@@ -42,8 +42,8 @@ func anyWithTarget(t *testing.T, target ParasiteTarget) Parasite {
 
 // otherThan is any concept that is not this one, for a test that needs a card a swap would change.
 func otherThan(c combat.ConceptID) combat.ConceptID {
-	if c != combat.Strike {
-		return combat.Strike
+	if c != combat.Bash {
+		return combat.Bash
 	}
 	return combat.Jab
 }
@@ -110,7 +110,7 @@ func TestARecordNamingSomethingTheRulesLackIsRefused(t *testing.T) {
 }
 
 func TestTheBucketHoldsWhatIsPutInIt(t *testing.T) {
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 
 	if run.HoldCount() != 0 {
 		t.Fatalf("a fresh run started holding %d parasites", run.HoldCount())
@@ -135,7 +135,7 @@ func TestTheBucketHoldsWhatIsPutInIt(t *testing.T) {
 }
 
 func TestARiderParasiteAttachesToTheCardItNames(t *testing.T) {
-	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab))
+	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
 	held := ids(run)
 
 	p := anyWithRider(t, combat.RiderHealOnPlay)
@@ -156,7 +156,7 @@ func TestARiderParasiteAttachesToTheCardItNames(t *testing.T) {
 func TestARemoveParasiteEatsBothOfItsTargets(t *testing.T) {
 	// **The two-card case is the one worms never had**, and it is where an index-based
 	// implementation goes wrong: removing the first shifts the second.
-	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab), combat.Plain(combat.Poke))
+	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab), combat.Plain(combat.Poke))
 	held := ids(run)
 
 	p := anyWithTarget(t, ParasiteRemove)
@@ -214,7 +214,7 @@ func TestAGraftMakesTheLeftCardTheRightCardWhole(t *testing.T) {
 	graft := anyWithTarget(t, ParasiteClone)
 	run := runWith(
 		combat.Card{Concept: combat.Jab, Element: combat.Ice},
-		combat.Card{Concept: combat.Strike, Element: combat.Fire},
+		combat.Card{Concept: combat.Bash, Element: combat.Fire},
 	)
 	left, right := ids(run)[0], ids(run)[1]
 
@@ -274,7 +274,7 @@ func TestAGraftBetweenTwoColoursOfOneCardIsOffered(t *testing.T) {
 }
 
 func TestAVitaeParasiteTouchesNoCard(t *testing.T) {
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 	before, size := run.Vitae(), run.Size()
 
 	p := anyWithTarget(t, ParasiteVitae)
@@ -290,7 +290,7 @@ func TestAVitaeParasiteTouchesNoCard(t *testing.T) {
 }
 
 func TestAParasiteRefusesTheWrongNumberOfTargets(t *testing.T) {
-	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab))
+	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
 	held := ids(run)
 
 	gnaw := anyWithTarget(t, ParasiteRemove)
@@ -313,7 +313,7 @@ func TestAParasiteRefusesTheWrongNumberOfTargets(t *testing.T) {
 // one: a card already upgraded is the pick a player reaching for a second parasite most obviously
 // wants. What is refused is the same upgrade twice, which is the rule every other target is under.
 func TestARiderIsRefusedOnlyWhenItWouldChangeNothing(t *testing.T) {
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 	id := ids(run)[0]
 
 	leech := anyWithRider(t, combat.RiderHealOnPlay)
@@ -355,7 +355,7 @@ func TestANormalChangeLeavesTheUpgradeAlone(t *testing.T) {
 	// **Two cards, because the element and form parasites take two.** The gold goes on the first
 	// and every assertion below is about that one; the second is only somebody for the pair
 	// parasites to name.
-	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab))
+	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
 	held := ids(run)
 	id := held[0]
 
@@ -404,16 +404,16 @@ func TestAMisdeclaredChangeIsRefused(t *testing.T) {
 	}{
 		{"a swap calling itself an upgrade", data.ParasiteData{
 			ParasiteRecord: "liar", Name: "Liar", Text: "X", Change: "upgrade",
-			Target: "swap", Value: "Strike", Count: 1}},
+			Target: "swap", Value: "Bash", Count: 1}},
 		{"a rider calling itself normal", data.ParasiteData{
 			ParasiteRecord: "liar", Name: "Liar", Text: "X", Change: "normal",
 			Target: "rider", Rider: "heal-on-play", Value: "10", Count: 1}},
 		{"a record declaring nothing", data.ParasiteData{
 			ParasiteRecord: "mute", Name: "Mute", Text: "X",
-			Target: "swap", Value: "Strike", Count: 1}},
+			Target: "swap", Value: "Bash", Count: 1}},
 		{"a record declaring a word that is not one", data.ParasiteData{
 			ParasiteRecord: "odd", Name: "Odd", Text: "X", Change: "sideways",
-			Target: "swap", Value: "Strike", Count: 1}},
+			Target: "swap", Value: "Bash", Count: 1}},
 	} {
 		if _, err := resolveParasite(tc.record); err == nil {
 			t.Errorf("%s was accepted", tc.what)
@@ -450,7 +450,7 @@ func TestTheBucketAndItsRidersSurviveASnapshot(t *testing.T) {
 	// **The one mistake that cannot be repaired afterwards.** A resumed run one consumable lighter,
 	// or holding a card whose rider stopped working, is a run the player would have to work out had
 	// changed.
-	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab))
+	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
 	id := ids(run)[0]
 
 	leech := anyWithRider(t, combat.RiderHealOnPlay)
@@ -488,7 +488,7 @@ func TestTheBucketAndItsRidersSurviveASnapshot(t *testing.T) {
 func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) {
 	// **They go into the pouch, not onto the ladder** *(owner's call, 2026-09-02)*. A shower hands
 	// over consumables to be spent or sold later; the run decides which rungs it raises.
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, ParasiteStones)
 
 	if !run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(1))) {
@@ -511,7 +511,7 @@ func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) 
 }
 
 func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, ParasiteStones)
 	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(3)))
 
@@ -531,7 +531,7 @@ func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
 }
 
 func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, ParasiteStones)
 	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(5)))
 
@@ -552,7 +552,7 @@ func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
 func TestThePouchSurvivesASnapshot(t *testing.T) {
 	// **A run resumed one consumable lighter is a run the player would have to work out had
 	// changed** — the rule the bucket and the worn relics are both under.
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, ParasiteStones)
 	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(9)))
 	want := run.Carried()
@@ -574,7 +574,7 @@ func TestThePouchSurvivesASnapshot(t *testing.T) {
 
 func TestARockShowerDrawsWithoutRepeats(t *testing.T) {
 	// A seat spent showing the same rock twice says nothing, which is the bag's own argument.
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, ParasiteStones)
 
 	if !run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(7))) {
@@ -594,7 +594,7 @@ func TestARockShowerWithNoSourceIsRefusedRatherThanRolledTheSameWayTwice(t *test
 	// **Refused outright rather than falling back to a default draw.** A consumable quietly
 	// handing out the same three rocks every time is a mechanic nobody designed, and it would be
 	// invisible — see ApplyParasiteRolling.
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, ParasiteStones)
 
 	if run.ApplyParasite(p, nil) {
@@ -605,8 +605,8 @@ func TestARockShowerWithNoSourceIsRefusedRatherThanRolledTheSameWayTwice(t *test
 func TestTwoShowersFromDifferentSourcesCanDifferAndOneSourceIsRepeatable(t *testing.T) {
 	// The stream is the caller's, so what this pins is that the run does not smuggle in a source
 	// of its own: the same seed twice is the same three stones.
-	first := runWith(combat.Plain(combat.Strike))
-	second := runWith(combat.Plain(combat.Strike))
+	first := runWith(combat.Plain(combat.Bash))
+	second := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, ParasiteStones)
 
 	first.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(42)))
@@ -627,7 +627,7 @@ func TestTwoShowersFromDifferentSourcesCanDifferAndOneSourceIsRepeatable(t *test
 // see internal/screens/consumables.go — and a bucket that took a third would make that fraction a
 // lie on the one screen the player reads their build off.
 func TestTheBucketRefusesMoreThanItHolds(t *testing.T) {
-	run := runWith(combat.Plain(combat.Strike))
+	run := runWith(combat.Plain(combat.Bash))
 
 	filler := anyWithRider(t, combat.RiderHealOnPlay).Record
 	spare := anyWithTarget(t, ParasiteRemove).Record

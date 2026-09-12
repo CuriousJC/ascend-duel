@@ -73,14 +73,14 @@ func TestNoDefenceStopsABlowOutright(t *testing.T) {
 	}
 }
 
-// **The three defend cards raise their own number of shields, and the price is the count.** Ward
-// for one at 1 AP, Brace for two at 2, Guard for three at 3 — the attacks' ladder with a count
+// **The three defend cards raise their own number of shields, and the price is the count.** Brace
+// for one at 1 AP, Block for two at 2, Guard for three at 3 — the attacks' ladder with a count
 // where the damage multiplier sits.
 func TestEachDefendCardRaisesItsOwnNumberOfShields(t *testing.T) {
 	for _, tc := range []struct {
 		card ConceptID
 		want int
-	}{{Ward, 1}, {Brace, 2}, {Guard, 3}} {
+	}{{Brace, 1}, {Block, 2}, {Guard, 3}} {
 		c := ConceptOf(tc.card)
 		if c.Amount != tc.want || c.Cost != tc.want {
 			t.Errorf("%s raises %d for %d AP, want %d for %d", c.Label, c.Amount, c.Cost, tc.want, tc.want)
@@ -106,13 +106,13 @@ func TestAShieldEatsExactlyOneAttack(t *testing.T) {
 	// **Both in one round, because that is the turn a shield covers.** A raises at the end of its
 	// own turn and B acts next; a shield still standing when A comes round again is one that
 	// expires unspent — see TestUnspentShieldsLapseBeforeTheirOwnerActsAgain.
-	events, a2, _ := resolve(a, b, PlainCards(Brace), PlainCards(Strike, Strike, Strike), 1)
+	events, a2, _ := resolve(a, b, PlainCards(Block), PlainCards(Bash, Bash, Bash), 1)
 
 	if got := countKind(events, KindBlocked); got != 2 {
 		t.Errorf("%d attacks blocked, want 2 — one shield is one attack", got)
 	}
 	if got := damageCount(events); got != 1 {
-		t.Errorf("%d attacks landed, want 1 — the third Strike had no shield left to meet it", got)
+		t.Errorf("%d attacks landed, want 1 — the third Bash had no shield left to meet it", got)
 	}
 	if a2.Shields != 0 {
 		t.Errorf("%d shields left standing, want 0 — both were spent", a2.Shields)
@@ -126,10 +126,10 @@ func TestABlockedAttackDealsNoDamage(t *testing.T) {
 	b := duelist(10, 6, 200)
 	b.SoloAttacks = true
 
-	_, a1, _ := resolve(a, b, PlainCards(Ward), PlainCards(Strike), 1)
+	_, a1, _ := resolve(a, b, PlainCards(Brace), PlainCards(Bash), 1)
 
 	if a1.CurrentLife != a.CurrentLife {
-		t.Errorf("a shielded duelist lost %d life to a blocked Strike, want none",
+		t.Errorf("a shielded duelist lost %d life to a blocked Bash, want none",
 			a.CurrentLife-a1.CurrentLife)
 	}
 }
@@ -209,10 +209,10 @@ func TestEveryRaisedDefenceMeetsTheBlow(t *testing.T) {
 	b := duelist(dmg, 0, 5000)
 
 	// The undefended figure comes off a fresh pair, so it is the same blow against nothing.
-	open, _, _ := resolve(a, b, PlainCards(Smash, Strike), nil, 2)
+	open, _, _ := resolve(a, b, PlainCards(Smash, Bash), nil, 2)
 
 	_, a, b = resolve(a, b, nil, PlainCards(testGuard, testGuard), 1)
-	events, _, _ := resolve(a, b, PlainCards(Smash, Strike), nil, 2)
+	events, _, _ := resolve(a, b, PlainCards(Smash, Bash), nil, 2)
 
 	if got := kindCount(events, KindNegated); got != 2 {
 		t.Errorf("%d defences fired, want both of them", got)
@@ -236,9 +236,9 @@ func TestDefencesAreSpentWhetherOrNotTheyWereNeeded(t *testing.T) {
 	}
 
 	// Round two: A queues nothing, so its own turn expires them before B swings.
-	events, _, _ := resolve(a1, b1, nil, PlainCards(Strike, Strike), 2)
+	events, _, _ := resolve(a1, b1, nil, PlainCards(Bash, Bash), 2)
 
-	open, _, _ := resolve(a, b, nil, PlainCards(Strike, Strike), 1)
+	open, _, _ := resolve(a, b, nil, PlainCards(Bash, Bash), 1)
 	if got, want := firstDamage(t, events, SideB).Amount, firstDamage(t, open, SideB).Amount; got != want {
 		t.Errorf("a blow into expired defends dealt %d, want the full %d", got, want)
 	}
@@ -266,7 +266,7 @@ func TestTheAttackLadderIsThreeFormsByFiveTiers(t *testing.T) {
 	// zero copies and exist only for a worm to walk a card onto, but they are rungs of the same
 	// ladder and have to match across the forms exactly as the dealt three do. That is the structural claim MECHANICS.md makes about the deck: a form
 	// is which pair you are building, never a better or worse way to build one. It is also the
-	// thing that quietly breaks the first time somebody makes a Cleave hit harder than a Lunge.
+	// thing that quietly breaks the first time somebody makes a Cleave hit harder than a Skewer.
 	//
 	// It also catches a concept falling through Cost()'s default arm, which returns a mid-tier
 	// price — a mistake that would otherwise hide behind an entirely plausible number.
@@ -412,7 +412,7 @@ func TestParseFormRoundTripsEveryForm(t *testing.T) {
 func TestAWormsBoundsHold(t *testing.T) {
 	// Cost floors at zero and does not go negative. A free card is bounded by the count cap
 	// instead of the budget, which is the trade that was taken deliberately.
-	cheap := Card{Concept: Strike, CostDelta: -99}
+	cheap := Card{Concept: Bash, CostDelta: -99}
 	if got := cheap.Cost(); got != 0 {
 		t.Errorf("a card cheapened past zero costs %d, want 0", got)
 	}
@@ -425,16 +425,16 @@ func TestAWormsBoundsHold(t *testing.T) {
 
 	// An amount cannot be scaled away to nothing: a reward that left a card doing zero would be
 	// a punishment wearing a gift's clothes.
-	crushed := Card{Concept: Brace, AmountPct: 1}
+	crushed := Card{Concept: Block, AmountPct: 1}
 	if got := crushed.Amount(); got < 1 {
 		t.Errorf("a scaled-down card banks %d", got)
 	}
 
 	// The zero value is unmodified, which is what keeps every existing Card literal working.
-	plain := Card{Concept: Brace}
-	if plain.Amount() != ConceptOf(Brace).Amount {
+	plain := Card{Concept: Block}
+	if plain.Amount() != ConceptOf(Block).Amount {
 		t.Errorf("an unmodified card reports %d against the concept's %d",
-			plain.Amount(), ConceptOf(Brace).Amount)
+			plain.Amount(), ConceptOf(Block).Amount)
 	}
 }
 
@@ -474,12 +474,12 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 	}
 
 	// The defences are a ladder too, and Grow and Shrink walk it exactly as they walk an attack
-	// form. Brace sits in the middle of Flinch / Ward / Brace / Guard.
-	if up, ok := Neighbour(Brace, 1); !ok || up != Guard {
-		t.Errorf("promoting a Brace gave %v, want Guard", up)
+	// form. Block sits in the middle of Flinch / Brace / Block / Guard.
+	if up, ok := Neighbour(Block, 1); !ok || up != Guard {
+		t.Errorf("promoting a Block gave %v, want Guard", up)
 	}
-	if down, ok := Neighbour(Ward, -1); !ok || down != Flinch {
-		t.Errorf("demoting a Ward gave %v, want Flinch", down)
+	if down, ok := Neighbour(Brace, -1); !ok || down != Flinch {
+		t.Errorf("demoting a Brace gave %v, want Flinch", down)
 	}
 	if _, ok := Neighbour(Flinch, -1); ok {
 		t.Error("the bottom of the defend ladder was demoted")
@@ -490,7 +490,7 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 
 	// The two ladders never meet: a defence promoted stays a defence, and an enemy card has no
 	// form and therefore no ladder at all.
-	if up, _ := Neighbour(Brace, 1); ConceptOf(up).Verb != VerbShield {
+	if up, _ := Neighbour(Block, 1); ConceptOf(up).Verb != VerbShield {
 		t.Error("promoting a defence produced an attack")
 	}
 }

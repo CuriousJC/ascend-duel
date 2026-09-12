@@ -7,28 +7,28 @@ import "sort"
 // meant to work better, and this file is the machinery that pays for that choice.
 //
 // **A turn produces exactly one attack** *(2026-08-14)*. The attack phase reads every attack card
-// queued, forms the best hand it can, and resolves a single blow — so five Strikes are not five
+// queued, forms the best hand it can, and resolves a single blow — so five Bashes are not five
 // hits, they are one Four of a Kind. Attack cards that do not contribute are ignored outright:
-// `Strike, Jab, Strike` is a Pair and the Jab is not in it.
+// `Bash, Jab, Bash` is a Pair and the Jab is not in it.
 //
 // **A hand counts cards that agree, and buys damage and nothing else** *(2026-08-17)*. The ladder
 // wears poker's names because it is poker's question — high card, pair, two pair, three of a kind,
 // full house, four of a kind — and the whole of what forming one does is multiply the blow.
 //
 // **A hand is what you played, not what you hit with** *(owner's call, 2026-08-23)*. Defend cards
-// carry an element, so they are counted like anything else: two Wards are a Pair, and a turn of
+// carry an element, so they are counted like anything else: two Braces are a Pair, and a turn of
 // four fire cards is an Elemental Four of a Kind whether any of them swung. They bring no damage
 // into the sum, since a defend card's `Damage` is zero — so a hand of nothing but shields multiplies
-// nothing and lands nothing, and a Ward beside two attacks raises the rung the two attacks are paid
+// nothing and lands nothing, and a Brace beside two attacks raises the rung the two attacks are paid
 // at.
 // That last case is the whole of what the change buys, and the whole of what it costs.
 //
-// **The colours a hand shows include its defences**, so a fire Ward arms a burn on a turn with no
+// **The colours a hand shows include its defences**, so a fire Brace arms a burn on a turn with no
 // fire attack in it. That follows from the same decision and is the sharper half of it.
 //
 // **What "agree" means is the hand's own business** *(2026-08-19)*. Most rungs exist three times
-// over, once per `Axis`: two Bashes are a Card Two Pair only if a second pair joins them, a Bash and
-// a Cleave agree on no form - they have different ones - and an ice Bash beside an ice Thrust is an
+// over, once per `Axis`: two Thumps are a Card Two Pair only if a second pair joins them, a Thump and
+// a Cleave agree on no form - they have different ones - and an ice Thump beside an ice Thrust is an
 // elemental hand though the two agree on nothing else. Those are separate catalogue entries rather
 // than one entry with three readings, so each is priced on how often it can actually be built.
 //
@@ -38,11 +38,11 @@ import "sort"
 // and the matcher tries each in turn. See `Hand.Axes`. **It pays 1x**, which is the identity: what
 // a pair buys is that two cards are summed where a High Card lands one.
 //
-// **The multiplier multiplies the hand's own cards** *(2026-08-18, owner's call)*. A Pair of Lunges
+// **The multiplier multiplies the hand's own cards** *(2026-08-18, owner's call)*. A Pair of Skewers
 // is `(20 + 20) x 1.5`, so what a hand is worth is a proportion of what its cards deal. It used to
 // be applied to a separate reference swing of one 1x attack at the attacker's DMG, added on top of
 // the cards, which made a percent buy a *fixed* figure: 500% was worth 2.5x the base on Jabs and
-// 0.6x on Lunges, so the ladder paid least to the decks that had climbed furthest. The High Card
+// 0.6x on Skewers, so the ladder paid least to the decks that had climbed furthest. The High Card
 // carries 100 for the same reason, and it is what makes a lone attack land its own face damage.
 //
 // **That is deliberately narrow.** Hands used to carry a second axis counting the distinct colours
@@ -50,7 +50,7 @@ import "sort"
 // opponent's next turn. Both are gone: statuses come from **elements and the relics that arm them**,
 // so a hand is one number and there is exactly one place to look for what a hand is worth.
 //
-// **Exactly one hand applies.** A hand wins on its multiplier — four Strikes are a Four of a Kind
+// **Exactly one hand applies.** A hand wins on its multiplier — four Bashes are a Four of a Kind
 // rather than also the pair and the trips inside it — so a turn produces one hand with no ranking
 // machinery beyond that comparison.
 //
@@ -82,13 +82,13 @@ const HandNone HandID = 0
 const multiplierScale = 100
 
 // Axis is what a hand counts copies *of* *(2026-08-19)*. The same rung exists once per axis —
-// three Bashes are a Card Three of a Kind, three crushes are a Form Three of a Kind, three ice
+// three Thumps are a Card Three of a Kind, three crushes are a Form Three of a Kind, three ice
 // cards are an Elemental Three of a Kind — so each can be priced on its own rarity.
 //
 // **The order is the tie-break, narrowest first, and that is a rule rather than an accident.**
 // A concept fixes a form, so every card hand is also a form hand and two of them can be live at
 // the same multiplier; the narrower one is what the player aimed at, so it wins. Element is
-// independent of both — an ice Bash and a fire Bash are a card hand and not an elemental one.
+// independent of both — an ice Thump and a fire Thump are a card hand and not an elemental one.
 //
 // It is safe to order this enum meaningfully because **an axis is never serialized**: hands.json
 // writes `"match": "form"` and `ParseAxis` resolves it, exactly as elements and forms are named
@@ -333,7 +333,7 @@ type Blow struct {
 
 // BlowFor works out one side's attack phase from the cards it resolved.
 //
-// **The best hand wins, and best means the biggest multiplier.** Four Strikes hold a pair and
+// **The best hand wins, and best means the biggest multiplier.** Four Bashes hold a pair and
 // trips as well as a four of a kind; the four of a kind is worth the most, so it is the hand, and
 // nothing else pays.
 //
@@ -386,7 +386,7 @@ func highCard(hands []Hand) Hand {
 // matchHand finds the best-paying hand of **two or more cards** the turn can form.
 //
 // **Best is the biggest multiplier, and a tie goes to the narrowest axis** *(2026-08-19)*. Two
-// Bashes satisfy the card two pair and the form two pair at once, so the comparison needs a second
+// Thumps satisfy the card two pair and the form two pair at once, so the comparison needs a second
 // key or it would be decided by file order; `Axis` is written narrowest-first for exactly this. It
 // is also what picks between the readings of a merged rung, which all carry one multiplier.
 //
@@ -433,13 +433,13 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 // entry used to name the categories it counted, and it could never change what was counted — it
 // only invited an entry to claim otherwise.
 //
-// **It counts every card in the turn** *(2026-08-23)*. Defences are in, so a pair of Wards is a Card
+// **It counts every card in the turn** *(2026-08-23)*. Defences are in, so a pair of Braces is a Card
 // Pair and a turn of one colour is an elemental hand whether it swung or not; they bring no damage
 // with them, since `Card.Damage` is zero for every verb that is not an attack. What is left out is
 // decided by `matchValue` — a card with no value on the hand's own axis — and by nothing else.
 //
 // **Groups are filled largest-count-first**, and a tie goes to the value whose first card was
-// played first. A full house asked for `[3,2]` against three Jabs and two Strikes has only one
+// played first. A full house asked for `[3,2]` against three Jabs and two Bashes has only one
 // reading, but the rule has to be written down for the cases that do not — and it has to be a rule rather than a
 // map walk, per the determinism note in CLAUDE.md.
 //
@@ -547,7 +547,7 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 // declines to spend the target's shield on a blow of zero.
 //
 // **It is compared on the concept's damage rather than its cost**, because damage is what the
-// blow is. The player's three forms ladder identically — a Lunge, a Cleave and a Smash all deal
+// blow is. The player's three forms ladder identically — a Skewer, a Cleave and a Smash all deal
 // double — so ties are common rather than exceptional, and they go to the card queued first. The
 // earliest slot wins, which is deterministic without inventing a rule.
 func biggestAttack(turn []Slot) []int {
@@ -581,7 +581,7 @@ func (c Card) formsBlow() bool {
 }
 
 // damageRankDMG is the DMG `biggestAttack` ranks concepts at. It never reaches a life total
-// — it exists only so Heavy sorts above Strike sorts above Jab — and it is deliberately large
+// — it exists only so Heavy sorts above Bash sorts above Jab — and it is deliberately large
 // enough that Jab's `dmg/2` floor of 1 cannot flatten the ladder.
 const damageRankDMG = 100
 
@@ -593,7 +593,7 @@ const damageRankDMG = 100
 // multiplier and is not any more.
 //
 // **Basic is skipped.** It is the absence of an element, so a basic card neither adds a colour nor
-// spoils one — two basic Strikes and an ice Strike show one colour. That is what makes a plain
+// spoils one — two basic Bashes and an ice Bash show one colour. That is what makes a plain
 // draw neutral rather than a punishment.
 func elementsOf(turn []Slot, cards []int) []Element {
 	var seen [ElementCount]bool

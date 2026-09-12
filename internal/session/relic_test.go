@@ -208,8 +208,8 @@ func TestAFlipRecoloursTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
 	// time on the way into the hand — which is what every one of these relics' text has always said.
 	run := wearing(t, "frozen-lightning-ring")
 	run.deck = []combat.Card{
-		{Concept: combat.Strike, Element: combat.Lightning},
-		{Concept: combat.Strike, Element: combat.Fire},
+		{Concept: combat.Bash, Element: combat.Lightning},
+		{Concept: combat.Bash, Element: combat.Fire},
 	}
 
 	for i, want := range []combat.Element{combat.Lightning, combat.Fire} {
@@ -238,7 +238,7 @@ func TestTwoFlipsCannotChainThroughOneCard(t *testing.T) {
 	// one's answer: lightning to ice to fire, and a deck walked to one colour by two relics that
 	// each claim to touch one.
 	run := wearing(t, "frozen-lightning-ring", "meltdown-ring")
-	owned := combat.Card{Concept: combat.Strike, Element: combat.Lightning}
+	owned := combat.Card{Concept: combat.Bash, Element: combat.Lightning}
 
 	drawn := run.DrawnAs(owned)
 	if drawn.Element != combat.Ice {
@@ -260,14 +260,14 @@ func TestADiscountRelicPricesTheRunsOwnCards(t *testing.T) {
 	// when it reached the hand would be the game contradicting itself between two screens.
 	run := wearing(t, "warm-ring")
 
-	hot := combat.Card{Concept: combat.Strike, Element: combat.Fire}
-	cold := combat.Card{Concept: combat.Strike, Element: combat.Ice}
+	hot := combat.Card{Concept: combat.Bash, Element: combat.Fire}
+	cold := combat.Card{Concept: combat.Bash, Element: combat.Ice}
 
 	if got, want := run.CardCost(hot), hot.Cost()-1; got != want {
-		t.Errorf("a fire Strike costs the run %d, want %d", got, want)
+		t.Errorf("a fire Bash costs the run %d, want %d", got, want)
 	}
 	if got, want := run.CardCost(cold), cold.Cost(); got != want {
-		t.Errorf("an ice Strike costs the run %d, want %d", got, want)
+		t.Errorf("an ice Bash costs the run %d, want %d", got, want)
 	}
 }
 
@@ -293,7 +293,7 @@ func TestARunOpensBare(t *testing.T) {
 
 func TestSellingAtrophyGivesTheCardsBack(t *testing.T) {
 	// **A deck-built relic rewrites the deck a fight is dealt from, never the deck the run owns.**
-	// The question this answers is a player's: take Atrophy off and the Lunges are back. If
+	// The question this answers is a player's: take Atrophy off and the Skewers are back. If
 	// FightDeck ever wrote through to the stored deck, selling would leave a run permanently
 	// smaller — a loss no screen would explain and no test but this one would catch.
 	run := wearing(t, "atrophy-ring")
@@ -337,7 +337,7 @@ func TestGrowthEarnedInAFightSurvivesIt(t *testing.T) {
 	run := wearing(t, "enflamed-ring")
 
 	d := run.Equip(combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100})
-	d = d.GrowOnLanding(combat.Of(combat.Strike, combat.Fire))
+	d = d.GrowOnLanding(combat.Of(combat.Bash, combat.Fire))
 
 	run.AbsorbGrowth(d)
 	if got := run.Grown("enflamed-ring"); got != 10 {
@@ -370,13 +370,13 @@ func TestGrowthEarnedInAFightSurvivesIt(t *testing.T) {
 // **Worn order is the order relics fire in**, so the row being draggable makes this a rules change
 // the run has to record. See MoveRelic, and combat.Duelist.MoveRelic for the copy a fight holds.
 func TestMovingAWornRelicReordersTheRow(t *testing.T) {
-	run := wearing(t, "keen-ring", "heart-ring", "banker-ring")
+	run := wearing(t, "sickle", "heart-ring", "banker-ring")
 
 	if !run.MoveRelic(2, 0) {
 		t.Fatal("the move was refused")
 	}
 
-	want := []string{"banker-ring", "keen-ring", "heart-ring"}
+	want := []string{"banker-ring", "sickle", "heart-ring"}
 	got := run.Worn()
 	if len(got) != len(want) {
 		t.Fatalf("wearing %v, want %v", got, want)
@@ -391,14 +391,14 @@ func TestMovingAWornRelicReordersTheRow(t *testing.T) {
 // A drop resolved against a row that changed underneath it must be a no-op, not a panic: this is
 // driven by a drag.
 func TestMovingAWornRelicOutOfRangeIsRefused(t *testing.T) {
-	run := wearing(t, "keen-ring", "heart-ring")
+	run := wearing(t, "sickle", "heart-ring")
 
 	for _, move := range [][2]int{{-1, 0}, {0, -1}, {2, 0}, {0, 2}, {1, 1}} {
 		if run.MoveRelic(move[0], move[1]) {
 			t.Errorf("MoveRelic(%d, %d) reported a change", move[0], move[1])
 		}
 	}
-	if got := run.Worn(); got[0] != "keen-ring" || got[1] != "heart-ring" {
+	if got := run.Worn(); got[0] != "sickle" || got[1] != "heart-ring" {
 		t.Errorf("the row moved anyway: %v", got)
 	}
 }
@@ -407,7 +407,7 @@ func TestMovingAWornRelicOutOfRangeIsRefused(t *testing.T) {
 // same relic with the same number. Growth following the finger instead would hand one relic's run to
 // another.
 func TestAMovedWornRelicKeepsItsGrowth(t *testing.T) {
-	run := wearing(t, "heart-ring", "keen-ring")
+	run := wearing(t, "heart-ring", "sickle")
 	run.grown["heart-ring"] = 45
 
 	if !run.MoveRelic(0, 1) {

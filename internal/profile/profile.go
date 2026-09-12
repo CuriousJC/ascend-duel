@@ -55,7 +55,7 @@ type Profile struct {
 	// map's keys in sorted order, so the file stays diffable exactly as the lists do.
 	//
 	// **A name, never an ordinal**, on the rule the whole package is under: `form:slash` and
-	// `concept:Strike` rather than a Form and a ConceptID, both of which are append-only enums whose
+	// `concept:Bash` rather than a Form and a ConceptID, both of which are append-only enums whose
 	// numbers will eventually mean something else. See internal/achieve, which makes the names.
 	//
 	// **A counter nothing reads any more is kept rather than pruned.** It costs a few bytes and the

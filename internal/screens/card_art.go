@@ -77,10 +77,10 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // **The face says what the *card* does and nothing about who is holding it** *(owner's call,
 // 2026-08-26)*, damage-wise. A relic's multiplier was written into the figure and coloured pink from
 // 2026-08-21 until today; what took it off is that the figure stopped being stable. A growing relic
-// steps between the cards of one blow, so the same Strike is worth one thing queued first and
+// steps between the cards of one blow, so the same Bash is worth one thing queued first and
 // another queued third — and a face stating either would be wrong somewhere. The owner's call went
 // further than the accumulator: **no relic reaches the printed damage at all**, growing or not, so a
-// Strike reads `1x DMG` whatever is on the fingers. What the relics did is shown where it happens,
+// Bash reads `1x DMG` whatever is on the fingers. What the relics did is shown where it happens,
 // in the sum — see the hand dialog, `combat.GrowthScale` and `Event.HandGrowth`.
 //
 // **Cost is the exception and stays the pairing's** — see below. A discount is not order-dependent
@@ -356,9 +356,9 @@ func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
 // duelistSpec is the player as a card: their name, three figures, and the life they have
 // left.
 //
-// **DMG is the stat, printed** *(2026-08-16)*. It used to be `combat.Strike.Damage(DMG)`, on the
+// **DMG is the stat, printed** *(2026-08-16)*. It used to be `combat.Bash.Damage(DMG)`, on the
 // grounds that the figure should follow the ladder rather than the stat — which was worth doing
-// while the ladder was a switch statement with Strike on its middle rung. A card declares its own
+// while the ladder was a switch statement with Bash on its middle rung. A card declares its own
 // multiplier now, so 1x is the definition rather than one card's entry, and asking a particular
 // card what it deals would make this figure move when that card was retuned.
 //
@@ -411,7 +411,7 @@ func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 }
 
 // shieldPip is the picture one standing shield is drawn as: the defend form's corner mark, the
-// same file a Ward, a Brace and a Guard carry.
+// same file a Brace, a Block and a Guard carry.
 //
 // **It goes through `artwork` rather than `systems.Glyph`** because a pip is scaled into a
 // twenty-pixel badge box like every other thing in that row, and `internal/cards` has no graphics

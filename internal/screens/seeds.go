@@ -38,41 +38,41 @@ type namedSeed struct {
 //
 // **Arcane took the deck back to 60 on 2026-08-25 and only two entries fell over**, which is worth
 // knowing rather than surprising: a fifth colour adds a card to every concept without changing what
-// a concept *is*, so the hands described in terms of concepts — three Strikes, four Strikes — were
+// a concept *is*, so the hands described in terms of concepts — three Bashes, four Bashes — were
 // re-dealt to the same shape by a different shuffle. What broke was the two that wanted a specific
 // combination of concepts. **A Card Five of a Kind is dealable for the first time**, at one hand in
 // about 22,000, because five copies of a concept now exist; there is no catalogued seed for it and
 // the default 20,000-seed search is too short to expect one.
 
 var seedCatalog = []namedSeed{
-	// 1xJab 1xCut 1xSlash 1xCleave 1xBash 3xStrike. Three Strikes is 6 AP, exactly the opening
+	// 1xJab 1xCut 1xSlice 1xCleave 1xThump 3xBash. Three Bashes is 6 AP, exactly the opening
 	// budget, so the Three of a Kind is clickable on round one with nothing set up first — and being
 	// three colours it lands three statuses with it, which is what the hand and its colours look
 	// like when they arrive together.
-	{"three-strikes", 51, "three or more Strikes: a Three of a Kind that can be clicked"},
+	{"three-bashes", 51, "three or more Bashes: a Three of a Kind that can be clicked"},
 
-	// 2xThrust 1xCleave 5xStrike. **The biggest hand the deck can deal**, and bigger than it was:
-	// with Guard gone the deck is 55 cards and this seed deals all five Strikes, which is the top of
+	// 2xThrust 1xCleave 5xBash. **The biggest hand the deck can deal**, and bigger than it was:
+	// with Guard gone the deck is 55 cards and this seed deals all five Bashes, which is the top of
 	// the ladder outright rather than the Four of a Kind the entry was named for. Ten AP against a
 	// six-point budget, so a bare duelist sees it and pays for part of it and a discount is what
 	// buys the rest, and it draws all five colours — five copies of a concept are five elements.
-	{"four-strikes", 238, "four Strikes: a Four of a Kind, the top of the ladder"},
+	{"four-bashes", 238, "four Bashes: a Four of a Kind, the top of the ladder"},
 
-	// 2xJab 1xCleave 2xStrike 3xSmash. The same shape one form over and at the top of
+	// 2xJab 1xCleave 2xBash 3xSmash. The same shape one form over and at the top of
 	// the ladder: three Smashes is 9 AP and cannot be paid for out of an opening budget, so this is
 	// the hand that shows a hand you can see and cannot afford.
 	{"three-smashes", 107, "three or more Smashes: 9 AP, unaffordable, but the cards are there"},
 
-	// 1xJab 1xThrust 2xSlash 2xBash 1xStrike 1xBrace. Both phases in one round, which is what the two
+	// 1xJab 1xThrust 2xSlice 2xThump 1xBash 1xBlock. Both phases in one round, which is what the two
 	// categories have to be told apart by: a defend card and an attack, so a blue "defends" and a
 	// red "attacks" appear in the same feed.
 	{"both-verbs", 1, "a defend card and an attack: both phases in one round"},
 
-	// 1xJab 2xThrust 1xLunge 1xSlash 1xBash 1xWard 1xBrace. It holds both defences, which is what
-	// the demo wants: three shields in one turn and the pip row on the duelist card part-filled. **Ward and Brace are the whole vocabulary now**
+	// 1xJab 2xThrust 1xSkewer 1xSlice 1xThump 1xBrace 1xBlock. It holds both defences, which is what
+	// the demo wants: three shields in one turn and the pip row on the duelist card part-filled. **Brace and Block are the whole vocabulary now**
 	// *(2026-09-01)* — Guard was taken out of the deck, so the six-shield hand this seed was
 	// chosen for cannot be dealt by anything. Together they are 3 AP, half a round.
-	{"all-shields", 2, "a Ward and a Brace: the whole defend vocabulary in hand"},
+	{"all-shields", 2, "a Brace and a Block: the whole defend vocabulary in hand"},
 }
 
 // seedFor looks a catalogued seed up by name. **It panics on an unknown name**, which is the

@@ -58,7 +58,7 @@ func scriptText(items []mathItem) string {
 func TestTheHandScriptSpellsOutEveryCard(t *testing.T) {
 	got := scriptText(mathScript(handEvent("pair", []int{20, 20}, 150, 60)))
 	if want := "20 + 20 x 1.5 = 60"; got != want {
-		t.Errorf("a Pair of Lunges reads %q, want %q", got, want)
+		t.Errorf("a Pair of Skewers reads %q, want %q", got, want)
 	}
 }
 
@@ -98,7 +98,7 @@ func TestTheHighCardShowsItsMultiplier(t *testing.T) {
 
 // **Every hand the engine names is shouted, the High Card included** *(2026-08-19, owner's call)*.
 // It was silent until then, on the argument that `HIGH CARD!` over a lone attack empties the word
-// the way `HAND!` over a single Strike does. What changed is that the name is now carried by the
+// the way `HAND!` over a single Bash does. What changed is that the name is now carried by the
 // banner from DUEL! onward — so silence here would not withhold an announcement, it would take a
 // word off the screen at the moment the blow lands.
 //

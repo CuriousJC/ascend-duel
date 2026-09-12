@@ -279,7 +279,7 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 // drawCardBack blits a face-down card at rest.
 //
 // Separate from drawCard because that one builds its Spec from an actionCard, and a back
-// has no card behind it to build from — asking it for one would mean inventing a Strike
+// has no card behind it to build from — asking it for one would mean inventing a Bash
 // nobody holds just to throw every field away. Separate from drawFlyingCard because a
 // resting card must not be filtered.
 func (s *CombatScene) drawCardBack(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style) {
@@ -526,8 +526,8 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 // attackSeats is every seat in one side's row holding an attack card.
 //
 // It counts along the same walk as noteResolved and seatPlayedCards — a seat is a position in
-// that side's own row, not in the round — so a turn that opens with a Ward still numbers its
-// Strike as seat 1.
+// that side's own row, not in the round — so a turn that opens with a Brace still numbers its
+// Bash as seat 1.
 func attackSeats(order []combat.Slot, side combat.Side) []int {
 	var (
 		seats []int

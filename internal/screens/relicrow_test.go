@@ -60,33 +60,33 @@ func TestTheBadgeSaysWhatTheRelicIsDoing(t *testing.T) {
 // **A relic that does not grow carries no badge**, which is most of the catalogue: an empty string is
 // what drawRelicCard passes through to a card that then draws nothing.
 func TestARelicThatDoesNotGrowHasNoBadge(t *testing.T) {
-	id, ok := combat.RelicByKey("keen-ring")
+	id, ok := combat.RelicByKey("sickle")
 	if !ok {
-		t.Fatal("keen-ring is in no registry")
+		t.Fatal("sickle is in no registry")
 	}
 	if got := relicCounter(combat.WornRelic{Relic: id, Grown: 50}); got != "" {
-		t.Errorf("keen-ring reads %q, want no badge at all", got)
+		t.Errorf("sickle reads %q, want no badge at all", got)
 	}
 }
 
 // The badges are keyed by record, because the row is about to be dragged into a different order and
 // a badge indexed by seat would follow the finger rather than the relic.
 func TestTheBadgesAreKeyedByRecord(t *testing.T) {
-	gs := wornState(t, "keen-ring", "heart-ring")
+	gs := wornState(t, "sickle", "heart-ring")
 
 	got := runCounters(gs)
 	if got["heart-ring"] == "" {
 		t.Error("heart-ring has no badge")
 	}
-	if _, ok := got["keen-ring"]; ok {
-		t.Error("keen-ring has a badge, and it does not grow")
+	if _, ok := got["sickle"]; ok {
+		t.Error("sickle has a badge, and it does not grow")
 	}
 }
 
 // **A drop lands on the seat the cursor is over**, and never past the end of the row: nothing is
 // being inserted here, so five relics reordered are still five relics.
 func TestARelicDropLandsOnTheSeatUnderTheCursor(t *testing.T) {
-	gs := wornState(t, "keen-ring", "heart-ring", "banker-ring")
+	gs := wornState(t, "sickle", "heart-ring", "banker-ring")
 	row := buildRelicRow(gs, nil)
 
 	for i := 0; i < row.worn; i++ {
@@ -100,7 +100,7 @@ func TestARelicDropLandsOnTheSeatUnderTheCursor(t *testing.T) {
 }
 
 func TestARelicDropIsClampedToTheRow(t *testing.T) {
-	gs := wornState(t, "keen-ring", "heart-ring", "banker-ring")
+	gs := wornState(t, "sickle", "heart-ring", "banker-ring")
 	row := buildRelicRow(gs, nil)
 
 	gs.MouseX, gs.MouseY = -400, row.rect.Min.Y
@@ -118,12 +118,12 @@ func TestARelicDropIsClampedToTheRow(t *testing.T) {
 // screen has a second half — see CombatScene.moveRelic — and no test here can reach it without a
 // fighter.
 func TestDroppingARelicReordersTheRun(t *testing.T) {
-	gs := wornState(t, "keen-ring", "heart-ring", "banker-ring")
+	gs := wornState(t, "sickle", "heart-ring", "banker-ring")
 	row := buildRelicRow(gs, nil)
 
 	row.rowReturn(2, 0)
 
-	want := []string{"banker-ring", "keen-ring", "heart-ring"}
+	want := []string{"banker-ring", "sickle", "heart-ring"}
 	got := gs.Run.Worn()
 	for i := range want {
 		if got[i] != want[i] {
@@ -135,7 +135,7 @@ func TestDroppingARelicReordersTheRun(t *testing.T) {
 // A cancelled drag passes the same index twice, and every row has to read that as putting the card
 // back untouched.
 func TestACancelledRelicDragChangesNothing(t *testing.T) {
-	gs := wornState(t, "keen-ring", "heart-ring")
+	gs := wornState(t, "sickle", "heart-ring")
 	row := buildRelicRow(gs, nil)
 
 	before := gs.Run.Worn()

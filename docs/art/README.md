@@ -28,11 +28,20 @@ and both are things the repo produced. These are things the repo consumes.
   prompt spends most of its words demanding, and 1.1 MB a card is about 155 MB across a 137-ring
   catalogue. At the card's size it is ~57 KB and nothing resamples at all.
   `TestEveryBleedingCardArtIsTheCardsOwnSize` is the tripwire.
-- **`go run ./tools/relicart` is what does the filing**, so the reduction, the `"Art"` field and the
-  worklist entry are one command rather than four steps remembered in order. Drop the generator's
-  PNG into `.scratch/to-process-relic-art/` named after the record and run it. Only relics have one
+- **`go run ./tools/relicart` is what does the filing**, so the reduction and the `"Art"` field are
+  one command rather than three steps remembered in order. Drop the generator's PNG into
+  `.scratch/to-process-relic-art/` named after the record and run it. Only relics have one
   today; a second catalogue reaching this volume should get the same treatment rather than a
   second set of manual steps.
+- **The generic prompt is what lives here; each relic's own description lives on its record**
+  *(owner's call, 2026-09-12)*. This prompt is shared by every card that carries a picture and
+  is about no record at all. The subject paragraph is about exactly one, so it is `Draw` in
+  `data/relics.json` — ignored by the engine, exactly as a status's `Badge` is, and pasted into
+  the generator as the record's own JSON. A brief kept apart from the record is a brief that
+  gets deleted when the picture it produced is filed.
+- **The worklist is a query now.** A relic with an empty `Art` has no picture, a relic with an
+  empty `Draw` has no brief, and `go run ./tools/relicsheet` prints both counts and marks both in
+  pink. A file listing the same thing is a second copy to keep in step.
 - **Nothing here is loaded by the game**, which is why it is not in `data/`. Everything in
   `data/` is the game's own catalogue, `//go:embed`ed and read at launch.
 
@@ -42,7 +51,6 @@ and both are things the repo produced. These are things the repo consumes.
 |---|---|
 | `card_art_prompt.MD` | the prompt, for every card that carries a picture — relics on `cards.RelicStyle`, parasites and worms and stones on `cards.WormStyle`. Two composition blocks, one per style; pick one |
 | `parasite_art_prompt.MD` | the closed list of parasite body plans, pasted into that prompt. A creature needs a shape where an object does not |
-| `relics_to_draw.md` | the worklist: one subject paragraph per relic with no artwork yet |
 
 **Neither bleeding card names itself** *(owner's call, 2026-09-11)*, so no prompt has to keep a
 title band clear: the picture is the card. What a relic card draws over its art is one counter

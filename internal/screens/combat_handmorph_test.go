@@ -46,7 +46,7 @@ func spend(t *testing.T, gs *state.GlobalState, s *CombatScene, key string) {
 // raised together, so a parasite that named two cards puts two on stage at once rather than one
 // after the other.
 func TestARecolouringParasiteMorphsEveryCardItTook(t *testing.T) {
-	gs, s := morphScene(t, combat.PlainCards(combat.Strike, combat.Strike))
+	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
 	spend(t, gs, s, "hexbore")
 
 	if got := len(s.theatre.morphs); got != 2 {
@@ -65,7 +65,7 @@ func TestARecolouringParasiteMorphsEveryCardItTook(t *testing.T) {
 // TestTheMorphsRunTogether. The clocks are what make it one beat rather than a queue of them, so
 // they have to be started on the same frame and be the same length.
 func TestTheMorphsRunTogether(t *testing.T) {
-	gs, s := morphScene(t, combat.PlainCards(combat.Strike, combat.Strike))
+	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
 	spend(t, gs, s, "hexbore")
 
 	first := s.theatre.morphs[0].m.t
@@ -80,7 +80,7 @@ func TestTheMorphsRunTogether(t *testing.T) {
 // to look up — this is the one case the captured rectangle exists for, and a zero rectangle would
 // draw the card in the top-left corner of the screen.
 func TestAnEatenCardMorphsAwayAtTheSeatItHad(t *testing.T) {
-	gs, s := morphScene(t, combat.PlainCards(combat.Strike, combat.Strike))
+	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
 	spend(t, gs, s, "gnaw")
 
 	if len(s.hand) != 0 {
@@ -103,7 +103,7 @@ func TestAnEatenCardMorphsAwayAtTheSeatItHad(t *testing.T) {
 // a card that was changed — see raiseHandMorphs, which reads the difference rather than the
 // parasite.
 func TestACopyMorphsInOutOfNothing(t *testing.T) {
-	gs, s := morphScene(t, combat.PlainCards(combat.Strike))
+	gs, s := morphScene(t, combat.PlainCards(combat.Bash))
 	spend(t, gs, s, "mimic")
 
 	if got := len(s.theatre.morphs); got != 1 {
@@ -119,7 +119,7 @@ func TestACopyMorphsInOutOfNothing(t *testing.T) {
 // face is untouched must not flash — which is what would happen if the raise walked the parasite's
 // targets rather than the difference.
 func TestAParasiteThatChangedNothingRaisesNothing(t *testing.T) {
-	gs, s := morphScene(t, combat.PlainCards(combat.Strike, combat.Strike))
+	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
 	was, seats := s.handFaces(gs)
 	s.raiseHandMorphs(gs, was, seats)
 

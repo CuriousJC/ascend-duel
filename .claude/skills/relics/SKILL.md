@@ -110,15 +110,15 @@ inside the same blow.
 |---|---|---|
 | `Element` | the card's colour | `{ "Element": "ice" }` |
 | `Form` | stab / slash / crush / defend | `{ "Form": "slash" }` |
-| `Concept` | one named card | `{ "Concept": "Strike" }` |
+| `Concept` | one named card | `{ "Concept": "Bash" }` |
 | `Tier` | **the rung of its form's ladder** a card sits on — its *declared* cost, 1/2/3 | `{ "Tier": 3 }` — Atrophy |
 | `Lead` | **the blow's first attack card**, not a fact about the card | `{ "Lead": true }` — Echo. `blow-formed` only; refused elsewhere |
 | `Hand` | **the rung the blow formed**, by its `hands.json` key | `{ "Hand": "concept-full-house" }` — the rung relics. `blow-formed` only, and refused alongside any card predicate |
 | `MinForms` | **how many distinct forms the blow's scoring cards cover** | `{ "Hand": "pair", "MinForms": 2 }` — Dual Wield. `blow-formed` only. Legal beside `Hand`, since both narrow the same set |
 | *(absent)* | always | Banker, Hungry, the stat relics |
 
-**`Tier` reads the declared cost, never the wearer's.** A discount relic makes a Lunge cost 2 to the
-duelist wearing it, and a rule matching `Tier: 3` still has to see a Lunge — otherwise two relics
+**`Tier` reads the declared cost, never the wearer's.** A discount relic makes a Skewer cost 2 to the
+duelist wearing it, and a rule matching `Tier: 3` still has to see a Skewer — otherwise two relics
 worn together would silently switch each other off, and which one won would depend on the order they
 were bought in. Same reading a worm takes.
 
@@ -157,7 +157,7 @@ not ignored.
 | `scale-damage` | `card-damage` | `Amount` percent | 200 is double |
 | `apply-status` | `attack-lands` | `Status` key | puts a status on the target |
 | `set-element` | `card-drawn` | `Element` | the flip: recolours a matching card as it is drawn |
-| `demote-card` | `deck-built` | `Amount` rungs | steps a matching attack **down its own form's ladder** — a 3 AP Lunge is dealt as a 2 AP Thrust. Walks `Neighbour`; a card with no rung below it is left alone |
+| `demote-card` | `deck-built` | `Amount` rungs | steps a matching attack **down its own form's ladder** — a 3 AP Skewer is dealt as a 2 AP Thrust. Walks `Neighbour`; a card with no rung below it is left alone |
 | `add-dmg` | `fight-start` | `Amount` | flat DMG for the fight |
 | `add-hp` | `fight-start` | `Amount` | flat HP for the fight |
 | `scale-hp` | `fight-start` | `Amount` percent | scales max life; **the one scaling verb meant to go below 100** — 75 takes a quarter off. Applied *after* every `add-hp`, and never below 1 life |

@@ -27,7 +27,7 @@ func TestMarksCompose(t *testing.T) {
 // entirely, would both look like nothing being wrong.
 func TestEveryMarkChangesTheFace(t *testing.T) {
 	f := faces(t)
-	base := Spec{Name: "Strike", Form: FormSlash, Cost: 2, Element: Fire, Text: "Slashes for 2x DMG"}
+	base := Spec{Name: "Bash", Form: FormSlash, Cost: 2, Element: Fire, Text: "Slashes for 2x DMG"}
 
 	plain := renderMark(t, base, f)
 	seen := map[string]bool{"plain": true}

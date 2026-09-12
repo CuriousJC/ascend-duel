@@ -296,7 +296,7 @@ func TestTheCornerControlsDoNotOverlap(t *testing.T) {
 func TestTheTabsUnderAnArmedStoneStayInsideThePanel(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
-	run := session.New(combat.PlainCards(combat.Strike))
+	run := session.New(combat.PlainCards(combat.Bash))
 	for _, key := range []string{"agate", "jasper", "onyx"} {
 		if !run.Carry(key) {
 			t.Fatalf("the catalogue has no stone %q", key)

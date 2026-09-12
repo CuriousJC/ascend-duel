@@ -1,7 +1,50 @@
 [
   {
+    "ScenarioRecord": "new-rings-fire-ice-lightning",
+    "Note": "The five dual-status rings drawn on 2026-09-12 that carry a fire, ice or lightning rule, worn at once so the artwork can be read on the pane at the size a player actually sees it - Scald, Wildfire, Hoarfrost, Brittle and Palsy. It is a batch of art rather than an interaction, which is what RelicSlots exists for: the shipped cap is five, so looking at nine new rings used to mean buying one, selling it and buying the next. The art is the question, but the rules are worth watching too, because every one of these applies TWO statuses off one attack: the hand is a fire slash, an ice slash, a lightning crush and two more of the same colours, so a single turn puts BURNED, CHILLED, SHOCKED and WEAKENED on the badge row under the creature's fraction at once. Against a dummy, so the statuses can be stacked and read rather than killed off; 15 AP so the choice is which cards rather than which are affordable.",
+    "Relics": [
+      "scald-ring",
+      "wildfire-ring",
+      "hoarfrost-ring",
+      "brittle-ring",
+      "palsy-ring"
+    ],
+    "Hand": [
+      { "Card": "Cut", "Element": "fire" },
+      { "Card": "Slice", "Element": "ice" },
+      { "Card": "Thump", "Element": "lightning" },
+      { "Card": "Bash", "Element": "fire" },
+      { "Card": "Thrust", "Element": "ice" }
+    ],
+    "Actions": 15,
+    "Dummy": true
+  },
+  {
+    "ScenarioRecord": "new-relics-earth-arcane-and-the-weapons",
+    "Note": "The other seven relics drawn on 2026-09-12: the four dual-status rings on earth and arcane - Caldera, Tremor, Blightfire and Millstone - plus the three records whose art is not a ring at all. The Sundering is an obsidian scimitar and The Bruise an obsidian mace, and they are the reason this fixture exists as well as the art: a relic is the category and a ring is one kind of it, so this is the page where a weapon and a ring are worn in the same row and can be told apart at a glance. Coiled is the third, and it is the one that says nothing until cards are LEFT in hand - it reads crush cards kept, so playing three of these five is a different blow from playing all five. The hand is earth and arcane in slash and crush, so Sundering fires on the slashes, Bruise on the crushes, and all four rings on the colours. RelicSlots is 7, which is under combat.MaxWornRelics and over the shipped cap. Against a dummy, 15 AP.",
+    "RelicSlots": 7,
+    "Relics": [
+      "caldera-ring",
+      "tremor-ring",
+      "blightfire-ring",
+      "millstone-ring",
+      "sundering",
+      "bruise",
+      "coiled-ring"
+    ],
+    "Hand": [
+      { "Card": "Cut", "Element": "earth" },
+      { "Card": "Thump", "Element": "arcane" },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Smash", "Element": "arcane" },
+      { "Card": "Slice", "Element": "earth" }
+    ],
+    "Actions": 15,
+    "Dummy": true
+  },
+  {
     "ScenarioRecord": "new-relic-art",
-    "Note": "The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, Boxer, Brass Knuckles and Attuned. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, Boxer doubles the Jab, Brass Knuckles doubles the Bash, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
+    "Note": "The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, Boxer, Brass Knuckles and Attuned. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, Boxer doubles the Jab, Brass Knuckles doubles the Thump, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
     "RelicSlots": 6,
     "Relics": [
       "bulwark-ring",
@@ -13,17 +56,17 @@
     ],
     "Hand": [
       { "Card": "Jab", "Element": "earth" },
+      { "Card": "Thump", "Element": "earth" },
       { "Card": "Bash", "Element": "earth" },
-      { "Card": "Strike", "Element": "earth" },
       { "Card": "Tap", "Element": "earth" },
-      { "Card": "Ward", "Element": "earth" }
+      { "Card": "Brace", "Element": "earth" }
     ],
     "Actions": 15,
     "Dummy": true
   },
   {
     "ScenarioRecord": "arsenal-on-a-dummy",
-    "Note": "The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the relic fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Ward beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the relic's term sits inside the sum rather than on the end of it, and the figure it moved is written in the relic pink. The relic pane is where the new artwork is.",
+    "Note": "The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the relic fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Brace beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the relic's term sits inside the sum rather than on the end of it, and the figure it moved is written in the relic pink. The relic pane is where the new artwork is.",
     "Relics": [
       "form-four-of-a-kind-hand-ring"
     ],
@@ -104,23 +147,23 @@
         "Copies": 2
       },
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "fire"
       },
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "ice"
       },
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "lightning"
       },
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "earth"
       },
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "arcane"
       },
       {
@@ -162,7 +205,7 @@
         "Element": "earth"
       },
       {
-        "Card": "Ward",
+        "Card": "Brace",
         "Element": "arcane"
       }
     ],
@@ -347,7 +390,7 @@
   },
   {
     "ScenarioRecord": "wildcards",
-    "Note": "A deck the wildcard parasite has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Ward - and the other half is ordinary, in four colours that agree with nothing. Watch two things: the wash over the whole card, which is where an upgrade is said as of 2026-09-09, and the hand line, which names an elemental rung off a set of cards that share no colour at all. Note the form mark stays hueless on a wild card and keeps its element on every other upgrade. A Motley is in the bucket too, for spending on a card that is not wild yet.",
+    "Note": "A deck the wildcard parasite has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Brace - and the other half is ordinary, in four colours that agree with nothing. Watch two things: the wash over the whole card, which is where an upgrade is said as of 2026-09-09, and the hand line, which names an elemental rung off a set of cards that share no colour at all. Note the form mark stays hueless on a wild card and keeps its element on every other upgrade. A Motley is in the bucket too, for spending on a card that is not wild yet.",
     "Relics": [],
     "Deck": [
       {
@@ -367,17 +410,17 @@
         ]
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "earth",
         "Copies": 4
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning",
         "Copies": 4
       },
       {
-        "Card": "Ward",
+        "Card": "Brace",
         "Element": "arcane",
         "Copies": 4,
         "Riders": [
@@ -406,15 +449,15 @@
         ]
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "earth"
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning"
       },
       {
-        "Card": "Ward",
+        "Card": "Brace",
         "Element": "arcane",
         "Riders": [
           "wild-element"
@@ -435,7 +478,7 @@
   },
   {
     "ScenarioRecord": "metals",
-    "Note": "The two gambling upgrades, already on cards, so the roll can be watched rather than bought towards. Four gold Jabs and four silver Cuts, with an ordinary Strike and Bash beside them for comparison; the opening hand holds one of each. Play the metals every turn and read the feed: gold announces +1 DMG or +5 max life on roughly two turns in five and the fighter card's stats move as it does, silver drops 10 into the purse on one in five. What to check is that a grant survives the round - the bonus lands on the run, so the next fight opens with it - and that a losing roll says nothing rather than saying nothing happened. A Golden and a Silver are in the bucket for putting one metal over the other, which is what last-one-wins looks like.",
+    "Note": "The two gambling upgrades, already on cards, so the roll can be watched rather than bought towards. Four gold Jabs and four silver Cuts, with an ordinary Bash and Thump beside them for comparison; the opening hand holds one of each. Play the metals every turn and read the feed: gold announces +1 DMG or +5 max life on roughly two turns in five and the fighter card's stats move as it does, silver drops 10 into the purse on one in five. What to check is that a grant survives the round - the bonus lands on the run, so the next fight opens with it - and that a losing roll says nothing rather than saying nothing happened. A Golden and a Silver are in the bucket for putting one metal over the other, which is what last-one-wins looks like.",
     "Relics": [],
     "Deck": [
       {
@@ -455,12 +498,12 @@
         ]
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning",
         "Copies": 4
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "earth",
         "Copies": 4
       }
@@ -481,11 +524,11 @@
         ]
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning"
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "earth"
       }
     ],
@@ -524,12 +567,12 @@
         ]
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning",
         "Copies": 4
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "earth",
         "Copies": 4
       }
@@ -557,11 +600,11 @@
         ]
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning"
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "earth"
       }
     ],
@@ -592,7 +635,7 @@
         ]
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "earth",
         "Copies": 4,
         "Riders": [
@@ -600,7 +643,7 @@
         ]
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning",
         "Copies": 4,
         "Riders": [
@@ -624,7 +667,7 @@
         ]
       },
       {
-        "Card": "Ward",
+        "Card": "Brace",
         "Element": "ice",
         "Copies": 4,
         "Riders": [
@@ -632,7 +675,7 @@
         ]
       },
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "arcane",
         "Copies": 4,
         "Riders": [
@@ -656,14 +699,14 @@
         ]
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "earth",
         "Riders": [
           "damage-on-play:10"
         ]
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning",
         "Riders": [
           "scale-in-combo:200"
@@ -684,14 +727,14 @@
         ]
       },
       {
-        "Card": "Ward",
+        "Card": "Brace",
         "Element": "ice",
         "Riders": [
           "vitae-in-hand:3"
         ]
       },
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "arcane",
         "Riders": [
           "wild-element"
@@ -731,7 +774,7 @@
     "Note": "The shop with money to spend, two fingers already full, a parasite in the bucket and a wound to heal. Straight to the shelf without playing three duels to reach it, and hurt enough that a Salve is worth buying.",
     "Relics": [
       "heart-ring",
-      "keen-ring"
+      "sickle"
     ],
     "Hand": [],
     "Parasites": [
@@ -750,7 +793,7 @@
     ],
     "Hand": [
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "fire"
       },
       {
@@ -758,7 +801,7 @@
         "Element": "ice"
       },
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "basic"
       },
       {
@@ -766,7 +809,7 @@
         "Element": "fire"
       },
       {
-        "Card": "Ward",
+        "Card": "Brace",
         "Element": "fire"
       }
     ],
@@ -775,7 +818,7 @@
   },
   {
     "ScenarioRecord": "echo-and-growth",
-    "Note": "Does an echoed fire card grow Enflamed three times? Play the Lunge first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
+    "Note": "Does an echoed fire card grow Enflamed three times? Play the Skewer first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
     "Relics": [
       "echo-ring",
       "enflamed-ring",
@@ -783,15 +826,15 @@
     ],
     "Hand": [
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "fire"
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "fire"
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "fire"
       },
       {
@@ -799,7 +842,7 @@
         "Element": "ice"
       },
       {
-        "Card": "Ward",
+        "Card": "Brace",
         "Element": "fire"
       }
     ],
@@ -818,19 +861,19 @@
         "Element": "fire"
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "ice"
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning"
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "earth"
       },
       {
-        "Card": "Bash",
+        "Card": "Thump",
         "Element": "fire"
       }
     ],
@@ -838,14 +881,14 @@
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
-    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Block at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
     "Relics": [
       "atrophy-ring",
       "momentum-ring"
     ],
     "Hand": [
       {
-        "Card": "Lunge",
+        "Card": "Skewer",
         "Element": "fire"
       },
       {
@@ -857,7 +900,7 @@
         "Element": "earth"
       },
       {
-        "Card": "Brace",
+        "Card": "Block",
         "Element": "fire"
       }
     ],
@@ -879,7 +922,7 @@
   },
   {
     "ScenarioRecord": "bucket-of-parasites",
-    "Note": "The board piece: a bucket holding one of each shape a parasite can take, clicked in the consumables pane on the top row - select the cards in the hand first, then click the parasite. It is here because a parasite is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Leech is the rider (a card that heals you as it is played, for the rest of the run), Gnaw eats two cards, Mimic copies one and the copy joins the hand you are holding, Effigy turns one into a Strike, Graft makes the first card you click into the second, and Hoard needs no target at all and so fires with nothing selected.",
+    "Note": "The board piece: a bucket holding one of each shape a parasite can take, clicked in the consumables pane on the top row - select the cards in the hand first, then click the parasite. It is here because a parasite is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Leech is the rider (a card that heals you as it is played, for the rest of the run), Gnaw eats two cards, Mimic copies one and the copy joins the hand you are holding, Effigy turns one into a Bash, Graft makes the first card you click into the second, and Hoard needs no target at all and so fires with nothing selected.",
     "Relics": [],
     "Hand": [],
     "Parasites": [
@@ -917,7 +960,7 @@
   },
   {
     "ScenarioRecord": "element-and-form-borers",
-    "Note": "The eight recolouring and reforming parasites, two cards each. The five bores paint a pair of cards an element; the three grubs change what a pair COUNTS AS on the form axis without changing the cards - so point Maulgrub at two Wards and you have two cards that still shield and now make a crush pair. That is a legal weird thing on the owner's call, not a hole in the checking. Watch the corner mark and the cost ticks for the recolour; watch the hands panel for the reform.",
+    "Note": "The eight recolouring and reforming parasites, two cards each. The five bores paint a pair of cards an element; the three grubs change what a pair COUNTS AS on the form axis without changing the cards - so point Maulgrub at two Braces and you have two cards that still shield and now make a crush pair. That is a legal weird thing on the owner's call, not a hole in the checking. Watch the corner mark and the cost ticks for the recolour; watch the hands panel for the reform.",
     "Relics": [],
     "Hand": [],
     "Parasites": [
@@ -989,7 +1032,7 @@
         "Element": "earth"
       },
       {
-        "Card": "Ward",
+        "Card": "Brace",
         "Element": "arcane"
       }
     ],
@@ -1051,7 +1094,7 @@
         ]
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning",
         "Copies": 4
       }
@@ -1093,7 +1136,7 @@
         ]
       },
       {
-        "Card": "Strike",
+        "Card": "Bash",
         "Element": "lightning"
       }
     ],

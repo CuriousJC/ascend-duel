@@ -3,6 +3,7 @@
     "RelicRecord": "fire-ring",
     "Name": "Fire Ring",
     "Art": "fire-ring",
+    "Draw": "",
     "Text": "Fire cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -17,6 +18,7 @@
     "RelicRecord": "burning-ring",
     "Name": "Burning Ring",
     "Art": "burning-ring",
+    "Draw": "",
     "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -31,6 +33,7 @@
     "RelicRecord": "ice-ring",
     "Name": "Ice Ring",
     "Art": "ice-ring",
+    "Draw": "",
     "Text": "Ice cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -45,6 +48,7 @@
     "RelicRecord": "chilling-ring",
     "Name": "Chilling Ring",
     "Art": "chilling-ring",
+    "Draw": "",
     "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -59,6 +63,7 @@
     "RelicRecord": "lightning-ring",
     "Name": "Lightning Ring",
     "Art": "lightning-ring",
+    "Draw": "",
     "Text": "Lightning cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -73,6 +78,7 @@
     "RelicRecord": "shocking-ring",
     "Name": "Shocking Ring",
     "Art": "shocking-ring",
+    "Draw": "",
     "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
     "Rarity": "uncommon",
     "Rules": [
@@ -87,6 +93,7 @@
     "RelicRecord": "earth-ring",
     "Name": "Earth Ring",
     "Art": "earth-ring",
+    "Draw": "",
     "Text": "Earth cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -101,6 +108,7 @@
     "RelicRecord": "weighted-ring",
     "Name": "Weighted Ring",
     "Art": "weighted-ring",
+    "Draw": "",
     "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -115,6 +123,7 @@
     "RelicRecord": "arcane-ring",
     "Name": "Arcane Ring",
     "Art": "arcane-ring",
+    "Draw": "",
     "Text": "Arcane cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -129,6 +138,7 @@
     "RelicRecord": "weakening-ring",
     "Name": "Weakening Ring",
     "Art": "weakening-ring",
+    "Draw": "",
     "Text": "Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
     "Rarity": "uncommon",
     "Rules": [
@@ -143,6 +153,7 @@
     "RelicRecord": "storm-ring",
     "Name": "Storm Ring",
     "Art": "storm-ring",
+    "Draw": "",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
     "Rarity": "rare",
     "Rules": [
@@ -160,6 +171,7 @@
     "RelicRecord": "scald-ring",
     "Name": "Scald Ring",
     "Art": "scald-ring",
+    "Draw": "a ring with a red gem surrounded by steam.  it should have two yellow gems along the side with some yellow bleeding into the copper band",
     "Text": "Fire attacks BURN and CHILL the target.",
     "Rarity": "rare",
     "Rules": [
@@ -177,6 +189,7 @@
     "RelicRecord": "wildfire-ring",
     "Name": "Wildfire Ring",
     "Art": "wildfire-ring",
+    "Draw": "a ring with a red gem surrounded by yellow, the flames should be licking up the sides of the ring.  it should have two yellow gems along the side with some yellow bleeding into the copper band",
     "Text": "Fire attacks BURN and SHOCK the target.",
     "Rarity": "rare",
     "Rules": [
@@ -193,7 +206,8 @@
   {
     "RelicRecord": "hoarfrost-ring",
     "Name": "Hoarfrost Ring",
-    "Art": "",
+    "Art": "hoarfrost-ring",
+    "Draw": "a ring with a blue gem surrounded by frosty ice shards, the frost should be dripping down the sides of the ring.  it should have two green gems along the side with some green bleeding into the copper band",
     "Text": "Ice attacks CHILL and WEIGH the target.",
     "Rarity": "rare",
     "Rules": [
@@ -210,7 +224,8 @@
   {
     "RelicRecord": "brittle-ring",
     "Name": "Brittle Ring",
-    "Art": "",
+    "Art": "brittle-ring",
+    "Draw": "a ring with a blue gem that has a crack running through it, the crack should be glowing with a faint blue light.  there should be 2 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band ",
     "Text": "Ice attacks CHILL and WEAKEN the target.",
     "Rarity": "rare",
     "Rules": [
@@ -227,7 +242,8 @@
   {
     "RelicRecord": "palsy-ring",
     "Name": "Palsy Ring",
-    "Art": "",
+    "Art": "palsy-ring",
+    "Draw": "a ring with a yellow gem sparking with electricity and with 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band",
     "Text": "Lightning attacks SHOCK and WEAKEN the target.",
     "Rarity": "rare",
     "Rules": [
@@ -244,7 +260,8 @@
   {
     "RelicRecord": "caldera-ring",
     "Name": "Caldera Ring",
-    "Art": "",
+    "Art": "caldera-ring",
+    "Draw": "a ring with a green gem surrounded by molten rock, the rock should be glowing with a faint green light.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band",
     "Text": "Earth attacks WEIGH and BURN the target.",
     "Rarity": "rare",
     "Rules": [
@@ -261,7 +278,8 @@
   {
     "RelicRecord": "tremor-ring",
     "Name": "Tremor Ring",
-    "Art": "",
+    "Art": "tremor-ring",
+    "Draw": "a ring with a green gem surrounded by lightning, the lightning should be sparking up the sides of the ring.  there should be 2 smaller yellow gems beside it, the yellow gems should have some yellow bleeding into the copper band",
     "Text": "Earth attacks WEIGH and SHOCK the target.",
     "Rarity": "rare",
     "Rules": [
@@ -278,7 +296,8 @@
   {
     "RelicRecord": "blightfire-ring",
     "Name": "Blightfire Ring",
-    "Art": "",
+    "Art": "blightfire-ring",
+    "Draw": "a ring with a purple gem surrounded by flames, the flames should be licking up the sides of the ring.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band",
     "Text": "Arcane attacks WEAKEN and BURN the target.",
     "Rarity": "rare",
     "Rules": [
@@ -295,7 +314,8 @@
   {
     "RelicRecord": "millstone-ring",
     "Name": "Millstone Ring",
-    "Art": "",
+    "Art": "millstone-ring",
+    "Draw": "a ring with a purple gem surrounded by rock, the rock should be glowing with a faint purple light.  there should be 2 smaller green gems beside it, the green gems should have some green bleeding into the copper band",
     "Text": "Arcane attacks WEAKEN and WEIGH the target.",
     "Rarity": "rare",
     "Rules": [
@@ -310,9 +330,10 @@
     ]
   },
   {
-    "RelicRecord": "sundering-ring",
-    "Name": "Sundering Ring",
-    "Art": "",
+    "RelicRecord": "sundering",
+    "Name": "The Sundering",
+    "Art": "sundering",
+    "Draw": "an obsidion scimitar with a purple glowing gem in the hilt angled to the right",
     "Text": "Slash attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
     "Rarity": "uncommon",
     "Rules": [
@@ -324,9 +345,10 @@
     ]
   },
   {
-    "RelicRecord": "bruising-ring",
-    "Name": "Bruising Ring",
-    "Art": "",
+    "RelicRecord": "bruise",
+    "Name": "The Bruise",
+    "Art": "bruise",
+    "Draw": "an obsidian mace topped with a green glowing blunt rock",
     "Text": "Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -338,9 +360,10 @@
     ]
   },
   {
-    "RelicRecord": "pinning-ring",
-    "Name": "Pinning Ring",
-    "Art": "",
+    "RelicRecord": "strike",
+    "Name": "The Strike",
+    "Art": "strike",
+    "Draw": "a spear made of yellow glass with lightning crackling along the shaft",
     "Text": "Stab attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
     "Rarity": "uncommon",
     "Rules": [
@@ -352,9 +375,10 @@
     ]
   },
   {
-    "RelicRecord": "keen-ring",
-    "Name": "Keen Ring",
-    "Art": "keen-ring",
+    "RelicRecord": "sickle",
+    "Name": "The Sickle",
+    "Art": "sickle",
+    "Draw": "a sickle with a leather hilt",
     "Text": "Every slash card deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -366,9 +390,10 @@
     ]
   },
   {
-    "RelicRecord": "heavy-ring",
-    "Name": "Heavy Ring",
-    "Art": "",
+    "RelicRecord": "club",
+    "Name": "The Club",
+    "Art": "club",
+    "Draw": "a heavy club with a leather strap",
     "Text": "Every crush card deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -380,9 +405,10 @@
     ]
   },
   {
-    "RelicRecord": "needle-ring",
-    "Name": "Needle Ring",
-    "Art": "needle-ring",
+    "RelicRecord": "needle",
+    "Name": "The Needle",
+    "Art": "needle",
+    "Draw": "fencing foil with a sharp tip and a leather hilt",
     "Text": "Every stab card deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -397,12 +423,13 @@
     "RelicRecord": "striker-ring",
     "Name": "Striker Ring",
     "Art": "",
-    "Text": "Every Strike deals double DMG.",
+    "Draw": "",
+    "Text": "Every Bash deals double DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
-        "If": { "Concept": "Strike" },
+        "If": { "Concept": "Bash" },
         "Then": [{ "Do": "scale-damage", "Amount": 200 }]
       }
     ]
@@ -411,6 +438,7 @@
     "RelicRecord": "prodder-ring",
     "Name": "Prodder Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Poke deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -425,6 +453,7 @@
     "RelicRecord": "boxer-ring",
     "Name": "Boxer Ring",
     "Art": "boxer-ring",
+    "Draw": "",
     "Text": "Every Jab deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -439,6 +468,7 @@
     "RelicRecord": "lancer-ring",
     "Name": "Lancer Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Thrust deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -453,12 +483,13 @@
     "RelicRecord": "fencer-ring",
     "Name": "Fencer Ring",
     "Art": "",
-    "Text": "Every Lunge deals double DMG.",
+    "Draw": "",
+    "Text": "Every Skewer deals double DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
-        "If": { "Concept": "Lunge" },
+        "If": { "Concept": "Skewer" },
         "Then": [{ "Do": "scale-damage", "Amount": 200 }]
       }
     ]
@@ -467,6 +498,7 @@
     "RelicRecord": "impaler-ring",
     "Name": "Impaler Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Impale deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -481,6 +513,7 @@
     "RelicRecord": "skirmisher-ring",
     "Name": "Skirmisher Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Nick deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -495,6 +528,7 @@
     "RelicRecord": "cutter-ring",
     "Name": "Cutter Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Cut deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -509,6 +543,7 @@
     "RelicRecord": "slicer-ring",
     "Name": "Slicer Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Slice card\ndeals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -523,6 +558,7 @@
     "RelicRecord": "cleaver-ring",
     "Name": "Cleaver Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Cleave deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -537,6 +573,7 @@
     "RelicRecord": "headsman-ring",
     "Name": "Headsman Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Sever deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -551,6 +588,7 @@
     "RelicRecord": "knocker-ring",
     "Name": "Knocker Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Tap deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -565,12 +603,13 @@
     "RelicRecord": "brass-knuckles-ring",
     "Name": "Brass Knuckles Ring",
     "Art": "brass-knuckles-ring",
-    "Text": "Every Bash deals double DMG.",
+    "Draw": "",
+    "Text": "Every Thump deals double DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
-        "If": { "Concept": "Bash" },
+        "If": { "Concept": "Thump" },
         "Then": [{ "Do": "scale-damage", "Amount": 200 }]
       }
     ]
@@ -579,6 +618,7 @@
     "RelicRecord": "smasher-ring",
     "Name": "Smasher Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Smash deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -593,6 +633,7 @@
     "RelicRecord": "grinder-ring",
     "Name": "Grinder Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Pulverize deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -607,6 +648,7 @@
     "RelicRecord": "flurry-ring",
     "Name": "Flurry Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every stab card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -621,6 +663,7 @@
     "RelicRecord": "rend-ring",
     "Name": "Rend Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every slash card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -635,6 +678,7 @@
     "RelicRecord": "aftershock-ring",
     "Name": "Aftershock Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every crush card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -649,6 +693,7 @@
     "RelicRecord": "backdraft-ring",
     "Name": "Backdraft Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every fire card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -663,6 +708,7 @@
     "RelicRecord": "shatter-ring",
     "Name": "Shatter Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every ice card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -677,6 +723,7 @@
     "RelicRecord": "forked-ring",
     "Name": "Forked Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every lightning card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -691,6 +738,7 @@
     "RelicRecord": "landslide-ring",
     "Name": "Landslide Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every earth card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -705,6 +753,7 @@
     "RelicRecord": "recursion-ring",
     "Name": "Recursion Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every arcane card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -719,6 +768,7 @@
     "RelicRecord": "smoulder-ring",
     "Name": "Smoulder Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Deals 5 more DMG for each fire card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -733,6 +783,7 @@
     "RelicRecord": "frostbank-ring",
     "Name": "Frostbank Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Deals 5 more DMG for each ice card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -747,6 +798,7 @@
     "RelicRecord": "potential-ring",
     "Name": "Potential Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Deals 5 more DMG for each lightning card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -761,6 +813,7 @@
     "RelicRecord": "bedrock-ring",
     "Name": "Bedrock Ring",
     "Art": "bedrock-ring",
+    "Draw": "",
     "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -775,6 +828,7 @@
     "RelicRecord": "wellspring-ring",
     "Name": "Wellspring Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Deals 5 more DMG for each arcane card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -789,6 +843,7 @@
     "RelicRecord": "poised-ring",
     "Name": "Poised Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Deals 5 more DMG for each stab card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -803,6 +858,7 @@
     "RelicRecord": "sheathed-ring",
     "Name": "Sheathed Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Deals 5 more DMG for each slash card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -816,7 +872,8 @@
   {
     "RelicRecord": "coiled-ring",
     "Name": "Coiled Ring",
-    "Art": "",
+    "Art": "coiled-ring",
+    "Draw": "tightly braided jade metal relic",
     "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -831,6 +888,7 @@
     "RelicRecord": "ebb-and-flow-ring",
     "Name": "Ebb & Flow Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every card gains 0.2x DMG\nfor each shield card\nyou play. Grows while worn.",
     "Rarity": "rare",
     "Rules": [
@@ -849,6 +907,7 @@
     "RelicRecord": "momentum-ring",
     "Name": "Momentum Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.",
     "Rarity": "common",
     "Rules": [
@@ -871,6 +930,7 @@
     "RelicRecord": "enflamed-ring",
     "Name": "Enflamed Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -890,6 +950,7 @@
     "RelicRecord": "frostbitten-ring",
     "Name": "Frostbitten Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Ice cards gain 0.1x DMG every time a ice attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -909,6 +970,7 @@
     "RelicRecord": "lithium-ring",
     "Name": "Lithium Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Lightning cards gain 0.1x DMG every time a lightning attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -928,6 +990,7 @@
     "RelicRecord": "granite-ring",
     "Name": "Granite Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Earth cards gain 0.1x DMG every time a earth attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -947,6 +1010,7 @@
     "RelicRecord": "unravelled-ring",
     "Name": "Unravelled Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -966,6 +1030,7 @@
     "RelicRecord": "sharpening-ring",
     "Name": "Sharpening Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -985,6 +1050,7 @@
     "RelicRecord": "pounding-ring",
     "Name": "Pounding Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Crush cards gain 0.1x DMG every time a crush attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1004,6 +1070,7 @@
     "RelicRecord": "quickening-ring",
     "Name": "Quickening Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Stab cards gain 0.1x DMG every time a stab attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1023,6 +1090,7 @@
     "RelicRecord": "echo-ring",
     "Name": "Echo Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Your first attack lands 3 times: full DMG, then 2/3, then 1/3.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1037,6 +1105,7 @@
     "RelicRecord": "atrophy-ring",
     "Name": "Atrophy Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every 3 AP attack is dealt as its 2 AP version.",
     "Rarity": "rare",
     "Rules": [
@@ -1051,6 +1120,7 @@
     "RelicRecord": "erode-ring",
     "Name": "Erode Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every 2 AP card is dealt as its 1 AP version.",
     "Rarity": "rare",
     "Rules": [
@@ -1065,6 +1135,7 @@
     "RelicRecord": "whittle-ring",
     "Name": "Whittle Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every 1 AP attack is dealt as its 0 AP version.",
     "Rarity": "rare",
     "Rules": [
@@ -1079,6 +1150,7 @@
     "RelicRecord": "swarm-ring",
     "Name": "Swarm Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every 1 AP card deals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1093,6 +1165,7 @@
     "RelicRecord": "crown-ring",
     "Name": "Crown Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every 3 AP card deals 2.5x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1107,6 +1180,7 @@
     "RelicRecord": "high-card-hand-ring",
     "Name": "Lone Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A High Card deals 2 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1121,6 +1195,7 @@
     "RelicRecord": "pair-hand-ring",
     "Name": "Twinned Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Pair deals 2 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1135,6 +1210,7 @@
     "RelicRecord": "concept-two-pair-hand-ring",
     "Name": "Doubled Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Card Two Pair deals 4 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1149,6 +1225,7 @@
     "RelicRecord": "concept-three-of-a-kind-hand-ring",
     "Name": "Trined Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Card Three of a Kind deals 5 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1163,6 +1240,7 @@
     "RelicRecord": "concept-full-house-hand-ring",
     "Name": "Laden Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Card Full House deals 8 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1177,6 +1255,7 @@
     "RelicRecord": "concept-four-of-a-kind-hand-ring",
     "Name": "Quartered Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Card Four of a Kind deals 10 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1191,6 +1270,7 @@
     "RelicRecord": "concept-five-of-a-kind-hand-ring",
     "Name": "Perfect Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Card Five of a Kind deals 16 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1205,6 +1285,7 @@
     "RelicRecord": "form-two-pair-hand-ring",
     "Name": "Paired Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Form Two Pair deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1219,6 +1300,7 @@
     "RelicRecord": "form-three-of-a-kind-hand-ring",
     "Name": "Forged Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Form Three of a Kind deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1233,6 +1315,7 @@
     "RelicRecord": "form-full-house-hand-ring",
     "Name": "Armoury Ring",
     "Art": "form-full-house-hand-ring",
+    "Draw": "",
     "Text": "A Form Full House deals 6 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1247,6 +1330,7 @@
     "RelicRecord": "form-four-of-a-kind-hand-ring",
     "Name": "Arsenal Ring",
     "Art": "form-four-of-a-kind-hand-ring",
+    "Draw": "",
     "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1261,6 +1345,7 @@
     "RelicRecord": "form-five-of-a-kind-hand-ring",
     "Name": "Panoply Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Form Five of a Kind deals 12 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1275,6 +1360,7 @@
     "RelicRecord": "element-two-pair-hand-ring",
     "Name": "Twinflame Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Elemental Two Pair deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1289,6 +1375,7 @@
     "RelicRecord": "element-three-of-a-kind-hand-ring",
     "Name": "Attuned Ring",
     "Art": "element-three-of-a-kind-hand-ring",
+    "Draw": "",
     "Text": "A Elemental Three of a Kind deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1303,6 +1390,7 @@
     "RelicRecord": "element-full-house-hand-ring",
     "Name": "Convergent Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Elemental Full House deals 7 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1317,6 +1405,7 @@
     "RelicRecord": "element-four-of-a-kind-hand-ring",
     "Name": "Confluent Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Elemental Four of a Kind deals 7 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1331,6 +1420,7 @@
     "RelicRecord": "element-five-of-a-kind-hand-ring",
     "Name": "Elemental Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A Elemental Five of a Kind deals 14 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1345,6 +1435,7 @@
     "RelicRecord": "onslaught-ring",
     "Name": "Onslaught Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every card costs 1 AP less. Lose 25% of your HP.",
     "Rarity": "rare",
     "Rules": [
@@ -1362,6 +1453,7 @@
     "RelicRecord": "warm-ring",
     "Name": "Warm Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Fire cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1376,6 +1468,7 @@
     "RelicRecord": "cold-ring",
     "Name": "Cold Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Ice cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1390,6 +1483,7 @@
     "RelicRecord": "static-ring",
     "Name": "Static Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Lightning cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1404,6 +1498,7 @@
     "RelicRecord": "dirty-ring",
     "Name": "Dirty Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Earth cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1418,6 +1513,7 @@
     "RelicRecord": "eerie-ring",
     "Name": "Eerie Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Arcane cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1432,6 +1528,7 @@
     "RelicRecord": "whetted-ring",
     "Name": "Whetted Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Slash cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1446,6 +1543,7 @@
     "RelicRecord": "hefted-ring",
     "Name": "Hefted Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Crush cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1460,6 +1558,7 @@
     "RelicRecord": "tapered-ring",
     "Name": "Tapered Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Stab cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1474,6 +1573,7 @@
     "RelicRecord": "braced-ring",
     "Name": "Braced Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Defend cards cost 1 AP less. +15 HP for every fight.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1492,6 +1592,7 @@
     "RelicRecord": "frozen-lightning-ring",
     "Name": "Frozen Lightning Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every lightning card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1506,6 +1607,7 @@
     "RelicRecord": "permafrost-ring",
     "Name": "Permafrost Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every earth card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1520,6 +1622,7 @@
     "RelicRecord": "frostbite-ring",
     "Name": "Frostbite Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every fire card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1534,6 +1637,7 @@
     "RelicRecord": "meltdown-ring",
     "Name": "Meltdown Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every ice card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1548,6 +1652,7 @@
     "RelicRecord": "firestorm-ring",
     "Name": "Firestorm Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every lightning card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1562,6 +1667,7 @@
     "RelicRecord": "magma-ring",
     "Name": "Magma Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every earth card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1576,6 +1682,7 @@
     "RelicRecord": "thundersnow-ring",
     "Name": "Thundersnow Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every ice card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1590,6 +1697,7 @@
     "RelicRecord": "heat-lightning-ring",
     "Name": "Heat Lightning Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every fire card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1604,6 +1712,7 @@
     "RelicRecord": "dust-storm-ring",
     "Name": "Dust Storm Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every earth card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1618,6 +1727,7 @@
     "RelicRecord": "glacier-ring",
     "Name": "Glacier Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every ice card is dealt as an earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1632,6 +1742,7 @@
     "RelicRecord": "obsidian-ring",
     "Name": "Obsidian Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every fire card is dealt as an earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1646,6 +1757,7 @@
     "RelicRecord": "fulgurite-ring",
     "Name": "Fulgurite Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every lightning card is dealt as an earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1660,6 +1772,7 @@
     "RelicRecord": "witchfire-ring",
     "Name": "Witchfire Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every fire card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1674,6 +1787,7 @@
     "RelicRecord": "runefrost-ring",
     "Name": "Runefrost Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every ice card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1688,6 +1802,7 @@
     "RelicRecord": "spellbolt-ring",
     "Name": "Spellbolt Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every lightning card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1702,6 +1817,7 @@
     "RelicRecord": "leyline-ring",
     "Name": "Leyline Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every earth card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1716,6 +1832,7 @@
     "RelicRecord": "hexfire-ring",
     "Name": "Hexfire Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every arcane card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1730,6 +1847,7 @@
     "RelicRecord": "hexfrost-ring",
     "Name": "Hexfrost Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every arcane card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1744,6 +1862,7 @@
     "RelicRecord": "hexbolt-ring",
     "Name": "Hexbolt Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every arcane card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1758,6 +1877,7 @@
     "RelicRecord": "hexstone-ring",
     "Name": "Hexstone Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every arcane card is dealt as a earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1772,6 +1892,7 @@
     "RelicRecord": "might-ring",
     "Name": "Might Ring",
     "Art": "",
+    "Draw": "",
     "Text": "+10 DMG for every fight.",
     "Rarity": "common",
     "Rules": [
@@ -1785,6 +1906,7 @@
     "RelicRecord": "bulwark-ring",
     "Name": "Bulwark Ring",
     "Art": "bulwark-ring",
+    "Draw": "",
     "Text": "+25 HP for every fight.",
     "Rarity": "common",
     "Rules": [
@@ -1798,6 +1920,7 @@
     "RelicRecord": "heart-ring",
     "Name": "Heart Ring",
     "Art": "",
+    "Draw": "",
     "Text": "+5 HP, and 5 more for every fight won.",
     "Rarity": "common",
     "Rules": [
@@ -1815,6 +1938,7 @@
     "RelicRecord": "rampant-ring",
     "Name": "Rampant Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every blow deals 1 more DMG\nfor each vitae you hold.",
     "Rarity": "rare",
     "Rules": [
@@ -1828,6 +1952,7 @@
     "RelicRecord": "weight-of-the-earth-ring",
     "Name": "Weight of the Earth Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every earth crush card\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1842,6 +1967,7 @@
     "RelicRecord": "struck-by-lightning-ring",
     "Name": "Struck by Lightning Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every lightning stab card\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1856,6 +1982,7 @@
     "RelicRecord": "sharp-as-ice-ring",
     "Name": "Sharp as Ice Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every ice slash card\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1870,6 +1997,7 @@
     "RelicRecord": "fire-of-life-ring",
     "Name": "Fire of Life Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Fire cards gain 0.1x DMG\nfor every 10 vitae you hold.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1884,6 +2012,7 @@
     "RelicRecord": "dual-wield-ring",
     "Name": "Dual Wield Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A pair built from two\ndifferent forms deals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1898,6 +2027,7 @@
     "RelicRecord": "pairing-ring",
     "Name": "Pairing Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every pair deals 2x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1912,6 +2042,7 @@
     "RelicRecord": "triplicate-form-ring",
     "Name": "Triplicate Form Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Three of a Kind\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1936,6 +2067,7 @@
     "RelicRecord": "house-of-pain-ring",
     "Name": "House of Pain Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Full House\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1960,6 +2092,7 @@
     "RelicRecord": "oak-ring",
     "Name": "Oak Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Four of a Kind\ndeals 4x DMG.",
     "Rarity": "rare",
     "Rules": [
@@ -1984,6 +2117,7 @@
     "RelicRecord": "pentacle-ring",
     "Name": "Pentacle Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Every Five of a Kind\ndeals 5x DMG.",
     "Rarity": "rare",
     "Rules": [
@@ -2008,6 +2142,7 @@
     "RelicRecord": "banker-ring",
     "Name": "Banker Ring",
     "Art": "banker-ring",
+    "Draw": "",
     "Text": "Vitae propagates twice as fast.",
     "Rarity": "common",
     "Rules": [
@@ -2021,6 +2156,7 @@
     "RelicRecord": "soul-taker-ring",
     "Name": "Soul Taker Ring",
     "Art": "",
+    "Draw": "",
     "Text": "A won room pays 5 more vitae.",
     "Rarity": "common",
     "Rules": [
@@ -2034,6 +2170,7 @@
     "RelicRecord": "hungry-ring",
     "Name": "Hungry Ring",
     "Art": "",
+    "Draw": "",
     "Text": "Two prizes after a fight instead of one.",
     "Rarity": "common",
     "Rules": [

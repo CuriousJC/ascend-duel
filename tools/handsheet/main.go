@@ -237,7 +237,7 @@ func verdict(r row, budget int) string {
 }
 
 // sharedValues names what the example's groups actually agree on, in the axis's own words —
-// "three Strikes and two Cuts", "four fire". It is the caption that makes a row of five cards
+// "three Bashes and two Cuts", "four fire". It is the caption that makes a row of five cards
 // legible as a *hand* rather than as five cards.
 func sharedValues(example []combat.Card, a combat.Axis) []string {
 	type run struct {
@@ -281,7 +281,7 @@ func groupText(groups []int) string {
 }
 
 // cardOnce renders a card the first time it is wanted and reuses the file afterwards. The ladder
-// asks for the same Strike in a dozen rows; eighteen rows of five cards is ninety renders of about
+// asks for the same Bash in a dozen rows; eighteen rows of five cards is ninety renders of about
 // twenty distinct pictures.
 func cardOnce(dir string, f *cards.Faces, drawn map[string]cell, c combat.Card) (cell, error) {
 	name := strings.ToLower(c.Label() + "-" + c.Element.String())

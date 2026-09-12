@@ -9,10 +9,10 @@ import (
 
 func testDeck() []combat.Card {
 	return []combat.Card{
-		{Concept: combat.Strike, Element: combat.Fire},
-		{Concept: combat.Strike, Element: combat.Ice},
+		{Concept: combat.Bash, Element: combat.Fire},
+		{Concept: combat.Bash, Element: combat.Ice},
 		{Concept: combat.Smash, Element: combat.Earth},
-		{Concept: combat.Ward, Element: combat.Basic},
+		{Concept: combat.Brace, Element: combat.Basic},
 	}
 }
 
@@ -42,7 +42,7 @@ func TestDeckHandsBackACopy(t *testing.T) {
 	got := run.Deck()
 	got[0] = combat.Card{Concept: combat.Cleave, Element: combat.Earth}
 
-	if again := run.Deck(); again[0].Concept != combat.Strike {
+	if again := run.Deck(); again[0].Concept != combat.Bash {
 		t.Errorf("editing the returned slice changed the run's deck: %v", again[0])
 	}
 }
@@ -61,8 +61,8 @@ func TestRemoveThins(t *testing.T) {
 
 	deck := run.Deck()
 	for _, c := range deck {
-		if c.Concept == combat.Strike && c.Element == combat.Ice {
-			t.Error("Remove took some other card: the ice Strike is still here")
+		if c.Concept == combat.Bash && c.Element == combat.Ice {
+			t.Error("Remove took some other card: the ice Bash is still here")
 		}
 	}
 }
@@ -257,8 +257,8 @@ func TestTheNumericTargetsApply(t *testing.T) {
 	})
 
 	t.Run("amount compounds", func(t *testing.T) {
-		run := New([]combat.Card{{Concept: combat.Ward}})
-		base := combat.ConceptOf(combat.Ward).Amount
+		run := New([]combat.Card{{Concept: combat.Brace}})
+		base := combat.ConceptOf(combat.Brace).Amount
 
 		run.Apply(Worm{Target: TargetAmount, Number: 150}, 0)
 		once, _ := run.Card(0)
@@ -311,7 +311,7 @@ func TestTheLadderWormsMoveOneRung(t *testing.T) {
 // TestCanApplyRefusesAWormThatWouldDoNothing. A reward that lands and changes nothing is a reward
 // taken away, so the screen asks before it offers a card.
 func TestCanApplyRefusesAWormThatWouldDoNothing(t *testing.T) {
-	run := New([]combat.Card{{Concept: combat.Strike, Element: combat.Fire}})
+	run := New([]combat.Card{{Concept: combat.Bash, Element: combat.Fire}})
 
 	if run.CanApply(Worm{Target: TargetElement, Element: combat.Fire}, 0) {
 		t.Error("recolouring a fire card to fire was offered")

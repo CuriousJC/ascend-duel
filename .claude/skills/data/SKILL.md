@@ -173,7 +173,7 @@ trust the floors.
 ### Relics
 
 **A relic is what makes its element do anything** *(2026-08-16)*: an attack applies a status only
-if its owner wears that element's relic, so a bare fire Strike is a plain Strike with a red
+if its owner wears that element's relic, so a bare fire Bash is a plain Bash with a red
 border. `Element` is the field that carries it — parsed in `internal/screens` with
 `combat.ParseElement`, because `internal/combat` may not read this file. A name the rules do not
 have is logged rather than dropped.

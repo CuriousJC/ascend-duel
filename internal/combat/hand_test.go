@@ -87,10 +87,10 @@ func TestATurnDealsDamageExactlyOnce(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	for _, turn := range [][]Card{
-		PlainCards(Strike),
-		PlainCards(Strike, Jab),
-		PlainCards(Strike, Strike),
-		PlainCards(Strike, Strike, Strike),
+		PlainCards(Bash),
+		PlainCards(Bash, Jab),
+		PlainCards(Bash, Bash),
+		PlainCards(Bash, Bash, Bash),
 		PlainCards(Jab, Jab, Jab, Jab, Jab),
 	} {
 		events, _, _ := resolve(a, b, turn, nil, 1)
@@ -105,20 +105,20 @@ func TestATurnDealsDamageExactlyOnce(t *testing.T) {
 func TestEveryAttackCardIsAnnouncedEvenOutsideTheHand(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Bash, Jab, Bash), nil, 1)
 
 	if took := sideActions(events, SideA); len(took) != 3 {
 		t.Fatalf("three cards were played and %d were announced: %v", len(took), took)
 	}
 }
 
-// **A card that builds to no hand contributes nothing to the blow.** `Strike, Jab, Strike` is a
-// Strike Pair and the Jab is not in it.
+// **A card that builds to no hand contributes nothing to the blow.** `Bash, Jab, Bash` is a
+// Bash Pair and the Jab is not in it.
 func TestACardOutsideTheHandAddsNothing(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	withJab, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike), nil, 1)
-	without, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
+	withJab, _, _ := resolve(a, b, PlainCards(Bash, Jab, Bash), nil, 1)
+	without, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
 
 	if got, want := damageDealtBy(withJab, SideA), damageDealtBy(without, SideA); got != want {
 		t.Errorf("the Jab added %d damage; it is in no hand and should add nothing", got-want)
@@ -129,13 +129,13 @@ func TestACardOutsideTheHandAddsNothing(t *testing.T) {
 		t.Fatal("no attack phase event")
 	}
 	if got := handCards(e); len(got) != 2 {
-		t.Errorf("the pair says it was formed from %v, want the two Strikes only", got)
+		t.Errorf("the pair says it was formed from %v, want the two Bashes only", got)
 	}
 }
 
 // --- the damage formula -------------------------------------------------------------------
 
-// **damage = the hand's own cards, times the multiplier** *(2026-08-18)*. Two Strikes at DMG 10
+// **damage = the hand's own cards, times the multiplier** *(2026-08-18)*. Two Bashes at DMG 10
 // are 20 of cards, and a 1.5x pair takes that to 30. There is no third term: the multiplier used
 // to be applied to a separate swing of one 1x attack at the attacker's DMG and added on top, which
 // made a hand's percent worth a fixed figure rather than a proportion of the cards that formed it.
@@ -147,11 +147,11 @@ func TestDamageIsTheHandsCardsTimesTheMultiplier(t *testing.T) {
 		t.Fatal("the catalogue has no pair")
 	}
 
-	events, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
 
-	want := Plain(Strike).Damage(10) * 2 * pair.Multiplier / multiplierScale
+	want := Plain(Bash).Damage(10) * 2 * pair.Multiplier / multiplierScale
 	if got := damageDealtBy(events, SideA); got != want {
-		t.Errorf("a plain Strike Pair dealt %d, want %d", got, want)
+		t.Errorf("a plain Bash Pair dealt %d, want %d", got, want)
 	}
 }
 
@@ -162,12 +162,12 @@ func TestTheSameHandPaysMoreOnBiggerCards(t *testing.T) {
 	a, b := duelist(10, 6, 5000), duelist(10, 6, 5000)
 
 	jabs, _, _ := resolve(a, b, PlainCards(Jab, Jab), nil, 1)
-	lunges, _, _ := resolve(a, b, PlainCards(Lunge, Lunge), nil, 1)
+	lunges, _, _ := resolve(a, b, PlainCards(Skewer, Skewer), nil, 1)
 
 	jabPair, lungePair := damageDealtBy(jabs, SideA), damageDealtBy(lunges, SideA)
 
 	// **The multiple is read off the cards, not written down here** *(2026-09-01)*. It was a
-	// literal 4 while Jab dealt half DMG and Lunge double; the day the 3 AP cards went to triple
+	// literal 4 while Jab dealt half DMG and Skewer double; the day the 3 AP cards went to triple
 	// it failed, having pinned a tuning decision inside a test about proportionality. What this
 	// is here to catch is a term added *outside* the multiplier, which shows up as the pairs
 	// being a different multiple apart than the cards are — whatever that multiple currently is.
@@ -177,10 +177,10 @@ func TestTheSameHandPaysMoreOnBiggerCards(t *testing.T) {
 	// pair — and scaling that up multiplies the loss with it. A gap wider than the truncation is
 	// the term this test exists to find.
 	const dmg = 10
-	mult := Plain(Lunge).Damage(dmg) / Plain(Jab).Damage(dmg)
+	mult := Plain(Skewer).Damage(dmg) / Plain(Jab).Damage(dmg)
 	want := jabPair * mult
 	if lungePair < want || lungePair > want+mult {
-		t.Errorf("a Lunge Pair dealt %d against a Jab Pair's %d; the cards are %dx apart, so want %d (+ up to %d of rounding)",
+		t.Errorf("a Skewer Pair dealt %d against a Jab Pair's %d; the cards are %dx apart, so want %d (+ up to %d of rounding)",
 			lungePair, jabPair, mult, want, mult)
 	}
 }
@@ -195,10 +195,10 @@ func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
 		key  string
 		turn []Card
 	}{
-		{"high-card", PlainCards(Strike)},
-		{"pair", PlainCards(Strike, Strike)},
-		{"concept-three-of-a-kind", PlainCards(Strike, Strike, Strike)},
-		{"concept-four-of-a-kind", PlainCards(Strike, Strike, Strike, Strike)},
+		{"high-card", PlainCards(Bash)},
+		{"pair", PlainCards(Bash, Bash)},
+		{"concept-three-of-a-kind", PlainCards(Bash, Bash, Bash)},
+		{"concept-four-of-a-kind", PlainCards(Bash, Bash, Bash, Bash)},
 	} {
 		h, ok := handByKey(tc.key)
 		if !ok {
@@ -211,7 +211,7 @@ func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
 			t.Fatalf("%s: no KindHand event", tc.key)
 		}
 
-		base := Plain(Strike).Damage(10) * len(tc.turn)
+		base := Plain(Bash).Damage(10) * len(tc.turn)
 		if e.Base != base {
 			t.Errorf("%s: base was %d, want the %d cards' own %d", tc.key, e.Base, len(tc.turn), base)
 		}
@@ -227,7 +227,7 @@ func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
 func TestTheHandAmountsAddUpToTheBase(t *testing.T) {
 	a, b := duelist(10, 8, 5000), duelist(10, 8, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Bash, Jab, Bash, Bash), nil, 1)
 	e, ok := handEventFor(events, SideA)
 	if !ok {
 		t.Fatal("no KindHand event")
@@ -247,8 +247,8 @@ func TestTheHandAmountsAddUpToTheBase(t *testing.T) {
 		t.Errorf("the hand's cards carry %d between them, but the base is %d", sum, e.Base)
 	}
 	// The Jab is in no hand, so its figure is in neither.
-	if e.Base != Plain(Strike).Damage(10)*3 {
-		t.Errorf("the base is %d, want the three Strikes' own %d", e.Base, Plain(Strike).Damage(10)*3)
+	if e.Base != Plain(Bash).Damage(10)*3 {
+		t.Errorf("the base is %d, want the three Bashes' own %d", e.Base, Plain(Bash).Damage(10)*3)
 	}
 }
 
@@ -265,9 +265,9 @@ func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 		what string
 		turn []Card
 	}{
-		{"two basics", PlainCards(Strike, Strike)},
-		{"one colour", []Card{Of(Strike, Ice), Of(Strike, Ice)}},
-		{"two colours", []Card{Of(Strike, Fire), Of(Strike, Ice)}},
+		{"two basics", PlainCards(Bash, Bash)},
+		{"one colour", []Card{Of(Bash, Ice), Of(Bash, Ice)}},
+		{"two colours", []Card{Of(Bash, Fire), Of(Bash, Ice)}},
 	} {
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
 
@@ -284,10 +284,10 @@ func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 
 // --- which hand forms ---------------------------------------------------------------------
 
-// **The best-paying hand wins.** Four Strikes hold a pair and a flurry as well as a barrage; only
+// **The best-paying hand wins.** Four Bashes hold a pair and a flurry as well as a barrage; only
 // the barrage pays.
 //
-// **A fifth Strike is its own rung** *(2026-08-19)*. It used to change nothing — a group matches at
+// **A fifth Bash is its own rung** *(2026-08-19)*. It used to change nothing — a group matches at
 // least its size, so five of one card was still the four — and the ladder now goes one further on
 // every axis. Five copies of a concept could not be dealt from the 48-card deck of the time, which
 // shipped four of each; arcane made a concept five cards on 2026-08-25, so the rung is dealable and
@@ -306,7 +306,7 @@ func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 	} {
 		turn := make([]Card, tc.n)
 		for i := range turn {
-			turn[i] = Plain(Strike)
+			turn[i] = Plain(Bash)
 		}
 
 		want, ok := handByKey(tc.want)
@@ -315,7 +315,7 @@ func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 		}
 		events, _, _ := resolve(a, b, turn, nil, 1)
 		if got := handsFormed(events, SideA); len(got) != 1 || got[0] != want.ID {
-			t.Errorf("%d Strikes formed %v, want %s alone", tc.n, got, tc.want)
+			t.Errorf("%d Bashes formed %v, want %s alone", tc.n, got, tc.want)
 		}
 	}
 }
@@ -333,8 +333,8 @@ func TestTheTwoConceptHands(t *testing.T) {
 		want HandID
 		what string
 	}{
-		{PlainCards(Jab, Jab, Strike, Strike), twoPair.ID, "two pairs"},
-		{PlainCards(Jab, Jab, Jab, Strike, Strike), fullHouse.ID, "three and two"},
+		{PlainCards(Jab, Jab, Bash, Bash), twoPair.ID, "two pairs"},
+		{PlainCards(Jab, Jab, Jab, Bash, Bash), fullHouse.ID, "three and two"},
 		{PlainCards(Jab, Jab, Jab, Jab, Jab), fiveOfAKind.ID, "five of one card"},
 	} {
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
@@ -344,30 +344,30 @@ func TestTheTwoConceptHands(t *testing.T) {
 	}
 }
 
-// **A counted hand does not care what sits between its cards.** Three Strikes with a Jab among
+// **A counted hand does not care what sits between its cards.** Three Bashes with a Jab among
 // them is a Flurry; the run-matcher this replaced needed them adjacent and formed nothing.
 func TestAHandIgnoresWhatSitsBetweenItsCards(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	flurry, _ := handByKey("concept-three-of-a-kind")
-	events, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Bash, Jab, Bash, Bash), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 1 || got[0] != flurry.ID {
-		t.Fatalf("three Strikes around a Jab formed %v, want a flurry", got)
+		t.Fatalf("three Bashes around a Jab formed %v, want a flurry", got)
 	}
 }
 
 // **A turn of nothing but defences is a hand, and it lands nothing** *(owner's call, 2026-09-02)*.
-// Every card carries a form and an element and every card is counted, so three Braces are three of
+// Every card carries a form and an element and every card is counted, so three Blocks are three of
 // a kind — the ladder can see a shield build. What the hand does not do is attack: no damage, and
 // nothing of the target's is spent.
 func TestATurnOfDefencesFormsAHandAndLandsNothing(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	events, _, after := resolve(a, b, PlainCards(Brace, Brace, Brace), nil, 1)
+	events, _, after := resolve(a, b, PlainCards(Block, Block, Block), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 1 {
-		t.Fatalf("three Braces formed %v, want one hand", got)
+		t.Fatalf("three Blocks formed %v, want one hand", got)
 	}
 	if n := kindCount(events, KindDamage); n != 0 {
 		t.Fatalf("a turn of defences dealt damage %d times, want 0", n)
@@ -434,15 +434,15 @@ func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
 		turn []Card
 		want []Element
 	}{
-		{"two basics", PlainCards(Strike, Strike), nil},
-		{"a basic and an ice", []Card{Plain(Strike), Of(Strike, Ice)}, []Element{Ice}},
-		{"two ice", []Card{Of(Strike, Ice), Of(Strike, Ice)}, []Element{Ice}},
-		{"ice and fire", []Card{Of(Strike, Ice), Of(Strike, Fire)}, []Element{Ice, Fire}},
-		{"ice, fire and a basic", []Card{Of(Strike, Ice), Of(Strike, Fire), Plain(Strike)},
+		{"two basics", PlainCards(Bash, Bash), nil},
+		{"a basic and an ice", []Card{Plain(Bash), Of(Bash, Ice)}, []Element{Ice}},
+		{"two ice", []Card{Of(Bash, Ice), Of(Bash, Ice)}, []Element{Ice}},
+		{"ice and fire", []Card{Of(Bash, Ice), Of(Bash, Fire)}, []Element{Ice, Fire}},
+		{"ice, fire and a basic", []Card{Of(Bash, Ice), Of(Bash, Fire), Plain(Bash)},
 			[]Element{Ice, Fire}},
 		{"five colours", []Card{
-			Of(Strike, Ice), Of(Strike, Fire), Of(Strike, Earth), Of(Strike, Lightning),
-			Of(Strike, Arcane),
+			Of(Bash, Ice), Of(Bash, Fire), Of(Bash, Earth), Of(Bash, Lightning),
+			Of(Bash, Arcane),
 		}, []Element{Ice, Fire, Earth, Lightning, Arcane}},
 	} {
 		a, b := reliced(duelist(10, 4, 10000)), duelist(10, 4, 10000)
@@ -470,7 +470,7 @@ func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
 func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
 	a, b := reliced(duelist(10, 4, 5000)), duelist(10, 4, 5000)
 
-	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice), Of(Jab, Fire), Of(Strike, Ice)}, nil, 1)
+	_, _, bAfter := resolve(a, b, []Card{Of(Bash, Ice), Of(Jab, Fire), Of(Bash, Ice)}, nil, 1)
 
 	if !bAfter.Statuses[statusOf(Ice)].Active() {
 		t.Error("the ice pair is the hand and should have chilled")
@@ -486,7 +486,7 @@ func TestEveryColourInTheHandLandsItsStatus(t *testing.T) {
 	a, b := reliced(duelist(10, 4, 10000)), duelist(10, 4, 10000)
 
 	events, _, bAfter := resolve(a, b, []Card{
-		Of(Strike, Fire), Of(Strike, Ice), Of(Strike, Earth), Of(Strike, Lightning),
+		Of(Bash, Fire), Of(Bash, Ice), Of(Bash, Earth), Of(Bash, Lightning),
 	}, nil, 1)
 
 	if n := kindCount(events, KindStatus); n != 4 {
@@ -502,7 +502,7 @@ func TestEveryColourInTheHandLandsItsStatus(t *testing.T) {
 func TestAColourlessHandLandsNoStatus(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
 
 	if n := kindCount(events, KindStatus); n != 0 {
 		t.Errorf("a colourless pair landed %d statuses, want 0 — basic is not a colour", n)
@@ -514,20 +514,20 @@ func TestAColourlessHandLandsNoStatus(t *testing.T) {
 func TestALoneAttackStillAppliesItsElement(t *testing.T) {
 	a, b := reliced(duelist(10, 4, 5000)), duelist(10, 4, 5000)
 
-	events, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice), Plain(Jab)}, nil, 1)
+	events, _, bAfter := resolve(a, b, []Card{Of(Bash, Ice), Plain(Jab)}, nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 0 {
-		t.Fatalf("a Strike and a Jab formed %v, want no hand", got)
+		t.Fatalf("a Bash and a Jab formed %v, want no hand", got)
 	}
 	if !bAfter.Statuses[statusOf(Ice)].Active() {
-		t.Error("the ice Strike was the blow and should still have chilled")
+		t.Error("the ice Bash was the blow and should still have chilled")
 	}
 }
 
 // --- a chilled turn -------------------------------------------------------------------------
 
 // **A hand is scored off what survives the chill, not off the queue.** Scoring the queue would let
-// a chilled duelist swing with a turn it never took. Four Strikes survive out of five, so a four of
+// a chilled duelist swing with a turn it never took. Four Bashes survive out of five, so a four of
 // a kind forms rather than whatever five would have been.
 func TestChilledCardsCannotFormAHand(t *testing.T) {
 	a := wearing(duelist(10, 4, 20000), Ice)
@@ -536,7 +536,7 @@ func TestChilledCardsCannotFormAHand(t *testing.T) {
 	// A's ice Jab chills B before B's own turn is read.
 	events, _, _ := resolve(a, b,
 		[]Card{Of(Jab, Ice)},
-		PlainCards(Strike, Strike, Strike, Strike, Strike), 1)
+		PlainCards(Bash, Bash, Bash, Bash, Bash), 1)
 
 	if lost := chilledActions(events, SideB); len(lost) != chillPct() {
 		t.Fatalf("B should lose %d card to the chill, got %v", chillPct(), lost)
@@ -544,7 +544,7 @@ func TestChilledCardsCannotFormAHand(t *testing.T) {
 
 	fourOfAKind, _ := handByKey("concept-four-of-a-kind")
 	if got := handsFormed(events, SideB); len(got) != 1 || got[0] != fourOfAKind.ID {
-		t.Fatalf("four surviving Strikes should form a four of a kind, got %v", got)
+		t.Fatalf("four surviving Bashes should form a four of a kind, got %v", got)
 	}
 }
 
@@ -553,9 +553,9 @@ func TestChilledCardsCannotFormAHand(t *testing.T) {
 func TestIceLandedByBBitesInTheFollowingRound(t *testing.T) {
 	a, b := duelist(10, 4, 20000), wearing(duelist(10, 4, 20000), Ice)
 
-	// **A queues nothing**, deliberately: a shield would eat B's Strike whole and the ice would
+	// **A queues nothing**, deliberately: a shield would eat B's Bash whole and the ice would
 	// never land, which is a test about shields rather than about when a chill bites.
-	r1, a1, b1 := resolve(a, b, nil, []Card{Of(Strike, Ice)}, 1)
+	r1, a1, b1 := resolve(a, b, nil, []Card{Of(Bash, Ice)}, 1)
 
 	if lost := chilledActions(r1, SideA); len(lost) != 0 {
 		t.Fatalf("A already acted, so nothing can be taken from it this round, got %v", lost)
@@ -564,7 +564,7 @@ func TestIceLandedByBBitesInTheFollowingRound(t *testing.T) {
 		t.Fatal("A should be carrying the chill into the next round")
 	}
 
-	r2, _, _ := resolve(a1, b1, PlainCards(Strike, Strike), nil, 2)
+	r2, _, _ := resolve(a1, b1, PlainCards(Bash, Bash), nil, 2)
 	if lost := chilledActions(r2, SideA); len(lost) != chillPct() {
 		t.Fatalf("A should lose %d card in the round after, got %v", chillPct(), lost)
 	}
@@ -594,7 +594,7 @@ func TestTheEventNamesScatteredCards(t *testing.T) {
 func TestTheHandIsAnnouncedBeforeTheDamage(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
 
 	handAt, damageAt := -1, -1
 	for i, e := range events {
@@ -617,10 +617,10 @@ func TestTheHandIsAnnouncedBeforeTheDamage(t *testing.T) {
 
 func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
-	turn := PlainCards(Strike, Strike, Strike)
+	turn := PlainCards(Bash, Bash, Bash)
 
-	e1, a1, b1 := resolve(a, b, turn, PlainCards(Jab, Strike), 1)
-	e2, a2, b2 := resolve(a, b, turn, PlainCards(Jab, Strike), 1)
+	e1, a1, b1 := resolve(a, b, turn, PlainCards(Jab, Bash), 1)
+	e2, a2, b2 := resolve(a, b, turn, PlainCards(Jab, Bash), 1)
 
 	if a1 != a2 || b1 != b2 {
 		t.Fatal("the same round resolved twice must end in the same state")
@@ -640,8 +640,8 @@ func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 // for the rest of the round if a slot went unaccounted for.
 func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 	a, b := wearing(duelist(10, 4, 20000), Ice), duelist(10, 4, 20000)
-	aPlan := []Card{Of(Strike, Ice), Of(Strike, Ice), Of(Strike, Ice)}
-	bPlan := PlainCards(Brace, Jab, Strike, testGuard)
+	aPlan := []Card{Of(Bash, Ice), Of(Bash, Ice), Of(Bash, Ice)}
+	bPlan := PlainCards(Block, Jab, Bash, testGuard)
 
 	events, _, _ := resolve(a, b, aPlan, bPlan, 1)
 	order := ResolutionOrder(aPlan, bPlan)
@@ -676,7 +676,7 @@ func TestAZeroBlowSpendsNothingOfTheTargets(t *testing.T) {
 	b.Shields = 2
 	b = b.raiseDefend(Plain(Guard))
 
-	events, _, after := resolve(a, b, PlainCards(Brace, Brace, Brace), nil, 1)
+	events, _, after := resolve(a, b, PlainCards(Block, Block, Block), nil, 1)
 
 	// The target's own turn expires what they were holding, so what proves the blow never touched
 	// it is the expiry announcing both shields still standing.

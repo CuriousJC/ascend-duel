@@ -21,7 +21,7 @@ import (
 //
 // This holds both halves of the fix: the parasite reaches the hand, and it reaches the run.
 func TestAnElementParasiteReachesTheCardInTheHand(t *testing.T) {
-	run := session.New(combat.PlainCards(combat.Strike, combat.Strike))
+	run := session.New(combat.PlainCards(combat.Bash, combat.Bash))
 	hexbore, ok := session.ParasiteByKey("hexbore")
 	if !ok {
 		t.Skip("no hexbore in the catalogue")

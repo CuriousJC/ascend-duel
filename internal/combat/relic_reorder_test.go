@@ -148,7 +148,7 @@ func TestAGrowingRelicStepsBetweenTheCardsOfOneBlow(t *testing.T) {
 		})
 
 	attacker := duelist(100, 8, 100).Wearing(WornRelic{Relic: enflamed})
-	fire := Of(Strike, Fire)
+	fire := Of(Bash, Fire)
 
 	log, _, _ := resolve(attacker, duelist(10, 5, 100000), []Card{fire, fire}, nil, 1)
 
@@ -187,7 +187,7 @@ func TestOnlyAMatchingCardStepsTheRelicMidBlow(t *testing.T) {
 		})
 
 	attacker := duelist(100, 8, 100).Wearing(WornRelic{Relic: enflamed})
-	fire, ice := Of(Strike, Fire), Of(Strike, Ice)
+	fire, ice := Of(Bash, Fire), Of(Bash, Ice)
 
 	log, _, _ := resolve(attacker, duelist(10, 5, 100000), []Card{fire, ice, fire}, nil, 1)
 
@@ -217,7 +217,7 @@ func TestTheHandEventCarriesEachTermsRelicMultipliers(t *testing.T) {
 		})
 
 	attacker := duelist(100, 8, 100).Wearing(WornRelic{Relic: enflamed})
-	fire := Of(Strike, Fire)
+	fire := Of(Bash, Fire)
 
 	log, _, _ := resolve(attacker, duelist(10, 5, 100000), []Card{fire, fire, fire}, nil, 1)
 
@@ -240,7 +240,7 @@ func TestTheHandEventCarriesEachTermsRelicMultipliers(t *testing.T) {
 // has not bought one.
 func TestABlowWithNoRelicsReportsNoneFiring(t *testing.T) {
 	log, _, _ := resolve(duelist(100, 8, 100), duelist(10, 5, 100000),
-		[]Card{Of(Strike, Fire), Of(Strike, Fire)}, nil, 1)
+		[]Card{Of(Bash, Fire), Of(Bash, Fire)}, nil, 1)
 
 	hand, ok := firstOfKind(log, KindHand)
 	if !ok {
@@ -297,7 +297,7 @@ func TestAnEchoedCardCompoundsAgainstItsOwnGrowth(t *testing.T) {
 		Wearing(WornRelic{Relic: echo})
 
 	log, _, _ := resolve(attacker, duelist(10, 5, 100000),
-		[]Card{Of(Strike, Fire)}, nil, 1)
+		[]Card{Of(Bash, Fire)}, nil, 1)
 
 	hand, ok := firstOfKind(log, KindHand)
 	if !ok {
@@ -357,7 +357,7 @@ func TestEveryDamageRelicIsAccountedForPerTerm(t *testing.T) {
 		Wearing(WornRelic{Relic: enflamed})
 
 	log, _, _ := resolve(attacker, duelist(10, 5, 100000),
-		[]Card{Of(Strike, Fire), Of(Strike, Fire)}, nil, 1)
+		[]Card{Of(Bash, Fire), Of(Bash, Fire)}, nil, 1)
 
 	hand, ok := firstOfKind(log, KindHand)
 	if !ok {
@@ -385,7 +385,7 @@ func TestARelicThatDoesNotMatchDoesNotFire(t *testing.T) {
 
 	attacker := duelist(100, 8, 100).Wearing(WornRelic{Relic: fire})
 
-	log, _, _ := resolve(attacker, duelist(10, 5, 100000), []Card{Of(Strike, Ice)}, nil, 1)
+	log, _, _ := resolve(attacker, duelist(10, 5, 100000), []Card{Of(Bash, Ice)}, nil, 1)
 
 	hand, ok := firstOfKind(log, KindHand)
 	if !ok {
@@ -409,7 +409,7 @@ func TestAnEchosExtraTermsNameTheRelicThatBoughtThem(t *testing.T) {
 
 	attacker := duelist(100, 8, 100).Wearing(WornRelic{Relic: echo})
 
-	log, _, _ := resolve(attacker, duelist(10, 5, 100000), []Card{Of(Strike, Fire)}, nil, 1)
+	log, _, _ := resolve(attacker, duelist(10, 5, 100000), []Card{Of(Bash, Fire)}, nil, 1)
 
 	hand, ok := firstOfKind(log, KindHand)
 	if !ok {
@@ -433,7 +433,7 @@ func TestAnEchosExtraTermsNameTheRelicThatBoughtThem(t *testing.T) {
 // A relic that seats no extra landing is not the reason for any term.
 func TestACardThatLandsOnceNamesNoRelic(t *testing.T) {
 	log, _, _ := resolve(duelist(100, 8, 100), duelist(10, 5, 100000),
-		[]Card{Of(Strike, Fire)}, nil, 1)
+		[]Card{Of(Bash, Fire)}, nil, 1)
 
 	hand, ok := firstOfKind(log, KindHand)
 	if !ok {

@@ -170,7 +170,7 @@ func New(deck []combat.Card) *Session {
 	copy(s.deck, deck)
 
 	// **Identity is stamped here and nowhere else on the way in.** `StartingDeck()` hands over a
-	// list of descriptions — four copies of a fire Strike are four equal values — and a run is
+	// list of descriptions — four copies of a fire Bash are four equal values — and a run is
 	// where they stop being interchangeable.
 	for i := range s.deck {
 		s.deck[i].ID = s.mintCardID()

@@ -59,7 +59,7 @@ const (
 	// under 100 by `Card.Amount`, because nothing stops a blow outright.
 	TargetAmount
 
-	// TargetPromote moves a card one rung up its form's ladder — Jab to Strike to Smash. It
+	// TargetPromote moves a card one rung up its form's ladder — Jab to Bash to Smash. It
 	// costs more and hits harder, and the ladder is a consequence of what `duelist_cards.json`
 	// declares rather than a table beside it.
 	TargetPromote
@@ -77,7 +77,7 @@ const (
 	// concept's form would change every copy in the deck, which is the argument the target list
 	// was closed against. The override is per-card and only `Card.Form` reads it.
 	//
-	// **A Ward told to be a crush still defends**, and now matches on an attack axis — the legal
+	// **A Brace told to be a crush still defends**, and now matches on an attack axis — the legal
 	// weird thing the owner ruled in when parasites got the field.
 	TargetForm
 )

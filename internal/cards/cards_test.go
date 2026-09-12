@@ -38,14 +38,14 @@ const deckVisibleWidth = 75
 // deckNames is every concept in the deck, for the layout tests that have to check the
 // worst case rather than a representative one.
 var deckNames = []string{
-	"Jab", "Thrust", "Lunge",
+	"Jab", "Thrust", "Skewer",
 	"Cut", "Slice", "Cleave",
-	"Bash", "Strike", "Smash",
-	"Ward", "Brace", "Guard",
+	"Thump", "Bash", "Smash",
+	"Brace", "Block", "Guard",
 }
 
 func strike(e Element) Spec {
-	return Spec{Name: "Strike", Form: FormCrush, Cost: 2, Element: e, Enabled: true}
+	return Spec{Name: "Bash", Form: FormCrush, Cost: 2, Element: e, Enabled: true}
 }
 
 func render(t *testing.T, s Spec, st Style) *image.RGBA {

@@ -98,7 +98,7 @@ type ClauseData struct {
 	// attack ladder — Poke, Nick, Tap — so "the free ones" and "any cost" are different questions
 	// and an int could not tell them apart.
 	//
-	// **It reads the card's cost, not its concept's**, so a worm that made a Lunge dearer counts it
+	// **It reads the card's cost, not its concept's**, so a worm that made a Skewer dearer counts it
 	// and one that made an Impale cheaper does not. That is the right way round: the achievement is
 	// about what the player paid for the turn, and the card's own face is what says it.
 	//

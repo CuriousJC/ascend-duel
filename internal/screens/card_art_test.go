@@ -277,7 +277,7 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 		if c.Category() != combat.CategoryDefend {
 			continue
 		}
-		if got, want := deckRowFor(c), deckRowFor(combat.Of(combat.Strike, c.Element)); got != want {
+		if got, want := deckRowFor(c), deckRowFor(combat.Of(combat.Bash, c.Element)); got != want {
 			t.Errorf("%v sits in row %d and an attack of the same colour sits in row %d", c, got, want)
 		}
 	}
@@ -595,7 +595,7 @@ func TestEveryRiderKindIsOnTheFace(t *testing.T) {
 	silent := map[combat.RiderKind]bool{combat.RiderGolden: true, combat.RiderSilver: true}
 
 	for _, k := range combat.RiderKinds() {
-		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: k, Amount: 5})
+		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 5})
 		switch got := riderText(c); {
 		case silent[k] && got != "":
 			t.Errorf("rider %s writes %q on the face, and its sheen is what names it", k, got)
@@ -603,7 +603,7 @@ func TestEveryRiderKindIsOnTheFace(t *testing.T) {
 			t.Errorf("rider %s adds nothing to the card's face", k)
 		}
 	}
-	if got := riderText(combat.Plain(combat.Strike)); got != "" {
+	if got := riderText(combat.Plain(combat.Bash)); got != "" {
 		t.Errorf("an unridden card claimed an upgrade on its face: %q", got)
 	}
 }
@@ -620,7 +620,7 @@ func TestAMetalStillExplainsItselfInTheTooltip(t *testing.T) {
 		{combat.RiderGolden, carddesc.Gold},
 		{combat.RiderSilver, carddesc.Silver},
 	} {
-		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: metal.kind, Amount: 5})
+		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: metal.kind, Amount: 5})
 		lines := carddesc.RiderLines(c)
 		if len(lines) < 2 {
 			t.Errorf("%s says %d lines, and the name alone is not an explanation", metal.kind, len(lines))
@@ -648,7 +648,7 @@ func TestAMetalsNameIsLitInTheTooltip(t *testing.T) {
 		{combat.RiderGolden, carddesc.Gold},
 		{combat.RiderSilver, carddesc.Silver},
 	} {
-		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: metal.kind, Amount: 5})
+		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: metal.kind, Amount: 5})
 		runs := tipLine(carddesc.RiderLines(c)[0])
 
 		lit := ""
@@ -674,7 +674,7 @@ func TestEveryRiderSaysWhenItHappens(t *testing.T) {
 		if k == combat.RiderWildElement || k == combat.RiderGolden || k == combat.RiderSilver {
 			continue
 		}
-		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: k, Amount: 5})
+		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 5})
 		lines := carddesc.FaceLines(c)
 		if len(lines) == 0 {
 			t.Errorf("rider %s has no face lines", k)
@@ -739,7 +739,7 @@ func TestNoUpgradeWordIsWiderThanItsColumn(t *testing.T) {
 	width := st.Width - st.TextColumnLeft - st.TextInset
 
 	for _, k := range combat.RiderKinds() {
-		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: k, Amount: 25})
+		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 25})
 		for _, line := range carddesc.FaceLines(c) {
 			for _, word := range strings.Fields(line) {
 				w, err := cards.TextWidth(f, st.TextSize, word)

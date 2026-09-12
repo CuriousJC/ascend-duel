@@ -331,7 +331,7 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 			// **This is the attack phase's line, and every hand takes it — the High Card
 			// included** *(2026-08-19)*. There used to be a branch here writing an ordinary attack
 			// sentence when `e.Hand` was `HandNone`, on the argument that announcing "HAND!" over
-			// a single Strike empties the word. **It had been unreachable for some time**:
+			// a single Bash empties the word. **It had been unreachable for some time**:
 			// `blowFor` falls back to the catalogue's `high-card` entry, so a turn with an attack
 			// in it always names a hand and the branch could not fire. What the log actually
 			// printed was the hand line, correctly, while the code beside it said otherwise.
@@ -718,7 +718,7 @@ const playerRecord = "Fighter1"
 
 // sideName is who a Resolution line belongs to, written out beside the swatch that already
 // says it in colour. **Saying it twice is deliberate**: the colours carry the pattern at a
-// glance, but a line that begins "Strike" reads as an instruction rather than a report, and
+// glance, but a line that begins "Bash" reads as an instruction rather than a report, and
 // with both sides' actions in one list the reader has to hold which colour is which. The name
 // makes each line stand on its own.
 //
@@ -773,7 +773,7 @@ func (s *CombatScene) concealEnemy(gs *state.GlobalState) bool {
 // handName is what the attack phase formed, said in words: "Two Pair", "Four of a Kind".
 //
 // **A hand carries its whole name** *(2026-08-17)*. The name used to be assembled here from two
-// parts — the element makeup in front of the hand, "Duo Strike Flurry" — and both of those axes
+// parts — the element makeup in front of the hand, "Duo Bash Flurry" — and both of those axes
 // are gone: colour buys statuses rather than a multiplier, and a hand is named for its shape
 // rather than for the card that formed it. A blow that formed no hand at all is named only as an
 // attack; the pane does not announce those, but the trace does.

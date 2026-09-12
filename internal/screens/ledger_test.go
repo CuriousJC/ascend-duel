@@ -191,7 +191,7 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 	e.HandLanding[1][1] = true
 
 	played := []combat.Card{
-		{Concept: combat.Strike, Element: combat.Fire},
+		{Concept: combat.Bash, Element: combat.Fire},
 		{Concept: combat.Jab, Element: combat.Ice},
 	}
 
@@ -229,7 +229,7 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 // the indent is what keeps the working readable, and it is easy to lose.
 func TestTheWorkingIsIndentedRatherThanCentred(t *testing.T) {
 	rows := paneRowsFor([]session.LedgerLine{
-		session.Line(session.VoiceTerm, "Strike 20"),
+		session.Line(session.VoiceTerm, "Bash 20"),
 		session.Line(session.VoicePlain, "- Round 1 -"),
 	})
 
@@ -267,7 +267,7 @@ func TestTheWorkingIsColouredLikeTheScreen(t *testing.T) {
 	e.HandAmounts[0], e.HandCardBase[0] = 20, 20
 	e.HandRelicScale[0][0] = 200
 
-	lines := s.handTermLines(e, []combat.Card{{Concept: combat.Strike, Element: combat.Fire}})
+	lines := s.handTermLines(e, []combat.Card{{Concept: combat.Bash, Element: combat.Fire}})
 	rows := paneRowsFor(lines)
 
 	fire := cards.BorderOf(artFor(combat.Fire))
@@ -343,7 +343,7 @@ func TestAnOpenedFightIsBanded(t *testing.T) {
 // bracket saying 1x on most swings in the game is a bracket that says nothing — and a defence
 // multiplies nothing, so it says nothing either.
 func TestAnAttackSaysWhatItWeighs(t *testing.T) {
-	for _, id := range []combat.ConceptID{combat.Jab, combat.Strike, combat.Cut} {
+	for _, id := range []combat.ConceptID{combat.Jab, combat.Bash, combat.Cut} {
 		card := combat.Plain(id)
 		got, weight := cardWeight(card), card.Amount()
 

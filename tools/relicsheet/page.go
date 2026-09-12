@@ -78,6 +78,14 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
     font-size: 11.5px; color: var(--dim); margin-top: 3px;
   }
   .art { margin: 10px 0 0; font-size: 11.5px; color: var(--dim); }
+  /* The subject paragraph is an *input* to the art generator, so it is set apart from the
+     authored sentence a player reads: indented, quieted, and marked when nobody has written
+     one yet. Same pink the missing-art line takes, because they are one backlog. */
+  .draw {
+    margin: 10px 0 0; font-size: 12.5px; color: var(--dim);
+    border-left: 2px solid var(--rule); padding-left: 9px;
+  }
+  .draw.missing { color: var(--pink); border-left-color: var(--pink); }
   .art.missing { color: var(--pink); }
   .cells { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 22px; }
   figure { margin: 0; }
@@ -86,7 +94,8 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
 
 <h1>Relic sheet</h1>
 <p class="facts">
-  {{.Count}} relics, {{.Undrawn}} of them drawing the default face.
+  {{.Count}} relics, {{.Undrawn}} of them drawing the default face,
+  {{.Unwritten}} with no subject paragraph written.
   Relic card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
   border <code>{{index .Style "borderWidth"}}</code>,
@@ -116,6 +125,15 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   it is read out of <code>data/relics.json</code> through the same registration the game
   runs at start-up — so a relic this page refuses to draw is a relic the game refuses to start
   with.
+</p>
+<p class="note">
+  <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The
+  quoted block under each relic is <code>Draw</code> in <code>data/relics.json</code>: what the
+  object <em>is</em> and what the effect is doing to it, in one sentence. Nothing in the game
+  reads it. It is pasted under the shared prompt in <code>docs/art/card_art_prompt.MD</code>,
+  which is the only part of a brief that is not about one relic. <strong>A relic with no
+  subject and no art is the backlog</strong> — both lines go pink, so the page can be scrolled
+  for what still needs writing rather than a worklist being kept in step by hand.
 </p>
 <p class="note">
   <strong>Read the sentence against the rules.</strong> The line under each name is the
@@ -150,6 +168,11 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
         <div class="record">{{.Record}}</div>
         <p class="price">{{.Price}} vitae, sells back for {{.Sell}}</p>
         <p class="text">{{.Text}}</p>
+        {{if .Draw}}
+          <p class="draw">{{.Draw}}</p>
+        {{else}}
+          <p class="draw missing">no subject written yet</p>
+        {{end}}
         {{if .Counter}}<p class="art">badge: <code>{{.Counter}}</code> at Grown 0</p>{{end}}
         <ul class="rules">
           {{range .Rules}}<li>{{.}}</li>{{end}}

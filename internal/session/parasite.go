@@ -65,7 +65,7 @@ const (
 
 	// ParasiteForm changes what a card counts as on the form axis, without changing the card.
 	//
-	// **A defend card is a legal target** *(owner's call, 2026-09-02)*. A Ward told to be a crush
+	// **A defend card is a legal target** *(owner's call, 2026-09-02)*. A Brace told to be a crush
 	// still shields and now matches crushes, which is a card doing something no card in the
 	// catalogue does. That is the point of it rather than a hole in the checking.
 	ParasiteForm

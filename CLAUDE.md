@@ -214,7 +214,7 @@ Card lands one. **`combat.Axis` is three values** — concept, form, element —
 say what its cards must *agree* on.
 
 **Shields replaced the plan form on 2026-08-31** *(owner's call)*. The player's three defend cards —
-`Ward`, `Brace`, `Guard` at 1/2/3 AP — raise that many shields, and **one shield eats one incoming
+`Brace`, `Block`, `Guard` at 1/2/3 AP — raise that many shields, and **one shield eats one incoming
 attack whole**. See MECHANICS.md §Shields. Four things to know before touching any of it:
 
 - **A shield eats the creature's *heaviest* blow, not its first** *(owner's call, 2026-09-08)*.
@@ -356,7 +356,7 @@ table and the rule that turned it into multipliers.
 a fact about one particular deck; change the deck and every catalogued number silently deals
 something else. The tool re-checks the catalogue before it searches and says which entries no
 longer match — a change to the deck size has invalidated every entry at once before. A demo
-testing a Three of a Kind against a hand with two Strikes in it is worse than no demo, because it passes.
+testing a Three of a Kind against a hand with two Bashes in it is worse than no demo, because it passes.
 
 **A rarer hand needs a bigger search, and the impossible ones are worth re-checking.** Whether a
 hand is dealable at all is arithmetic over the *current* deck — how many copies of a concept there
@@ -1095,8 +1095,15 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   draw time softens exactly the hard block edges the prompt spends its words demanding. Reduced
   once, it is ~57 KB each and nothing resamples.
   `TestEveryBleedingCardArtIsTheCardsOwnSize` is the tripwire.
-- **The prompts that produce it live in `docs/art/`**, not in `data/` — nothing there is loaded by
-  the game. `relics_to_draw.md` is the worklist of relics with no picture yet.
+- **The generator's generic prompt lives in `docs/art/`; each relic's own description lives on
+  its record** *(owner's call, 2026-09-12)*. `docs/art/card_art_prompt.MD` is shared by every
+  card that carries a picture and is about no record at all, which is why it is not in `data/`.
+  What *is* about one record is the subject paragraph, and that is `Draw` in `data/relics.json`
+  — **ignored by the engine**, exactly as a status's `Badge` is, and pasted into the generator
+  as the record's own JSON. A brief kept apart from the record was deleted when the picture it
+  produced was filed, which is what moving it here fixes. **There is no worklist file** — a
+  relic with an empty `Art` is still to draw and one with an empty `Draw` has no brief, and
+  `go run ./tools/relicsheet` counts both and marks both in pink.
 
 **Relic and worm art is a globbed family, keyed by filename stem** *(2026-09-11)* —
 `relic/fire-ring.png` is `fire-ring`, which is what `data/relics.json` writes in its `Art` field.
@@ -1532,7 +1539,7 @@ player's.
 - **An anchor names what the step is *asking for*, not what it is about** *(owner's call,
   2026-09-08)*. `matching-cards` and `matching-cards-left` are the same set minus what is already
   queued, and they exist as two because the two steps using them say different things: "take the
-  other three" asks, and "one of those four is a Ward" describes. Sharing one anchor lit four cards
+  other three" asks, and "one of those four is a Brace" describes. Sharing one anchor lit four cards
   under a sentence about three — and since the anchor is the click gate, the card already taken was
   the one thing the step invited you to click, which undoes the step before it.
   `TestTheStepAsksOnlyForTheCardsStillToTake` is the tripwire. **The red comes off each card as it
@@ -1576,11 +1583,11 @@ player's.
   whatever the clock had rolled and described a hand it had not dealt. **A promise and the thing
   that makes it true belong in one file.** The scenario entry keeps only `"Teach": true`.
 - **The taught fight is two rounds, and the shield is why** *(owner's call, 2026-09-06)*. Run code
-  `0000GY` deals `Jab Ward Thrust Strike`, all lightning, for exactly 6 AP — an Elemental Four of a
-  Kind dealing 69 into a GiantBat's 80. **One of the four is a Ward**, which teaches the thing a
+  `0000GY` deals `Jab Brace Thrust Bash`, all lightning, for exactly 6 AP — an Elemental Four of a
+  Kind dealing 69 into a GiantBat's 80. **One of the four is a Brace**, which teaches the thing a
   hand of pure attacks cannot: a defence carries an element and joins a hand like anything else,
   bringing no damage with it. Because it brings none, the creature lives on 11, takes its turn —
-  Swoop, Drain, Nip — and **the Ward's one shield eats the Drain whole while the other two land**,
+  Swoop, Drain, Nip — and **the Brace's one shield eats the Drain whole while the other two land**,
   60 life down to 53. A creature that dies in one blow never swings, so a lesson about shields
   cannot be taught in a round that kills. The player then reads the ledger and finishes it.
   **It ate the Swoop and left the player on 48 until 2026-09-08**, when shields started picking the

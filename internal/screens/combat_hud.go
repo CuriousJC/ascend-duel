@@ -62,7 +62,7 @@ func drawBox(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, c c
 //
 // What the box held is what the card holds, in the same order: the duelist's name, then the
 // figures, then life. What it *gains* is the two figures the block had nowhere to put — the
-// damage a Strike does in these hands, and the action points the round is bought with — and a
+// damage a Bash does in these hands, and the action points the round is bought with — and a
 // health bar above the fraction, matching the enemy's at the same offsets so the two can be
 // compared across the screen without measuring.
 //

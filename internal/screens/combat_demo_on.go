@@ -35,7 +35,7 @@ import (
 // — and `ResolveRound` neither sees it nor is called by it.
 //
 // **It picks its own opening hand by name**, via the seed catalogue in seeds.go. That is what
-// lets round one be *clicked* rather than forced: `three-strikes` guarantees three Strikes in
+// lets round one be *clicked* rather than forced: `three-bashes` guarantees three Bashes in
 // hand, so the demo selects them through `toggle` exactly as a player would and the hand
 // fires off a real selection. Before named seeds the deal held no three-of-a-kind and the only
 // way to see a hand was to write the queue directly, which tested the pane but not the path
@@ -64,13 +64,13 @@ import (
 const demoScriptedRounds = 1
 
 // demoSeedName is the opening hand the demo asks for, overriding whatever a plain launch uses.
-// `three-strikes` puts three Strikes in hand, which is what round one clicks.
-const demoSeedName = "three-strikes"
+// `three-bashes` puts three Bashes in hand, which is what round one clicks.
+const demoSeedName = "three-bashes"
 
 // demoClickRun is the card round one selects three of. It has to be a card the chosen seed
 // actually deals three of, or the click phase quietly selects fewer and no hand forms —
 // `tools/seeds` is what keeps those two facts in agreement.
-var demoClickRun = combat.Strike
+var demoClickRun = combat.Bash
 
 func init() { deckSeed = seedFor(demoSeedName) }
 

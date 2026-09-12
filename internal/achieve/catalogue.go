@@ -31,7 +31,7 @@ const (
 
 	// MomentCardAltered is a worm having changed a card, carrying the resulting card's label in
 	// Value. **The label rather than the worm**, because what the player did is "made a Flinch" and
-	// several worms can arrive at one — a demote from a Ward today, something else tomorrow.
+	// several worms can arrive at one — a demote from a Brace today, something else tomorrow.
 	MomentCardAltered = "card-altered"
 
 	// MomentShieldsRaised is the player standing behind a count of shields, carried in N. **A

@@ -366,7 +366,7 @@ type handMathBox struct {
 
 	// shout is the hand's name — `PAIR!` — and shoutAt its centre. Empty when no hand was built,
 	// which is the High Card: a lone attack shouting its own name is the same emptying of the
-	// word that keeps `HAND!` off a single Strike in the feed.
+	// word that keeps `HAND!` off a single Bash in the feed.
 	shout   string
 	shoutAt image.Point
 	shoutT  travel

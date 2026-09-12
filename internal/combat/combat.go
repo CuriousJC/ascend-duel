@@ -151,7 +151,7 @@ func playTurn(
 
 	// **The attack phase is one blow, whatever it was made of.** Every attack card queued is
 	// announced, then the hand they form is announced, then a single figure of damage lands. Five
-	// Strikes are not five hits; they are one Four of a Kind.
+	// Bashes are not five hits; they are one Four of a Kind.
 	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands, src.Roll)
 
 	// **The defend phase comes second, and that is what a defence needs** *(2026-08-15)*. A guard
@@ -316,7 +316,7 @@ func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist
 //
 // **One blow per turn** *(2026-08-14)*. Attack cards no longer resolve one at a time; they are
 // announced, and then `BlowFor` reads them as a set and says what they amount to. Cards that
-// contribute to no hand are announced and then ignored — `Strike, Jab, Strike` is a Pair and the
+// contribute to no hand are announced and then ignored — `Bash, Jab, Bash` is a Pair and the
 // Jab is not in it, so it adds nothing to the figure.
 //
 // The order inside the blow is: shock roll, base damage from the hand's own cards, the hand
@@ -431,8 +431,8 @@ func resolveAttackPhase(
 	}
 
 	// **Base damage is the cards in the hand, and the multiplier is DMG on top.** DMG is what one
-	// Strike deals at this duelist's strength, which is the figure the duelist card shows — so
-	// `20 + 10 x 1.5 = 35` for a pair of Strikes at Str 10, exactly as the design states it.
+	// Bash deals at this duelist's strength, which is the figure the duelist card shows — so
+	// `20 + 10 x 1.5 = 35` for a pair of Bashes at Str 10, exactly as the design states it.
 	//
 	// That sum is the announcement's `Amount`, taken rather than repeated: the feed prints the
 	// arithmetic, and a second copy of it here is the one way the printed sum could be wrong.
@@ -760,7 +760,7 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 	// still lands once, the hand still multiplies one figure, and what the player sees is the first
 	// card paying three times — "seven cards played, the first one three of them".
 	//
-	// **The echo does not reach the matcher.** `blowFor` has already run, so an echoed Strike does
+	// **The echo does not reach the matcher.** `blowFor` has already run, so an echoed Bash does
 	// not turn a Pair into Trips; it pays into the hand the real cards formed.
 	// **The accumulator moves inside this loop as of 2026-08-26** *(owner's call)*. It used to step
 	// once, after the whole blow had landed, so every fire card of a turn was counted at the figure
@@ -840,7 +840,7 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 	e.HandScale, e.HandScaleSeats = HandScale(actor.WornRelics(), blow.Hand.ID, scoringCards(blow, turn))
 
 	// **The multiplier multiplies the cards** *(2026-08-18)*. There is no separate swing term: a
-	// hand is worth a proportion of what its own cards deal, so a Pair of Lunges is worth more
+	// hand is worth a proportion of what its own cards deal, so a Pair of Skewers is worth more
 	// than a Pair of Jabs by exactly the margin the cards themselves are worth.
 	e.Amount = scaleDamage(e.Base, blow.Multiplier)
 

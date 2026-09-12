@@ -30,7 +30,7 @@ func wearing(t *testing.T, dmg int, keys ...string) held {
 	return h
 }
 
-// aSlash is any attack card the Keen Ring matches, found rather than named: the deck is data and a
+// aSlash is any attack card The Sickle matches, found rather than named: the deck is data and a
 // test naming one card by label would be a test about `duelist_cards.json`.
 func aSlash(t *testing.T) combat.Card {
 	t.Helper()
@@ -52,7 +52,7 @@ func TestNoRelicReachesWhatTheFaceSays(t *testing.T) {
 	// multiplier, written pink, because a card reading "2x DMG" while dealing four times DMG was a
 	// face telling the truth about the card and a lie about the attack. What changed is that there
 	// is no longer one figure to tell the truth *with*: a growing relic steps between the cards of a
-	// single blow, so the same Strike is worth one thing queued first and another queued third. The
+	// single blow, so the same Bash is worth one thing queued first and another queued third. The
 	// face states the stable half and the sum states what it came to — see the hand dialog.
 	card := aSlash(t)
 
@@ -94,7 +94,7 @@ func TestADiscountRelicStillReachesTheCost(t *testing.T) {
 // next four lines explain a bigger one.
 func TestTheTooltipOpensWithTheStatBlock(t *testing.T) {
 	card := aSlash(t)
-	h := wearing(t, 12, "keen-ring")
+	h := wearing(t, 12, "sickle")
 
 	title, lines := cardTip(card, h)
 	if want := carddesc.Title(card); title != want {
@@ -121,12 +121,12 @@ func TestTheTooltipOpensWithTheStatBlock(t *testing.T) {
 // — that is the whole reason the panel exists, and it survived the block landing on top of it.
 func TestTheTooltipShowsEveryTermOfTheDamage(t *testing.T) {
 	card := aSlash(t)
-	h := wearing(t, 12, "keen-ring")
+	h := wearing(t, 12, "sickle")
 
 	_, lines := cardTip(card, h)
 	joined := strings.Join(lines, " | ")
 
-	for _, want := range []string{"the card", "Keen Ring", "before the hand"} {
+	for _, want := range []string{"the card", "The Sickle", "before the hand"} {
 		if !strings.Contains(joined, want) {
 			t.Errorf("the tooltip is missing %q: %s", want, joined)
 		}
@@ -163,7 +163,7 @@ func TestTheTooltipStatesMultipliersWhenNobodyIsHoldingTheCard(t *testing.T) {
 	// nobody has.
 	card := aSlash(t)
 
-	_, lines := cardTip(card, wearing(t, 0, "keen-ring"))
+	_, lines := cardTip(card, wearing(t, 0, "sickle"))
 	joined := strings.Join(lines, " | ")
 
 	if !strings.Contains(joined, "X DMG") {
@@ -175,12 +175,12 @@ func TestTheTooltipStatesMultipliersWhenNobodyIsHoldingTheCard(t *testing.T) {
 // is the same failure as one with no drawing, in the other direction.
 func TestEveryRiderKindHasTipLines(t *testing.T) {
 	for _, k := range combat.RiderKinds() {
-		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: k, Amount: 5})
+		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 5})
 		if lines := carddesc.RiderLines(c); len(lines) == 0 {
 			t.Errorf("rider %s adds no line to a card's tooltip", k)
 		}
 	}
-	if lines := carddesc.RiderLines(combat.Plain(combat.Strike)); len(lines) != 0 {
+	if lines := carddesc.RiderLines(combat.Plain(combat.Bash)); len(lines) != 0 {
 		t.Errorf("an unridden card claimed an upgrade: %v", lines)
 	}
 }
@@ -201,14 +201,14 @@ func TestTheTooltipReadsTheWayItWasSpecified(t *testing.T) {
 		t.Errorf("a fire Jab with a Leech reads %q %v, want %q %v", title, lines, "FIRE JAB", want)
 	}
 
-	ward := cardNamed(t, "Ward")
+	ward := cardNamed(t, "Brace")
 	ward.Element = combat.Ice
 	ward = ward.SetRider(combat.Rider{Kind: combat.RiderVitaeInHand, Amount: 3})
 
 	title, lines = cardTip(ward, held{cost: ward.Cost()})
 	want = []string{"1 AP", "1 SHIELD", "+3 VITAE IN HAND"}
-	if title != "ICE WARD" || !equal(lines, want) {
-		t.Errorf("an ice Ward with a Brood reads %q %v, want %q %v", title, lines, "ICE WARD", want)
+	if title != "ICE BRACE" || !equal(lines, want) {
+		t.Errorf("an ice Brace with a Brood reads %q %v, want %q %v", title, lines, "ICE BRACE", want)
 	}
 }
 
@@ -293,7 +293,7 @@ func TestAWornRelicSaysWhereItFires(t *testing.T) {
 	// Worn order is a rule — relics fire left to right and compound — so the position is information
 	// about the effect rather than about the layout.
 	records := data.LoadRelics()
-	record := records["keen-ring"]
+	record := records["sickle"]
 
 	_, lines := relicTip(record, 1, 3)
 	if joined := strings.Join(lines, " | "); !strings.Contains(joined, "2nd of 3") {
@@ -328,19 +328,19 @@ func itoa(n int) string {
 }
 
 // **A wildcard is CHROMATIC, not the element it happens to be** *(owner's call, 2026-09-09)*. The
-// card still is an arcane Lunge and everything else goes on reading it as one; what changes is the
-// title, because `ARCANE LUNGE` over a line reading `COUNTS AS EVERY ELEMENT` is a panel
+// card still is an arcane Skewer and everything else goes on reading it as one; what changes is the
+// title, because `ARCANE SKEWER` over a line reading `COUNTS AS EVERY ELEMENT` is a panel
 // contradicting itself in two lines.
 func TestAWildcardsTitleIsChromatic(t *testing.T) {
-	card := combat.Of(combat.Strike, combat.Arcane)
+	card := combat.Of(combat.Bash, combat.Arcane)
 
-	if got := carddesc.Title(card); got != "ARCANE STRIKE" {
+	if got := carddesc.Title(card); got != "ARCANE BASH" {
 		t.Errorf("an ordinary arcane card is titled %q", got)
 	}
 
 	wild := card.SetRider(combat.Rider{Kind: combat.RiderWildElement})
-	if got := carddesc.Title(wild); got != carddesc.Chromatic+" STRIKE" {
-		t.Errorf("a wildcard is titled %q, want %q", got, carddesc.Chromatic+" STRIKE")
+	if got := carddesc.Title(wild); got != carddesc.Chromatic+" BASH" {
+		t.Errorf("a wildcard is titled %q, want %q", got, carddesc.Chromatic+" BASH")
 	}
 	// The card is still arcane, and everything that is not the title still says so.
 	if wild.Element != combat.Arcane {
@@ -352,9 +352,9 @@ func TestAWildcardsTitleIsChromatic(t *testing.T) {
 // game that rule did not reach, because `models.Tooltip.Title` was a plain string — and a card's
 // title is where an element word is most worth colouring.
 func TestTheElementInATitleIsColoured(t *testing.T) {
-	title := tipLine(carddesc.Title(combat.Of(combat.Strike, combat.Fire)))
+	title := tipLine(carddesc.Title(combat.Of(combat.Bash, combat.Fire)))
 
-	if title.Text() != "FIRE STRIKE" {
+	if title.Text() != "FIRE BASH" {
 		t.Fatalf("the title reads %q", title.Text())
 	}
 	if len(title) < 2 {
@@ -377,7 +377,7 @@ func TestTheElementInATitleIsColoured(t *testing.T) {
 // is an element's ink, and the card's *element* is not what the title is coloured by.
 func TestChromaticTakesNoElementColour(t *testing.T) {
 	title := tipLine(carddesc.Title(
-		combat.Of(combat.Strike, combat.Arcane).SetRider(combat.Rider{Kind: combat.RiderWildElement})))
+		combat.Of(combat.Bash, combat.Arcane).SetRider(combat.Rider{Kind: combat.RiderWildElement})))
 
 	elements := map[cards.Element]bool{
 		cards.Fire: true, cards.Ice: true, cards.Lightning: true, cards.Earth: true, cards.Arcane: true,

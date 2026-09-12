@@ -268,7 +268,7 @@ const (
 // drawDeckPanel covers the screen with the deck.
 //
 // The cards are drawn as themselves at half size rather than as a table of counts. A count could
-// say "six Strikes"; it could not say which of them are fire and which are plain, and with
+// say "six Bashes"; it could not say which of them are fire and which are plain, and with
 // elements on the cards that is most of what the player wants to know. The whole deck fits on the
 // panel at once, so it is one look.
 //
@@ -439,7 +439,7 @@ func deckRowElements() []cards.Element {
 // **The defences lost their own row on 2026-08-23**, when they stopped being basic. They had one
 // because every defence was colourless and no attack was, so the alternative then was a row
 // labelled "basic" holding nothing but defences — naming the colour rather than the thing, on the
-// one row where the colour was the least interesting fact about the cards in it. Now a Ward is a
+// one row where the colour was the least interesting fact about the cards in it. Now a Brace is a
 // fire card, and the row that says "fire" is where a player looks for it.
 //
 // A row therefore holds a colour's whole share of the deck — the nine attacks and the defences —

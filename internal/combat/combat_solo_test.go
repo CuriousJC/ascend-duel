@@ -30,19 +30,19 @@ func TestASoloAttackerSwingsOncePerCard(t *testing.T) {
 	a := soloist(10, 9, 500)
 	b := duelist(10, 5, 500)
 
-	events, _, after := resolve(a, b, PlainCards(Strike, Strike, Strike), nil, 1)
+	events, _, after := resolve(a, b, PlainCards(Bash, Bash, Bash), nil, 1)
 
 	if n := damageCount(events); n != 3 {
-		t.Errorf("three Strikes produced %d damage events, want 3 — one per card", n)
+		t.Errorf("three Bashes produced %d damage events, want 3 — one per card", n)
 	}
 	if n := handCount(events); n != 0 {
 		t.Errorf("a solo attacker formed %d hands, want none", n)
 	}
 
-	// **The face damage and nothing else.** The hand-forming version of this turn is a Strike Flurry:
+	// **The face damage and nothing else.** The hand-forming version of this turn is a Bash Flurry:
 	// the same three cards plus DMG times the multiplier, which is the whole of what this removes.
-	if want := 500 - 3*ConceptOf(Strike).Amount*a.DMG/100; after.CurrentLife != want {
-		t.Errorf("three Strikes left %d life, want %d — the sum of the cards' own damage",
+	if want := 500 - 3*ConceptOf(Bash).Amount*a.DMG/100; after.CurrentLife != want {
+		t.Errorf("three Bashes left %d life, want %d — the sum of the cards' own damage",
 			after.CurrentLife, want)
 	}
 }
@@ -53,7 +53,7 @@ func TestASoloAttackerLandsItsCardsInQueueOrder(t *testing.T) {
 	a := soloist(10, 9, 500)
 	b := duelist(10, 5, 500)
 
-	events, _, _ := resolve(a, b, PlainCards(Smash, Jab, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Smash, Jab, Bash), nil, 1)
 
 	var got []int
 	for _, e := range events {
@@ -65,7 +65,7 @@ func TestASoloAttackerLandsItsCardsInQueueOrder(t *testing.T) {
 	want := []int{
 		Plain(Smash).Damage(a.DMG),
 		Plain(Jab).Damage(a.DMG),
-		Plain(Strike).Damage(a.DMG),
+		Plain(Bash).Damage(a.DMG),
 	}
 	if len(got) != len(want) {
 		t.Fatalf("got %d blows, want %d", len(got), len(want))
@@ -84,8 +84,8 @@ func TestADefendAnswersEverySwingOfASoloTurn(t *testing.T) {
 	b := soloist(10, 9, 500)
 	a := duelist(10, 5, 500)
 
-	open, _, _ := resolve(a, b, nil, PlainCards(Strike, Strike), 1)
-	shielded, after, _ := resolve(a, b, PlainCards(testGuard), PlainCards(Strike, Strike), 1)
+	open, _, _ := resolve(a, b, nil, PlainCards(Bash, Bash), 1)
+	shielded, after, _ := resolve(a, b, PlainCards(testGuard), PlainCards(Bash, Bash), 1)
 
 	cut := 100 - ConceptOf(testGuard).Amount
 	for i, e := range damages(shielded) {
@@ -107,7 +107,7 @@ func TestASoloAttackerStopsAtTheKill(t *testing.T) {
 	a := soloist(10, 9, 500)
 	b := duelist(10, 5, 15)
 
-	events, _, after := resolve(a, b, PlainCards(Strike, Strike, Strike), nil, 1)
+	events, _, after := resolve(a, b, PlainCards(Bash, Bash, Bash), nil, 1)
 
 	if after.CurrentLife != 0 {
 		t.Fatalf("the target ended on %d life, want 0", after.CurrentLife)
@@ -125,7 +125,7 @@ func TestAShockedSoloAttackerMissesWithEverything(t *testing.T) {
 	a.Statuses[statusOf(Lightning)] = Status{Amount: 50, Rounds: 2}
 	b := duelist(10, 5, 500)
 
-	events, _, after := resolveWith(alwaysMisses(), a, b, PlainCards(Strike, Strike, Strike), nil, 1)
+	events, _, after := resolveWith(alwaysMisses(), a, b, PlainCards(Bash, Bash, Bash), nil, 1)
 
 	misses := 0
 	for _, e := range events {
@@ -151,7 +151,7 @@ func TestEverySoloAttackAnnouncesItself(t *testing.T) {
 	a := soloist(10, 9, 500)
 	b := duelist(10, 5, 500)
 
-	cards := PlainCards(Strike, Jab, Brace)
+	cards := PlainCards(Bash, Jab, Block)
 	events, _, _ := resolve(a, b, cards, nil, 1)
 
 	actions := 0

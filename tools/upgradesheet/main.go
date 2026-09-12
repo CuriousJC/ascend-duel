@@ -103,7 +103,7 @@ var demoCards = []struct {
 	Name    string
 	Element cards.Element
 }{
-	{cards.FormStab, "Lunge", cards.Fire},
+	{cards.FormStab, "Skewer", cards.Fire},
 	{cards.FormSlash, "Cleave", cards.Ice},
 	{cards.FormCrush, "Smash", cards.Lightning},
 	{cards.FormDefend, "Guard", cards.Earth},
@@ -114,7 +114,7 @@ const demoCost = 3
 
 // demoDMG is what the duelist holding these cards hits for, for the tooltip figures.
 //
-// **Ten, because it makes every card on the page arithmetic somebody can check by eye**: a 2x Lunge
+// **Ten, because it makes every card on the page arithmetic somebody can check by eye**: a 2x Skewer
 // held by a duelist on 10 is 20, and a reader who disagrees with a figure can say so without
 // reaching for a calculator. It is not the game's starting DMG and does not pretend to be.
 const demoDMG = 10
@@ -266,7 +266,7 @@ func specFor(form cards.Form, name string, e cards.Element, u systems.Upgrade, s
 // can reach it — the same trade the tooltip block already makes on this page. What that removes is
 // the one line on the sheet that could disagree with the card it is a picture of.
 //
-// The demonstration card is the row's own: the same fire Lunge `tipFor` builds, so the face and the
+// The demonstration card is the row's own: the same fire Skewer `tipFor` builds, so the face and the
 // tooltip beside it are two readings of one card rather than two cards.
 func textFor(u systems.Upgrade) string {
 	out := "2x DMG"
@@ -342,7 +342,7 @@ func grantsFor(u systems.Upgrade) string {
 
 // tipFor is the tooltip a card carrying this upgrade shows, exactly as the game builds it.
 //
-// **The demonstration card and the duelist behind it are the row's own** — a fire Lunge held by a
+// **The demonstration card and the duelist behind it are the row's own** — a fire Skewer held by a
 // duelist hitting for demoDMG — so the figures on the page are figures a real pairing produces
 // rather than round numbers chosen to look tidy. The cost comes off the card rather than off
 // demoCost: the pictures are all drawn at one cost so the tick columns line up, and a tooltip
@@ -414,7 +414,7 @@ func demoRiderAmount(k combat.RiderKind) int {
 	return 0
 }
 
-// demoConcept is the card the tooltips are built on: the same Lunge the pictures use, found in the
+// demoConcept is the card the tooltips are built on: the same Skewer the pictures use, found in the
 // registry rather than named by hand so a rename fails the sheet instead of quietly changing it.
 func demoConcept() combat.ConceptID {
 	for _, id := range combat.AllConcepts() {

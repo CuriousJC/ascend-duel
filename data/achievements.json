@@ -143,12 +143,12 @@
   {
     "AchievementRecord": "strike-200",
     "Name": "STRUCK TWO HUNDRED",
-    "How": "Play the Strike card 200 times.",
+    "How": "Play the Bash card 200 times.",
     "Said": [
-      "Two hundred Strikes. The middle rung of the crushes, over and over.",
+      "Two hundred Bashes. The middle rung of the crushes, over and over.",
       "Nothing fancy has ever needed to be."
     ],
-    "Trigger": { "Kind": "count", "Counter": "concept:Strike", "N": 200 }
+    "Trigger": { "Kind": "count", "Counter": "concept:Bash", "N": 200 }
   },
   {
     "AchievementRecord": "tiny-but-fierce",

@@ -77,7 +77,7 @@ func TestTheSplitIsTakenFromResolutionOrder(t *testing.T) {
 	// first and its plans second; a row that counted its own would be a second answer to a
 	// question already settled, and would drift the first time a card changed category.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Guard, combat.Strike, combat.Ward, combat.Jab),
+		enemyActions: combat.PlainCards(combat.Guard, combat.Bash, combat.Brace, combat.Jab),
 	}
 	s.seatEnemyCards()
 
@@ -89,7 +89,7 @@ func TestTheSplitIsTakenFromResolutionOrder(t *testing.T) {
 	}
 
 	// A row with no plans in it splits at its end, which reads as no break.
-	all := &CombatScene{enemyActions: combat.PlainCards(combat.Strike, combat.Jab)}
+	all := &CombatScene{enemyActions: combat.PlainCards(combat.Bash, combat.Jab)}
 	all.seatEnemyCards()
 	if got := all.enemySplit(); got != 2 {
 		t.Errorf("an all-attack row splits at %d, want its length", got)
@@ -147,11 +147,11 @@ func TestTheOpponentsRowIsInResolutionOrder(t *testing.T) {
 	// turn into attacks then plans, so a queue planned plan-first comes out of the planner in one
 	// order and resolves in another.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Ward, combat.Strike, combat.Jab),
+		enemyActions: combat.PlainCards(combat.Brace, combat.Bash, combat.Jab),
 	}
 
 	got := s.enemyQueueOrder()
-	want := combat.PlainCards(combat.Strike, combat.Jab, combat.Ward)
+	want := combat.PlainCards(combat.Bash, combat.Jab, combat.Brace)
 
 	if len(got) != len(want) {
 		t.Fatalf("the row holds %d cards, want %d", len(got), len(want))
@@ -185,13 +185,13 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 	// have — so this is what replaces that safety.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: actionCard{Concept: combat.Ward, Element: combat.Ice}, selected: true},
-			{actionCard: actionCard{Concept: combat.Strike, Element: combat.Fire}, selected: true},
+			{actionCard: actionCard{Concept: combat.Brace, Element: combat.Ice}, selected: true},
+			{actionCard: actionCard{Concept: combat.Bash, Element: combat.Fire}, selected: true},
 			{actionCard: actionCard{Concept: combat.Jab, Element: combat.Earth}, selected: true},
 		},
 		fighterActions: []combat.Card{
-			combat.Of(combat.Ward, combat.Ice),
-			combat.Of(combat.Strike, combat.Fire),
+			combat.Of(combat.Brace, combat.Ice),
+			combat.Of(combat.Bash, combat.Fire),
 			combat.Of(combat.Jab, combat.Earth),
 		},
 	}
@@ -202,9 +202,9 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 	// The elements come along, so a seat holding the right concept in the wrong colour fails
 	// too — which is the whole reason the hand and the queue are one type now.
 	want := []combat.Card{
-		combat.Of(combat.Strike, combat.Fire),
+		combat.Of(combat.Bash, combat.Fire),
 		combat.Of(combat.Jab, combat.Earth),
-		combat.Of(combat.Ward, combat.Ice),
+		combat.Of(combat.Brace, combat.Ice),
 	}
 	if len(s.theatre.resolved) != len(want) {
 		t.Fatalf("%d cards were seated, want %d", len(s.theatre.resolved), len(want))
@@ -255,10 +255,10 @@ func TestOnlyOneSideOfTheTableIsLitAtATime(t *testing.T) {
 	// one. The event that lights one side is the event that unlights the other, which is why
 	// neither row has to know the other exists.
 	s := &CombatScene{
-		fighterActions: combat.PlainCards(combat.Strike),
+		fighterActions: combat.PlainCards(combat.Bash),
 		enemyActions:   combat.PlainCards(combat.Jab),
 		log: []combat.Event{
-			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Strike},
+			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Bash},
 			{Kind: combat.KindAction, Side: combat.SideB, Action: combat.Jab},
 		},
 	}
@@ -286,18 +286,18 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 	// nothing, so what is left standing is what the feed's single line is about.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: actionCard{Concept: combat.Strike, Element: combat.Fire}, selected: true},
-			{actionCard: actionCard{Concept: combat.Strike, Element: combat.Ice}, selected: true},
+			{actionCard: actionCard{Concept: combat.Bash, Element: combat.Fire}, selected: true},
+			{actionCard: actionCard{Concept: combat.Bash, Element: combat.Ice}, selected: true},
 			{actionCard: actionCard{Concept: combat.Jab, Element: combat.Basic}, selected: true},
 		},
 		fighterActions: []combat.Card{
-			combat.Of(combat.Strike, combat.Fire),
-			combat.Of(combat.Strike, combat.Ice),
+			combat.Of(combat.Bash, combat.Fire),
+			combat.Of(combat.Bash, combat.Ice),
 			combat.Of(combat.Jab, combat.Basic),
 		},
 		log: []combat.Event{
-			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Strike},
-			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Strike},
+			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Bash},
+			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Bash},
 			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Jab},
 		},
 	}
@@ -381,11 +381,11 @@ func TestTheOpponentsRowIsSeatedFromItsQueue(t *testing.T) {
 	// does not happen. It is the same walk, and this pins that seating uses it rather than
 	// taking the queue as planned.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Ward, combat.Strike, combat.Jab),
+		enemyActions: combat.PlainCards(combat.Brace, combat.Bash, combat.Jab),
 	}
 	s.seatEnemyCards()
 
-	want := combat.PlainCards(combat.Strike, combat.Jab, combat.Ward)
+	want := combat.PlainCards(combat.Bash, combat.Jab, combat.Brace)
 	if len(s.theatre.enemyDealt) != len(want) {
 		t.Fatalf("%d cards were seated, want %d", len(s.theatre.enemyDealt), len(want))
 	}
@@ -433,11 +433,11 @@ func TestBothRowsUseTheSameArrivalClock(t *testing.T) {
 	// to one of them being made twice.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: combat.Plain(combat.Strike), selected: true},
+			{actionCard: combat.Plain(combat.Bash), selected: true},
 			{actionCard: combat.Plain(combat.Jab), selected: true},
 		},
-		fighterActions: combat.PlainCards(combat.Strike, combat.Jab),
-		enemyActions:   combat.PlainCards(combat.Strike, combat.Jab),
+		fighterActions: combat.PlainCards(combat.Bash, combat.Jab),
+		enemyActions:   combat.PlainCards(combat.Bash, combat.Jab),
 	}
 	s.seatPlayedCards()
 	s.seatEnemyCards()
@@ -504,17 +504,17 @@ func selecting(cards ...combat.Card) *CombatScene {
 
 func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 	// **The preview is the resolver's own answer**, so what is named while choosing is what
-	// fires. Three Strikes are three of a kind the instant the third is picked, not when DUEL! is
+	// fires. Three Bashes are three of a kind the instant the third is picked, not when DUEL! is
 	// pressed.
 	s := selecting(
-		combat.Of(combat.Strike, combat.Fire),
-		combat.Of(combat.Strike, combat.Ice),
-		combat.Of(combat.Strike, combat.Basic),
+		combat.Of(combat.Bash, combat.Fire),
+		combat.Of(combat.Bash, combat.Ice),
+		combat.Of(combat.Bash, combat.Basic),
 	)
 
 	blow, _, ok := s.previewBlow()
 	if !ok {
-		t.Fatal("three Strikes previewed no hand")
+		t.Fatal("three Bashes previewed no hand")
 	}
 	if len(blow.Cards) != 3 {
 		t.Errorf("the previewed hand is made of %v, want all three cards", blow.Cards)
@@ -532,7 +532,7 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 		t.Errorf("the planned hand reads %q, want %q", got, want)
 	}
 	if blow.Hand.Key != "concept-three-of-a-kind" {
-		t.Errorf("three Strikes previewed %q, want the three of a kind", blow.Hand.Key)
+		t.Errorf("three Bashes previewed %q, want the three of a kind", blow.Hand.Key)
 	}
 }
 
@@ -540,20 +540,20 @@ func TestOneAttackIsTheHighCard(t *testing.T) {
 	// **A single attack is a hand and is named as one** *(2026-08-19, owner's call)*, where it used
 	// to preview nothing at all. The label is on screen from the first attack card picked rather
 	// than appearing only if a pair happens to form.
-	s := selecting(combat.Of(combat.Strike, combat.Fire))
+	s := selecting(combat.Of(combat.Bash, combat.Fire))
 
 	blow, ok := s.previewAttack()
 	if !ok {
-		t.Fatal("one Strike previewed no hand")
+		t.Fatal("one Bash previewed no hand")
 	}
 	if blow.Hand.Key != "high-card" {
-		t.Errorf("one Strike previewed %q, want the high card", blow.Hand.Key)
+		t.Errorf("one Bash previewed %q, want the high card", blow.Hand.Key)
 	}
 
 	// **The planned name and the fired one are one spelling**, which is what lets the banner carry
 	// the word through DUEL! instead of the dialog announcing it a second time.
 	if got, want := handShout(blow.Hand.Name), "HIGH CARD!"; got != want {
-		t.Errorf("one Strike is named %q, want %q", got, want)
+		t.Errorf("one Bash is named %q, want %q", got, want)
 	}
 }
 
@@ -566,8 +566,8 @@ func TestAQueueOfPlansNamesAHandThatLandsNothing(t *testing.T) {
 	// a Form Pair; what they are not doing is dealing damage with it, and the two facts have to be
 	// visible together or the multiplier looks like it went missing.
 	s := selecting(
-		combat.Of(combat.Ward, combat.Fire),
-		combat.Of(combat.Brace, combat.Ice),
+		combat.Of(combat.Brace, combat.Fire),
+		combat.Of(combat.Block, combat.Ice),
 	)
 
 	blow, turn, ok := s.previewBlow()
@@ -596,9 +596,9 @@ func TestAPlanQueuedFirstDoesNotHideTheHandBehindIt(t *testing.T) {
 	// slots 1 and 2. The preview goes through `ResolutionOrder` for exactly that reason, and a
 	// preview built off the hand as the player left it would miss this hand entirely.
 	s := selecting(
-		combat.Of(combat.Ward, combat.Basic),
-		combat.Of(combat.Strike, combat.Fire),
-		combat.Of(combat.Strike, combat.Ice),
+		combat.Of(combat.Brace, combat.Basic),
+		combat.Of(combat.Bash, combat.Fire),
+		combat.Of(combat.Bash, combat.Ice),
 	)
 
 	blow, ok := s.previewAttack()
@@ -609,7 +609,7 @@ func TestAPlanQueuedFirstDoesNotHideTheHandBehindIt(t *testing.T) {
 		t.Errorf("a pair behind a Prepare previewed %q, want the pair", blow.Hand.Key)
 	}
 	if !sameSeats(blow.Cards, []int{0, 1}) {
-		t.Errorf("the previewed hand is turn slots %v, want the two Strikes at 0 and 1", blow.Cards)
+		t.Errorf("the previewed hand is turn slots %v, want the two Bashes at 0 and 1", blow.Cards)
 	}
 }
 
@@ -617,8 +617,8 @@ func TestThePreviewIsGoneOnceTheRoundIsRunning(t *testing.T) {
 	// planning() is the single predicate for "the queue may still be edited", and a preview of a
 	// round that is already resolving would be a proposal drawn over a record.
 	s := selecting(
-		combat.Of(combat.Strike, combat.Fire),
-		combat.Of(combat.Strike, combat.Ice),
+		combat.Of(combat.Bash, combat.Fire),
+		combat.Of(combat.Bash, combat.Ice),
 	)
 	s.log = []combat.Event{{Kind: combat.KindRoundStart}}
 	s.cursor = 0
@@ -696,9 +696,9 @@ func TestADefenceThatAlreadyFlewDoesNotRiseAgain(t *testing.T) {
 
 	newScene := func() *CombatScene {
 		s := &CombatScene{
-			fighterActions: []combat.Card{combat.Plain(combat.Strike), combat.Plain(ward)},
+			fighterActions: []combat.Card{combat.Plain(combat.Bash), combat.Plain(ward)},
 			log: []combat.Event{
-				{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Strike},
+				{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Bash},
 				{Kind: combat.KindAction, Side: combat.SideA, Action: ward},
 			},
 		}

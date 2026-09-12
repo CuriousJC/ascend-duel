@@ -96,7 +96,7 @@ func run(dir string) error {
 	for _, e := range cards.Elements() {
 		row := row{Label: e.String()}
 		for cost := minCost; cost <= maxCost; cost++ {
-			spec := specFor("Strike", e)
+			spec := specFor("Bash", e)
 			spec.Cost = cost
 			cell, err := write(dir, faces, spec, cards.Hand,
 				fmt.Sprintf("card-%s-ap%d.png", e, cost),
@@ -116,7 +116,7 @@ func run(dir string) error {
 	// corner at a glance, at the size a card actually draws them.
 	famRow := row{Label: "form mark"}
 	for _, fam := range cards.Forms() {
-		spec := specFor("Strike", cards.Fire)
+		spec := specFor("Bash", cards.Fire)
 		spec.Form = fam
 		cell, err := write(dir, faces, spec, cards.Hand,
 			fmt.Sprintf("form-%s.png", fam),
@@ -141,9 +141,9 @@ func run(dir string) error {
 		// above: those vary one axis on a card that is deliberately not real, and this one has
 		// to be a real card because the effect text is part of what a state has to do —
 		// disabled dims the ink and there is now a paragraph of it to get wrong.
-		{"enabled", "enabled — affordable, not queued", specFor("Strike", cards.Fire)},
-		{"selected", "selected — queued this round", selected(specFor("Strike", cards.Fire))},
-		{"disabled", "disabled — cannot afford it", disabled(specFor("Strike", cards.Fire))},
+		{"enabled", "enabled — affordable, not queued", specFor("Bash", cards.Fire)},
+		{"selected", "selected — queued this round", selected(specFor("Bash", cards.Fire))},
+		{"disabled", "disabled — cannot afford it", disabled(specFor("Bash", cards.Fire))},
 	}
 	stateRow := row{Label: "card state"}
 	for _, st := range states {
@@ -189,7 +189,7 @@ func run(dir string) error {
 		{"back-triangle-stack", "triangle — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkTriangle}, cards.Stack},
 		{"back-diamond-stack", "diamond — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkDiamond}, cards.Stack},
 		{"back-chevron-stack", "chevron — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkChevron}, cards.Stack},
-		{"back-face", "a face, for the silhouette", specFor("Strike", cards.Fire), cards.Hand},
+		{"back-face", "a face, for the silhouette", specFor("Bash", cards.Fire), cards.Hand},
 	}
 	backRow := row{Label: "card back"}
 	for _, b := range backs {

@@ -53,7 +53,7 @@ next, so a shield or a guard raised at the end of your turn is up when their blo
 
 **The attack phase is one blow** *(2026-08-14)*. Every attack card queued is announced with a
 `KindAction`, then one `KindHand` names the hand they formed, then a single `KindDamage`
-lands. Five Strikes are not five hits.
+lands. Five Bashes are not five hits.
 
 **The phase is also one line in the log, and it is the hand's.** The `KindAction`s still play —
 each is a beat, and each raises its card on the table — but `logRows` writes no sentence for them.
@@ -122,7 +122,7 @@ in `MECHANICS.md`; these are what matter to the screen.
   `Event.Hand` is a `HandID` and `Event.Multiplier` the percent. `handName` in `prose.go`
   looks it up with `HandByID` and prints `Hand.Name` — "Two Pair" — **assembling nothing**. It used
   to join a hand to a *mix* counting the distinct colours, and to fill a `{card}` template from the
-  concept that formed the hand, so one hand could print as "Duo Strike Flurry"; both axes are gone
+  concept that formed the hand, so one hand could print as "Duo Bash Flurry"; both axes are gone
   and a hand carries its whole name. **Exactly one fires per turn**, so there is no stacking to draw
   and no ranking to explain.
 - **`Event.Hand` always names a hand** *(corrected 2026-08-19)*. A turn with an attack in it falls
@@ -166,14 +166,14 @@ in `MECHANICS.md`; these are what matter to the screen.
   attack card is a hand — the catalogue's `high-card` at the identity multiplier — so the name is
   on screen from the first attack picked; a queue of nothing but shields names nothing, `BlowFor`
   returning a blow with no cards. **This reverses the old rule**, which was that only a hand of two
-  or more previewed, on the argument that HAND! over one Strike empties the word. What makes it
+  or more previewed, on the argument that HAND! over one Bash empties the word. What makes it
   safe is that the label names the *hand* rather than shouting HAND!, and the log still writes a
   lone attack as an ordinary attack sentence. **Two lines show it**: `drawPlannedHand` writes its
   name across the middle of the table, breathing, in `handNameInk`, with **what it is worth on a
   second line under it** — `1.15x DMG` — and that pair is what flies down to the hand row at DUEL!,
   so the preview and the announcement are one object. See `handBanner`.
   **`Blow.Cards` indexes the turn, not the hand**, which is why the preview goes through
-  `ResolutionOrder` — a Ward queued first resolves last, so a preview read off the hand as the
+  `ResolutionOrder` — a Brace queued first resolves last, so a preview read off the hand as the
   player left it would miss the hand behind it.
 - **A chilled slot is a row that never resolves.** `currentSlot` counts `KindChilled`
   alongside `KindAction` for exactly this reason — one beat per slot, taken or lost — and
@@ -683,7 +683,7 @@ that is the argument to answer.
   slot an element into it — that is a constraint on any new wording here.
 - **Outcomes append to `suffix`**, after the verb, so the mark never moves as a line grows.
 - **The name is said as well as coloured, deliberately.** The swatch already encodes the side,
-  but a line beginning "Strike" reads as an instruction rather than a report, and with both
+  but a line beginning "Bash" reads as an instruction rather than a report, and with both
   sides in one list the reader would have to hold which colour is which.
 
 **Row highlights and swatches are centred on the measured line height**, not offset from the

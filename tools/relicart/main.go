@@ -1,12 +1,14 @@
 // Command relicart takes the art generator's output and files it: every PNG in the inbox is
-// reduced to the relic card's own size, committed under assets/relic, recorded on its record in
-// data/relics.json, and struck from the worklist in docs/art/relics_to_draw.md.
+// reduced to the relic card's own size, committed under assets/relic, and recorded on its
+// record in data/relics.json.
 //
 // It exists because that is four steps done by hand, once per relic, a hundred and twenty times —
 // and the two that fail silently are the ones a person gets wrong. A picture committed at the
 // generator's 1060x1484 is caught by TestEveryBleedingCardArtIsTheCardsOwnSize, but an "Art"
-// field left empty just draws default-relic.png, and a worklist entry left standing is a relic
-// that gets drawn twice.
+// field left empty just draws default-relic.png and nothing fails.
+//
+// **There is no worklist to strike.** A relic with no Art is one still to draw, and its brief is
+// the Draw field on the same record — tools/relicsheet counts both and marks both.
 //
 //	go run ./tools/relicart              # file everything in the inbox
 //	go run ./tools/relicart -n           # say what would happen and touch nothing
@@ -37,13 +39,12 @@ import (
 
 const (
 	relicsJSON = "data/relics.json"
-	worklist   = "docs/art/relics_to_draw.md"
 )
 
 func main() {
 	in := flag.String("in", filepath.Join(".scratch", "to-process-relic-art"), "inbox of generated PNGs")
 	out := flag.String("out", filepath.Join("assets", "relic"), "where the reduced art is committed")
-	done := flag.String("done", filepath.Join(".scratch", "processed-rings"), "where the originals are kept")
+	done := flag.String("done", filepath.Join(".scratch", "processed-relics"), "where the originals are kept")
 	blocky := flag.Bool("blocky", false, "quantize to the 40x56 block grid, then scale up by a whole number")
 	dry := flag.Bool("n", false, "report what would happen and write nothing")
 	flag.Parse()
@@ -98,13 +99,13 @@ func main() {
 	}
 
 	if *dry {
-		fmt.Printf("\n%d relic(s) would be filed; %s and %s untouched\n", len(keys), relicsJSON, worklist)
+		fmt.Printf("\n%d relic(s) would be filed; %s untouched\n", len(keys), relicsJSON)
 		return
 	}
 	if err := setArt(relicsJSON, keys); err != nil {
 		log.Fatal(err)
 	}
-	left, err := strike(worklist, keys)
+	left, err := undrawn(relicsJSON)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -204,63 +205,25 @@ func setArt(path string, keys []string) error {
 	return os.WriteFile(path, []byte(s), 0o644)
 }
 
-var (
-	entryRe   = regexp.MustCompile("(?m)^### [^\n]*\n\n- \\*\\*Key:\\*\\* `([a-z0-9-]+)`\n(?:[^\n]*\n)*?\n")
-	sectionRe = regexp.MustCompile(`(?m)^(## )(Common|Uncommon|Rare)( — )\d+( relics)$`)
-	totalRe   = regexp.MustCompile(`for the \d+ relics with no artwork yet`)
-)
-
-// strike removes the worklist entry for each relic that now has art, then recomputes the counts in
-// the heading and in every section title. A worklist whose length is wrong is a worklist nobody
-// trusts the length of, which is the whole reason the file says to delete finished entries.
-func strike(path string, keys []string) (int, error) {
+// undrawn counts the records still carrying no art, read back off the file rather than
+// subtracted from what was just filed — the file is the truth, and an arithmetic count can
+// only ever drift from it. It is the whole of what the worklist used to be.
+func undrawn(path string) (int, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return 0, err
 	}
-	s := string(raw)
-	drawn := make(map[string]bool, len(keys))
-	var missing []string
-	for _, k := range keys {
-		drawn[k] = true
-		if !strings.Contains(s, "`"+k+"`") {
-			missing = append(missing, k)
-		}
+	var file []struct {
+		Art string `json:"Art"`
 	}
-	if len(missing) > 0 {
-		fmt.Printf("  note: no worklist entry for %s — already struck?\n", strings.Join(missing, ", "))
+	if err := json.Unmarshal(raw, &file); err != nil {
+		return 0, fmt.Errorf("%s: %w", path, err)
 	}
-	s = entryRe.ReplaceAllStringFunc(s, func(m string) string {
-		if drawn[entryRe.FindStringSubmatch(m)[1]] {
-			return ""
-		}
-		return m
-	})
-
-	// Count what is left off the file itself rather than by arithmetic on what was removed — the
-	// file is the truth, and a subtraction can only ever drift from it.
 	left := 0
-	counts := map[string]int{}
-	for _, name := range []string{"Common", "Uncommon", "Rare"} {
-		counts[name] = countIn(s, name)
-		left += counts[name]
+	for _, r := range file {
+		if r.Art == "" {
+			left++
+		}
 	}
-	s = sectionRe.ReplaceAllStringFunc(s, func(m string) string {
-		p := sectionRe.FindStringSubmatch(m)
-		return fmt.Sprintf("%s%s%s%d%s", p[1], p[2], p[3], counts[p[2]], p[4])
-	})
-	s = totalRe.ReplaceAllString(s, fmt.Sprintf("for the %d relics with no artwork yet", left))
-	return left, os.WriteFile(path, []byte(s), 0o644)
-}
-
-func countIn(s, section string) int {
-	start := strings.Index(s, "## "+section+" — ")
-	if start < 0 {
-		return 0
-	}
-	rest := s[start:]
-	if next := strings.Index(rest[3:], "\n## "); next >= 0 {
-		rest = rest[:next+3]
-	}
-	return strings.Count(rest, "- **Key:** ")
+	return left, nil
 }

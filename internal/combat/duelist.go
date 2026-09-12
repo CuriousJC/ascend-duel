@@ -86,7 +86,7 @@ type Duelist struct {
 	DefendCount int
 
 	// Shields is how many incoming attacks this duelist can still eat outright, and it is what the
-	// player's defend cards buy — Ward for one and Brace for two. Guard is a third rung the file
+	// player's defend cards buy — Brace for one and Block for two. Guard is a third rung the file
 	// still declares at zero copies, so the rules can resolve a 3-shield card that nothing deals.
 	//
 	// **A count rather than a percentage, because an enemy turn is several attacks.** Every

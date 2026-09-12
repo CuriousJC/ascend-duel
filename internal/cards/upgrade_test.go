@@ -14,7 +14,7 @@ func upgradeSpec(u systems.Upgrade) Spec { return styledSpec(u, DefaultUpgradeSt
 // styledSpec is upgradeSpec in a named style, for the tests that are about where the ink lands.
 func styledSpec(u systems.Upgrade, style UpgradeStyle) Spec {
 	return Spec{
-		Name:         "Lunge",
+		Name:         "Skewer",
 		Form:         FormStab,
 		Cost:         3,
 		Element:      Fire,

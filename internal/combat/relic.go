@@ -246,7 +246,7 @@ const (
 	DoGrowOnHit
 
 	// DoDemoteCard steps a matching attack card Amount rungs **down its own form's ladder** as the
-	// fight's deck is dealt: a 3 AP Lunge becomes a 2 AP Thrust, same form, one rung cheaper and
+	// fight's deck is dealt: a 3 AP Skewer becomes a 2 AP Thrust, same form, one rung cheaper and
 	// half the damage.
 	//
 	// **It walks `Neighbour`, so the ladder stays a consequence of `duelist_cards.json`** rather
@@ -444,8 +444,8 @@ type RelicCondition struct {
 	// Tier narrows a rule to cards sitting on one rung of their form's ladder, which for the
 	// player's nine attacks is **the cost printed on the card** — 1, 2 or 3 *(2026-08-22)*.
 	//
-	// **The declared cost, never the wearer's.** A discount relic makes a Lunge cost 2 to its
-	// wearer, and a rule matching `Tier: 3` still has to see a Lunge — otherwise two relics worn
+	// **The declared cost, never the wearer's.** A discount relic makes a Skewer cost 2 to its
+	// wearer, and a rule matching `Tier: 3` still has to see a Skewer — otherwise two relics worn
 	// together would silently stop each other working, and which one won would depend on the order
 	// they were bought in. `Concept.Tier` is the same reading a worm takes, and for the same reason.
 	Tier    int
@@ -851,7 +851,7 @@ func (d Duelist) relicEffects(m Moment, card Card) []RelicEffect {
 // CardCost is what one card takes out of this duelist's budget, discounts included.
 //
 // **The relics are read here rather than on the card**, because a cost is a property of the *pairing*:
-// the same Strike costs 3 to a duelist wearing the crush discount and 4 to one who is not. `Card.Cost`
+// the same Bash costs 3 to a duelist wearing the crush discount and 4 to one who is not. `Card.Cost`
 // is still the card's own figure and is what a contact sheet or a deck panel draws.
 func (d Duelist) CardCost(c Card) int { return CostWith(d.WornRelics(), c) }
 

@@ -18,10 +18,10 @@ func TestThePairFormsOnWhicheverAxisAgrees(t *testing.T) {
 		what string
 		turn []Card
 	}{
-		// Two Strikes agree on the concept, and so on everything narrower than it.
-		{"two of one card", PlainCards(Strike, Strike)},
-		// A fire Strike and an ice Strike are one concept and two colours.
-		{"one card in two colours", []Card{Of(Strike, Fire), Of(Strike, Ice)}},
+		// Two Bashes agree on the concept, and so on everything narrower than it.
+		{"two of one card", PlainCards(Bash, Bash)},
+		// A fire Bash and an ice Bash are one concept and two colours.
+		{"one card in two colours", []Card{Of(Bash, Fire), Of(Bash, Ice)}},
 	} {
 		a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
@@ -45,7 +45,7 @@ func TestTheMergedPairReportsTheAxisThatFormedIt(t *testing.T) {
 		cards []Card
 		want  Axis
 	}{
-		{"two of one card", PlainCards(Strike, Strike), AxisConcept},
+		{"two of one card", PlainCards(Bash, Bash), AxisConcept},
 		// A stab and a slash, one fire and one ice, agree on neither concept nor element.
 		{"two forms that match", []Card{Of(Jab, Fire), Of(Thrust, Ice)}, AxisForm},
 		// Two different concepts in two different forms, agreeing only on their colour.
@@ -75,16 +75,16 @@ func TestTheMergedPairReportsTheAxisThatFormedIt(t *testing.T) {
 func TestAPairAtTheIdentityStillBeatsAHighCard(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	one, _, _ := resolve(a, b, PlainCards(Strike), nil, 1)
-	two, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
+	one, _, _ := resolve(a, b, PlainCards(Bash), nil, 1)
+	two, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
 
 	single, ok := handEventFor(one, SideA)
 	if !ok {
-		t.Fatal("no attack phase event for the lone Strike")
+		t.Fatal("no attack phase event for the lone Bash")
 	}
 	paired, ok := handEventFor(two, SideA)
 	if !ok {
-		t.Fatal("no attack phase event for the two Strikes")
+		t.Fatal("no attack phase event for the two Bashes")
 	}
 	if paired.Amount <= single.Amount {
 		t.Errorf("a pair lands %d against a high card's %d, so nobody would build it",

@@ -197,9 +197,9 @@
     "Name": "Effigy",
     "Change": "normal",
     "Target": "swap",
-    "Value": "Strike",
+    "Value": "Bash",
     "Count": 1,
-    "Text": "CARD BECOMES STRIKE"
+    "Text": "CARD BECOMES BASH"
   },
   {
     "ParasiteRecord": "totem",
@@ -224,9 +224,9 @@
     "Name": "Cocoon",
     "Change": "normal",
     "Target": "swap",
-    "Value": "Brace",
+    "Value": "Block",
     "Count": 1,
-    "Text": "CARD BECOMES BRACE"
+    "Text": "CARD BECOMES BLOCK"
   },
   {
     "ParasiteRecord": "barb",
@@ -251,27 +251,27 @@
     "Name": "Knot",
     "Change": "normal",
     "Target": "swap",
-    "Value": "Bash",
+    "Value": "Thump",
     "Count": 1,
-    "Text": "CARD BECOMES BASH"
+    "Text": "CARD BECOMES THUMP"
   },
   {
     "ParasiteRecord": "shell",
     "Name": "Shell",
     "Change": "normal",
     "Target": "swap",
-    "Value": "Ward",
+    "Value": "Brace",
     "Count": 1,
-    "Text": "CARD BECOMES WARD"
+    "Text": "CARD BECOMES BRACE"
   },
   {
     "ParasiteRecord": "spur",
     "Name": "Spur",
     "Change": "normal",
     "Target": "swap",
-    "Value": "Lunge",
+    "Value": "Skewer",
     "Count": 1,
-    "Text": "CARD BECOMES LUNGE"
+    "Text": "CARD BECOMES SKEWER"
   },
   {
     "ParasiteRecord": "fang",

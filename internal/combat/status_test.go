@@ -110,13 +110,13 @@ func TestAnElementAppliesNothingWithoutItsRelic(t *testing.T) {
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		a, b := duelist(10, 5, 500), duelist(10, 5, 500)
 
-		events, _, bAfter := resolve(a, b, []Card{Of(Strike, e)}, nil, 1)
+		events, _, bAfter := resolve(a, b, []Card{Of(Bash, e)}, nil, 1)
 
 		if n := len(statusEvents(events, e)); n != 0 {
-			t.Errorf("a bare %v Strike applied %d statuses, want 0", e, n)
+			t.Errorf("a bare %v Bash applied %d statuses, want 0", e, n)
 		}
 		if bAfter.Statuses[statusOf(e)].Active() {
-			t.Errorf("a bare %v Strike left a %v status behind", e, e)
+			t.Errorf("a bare %v Bash left a %v status behind", e, e)
 		}
 	}
 }
@@ -146,7 +146,7 @@ func TestTheRelicIsReadOffTheAttackerNotTheVictim(t *testing.T) {
 	a := duelist(10, 5, 500)
 	b := wearing(duelist(10, 5, 500), Fire)
 
-	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Fire)}, nil, 1)
+	_, _, bAfter := resolve(a, b, []Card{Of(Bash, Fire)}, nil, 1)
 
 	if bAfter.Statuses[statusOf(Fire)].Active() {
 		t.Error("the victim's own fire relic lit a burn on themselves")
@@ -159,14 +159,14 @@ func TestABasicAttackAppliesNothingHoweverManyRelicsAreWorn(t *testing.T) {
 	// keeps "drab lands none" true from the relic's side as well as the card's.
 	a, b := reliced(duelist(10, 5, 500)), duelist(10, 5, 500)
 
-	events, _, bAfter := resolve(a, b, []Card{Plain(Strike)}, nil, 1)
+	events, _, bAfter := resolve(a, b, []Card{Plain(Bash)}, nil, 1)
 
 	if n := countKind(events, KindStatus); n != 0 {
-		t.Errorf("a basic Strike applied %d statuses, want 0", n)
+		t.Errorf("a basic Bash applied %d statuses, want 0", n)
 	}
 	for _, id := range AllStatuses() {
 		if bAfter.Statuses[id].Active() {
-			t.Errorf("a basic Strike left %s behind", StatusOf(id).Key)
+			t.Errorf("a basic Bash left %s behind", StatusOf(id).Key)
 		}
 	}
 }
@@ -191,22 +191,22 @@ func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 	// else does.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		a, b := reliced(duelist(10, 5, 500)), duelist(10, 5, 500)
-		events, _, bAfter := resolve(a, b, []Card{Of(Strike, e)}, nil, 1)
+		events, _, bAfter := resolve(a, b, []Card{Of(Bash, e)}, nil, 1)
 
 		if got := statusEvents(events, e); len(got) != 1 {
-			t.Errorf("a %v Strike raised %d status events, want 1", e, len(got))
+			t.Errorf("a %v Bash raised %d status events, want 1", e, len(got))
 		}
 		if !bAfter.Statuses[statusOf(e)].Active() {
-			t.Errorf("a %v Strike left no %v status on the target", e, e)
+			t.Errorf("a %v Bash left no %v status on the target", e, e)
 		}
 	}
 }
 
 func TestOnlyAttacksApplyAStatus(t *testing.T) {
 	// **Decided 2026-08-12**: a plan card carries its element for hands and for the relic
-	// discount and applies nothing. Otherwise a 1-AP Ward would be as good a status delivery
+	// discount and applies nothing. Otherwise a 1-AP Brace would be as good a status delivery
 	// as a 1-AP Jab, and the plan phase would quietly become the status engine.
-	for _, a := range []ConceptID{Brace, Ward, testGuard} {
+	for _, a := range []ConceptID{Block, Brace, testGuard} {
 		attacker, target := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 		events, _, bAfter := resolve(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
@@ -231,13 +231,13 @@ func TestABlockedBlowStillAppliesItsStatus(t *testing.T) {
 
 		// B raises the defence in round one, A swings into it in round two.
 		_, a1, b1 := resolve(a, b, nil, []Card{Plain(defence)}, 1)
-		events, _, bAfter := resolve(a1, b1, []Card{Of(Strike, Fire)}, nil, 2)
+		events, _, bAfter := resolve(a1, b1, []Card{Of(Bash, Fire)}, nil, 2)
 
 		if n := len(statusEvents(events, Fire)); n != 1 {
-			t.Errorf("a Strike met by a %v applied its burn %d times, want 1", defence, n)
+			t.Errorf("a Bash met by a %v applied its burn %d times, want 1", defence, n)
 		}
 		if !bAfter.Statuses[statusOf(Fire)].Active() {
-			t.Errorf("a Strike met by a %v left no burn", defence)
+			t.Errorf("a Bash met by a %v left no burn", defence)
 		}
 	}
 }
@@ -276,12 +276,12 @@ func TestEachColourInTheHandLandsItsOwnStatus(t *testing.T) {
 
 func TestACardOutsideTheHandCarriesNoColour(t *testing.T) {
 	// Attack cards that build no hand are announced and contribute nothing — not damage and not
-	// an element. `Strike, Jab, Strike` is a Strike Pair and the Jab is not in it, so a fire Jab
-	// alongside two plain Strikes burns nobody.
+	// an element. `Bash, Jab, Bash` is a Bash Pair and the Jab is not in it, so a fire Jab
+	// alongside two plain Bashes burns nobody.
 	a, b := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 
 	events, _, bAfter := resolve(a, b,
-		[]Card{Plain(Strike), Of(Jab, Fire), Plain(Strike)}, nil, 1)
+		[]Card{Plain(Bash), Of(Jab, Fire), Plain(Bash)}, nil, 1)
 
 	if n := len(statusEvents(events, Fire)); n != 0 {
 		t.Errorf("a fire Jab outside the hand applied %d burns, want 0", n)
@@ -298,13 +298,13 @@ func TestAHalvedAttackStillAppliesItsStatus(t *testing.T) {
 	a, b := reliced(duelist(10, 5, 500)), duelist(10, 8, 500)
 
 	_, a1, b1 := resolve(a, b, nil, []Card{Plain(testGuard)}, 1)
-	events, _, bAfter := resolve(a1, b1, []Card{Of(Strike, Ice)}, nil, 2)
+	events, _, bAfter := resolve(a1, b1, []Card{Of(Bash, Ice)}, nil, 2)
 
 	if n := len(statusEvents(events, Ice)); n != 1 {
-		t.Errorf("a halved Strike applied its chill %d times, want 1", n)
+		t.Errorf("a halved Bash applied its chill %d times, want 1", n)
 	}
 	if !bAfter.Statuses[statusOf(Ice)].Active() {
-		t.Error("a halved ice Strike left no chill")
+		t.Error("a halved ice Bash left no chill")
 	}
 }
 
@@ -337,7 +337,7 @@ func TestAStatusIsGoneByTheEndOfTheRoundAfterItLanded(t *testing.T) {
 	// second, would never bite anything at all — and it must not survive the next one.
 	a, b := reliced(duelist(10, 5, 500)), duelist(10, 5, 500)
 
-	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Ice)}, nil, 1)
+	_, a1, b1 := resolve(a, b, []Card{Of(Bash, Ice)}, nil, 1)
 	if !b1.Statuses[statusOf(Ice)].Active() {
 		t.Fatal("the chill did not survive the round it was applied in")
 	}
@@ -356,12 +356,12 @@ func TestIceTakesACardOffTheFrontOfTheTurn(t *testing.T) {
 	// what goes is the blow.
 	a, b := wearing(duelist(10, 5, 500), Ice), duelist(10, 5, 500)
 
-	plain, _, _ := resolve(a, b, nil, []Card{Plain(Strike), Plain(Strike)}, 1)
+	plain, _, _ := resolve(a, b, nil, []Card{Plain(Bash), Plain(Bash)}, 1)
 	if n := countKind(plain, KindChilled); n != 0 {
 		t.Fatalf("an unchilled turn lost %d cards, want 0", n)
 	}
 
-	events, _, _ := resolve(a, b, []Card{Of(Jab, Ice)}, []Card{Plain(Strike), Plain(Strike)}, 1)
+	events, _, _ := resolve(a, b, []Card{Of(Jab, Ice)}, []Card{Plain(Bash), Plain(Bash)}, 1)
 
 	if got, want := countKind(events, KindChilled), chillPct(); got != want {
 		t.Errorf("a chilled turn lost %d cards, want %d", got, want)
@@ -373,7 +373,7 @@ func TestAChillBitesEveryTurnItOutlives(t *testing.T) {
 	// bites on every turn it is still running for. B is hit in round one and acts after A, so it
 	// loses a card that round and again in round two.
 	a, b := wearing(duelist(10, 5, 500), Ice), duelist(10, 5, 500)
-	bTurn := []Card{Plain(Strike), Plain(Strike)}
+	bTurn := []Card{Plain(Bash), Plain(Bash)}
 
 	r1, a1, b1 := resolve(a, b, []Card{Of(Jab, Ice)}, bTurn, 1)
 	if n := countKind(r1, KindChilled); n != chillPct() {
@@ -396,7 +396,7 @@ func TestAChillBitesEveryTurnItOutlives(t *testing.T) {
 // so a duelist hit twice still loses one card a turn — for longer.
 func TestASecondIceHitDoesNotDeepenTheChill(t *testing.T) {
 	a, b := wearing(duelist(10, 5, 500), Ice), duelist(10, 5, 500)
-	bTurn := []Card{Plain(Strike), Plain(Strike), Plain(Strike)}
+	bTurn := []Card{Plain(Bash), Plain(Bash), Plain(Bash)}
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Ice)}, nil, 1)
 
@@ -414,7 +414,7 @@ func TestAStatusNoLongerTouchesTheBudget(t *testing.T) {
 	a, b := reliced(duelist(10, 5, 500)), duelist(10, 5, 500)
 	before := b.ActionPoints()
 
-	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice)}, nil, 1)
+	_, _, bAfter := resolve(a, b, []Card{Of(Bash, Ice)}, nil, 1)
 
 	if got := bAfter.ActionPoints(); got != before {
 		t.Errorf("a chilled duelist has %d AP, want %d — statuses do not touch the budget", got, before)
@@ -433,13 +433,13 @@ func TestAShockIsARollAndTheSourceDecidesIt(t *testing.T) {
 	// seeded — see fixedSource.
 	a, b := wearing(duelist(10, 5, 500), Lightning), duelist(10, 5, 500)
 
-	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Lightning)}, nil, 1)
+	_, a1, b1 := resolve(a, b, []Card{Of(Bash, Lightning)}, nil, 1)
 	if !b1.Statuses[statusOf(Lightning)].Active() {
-		t.Fatal("the lightning Strike left no shock")
+		t.Fatal("the lightning Bash left no shock")
 	}
 
-	missed, aMissed, _ := resolveWith(alwaysMisses(), a1, b1, nil, []Card{Plain(Strike)}, 2)
-	landed, aLanded, _ := resolveWith(neverMisses(), a1, b1, nil, []Card{Plain(Strike)}, 2)
+	missed, aMissed, _ := resolveWith(alwaysMisses(), a1, b1, nil, []Card{Plain(Bash)}, 2)
+	landed, aLanded, _ := resolveWith(neverMisses(), a1, b1, nil, []Card{Plain(Bash)}, 2)
 
 	if n := countKind(missed, KindMissed); n != 1 {
 		t.Errorf("a losing roll missed %d times, want 1", n)
@@ -494,7 +494,7 @@ func TestAShockRollsAgainOnEveryAttackItOutlives(t *testing.T) {
 	a, b := wearing(duelist(10, 5, 500), Lightning), duelist(10, 5, 500)
 
 	r1, a1, b1 := resolveWith(alwaysMisses(), a, b,
-		[]Card{Of(Jab, Lightning)}, []Card{Plain(Strike)}, 1)
+		[]Card{Of(Jab, Lightning)}, []Card{Plain(Bash)}, 1)
 	if n := countKind(r1, KindMissed); n != 1 {
 		t.Fatalf("round 1 missed %d times, want 1", n)
 	}
@@ -502,7 +502,7 @@ func TestAShockRollsAgainOnEveryAttackItOutlives(t *testing.T) {
 		t.Fatal("the roll consumed the shock")
 	}
 
-	r2, _, _ := resolveWith(alwaysMisses(), a1, b1, nil, []Card{Plain(Strike)}, 2)
+	r2, _, _ := resolveWith(alwaysMisses(), a1, b1, nil, []Card{Plain(Bash)}, 2)
 	if n := countKind(r2, KindMissed); n != 1 {
 		t.Errorf("round 2 missed %d times, want 1 — a shock rolls while it lasts", n)
 	}
@@ -539,9 +539,9 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
 
-	// B is shocked and swings a fire Strike; A is holding a testGuard for it.
+	// B is shocked and swings a fire Bash; A is holding a testGuard for it.
 	events, _, bAfter := resolveWith(alwaysMisses(), a1, b1,
-		[]Card{Plain(testGuard)}, []Card{Of(Strike, Fire)}, 2)
+		[]Card{Plain(testGuard)}, []Card{Of(Bash, Fire)}, 2)
 
 	if n := countKind(events, KindNegated); n != 0 {
 		t.Error("a missed attack still spent the defence that was waiting for it")
@@ -637,9 +637,9 @@ func TestADeadDuelistDoesNotBurn(t *testing.T) {
 	// no order dependence.
 	a, b := wearing(duelist(10, 8, 500), Fire), duelist(10, 5, 500)
 
-	// A fire Pair rather than a fire Jab beside a plain Strike: the pair is a *hand*, so both
+	// A fire Pair rather than a fire Jab beside a plain Bash: the pair is a *hand*, so both
 	// cards count and the mix is fire. A mixed pile would resolve as its single biggest attack —
-	// the plain Strike — and light nothing at all.
+	// the plain Bash — and light nothing at all.
 	turn := []Card{Of(Jab, Fire), Of(Jab, Fire)}
 
 	// Learn what the hand deals rather than writing the arithmetic down a second time; the
@@ -672,20 +672,20 @@ func TestEarthBluntsWhatItsVictimDeals(t *testing.T) {
 	// attacker-side, before any of the defender's cards touch the blow.
 	a, b := wearing(duelist(10, 5, 500), Earth), duelist(10, 5, 500)
 
-	plain, _, _ := resolve(a, b, nil, []Card{Plain(Strike)}, 1)
+	plain, _, _ := resolve(a, b, nil, []Card{Plain(Bash)}, 1)
 	base := firstDamage(t, plain, SideB).Amount
 
-	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Earth)}, nil, 1)
-	weighted, _, _ := resolve(a1, b1, nil, []Card{Plain(Strike)}, 2)
+	_, a1, b1 := resolve(a, b, []Card{Of(Bash, Earth)}, nil, 1)
+	weighted, _, _ := resolve(a1, b1, nil, []Card{Plain(Bash)}, 2)
 
 	got := firstDamage(t, weighted, SideB).Amount
 	want := blunt(base, weightPct())
 	if got != want {
-		t.Errorf("a weighted Strike dealt %d, want %d (%d blunted by %d%%)",
+		t.Errorf("a weighted Bash dealt %d, want %d (%d blunted by %d%%)",
 			got, want, base, weightPct())
 	}
 	if got >= base {
-		t.Errorf("a weighted Strike dealt %d against an unweighted %d — earth did nothing", got, base)
+		t.Errorf("a weighted Bash dealt %d against an unweighted %d — earth did nothing", got, base)
 	}
 }
 
@@ -725,7 +725,7 @@ func TestStatusesLeaveARoundStillDeterministic(t *testing.T) {
 	// The rule the whole package is built on, re-checked against the one feature added since
 	// that could plausibly have broken it. Nothing in a status consults a clock or a map.
 	a, b := reliced(duelist(10, 6, 500)), reliced(duelist(10, 6, 500))
-	aPlan := []Card{Of(Strike, Fire), Of(Jab, Ice)}
+	aPlan := []Card{Of(Bash, Fire), Of(Jab, Ice)}
 	bPlan := []Card{Of(Jab, Lightning), Of(Jab, Earth)}
 
 	first, a1, b1 := resolve(a, b, aPlan, bPlan, 1)
@@ -753,23 +753,23 @@ func TestArcaneDoublesWhatItsVictimTakes(t *testing.T) {
 	// attacker instead — which would look identical in a mirror match and wrong in every real one.
 	a, b := wearing(duelist(10, 5, 5000), Arcane), duelist(10, 5, 5000)
 
-	plain, _, _ := resolve(a, b, []Card{Plain(Strike)}, nil, 1)
+	plain, _, _ := resolve(a, b, []Card{Plain(Bash)}, nil, 1)
 	base := firstDamage(t, plain, SideA).Amount
 
-	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Arcane)}, nil, 1)
+	_, a1, b1 := resolve(a, b, []Card{Of(Bash, Arcane)}, nil, 1)
 	if !b1.Statuses[statusOf(Arcane)].Active() {
 		t.Fatal("the arcane hand left no WEAKENED, so this test proves nothing")
 	}
 
-	weakened, _, _ := resolve(a1, b1, []Card{Plain(Strike)}, nil, 2)
+	weakened, _, _ := resolve(a1, b1, []Card{Plain(Bash)}, nil, 2)
 	got := firstDamage(t, weakened, SideA).Amount
 	want := amplify(base, amplifyPct())
 	if got != want {
-		t.Errorf("a Strike into WEAKENED dealt %d, want %d (%d amplified by %d%%)",
+		t.Errorf("a Bash into WEAKENED dealt %d, want %d (%d amplified by %d%%)",
 			got, want, base, amplifyPct())
 	}
 	if got <= base {
-		t.Errorf("a Strike into WEAKENED dealt %d against an unweakened %d — arcane did nothing",
+		t.Errorf("a Bash into WEAKENED dealt %d against an unweakened %d — arcane did nothing",
 			got, base)
 	}
 }
@@ -781,17 +781,17 @@ func TestWeakenedAmplifiesABurnTick(t *testing.T) {
 	a := wearing(duelist(10, 5, 5000), Fire, Arcane)
 	b := duelist(10, 5, 5000)
 
-	_, _, burnt := resolve(a, b, []Card{Of(Strike, Fire)}, nil, 1)
+	_, _, burnt := resolve(a, b, []Card{Of(Bash, Fire)}, nil, 1)
 	bare := burnt.Statuses[statusOf(Fire)].Amount
 	if bare <= 0 {
 		t.Fatal("the fire hand lit no burn, so this test proves nothing")
 	}
 
-	// The same fire card, plus an arcane one to weaken with. **Both have to be Strikes**: only the
-	// cards that formed the hand carry colour, so a Jab beside a Strike is a High Card and the
+	// The same fire card, plus an arcane one to weaken with. **Both have to be Bashes**: only the
+	// cards that formed the hand carry colour, so a Jab beside a Bash is a High Card and the
 	// arcane card would land nothing. A burn is a share of the attacker's DMG rather than of the
 	// blow, so the tick is lit from the same figure either way and only its *arrival* differs.
-	events, _, _ := resolve(a, b, []Card{Of(Strike, Fire), Of(Strike, Arcane)}, nil, 1)
+	events, _, _ := resolve(a, b, []Card{Of(Bash, Fire), Of(Bash, Arcane)}, nil, 1)
 
 	var tick int
 	for _, e := range events {

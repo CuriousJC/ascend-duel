@@ -638,7 +638,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 //
 // **It calls the resolver's own `combat.BlowFor`**, which is what makes a preview trustworthy:
 // the hand shown while choosing is the hand that fires, by construction rather than by two
-// pieces of code agreeing about what three Strikes are worth. Nothing here knows what a Flurry
+// pieces of code agreeing about what three Bashes are worth. Nothing here knows what a Flurry
 // is.
 //
 // **Every attack previews, the High Card included** *(2026-08-19, owner's call)*. A single attack
@@ -648,7 +648,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 // `BlowFor` returns a blow with no cards and there is no attack to be one.
 //
 // **This reverses a rule**, and the argument it reverses is worth keeping in view — announcing
-// HAND! over one Strike would empty the word. What makes it safe is that the label names the
+// HAND! over one Bash would empty the word. What makes it safe is that the label names the
 // *hand* rather than shouting HAND!: `HIGH CARD!` is an honest name for the commonest turn in the
 // game, and the log still writes a lone attack as an ordinary attack sentence.
 //

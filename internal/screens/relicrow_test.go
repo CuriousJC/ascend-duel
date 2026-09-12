@@ -43,8 +43,8 @@ func TestTheBadgeSaysWhatTheRelicIsDoing(t *testing.T) {
 	}{
 		{"heart", 0, "+5"},
 		{"heart", 45, "+50"},
-		{"enflamed", 0, "1.0"},
-		{"enflamed", 50, "1.5"},
+		{"growth-fire", 0, "1.0"},
+		{"growth-fire", 50, "1.5"},
 		{"momentum", 60, "1.6"},
 	} {
 		id, ok := combat.RelicByKey(tc.key)
@@ -153,9 +153,9 @@ func TestACancelledRelicDragChangesNothing(t *testing.T) {
 // 2026-08-26)*. `ungrown` is the one place that is enforced. The face carries no relic at all — see
 // TestNoRelicReachesWhatTheFaceSays.
 func TestTheTooltipDropsTheAccumulator(t *testing.T) {
-	id, ok := combat.RelicByKey("enflamed")
+	id, ok := combat.RelicByKey("growth-fire")
 	if !ok {
-		t.Fatal("enflamed-ring is in no registry")
+		t.Fatal("growth-fire is in no registry")
 	}
 
 	worn := ungrown([]combat.WornRelic{{Relic: id, Grown: 50}})
@@ -174,9 +174,9 @@ func TestTheTooltipDropsTheAccumulator(t *testing.T) {
 // is about to price the next card go up. withGrown is the copy that makes that possible without
 // writing back into the fight's own duelist.
 func TestTheBadgeFollowsTheSumMidBlow(t *testing.T) {
-	id, ok := combat.RelicByKey("enflamed")
+	id, ok := combat.RelicByKey("growth-fire")
 	if !ok {
-		t.Fatal("enflamed-ring is in no registry")
+		t.Fatal("growth-fire is in no registry")
 	}
 
 	worn := []combat.WornRelic{{Relic: id, Grown: 0}}

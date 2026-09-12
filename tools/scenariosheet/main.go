@@ -70,9 +70,14 @@ const source = "internal/scenario/scenarios.json"
 // hand against a white browser page is the same failure as previewing art at the wrong scale.
 const ground = "#a8bcd4"
 
-// wormArtKey is the placeholder face a parasite and a stone both draw, the constant of the same
-// name in internal/screens. Keys are not file paths.
-const wormArtKey = "default-worm"
+// placeholderArt is the face this sheet gives anything it is only naming — a parasite, a stone, a
+// key the catalogues do not answer to.
+//
+// **It is the worm catalogue's own default rather than a fourth picture**, and it is spelled by
+// reading data.DefaultWormArt rather than by writing the string again: a page that showed a
+// picture no catalogue uses would be inventing art in a review tool. This sheet is about what a
+// fixture *plugs in*, so a face here is a label, not a drawing to judge.
+const placeholderArt = data.DefaultWormArt
 
 // stripGap is the space between two cards in a row, and stripSplit the wider one between a row's
 // sections. Same two figures tools/roster uses, for the same reason: a strip has to say where one
@@ -318,14 +323,14 @@ func wornSpecs(r record) section {
 // does is `tools/parasitesheet` and `tools/stonesheet`'s subject, and repeating their text here
 // would be a third place the same sentence can go stale.
 func goodSpec(name string) cards.Spec {
-	return cards.Spec{Name: name, Element: cards.Relic, Art: artwork(wormArtKey), Enabled: true}
+	return cards.Spec{Name: name, Element: cards.Relic, Art: artwork(placeholderArt), Enabled: true}
 }
 
 // missingSpec is a key nothing in the catalogues answers to. **Drawn rather than fatal**, unlike
 // the game, which refuses the launch: the sheet's job is to show what the file says, and a page
 // that would not render because one fixture names a deleted relic would hide the other twenty.
 func missingSpec(key string) cards.Spec {
-	return cards.Spec{Name: "?" + key, Element: cards.Relic, Art: artwork(wormArtKey), Enabled: false}
+	return cards.Spec{Name: "?" + key, Element: cards.Relic, Art: artwork(placeholderArt), Enabled: false}
 }
 
 // cardSpec is one player card as the hand draws it. A key the registry does not hold is drawn

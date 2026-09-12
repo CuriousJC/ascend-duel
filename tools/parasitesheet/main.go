@@ -55,6 +55,7 @@ import (
 	"strconv"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -62,14 +63,6 @@ import (
 
 // ground is screens.screenGround, the light slate blue a parasite is actually offered on.
 const ground = "#a8bcd4"
-
-// wormArtKey is the picture every parasite draws, and it is the constant of the same name in
-// internal/screens — the parasite borrows the worm's placeholder, because a card with no face at
-// all would be worse than one wearing a placeholder its sibling already wears.
-//
-// **Keys are not file paths**: the file is assets/worm/default-worm.png and LoadImageData files it
-// under this.
-const wormArtKey = "default-worm"
 
 func main() {
 	dir := flag.String("dir", filepath.Join("docs", "sheets", "parasitesheet"),
@@ -91,19 +84,17 @@ func run(dir string) error {
 		return err
 	}
 
-	art, err := artwork(wormArtKey)
-	if err != nil {
-		return err
-	}
-
-	// session.Parasites is already the sorted order the bucket draws from, so two runs of the tool
-	// produce the same page and a new parasite lands in one predictable place.
-	parasites := session.Parasites()
+	// **The page walks the file's own order and the bucket walks the sorted one.**
+	// data.ParasiteFileOrder is the motif order the catalogue is authored in — the five bores
+	// together, the four grubs, the metals beside each other — which is what makes the family
+	// headings read as blocks. session.Parasites stays the bucket's order, and nothing on this page
+	// decides an outcome, so the two never meet. Same split the relic sheet makes.
+	order := data.ParasiteFileOrder()
 
 	page := page{
 		Ground:      ground,
 		Style:       styleFacts(cards.WormStyle),
-		Count:       len(parasites),
+		Count:       len(order),
 		BucketSize:  session.BucketSize(),
 		BucketPrice: session.BucketPrice(),
 		MaxTargets:  session.MaxParasiteTargets,
@@ -113,31 +104,55 @@ func run(dir string) error {
 	}
 
 	var plates []plate
-	for _, p := range parasites {
+	for _, key := range order {
+		p, ok := session.ParasiteByKey(key)
+		if !ok {
+			return fmt.Errorf("parasites.json writes %q and internal/session resolved no such parasite", key)
+		}
+
+		art, err := artwork(p.Art)
+		if err != nil {
+			return err
+		}
 		cell, err := write(dir, faces, specFor(p, art, true, false),
 			"parasite-"+p.Record+".png", p.Name)
 		if err != nil {
 			return err
 		}
 		plates = append(plates, plate{
-			Cell:   cell,
-			Record: p.Record,
-			Name:   p.Name,
-			Text:   p.Text,
-			Target: p.Target.String(),
-			Cards:  cardsWanted(p),
-			Value:  valueOf(p),
-			Rule:   ruleLine(p),
+			Cell:    cell,
+			Record:  p.Record,
+			Name:    p.Name,
+			Text:    p.Text,
+			Target:  p.Target.String(),
+			Cards:   cardsWanted(p),
+			Value:   valueOf(p),
+			Rule:    ruleLine(p),
+			Family:  p.Family,
+			Draw:    p.Draw,
+			Art:     p.Art,
+			Default: p.Art == data.DefaultParasiteArt,
 		})
+		if p.Art == data.DefaultParasiteArt {
+			page.Undrawn++
+		}
+		if p.Draw == "" {
+			page.Unwritten++
+		}
 	}
 
-	page.Groups = groupByTarget(plates)
+	page.Targets = groupByTarget(plates)
+	page.Families = groupByFamily(plates)
 
 	// The three states a parasite card is drawn in, which is one more than a worm has. **Selected
 	// is a state here and is not one there**: a parasite is armed first and aimed second, so the
 	// board piece has to say which one is in hand while the player picks what it eats.
-	if len(parasites) > 0 {
-		first := parasites[0]
+	if len(order) > 0 {
+		first, _ := session.ParasiteByKey(order[0])
+		art, err := artwork(first.Art)
+		if err != nil {
+			return err
+		}
 		for _, s := range []struct {
 			name            string
 			label           string
@@ -167,10 +182,13 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d parasites, %d drawn from a %d-vitae bucket, %s%% of the catalogue a seat\n",
-		out, len(plates)+len(page.States), page.Count, page.BucketSize, page.BucketPrice, page.Share)
-	for _, g := range page.Groups {
-		fmt.Printf("  %-8s %2d parasites\n", g.Target, g.Count)
+	fmt.Printf("wrote %s and %d PNGs — %d parasites, %d with art of their own and %d with a subject; "+
+		"%d drawn from a %d-vitae bucket, %s%% of the catalogue a seat\n",
+		out, len(plates)+len(page.States), page.Count,
+		page.Count-page.Undrawn, page.Count-page.Unwritten,
+		page.BucketSize, page.BucketPrice, page.Share)
+	for _, f := range page.Families {
+		fmt.Printf("  %-24s %2d %s\n", f.Name, f.Count, f.Noun)
 	}
 	return nil
 }
@@ -274,6 +292,44 @@ func groupByTarget(plates []plate) []group {
 	return out
 }
 
+// groupByFamily splits the catalogue into the motifs its records are authored in.
+//
+// **In first-appearance order, which is the file's order**, so the page reads as
+// data/parasites.json does and a parasite lands where its siblings were written rather than where
+// the alphabet puts it. It is the relic sheet's function over a different catalogue.
+//
+// **The target grouping did not go — it moved to the header**, as a list of counts. That grouping
+// was right while the target was the only axis the file had, and it is a poor block heading now
+// that twelve of the records are one target: `swap` was a third of the page under one word, and
+// the motif is what tells a jar of needles from a jar of razors.
+//
+// A record with no Family lands under "unfamilied" rather than being dropped.
+func groupByFamily(plates []plate) []family {
+	order := make([]string, 0, 8)
+	byName := map[string][]plate{}
+	for _, p := range plates {
+		name := p.Family
+		if name == "" {
+			name = "unfamilied"
+		}
+		if _, seen := byName[name]; !seen {
+			order = append(order, name)
+		}
+		byName[name] = append(byName[name], p)
+	}
+
+	out := make([]family, 0, len(order))
+	for _, name := range order {
+		f := family{Name: name, Parasites: byName[name], Count: len(byName[name])}
+		f.Noun = "parasites"
+		if f.Count == 1 {
+			f.Noun = "parasite"
+		}
+		out = append(out, f)
+	}
+	return out
+}
+
 // write renders one card, saves it, and returns what the page needs to show it.
 func write(dir string, f *cards.Faces, s cards.Spec, name, label string) (cell, error) {
 	img, err := cards.Render(s, cards.WormStyle, f)
@@ -343,12 +399,28 @@ type plate struct {
 	Cards  string
 	Value  string
 	Rule   string
+
+	// Family, Draw and Art are the three fields the engine ignores: the motif the record was
+	// authored under, the subject paragraph an art generator is given, and the picture the card
+	// actually draws. Default says that picture is the placeholder rather than one of its own.
+	Family  string
+	Draw    string
+	Art     string
+	Default bool
 }
 
 // group is one target's worth of the catalogue.
 type group struct {
 	Target    string
 	Count     int
+	Parasites []plate
+}
+
+// family is one motif's worth of the catalogue: every parasite authored in that block.
+type family struct {
+	Name      string
+	Count     int
+	Noun      string
 	Parasites []plate
 }
 
@@ -359,7 +431,10 @@ type page struct {
 	BucketSize  int
 	BucketPrice int
 	MaxTargets  int
+	Undrawn     int
+	Unwritten   int
 	Share       string
-	Groups      []group
+	Targets     []group
+	Families    []family
 	States      []cell
 }

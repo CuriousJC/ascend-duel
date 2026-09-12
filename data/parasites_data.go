@@ -34,6 +34,35 @@ type ParasiteData struct {
 	// Name is what is written across the top of the card.
 	Name string `json:"Name"`
 
+	// Family is the motif this parasite belongs to — the block of siblings it was authored beside,
+	// and the heading it is reviewed under on the parasite sheet.
+	//
+	// **The engine ignores it, exactly as it ignores Art and Draw.** It groups the review page and
+	// nothing else reads it; a parasite with no Family still loads and is still sold.
+	//
+	// **It is the relic catalogue's field brought over** *(owner's call, 2026-09-12)*, with the
+	// same argument and the same caveat: it is legibility for whoever is authoring rather than a
+	// fact the file knows and the rules do not, and it can go quietly out of date when a record is
+	// retargeted without anything failing. Re-read the block when you change what a parasite does.
+	Family string `json:"Family"`
+
+	// Art is the assets.LoadImageData key for the picture on the face. **Empty means the default
+	// parasite face** — see ArtKey.
+	//
+	// **The parasite borrowed the worm's placeholder until 2026-09-12**, through one constant in
+	// internal/screens whose own note said the day parasites got art it should become a field here
+	// rather than a fallback being unpicked. This is that field, and the placeholder is a parasite's
+	// own now: two catalogues wearing one picture is two backlogs that cannot be told apart.
+	Art string `json:"Art"`
+
+	// Draw is the subject paragraph the art generator is given for this parasite — what the thing
+	// *is* and what it is doing, in one sentence. **Nothing in the game reads it**, exactly like
+	// Art's own key and a relic's Draw.
+	//
+	// **Empty means nobody has written one yet**, which — read against an empty Art — is what the
+	// parasite sheet reports as the backlog.
+	Draw string `json:"Draw"`
+
 	// Change is what class of alteration this parasite makes, from a closed vocabulary resolved by
 	// `session.ParseParasiteChange`: `normal` or `upgrade`. **Required on every record.**
 	//
@@ -74,6 +103,48 @@ type ParasiteData struct {
 	// column is about a dozen characters wide, and a `\n` is an authored line break honoured by
 	// `cards.WrapText`.
 	Text string `json:"Text"`
+}
+
+// DefaultParasiteArt is the face a record with no Art of its own draws:
+// assets/parasite/default-parasite.png.
+//
+// **A picture of its own rather than the worm's** *(2026-09-12)*. The two catalogues wore one
+// placeholder while neither had art, and the moment either gets some that becomes a page where a
+// drawn worm and an undrawn parasite are the same picture — so the backlogs are told apart by
+// giving each its own seat. **Keys are not file paths**: LoadImageData files that picture under
+// this.
+const DefaultParasiteArt = "default-parasite"
+
+// ArtKey is the picture this parasite actually draws: its own if it has one, the default otherwise.
+//
+// **It is here rather than at the call sites** for RelicData.ArtKey's reason: a parasite is drawn
+// in the consumables pane, in the shop and in tools/parasitesheet, and a fallback living in a
+// screen is a fallback the review tool does not have.
+func (p ParasiteData) ArtKey() string {
+	if p.Art == "" {
+		return DefaultParasiteArt
+	}
+	return p.Art
+}
+
+// ParasiteFileOrder is every record id in the order data/parasites.json writes them.
+//
+// **File order rather than ParasiteOrder's sorted keys**, and it is for the review page alone: the
+// catalogue is authored in motif order — the five bores together, the four grubs, the metals
+// beside each other — and sorting by key throws exactly that away.
+//
+// **Nothing that decides an outcome may walk this.** What a bucket holds is a shuffle of
+// ParasiteOrder, which is sorted for the reason the randomness skill gives; this is a layout.
+func ParasiteFileOrder() []string {
+	var list []ParasiteData
+	if err := json.Unmarshal(parasitesJSON, &list); err != nil {
+		panic("Failed to unmarshal parasites.json: " + err.Error())
+	}
+	out := make([]string, 0, len(list))
+	for _, p := range list {
+		out = append(out, p.ParasiteRecord)
+	}
+	return out
 }
 
 // LoadParasites parses the catalogue into a map keyed by ParasiteRecord.

@@ -66,14 +66,39 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
     font-size: 11.5px; color: var(--dim);
   }
   .cards { margin: 10px 0 0; font-size: 11.5px; color: var(--dim); }
-  .art { margin: 6px 0 0; font-size: 11.5px; color: var(--pink); }
+  .art { margin: 6px 0 0; font-size: 11.5px; color: var(--dim); }
+  .art.missing { color: var(--pink); }
+  /* The subject paragraph is an *input* to the art generator, so it is set apart from the
+     authored line a player reads: indented, quieted, and marked when nobody has written one
+     yet. Same pink the missing-art line takes, because they are one backlog. */
+  .draw {
+    margin: 10px 0 0; font-size: 12.5px; color: var(--dim);
+    border-left: 2px solid var(--rule); padding-left: 9px;
+  }
+  .draw.missing { color: var(--pink); border-left-color: var(--pink); }
+  h3.family {
+    font-size: 15px; font-weight: 600;
+    margin: 34px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
+  }
+  h3.family span {
+    font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 10px;
+  }
+  /* The target counts, which used to be the page's headings and are now a list at the top. */
+  ul.targets { list-style: none; padding: 0; margin: 14px 0 0; }
+  li.target {
+    font-size: 12.5px; color: var(--dim); padding: 5px 0 5px 10px;
+    border-left: 3px solid var(--rule); margin-bottom: 3px;
+  }
+  li.target strong { color: var(--ink); text-transform: capitalize; margin-right: 6px; }
+  li.target.empty { opacity: .62; }
   figure { margin: 0; }
   figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
 </style>
 
 <h1>Parasite sheet</h1>
 <p class="facts">
-  {{.Count}} parasites. A sealed bucket costs <code>{{.BucketPrice}}</code> vitae and draws
+  {{.Count}} parasites, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no
+  subject paragraph written. A sealed bucket costs <code>{{.BucketPrice}}</code> vitae and draws
   <code>{{.BucketSize}}</code>, keep one — {{.Share}}% of the catalogue gets a seat. One parasite
   may name at most <code>{{.MaxTargets}}</code> cards.
   Card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
@@ -104,24 +129,45 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
   mid-playback would show a face disagreeing with a blow already computed.
 </p>
 <p class="note">
-  <strong>Every parasite draws the worm's placeholder.</strong> <code>default-worm.png</code> is
-  borrowed rather than a fallback that has gone wrong — so what is being reviewed here is the
-  wording and the numbers, not the picture.
+  <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The quoted
+  block under each parasite is <code>Draw</code> in <code>data/parasites.json</code>: what the
+  thing <em>is</em> and what it is doing, in one sentence. Nothing in the game reads it. It is
+  pasted under the shared prompt in <code>docs/art/card_art_prompt.MD</code>, which is the only
+  part of a brief that is not about one record. <strong>A parasite with no subject and no art is
+  the backlog</strong> — both lines go pink, so the page can be scrolled for what still needs
+  writing. <code>default-parasite.png</code> is the seat art goes into; it was the worm's own
+  placeholder until 2026-09-12, and the two split because one shared picture is a page where a
+  drawn worm and an undrawn parasite look identical.
 </p>
 
-<h2>The catalogue, by target</h2>
+<h2>What the catalogue does</h2>
 <p class="note">
-  <strong>Grouped by what a parasite does</strong>, because that is the design axis and the
-  vocabulary is closed. A target with nothing under it is a mechanic built and never authored
-  into — a design question rather than a bug.
+  <strong>Every target, and how many parasites sit at it.</strong> The vocabulary is closed — a new
+  target is a Go change plus one place applying it, never something a file can assert into
+  existence — so a target with nothing under it is a mechanic built and never reached for. This was
+  the page's grouping until families landed, and it made a poor heading once a third of the
+  catalogue was a single <code>swap</code>: the motif is what tells one swap from another.
+</p>
+<ul class="targets">
+{{range .Targets}}
+  <li class="target{{if not .Count}} empty{{end}}"><strong>{{.Target}}</strong>
+    {{.Count}} parasites{{if not .Count}} — nobody has authored one{{end}}</li>
+{{end}}
+</ul>
+
+<h2>The catalogue, by family</h2>
+<p class="note">
+  <strong>Grouped by the motif each parasite was authored beside, in the file's own order.</strong>
+  <code>Family</code> is authored and the engine ignores it, exactly as it ignores <code>Art</code>
+  and <code>Draw</code> — so it can go quietly out of date when a record is retargeted, and nothing
+  fails. Treat a family that disagrees with the rule beside it as a label to fix.
 </p>
 
-{{range .Groups}}
-<h3 class="group">
-  {{.Target}}
-  <span>{{.Count}} parasites</span>
+{{range .Families}}
+<h3 class="family">
+  {{.Name}}
+  <span>{{.Count}} {{.Noun}}</span>
 </h3>
-{{if not .Parasites}}<p class="note">Nothing is authored at this target.</p>{{end}}
 <div class="plates">
   {{range .Parasites}}
     <div class="plate">
@@ -131,9 +177,18 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
         <p class="name">{{.Name}}</p>
         <div class="record">{{.Record}}</div>
         <p class="text">{{.Text}}</p>
+        {{if .Draw}}
+          <p class="draw">{{.Draw}}</p>
+        {{else}}
+          <p class="draw missing">no subject written yet</p>
+        {{end}}
         <p class="rule">{{.Rule}}</p>
         <p class="cards">cards asked for: {{.Cards}}</p>
-        <p class="art">no art of its own — borrowing default-worm.png</p>
+        {{if .Default}}
+          <p class="art missing">no art of its own — drawing default-parasite.png</p>
+        {{else}}
+          <p class="art">art: <code>{{.Art}}</code></p>
+        {{end}}
       </div>
     </div>
   {{end}}

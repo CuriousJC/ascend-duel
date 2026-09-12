@@ -1,6 +1,10 @@
 package roster
 
-import "html/template"
+import (
+	"fmt"
+	"html/template"
+	"strings"
+)
 
 // The page and the types it walks.
 //
@@ -54,6 +58,12 @@ type group struct {
 	MinHP, MaxHP   int
 	MinDMG, MaxDMG int
 	MinAP, MaxAP   int
+
+	// Mix is the family spread within the band, written out on the heading — "6 Slimes, 2 Pods".
+	// **It is what the Family field buys at this level**: the band's stat spread says whether the
+	// floor is pitched right and this says whether it is four more of the same thing, which is the
+	// question the numbers cannot answer.
+	Mix string
 }
 
 type page struct {
@@ -93,6 +103,37 @@ func (p *page) add(pl plate) {
 	stretch(&g.MinHP, &g.MaxHP, pl.Entry.HP)
 	stretch(&g.MinDMG, &g.MaxDMG, pl.Entry.DMG)
 	stretch(&g.MinAP, &g.MaxAP, pl.Entry.Actions)
+	g.Mix = familyMix(g.Plates)
+}
+
+// familyMix is the band's family spread, in the order the families first appear in it — which is
+// the file's order, since the entries arrive in it.
+//
+// **Recomputed on every add rather than once at the end**, because the page is assembled as the
+// strips are written and there is no second pass to hang it off. It is a walk over at most a few
+// dozen plates a band, so the cost is nothing and the alternative is a finalise step somebody has
+// to remember to call.
+//
+// **A record with no family is counted as "unfamilied"** rather than skipped: a band whose spread
+// does not add up to its own count would be a heading that quietly lies.
+func familyMix(plates []plate) string {
+	order := make([]string, 0, 4)
+	counts := map[string]int{}
+	for _, p := range plates {
+		name := p.Entry.Family
+		if name == "" {
+			name = "unfamilied"
+		}
+		if counts[name] == 0 {
+			order = append(order, name)
+		}
+		counts[name]++
+	}
+	parts := make([]string, 0, len(order))
+	for _, name := range order {
+		parts = append(parts, fmt.Sprintf("%d %s", counts[name], name))
+	}
+	return strings.Join(parts, ", ")
 }
 
 func stretch(lo, hi *int, v int) {
@@ -169,6 +210,20 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
   td.num { text-align: right; padding-right: 22px; font-variant-numeric: tabular-nums; }
   td.effect { color: var(--dim); }
   .affix { color: var(--dim); font-size: 12px; margin: 10px 0 0; }
+  /* The family sits beside the record key, quiet and in small caps: it is what kind of thing this
+     is rather than what it is called, so it reads as a label on the name rather than a second
+     name. */
+  .family {
+    color: var(--dim); font-size: 11px; letter-spacing: .05em;
+    text-transform: uppercase; margin-left: 10px;
+  }
+  /* The subject paragraph is an *input* to an art generator rather than anything the game reads,
+     so it is set apart from the stat line and the deck: indented and quieted, under everything
+     the record actually does. Every one of them reads TO BE DETERMINED today. */
+  .draw {
+    color: var(--dim); font-size: 12px; margin: 8px 0 0;
+    border-left: 2px solid var(--rule); padding-left: 9px;
+  }
 </style>
 
 <h1>{{.Title}}</h1>
@@ -190,7 +245,7 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
   <h2 class="floor">
     {{.Label}}
     <span>{{len .Plates}} records · HP {{.MinHP}}–{{.MaxHP}} · DMG {{.MinDMG}}–{{.MaxDMG}} ·
-      AP {{.MinAP}}–{{.MaxAP}}</span>
+      AP {{.MinAP}}–{{.MaxAP}} · {{.Mix}}</span>
   </h2>
 
   {{range .Plates}}
@@ -201,6 +256,7 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
           {{if .Entry.Title}}<span class="title">{{.Entry.Title}}</span>{{end}}
         </span>
         <span class="record">{{.Entry.Record}}</span>
+        {{if .Entry.Family}}<span class="family">{{.Entry.Family}}</span>{{end}}
         <span class="stats">
           <b>HP {{.Entry.HP}}</b><span>DMG {{.Entry.DMG}}</span><span>AP {{.Entry.Actions}}</span>
           <span>{{.Deck}}-card deck</span>
@@ -226,6 +282,7 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
       </table>
 
       {{if .Affixes}}<p class="affix">Affixes it may be themed with: {{.Affixes}}</p>{{end}}
+      {{if .Entry.Draw}}<p class="draw">{{.Entry.Draw}}</p>{{end}}
     </div>
   {{end}}
 {{end}}

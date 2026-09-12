@@ -113,6 +113,19 @@ type Entry struct {
 	// on the card. Empty for every creature in the roster: a creature has no title.
 	Title string
 
+	// Family is the kind of thing this is — a creature's is "Slimes" or "Beasts", a boss's is the
+	// post it holds — and Draw is the subject paragraph an art generator would be given. **Both
+	// are authored, both are ignored by everything that plays the game**, exactly as a relic's
+	// Family and Draw are.
+	//
+	// **Family is not the floor band, deliberately** *(owner's call, 2026-09-12)*. The page is
+	// still cut by floor, because the floor is the placement decision and the spread beside each
+	// heading is what a balance review reads — so a Family repeating it would say nothing. What it
+	// adds is the axis the floor does not carry: whether a band is four more slimes or a floor
+	// with a shape of its own. It is printed on each record and summarised on each band's heading.
+	Family string
+	Draw   string
+
 	Portrait string
 
 	DMG     int
@@ -145,6 +158,7 @@ var EnemyPool = Pool{
 			r := records[key]
 			out = append(out, Entry{
 				Record: r.EnemyRecord, Name: r.Name, Portrait: r.Portrait,
+				Family: r.Family, Draw: r.Draw,
 				DMG: r.DMG, Actions: r.Actions, HP: r.HP,
 				Group: r.ValidFloors[0], Floors: floorBand(r.ValidFloors),
 				Affixes: r.AvailableAffixes, Cards: r.Cards,
@@ -170,6 +184,7 @@ var BossPool = Pool{
 			r := records[key]
 			out = append(out, Entry{
 				Record: r.BossRecord, Name: r.Name, Title: r.Title, Portrait: r.Portrait,
+				Family: r.Family, Draw: r.Draw,
 				DMG: r.DMG, Actions: r.Actions, HP: r.HP,
 				Group: r.Floor, Floors: "Floor " + strconv.Itoa(r.Floor),
 				Affixes: r.AvailableAffixes, Cards: r.Cards,
@@ -254,8 +269,9 @@ func Run(p Pool, dir string) error {
 		if len(g.Plates) == 1 {
 			plural = " "
 		}
-		fmt.Printf("  %-14s %2d record%s — HP %d-%d, DMG %d-%d, AP %d-%d\n",
-			g.Label, len(g.Plates), plural, g.MinHP, g.MaxHP, g.MinDMG, g.MaxDMG, g.MinAP, g.MaxAP)
+		fmt.Printf("  %-14s %2d record%s — HP %d-%d, DMG %d-%d, AP %d-%d — %s\n",
+			g.Label, len(g.Plates), plural, g.MinHP, g.MaxHP, g.MinDMG, g.MaxDMG,
+			g.MinAP, g.MaxAP, g.Mix)
 	}
 	return nil
 }

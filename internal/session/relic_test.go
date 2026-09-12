@@ -258,7 +258,7 @@ func TestTwoFlipsCannotChainThroughOneCard(t *testing.T) {
 func TestADiscountRelicPricesTheRunsOwnCards(t *testing.T) {
 	// The post-battle screen draws deck cards with no duelist to ask, and a card whose price changed
 	// when it reached the hand would be the game contradicting itself between two screens.
-	run := wearing(t, "warm")
+	run := wearing(t, "discount-fire")
 
 	hot := combat.Card{Concept: combat.Bash, Element: combat.Fire}
 	cold := combat.Card{Concept: combat.Bash, Element: combat.Ice}
@@ -332,15 +332,15 @@ func TestSellingAtrophyGivesTheCardsBack(t *testing.T) {
 
 func TestGrowthEarnedInAFightSurvivesIt(t *testing.T) {
 	// The other half of grow-on-hit: combat grows the duelist's own copy, and the run has to read
-	// it back before that copy is thrown away. Without AbsorbGrowth an Enflamed Ring would reset
+	// it back before that copy is thrown away. Without AbsorbGrowth the fire growth relic would reset
 	// every fight and the relic's whole sentence would be a lie.
-	run := wearing(t, "enflamed")
+	run := wearing(t, "growth-fire")
 
 	d := run.Equip(combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100})
 	d = d.GrowOnLanding(combat.Of(combat.Bash, combat.Fire))
 
 	run.AbsorbGrowth(d)
-	if got := run.Grown("enflamed"); got != 10 {
+	if got := run.Grown("growth-fire"); got != 10 {
 		t.Errorf("a fire landing left the run at %d, want 10", got)
 	}
 
@@ -354,15 +354,15 @@ func TestGrowthEarnedInAFightSurvivesIt(t *testing.T) {
 	// **A duelist wearing nothing cannot wind it back**, which is what stops a screen rebuilding
 	// its fighter from erasing a run's growth.
 	run.AbsorbGrowth(combat.Duelist{})
-	if got := run.Grown("enflamed"); got != 10 {
+	if got := run.Grown("growth-fire"); got != 10 {
 		t.Errorf("an empty duelist wound the accumulator to %d, want 10", got)
 	}
 
 	// Selling still forfeits it, per the shop's rule.
-	if !run.Sell("enflamed") {
+	if !run.Sell("growth-fire") {
 		t.Fatal("the relic would not come off")
 	}
-	if got := run.Grown("enflamed"); got != 0 {
+	if got := run.Grown("growth-fire"); got != 0 {
 		t.Errorf("a sold relic kept %d of its growth, want 0", got)
 	}
 }

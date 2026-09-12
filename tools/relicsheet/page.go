@@ -76,6 +76,18 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
   .record { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
   .price { margin: 10px 0 0; font-size: 12.5px; }
+  /* The tier, on the relic rather than only on the shelf list and the family heading. A
+     family is nearly always one rarity throughout, which is exactly what makes a mixed one
+     worth reading card by card — and the price beside it is the tier's price, so the two
+     belong on one line. Same three colours the shelf list uses. */
+  .rarity {
+    display: inline-block; margin-right: 7px; padding: 1px 7px 2px;
+    border-radius: 9px; font-size: 11px; letter-spacing: .05em;
+    text-transform: uppercase; font-weight: 600;
+    color: var(--ground); background: var(--rule);
+  }
+  .rarity.uncommon { background: #6c8fb5; }
+  .rarity.rare { background: var(--pink); }
   .text { margin: 10px 0 0; font-size: 13px; }
   .rules { margin: 10px 0 0; padding: 0; list-style: none; }
   .rules li {
@@ -183,7 +195,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
       <div class="about">
         <p class="name">{{.Name}}</p>
         <div class="record">{{.Record}}</div>
-        <p class="price">{{.Price}} vitae, sells back for {{.Sell}}</p>
+        <p class="price"><span class="rarity {{.Rarity}}">{{.Rarity}}</span>{{.Price}} vitae, sells back for {{.Sell}}</p>
         <p class="text">{{.Text}}</p>
         {{if .Draw}}
           <p class="draw">{{.Draw}}</p>

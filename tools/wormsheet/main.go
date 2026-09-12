@@ -25,8 +25,10 @@
 // **The border colours.** A worm's border carries the element it grants; the ones that grant no
 // element are basic grey. How many of each is a fact about the offer, not a detail.
 //
-// **How much art there is not.** Every worm draws default-worm.png today, so the page is mostly
-// a check that the seat is the right shape.
+// **How much art there is not.** A worm with no `Art` of its own draws `default-worm.png` and the
+// page marks it, exactly as the relic sheet marks an undrawn relic — so a column of identical
+// faces reads as a backlog rather than as a bug. Its `Draw` is the subject paragraph an art
+// generator would be given, and a record with neither is the backlog twice over.
 //
 // # Output
 //
@@ -51,6 +53,7 @@ import (
 	"strconv"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -60,11 +63,6 @@ import (
 // against a white browser page would be the same failure as previewing art at a scale the game
 // does not use.
 const ground = "#a8bcd4"
-
-// wormArtKey is the picture every worm draws, and it is the constant of the same name in
-// internal/screens. **Keys are not file paths** — the file is assets/worm/default-worm.png and
-// LoadImageData files it under this.
-const wormArtKey = "default-worm"
 
 // offered is how many worms a won fight puts up. It is dealWorms' cut, written down here because
 // that function lives in internal/screens and links Ebitengine. It is used for one derived
@@ -92,27 +90,34 @@ func run(dir string) error {
 		return err
 	}
 
-	art, err := artwork(wormArtKey)
-	if err != nil {
-		return err
-	}
-
-	// session.Worms is already the sorted order the offer shuffles, so two runs of the tool
-	// produce the same page and a new worm lands in one predictable place.
-	worms := session.Worms()
+	// **The page walks the file's own order and the offer walks the sorted one.**
+	// data.WormFileOrder is the motif order the catalogue is authored in — the five recolours
+	// together, the two that resize a card beside each other — which is what makes the family
+	// headings read as blocks. session.Worms stays the shuffle's order, and nothing on this page
+	// decides an outcome, so the two never meet. Same split the relic sheet makes.
+	order := data.WormFileOrder()
 
 	page := page{
 		Ground:  ground,
 		Style:   styleFacts(cards.WormStyle),
-		Count:   len(worms),
+		Count:   len(order),
 		Offered: offered,
 	}
-	if len(worms) > 0 {
-		page.Share = fmt.Sprintf("%.1f", float64(offered)*100/float64(len(worms)))
+	if page.Count > 0 {
+		page.Share = fmt.Sprintf("%.1f", float64(offered)*100/float64(page.Count))
 	}
 
 	var plates []plate
-	for _, w := range worms {
+	for _, key := range order {
+		w, ok := session.WormByKey(key)
+		if !ok {
+			return fmt.Errorf("worms.json writes %q and internal/session resolved no such worm", key)
+		}
+
+		art, err := artwork(w.Art)
+		if err != nil {
+			return err
+		}
 		spec := specFor(w, art, true)
 		cell, err := write(dir, faces, spec, cards.WormStyle, "worm-"+w.Record+".png", w.Name)
 		if err != nil {
@@ -127,23 +132,39 @@ func run(dir string) error {
 			Value:   valueOf(w),
 			Element: elementName(w),
 			Rule:    ruleLine(w),
+			Family:  w.Family,
+			Draw:    w.Draw,
+			Art:     w.Art,
+			Default: w.Art == data.DefaultWormArt,
 		})
+		if w.Art == data.DefaultWormArt {
+			page.Undrawn++
+		}
+		if w.Draw == "" {
+			page.Unwritten++
+		}
 	}
 
-	page.Groups = groupByTarget(plates)
+	page.Targets = groupByTarget(plates)
+	page.Families = groupByFamily(plates)
 
 	// The two states a worm card is drawn in. **Not "chosen"** — the reward screen dims the one
 	// that was not taken rather than lighting the one that was, so those are the two.
-	if len(worms) > 0 {
+	if len(order) > 0 {
+		first, _ := session.WormByKey(order[0])
+		art, err := artwork(first.Art)
+		if err != nil {
+			return err
+		}
 		for _, st := range []struct {
 			name    string
 			label   string
 			enabled bool
 		}{
-			{"rest", worms[0].Name + " — on offer", true},
-			{"disabled", worms[0].Name + " — the offer not taken", false},
+			{"rest", first.Name + " — on offer", true},
+			{"disabled", first.Name + " — the offer not taken", false},
 		} {
-			cell, err := write(dir, faces, specFor(worms[0], art, st.enabled),
+			cell, err := write(dir, faces, specFor(first, art, st.enabled),
 				cards.WormStyle, "state-"+st.name+".png", st.label)
 			if err != nil {
 				return err
@@ -163,10 +184,12 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d worms, %d offered a fight, %s%% of the catalogue a seat\n",
-		out, len(plates)+len(page.States), page.Count, offered, page.Share)
-	for _, g := range page.Groups {
-		fmt.Printf("  %-10s %2d worms\n", g.Target, g.Count)
+	fmt.Printf("wrote %s and %d PNGs — %d worms, %d with art of their own and %d with a subject; "+
+		"%d offered a fight, %s%% of the catalogue a seat\n",
+		out, len(plates)+len(page.States), page.Count,
+		page.Count-page.Undrawn, page.Count-page.Unwritten, offered, page.Share)
+	for _, f := range page.Families {
+		fmt.Printf("  %-26s %2d %s\n", f.Name, f.Count, f.Noun)
 	}
 	return nil
 }
@@ -275,6 +298,46 @@ func groupByTarget(plates []plate) []group {
 	return out
 }
 
+// groupByFamily splits the catalogue into the motifs its records are authored in.
+//
+// **In first-appearance order, which is the file's order**, so the page reads as data/worms.json
+// does and a worm lands where its siblings were written rather than where the alphabet puts it.
+// It is the relic sheet's function over a different catalogue, and it earns its place here for the
+// reason that one does: a family is a block to review at once.
+//
+// **The target grouping did not go — it moved to the header**, as a list of counts. Grouping by
+// target was right while the target was the only axis the file had; now that a record says which
+// motif it belongs to, the target is a fact about one worm and the family is a block of them. A
+// target nobody has authored into is still visible, in that list.
+//
+// A record with no Family lands under "unfamilied" rather than being dropped — an ungrouped worm
+// is a thing to see, not a thing to omit.
+func groupByFamily(plates []plate) []family {
+	order := make([]string, 0, 8)
+	byName := map[string][]plate{}
+	for _, p := range plates {
+		name := p.Family
+		if name == "" {
+			name = "unfamilied"
+		}
+		if _, seen := byName[name]; !seen {
+			order = append(order, name)
+		}
+		byName[name] = append(byName[name], p)
+	}
+
+	out := make([]family, 0, len(order))
+	for _, name := range order {
+		f := family{Name: name, Worms: byName[name], Count: len(byName[name])}
+		f.Noun = "worms"
+		if f.Count == 1 {
+			f.Noun = "worm"
+		}
+		out = append(out, f)
+	}
+	return out
+}
+
 // write renders one card, saves it, and returns what the page needs to show it.
 func write(dir string, f *cards.Faces, s cards.Spec, st cards.Style, name, label string) (cell, error) {
 	img, err := cards.Render(s, st, f)
@@ -341,6 +404,14 @@ type plate struct {
 	Value   string
 	Element string
 	Rule    string
+
+	// Family, Draw and Art are the three fields the engine ignores: the motif the record was
+	// authored under, the subject paragraph an art generator is given, and the picture the card
+	// actually draws. Default says that picture is the placeholder rather than one of its own.
+	Family  string
+	Draw    string
+	Art     string
+	Default bool
 }
 
 // group is one target's worth of the catalogue.
@@ -350,12 +421,23 @@ type group struct {
 	Worms  []plate
 }
 
+// family is one motif's worth of the catalogue: every worm authored in that block.
+type family struct {
+	Name  string
+	Count int
+	Noun  string
+	Worms []plate
+}
+
 type page struct {
-	Ground  string
-	Style   map[string]int
-	Count   int
-	Offered int
-	Share   string
-	Groups  []group
-	States  []cell
+	Ground    string
+	Style     map[string]int
+	Count     int
+	Offered   int
+	Undrawn   int
+	Unwritten int
+	Share     string
+	Targets   []group
+	Families  []family
+	States    []cell
 }

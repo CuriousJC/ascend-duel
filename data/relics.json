@@ -1105,7 +1105,7 @@
     "RelicRecord": "jar-fire",
     "Name": "Smouldering Jar",
     "Family": "Elements held",
-    "Art": "",
+    "Art": "jar-fire",
     "Draw": "a jar with burning coals inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each fire card\nkept in hand.",
     "Rarity": "common",
@@ -1121,7 +1121,7 @@
     "RelicRecord": "jar-ice",
     "Name": "Jar of Ice",
     "Family": "Elements held",
-    "Art": "",
+    "Art": "jar-ice",
     "Draw": "a jar with large shards of ice inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each ice card\nkept in hand.",
     "Rarity": "common",
@@ -1137,7 +1137,7 @@
     "RelicRecord": "jar-lightning",
     "Name": "Jar of Sparks",
     "Family": "Elements held",
-    "Art": "",
+    "Art": "jar-lightning",
     "Draw": "a jar with a small lightning bolts inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each lightning card\nkept in hand.",
     "Rarity": "common",
@@ -1153,7 +1153,7 @@
     "RelicRecord": "jar-earth",
     "Name": "Jar of Earth",
     "Family": "Elements held",
-    "Art": "",
+    "Art": "jar-earth",
     "Draw": "a jar with a small rocks inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
     "Rarity": "common",
@@ -1169,7 +1169,7 @@
     "RelicRecord": "jar-arcane",
     "Name": "Jar of Magic",
     "Family": "Elements held",
-    "Art": "",
+    "Art": "jar-arcane",
     "Draw": "a jar with a small glowing orbs inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each arcane card\nkept in hand.",
     "Rarity": "common",
@@ -1263,9 +1263,9 @@
   },
   {
     "RelicRecord": "repeat-fire",
-    "Name": "Backdraft",
+    "Name": "Twisted Flame",
     "Family": "Elemental repeats",
-    "Art": "",
+    "Art": "repeat-fire",
     "Draw": "a dual ring that's wrapped into a circle twice formed of burning copper",
     "Text": "Every fire card lands twice, both at full DMG.",
     "Rarity": "uncommon",
@@ -1279,9 +1279,9 @@
   },
   {
     "RelicRecord": "repeat-ice",
-    "Name": "Shatter Ring",
+    "Name": "Twisted Ice",
     "Family": "Elemental repeats",
-    "Art": "",
+    "Art": "repeat-ice",
     "Draw": "a dual ring that's wrapped into a circle twice formed of icy covered copper",
     "Text": "Every ice card lands twice, both at full DMG.",
     "Rarity": "uncommon",
@@ -1295,9 +1295,9 @@
   },
   {
     "RelicRecord": "repeat-lightning",
-    "Name": "Forked",
+    "Name": "Twisted Light",
     "Family": "Elemental repeats",
-    "Art": "",
+    "Art": "repeat-lightning",
     "Draw": "a dual ring that's wrapped into a circle twice formed of sparking copper",
     "Text": "Every lightning card lands twice, both at full DMG.",
     "Rarity": "uncommon",
@@ -1311,9 +1311,9 @@
   },
   {
     "RelicRecord": "repeat-earth",
-    "Name": "Landslide",
+    "Name": "Twisted Earth",
     "Family": "Elemental repeats",
-    "Art": "",
+    "Art": "repeat-earth",
     "Draw": "a dual ring that's wrapped into a circle twice formed of rocky copper",
     "Text": "Every earth card lands twice, both at full DMG.",
     "Rarity": "uncommon",
@@ -1327,9 +1327,9 @@
   },
   {
     "RelicRecord": "repeat-arcane",
-    "Name": "Recursion",
+    "Name": "Twisted Power",
     "Family": "Elemental repeats",
-    "Art": "",
+    "Art": "repeat-arcane",
     "Draw": "a dual ring that's wrapped into a circle twice formed of purple lightning covered copper",
     "Text": "Every arcane card lands twice, both at full DMG.",
     "Rarity": "uncommon",
@@ -1342,11 +1342,11 @@
     ]
   },
   {
-    "RelicRecord": "enflamed",
-    "Name": "Enflamed",
+    "RelicRecord": "growth-fire",
+    "Name": "Weight of the Flame",
     "Family": "Elemental growth",
-    "Art": "",
-    "Draw": "",
+    "Art": "growth-fire",
+    "Draw": "silver amulet of a scale witha red gem weighing down one side and a silver chain from the top",
     "Text": "Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1363,11 +1363,11 @@
     ]
   },
   {
-    "RelicRecord": "frostbitten",
-    "Name": "Frostbitten",
+    "RelicRecord": "growth-ice",
+    "Name": "Weight of the Ice",
     "Family": "Elemental growth",
-    "Art": "",
-    "Draw": "",
+    "Art": "growth-ice",
+    "Draw": "silver amulet of a scale witha blue gem weighing down one side and a silver chain from the top",
     "Text": "Ice cards gain 0.1x DMG every time a ice attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1384,11 +1384,11 @@
     ]
   },
   {
-    "RelicRecord": "lithium",
-    "Name": "Lithium",
+    "RelicRecord": "growth-lightning",
+    "Name": "Weight of the Light",
     "Family": "Elemental growth",
-    "Art": "",
-    "Draw": "",
+    "Art": "growth-lightning",
+    "Draw": "silver amulet of a scale witha yellow gem weighing down one side and a silver chain from the top",
     "Text": "Lightning cards gain 0.1x DMG every time a lightning attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1405,11 +1405,11 @@
     ]
   },
   {
-    "RelicRecord": "granite",
-    "Name": "Granite",
+    "RelicRecord": "growth-earth",
+    "Name": "Weight of the Earth",
     "Family": "Elemental growth",
-    "Art": "",
-    "Draw": "",
+    "Art": "growth-earth",
+    "Draw": "silver amulet of a scale witha green gem weighing down one side and a silver chain from the top",
     "Text": "Earth cards gain 0.1x DMG every time a earth attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1426,11 +1426,11 @@
     ]
   },
   {
-    "RelicRecord": "unravelled",
-    "Name": "Unravelled",
+    "RelicRecord": "growth-arcane",
+    "Name": "Weight of the Power",
     "Family": "Elemental growth",
-    "Art": "",
-    "Draw": "",
+    "Art": "growth-arcane",
+    "Draw": "silver amulet of a scale witha purple gem weighing down one side and a silver chain from the top",
     "Text": "Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1447,11 +1447,11 @@
     ]
   },
   {
-    "RelicRecord": "warm",
-    "Name": "Warm",
+    "RelicRecord": "discount-fire",
+    "Name": "Warm Robe",
     "Family": "Elemental discounts",
-    "Art": "",
-    "Draw": "",
+    "Art": "discount-fire",
+    "Draw": "a red robe",
     "Text": "Fire cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1463,11 +1463,11 @@
     ]
   },
   {
-    "RelicRecord": "cold",
-    "Name": "Cold",
+    "RelicRecord": "discount-ice",
+    "Name": "Cold Robe",
     "Family": "Elemental discounts",
-    "Art": "",
-    "Draw": "",
+    "Art": "discount-ice",
+    "Draw": "a blue robe",
     "Text": "Ice cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1479,11 +1479,11 @@
     ]
   },
   {
-    "RelicRecord": "static",
-    "Name": "Static",
+    "RelicRecord": "discount-lightning",
+    "Name": "Static Robe",
     "Family": "Elemental discounts",
-    "Art": "",
-    "Draw": "",
+    "Art": "discount-lightning",
+    "Draw": "a yellow robe",
     "Text": "Lightning cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1495,11 +1495,11 @@
     ]
   },
   {
-    "RelicRecord": "dirty",
-    "Name": "Dirty",
+    "RelicRecord": "discount-earth",
+    "Name": "Dirty Robe",
     "Family": "Elemental discounts",
-    "Art": "",
-    "Draw": "",
+    "Art": "discount-earth",
+    "Draw": "a brown robe",
     "Text": "Earth cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1511,11 +1511,11 @@
     ]
   },
   {
-    "RelicRecord": "eerie",
-    "Name": "Eerie",
+    "RelicRecord": "discount-arcane",
+    "Name": "Eerie Robe",
     "Family": "Elemental discounts",
-    "Art": "",
-    "Draw": "",
+    "Art": "discount-arcane",
+    "Draw": "a purple robe",
     "Text": "Arcane cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1527,11 +1527,11 @@
     ]
   },
   {
-    "RelicRecord": "pairing",
-    "Name": "Pairing",
+    "RelicRecord": "handmult-pair",
+    "Name": "Paired Rings",
     "Family": "Hand multipliers",
     "Art": "",
-    "Draw": "",
+    "Draw": "an amulet with with 2 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
     "Text": "Every pair deals 2x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1543,11 +1543,11 @@
     ]
   },
   {
-    "RelicRecord": "triplicate-form",
-    "Name": "Triplicate Form",
+    "RelicRecord": "handmult-triplicate",
+    "Name": "Triplicate Rings",
     "Family": "Hand multipliers",
     "Art": "",
-    "Draw": "",
+    "Draw": "an amulet with with 3 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
     "Text": "Every Three of a Kind\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1569,11 +1569,11 @@
     ]
   },
   {
-    "RelicRecord": "house-of-pain",
-    "Name": "House of Pain",
+    "RelicRecord": "handmult-full",
+    "Name": "Fulsome Rings",
     "Family": "Hand multipliers",
-    "Art": "",
-    "Draw": "",
+    "Art": "handmult-full",
+    "Draw": "an amulet with with 3 rings made of bronze snakes eating their own tails and 2 rings made of silver snakes either their own tails, the rings are intertwined and the snakes heads are facing each other",
     "Text": "Every Full House\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1595,11 +1595,11 @@
     ]
   },
   {
-    "RelicRecord": "oak",
-    "Name": "Oak",
+    "RelicRecord": "handmult-four",
+    "Name": "Quartered Rings",
     "Family": "Hand multipliers",
     "Art": "",
-    "Draw": "",
+    "Draw": "an amulet with with 4 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
     "Text": "Every Four of a Kind\ndeals 4x DMG.",
     "Rarity": "rare",
     "Rules": [
@@ -1621,11 +1621,11 @@
     ]
   },
   {
-    "RelicRecord": "pentacle",
-    "Name": "Pentacle",
+    "RelicRecord": "handmult-five",
+    "Name": "Perfected Rings",
     "Family": "Hand multipliers",
     "Art": "",
-    "Draw": "",
+    "Draw": "an amulet with with 5 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
     "Text": "Every Five of a Kind\ndeals 5x DMG.",
     "Rarity": "rare",
     "Rules": [
@@ -1647,11 +1647,11 @@
     ]
   },
   {
-    "RelicRecord": "poised",
-    "Name": "Poised",
+    "RelicRecord": "jar-stab",
+    "Name": "Jar of Needles",
     "Family": "Forms held",
-    "Art": "",
-    "Draw": "",
+    "Art": "jar-stab",
+    "Draw": "a jar with needles, the jar is made of clear glass with an indigo lid",
     "Text": "Deals 5 more DMG for each stab card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1663,11 +1663,11 @@
     ]
   },
   {
-    "RelicRecord": "sheathed",
-    "Name": "Sheathed",
+    "RelicRecord": "jar-slash",
+    "Name": "Jar of Razors",
     "Family": "Forms held",
-    "Art": "",
-    "Draw": "",
+    "Art": "jar-slash",
+    "Draw": "a jar with razor blades inside, the jar is made of clear glass with an indigo lid",
     "Text": "Deals 5 more DMG for each slash card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1679,27 +1679,11 @@
     ]
   },
   {
-    "RelicRecord": "coiled",
-    "Name": "Coiled",
+    "RelicRecord": "jar-crush",
+    "Name": "Jar of Metal",
     "Family": "Forms held",
-    "Art": "coiled",
-    "Draw": "tightly braided jade metal relic",
-    "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Form": "crush" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "shouldered",
-    "Name": "Shouldered",
-    "Family": "Forms held",
-    "Art": "",
-    "Draw": "",
+    "Art": "jar-crush",
+    "Draw": "a jar with blobs of metal inside, the jar is made of clear glass with an indigo lid",
     "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
     "Rarity": "common",
     "Rules": [

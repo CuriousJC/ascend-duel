@@ -19,6 +19,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
+| `parasites.json` | `LoadParasites` | the deck alterations spent *during* a fight |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
@@ -205,6 +206,9 @@ value nothing reads is somebody expecting a mechanic the game does not have.
 **Parsed and validated in `internal/session`, not in `internal/combat`.** A worm acts on the
 *run's* deck, and the rules have no deck — the who-consumes-it test again.
 
+**It carries `Family`, `Art` and `Draw`, and the engine reads none of them** *(2026-09-12)* — see
+the shared section below.
+
 **Seven targets**: `element`, `remove`, `duplicate`, `cost`, `amount`, `promote`, `demote`. The
 vocabulary is closed the way the card verbs are — a new one is a Go change plus one place applying
 it, never something a file can assert into existence.
@@ -216,6 +220,34 @@ make the argument in MECHANICS.md again before adding one.
 
 **`amount` reaches every card with one worm**, because what the figure means depends on the verb.
 That is the card language paying off, and it is the shape to reach for before adding a target.
+
+### The three fields no catalogue's rules read
+
+**`Family`, `Art` and `Draw` are authored, ignored, and read only by a review sheet.** They landed
+on `relics.json` first and were taken to `worms.json` and `parasites.json` on 2026-09-12;
+`enemies.json` and `bosses.json` carry `Family` and `Draw` without an `Art`, because a portrait
+key is what those two already have.
+
+- **`Family` is the motif a record was authored beside**, and it is what its sheet groups by —
+  "Elemental worms", "Concept swaps", "Slimes", "Stairway keepers". It is **authored rather than
+  derived** for the argument `RelicData.Family` records: nearly every value is implied by the
+  record's own rules, so a derived grouping would reproduce it almost exactly, and what an authored
+  one buys is a name to read instead of a signature to decode. **It is not the `CostTier` mistake**,
+  because nothing resolves anything differently because of it — but it **can go quietly out of date
+  and no test fails**, so re-read the block when a record's rules change.
+- **`Art` is an `assets.LoadImageData` key**, and **empty means the catalogue's default face**.
+  Every catalogue that has one exposes an `ArtKey()` on its record — `DefaultRelicArt`,
+  `DefaultWormArt`, `DefaultParasiteArt` — so the fallback is in `data/` and not in a screen: one
+  that lives in `internal/screens` is one the review tools do not have.
+- **`Draw` is the subject paragraph an art generator is given**, one sentence saying what the thing
+  *is* and what it is doing. The *generic* prompt is `docs/art/card_art_prompt.MD` and is about no
+  record at all. **Empty means nobody has written one**, which — read against an empty `Art` — is
+  the backlog each sheet marks in pink. **Every enemy and boss `Draw` reads `TO BE DETERMINED`**:
+  those portraits are licensed art rather than generated pictures, so the field is a seat rather
+  than a backlog.
+- **`go run ./tools/relicart -kind relic|worm|parasite`** files a generated picture into any of the
+  three: reduce to the card's size, commit under the family's asset directory, write `Art` on the
+  record.
 
 ### Stones
 
@@ -386,8 +418,9 @@ The data is about to grow three ways at once, which is why this was carved out o
 - **More relics.** The grammar is built and seventeen are authored; growing the *vocabulary* — a new
   moment or a new effect verb — is a Go change, and is meant to be. Buying and selling landed on
   2026-08-21, so a new record needs a `Rarity` as well as its rules.
-- **More worms.** `worms.json` exists and holds ten across seven targets. Growing it is one record
-  each; growing the *target vocabulary* is not, and MECHANICS.md says why.
+- **More worms.** `worms.json` exists and spans seven targets. Growing it is one record each;
+  growing the *target vocabulary* is not, and MECHANICS.md says why. `go run ./tools/wormsheet` is
+  what the catalogue is read on.
 - **Brands** — permanent for the run, altering the container where relics alter the contents. The
   mechanic is decided in `MECHANICS.md`; there is no `brands.json` and no acquisition.
 

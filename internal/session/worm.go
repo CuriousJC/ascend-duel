@@ -130,6 +130,18 @@ type Worm struct {
 	Text   string
 	Target WormTarget
 
+	// Art is the assets key of the picture this worm draws, already resolved through
+	// data.WormData.ArtKey — so it is never empty, and a worm nobody has drawn carries the
+	// placeholder rather than a hole. Carried here so the reward screen and tools/wormsheet read
+	// one answer.
+	Art string
+
+	// Family and Draw are authored, ignored by everything that plays the game, and read only by
+	// tools/wormsheet — the motif the record was written under, and the art brief for its picture.
+	// They ride along here so the sheet does not have to open data/worms.json a second time.
+	Family string
+	Draw   string
+
 	// Element is the new colour, and is only meaningful for TargetElement.
 	Element combat.Element
 
@@ -213,7 +225,8 @@ func resolveWorm(r data.WormData) (Worm, error) {
 			r.WormRecord, r.Target, targetList())
 	}
 
-	w := Worm{Record: r.WormRecord, Name: r.Name, Text: r.Text, Target: target}
+	w := Worm{Record: r.WormRecord, Name: r.Name, Text: r.Text, Target: target,
+		Art: r.ArtKey(), Family: r.Family, Draw: r.Draw}
 
 	switch target {
 	case TargetCost:

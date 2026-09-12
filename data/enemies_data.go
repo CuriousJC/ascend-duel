@@ -31,6 +31,32 @@ type EnemyData struct {
 	// to say one.
 	Name string `json:"Name"`
 
+	// Family is the kind of creature this is — undead, beast, humanoid, construct, and so on —
+	// and the motif its siblings were authored under.
+	//
+	// **The engine ignores it, exactly as it ignores Draw and a relic's Family.** Nothing picks an
+	// opponent by it and nothing resolves a round differently because of it; it is a heading on the
+	// roster sheet and a word for whoever is reading the catalogue.
+	//
+	// **It is deliberately not the floor band** *(owner's call, 2026-09-12)*. The sheet already
+	// groups by floor and prints the band on every heading, so a Family repeating that would be a
+	// field that says nothing. What it adds is the axis the placement decision does *not* carry:
+	// whether floor four is four more skeletons or a floor with a shape of its own.
+	//
+	// **It can go quietly out of date and no test fails**, the caveat every authored-and-ignored
+	// field here carries.
+	Family string `json:"Family"`
+
+	// Draw is the subject paragraph an art generator would be given for this opponent. **Nothing
+	// in the game reads it**, exactly like a relic's Draw.
+	//
+	// **Every record ships it as "TO BE DETERMINED"** *(owner's call, 2026-09-12)*. The portraits
+	// are licensed creature art rather than generated pictures, so unlike a relic there is nothing
+	// a brief would currently produce — the field is here so the briefs can be written a few at a
+	// time against the roster sheet, instead of a field being added later that every existing
+	// record is missing.
+	Draw string `json:"Draw"`
+
 	// Portrait is the assets key for the facing portrait drawn on this enemy's card.
 	//
 	// **The sprite sheet and its rect are gone** *(2026-08-11)*. The enemy is a card now, so

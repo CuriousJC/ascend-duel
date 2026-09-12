@@ -252,7 +252,7 @@ func TestADiscountRelicExplainsThePrice(t *testing.T) {
 		t.Skip("no fire attack in the deck")
 	}
 
-	h := wearing(t, 12, "warm")
+	h := wearing(t, 12, "discount-fire")
 	h.cost = combat.CostWith(h.worn, fire)
 
 	_, lines := cardTip(fire, h)

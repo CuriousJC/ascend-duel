@@ -159,7 +159,9 @@ go run ./tools/parasitesheet # every parasite: the line it prints against the ru
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
-go run ./tools/relicart      # files generated relic art: reduce, commit, set "Art", strike the worklist
+go run ./tools/relicart      # files generated relic art: reduce, commit, set "Art" on the record
+go run ./tools/relicart -kind worm       # the same, for data/worms.json and assets/worm
+go run ./tools/relicart -kind parasite   # the same, for data/parasites.json and assets/parasite
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
@@ -1095,18 +1097,37 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   draw time softens exactly the hard block edges the prompt spends its words demanding. Reduced
   once, it is ~57 KB each and nothing resamples.
   `TestEveryBleedingCardArtIsTheCardsOwnSize` is the tripwire.
-- **The generator's generic prompt lives in `docs/art/`; each relic's own description lives on
-  its record** *(owner's call, 2026-09-12)*. `docs/art/card_art_prompt.MD` is shared by every
+- **The generator's generic prompt lives in `docs/art/`; each record's own description lives on
+  the record** *(owner's call, 2026-09-12)*. `docs/art/card_art_prompt.MD` is shared by every
   card that carries a picture and is about no record at all, which is why it is not in `data/`.
-  What *is* about one record is the subject paragraph, and that is `Draw` in `data/relics.json`
-  — **ignored by the engine**, exactly as a status's `Badge` is, and pasted into the generator
-  as the record's own JSON. A brief kept apart from the record was deleted when the picture it
-  produced was filed, which is what moving it here fixes. **There is no worklist file** — a
-  relic with an empty `Art` is still to draw and one with an empty `Draw` has no brief, and
-  `go run ./tools/relicsheet` counts both and marks both in pink.
+  What *is* about one record is the subject paragraph, and that is `Draw` — **ignored by the
+  engine**, exactly as a status's `Badge` is, and pasted into the generator as the record's own
+  JSON. A brief kept apart from the record was deleted when the picture it produced was filed,
+  which is what moving it here fixes. **There is no worklist file** — a record with an empty
+  `Art` is still to draw and one with an empty `Draw` has no brief, and the catalogue's own
+  sheet counts both and marks both in pink.
 
-**Relic and worm art is a globbed family, keyed by filename stem** *(2026-09-11)* —
-`relic/fire.png` is `fire`, which is what `data/relics.json` writes in its `Art` field.
+- **Four catalogues carry `Family` and `Draw`, and nothing that plays the game reads either**
+  *(owner's call, 2026-09-12)*. `relics.json`, `worms.json` and `parasites.json` carry `Art`
+  beside them; `enemies.json` and `bosses.json` carry the two alone, with every `Draw` reading
+  `TO BE DETERMINED` — their portraits are licensed creature art rather than generated pictures,
+  so the field is a seat for briefs to be written into a few at a time rather than a backlog
+  anybody is working. **`Family` is the motif a record was authored beside** and is what its
+  review sheet groups by; it is authored rather than derived for the relic catalogue's reason,
+  and it carries the same caveat — **it can go quietly out of date when a record is retuned and
+  no test fails**, so re-read the block when you change what something does. **An enemy's
+  `Family` is deliberately not its floor band**: the roster sheet still cuts by floor, because
+  the floor is the placement decision, and a field repeating the heading above it would say
+  nothing.
+
+**Relic, worm and parasite art is a globbed family, keyed by filename stem** *(2026-09-11, the
+parasites 2026-09-12)* — `relic/fire.png` is `fire`, which is what `data/relics.json` writes in
+its `Art` field. **Each has its own default face** — `default-relic`, `default-worm`,
+`default-parasite`, reached through the record's `ArtKey()` rather than through a constant in a
+screen: a fallback living in `internal/screens` is a fallback the review tool does not have, which
+is how a sheet comes to disagree with the game. The parasites wore the worm's placeholder until
+they split, and they split because one shared picture is a page where a drawn worm and an undrawn
+parasite are the same face.
 Same exception to the three-edit rule the enemy portraits take, and the same cost: a key is
 tied to its filename, so renaming a file means editing the JSON. `assets.embedFamily` is the one
 walk all four families go through. **Most relics still have no artwork and draw

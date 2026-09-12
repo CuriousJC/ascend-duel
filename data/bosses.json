@@ -2,6 +2,8 @@
   {
     "BossRecord": "Jerry",
     "Name": "Jerry",
+    "Family": "Stairway keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Toll-Taker",
     "Portrait": "jerry-boss",
     "DMG": 11,
@@ -53,6 +55,8 @@
   {
     "BossRecord": "Sam",
     "Name": "Sam",
+    "Family": "Stairway keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "of the Low Steps",
     "Portrait": "sam-boss",
     "DMG": 11,
@@ -104,6 +108,8 @@
   {
     "BossRecord": "Dodge",
     "Name": "Dodge",
+    "Family": "Thieves and hoarders",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Cutpurse",
     "Portrait": "dodge-boss",
     "DMG": 11,
@@ -155,6 +161,8 @@
   {
     "BossRecord": "Callie",
     "Name": "Callie",
+    "Family": "Stairway keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "of the First Gate",
     "Portrait": "callie-boss",
     "DMG": 11,
@@ -206,6 +214,8 @@
   {
     "BossRecord": "Boris",
     "Name": "Boris",
+    "Family": "Brutes",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Stairbreaker",
     "Portrait": "boris-boss",
     "DMG": 13,
@@ -257,6 +267,8 @@
   {
     "BossRecord": "Troy",
     "Name": "Troy",
+    "Family": "Stairway keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Watchman",
     "Portrait": "troy-boss",
     "DMG": 13,
@@ -308,6 +320,8 @@
   {
     "BossRecord": "Harrold",
     "Name": "Harrold",
+    "Family": "Thieves and hoarders",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Hoarder",
     "Portrait": "harrold-boss",
     "DMG": 13,
@@ -359,6 +373,8 @@
   {
     "BossRecord": "Jack",
     "Name": "Jack",
+    "Family": "Stairway keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "of the Second Bell",
     "Portrait": "jack-boss",
     "DMG": 13,
@@ -410,6 +426,8 @@
   {
     "BossRecord": "Aimee",
     "Name": "Aimee",
+    "Family": "Bloodletters",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Bloodletter",
     "Portrait": "aimee-boss",
     "DMG": 16,
@@ -461,6 +479,8 @@
   {
     "BossRecord": "Charles",
     "Name": "Charles",
+    "Family": "Wardens",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Warden",
     "Portrait": "charles-boss",
     "DMG": 16,
@@ -512,6 +532,8 @@
   {
     "BossRecord": "Duke",
     "Name": "Duke",
+    "Family": "Stairway keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "of the Third Landing",
     "Portrait": "duke-boss",
     "DMG": 16,
@@ -563,6 +585,8 @@
   {
     "BossRecord": "Meglan",
     "Name": "Meglan",
+    "Family": "Hexwrights",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Hexwright",
     "Portrait": "meglan-boss",
     "DMG": 16,
@@ -614,6 +638,8 @@
   {
     "BossRecord": "Lanton",
     "Name": "Lanton",
+    "Family": "Elementalists",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Pyre-Keeper",
     "Portrait": "lanton-boss",
     "DMG": 19,
@@ -665,6 +691,8 @@
   {
     "BossRecord": "Pallant",
     "Name": "Pallant",
+    "Family": "Grave-keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Pale",
     "Portrait": "pallant-boss",
     "DMG": 19,
@@ -716,6 +744,8 @@
   {
     "BossRecord": "Rockard",
     "Name": "Rockard",
+    "Family": "Brutes",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Unmoved",
     "Portrait": "rockard-boss",
     "DMG": 19,
@@ -767,6 +797,8 @@
   {
     "BossRecord": "Sentry",
     "Name": "Sentry",
+    "Family": "Stairway keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Fourth",
     "Portrait": "sentry-boss",
     "DMG": 19,
@@ -818,6 +850,8 @@
   {
     "BossRecord": "Anndal",
     "Name": "Anndal",
+    "Family": "Elementalists",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Stormcaller",
     "Portrait": "anndal-boss",
     "DMG": 22,
@@ -869,6 +903,8 @@
   {
     "BossRecord": "Feld",
     "Name": "Feld",
+    "Family": "Grave-keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Grave-Digger",
     "Portrait": "feld-boss",
     "DMG": 22,
@@ -920,6 +956,8 @@
   {
     "BossRecord": "Thera",
     "Name": "Thera",
+    "Family": "Hunters",
+    "Draw": "TO BE DETERMINED",
     "Title": "of the Thorn",
     "Portrait": "thera-boss",
     "DMG": 22,
@@ -971,6 +1009,8 @@
   {
     "BossRecord": "Raul",
     "Name": "Raul",
+    "Family": "Bloodletters",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Flensing Blade",
     "Portrait": "raul-boss",
     "DMG": 22,
@@ -1022,6 +1062,8 @@
   {
     "BossRecord": "Gideon",
     "Name": "Gideon",
+    "Family": "Wardens",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Oathbreaker",
     "Portrait": "gideon-boss",
     "DMG": 26,
@@ -1073,6 +1115,8 @@
   {
     "BossRecord": "Mangat",
     "Name": "Mangat",
+    "Family": "Grave-keepers",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Bonebinder",
     "Portrait": "mangat-boss",
     "DMG": 26,
@@ -1124,6 +1168,8 @@
   {
     "BossRecord": "Shen",
     "Name": "Shen",
+    "Family": "Bladesmen",
+    "Draw": "TO BE DETERMINED",
     "Title": "of the Still Blade",
     "Portrait": "shen-boss",
     "DMG": 26,
@@ -1175,6 +1221,8 @@
   {
     "BossRecord": "Zither",
     "Name": "Zither",
+    "Family": "Hexwrights",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Discordant",
     "Portrait": "zither-boss",
     "DMG": 26,
@@ -1226,6 +1274,8 @@
   {
     "BossRecord": "Feyd",
     "Name": "Feyd",
+    "Family": "Crowned",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Serpent Prince",
     "Portrait": "feyd-boss",
     "DMG": 30,
@@ -1277,6 +1327,8 @@
   {
     "BossRecord": "Neytiri",
     "Name": "Neytiri",
+    "Family": "Hunters",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Skyhunter",
     "Portrait": "neytiri-boss",
     "DMG": 30,
@@ -1328,6 +1380,8 @@
   {
     "BossRecord": "Zeran",
     "Name": "Zeran",
+    "Family": "Hexwrights",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Voidtouched",
     "Portrait": "zeran-boss",
     "DMG": 30,
@@ -1379,6 +1433,8 @@
   {
     "BossRecord": "Bayaz",
     "Name": "Bayaz",
+    "Family": "Hexwrights",
+    "Draw": "TO BE DETERMINED",
     "Title": "First of the Magi",
     "Portrait": "bayaz-boss",
     "DMG": 35,
@@ -1430,6 +1486,8 @@
   {
     "BossRecord": "Maw",
     "Name": "The Maw",
+    "Family": "Crowned",
+    "Draw": "TO BE DETERMINED",
     "Title": "",
     "Portrait": "maw-boss",
     "DMG": 35,
@@ -1481,6 +1539,8 @@
   {
     "BossRecord": "Zaheel",
     "Name": "Zaheel",
+    "Family": "Crowned",
+    "Draw": "TO BE DETERMINED",
     "Title": "the Crownless",
     "Portrait": "zaheel-boss",
     "DMG": 35,

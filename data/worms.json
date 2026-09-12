@@ -2,18 +2,27 @@
   {
     "WormRecord": "devour",
     "Name": "DEVOUR",
+    "Family": "Cards eaten and copied",
+    "Art": "",
+    "Draw": "a fat pale grub with a wide ringed maw of inward-facing teeth, caught halfway through biting a card in two, the torn halves curling away from it",
     "Target": "remove",
     "Text": "DESTROY CARD"
   },
   {
     "WormRecord": "spawn",
     "Name": "SPAWN",
+    "Family": "Cards eaten and copied",
+    "Art": "",
+    "Draw": "a segmented worm splitting lengthwise into two identical worms, the halves still joined at the tail",
     "Target": "duplicate",
     "Text": "COPY CARD"
   },
   {
     "WormRecord": "ember-worm",
     "Name": "EMBER WORM",
+    "Family": "Elemental worms",
+    "Art": "",
+    "Draw": "a worm of glowing red coal, its segments cracked open like cooling lava with fire showing through the seams",
     "Target": "element",
     "Value": "fire",
     "Text": "CARD BECOMES FIRE"
@@ -21,6 +30,9 @@
   {
     "WormRecord": "rime-worm",
     "Name": "RIME WORM",
+    "Family": "Elemental worms",
+    "Art": "",
+    "Draw": "a worm sheathed in pale blue ice, frost spreading out from every place its body touches the ground",
     "Target": "element",
     "Value": "ice",
     "Text": "CARD BECOMES ICE"
@@ -28,6 +40,9 @@
   {
     "WormRecord": "arc-worm",
     "Name": "ARC WORM",
+    "Family": "Elemental worms",
+    "Art": "",
+    "Draw": "a worm of crackling yellow lightning, its body a jagged bolt with sparks leaping between the segments",
     "Target": "element",
     "Value": "lightning",
     "Text": "CARD BECOMES LIGHTNING"
@@ -35,6 +50,9 @@
   {
     "WormRecord": "loam-worm",
     "Name": "LOAM WORM",
+    "Family": "Elemental worms",
+    "Art": "",
+    "Draw": "a worm armoured in brown stone and packed earth, dirt and small pebbles shedding from its segments as it moves",
     "Target": "element",
     "Value": "earth",
     "Text": "CARD BECOMES EARTH"
@@ -42,6 +60,9 @@
   {
     "WormRecord": "hex-worm",
     "Name": "HEX WORM",
+    "Family": "Elemental worms",
+    "Art": "",
+    "Draw": "a worm of violet light, its body half transparent and hung about with slowly drifting arcane sigils",
     "Target": "element",
     "Value": "arcane",
     "Text": "CARD BECOMES ARCANE"
@@ -49,6 +70,9 @@
   {
     "WormRecord": "whetworm",
     "Name": "WHETWORM",
+    "Family": "Card strength",
+    "Art": "",
+    "Draw": "a worm whose body is a long grey whetstone, throwing a thin line of sparks where a blade is being drawn along it",
     "Target": "cost",
     "Value": "-1",
     "Text": "CARD BECOMES EASIER -1 AP"
@@ -56,6 +80,9 @@
   {
     "WormRecord": "swell",
     "Name": "SWELL",
+    "Family": "Card strength",
+    "Art": "",
+    "Draw": "a worm bloated to twice its length, its skin stretched tight and shining over the bulge",
     "Target": "amount",
     "Value": "150",
     "Text": "CARD GAINS DMG +50%"
@@ -63,18 +90,27 @@
   {
     "WormRecord": "grow",
     "Name": "GROW",
+    "Family": "Card strength",
+    "Art": "",
+    "Draw": "a thick heavy worm rearing up off the ground, far broader at the head than at the tail",
     "Target": "promote",
     "Text": "CARD GAINS STRENGTH +1 AP"
   },
   {
     "WormRecord": "shrink",
     "Name": "SHRINK",
+    "Family": "Card strength",
+    "Art": "",
+    "Draw": "a shrivelled worm curled tight and drawn in on itself, its skin hanging loose and wrinkled",
     "Target": "demote",
     "Text": "CARD LOSES STRENGTH -1 AP"
   },
   {
     "WormRecord": "tusk-worm",
     "Name": "TUSK WORM",
+    "Family": "Form worms",
+    "Art": "",
+    "Draw": "a worm with a blunt armoured head like the face of a maul, two short ivory tusks curving up from its jaw",
     "Target": "form",
     "Value": "crush",
     "Text": "CARD BECOMES CRUSH"
@@ -82,6 +118,9 @@
   {
     "WormRecord": "edge-worm",
     "Name": "EDGE WORM",
+    "Family": "Form worms",
+    "Art": "",
+    "Draw": "a worm whose body is one long curved blade, the outer edge bright and honed and the inner edge dull",
     "Target": "form",
     "Value": "slash",
     "Text": "CARD BECOMES SLASH"
@@ -89,6 +128,9 @@
   {
     "WormRecord": "point-worm",
     "Name": "POINT WORM",
+    "Family": "Form worms",
+    "Art": "",
+    "Draw": "a worm tapering along its whole length to a single needle point, its head a narrow spike",
     "Target": "form",
     "Value": "stab",
     "Text": "CARD BECOMES STAB"
@@ -96,6 +138,9 @@
   {
     "WormRecord": "shell-worm",
     "Name": "SHELL WORM",
+    "Family": "Form worms",
+    "Art": "",
+    "Draw": "a worm coiled inside a thick ridged shell, only its head showing at the opening",
     "Target": "form",
     "Value": "defend",
     "Text": "CARD BECOMES DEFEND"

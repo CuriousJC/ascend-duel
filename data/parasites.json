@@ -2,6 +2,9 @@
   {
     "ParasiteRecord": "graft",
     "Name": "Graft",
+    "Family": "Cards eaten and copied",
+    "Art": "",
+    "Draw": "a pale grub arched between two cards with its head buried in one and its tail in the other, a ridge of grafted tissue joining the pair",
     "Change": "normal",
     "Target": "clone",
     "Count": 2,
@@ -10,6 +13,9 @@
   {
     "ParasiteRecord": "mimic",
     "Name": "Mimic",
+    "Family": "Cards eaten and copied",
+    "Art": "",
+    "Draw": "a squat grey insect sitting on a card and moulting a second identical insect out of its own back",
     "Change": "normal",
     "Target": "duplicate",
     "Count": 1,
@@ -18,6 +24,9 @@
   {
     "ParasiteRecord": "arcbore",
     "Name": "Arcbore",
+    "Family": "Elemental bores",
+    "Art": "",
+    "Draw": "a long thin boring insect with a drill-bit head, yellow lightning crawling down its body and arcing off the drill",
     "Change": "normal",
     "Target": "element",
     "Value": "lightning",
@@ -27,6 +36,9 @@
   {
     "ParasiteRecord": "emberbore",
     "Name": "Emberbore",
+    "Family": "Elemental bores",
+    "Art": "",
+    "Draw": "a long thin boring insect with a drill-bit head glowing orange with heat, smoke curling back along its body",
     "Change": "normal",
     "Target": "element",
     "Value": "fire",
@@ -36,6 +48,9 @@
   {
     "ParasiteRecord": "hexbore",
     "Name": "Hexbore",
+    "Family": "Elemental bores",
+    "Art": "",
+    "Draw": "a long thin boring insect with a drill-bit head, violet light spilling out of the hole it is boring",
     "Change": "normal",
     "Target": "element",
     "Value": "arcane",
@@ -45,6 +60,9 @@
   {
     "ParasiteRecord": "loambore",
     "Name": "Loambore",
+    "Family": "Elemental bores",
+    "Art": "",
+    "Draw": "a long thin boring insect with a drill-bit head packed with brown earth, soil heaped behind it",
     "Change": "normal",
     "Target": "element",
     "Value": "earth",
@@ -54,6 +72,9 @@
   {
     "ParasiteRecord": "rimebore",
     "Name": "Rimebore",
+    "Family": "Elemental bores",
+    "Art": "",
+    "Draw": "a long thin boring insect with a drill-bit head rimed in frost, a plume of ice crystals thrown back from the hole",
     "Change": "normal",
     "Target": "element",
     "Value": "ice",
@@ -63,6 +84,9 @@
   {
     "ParasiteRecord": "edgegrub",
     "Name": "Edgegrub",
+    "Family": "Form grubs",
+    "Art": "",
+    "Draw": "a grub with a row of bright honed blades down its back, lying along the edge of a card",
     "Change": "normal",
     "Target": "form",
     "Value": "slash",
@@ -72,6 +96,9 @@
   {
     "ParasiteRecord": "maulgrub",
     "Name": "Maulgrub",
+    "Family": "Form grubs",
+    "Art": "",
+    "Draw": "a heavy armoured grub with a blunt knob of a head, curled like a hammer about to fall",
     "Change": "normal",
     "Target": "form",
     "Value": "crush",
@@ -81,6 +108,9 @@
   {
     "ParasiteRecord": "thorngrub",
     "Name": "Thorngrub",
+    "Family": "Form grubs",
+    "Art": "",
+    "Draw": "a narrow grub bristling with long straight thorns, its head drawn out to a single point",
     "Change": "normal",
     "Target": "form",
     "Value": "stab",
@@ -90,6 +120,9 @@
   {
     "ParasiteRecord": "wardgrub",
     "Name": "Wardgrub",
+    "Family": "Form grubs",
+    "Art": "",
+    "Draw": "a grub rolled into a tight armoured ball, its overlapping plates presented outward like a shield",
     "Change": "normal",
     "Target": "form",
     "Value": "defend",
@@ -99,6 +132,9 @@
   {
     "ParasiteRecord": "gnaw",
     "Name": "Gnaw",
+    "Family": "Cards eaten and copied",
+    "Art": "",
+    "Draw": "a broad-jawed beetle with heavy mandibles, chewing a ragged bite out of the corner of a card",
     "Change": "normal",
     "Target": "remove",
     "Count": 2,
@@ -107,6 +143,9 @@
   {
     "ParasiteRecord": "brood",
     "Name": "Brood",
+    "Family": "Held upgrades",
+    "Art": "",
+    "Draw": "a bloated insect queen heavy with eggs, a clutch of small bright coins packed among them",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "vitae-in-hand",
@@ -117,6 +156,9 @@
   {
     "ParasiteRecord": "motley",
     "Name": "Motley",
+    "Family": "Wildcards",
+    "Art": "",
+    "Draw": "a beetle whose shell runs through all five colours at once, red and blue and yellow and brown and violet bleeding into one another",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "wild-element",
@@ -126,6 +168,9 @@
   {
     "ParasiteRecord": "carapace",
     "Name": "Carapace",
+    "Family": "Play upgrades",
+    "Art": "",
+    "Draw": "a beetle with a broad domed shell held up over itself like a raised shield, the plates thick and ridged",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "shield-on-play",
@@ -136,6 +181,9 @@
   {
     "ParasiteRecord": "goad",
     "Name": "Goad",
+    "Family": "Play upgrades",
+    "Art": "",
+    "Draw": "a wasp-like insect with a long barbed sting held forward, a bead of venom at the tip",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "damage-on-play",
@@ -146,6 +194,9 @@
   {
     "ParasiteRecord": "hunger",
     "Name": "Hunger",
+    "Family": "Play upgrades",
+    "Art": "",
+    "Draw": "a gaunt insect all jaw and no body, its mandibles open far wider than it should be able to manage",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "scale-in-combo",
@@ -156,6 +207,9 @@
   {
     "ParasiteRecord": "leech",
     "Name": "Leech",
+    "Family": "Play upgrades",
+    "Art": "",
+    "Draw": "a fat dark leech swollen with blood, a bead of it welling at the sucker",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "heal-on-play",
@@ -166,6 +220,9 @@
   {
     "ParasiteRecord": "patience",
     "Name": "Patience",
+    "Family": "Held upgrades",
+    "Art": "",
+    "Draw": "a still grey insect folded in on itself and waiting, dust settled over its back",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "scale-in-hand",
@@ -176,6 +233,9 @@
   {
     "ParasiteRecord": "spite",
     "Name": "Spite",
+    "Family": "Held upgrades",
+    "Art": "",
+    "Draw": "a small black insect coiled tight with its sting cocked, every line of it held in check",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "damage-in-hand",
@@ -186,6 +246,9 @@
   {
     "ParasiteRecord": "rockbeetle",
     "Name": "Rock Beetle",
+    "Family": "Purse and pouch",
+    "Art": "",
+    "Draw": "a squat beetle whose shell is a slab of grey rock, small stones wedged between its plates",
     "Change": "normal",
     "Target": "stones",
     "Value": "2",
@@ -195,6 +258,9 @@
   {
     "ParasiteRecord": "effigy",
     "Name": "Effigy",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a crude insect figure bound together out of straw and twine, shaped roughly like a fist",
     "Change": "normal",
     "Target": "swap",
     "Value": "Bash",
@@ -204,6 +270,9 @@
   {
     "ParasiteRecord": "totem",
     "Name": "Totem",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a carved insect totem of dark wood, its body drawn out into a long forward-pointing spar",
     "Change": "normal",
     "Target": "swap",
     "Value": "Thrust",
@@ -213,6 +282,9 @@
   {
     "ParasiteRecord": "husk",
     "Name": "Husk",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "the hollow split husk a moulting insect has climbed out of, still holding its shape",
     "Change": "normal",
     "Target": "swap",
     "Value": "Slice",
@@ -222,6 +294,9 @@
   {
     "ParasiteRecord": "cocoon",
     "Name": "Cocoon",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a thick silk cocoon wrapped round and round, dense enough to stop a blade",
     "Change": "normal",
     "Target": "swap",
     "Value": "Block",
@@ -231,6 +306,9 @@
   {
     "ParasiteRecord": "barb",
     "Name": "Barb",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a single small barbed hook of chitin, sharp and quick and no bigger than a thorn",
     "Change": "normal",
     "Target": "swap",
     "Value": "Jab",
@@ -240,6 +318,9 @@
   {
     "ParasiteRecord": "scab",
     "Name": "Scab",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a hard dark scab of an insect, its shell crusted and split along one clean edge",
     "Change": "normal",
     "Target": "swap",
     "Value": "Cut",
@@ -249,6 +330,9 @@
   {
     "ParasiteRecord": "knot",
     "Name": "Knot",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a knotted ball of insect legs and chitin, heavy and blunt and tangled beyond unpicking",
     "Change": "normal",
     "Target": "swap",
     "Value": "Thump",
@@ -258,6 +342,9 @@
   {
     "ParasiteRecord": "shell",
     "Name": "Shell",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a plain curved shell held edge-on like a small brace of armour",
     "Change": "normal",
     "Target": "swap",
     "Value": "Brace",
@@ -267,6 +354,9 @@
   {
     "ParasiteRecord": "spur",
     "Name": "Spur",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a long bone spur of an insect, straight and thin and tapering to a fine point",
     "Change": "normal",
     "Target": "swap",
     "Value": "Skewer",
@@ -276,6 +366,9 @@
   {
     "ParasiteRecord": "fang",
     "Name": "Fang",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a curved chitin fang with a bright cutting edge along its inner curve",
     "Change": "normal",
     "Target": "swap",
     "Value": "Cleave",
@@ -285,6 +378,9 @@
   {
     "ParasiteRecord": "growth",
     "Name": "Growth",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a lumpen swollen growth of an insect, far too heavy for the legs under it",
     "Change": "normal",
     "Target": "swap",
     "Value": "Smash",
@@ -294,6 +390,9 @@
   {
     "ParasiteRecord": "bulwark",
     "Name": "Bulwark",
+    "Family": "Concept swaps",
+    "Art": "",
+    "Draw": "a broad flat insect like a wall of overlapping plates, planted and immovable",
     "Change": "normal",
     "Target": "swap",
     "Value": "Guard",
@@ -303,6 +402,9 @@
   {
     "ParasiteRecord": "hoard",
     "Name": "Hoard",
+    "Family": "Purse and pouch",
+    "Art": "",
+    "Draw": "a beetle crouched over a heap of bright coins, its legs closed around the pile",
     "Change": "normal",
     "Target": "vitae",
     "Value": "20",
@@ -312,6 +414,9 @@
   {
     "ParasiteRecord": "golden",
     "Name": "Golden",
+    "Family": "Gambling metals",
+    "Art": "",
+    "Draw": "a scarab worked in solid gold, every plate of its shell polished to a mirror",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "golden",
@@ -322,6 +427,9 @@
   {
     "ParasiteRecord": "silver",
     "Name": "Silver",
+    "Family": "Gambling metals",
+    "Art": "",
+    "Draw": "a scarab worked in bright silver, its shell chased with fine engraved lines",
     "Change": "upgrade",
     "Target": "rider",
     "Rider": "silver",
@@ -332,6 +440,9 @@
   {
     "ParasiteRecord": "chimera",
     "Name": "Chimera",
+    "Family": "Echoes",
+    "Art": "",
+    "Draw": "an insect assembled from the parts of several others, no two limbs matching, a second head budding from its thorax",
     "Change": "normal",
     "Target": "chimera",
     "Count": 0,

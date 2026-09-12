@@ -33,6 +33,38 @@ type WormData struct {
 	// Name is what is written across the top of the card.
 	Name string `json:"Name"`
 
+	// Family is the motif this worm belongs to — the block of siblings it was authored beside,
+	// and the heading it is reviewed under on the worm sheet.
+	//
+	// **The engine ignores it, exactly as it ignores Art and Draw.** It groups the review page and
+	// nothing else reads it; a worm with no Family still loads and is still offered.
+	//
+	// **It is the relic catalogue's field brought over** *(owner's call, 2026-09-12)*. The same
+	// argument holds and the same caveat does: nearly every value here is implied by the record's
+	// own Target and Value — the five elemental worms are one block because they all recolour — so
+	// this is legibility for whoever is authoring rather than a fact the file knows and the rules
+	// do not. It can go quietly out of date when a worm is retargeted, and no test fails, so
+	// re-read the block when you change what a worm does.
+	Family string `json:"Family"`
+
+	// Art is the assets.LoadImageData key for the picture on the face. **Empty means the default
+	// worm face** — see ArtKey.
+	//
+	// **It became a field on 2026-09-12**, having been the one constant `screens.wormArtKey`. The
+	// note on that constant said the day worms got art it should become a field appearing here
+	// rather than a fallback being unpicked, and this is that day: the fallback is `ArtKey`, which
+	// is the shape `RelicData.ArtKey` already had, so a worm with no art of its own draws the
+	// placeholder and one with art draws it.
+	Art string `json:"Art"`
+
+	// Draw is the subject paragraph the art generator is given for this worm — what the thing
+	// *is* and what it is doing, in one sentence. **Nothing in the game reads it**, exactly like
+	// Art's own key and a relic's Draw.
+	//
+	// **Empty means nobody has written one yet**, which — read against an empty Art — is what the
+	// worm sheet reports as the backlog.
+	Draw string `json:"Draw"`
+
 	// Target is which aspect of a card this worm changes. A closed vocabulary, resolved by
 	// `session.ParseWormTarget`: `element`, `remove`, `duplicate`.
 	//
@@ -58,6 +90,46 @@ type WormData struct {
 	// the same card. A break is the author saying where it goes; it can only ever add a line,
 	// since a too-wide authored line still wraps.
 	Text string `json:"Text"`
+}
+
+// DefaultWormArt is the face a record with no Art of its own draws: assets/worm/default-worm.png.
+//
+// **Keys are not file paths** — LoadImageData files that picture under this, which is what a
+// lookup has to spell. Writing the filename instead is why the first version of the worm card drew
+// nothing and logged `no artwork named "default-relic"`.
+const DefaultWormArt = "default-worm"
+
+// ArtKey is the picture this worm actually draws: its own if it has one, the default otherwise.
+//
+// **It is here rather than at the call sites** for RelicData.ArtKey's reason: a worm is drawn in
+// the reward screen and in tools/wormsheet, and a fallback living in a screen is a fallback the
+// review tool does not have — which is exactly how a sheet comes to disagree with the game.
+func (w WormData) ArtKey() string {
+	if w.Art == "" {
+		return DefaultWormArt
+	}
+	return w.Art
+}
+
+// WormFileOrder is every record id in the order data/worms.json writes them.
+//
+// **File order rather than WormOrder's sorted keys**, and it is for the review page alone: the
+// catalogue is authored in motif order — the five recolours together, the two that resize a card
+// beside each other — and sorting by key throws exactly that away. It is as deterministic as
+// sorted order and carries more.
+//
+// **Nothing that decides an outcome may walk this.** The offer is a shuffle of WormOrder, which is
+// sorted for the reason the randomness skill gives; this is a layout.
+func WormFileOrder() []string {
+	var list []WormData
+	if err := json.Unmarshal(wormsJSON, &list); err != nil {
+		panic("Failed to unmarshal worms.json: " + err.Error())
+	}
+	out := make([]string, 0, len(list))
+	for _, w := range list {
+		out = append(out, w.WormRecord)
+	}
+	return out
 }
 
 // LoadWorms parses the catalogue into a map keyed by WormRecord.

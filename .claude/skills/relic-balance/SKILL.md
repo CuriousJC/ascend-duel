@@ -15,6 +15,13 @@ state the same fact twice and let the second copy go stale silently. A relic ret
 `add-hand-damage` to `adjust-cost` would keep the tag it was born with and nothing would fail.
 This is `CostTier` again — see the `data` skill.
 
+**`Family` in `relics.json` is not a counter-example to this** *(owner's call, 2026-09-12)*. It is
+a motif name — "Jade rings", "Weapons" — authored so the relic sheet has headings a person can
+read, and it groups that page and nothing else. It is a *restatement in words* of what the rules
+already say, made for the author's own legibility, where a `Tags` field would be a second source of
+truth about what a relic **is**. Nothing here reads it, and `classify.py` stays derived: if a
+Family and the rules ever disagree, the rules win and the label is the thing to fix.
+
 **The corollary is that new categories are cheap.** The taxonomy is three Python dicts at the top
 of one file. Adding an axis, splitting a category, or reclassifying a verb is an edit there and a
 re-run — no data migration, no Go change, no record touched. That is what makes it safe to keep

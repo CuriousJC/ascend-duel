@@ -196,7 +196,12 @@ func setArt(path string, keys []string) error {
 	}
 	s := string(raw)
 	for _, key := range keys {
-		re := regexp.MustCompile(`("RelicRecord": "` + regexp.QuoteMeta(key) + `",\n(?:[^\n]*\n)??[ \t]*"Art": )"[^"]*"`)
+		// **Bounded and lazy, so it cannot walk into the next record.** The header fields between
+		// RelicRecord and Art are authored and have grown once already — Family landed between Name
+		// and Art on 2026-09-12, and a pattern allowing exactly one intervening line then matched no
+		// record in the file. Four is headroom for the next one; an unbounded `*` would silently
+		// retarget a record whose own Art was missing.
+		re := regexp.MustCompile(`("RelicRecord": "` + regexp.QuoteMeta(key) + `",\n(?:[^\n]*\n){0,4}?[ \t]*"Art": )"[^"]*"`)
 		if !re.MatchString(s) {
 			return fmt.Errorf("%s: found no Art field on record %q", path, key)
 		}

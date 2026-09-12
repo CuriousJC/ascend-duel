@@ -96,10 +96,12 @@ func run(dir string) error {
 		Count:  len(records),
 	}
 
-	// **In `RelicOrder`'s order, which is the file's sorted keys**, so two runs of the tool
-	// produce the same page and a new relic lands in one predictable place rather than
-	// somewhere different every time. Same rule the relic pane draws under.
-	for _, key := range data.RelicOrder(records) {
+	// **In the file's own order, not RelicOrder's sorted keys** *(2026-09-12)*. The catalogue is
+	// authored in motif order — the flips together, the three ring families walking their ladders,
+	// the weapons along the concept ladder — and sorting by key threw exactly that away, which is
+	// what made an alphabetical page the wrong picture of a catalogue with families in it. File
+	// order is as deterministic as sorted order and carries more.
+	for _, key := range data.RelicFileOrder() {
 		record := records[key]
 
 		art, err := artwork(record.ArtKey())
@@ -129,6 +131,7 @@ func run(dir string) error {
 			Text:   record.Text,
 			Price:  price,
 			Rarity: string(record.Rarity),
+			Family: record.Family,
 			Sell:   session.SellValue(key),
 			Art:    record.Art,
 			// **The subject paragraph, beside the picture it produced.** It lived in a worklist
@@ -149,6 +152,7 @@ func run(dir string) error {
 	}
 
 	page.Tiers = groupByRarity(plates)
+	page.Families = groupByFamily(plates)
 
 	// The three states a relic card is drawn in, on one relic so the card underneath is
 	// provably the same one. **Not "not owned"** — a relic the run has neither bought nor been
@@ -334,6 +338,67 @@ func artwork(key string) (image.Image, error) {
 // **Share is the chance a single shelf draw lands in this tier**, as a whole percent: the tier's
 // tickets over every relic's tickets. It is what turns "weight 10" into something reviewable — a
 // tier holding half the catalogue at ten tickets each is a shelf that shows little else.
+// groupByFamily splits the catalogue into the motifs its records are authored in.
+//
+// **In first-appearance order, which is the file's order**, so the page reads as data/relics.json
+// does and a family lands where its siblings were written rather than where the alphabet puts it.
+//
+// **The mix is the rarity spread within the family**, printed on the heading. That is what keeps
+// the pricing review the rarity grouping existed for: nearly every family is single-rarity, so a
+// heading reading "15 relics, all common" answers "does one of these belong a tier up" for the
+// whole block at once, and a family with a mix says so rather than hiding it. The three tier
+// shares stay on the page header, where they are about the shelf rather than about a motif.
+//
+// A record with no Family lands under "unfamilied" rather than being dropped — an ungrouped relic
+// is a thing to see, not a thing to omit.
+func groupByFamily(plates []plate) []family {
+	order := make([]string, 0, 8)
+	byName := map[string][]plate{}
+	for _, p := range plates {
+		name := p.Family
+		if name == "" {
+			name = "unfamilied"
+		}
+		if _, seen := byName[name]; !seen {
+			order = append(order, name)
+		}
+		byName[name] = append(byName[name], p)
+	}
+
+	out := make([]family, 0, len(order))
+	for _, name := range order {
+		f := family{Name: name, Relics: byName[name], Count: len(byName[name])}
+		f.Noun = "relics"
+		if f.Count == 1 {
+			f.Noun = "relic"
+		}
+		counts := map[string]int{}
+		for _, p := range f.Relics {
+			counts[p.Rarity]++
+		}
+		parts := make([]string, 0, len(data.Rarities()))
+		for _, r := range data.Rarities() {
+			if n := counts[string(r)]; n > 0 {
+				if n == f.Count {
+					// **"all common" reads as a claim about a block, so a family of one just
+					// names its tier** — "all uncommon" over a single relic is a sentence with
+					// nothing to quantify.
+					if f.Count == 1 {
+						parts = append(parts, string(r))
+					} else {
+						parts = append(parts, "all "+string(r))
+					}
+				} else {
+					parts = append(parts, fmt.Sprintf("%d %s", n, r))
+				}
+			}
+		}
+		f.Mix = strings.Join(parts, ", ")
+		out = append(out, f)
+	}
+	return out
+}
+
 func groupByRarity(plates []plate) []tier {
 	total := 0
 	for _, p := range plates {
@@ -413,6 +478,7 @@ type plate struct {
 	Sell    int
 	Art     string
 	Draw    string
+	Family  string
 	Counter string
 	Default bool
 	Rules   []string
@@ -435,6 +501,16 @@ type tier struct {
 	Relics []plate
 }
 
+// family is one motif's worth of the catalogue: every relic authored in that block, with the
+// rarity spread across them.
+type family struct {
+	Name   string
+	Count  int
+	Noun   string
+	Mix    string
+	Relics []plate
+}
+
 type page struct {
 	Ground    string
 	Style     map[string]int
@@ -442,5 +518,6 @@ type page struct {
 	Undrawn   int
 	Unwritten int
 	Tiers     []tier
+	Families  []family
 	States    []cell
 }

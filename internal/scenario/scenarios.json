@@ -44,12 +44,12 @@
   },
   {
     "ScenarioRecord": "new-relic-art",
-    "Note": "The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, The Old Dagger, The Knuckles and Attuned. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, The Old Dagger quadruples the Jab, The Knuckles quadruples the Thump, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
+    "Note": "The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, the Jar of Earth, The Old Dagger, The Knuckles and Trio Ring. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Trio Ring pays an Elemental Three of a Kind, The Old Dagger quadruples the Jab, The Knuckles quadruples the Thump, and the Jar of Earth reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
     "RelicSlots": 6,
     "Relics": [
       "bulwark",
       "banker",
-      "bedrock",
+      "jar-earth",
       "old-dagger",
       "brass-knuckles",
       "element-three-of-a-kind-hand"
@@ -219,7 +219,7 @@
   },
   {
     "ScenarioRecord": "form-hand-relics",
-    "Note": "The two new form-hand relics on the fingers, Armoury and Arsenal, so the artwork can be looked at on the relic pane and the rules can be made to fire in the same launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Arsenal adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Armoury adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the relic term, and the relic pane for whether the two pictures are tellable apart at the size they are drawn - they are two relics about the same axis, and the card carries no title.",
+    "Note": "The two form-hand relics on the fingers, Full Ring and Quad Ring, so the rules can be made to fire and the two can be told apart on the relic pane in one launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Quad Ring adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Full Ring adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the relic term, and the relic pane for whether the two pictures are tellable apart at the size they are drawn - they are two relics about the same axis, and the card carries no title.",
     "Relics": [
       "form-full-house-hand",
       "form-four-of-a-kind-hand"

@@ -42,20 +42,25 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
     color: var(--dim); font-weight: 600;
     margin: 44px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
   }
-  h3.tier {
-    font-size: 15px; font-weight: 600; text-transform: capitalize;
+  h3.family {
+    font-size: 15px; font-weight: 600;
     margin: 34px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
   }
-  h3.tier span {
-    text-transform: none; font-weight: 400; font-size: 12px; color: var(--dim);
-    margin-left: 10px;
+  h3.family span {
+    font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 10px;
   }
-  /* The tier is a colour as well as a word, so a card can be placed at a glance while
-     scrolling. Common is the ground itself; rare is the relic pink the game already spends
-     on "a relic did this". */
-  h3.tier.common { border-bottom-color: var(--rule); }
-  h3.tier.uncommon { border-bottom-color: #6c8fb5; }
-  h3.tier.rare { border-bottom-color: var(--pink); }
+  /* The shelf is a list rather than three headings now that the page groups by family, so the
+     tier colour moves onto the row. Common is the ground itself; rare is the relic pink the
+     game already spends on "a relic did this". */
+  ul.shelf { list-style: none; padding: 0; margin: 14px 0 0; }
+  li.tier {
+    font-size: 12.5px; color: var(--dim); padding: 5px 0 5px 10px;
+    border-left: 3px solid var(--rule); margin-bottom: 3px;
+  }
+  li.tier strong { color: var(--ink); text-transform: capitalize; margin-right: 6px; }
+  li.tier.common { border-left-color: var(--rule); }
+  li.tier.uncommon { border-left-color: #6c8fb5; }
+  li.tier.rare { border-left-color: var(--pink); }
   .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
   .facts code { color: var(--ink); }
   .note { color: var(--dim); font-size: 12.5px; max-width: 68ch; margin: 12px 0 0; }
@@ -143,21 +148,33 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   player, and this is the only place the two are visible together.
 </p>
 
-<h2>The catalogue, by rarity</h2>
+<h2>The shelf</h2>
 <p class="note">
-  <strong>Grouped by tier because that is the pricing decision.</strong> A relic is rebalanced by
-  moving it between these three, never by writing a number, so what a review needs is every
-  common side by side. The share is how often a single shelf seat lands in that tier — the
-  tier's tickets over the whole catalogue's.
+  <strong>What a single shelf seat costs and how often it lands in each tier.</strong> Rarity is
+  the only pricing dial there is — a relic is rebalanced by moving it between these three, never
+  by writing a number — and the share is the tier's tickets over the whole catalogue's.
+</p>
+<ul class="shelf">
+{{range .Tiers}}
+  <li class="tier {{.Rarity}}"><strong>{{.Rarity}}</strong>
+    {{.Count}} relics &middot; {{.Price}} vitae, sells for {{.Sell}} &middot;
+    weight {{.Weight}} each &middot; {{.Share}}% of a shelf draw</li>
+{{end}}
+</ul>
+
+<h2>The catalogue, by family</h2>
+<p class="note">
+  <strong>Grouped by the motif each relic was authored beside, in the file's own order.</strong>
+  The pricing review survives the move because nearly every family is one tier throughout: a
+  heading reading <em>all common</em> asks "does one of these belong a tier up" of the whole block
+  at once, and a family with a mix says so on its heading rather than hiding it.
 </p>
 
-{{range .Tiers}}
-<h3 class="tier {{.Rarity}}">
-  {{.Rarity}}
-  <span>{{.Count}} relics &middot; {{.Price}} vitae, sells for {{.Sell}} &middot;
-    weight {{.Weight}} each &middot; {{.Share}}% of a shelf draw</span>
+{{range .Families}}
+<h3 class="family">
+  {{.Name}}
+  <span>{{.Count}} {{.Noun}} &middot; {{.Mix}}</span>
 </h3>
-{{if not .Relics}}<p class="note">Nothing is authored at this tier.</p>{{end}}
 <div class="plates">
   {{range .Relics}}
     <div class="plate">

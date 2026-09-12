@@ -355,7 +355,7 @@ deck is half ice" from being confused with "my deck contains more ice cards".
   steps every 3 AP attack one rung down its own form's ladder, so a Skewer is dealt as a Thrust for
   the whole fight. It lasts as long as the relic is worn and no longer.
 - **A relic can also rewrite a card as it is dealt** — the `card-drawn` moment, which leaves even
-  the fight's deck alone. Frozen Lightning and Hexfrost both `set-element` to ice, which is why a
+  the fight's deck alone. Frozen Lightning and Frozen Orb both `set-element` to ice, which is why a
   run wearing the pair reads as zero lightning and zero arcane; take them off and the colours come
   back. `card-cost` relics are the same shape applied to the price rather than the colour.
 
@@ -1545,8 +1545,9 @@ Striker covers 5 cards, Keen covers 15.
 sixth colour rather than the one a card list suggests. Four are the colour's own seats in families
 that already existed — **Arcane** (2x DMG), **Weakening** (applies WEAKENED), **Eerie** (1 AP off),
 **Unravelled** (grows +0.1x per landed arcane hit). The other eight are the flip cross-product,
-which is quadratic: **Witchfire / Runefrost / Spellbolt / Leyline** turn fire, ice, lightning and
-earth into arcane, and **Hexfire / Hexfrost / Hexbolt / Hexstone** turn arcane into each of them.
+which is quadratic: **Burning Mana / Frozen Mana / Electrified Mana / Enchanted Earth** turn fire,
+ice, lightning and earth into arcane, and **Burning Orb / Frozen Orb / Charged Orb / Stone Orb** turn
+arcane into each of them.
 Twelve ordered pairs became twenty. **A sixth colour would bring fourteen**, ten of them flips.
 
 **Weakening is the strongest of the five status relics and is priced the same as the others.** That
@@ -1732,17 +1733,19 @@ it does, and the tooltip is what says it.
 
 | dealt as → | from fire | from ice | from lightning | from earth | from arcane |
 |---|---|---|---|---|---|
-| **fire** | — | Meltdown | Firestorm | Magma | Hexfire |
-| **ice** | Frostbite | — | Frozen Lightning | Permafrost | Hexfrost |
-| **lightning** | Heat Lightning | Thundersnow | — | Dust Storm | Hexbolt |
-| **earth** | Obsidian | Glacier | Fulgurite | — | Hexstone |
-| **arcane** | Witchfire | Runefrost | Spellbolt | Leyline | — |
+| **fire** | — | Meltdown | Firestorm | Magma | Burning Orb |
+| **ice** | Frostbite | — | Frozen Lightning | Permafrost | Frozen Orb |
+| **lightning** | Heat Lightning | Thundersnow | — | Dust Storm | Charged Orb |
+| **earth** | Obsidian | Glacier | Fulgurite | — | Stone Orb |
+| **arcane** | Burning Mana | Frozen Mana | Electrified Mana | Enchanted Earth | — |
 
-**The eight arcane names are placeholders the owner may replace** *(2026-08-25)*. They follow a
-convention the original twelve do not: everything *out of* arcane is a Hex-, and everything *into*
-it is a spell word grafted onto the source's phenomenon. That was chosen because sixteen thematic
-one-off names is more than a player can hold, and a legible half-convention is worth more than
-another eight inventions.
+**The eight arcane names follow a convention the original twelve do not** *(owner's call,
+2026-09-12)*. Everything *out of* arcane is an **Orb** and everything *into* it is a **Mana**, each
+qualified by the colour at the other end of the flip — Burning Orb is arcane dealt as fire, Burning
+Mana is fire dealt as arcane. Enchanted Earth is the one that breaks the second half of the
+pattern, because "Earthen Mana" says the direction backwards. That half-convention is deliberate:
+sixteen thematic one-off names is more than a player can hold, and a name that says which way the
+flip runs is worth more than another eight inventions.
 
 **They fire as a card is drawn, not as the deck is built** *(owner's call, 2026-08-24)*. Every one of
 them is worded "every X card is dealt as a Y card", and the dealing is the draw. The cards a fight

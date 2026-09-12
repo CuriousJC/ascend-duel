@@ -97,7 +97,7 @@ func TestWornOrderIsTheOrderTheyWentOn(t *testing.T) {
 }
 
 func TestAStatRelicIsAddedAtFightStartAndNowhereElse(t *testing.T) {
-	run := wearing(t, "might", "bulwark")
+	run := wearing(t, "dmg-plus", "bulwark")
 
 	base := combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100}
 	d := run.Equip(base)
@@ -206,7 +206,7 @@ func TestAFlipRecoloursTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
 	// **A flip fires as a card is drawn, not as the deck is built** *(2026-08-24)*. The pile a
 	// fight opens with therefore holds the run's own colours, and the recolour lands one card at a
 	// time on the way into the hand — which is what every one of these relics' text has always said.
-	run := wearing(t, "frozen-lightning")
+	run := wearing(t, "flip-lightning-to-ice")
 	run.deck = []combat.Card{
 		{Concept: combat.Bash, Element: combat.Lightning},
 		{Concept: combat.Bash, Element: combat.Fire},
@@ -237,7 +237,7 @@ func TestTwoFlipsCannotChainThroughOneCard(t *testing.T) {
 	// relic made, so handing that card back to DrawnAs is asking the second flip to read the first
 	// one's answer: lightning to ice to fire, and a deck walked to one colour by two relics that
 	// each claim to touch one.
-	run := wearing(t, "frozen-lightning", "meltdown")
+	run := wearing(t, "flip-lightning-to-ice", "flip-ice-to-fire")
 	owned := combat.Card{Concept: combat.Bash, Element: combat.Lightning}
 
 	drawn := run.DrawnAs(owned)

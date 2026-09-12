@@ -152,13 +152,6 @@ func TestAMergedRungIsDrawnOnEveryAxisItReads(t *testing.T) {
 					row.name, i, len(set), h.Cards())
 			}
 		}
-		if want > 1 && len(row.axes) != want {
-			t.Errorf("%s carries %d captions for %d examples", row.name, len(row.axes), want)
-		}
-		if want == 1 && len(row.axes) != 0 {
-			t.Errorf("%s names its own axis and should carry no caption, got %v",
-				row.name, row.axes)
-		}
 	}
 	if merged == 0 {
 		t.Fatal("no rung in the catalogue is read on more than one axis, so nothing was checked")
@@ -168,9 +161,25 @@ func TestAMergedRungIsDrawnOnEveryAxisItReads(t *testing.T) {
 // **A merged rung's examples really are that rung, read one axis at a time.** They come out of
 // `decks.Example` through `Hand.On`, so each set is a hand the matcher would score — this is what
 // fails if the panel ever starts inventing an illustration of its own.
+//
+// **The axes come off the catalogue rather than off the row** *(2026-09-12)*. The row carried them
+// so the drawing could caption each set; the captions are gone and the sets are still built in the
+// catalogue's own axis order, which is the thing this test is actually pinning.
 func TestEachOfAMergedRungsExamplesMatchesOnItsOwnAxis(t *testing.T) {
+	byName := map[string]combat.Hand{}
+	for _, h := range combat.Hands() {
+		byName[h.Name] = h
+	}
+
 	for _, row := range handsRows(shippingHands()) {
-		for i, axis := range row.axes {
+		axes := byName[row.name].Axes
+		if len(axes) < 2 {
+			// A rung read on one axis is drawn as the whole hand, which spreads over as many
+			// values on that axis as the rung has groups — two pairs are two values. Only a
+			// merged rung is narrowed to one reading per example, which is what this checks.
+			continue
+		}
+		for i, axis := range axes {
 			seen := map[int]bool{}
 			for _, card := range row.sets[i] {
 				v, ok := combat.MatchValue(card, axis)
@@ -251,13 +260,10 @@ func TestTheColumnsAreFilledDownwards(t *testing.T) {
 // is written down again.
 func TestARungsCardsFitBetweenItsNameAndItsRule(t *testing.T) {
 	for _, row := range handsRows(shippingHands()) {
-		cardsTop, ruleDrop := handsCardsTopFor(row), handsRuleDropFor(row)
+		cardsTop, ruleDrop := handsCardsTop, handsRuleDrop
 		if cardsTop < handsNameSize {
 			t.Errorf("%s: the cards start at %dpx and the name is %dpx tall",
 				row.name, cardsTop, handsNameSize)
-		}
-		if len(row.axes) > 1 && cardsTop-handsAxisBand < handsNameSize {
-			t.Errorf("%s: the axis captions land on the name", row.name)
 		}
 		if bottom := cardsTop + cards.Token.Height; bottom > ruleDrop {
 			t.Errorf("%s: the cards run to %dpx and the rule closing the rung is at %d",
@@ -265,7 +271,7 @@ func TestARungsCardsFitBetweenItsNameAndItsRule(t *testing.T) {
 		}
 		// The next rung's name is drawn at its own top, so the depth has to clear the rule by at
 		// least the air the block leaves under it.
-		if gap := handsRowDepth(row) - ruleDrop; gap < handsRowGap {
+		if gap := handsRowHeight - ruleDrop; gap < handsRowGap {
 			t.Errorf("%s: %dpx between its rule and the next rung's name, want at least %d",
 				row.name, gap, handsRowGap)
 		}
@@ -358,10 +364,10 @@ func TestEveryRungsNameAndTallyFitTheColumn(t *testing.T) {
 	}
 }
 
-// **An axis caption has to fit over the set it names, and so does the word between two sets.** The
-// captions carry the whole of the merged rung's claim, and one running into the set beside it would
-// say the wrong pair counts on that axis; the OR has only the gap to stand in.
-func TestEveryAxisCaptionFitsItsExample(t *testing.T) {
+// **The word between two sets has only the gap to stand in.** OR is what says a merged rung takes
+// whichever of its examples the turn makes, and one wider than the air between them would read as a
+// caption on whichever set it overlapped.
+func TestTheWordBetweenTwoExamplesFitsTheGap(t *testing.T) {
 	fonts := assets.LoadFonts()
 	src := fonts["kubasta"]
 	if src == nil {
@@ -369,14 +375,6 @@ func TestEveryAxisCaptionFitsItsExample(t *testing.T) {
 	}
 
 	for _, row := range handsRows(shippingHands()) {
-		for i, axis := range row.axes {
-			word := handsAxisWord(axis)
-			adv, _ := text.Measure(word, &text.GoTextFace{Source: src, Size: handsAxisSize}, 0)
-			room := handsCardsWidth(len(row.sets[i])) + handsSetGap
-			if int(adv) > room {
-				t.Errorf("%s: %q is %dpx over a %dpx example", row.name, word, int(adv), room)
-			}
-		}
 		if len(row.sets) < 2 {
 			continue
 		}

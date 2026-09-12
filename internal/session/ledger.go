@@ -150,6 +150,16 @@ type LedgerFight struct {
 
 	Rounds []LedgerRound
 
+	// After is what the player did to the run between this fight and the next: the card taken, the
+	// card cut, the worm spent, the relic bought, the rung raised.
+	//
+	// **It hangs off the fight rather than sitting between two of them** *(owner's call,
+	// 2026-09-12)*. The panel folds by fight, so a block of its own would be a third kind of thing
+	// to fold and a heading with no record to belong to; filed here it opens and closes with the
+	// duel it followed, which is how the player remembers it — "after fight one". The lines arrive
+	// already worded, exactly as a round's do.
+	After []LedgerLine
+
 	// dealt is what the player's blows came to across the fight. Unexported and read through
 	// Dealt(), so nothing outside this package can add to a total the rounds do not support.
 	dealt int
@@ -226,6 +236,22 @@ func (s *Session) EndFight(outcome string) {
 		return
 	}
 	s.ledger.Fights[n-1].Outcome = outcome
+}
+
+// RecordAfter adds lines to the aftermath of the fight most recently fought.
+//
+// **It appends rather than replaces**, because the gap between two fights holds several choices
+// and they arrive one at a time as the player makes them.
+//
+// Lines arriving with no fight on record are dropped, on RecordRound's terms: there is no heading
+// for them to sit under. A fight that was left before a round was thrown has already been dropped
+// by BeginFight, so nothing can attach to a record that is not there.
+func (s *Session) RecordAfter(lines []LedgerLine) {
+	n := len(s.ledger.Fights)
+	if n == 0 || len(lines) == 0 {
+		return
+	}
+	s.ledger.Fights[n-1].After = append(s.ledger.Fights[n-1].After, lines...)
 }
 
 // LedgerOpenFight reports whether a fight is still being fought, and which record it is. The panel

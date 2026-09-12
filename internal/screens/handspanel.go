@@ -26,9 +26,14 @@ package screens
 // **A merged rung is drawn once per axis it reads** *(owner's call, 2026-09-07)*. The Pair is
 // `"match": "any"` — it fires on whichever of concept, form and element the turn happens to satisfy
 // — and the panel drew it as the concept reading alone, which is a picture of a rung that does not
-// exist. It is now three examples side by side, captioned CARD / FORM / ELEMENTAL in the wording the
-// unmerged rungs on the same page use, with a hairline between them: six tokens at the row's own
-// pitch would read as one hand of six, which is the one thing this row must not say.
+// exist. It is three examples side by side, separated by OR: six tokens at the row's own pitch
+// would read as one hand of six, which is the one thing this row must not say.
+//
+// **The three are not captioned** *(owner's call, 2026-09-12)*. They carried CARD / FORM /
+// ELEMENTAL over them, which cost that one rung a line of type nothing else on the page has — so
+// eighteen rungs stacked at two different depths and no two columns lined up across the panel. The
+// cards say which axis each set is read on, and a player who cannot see that three matching stabs
+// and three matching reds are different things is not going to be helped by a word.
 //
 // **A rung is one block, ruled off from the next** *(owner's call, 2026-08-24)*, and the block is
 // what holds a figure to the rung it belongs to: three columns of names, cards and figures
@@ -133,11 +138,6 @@ type handsRow struct {
 	// pictures the rest of the ladder is drawn in.
 	sets [][]combat.Card
 
-	// axes is what each set is read on, parallel to sets. **Empty for a rung with one axis**,
-	// because its name already says which — "Elemental Two Pair" needs no caption reading
-	// ELEMENTAL under it.
-	axes []combat.Axis
-
 	// plays is how many times this run has formed the rung, and level is how many stones stand on
 	// it *(owner's call, 2026-09-05)*. **Two counters and not one**, because they say different
 	// things: a level is something the player bought and it moves the multiplier beside it, and a
@@ -184,12 +184,11 @@ func handsRows(c handsContents) []handsRow {
 
 	out := make([]handsRow, 0, len(hands))
 	for _, h := range hands {
-		sets, axes := handsExamples(c, h)
+		sets := handsExamples(c, h)
 		out = append(out, handsRow{
 			name:   h.Name,
 			mult:   multiplierText(h.Multiplier),
 			sets:   sets,
-			axes:   axes,
 			plays:  c.plays[h.Key],
 			level:  c.holder.HandStoneCount(h.Key) + 1,
 			raised: h.Multiplier != catalogueMultiplier(base, h.Key),
@@ -210,37 +209,21 @@ func handsRows(c handsContents) []handsRow {
 // words where the cards belong — see decks.Example, which repeats a card rather than coming back
 // empty. Whether a rung is reachable is a fact about today's deck; the rung is the ladder.
 // **A rung read on more than one axis is illustrated once per axis** *(owner's call, 2026-09-07)*,
-// and the axes come back beside the sets so the drawing can caption them. `Hand.On` is what narrows
-// the rung to one reading, and it is the matcher's own function — so each set really is a hand that
-// rung would score, rather than three examples this panel invented.
-func handsExamples(c handsContents, h combat.Hand) ([][]combat.Card, []combat.Axis) {
-	axes := h.Axes
-	if len(axes) < 2 {
+// in the catalogue's own axis order. `Hand.On` is what narrows the rung to one reading, and it is
+// the matcher's own function — so each set really is a hand that rung would score, rather than
+// three examples this panel invented.
+func handsExamples(c handsContents, h combat.Hand) [][]combat.Card {
+	if len(h.Axes) < 2 {
 		hand, _ := decks.Example(c.deck, h)
-		return [][]combat.Card{hand}, nil
+		return [][]combat.Card{hand}
 	}
 
-	sets := make([][]combat.Card, 0, len(axes))
-	for _, a := range axes {
+	sets := make([][]combat.Card, 0, len(h.Axes))
+	for _, a := range h.Axes {
 		hand, _ := decks.Example(c.deck, h.On(a))
 		sets = append(sets, hand)
 	}
-	return sets, append([]combat.Axis(nil), axes...)
-}
-
-// handsAxisWord is what a caption under a set reads. **The catalogue's own wording, not the
-// matcher's** — a player has "Card Two Pair" and "Elemental Two Pair" on the same page, so the
-// merged rung's captions have to be the words those rungs use rather than `Axis.String`'s
-// `concept` and `element`.
-func handsAxisWord(a combat.Axis) string {
-	switch a {
-	case combat.AxisForm:
-		return "FORM"
-	case combat.AxisElement:
-		return "ELEMENTAL"
-	default:
-		return "CARD"
-	}
+	return sets
 }
 
 // The panel's own geometry: three columns of rungs, a name over a row of cards.
@@ -296,11 +279,6 @@ const (
 	// them the turn happens to make. It is written under the title's size on purpose — it is the
 	// one thing in the band that is not a card, and at the title's size it would be read first.
 	handsOrSize = 20
-
-	// handsAxisSize is the caption naming which axis a set is read on, and handsAxisBand is what
-	// the line costs the rung in depth — the type plus the air under it.
-	handsAxisSize = 20
-	handsAxisBand = handsAxisSize + 3
 )
 
 // handsCardsTop is where a rung's tokens start, measured from its own top. **Derived from the
@@ -324,37 +302,18 @@ var handsRuleDrop = handsCardsTop + cards.Token.Height + handsRowGap
 // rule before the next name. Derived for the reason handsRuleDrop is.
 var handsRowHeight = handsRuleDrop + handsRowGap + handsNameSize
 
-// The three measurements above are the plain rung's. A rung carrying axis captions is that much
-// taller, and these are the same three read against a row rather than assumed.
-//
-// **The column stacks by accumulated depth rather than by a fixed pitch** *(2026-09-07)*, which is
-// what a row of two heights costs. A pitch is cheaper and was right while every rung was the same
-// block; multiplying an index by it once one rung is taller draws the ladder through itself.
-func handsCardsTopFor(row handsRow) int { return handsCardsTop + handsCaptionBand(row) }
-func handsRuleDropFor(row handsRow) int { return handsRuleDrop + handsCaptionBand(row) }
-func handsRowDepth(row handsRow) int    { return handsRowHeight + handsCaptionBand(row) }
-
-// handsCaptionBand is the depth a rung's axis captions cost it, or zero for a rung that names its
-// own axis.
-func handsCaptionBand(row handsRow) int {
-	if len(row.axes) < 2 {
-		return 0
-	}
-	return handsAxisBand
-}
-
 // handsColumnDepth is how tall a column of rungs stands: every block, less the air the last one
 // leaves under its own rule.
+//
+// **Every rung is one block deep again** *(2026-09-12)*. The column stacked by accumulated depth
+// while the merged rung carried axis captions and was a line of type taller than the rest; with the
+// captions gone the pitch is one figure, and a ladder of eighteen rungs lines up across three
+// columns without anything having to agree to.
 func handsColumnDepth(column []handsRow) int {
 	if len(column) == 0 {
 		return 0
 	}
-	tall := 0
-	for _, row := range column {
-		tall += handsRowDepth(row)
-	}
-	last := column[len(column)-1]
-	return tall - (handsRowDepth(last) - handsRuleDropFor(last))
+	return len(column)*handsRowHeight - (handsRowHeight - handsRuleDrop)
 }
 
 // handsCardPitch is how far apart the tokens in a row sit: the token plus two pixels of air.
@@ -467,7 +426,7 @@ func drawHandPanel(gs *state.GlobalState, screen *ebiten.Image, c handsContents)
 		top := body.Min.Y
 		for _, row := range column {
 			drawHandRow(gs, screen, c, row, left, top, colWidth)
-			top += handsRowDepth(row)
+			top += handsRowHeight
 		}
 	}
 }
@@ -504,7 +463,7 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 		multInk = boostInk
 	}
 
-	cardsTop := top + handsCardsTopFor(row)
+	cardsTop := top + handsCardsTop
 
 	// **The cards are drawn as themselves**, through the same spec every other screen builds, so
 	// a token cannot say something the card in the hand does not. `enabled` is true and nothing is
@@ -518,10 +477,6 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 			// worked out, where the word says the rung takes whichever of them the turn makes.
 			write(x-handsSetGap/2-widthOf(handsOrWord, handsOrSize)/2,
 				cardsTop+handsMultDrop(handsOrSize), handsOrSize, handsTallyInk, handsOrWord)
-		}
-		if i < len(row.axes) {
-			write(x, cardsTop-handsAxisBand, handsAxisSize, handsTallyInk,
-				handsAxisWord(row.axes[i]))
 		}
 		for j, card := range set {
 			at := image.Pt(x+j*handsCardPitch, cardsTop)
@@ -541,7 +496,7 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 	write(left+width-widthOf(row.mult, handsMultSize),
 		cardsTop+handsMultDrop(handsMultSize), handsMultSize, multInk, row.mult)
 
-	rule := float32(top + handsRuleDropFor(row))
+	rule := float32(top + handsRuleDrop)
 	vector.StrokeLine(screen, float32(left), rule, float32(left+width), rule, 1, handsRuleInk, false)
 }
 

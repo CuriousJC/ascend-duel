@@ -175,6 +175,10 @@ type LedgerFightSnapshot struct {
 	Dealt int `json:"dealt,omitempty"`
 
 	Rounds []LedgerRoundSnapshot `json:"rounds,omitempty"`
+
+	// After is what the player did to the run between this fight and the next, in the same
+	// already-worded lines a round carries.
+	After []LedgerLineSnapshot `json:"after,omitempty"`
 }
 
 // LedgerRoundSnapshot is one round of one fight.

@@ -1,9 +1,9 @@
 [
   {
-    "RelicRecord": "frozen-lightning",
+    "RelicRecord": "flip-lightning-to-ice",
     "Name": "Frozen Lightning",
     "Family": "Elemental flips",
-    "Art": "frozen-lightning",
+    "Art": "flip-lightning-to-ice",
     "Draw": "ball lightning locked in a frozen ice shard",
     "Text": "Every lightning card is dealt as an ice card.",
     "Rarity": "uncommon",
@@ -16,10 +16,10 @@
     ]
   },
   {
-    "RelicRecord": "permafrost",
+    "RelicRecord": "flip-earth-to-ice",
     "Name": "Permafrost",
     "Family": "Elemental flips",
-    "Art": "permafrost",
+    "Art": "flip-earth-to-ice",
     "Draw": "a rock surrounded by variegated blue and purple ice",
     "Text": "Every earth card is dealt as an ice card.",
     "Rarity": "uncommon",
@@ -32,10 +32,10 @@
     ]
   },
   {
-    "RelicRecord": "frostbite",
+    "RelicRecord": "flip-fire-to-ice",
     "Name": "Frostbite",
     "Family": "Elemental flips",
-    "Art": "frostbite",
+    "Art": "flip-fire-to-ice",
     "Draw": "ice shaped into flickering fire",
     "Text": "Every fire card is dealt as an ice card.",
     "Rarity": "uncommon",
@@ -48,10 +48,10 @@
     ]
   },
   {
-    "RelicRecord": "meltdown",
+    "RelicRecord": "flip-ice-to-fire",
     "Name": "Meltdown",
     "Family": "Elemental flips",
-    "Art": "meltdown",
+    "Art": "flip-ice-to-fire",
     "Draw": "shard of ice burning with fire",
     "Text": "Every ice card is dealt as a fire card.",
     "Rarity": "uncommon",
@@ -64,10 +64,10 @@
     ]
   },
   {
-    "RelicRecord": "firestorm",
+    "RelicRecord": "flip-lightning-to-fire",
     "Name": "Firestorm",
     "Family": "Elemental flips",
-    "Art": "firestorm",
+    "Art": "flip-lightning-to-fire",
     "Draw": "ball lightning surrounded by flames",
     "Text": "Every lightning card is dealt as a fire card.",
     "Rarity": "uncommon",
@@ -80,10 +80,10 @@
     ]
   },
   {
-    "RelicRecord": "magma",
+    "RelicRecord": "flip-earth-to-fire",
     "Name": "Magma",
     "Family": "Elemental flips",
-    "Art": "magma",
+    "Art": "flip-earth-to-fire",
     "Draw": "a glowing mass of molten rock",
     "Text": "Every earth card is dealt as a fire card.",
     "Rarity": "uncommon",
@@ -96,10 +96,10 @@
     ]
   },
   {
-    "RelicRecord": "thundersnow",
+    "RelicRecord": "flip-ice-to-lightning",
     "Name": "Thundersnow",
     "Family": "Elemental flips",
-    "Art": "thundersnow",
+    "Art": "flip-ice-to-lightning",
     "Draw": "a snowflake crackling with electricity",
     "Text": "Every ice card is dealt as a lightning card.",
     "Rarity": "uncommon",
@@ -112,10 +112,10 @@
     ]
   },
   {
-    "RelicRecord": "heat-lightning",
+    "RelicRecord": "flip-fire-to-lightning",
     "Name": "Heat Lightning",
     "Family": "Elemental flips",
-    "Art": "heat-lightning",
+    "Art": "flip-fire-to-lightning",
     "Draw": "ball of fire wrapped in yellow lightning",
     "Text": "Every fire card is dealt as a lightning card.",
     "Rarity": "uncommon",
@@ -128,10 +128,10 @@
     ]
   },
   {
-    "RelicRecord": "dust-storm",
+    "RelicRecord": "flip-earth-to-lightning",
     "Name": "Dust Storm",
     "Family": "Elemental flips",
-    "Art": "dust-storm",
+    "Art": "flip-earth-to-lightning",
     "Draw": "a rock surrounded with variegated yellow and purple lightning",
     "Text": "Every earth card is dealt as a lightning card.",
     "Rarity": "uncommon",
@@ -144,10 +144,10 @@
     ]
   },
   {
-    "RelicRecord": "glacier",
+    "RelicRecord": "flip-ice-to-earth",
     "Name": "Glacier",
     "Family": "Elemental flips",
-    "Art": "glacier",
+    "Art": "flip-ice-to-earth",
     "Draw": "a shard of ice dipped in muddy earth",
     "Text": "Every ice card is dealt as an earth card.",
     "Rarity": "uncommon",
@@ -160,10 +160,10 @@
     ]
   },
   {
-    "RelicRecord": "obsidian",
+    "RelicRecord": "flip-fire-to-earth",
     "Name": "Obsidian",
     "Family": "Elemental flips",
-    "Art": "obsidian",
+    "Art": "flip-fire-to-earth",
     "Draw": "a jagged piece of obsidian rock",
     "Text": "Every fire card is dealt as an earth card.",
     "Rarity": "uncommon",
@@ -176,10 +176,10 @@
     ]
   },
   {
-    "RelicRecord": "fulgurite",
+    "RelicRecord": "flip-lightning-to-earth",
     "Name": "Fulgurite",
     "Family": "Elemental flips",
-    "Art": "fulgurite",
+    "Art": "flip-lightning-to-earth",
     "Draw": "a glowing piece of rock in the shape of a lightning bolt",
     "Text": "Every lightning card is dealt as an earth card.",
     "Rarity": "uncommon",
@@ -192,10 +192,10 @@
     ]
   },
   {
-    "RelicRecord": "burning-mana",
+    "RelicRecord": "flip-fire-to-arcane",
     "Name": "Burning Mana",
     "Family": "Elemental flips",
-    "Art": "burning-mana",
+    "Art": "flip-fire-to-arcane",
     "Draw": "a swirling mass of purple flames",
     "Text": "Every fire card is dealt as an arcane card.",
     "Rarity": "uncommon",
@@ -208,10 +208,10 @@
     ]
   },
   {
-    "RelicRecord": "frozen-mana",
+    "RelicRecord": "flip-ice-to-arcane",
     "Name": "Frozen Mana",
     "Family": "Elemental flips",
-    "Art": "frozen-mana",
+    "Art": "flip-ice-to-arcane",
     "Draw": "jagged piece of ice with purple energy surrounding it",
     "Text": "Every ice card is dealt as an arcane card.",
     "Rarity": "uncommon",
@@ -224,10 +224,10 @@
     ]
   },
   {
-    "RelicRecord": "electrified-mana",
+    "RelicRecord": "flip-lightning-to-arcane",
     "Name": "Electrified Mana",
     "Family": "Elemental flips",
-    "Art": "electrified-mana",
+    "Art": "flip-lightning-to-arcane",
     "Draw": "ball lightning that is encapsulated in a purple arcane sphere",
     "Text": "Every lightning card is dealt as an arcane card.",
     "Rarity": "uncommon",
@@ -240,10 +240,10 @@
     ]
   },
   {
-    "RelicRecord": "enchanted-earth",
+    "RelicRecord": "flip-earth-to-arcane",
     "Name": "Enchanted Earth",
     "Family": "Elemental flips",
-    "Art": "enchanted-earth",
+    "Art": "flip-earth-to-arcane",
     "Draw": "a rock with a purple glowing vein inside of it",
     "Text": "Every earth card is dealt as an arcane card.",
     "Rarity": "uncommon",
@@ -256,10 +256,10 @@
     ]
   },
   {
-    "RelicRecord": "burning-orb",
+    "RelicRecord": "flip-arcane-to-fire",
     "Name": "Burning Orb",
     "Family": "Elemental flips",
-    "Art": "burning-orb",
+    "Art": "flip-arcane-to-fire",
     "Draw": "a purple sphere that is burning with a red flame",
     "Text": "Every arcane card is dealt as a fire card.",
     "Rarity": "uncommon",
@@ -272,10 +272,10 @@
     ]
   },
   {
-    "RelicRecord": "frozen-orb",
+    "RelicRecord": "flip-arcane-to-ice",
     "Name": "Frozen Orb",
     "Family": "Elemental flips",
-    "Art": "frozen-orb",
+    "Art": "flip-arcane-to-ice",
     "Draw": "a shard of ice with purple energy surrounding it",
     "Text": "Every arcane card is dealt as an ice card.",
     "Rarity": "uncommon",
@@ -288,10 +288,10 @@
     ]
   },
   {
-    "RelicRecord": "charged-orb",
+    "RelicRecord": "flip-arcane-to-lightning",
     "Name": "Charged Orb",
     "Family": "Elemental flips",
-    "Art": "charged-orb",
+    "Art": "flip-arcane-to-lightning",
     "Draw": "a purple sphere with yellow lightning crackling around it",
     "Text": "Every arcane card is dealt as a lightning card.",
     "Rarity": "uncommon",
@@ -304,10 +304,10 @@
     ]
   },
   {
-    "RelicRecord": "stone-orb",
+    "RelicRecord": "flip-arcane-to-earth",
     "Name": "Stone Orb",
     "Family": "Elemental flips",
-    "Art": "stone-orb",
+    "Art": "flip-arcane-to-earth",
     "Draw": "a purple sphere dipped into muddy earth",
     "Text": "Every arcane card is dealt as a earth card.",
     "Rarity": "uncommon",
@@ -320,10 +320,10 @@
     ]
   },
   {
-    "RelicRecord": "singular-ring",
+    "RelicRecord": "dmg-high-hand",
     "Name": "Singular Ring",
     "Family": "Jade rings",
-    "Art": "singular-ring",
+    "Art": "dmg-high-hand",
     "Draw": "jade ring with a single diamond",
     "Text": "A High Card deals 2 more DMG before the multiplier.",
     "Rarity": "common",
@@ -336,10 +336,10 @@
     ]
   },
   {
-    "RelicRecord": "twinned-ring",
+    "RelicRecord": "dmg-pair-hand",
     "Name": "Twinned Ring",
     "Family": "Jade rings",
-    "Art": "twinned-ring",
+    "Art": "dmg-pair-hand",
     "Draw": "jade ring with two diamonds",
     "Text": "A Pair deals 2 more DMG before the multiplier.",
     "Rarity": "common",
@@ -352,10 +352,10 @@
     ]
   },
   {
-    "RelicRecord": "concept-doubled-ring",
+    "RelicRecord": "dmg-concept-doubled-hand",
     "Name": "Doubled Ring",
     "Family": "Jade rings",
-    "Art": "concept-doubled-ring",
+    "Art": "dmg-concept-doubled-hand",
     "Draw": "jade ring with two diamonds and two black gems",
     "Text": "A Card Two Pair deals 4 more DMG before the multiplier.",
     "Rarity": "common",
@@ -368,10 +368,10 @@
     ]
   },
   {
-    "RelicRecord": "concept-tripled-ring",
+    "RelicRecord": "dmg-concept-tripled-hand",
     "Name": "Tripled Ring",
     "Family": "Jade rings",
-    "Art": "concept-tripled-ring",
+    "Art": "dmg-concept-tripled-hand",
     "Draw": "jade ring with three diamonds",
     "Text": "A Card Three of a Kind deals 5 more DMG before the multiplier.",
     "Rarity": "common",
@@ -384,10 +384,10 @@
     ]
   },
   {
-    "RelicRecord": "concept-full-house-hand",
+    "RelicRecord": "dmg-concept-full-house-hand",
     "Name": "Filled Ring",
     "Family": "Jade rings",
-    "Art": "concept-full-house-hand",
+    "Art": "dmg-concept-full-house-hand",
     "Draw": "jade ring with three diamonds and two black gems",
     "Text": "A Card Full House deals 8 more DMG before the multiplier.",
     "Rarity": "common",
@@ -400,10 +400,10 @@
     ]
   },
   {
-    "RelicRecord": "concept-four-of-a-kind-hand",
+    "RelicRecord": "dmg-concept-four-of-a-kind-hand",
     "Name": "Fourth Ring",
     "Family": "Jade rings",
-    "Art": "concept-four-of-a-kind-hand",
+    "Art": "dmg-concept-four-of-a-kind-hand",
     "Draw": "jade ring with four diamonds",
     "Text": "A Card Four of a Kind deals 10 more DMG before the multiplier.",
     "Rarity": "common",
@@ -416,10 +416,10 @@
     ]
   },
   {
-    "RelicRecord": "concept-five-of-a-kind-hand",
+    "RelicRecord": "dmg-concept-five-of-a-kind-hand",
     "Name": "Perfect Ring",
     "Family": "Jade rings",
-    "Art": "concept-five-of-a-kind-hand",
+    "Art": "dmg-concept-five-of-a-kind-hand",
     "Draw": "jade ring with five diamonds",
     "Text": "A Card Five of a Kind deals 16 more DMG before the multiplier.",
     "Rarity": "common",
@@ -432,10 +432,10 @@
     ]
   },
   {
-    "RelicRecord": "form-two-pair-hand",
+    "RelicRecord": "dmg-form-two-pair-hand",
     "Name": "Paired Ring",
     "Family": "Indigo rings",
-    "Art": "form-two-pair-hand",
+    "Art": "dmg-form-two-pair-hand",
     "Draw": "indigo ring with two golden gems and two silver gems",
     "Text": "A Form Two Pair deals 3 more DMG before the multiplier.",
     "Rarity": "common",
@@ -448,10 +448,10 @@
     ]
   },
   {
-    "RelicRecord": "form-three-of-a-kind-hand",
+    "RelicRecord": "dmg-form-three-of-a-kind-hand",
     "Name": "Trine Ring",
     "Family": "Indigo rings",
-    "Art": "form-three-of-a-kind-hand",
+    "Art": "dmg-form-three-of-a-kind-hand",
     "Draw": "indigo ring with three golden gems",
     "Text": "A Form Three of a Kind deals 3 more DMG before the multiplier.",
     "Rarity": "common",
@@ -464,10 +464,10 @@
     ]
   },
   {
-    "RelicRecord": "form-full-house-hand",
+    "RelicRecord": "dmg-form-full-house-hand",
     "Name": "Full Ring",
     "Family": "Indigo rings",
-    "Art": "form-full-house-hand",
+    "Art": "dmg-form-full-house-hand",
     "Draw": "indigo ring with three golden gems and two silver gems",
     "Text": "A Form Full House deals 6 more DMG before the multiplier.",
     "Rarity": "common",
@@ -480,10 +480,10 @@
     ]
   },
   {
-    "RelicRecord": "form-four-of-a-kind-hand",
+    "RelicRecord": "dmg-form-four-of-a-kind-hand",
     "Name": "Quad Ring",
     "Family": "Indigo rings",
-    "Art": "form-four-of-a-kind-hand",
+    "Art": "dmg-form-four-of-a-kind-hand",
     "Draw": "indigo ring with four golden gems",
     "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
     "Rarity": "common",
@@ -496,10 +496,10 @@
     ]
   },
   {
-    "RelicRecord": "form-five-of-a-kind-hand",
+    "RelicRecord": "dmg-form-five-of-a-kind-hand",
     "Name": "Pent Ring",
     "Family": "Indigo rings",
-    "Art": "form-five-of-a-kind-hand",
+    "Art": "dmg-form-five-of-a-kind-hand",
     "Draw": "indigo ring with five golden gems",
     "Text": "A Form Five of a Kind deals 12 more DMG before the multiplier.",
     "Rarity": "common",
@@ -512,10 +512,10 @@
     ]
   },
   {
-    "RelicRecord": "element-two-pair-hand",
+    "RelicRecord": "dmg-element-two-pair-hand",
     "Name": "Duet Ring",
     "Family": "Sandstone rings",
-    "Art": "element-two-pair-hand",
+    "Art": "dmg-element-two-pair-hand",
     "Draw": "sandstone ring with two turquoise gems and two rubies",
     "Text": "An Elemental Two Pair deals 3 more DMG before the multiplier.",
     "Rarity": "common",
@@ -528,10 +528,10 @@
     ]
   },
   {
-    "RelicRecord": "element-three-of-a-kind-hand",
+    "RelicRecord": "dmg-element-three-of-a-kind-hand",
     "Name": "Trio Ring",
     "Family": "Sandstone rings",
-    "Art": "element-three-of-a-kind-hand",
+    "Art": "dmg-element-three-of-a-kind-hand",
     "Draw": "sandstone ring with three turquoise gems",
     "Text": "An Elemental Three of a Kind deals 3 more DMG before the multiplier.",
     "Rarity": "common",
@@ -544,10 +544,10 @@
     ]
   },
   {
-    "RelicRecord": "element-full-house-hand",
+    "RelicRecord": "dmg-element-full-house-hand",
     "Name": "Laden Ring",
     "Family": "Sandstone rings",
-    "Art": "element-full-house-hand",
+    "Art": "dmg-element-full-house-hand",
     "Draw": "sandstone ring with three turquoise gems and two rubies",
     "Text": "An Elemental Full House deals 7 more DMG before the multiplier.",
     "Rarity": "common",
@@ -560,10 +560,10 @@
     ]
   },
   {
-    "RelicRecord": "element-four-of-a-kind-hand",
+    "RelicRecord": "dmg-element-four-of-a-kind-hand",
     "Name": "Quartet Ring",
     "Family": "Sandstone rings",
-    "Art": "element-four-of-a-kind-hand",
+    "Art": "dmg-element-four-of-a-kind-hand",
     "Draw": "sandstone ring with four turquoise gems",
     "Text": "An Elemental Four of a Kind deals 7 more DMG before the multiplier.",
     "Rarity": "common",
@@ -576,10 +576,10 @@
     ]
   },
   {
-    "RelicRecord": "element-five-of-a-kind-hand",
+    "RelicRecord": "dmg-element-five-of-a-kind-hand",
     "Name": "Quintet Ring",
     "Family": "Sandstone rings",
-    "Art": "element-five-of-a-kind-hand",
+    "Art": "dmg-element-five-of-a-kind-hand",
     "Draw": "sandstone ring with five turquoise gems",
     "Text": "An Elemental Five of a Kind deals 14 more DMG before the multiplier.",
     "Rarity": "common",
@@ -1953,8 +1953,8 @@
     "RelicRecord": "discount-slash",
     "Name": "Whetted",
     "Family": "Form discounts",
-    "Art": "",
-    "Draw": "",
+    "Art": "discount-slash",
+    "Draw": "malachite robe",
     "Text": "Slash cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1969,8 +1969,8 @@
     "RelicRecord": "discount-crush",
     "Name": "Hefted",
     "Family": "Form discounts",
-    "Art": "",
-    "Draw": "",
+    "Art": "discount-crush",
+    "Draw": "moonstone robe",
     "Text": "Crush cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1985,8 +1985,8 @@
     "RelicRecord": "discount-stab",
     "Name": "Tapered",
     "Family": "Form discounts",
-    "Art": "",
-    "Draw": "",
+    "Art": "discount-stab",
+    "Draw": "marble robe",
     "Text": "Stab cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1998,11 +1998,11 @@
     ]
   },
   {
-    "RelicRecord": "weight-of-the-earth",
-    "Name": "Weight of the Earth",
+    "RelicRecord": "dmg-earth-crush",
+    "Name": "Crushed by Stone",
     "Family": "Element and form",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-earth-crush",
+    "Draw": "a hammer made all of green gemstone",
     "Text": "Every earth crush card\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2014,11 +2014,11 @@
     ]
   },
   {
-    "RelicRecord": "struck-by-lightning",
+    "RelicRecord": "dmg-lightning-stab",
     "Name": "Struck by Lightning",
     "Family": "Element and form",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-lightning-stab",
+    "Draw": "a fencing foil made entirely of yellow gemstone",
     "Text": "Every lightning stab card\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2030,11 +2030,11 @@
     ]
   },
   {
-    "RelicRecord": "sharp-as-ice",
+    "RelicRecord": "dmg-ice-slash",
     "Name": "Sharp as Ice",
     "Family": "Element and form",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-ice-slash",
+    "Draw": "a cutlass made entirely of blue gemstone",
     "Text": "Every ice slash card\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2062,11 +2062,11 @@
     ]
   },
   {
-    "RelicRecord": "crown",
-    "Name": "Crown",
+    "RelicRecord": "dmg-cost-three",
+    "Name": "Shimmering Crown",
     "Family": "Tier damage",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-cost-three",
+    "Draw": "a circlet made of solid shimmering rainbows",
     "Text": "Every 3 AP card deals 2.5x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2078,11 +2078,11 @@
     ]
   },
   {
-    "RelicRecord": "ebb-and-flow",
+    "RelicRecord": "dmg-shield-use",
     "Name": "Ebb & Flow",
     "Family": "Shield streaks",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-shield-use",
+    "Draw": "a tower shield with an embedded rainbow gem in the centre",
     "Text": "Every card gains 0.2x DMG\nfor each shield card\nyou play. Grows while worn.",
     "Rarity": "rare",
     "Rules": [
@@ -2098,11 +2098,11 @@
     ]
   },
   {
-    "RelicRecord": "momentum",
+    "RelicRecord": "dmg-no-shield",
     "Name": "Momentum",
     "Family": "Shield streaks",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-no-shield",
+    "Draw": "a black steel double headed axe with a rainbow gem in the center of the blade",
     "Text": "Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.",
     "Rarity": "common",
     "Rules": [
@@ -2122,11 +2122,11 @@
     ]
   },
   {
-    "RelicRecord": "echo",
+    "RelicRecord": "lead-three-times",
     "Name": "Echo",
     "Family": "Lead attack",
-    "Art": "",
-    "Draw": "",
+    "Art": "lead-three-times",
+    "Draw": "a platinum sword with two foggy swords behind it, the foggy swords are slightly smaller and angled to the right",
     "Text": "Your first attack lands 3 times: full DMG, then 2/3, then 1/3.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2138,11 +2138,11 @@
     ]
   },
   {
-    "RelicRecord": "onslaught",
+    "RelicRecord": "cost-life-lost",
     "Name": "Onslaught",
     "Family": "Cost bargains",
-    "Art": "",
-    "Draw": "",
+    "Art": "cost-life-lost",
+    "Draw": "a solid platinum spear with blood staining the handle and not the blade",
     "Text": "Every card costs 1 AP less. Lose 25% of your HP.",
     "Rarity": "rare",
     "Rules": [
@@ -2157,11 +2157,11 @@
     ]
   },
   {
-    "RelicRecord": "braced",
+    "RelicRecord": "cost-defend-less",
     "Name": "Braced",
     "Family": "Cost bargains",
     "Art": "",
-    "Draw": "",
+    "Draw": "a dark tanned set of crossed female muscular arms wearing platinum bracers on the full forearms",
     "Text": "Defend cards cost 1 AP less. +15 HP for every fight.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2177,11 +2177,11 @@
     ]
   },
   {
-    "RelicRecord": "might",
+    "RelicRecord": "dmg-plus",
     "Name": "Might",
     "Family": "Standing stats",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-plus",
+    "Draw": "a platinum amulet with a flexed bicep arm on the chain",
     "Text": "+10 DMG for every fight.",
     "Rarity": "common",
     "Rules": [

@@ -58,6 +58,13 @@ type Game struct {
 	// **It holds no queue** — state.EarnedThisSession is the queue, written wherever an award
 	// happens in internal/screens. This is the thing that draws it.
 	toast screens.AchievementToast
+
+	// changes watches the run between fights and writes what the player did into the ledger's own
+	// account of itself. **Chrome for the ledger's reason** — it is true of the whole run rather
+	// than of one screen — and it is here rather than in two scenes because a watcher ticked by
+	// the scenes that happen to change a deck today is a watcher the next such scene forgets.
+	// See screens.RunWatch.
+	changes screens.RunWatch
 }
 
 func NewGame() *Game {
@@ -180,6 +187,11 @@ func (g *Game) Update() error {
 	if err := scene.Update(g.GlobalState); err != nil {
 		return err
 	}
+
+	// **After the scene, because it reads what the scene just did.** It records nothing while a
+	// fight is on — a card altered mid-round is an event of that round — and nothing at all on a
+	// frame where the run did not move.
+	g.changes.Note(g.GlobalState)
 
 	// The frame's own controls, after the scene, so they read the modal flag the scene has
 	// just written. See chrome.go.

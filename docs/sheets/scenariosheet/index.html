@@ -96,7 +96,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">scald</td><td>Scald</td><td class="said">Fire attacks BURN and CHILL the target.</td></tr><tr><td class="key">wildfire</td><td>Wildfire</td><td class="said">Fire attacks BURN and SHOCK the target.</td></tr><tr><td class="key">hoarfrost</td><td>Hoarfrost</td><td class="said">Ice attacks CHILL and WEIGH the target.</td></tr><tr><td class="key">brittle</td><td>Brittle</td><td class="said">Ice attacks CHILL and WEAKEN the target.</td></tr><tr><td class="key">palsy</td><td>Palsy</td><td class="said">Lightning attacks SHOCK and WEAKEN the target.</td></tr>
+            <tr><td class="key">pair-status-burn-chill</td><td>Scald</td><td class="said">Fire attacks BURN and CHILL the target.</td></tr><tr><td class="key">pair-status-burn-shock</td><td>Wildfire</td><td class="said">Fire attacks BURN and SHOCK the target.</td></tr><tr><td class="key">pair-status-chill-weight</td><td>Hoarfrost</td><td class="said">Ice attacks CHILL and WEIGH the target.</td></tr><tr><td class="key">pair-status-chill-weak</td><td>Brittle</td><td class="said">Ice attacks CHILL and WEAKEN the target.</td></tr><tr><td class="key">pair-status-shock-weak</td><td>Palsy</td><td class="said">Lightning attacks SHOCK and WEAKEN the target.</td></tr>
           </table>
         
         
@@ -114,7 +114,7 @@
       <div class="record">new-relics-earth-arcane-and-the-weapons</div>
       <div class="facts">opens on combat · room 0 · DUMMY -- nothing dies · 15 AP a turn · 7 relic slots</div>
       <code class="cmd">ASCEND_DUEL_SCENARIO=new-relics-earth-arcane-and-the-weapons go run -tags scenario .</code>
-      <p class="blurb">The other seven relics drawn on 2026-09-12: the four dual-status rings on earth and arcane - Caldera, Tremor, Blightfire and Millstone - plus the three records whose art is not a ring at all. The Sundering is an obsidian scimitar and The Bruise an obsidian mace, and they are the reason this fixture exists as well as the art: a relic is the category and a ring is one kind of it, so this is the page where a weapon and a ring are worn in the same row and can be told apart at a glance. Coiled is the third, and it is the one that says nothing until cards are LEFT in hand - it reads crush cards kept, so playing three of these five is a different blow from playing all five. The hand is earth and arcane in slash and crush, so Sundering fires on the slashes, Bruise on the crushes, and all four rings on the colours. RelicSlots is 7, which is under combat.MaxWornRelics and over the shipped cap. Against a dummy, 15 AP.</p>
+      <p class="blurb">The other seven relics drawn on 2026-09-12: the four dual-status rings on earth and arcane - Caldera, Tremor, Blightfire and Millstone - plus the three records whose art is not a ring at all. The Sundering is an obsidian scimitar and The Bruise an obsidian mace, and they are the reason this fixture exists as well as the art: a relic is the category and a ring is one kind of it, so this is the page where a weapon and a ring are worn in the same row and can be told apart at a glance. The Jar of Metal is the third, and it is the one that says nothing until cards are LEFT in hand - it reads crush cards kept, so playing three of these five is a different blow from playing all five. The hand is earth and arcane in slash and crush, so Sundering fires on the slashes, Bruise on the crushes, and all four rings on the colours. RelicSlots is 7, which is under combat.MaxWornRelics and over the shipped cap. Against a dummy, 15 AP.</p>
 
       
         <div class="strip">
@@ -132,7 +132,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">caldera</td><td>Caldera</td><td class="said">Earth attacks WEIGH and BURN the target.</td></tr><tr><td class="key">tremor</td><td>Tremor</td><td class="said">Earth attacks WEIGH and SHOCK the target.</td></tr><tr><td class="key">blightfire</td><td>Blightfire</td><td class="said">Arcane attacks WEAKEN and BURN the target.</td></tr><tr><td class="key">millstone</td><td>Millstone</td><td class="said">Arcane attacks WEAKEN and WEIGH the target.</td></tr><tr><td class="key">sundering</td><td>The Sundering</td><td class="said">Slash attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.</td></tr><tr><td class="key">bruise</td><td>The Bruise</td><td class="said">Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.</td></tr><tr><td class="key">coiled</td><td>Coiled</td><td class="said">Deals 5 more DMG for each crush card kept in hand.</td></tr>
+            <tr><td class="key">pair-status-weight-burn</td><td>Caldera</td><td class="said">Earth attacks WEIGH and BURN the target.</td></tr><tr><td class="key">pair-status-weight-shock</td><td>Tremor</td><td class="said">Earth attacks WEIGH and SHOCK the target.</td></tr><tr><td class="key">pair-status-weak-burn</td><td>Blightfire</td><td class="said">Arcane attacks WEAKEN and BURN the target.</td></tr><tr><td class="key">pair-status-weak-weight</td><td>Millstone</td><td class="said">Arcane attacks WEAKEN and WEIGH the target.</td></tr><tr><td class="key">sundering</td><td>The Sundering</td><td class="said">Slash attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.</td></tr><tr><td class="key">bruise</td><td>The Bruise</td><td class="said">Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.</td></tr><tr><td class="key">jar-crush</td><td>Jar of Metal</td><td class="said">Deals 5 more DMG for each crush card kept in hand.</td></tr>
           </table>
         
         
@@ -559,7 +559,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">heart</td><td>Heart</td><td class="said">&#43;5 HP, and 5 more for every fight won.</td></tr><tr><td class="key">sickle</td><td>The Sickle</td><td class="said">Every slash card deals double DMG.</td></tr>
+            <tr><td class="key">heart</td><td>Heart</td><td class="said">&#43;5 HP, and 5 more for every fight won.</td></tr><tr><td class="key">dmg-all-slash</td><td>The Sickle</td><td class="said">Every slash card deals double DMG.</td></tr>
           </table>
         
         
@@ -631,7 +631,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">echo</td><td>Echo</td><td class="said">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</td></tr><tr><td class="key">enflamed</td><td>Enflamed</td><td class="said">Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.</td></tr><tr><td class="key">fire</td><td>Fire</td><td class="said">Fire cards deal 2x DMG.</td></tr>
+            <tr><td class="key">echo</td><td>Echo</td><td class="said">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</td></tr><tr><td class="key">enflamed</td><td>-- no such relic --</td><td class="said"></td></tr><tr><td class="key">fire</td><td>Fire</td><td class="said">Fire cards deal 2x DMG.</td></tr>
           </table>
         
         
@@ -667,7 +667,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">echo</td><td>Echo</td><td class="said">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</td></tr><tr><td class="key">aftershock</td><td>Aftershock</td><td class="said">Every crush card lands twice, both at full DMG.</td></tr>
+            <tr><td class="key">echo</td><td>Echo</td><td class="said">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</td></tr><tr><td class="key">aftershock</td><td>-- no such relic --</td><td class="said"></td></tr>
           </table>
         
         
@@ -703,7 +703,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">atrophy</td><td>Atrophy</td><td class="said">Every 3 AP attack is dealt as its 2 AP version.</td></tr><tr><td class="key">momentum</td><td>Momentum</td><td class="said">Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.</td></tr>
+            <tr><td class="key">demotion-three</td><td>Atrophy Ring</td><td class="said">Every 3 AP attack is dealt as its 2 AP version.</td></tr><tr><td class="key">momentum</td><td>Momentum</td><td class="said">Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.</td></tr>
           </table>
         
         
@@ -734,7 +734,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">magma</td><td>Magma</td><td class="said">Every earth card is dealt as a fire card.</td></tr><tr><td class="key">firestorm</td><td>Firestorm</td><td class="said">Every lightning card is dealt as a fire card.</td></tr><tr><td class="key">atrophy</td><td>Atrophy</td><td class="said">Every 3 AP attack is dealt as its 2 AP version.</td></tr>
+            <tr><td class="key">magma</td><td>Magma</td><td class="said">Every earth card is dealt as a fire card.</td></tr><tr><td class="key">firestorm</td><td>Firestorm</td><td class="said">Every lightning card is dealt as a fire card.</td></tr><tr><td class="key">demotion-three</td><td>Atrophy Ring</td><td class="said">Every 3 AP attack is dealt as its 2 AP version.</td></tr>
           </table>
         
         

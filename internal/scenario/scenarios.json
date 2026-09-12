@@ -3,11 +3,11 @@
     "ScenarioRecord": "new-rings-fire-ice-lightning",
     "Note": "The five dual-status rings drawn on 2026-09-12 that carry a fire, ice or lightning rule, worn at once so the artwork can be read on the pane at the size a player actually sees it - Scald, Wildfire, Hoarfrost, Brittle and Palsy. It is a batch of art rather than an interaction, which is what RelicSlots exists for: the shipped cap is five, so looking at nine new rings used to mean buying one, selling it and buying the next. The art is the question, but the rules are worth watching too, because every one of these applies TWO statuses off one attack: the hand is a fire slash, an ice slash, a lightning crush and two more of the same colours, so a single turn puts BURNED, CHILLED, SHOCKED and WEAKENED on the badge row under the creature's fraction at once. Against a dummy, so the statuses can be stacked and read rather than killed off; 15 AP so the choice is which cards rather than which are affordable.",
     "Relics": [
-      "scald",
-      "wildfire",
-      "hoarfrost",
-      "brittle",
-      "palsy"
+      "pair-status-burn-chill",
+      "pair-status-burn-shock",
+      "pair-status-chill-weight",
+      "pair-status-chill-weak",
+      "pair-status-shock-weak"
     ],
     "Hand": [
       { "Card": "Cut", "Element": "fire" },
@@ -21,16 +21,16 @@
   },
   {
     "ScenarioRecord": "new-relics-earth-arcane-and-the-weapons",
-    "Note": "The other seven relics drawn on 2026-09-12: the four dual-status rings on earth and arcane - Caldera, Tremor, Blightfire and Millstone - plus the three records whose art is not a ring at all. The Sundering is an obsidian scimitar and The Bruise an obsidian mace, and they are the reason this fixture exists as well as the art: a relic is the category and a ring is one kind of it, so this is the page where a weapon and a ring are worn in the same row and can be told apart at a glance. Coiled is the third, and it is the one that says nothing until cards are LEFT in hand - it reads crush cards kept, so playing three of these five is a different blow from playing all five. The hand is earth and arcane in slash and crush, so Sundering fires on the slashes, Bruise on the crushes, and all four rings on the colours. RelicSlots is 7, which is under combat.MaxWornRelics and over the shipped cap. Against a dummy, 15 AP.",
+    "Note": "The other seven relics drawn on 2026-09-12: the four dual-status rings on earth and arcane - Caldera, Tremor, Blightfire and Millstone - plus the three records whose art is not a ring at all. The Sundering is an obsidian scimitar and The Bruise an obsidian mace, and they are the reason this fixture exists as well as the art: a relic is the category and a ring is one kind of it, so this is the page where a weapon and a ring are worn in the same row and can be told apart at a glance. The Jar of Metal is the third, and it is the one that says nothing until cards are LEFT in hand - it reads crush cards kept, so playing three of these five is a different blow from playing all five. The hand is earth and arcane in slash and crush, so Sundering fires on the slashes, Bruise on the crushes, and all four rings on the colours. RelicSlots is 7, which is under combat.MaxWornRelics and over the shipped cap. Against a dummy, 15 AP.",
     "RelicSlots": 7,
     "Relics": [
-      "caldera",
-      "tremor",
-      "blightfire",
-      "millstone",
+      "pair-status-weight-burn",
+      "pair-status-weight-shock",
+      "pair-status-weak-burn",
+      "pair-status-weak-weight",
       "sundering",
       "bruise",
-      "coiled"
+      "jar-crush"
     ],
     "Hand": [
       { "Card": "Cut", "Element": "earth" },
@@ -774,7 +774,7 @@
     "Note": "The shop with money to spend, two fingers already full, a parasite in the bucket and a wound to heal. Straight to the shelf without playing three duels to reach it, and hurt enough that a Salve is worth buying.",
     "Relics": [
       "heart",
-      "sickle"
+      "dmg-all-slash"
     ],
     "Hand": [],
     "Parasites": [
@@ -883,7 +883,7 @@
     "ScenarioRecord": "momentum-and-atrophy",
     "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Block at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
     "Relics": [
-      "atrophy",
+      "demotion-three",
       "momentum"
     ],
     "Hand": [
@@ -912,7 +912,7 @@
     "Relics": [
       "magma",
       "firestorm",
-      "atrophy"
+      "demotion-three"
     ],
     "Hand": [],
     "Screen": "",

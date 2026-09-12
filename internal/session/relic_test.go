@@ -296,7 +296,7 @@ func TestSellingAtrophyGivesTheCardsBack(t *testing.T) {
 	// The question this answers is a player's: take Atrophy off and the Skewers are back. If
 	// FightDeck ever wrote through to the stored deck, selling would leave a run permanently
 	// smaller — a loss no screen would explain and no test but this one would catch.
-	run := wearing(t, "atrophy")
+	run := wearing(t, "demotion-three")
 
 	tops := func(deck []combat.Card) int {
 		n := 0
@@ -321,7 +321,7 @@ func TestSellingAtrophyGivesTheCardsBack(t *testing.T) {
 			"stored deck", got, owned)
 	}
 
-	if !run.Sell("atrophy") {
+	if !run.Sell("demotion-three") {
 		t.Fatal("Atrophy would not come off")
 	}
 	if got := tops(run.FightDeck()); got != owned {
@@ -370,13 +370,13 @@ func TestGrowthEarnedInAFightSurvivesIt(t *testing.T) {
 // **Worn order is the order relics fire in**, so the row being draggable makes this a rules change
 // the run has to record. See MoveRelic, and combat.Duelist.MoveRelic for the copy a fight holds.
 func TestMovingAWornRelicReordersTheRow(t *testing.T) {
-	run := wearing(t, "sickle", "heart", "banker")
+	run := wearing(t, "dmg-all-slash", "heart", "banker")
 
 	if !run.MoveRelic(2, 0) {
 		t.Fatal("the move was refused")
 	}
 
-	want := []string{"banker", "sickle", "heart"}
+	want := []string{"banker", "dmg-all-slash", "heart"}
 	got := run.Worn()
 	if len(got) != len(want) {
 		t.Fatalf("wearing %v, want %v", got, want)
@@ -391,14 +391,14 @@ func TestMovingAWornRelicReordersTheRow(t *testing.T) {
 // A drop resolved against a row that changed underneath it must be a no-op, not a panic: this is
 // driven by a drag.
 func TestMovingAWornRelicOutOfRangeIsRefused(t *testing.T) {
-	run := wearing(t, "sickle", "heart")
+	run := wearing(t, "dmg-all-slash", "heart")
 
 	for _, move := range [][2]int{{-1, 0}, {0, -1}, {2, 0}, {0, 2}, {1, 1}} {
 		if run.MoveRelic(move[0], move[1]) {
 			t.Errorf("MoveRelic(%d, %d) reported a change", move[0], move[1])
 		}
 	}
-	if got := run.Worn(); got[0] != "sickle" || got[1] != "heart" {
+	if got := run.Worn(); got[0] != "dmg-all-slash" || got[1] != "heart" {
 		t.Errorf("the row moved anyway: %v", got)
 	}
 }
@@ -407,7 +407,7 @@ func TestMovingAWornRelicOutOfRangeIsRefused(t *testing.T) {
 // same relic with the same number. Growth following the finger instead would hand one relic's run to
 // another.
 func TestAMovedWornRelicKeepsItsGrowth(t *testing.T) {
-	run := wearing(t, "heart", "sickle")
+	run := wearing(t, "heart", "dmg-all-slash")
 	run.grown["heart"] = 45
 
 	if !run.MoveRelic(0, 1) {

@@ -592,10 +592,10 @@
     ]
   },
   {
-    "RelicRecord": "burning",
+    "RelicRecord": "status-burn",
     "Name": "Burning",
     "Family": "Elemental statuses",
-    "Art": "burning",
+    "Art": "status-burn",
     "Draw": "a gold ring with a red gem, the flames should be licking up the sides of the ring",
     "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.",
     "Rarity": "uncommon",
@@ -608,10 +608,10 @@
     ]
   },
   {
-    "RelicRecord": "chilling",
+    "RelicRecord": "status-chill",
     "Name": "Chilling",
     "Family": "Elemental statuses",
-    "Art": "chilling",
+    "Art": "status-chill",
     "Draw": "a gold ring with a blue gem, icicles hanging off the shoulders and frost dripping down the sides of the band",
     "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
     "Rarity": "uncommon",
@@ -624,10 +624,10 @@
     ]
   },
   {
-    "RelicRecord": "shocking",
+    "RelicRecord": "status-shock",
     "Name": "Shocking",
     "Family": "Elemental statuses",
-    "Art": "shocking",
+    "Art": "status-shock",
     "Draw": "a gold ring with a yellow gem, electricity crackling up the sides of the ring",
     "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
     "Rarity": "uncommon",
@@ -640,10 +640,10 @@
     ]
   },
   {
-    "RelicRecord": "weighted",
+    "RelicRecord": "status-weight",
     "Name": "Weighted",
     "Family": "Elemental statuses",
-    "Art": "weighted",
+    "Art": "status-weight",
     "Draw": "a gold ring with a green gem, chunks of rock stuck along the shoulders of the band and a few loose pebbles around it",
     "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
     "Rarity": "uncommon",
@@ -656,10 +656,10 @@
     ]
   },
   {
-    "RelicRecord": "weakening",
+    "RelicRecord": "status-weak",
     "Name": "Weakening",
     "Family": "Elemental statuses",
-    "Art": "weakening",
+    "Art": "status-weak",
     "Draw": "a gold ring with a purple gem, purple flames licking up the sides of the ring",
     "Text": "Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
     "Rarity": "uncommon",
@@ -672,11 +672,11 @@
     ]
   },
   {
-    "RelicRecord": "storm",
+    "RelicRecord": "pair-status-shock-chill",
     "Name": "Storm",
     "Family": "Paired statuses",
-    "Art": "storm",
-    "Draw": "a gold ring with a yellow gem and cold blue lightning burning off it, there should be 2 smaller blue gems beside it with some blue bleeding into the gold band",
+    "Art": "pair-status-shock-chill",
+    "Draw": "a ring with a yellow gem surrounded by cold blue lightning, the lightning should be burning up the sides of the ring.  there should be 2 smaller blue gems beside it, with some blue bleeding into the copper band",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
     "Rarity": "rare",
     "Rules": [
@@ -691,11 +691,11 @@
     ]
   },
   {
-    "RelicRecord": "scald",
+    "RelicRecord": "pair-status-burn-chill",
     "Name": "Scald",
     "Family": "Paired statuses",
-    "Art": "scald",
-    "Draw": "a ring with a red gem surrounded by steam.  it should have two yellow gems along the side with some yellow bleeding into the copper band",
+    "Art": "pair-status-burn-chill",
+    "Draw": "a ring with a red gem surrounded by steam, the steam should be rising up the sides of the ring.  there should be 2 smaller blue gems beside it, with some blue bleeding into the copper band",
     "Text": "Fire attacks BURN and CHILL the target.",
     "Rarity": "rare",
     "Rules": [
@@ -710,11 +710,11 @@
     ]
   },
   {
-    "RelicRecord": "wildfire",
+    "RelicRecord": "pair-status-burn-shock",
     "Name": "Wildfire",
     "Family": "Paired statuses",
-    "Art": "wildfire",
-    "Draw": "a ring with a red gem surrounded by yellow, the flames should be licking up the sides of the ring.  it should have two yellow gems along the side with some yellow bleeding into the copper band",
+    "Art": "pair-status-burn-shock",
+    "Draw": "a ring with a red gem surrounded by yellow flames, the flames should be licking up the sides of the ring.  there should be 2 smaller yellow gems beside it, with some yellow bleeding into the copper band",
     "Text": "Fire attacks BURN and SHOCK the target.",
     "Rarity": "rare",
     "Rules": [
@@ -729,11 +729,11 @@
     ]
   },
   {
-    "RelicRecord": "hoarfrost",
+    "RelicRecord": "pair-status-chill-weight",
     "Name": "Hoarfrost",
     "Family": "Paired statuses",
-    "Art": "hoarfrost",
-    "Draw": "a ring with a blue gem surrounded by frosty ice shards, the frost should be dripping down the sides of the ring.  it should have two green gems along the side with some green bleeding into the copper band",
+    "Art": "pair-status-chill-weight",
+    "Draw": "a ring with a blue gem surrounded by frosty ice shards, the frost should be dripping down the sides of the ring.  there should be 2 smaller green gems beside it, with some green bleeding into the copper band",
     "Text": "Ice attacks CHILL and WEIGH the target.",
     "Rarity": "rare",
     "Rules": [
@@ -748,11 +748,11 @@
     ]
   },
   {
-    "RelicRecord": "brittle",
+    "RelicRecord": "pair-status-chill-weak",
     "Name": "Brittle",
     "Family": "Paired statuses",
-    "Art": "brittle",
-    "Draw": "a ring with a blue gem that has a crack running through it, the crack should be glowing with a faint blue light.  there should be 2 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band ",
+    "Art": "pair-status-chill-weak",
+    "Draw": "a ring with a blue gem that has a crack running through it, the crack should be glowing with a faint blue light.  there should be 2 smaller purple gems beside it, with some purple bleeding into the copper band",
     "Text": "Ice attacks CHILL and WEAKEN the target.",
     "Rarity": "rare",
     "Rules": [
@@ -767,11 +767,11 @@
     ]
   },
   {
-    "RelicRecord": "palsy",
+    "RelicRecord": "pair-status-shock-weak",
     "Name": "Palsy",
     "Family": "Paired statuses",
-    "Art": "palsy",
-    "Draw": "a ring with a yellow gem sparking with electricity and with 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band",
+    "Art": "pair-status-shock-weak",
+    "Draw": "a ring with a yellow gem sparking with electricity, the sparks should be crackling up the sides of the ring.  there should be 2 smaller purple gems beside it, with some purple bleeding into the copper band",
     "Text": "Lightning attacks SHOCK and WEAKEN the target.",
     "Rarity": "rare",
     "Rules": [
@@ -786,11 +786,11 @@
     ]
   },
   {
-    "RelicRecord": "caldera",
+    "RelicRecord": "pair-status-weight-burn",
     "Name": "Caldera",
     "Family": "Paired statuses",
-    "Art": "caldera",
-    "Draw": "a ring with a green gem surrounded by molten rock, the rock should be glowing with a faint green light.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band",
+    "Art": "pair-status-weight-burn",
+    "Draw": "a ring with a green gem surrounded by molten rock, the rock should be glowing with a faint green light.  there should be 2 smaller red gems beside it, with some red bleeding into the copper band",
     "Text": "Earth attacks WEIGH and BURN the target.",
     "Rarity": "rare",
     "Rules": [
@@ -805,11 +805,11 @@
     ]
   },
   {
-    "RelicRecord": "tremor",
+    "RelicRecord": "pair-status-weight-shock",
     "Name": "Tremor",
     "Family": "Paired statuses",
-    "Art": "tremor",
-    "Draw": "a ring with a green gem surrounded by lightning, the lightning should be sparking up the sides of the ring.  there should be 2 smaller yellow gems beside it, the yellow gems should have some yellow bleeding into the copper band",
+    "Art": "pair-status-weight-shock",
+    "Draw": "a ring with a green gem surrounded by lightning, the lightning should be sparking up the sides of the ring.  there should be 2 smaller yellow gems beside it, with some yellow bleeding into the copper band",
     "Text": "Earth attacks WEIGH and SHOCK the target.",
     "Rarity": "rare",
     "Rules": [
@@ -824,11 +824,11 @@
     ]
   },
   {
-    "RelicRecord": "blightfire",
+    "RelicRecord": "pair-status-weak-burn",
     "Name": "Blightfire",
     "Family": "Paired statuses",
-    "Art": "blightfire",
-    "Draw": "a ring with a purple gem surrounded by flames, the flames should be licking up the sides of the ring.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band",
+    "Art": "pair-status-weak-burn",
+    "Draw": "a ring with a purple gem surrounded by flames, the flames should be licking up the sides of the ring.  there should be 2 smaller red gems beside it, with some red bleeding into the copper band",
     "Text": "Arcane attacks WEAKEN and BURN the target.",
     "Rarity": "rare",
     "Rules": [
@@ -843,11 +843,11 @@
     ]
   },
   {
-    "RelicRecord": "millstone",
+    "RelicRecord": "pair-status-weak-weight",
     "Name": "Millstone",
     "Family": "Paired statuses",
-    "Art": "millstone",
-    "Draw": "a ring with a purple gem surrounded by rock, the rock should be glowing with a faint purple light.  there should be 2 smaller green gems beside it, the green gems should have some green bleeding into the copper band",
+    "Art": "pair-status-weak-weight",
+    "Draw": "a ring with a purple gem surrounded by rock, the rock should be glowing with a faint purple light.  there should be 2 smaller green gems beside it, with some green bleeding into the copper band",
     "Text": "Arcane attacks WEAKEN and WEIGH the target.",
     "Rarity": "rare",
     "Rules": [
@@ -1743,10 +1743,10 @@
     ]
   },
   {
-    "RelicRecord": "sickle",
+    "RelicRecord": "dmg-all-slash",
     "Name": "The Sickle",
     "Family": "Form weapons",
-    "Art": "sickle",
+    "Art": "dmg-all-slash",
     "Draw": "a sickle with a leather hilt",
     "Text": "Every slash card deals double DMG.",
     "Rarity": "common",
@@ -1759,10 +1759,10 @@
     ]
   },
   {
-    "RelicRecord": "club",
+    "RelicRecord": "dmg-all-crush",
     "Name": "The Club",
     "Family": "Form weapons",
-    "Art": "club",
+    "Art": "dmg-all-crush",
     "Draw": "a heavy club with a leather strap",
     "Text": "Every crush card deals double DMG.",
     "Rarity": "common",
@@ -1775,10 +1775,10 @@
     ]
   },
   {
-    "RelicRecord": "needle",
+    "RelicRecord": "dmg-all-stab",
     "Name": "The Needle",
     "Family": "Form weapons",
-    "Art": "needle",
+    "Art": "dmg-all-stab",
     "Draw": "fencing foil with a sharp tip and a leather hilt",
     "Text": "Every stab card deals double DMG.",
     "Rarity": "common",
@@ -1792,10 +1792,10 @@
   },
   {
     "RelicRecord": "repeat-stab",
-    "Name": "Flurry",
+    "Name": "Twisted Points",
     "Family": "Form repeats",
-    "Art": "",
-    "Draw": "a dual ring that's wrapped into a circle twice in the shape of a spear",
+    "Art": "repeat-stab",
+    "Draw": "a dual marble ring that's wrapped into a circle twice.",
     "Text": "Every stab card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1808,10 +1808,10 @@
   },
   {
     "RelicRecord": "repeat-slash",
-    "Name": "Rend",
+    "Name": "Twisted Edges",
     "Family": "Form repeats",
-    "Art": "",
-    "Draw": "a dual ring that's wrapped into a circle twice in the shape of a sword",
+    "Art": "repeat-slash",
+    "Draw": "a dual malachite ring that's wrapped into a circle twice.",
     "Text": "Every slash card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1824,10 +1824,10 @@
   },
   {
     "RelicRecord": "repeat-crush",
-    "Name": "Aftershock",
+    "Name": "Twisted Weights",
     "Family": "Form repeats",
-    "Art": "",
-    "Draw": "a dual ring that's wrapped into a circle twice in the shape of an axe",
+    "Art": "repeat-crush",
+    "Draw": "a dual moonstone ring that's wrapped into a circle twice.",
     "Text": "Every crush card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1839,11 +1839,11 @@
     ]
   },
   {
-    "RelicRecord": "sharpening",
-    "Name": "Sharpening",
+    "RelicRecord": "growth-slash",
+    "Name": "Weight of the Edge",
     "Family": "Form growth",
-    "Art": "",
-    "Draw": "",
+    "Art": "growth-slash",
+    "Draw": "golden amulet of a scale witha malachite gem weighing down one side and a golden chain from the top",
     "Text": "Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1860,11 +1860,11 @@
     ]
   },
   {
-    "RelicRecord": "pounding",
-    "Name": "Pounding",
+    "RelicRecord": "growth-crush",
+    "Name": "Weight of the Metal",
     "Family": "Form growth",
-    "Art": "",
-    "Draw": "",
+    "Art": "growth-crush",
+    "Draw": "golden amulet of a scale witha moonstone gem weighing down one side and a golden chain from the top",
     "Text": "Crush cards gain 0.1x DMG every time a crush attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1881,11 +1881,11 @@
     ]
   },
   {
-    "RelicRecord": "quickening",
-    "Name": "Quickening",
+    "RelicRecord": "growth-stab",
+    "Name": "Weight of the Needle",
     "Family": "Form growth",
-    "Art": "",
-    "Draw": "",
+    "Art": "growth-stab",
+    "Draw": "golden amulet of a scale witha marble gem weighing down one side and a golden chain from the top",
     "Text": "Stab cards gain 0.1x DMG every time a stab attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1902,11 +1902,11 @@
     ]
   },
   {
-    "RelicRecord": "atrophy",
-    "Name": "Atrophy",
+    "RelicRecord": "demotion-three",
+    "Name": "Atrophy Ring",
     "Family": "Tier demotions",
-    "Art": "",
-    "Draw": "",
+    "Art": "demotion-three",
+    "Draw": "bone white ring with a small line of black on one edge",
     "Text": "Every 3 AP attack is dealt as its 2 AP version.",
     "Rarity": "rare",
     "Rules": [
@@ -1918,11 +1918,11 @@
     ]
   },
   {
-    "RelicRecord": "erode",
-    "Name": "Erode",
+    "RelicRecord": "demotion-two",
+    "Name": "Eroding Ring",
     "Family": "Tier demotions",
-    "Art": "",
-    "Draw": "",
+    "Art": "demotion-two",
+    "Draw": "bloodstone ring with a line of bright white on one edge",
     "Text": "Every 2 AP card is dealt as its 1 AP version.",
     "Rarity": "rare",
     "Rules": [
@@ -1934,11 +1934,11 @@
     ]
   },
   {
-    "RelicRecord": "whittle",
-    "Name": "Whittle",
+    "RelicRecord": "demotion-one",
+    "Name": "Whittling Ring",
     "Family": "Tier demotions",
-    "Art": "",
-    "Draw": "",
+    "Art": "demotion-one",
+    "Draw": "wooden ring with a line of red on one edge",
     "Text": "Every 1 AP attack is dealt as its 0 AP version.",
     "Rarity": "rare",
     "Rules": [
@@ -1950,7 +1950,7 @@
     ]
   },
   {
-    "RelicRecord": "whetted",
+    "RelicRecord": "discount-slash",
     "Name": "Whetted",
     "Family": "Form discounts",
     "Art": "",
@@ -1966,7 +1966,7 @@
     ]
   },
   {
-    "RelicRecord": "hefted",
+    "RelicRecord": "discount-crush",
     "Name": "Hefted",
     "Family": "Form discounts",
     "Art": "",
@@ -1982,7 +1982,7 @@
     ]
   },
   {
-    "RelicRecord": "tapered",
+    "RelicRecord": "discount-stab",
     "Name": "Tapered",
     "Family": "Form discounts",
     "Art": "",

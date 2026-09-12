@@ -94,7 +94,7 @@ func TestADiscountRelicStillReachesTheCost(t *testing.T) {
 // next four lines explain a bigger one.
 func TestTheTooltipOpensWithTheStatBlock(t *testing.T) {
 	card := aSlash(t)
-	h := wearing(t, 12, "sickle")
+	h := wearing(t, 12, "dmg-all-slash")
 
 	title, lines := cardTip(card, h)
 	if want := carddesc.Title(card); title != want {
@@ -121,7 +121,7 @@ func TestTheTooltipOpensWithTheStatBlock(t *testing.T) {
 // — that is the whole reason the panel exists, and it survived the block landing on top of it.
 func TestTheTooltipShowsEveryTermOfTheDamage(t *testing.T) {
 	card := aSlash(t)
-	h := wearing(t, 12, "sickle")
+	h := wearing(t, 12, "dmg-all-slash")
 
 	_, lines := cardTip(card, h)
 	joined := strings.Join(lines, " | ")
@@ -163,7 +163,7 @@ func TestTheTooltipStatesMultipliersWhenNobodyIsHoldingTheCard(t *testing.T) {
 	// nobody has.
 	card := aSlash(t)
 
-	_, lines := cardTip(card, wearing(t, 0, "sickle"))
+	_, lines := cardTip(card, wearing(t, 0, "dmg-all-slash"))
 	joined := strings.Join(lines, " | ")
 
 	if !strings.Contains(joined, "X DMG") {
@@ -293,7 +293,7 @@ func TestAWornRelicSaysWhereItFires(t *testing.T) {
 	// Worn order is a rule — relics fire left to right and compound — so the position is information
 	// about the effect rather than about the layout.
 	records := data.LoadRelics()
-	record := records["sickle"]
+	record := records["dmg-all-slash"]
 
 	_, lines := relicTip(record, 1, 3)
 	if joined := strings.Join(lines, " | "); !strings.Contains(joined, "2nd of 3") {

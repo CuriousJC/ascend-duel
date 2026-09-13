@@ -1,21 +1,5 @@
 # Relic art prompt
 
-**The relic catalog's own prompt.** It shares the style block below word for word with
-[essence_art_prompt.MD](essence_art_prompt.MD), because a relic and an essence have to look like
-two cards from one game. What it does not share is the composition, and the ephemeral fading an
-essence has and a relic does not.
-
-**The style block describes the shipped catalog rather than an ideal**, and that is what it is
-for: it was measured off the 138 pictures in `assets/relic/`, so a generator given this and a
-record should land somewhere the existing shelf would accept. See the README for what was
-measured and how.
-
-**A relic is an object and can be described from nothing**, which is why nothing is pasted
-between this prompt and the record the way a rune's body plan is. The record's `Draw` is the
-whole brief.
-
----
-
 High-resolution digital illustration of a single object, in the style of 16-bit console RPG
 equipment art. No text anywhere in the image — no title, no label, no caption, no signature, no
 watermark. The object and its background, nothing else.
@@ -77,13 +61,15 @@ any kind for text or a number. Do not leave a corner or an edge empty for one, a
 one. Whatever the card puts on top of this picture, it puts there itself at draw time, and the
 picture is meant to carry on underneath.
 
-## The subject — pasted as the record
+## The subject
 
-The block below is one record from `data/relics.json`, in JSON.
+The block pasted below this prompt is one record from `data/relics.json`, in JSON.
 
-**Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Rules`,
-`Rarity`, `Family` and the rest — is context for what the relic does and is never to be rendered:
-no title, no caption, no rules text, no numbers anywhere in the image. If `Draw` is empty, stop
-and say so rather than inventing a subject.
+**Read `Draw` and nothing else as the subject.** A relic is an object and can be described from
+nothing, so `Draw` is the whole brief. Every other field — `Name`, `Text`, `Rules`, `Rarity`,
+`Family` and the rest — is context for what the relic does and is never to be rendered: no title,
+no caption, no rules text, no numbers anywhere in the image. If `Draw` is empty, stop and say so
+rather than inventing a subject.
 
-All images should be named after the record's own key — `RelicRecord` — and a link provided so I can easily click to download
+Name the image after the record's own key — the `RelicRecord` value — and give me a link I can
+click to download it.

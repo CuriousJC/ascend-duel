@@ -47,7 +47,7 @@ type Card struct {
 	// to be something else. **FormNone means unmodified**, so a plain card is still the zero value
 	// and every `Card{Concept: x}` literal keeps working — the same trade AmountPct made.
 	//
-	// **It is a per-card modifier and not a concept swap**, because that is the difference the
+	// **It is a per-card modifier and not a change of concept**, because that is the difference the
 	// owner asked for: a Brace turned into a crush is still a Brace, still defends, and now counts
 	// as a crush when the hand is matched. That produces a card that shields and matches on an
 	// attack axis, which is a legal weird thing rather than a bug *(owner's call, 2026-09-02)*.

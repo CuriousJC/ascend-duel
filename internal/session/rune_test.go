@@ -23,9 +23,9 @@ func ids(s *Session) []int {
 // anyWithTarget is a rune from the shipped catalog that does this, whichever one it is.
 //
 // **A test's subject is the grammar, not the record.** Every assertion in this file already reads
-// off the resolved rune — `p.Number`, `p.Count`, `p.Concept` — so the record key was the one
-// place a rename could break a test that was not about that record at all, and it broke seven of
-// them at once when `rockshower` became `cairn`.
+// off the resolved rune — `p.Number`, `p.Count` — so the record key was the one place a rename
+// could break a test that was not about that record at all, and it broke seven of them at once
+// when `rockshower` was renamed.
 //
 // **Deterministic, because `Runes()` is sorted.** The first match is the same one every run,
 // which is what stops this being a test that quietly changes what it exercises.
@@ -40,12 +40,18 @@ func anyWithTarget(t *testing.T, target RuneTarget) Rune {
 	return Rune{}
 }
 
-// otherThan is any concept that is not this one, for a test that needs a card a swap would change.
-func otherThan(c combat.ConceptID) combat.ConceptID {
-	if c != combat.Bash {
-		return combat.Bash
+// notOfForm is any concept the rules have that is not this form, for a test whose cards have to
+// be something a form rune would actually change.
+func notOfForm(t *testing.T, f combat.Form) combat.ConceptID {
+	t.Helper()
+	for i := 0; i < combat.ConceptCount(); i++ {
+		id := combat.ConceptID(i)
+		if combat.ConceptOf(id).Form != f {
+			return id
+		}
 	}
-	return combat.Jab
+	t.Fatalf("every concept this build has is %s", f)
+	return combat.NoConcept
 }
 
 // anyWithRider is anyWithTarget for the one target whose behavior is chosen by a second field.
@@ -172,38 +178,6 @@ func TestARemoveRuneEatsBothOfItsTargets(t *testing.T) {
 	}
 	if _, ok := run.CardByID(held[1]); !ok {
 		t.Error("the card that was not named is the one that went")
-	}
-}
-
-func TestASwapKeepsTheCardsIdentityAndItsRiders(t *testing.T) {
-	// **A card the player has already spent runes on stays the card they invested in.** If a
-	// swap minted a new identity the riders would go with it, and a player would watch an
-	// investment vanish because they changed what the card was.
-	// **The card starts as something the swap is not**, since a swap onto the card it already is
-	// is refused — so the starting concept is derived from the rune rather than named.
-	effigy := anyWithTarget(t, RuneSwap)
-	run := runWith(combat.Plain(otherThan(effigy.Concept)))
-	id := ids(run)[0]
-
-	siphon := anyWithRider(t, combat.RiderHealOnPlay)
-	if !run.ApplyRune(siphon, []int{id}) {
-		t.Fatal("the rider was refused")
-	}
-
-	if !run.ApplyRune(effigy, []int{id}) {
-		t.Fatal("the swap was refused")
-	}
-
-	card, ok := run.CardByID(id)
-	if !ok {
-		t.Fatal("the swapped card lost its identity")
-	}
-	if card.Concept != effigy.Concept {
-		t.Errorf("the card is %s, wanted %s",
-			combat.ConceptOf(card.Concept).Label, combat.ConceptOf(effigy.Concept).Label)
-	}
-	if card.HealOnPlay() != siphon.Number {
-		t.Errorf("the swap lost the rider: heals %d", card.HealOnPlay())
 	}
 }
 
@@ -355,7 +329,12 @@ func TestANormalChangeLeavesTheUpgradeAlone(t *testing.T) {
 	// **Two cards, because the element and form runes take two.** The gold goes on the first
 	// and every assertion below is about that one; the second is only somebody for the pair
 	// runes to name.
-	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
+	//
+	// **The starting cards are derived from the form rune rather than named**, because a rune
+	// is refused on a card it would not change — so a hand that happened to already be the
+	// form the rune makes would fail this test for a reason that is not what it tests.
+	lead := notOfForm(t, anyWithTarget(t, RuneForm).Form)
+	run := runWith(combat.Plain(lead), combat.Plain(lead))
 	held := ids(run)
 	id := held[0]
 
@@ -364,7 +343,7 @@ func TestANormalChangeLeavesTheUpgradeAlone(t *testing.T) {
 		t.Fatal("a plain card refused gold")
 	}
 
-	for _, target := range []RuneTarget{RuneSwap, RuneElement, RuneForm} {
+	for _, target := range []RuneTarget{RuneElement, RuneForm} {
 		p := anyWithTarget(t, target)
 		if p.Change != RuneNormal {
 			t.Fatalf("%s calls itself a %s change", p.Record, p.Change)
@@ -433,16 +412,6 @@ func TestAGambleThatAlwaysPaysIsRefused(t *testing.T) {
 		if _, err := resolveRune(bad); err == nil {
 			t.Errorf("a %s card on a d2 was accepted", rider)
 		}
-	}
-}
-
-func TestASwapOntoTheCardItAlreadyIsDoesNothing(t *testing.T) {
-	effigy := anyWithTarget(t, RuneSwap)
-	run := runWith(combat.Plain(effigy.Concept))
-	id := ids(run)[0]
-
-	if run.CanApplyRune(effigy, []int{id}) {
-		t.Error("a swap onto the card it already is was offered as a legal target")
 	}
 }
 

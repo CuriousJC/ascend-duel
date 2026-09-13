@@ -44,11 +44,6 @@ const (
 	// the field an essence never had.
 	RuneRemove
 
-	// RuneSwap turns a card into a different card the game already defines. The identity is
-	// kept, so a card the player has already spent two runes on does not become a stranger —
-	// its riders and its per-card modifiers travel with it.
-	RuneSwap
-
 	// RuneVitae fills the purse and touches no card. **Count is zero for it**, and the board
 	// piece asks for no target at all.
 	RuneVitae
@@ -173,7 +168,7 @@ func changeFor(t RuneTarget) RuneChange {
 // RuneTargets is every target in a fixed order, for anything that walks them.
 func RuneTargets() []RuneTarget {
 	return []RuneTarget{
-		RuneRider, RuneRemove, RuneSwap, RuneVitae,
+		RuneRider, RuneRemove, RuneVitae,
 		RuneDuplicate, RuneElement, RuneForm, RuneStones, RuneClone,
 		RuneChimera,
 	}
@@ -183,8 +178,6 @@ func (t RuneTarget) String() string {
 	switch t {
 	case RuneRemove:
 		return "remove"
-	case RuneSwap:
-		return "swap"
 	case RuneVitae:
 		return "vitae"
 	case RuneDuplicate:
@@ -257,9 +250,6 @@ type Rune struct {
 
 	// Rider is the rule a rider rune attaches, already resolved. RiderNone elsewhere.
 	Rider combat.RiderKind
-
-	// Concept is what a swap rune turns a card into, already resolved. NoConcept elsewhere.
-	Concept combat.ConceptID
 
 	// Element is what an element rune recolors to, already resolved. Basic elsewhere.
 	Element combat.Element
@@ -352,7 +342,7 @@ func resolveRune(r data.RuneData) (Rune, error) {
 	}
 
 	p := Rune{Record: r.RuneRecord, Name: r.Name, Text: r.Text,
-		Target: target, Change: change, Count: r.Count, Concept: combat.NoConcept,
+		Target: target, Change: change, Count: r.Count,
 		Element: combat.Basic, Form: combat.FormNone,
 		Art: r.ArtKey(), Family: r.Family, Draw: r.Draw}
 
@@ -435,23 +425,9 @@ func resolveRune(r data.RuneData) (Rune, error) {
 		p.Number = n
 		return p, nil
 
-	case RuneSwap:
-		// **Resolved against the registry, so a rune cannot invent a card.** That is the same
-		// safety property the essences have — the concept is never one internal/combat has not
-		// registered — and it is what keeps a consumable from being a way to author cards in a
-		// JSON file the rules never read.
-		id, ok := combat.ConceptByKey(r.Value)
-		if !ok {
-			return Rune{}, fmt.Errorf("%s turns a card into %q, which is not a card this build has",
-				r.RuneRecord, r.Value)
-		}
-		p.Concept = id
-		return p, nil
-
 	case RuneElement:
-		// **Resolved against the rules' own element list**, for the reason a swap resolves against
-		// the concept registry: a color this build does not have is a rune that would land
-		// and paint nothing.
+		// **Resolved against the rules' own element list**, so that a color this build does not
+		// have is refused rather than being a rune that lands and paints nothing.
 		e, ok := combat.ParseElement(r.Value)
 		if !ok {
 			return Rune{}, fmt.Errorf("%s recolors to %q, which is not an element the rules have",
@@ -502,7 +478,7 @@ func resolveRune(r data.RuneData) (Rune, error) {
 	case RuneClone:
 		// **The template is a card the player picks, so there is nothing to resolve here** — what
 		// this checks is that the record did not try to name one. A clone carrying a Value is
-		// somebody expecting the swap it is not.
+		// somebody expecting it to name a card, which it never does.
 		if r.Count != 2 {
 			return Rune{}, fmt.Errorf("%s clones one card into another and takes %d cards, which cannot be done",
 				r.RuneRecord, r.Count)
@@ -665,14 +641,6 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 		}
 		return true
 
-	case RuneSwap:
-		for _, i := range s.positionsOf(ids) {
-			// **The identity is kept and so are the riders.** A card the player has already spent
-			// runes on stays the card they invested in; what changes is which card it is.
-			s.deck[i].Concept = p.Concept
-		}
-		return true
-
 	case RuneStones:
 		// **Drawn without repeats and every one of them kept** *(owner's call, 2026-09-02)*. The
 		// shuffle-and-take-a-prefix is the bag's own draw, and it is flat for the bag's reason: a
@@ -718,8 +686,8 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 
 	case RuneForm:
 		for _, i := range s.positionsOf(ids) {
-			// **An override rather than a swap**, so the card goes on being the card it was and
-			// only the axis it is counted on moves. See `combat.Card.FormOverride`.
+			// **An override rather than a replacement**, so the card goes on being the card it
+			// was and only the axis it is counted on moves. See `combat.Card.FormOverride`.
 			s.deck[i].FormOverride = p.Form
 		}
 		return true
@@ -792,10 +760,6 @@ func (s *Session) CanApplyRune(p Rune, ids []int) bool {
 		}
 
 		switch p.Target {
-		case RuneSwap:
-			if card.Concept == p.Concept {
-				return false
-			}
 		case RuneElement:
 			if card.Element == p.Element {
 				return false

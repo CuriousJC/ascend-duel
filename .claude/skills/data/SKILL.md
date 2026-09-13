@@ -229,7 +229,7 @@ on `relics.json` first and were taken to `essences.json` and `runes.json` on 202
 key is what those two already have.
 
 - **`Family` is the motif a record was authored beside**, and it is what its sheet groups by —
-  "Elemental essences", "Concept swaps", "Slimes", "Stairway keepers". It is **authored rather than
+  "Elemental essences", "Elemental marks", "Slimes", "Stairway keepers". It is **authored rather than
   derived** for the argument `RelicData.Family` records: nearly every value is implied by the
   record's own rules, so a derived grouping would reproduce it almost exactly, and what an authored
   one buys is a name to read instead of a signature to decode. **It is not the `CostTier` mistake**,

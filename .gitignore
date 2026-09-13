@@ -43,7 +43,7 @@ analysis.md
 # only ever near-identical binaries. What that argument left out is the audience: the sheets are
 # how the catalogues get *reviewed*, and requiring a Go toolchain and four commands to see them
 # means they are only ever looked at by whoever just changed the thing. Committed, a clone opens
-# docs/sheets/index.html and sees every card, ring, worm and hand in the game.
+# docs/sheets/index.html and sees every card, ring, essence and hand in the game.
 #
 # The price is real and accepted: about 1.7 MB and 150 binary files rewritten whenever the sheets
 # are regenerated. **Regenerate deliberately rather than reflexively** — a sheet rebuilt in a

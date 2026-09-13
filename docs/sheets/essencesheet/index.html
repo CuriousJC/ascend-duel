@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — worm sheet</title>
+<title>Ascending Duel — essence sheet</title>
 <style>
   :root {
     --ground: #a8bcd4;
@@ -80,23 +80,23 @@
   figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
 </style>
 
-<h1>Worm sheet</h1>
+<h1>Essence sheet</h1>
 <p class="facts">
-  15 worms, 15 of them drawing the default face, 0 with no subject
+  15 essences, 15 of them drawing the default face, 15 with no subject
   paragraph written. 2 are offered after a won fight — 13.3% of the catalogue gets
-  a seat. Worm card <code>200&times;280</code>,
+  a seat. Essence card <code>200&times;280</code>,
   corner radius <code>15</code>,
   border <code>4</code>,
   art box inset <code>0</code> from
   <code>y=0</code> at most <code>0</code> tall,
   text band from <code>y=140</code>.
-  Shown at 1:1 on the ground the worms are actually offered on.
+  Shown at 1:1 on the ground the essences are actually offered on.
 </p>
 <p class="note">
-  Regenerate with <code>go run ./tools/wormsheet</code> and refresh. Every card here is drawn by
+  Regenerate with <code>go run ./tools/essencesheet</code> and refresh. Every card here is drawn by
   <code>internal/cards</code>, the same code the game blits, and every word beside it is read out
-  of <code>data/worms.json</code> through <code>internal/session</code>'s own validation — so a
-  worm this page refuses to draw is a worm the game refuses to start with.
+  of <code>data/essences.json</code> through <code>internal/session</code>'s own validation — so a
+  essence this page refuses to draw is an essence the game refuses to start with.
 </p>
 <p class="note">
   <strong>Read the sentence against the rule.</strong> The line under each name is the
@@ -105,98 +105,98 @@
 </p>
 <p class="note">
   <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The quoted
-  block under each worm is <code>Draw</code> in <code>data/worms.json</code>: what the thing
+  block under each essence is <code>Draw</code> in <code>data/essences.json</code>: what the thing
   <em>is</em> and what it is doing, in one sentence. Nothing in the game reads it. It is pasted
   under the shared prompt in <code>docs/art/card_art_prompt.MD</code>, which is the only part of a
-  brief that is not about one record. <strong>A worm with no subject and no art is the
+  brief that is not about one record. <strong>An essence with no subject and no art is the
   backlog</strong> — both lines go pink, so the page can be scrolled for what still needs writing
-  rather than a worklist being kept in step by hand. <code>default-worm.png</code> is the seat art
+  rather than a worklist being kept in step by hand. <code>default-essence.png</code> is the seat art
   goes into, not a fallback that has gone wrong.
 </p>
 
 <h2>What the catalogue changes</h2>
 <p class="note">
-  <strong>Every target, and how many worms sit at it.</strong> The target vocabulary is closed —
+  <strong>Every target, and how many essences sit at it.</strong> The target vocabulary is closed —
   a new one is a Go change plus one place applying it, never something a file can assert into
   existence — so a target with nothing under it is a mechanic that was built and never reached for.
   This was the page's grouping until families landed; it is a count now, because the target is a
-  fact about one worm and a family is a block of them.
+  fact about one essence and a family is a block of them.
 </p>
 <ul class="targets">
 
   <li class="target"><strong>element</strong>
-    5 worms</li>
+    5 essences</li>
 
   <li class="target"><strong>remove</strong>
-    1 worms</li>
+    1 essences</li>
 
   <li class="target"><strong>duplicate</strong>
-    1 worms</li>
+    1 essences</li>
 
   <li class="target"><strong>cost</strong>
-    1 worms</li>
+    1 essences</li>
 
   <li class="target"><strong>amount</strong>
-    1 worms</li>
+    1 essences</li>
 
   <li class="target"><strong>promote</strong>
-    1 worms</li>
+    1 essences</li>
 
   <li class="target"><strong>demote</strong>
-    1 worms</li>
+    1 essences</li>
 
   <li class="target"><strong>form</strong>
-    4 worms</li>
+    4 essences</li>
 
 </ul>
 
 <h2>The catalogue, by family</h2>
 <p class="note">
-  <strong>Grouped by the motif each worm was authored beside, in the file's own order.</strong>
+  <strong>Grouped by the motif each essence was authored beside, in the file's own order.</strong>
   <code>Family</code> is authored and the engine ignores it, exactly as it ignores <code>Art</code>
-  and <code>Draw</code> — so it can go quietly out of date when a worm is retargeted, and nothing
+  and <code>Draw</code> — so it can go quietly out of date when an essence is retargeted, and nothing
   fails. Treat a family that disagrees with the rule beside it as a label to fix.
 </p>
 
 
 <h3 class="family">
-  Cards eaten and copied
-  <span>2 worms</span>
+  Dissolve and multiply
+  <span>2 essences</span>
 </h3>
 <div class="plates">
   
     <div class="plate">
-      <img src="worm-devour.png" width="200" height="280"
-           alt="DEVOUR">
+      <img src="essence-dissolve.png" width="200" height="280"
+           alt="DISSOLVE">
       <div class="about">
-        <p class="name">DEVOUR</p>
-        <div class="record">devour</div>
+        <p class="name">DISSOLVE</p>
+        <div class="record">dissolve</div>
         <p class="text">DESTROY CARD</p>
         
-          <p class="draw">a fat pale grub with a wide ringed maw of inward-facing teeth, caught halfway through biting a card in two, the torn halves curling away from it</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">remove</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-spawn.png" width="200" height="280"
-           alt="SPAWN">
+      <img src="essence-multiply.png" width="200" height="280"
+           alt="MULTIPLY">
       <div class="about">
-        <p class="name">SPAWN</p>
-        <div class="record">spawn</div>
+        <p class="name">MULTIPLY</p>
+        <div class="record">multiply</div>
         <p class="text">COPY CARD</p>
         
-          <p class="draw">a segmented worm splitting lengthwise into two identical worms, the halves still joined at the tail</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">duplicate</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
@@ -204,97 +204,97 @@
 </div>
 
 <h3 class="family">
-  Elemental worms
-  <span>5 worms</span>
+  Elemental essences
+  <span>5 essences</span>
 </h3>
 <div class="plates">
   
     <div class="plate">
-      <img src="worm-ember-worm.png" width="200" height="280"
-           alt="EMBER WORM">
+      <img src="essence-ember.png" width="200" height="280"
+           alt="EMBER">
       <div class="about">
-        <p class="name">EMBER WORM</p>
-        <div class="record">ember-worm</div>
+        <p class="name">EMBER</p>
+        <div class="record">ember</div>
         <p class="text">CARD BECOMES FIRE</p>
         
-          <p class="draw">a worm of glowing red coal, its segments cracked open like cooling lava with fire showing through the seams</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">element → fire</p>
         <p class="border">border: fire</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-rime-worm.png" width="200" height="280"
-           alt="RIME WORM">
+      <img src="essence-rime.png" width="200" height="280"
+           alt="RIME">
       <div class="about">
-        <p class="name">RIME WORM</p>
-        <div class="record">rime-worm</div>
+        <p class="name">RIME</p>
+        <div class="record">rime</div>
         <p class="text">CARD BECOMES ICE</p>
         
-          <p class="draw">a worm sheathed in pale blue ice, frost spreading out from every place its body touches the ground</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">element → ice</p>
         <p class="border">border: ice</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-arc-worm.png" width="200" height="280"
-           alt="ARC WORM">
+      <img src="essence-arc.png" width="200" height="280"
+           alt="ARC">
       <div class="about">
-        <p class="name">ARC WORM</p>
-        <div class="record">arc-worm</div>
+        <p class="name">ARC</p>
+        <div class="record">arc</div>
         <p class="text">CARD BECOMES LIGHTNING</p>
         
-          <p class="draw">a worm of crackling yellow lightning, its body a jagged bolt with sparks leaping between the segments</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">element → lightning</p>
         <p class="border">border: lightning</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-loam-worm.png" width="200" height="280"
-           alt="LOAM WORM">
+      <img src="essence-loam.png" width="200" height="280"
+           alt="LOAM">
       <div class="about">
-        <p class="name">LOAM WORM</p>
-        <div class="record">loam-worm</div>
+        <p class="name">LOAM</p>
+        <div class="record">loam</div>
         <p class="text">CARD BECOMES EARTH</p>
         
-          <p class="draw">a worm armoured in brown stone and packed earth, dirt and small pebbles shedding from its segments as it moves</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">element → earth</p>
         <p class="border">border: earth</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-hex-worm.png" width="200" height="280"
-           alt="HEX WORM">
+      <img src="essence-hex.png" width="200" height="280"
+           alt="HEX">
       <div class="about">
-        <p class="name">HEX WORM</p>
-        <div class="record">hex-worm</div>
+        <p class="name">HEX</p>
+        <div class="record">hex</div>
         <p class="text">CARD BECOMES ARCANE</p>
         
-          <p class="draw">a worm of violet light, its body half transparent and hung about with slowly drifting arcane sigils</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">element → arcane</p>
         <p class="border">border: arcane</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
@@ -303,78 +303,78 @@
 
 <h3 class="family">
   Card strength
-  <span>4 worms</span>
+  <span>4 essences</span>
 </h3>
 <div class="plates">
   
     <div class="plate">
-      <img src="worm-whetworm.png" width="200" height="280"
-           alt="WHETWORM">
+      <img src="essence-hone.png" width="200" height="280"
+           alt="HONE">
       <div class="about">
-        <p class="name">WHETWORM</p>
-        <div class="record">whetworm</div>
+        <p class="name">HONE</p>
+        <div class="record">hone</div>
         <p class="text">CARD BECOMES EASIER -1 AP</p>
         
-          <p class="draw">a worm whose body is a long grey whetstone, throwing a thin line of sparks where a blade is being drawn along it</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">cost -1 AP, floored at zero</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-swell.png" width="200" height="280"
+      <img src="essence-swell.png" width="200" height="280"
            alt="SWELL">
       <div class="about">
         <p class="name">SWELL</p>
         <div class="record">swell</div>
         <p class="text">CARD GAINS DMG &#43;50%</p>
         
-          <p class="draw">a worm bloated to twice its length, its skin stretched tight and shining over the bulge</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">amount × 150%</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-grow.png" width="200" height="280"
-           alt="GROW">
+      <img src="essence-exalt.png" width="200" height="280"
+           alt="EXALT">
       <div class="about">
-        <p class="name">GROW</p>
-        <div class="record">grow</div>
+        <p class="name">EXALT</p>
+        <div class="record">exalt</div>
         <p class="text">CARD GAINS STRENGTH &#43;1 AP</p>
         
-          <p class="draw">a thick heavy worm rearing up off the ground, far broader at the head than at the tail</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">promote</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-shrink.png" width="200" height="280"
-           alt="SHRINK">
+      <img src="essence-debase.png" width="200" height="280"
+           alt="DEBASE">
       <div class="about">
-        <p class="name">SHRINK</p>
-        <div class="record">shrink</div>
+        <p class="name">DEBASE</p>
+        <div class="record">debase</div>
         <p class="text">CARD LOSES STRENGTH -1 AP</p>
         
-          <p class="draw">a shrivelled worm curled tight and drawn in on itself, its skin hanging loose and wrinkled</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">demote</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
@@ -382,79 +382,79 @@
 </div>
 
 <h3 class="family">
-  Form worms
-  <span>4 worms</span>
+  Form essences
+  <span>4 essences</span>
 </h3>
 <div class="plates">
   
     <div class="plate">
-      <img src="worm-tusk-worm.png" width="200" height="280"
-           alt="TUSK WORM">
+      <img src="essence-blunt.png" width="200" height="280"
+           alt="BLUNT">
       <div class="about">
-        <p class="name">TUSK WORM</p>
-        <div class="record">tusk-worm</div>
+        <p class="name">BLUNT</p>
+        <div class="record">blunt</div>
         <p class="text">CARD BECOMES CRUSH</p>
         
-          <p class="draw">a worm with a blunt armoured head like the face of a maul, two short ivory tusks curving up from its jaw</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">form</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-edge-worm.png" width="200" height="280"
-           alt="EDGE WORM">
+      <img src="essence-edge.png" width="200" height="280"
+           alt="EDGE">
       <div class="about">
-        <p class="name">EDGE WORM</p>
-        <div class="record">edge-worm</div>
+        <p class="name">EDGE</p>
+        <div class="record">edge</div>
         <p class="text">CARD BECOMES SLASH</p>
         
-          <p class="draw">a worm whose body is one long curved blade, the outer edge bright and honed and the inner edge dull</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">form</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-point-worm.png" width="200" height="280"
-           alt="POINT WORM">
+      <img src="essence-spike.png" width="200" height="280"
+           alt="SPIKE">
       <div class="about">
-        <p class="name">POINT WORM</p>
-        <div class="record">point-worm</div>
+        <p class="name">SPIKE</p>
+        <div class="record">spike</div>
         <p class="text">CARD BECOMES STAB</p>
         
-          <p class="draw">a worm tapering along its whole length to a single needle point, its head a narrow spike</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">form</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="worm-shell-worm.png" width="200" height="280"
-           alt="SHELL WORM">
+      <img src="essence-aegis.png" width="200" height="280"
+           alt="AEGIS">
       <div class="about">
-        <p class="name">SHELL WORM</p>
-        <div class="record">shell-worm</div>
+        <p class="name">AEGIS</p>
+        <div class="record">aegis</div>
         <p class="text">CARD BECOMES DEFEND</p>
         
-          <p class="draw">a worm coiled inside a thick ridged shell, only its head showing at the opening</p>
+          <p class="draw missing">no subject written yet</p>
         
         <p class="rule">form</p>
         <p class="border">border: basic — grants no element</p>
         
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         
       </div>
     </div>
@@ -464,19 +464,19 @@
 
 <h2>Card states</h2>
 <p class="note">
-  The two states a worm card is drawn in. The reward screen dims the offer that was not taken
+  The two states an essence card is drawn in. The reward screen dims the offer that was not taken
   rather than lighting the one that was, so there is no third.
 </p>
 <div class="cells">
   
     <figure>
-      <img src="state-rest.png" width="200" height="280" alt="DEVOUR — on offer">
-      <figcaption>DEVOUR — on offer</figcaption>
+      <img src="state-rest.png" width="200" height="280" alt="DISSOLVE — on offer">
+      <figcaption>DISSOLVE — on offer</figcaption>
     </figure>
   
     <figure>
-      <img src="state-disabled.png" width="200" height="280" alt="DEVOUR — the offer not taken">
-      <figcaption>DEVOUR — the offer not taken</figcaption>
+      <img src="state-disabled.png" width="200" height="280" alt="DISSOLVE — the offer not taken">
+      <figcaption>DISSOLVE — the offer not taken</figcaption>
     </figure>
   
 </div>

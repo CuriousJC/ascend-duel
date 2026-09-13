@@ -34,19 +34,19 @@ const (
 	// in the fight just won, so playing a longer duel would change what you were offered for it.
 	RewardHand
 
-	// WormOffer is which two alterations are offered after a fight. Per fight.
+	// EssenceOffer is which two alterations are offered after a fight. Per fight.
 	//
 	// **A separate stream from RewardHand, and the question was asked rather than assumed.** They
 	// are drawn from different lists — one from the catalogue, one from the run deck — and they
-	// change on different schedules: adding a worm to `data/worms.json` would otherwise reroll
+	// change on different schedules: adding an essence to `data/essences.json` would otherwise reroll
 	// which *cards* every fight of every run offered, which is a retune of the catalogue silently
 	// changing the game around it. That is the exact failure the salts exist to prevent.
-	WormOffer
+	EssenceOffer
 
 	// ShopStock is which relics the shop puts up after a fight. Per fight.
 	//
-	// **Its own stream, and the question was asked.** Sharing WormOffer would draw the shop's
-	// three relics off the same sequence as the two worms, so authoring a new worm would change
+	// **Its own stream, and the question was asked.** Sharing EssenceOffer would draw the shop's
+	// three relics off the same sequence as the two essences, so authoring a new essence would change
 	// which relics every run was ever offered — the catalogue-retune failure this package exists to
 	// prevent, one file over. Sharing RewardHand would make the shelf a function of the run deck's
 	// size, which is a thing the player changes on the screen immediately before the shop.
@@ -61,20 +61,20 @@ const (
 	// far more often than the relics are.
 	BagStock
 
-	// CanStock is which four worms a can of worms holds. Per fight.
+	// VialStock is which four essences a vial of essence holds. Per fight.
 	//
-	// **Separate from WormOffer even though both draw worms from one catalogue**, which is the
+	// **Separate from EssenceOffer even though both draw essences from one catalogue**, which is the
 	// case worth stating: they are two draws that happen in one run at two different stations, and
 	// sharing the stream would make the shop's four a function of which two the reward screen had
-	// already put up. Buying the can would then be able to *guarantee* the pair you had just
+	// already put up. Buying the vial would then be able to *guarantee* the pair you had just
 	// turned down, or to guarantee it could not appear — a rule nobody designed, arriving out of
 	// an implementation detail.
-	CanStock
+	VialStock
 
 	// BucketStock is which four parasites a bucket of parasites holds. Per fight.
 	//
-	// **Its own stream, on exactly the argument CanStock is under.** A parasite catalogue and a
-	// worm catalogue grow on different schedules and are drawn at the same station, so sharing
+	// **Its own stream, on exactly the argument VialStock is under.** A parasite catalogue and a
+	// essence catalogue grow on different schedules and are drawn at the same station, so sharing
 	// either of the other two goods' streams would make one good's contents a function of the
 	// other's — and authoring a parasite would silently reroll every bag every run has ever
 	// opened.
@@ -100,10 +100,10 @@ const (
 	// silently change which good every run was ever offered — and the shelf is redrawn by a
 	// reroll, which would then reroll the packs beside it. Sharing any of the three stock streams
 	// would be worse still: those decide what is *inside* a pack, and the choice of which two
-	// stand on the shelf would move whenever a stone or a worm was written.
+	// stand on the shelf would move whenever a stone or an essence was written.
 	//
 	// **It exists at all because a visit stopped offering all three** *(owner's call,
-	// 2026-09-06)*. While the bag, the can and the bucket were all always there, which packs a
+	// 2026-09-06)*. While the bag, the vial and the bucket were all always there, which packs a
 	// shop had was not a decision and needed no roll.
 	PackOffer
 
@@ -148,19 +148,19 @@ type stream struct {
 }
 
 var streams = [...]stream{
-	EnemySelect: {name: "enemy-select", salt: 0x5EED_E9E3},
-	CombatRoll:  {name: "combat-roll", salt: 0x5EED_5C0F},
-	PlayerDeck:  {name: "player-deck", salt: 0x5EED_DEC4, perFight: true},
-	EnemyDeck:   {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
-	RewardHand:  {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
-	WormOffer:   {name: "worm-offer", salt: 0x5EED_7A19, perFight: true},
-	ShopStock:   {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
-	BagStock:    {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
-	CanStock:    {name: "can-stock", salt: 0x5EED_CA07, perFight: true},
-	BucketStock: {name: "bucket-stock", salt: 0x5EED_B0CC, perFight: true},
-	StoneShower: {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
-	PackOffer:   {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
-	LuckRoll:    {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
+	EnemySelect:  {name: "enemy-select", salt: 0x5EED_E9E3},
+	CombatRoll:   {name: "combat-roll", salt: 0x5EED_5C0F},
+	PlayerDeck:   {name: "player-deck", salt: 0x5EED_DEC4, perFight: true},
+	EnemyDeck:    {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
+	RewardHand:   {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
+	EssenceOffer: {name: "essence-offer", salt: 0x5EED_7A19, perFight: true},
+	ShopStock:    {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
+	BagStock:     {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
+	VialStock:    {name: "vial-stock", salt: 0x5EED_CA07, perFight: true},
+	BucketStock:  {name: "bucket-stock", salt: 0x5EED_B0CC, perFight: true},
+	StoneShower:  {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
+	PackOffer:    {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
+	LuckRoll:     {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

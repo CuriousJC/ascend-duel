@@ -272,7 +272,7 @@ func (c Card) riderTotal(kind RiderKind) int {
 
 // riderScale is one kind's percentages over a card's riders, compounded.
 //
-// **Compounded rather than added**, which is the posture `TargetAmount` already takes for worms:
+// **Compounded rather than added**, which is the posture `TargetAmount` already takes for essences:
 // two doublings on one card are four times, not three. 100 is the identity, and a card carrying
 // none of this kind returns it.
 func (c Card) riderScale(kind RiderKind) int {

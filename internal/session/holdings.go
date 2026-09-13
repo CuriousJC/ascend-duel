@@ -4,7 +4,7 @@ package session
 //
 // The ledger records rounds, which is what the combat screen hands it — so a run's account went
 // silent the moment the duel ended and picked up again at the next one. Everything the player
-// actually *decided* happened in that gap: the card they took, the card they cut, the worm they
+// actually *decided* happened in that gap: the card they took, the card they cut, the essence they
 // spent, the relic they bought, the rung they raised. See ledger.go's After block, which is where
 // the words end up.
 //

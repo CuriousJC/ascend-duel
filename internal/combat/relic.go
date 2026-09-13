@@ -4,7 +4,7 @@ package combat
 // inside this package.
 //
 // **A relic is the only collected thing that is never played** *(2026-08-17)*. A card resolves in the
-// turn you queued it, a worm fires when you pick it, a hand is scored when the attack phase runs —
+// turn you queued it, an essence fires when you pick it, a hand is scored when the attack phase runs —
 // each already knows *when* it happens. A relic waits, so it has to say so itself, and that is the
 // third part the card language does not need. `.claude/skills/relics/SKILL.md` is the whole grammar;
 // MECHANICS.md holds the argument for its shape.
@@ -14,7 +14,7 @@ package combat
 // too, which is what buys a relic that shocks *and* chills with no new vocabulary.
 //
 // **This package holds the vocabulary and refuses a rule that misuses it; it does not read
-// `relics.json`.** The file lives beside the worms in `internal/session`, which parses the strings
+// `relics.json`.** The file lives beside the essences in `internal/session`, which parses the strings
 // and calls RegisterRelic with rules types — so the engine never sees an art key, and a relic's own
 // record can carry one. Same division `buildStartingDeck` and `decks.EnemyCards` draw for cards.
 //
@@ -447,7 +447,7 @@ type RelicCondition struct {
 	// **The declared cost, never the wearer's.** A discount relic makes a Skewer cost 2 to its
 	// wearer, and a rule matching `Tier: 3` still has to see a Skewer — otherwise two relics worn
 	// together would silently stop each other working, and which one won would depend on the order
-	// they were bought in. `Concept.Tier` is the same reading a worm takes, and for the same reason.
+	// they were bought in. `Concept.Tier` is the same reading an essence takes, and for the same reason.
 	Tier    int
 	HasTier bool
 
@@ -633,7 +633,7 @@ func RegisterRelic(key, name string, rules []RelicRule) (RelicID, error) {
 }
 
 // checkEffect holds each verb to the figure it needs. **A zero is refused rather than clamped**,
-// unlike a worm's amount: a worm is a reward the player chose and a silent nothing would be worse
+// unlike an essence's amount: an essence is a reward the player chose and a silent nothing would be worse
 // than a ceiling, where a relic is authored once and a zero there is a typo.
 func checkEffect(key string, e RelicEffect) error {
 	switch e.Do {

@@ -151,7 +151,7 @@ type LedgerFight struct {
 	Rounds []LedgerRound
 
 	// After is what the player did to the run between this fight and the next: the card taken, the
-	// card cut, the worm spent, the relic bought, the rung raised.
+	// card cut, the essence spent, the relic bought, the rung raised.
 	//
 	// **It hangs off the fight rather than sitting between two of them** *(owner's call,
 	// 2026-09-12)*. The panel folds by fight, so a block of its own would be a third kind of thing

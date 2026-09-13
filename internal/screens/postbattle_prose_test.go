@@ -121,7 +121,7 @@ func itoaTest(n int) string {
 }
 
 // TestATypedOutNarrationWaitsToBeDismissed. **Nothing advances on its own** — a block that finished
-// typing without ever being clicked still holds the screen, so the worms cannot arrive over a total
+// typing without ever being clicked still holds the screen, so the essences cannot arrive over a total
 // the player is still reading.
 func TestATypedOutNarrationWaitsToBeDismissed(t *testing.T) {
 	gs := wonRun(63)
@@ -149,7 +149,7 @@ func TestATypedOutNarrationWaitsToBeDismissed(t *testing.T) {
 
 // TestFillingDoesNotLeaveTheNarration. **The click that fills the block may not also be the click
 // that leaves it** *(owner's call, 2026-09-08)*. A player asking to see the whole payout is asking
-// to read it, not to be past it, so the worms wait for a second click.
+// to read it, not to be past it, so the essences wait for a second click.
 func TestFillingDoesNotLeaveTheNarration(t *testing.T) {
 	gs := wonRun(63)
 	w := typewriter{}

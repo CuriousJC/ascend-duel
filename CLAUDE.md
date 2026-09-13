@@ -32,7 +32,7 @@ Six streams, each with one job. Reach for the right one rather than searching al
   work turned one up.
 - When the two disagree, `MECHANICS.md` is newer and wins — say so rather than guessing.
 - **`data/` is the catalogue, and this file never says what is in it** *(owner's call,
-  2026-09-11)*. How many relics there are, which worms exist, what a parasite's line reads — all of
+  2026-09-11)*. How many relics there are, which essences exist, what a parasite's line reads — all of
   that is a `data/*.json` read or a `docs/sheets/` page away, and it is **pre-v1 and changing
   constantly**, so a count written down here is wrong within the week and wrong *silently*: nothing
   compiles it, nothing tests it, and it is loaded into context every session to mislead. Every
@@ -78,7 +78,7 @@ skill that does not exist.
 |---|---|
 | [`caveman`](.claude/skills/caveman/SKILL.md) | **every session, at the start** — see below; it is on by default in this repo |
 | [`github-workflow`](.claude/skills/github-workflow/SKILL.md) | any `git` or `gh` command — branching, committing, pushing, opening or merging a PR, cleaning up after one, or when a merge is refused |
-| [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / worms, or writing a loader |
+| [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / essences, or writing a loader |
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
 | [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn relic |
@@ -150,7 +150,7 @@ go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
 go run ./tools/sheets       # regenerate every review sheet and the index that links them
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
 go run ./tools/relicsheet    # every relic to PNGs + a page grouped by rarity: art, price, text, rules
-go run ./tools/wormsheet    # every worm to PNGs + a page grouped by what it changes about a card
+go run ./tools/essencesheet    # every essence to PNGs + a page grouped by what it changes about a card
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
 go run ./tools/enemysheet   # every creature by floor band: card, stat line, whole deck
 go run ./tools/bosssheet    # the stairway protectors, the same way, by floor
@@ -160,7 +160,7 @@ go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, i
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
 go run ./tools/relicart      # files generated relic art: reduce, commit, set "Art" on the record
-go run ./tools/relicart -kind worm       # the same, for data/worms.json and assets/worm
+go run ./tools/relicart -kind essence       # the same, for data/essences.json and assets/essence
 go run ./tools/relicart -kind parasite   # the same, for data/parasites.json and assets/parasite
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
@@ -168,7 +168,7 @@ go run ./tools/handodds     # how often each rung of the hand ladder can actuall
 
 **The sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write there
 rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone opens to
-see every card, relic, worm, hand, stone, parasite, upgrade, creature and boss in the game. That
+see every card, relic, essence, hand, stone, parasite, upgrade, creature and boss in the game. That
 reverses the older rule that a regenerated artefact is not worth committing: the argument it left
 out is the audience, since a sheet needing a Go toolchain and a remembered command each is a sheet
 only ever seen by whoever just changed the thing it shows.
@@ -881,7 +881,7 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
 - **A `\n` in effect text is an authored line break** *(2026-08-23)*, honoured by
   `cards.WrapText` before the width is measured, and split back into lines by the tooltip.
   It exists because width-wrapping cannot make a *set* of cards break in the same place: the
-  five elemental worms differ only in the element they name, and `FIRE` sits comfortably on
+  five elemental essences differ only in the element they name, and `FIRE` sits comfortably on
   the line where `LIGHTNING` all but fills it, so left to the measurer the four read as four
   layouts of one card. **A break can only ever add a line** — an authored line too wide for
   the band still wraps — so it is not a way past the column.
@@ -1073,7 +1073,7 @@ are easy to re-break:
 **A card's picture is either a panel on it or the whole of it, and `Style.ArtBleed` is which**
 *(owner's call, 2026-09-11)*. `internal/cards/bleed.go` owns the second path: the art is scaled to
 *cover* the card, clipped to the border's inner curve, and drawn first with everything else on
-top. `RelicStyle` and `WormStyle` bleed — so relics, parasites, worms, stones and the two
+top. `RelicStyle` and `EssenceStyle` bleed — so relics, parasites, essences, stones and the two
 sealed goods are all one format — and `EnemyStyle` and `DuelistStyle` still fit a picture into
 `ArtTop`/`ArtInset`/`ArtMaxH`. The two do not compose, and the art is authored against the choice:
 a fitted box wants a square and a bleeding card wants the card's own 200x280. Five things follow:
@@ -1085,13 +1085,13 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   not recognise a picture yet goes. `TestTheEnemyNamesItselfAboveItsPortrait` holds both halves —
   a naming card centres its name across the top, a bleeding card has none.
 - **What survives on top of the art is one scrim each.** A relic draws its counter disc in the
-  bottom-right; a worm draws the sentence saying what it does, on a dark band from 140 to 265.
+  bottom-right; an essence draws the sentence saying what it does, on a dark band from 140 to 265.
   The band is derived from the offsets the type is drawn at, never authored twice.
 - **The surface was carrying the text, so the ink set flips.** Every ink in `internal/cards` is
   near-black because it was written against the off-white `Surface`; `cards.onScrim` swaps the
   three named inks for light ones and lifts an authored element colour toward white. **The one
   place that table is not a straight translation is `LabelInk`**, which is a stat row's quiet word
-  everywhere else and is a worm's whole sentence here.
+  everywhere else and is an essence's whole sentence here.
 - **Art is committed at 200x280 and the generator's output stays in `.scratch`.** The batch came
   back at 1060x1484 — 1.1 MB a relic, about 155 MB across the catalogue — and a 5.3x reduction at
   draw time softens exactly the hard block edges the prompt spends its words demanding. Reduced
@@ -1108,7 +1108,7 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   sheet counts both and marks both in pink.
 
 - **Four catalogues carry `Family` and `Draw`, and nothing that plays the game reads either**
-  *(owner's call, 2026-09-12)*. `relics.json`, `worms.json` and `parasites.json` carry `Art`
+  *(owner's call, 2026-09-12)*. `relics.json`, `essences.json` and `parasites.json` carry `Art`
   beside them; `enemies.json` and `bosses.json` carry the two alone, with every `Draw` reading
   `TO BE DETERMINED` — their portraits are licensed creature art rather than generated pictures,
   so the field is a seat for briefs to be written into a few at a time rather than a backlog
@@ -1120,13 +1120,13 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   the floor is the placement decision, and a field repeating the heading above it would say
   nothing.
 
-**Relic, worm and parasite art is a globbed family, keyed by filename stem** *(2026-09-11, the
+**Relic, essence and parasite art is a globbed family, keyed by filename stem** *(2026-09-11, the
 parasites 2026-09-12)* — `relic/fire.png` is `fire`, which is what `data/relics.json` writes in
-its `Art` field. **Each has its own default face** — `default-relic`, `default-worm`,
+its `Art` field. **Each has its own default face** — `default-relic`, `default-essence`,
 `default-parasite`, reached through the record's `ArtKey()` rather than through a constant in a
 screen: a fallback living in `internal/screens` is a fallback the review tool does not have, which
-is how a sheet comes to disagree with the game. The parasites wore the worm's placeholder until
-they split, and they split because one shared picture is a page where a drawn worm and an undrawn
+is how a sheet comes to disagree with the game. The parasites wore the essence's placeholder until
+they split, and they split because one shared picture is a page where a drawn essence and an undrawn
 parasite are the same face.
 Same exception to the three-edit rule the enemy portraits take, and the same cost: a key is
 tied to its filename, so renaming a file means editing the JSON. `assets.embedFamily` is the one
@@ -1141,8 +1141,8 @@ over. The sheet draws each with its price, its authored `Text` and its rules sid
 which is also the only place the sentence a player reads can be checked against the rules that
 actually fire.
 
-**`tools/wormsheet` and `tools/handsheet` are the same idea on the other two catalogues**
-*(2026-08-23)*. A worm is offered two at a time after a won fight, so the whole catalogue is five
+**`tools/essencesheet` and `tools/handsheet` are the same idea on the other two catalogues**
+*(2026-08-23)*. An essence is offered two at a time after a won fight, so the whole catalogue is five
 fights away; the sheet draws them all grouped by what each one changes about a card, with the
 authored `Text` against the rule that fires, exactly as the relic sheet does. The hand sheet draws
 every rung of the ladder as an *actual hand of real cards* — the set the shipping deck can form
@@ -1236,7 +1236,7 @@ unreachable.
 **Every word naming an element is written in that element's colour** *(owner's call, 2026-09-08)*.
 `cards.ElementRuns` is the one vocabulary — the five element names plus each status's `Name` and
 `Verb`, read off `statuses.json`, longest first — and `cards.SplitRuns` is the one cut, matching
-whole words only and ignoring case so a relic writing `Fire` and a worm writing `FIRE` share an
+whole words only and ignoring case so a relic writing `Fire` and an essence writing `FIRE` share an
 entry. Four things to know before touching it:
 
 - **The vocabulary lives in `internal/cards` because that is the only windowless package all three

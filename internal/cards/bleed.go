@@ -44,7 +44,7 @@ var (
 	//
 	// **It is not the quiet one, unlike the ink it stands in for.** LabelInk is a stat row's
 	// *word* on a card that also carries figures, where it is deliberately quieter than what it
-	// labels. What arrives here as LabelInk is a worm's sentence — the whole content of its card —
+	// labels. What arrives here as LabelInk is an essence's sentence — the whole content of its card —
 	// because drawMarkedLine falls back to LabelInk for any run with no colour of its own. Set as
 	// quietly as its name suggests, it read as a caption on a picture.
 	LabelInkOnScrim = color.RGBA{R: 222, G: 224, B: 232, A: 255}

@@ -106,7 +106,7 @@ func TestUnclaimedSpoilsSurvive(t *testing.T) {
 	}
 }
 
-// TestTheIdentityCounterIsSavedRatherThanRecomputed: a worm removing the newest card takes the
+// TestTheIdentityCounterIsSavedRatherThanRecomputed: an essence removing the newest card takes the
 // highest id with it, and a counter derived from what survives would hand that number out twice.
 func TestTheIdentityCounterIsSavedRatherThanRecomputed(t *testing.T) {
 	enemies, bosses := rosters(t)

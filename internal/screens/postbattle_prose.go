@@ -122,7 +122,7 @@ func (t *typewriter) filled() bool {
 
 // release hands the screen on. **Nothing in here calls it** - a block does not decide when it is
 // done being looked at, and the beat it used to hold before moving on by itself was what put the
-// worms up over a total still being read.
+// essences up over a total still being read.
 func (t *typewriter) release() { t.released = true }
 
 // finished reports whether the narration is done with the screen.
@@ -179,7 +179,7 @@ func (t *typewriter) tick(gs *state.GlobalState, at func(line int) image.Point) 
 // the slow one cannot disagree about what a win was worth.
 //
 // **It does not release the screen** *(owner's call, 2026-09-08)*. A click that both finished the
-// reading and started the worms would have skipped the sentence it was asking to be shown - the
+// reading and started the essences would have skipped the sentence it was asking to be shown - the
 // player asked to see the payout now, not to be past it. The next click leaves.
 func (t *typewriter) skip(gs *state.GlobalState) {
 	for i := range t.lines {

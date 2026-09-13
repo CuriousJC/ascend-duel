@@ -47,7 +47,7 @@ func TestTheAftermathSaysWhatJoinedTheDeckAndWhatLeftIt(t *testing.T) {
 	has(t, lines, "cut")
 }
 
-// **A card altered in place is the case the ids exist for.** Without them a worm's work is
+// **A card altered in place is the case the ids exist for.** Without them an essence's work is
 // indistinguishable from a cut and a take, which is a pair of lines describing one act.
 func TestAnAlteredCardIsOneLineRatherThanTwo(t *testing.T) {
 	was := combat.Card{ID: 7, Concept: combat.Jab, Element: combat.Fire}
@@ -65,12 +65,12 @@ func TestAnAlteredCardIsOneLineRatherThanTwo(t *testing.T) {
 	has(t, lines, "into")
 }
 
-// A worm that moves a card's form moves nothing the card's name says, so the line has to name it —
+// An essence that moves a card's form moves nothing the card's name says, so the line has to name it —
 // the same gap that had an altered Crush drawing a spear over the word CRUSH.
 func TestAnAlteredFormIsNamedInTheLine(t *testing.T) {
 	was := combat.Card{ID: 9, Concept: combat.Bash, Element: combat.Fire}
 	if was.Form() != combat.FormCrush {
-		t.Skipf("bash is no longer a crush; this test needs a card whose form a worm can move")
+		t.Skipf("bash is no longer a crush; this test needs a card whose form an essence can move")
 	}
 	now := was
 	now.FormOverride = combat.FormStab

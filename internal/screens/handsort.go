@@ -4,7 +4,7 @@ package screens
 //
 // **This is the half that belongs to no screen** *(2026-09-05)*. It was all one file on the
 // combat screen, which was right while that screen was the only place a hand was laid out. The
-// worm screen deals one too — eight cards off the run deck, to point a worm at — and a row of
+// essence screen deals one too — eight cards off the run deck, to point an essence at — and a row of
 // eight overlapping cards is exactly as hard to read there as it is in a duel.
 //
 // What is here: the modes, the comparison each one makes, and the tab block as a widget. What
@@ -58,7 +58,7 @@ func setHandSort(gs *state.GlobalState, mode handSort) {
 // sortColumnGap is the clear air between the last card of the widest row and the block beside it.
 //
 // **It belongs to the cards rather than to the block**: on the combat screen it is what
-// cardBandWidth takes off the hand, and on the worm screen it is what the offer row's own right
+// cardBandWidth takes off the hand, and on the essence screen it is what the offer row's own right
 // edge is measured from. One figure, so the two rows sit the same distance from their tabs.
 const sortColumnGap = 12
 

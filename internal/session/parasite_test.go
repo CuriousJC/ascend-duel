@@ -154,7 +154,7 @@ func TestARiderParasiteAttachesToTheCardItNames(t *testing.T) {
 }
 
 func TestARemoveParasiteEatsBothOfItsTargets(t *testing.T) {
-	// **The two-card case is the one worms never had**, and it is where an index-based
+	// **The two-card case is the one essences never had**, and it is where an index-based
 	// implementation goes wrong: removing the first shifts the second.
 	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab), combat.Plain(combat.Poke))
 	held := ids(run)

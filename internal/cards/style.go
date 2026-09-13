@@ -583,22 +583,22 @@ var DuelistStyle = Style{
 	EffectGap:  8,
 }
 
-// WormStyle is a worm, in the card format *(2026-08-22)*.
+// EssenceStyle is an essence, in the card format *(2026-08-22)*.
 //
 // **A picture with its text under it**, which is what the owner asked for and is the shape a
-// creature card wants: the worm is a thing you are catching, so the face is mostly the thing. It
-// borrowed `Hand` until now, which drew a worm as a cost column with no cost and a paragraph
+// creature card wants: the essence is a thing you are collecting, so the face is mostly the thing. It
+// borrowed `Hand` until now, which drew an essence as a cost column with no cost and a paragraph
 // beside the empty space where a form mark was not.
 //
 // What it drops is everything describing a *play* — no form mark, no cost dashes — for the reason
-// RelicStyle drops them: a worm is not played from a hand and resolves in no phase. What it gains
-// over RelicStyle is the text band, because a worm's whole content is the sentence saying what it
+// RelicStyle drops them: an essence is not played from a hand and resolves in no phase. What it gains
+// over RelicStyle is the text band, because an essence's whole content is the sentence saying what it
 // does to a card.
 //
-// **The art is a placeholder for every worm today.** `Spec.Art` is filled from the shared default
+// **The art is a placeholder for every essence today.** `Spec.Art` is filled from the shared default
 // image, so the box is the seat the art goes into rather than a box that will have to be invented
 // when there is some.
-var WormStyle = Style{
+var EssenceStyle = Style{
 	Width: 200, Height: 280,
 
 	CornerRadius: 15,
@@ -622,7 +622,7 @@ var WormStyle = Style{
 	ArtBleed: true,
 
 	// The full width, unlike Hand — there is no cost column to leave room for. Centred in the band
-	// under the art for the same reason Hand centres in its own: a one-line worm and a two-line one
+	// under the art for the same reason Hand centres in its own: a one-line essence and a two-line one
 	// should look like the same card.
 	TextColumnLeft: 15,
 	TextInset:      10,

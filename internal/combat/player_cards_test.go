@@ -174,7 +174,7 @@ func TestATurnMayRaiseMoreShieldsThanOneCardCan(t *testing.T) {
 }
 
 // **One card still cannot raise more than maxShields**, which is the half of the rule that
-// survived. RegisterConcept refuses a concept declaring more, and Card.Amount clamps a worm that
+// survived. RegisterConcept refuses a concept declaring more, and Card.Amount clamps an essence that
 // scaled one past it — a card whose face promised a sixth shield would be promising something its
 // own turn can never see spent.
 func TestOneCardStillCannotRaisePastTheCap(t *testing.T) {
@@ -263,7 +263,7 @@ func TestClearDefensesClearsEveryDefensiveField(t *testing.T) {
 func TestTheAttackLadderIsThreeFormsByFiveTiers(t *testing.T) {
 	// One concept per form per tier, and **the tiers are identical across the forms** — same
 	// cost, same damage. **Five rungs, not three** *(2026-08-24)*: the 0 AP and 4 AP ends ship at
-	// zero copies and exist only for a worm to walk a card onto, but they are rungs of the same
+	// zero copies and exist only for an essence to walk a card onto, but they are rungs of the same
 	// ladder and have to match across the forms exactly as the dealt three do. That is the structural claim MECHANICS.md makes about the deck: a form
 	// is which pair you are building, never a better or worse way to build one. It is also the
 	// thing that quietly breaks the first time somebody makes a Cleave hit harder than a Skewer.
@@ -407,9 +407,9 @@ func TestParseFormRoundTripsEveryForm(t *testing.T) {
 	}
 }
 
-// TestAWormsBoundsHold. The two per-card modifiers are the only way a card's numbers move, and
+// TestAEssencesBoundsHold. The two per-card modifiers are the only way a card's numbers move, and
 // both ends of each are a rule rather than a convenience.
-func TestAWormsBoundsHold(t *testing.T) {
+func TestAEssencesBoundsHold(t *testing.T) {
 	// Cost floors at zero and does not go negative. A free card is bounded by the count cap
 	// instead of the budget, which is the trade that was taken deliberately.
 	cheap := Card{Concept: Bash, CostDelta: -99}
@@ -417,7 +417,7 @@ func TestAWormsBoundsHold(t *testing.T) {
 		t.Errorf("a card cheapened past zero costs %d, want 0", got)
 	}
 
-	// Nothing stops a blow outright, however many worms are stacked on a testGuard.
+	// Nothing stops a blow outright, however many essences are stacked on a testGuard.
 	wall := Card{Concept: testGuard, AmountPct: 10000}
 	if got := wall.Amount(); got >= 100 {
 		t.Errorf("a defence scaled up reduces by %d%%, and nothing may reach 100", got)
@@ -458,13 +458,13 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 	}
 
 	// A Jab now demotes, because the ladder grew an end below it. That is the whole point of the
-	// zero-copy rungs: the worm reaches a card it used to be refused on.
+	// zero-copy rungs: the essence reaches a card it used to be refused on.
 	if down, ok := Neighbour(Jab, -1); !ok || down != Poke {
 		t.Errorf("demoting a Jab gave %v, want Poke", down)
 	}
 
 	// Both ends still stop, one rung further out than they used to. A card at the top of its form
-	// cannot be promoted, and the screen asks before it offers so the player is never shown a worm
+	// cannot be promoted, and the screen asks before it offers so the player is never shown an essence
 	// that would do nothing.
 	if _, ok := Neighbour(Poke, -1); ok {
 		t.Error("the bottom of a ladder was demoted")

@@ -29,7 +29,7 @@ type Card struct {
 	Concept ConceptID
 	Element Element
 
-	// CostDelta and AmountPct are **per-card modifiers, and they are what a worm writes**
+	// CostDelta and AmountPct are **per-card modifiers, and they are what an essence writes**
 	// *(2026-08-17)*. Everything else about a card lives on the shared concept, so altering one
 	// copy of a Bash would otherwise alter every Bash in the deck.
 	//
@@ -37,7 +37,7 @@ type Card struct {
 	// **zero meaning unmodified** so a plain card is still the zero value and every existing
 	// `Card{Concept: x}` literal keeps working.
 	//
-	// **The bounds live in the methods, not here**, because a stack of worms has to clamp rather
+	// **The bounds live in the methods, not here**, because a stack of essences has to clamp rather
 	// than be refused — see Cost and Amount. A card is still comparable, which is what
 	// TestRoundIsDeterministic and the screen's render cache both need.
 	CostDelta int
@@ -124,7 +124,7 @@ func (c Card) Cost() int {
 	return cost
 }
 
-// minCardCost is the floor a cheapening worm can drive a card to.
+// minCardCost is the floor a cheapening essence can drive a card to.
 //
 // **Zero, deliberately, and it moves the game onto its other bound.** A round is capped by cost
 // *and* by count independently — `MaxActions` cards however cheap they are — so a free card is not
@@ -136,12 +136,12 @@ const minCardCost = 0
 // Amount is the card's figure, read against its verb: a defence percentage, shields raised, or the
 // damage multiplier.
 //
-// **It is the seat a worm's scaling sits in**, the same shape Cost is, and it is why the three
+// **It is the seat an essence's scaling sits in**, the same shape Cost is, and it is why the three
 // places that used to read `Spec().Amount` directly now go through the card. A modified card that
 // still reported its concept's figure would behave differently from what its own face says.
 //
 // **A defence is clamped below 100, a shield count at maxShields, and everything is floored at 1.**
-// `RegisterConcept` refuses a concept declaring either out of range; a worm stacking onto one has to
+// `RegisterConcept` refuses a concept declaring either out of range; an essence stacking onto one has to
 // obey the same rule, and it clamps rather than being refused — a reward that silently did nothing
 // would be worse than one that hits its ceiling.
 func (c Card) Amount() int {

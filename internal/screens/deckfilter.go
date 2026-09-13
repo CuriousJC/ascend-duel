@@ -128,7 +128,7 @@ type deckCounts struct {
 	byElement map[cards.Element]int
 
 	// costs is every cost the lit cards actually carry, ascending, so the AP block draws a button
-	// per price the deck holds rather than a fixed 0..4 that goes stale the day a worm invents a
+	// per price the deck holds rather than a fixed 0..4 that goes stale the day an essence invents a
 	// rung. **Taken with no axis set aside**, because a button for a price nothing in the picked
 	// set has is a button that would be pressed and mark nothing.
 	costs []int

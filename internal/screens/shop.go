@@ -2,7 +2,7 @@ package screens
 
 // The shop: **three relics on a shelf, five fingers, and one purse.**
 //
-// It is the second of the between-fight scenes — the worm, then this, then the room choice — and
+// It is the second of the between-fight scenes — the essence, then this, then the room choice — and
 // like the first it is an ordinary scene in the registry rather than a mode of anything. Nothing
 // here names what comes next: the scene says it is finished and `advanceRun` decides where that
 // leads. See flow.go.
@@ -190,13 +190,13 @@ type ShopScene struct {
 	// three Salves in a row would be buying a life bar rather than a potion.
 	drunk map[string]bool
 
-	// bagBought, canBought and bucketBought are whether this visit's three sealed goods have been
+	// bagBought, vialBought and bucketBought are whether this visit's three sealed goods have been
 	// taken.
 	//
 	// **Once each per visit** *(owner's call, 2026-08-27)*, restocked on the next. It bounds what a
 	// rich run can do in one stop and keeps the shop a short offer rather than a vending machine —
 	// the same argument the three-ring shelf is under.
-	bagBought, canBought, bucketBought bool
+	bagBought, vialBought, bucketBought bool
 
 	// good is the dialog a purchase opens: the four that were inside, and which one is taken. See
 	// shop_goods.go.
@@ -237,7 +237,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.leaving = false
 	s.from, s.move = nil, travel{}
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
-	s.bagBought, s.canBought, s.bucketBought = false, false, false
+	s.bagBought, s.vialBought, s.bucketBought = false, false, false
 	s.good.reset()
 
 	// **Both stocks are dealt from an rng the visit keeps**, rather than from one built per call.
@@ -283,8 +283,8 @@ func shelfKeys(items []shelfItem) []string {
 // the same three relics however many times it was pressed.
 //
 // **Its own stream** (`seeds.ShopStock`), and per fight — so a defeat and a retry walk into the
-// same shop, exactly as they meet the same opponent. Sharing the worm offer's stream would have
-// made authoring a worm change which relics every run was ever sold; see internal/seeds.
+// same shop, exactly as they meet the same opponent. Sharing the essence offer's stream would have
+// made authoring an essence change which relics every run was ever sold; see internal/seeds.
 //
 // **What is already worn is off the shelf**, rather than shown and refused. A relic on your hand
 // offered back to you is a seat spent saying nothing, and `Buy` would turn the click down anyway.
@@ -937,7 +937,7 @@ func (s *ShopScene) goodTaken(kind goodKind) bool {
 	case goodBucket:
 		return s.bucketBought
 	default:
-		return s.canBought
+		return s.vialBought
 	}
 }
 
@@ -954,7 +954,7 @@ func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
 	case goodBucket:
 		return gs.Run.CanAffordBucket()
 	default:
-		return gs.Run.CanAffordCan()
+		return gs.Run.CanAffordVial()
 	}
 }
 
@@ -962,7 +962,7 @@ func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
 // to put what comes out.
 //
 // **Only the bucket has the second question** *(2026-09-06)*. A stone is spent in the dialog that
-// opened the bag and a worm is spent in the dialog that opened the can, so neither can hand the run
+// opened the bag and an essence is spent in the dialog that opened the vial, so neither can hand the run
 // something it has no room for; a parasite goes into a bucket that now holds two — see
 // session.MaxHeld — and a full one would take five vitae for a card that `Hold` refuses. The seat
 // goes dim rather than the purchase failing afterwards, which is the same courtesy an unaffordable
@@ -995,7 +995,7 @@ func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
 	case goodBucket:
 		paid = gs.Run.BuyBucket()
 	default:
-		paid = gs.Run.BuyCan()
+		paid = gs.Run.BuyVial()
 	}
 	if !paid {
 		return
@@ -1007,7 +1007,7 @@ func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
 	case goodBucket:
 		s.bucketBought = true
 	default:
-		s.canBought = true
+		s.vialBought = true
 	}
 	s.good.open(gs, kind)
 	s.tip.Forget()
@@ -1045,7 +1045,7 @@ func goodName(kind goodKind) string {
 	case goodBucket:
 		return bucketName
 	default:
-		return canName
+		return vialName
 	}
 }
 
@@ -1053,7 +1053,7 @@ func goodLine(kind goodKind) string {
 	if kind == goodBag {
 		return fmt.Sprintf("%d stones\nkeep 1", session.BagSize())
 	}
-	return fmt.Sprintf("%d worms\nkeep 1", session.CanSize())
+	return fmt.Sprintf("%d essences\nkeep 1", session.VialSize())
 }
 
 func goodPrice(kind goodKind) int {
@@ -1063,12 +1063,12 @@ func goodPrice(kind goodKind) int {
 	case goodBucket:
 		return session.BucketPrice()
 	default:
-		return session.CanPrice()
+		return session.VialPrice()
 	}
 }
 
 // **Each sealed good draws the placeholder of whatever is inside it** — the bag the boulder every
-// stone card draws, the can the worm catalogue's default face, the bucket the parasite
+// stone card draws, the vial the essence catalogue's default face, the bucket the parasite
 // catalogue's. A third picture would be a third thing to recognise for no gain: what is in the
 // good is exactly what the picture shows, and the two that used to share one face now split for
 // the reason the two placeholders split, which is that a shared picture hides which catalogue is
@@ -1080,11 +1080,11 @@ func goodArt(gs *state.GlobalState, kind goodKind) image.Image {
 	case goodBucket:
 		return artwork(gs, data.DefaultParasiteArt)
 	default:
-		return artwork(gs, data.DefaultWormArt)
+		return artwork(gs, data.DefaultEssenceArt)
 	}
 }
 
-// goodTip is what resting on one says. **It explains what a stone and a worm each are**, since the
+// goodTip is what resting on one says. **It explains what a stone and an essence each are**, since the
 // face has room for neither and a player meeting the bag on floor one has never seen a stone.
 func goodTip(kind goodKind) (string, []string) {
 	if kind == goodBag {
@@ -1095,9 +1095,9 @@ func goodTip(kind goodKind) (string, []string) {
 			fmt.Sprintf("%d vitae", session.BagPrice()),
 		}
 	}
-	return canName, []string{
-		fmt.Sprintf("%d worms, and you keep one", session.CanSize()),
-		"a worm changes one card of your deck",
-		fmt.Sprintf("%d vitae", session.CanPrice()),
+	return vialName, []string{
+		fmt.Sprintf("%d essences, and you keep one", session.VialSize()),
+		"an essence changes one card of your deck",
+		fmt.Sprintf("%d vitae", session.VialPrice()),
 	}
 }

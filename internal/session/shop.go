@@ -116,7 +116,7 @@ func (s *Session) Sell(key string) bool {
 	return true
 }
 
-// The two sealed goods: **a bag of rocks and a can of worms.**
+// The two sealed goods: **a bag of rocks and a vial of essence.**
 //
 // A relic on the shelf is a thing you can read before you buy it. These are not: what is inside is
 // four of something, drawn when the bag is opened, and the choice is which one to keep. That is
@@ -127,56 +127,56 @@ func (s *Session) Sell(key string) bool {
 // or sizing them differently would be saying one of those is worth more without anything to say it
 // with.
 
-// bagPrice and canPrice are what the two sealed goods cost.
+// bagPrice and vialPrice are what the two sealed goods cost.
 //
 // **Five vitae, which is a relic's middle tier** *(owner's call, 2026-08-27)*. A win pays three to
 // five from the room plus a tenth of the life left, so a good is about a fight's takings — bought
 // instead of a relic rather than alongside one.
 const (
 	bagPrice    = 5
-	canPrice    = 5
+	vialPrice   = 5
 	bucketPrice = 5
 )
 
-// bagSize and canSize are how many are drawn from inside.
+// bagSize and vialSize are how many are drawn from inside.
 //
-// **Four, against the reward screen's two worms.** The free offer after a fight is a choice
-// between two; this is what five vitae buys over that, and it is why the can is worth opening at
-// all when a worm arrives free every fight.
+// **Four, against the reward screen's two essences.** The free offer after a fight is a choice
+// between two; this is what five vitae buys over that, and it is why the vial is worth opening at
+// all when an essence arrives free every fight.
 const (
 	bagSize    = 4
-	canSize    = 4
+	vialSize   = 4
 	bucketSize = 4
 )
 
-// BagPrice, CanPrice, BagSize and CanSize are the figures a screen writes on the cards. **Asked
+// BagPrice, VialPrice, BagSize and VialSize are the figures a screen writes on the cards. **Asked
 // rather than repeated**: a price printed on a face and charged by a method are two numbers that
 // can disagree, and the shop is where that has already been avoided once for relics.
-func BagPrice() int { return bagPrice }
-func CanPrice() int { return canPrice }
-func BagSize() int  { return bagSize }
-func CanSize() int  { return canSize }
+func BagPrice() int  { return bagPrice }
+func VialPrice() int { return vialPrice }
+func BagSize() int   { return bagSize }
+func VialSize() int  { return vialSize }
 
 // BucketPrice and BucketSize are the third good's, on the same terms.
 func BucketPrice() int { return bucketPrice }
 func BucketSize() int  { return bucketSize }
 
-// CanAffordBag and CanAffordCan report whether the purse covers one. **The question, not the
-// guard** — `BuyBag` and `BuyCan` check the purse themselves, exactly as `CanBuy` sits beside
+// CanAffordBag and CanAffordVial report whether the purse covers one. **The question, not the
+// guard** — `BuyBag` and `BuyVial` check the purse themselves, exactly as `CanBuy` sits beside
 // `Buy`. They exist so a shelf can dim a card rather than swallow a click.
 func (s *Session) CanAffordBag() bool    { return s.vitae >= bagPrice }
-func (s *Session) CanAffordCan() bool    { return s.vitae >= canPrice }
+func (s *Session) CanAffordVial() bool   { return s.vitae >= vialPrice }
 func (s *Session) CanAffordBucket() bool { return s.vitae >= bucketPrice }
 
-// BuyBag and BuyCan pay for a sealed good and report whether they could.
+// BuyBag and BuyVial pay for a sealed good and report whether they could.
 //
 // **The purse moves and nothing else does.** What is inside is drawn by the screen from its own
 // seeded stream and applied by `UseStone` or `Apply` when the player picks one, so a purchase
 // interrupted by a quit costs the vitae and hands back nothing — which is the same deal a shop
 // makes anywhere. Rolling the contents here would put the offer in the run's state and mean
 // snapshotting a bag nobody has opened yet.
-func (s *Session) BuyBag() bool { return s.SpendVitae(bagPrice) }
-func (s *Session) BuyCan() bool { return s.SpendVitae(canPrice) }
+func (s *Session) BuyBag() bool  { return s.SpendVitae(bagPrice) }
+func (s *Session) BuyVial() bool { return s.SpendVitae(vialPrice) }
 
 // BuyBucket is the third good, and the one whose contents go *into* the run rather than being
 // applied on the spot. **It still only moves the purse**: what is drawn is the screen's, and

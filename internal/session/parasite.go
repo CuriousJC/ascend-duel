@@ -2,17 +2,17 @@ package session
 
 // Parasites: the alterations a run can make to its own deck **while a fight is going on.**
 //
-// A worm is won between rooms and spent on the spot. A parasite is bought, carried in a bucket,
+// An essence is won between rooms and spent on the spot. A parasite is bought, carried in a bucket,
 // and spent in the gap between one turn and the next — so the deck a duel started with is not
 // necessarily the deck it ends with. The catalogue is `data/parasites.json`; this file is where a
 // record becomes something applicable, and where a bad record is refused.
 //
-// **It lives here rather than in `internal/combat` for the reason worms do**: a parasite acts on
+// **It lives here rather than in `internal/combat` for the reason essences do**: a parasite acts on
 // the *run's* deck, and the rules have no deck. The one exception is a rider, whose vocabulary is
 // a Go enum in `internal/combat` because the rules have to read it while a round resolves — this
 // file resolves the name and hands over the value.
 //
-// **Targets are card *identities*, not positions.** That is the whole difference from worm.go,
+// **Targets are card *identities*, not positions.** That is the whole difference from essence.go,
 // which takes an index and says in its own comment that a caller may not hold two across a call.
 // A parasite may eat two cards, and it is spent while a hand, a draw pile and a discard pile are
 // all live and holding copies of the same cards — so a position would be meaningless by the time
@@ -31,7 +31,7 @@ import (
 
 // ParasiteTarget is what a parasite does.
 //
-// **A closed vocabulary**, the same posture WormTarget and combat.Verb take. A new target is a Go
+// **A closed vocabulary**, the same posture EssenceTarget and combat.Verb take. A new target is a Go
 // change plus one place applying it, never something a JSON file can assert into existence.
 type ParasiteTarget int
 
@@ -41,7 +41,7 @@ const (
 	ParasiteRider ParasiteTarget = iota
 
 	// ParasiteRemove takes cards out of the run for good. **Count may be more than one**, which is
-	// the field a worm never had.
+	// the field an essence never had.
 	ParasiteRemove
 
 	// ParasiteSwap turns a card into a different card the game already defines. The identity is
@@ -53,14 +53,14 @@ const (
 	// piece asks for no target at all.
 	ParasiteVitae
 
-	// ParasiteDuplicate copies a card. **It is the worm `spawn` spent in the middle of a fight**,
+	// ParasiteDuplicate copies a card. **It is the essence `spawn` spent in the middle of a fight**,
 	// which is the whole difference: the copy goes into the dealt hand rather than only into the
 	// run's deck, so the player has two of the card *this turn* — see `Session.Duplicated`, and
 	// `CombatScene.takeParasite`, which is what puts it in the row.
 	ParasiteDuplicate
 
 	// ParasiteElement recolours cards. **Count is two**, which is the difference from the
-	// elemental worms: a worm buys one card of a colour and this buys a pair, which is a hand.
+	// elemental essences: an essence buys one card of a colour and this buys a pair, which is a hand.
 	ParasiteElement
 
 	// ParasiteForm changes what a card counts as on the form axis, without changing the card.
@@ -219,13 +219,13 @@ func ParseParasiteTarget(name string) (ParasiteTarget, bool) {
 // MaxParasiteTargets is the most cards one parasite may name.
 //
 // **Two, because the board piece shows the targets side by side** and a picker that scrolled would
-// be a menu to read rather than a decision to make — the same argument the two-worm offer is
+// be a menu to read rather than a decision to make — the same argument the two-essence offer is
 // under. It is a layout number as much as a rules one.
 const MaxParasiteTargets = 2
 
 // Parasite is one consumable, resolved against the rules.
 //
-// Comparable, so a screen can hold one by value — the same property Worm has and for the same
+// Comparable, so a screen can hold one by value — the same property Essence has and for the same
 // reason.
 type Parasite struct {
 	Record string
@@ -271,7 +271,7 @@ type Parasite struct {
 // parasites is the validated catalogue, built once at package init.
 //
 // **A bad record panics at init**, so it fails on launch rather than the first time a player opens
-// a bucket — the same severity a bad worm record takes, and for the same reason: a consumable that
+// a bucket — the same severity a bad essence record takes, and for the same reason: a consumable that
 // does nothing is something bought and taken away.
 var parasites, parasiteOrder = loadParasites()
 
@@ -327,7 +327,7 @@ func resolveParasite(r data.ParasiteData) (Parasite, error) {
 		return Parasite{}, fmt.Errorf("%s has no name", r.ParasiteRecord)
 	}
 	if r.Text == "" {
-		// The card is a name and a line of text and nothing else, exactly as a worm's is, so a
+		// The card is a name and a line of text and nothing else, exactly as an essence's is, so a
 		// parasite with no text is a card that does not say what it does.
 		return Parasite{}, fmt.Errorf("%s has no text, so its card says nothing", r.ParasiteRecord)
 	}
@@ -437,7 +437,7 @@ func resolveParasite(r data.ParasiteData) (Parasite, error) {
 
 	case ParasiteSwap:
 		// **Resolved against the registry, so a parasite cannot invent a card.** That is the same
-		// safety property the worms have — the concept is never one internal/combat has not
+		// safety property the essences have — the concept is never one internal/combat has not
 		// registered — and it is what keeps a consumable from being a way to author cards in a
 		// JSON file the rules never read.
 		id, ok := combat.ConceptByKey(r.Value)
@@ -597,7 +597,7 @@ func (s *Session) hold(key string) bool {
 //
 // **Spending is Drop plus ApplyParasite, and they are separate on purpose.** A parasite naming two
 // cards is not spent until both are picked and the player confirms, and the picker can be backed
-// out of at any point — the same rule the worm morph is under. Dropping first would charge for a
+// out of at any point — the same rule the essence morph is under. Dropping first would charge for a
 // choice that was never made.
 func (s *Session) Drop(i int) bool {
 	if i < 0 || i >= len(s.held) {
@@ -737,7 +737,7 @@ func (s *Session) ApplyParasiteRolling(p Parasite, ids []int, rng *rand.Rand) bo
 		// **Everything but the identity** *(owner's call, 2026-09-08)*. It copied the concept alone
 		// until then, so grafting a fire Cut onto an ice Jab produced an ice Cut — a card whose name
 		// said it had become the right-hand card and whose colour said it had not. "BECOMES" is not
-		// a partial verb, and the same bug was waiting on the form override, the worm deltas and the
+		// a partial verb, and the same bug was waiting on the form override, the essence deltas and the
 		// riders.
 		//
 		// **`ID` is what does not travel**, because it is the one field that says *which* card this
@@ -761,7 +761,7 @@ func (s *Session) ApplyParasiteRolling(p Parasite, ids []int, rng *rand.Rand) bo
 
 // CanApplyParasite reports whether this parasite would do anything to these cards.
 //
-// **The board piece asks before it offers**, on the same terms CanApply is asked for a worm: a
+// **The board piece asks before it offers**, on the same terms CanApply is asked for an essence: a
 // parasite that lands and changes nothing is something bought and taken away. It also refuses the
 // wrong number of targets, which is what stops a two-card parasite being spent on one.
 func (s *Session) CanApplyParasite(p Parasite, ids []int) bool {
@@ -842,7 +842,7 @@ func (s *Session) CanApplyParasite(p Parasite, ids []int) bool {
 
 // Duplicated is the cards the last duplicate parasite minted, in the order they were made.
 //
-// **It exists because the copy has to reach the dealt hand** *(owner's call, 2026-09-02)*. A worm
+// **It exists because the copy has to reach the dealt hand** *(owner's call, 2026-09-02)*. An essence
 // copying a card between fights only has to put it in the deck; a parasite is spent in the middle
 // of one, and a copy that could not be played until the next fight would read as a dud. The screen
 // reads this straight after `ApplyParasite` and seats what it finds — see

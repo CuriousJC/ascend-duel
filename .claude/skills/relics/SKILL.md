@@ -6,7 +6,7 @@ description: The relic grammar - how a relic is written as data, the closed voca
 # Relics
 
 **A relic is the only collected thing that is never played.** A card resolves in the turn you
-queued it, a worm fires when you pick it, a hand is scored when the attack phase runs — each
+queued it, an essence fires when you pick it, a hand is scored when the attack phase runs — each
 already knows *when* it happens. A relic waits, so it has to say so itself.
 
 That is the whole reason the grammar has three parts where the card language has two.
@@ -120,7 +120,7 @@ inside the same blow.
 **`Tier` reads the declared cost, never the wearer's.** A discount relic makes a Skewer cost 2 to the
 duelist wearing it, and a rule matching `Tier: 3` still has to see a Skewer — otherwise two relics
 worn together would silently switch each other off, and which one won would depend on the order they
-were bought in. Same reading a worm takes.
+were bought in. Same reading an essence takes.
 
 **`Lead` is the first *positional* predicate, and more are expected** *(owner's call, 2026-08-22)*.
 Element, form and concept ask what a card **is**; `Lead` asks where it **sits in the blow**. When the
@@ -178,7 +178,7 @@ not ignored.
 | `echo-attack` | `blow-formed` | `Amount` landings | the blow's lead card lands Amount times, at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
 
 **Adding a verb is a Go change** — one entry here plus the one place applying it — and that cost
-is charged on purpose, exactly as it is for `combat.Verb` and `session.WormTarget`. A file may
+is charged on purpose, exactly as it is for `combat.Verb` and `session.EssenceTarget`. A file may
 never assert a verb into existence.
 
 ## Ordering: left to right, and it compounds
@@ -312,7 +312,7 @@ Reach for these first when an idea sounds too easy.
   undone if affixes later reuse the machinery.
 - **A relic may not change what a *concept* is.** Cost and amount are per-card
   (`Card.CostDelta`, `Card.AmountPct`); form and label are concept-wide, so a relic targeting
-  one of those would change every copy in the deck. Same bound a worm has.
+  one of those would change every copy in the deck. Same bound an essence has.
 - **Five worn at once**, until brands expand it.
 
 ## Where the code is — it is built *(2026-08-17)*
@@ -329,7 +329,7 @@ Reach for these first when an idea sounds too easy.
 | the row on screen | `internal/screens/combat_relics.go` — a lookup from worn key to record |
 | the whole catalogue as pictures | `go run ./tools/relicsheet` — **grouped by rarity**, card, price, `Text` and rules side by side, and each tier's share of a shelf draw |
 
-**`relics.json` is parsed in `internal/session`**, which already parses worms and for the same
+**`relics.json` is parsed in `internal/session`**, which already parses essences and for the same
 reason: a relic belongs to a *run*. It hands `combat` rules types — `RegisterRelic(key, name,
 []RelicRule)` — so `data` stays ignorant of the rules and `internal/combat` never reads a file
 holding an art key. That is the who-consumes-it test in the `data` skill, answered without a new

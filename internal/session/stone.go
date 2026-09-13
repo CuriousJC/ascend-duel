@@ -2,12 +2,12 @@ package session
 
 // Stones: the run's own opinion about what a hand is worth.
 //
-// **A worm alters a card; a stone alters a rung.** One stone raises one hand's multiplier by a
+// **An essence alters a card; a stone alters a rung.** One stone raises one hand's multiplier by a
 // tenth of the figure `data/hands.json` writes down, for the rest of the run — see
 // `internal/combat/stone.go`, which owns the arithmetic and the seat a count sits in.
 //
 // **This file is where a record becomes something usable, and where a bad record is refused**,
-// which is the same job `worm.go` does for the other catalogue. It lives here rather than in
+// which is the same job `essence.go` does for the other catalogue. It lives here rather than in
 // `internal/combat` because a stone is *held by a run*: the rules have no idea a run exists, and
 // what they are handed is a fighter that already carries its counts.
 //
@@ -26,7 +26,7 @@ import (
 // Stone is one rung-raiser, resolved against the rules.
 //
 // Comparable, so a screen can hold one by value and compare two without reaching for the key —
-// exactly as `Worm` is.
+// exactly as `Essence` is.
 type Stone struct {
 	Record string
 	Name   string
@@ -40,7 +40,7 @@ type Stone struct {
 
 // stones is the validated catalogue, built once at package init.
 //
-// **A bad record panics at init**, exactly as a bad worm does: a stone naming a rung the rules have
+// **A bad record panics at init**, exactly as a bad essence does: a stone naming a rung the rules have
 // not got is a purchase that silently buys nothing, and the failure has to happen on launch rather
 // than in the one shop that offered it.
 var stones, stoneOrder = loadStones()
@@ -222,7 +222,7 @@ func (s *Session) equipStones(d combat.Duelist) combat.Duelist {
 }
 
 // sortedHands is the map's keys in a fixed order. Go randomises map iteration and this decides a
-// duelist's contents, so it is sorted for the reason `WormOrder` is — see the `randomness` skill.
+// duelist's contents, so it is sorted for the reason `EssenceOrder` is — see the `randomness` skill.
 func sortedHands(m map[string]int) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {

@@ -73,7 +73,7 @@ type TutorialData struct {
 
 // TutorialStepData is one thing Bob says.
 type TutorialStepData struct {
-	// StepRecord is the key, kebab-case like a relic's or a worm's. Nothing stores it yet — the
+	// StepRecord is the key, kebab-case like a relic's or an essence's. Nothing stores it yet — the
 	// cursor is an index, because a script is walked rather than looked up — but a step needs a
 	// name to be talked about in a bug report, and the day a save file records how far a player
 	// got, this is the thing it writes rather than the number.

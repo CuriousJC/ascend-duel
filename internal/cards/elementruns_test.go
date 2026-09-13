@@ -47,7 +47,7 @@ func TestEveryStatusWordIsColoured(t *testing.T) {
 }
 
 func TestTheFiveElementsAreColouredInBothCases(t *testing.T) {
-	// Relics write "Fire" and worms write "FIRE". Both colour, through one vocabulary entry, because
+	// Relics write "Fire" and essences write "FIRE". Both colour, through one vocabulary entry, because
 	// the match ignores case on both sides.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		for _, word := range []string{strings.ToUpper(e.String()), e.String()} {
@@ -104,8 +104,8 @@ func TestEveryTextFitsItsHighlights(t *testing.T) {
 		}
 	}
 
-	for key, w := range data.LoadWorms() {
-		check("worm "+key, w.Text)
+	for key, w := range data.LoadEssences() {
+		check("essence "+key, w.Text)
 	}
 	for key, p := range data.LoadParasites() {
 		check("parasite "+key, p.Text)

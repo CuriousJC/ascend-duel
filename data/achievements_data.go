@@ -29,7 +29,7 @@ import (
 var achievementsJSON []byte
 
 // The three kinds of trigger. **Closed, and refused at load if a file invents a fourth** — the
-// posture combat.Verb and session.WormTarget both take.
+// posture combat.Verb and session.EssenceTarget both take.
 //
 // They are three rather than one because the things they watch are genuinely different shapes: a
 // turn is gone the moment it resolves, a count accumulates across every run the player has ever
@@ -98,7 +98,7 @@ type ClauseData struct {
 	// attack ladder — Poke, Nick, Tap — so "the free ones" and "any cost" are different questions
 	// and an int could not tell them apart.
 	//
-	// **It reads the card's cost, not its concept's**, so a worm that made a Skewer dearer counts it
+	// **It reads the card's cost, not its concept's**, so an essence that made a Skewer dearer counts it
 	// and one that made an Impale cheaper does not. That is the right way round: the achievement is
 	// about what the player paid for the turn, and the card's own face is what says it.
 	//
@@ -142,7 +142,7 @@ type TriggerData struct {
 type AchievementData struct {
 	// AchievementRecord is the key, and **it is the disk contract**: it is written into
 	// `profile.json` and is the thing that must never be renamed once a build has shipped. Every
-	// other field here can be rewritten any afternoon. Kebab-case, like a relic's and a worm's.
+	// other field here can be rewritten any afternoon. Kebab-case, like a relic's and an essence's.
 	AchievementRecord string `json:"AchievementRecord"`
 
 	// Name is what the page calls it, in caps, like the rows already on that screen.
@@ -179,7 +179,7 @@ type AchievementData struct {
 // which puts "Arsenal" above "First Steps".
 //
 // **Shape only.** Whether a trigger says anything the game can act on is internal/achieve's
-// question, exactly as a worm's target is internal/session's and a card's verb is
+// question, exactly as an essence's target is internal/session's and a card's verb is
 // internal/combat's. This file may not import either.
 func LoadAchievements() []AchievementData {
 	var list []AchievementData

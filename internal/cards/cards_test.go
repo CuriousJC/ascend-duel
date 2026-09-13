@@ -925,7 +925,7 @@ func TestTheEnemyNamesItselfAboveItsPortrait(t *testing.T) {
 			t.Errorf("%s does not centre a name across its top", name)
 		}
 	}
-	for name, st := range map[string]Style{"relic": RelicStyle, "worm": WormStyle} {
+	for name, st := range map[string]Style{"relic": RelicStyle, "essence": EssenceStyle} {
 		if !st.ArtBleed {
 			t.Errorf("%s is no longer full-bleed — this test is checking the wrong styles", name)
 		}
@@ -1006,7 +1006,7 @@ func TestEffectTextBreaksAtEveryWord(t *testing.T) {
 	// the text: a measurer that fitted the words onto one line is exactly what this replaced, and a
 	// generous column is the case that would hide it.
 	f := faces(t)
-	lines, err := WrapText(f, WormStyle.TextSize, "CARD BECOMES FIRE", 400)
+	lines, err := WrapText(f, EssenceStyle.TextSize, "CARD BECOMES FIRE", 400)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1019,7 +1019,7 @@ func TestANewlineIsJustASpace(t *testing.T) {
 	// A newline used to be an authored break and is now nothing special — every space breaks, so
 	// there is nothing left for one to ask for. It must not produce an empty line.
 	f := faces(t)
-	lines, err := WrapText(f, WormStyle.TextSize, "CARD BECOMES\nFIRE", 400)
+	lines, err := WrapText(f, EssenceStyle.TextSize, "CARD BECOMES\nFIRE", 400)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1322,7 +1322,7 @@ func TestAFigureStaysOnItsUnitsLine(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		lines, err := WrapText(f, WormStyle.TextSize, c.text, 400)
+		lines, err := WrapText(f, EssenceStyle.TextSize, c.text, 400)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -66,7 +66,7 @@ func TestAdvanceFromTheFightReachesTheReward(t *testing.T) {
 }
 
 func TestAdvanceFromTheRewardReachesTheShop(t *testing.T) {
-	// The station that stopped being walked past on 2026-08-21. A run that took its worm now goes
+	// The station that stopped being walked past on 2026-08-21. A run that took its essence now goes
 	// shopping before the next fight, and this is the entry in phaseScreens that says so.
 	gs := &state.GlobalState{Run: session.New(session.StartingDeck())}
 	gs.Run.SetPhase(session.PhaseReward)

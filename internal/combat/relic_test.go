@@ -92,7 +92,7 @@ func TestAPredicateOnACardlessMomentIsRefused(t *testing.T) {
 
 func TestAnEffectWithNothingToDoIsRefused(t *testing.T) {
 	// A zero is a typo in a file authored once, not a reward to be clamped — see checkEffect for
-	// why this is the opposite call from the one a worm's amount takes.
+	// why this is the opposite call from the one an essence's amount takes.
 	refused(t, "zero damage scale", RelicRule{
 		When: MomentCardDamage,
 		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 0}},

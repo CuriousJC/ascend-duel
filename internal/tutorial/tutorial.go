@@ -46,7 +46,7 @@ const (
 	AnchorMathBand
 
 	// The post-battle screen.
-	AnchorRewardWorms
+	AnchorRewardEssences
 
 	// AnchorBuildCard is the duelist card in the band both between-fights screens carry, which is
 	// where the purse is written. **Answered by two scenes**, uniquely among the anchors, because
@@ -172,7 +172,7 @@ var anchorNames = map[Anchor]string{
 	AnchorDeckStack:         "deck-stack",
 	AnchorTowerPlace:        "tower-place",
 	AnchorMathBand:          "math-band",
-	AnchorRewardWorms:       "reward-worms",
+	AnchorRewardEssences:    "reward-essences",
 	AnchorBuildCard:         "build-card",
 	AnchorShopShelf:         "shop-shelf",
 	AnchorMatchingCards:     "matching-cards",

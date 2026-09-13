@@ -3,7 +3,7 @@
 //
 //	go run ./tools/stonesheet
 //
-// It exists for the reason tools/wormsheet does. A stone arrives four at a time inside a sealed
+// It exists for the reason tools/essencesheet does. A stone arrives four at a time inside a sealed
 // bag, one bag per shop visit and only if five vitae can be spared — so seeing the whole
 // catalogue in a launched game means buying a lot of rocks and being lucky about the draw. This
 // draws all of them at once.
@@ -91,7 +91,7 @@ func run(dir string) error {
 
 	page := page{
 		Ground:   ground,
-		Style:    styleFacts(cards.WormStyle),
+		Style:    styleFacts(cards.EssenceStyle),
 		Count:    len(session.Stones()),
 		Rungs:    len(combat.Hands()),
 		BagSize:  session.BagSize(),
@@ -141,7 +141,7 @@ func run(dir string) error {
 	page.Groups = groupByAxis(plates)
 
 	// The two states a stone card is drawn in. **Not "chosen"** — the bag's dialog dims the three
-	// that were not kept rather than lighting the one that was, exactly as the worm offer does.
+	// that were not kept rather than lighting the one that was, exactly as the essence offer does.
 	if first, ok := firstStone(plates); ok {
 		st, _ := session.StoneByKey(first.Record)
 		for _, s := range []struct {
@@ -270,7 +270,7 @@ func axisLabel(h combat.Hand) string {
 
 // write renders one card, saves it, and returns what the page needs to show it.
 func write(dir string, f *cards.Faces, s cards.Spec, name, label string) (cell, error) {
-	img, err := cards.Render(s, cards.WormStyle, f)
+	img, err := cards.Render(s, cards.EssenceStyle, f)
 	if err != nil {
 		return cell{}, fmt.Errorf("rendering %s: %w", name, err)
 	}
@@ -286,7 +286,7 @@ func write(dir string, f *cards.Faces, s cards.Spec, name, label string) (cell, 
 	}
 	return cell{
 		File: name, Label: label,
-		Width: cards.WormStyle.Width, Height: cards.WormStyle.Height,
+		Width: cards.EssenceStyle.Width, Height: cards.EssenceStyle.Height,
 	}, nil
 }
 

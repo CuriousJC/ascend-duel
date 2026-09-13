@@ -17,7 +17,7 @@ func testDeck() []combat.Card {
 }
 
 // TestTheStartingListCannotBeEditedByARun is the counterpart of the same rule on
-// `decks.EnemyCards`. `StartingDeck()` is what a run is built from, and a worm that
+// `decks.EnemyCards`. `StartingDeck()` is what a run is built from, and an essence that
 // reached through into it would be altering what *every* future run opens with.
 func TestTheStartingListCannotBeEditedByARun(t *testing.T) {
 	start := testDeck()
@@ -85,7 +85,7 @@ func TestAnOutOfRangeIndexIsRefused(t *testing.T) {
 	}
 }
 
-// TestModifyKeepsTheConcept is the rule that makes a worm safe: it varies a card the game already
+// TestModifyKeepsTheConcept is the rule that makes an essence safe: it varies a card the game already
 // defines. If a recolour could change what card it was, the screen could produce something
 // `internal/combat` had never registered.
 func TestModifyKeepsTheConcept(t *testing.T) {
@@ -121,11 +121,11 @@ func TestOnlyAWinAdvancesTheRun(t *testing.T) {
 }
 
 // TestTheCatalogueLoads. A bad record panics at init, so reaching this at all is most of the
-// check; what is left is that the shipped file is not one worm short of an offer.
+// check; what is left is that the shipped file is not one essence short of an offer.
 func TestTheCatalogueLoads(t *testing.T) {
-	all := Worms()
+	all := Essences()
 	if len(all) < 2 {
-		t.Fatalf("%d worms, and an offer needs two", len(all))
+		t.Fatalf("%d essences, and an offer needs two", len(all))
 	}
 
 	seen := map[string]bool{}
@@ -144,37 +144,37 @@ func TestTheCatalogueLoads(t *testing.T) {
 	}
 }
 
-// TestABadWormIsRefused walks the ways a record can be wrong. Each one is something a person
-// editing worms.json could plausibly type, and every one of them would otherwise produce a reward
+// TestABadEssenceIsRefused walks the ways a record can be wrong. Each one is something a person
+// editing essences.json could plausibly type, and every one of them would otherwise produce a reward
 // that quietly does nothing.
-func TestABadWormIsRefused(t *testing.T) {
+func TestABadEssenceIsRefused(t *testing.T) {
 	for _, c := range []struct {
 		why string
-		rec data.WormData
+		rec data.EssenceData
 	}{
-		{"no key", data.WormData{Name: "X", Target: "remove", Text: "t"}},
-		{"no name", data.WormData{WormRecord: "x", Target: "remove", Text: "t"}},
-		{"no text", data.WormData{WormRecord: "x", Name: "X", Target: "remove"}},
-		{"unknown target", data.WormData{WormRecord: "x", Name: "X", Target: "sharpen", Text: "t"}},
-		{"element with no value", data.WormData{WormRecord: "x", Name: "X", Target: "element", Text: "t"}},
-		{"element the rules lack", data.WormData{WormRecord: "x", Name: "X", Target: "element", Value: "wind", Text: "t"}},
-		{"recolour to basic", data.WormData{WormRecord: "x", Name: "X", Target: "element", Value: "basic", Text: "t"}},
-		{"value nothing reads", data.WormData{WormRecord: "x", Name: "X", Target: "remove", Value: "fire", Text: "t"}},
+		{"no key", data.EssenceData{Name: "X", Target: "remove", Text: "t"}},
+		{"no name", data.EssenceData{EssenceRecord: "x", Target: "remove", Text: "t"}},
+		{"no text", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "remove"}},
+		{"unknown target", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "sharpen", Text: "t"}},
+		{"element with no value", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "element", Text: "t"}},
+		{"element the rules lack", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "element", Value: "wind", Text: "t"}},
+		{"recolour to basic", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "element", Value: "basic", Text: "t"}},
+		{"value nothing reads", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "remove", Value: "fire", Text: "t"}},
 	} {
-		if _, err := resolveWorm(c.rec); err == nil {
-			t.Errorf("a worm with %s was accepted", c.why)
+		if _, err := resolveEssence(c.rec); err == nil {
+			t.Errorf("an essence with %s was accepted", c.why)
 		}
 	}
 }
 
-// TestApplyDoesWhatTheTargetSays, and never touches the concept — the property that makes a worm
+// TestApplyDoesWhatTheTargetSays, and never touches the concept — the property that makes an essence
 // safe: it varies a card the game already defines rather than inventing one.
 func TestApplyDoesWhatTheTargetSays(t *testing.T) {
 	t.Run("element", func(t *testing.T) {
 		run := New(testDeck())
 		before, _ := run.Card(0)
 
-		if !run.Apply(Worm{Target: TargetElement, Element: combat.Earth}, 0) {
+		if !run.Apply(Essence{Target: TargetElement, Element: combat.Earth}, 0) {
 			t.Fatal("Apply refused a valid index")
 		}
 
@@ -192,7 +192,7 @@ func TestApplyDoesWhatTheTargetSays(t *testing.T) {
 
 	t.Run("remove", func(t *testing.T) {
 		run := New(testDeck())
-		if !run.Apply(Worm{Target: TargetRemove}, 0) {
+		if !run.Apply(Essence{Target: TargetRemove}, 0) {
 			t.Fatal("Apply refused a valid index")
 		}
 		if run.Size() != 3 {
@@ -204,7 +204,7 @@ func TestApplyDoesWhatTheTargetSays(t *testing.T) {
 		run := New(testDeck())
 		want, _ := run.Card(0)
 
-		if !run.Apply(Worm{Target: TargetDuplicate}, 0) {
+		if !run.Apply(Essence{Target: TargetDuplicate}, 0) {
 			t.Fatal("Apply refused a valid index")
 		}
 		if run.Size() != 5 {
@@ -228,7 +228,7 @@ func TestApplyDoesWhatTheTargetSays(t *testing.T) {
 // under them, so a stale one has to be a no-op rather than a panic mid-run.
 func TestApplyRefusesAnIndexTheDeckDoesNotHold(t *testing.T) {
 	run := New(testDeck())
-	for _, w := range []Worm{{Target: TargetRemove}, {Target: TargetDuplicate},
+	for _, w := range []Essence{{Target: TargetRemove}, {Target: TargetDuplicate},
 		{Target: TargetElement, Element: combat.Fire}} {
 
 		if run.Apply(w, 99) {
@@ -236,7 +236,7 @@ func TestApplyRefusesAnIndexTheDeckDoesNotHold(t *testing.T) {
 		}
 	}
 	if run.Size() != 4 {
-		t.Errorf("a refused worm still changed the deck: %d cards", run.Size())
+		t.Errorf("a refused essence still changed the deck: %d cards", run.Size())
 	}
 }
 
@@ -247,7 +247,7 @@ func TestTheNumericTargetsApply(t *testing.T) {
 		run := New([]combat.Card{{Concept: combat.Smash}})
 		base := combat.ConceptOf(combat.Smash).Cost
 
-		if !run.Apply(Worm{Target: TargetCost, Number: -1}, 0) {
+		if !run.Apply(Essence{Target: TargetCost, Number: -1}, 0) {
 			t.Fatal("Apply refused a valid index")
 		}
 		got, _ := run.Card(0)
@@ -260,15 +260,15 @@ func TestTheNumericTargetsApply(t *testing.T) {
 		run := New([]combat.Card{{Concept: combat.Brace}})
 		base := combat.ConceptOf(combat.Brace).Amount
 
-		run.Apply(Worm{Target: TargetAmount, Number: 150}, 0)
+		run.Apply(Essence{Target: TargetAmount, Number: 150}, 0)
 		once, _ := run.Card(0)
 		if once.Amount() != base*150/100 {
 			t.Errorf("scaled once banks %d, want %d", once.Amount(), base*150/100)
 		}
 
-		// A second worm on the same card has to be worth something, so percentages compound
+		// A second essence on the same card has to be worth something, so percentages compound
 		// rather than replace.
-		run.Apply(Worm{Target: TargetAmount, Number: 150}, 0)
+		run.Apply(Essence{Target: TargetAmount, Number: 150}, 0)
 		twice, _ := run.Card(0)
 		if twice.Amount() <= once.Amount() {
 			t.Errorf("scaling twice gave %d against %d once", twice.Amount(), once.Amount())
@@ -276,12 +276,12 @@ func TestTheNumericTargetsApply(t *testing.T) {
 	})
 }
 
-// TestTheLadderWormsMoveOneRung, and refuse rather than doing nothing at the ends.
-func TestTheLadderWormsMoveOneRung(t *testing.T) {
+// TestTheLadderEssencesMoveOneRung, and refuse rather than doing nothing at the ends.
+func TestTheLadderEssencesMoveOneRung(t *testing.T) {
 	up, _ := combat.Neighbour(combat.Jab, 1)
 
 	run := New([]combat.Card{{Concept: combat.Jab, Element: combat.Fire}})
-	if !run.Apply(Worm{Target: TargetPromote}, 0) {
+	if !run.Apply(Essence{Target: TargetPromote}, 0) {
 		t.Fatal("promoting a Jab was refused")
 	}
 
@@ -297,29 +297,29 @@ func TestTheLadderWormsMoveOneRung(t *testing.T) {
 	// **The bottom is the zero-copy Poke now**, not the Jab — which is the change the new rungs
 	// bought: every card a run actually deals can be walked in both directions.
 	bottom := New([]combat.Card{{Concept: combat.Poke}})
-	if bottom.CanApply(Worm{Target: TargetDemote}, 0) {
+	if bottom.CanApply(Essence{Target: TargetDemote}, 0) {
 		t.Error("CanApply said a Poke could be demoted")
 	}
-	if bottom.Apply(Worm{Target: TargetDemote}, 0) {
+	if bottom.Apply(Essence{Target: TargetDemote}, 0) {
 		t.Error("demoting a Poke claimed to work")
 	}
-	if !New([]combat.Card{{Concept: combat.Jab}}).CanApply(Worm{Target: TargetDemote}, 0) {
+	if !New([]combat.Card{{Concept: combat.Jab}}).CanApply(Essence{Target: TargetDemote}, 0) {
 		t.Error("a Jab could not be demoted, and the ladder now has a rung under it")
 	}
 }
 
-// TestCanApplyRefusesAWormThatWouldDoNothing. A reward that lands and changes nothing is a reward
+// TestCanApplyRefusesAEssenceThatWouldDoNothing. A reward that lands and changes nothing is a reward
 // taken away, so the screen asks before it offers a card.
-func TestCanApplyRefusesAWormThatWouldDoNothing(t *testing.T) {
+func TestCanApplyRefusesAEssenceThatWouldDoNothing(t *testing.T) {
 	run := New([]combat.Card{{Concept: combat.Bash, Element: combat.Fire}})
 
-	if run.CanApply(Worm{Target: TargetElement, Element: combat.Fire}, 0) {
+	if run.CanApply(Essence{Target: TargetElement, Element: combat.Fire}, 0) {
 		t.Error("recolouring a fire card to fire was offered")
 	}
-	if !run.CanApply(Worm{Target: TargetElement, Element: combat.Ice}, 0) {
+	if !run.CanApply(Essence{Target: TargetElement, Element: combat.Ice}, 0) {
 		t.Error("recolouring a fire card to ice was refused")
 	}
-	if run.CanApply(Worm{Target: TargetRemove}, 99) {
+	if run.CanApply(Essence{Target: TargetRemove}, 99) {
 		t.Error("an index the deck does not hold was offered")
 	}
 }

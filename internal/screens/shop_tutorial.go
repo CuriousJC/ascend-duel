@@ -29,7 +29,7 @@ func (s *ShopScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 
 // tutorialRect answers for the shelf.
 //
-// **The whole row rather than one card**, exactly as the reward screen's worms are: which relic to
+// **The whole row rather than one card**, exactly as the reward screen's essences are: which relic to
 // buy is the player's decision, and a spotlight on one of three would be making it for them.
 //
 // **The worn row now has one** *(2026-09-06)*. It deliberately did not, because a run reaches its

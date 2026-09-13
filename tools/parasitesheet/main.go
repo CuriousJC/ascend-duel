@@ -93,7 +93,7 @@ func run(dir string) error {
 
 	page := page{
 		Ground:      ground,
-		Style:       styleFacts(cards.WormStyle),
+		Style:       styleFacts(cards.EssenceStyle),
 		Count:       len(order),
 		BucketSize:  session.BucketSize(),
 		BucketPrice: session.BucketPrice(),
@@ -144,7 +144,7 @@ func run(dir string) error {
 	page.Targets = groupByTarget(plates)
 	page.Families = groupByFamily(plates)
 
-	// The three states a parasite card is drawn in, which is one more than a worm has. **Selected
+	// The three states a parasite card is drawn in, which is one more than an essence has. **Selected
 	// is a state here and is not one there**: a parasite is armed first and aimed second, so the
 	// board piece has to say which one is in hand while the player picks what it eats.
 	if len(order) > 0 {
@@ -273,7 +273,7 @@ func cardsWanted(p session.Parasite) string {
 
 // groupByTarget splits the catalogue by what a parasite does, in session.ParasiteTargets' order.
 //
-// **An empty group still gets a heading**, exactly as the worm sheet's do: the vocabulary is
+// **An empty group still gets a heading**, exactly as the essence sheet's do: the vocabulary is
 // closed, so a target nobody has authored into is a mechanic built and never reached for. That is
 // worth seeing rather than a section to omit — and with four records against four targets it is
 // most of what this page currently has to say.
@@ -332,7 +332,7 @@ func groupByFamily(plates []plate) []family {
 
 // write renders one card, saves it, and returns what the page needs to show it.
 func write(dir string, f *cards.Faces, s cards.Spec, name, label string) (cell, error) {
-	img, err := cards.Render(s, cards.WormStyle, f)
+	img, err := cards.Render(s, cards.EssenceStyle, f)
 	if err != nil {
 		return cell{}, fmt.Errorf("rendering %s: %w", name, err)
 	}
@@ -348,7 +348,7 @@ func write(dir string, f *cards.Faces, s cards.Spec, name, label string) (cell, 
 	}
 	return cell{
 		File: name, Label: label,
-		Width: cards.WormStyle.Width, Height: cards.WormStyle.Height,
+		Width: cards.EssenceStyle.Width, Height: cards.EssenceStyle.Height,
 	}, nil
 }
 

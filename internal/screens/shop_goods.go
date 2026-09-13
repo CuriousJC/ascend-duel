@@ -2,7 +2,7 @@ package screens
 
 // The two sealed goods, and the dialog that opens them.
 //
-// **A bag of rocks and a can of worms** *(owner's call, 2026-08-27)*. Both cost five vitae, both
+// **A bag of rocks and a vial of essence** *(owner's call, 2026-08-27)*. Both cost five vitae, both
 // hold four of something, and both give the player exactly one of the four — the other three are
 // gone. What is bought is the *choice*, which is what makes them different from a relic on the
 // shelf: a relic is a thing you read and then pay for, and these are paid for and then read.
@@ -12,16 +12,16 @@ package screens
 // Choosing it is using it: there is no inventory, so the click that picks a rock is the click that
 // puts it on the ladder.
 //
-// **The can is a worm, on the same terms as the reward screen's** — and that includes the gesture:
-// the four worms and a hand's worth of cards are up together, and you select the card first and
-// click the worm second *(owner's call, 2026-09-06)*. It was two stages until then, and what was
-// wrong with them is that the worms left the screen at the moment the player had to judge one
+// **The vial is an essence, on the same terms as the reward screen's** — and that includes the gesture:
+// the four essences and a hand's worth of cards are up together, and you select the card first and
+// click the essence second *(owner's call, 2026-09-06)*. It was two stages until then, and what was
+// wrong with them is that the essences left the screen at the moment the player had to judge one
 // against a card. See targeting.go for the rule, and the reward screen, which merged its own two
 // stages the same day. It is worth five vitae over a free offer of two because four is twice the
 // choice and because it arrives at the shop rather than at the end of a fight, which is a
 // different moment to want one at.
 //
-// **The can's title is an instruction and its hint is the gesture**, because a dialog whose two
+// **The vial's title is an instruction and its hint is the gesture**, because a dialog whose two
 // rows are both live has to say which one is clicked first.
 //
 // **This dialog has no X, and that is deliberate.** Every other modal in the game is a look at
@@ -56,23 +56,23 @@ type goodKind int
 const (
 	goodNone goodKind = iota
 	goodBag
-	goodCan
+	goodVial
 
 	// goodBucket is the third, and the one whose contents leave the shop with the player rather
-	// than being applied in the dialog. A stone and a worm are both spent the moment they are
+	// than being applied in the dialog. A stone and an essence are both spent the moment they are
 	// chosen; a parasite goes into the bucket and is spent mid-fight. See combat_parasite.go.
 	goodBucket
 )
 
 // goodKinds is the shelf's goods in the order they stand, for anything that walks them.
-func goodKinds() []goodKind { return []goodKind{goodBag, goodCan, goodBucket} }
+func goodKinds() []goodKind { return []goodKind{goodBag, goodVial, goodBucket} }
 
 // The two goods as cards. **The name is what it is and the line is the shape of the offer**, never
 // what is inside: a bag that named its four rocks on the face would be a shelf item you could read
 // before paying for, which is the one thing these are not.
 const (
 	bagName    = "BAG OF ROCKS"
-	canName    = "CAN OF WORMS"
+	vialName   = "VIAL OF ESSENCE"
 	bucketName = "BUCKET OF PARASITES"
 )
 
@@ -82,12 +82,12 @@ const (
 	// row and nothing under it.
 	goodsChoiceRowPct = 42
 
-	// The can has two rows and they both have to fit inside the panel, so its worms sit high and
+	// The vial has two rows and they both have to fit inside the panel, so its essences sit high and
 	// the cards they may eat sit under them. **Not 42 and 70** *(2026-09-06)*: the offer row ended
 	// exactly on the panel's bottom edge, which was survivable while it was the only row on screen
 	// and is not now that a selected card is lifted into the row above it.
-	canWormRowPct    = 22
-	goodsOfferRowPct = 55
+	vialEssenceRowPct = 22
+	goodsOfferRowPct  = 55
 
 	// The line under the title, saying what to do with what is up.
 	goodsHintTop = 120
@@ -101,11 +101,11 @@ const (
 	goodsClosed goodsStage = iota
 
 	// goodsPick: what was drawn is up, and a click takes one. **There is no second stage**
-	// *(owner's call, 2026-09-06)*: the can used to move on to a row of cards once a worm was
-	// chosen, so the worms disappeared at the moment the player had to judge one against a card.
+	// *(owner's call, 2026-09-06)*: the vial used to move on to a row of cards once an essence was
+	// chosen, so the essences disappeared at the moment the player had to judge one against a card.
 	// Both rows are up together now and the gesture is the row's own — select the card, then click
-	// the worm. See targeting.go, which is the rule the parasite pane and the reward screen's own
-	// worm row already follow.
+	// the essence. See targeting.go, which is the rule the parasite pane and the reward screen's own
+	// essence row already follow.
 	goodsPick
 )
 
@@ -119,17 +119,17 @@ type goods struct {
 	kind  goodKind
 	stage goodsStage
 
-	// stones, worms and parasites are what was drawn, and only the one matching kind is filled.
+	// stones, essences and parasites are what was drawn, and only the one matching kind is filled.
 	stones    []session.Stone
-	worms     []session.Worm
+	essences  []session.Essence
 	parasites []session.Parasite
 
-	// offer is the cards a worm may be aimed at, by index into the run's deck. **Only the can
-	// fills it**, and it is dealt when the can is opened rather than when a worm is picked — the
+	// offer is the cards an essence may be aimed at, by index into the run's deck. **Only the vial
+	// fills it**, and it is dealt when the vial is opened rather than when an essence is picked — the
 	// two rows are up at once, so the cards cannot be a function of a choice not yet made.
 	offer []int
 
-	// selected is which offered card is picked out, or -1. **One card**, because a worm eats
+	// selected is which offered card is picked out, or -1. **One card**, because an essence eats
 	// exactly one — the reward screen's own field, and the same reason it is an index rather than
 	// a set. See consumableTarget.
 	selected int
@@ -146,15 +146,15 @@ type goods struct {
 // bag.
 func (g *goods) open(gs *state.GlobalState, kind goodKind) {
 	g.kind, g.stage, g.selected = kind, goodsPick, -1
-	g.stones, g.worms, g.parasites, g.offer = nil, nil, nil, nil
+	g.stones, g.essences, g.parasites, g.offer = nil, nil, nil, nil
 	g.tip = models.Tooltip{DwellTicks: tipDwell}
 
 	switch kind {
 	case goodBag:
 		g.stones = dealStones(gs)
-	case goodCan:
-		g.worms = dealCanWorms(gs)
-		g.offer = dealCanOffer(gs)
+	case goodVial:
+		g.essences = dealVialEssences(gs)
+		g.offer = dealVialOffer(gs)
 	case goodBucket:
 		g.parasites = dealBucketParasites(gs)
 	}
@@ -166,12 +166,12 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 // close puts it away.
 func (g *goods) reset() {
 	g.kind, g.stage, g.selected = goodNone, goodsClosed, -1
-	g.stones, g.worms, g.parasites, g.offer = nil, nil, nil, nil
+	g.stones, g.essences, g.parasites, g.offer = nil, nil, nil, nil
 	g.tip.Forget()
 }
 
 // count is how many cards are in the row that is taken from: the stones, the parasites, or the
-// worms. **Not the offer**, which is a second row with its own slot function.
+// essences. **Not the offer**, which is a second row with its own slot function.
 func (g *goods) count() int {
 	switch {
 	case g.kind == goodBag:
@@ -179,13 +179,13 @@ func (g *goods) count() int {
 	case g.kind == goodBucket:
 		return len(g.parasites)
 	default:
-		return len(g.worms)
+		return len(g.essences)
 	}
 }
 
 // dealStones is what a bag holds: four of the catalogue, without repeats.
 //
-// **Its own stream** (`seeds.BagStock`), separate from the shelf's relics and from both worm draws —
+// **Its own stream** (`seeds.BagStock`), separate from the shelf's relics and from both essence draws —
 // see internal/seeds, where the argument is written down. **Without repeats**, because a bag
 // offering the same rock twice is a seat spent saying nothing, exactly as the shelf is.
 //
@@ -203,19 +203,19 @@ func dealStones(gs *state.GlobalState) []session.Stone {
 	return all
 }
 
-// dealCanWorms is what a can holds: four worms, without repeats.
+// dealVialEssences is what a vial holds: four essences, without repeats.
 //
-// **A different stream from the reward screen's two** (`seeds.CanStock`), which is the case the
+// **A different stream from the reward screen's two** (`seeds.VialStock`), which is the case the
 // salts exist for: sharing would make the shop's four a function of which two had just been
-// offered free, so buying the can could guarantee — or rule out — the pair the player had turned
+// offered free, so buying the vial could guarantee — or rule out — the pair the player had turned
 // down. See internal/seeds.
-func dealCanWorms(gs *state.GlobalState) []session.Worm {
-	all := session.Worms()
-	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.CanStock, gs.Run.Fight())))
+func dealVialEssences(gs *state.GlobalState) []session.Essence {
+	all := session.Essences()
+	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.VialStock, gs.Run.Fight())))
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
-	if len(all) > session.CanSize() {
-		all = all[:session.CanSize()]
+	if len(all) > session.VialSize() {
+		all = all[:session.VialSize()]
 	}
 	return all
 }
@@ -223,7 +223,7 @@ func dealCanWorms(gs *state.GlobalState) []session.Worm {
 // dealBucketParasites is what a bucket holds: four of the catalogue, without repeats.
 //
 // **Its own stream** (`seeds.BucketStock`), separate from both other goods and from the reward
-// screen's worms — see internal/seeds. **Flat, not weighted**, on the bag's argument: a parasite
+// screen's essences — see internal/seeds. **Flat, not weighted**, on the bag's argument: a parasite
 // has no rarity, and weighting them would be pricing the effect, which nothing has decided yet.
 //
 // **A catalogue shorter than the bucket is not an error.** Four parasites ship and the bucket holds
@@ -242,25 +242,25 @@ func dealBucketParasites(gs *state.GlobalState) []session.Parasite {
 // parasiteTipLines is what resting on a parasite says: what it does, and when it can be spent.
 //
 // **The "when" is the half the card cannot say.** A parasite's face is a name and a clipped line,
-// and the thing that makes it a different object from a worm is not on it — so the tooltip is where
+// and the thing that makes it a different object from an essence is not on it — so the tooltip is where
 // a player finds out that this one is carried into a fight rather than used now.
 func parasiteTipLines(p session.Parasite) []string {
 	// **The card's own text, unwrapped.** A `\n` on a face is an authored line break and a tooltip
 	// draws its own lines, so the two are the same sentence written for two widths — the same
-	// treatment wormTip gives a worm.
+	// treatment essenceTip gives an essence.
 	lines := strings.Split(p.Text, "\n")
 	return append(lines, "spent between the turns of a fight")
 }
 
-// dealCanOffer is the hand the can deals beside its worms: a shuffle of every position in the run's
+// dealVialOffer is the hand the vial deals beside its essences: a shuffle of every position in the run's
 // deck, cut to a hand's worth.
 //
-// **It is not filtered by a worm any more** *(owner's call, 2026-09-06)*. It could not be: both rows
+// **It is not filtered by an essence any more** *(owner's call, 2026-09-06)*. It could not be: both rows
 // are up at once now, so the cards are dealt before the player has chosen anything, and a filter
-// would have to know which worm. What replaces it is the *worm* going dim — a worm that cannot
+// would have to know which essence. What replaces it is the *essence* going dim — an essence that cannot
 // change the selected card is unclickable, which is the same information at the other end of the
-// gesture, and the reward screen's own rule. See wormSpendable.
-func dealCanOffer(gs *state.GlobalState) []int {
+// gesture, and the reward screen's own rule. See essenceSpendable.
+func dealVialOffer(gs *state.GlobalState) []int {
 	if gs.Run == nil || gs.Run.Size() == 0 {
 		return nil
 	}
@@ -270,7 +270,7 @@ func dealCanOffer(gs *state.GlobalState) []int {
 		idx = append(idx, i)
 	}
 
-	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.CanStock, gs.Run.Fight())))
+	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.VialStock, gs.Run.Fight())))
 	rng.Shuffle(len(idx), func(i, j int) { idx[i], idx[j] = idx[j], idx[i] })
 
 	if len(idx) > handSize {
@@ -289,8 +289,8 @@ func (g *goods) slot(gs *state.GlobalState, i int) image.Rectangle {
 	}
 
 	top := gs.PctY(goodsChoiceRowPct)
-	if g.kind == goodCan {
-		top = gs.PctY(canWormRowPct)
+	if g.kind == goodVial {
+		top = gs.PctY(vialEssenceRowPct)
 	}
 	pitch := cardWidth + 40
 
@@ -299,7 +299,7 @@ func (g *goods) slot(gs *state.GlobalState, i int) image.Rectangle {
 	return image.Rect(left+i*pitch, top, left+i*pitch+cardWidth, top+cardHeight)
 }
 
-// offerSlot is where one of the cards a worm may eat is drawn and clicked. **The hand's own
+// offerSlot is where one of the cards an essence may eat is drawn and clicked. **The hand's own
 // compressing pitch**, because this row is a hand's worth of cards and the fixed pitch above it is
 // for four.
 //
@@ -331,13 +331,13 @@ func (g *goods) selectedDeckIndex() (int, bool) {
 	return g.offer[g.selected], true
 }
 
-// wormSpendable is whether clicking this worm now would take it: a card is selected, and this worm
+// essenceSpendable is whether clicking this essence now would take it: a card is selected, and this essence
 // can actually change that card.
 //
 // **The same question the click asks and the same one the card's lit state reads**, which is what
-// stops a worm looking available and doing nothing. It is the reward screen's predicate over the
+// stops an essence looking available and doing nothing. It is the reward screen's predicate over the
 // same target rule — see targeting.go.
-func (g *goods) wormSpendable(gs *state.GlobalState, w session.Worm) bool {
+func (g *goods) essenceSpendable(gs *state.GlobalState, w session.Essence) bool {
 	if gs.Run == nil {
 		return false
 	}
@@ -393,10 +393,10 @@ func (g *goods) hover(gs *state.GlobalState) {
 			continue
 		}
 		switch {
-		case g.kind == goodCan:
-			// **The worms are deliberately not tooltipped**, which is the reward screen's own
-			// choice on the same row: a worm's whole rule is printed on its face, where a deck
-			// card's is not. What a dim worm means — "not for the card you have selected" — is
+		case g.kind == goodVial:
+			// **The essences are deliberately not tooltipped**, which is the reward screen's own
+			// choice on the same row: an essence's whole rule is printed on its face, where a deck
+			// card's is not. What a dim essence means — "not for the card you have selected" — is
 			// left to the row rather than to a tooltip.
 			return
 		case g.kind == goodBag:
@@ -438,23 +438,23 @@ func (g *goods) click(gs *state.GlobalState) {
 // take commits whichever card was clicked.
 func (g *goods) take(gs *state.GlobalState, i int) {
 	switch {
-	case g.kind == goodCan:
-		// **A worm is refused rather than falling back**, on the predicate its lit state already
-		// read: a dim worm cannot be taken and a lit one always works. With no card selected every
-		// worm is dim, so the dialog waits rather than choosing a card for the player.
-		worm := g.worms[i]
+	case g.kind == goodVial:
+		// **An essence is refused rather than falling back**, on the predicate its lit state already
+		// read: a dim essence cannot be taken and a lit one always works. With no card selected every
+		// essence is dim, so the dialog waits rather than choosing a card for the player.
+		essence := g.essences[i]
 		idx, ok := g.selectedDeckIndex()
-		if !ok || !g.wormSpendable(gs, worm) {
+		if !ok || !g.essenceSpendable(gs, essence) {
 			return
 		}
 
-		if gs.Run.Apply(worm, idx) {
-			trace.Logf("shop", "can of worms: %s applied to deck position %d", worm.Record, idx)
+		if gs.Run.Apply(essence, idx) {
+			trace.Logf("shop", "vial of essence: %s applied to deck position %d", essence.Record, idx)
 
 			// **The same moment the post-battle screen raises**, because it is the same event: a
 			// card in the run's deck is now a different card. Read back out of the deck rather than
 			// predicted, and skipped for a removal, which leaves no card to name.
-			if worm.Target != session.TargetRemove {
+			if essence.Target != session.TargetRemove {
 				if card, ok := gs.Run.Card(idx); ok {
 					earnMoment(gs, achieve.CardAltered(card.Label()))
 				}
@@ -472,7 +472,7 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 
 	case g.kind == goodBucket:
 		// **A parasite is not applied here — it goes into the bucket.** That is the whole
-		// difference between this good and the other two: a stone and a worm are spent on the
+		// difference between this good and the other two: a stone and an essence are spent on the
 		// spot, and a parasite is carried into the next fight and spent between its turns.
 		p := g.parasites[i]
 		if gs.Run.Hold(p.Record) {
@@ -521,15 +521,15 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 		case g.kind == goodBucket:
 			drawSpecCard(gs, screen, at, parasiteSpec(gs, g.parasites[i], true, false))
 		default:
-			// **A worm is lit only for the card that is selected.** With nothing selected the
+			// **An essence is lit only for the card that is selected.** With nothing selected the
 			// whole row is dim, which is what says the gesture starts underneath — the reward
 			// screen's rule, and the parasite pane's.
-			drawWormCard(gs, screen, at, g.worms[i], g.wormSpendable(gs, g.worms[i]))
+			drawEssenceCard(gs, screen, at, g.essences[i], g.essenceSpendable(gs, g.essences[i]))
 		}
 	}
 
-	// **The cards the worms may eat, under them and up at the same time** *(owner's call,
-	// 2026-09-06)*. They are drawn after the worms so a lifted card is in front of the row above
+	// **The cards the essences may eat, under them and up at the same time** *(owner's call,
+	// 2026-09-06)*. They are drawn after the essences so a lifted card is in front of the row above
 	// it, which is the only place the two rows can meet.
 	for i, deckIndex := range g.offer {
 		card, ok := gs.Run.Card(deckIndex)
@@ -546,7 +546,7 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 // title names what is open, and hint says what to do with it. **Two short lines rather than a
 // paragraph**: the cards say what they are, and this says how many of them the player gets.
 //
-// **The can is the exception and says one thing** *(owner's call, 2026-09-05)*: the worms on the
+// **The vial is the exception and says one thing** *(owner's call, 2026-09-05)*: the essences on the
 // table are the whole of what the dialog is, so it is an instruction rather than a label with a
 // caption. hint returns nothing there and draw prints nothing rather than an empty line.
 func (g *goods) title() string {
@@ -556,14 +556,14 @@ func (g *goods) title() string {
 	case goodBucket:
 		return bucketName
 	default:
-		return "CHOOSE YOUR WORM"
+		return "CHOOSE YOUR ESSENCE"
 	}
 }
 
 func (g *goods) hint() string {
 	switch {
-	case g.kind == goodCan:
-		return "pick the card, then the worm that eats it"
+	case g.kind == goodVial:
+		return "pick the card, then the essence that changes it"
 	case g.kind == goodBag:
 		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.stones))
 	default:

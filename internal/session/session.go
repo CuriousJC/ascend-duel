@@ -159,7 +159,7 @@ type Session struct {
 }
 
 // New starts a run from a deck list — `startingDeck`, in practice, expanded to one entry per
-// card. The slice is copied, so the caller's starting list cannot be edited by a worm.
+// card. The slice is copied, so the caller's starting list cannot be edited by an essence.
 //
 // **It opens wearing StartingRelics**, which is empty as shipped — see relic.go, where the list and
 // the reason live. A run buys its relics.
@@ -219,7 +219,7 @@ func (s *Session) Deck() []combat.Card {
 	return out
 }
 
-// Size is how many cards the run holds. The deck thins as worms remove cards, so this is not a
+// Size is how many cards the run holds. The deck thins as essences remove cards, so this is not a
 // constant and nothing should treat 48 as one.
 func (s *Session) Size() int { return len(s.deck) }
 
@@ -245,7 +245,7 @@ func (s *Session) Remove(i int) bool {
 	return true
 }
 
-// SetElement recolours a card. The concept is untouched: a worm varies a card the game already
+// SetElement recolours a card. The concept is untouched: an essence varies a card the game already
 // defines rather than inventing one, so what changes is which colour it counts as in a mix and
 // which status it can apply.
 func (s *Session) SetElement(i int, e combat.Element) bool {
@@ -322,7 +322,7 @@ func (s *Session) WonFight(lifeLeft, maxLife int) {
 	s.fight++
 }
 
-// Add puts a card into the run. Nothing offers this yet — REMOVE and MODIFY are the two worms
+// Add puts a card into the run. Nothing offers this yet — REMOVE and MODIFY are the two essences
 // that exist — but the third one named in the design is "add", and it is one line.
 //
 // **The card is given a fresh identity, whatever it arrived carrying.** A caller handing over a
@@ -344,7 +344,7 @@ func (s *Session) mintCardID() int {
 //
 // It reports false for an id the run has not got, which covers the two honest cases: a card with
 // no identity at all (an enemy's, a test's) and a card whose original has since been eaten by a
-// worm. A caller that cannot find the original should draw the card it actually has.
+// essence. A caller that cannot find the original should draw the card it actually has.
 //
 // **A linear walk, deliberately.** The deck is fifty-odd cards and this is asked while a panel is
 // open, so an index would be a second structure to keep in step with `Remove` for no measurable

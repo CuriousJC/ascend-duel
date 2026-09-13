@@ -2,7 +2,7 @@ package data
 
 // The stones: **what the player may do to the hand ladder.**
 //
-// A worm record says what a stone's sibling changes about a *card*; a stone record says what it
+// An essence record says what a stone's sibling changes about a *card*; a stone record says what it
 // changes about a *rung*. One stone raises one hand's multiplier by a tenth of the figure
 // `hands.json` writes down, for the rest of the run.
 //
@@ -17,7 +17,7 @@ package data
 // becomes a field here the day two stones want to be worth different amounts, and not before.
 //
 // **The rules do not read this file.** A stone is bought by the run and applied to the run's
-// fighter, so the parsing and the validation live in `internal/session`, exactly as a worm's do.
+// fighter, so the parsing and the validation live in `internal/session`, exactly as an essence's do.
 
 import (
 	_ "embed"
@@ -31,7 +31,7 @@ var stonesJSON []byte
 // StoneData is one rung-raiser as written in the file.
 type StoneData struct {
 	// StoneRecord is the key, and what anything holding a stone stores. Kebab-case, like a relic's
-	// and a worm's.
+	// and an essence's.
 	StoneRecord string `json:"StoneRecord"`
 
 	// Name is what is written across the top of the card. **A mineral rather than the rung**, so
@@ -43,7 +43,7 @@ type StoneData struct {
 	// landing on whichever rung happens to sit first.
 	Hand string `json:"Hand"`
 
-	// Text is what the card says it does, in the same clipped register the worms use. A `\n` is an
+	// Text is what the card says it does, in the same clipped register the essences use. A `\n` is an
 	// authored line break, honoured by `cards.WrapText` — every stone carries one, because the
 	// eighteen differ only in the rung they name and left to the measurer they would read as
 	// eighteen layouts of one card.
@@ -70,7 +70,7 @@ func LoadStones() map[string]StoneData {
 
 // StoneOrder is every record, sorted by key.
 //
-// **Sorted for the reason WormOrder is**: LoadStones returns a map, Go randomises map order, and
+// **Sorted for the reason EssenceOrder is**: LoadStones returns a map, Go randomises map order, and
 // the bag of rocks is a shuffle of this list — so an unsorted walk would make which stones a run
 // is offered depend on map iteration and take the run's reproducibility with it. See the
 // `randomness` skill.

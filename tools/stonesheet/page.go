@@ -13,7 +13,7 @@ import "html/template"
 // card from a grey border on the game's own blue.
 //
 // **A rung with no stone is still a row**, drawn as an empty seat rather than skipped. That is the
-// one layout decision this template makes that the worm sheet's does not, and it is why the page
+// one layout decision this template makes that the essence sheet's does not, and it is why the page
 // is worth having: the gap is the finding.
 var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
 <meta charset="utf-8">

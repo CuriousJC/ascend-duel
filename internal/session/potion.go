@@ -2,7 +2,7 @@ package session
 
 // Potions: the run's own opinion about the duelist's body.
 //
-// **A relic is worn, a stone raises a rung, a worm eats a card — and a potion changes the duelist**
+// **A relic is worn, a stone raises a rung, an essence eats a card — and a potion changes the duelist**
 // *(owner's call, 2026-09-06)*. It is the only thing in the shop that moves one of the three
 // figures the fighter is actually made of: the life it has left, the ceiling that life sits under,
 // or the damage it hits for.
@@ -19,7 +19,7 @@ package session
 // Healing is not stored at all: it takes the wound down, which is the one number `life.go` keeps.
 //
 // **This file is where a record becomes something usable and where a bad one is refused**, the job
-// `stone.go` and `worm.go` do for their catalogues. It lives here rather than in `internal/combat`
+// `stone.go` and `essence.go` do for their catalogues. It lives here rather than in `internal/combat`
 // for their reason too: a potion is bought by a *run*, and the rules have never heard of a shop.
 
 import (
@@ -30,7 +30,7 @@ import (
 
 // PotionEffect is which of the duelist's three figures a potion moves. **A closed vocabulary**, in
 // Go rather than in the file: a fourth effect is a rule the run has to learn how to apply, never
-// something `potions.json` can assert into existence. Same posture as a worm's target.
+// something `potions.json` can assert into existence. Same posture as an essence's target.
 type PotionEffect int
 
 const (
@@ -48,7 +48,7 @@ const (
 // Potion is one bottle, resolved against the vocabulary above.
 //
 // Comparable, so a screen can hold one by value and compare two without reaching for the key —
-// exactly as `Stone` and `Worm` are.
+// exactly as `Stone` and `Essence` are.
 type Potion struct {
 	Record string
 	Name   string

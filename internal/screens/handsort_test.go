@@ -7,7 +7,7 @@ import (
 )
 
 // The sort tabs where they are shared: one preference over every screen that deals a hand, and the
-// worm screen's own row arranged by it. The combat screen's half is combat_sort_test.go.
+// essence screen's own row arranged by it. The combat screen's half is combat_sort_test.go.
 //
 // Nothing here creates an ebiten.Image — the same narrow exception the other tests in this package
 // take.
@@ -24,7 +24,7 @@ func TestTheSortPreferenceIsOneThingForTheWholeGame(t *testing.T) {
 	var post PostBattleScene
 	post.Init(gs)
 	if post.sortMode != sortByElement {
-		t.Errorf("the worm screen opened sorting by %v, want %v", post.sortMode, sortByElement)
+		t.Errorf("the essence screen opened sorting by %v, want %v", post.sortMode, sortByElement)
 	}
 
 	if got := handSortOf(gs); got != sortByElement {
@@ -44,9 +44,9 @@ func TestAFreshStateSortsByCost(t *testing.T) {
 	}
 }
 
-// TestTheWormOfferIsArrangedByTheSortMode. The row a worm is pointed at obeys the same three tabs
+// TestTheEssenceOfferIsArrangedByTheSortMode. The row an essence is pointed at obeys the same three tabs
 // the hand does — which is the whole point of the mode being global.
-func TestTheWormOfferIsArrangedByTheSortMode(t *testing.T) {
+func TestTheEssenceOfferIsArrangedByTheSortMode(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = 1920, 1080
 
@@ -72,10 +72,10 @@ func TestTheWormOfferIsArrangedByTheSortMode(t *testing.T) {
 	}
 }
 
-// TestTheWormScreensSortBlockFitsBesideItsRow. The block hangs off the offer row's right edge, and
+// TestTheEssenceScreensSortBlockFitsBesideItsRow. The block hangs off the offer row's right edge, and
 // the row is centred and eight cards wide — so the two are competing for the same pixels. A block
 // running off the screen would be a control the player cannot press.
-func TestTheWormScreensSortBlockFitsBesideItsRow(t *testing.T) {
+func TestTheEssenceScreensSortBlockFitsBesideItsRow(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = 1920, 1080
 
@@ -106,7 +106,7 @@ func TestTheTwoScreensLeaveTheSameAirBesideTheirCards(t *testing.T) {
 	s.Init(gs)
 
 	if got := s.sortTabs.rect(gs).Min.X - s.offerRow(gs).Max.X; got != sortColumnGap {
-		t.Errorf("the worm screen leaves %d beside its row, want %d", got, sortColumnGap)
+		t.Errorf("the essence screen leaves %d beside its row, want %d", got, sortColumnGap)
 	}
 	if got := sortColumnRect(gs).Min.X - (handBandLeft(gs) + cardBandWidth(gs)); got != 0 {
 		t.Errorf("the combat screen's block is %d off the card band's right edge, want 0", got)

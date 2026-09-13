@@ -660,7 +660,7 @@ type Segment struct {
 // **Every occurrence of every run is coloured**, so one entry carries a word a sentence repeats —
 // "apply BURNING status … BURNING enemies" — without spending a second seat in a fixed array.
 //
-// **Matching ignores case and the line keeps its own spelling.** Relics write "Fire" and worms write
+// **Matching ignores case and the line keeps its own spelling.** Relics write "Fire" and essences write
 // "FIRE", and neither the file nor the caller's vocabulary should have to pick one.
 //
 // **A run only matches at a word boundary**: ICE is inside SLICE and BURN is inside BURNING, and a

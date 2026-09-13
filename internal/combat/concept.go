@@ -277,10 +277,10 @@ func registerPlayerConcepts() map[string]ConceptID {
 //
 // **Eight of them ship at zero copies** — the 0 AP and 4 AP rung of each attack form *(2026-08-24)*,
 // and Flinch and Guard at the two ends of the defences *(2026-09-06)*.
-// They are not in the starting deck and cannot be bought; the only way to hold one is a Shrink or a
-// Grow worm walking a card off the end of the rungs the deck does ship. They are registered concepts all the
+// They are not in the starting deck and cannot be bought; the only way to hold one is a Debase or a
+// Exalt essence walking a card off the end of the rungs the deck does ship. They are registered concepts all the
 // same, because `Neighbour` derives the ladder from this registry and a rung that does not exist is
-// a rung a worm cannot step onto.
+// a rung an essence cannot step onto.
 //
 // **They are resolved from the file rather than defining it.** Renaming a card in
 // `duelist_cards.json` fails here, at startup, with the name that went missing — which is the loud
@@ -343,7 +343,7 @@ func PlayerConcepts() []ConceptID {
 //
 // The player's attacks are a 3x3 grid — three forms by three tiers at 1/2/3 AP for 0.5x/1x/2x
 // damage — so the price *is* the rung. Reading the declared cost rather than a per-card one is
-// deliberate: a worm that cheapened a Bash must not thereby turn it into a Jab.
+// deliberate: an essence that cheapened a Bash must not thereby turn it into a Jab.
 func (c Concept) Tier() int { return c.Cost }
 
 // Neighbour is the concept one rung up or down the same form's ladder, or false if there is
@@ -355,7 +355,7 @@ func (c Concept) Tier() int { return c.Cost }
 // ladder to walk.
 //
 // **The verb is matched rather than required to be an attack** *(2026-09-06)*. The defences are a
-// ladder too — Flinch, Brace, Block, Guard at 0/1/2/3 AP for 1/1/2/3 shields — so a Grow or a Shrink
+// ladder too — Flinch, Brace, Block, Guard at 0/1/2/3 AP for 1/1/2/3 shields — so an Exalt or a Debase
 // reaches them the same way it reaches a Jab. Matching `from.Verb` rather than pinning `VerbAttack`
 // is what keeps the two ladders separate while there is only one registry: a defend card and an
 // attack card can never share a form, but reading the verb says so rather than relying on it.

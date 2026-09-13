@@ -4,7 +4,7 @@ package screens
 // standing does when the cards around it are spent.
 //
 // **It belongs to no screen** *(owner's call, 2026-09-05)*. It was `handSlide` on the combat
-// screen, which was right while the hand was the only sorted row; the worm screen's offer is
+// screen, which was right while the hand was the only sorted row; the essence screen's offer is
 // sorted by the same three tabs, and **a widget that behaves differently on the second screen is
 // two widgets**. So the mover moved out here with the tabs, and both rows are re-arranged by one
 // piece of code on one clock.

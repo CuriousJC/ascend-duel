@@ -29,9 +29,9 @@ const (
 	// somehow skipped the floor is not left with a hole in the page.
 	MomentFloorReached = "floor-reached"
 
-	// MomentCardAltered is a worm having changed a card, carrying the resulting card's label in
-	// Value. **The label rather than the worm**, because what the player did is "made a Flinch" and
-	// several worms can arrive at one — a demote from a Brace today, something else tomorrow.
+	// MomentCardAltered is an essence having changed a card, carrying the resulting card's label in
+	// Value. **The label rather than the essence**, because what the player did is "made a Flinch" and
+	// several essences can arrive at one — a demote from a Brace today, something else tomorrow.
 	MomentCardAltered = "card-altered"
 
 	// MomentShieldsRaised is the player standing behind a count of shields, carried in N. **A
@@ -39,7 +39,7 @@ const (
 	//
 	// **It is a moment rather than a turn pattern, and that is the whole reason it exists**
 	// *(2026-09-09)*. A turn pattern reads the cards played; shields are what those cards *did*,
-	// after Card.Amount has been scaled by a worm and after a rider has added its own. Counting
+	// after Card.Amount has been scaled by an essence and after a rider has added its own. Counting
 	// Guards would be counting the receipt rather than the money.
 	//
 	// **It is read off the resolved event log, never off the playback** — see

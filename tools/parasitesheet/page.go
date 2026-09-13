@@ -135,9 +135,9 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
   pasted under the shared prompt in <code>docs/art/card_art_prompt.MD</code>, which is the only
   part of a brief that is not about one record. <strong>A parasite with no subject and no art is
   the backlog</strong> — both lines go pink, so the page can be scrolled for what still needs
-  writing. <code>default-parasite.png</code> is the seat art goes into; it was the worm's own
+  writing. <code>default-parasite.png</code> is the seat art goes into; it was the essence's own
   placeholder until 2026-09-12, and the two split because one shared picture is a page where a
-  drawn worm and an undrawn parasite look identical.
+  drawn essence and an undrawn parasite look identical.
 </p>
 
 <h2>What the catalogue does</h2>
@@ -197,7 +197,7 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
 
 <h2>Card states</h2>
 <p class="note">
-  The three states a parasite card is drawn in — one more than a worm has.
+  The three states a parasite card is drawn in — one more than an essence has.
   <strong>Selected is a state here and is not one there</strong>: a parasite is armed first and
   aimed second, so the board piece has to say which one is in hand while the player picks what it
   eats.

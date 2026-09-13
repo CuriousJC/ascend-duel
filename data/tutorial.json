@@ -105,15 +105,15 @@
       "Until": "next"
     },
     {
-      "StepRecord": "the-worm",
+      "StepRecord": "the-essence",
       "Text": "Every enemy has parasites you can use.",
-      "Anchor": "reward-worms",
+      "Anchor": "reward-essences",
       "Until": "next"
     },
     {
-      "StepRecord": "choose-a-worm",
-      "Text": "Pick the card you want changed, then click the worm that changes it.",
-      "Anchor": "reward-worms",
+      "StepRecord": "choose-an-essence",
+      "Text": "Pick the card you want changed, then click the essence that changes it.",
+      "Anchor": "reward-essences",
       "Until": "phase-shop"
     },
     {

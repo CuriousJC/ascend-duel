@@ -462,7 +462,7 @@ type Spec struct {
 	// codebase follows — so a caller that never fills one in gets a line entirely in LabelInk.
 	//
 	// **It exists so the words that name a thing with a colour are drawn in it** *(owner's call,
-	// 2026-09-08)*: a worm reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple, and a
+	// 2026-09-08)*: an essence reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple, and a
 	// relic reading "Fire attacks BURN and CHILL the target." sets three words across two colours.
 	// The state colouring still applies on top, so a disabled card fades with everything else.
 	//

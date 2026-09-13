@@ -2,18 +2,18 @@ package main
 
 import "html/template"
 
-// The page. One static file, no JavaScript, no build step: the loop is "edit worms.json, re-run
+// The page. One static file, no JavaScript, no build step: the loop is "edit essences.json, re-run
 // the tool, refresh the tab", the same loop every other tool here has.
 //
 // **Images are shown at their natural size with image-rendering: pixelated**, for the reason the
 // relic sheet's template gives: a card's rim is one pixel thick and a browser that scales it
 // resamples that rim into a blur, which makes the sheet lie about the art.
 //
-// **The ground is the one the worms actually sit on.** A red border on white is a different
+// **The ground is the one the essences actually sit on.** A red border on white is a different
 // card from a red border on the game's own blue.
-var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
+var tmpl = template.Must(template.New("essencesheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — worm sheet</title>
+<title>Ascending Duel — essence sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};
@@ -95,23 +95,23 @@ var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
   figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
 </style>
 
-<h1>Worm sheet</h1>
+<h1>Essence sheet</h1>
 <p class="facts">
-  {{.Count}} worms, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no subject
+  {{.Count}} essences, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no subject
   paragraph written. {{.Offered}} are offered after a won fight — {{.Share}}% of the catalogue gets
-  a seat. Worm card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
+  a seat. Essence card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
   border <code>{{index .Style "borderWidth"}}</code>,
   art box inset <code>{{index .Style "artInset"}}</code> from
   <code>y={{index .Style "artTop"}}</code> at most <code>{{index .Style "artMaxH"}}</code> tall,
   text band from <code>y={{index .Style "textBandTop"}}</code>.
-  Shown at 1:1 on the ground the worms are actually offered on.
+  Shown at 1:1 on the ground the essences are actually offered on.
 </p>
 <p class="note">
-  Regenerate with <code>go run ./tools/wormsheet</code> and refresh. Every card here is drawn by
+  Regenerate with <code>go run ./tools/essencesheet</code> and refresh. Every card here is drawn by
   <code>internal/cards</code>, the same code the game blits, and every word beside it is read out
-  of <code>data/worms.json</code> through <code>internal/session</code>'s own validation — so a
-  worm this page refuses to draw is a worm the game refuses to start with.
+  of <code>data/essences.json</code> through <code>internal/session</code>'s own validation — so a
+  essence this page refuses to draw is an essence the game refuses to start with.
 </p>
 <p class="note">
   <strong>Read the sentence against the rule.</strong> The line under each name is the
@@ -120,35 +120,35 @@ var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
 </p>
 <p class="note">
   <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The quoted
-  block under each worm is <code>Draw</code> in <code>data/worms.json</code>: what the thing
+  block under each essence is <code>Draw</code> in <code>data/essences.json</code>: what the thing
   <em>is</em> and what it is doing, in one sentence. Nothing in the game reads it. It is pasted
   under the shared prompt in <code>docs/art/card_art_prompt.MD</code>, which is the only part of a
-  brief that is not about one record. <strong>A worm with no subject and no art is the
+  brief that is not about one record. <strong>An essence with no subject and no art is the
   backlog</strong> — both lines go pink, so the page can be scrolled for what still needs writing
-  rather than a worklist being kept in step by hand. <code>default-worm.png</code> is the seat art
+  rather than a worklist being kept in step by hand. <code>default-essence.png</code> is the seat art
   goes into, not a fallback that has gone wrong.
 </p>
 
 <h2>What the catalogue changes</h2>
 <p class="note">
-  <strong>Every target, and how many worms sit at it.</strong> The target vocabulary is closed —
+  <strong>Every target, and how many essences sit at it.</strong> The target vocabulary is closed —
   a new one is a Go change plus one place applying it, never something a file can assert into
   existence — so a target with nothing under it is a mechanic that was built and never reached for.
   This was the page's grouping until families landed; it is a count now, because the target is a
-  fact about one worm and a family is a block of them.
+  fact about one essence and a family is a block of them.
 </p>
 <ul class="targets">
 {{range .Targets}}
   <li class="target{{if not .Count}} empty{{end}}"><strong>{{.Target}}</strong>
-    {{.Count}} worms{{if not .Count}} — nobody has authored one{{end}}</li>
+    {{.Count}} essences{{if not .Count}} — nobody has authored one{{end}}</li>
 {{end}}
 </ul>
 
 <h2>The catalogue, by family</h2>
 <p class="note">
-  <strong>Grouped by the motif each worm was authored beside, in the file's own order.</strong>
+  <strong>Grouped by the motif each essence was authored beside, in the file's own order.</strong>
   <code>Family</code> is authored and the engine ignores it, exactly as it ignores <code>Art</code>
-  and <code>Draw</code> — so it can go quietly out of date when a worm is retargeted, and nothing
+  and <code>Draw</code> — so it can go quietly out of date when an essence is retargeted, and nothing
   fails. Treat a family that disagrees with the rule beside it as a label to fix.
 </p>
 
@@ -158,7 +158,7 @@ var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
   <span>{{.Count}} {{.Noun}}</span>
 </h3>
 <div class="plates">
-  {{range .Worms}}
+  {{range .Essences}}
     <div class="plate">
       <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}"
            alt="{{.Name}}">
@@ -174,7 +174,7 @@ var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
         <p class="rule">{{.Rule}}</p>
         <p class="border">border: {{.Element}}</p>
         {{if .Default}}
-          <p class="art missing">no art of its own — drawing default-worm.png</p>
+          <p class="art missing">no art of its own — drawing default-essence.png</p>
         {{else}}
           <p class="art">art: <code>{{.Art}}</code></p>
         {{end}}
@@ -186,7 +186,7 @@ var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
 
 <h2>Card states</h2>
 <p class="note">
-  The two states a worm card is drawn in. The reward screen dims the offer that was not taken
+  The two states an essence card is drawn in. The reward screen dims the offer that was not taken
   rather than lighting the one that was, so there is no third.
 </p>
 <div class="cells">

@@ -2,7 +2,7 @@ package data
 
 // The potions: **what the player may do to the duelist themself.**
 //
-// A relic is worn and comes off; a stone raises a rung; a worm eats a card. A potion is the one
+// A relic is worn and comes off; a stone raises a rung; an essence eats a card. A potion is the one
 // thing in the shop that changes the *body* — the life it is carrying, the ceiling that life sits
 // under, or the damage it hits for — and it is drunk on the spot, so nothing is carried and nothing
 // is held. That is what keeps it out of the consumables pane the parasites live in.
@@ -13,7 +13,7 @@ package data
 //
 // **The rules do not read this file.** A potion is bought by a run and applied to the run's
 // fighter, so the parsing and the closed effect vocabulary live in `internal/session`, exactly as a
-// worm's target does. See internal/session/potion.go.
+// essence's target does. See internal/session/potion.go.
 
 import (
 	_ "embed"
@@ -26,7 +26,7 @@ var potionsJSON []byte
 // PotionData is one potion as written in the file.
 type PotionData struct {
 	// PotionRecord is the key, and what anything naming a potion stores. Kebab-case, like a relic's,
-	// a worm's and a stone's.
+	// an essence's and a stone's.
 	PotionRecord string `json:"PotionRecord"`
 
 	// Name is what is written across the top of the card — a vessel rather than the effect, so the

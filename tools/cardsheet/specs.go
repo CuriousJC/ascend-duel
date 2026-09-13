@@ -64,7 +64,7 @@ type concept struct {
 // build one, and the only thing separating Skewer from Cleave is what it pairs with.
 //
 // **The defences are a four-rung ladder of their own** *(2026-09-06)*, Flinch through Guard, with
-// the shield count where the attacks have a damage multiplier — so a Grow or a Shrink walks it too.
+// the shield count where the attacks have a damage multiplier — so an Exalt or a Debase walks it too.
 //
 // **The outer rungs ship at zero copies** — both ends of each attack form, and Flinch and Guard —
 // so they are on this sheet and not in any deck. This

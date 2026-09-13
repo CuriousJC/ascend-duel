@@ -38,7 +38,7 @@ import (
 var elementWords = buildElementWords()
 
 // elementWord is one coloured term, held lower case. Case is not part of the match and a text keeps
-// its own spelling, so "Fire" on a relic and "FIRE" on a worm both colour and neither is rewritten.
+// its own spelling, so "Fire" on a relic and "FIRE" on an essence both colour and neither is rewritten.
 type elementWord struct {
 	word string
 	ink  color.RGBA

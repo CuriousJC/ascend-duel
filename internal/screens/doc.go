@@ -82,9 +82,9 @@
 // The between-fight scenes:
 //
 //   - title.go, ascend.go — the front screen, and two stubs.
-//   - postbattle.go — pick a worm, then pick the card it eats. The first of the between-fight
+//   - postbattle.go — pick an essence, then pick the card it eats. The first of the between-fight
 //     scenes; a shop and a room choice come after it, and each is an ordinary scene rather than a
-//     mode of the combat screen. It is also the prizes-dealt relic moment. The row of cards a worm
+//     mode of the combat screen. It is also the prizes-dealt relic moment. The row of cards an essence
 //     is pointed at carries the same three sort tabs the hand does (2026-09-05), hung off the row's
 //     own right edge; see handsort.go. Nothing slides there — the row is dealt, read and clicked
 //     once, so there is no arrangement of it to preserve.

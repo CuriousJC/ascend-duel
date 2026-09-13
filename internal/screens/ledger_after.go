@@ -13,14 +13,14 @@ package screens
 // card taken — and that is a list a new mechanic gets left off, silently, because a missing
 // announcement and a deliberate silence read identically. This watches the run instead and words
 // whatever moved, which is combat_handmorph.go's rule one screen over: what changed is read off the
-// faces rather than off the parasite, so no parasite has a case anywhere in the drawing and a new
+// faces rather than off the rune, so no rune has a case anywhere in the drawing and a new
 // one cannot arrive with no picture.
 //
 // **One call site, in internal/game**, for the reason the ledger panel lives there: it is true of
 // the whole run rather than of one screen, and a watcher ticked by two scenes is a watcher the
 // third scene forgets.
 //
-// **It records nothing during a fight.** A parasite spent mid-round is an event of that round and
+// **It records nothing during a fight.** A rune spent mid-round is an event of that round and
 // belongs to the round's own lines; this is the account of the gap between them.
 
 import (
@@ -90,7 +90,7 @@ func afterLines(gs *state.GlobalState, before, after session.Holdings) []session
 //
 // **Cards are told apart by combat.Card.ID**, which is what makes the third case sayable at all: a
 // card that was altered and a card that was cut with another taken in its place look identical to
-// anything counting faces. The ids are exactly why they exist — see CLAUDE.md on parasites naming
+// anything counting faces. The ids are exactly why they exist — see CLAUDE.md on runes naming
 // card identities rather than deck positions.
 func deckLines(before, after []combat.Card) []session.LedgerLine {
 	was := make(map[int]combat.Card, len(before))
@@ -155,7 +155,7 @@ func cardWords(c combat.Card) string {
 	return name
 }
 
-// keyLines is the diff of a list of keys — the relic row, the parasites in hand, the stones in the
+// keyLines is the diff of a list of keys — the relic row, the runes in hand, the stones in the
 // pouch — with a verb for one arriving and one for one leaving.
 //
 // **By count rather than by set**, because all three lists can hold the same key twice and a set
@@ -215,15 +215,15 @@ func vitaeLines(before, after int) []session.LedgerLine {
 //
 // **The verb is marked exactly as an action's is**, so the aftermath can be scanned for what kind
 // of thing happened before any of it is read — the rule the round lines are already under. The rest
-// goes through elementRuns, so a fire card is named in the fire colour here as it is everywhere
+// goes through elementSpans, so a fire card is named in the fire colour here as it is everywhere
 // else.
 func afterLine(verb, clause string) session.LedgerLine {
-	runs := []session.LedgerRun{{Text: verb, Mark: true}}
-	runs = append(runs, elementRuns(" "+clause)...)
-	return session.LedgerLine{Voice: session.VoiceYou, Runs: runs}
+	spans := []session.LedgerSpan{{Text: verb, Mark: true}}
+	spans = append(spans, elementSpans(" "+clause)...)
+	return session.LedgerLine{Voice: session.VoiceYou, Spans: spans}
 }
 
-// goodsName is what a relic, parasite or stone is called on screen, falling back to its key.
+// goodsName is what a relic, rune or stone is called on screen, falling back to its key.
 //
 // **A key is named rather than hidden**, for relicName's reason: a line in a saved account has to
 // read as something, and a record this build no longer has is better admitted than dropped.
@@ -233,7 +233,7 @@ func goodsName(gs *state.GlobalState, key string) string {
 			return record.Name
 		}
 	}
-	if p, ok := session.ParasiteByKey(key); ok {
+	if p, ok := session.RuneByKey(key); ok {
 		return p.Name
 	}
 	if st, ok := session.StoneByKey(key); ok {

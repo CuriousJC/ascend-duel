@@ -54,17 +54,17 @@ type record struct {
 	// Hand is the opening hand, dealt over whatever the shuffle produced.
 	Hand []handCard `json:"Hand"`
 
-	// Parasites is what the run opens with in its bucket, by record key.
+	// Runes is what the run opens with in its sack, by record key.
 	//
-	// **The board piece is otherwise two shops away.** A parasite is bought from the shelf and
+	// **The board piece is otherwise two shops away.** A rune is bought from the shelf and
 	// spent between the turns of the fight after it, so seeing the dialog at all meant playing to
-	// a shop, buying the bucket, taking one of four, winning the room and opening it — which is
+	// a shop, buying the sack, taking one of four, winning the room and opening it — which is
 	// the twenty-minute question this package exists to answer. Keys are checked by the caller,
-	// exactly as Relics are: a parasite key is internal/session's to resolve.
-	Parasites []string `json:"Parasites"`
+	// exactly as Relics are: a rune key is internal/session's to resolve.
+	Runes []string `json:"Runes"`
 
 	// Stones is what the run opens carrying in its pouch, by record key. The caller resolves them,
-	// on the terms Parasites is under.
+	// on the terms Runes is under.
 	Stones []string `json:"Stones"`
 
 	// Enemy is a record key from enemies.json. **Empty means the climb's own**, so a scenario that
@@ -195,11 +195,11 @@ type deckLine struct {
 	Copies  int    `json:"Copies"`
 
 	// Riders are the rules these cards arrive already carrying, by the names combat.RiderKind
-	// writes — so a fixture can open on a deck a parasite has *already been spent on* rather than
-	// on one a parasite has to be spent on first.
+	// writes — so a fixture can open on a deck a rune has *already been spent on* rather than
+	// on one a rune has to be spent on first.
 	//
 	// **It exists because a card alteration is otherwise several shops and a duel away**
-	// *(2026-09-07)*. `Parasites` puts the consumable in the bucket, which is the right fixture
+	// *(2026-09-07)*. `Runes` puts the consumable in the sack, which is the right fixture
 	// for looking at the *dialog*; it is the wrong one for looking at what an altered card does to
 	// a hand, because getting there means playing a turn to spend it and then reading a hand that
 	// has already been half spent. This is the same argument `Deck` made against `Hand`, one
@@ -419,9 +419,9 @@ func Note() string { return current.Note }
 // Relics is what the run should open wearing, in worn order.
 func Relics() []string { return current.Relics }
 
-// Parasites is what the run opens holding in its bucket, by record key. The caller resolves them,
+// Runes is what the run opens holding in its sack, by record key. The caller resolves them,
 // for the reason it resolves the relics.
-func Parasites() []string { return current.Parasites }
+func Runes() []string { return current.Runes }
 
 // Stones is what the run opens carrying in its pouch, by record key.
 func Stones() []string { return current.Stones }

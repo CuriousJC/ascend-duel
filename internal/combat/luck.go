@@ -10,7 +10,7 @@ package combat
 // **It is the second roll `internal/combat` has**, and the argument for it is not lightning's. See
 // MECHANICS.md: a mechanic whose entire subject is luck is the one case where certainty deletes the
 // thing rather than tightening it, and a gamble that always pays is a purchase. What is new here is
-// only *where* it is taken; the design argument was made when the parasite landed and is unchanged.
+// only *where* it is taken; the design argument was made when the rune landed and is unchanged.
 //
 // **It takes its own source and never the one lightning draws from.** Sharing would make every
 // shock in a run a function of how many golden cards were played, and every gamble a function of
@@ -22,14 +22,14 @@ import "math/rand"
 // LuckOutcomes is how many faces a gamble's die has to have before one of them can lose.
 //
 // **Three: the damage, the life, and nothing.** A record naming fewer is refused at load — see
-// resolveParasite — because a gamble that always pays is a purchase rather than a gamble, and the
+// resolveRune — because a gamble that always pays is a purchase rather than a gamble, and the
 // mistake is one a number in a JSON file could make silently. Silver has only one paying face and
 // is held to the same floor, which costs it nothing.
 const LuckOutcomes = 3
 
 // LuckDMG, LuckLife and SilverVitae are what a winning roll is worth.
 //
-// **Go constants rather than record fields** *(owner's call, 2026-09-07)*. A parasite record has
+// **Go constants rather than record fields** *(owner's call, 2026-09-07)*. A rune record has
 // one Value and gold needs two figures, and the odds are the interesting dial — a second tier of
 // luck is written by moving the denominator, not by paying more per hit. The day somebody wants a
 // greater gold that grants three DMG is the day these become fields; until then two numbers in the

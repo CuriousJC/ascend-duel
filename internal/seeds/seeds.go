@@ -71,26 +71,26 @@ const (
 	// an implementation detail.
 	VialStock
 
-	// BucketStock is which four parasites a bucket of parasites holds. Per fight.
+	// SackStock is which four runes a sack of runes holds. Per fight.
 	//
-	// **Its own stream, on exactly the argument VialStock is under.** A parasite catalogue and a
+	// **Its own stream, on exactly the argument VialStock is under.** A rune catalogue and a
 	// essence catalogue grow on different schedules and are drawn at the same station, so sharing
 	// either of the other two goods' streams would make one good's contents a function of the
-	// other's — and authoring a parasite would silently reroll every bag every run has ever
+	// other's — and authoring a rune would silently reroll every bag every run has ever
 	// opened.
-	BucketStock
+	SackStock
 
-	// StoneShower is which stones a rock-shower parasite hands over. Per fight.
+	// StoneShower is which stones a rock-shower rune hands over. Per fight.
 	//
 	// **The first roll a consumable makes while it is being spent**, rather than one that decides
 	// what a shelf is offering. Every other stream here is drawn once at a station: a shop's four
-	// are a function of the fight, and opening the same bucket twice is not a thing the shelf
-	// allows. A parasite is different — a run may carry three rock showers and spend all three in
+	// are a function of the fight, and opening the same sack twice is not a thing the shelf
+	// allows. A rune is different — a run may carry three rock showers and spend all three in
 	// one fight — so the fight index alone would hand out the same three stones every time.
 	//
 	// **The count of stones the run has already placed is mixed in by the caller**, which is a
 	// number the snapshot already carries, so a resumed run rolls what it would have rolled. See
-	// `Session.ApplyParasite`, which is the one place it is drawn.
+	// `Session.ApplyRune`, which is the one place it is drawn.
 	StoneShower
 
 	// PackOffer is which two of the three sealed packs a shop visit puts up. Per fight.
@@ -103,14 +103,14 @@ const (
 	// stand on the shelf would move whenever a stone or an essence was written.
 	//
 	// **It exists at all because a visit stopped offering all three** *(owner's call,
-	// 2026-09-06)*. While the bag, the vial and the bucket were all always there, which packs a
+	// 2026-09-06)*. While the bag, the vial and the sack were all always there, which packs a
 	// shop had was not a decision and needed no roll.
 	PackOffer
 
-	// LuckRoll is what a luck parasite rolls when it is spent. Per fight.
+	// LuckRoll is what a luck rune rolls when it is spent. Per fight.
 	//
 	// **StoneShower's argument, applied to the second consumable that rolls while it is being
-	// spent.** A run may carry two luck parasites and spend both in one fight, so the fight index
+	// spent.** A run may carry two luck runes and spend both in one fight, so the fight index
 	// alone would hand out the same result twice — and unlike a shelf, there is no station here to
 	// draw once at.
 	//
@@ -121,7 +121,7 @@ const (
 	// have rolled.
 	//
 	// **Its own stream rather than StoneShower's**, on the rule every row here is under: sharing
-	// would make what a luck parasite grants a function of how many rock showers the run had
+	// would make what a luck rune grants a function of how many rock showers the run had
 	// spent, which is a rule nobody designed.
 	LuckRoll
 )
@@ -157,7 +157,7 @@ var streams = [...]stream{
 	ShopStock:    {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
 	BagStock:     {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
 	VialStock:    {name: "vial-stock", salt: 0x5EED_CA07, perFight: true},
-	BucketStock:  {name: "bucket-stock", salt: 0x5EED_B0CC, perFight: true},
+	SackStock:    {name: "sack-stock", salt: 0x5EED_B0CC, perFight: true},
 	StoneShower:  {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
 	PackOffer:    {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
 	LuckRoll:     {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},

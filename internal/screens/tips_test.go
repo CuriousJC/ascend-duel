@@ -171,7 +171,7 @@ func TestTheTooltipStatesMultipliersWhenNobodyIsHoldingTheCard(t *testing.T) {
 	}
 }
 
-// **Every rider is mentioned.** A parasite the player spent whose effect the tooltip does not name
+// **Every rider is mentioned.** A rune the player spent whose effect the tooltip does not name
 // is the same failure as one with no drawing, in the other direction.
 func TestEveryRiderKindHasTipLines(t *testing.T) {
 	for _, k := range combat.RiderKinds() {

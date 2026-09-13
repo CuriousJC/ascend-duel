@@ -3,7 +3,7 @@ package screens
 // **What every modal in this game has in common**, pulled out of the deck panel on 2026-08-24 so
 // that the third one did not start life as a copy of the first.
 //
-// There are four now — the deck, the hands ladder, the bucket and the run's ledger — and the parts
+// There are four now — the deck, the hands ladder, the sack and the run's ledger — and the parts
 // they share
 // are not incidental: the footprint, the scrim, the raised panel, the heading block, the closing
 // hint, and the rule that the button which opened a dialog is the button that closes it. **The

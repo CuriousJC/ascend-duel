@@ -23,8 +23,8 @@ func Relics() []string { return nil }
 // Hand is the opening hand to deal. Nil here.
 func Hand() []combat.Card { return nil }
 
-// Parasites is what the run should open holding in its bucket. Nil here.
-func Parasites() []string { return nil }
+// Runes is what the run should open holding in its sack. Nil here.
+func Runes() []string { return nil }
 
 // Stones is what the run should open carrying in its pouch. Nil here.
 func Stones() []string { return nil }

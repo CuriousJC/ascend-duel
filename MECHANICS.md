@@ -2009,14 +2009,14 @@ of the figure `hands.json` writes down**, for the rest of the run.
 
 **Using a stone stopped being the same as owning one.** Until 2026-09-02 a stone was applied the
 instant it was chosen and there was no inventory at all: the bag of rocks offered four, one went on
-its rung, the other three were gone. The rock-shower parasite is what changed it — it hands over
+its rung, the other three were gone. The rock-shower rune is what changed it — it hands over
 *consumables*, and a consumable you cannot carry is a consumable you cannot decide about.
 
 | | |
 |---|---|
 | Held | in the run's **pouch**, uncapped, across fights and across a save |
 | Spent | at the shop, from the `S` panel: **Use** puts it on its rung, **Sell** pays `StoneSalePrice` |
-| Arrives from | a rock-shower parasite. **The bag of rocks still applies its pick on the spot** |
+| Arrives from | a rock-shower rune. **The bag of rocks still applies its pick on the spot** |
 
 - **The pouch is a list of keys and `stones` is a map of counts**, which is the opposite shape for
   the opposite reason. The counts are what the ladder reads and two Agates there are genuinely one
@@ -2225,24 +2225,24 @@ and is walked past.
 
 ---
 
-## Parasites — altering the deck *during* a fight *(owner's call, 2026-08-27)*
+## Runes — altering the deck *during* a fight *(owner's call, 2026-08-27)*
 
-**A parasite is a consumable you carry into a duel and spend between its turns.** It is bought
-from the shop in a **bucket of parasites**, held in the run, and spent from a board piece on the
+**A rune is a consumable you carry into a duel and spend between its turns.** It is bought
+from the shop in a **sack of runes**, held in the run, and spent from a board piece on the
 combat screen — clicked in the **consumables pane** on the top row, aimed with the hand's own
 selection. See the section below.
 
-**They overlap with essences on purpose** *(owner's call)*. Several parasites do what an essence already
+**They overlap with essences on purpose** *(owner's call)*. Several runes do what an essence already
 does. What makes them a different thing is *when* you spend one: an essence is won after a fight and
-applied on the spot, and a parasite is carried and spent in the gap between one turn and the next.
+applied on the spot, and a rune is carried and spent in the gap between one turn and the next.
 The overlap is accepted rather than designed around; the two catalogues are separate files with
 separate grammars.
 
 | | |
 |---|---|
-| Bought | the shop's sixth seat, a **bucket of parasites** — 5 vitae, holds 4, keep 1 |
-| Held | in the run's bucket, **two at a time**, across fights and across a save |
-| Spent | on the combat screen, **between turns only** — select the cards, then click the parasite |
+| Bought | the shop's sixth seat, a **sack of runes** — 5 vitae, holds 4, keep 1 |
+| Held | in the run's sack, **two at a time**, across fights and across a save |
+| Spent | on the combat screen, **between turns only** — select the cards, then click the rune |
 | Targets | cards **in the hand**, by identity, one or two of them |
 | Lasts | the rest of the run |
 
@@ -2260,31 +2260,31 @@ concept, element, form override, the essence-written cost and damage deltas, and
   card promises, and the alternative was a carve-out for one rider that nobody could predict from
   reading the card. The wash follows for free, because `screens.upgradeOf` derives it from the rider
   rather than it being copied separately.
-- **A parasite that changes the *run* rather than a card cannot be grafted**, by construction. Hoard
-  and Rock Beetle take no targets, so there is nothing on a card for the graft to find.
+- **A rune that changes the *run* rather than a card cannot be grafted**, by construction. Hoard
+  and Cairn take no targets, so there is nothing on a card for the graft to find.
 - **The offer moved with the rule.** It refused any pair sharing a concept, which made two colours
   of one card an illegal pick — the pick a player reaching for this most obviously wants. It now
   compares everything the apply copies.
 
-### The bucket holds two, and the top row says so *(owner's call, 2026-09-06)*
+### The sack holds two, and the top row says so *(owner's call, 2026-09-06)*
 
-**A run carries at most two parasites**, and the count is drawn where the worn relics' is: the top
+**A run carries at most two runes**, and the count is drawn where the worn relics' is: the top
 row of every screen that shows a build is now **two panes** — `worn/5` relics on the left, `held/2`
-parasites on the right.
+runes on the right.
 
 - **The cap came from the pane and not the other way round.** A row drawn as `n/2` has to be a rule
-  or it is a lie the first time a third parasite arrives. `session.MaxHeld` is that rule, and it
+  or it is a lie the first time a third rune arrives. `session.MaxHeld` is that rule, and it
   reads the same way `combat.MaxWornRelics` does — one number, read by the screen rather than
   restated in it.
 - **What it buys is that the third purchase is a decision.** An uncapped consumable is one a rich
-  run hoards rather than spends; with two seats, a bucket bought while both are full is a parasite
+  run hoards rather than spends; with two seats, a sack bought while both are full is a rune
   you have to spend one to make room for.
-- **The shop's bucket seat goes dim when the bucket is full**, rather than taking five vitae for a
-  parasite that would be refused. It is the same courtesy an unaffordable good already gets, and it
+- **The shop's sack seat goes dim when the sack is full**, rather than taking five vitae for a
+  rune that would be refused. It is the same courtesy an unaffordable good already gets, and it
   is the control the player actually meets — `Hold` refusing is the belt behind it.
-- **Only the bucket needs it.** A stone is spent in the dialog that opened the bag and an essence in the
+- **Only the sack needs it.** A stone is spent in the dialog that opened the bag and an essence in the
   dialog that opened the vial, so neither hands the run something it has no room for.
-- **The pane is where a parasite is visible at all.** Before this the only readout was behind the
+- **The pane is where a rune is visible at all.** Before this the only readout was behind the
   `P` button, two clicks into a dialog that exists mid-duel — so what a run was carrying was
   invisible on the two screens where it decides what to carry.
 - **The whole row packs at one pitch, and it overlaps** *(owner's call)*. The combat row spans 1443
@@ -2295,16 +2295,16 @@ parasites on the right.
   closes up rather than shrinking a card, because a smaller relic is a different drawing.
   **The shop and the reward screen pay nothing**: there is no opponent card, the span is 1662, and
   the pitch hits its cap at 229 before it hits the span, so nothing overlaps there.
-- **A fixture may still plant more than two.** `session.StartingParasites` goes past the cap on
+- **A fixture may still plant more than two.** `session.StartingRunes` goes past the cap on
   purpose, exactly as a scenario's hand may be longer than the game's own — four fixtures walk six
-  parasites through the dialog. The pane draws the first two seats and the count reports the honest
-  number, so an over-full bucket looks like what it is.
+  runes through the dialog. The pane draws the first two seats and the count reports the honest
+  number, so an over-full sack looks like what it is.
 
 ### Select the cards, then click the consumable *(owner's call, 2026-09-06)*
 
-**The gesture reversed.** Spending a parasite used to be arm-then-aim behind the `P` button: open a
-dialog, click the parasite, then click the cards it eats, in a second drawing of the hand one row
-lower. It is now **select the cards in the hand, then click the parasite in the consumables pane**.
+**The gesture reversed.** Spending a rune used to be arm-then-aim behind the `P` button: open a
+dialog, click the rune, then click the cards it eats, in a second drawing of the hand one row
+lower. It is now **select the cards in the hand, then click the rune in the consumables pane**.
 The essence offer follows the same order, so there is one way to point a consumable at a card anywhere
 in the game.
 
@@ -2314,15 +2314,15 @@ in the game.
   the same state an unaffordable card on the shop shelf takes. That predicate is the whole of what
   makes the reversed order readable: the player is never asked whether they have picked the right
   cards, because the consumable that wants them is the one that is lit.
-- **Exactly, never at least.** A parasite that ate two cards out of a selection of five would be
+- **Exactly, never at least.** A rune that ate two cards out of a selection of five would be
   choosing for the player which two, and nothing on screen could say which it picked.
-- **The order of a selection is the order of the row.** A parasite naming a first and a second
+- **The order of a selection is the order of the row.** A rune naming a first and a second
   target — Clone — reads them left to right, and the player reorders by dragging, exactly as they
   reorder the round. There is no separate click order to learn.
 - **What it costs, said out loud.** On the combat screen a selected card is also a card queued for
   the round, so one gesture now carries two meanings. The objection was raised and overruled; the
   lit-when-legal rule is what makes it workable, and the cost is that a player who has selected a
-  turn's worth of cards may find a parasite lit that they did not mean to think about.
+  turn's worth of cards may find a rune lit that they did not mean to think about.
 - **A rock shower's stones fly to the duelist card** rather than putting a receipt up to be
   dismissed. They are in the pouch before the first frame is drawn — the flight is a picture of
   where they went, not a confirmation, and it cannot change an outcome.
@@ -2347,16 +2347,16 @@ card in flight**, arriving at the one mechanic that genuinely wanted to break it
 
 **Card identity is what makes it possible at all.** MECHANICS used to say mid-fight alteration
 would need a real card ID; `combat.Card.ID` landed on 2026-08-24 for the element flip, and a
-parasite's targets are identities rather than deck positions. That matters more here than it does
-for an essence: a parasite may name two cards, and it is spent while a hand, a draw pile and a discard
+rune's targets are identities rather than deck positions. That matters more here than it does
+for an essence: a rune may name two cards, and it is spent while a hand, a draw pile and a discard
 pile are all live holding copies of the same cards, so a position would be meaningless by the time
 the player confirmed.
 
 ### The grammar: a target, a count and a value
 
-A parasite record is the essence record's shape plus the two fields an essence never needed — **how many
-cards it takes**, and **what class of change it makes**. See `data/parasites.json` and
-`internal/session/parasite.go`, where a record is validated.
+A rune record is the essence record's shape plus the two fields an essence never needed — **how many
+cards it takes**, and **what class of change it makes**. See `data/runes.json` and
+`internal/session/rune.go`, where a record is validated.
 
 | Target | Change | Value | Count | What it does |
 |---|---|---|---|---|
@@ -2369,24 +2369,24 @@ cards it takes**, and **what class of change it makes**. See `data/parasites.jso
 | `form` | normal | a form name | 1–2 | changes what cards **count as** on the form axis |
 | `stones` | normal | how many | **0** | puts that many random stones in the run's **pouch** |
 | `clone` | normal | — | **2** | the first card picked becomes the second |
-| `chimera` | normal | — | **0** | fires the run's last parasite again |
+| `chimera` | normal | — | **0** | fires the run's last rune again |
 
 ### Normal and upgrade: the two classes of change *(owner's call, 2026-09-09)*
 
 **A card is a form, an element and an action — and then one upgrade.** The first three compose
-freely: a Jab painted fire and reformed to crush is all three at once, and a parasite that moves one
+freely: a Jab painted fire and reformed to crush is all three at once, and a rune that moves one
 of them has no opinion about the others. The fourth is different. **A card carries exactly one
 upgrade, and writing it discards whatever was there** — `combat.MaxCardRiders` is 1, and
 `Card.SetRider` replaces rather than stacks.
 
-**So a Leech on a golden card leaves a card that heals and has forgotten it was ever gold**, and a
+**So a Siphon on a golden card leaves a card that heals and has forgotten it was ever gold**, and a
 Bulwark on that same card leaves a Guard that still heals. That is the whole distinction, and it is
-worth naming because it is **invisible in the effect**: Bulwark and Golden both read as "a parasite
-changed my card", and what separates them is what the *next* parasite does.
+worth naming because it is **invisible in the effect**: Bulwark and Golden both read as "a rune
+changed my card", and what separates them is what the *next* rune does.
 
 - **`Change` is a required field on every record**, `normal` or `upgrade`, from a closed vocabulary.
 - **It is authored rather than derived, and the loader refuses a record that disagrees with its own
-  target.** Every `rider` parasite is an upgrade and nothing else is, so it *could* have been
+  target.** Every `rider` rune is an upgrade and nothing else is, so it *could* have been
   computed — and a computed field says nothing, where an authored one is a claim the record makes
   and the loader checks. Same posture as `Match` in the tutorial script: the thing the author meant,
   written where the author is looking.
@@ -2394,13 +2394,13 @@ changed my card", and what separates them is what the *next* parasite does.
   is refused; a gold card the player wants to make silver is offered, which is the pick they came
   for. That replaces the old rule — a card carrying its maximum — which stopped meaning anything the
   day the maximum became one.
-- **Riders stacked until 2026-09-09**, three to a card, and two Leeches were twenty life. They no
-  longer do, and that is a real nerf to the parasite economy taken deliberately.
+- **Riders stacked until 2026-09-09**, three to a card, and two Siphons were twenty life. They no
+  longer do, and that is a real nerf to the rune economy taken deliberately.
 
 **Four targets landed on 2026-09-02** *(owner's call)*, and three of them are worth saying twice:
 
 - **`duplicate` is the mid-fight `spawn`, and the copy has to reach the hand.** An essence copying a
-  card only has to put it in the deck, because it is spent between fights. A parasite is spent in
+  card only has to put it in the deck, because it is spent between fights. A rune is spent in
   the middle of one, and the fight's piles were dealt before the copy existed — so a copy that went
   only into the run would not be playable until the *next* fight and would read as a dud. The copy
   is a new card with a new identity, arrives unselected, and `Session.Duplicated` is the handover.
@@ -2415,11 +2415,11 @@ changed my card", and what separates them is what the *next* parasite does.
   stones each time. `seeds.StoneShower` is the stream and **the number of stones the run has already
   placed is mixed in** — a figure the snapshot already carries, so a resumed run rolls what it would
   have rolled. **The source is the caller's**, because the run does not know its own seed;
-  `ApplyParasiteRolling` is refused outright without one rather than falling back to a default draw.
+  `ApplyRuneRolling` is refused outright without one rather than falling back to a default draw.
 - **They go into a pouch, not onto the ladder** *(owner's call, 2026-09-02)*. See §The pouch below,
   which is where that reversal is written down. The dialog stays up afterwards as a *receipt* rather
   than an offer, and any click dismisses it.
-- **`clone` is the one target whose two seats are not interchangeable.** Every other parasite
+- **`clone` is the one target whose two seats are not interchangeable.** Every other rune
   treats its targets as a set; this one is directional — first pick changes, second pick is the
   template — so the picker's click order is a rule rather than a detail. It copies the concept and
   keeps the first card's identity, riders and modifiers, exactly as `swap` does.
@@ -2429,7 +2429,7 @@ changed my card", and what separates them is what the *next* parasite does.
 **Golden and Silver are upgrades, and they gamble every time their card is played.** A **gold** card
 rolls a d5: on a 1 the run gains **+1 DMG** permanently, on a 2 it gains **+5 max life**, and on a 3,
 4 or 5 nothing happens. A **silver** card rolls the same die and pays **+10 vitae** on a 1 and
-nothing otherwise. Both are `rider` parasites, both take one card, and the `Value` is the
+nothing otherwise. Both are `rider` runes, both take one card, and the `Value` is the
 denominator.
 
 **They were a consumable that rolled once and touched no card**, from 2026-09-07 to 2026-09-09. What
@@ -2475,34 +2475,34 @@ has thirty-four of.
 **What nothing catches is the balance, and it got much bigger.** A card that gambles once cost one
 purchase; a card that gambles on every play is worth however often the player plays it, which on a
 cheap card in the starting deck is dozens of times a run. Nothing in the repo simulates a run, so
-the dial to move is the denominator in `data/parasites.json` and no code changes.
+the dial to move is the denominator in `data/runes.json` and no code changes.
 
 ### `chimera` fires the last one again *(owner's call, 2026-09-07)*
 
 **It carries no effect of its own.** What it costs, how many cards it names and what it does to them
-all come from the parasite it is copying, resolved through `Session.Echoes` before anything reads
-it. A chimera behind an Emberbore asks for two cards and paints them fire; a chimera behind a Hoard
+all come from the rune it is copying, resolved through `Session.Echoes` before anything reads
+it. A chimera behind an Embermark asks for two cards and paints them fire; a chimera behind a Hoard
 asks for none.
 
 - **The memory is the run's, not the fight's.** A chimera carried out of one duel and into the next
-  still copies what was spent in the first. `Session.lastParasite` is the record key and it is
+  still copies what was spent in the first. `Session.lastRune` is the record key and it is
   **saved with the run**, so a resume does not forget.
 - **It refuses only on a run that has spent nothing.** There is no effect to copy, and a consumable
   that landed and did nothing is something bought and taken away. The consumables pane draws it dim,
   the same courtesy an unaffordable relic gets.
-- **The targets are picked again rather than inherited.** The copied parasite's cards are long gone
+- **The targets are picked again rather than inherited.** The copied rune's cards are long gone
   from the hand by the time a chimera is spent — a different turn, sometimes a different fight — and
   re-firing against the same identities would be a no-op wherever the effect was idempotent, which
   is most of the catalogue.
-- **A chimera never becomes the thing to copy.** `rememberParasite` records the *resolved* record, so
-  two chimeras in a row both fire the parasite behind them rather than the second copying the first
+- **A chimera never becomes the thing to copy.** `rememberRune` records the *resolved* record, so
+  two chimeras in a row both fire the rune behind them rather than the second copying the first
   into nothing.
 - **A remembered record the catalogue no longer holds is forgotten rather than refused**, which is
-  the one place `Resume` is lenient and is deliberate: a *held* parasite is a thing the player owns
+  the one place `Resume` is lenient and is deliberate: a *held* rune is a thing the player owns
   and would notice going missing, where this is a memory of one already spent. The worst it costs is
   a chimera with nothing to copy, which is a state the mechanic already has a rule for.
 - **The card's face says what it would fire** — `COPIES / HOARD` — because its authored line cannot.
-  A card whose whole subject is a parasite named somewhere else is one the player would otherwise
+  A card whose whole subject is a rune named somewhere else is one the player would otherwise
   have to remember the answer to.
 
 **The vocabulary is closed**, the posture every other one in the game takes. A bad record — an
@@ -2510,10 +2510,10 @@ unknown target, a rider the rules lack, a concept this build has not registered,
 for a card — **panics at init**.
 
 **A `swap` keeps the card's identity, and so keeps its riders.** A card the player has already
-spent two parasites on stays the card they invested in; what changes is which card it is. Minting
+spent two runes on stays the card they invested in; what changes is which card it is. Minting
 a fresh identity would take the investment with it.
 
-**`MaxParasiteTargets` is 2**, because the picker shows the targets side by side and a picker that
+**`MaxRuneTargets` is 2**, because the picker shows the targets side by side and a picker that
 scrolled would be a menu to read rather than a decision to make — the two-essence offer's argument.
 
 ### Riders: a rule carried by one card
@@ -2560,7 +2560,7 @@ hand and the discard, and fires only when that card is played.
   held and would otherwise price a turn-three blow at turn-one rates.
 
 - **The vocabulary is a Go enum in `internal/combat`, not a data record.** Everything else a
-  parasite does happens to the run; a rider is the one thing read while a round resolves, and that
+  rune does happens to the run; a rider is the one thing read while a round resolves, and that
   package is at the bottom of the graph and reads no JSON. The *amount* rides on the card, so the
   rules need no lookup table and nothing to keep in step with a catalogue.
 - **A card carries one rider — `MaxCardRiders` is 1** *(owner's call, 2026-09-09)*, because a rider
@@ -2572,7 +2572,7 @@ hand and the discard, and fires only when that card is played.
   down to one, because a seat is what makes "no upgrade" the zero value rather than a case.
 - **Last one wins, and nothing stacks.** `Card.SetRider` replaces. Riders stacked three to a card
   until 2026-09-09 and two ten-point heals were twenty life; they are now one card forgetting the
-  other, which is a real nerf to the parasite economy taken deliberately.
+  other, which is a real nerf to the rune economy taken deliberately.
 - **A card a chill ate heals nothing**, which is why riders fire after the chill and before the
   blow. A rider on the front card of a turn is exposed to the one thing that can delete it.
 - **A heal that restores nothing is silent.** The cap is applied first and the event carries what
@@ -2582,7 +2582,7 @@ hand and the discard, and fires only when that card is played.
 
 Effect text reads the card, so an upgraded card prints an extra line — `+10 LIFE`, `GOLD` — under
 its own. **It is not written in the relic pink**: that colour means "a relic did this" everywhere
-else, and a parasite is not a relic.
+else, and a rune is not a relic.
 
 **Every rider is visible as of 2026-09-09**, in three places: the line on the face, the wash over
 the card, and the tooltip. None is redundant with the others — the colour carries at a glance across
@@ -2635,7 +2635,7 @@ so is a panel that trains the player not to read it.
 ### The wildcard *(owner's call, 2026-09-07)*
 
 `RiderWildElement` makes one card count as **every element at once** when a hand is formed. It is
-attached by the **Motley** parasite and it is the eighth rider kind.
+attached by the **Motley** rune and it is the eighth rider kind.
 
 **The card keeps its own element and everything else goes on reading it.** A wild fire Bash is
 still a fire Bash: it lands a burn, it sits in the fire row of the deck panel, and `Blow.Elements`
@@ -2661,12 +2661,12 @@ Four rules, and each of them is a thing the first version got wrong or could hav
   the matcher saying that cards which match everything match nothing.
 
 **It carries no amount, and the vocabulary says so.** `RiderKind.CarriesAmount` is what
-`internal/session` asks before demanding a figure off a rider parasite's record, so a `Value` on a
+`internal/session` asks before demanding a figure off a rider rune's record, so a `Value` on a
 Motley is refused rather than being a number nothing reads.
 
 **This is a balance lever and it was taken as one.** One wildcard turns any three-of-an-element
 into a four, and the elemental rungs are high on the ladder — so what a run pays for a Motley is
-the number to watch, and that number is the parasite's place in `data/parasites.json` rather than
+the number to watch, and that number is the rune's place in `data/runes.json` rather than
 anything in the rules.
 
 ### An upgrade is painted on the card, and where is still open *(2026-09-09)*
@@ -2745,12 +2745,12 @@ somewhere in a pile of forty is the reward screen's decision taken in a worse pl
 is already on screen. **What it costs is reach** — a card in the draw pile cannot be touched until
 it is drawn.
 
-### The bucket, on the shelf
+### The sack, on the shelf
 
-The bucket is the shop's **third sealed good** and takes the bag's and the vial's shape exactly: 5
-vitae, four inside, keep one, its own per-fight stream (`seeds.BucketStock`), one per visit. It
+The sack is the shop's **third sealed good** and takes the bag's and the vial's shape exactly: 5
+vitae, four inside, keep one, its own per-fight stream (`seeds.SackStock`), one per visit. It
 differs in one way and it is the interesting one — **a stone and an essence are spent the moment they
-are chosen, and a parasite goes into the bucket to be spent later.**
+are chosen, and a rune goes into the sack to be spent later.**
 
 **The shelf is six seats now.** `rowSlot`'s fixed pitch puts six cards in 1172 pixels of 1280, so
 it fits with about 54 clear at each end and a seventh would not. The next good has to narrow the
@@ -2758,8 +2758,8 @@ pitch or find a second row.
 
 ### Run-scoped, and saved
 
-The bucket and every rider are written into `run.json`, **by name and never by ordinal** — the
-rule every other vocabulary in a snapshot is under. A parasite the catalogue no longer holds, or a
+The sack and every rider are written into `run.json`, **by name and never by ordinal** — the
+rule every other vocabulary in a snapshot is under. A rune the catalogue no longer holds, or a
 rider the rules lack, is **refused on resume rather than dropped**: a run that came back one
 consumable lighter is a run the player would have to work out had changed.
 
@@ -3384,12 +3384,12 @@ relic bought or sold, the stone spent and the rung it raised, and what the purse
 - **It is read off the run rather than announced by the screens.** A call beside every commit is a
   list a new mechanic gets left off silently, since a missing announcement and a deliberate silence
   are the same absence. The run is watched instead and whatever moved is worded — the rule
-  `internal/screens/combat_handmorph.go` already follows, where what a parasite did is read off the
-  card faces so that no parasite has a case in the drawing.
+  `internal/screens/combat_handmorph.go` already follows, where what a rune did is read off the
+  card faces so that no rune has a case in the drawing.
 - **Cards are told apart by `combat.Card.ID`.** That is what makes "this card became that one"
   sayable at all: counting faces cannot distinguish a card altered from a card cut with another
   taken in its place, and would report one act as two lines.
-- **Nothing is recorded during a fight.** A parasite spent mid-round is an event of that round and
+- **Nothing is recorded during a fight.** A rune spent mid-round is an event of that round and
   belongs to the round's own lines.
 
 ---

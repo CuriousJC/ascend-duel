@@ -288,7 +288,7 @@ type combatTheatre struct {
 	// is the only one that needs a row size at each end.
 	slides []cardSlide
 
-	// Cards changing into other cards where they stand, because a parasite altered them. Separate
+	// Cards changing into other cards where they stand, because a rune altered them. Separate
 	// from the two above because it is the only mover that does not move: what travels is the face,
 	// not the card. See combat_handmorph.go.
 	morphs []handMorph

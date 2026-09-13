@@ -329,7 +329,7 @@ type StatLine struct {
 	ValueInk color.RGBA
 }
 
-// MaxTextHighlights is how many separately coloured runs one card's text can carry.
+// MaxTextHighlights is how many separately coloured spans one card's text can carry.
 //
 // **Four, because the wordiest relic in the catalogue names three things** — an element and two
 // statuses — and a fixed array needs a number. `TestEveryTextFitsItsHighlights` in
@@ -337,15 +337,15 @@ type StatLine struct {
 // test rather than losing its last colour to an array that silently ran out.
 const MaxTextHighlights = 4
 
-// TextRun is one run of a card's Text set in its own colour.
+// TextSpan is one span of a card's Text set in its own colour.
 //
 // **Both halves are the caller's**, exactly as a StatLine's are: this package matches a string
 // and paints it, and never learns why that string is worth a colour.
-type TextRun struct {
-	// Run is the text to colour. Empty means the entry is unused.
-	Run string
+type TextSpan struct {
+	// Span is the text to colour. Empty means the entry is unused.
+	Span string
 
-	// Ink is what to colour it. Zero alpha means the entry is unused, whatever Run says.
+	// Ink is what to colour it. Zero alpha means the entry is unused, whatever Span says.
 	Ink color.RGBA
 }
 
@@ -457,7 +457,7 @@ type Spec struct {
 	// names and costs.
 	Text string
 
-	// Highlights are the runs of Text that are set in their own colour. **A zero-alpha Ink
+	// Highlights are the spans of Text that are set in their own colour. **A zero-alpha Ink
 	// means the entry is empty**, which is the convention every other optional colour in this
 	// codebase follows — so a caller that never fills one in gets a line entirely in LabelInk.
 	//
@@ -466,7 +466,7 @@ type Spec struct {
 	// relic reading "Fire attacks BURN and CHILL the target." sets three words across two colours.
 	// The state colouring still applies on top, so a disabled card fades with everything else.
 	//
-	// **A run is matched at word boundaries and every occurrence of it is coloured**, which is
+	// **A span is matched at word boundaries and every occurrence of it is coloured**, which is
 	// what lets one entry carry a word a sentence says twice — "BURNING enemies" after "apply
 	// BURNING status" — without spending two seats. The boundary is not an optimisation: ICE is
 	// inside SLICE and BURN is inside BURNING, and a substring match would paint half a word.
@@ -482,7 +482,7 @@ type Spec struct {
 	//
 	// **This package still does not know what an element is.** It is handed strings and colours;
 	// the decision that the two go together is internal/screens, which is where the wording lives.
-	Highlights [MaxTextHighlights]TextRun
+	Highlights [MaxTextHighlights]TextSpan
 
 	// Art is optional artwork drawn on the face, scaled to fit and centred. Relics use
 	// it; action cards do not, and their art is the generated glyphs instead.

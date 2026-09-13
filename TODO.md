@@ -14,7 +14,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
-- [?] **Three parasites from the owner's list still need a design decision before they can be
+- [?] **Three runes from the owner's list still need a design decision before they can be
       written as data** *(owner asked for this to be tracked, 2026-08-27; trimmed 2026-09-02 as
       the rest landed)*. **Lucky card**; **chance to increase a relic** (which relic, and increase
       what?); **wild card** (matches any axis, or any one axis you name?). Two of them are random,

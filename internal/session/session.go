@@ -104,12 +104,12 @@ type Session struct {
 	// fight would be reset by the next `Init`, and it is the run's whole climb that is interesting.
 	plays map[string]int
 
-	// held is the bucket: every parasite the run is carrying, by record key, in the order they
+	// held is the sack: every rune the run is carrying, by record key, in the order they
 	// were acquired. **A list rather than a count per key** — two of the same are two things to
-	// spend, and the board piece draws a card for each. See parasite.go.
+	// spend, and the board piece draws a card for each. See rune.go.
 	held []string
 
-	// duplicated is what the last duplicate parasite minted, so the screen can seat the copy in
+	// duplicated is what the last duplicate rune minted, so the screen can seat the copy in
 	// the hand it was spent from. **Deliberately not snapshotted**: it is a handover between two
 	// calls a frame apart, not a fact about the run, and a resumed run has no hand to seat it in.
 	// See Session.Duplicated.
@@ -120,20 +120,20 @@ type Session struct {
 	// distinction is written down.
 	pouch []string
 
-	// granted is the stones the last rock-shower parasite handed over, so the dialog can show what
+	// granted is the stones the last rock-shower rune handed over, so the dialog can show what
 	// the player just got. **Not snapshotted**, for the reason duplicated is not: it is a handover
 	// between two calls a frame apart, and the stones themselves are already on their rungs in
 	// `stones`, which is saved.
 	granted []Stone
 
-	// lastParasite is the record key of the parasite this run spent most recently, which is what a
+	// lastRune is the record key of the rune this run spent most recently, which is what a
 	// chimera copies. **Saved**, unlike `granted` and `duplicated`, because the memory is the
 	// run's rather than the fight's: a chimera carried out of one duel still copies what was spent
 	// in the previous one. See luck.go.
 	//
-	// **A chimera never writes itself here** — `rememberParasite` records the resolved record — so
+	// **A chimera never writes itself here** — `rememberRune` records the resolved record — so
 	// two of them in a row both fire the thing behind them.
-	lastParasite string
+	lastRune string
 
 	// ledger is the run's account of itself: every fight, round by round, in already-worded
 	// lines. **Run-level because that is the whole feature** — it used to be this fight's events
@@ -186,18 +186,18 @@ func New(deck []combat.Card) *Session {
 	for _, key := range StartingRelics {
 		s.Wear(key)
 	}
-	// **The bucket is filled the same way the fingers are**, and a key the catalogue has not got is
-	// dropped rather than held — `Hold` is what refuses it. See StartingParasites, which is empty
+	// **The sack is filled the same way the fingers are**, and a key the catalogue has not got is
+	// dropped rather than held — `Hold` is what refuses it. See StartingRunes, which is empty
 	// as shipped.
 	//
-	// **It goes past the cap on purpose** *(2026-09-06)*. `Hold` refuses a third parasite because
-	// `MaxHeld` is a rule about *acquiring* one, and this is a fixture planting a bucket rather than
+	// **It goes past the cap on purpose** *(2026-09-06)*. `Hold` refuses a third rune because
+	// `MaxHeld` is a rule about *acquiring* one, and this is a fixture planting a sack rather than
 	// a run buying one — the same exception `internal/scenario`'s check() already writes down for a
-	// hand longer than the game's own. Four fixtures exist to walk six parasites through the dialog
+	// hand longer than the game's own. Four fixtures exist to walk six runes through the dialog
 	// and trimming them to two would leave four Notes describing cards that are no longer there.
 	// The pane draws the first two seats and the count reads the honest number, so an over-full
-	// bucket looks like what it is.
-	for _, key := range StartingParasites {
+	// sack looks like what it is.
+	for _, key := range StartingRunes {
 		s.hold(key)
 	}
 	// **And the pouch the same way**, with a key the catalogue has not got dropped rather than

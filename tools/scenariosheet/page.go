@@ -36,13 +36,13 @@ type cell struct {
 	Height int
 }
 
-// named is a relic, a parasite or a stone: what the fixture wrote, what it is called, and the
+// named is a relic, a rune or a stone: what the fixture wrote, what it is called, and the
 // sentence it prints.
 type named struct {
 	Key  string
 	Name string
 	Text string
-	Kind string // "bucket" or "pouch" for a held good; empty for a relic
+	Kind string // "sack" or "pouch" for a held good; empty for a relic
 }
 
 // line is one row of a hand or a deck, as the fixture writes it.

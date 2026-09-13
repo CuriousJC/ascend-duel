@@ -34,8 +34,8 @@ func TestEveryStatusWordIsColoured(t *testing.T) {
 	for _, s := range data.LoadStatuses() {
 		for _, word := range []string{s.Name, s.Verb} {
 			found := false
-			for _, r := range ElementRuns("attacks " + word + " the target.") {
-				if strings.EqualFold(r.Run, word) {
+			for _, r := range ElementSpans("attacks " + word + " the target.") {
+				if strings.EqualFold(r.Span, word) {
 					found = true
 				}
 			}
@@ -51,7 +51,7 @@ func TestTheFiveElementsAreColouredInBothCases(t *testing.T) {
 	// the match ignores case on both sides.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		for _, word := range []string{strings.ToUpper(e.String()), e.String()} {
-			runs := ElementRuns("CARD BECOMES " + word)
+			runs := ElementSpans("CARD BECOMES " + word)
 			if len(runs) != 1 {
 				t.Errorf("%q produced %v, want one run", word, runs)
 				continue
@@ -67,22 +67,22 @@ func TestBasicAndRelicAreNotColouredWords(t *testing.T) {
 	// Basic is the absence of an element and its grey is what an uncoloured word already looks
 	// like. Relic is not an element at all, and a text saying "relic" means the jewellery.
 	for _, word := range []string{"BASIC", "RELIC"} {
-		if runs := ElementRuns("CARD BECOMES " + word); len(runs) != 0 {
+		if runs := ElementSpans("CARD BECOMES " + word); len(runs) != 0 {
 			t.Errorf("%q was coloured: %v", word, runs)
 		}
 	}
 }
 
 func TestAnElementInsideALongerWordIsNotColoured(t *testing.T) {
-	// ICE is inside SLICE, and every parasite that turns a card into a Slice says so. A substring
+	// ICE is inside SLICE, and every rune that turns a card into a Slice says so. A substring
 	// match would light three letters of a card's name in the ice blue.
-	if runs := ElementRuns("CARD BECOMES SLICE"); len(runs) != 0 {
+	if runs := ElementSpans("CARD BECOMES SLICE"); len(runs) != 0 {
 		t.Errorf("a word inside SLICE was coloured: %v", runs)
 	}
 }
 
 func TestTheVocabularyIsLongestFirst(t *testing.T) {
-	// splitRuns lets the first run to claim a position keep it, so BURNING has to be offered before
+	// SplitSpans lets the first run to claim a position keep it, so BURNING has to be offered before
 	// BURN or the longer word draws as a coloured BURN and a default-ink ING.
 	for i := 1; i < len(elementWords); i++ {
 		if len(elementWords[i-1].word) < len(elementWords[i].word) {
@@ -98,7 +98,7 @@ func TestEveryTextFitsItsHighlights(t *testing.T) {
 	// author has run out of room rather than a player finding a half-lit sentence.
 	check := func(what, text string) {
 		t.Helper()
-		if n := len(ElementRuns(text)); n > MaxTextHighlights {
+		if n := len(ElementSpans(text)); n > MaxTextHighlights {
 			t.Errorf("%s names %d coloured terms and a card holds %d: %q",
 				what, n, MaxTextHighlights, text)
 		}
@@ -107,8 +107,8 @@ func TestEveryTextFitsItsHighlights(t *testing.T) {
 	for key, w := range data.LoadEssences() {
 		check("essence "+key, w.Text)
 	}
-	for key, p := range data.LoadParasites() {
-		check("parasite "+key, p.Text)
+	for key, p := range data.LoadRunes() {
+		check("rune "+key, p.Text)
 	}
 	for key, st := range data.LoadStones() {
 		check("stone "+key, st.Text)

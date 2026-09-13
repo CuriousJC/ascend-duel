@@ -389,7 +389,7 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 		// the one place on this panel where that is true.
 		head := plainRow(ledgerHeading(f, live || expanded[f.Number]))
 		head.band = band
-		head.runs[0].ink = ledgerBandInk
+		head.spans[0].ink = ledgerBandInk
 		rows = append(rows, ledgerRow{row: head, fight: fightToggle(f, live)})
 
 		if !live && !expanded[f.Number] {

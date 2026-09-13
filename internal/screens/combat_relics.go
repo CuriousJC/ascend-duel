@@ -139,7 +139,7 @@ func (s *CombatScene) relicPaneRect(gs *state.GlobalState) image.Rectangle {
 	return relics
 }
 
-// consumablePaneRect is the right half: the parasites the run is carrying. See consumables.go.
+// consumablePaneRect is the right half: the runes the run is carrying. See consumables.go.
 func (s *CombatScene) consumablePaneRect(gs *state.GlobalState) image.Rectangle {
 	_, consumables := s.topRowPanes(gs)
 	return consumables
@@ -682,7 +682,7 @@ func (s *CombatScene) relicCountRect(gs *state.GlobalState) image.Rectangle {
 // **It is the bare fraction, and the noun went on 2026-09-11** *(owner's call)*. What the corner
 // has to say is how many seats are spoken for; the pane under it is full of relic cards, so the
 // word was the figure repeating what the cards it sits on already say. The same call took
-// `parasites` off the consumables pane — see drawConsumableCount, which is this figure in the same
+// `runes` off the consumables pane — see drawConsumableCount, which is this figure in the same
 // seat at the same size and has to stay its twin.
 //
 // **The denominator is relicSlots, not maxRelics** *(bug, 2026-09-11)*. It drew `0/8` — the width

@@ -274,10 +274,10 @@ func TestTheWorkingIsColouredLikeTheScreen(t *testing.T) {
 	relic := boostInk
 
 	term := rows[0]
-	if term.runs[0].ink != fire {
-		t.Errorf("the card's name is in %v, want its element's %v", term.runs[0].ink, fire)
+	if term.spans[0].ink != fire {
+		t.Errorf("the card's name is in %v, want its element's %v", term.spans[0].ink, fire)
 	}
-	if last := term.runs[len(term.runs)-1]; last.ink != relic {
+	if last := term.spans[len(term.spans)-1]; last.ink != relic {
 		t.Errorf("the relic's note is in %v, want the relic pink %v", last.ink, relic)
 	}
 
@@ -286,7 +286,7 @@ func TestTheWorkingIsColouredLikeTheScreen(t *testing.T) {
 	// reads as a typesetting accident. This is the check that catches either coming back.
 	sum := rows[len(rows)-1]
 	var sawRelic bool
-	for _, r := range sum.runs {
+	for _, r := range sum.spans {
 		sawRelic = sawRelic || r.ink == relic
 		if r.mark {
 			t.Errorf("a run of the sum is underlined: %q", r.text)
@@ -321,8 +321,8 @@ func TestAnOpenedFightIsBanded(t *testing.T) {
 			if want := ledgerBands[pair%2]; r.row.band != want {
 				t.Errorf("fight %d's heading is on %v, want the band %v", heads, r.row.band, want)
 			}
-			if r.row.runs[0].ink != ledgerBandInk {
-				t.Errorf("a heading on the dark band is written in %v", r.row.runs[0].ink)
+			if r.row.spans[0].ink != ledgerBandInk {
+				t.Errorf("a heading on the dark band is written in %v", r.row.spans[0].ink)
 			}
 		default:
 			if want := ledgerGrounds[pair%2]; r.row.band != want {

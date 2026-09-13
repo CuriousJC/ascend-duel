@@ -133,7 +133,7 @@ func TestAnUpgradeLeavesTheCornersAlone(t *testing.T) {
 	}
 }
 
-// **Every upgrade draws a different card**, or two parasites the player spent would look like one
+// **Every upgrade draws a different card**, or two runes the player spent would look like one
 // they spent twice. It is the aggregate version of TestEveryUpgradeHasAnInk below: an ink can exist
 // and still be close enough to its neighbour to be indistinguishable on a card.
 func TestNoTwoUpgradesDrawTheSameCard(t *testing.T) {
@@ -198,7 +198,7 @@ func same(a, b *image.RGBA, box image.Rectangle) bool {
 
 // **Every upgrade in the vocabulary has an ink.** One without would draw as an ordinary card and
 // be invisible, which is the exact failure the whole idea exists to fix — so it fails here rather
-// than shipping a parasite that appears to do nothing.
+// than shipping a rune that appears to do nothing.
 //
 // **It no longer requires the ink to be more than one colour.** That check belonged to the left
 // column, where a flat ink would have said something an element could already say; a whole-card

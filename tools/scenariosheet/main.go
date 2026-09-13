@@ -70,7 +70,7 @@ const source = "internal/scenario/scenarios.json"
 // hand against a white browser page is the same failure as previewing art at the wrong scale.
 const ground = "#a8bcd4"
 
-// placeholderArt is the face this sheet gives anything it is only naming — a parasite, a stone, a
+// placeholderArt is the face this sheet gives anything it is only naming — a rune, a stone, a
 // key the catalogues do not answer to.
 //
 // **It is the essence catalogue's own default rather than a fourth picture**, and it is spelled by
@@ -195,7 +195,7 @@ type record struct {
 	Note           string     `json:"Note"`
 	Relics         []string   `json:"Relics"`
 	Hand           []handCard `json:"Hand"`
-	Parasites      []string   `json:"Parasites"`
+	Runes          []string   `json:"Runes"`
 	Stones         []string   `json:"Stones"`
 	Enemy          string     `json:"Enemy"`
 	Screen         string     `json:"Screen"`
@@ -271,12 +271,12 @@ func sectionsOf(r record) []section {
 	return out
 }
 
-// wornSpecs is the relics, the bucket and the pouch on one row, split apart by the wider gap.
+// wornSpecs is the relics, the sack and the pouch on one row, split apart by the wider gap.
 //
 // **One row rather than three**, because all three are things the run is *carrying* and a fixture
 // rarely has more than a couple of each — three near-empty rows would say less than one.
 func wornSpecs(r record) section {
-	s := section{name: "worn", label: "worn, in the bucket, and in the pouch", style: cards.RelicStyle}
+	s := section{name: "worn", label: "worn, in the sack, and in the pouch", style: cards.RelicStyle}
 
 	relics := data.LoadRelics()
 	for _, key := range r.Relics {
@@ -291,13 +291,13 @@ func wornSpecs(r record) section {
 		})
 	}
 
-	// **The parasites and the stones are drawn in the relic style too**, because a strip is one
+	// **The runes and the stones are drawn in the relic style too**, because a strip is one
 	// style wide: EssenceStyle and RelicStyle are the same size, and mixing them in a row would be the
 	// only place in the project two card formats stand side by side pretending to be a set.
-	if len(r.Parasites) > 0 {
+	if len(r.Runes) > 0 {
 		s.splits = append(s.splits, len(s.specs))
-		for _, key := range r.Parasites {
-			p, ok := session.ParasiteByKey(key)
+		for _, key := range r.Runes {
+			p, ok := session.RuneByKey(key)
 			if !ok {
 				s.specs = append(s.specs, missingSpec(key))
 				continue
@@ -320,8 +320,8 @@ func wornSpecs(r record) section {
 	return s
 }
 
-// goodSpec is a parasite or a stone as a face. **The name and nothing else** — what either one
-// does is `tools/parasitesheet` and `tools/stonesheet`'s subject, and repeating their text here
+// goodSpec is a rune or a stone as a face. **The name and nothing else** — what either one
+// does is `tools/runesheet` and `tools/stonesheet`'s subject, and repeating their text here
 // would be a third place the same sentence can go stale.
 func goodSpec(name string) cards.Spec {
 	return cards.Spec{Name: name, Element: cards.Relic, Art: artwork(placeholderArt), Enabled: true}
@@ -472,16 +472,16 @@ func relicLines(keys []string) []named {
 	return out
 }
 
-// heldLines is the bucket and the pouch, in that order, each row saying which it is.
+// heldLines is the sack and the pouch, in that order, each row saying which it is.
 func heldLines(r record) []named {
 	var out []named
-	for _, key := range r.Parasites {
-		p, ok := session.ParasiteByKey(key)
+	for _, key := range r.Runes {
+		p, ok := session.RuneByKey(key)
 		if !ok {
-			out = append(out, named{Key: key, Name: "-- no such parasite --", Kind: "bucket"})
+			out = append(out, named{Key: key, Name: "-- no such rune --", Kind: "sack"})
 			continue
 		}
-		out = append(out, named{Key: key, Name: p.Name, Text: oneLine(p.Text), Kind: "bucket"})
+		out = append(out, named{Key: key, Name: p.Name, Text: oneLine(p.Text), Kind: "sack"})
 	}
 	stones := data.LoadStones()
 	for _, key := range r.Stones {

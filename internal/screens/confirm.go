@@ -2,7 +2,7 @@ package screens
 
 // **The game asking "are you sure", and the third dialog shape in it.**
 //
-// The first two are the modal panel — the deck, the hands ladder, the bucket, the ledger — and the
+// The first two are the modal panel — the deck, the hands ladder, the sack, the ledger — and the
 // tutorial's bubble. This is a third, and it is deliberate rather than a drift *(2026-09-03)*.
 //
 // **A confirm is a question, not a view.** Every modalToggle takes the same near-full-screen

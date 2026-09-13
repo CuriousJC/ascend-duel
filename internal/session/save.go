@@ -33,25 +33,25 @@ import (
 // for the two to drift apart.
 func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 	out := &profile.RunSnapshot{
-		Seed:         seeds.Code(runSeed),
-		Fight:        s.fight,
-		Phase:        s.phase.String(),
-		Vitae:        s.vitae,
-		LifeLeft:     s.lifeLeft,
-		Hurt:         s.hurt,
-		BossWins:     s.bossWins,
-		DMGBonus:     s.dmgBonus,
-		LifeBonus:    s.lifeBonus,
-		RoundLimit:   s.roundLimit,
-		RelicSlots:   s.relicSlots,
-		Worn:         s.Worn(),
-		Grown:        map[string]int{},
-		Stones:       s.StoneCounts(),
-		Plays:        s.PlayCounts(),
-		Held:         s.Held(),
-		LastParasite: s.lastParasite,
-		Pouch:        s.Carried(),
-		NextCardID:   s.nextCardID,
+		Seed:       seeds.Code(runSeed),
+		Fight:      s.fight,
+		Phase:      s.phase.String(),
+		Vitae:      s.vitae,
+		LifeLeft:   s.lifeLeft,
+		Hurt:       s.hurt,
+		BossWins:   s.bossWins,
+		DMGBonus:   s.dmgBonus,
+		LifeBonus:  s.lifeBonus,
+		RoundLimit: s.roundLimit,
+		RelicSlots: s.relicSlots,
+		Worn:       s.Worn(),
+		Grown:      map[string]int{},
+		Stones:     s.StoneCounts(),
+		Plays:      s.PlayCounts(),
+		Held:       s.Held(),
+		LastRune:   s.lastRune,
+		Pouch:      s.Carried(),
+		NextCardID: s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
 			Propagated: s.spoils.Propagated,
 			FromLife:   s.spoils.FromLife,
@@ -132,11 +132,11 @@ func linesSnapshot(in []LedgerLine) []profile.LedgerLineSnapshot {
 	}
 	out := make([]profile.LedgerLineSnapshot, 0, len(in))
 	for _, l := range in {
-		runs := make([]profile.LedgerRunSnapshot, 0, len(l.Runs))
-		for _, run := range l.Runs {
-			runs = append(runs, profile.LedgerRunSnapshot{Text: run.Text, Ink: run.Ink, Mark: run.Mark})
+		spans := make([]profile.LedgerSpanSnapshot, 0, len(l.Spans))
+		for _, span := range l.Spans {
+			spans = append(spans, profile.LedgerSpanSnapshot{Text: span.Text, Ink: span.Ink, Mark: span.Mark})
 		}
-		out = append(out, profile.LedgerLineSnapshot{Voice: l.Voice, Runs: runs})
+		out = append(out, profile.LedgerLineSnapshot{Voice: l.Voice, Spans: spans})
 	}
 	return out
 }
@@ -147,11 +147,11 @@ func resumeLines(in []profile.LedgerLineSnapshot) []LedgerLine {
 	}
 	out := make([]LedgerLine, 0, len(in))
 	for _, l := range in {
-		runs := make([]LedgerRun, 0, len(l.Runs))
-		for _, run := range l.Runs {
-			runs = append(runs, LedgerRun{Text: run.Text, Ink: run.Ink, Mark: run.Mark})
+		spans := make([]LedgerSpan, 0, len(l.Spans))
+		for _, span := range l.Spans {
+			spans = append(spans, LedgerSpan{Text: span.Text, Ink: span.Ink, Mark: span.Mark})
 		}
-		out = append(out, LedgerLine{Voice: l.Voice, Runs: runs})
+		out = append(out, LedgerLine{Voice: l.Voice, Spans: spans})
 	}
 	return out
 }
@@ -227,13 +227,13 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 			AmountPct: c.AmountPct,
 		}
 		// **A rider this build has not got is refused rather than dropped.** A card resumed
-		// without the parasite spent on it is the one mistake that cannot be repaired afterwards,
+		// without the rune spent on it is the one mistake that cannot be repaired afterwards,
 		// and it would look like a rider that had simply stopped working.
 		//
 		// **A file written before 2026-09-09 can hold more than one**, back when a card stacked
 		// three. The seat count came down to one and a resume is not the place to argue with a file
 		// that was legal when it was written, so the last one on it is the upgrade the card resumes
-		// with — which is the same answer SetRider gives to two parasites spent in a row.
+		// with — which is the same answer SetRider gives to two runes spent in a row.
 		for _, r := range c.Riders {
 			kind, ok := combat.ParseRiderKind(r.Kind)
 			if !ok {
@@ -278,29 +278,29 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 			return nil, 0, fmt.Errorf("relic %q is not one this build can wear", key)
 		}
 	}
-	// **A parasite the catalogue no longer holds is refused rather than dropped**, on the terms a
+	// **A rune the catalogue no longer holds is refused rather than dropped**, on the terms a
 	// relic is: a run resumed one consumable lighter is a run the player would have to work out had
-	// changed. Order is acquisition order and is kept, because it is the order the bucket draws.
+	// changed. Order is acquisition order and is kept, because it is the order the sack draws.
 	for _, key := range snap.Held {
 		if !s.Hold(key) {
-			return nil, 0, fmt.Errorf("parasite %q is not one this build has", key)
+			return nil, 0, fmt.Errorf("rune %q is not one this build has", key)
 		}
 	}
 
-	// **A remembered parasite the catalogue no longer holds is forgotten rather than refused**,
-	// which is the one place this file is lenient and is deliberate. A held parasite is a thing the
+	// **A remembered rune the catalogue no longer holds is forgotten rather than refused**,
+	// which is the one place this file is lenient and is deliberate. A held rune is a thing the
 	// player owns and would notice going missing; this is a memory of one already spent, and the
 	// worst it costs is a chimera with nothing to copy — which is a state the mechanic already has
 	// a rule for. Refusing would make deleting a record from the catalogue break every save that
 	// had ever used it.
-	if snap.LastParasite != "" {
-		if p, ok := ParasiteByKey(snap.LastParasite); ok && p.Target != ParasiteChimera {
-			s.lastParasite = snap.LastParasite
+	if snap.LastRune != "" {
+		if p, ok := RuneByKey(snap.LastRune); ok && p.Target != RuneChimera {
+			s.lastRune = snap.LastRune
 		}
 	}
 
 	// **A carried stone the catalogue no longer holds is refused rather than dropped**, on the
-	// terms a parasite is. It is checked before the placed counts below because the two are
+	// terms a rune is. It is checked before the placed counts below because the two are
 	// different failures: this is a rock in the pouch that has stopped existing, and that is a rung
 	// that has.
 	for _, key := range snap.Pouch {

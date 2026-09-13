@@ -12,8 +12,8 @@ package session
 // screens could announce each choice as they committed it, and that is a list a new mechanic gets
 // forgotten from — silently, because a missing announcement and a deliberate silence read the
 // same. What actually changed is read back off the run instead, exactly as
-// `internal/screens/combat_handmorph.go` reads a parasite's work off the card faces rather than
-// off the parasite: "no parasite has a case anywhere in the drawing, which is what stops a new one
+// `internal/screens/combat_handmorph.go` reads a rune's work off the card faces rather than
+// off the rune: "no rune has a case anywhere in the drawing, which is what stops a new one
 // arriving with no picture".
 //
 // **This package still words nothing.** A snapshot is cards and keys; `internal/screens` turns a
@@ -30,7 +30,7 @@ type Holdings struct {
 	// that was altered distinguishable from one that was cut and another taken.
 	Cards []combat.Card
 
-	// Relics is the worn row, Held the parasites in hand, Pouch the stones not yet spent.
+	// Relics is the worn row, Held the runes in hand, Pouch the stones not yet spent.
 	Relics []string
 	Held   []string
 	Pouch  []string

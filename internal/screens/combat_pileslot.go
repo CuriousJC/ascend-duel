@@ -16,7 +16,7 @@ import (
 // for what it is drawn from.
 //
 // What stays here is the *geometry*, because four other controls are placed against it: the
-// bucket stands in this slot, and the deck, hands and pouch toggles are all sized from it. The
+// sack stands in this slot, and the deck, hands and pouch toggles are all sized from it. The
 // square beside the pile is a shape this screen uses, and it outlived the one button that
 // happened to be the first thing in it.
 

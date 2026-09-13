@@ -54,11 +54,11 @@ var (
 	vitaeFlightTicks = beat(3, 4)
 )
 
-// proseRun is one coloured stretch of a sentence. A line is a few of them, so "the enemy's 4 vitae
+// proseSpan is one coloured stretch of a sentence. A line is a few of them, so "the enemy's 4 vitae
 // flows to you" can put the figure and the word in crimson and leave the rest of the sentence alone
 // — the same distinction `Spec.TextInk` makes on a card, and for the same reason: colouring the
 // verb would say the money changed the sentence.
-type proseRun struct {
+type proseSpan struct {
 	text string
 	ink  color.RGBA
 }
@@ -66,7 +66,7 @@ type proseRun struct {
 // proseLine is one sentence, and pays is what claiming it hands over — nil for a line that only
 // says something.
 type proseLine struct {
-	runs []proseRun
+	spans []proseSpan
 
 	// pays is called when the figure this line named has flown to the card. **It is the claim**,
 	// so the purse moves at the moment the player watches it arrive.
@@ -75,7 +75,7 @@ type proseLine struct {
 
 func (l proseLine) plain() string {
 	out := ""
-	for _, r := range l.runs {
+	for _, r := range l.spans {
 		out += r.text
 	}
 	return out
@@ -191,26 +191,26 @@ func (t *typewriter) skip(gs *state.GlobalState) {
 	t.line, t.shown, t.wait, t.flying = len(t.lines), 0, 0, false
 }
 
-// visible is the runs of one line as far as they have been typed, and whether the line is on screen
+// visible is the spans of one line as far as they have been typed, and whether the line is on screen
 // at all.
-func (t *typewriter) visible(i int) ([]proseRun, bool) {
+func (t *typewriter) visible(i int) ([]proseSpan, bool) {
 	if i > t.line {
 		return nil, false
 	}
 	line := t.lines[i]
 	if i < t.line {
-		return line.runs, true
+		return line.spans, true
 	}
 
 	left := t.shown
-	out := make([]proseRun, 0, len(line.runs))
-	for _, r := range line.runs {
+	out := make([]proseSpan, 0, len(line.spans))
+	for _, r := range line.spans {
 		runes := []rune(r.text)
 		if left <= 0 {
 			break
 		}
 		if left < len(runes) {
-			out = append(out, proseRun{text: string(runes[:left]), ink: r.ink})
+			out = append(out, proseSpan{text: string(runes[:left]), ink: r.ink})
 			break
 		}
 		out = append(out, r)
@@ -219,19 +219,19 @@ func (t *typewriter) visible(i int) ([]proseRun, bool) {
 	return out, true
 }
 
-// drawProseLine writes one line's runs centred on x, and reports the rectangle the whole line
+// drawProseLine writes one line's spans centred on x, and reports the rectangle the whole line
 // occupies — which is what a payment flies out of.
 //
 // **Centred by measuring the finished line, not the typed part** *(2026-08-22)*, so a sentence
 // does not slide sideways as it types. A line that grew from its own centre would be a line the eye
 // has to keep re-finding.
-func drawProseLine(screen *ebiten.Image, face *text.GoTextFace, full string, runs []proseRun,
+func drawProseLine(screen *ebiten.Image, face *text.GoTextFace, full string, spans []proseSpan,
 	centerX, y int) {
 
 	width, _ := text.Measure(full, face, 0)
 	x := float64(centerX) - width/2
 
-	for _, r := range runs {
+	for _, r := range spans {
 		op := &text.DrawOptions{}
 		op.GeoM.Translate(x, float64(y))
 		ink := r.ink

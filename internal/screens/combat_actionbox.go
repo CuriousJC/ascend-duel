@@ -600,7 +600,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 
 		seat := s.cardSlot(gs, i)
 
-		// A card a parasite has just changed is drawn by its morph — the old face coming apart and
+		// A card a rune has just changed is drawn by its morph — the old face coming apart and
 		// the new one coming through it, in the seat the card is already standing in. Same rule as
 		// the three suppressions above: the card is in the hand and what is skipped is a drawing.
 		//

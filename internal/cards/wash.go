@@ -3,7 +3,7 @@ package cards
 // **Writing a word in an upgrade's own wash**, which is the one place in the game a single word is
 // set in more than one colour.
 //
-// It is here rather than in `internal/screens` for `ElementRuns`' reason and `internal/carddesc`'s:
+// It is here rather than in `internal/screens` for `ElementSpans`' reason and `internal/carddesc`'s:
 // the review sheets print the same titles the game does, and a tool cannot import a package that
 // links Ebitengine. Two rasterisers draw this game's words and they share no code — so what is
 // shared is the vocabulary, and this is one more entry in it.
@@ -34,7 +34,7 @@ import (
 // the element vocabulary, and a word cannot be two things — which is what makes the order of the two
 // passes at the call site a rule rather than a preference.
 //
-// **Whole words only**, like ContainsRun, so CHROMATICS is not lit.
+// **Whole words only**, like ContainsSpan, so CHROMATICS is not lit.
 func SplitWash(seg Segment, word string, u systems.Upgrade) []Segment {
 	if seg.Ink.A != 0 || word == "" {
 		return []Segment{seg}
@@ -106,7 +106,7 @@ func washInk(ink *image.RGBA, at float64) color.RGBA {
 }
 
 // indexWholeWord is where word starts in text as a whole word, or -1. **Case-folded, like
-// ContainsRun**, so a caller writing Chromatic and a card writing CHROMATIC share one entry.
+// ContainsSpan**, so a caller writing Chromatic and a card writing CHROMATIC share one entry.
 func indexWholeWord(text, word string) int {
 	folded, want := strings.ToLower(text), strings.ToLower(word)
 	for at := 0; at+len(want) <= len(folded); at++ {
@@ -143,7 +143,7 @@ var MetalWords = []WashWord{
 // **One colour rather than SplitWash's spectrum, because the metals are one colour.** The wildcard's
 // ink is five bands and reads as a spectrum only if the letters are cut apart; a sheen is one hue
 // with a light running over it, and a letter-by-letter gold would be a gradient nobody could see
-// spent on nine runs. Which of the two a word takes is a fact about its ink, so the two cuts are
+// spent on nine spans. Which of the two a word takes is a fact about its ink, so the two cuts are
 // two functions rather than one with a flag.
 //
 // **Lifted like SplitWash**, because a tooltip panel is nearly black and these inks were mixed to

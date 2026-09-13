@@ -43,7 +43,7 @@ type Card struct {
 	CostDelta int
 	AmountPct int
 
-	// FormOverride is what this one card counts as on the form axis, when a parasite has told it
+	// FormOverride is what this one card counts as on the form axis, when a rune has told it
 	// to be something else. **FormNone means unmodified**, so a plain card is still the zero value
 	// and every `Card{Concept: x}` literal keeps working — the same trade AmountPct made.
 	//
@@ -81,7 +81,7 @@ type Card struct {
 	// only by ID still share one rendered face.
 	ID int
 
-	// Riders are the rules this one card carries, and they are what a parasite leaves behind.
+	// Riders are the rules this one card carries, and they are what a rune leaves behind.
 	//
 	// **A fixed array, because a card must stay comparable** — the screen's face cache and
 	// TestRoundIsDeterministic both depend on it, and a slice here would end both. Empty seats are

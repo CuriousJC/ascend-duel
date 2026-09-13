@@ -52,19 +52,19 @@ func (s *CombatScene) handTermLines(e combat.Event, played []combat.Card) []sess
 		card := played[idx]
 		ink := elementInk(card.Element)
 
-		runs := []session.LedgerRun{
+		spans := []session.LedgerSpan{
 			{Text: fmt.Sprintf("%-14s", termCardName(card)), Ink: ink},
 			{Text: fmt.Sprintf("%4d", termBase(e, i)), Ink: ink},
 		}
-		runs = append(runs, termNotes(e, i, relics)...)
+		spans = append(spans, termNotes(e, i, relics)...)
 
-		out = append(out, session.LedgerLine{Voice: session.VoiceTerm, Runs: runs})
+		out = append(out, session.LedgerLine{Voice: session.VoiceTerm, Spans: spans})
 	}
 
 	// **The sum, under the terms it adds up, in the figures the hand dialog flew into place.** It
 	// is the last line rather than the first because that is the order the arithmetic happens in
 	// and the order the dialog acts it out in: the cards, then what they came to.
-	out = append(out, session.LedgerLine{Voice: session.VoiceTerm, Runs: handMathRuns(e, played)})
+	out = append(out, session.LedgerLine{Voice: session.VoiceTerm, Spans: handMathSpans(e, played)})
 	return out
 }
 
@@ -102,12 +102,12 @@ func termCardName(c combat.Card) string {
 //
 // **A relic firing at the identity still fired.** A fresh Enflamed is 1x and is written, on
 // relicNote's rule: leaving it out is how a growing relic's climb off 1x becomes invisible.
-func termNotes(e combat.Event, term int, relics []combat.WornRelic) []session.LedgerRun {
-	var notes []session.LedgerRun
+func termNotes(e combat.Event, term int, relics []combat.WornRelic) []session.LedgerSpan {
+	var notes []session.LedgerSpan
 
 	for seat := range e.HandLanding[term] {
 		if e.HandLanding[term][seat] {
-			notes = append(notes, session.LedgerRun{
+			notes = append(notes, session.LedgerSpan{
 				Text: "  + " + relicName(relics, seat) + " lands it again",
 				Ink:  session.InkRelic,
 			})
@@ -126,13 +126,13 @@ func termNotes(e combat.Event, term int, relics []combat.WornRelic) []session.Le
 		if grown := e.HandGrown[term][seat]; term > 0 && grown != e.HandGrown[term-1][seat] {
 			note += fmt.Sprintf(" (grown %d)", grown)
 		}
-		notes = append(notes, session.LedgerRun{Text: note, Ink: session.InkRelic})
+		notes = append(notes, session.LedgerSpan{Text: note, Ink: session.InkRelic})
 	}
 
 	return notes
 }
 
-// handMathRuns is the blow written out as the sum it is, in the colours the hand dialog uses:
+// handMathSpans is the blow written out as the sum it is, in the colours the hand dialog uses:
 // `10 + 10 + (10 x 2) x 2.5 = 100`.
 //
 // **A relic's figure stays with the term it priced**, in brackets, rather than being folded into the
@@ -142,12 +142,12 @@ func termNotes(e combat.Event, term int, relics []combat.WornRelic) []session.Le
 //
 // **Every figure comes off the event.** Base, Multiplier, the per-term amounts and the total are
 // all the resolver's, so the line cannot claim a sum the round did not use.
-func handMathRuns(e combat.Event, played []combat.Card) []session.LedgerRun {
-	var runs []session.LedgerRun
+func handMathSpans(e combat.Event, played []combat.Card) []session.LedgerSpan {
+	var spans []session.LedgerSpan
 
 	for i := 0; i < e.HandCardCount && i < len(e.HandAmounts); i++ {
-		if len(runs) > 0 {
-			runs = append(runs, session.LedgerRun{Text: " + "})
+		if len(spans) > 0 {
+			spans = append(spans, session.LedgerSpan{Text: " + "})
 		}
 
 		ink := ""
@@ -157,34 +157,34 @@ func handMathRuns(e combat.Event, played []combat.Card) []session.LedgerRun {
 
 		base, scales := termBase(e, i), relicFactors(e, i)
 		if len(scales) == 0 {
-			runs = append(runs, session.LedgerRun{Text: strconv.Itoa(base), Ink: ink})
+			spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(base), Ink: ink})
 			continue
 		}
 
-		runs = append(runs, session.LedgerRun{Text: "(" + strconv.Itoa(base), Ink: ink})
+		spans = append(spans, session.LedgerSpan{Text: "(" + strconv.Itoa(base), Ink: ink})
 		for _, pct := range scales {
-			runs = append(runs, session.LedgerRun{
+			spans = append(spans, session.LedgerSpan{
 				Text: " x " + handMultiplierText(pct), Ink: session.InkRelic,
 			})
 		}
-		runs = append(runs, session.LedgerRun{Text: ")", Ink: ink})
+		spans = append(spans, session.LedgerSpan{Text: ")", Ink: ink})
 	}
 
 	// A blow whose event carries no terms still has its two figures. Nothing produces one today;
 	// saying the sum it did is better than a line reading `x 1.5 = 30` with nothing in front.
-	if len(runs) == 0 {
-		runs = append(runs, session.LedgerRun{Text: strconv.Itoa(e.Base)})
+	if len(spans) == 0 {
+		spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(e.Base)})
 	}
 
-	runs = append(runs,
+	spans = append(spans,
 		// **No mark.** An underline under a multiplier in the middle of a sum reads as a
 		// typesetting accident; the whole panel is bold already, and the figure's place in the
 		// line is what says what it is.
-		session.LedgerRun{Text: " x " + handMultiplierText(e.Multiplier), Ink: session.InkHand},
-		session.LedgerRun{Text: " = "},
-		session.LedgerRun{Text: strconv.Itoa(e.Amount), Ink: session.InkTotal},
+		session.LedgerSpan{Text: " x " + handMultiplierText(e.Multiplier), Ink: session.InkHand},
+		session.LedgerSpan{Text: " = "},
+		session.LedgerSpan{Text: strconv.Itoa(e.Amount), Ink: session.InkTotal},
 	)
-	return runs
+	return spans
 }
 
 // relicFactors is every relic multiplier that priced one term, in worn order — which is firing order.

@@ -5,7 +5,7 @@
 //
 // # Why it exists
 //
-// Sixteen parasites attach seven kinds of rider and, until 2026-09-07, not one of them reached the
+// Sixteen runes attach seven kinds of rider and, until 2026-09-07, not one of them reached the
 // drawing: a ridden card looked exactly like an unridden one and the only place a rider was
 // visible was the tooltip prose. That is a hand of altered cards the player cannot read. See
 // TODO.md, which is where the owner asked for it to be tracked.
@@ -51,14 +51,14 @@
 // be afforded, exactly as an ordinary one does. That is one switch in `Spec.atState` and a wash
 // applied after it, and this is where it is visible.
 //
-// **Which parasite grants it.** An upgrade nobody can acquire is invisible in the other
+// **Which rune grants it.** An upgrade nobody can acquire is invisible in the other
 // direction, so the page names the rider and the record that attaches it, and says so loudly when
-// nothing in `data/parasites.json` does.
+// nothing in `data/runes.json` does.
 //
 // # It is a report, not a drawing-board
 //
 // Same split as relicsheet against cardsheet. The upgrades come from `systems.Upgrades()`, the
-// riders from `combat.RiderKinds()` and the parasites from `internal/session`, which validates the
+// riders from `combat.RiderKinds()` and the runes from `internal/session`, which validates the
 // catalogue at init — so an upgrade this page cannot draw is one the game cannot draw either.
 //
 // **It also walks the riders the other way round**, and says so when a rider kind draws nothing: an
@@ -319,7 +319,7 @@ var riderUpgrade = map[combat.RiderKind]systems.Upgrade{
 	combat.RiderVitaeInHand:  systems.UpgradeHeldVitae,
 }
 
-// grantsFor names every parasite in the catalogue that attaches this upgrade's rider, or an empty
+// grantsFor names every rune in the catalogue that attaches this upgrade's rider, or an empty
 // string if nothing does.
 //
 // **An upgrade nothing grants is a drawing with no way into the game.** That is exactly as
@@ -328,8 +328,8 @@ var riderUpgrade = map[combat.RiderKind]systems.Upgrade{
 func grantsFor(u systems.Upgrade) string {
 	want := ridersFor(u)
 	out := ""
-	for _, p := range session.Parasites() {
-		if p.Target != session.ParasiteRider || p.Rider.String() != want {
+	for _, p := range session.Runes() {
+		if p.Target != session.RuneRider || p.Rider.String() != want {
 			continue
 		}
 		if out != "" {
@@ -362,7 +362,7 @@ func tipFor(u systems.Upgrade) tip {
 
 // tipRuns cuts one line into the runs the game draws it as, with each colour written out as CSS.
 //
-// **It is `screens.tipLine` through the same vocabulary**, which is the whole reason `ElementRuns`
+// **It is `screens.tipLine` through the same vocabulary**, which is the whole reason `ElementSpans`
 // lives in `internal/cards`: the page cannot import the screen, but it can import the table the
 // screen reads. A word coloured here is coloured under the cursor.
 func tipRuns(line string) []tipRun {
@@ -386,7 +386,7 @@ func tipRuns(line string) []tipRun {
 // drifting is that both cuts live in `internal/cards`.
 func washed(line string) []cards.Segment {
 	var out []cards.Segment
-	for _, seg := range cards.SplitRuns(line, cards.ElementRuns(line)) {
+	for _, seg := range cards.SplitSpans(line, cards.ElementSpans(line)) {
 		out = append(out, cards.SplitWash(seg, carddesc.Chromatic, systems.UpgradeWild)...)
 	}
 	return cards.SplitMetals(out)
@@ -402,12 +402,12 @@ func riderOf(u systems.Upgrade) combat.RiderKind {
 	return combat.RiderNone
 }
 
-// demoRiderAmount is the figure the page gives a rider, taken from **the parasite that grants it**
+// demoRiderAmount is the figure the page gives a rider, taken from **the rune that grants it**
 // rather than made up here — so the tooltip on this page carries the number a run would actually
-// see, and a retune in `data/parasites.json` moves it.
+// see, and a retune in `data/runes.json` moves it.
 func demoRiderAmount(k combat.RiderKind) int {
-	for _, p := range session.Parasites() {
-		if p.Target == session.ParasiteRider && p.Rider == k {
+	for _, p := range session.Runes() {
+		if p.Target == session.RuneRider && p.Rider == k {
 			return p.Number
 		}
 	}

@@ -8,23 +8,23 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
-// TestAnElementParasiteReachesTheCardInTheHand.
+// TestAnElementRuneReachesTheCardInTheHand.
 //
-// **The whole point of a parasite is that it lands mid-fight**, and until 2026-09-08 no element
-// parasite did. `resyncHandFromRun` wrote the hand's old colour back over the run's new one, to
+// **The whole point of a rune is that it lands mid-fight**, and until 2026-09-08 no element
+// rune did. `resyncHandFromRun` wrote the hand's old colour back over the run's new one, to
 // preserve a flip relic's recolour — so the run's card really did turn arcane and the card the player
-// was holding did not. The round is played out of `s.hand`, so what a Hexbore bought was a change
+// was holding did not. The round is played out of `s.hand`, so what a Hexmark bought was a change
 // that arrived next fight and a consumable that appeared to vanish for nothing.
 //
-// The form parasites were unaffected, which is what made it hard to see: only Element was written
+// The form runes were unaffected, which is what made it hard to see: only Element was written
 // back over.
 //
-// This holds both halves of the fix: the parasite reaches the hand, and it reaches the run.
-func TestAnElementParasiteReachesTheCardInTheHand(t *testing.T) {
+// This holds both halves of the fix: the rune reaches the hand, and it reaches the run.
+func TestAnElementRuneReachesTheCardInTheHand(t *testing.T) {
 	run := session.New(combat.PlainCards(combat.Bash, combat.Bash))
-	hexbore, ok := session.ParasiteByKey("hexbore")
+	hexmark, ok := session.RuneByKey("hexmark")
 	if !ok {
-		t.Skip("no hexbore in the catalogue")
+		t.Skip("no hexmark in the catalogue")
 	}
 
 	gs := &state.GlobalState{Run: run}
@@ -37,8 +37,8 @@ func TestAnElementParasiteReachesTheCardInTheHand(t *testing.T) {
 	}
 
 	ids := s.selectedCardIDs()
-	if !run.ApplyParasiteRolling(hexbore, ids, nil) {
-		t.Fatalf("hexbore refused %d cards", len(ids))
+	if !run.ApplyRuneRolling(hexmark, ids, nil) {
+		t.Fatalf("hexmark refused %d cards", len(ids))
 	}
 	s.resyncHandFromRun(gs)
 
@@ -47,12 +47,12 @@ func TestAnElementParasiteReachesTheCardInTheHand(t *testing.T) {
 	}
 	for i, c := range s.hand {
 		if c.actionCard.Element != combat.Arcane {
-			t.Errorf("hand card %d is %v after a hexbore, want arcane", i, c.actionCard.Element)
+			t.Errorf("hand card %d is %v after a hexmark, want arcane", i, c.actionCard.Element)
 		}
 	}
 	for _, c := range run.Deck() {
 		if c.Element != combat.Arcane {
-			t.Errorf("the run's card is %v after a hexbore, want arcane", c.Element)
+			t.Errorf("the run's card is %v after a hexmark, want arcane", c.Element)
 		}
 	}
 }

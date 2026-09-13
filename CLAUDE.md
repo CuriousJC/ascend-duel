@@ -32,7 +32,7 @@ Six streams, each with one job. Reach for the right one rather than searching al
   work turned one up.
 - When the two disagree, `MECHANICS.md` is newer and wins — say so rather than guessing.
 - **`data/` is the catalogue, and this file never says what is in it** *(owner's call,
-  2026-09-11)*. How many relics there are, which essences exist, what a parasite's line reads — all of
+  2026-09-11)*. How many relics there are, which essences exist, what a rune's line reads — all of
   that is a `data/*.json` read or a `docs/sheets/` page away, and it is **pre-v1 and changing
   constantly**, so a count written down here is wrong within the week and wrong *silently*: nothing
   compiles it, nothing tests it, and it is loaded into context every session to mislead. Every
@@ -155,20 +155,20 @@ go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by m
 go run ./tools/enemysheet   # every creature by floor band: card, stat line, whole deck
 go run ./tools/bosssheet    # the stairway protectors, the same way, by floor
 go run ./tools/stonesheet   # every stone against the rung it raises, grouped by axis
-go run ./tools/parasitesheet # every parasite: the line it prints against the rule that fires
+go run ./tools/runesheet # every rune: the line it prints against the rule that fires
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
 go run ./tools/relicart      # files generated relic art: reduce, commit, set "Art" on the record
 go run ./tools/relicart -kind essence       # the same, for data/essences.json and assets/essence
-go run ./tools/relicart -kind parasite   # the same, for data/parasites.json and assets/parasite
+go run ./tools/relicart -kind rune   # the same, for data/runes.json and assets/rune
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
 
 **The sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write there
 rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone opens to
-see every card, relic, essence, hand, stone, parasite, upgrade, creature and boss in the game. That
+see every card, relic, essence, hand, stone, rune, upgrade, creature and boss in the game. That
 reverses the older rule that a regenerated artefact is not worth committing: the argument it left
 out is the audience, since a sheet needing a Go toolchain and a remembered command each is a sheet
 only ever seen by whoever just changed the thing it shows.
@@ -280,14 +280,14 @@ field to write. See MECHANICS.md §The round limit. Two things to know before to
   simulates a duel, so a floor whose creatures have outrun what a run can build is unwinnable and
   no test goes red.
 
-**Parasites alter the deck *during* a fight, and they are the one mechanic allowed near a live
-round** *(owner's call, 2026-08-27)*. `data/parasites.json` is the catalogue,
-`internal/session/parasite.go` validates and applies, `internal/combat/rider.go` holds the one
-vocabulary the rules have to read, and `internal/screens/combat_parasite.go` is the run's half —
+**Runes alter the deck *during* a fight, and they are the one mechanic allowed near a live
+round** *(owner's call, 2026-08-27)*. `data/runes.json` is the catalogue,
+`internal/session/rune.go` validates and applies, `internal/combat/rider.go` holds the one
+vocabulary the rules have to read, and `internal/screens/combat_rune.go` is the run's half —
 there is no board piece any more. **The `P` button and its dialog went on 2026-09-06** *(owner's
-call)*: a parasite is a card in the **consumables pane** on the top row (`consumables.go`), and it
-is aimed by **selecting the cards in the hand first and clicking the parasite second** — the rule
-that joins the two is `targeting.go`. See MECHANICS.md §Parasites. A handful of things to know
+call)*: a rune is a card in the **consumables pane** on the top row (`consumables.go`), and it
+is aimed by **selecting the cards in the hand first and clicking the rune second** — the rule
+that joins the two is `targeting.go`. See MECHANICS.md §Runes. A handful of things to know
 before touching any of it:
 
 - **Between turns, never inside one.** Spending is gated on `planning()`, because `ResolveRound`
@@ -295,11 +295,11 @@ before touching any of it:
   disagreeing with a blow already computed. This is the presentation-may-never-change-an-outcome
   rule meeting the one mechanic that wanted to break it.
 - **A card is a form, an element and an action — and then one upgrade** *(owner's call,
-  2026-09-09)*. The first three compose freely and a `normal` parasite moves one of them; an
-  `upgrade` parasite writes the fourth, and **whatever was there is gone**. `combat.MaxCardRiders`
-  is **1**, `Card.SetRider` replaces rather than stacks, and `data/parasites.json` declares
+  2026-09-09)*. The first three compose freely and a `normal` rune moves one of them; an
+  `upgrade` rune writes the fourth, and **whatever was there is gone**. `combat.MaxCardRiders`
+  is **1**, `Card.SetRider` replaces rather than stacks, and `data/runes.json` declares
   `"Change": "normal"|"upgrade"` on every record — authored, and refused at load if it disagrees
-  with what its target actually does. Riders stacked three to a card until then; two Leeches were
+  with what its target actually does. Riders stacked three to a card until then; two Siphons were
   twenty life and are now one card forgetting the other. See MECHANICS.md §Normal and upgrade.
 - **`combat.Card.Riders` is still a fixed array** because a card must stay comparable — the screen's
   face cache and `TestRoundIsDeterministic` both depend on it, exactly as `Duelist.Relics` does. A
@@ -328,8 +328,8 @@ before touching any of it:
   `KindGrantedLife` for `screens.settleGrants` to make permanent on the run; silver goes through the
   purse and needs no event. **A card that gambles on every play is worth however often it is
   played**, which on a cheap starting card is dozens of times a run — the dial is the denominator in
-  `data/parasites.json`. See MECHANICS.md §Gold and silver.
-- **Targets are card identities, not deck positions.** A parasite may name two cards and is spent
+  `data/runes.json`. See MECHANICS.md §Gold and silver.
+- **Targets are card identities, not deck positions.** A rune may name two cards and is spent
   while three piles hold copies of the same cards, so `combat.Card.ID` is what makes it possible.
   The note in MECHANICS.md saying mid-fight alteration would need one is now satisfied rather than
   outstanding.
@@ -758,15 +758,15 @@ the machinery and `internal/cards/dissolve.go` is the pattern the face comes apa
 - **It may never change an outcome.** The post-battle screen still holds the real deck edit in
   `applyNow` until the stage is over; the morph is a picture of a decision already taken.
 
-**Two callers, and the second is the hand.** `internal/screens/combat_handmorph.go` is a parasite
+**Two callers, and the second is the hand.** `internal/screens/combat_handmorph.go` is a rune
 changing cards where they stand, mid-fight.
 
-- **What changed is read off the faces, not off the parasite.** `handFaces` is taken before the
+- **What changed is read off the faces, not off the rune.** `handFaces` is taken before the
   apply and again after, and the three shapes fall out of the comparison: a face that differs is a
-  replacement, a card that has appeared is a copy, a card that has gone was eaten. **No parasite has
+  replacement, a card that has appeared is a copy, a card that has gone was eaten. **No rune has
   a case anywhere in the drawing**, which is what stops a new one arriving with no picture.
 - **One beat for all of them** *(owner's call, the shield break's rule again)*. Every card a
-  parasite took changes at once; three dissolves in sequence would be three pauses over a hand the
+  rune took changes at once; three dissolves in sequence would be three pauses over a hand the
   player is building.
 - **A morph carries the card's identity, never a seat index**, so a sort or a drag under a running
   one moves the picture with the card. The captured rectangle is the fallback for a card that is no
@@ -774,7 +774,7 @@ changing cards where they stand, mid-fight.
 - **The row draws its own**, as a fourth suppression beside `inboundTo`, `resolvedInHand` and
   `slidingTo`, and it is checked last: a morph still running when DUEL! is pressed gives way to the
   round rather than painting a second copy of the card.
-- **Nothing waits for it.** A parasite is spent while planning, so the card under a running morph is
+- **Nothing waits for it.** A rune is spent while planning, so the card under a running morph is
   already the new card and is selectable while it changes — the same rule that makes a flying card
   clickable. It is deliberately not in `combatTheatre.running()`, which is the playback cursor's
   question.
@@ -1073,7 +1073,7 @@ are easy to re-break:
 **A card's picture is either a panel on it or the whole of it, and `Style.ArtBleed` is which**
 *(owner's call, 2026-09-11)*. `internal/cards/bleed.go` owns the second path: the art is scaled to
 *cover* the card, clipped to the border's inner curve, and drawn first with everything else on
-top. `RelicStyle` and `EssenceStyle` bleed — so relics, parasites, essences, stones and the two
+top. `RelicStyle` and `EssenceStyle` bleed — so relics, runes, essences, stones and the two
 sealed goods are all one format — and `EnemyStyle` and `DuelistStyle` still fit a picture into
 `ArtTop`/`ArtInset`/`ArtMaxH`. The two do not compose, and the art is authored against the choice:
 a fitted box wants a square and a bleeding card wants the card's own 200x280. Five things follow:
@@ -1108,7 +1108,7 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   sheet counts both and marks both in pink.
 
 - **Four catalogues carry `Family` and `Draw`, and nothing that plays the game reads either**
-  *(owner's call, 2026-09-12)*. `relics.json`, `essences.json` and `parasites.json` carry `Art`
+  *(owner's call, 2026-09-12)*. `relics.json`, `essences.json` and `runes.json` carry `Art`
   beside them; `enemies.json` and `bosses.json` carry the two alone, with every `Draw` reading
   `TO BE DETERMINED` — their portraits are licensed creature art rather than generated pictures,
   so the field is a seat for briefs to be written into a few at a time rather than a backlog
@@ -1120,14 +1120,14 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   the floor is the placement decision, and a field repeating the heading above it would say
   nothing.
 
-**Relic, essence and parasite art is a globbed family, keyed by filename stem** *(2026-09-11, the
-parasites 2026-09-12)* — `relic/fire.png` is `fire`, which is what `data/relics.json` writes in
+**Relic, essence and rune art is a globbed family, keyed by filename stem** *(2026-09-11, the
+runes 2026-09-12)* — `relic/fire.png` is `fire`, which is what `data/relics.json` writes in
 its `Art` field. **Each has its own default face** — `default-relic`, `default-essence`,
-`default-parasite`, reached through the record's `ArtKey()` rather than through a constant in a
+`default-rune`, reached through the record's `ArtKey()` rather than through a constant in a
 screen: a fallback living in `internal/screens` is a fallback the review tool does not have, which
-is how a sheet comes to disagree with the game. The parasites wore the essence's placeholder until
+is how a sheet comes to disagree with the game. The runes wore the essence's placeholder until
 they split, and they split because one shared picture is a page where a drawn essence and an undrawn
-parasite are the same face.
+rune are the same face.
 Same exception to the three-edit rule the enemy portraits take, and the same cost: a key is
 tied to its filename, so renaming a file means editing the JSON. `assets.embedFamily` is the one
 walk all four families go through. **Most relics still have no artwork and draw
@@ -1168,7 +1168,7 @@ thirty seconds on every `tools/handsheet` run**, which a full `tools/sheets` pay
 are priced against. `handodds` stays the tuning view — the axes kept apart, and the `-ap` flag for
 a turn holding cost discounts.
 
-**`tools/stonesheet` and `tools/parasitesheet` do it for the two consumable catalogues**
+**`tools/stonesheet` and `tools/runesheet` do it for the two consumable catalogues**
 *(2026-09-01)*. Both arrive four at a time inside a sealed good, so the whole of either is several
 shop visits and a lot of luck away in a launched game. The stone sheet is **walked by rung rather
 than by stone** — the catalogue is one stone per rung, so walking the ladder orders the page for
@@ -1178,9 +1178,9 @@ dropped rather than drawn empty, which is deliberately not the hand sheet's layo
 interleaves all three by multiplier because a player forming a hand chooses among all of them at
 once, where a stone is bought against one rung. **It is also the only place the ladder and the +N
 are visible together**, and the +N is computed from `hands.json` rather than authored, so a retuned
-rung moves the card's face with nothing edited in `stones.json`. The parasite sheet is relic-sheet
+rung moves the card's face with nothing edited in `stones.json`. The rune sheet is relic-sheet
 shaped — the authored line against the resolved rule — and earned a page before it had many
-records, because a parasite is the least readable record in `data/`: which of `Rider`, `Value` and
+records, because a rune is the least readable record in `data/`: which of `Rider`, `Value` and
 `Count` the rules read depends entirely on the target.
 
 **`tools/enemysheet` and `tools/bosssheet` do it for the two opponent pools** *(2026-08-23)*. A
@@ -1466,7 +1466,7 @@ combination looks like on screen. It is the relic-and-hand counterpart of `deckS
 - **A deck line and a hand card may carry `"Riders"`** *(2026-09-07)*, by the names
   `combat.RiderKind` writes, with a figure after a colon where the kind takes one —
   `"damage-on-play:10"`, or the bare `"wild-element"` for the one that does not. It exists because
-  `Parasites` is the right fixture for looking at the *dialog* and the wrong one for looking at what
+  `Runes` is the right fixture for looking at the *dialog* and the wrong one for looking at what
   an altered card does to a hand: getting there means playing a turn to spend the consumable and
   then reading a hand that is already half spent. The `wildcards` entry is what wanted it.
 - **`"Teach": true` starts the tutorial on the run**, and is the only way to start it today — see

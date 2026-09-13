@@ -111,14 +111,14 @@ type panePlacement struct {
 // paneEdge is the pink a pane is bordered and named in. Still a placeholder palette.
 var paneEdge = color.RGBA{R: 235, G: 105, B: 170, A: 255}
 
-// paneRun is one run of text inside a row, with the colour it is written in.
+// paneSpan is one run of text inside a row, with the colour it is written in.
 //
-// **A row is runs rather than three fixed slots** *(2026-09-02)*. It was prefix / verb / suffix,
+// **A row is spans rather than three fixed slots** *(2026-09-02)*. It was prefix / verb / suffix,
 // which was exactly enough for a sentence with one coloured verb in it and not enough for the
 // ledger's arithmetic — a figure in its card's colour, a relic's multiplier in the relic pink, the
-// hand's own multiplier in the hand's. Storing runs is what lets the panel look like the screen it
+// hand's own multiplier in the hand's. Storing spans is what lets the panel look like the screen it
 // is an account of.
-type paneRun struct {
+type paneSpan struct {
 	text string
 
 	// ink is the colour this run is written in. **Zero alpha means "the row's own ink"**, the same
@@ -129,11 +129,11 @@ type paneRun struct {
 	mark bool
 }
 
-// paneRow is one line in a pane: some runs of text, optionally preceded by a colour swatch saying
+// paneRow is one line in a pane: some spans of text, optionally preceded by a colour swatch saying
 // whose action it is. A zero-alpha swatch means the row has none, in which case a single unmarked
 // run is centred instead of sitting in a column beside the squares.
 type paneRow struct {
-	runs []paneRun
+	spans []paneSpan
 
 	swatch color.RGBA
 
@@ -159,23 +159,23 @@ type paneRow struct {
 // plainRow is a whole row in the pane's own ink: a heading, a placeholder, a sentence nobody has
 // coloured. Most rows outside a duel are one of these.
 func plainRow(text string) paneRow {
-	return paneRow{runs: []paneRun{{text: text}}}
+	return paneRow{spans: []paneSpan{{text: text}}}
 }
 
 // text is the row as one string, for a caller reading it rather than drawing it — a test, or the
 // scripted demo's report.
 func (r paneRow) text() string {
 	var out string
-	for _, run := range r.runs {
-		out += run.text
+	for _, span := range r.spans {
+		out += span.text
 	}
 	return out
 }
 
 // centred reports whether the row is written down the middle of the pane rather than in the
-// column: a lone unmarked run, no swatch and no indent. Headings are the case this exists for.
+// column: a lone unmarked span, no swatch and no indent. Headings are the case this exists for.
 func (r paneRow) centred() bool {
-	return r.swatch.A == 0 && r.indent == 0 && len(r.runs) == 1 && !r.runs[0].mark
+	return r.swatch.A == 0 && r.indent == 0 && len(r.spans) == 1 && !r.spans[0].mark
 }
 
 // panePlacementRect is the column a full-height pane occupies, from its percentages and the
@@ -273,15 +273,15 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 			// needs it most is the one that has a band behind it: a heading on a dark ground
 			// written in the panel's near-black ink is a heading nobody can read.
 			tint := ink
-			if !row.highlighted && row.runs[0].ink.A != 0 {
-				tint = row.runs[0].ink
+			if !row.highlighted && row.spans[0].ink.A != 0 {
+				tint = row.spans[0].ink
 			}
 
 			rowOp := &text.DrawOptions{}
 			rowOp.GeoM.Translate(float64(x+contentW/2), float64(rowY))
 			rowOp.PrimaryAlign = text.AlignCenter
 			rowOp.ColorScale.ScaleWithColor(tint)
-			text.Draw(screen, row.runs[0].text, face, rowOp)
+			text.Draw(screen, row.spans[0].text, face, rowOp)
 			continue
 		}
 
@@ -306,31 +306,31 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 			textX = x + paneRowInset + swatchSize + swatchGap
 		}
 
-		// The runs, measured one after the next. **A run with no ink of its own takes the row's**,
+		// The spans, measured one after the next. **A span with no ink of its own takes the row's**,
 		// so a plain sentence is written in one colour and a sum is written in five.
 		cursorX := float64(textX)
-		for _, run := range row.runs {
-			if run.text == "" {
+		for _, span := range row.spans {
+			if span.text == "" {
 				continue
 			}
-			tint := run.ink
+			tint := span.ink
 			if tint.A == 0 || row.highlighted {
 				tint = ink
 			}
-			bold := run.mark || row.highlighted || p.bold
+			bold := span.mark || row.highlighted || p.bold
 
 			at := func(dx float64) {
 				op := &text.DrawOptions{}
 				op.GeoM.Translate(cursorX+dx, float64(rowY))
 				op.ColorScale.ScaleWithColor(tint)
-				text.Draw(screen, run.text, face, op)
+				text.Draw(screen, span.text, face, op)
 			}
 			at(0)
 			if bold {
 				at(1) // faux bold
 			}
 
-			wRun, _ := text.Measure(run.text, face, 0)
+			wSpan, _ := text.Measure(span.text, face, 0)
 
 			// **The mark is always bold *and* underlined.** That is what makes a verb read as the
 			// verb rather than as a word that happens to be coloured — one mark would be ambiguous
@@ -339,15 +339,15 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 			// **Flush with the bottom of the measured line box**, not a constant above it:
 			// text.Measure reports the full line including descent, which is what keeps the rule
 			// clear of a descender rather than striking through one.
-			if run.mark {
+			if span.mark {
 				vector.DrawFilledRect(screen,
 					float32(cursorX), rowY+float32(lineHeight)-underlineHeight,
-					float32(wRun), underlineHeight, tint, false)
+					float32(wSpan), underlineHeight, tint, false)
 			}
 
 			// Advance by the *unbolded* width, so the second pass thickens the strokes without
-			// walking the runs after it out of place.
-			cursorX += wRun
+			// walking the spans after it out of place.
+			cursorX += wSpan
 		}
 	}
 }

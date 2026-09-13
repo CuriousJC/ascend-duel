@@ -285,7 +285,7 @@ const (
 	// Every other element and form relic pays for spending a card; this pays for holding one, so a
 	// run wearing both is being pulled in two directions on purpose.
 	//
-	// **The held hand is already something the rules see** — `blowDMG` reads it for the parasite
+	// **The held hand is already something the rules see** — `blowDMG` reads it for the rune
 	// riders — so this needed no new moment. It lands in the blow's base sum beside the hand's own
 	// term, and is multiplied with the cards for the same reason that one is.
 	//
@@ -1230,7 +1230,7 @@ func HandBonus(worn []WornRelic, hand HandID) (int, [MaxWornRelics]bool) {
 // `card-damage` rule takes, applied to the other pile.
 //
 // **A card kept back is not spent**, so this pays again on every turn it is still being held — the
-// same property the parasite riders have, and for the same reason: it is a fact about the hand at
+// same property the rune riders have, and for the same reason: it is a fact about the hand at
 // the moment the blow is added up rather than an event.
 func HeldBonus(worn []WornRelic, held []Card) (int, [MaxWornRelics]bool) {
 	var seats [MaxWornRelics]bool

@@ -116,9 +116,9 @@ type RunSnapshot struct {
 	// than about the run.
 	Plays map[string]int `json:"plays,omitempty"`
 
-	// Held is the bucket of parasites the run is carrying, by record key, **in acquisition
+	// Held is the sack of runes the run is carrying, by record key, **in acquisition
 	// order** — which is the order the board piece draws them in, and so the only order the
-	// player can see. A list rather than a count per key, because two of the same parasite are
+	// player can see. A list rather than a count per key, because two of the same rune are
 	// two things to spend.
 	Held []string `json:"held,omitempty"`
 
@@ -128,10 +128,10 @@ type RunSnapshot struct {
 	// one is a decision already made, and folding the two would lose the difference.
 	Pouch []string `json:"pouch,omitempty"`
 
-	// LastParasite is the record key of the parasite the run spent most recently, which is what a
+	// LastRune is the record key of the rune the run spent most recently, which is what a
 	// chimera copies. **A name, never an ordinal**, the rule every vocabulary in this file is
 	// under. Empty on a run that has spent none, which is what makes a chimera refuse.
-	LastParasite string `json:"lastParasite,omitempty"`
+	LastRune string `json:"lastRune,omitempty"`
 
 	// Spoils is what the last win still owes, unclaimed. A run saved at the reward station has a
 	// payout part-narrated, and dropping it would pay the player less for quitting.
@@ -189,17 +189,17 @@ type LedgerRoundSnapshot struct {
 
 // LedgerLineSnapshot is one line of the account.
 //
-// **Runs rather than one string**, because the panel colours a line in pieces: the verb by its
+// **Spans rather than one string**, because the panel colours a line in pieces: the verb by its
 // category, a figure by its card's element, a relic's multiplier in the relic pink. Voice and Ink are
 // short closed vocabularies written as words, on the rule every other name in this file is under —
 // a colour in a save file would be a palette decision frozen into a run.
 type LedgerLineSnapshot struct {
-	Voice string              `json:"voice,omitempty"`
-	Runs  []LedgerRunSnapshot `json:"runs,omitempty"`
+	Voice string               `json:"voice,omitempty"`
+	Spans []LedgerSpanSnapshot `json:"spans,omitempty"`
 }
 
-// LedgerRunSnapshot is one run of text inside a line.
-type LedgerRunSnapshot struct {
+// LedgerSpanSnapshot is one run of text inside a line.
+type LedgerSpanSnapshot struct {
 	Text string `json:"text"`
 	Ink  string `json:"ink,omitempty"`
 	Mark bool   `json:"mark,omitempty"`
@@ -232,7 +232,7 @@ type CardSnapshot struct {
 	CostDelta int `json:"costDelta,omitempty"`
 	AmountPct int `json:"amountPct,omitempty"`
 
-	// Riders are the lasting rules a parasite has attached to this card, in the order they were
+	// Riders are the lasting rules a rune has attached to this card, in the order they were
 	// attached — which is the order they fire. Omitted when empty, so an unridden deck reads as a
 	// plain list.
 	Riders []RiderSnapshot `json:"riders,omitempty"`

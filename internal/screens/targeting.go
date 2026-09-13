@@ -3,18 +3,18 @@ package screens
 // Aiming a consumable: **select the cards, then click the thing you are spending on them.**
 //
 // **The gesture reversed on 2026-09-06** *(owner's call)*. It used to be arm-then-aim — open a
-// dialog, click the parasite, then click the cards it eats — and it is now select-then-apply, on
+// dialog, click the rune, then click the cards it eats — and it is now select-then-apply, on
 // the row of cards the player is already looking at. The essence offer follows the same order, so
 // there is one way to point a consumable at a card anywhere in the game.
 //
 // **What it costs, said out loud.** On the combat screen a selected card is also a card queued for
 // the round, so one gesture now carries two meanings: these are the cards I am playing, and these
-// are the cards this parasite eats. The objection was raised and overruled; what makes it workable
+// are the cards this rune eats. The objection was raised and overruled; what makes it workable
 // is that a consumable is only *clickable* when the current selection is exactly what it needs, so
 // the player is never asked which of the two meanings a click had. That predicate is this file.
 //
 // **The order of a selection is the order of the row.** `syncQueue` walks the hand in row order and
-// so does this, which means a parasite naming a first and a second target — Clone — reads them left
+// so does this, which means a rune naming a first and a second target — Clone — reads them left
 // to right, and the player reorders by dragging exactly as they reorder the queue. There is no
 // separate click order to learn or to draw.
 
@@ -22,9 +22,9 @@ package screens
 // given set of them is legal.
 //
 // **The count is the record's and the legality is the run's.** Neither is this file's to decide —
-// `session.Parasite.Count` says how many cards, `Session.CanApplyParasite` says whether these ones
+// `session.Rune.Count` says how many cards, `Session.CanApplyRune` says whether these ones
 // can take it, and an essence answers both through its own offer. What is here is the one rule that
-// joins them, so the parasite pane and the essence row cannot come to two different conclusions about
+// joins them, so the rune pane and the essence row cannot come to two different conclusions about
 // whether a click should be allowed.
 type consumableTarget struct {
 	// needs is how many cards must be selected. **Zero is a consumable that takes no target at
@@ -42,7 +42,7 @@ type consumableTarget struct {
 
 // satisfiedBy reports whether a selection is exactly what this consumable needs.
 //
-// **Exactly, not at least.** A parasite that ate two cards out of a selection of five would be
+// **Exactly, not at least.** A rune that ate two cards out of a selection of five would be
 // choosing for the player which two, and there is nothing on screen that could say which it picked.
 // So a selection of the wrong size leaves the consumable unclickable rather than the click picking
 // a subset — the card goes dim, which is the same thing an unaffordable card on the shop shelf

@@ -11,7 +11,7 @@ import (
 // These tests walk tables and compare constants. They create no `ebiten.Image` and need no window,
 // which is the narrow exception `internal/screens` tests are allowed under — see CLAUDE.md.
 
-// **Every rider draws.** A parasite the player spent on a card they cannot see they spent it on is
+// **Every rider draws.** A rune the player spent on a card they cannot see they spent it on is
 // the exact failure the whole upgrade mechanic was written to fix, and a rider added without a line
 // in upgradeForRider would be silently invisible — the zero value is UpgradeNone, so it would draw
 // as an ordinary card rather than fail anywhere.
@@ -40,7 +40,7 @@ func TestEveryRiderKindIsDrawn(t *testing.T) {
 	}
 }
 
-// **No two riders draw the same upgrade.** Two parasites that painted a card identically would be
+// **No two riders draw the same upgrade.** Two runes that painted a card identically would be
 // two purchases the player cannot tell apart afterwards, which is the same failure as a rider that
 // draws nothing — one step further along.
 func TestNoTwoRidersShareAnUpgrade(t *testing.T) {
@@ -75,30 +75,30 @@ func TestTheFaceShowsTheLastUpgradePutOn(t *testing.T) {
 	}
 }
 
-// **Every rider a parasite can attach is one the catalogue actually grants**, and every rider the
+// **Every rider a rune can attach is one the catalogue actually grants**, and every rider the
 // rules have is attachable. An upgrade nobody can acquire is a drawing with no way into the game,
 // which is as invisible as a rider with no drawing — see tools/upgradesheet, which says so on the
 // page for the same reason.
 func TestEveryRiderKindIsGrantedBySomething(t *testing.T) {
 	granted := map[combat.RiderKind]bool{}
-	for _, p := range session.Parasites() {
-		if p.Target == session.ParasiteRider {
+	for _, p := range session.Runes() {
+		if p.Target == session.RuneRider {
 			granted[p.Rider] = true
 		}
 	}
 	for _, k := range combat.RiderKinds() {
 		if !granted[k] {
-			t.Errorf("nothing in data/parasites.json attaches rider %s, so the %s upgrade "+
+			t.Errorf("nothing in data/runes.json attaches rider %s, so the %s upgrade "+
 				"cannot be acquired", k, upgradeForRider[k])
 		}
 	}
 }
 
-// **Every rider has a sentence.** parasiteRiderLine had one arm and a "does nothing" default, which
+// **Every rider has a sentence.** runeRiderLine had one arm and a "does nothing" default, which
 // was a lie about seven of the eight kinds that existed at the time.
 func TestEveryRiderKindHasALine(t *testing.T) {
 	for _, k := range combat.RiderKinds() {
-		if line := parasiteRiderLine(k); line == "does nothing" {
+		if line := runeRiderLine(k); line == "does nothing" {
 			t.Errorf("rider %s falls through to the default line", k)
 		}
 	}

@@ -63,7 +63,7 @@ const (
 	// **It resolves to no colour at all** *(owner's call, 2026-09-02)*. Hue belongs to the elements
 	// — five of them, plus pink for a relic and red and blue for the two verbs — and there is none
 	// left that is not a near-collision. A hand is marked by weight and by the amber swatch on its
-	// row instead, which is why these runs carry Mark. See screens.inkNamed.
+	// row instead, which is why these spans carry Mark. See screens.inkNamed.
 	InkHand = "hand"
 
 	// InkRelic is what a worn relic did — the figure it priced a term at, or the landing it bought.
@@ -81,12 +81,12 @@ const (
 	OutcomeLost = "lost"
 )
 
-// LedgerRun is one run of text inside a line, with the colour it is written in.
+// LedgerSpan is one run of text inside a line, with the colour it is written in.
 //
-// **A line is runs rather than one string**, because the ledger is trying to look like the screen
+// **A line is spans rather than one string**, because the ledger is trying to look like the screen
 // it is an account of: the verb coloured by category, a figure by its card's element, a relic's
 // multiplier in the relic pink. One ink a line could say none of that.
-type LedgerRun struct {
+type LedgerSpan struct {
 	Text string
 
 	// Ink is one of the names above, an element's name, or empty for the panel's own ink.
@@ -104,7 +104,7 @@ type LedgerRun struct {
 // **Worded once, when it happened**, so a line read back three fights later is the line that was on
 // screen while it was happening. See internal/screens/prose.go, the one place the words are chosen.
 type LedgerLine struct {
-	Runs []LedgerRun
+	Spans []LedgerSpan
 
 	// Voice is who is speaking, from the list above. An unrecognised voice draws plain rather than
 	// failing anything — see resumeLedger in save.go for why a line may never refuse a run.
@@ -115,7 +115,7 @@ type LedgerLine struct {
 // the scripted demo's report.
 func (l LedgerLine) Text() string {
 	var out string
-	for _, r := range l.Runs {
+	for _, r := range l.Spans {
 		out += r.Text
 	}
 	return out
@@ -123,7 +123,7 @@ func (l LedgerLine) Text() string {
 
 // Line is a whole line in one voice and one ink, which is what a heading and most sentences are.
 func Line(voice, text string) LedgerLine {
-	return LedgerLine{Voice: voice, Runs: []LedgerRun{{Text: text}}}
+	return LedgerLine{Voice: voice, Spans: []LedgerSpan{{Text: text}}}
 }
 
 // LedgerRound is one round of one fight.

@@ -15,7 +15,7 @@ var (
 	arcaneInk = BorderOf(Arcane)
 )
 
-func markedSpec(runs ...TextRun) Spec {
+func markedSpec(runs ...TextSpan) Spec {
 	s := Spec{
 		Name:    "Slice",
 		Form:    FormSlash,
@@ -57,15 +57,15 @@ func TestOnlyTheMarkedRunTakesTheSecondColour(t *testing.T) {
 	// relic changed the card; colouring "4x" says it changed the number, which is what happened.
 	f := faces(t)
 
-	marked, err := Render(markedSpec(TextRun{Run: "4x", Ink: pinkInk}), Hand, f)
+	marked, err := Render(markedSpec(TextSpan{Span: "4x", Ink: pinkInk}), Hand, f)
 	if err != nil {
 		t.Fatal(err)
 	}
 	whole, err := Render(markedSpec(
-		TextRun{Run: "Slashes", Ink: pinkInk},
-		TextRun{Run: "for", Ink: pinkInk},
-		TextRun{Run: "4x", Ink: pinkInk},
-		TextRun{Run: "DMG", Ink: pinkInk},
+		TextSpan{Span: "Slashes", Ink: pinkInk},
+		TextSpan{Span: "for", Ink: pinkInk},
+		TextSpan{Span: "4x", Ink: pinkInk},
+		TextSpan{Span: "DMG", Ink: pinkInk},
 	), Hand, f)
 	if err != nil {
 		t.Fatal(err)
@@ -87,7 +87,7 @@ func TestAMarkThatIsNotInTheTextChangesNothing(t *testing.T) {
 	// blank or a panic. The mark is looked for and not found; the line is drawn in one colour.
 	f := faces(t)
 
-	missing, err := Render(markedSpec(TextRun{Run: "nowhere", Ink: pinkInk}), Hand, f)
+	missing, err := Render(markedSpec(TextSpan{Span: "nowhere", Ink: pinkInk}), Hand, f)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,8 +107,8 @@ func TestTwoRunsTakeTwoColoursOnOneCard(t *testing.T) {
 	f := faces(t)
 
 	spec := markedSpec(
-		TextRun{Run: "Slashes", Ink: fireInk},
-		TextRun{Run: "DMG", Ink: arcaneInk},
+		TextSpan{Span: "Slashes", Ink: fireInk},
+		TextSpan{Span: "DMG", Ink: arcaneInk},
 	)
 	img, err := Render(spec, Hand, f)
 	if err != nil {
@@ -123,13 +123,13 @@ func TestTwoRunsTakeTwoColoursOnOneCard(t *testing.T) {
 	}
 }
 
-// splitRuns is where the whole-word rule and the first-claim rule live, and both are cheaper to
+// SplitSpans is where the whole-word rule and the first-claim rule live, and both are cheaper to
 // assert on strings than on pixels.
 
 func TestARunOnlyMatchesAWholeWord(t *testing.T) {
 	// ICE is inside SLICE and PRICE. A substring match would paint three letters of a card's name
 	// in the ice blue, which reads as a rendering fault rather than as a colour meaning something.
-	segs := SplitRuns("CARD BECOMES SLICE", []TextRun{{Run: "ICE", Ink: fireInk}})
+	segs := SplitSpans("CARD BECOMES SLICE", []TextSpan{{Span: "ICE", Ink: fireInk}})
 
 	if len(segs) != 1 || segs[0].Ink.A != 0 {
 		t.Errorf("ICE matched inside SLICE: %v", segs)
@@ -139,7 +139,7 @@ func TestARunOnlyMatchesAWholeWord(t *testing.T) {
 func TestEveryOccurrenceOfARunIsColoured(t *testing.T) {
 	// One entry covers a word a sentence says twice — "apply BURNING status … BURNING enemies" —
 	// so a repeat does not cost a second seat in a fixed array.
-	segs := SplitRuns("BURNING and BURNING", []TextRun{{Run: "BURNING", Ink: fireInk}})
+	segs := SplitSpans("BURNING and BURNING", []TextSpan{{Span: "BURNING", Ink: fireInk}})
 
 	n := 0
 	for _, s := range segs {
@@ -155,9 +155,9 @@ func TestEveryOccurrenceOfARunIsColoured(t *testing.T) {
 func TestTheFirstRunToClaimAPositionKeepsIt(t *testing.T) {
 	// The caller sorts by length, so BURNING is offered before BURN. If the shorter one could take
 	// the front of the longer, "BURNING" would draw as a coloured BURN and a default-ink ING.
-	segs := SplitRuns("BURNING", []TextRun{
-		{Run: "BURNING", Ink: fireInk},
-		{Run: "BURN", Ink: arcaneInk},
+	segs := SplitSpans("BURNING", []TextSpan{
+		{Span: "BURNING", Ink: fireInk},
+		{Span: "BURN", Ink: arcaneInk},
 	})
 
 	if len(segs) != 1 || segs[0].Text != "BURNING" || segs[0].Ink != fireInk {
@@ -169,9 +169,9 @@ func TestSplittingCoversTheWholeLine(t *testing.T) {
 	// Segments are drawn one after another from a single starting x, so anything dropped between
 	// them would shift the rest of the line left rather than leave a gap.
 	line := "Fire attacks BURN the target."
-	segs := SplitRuns(line, []TextRun{
-		{Run: "Fire", Ink: fireInk},
-		{Run: "BURN", Ink: arcaneInk},
+	segs := SplitSpans(line, []TextSpan{
+		{Span: "Fire", Ink: fireInk},
+		{Span: "BURN", Ink: arcaneInk},
 	})
 
 	joined := ""

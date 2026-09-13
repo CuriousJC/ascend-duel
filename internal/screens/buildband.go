@@ -51,7 +51,7 @@ func buildRelicRect(gs *state.GlobalState) image.Rectangle {
 	return relics
 }
 
-// buildConsumableRect is the row's other half: the parasites the run is carrying, in the pane the
+// buildConsumableRect is the row's other half: the runes the run is carrying, in the pane the
 // combat screen draws in the same place. See consumables.go.
 func buildConsumableRect(gs *state.GlobalState) image.Rectangle {
 	_, consumables := buildTopRowPanes(gs)
@@ -96,7 +96,7 @@ func buildBandBottom(gs *state.GlobalState) int {
 func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag *cardDrag) {
 	drawBuildCard(gs, screen, vitae)
 	drawBuildRelics(gs, screen, drag)
-	// **nil: a parasite is carried on these screens, not spent.** The pane draws the same two seats
+	// **nil: a rune is carried on these screens, not spent.** The pane draws the same two seats
 	// and the same cards, dim, and the tooltip still explains them. See canSpend.
 	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil)
 }

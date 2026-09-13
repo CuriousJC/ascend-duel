@@ -65,7 +65,7 @@ const Chromatic = "CHROMATIC"
 //
 // **Exported so a caller can ask which part of a title is the element** without re-deriving it.
 // The colouring itself needs nobody to ask: `screens.tipLine` runs every tooltip line through
-// `cards.ElementRuns`, which matches whole words, so FIRE in `FIRE JAB` comes out in the fire red
+// `cards.ElementSpans`, which matches whole words, so FIRE in `FIRE JAB` comes out in the fire red
 // for free — and CHROMATIC does not, which is the intended answer rather than a gap.
 func ElementWord(c combat.Card) string {
 	if c.Wild(combat.AxisElement) {
@@ -134,7 +134,7 @@ func EffectLine(c combat.Card, dmg, scale int) string {
 // RiderLines is what the card's upgrade adds, one line each — `+10 HEAL ON PLAY`.
 //
 // **Total over `combat.RiderKinds()`, and TestEveryRiderKindHasTipLines holds it that way.** A rider
-// with no line is a parasite the player spent whose effect the tooltip does not mention, which is
+// with no line is a rune the player spent whose effect the tooltip does not mention, which is
 // the same failure as a rider with no drawing.
 //
 // **A card carries one**, so this is at most one entry long — except for gold, which is two, because
@@ -249,7 +249,7 @@ func upper(s string) string {
 // upgrade here — `IF IT SCORES` over `DMG 1.5X` — takes four. Gold and silver are the reason the
 // odds are not on the face; see below.
 //
-// **Total over combat.RiderKinds(), like RiderLines.** A rider with no face line is a parasite the
+// **Total over combat.RiderKinds(), like RiderLines.** A rider with no face line is a rune the
 // player spent that the card does not mention — the same failure as a rider with no drawing, and
 // the one the wash on its own cannot fix: a colour is what carries across a row of eight cards, and
 // the words are what answers "what does that mean" without a hover.

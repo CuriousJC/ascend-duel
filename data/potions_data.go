@@ -5,7 +5,7 @@ package data
 // A relic is worn and comes off; a stone raises a rung; an essence eats a card. A potion is the one
 // thing in the shop that changes the *body* — the life it is carrying, the ceiling that life sits
 // under, or the damage it hits for — and it is drunk on the spot, so nothing is carried and nothing
-// is held. That is what keeps it out of the consumables pane the parasites live in.
+// is held. That is what keeps it out of the consumables pane the runes live in.
 //
 // **Three fields carry the whole mechanic**: an `Effect` naming which of the three it moves, an
 // `Amount` read against it, and a `Price`. There is no `Target`, because a potion has only ever one

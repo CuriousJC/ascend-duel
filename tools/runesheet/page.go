@@ -2,19 +2,19 @@ package main
 
 import "html/template"
 
-// The page. One static file, no JavaScript, no build step: the loop is "edit parasites.json,
+// The page. One static file, no JavaScript, no build step: the loop is "edit runes.json,
 // re-run the tool, refresh the tab", the same loop every other tool here has.
 //
 // **Images are shown at their natural size with image-rendering: pixelated**, for the reason the
 // relic sheet's template gives: a card's rim is one pixel thick and a browser that scales it
 // resamples that rim into a blur, which makes the sheet lie about the art.
 //
-// **The ground is the one the parasites actually sit on**, which for these is the panel over a
-// live fight rather than a shop shelf — the bucket opens between turns, which is the one thing
+// **The ground is the one the runes actually sit on**, which for these is the panel over a
+// live fight rather than a shop shelf — the sack opens between turns, which is the one thing
 // about this catalogue the page has to say in words because no card can show it.
-var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
+var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — parasite sheet</title>
+<title>Ascending Duel — rune sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};
@@ -95,11 +95,11 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
   figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
 </style>
 
-<h1>Parasite sheet</h1>
+<h1>Rune sheet</h1>
 <p class="facts">
-  {{.Count}} parasites, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no
-  subject paragraph written. A sealed bucket costs <code>{{.BucketPrice}}</code> vitae and draws
-  <code>{{.BucketSize}}</code>, keep one — {{.Share}}% of the catalogue gets a seat. One parasite
+  {{.Count}} runes, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no
+  subject paragraph written. A sealed sack costs <code>{{.SackPrice}}</code> vitae and draws
+  <code>{{.SackSize}}</code>, keep one — {{.Share}}% of the catalogue gets a seat. One rune
   may name at most <code>{{.MaxTargets}}</code> cards.
   Card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
@@ -110,10 +110,10 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
   Shown at 1:1.
 </p>
 <p class="note">
-  Regenerate with <code>go run ./tools/parasitesheet</code> and refresh. Every card here is drawn
+  Regenerate with <code>go run ./tools/runesheet</code> and refresh. Every card here is drawn
   by <code>internal/cards</code>, the same code the game blits, and every word beside it is read
-  out of <code>data/parasites.json</code> through <code>internal/session</code>'s own validation —
-  so a parasite this page refuses to draw is a parasite the game refuses to start with.
+  out of <code>data/runes.json</code> through <code>internal/session</code>'s own validation —
+  so a rune this page refuses to draw is a rune the game refuses to start with.
 </p>
 <p class="note">
   <strong>Read the sentence against the rule.</strong> The line under each name is the
@@ -124,25 +124,25 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
 </p>
 <p class="note">
   <strong>They are spent between the turns of a fight, never inside one.</strong> That is the
-  thing about this catalogue no card can show: the bucket is gated on planning, because
+  thing about this catalogue no card can show: the sack is gated on planning, because
   <code>ResolveRound</code> decides a whole round before playback starts and a card altered
   mid-playback would show a face disagreeing with a blow already computed.
 </p>
 <p class="note">
   <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The quoted
-  block under each parasite is <code>Draw</code> in <code>data/parasites.json</code>: what the
+  block under each rune is <code>Draw</code> in <code>data/runes.json</code>: what the
   thing <em>is</em> and what it is doing, in one sentence. Nothing in the game reads it. It is
   pasted under the shared prompt in <code>docs/art/card_art_prompt.MD</code>, which is the only
-  part of a brief that is not about one record. <strong>A parasite with no subject and no art is
+  part of a brief that is not about one record. <strong>A rune with no subject and no art is
   the backlog</strong> — both lines go pink, so the page can be scrolled for what still needs
-  writing. <code>default-parasite.png</code> is the seat art goes into; it was the essence's own
+  writing. <code>default-rune.png</code> is the seat art goes into; it was the essence's own
   placeholder until 2026-09-12, and the two split because one shared picture is a page where a
-  drawn essence and an undrawn parasite look identical.
+  drawn essence and an undrawn rune look identical.
 </p>
 
 <h2>What the catalogue does</h2>
 <p class="note">
-  <strong>Every target, and how many parasites sit at it.</strong> The vocabulary is closed — a new
+  <strong>Every target, and how many runes sit at it.</strong> The vocabulary is closed — a new
   target is a Go change plus one place applying it, never something a file can assert into
   existence — so a target with nothing under it is a mechanic built and never reached for. This was
   the page's grouping until families landed, and it made a poor heading once a third of the
@@ -151,13 +151,13 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
 <ul class="targets">
 {{range .Targets}}
   <li class="target{{if not .Count}} empty{{end}}"><strong>{{.Target}}</strong>
-    {{.Count}} parasites{{if not .Count}} — nobody has authored one{{end}}</li>
+    {{.Count}} runes{{if not .Count}} — nobody has authored one{{end}}</li>
 {{end}}
 </ul>
 
 <h2>The catalogue, by family</h2>
 <p class="note">
-  <strong>Grouped by the motif each parasite was authored beside, in the file's own order.</strong>
+  <strong>Grouped by the motif each rune was authored beside, in the file's own order.</strong>
   <code>Family</code> is authored and the engine ignores it, exactly as it ignores <code>Art</code>
   and <code>Draw</code> — so it can go quietly out of date when a record is retargeted, and nothing
   fails. Treat a family that disagrees with the rule beside it as a label to fix.
@@ -169,7 +169,7 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
   <span>{{.Count}} {{.Noun}}</span>
 </h3>
 <div class="plates">
-  {{range .Parasites}}
+  {{range .Runes}}
     <div class="plate">
       <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}"
            alt="{{.Name}}">
@@ -185,7 +185,7 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
         <p class="rule">{{.Rule}}</p>
         <p class="cards">cards asked for: {{.Cards}}</p>
         {{if .Default}}
-          <p class="art missing">no art of its own — drawing default-parasite.png</p>
+          <p class="art missing">no art of its own — drawing default-rune.png</p>
         {{else}}
           <p class="art">art: <code>{{.Art}}</code></p>
         {{end}}
@@ -197,8 +197,8 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
 
 <h2>Card states</h2>
 <p class="note">
-  The three states a parasite card is drawn in — one more than an essence has.
-  <strong>Selected is a state here and is not one there</strong>: a parasite is armed first and
+  The three states a rune card is drawn in — one more than an essence has.
+  <strong>Selected is a state here and is not one there</strong>: a rune is armed first and
   aimed second, so the board piece has to say which one is in hand while the player picks what it
   eats.
 </p>

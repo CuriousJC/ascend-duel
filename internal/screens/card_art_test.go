@@ -583,7 +583,7 @@ func TestEveryOpponentNameFitsItsCard(t *testing.T) {
 }
 
 // **Every rider is on the face, not only in the tooltip** *(2026-09-09)*. A card the player spent a
-// parasite on carries a wash whatever the rider is, and the wash is what carries across a row of
+// rune on carries a wash whatever the rider is, and the wash is what carries across a row of
 // eight cards — but it is not what answers "what does that mean". Six of the ten riders said
 // nothing at all until this test existed.
 //
@@ -649,16 +649,16 @@ func TestAMetalsNameIsLitInTheTooltip(t *testing.T) {
 		{combat.RiderSilver, carddesc.Silver},
 	} {
 		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: metal.kind, Amount: 5})
-		runs := tipLine(carddesc.RiderLines(c)[0])
+		spans := tipLine(carddesc.RiderLines(c)[0])
 
 		lit := ""
-		for _, run := range runs {
-			if run.Ink.A != 0 {
-				lit += run.Text
+		for _, span := range spans {
+			if span.Ink.A != 0 {
+				lit += span.Text
 			}
 		}
 		if lit != metal.word {
-			t.Errorf("%s's name line lights %q, want %q: %v", metal.kind, lit, metal.word, runs)
+			t.Errorf("%s's name line lights %q, want %q: %v", metal.kind, lit, metal.word, spans)
 		}
 	}
 }

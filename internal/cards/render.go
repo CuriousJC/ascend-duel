@@ -335,7 +335,7 @@ func drawStats(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA)
 // them move the same distance toward the same ground. Passing the rule rather than the
 // results keeps that a single number.
 func (s Spec) colors() (border, surface color.RGBA, ink func(color.RGBA) color.RGBA) {
-	border = s.atState(borderBase(s.Element))
+	border = s.atState(borderBase(s.Element, s.Rarity))
 
 	switch {
 	case !s.Enabled:

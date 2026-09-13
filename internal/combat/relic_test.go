@@ -319,7 +319,7 @@ func TestOneBlowLandsOneOfEachStatus(t *testing.T) {
 	// the same as applying it once — but announcing it twice would describe two things that did
 	// not happen. See statusesFrom.
 	burning := MustStatus("burning")
-	fire := relic(t, "fire", RelicRule{
+	fire := relic(t, "burns-fire", RelicRule{
 		When: MomentAttackLands,
 		If:   RelicCondition{Element: Fire, HasElement: true},
 		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
@@ -393,7 +393,7 @@ func TestFlipsDoNotCompose(t *testing.T) {
 func TestTheAccumulatorRidesOnTheWornRelic(t *testing.T) {
 	// A growing relic's own amounts are read as `Amount + accumulator`, and the accumulator travels
 	// with the worn relic because it belongs to a run rather than to the registry.
-	heart := relic(t, "heart",
+	heart := relic(t, "hp-scale",
 		RelicRule{When: MomentFightStart, Then: []RelicEffect{{Do: DoAddHP, Amount: 5}}},
 		RelicRule{When: MomentFightWon, Then: []RelicEffect{{Do: DoGrowOnWin, Amount: 5}}})
 

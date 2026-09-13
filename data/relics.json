@@ -1182,11 +1182,11 @@
     ]
   },
   {
-    "RelicRecord": "fire",
+    "RelicRecord": "dmgx-fire",
     "Name": "Fire",
     "Family": "Elemental damage",
-    "Art": "fire",
-    "Draw": "a ring made entirely of fire, no band and no gem, a circle of red and orange flame with the flames licking up off the top",
+    "Art": "dmgx-fire",
+    "Draw": "angled ring made of red flames with a thick band",
     "Text": "Fire cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1198,11 +1198,11 @@
     ]
   },
   {
-    "RelicRecord": "ice",
+    "RelicRecord": "dmgx-ice",
     "Name": "Ice",
     "Family": "Elemental damage",
-    "Art": "ice",
-    "Draw": "a ring made entirely of ice, no band and no gem, a circle of pale blue ice with a cluster of crystals at the top and icicles hanging off the bottom",
+    "Art": "dmgx-ice",
+    "Draw": "angled ring made of woven blue ice with a thick band",
     "Text": "Ice cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1214,11 +1214,11 @@
     ]
   },
   {
-    "RelicRecord": "lightning",
+    "RelicRecord": "dmgx-lightning",
     "Name": "Lightning",
     "Family": "Elemental damage",
-    "Art": "lightning",
-    "Draw": "a ring made entirely of lightning, no band and no gem, a circle of yellow electricity arcing up off the top",
+    "Art": "dmgx-lightning",
+    "Draw": "angled ring made of woven yellow lightning with a thick band",
     "Text": "Lightning cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1230,11 +1230,11 @@
     ]
   },
   {
-    "RelicRecord": "earth",
+    "RelicRecord": "dmgx-earth",
     "Name": "Earth",
     "Family": "Elemental damage",
-    "Art": "earth",
-    "Draw": "a ring made entirely of rock, no band and no gem, a circle of brown stone slabs with loose pebbles breaking off it",
+    "Art": "dmgx-earth",
+    "Draw": "angled ring made of woven grey rock with a thick band",
     "Text": "Earth cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1246,11 +1246,11 @@
     ]
   },
   {
-    "RelicRecord": "arcane",
+    "RelicRecord": "dmgx-arcane",
     "Name": "Arcane",
     "Family": "Elemental damage",
-    "Art": "arcane",
-    "Draw": "a ring made entirely of arcane fire, no band and no gem, a circle of purple flame licking up off the top",
+    "Art": "dmgx-arcane",
+    "Draw": "angled ring made of etheral purple flames with a thick band",
     "Text": "Arcane cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1530,7 +1530,7 @@
     "RelicRecord": "handmult-pair",
     "Name": "Paired Rings",
     "Family": "Hand multipliers",
-    "Art": "",
+    "Art": "handmult-pair",
     "Draw": "an amulet with with 2 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
     "Text": "Every pair deals 2x DMG.",
     "Rarity": "uncommon",
@@ -1546,7 +1546,7 @@
     "RelicRecord": "handmult-triplicate",
     "Name": "Triplicate Rings",
     "Family": "Hand multipliers",
-    "Art": "",
+    "Art": "handmult-triplicate",
     "Draw": "an amulet with with 3 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
     "Text": "Every Three of a Kind\ndeals 3x DMG.",
     "Rarity": "uncommon",
@@ -1624,7 +1624,7 @@
     "RelicRecord": "handmult-five",
     "Name": "Perfected Rings",
     "Family": "Hand multipliers",
-    "Art": "",
+    "Art": "handmult-five",
     "Draw": "an amulet with with 5 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
     "Text": "Every Five of a Kind\ndeals 5x DMG.",
     "Rarity": "rare",
@@ -2046,11 +2046,11 @@
     ]
   },
   {
-    "RelicRecord": "swarm",
+    "RelicRecord": "dmgx-one-ap",
     "Name": "Swarm",
     "Family": "Tier damage",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmgx-one-ap",
+    "Draw": "amulet of silver locusts in a tangled bundle with a jade chain",
     "Text": "Every 1 AP card deals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2066,7 +2066,7 @@
     "Name": "Shimmering Crown",
     "Family": "Tier damage",
     "Art": "dmg-cost-three",
-    "Draw": "a circlet made of solid shimmering rainbows",
+    "Draw": "a circlet made of platinum with rainbow gem embedded in the center",
     "Text": "Every 3 AP card deals 2.5x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2160,8 +2160,8 @@
     "RelicRecord": "cost-defend-less",
     "Name": "Braced",
     "Family": "Cost bargains",
-    "Art": "",
-    "Draw": "a dark tanned set of crossed female muscular arms wearing platinum bracers on the full forearms",
+    "Art": "cost-defend-less",
+    "Draw": "a set of jade bracers",
     "Text": "Defend cards cost 1 AP less. +15 HP for every fight.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2192,11 +2192,11 @@
     ]
   },
   {
-    "RelicRecord": "bulwark",
+    "RelicRecord": "hp-plus",
     "Name": "Bulwark",
     "Family": "Standing stats",
-    "Art": "bulwark",
-    "Draw": "a wide gold armband clasped around a thick bare bicep, a round gold boss in the centre holding a gem with a stud either side",
+    "Art": "hp-plus",
+    "Draw": "a wide ruby armband with a golden gem",
     "Text": "+25 HP for every fight.",
     "Rarity": "common",
     "Rules": [
@@ -2207,11 +2207,11 @@
     ]
   },
   {
-    "RelicRecord": "heart",
-    "Name": "Heart",
+    "RelicRecord": "hp-scale",
+    "Name": "The Heart",
     "Family": "Standing stats",
-    "Art": "",
-    "Draw": "",
+    "Art": "hp-scale",
+    "Draw": "a jade amulet with a ruby in the shape of a stylized heart",
     "Text": "+5 HP, and 5 more for every fight won.",
     "Rarity": "common",
     "Rules": [
@@ -2226,11 +2226,11 @@
     ]
   },
   {
-    "RelicRecord": "rampant",
-    "Name": "Rampant",
+    "RelicRecord": "dmg-vitae-scale",
+    "Name": "The Rampant",
     "Family": "Vitae power",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-vitae-scale",
+    "Draw": "a tangled knot of malachite lines in an organic knot shape",
     "Text": "Every blow deals 1 more DMG\nfor each vitae you hold.",
     "Rarity": "rare",
     "Rules": [
@@ -2241,11 +2241,11 @@
     ]
   },
   {
-    "RelicRecord": "fire-of-life",
-    "Name": "Fire of Life",
+    "RelicRecord": "dmg-vitae-fire-scale",
+    "Name": "The Fire of Life",
     "Family": "Vitae power",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-vitae-fire-scale",
+    "Draw": "amulet in the shape of red fire on a platinum chain",
     "Text": "Fire cards gain 0.1x DMG\nfor every 10 vitae you hold.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2257,11 +2257,11 @@
     ]
   },
   {
-    "RelicRecord": "dual-wield",
+    "RelicRecord": "dmg-two-forms",
     "Name": "Dual Wield",
     "Family": "Mixed hands",
-    "Art": "",
-    "Draw": "",
+    "Art": "dmg-two-forms",
+    "Draw": "a scimitar and a battle axe crossed over each other",
     "Text": "A pair built from two\ndifferent forms deals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -2288,11 +2288,11 @@
     ]
   },
   {
-    "RelicRecord": "soul-taker",
+    "RelicRecord": "vitae-plus-room",
     "Name": "Soul Taker",
     "Family": "Spoils",
-    "Art": "",
-    "Draw": "",
+    "Art": "vitae-plus-room",
+    "Draw": "a obsidion ring with sharp edges",
     "Text": "A won room pays 5 more vitae.",
     "Rarity": "common",
     "Rules": [
@@ -2303,11 +2303,11 @@
     ]
   },
   {
-    "RelicRecord": "hungry",
+    "RelicRecord": "prizes-add",
     "Name": "Hungry",
     "Family": "Spoils",
-    "Art": "",
-    "Draw": "",
+    "Art": "prizes-add",
+    "Draw": "bonewhite amulet of a grasping hand on a bronze chain",
     "Text": "Two prizes after a fight instead of one.",
     "Rarity": "common",
     "Rules": [

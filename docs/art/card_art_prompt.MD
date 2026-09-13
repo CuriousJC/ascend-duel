@@ -59,14 +59,3 @@ numbers anywhere in the image. If `Draw` is empty, stop and say so rather than i
 subject.
 
 All images should be named based on the provided RelicRecord and a link provided so I can easily click to download
-
-```json
-{
-  "RelicRecord": "coiled-ring",
-  "Name": "Coiled Ring",
-  "Art": "",
-  "Draw": "tightly braided jade metal relic",
-  "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
-  "Rarity": "common"
-}
-```

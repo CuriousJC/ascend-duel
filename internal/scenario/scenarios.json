@@ -47,7 +47,7 @@
     "Note": "The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, the Jar of Earth, The Old Dagger, The Knuckles and Trio Ring. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Trio Ring pays an Elemental Three of a Kind, The Old Dagger quadruples the Jab, The Knuckles quadruples the Thump, and the Jar of Earth reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
     "RelicSlots": 6,
     "Relics": [
-      "bulwark",
+      "hp-plus",
       "banker",
       "jar-earth",
       "old-dagger",
@@ -761,7 +761,7 @@
     "ScenarioRecord": "reward-payout",
     "Note": "The reward screen with something to say: a purse big enough to earn interest, a fight won on 63 life, and the stairway's award. Watch the three sentences type and each figure fly to the duelist card.",
     "Relics": [
-      "heart"
+      "hp-scale"
     ],
     "Hand": [],
     "Screen": "reward",
@@ -773,7 +773,7 @@
     "ScenarioRecord": "shop-shelf",
     "Note": "The shop with money to spend, two fingers already full, a parasite in the bucket and a wound to heal. Straight to the shelf without playing three duels to reach it, and hurt enough that a Salve is worth buying.",
     "Relics": [
-      "heart",
+      "hp-scale",
       "dmg-all-slash"
     ],
     "Hand": [],
@@ -789,7 +789,7 @@
     "ScenarioRecord": "stairway-boss",
     "Note": "A stairway protector on his own card: name, title, portrait and a deck out of bosses.json rather than the roster. The first stairway a run reaches is fight 2, which is where this opens.",
     "Relics": [
-      "heart"
+      "hp-scale"
     ],
     "Hand": [
       {
@@ -822,7 +822,7 @@
     "Relics": [
       "lead-three-times",
       "enflamed",
-      "fire"
+      "dmgx-fire"
     ],
     "Hand": [
       {

@@ -232,8 +232,6 @@ func ruleLine(p session.Rune) string {
 		return fmt.Sprintf("upgrade: rider %s, value %d", p.Rider, p.Number)
 	case session.RuneRemove:
 		return fmt.Sprintf("removes %d card(s) from the run", p.Count)
-	case session.RuneSwap:
-		return "becomes " + combat.Of(p.Concept, combat.Basic).Label()
 	case session.RuneVitae:
 		return fmt.Sprintf("+%d vitae, touching no card", p.Number)
 	case session.RuneChimera:
@@ -251,8 +249,6 @@ func valueOf(p session.Rune) string {
 	switch p.Target {
 	case session.RuneRider, session.RuneVitae:
 		return strconv.Itoa(p.Number)
-	case session.RuneSwap:
-		return combat.Of(p.Concept, combat.Basic).Label()
 	default:
 		return ""
 	}

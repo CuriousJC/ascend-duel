@@ -2362,7 +2362,6 @@ cards it takes**, and **what class of change it makes**. See `data/runes.json` a
 |---|---|---|---|---|
 | `rider` | **upgrade** | a figure, plus a `Rider` name | 1–2 | writes the card's one upgrade |
 | `remove` | normal | — | 1–2 | takes cards out of the run |
-| `swap` | normal | a concept key | 1–2 | turns a card into a different card the game already defines |
 | `vitae` | normal | a figure | **0** | fills the purse and touches no card |
 | `duplicate` | normal | — | 1–2 | copies a card — **and the copy joins the dealt hand** |
 | `element` | normal | an element name | 1–2 | recolors cards |
@@ -2404,7 +2403,7 @@ changed my card", and what separates them is what the *next* rune does.
   the middle of one, and the fight's piles were dealt before the copy existed — so a copy that went
   only into the run would not be playable until the *next* fight and would read as a dud. The copy
   is a new card with a new identity, arrives unselected, and `Session.Duplicated` is the handover.
-- **`form` is an override on the card, not a swap of the concept.** A Brace told to be a crush is
+- **`form` is an override on the card, not a replacement of the concept.** A Brace told to be a crush is
   still a Brace: it still shields, and it now counts as a crush when the hand is matched. **A defend
   card is a legal target and that is the point** *(owner's call)* — it produces a card that shields
   and matches on an attack axis, which nothing in the catalog does. `combat.Card.FormOverride` is
@@ -2422,7 +2421,7 @@ changed my card", and what separates them is what the *next* rune does.
 - **`clone` is the one target whose two seats are not interchangeable.** Every other rune
   treats its targets as a set; this one is directional — first pick changes, second pick is the
   template — so the picker's click order is a rule rather than a detail. It copies the concept and
-  keeps the first card's identity, riders and modifiers, exactly as `swap` does.
+  keeps the first card's identity, riders and modifiers.
 
 ### Gold and silver: the second roll in the game, and it is on a card now *(owner's call, 2026-09-09)*
 
@@ -2509,9 +2508,9 @@ asks for none.
 unknown target, a rider the rules lack, a concept this build has not registered, a `vitae` asking
 for a card — **panics at init**.
 
-**A `swap` keeps the card's identity, and so keeps its riders.** A card the player has already
-spent two runes on stays the card they invested in; what changes is which card it is. Minting
-a fresh identity would take the investment with it.
+**A rune that changes what a card is keeps the card's identity, and so keeps its riders.** A card
+the player has already spent two runes on stays the card they invested in. Minting a fresh
+identity would take the investment with it — `clone` is the target this is about today.
 
 **`MaxRuneTargets` is 2**, because the picker shows the targets side by side and a picker that
 scrolled would be a menu to read rather than a decision to make — the two-essence offer's argument.

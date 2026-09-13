@@ -945,8 +945,8 @@
     "Relics": [],
     "Hand": [],
     "Runes": [
-      "patience",
-      "spite",
+      "held-dmgx",
+      "held-dmg",
       "tithe",
       "hunger",
       "aegis",
@@ -981,9 +981,9 @@
     "Relics": [],
     "Hand": [],
     "Runes": [
-      "cairn",
-      "cairn",
-      "cairn"
+      "two-stones",
+      "two-stones",
+      "two-stones"
     ],
     "Screen": "combat",
     "Seed": "0000HX",

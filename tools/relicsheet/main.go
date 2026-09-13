@@ -111,6 +111,7 @@ func run(dir string) error {
 		spec := cards.Spec{
 			Name:    record.Name,
 			Element: cards.Relic,
+			Rarity:  record.Rarity,
 			Art:     art,
 			Counter: counterFor(key),
 			Enabled: true,
@@ -217,7 +218,7 @@ func stateSpecs(records map[string]data.RelicData) ([]struct {
 	if err != nil {
 		return nil, err
 	}
-	base := cards.Spec{Name: record.Name, Element: cards.Relic, Art: art, Enabled: true}
+	base := cards.Spec{Name: record.Name, Element: cards.Relic, Rarity: record.Rarity, Art: art, Enabled: true}
 
 	dragged := base
 	dragged.Dragging = true

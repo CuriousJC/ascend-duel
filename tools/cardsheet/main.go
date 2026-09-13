@@ -217,13 +217,13 @@ func run(dir string) error {
 		page.Deck = append(page.Deck, stack)
 	}
 
-	// Section six: the first relic. Same format, pink border, artwork instead of glyphs,
-	// and nothing about cost or phase because a relic is not played from a hand.
+	// Section six: the relics. Same format, artwork instead of glyphs, a border drawn from the
+	// rarity, and nothing about cost or phase because a relic is not played from a hand.
 	relics, err := relicSpecs()
 	if err != nil {
 		return err
 	}
-	relicRow := row{Label: "relics — same format, pink border"}
+	relicRow := row{Label: "relics — same format, the border says the rarity"}
 	for _, spec := range relics {
 		state := "at rest"
 		if spec.Dragging {

@@ -286,7 +286,8 @@ func wornSpecs(r record) section {
 			continue
 		}
 		s.specs = append(s.specs, cards.Spec{
-			Name: rec.Name, Element: cards.Relic, Art: artwork(rec.ArtKey()), Enabled: true,
+			Name: rec.Name, Element: cards.Relic, Rarity: rec.Rarity,
+			Art: artwork(rec.ArtKey()), Enabled: true,
 		})
 	}
 

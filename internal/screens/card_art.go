@@ -465,16 +465,20 @@ func tintedPip(src image.Image, ink color.RGBA) image.Image {
 // relicSpec is an equipped relic as a card: its name and its artwork, and nothing else.
 //
 // **The element on the record does not reach the Spec**, deliberately. `cards.Relic` is the
-// element a relic card carries, which paints the border pink whatever the relic is about — the
-// one thing that must never happen is reaching for a relic thinking it is a card you can play.
+// element a relic card carries, and what it paints the border from is the *rarity*
+// *(owner's call, 2026-09-13)* — the pink it used to paint is in cards.rarityBorders' history.
 // `RelicData.Element` says which element the relic will eventually *discount*; it is a rule, not
 // a colour, and it has nowhere to be read yet.
+//
+// **The rarity does reach it, and it is the only record field that becomes a colour here.** A
+// relic is bought off a shelf, so how scarce it is the fact worth carrying on the face.
 //
 // No cost, no category, no damage: a relic is not played from a hand and has no phase.
 func relicSpec(gs *state.GlobalState, r data.RelicData, counter string, enabled, lit bool) cards.Spec {
 	return cards.Spec{
 		Name:     r.Name,
 		Element:  cards.Relic,
+		Rarity:   r.Rarity,
 		Art:      artwork(gs, r.ArtKey()),
 		Counter:  counter,
 		Enabled:  enabled,

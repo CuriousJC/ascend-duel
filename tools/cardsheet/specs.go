@@ -5,10 +5,22 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )
+
+// titled capitalises a rarity for the caption and the filename. **Hand-rolled rather than
+// strings.Title**, which is deprecated, or golang.org/x/text/cases, which is a dependency for
+// three words that are known to be ASCII.
+func titled(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
 
 // What the sheet renders, kept apart from how it renders it.
 //
@@ -144,7 +156,7 @@ func disabled(s cards.Spec) cards.Spec { s.Enabled = false; return s }
 
 // relicSpecs is the first pass at a relic, in the card format.
 //
-// The art is assets/fire.png. **That is first-party work** — README credits the art
+// The art is assets/relic/dmgx-fire.png. **That is first-party work** — README credits the art
 // to CuriousJC and KingSherman1820, and only the sheets prefixed `tyrian_` come from the
 // Tyrian set. So it carries no provenance question and is not part of the release blocker
 // that set represents; it can ship.
@@ -152,23 +164,36 @@ func disabled(s cards.Spec) cards.Spec { s.Enabled = false; return s }
 // No cost dashes, no category glyph, no damage badge: a relic is not played from a hand
 // and has no phase. What it keeps is the footprint, the corners and the border, so it
 // reads as the same game.
+//
+// **It draws one card per rarity** *(2026-09-13)*, because the border is what a rarity says now
+// and three colours side by side is the only way to review whether they are actually telling
+// each other apart. One picture is used for all of them on purpose: the art is the variable being
+// held still so the ring is the thing being compared.
 func relicSpecs() ([]cards.Spec, error) {
-	art, err := loadPNG("fire")
+	art, err := loadPNG("dmgx-fire")
 	if err != nil {
 		return nil, err
 	}
-	// **The name is set and never drawn.** A relic card is a full-bleed picture with no title,
-	// so Spec.Name is what a mark's pattern is derived from and nothing else. It is written out
-	// in full here, as the game and tools/relicsheet pass it.
-	return []cards.Spec{
-		{Name: "Fire", Element: cards.Relic, Art: art, Enabled: true},
+	// **The name is set and never drawn.** A relic card is a full-bleed picture with no title, so
+	// Spec.Name is what a mark's pattern is derived from and what names the file — which is why
+	// these are named for the rarity rather than for the relic: three cards called "Fire" would be
+	// one file written three times.
+	var out []cards.Spec
+	for _, r := range data.Rarities() {
+		out = append(out, cards.Spec{
+			Name: titled(string(r)), Element: cards.Relic, Rarity: r,
+			Art: art, Enabled: true,
+		})
+	}
 
-		// The same relic mid-drag. **Not "not equipped"** — a relic you do not have is not
-		// shown at all, so that state does not exist to draw. Being carried by the cursor
-		// does exist, and it is the one thing a relic in a card format has to look like
-		// besides sitting still.
-		{Name: "Fire", Element: cards.Relic, Art: art, Enabled: true, Dragging: true},
-	}, nil
+	// The same relic mid-drag. **Not "not equipped"** — a relic you do not have is not
+	// shown at all, so that state does not exist to draw. Being carried by the cursor
+	// does exist, and it is the one thing a relic in a card format has to look like
+	// besides sitting still.
+	return append(out, cards.Spec{
+		Name: "Rare", Element: cards.Relic, Rarity: data.Rare,
+		Art: art, Enabled: true, Dragging: true,
+	}), nil
 }
 
 // enemySpecs is the opponent in the card format, at four states of health and four counts of

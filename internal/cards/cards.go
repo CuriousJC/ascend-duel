@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
@@ -29,9 +30,10 @@ const (
 	Arcane
 
 	// Relic is not an element and never appears on an action card. Relics reuse the whole
-	// card format — same size, same corners, same border treatment — with a pink border
-	// and artwork instead of glyphs, so they read as belonging to the same game while
-	// never being mistaken for something playable from the hand.
+	// card format — same size, same corners, same border treatment — with a border drawn
+	// from the relic's rarity and artwork instead of glyphs, so they read as belonging to the
+	// same game while never being mistaken for something playable from the hand. See
+	// rarityBorders, and Spec.Rarity, which is the field that reaches this.
 	//
 	// It is deliberately outside Elements(): anything iterating the elements is asking
 	// about cards, and a relic is not one.
@@ -89,10 +91,43 @@ var borderColors = [...]color.RGBA{
 	// which is the constraint that pushed lightning down in 2026-08-19.
 	Arcane: {R: 138, G: 84, B: 200, A: 255},
 
-	// Pink, and deliberately unlike any of the four above — a relic has to be
-	// unmistakable at a glance, because the one thing that must never happen is reaching
-	// for a relic thinking it is a card you can play.
+	// Pink, and deliberately unlike any of the four above. It was the relic border until
+	// 2026-09-13, when rarity took that job — see rarityBorders. What it still carries is the
+	// relic's *voice*: internal/screens writes a figure a relic has moved in this colour, and a
+	// relic card whose rarity is not one of the three falls back to it, so an unclassified record
+	// reads as broken rather than as common.
 	Relic: {R: 232, G: 106, B: 168, A: 255},
+}
+
+// rarityBorders is what a relic card's border says now: how scarce the relic is
+// *(owner's call, 2026-09-13)*.
+//
+// **It replaced the pink, and the pink's job went with it.** A relic bordered pink from
+// 2026-08-09 because pink was the "this is not something you can play" signal; rarity is the fact
+// a player actually wants off a shelf, and the format already says the rest — a relic is the only
+// card that is full-bleed art with no title, no cost ticks and no form mark, so it cannot be
+// mistaken for something in the hand whatever colour rings it.
+//
+// **Relics are the only cards with a rarity at all.** data/relics.json is the one catalogue
+// carrying the field, so a Spec with no Rarity is every other card in the game and takes the
+// neutral grey through borderBase.
+//
+// Three notes on the colours themselves:
+//
+//   - **Common is bone, not white.** White is the trap borderColors[Basic] already documents: the
+//     bevel is derived by pushing the fill toward white, so a white fill has nowhere to climb and
+//     goes flat, and the card sits on a light slate table where a white ring reads as no ring.
+//     Bone reads as white against that ground and keeps both an edge and a bevel.
+//   - **Gold is lightning's hue and that is accepted rather than solved.** The wheel was already
+//     full — see CLAUDE.md — and gold is what a rare thing looks like. It is pushed toward amber
+//     to sit apart from the lemon of borderColors[Lightning], and the two are never compared:
+//     lightning borders nothing any more, and a relic card carries no element.
+//   - **All three are dark or warm enough to hold against screenGround**, which is the constraint
+//     that pushed lightning down in 2026-08-19 and is why none of these is a pastel.
+var rarityBorders = map[data.Rarity]color.RGBA{
+	data.Common:   {R: 206, G: 201, B: 189, A: 255},
+	data.Uncommon: {R: 42, G: 145, B: 116, A: 255},
+	data.Rare:     {R: 196, G: 154, B: 56, A: 255},
 }
 
 // BorderOf is the colour this element's border is drawn in at full strength. States
@@ -351,6 +386,23 @@ type Spec struct {
 	Cost    int // action points, drawn as dash marks
 	Element Element
 
+	// Rarity is how scarce this relic is, and it is what a relic card's border is drawn from
+	// *(owner's call, 2026-09-13)*. **The zero value is every card that is not a relic**, which is
+	// almost all of them: data/relics.json is the only catalogue in the game carrying the field,
+	// so nothing else has one to set.
+	//
+	// **It is data.Rarity rather than a type of this package's own**, which is the opposite of the
+	// call Element makes one field up — and the difference is which way the vocabulary is moving.
+	// An element is expected to become a rules concept and this package mirrors it so as not to be
+	// in the way; a rarity is already a settled, closed, three-word vocabulary at the bottom of the
+	// graph, and a second copy here would be a second list to keep in step for nothing. It is a
+	// string, so Spec stays comparable and the screen's face cache is untouched.
+	//
+	// **This package still does not know what a rarity means** — it does not price one, weight one
+	// or offer one. It is handed the word and owns the colour, exactly as it is handed Text and
+	// owns the wrapping. See rarityBorders.
+	Rarity data.Rarity
+
 	// Upgrade is the one alteration the run has permanently made to this card, and it washes the
 	// whole finished face — the border included. UpgradeNone — the zero value — is every ordinary
 	// card, which is almost all of them.
@@ -541,11 +593,17 @@ type Spec struct {
 // — was painted in one hueless palette. Swapping them spends the colour on the mark and gives the
 // border back to state, which is what borderRestToward and the rest were always about.
 //
-// **Relic keeps its pink**, because pink was never an element. It is the "this is not something
-// you can play" signal, and it has to survive a change that is about elements.
-func borderBase(e Element) color.RGBA {
-	if e == Relic {
-		return borderColors[Relic]
+// **A relic borders by rarity** *(owner's call, 2026-09-13)*, which is the second time this
+// function has given the border away — first to state, now, for relics only, to scarcity. See
+// rarityBorders for what replaced the pink and why the pink is still the fallback: a relic whose
+// rarity is not one of the three is a record that failed validation or a key naming no record at
+// all, and either should look wrong rather than look common.
+func borderBase(e Element, r data.Rarity) color.RGBA {
+	if e != Relic {
+		return borderColors[Basic]
 	}
-	return borderColors[Basic]
+	if c, ok := rarityBorders[r]; ok {
+		return c
+	}
+	return borderColors[Relic]
 }

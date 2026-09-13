@@ -81,9 +81,9 @@ func TestWornOrderIsTheOrderTheyWentOn(t *testing.T) {
 	// **Worn order is a rule, not a presentation detail**: relics fire left to right and compound, so
 	// the order has to be one the player can see. Sorting it here would quietly change what two
 	// multiplicative relics come to.
-	run := wearing(t, "lightning", "fire", "ice")
+	run := wearing(t, "dmgx-lightning", "dmgx-fire", "dmgx-ice")
 
-	want := []string{"lightning", "fire", "ice"}
+	want := []string{"dmgx-lightning", "dmgx-fire", "dmgx-ice"}
 	got := run.Worn()
 
 	if len(got) != len(want) {
@@ -97,7 +97,7 @@ func TestWornOrderIsTheOrderTheyWentOn(t *testing.T) {
 }
 
 func TestAStatRelicIsAddedAtFightStartAndNowhereElse(t *testing.T) {
-	run := wearing(t, "dmg-plus", "bulwark")
+	run := wearing(t, "dmg-plus", "hp-plus")
 
 	base := combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100}
 	d := run.Equip(base)
@@ -119,7 +119,7 @@ func TestAStatRelicIsAddedAtFightStartAndNowhereElse(t *testing.T) {
 func TestEquippingAWoundedDuelistRaisesTheCeilingWithoutHealingThem(t *testing.T) {
 	// HP raises the ceiling and fills it, but a duelist arriving hurt keeps the wound. What must
 	// never happen is CurrentLife climbing past MaxLife.
-	run := wearing(t, "bulwark")
+	run := wearing(t, "hp-plus")
 
 	d := run.Equip(combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 40})
 
@@ -134,7 +134,7 @@ func TestEquippingAWoundedDuelistRaisesTheCeilingWithoutHealingThem(t *testing.T
 func TestAGrowingRelicGainsOnEveryWin(t *testing.T) {
 	// The accumulator is the first relic state that survives a fight, and it is keyed by record
 	// because it is the first that will have to be serialized.
-	run := wearing(t, "heart")
+	run := wearing(t, "hp-scale")
 
 	base := combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100}
 	if got := run.Equip(base).MaxLife; got != 105 {
@@ -144,7 +144,7 @@ func TestAGrowingRelicGainsOnEveryWin(t *testing.T) {
 	run.WonFight(0, 0)
 	run.WonFight(0, 0)
 
-	if got := run.Grown("heart"); got != 10 {
+	if got := run.Grown("hp-scale"); got != 10 {
 		t.Errorf("two wins grew the relic by %d, want 10", got)
 	}
 	if got := run.Equip(base).MaxLife; got != 115 {
@@ -193,7 +193,7 @@ func TestSoulTakerPaysFlatAndHungryAddsAPick(t *testing.T) {
 		t.Errorf("a bare run is offered %d picks, want 1", got)
 	}
 
-	rich := wearing(t, "soul-taker", "hungry")
+	rich := wearing(t, "vitae-plus-room", "prizes-add")
 	if got := rich.PrizeVitae(5); got != 10 {
 		t.Errorf("Soul Taker's vitae card pays %d, want 10", got)
 	}
@@ -370,13 +370,13 @@ func TestGrowthEarnedInAFightSurvivesIt(t *testing.T) {
 // **Worn order is the order relics fire in**, so the row being draggable makes this a rules change
 // the run has to record. See MoveRelic, and combat.Duelist.MoveRelic for the copy a fight holds.
 func TestMovingAWornRelicReordersTheRow(t *testing.T) {
-	run := wearing(t, "dmg-all-slash", "heart", "banker")
+	run := wearing(t, "dmg-all-slash", "hp-scale", "banker")
 
 	if !run.MoveRelic(2, 0) {
 		t.Fatal("the move was refused")
 	}
 
-	want := []string{"banker", "dmg-all-slash", "heart"}
+	want := []string{"banker", "dmg-all-slash", "hp-scale"}
 	got := run.Worn()
 	if len(got) != len(want) {
 		t.Fatalf("wearing %v, want %v", got, want)
@@ -391,14 +391,14 @@ func TestMovingAWornRelicReordersTheRow(t *testing.T) {
 // A drop resolved against a row that changed underneath it must be a no-op, not a panic: this is
 // driven by a drag.
 func TestMovingAWornRelicOutOfRangeIsRefused(t *testing.T) {
-	run := wearing(t, "dmg-all-slash", "heart")
+	run := wearing(t, "dmg-all-slash", "hp-scale")
 
 	for _, move := range [][2]int{{-1, 0}, {0, -1}, {2, 0}, {0, 2}, {1, 1}} {
 		if run.MoveRelic(move[0], move[1]) {
 			t.Errorf("MoveRelic(%d, %d) reported a change", move[0], move[1])
 		}
 	}
-	if got := run.Worn(); got[0] != "dmg-all-slash" || got[1] != "heart" {
+	if got := run.Worn(); got[0] != "dmg-all-slash" || got[1] != "hp-scale" {
 		t.Errorf("the row moved anyway: %v", got)
 	}
 }
@@ -407,19 +407,19 @@ func TestMovingAWornRelicOutOfRangeIsRefused(t *testing.T) {
 // same relic with the same number. Growth following the finger instead would hand one relic's run to
 // another.
 func TestAMovedWornRelicKeepsItsGrowth(t *testing.T) {
-	run := wearing(t, "heart", "dmg-all-slash")
-	run.grown["heart"] = 45
+	run := wearing(t, "hp-scale", "dmg-all-slash")
+	run.grown["hp-scale"] = 45
 
 	if !run.MoveRelic(0, 1) {
 		t.Fatal("the move was refused")
 	}
 
-	if got := run.Grown("heart"); got != 45 {
+	if got := run.Grown("hp-scale"); got != 45 {
 		t.Errorf("heart-ring has grown %d after the move, want 45", got)
 	}
 	for _, w := range run.WornRelics() {
 		key := combat.RelicOf(w.Relic).Key
-		if key == "heart" && w.Grown != 45 {
+		if key == "hp-scale" && w.Grown != 45 {
 			t.Errorf("the worn heart-ring reports %d, want 45", w.Grown)
 		}
 	}

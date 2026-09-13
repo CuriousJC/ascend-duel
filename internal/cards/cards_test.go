@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"golang.org/x/image/font"
 )
@@ -110,7 +111,7 @@ func TestBorderIsTheNeutralColourAtItsDeclaredWidth(t *testing.T) {
 
 	for _, e := range Elements() {
 		img := render(t, strike(e), st)
-		want := systems.ColorToward(borderBase(e), Surface, borderRestToward)
+		want := systems.ColorToward(borderBase(e, ""), Surface, borderRestToward)
 
 		// Walk in from the left edge at the card's waist, where there is no curvature.
 		for x := BorderBevel; x < st.BorderWidth; x++ {
@@ -136,7 +137,7 @@ func TestTheCardBorderIsLitOnTheTopLeftAndShadowedOnTheBottomRight(t *testing.T)
 	img := render(t, strike(Fire), st)
 	mid := st.Height / 2
 
-	face := systems.ColorToward(borderBase(Fire), Surface, borderRestToward)
+	face := systems.ColorToward(borderBase(Fire, ""), Surface, borderRestToward)
 	light, shade := systems.BevelEdges(face)
 
 	if got := img.RGBAAt(0, mid); got != light {
@@ -576,8 +577,8 @@ func TestSelectedIsTheColourNamedInTheSource(t *testing.T) {
 		s := strike(e)
 		s.Selected = true
 		got := render(t, s, st).RGBAAt(st.BorderWidth/2, st.Height/2)
-		if got != borderBase(e) {
-			t.Errorf("%s selected border is %v, want the named colour %v", e, got, borderBase(e))
+		if got != borderBase(e, "") {
+			t.Errorf("%s selected border is %v, want the named colour %v", e, got, borderBase(e, ""))
 		}
 	}
 }
@@ -669,8 +670,8 @@ func TestDraggingKeepsItsBorderAndGhostsItsFace(t *testing.T) {
 
 	dragImg, deadImg := render(t, drag, st), render(t, dead, st)
 
-	if got := dragImg.RGBAAt(st.BorderWidth/2, mid); got != borderBase(Fire) {
-		t.Errorf("dragged border is %v, want full strength %v", got, borderBase(Fire))
+	if got := dragImg.RGBAAt(st.BorderWidth/2, mid); got != borderBase(Fire, "") {
+		t.Errorf("dragged border is %v, want full strength %v", got, borderBase(Fire, ""))
 	}
 	if dragImg.RGBAAt(st.BorderWidth/2, mid) == deadImg.RGBAAt(st.BorderWidth/2, mid) {
 		t.Error("dragged and disabled draw the same border — they mean opposite things")
@@ -1043,17 +1044,74 @@ func TestTheBorderIsTheSameWhateverTheElement(t *testing.T) {
 	}
 }
 
-// TestARelicStillBordersPink guards the one colour the swap deliberately kept. Pink was never an
-// element — it is the "you cannot play this" signal — so a change that neutralises the four
-// element borders must not take it with them.
-func TestARelicStillBordersPink(t *testing.T) {
-	if got := borderBase(Relic); got != BorderOf(Relic) {
-		t.Errorf("relic border base is %v, want the pink %v", got, BorderOf(Relic))
-	}
-	for _, e := range Elements() {
-		if borderBase(e) == borderBase(Relic) {
-			t.Errorf("%s borders in the relic pink — a card and a relic must not look alike", e)
+// TestARelicBordersByItsRarity is what replaced TestARelicStillBordersPink *(2026-09-13)*. The
+// pink survived the 2026-08-23 swap because that change was about elements and pink was never one;
+// this change is about relics, so the colour it was holding is the colour being spent.
+//
+// What still has to hold is the thing the pink was *for*: no relic may border like a playable
+// card. That is now three colours to check rather than one, which is why this asks the question of
+// every rarity rather than of a constant.
+func TestARelicBordersByItsRarity(t *testing.T) {
+	seen := map[color.RGBA]data.Rarity{}
+	for _, r := range data.Rarities() {
+		got := borderBase(Relic, r)
+
+		if want, ok := rarityBorders[r]; !ok || got != want {
+			t.Errorf("a %s relic borders %v, want %v", r, got, want)
 		}
+		for _, e := range Elements() {
+			if got == borderBase(e, "") {
+				t.Errorf("a %s relic borders like a %s card — a card and a relic must not look alike", r, e)
+			}
+		}
+		if other, dup := seen[got]; dup {
+			t.Errorf("%s and %s border the same %v — rarity has to be readable off the colour", r, other, got)
+		}
+		seen[got] = r
+	}
+}
+
+// TestEveryRarityHasABorder is the tripwire for a fourth tier. data.Rarities() is the vocabulary
+// and rarityBorders is the palette; a rarity added to one and not the other would fall through to
+// the pink below and read as a broken record rather than as a new tier.
+func TestEveryRarityHasABorder(t *testing.T) {
+	for _, r := range data.Rarities() {
+		if _, ok := rarityBorders[r]; !ok {
+			t.Errorf("rarity %q has no border colour", r)
+		}
+	}
+	if len(rarityBorders) != len(data.Rarities()) {
+		t.Errorf("rarityBorders has %d entries for %d rarities — one of them names nothing",
+			len(rarityBorders), len(data.Rarities()))
+	}
+}
+
+// TestAnUnclassifiedRelicFallsBackToThePink pins what the pink means now. A relic whose rarity is
+// not one of the three is a record that failed validation or a key naming no record at all — the
+// scenario sheet's missingSpec draws exactly that — and it has to look wrong rather than look
+// common.
+func TestAnUnclassifiedRelicFallsBackToThePink(t *testing.T) {
+	if got := borderBase(Relic, ""); got != BorderOf(Relic) {
+		t.Errorf("an unclassified relic borders %v, want the pink %v", got, BorderOf(Relic))
+	}
+	for _, r := range data.Rarities() {
+		if borderBase(Relic, r) == BorderOf(Relic) {
+			t.Errorf("a %s relic borders in the fallback pink — a real tier and a broken record look alike", r)
+		}
+	}
+}
+
+// TestCommonIsNotWhite is the trap borderColors[Basic] documents, one card format over. The bevel
+// is derived by pushing the fill toward white, so a white border has nowhere to climb and goes
+// flat; the card also sits on a light table, where a white ring reads as no ring. Bone is the
+// answer and this is what stops it drifting back.
+func TestCommonIsNotWhite(t *testing.T) {
+	c := rarityBorders[data.Common]
+	if c.R > 230 && c.G > 230 && c.B > 230 {
+		t.Errorf("the common border is %v — a near-white ring has no bevel and no edge against the table", c)
+	}
+	if lit := systems.ColorToward(c, color.RGBA{R: 255, G: 255, B: 255, A: 255}, 100); lit == c {
+		t.Error("the common border cannot be lightened, so its bevel has no light edge")
 	}
 }
 
@@ -1192,7 +1250,7 @@ func TestTheTicksAndTheBorderShareOneState(t *testing.T) {
 		gotBorder := img.RGBAAt(st.BorderWidth/2, mid)
 		gotTick := img.RGBAAt(tick.X, tick.Y)
 
-		if want := s.atState(borderBase(Fire)); gotBorder != want {
+		if want := s.atState(borderBase(Fire, "")); gotBorder != want {
 			t.Errorf("%s border is %v, want %v", tc.name, gotBorder, want)
 		}
 		if want := s.atState(BorderOf(Fire)); gotTick != want {

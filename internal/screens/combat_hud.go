@@ -24,7 +24,7 @@ import (
 	"image/color"
 )
 
-// drawBox draws a framed panel: dim fill, full-strength border, and a title centred on the
+// drawBox draws a framed panel: dim fill, full-strength border, and a title centered on the
 // top edge. Dim fill and a full-strength border means the box reads as green or pink at a
 // glance without drowning what is drawn on top of it.
 //
@@ -82,7 +82,7 @@ const (
 // **Nothing draws it since the character block became a card** — the card's own bar and
 // fraction come from cards.HealthFull and cards.NumberInk, which is the point of drawing the
 // player the same way as everything else. It is kept because the deck overlay and the flight
-// code still describe state in the screen's own colours and this is the one red among them;
+// code still describe state in the screen's own colors and this is the one red among them;
 // delete it if a second thing has to be said about that.
 var lifeColor = color.RGBA{R: 225, G: 65, B: 65, A: 255}
 
@@ -209,10 +209,10 @@ func (s *CombatScene) drawTowerPlace(gs *state.GlobalState, screen *ebiten.Image
 	}
 }
 
-// The discards-left badge: a filled disc centred exactly on the Discard button's bottom-right
+// The discards-left badge: a filled disc centered exactly on the Discard button's bottom-right
 // corner, with the count in it.
 //
-// **Centred on the corner rather than inset from it**, so a quarter of the disc hangs off each
+// **Centered on the corner rather than inset from it**, so a quarter of the disc hangs off each
 // of the two edges and it reads as a counter attached to the button instead of a second thing
 // printed inside it. Nothing sits under that corner — the hand row ends well above the button
 // strip — so the overhang costs no legibility anywhere else.
@@ -230,9 +230,9 @@ const (
 // The badge's disc and its ink.
 //
 // **Two pairs rather than one dimmed by state**, because the button underneath does not dim —
-// it changes colour entirely. `disabledButtonColor` is flat dark grey and deliberately ignores
-// BaseColor, so a badge tuned to sit on yellow has nothing to say about grey. Disabled takes a
-// mid grey disc: still a disc, plainly not a live one.
+// it changes color entirely. `disabledButtonColor` is flat dark gray and deliberately ignores
+// BaseColor, so a badge tuned to sit on yellow has nothing to say about gray. Disabled takes a
+// mid gray disc: still a disc, plainly not a live one.
 var (
 	discardBadgeFill         = color.RGBA{R: 245, G: 245, B: 245, A: 255}
 	discardBadgeInk          = color.RGBA{R: 25, G: 25, B: 25, A: 255}
@@ -243,7 +243,7 @@ var (
 // drawDiscardsLeft draws the badge holding the discards remaining this round.
 //
 // **It is drawn by the scene, over the button, rather than being a second label on the
-// widget.** models.Button is a plain struct with one centred string and the count is game
+// widget.** models.Button is a plain struct with one centered string and the count is game
 // state that refills at the end of a round; giving the widget a corner-badge field would put
 // a rule about this screen into something every screen shares.
 //
@@ -254,7 +254,7 @@ func (s *CombatScene) drawDiscardsLeft(gs *state.GlobalState, screen *ebiten.Ima
 		return
 	}
 
-	// ScreenX/ScreenY are the button's centre; both DrawButton and the hit test re-derive the
+	// ScreenX/ScreenY are the button's center; both DrawButton and the hit test re-derive the
 	// corners from them the same way.
 	cx := float64(b.ScreenX) + float64(b.Width)/2
 	cy := float64(b.ScreenY) + float64(b.Height)/2
@@ -300,7 +300,7 @@ func enemyCardRect(gs *state.GlobalState) image.Rectangle {
 // drawEnemyCard draws the opponent in the card format: name, portrait, health bar, and the
 // life left as a fraction.
 //
-// **It is in the top-right corner** *(2026-08-12)*, where it was centred at 88%,34% before —
+// **It is in the top-right corner** *(2026-08-12)*, where it was centered at 88%,34% before —
 // floating in the middle of the band the relics want, at a height nothing else on the screen
 // shared. The corner puts it opposite the player's card and hands the whole band between them
 // to the relic row.
@@ -395,7 +395,7 @@ func (s *CombatScene) roundTimerSpent(limit int) int {
 
 // drawRoundTimer draws one cell per round, filled for the rounds already spent.
 //
-// **The last cell is the game's one red** — `modalCloseColor`, the colour the destructive answer
+// **The last cell is the game's one red** — `modalCloseColor`, the color the destructive answer
 // on a confirm dialog takes — and it is lit only once the fight has actually reached it. There is
 // no hue left to claim (see CLAUDE.md), and this is not claiming one: it is the existing meaning
 // of that red, which is "this ends something", arriving at the moment it becomes true.

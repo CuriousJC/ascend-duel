@@ -1,6 +1,6 @@
 // Command relicart takes the art generator's output and files it: every PNG in the inbox is
-// reduced to the card's own size, committed under the catalogue's asset directory, and recorded
-// on its record in the catalogue's JSON file.
+// reduced to the card's own size, committed under the catalog's asset directory, and recorded
+// on its record in the catalog's JSON file.
 //
 // It exists because that is four steps done by hand, once per record, a hundred and twenty times —
 // and the two that fail silently are the ones a person gets wrong. A picture committed at the
@@ -8,7 +8,7 @@
 // field left empty just draws the default face and nothing fails.
 //
 // **There is no worklist to strike.** A record with no Art is one still to draw, and its brief is
-// the Draw field on the same record — the catalogue's review sheet counts both and marks both.
+// the Draw field on the same record — the catalog's review sheet counts both and marks both.
 //
 //	go run ./tools/relicart                    # file everything in the relic inbox
 //	go run ./tools/relicart -kind essence         # the essences instead
@@ -16,11 +16,11 @@
 //	go run ./tools/relicart -n                 # say what would happen and touch nothing
 //	go run ./tools/relicart -blocky            # quantize to the block grid on the way down
 //
-// # Three catalogues, one command
+// # Three catalogs, one command
 //
 // **Relics, essences and runes all carry Art and Draw and all draw a full-bleed card**, so filing
 // a picture is the identical four steps for each and a second command would be this file copied
-// with three strings changed. `-kind` is the parameter and `catalogues` is the whole difference:
+// with three strings changed. `-kind` is the parameter and `catalogs` is the whole difference:
 // an inbox, an asset directory, a JSON file, and the name of that file's record key. The name
 // stays `relicart` because the relics are what it is reached for; renaming it would break the
 // muscle memory and the CLAUDE.md line for nothing.
@@ -48,7 +48,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )
 
-// catalogue is one family of records this tool can file art for: where the generator's output
+// catalog is one family of records this tool can file art for: where the generator's output
 // lands, where the reduced pictures are committed, which file records them, and what that file
 // calls its key.
 //
@@ -56,14 +56,14 @@ import (
 // JSON twice for two different questions — which ids exist, and which lines to rewrite — and both
 // are done with the minimum that answers them. A full round-trip through encoding/json would
 // reflow a hand-formatted file; see setArt.
-type catalogue struct {
+type catalog struct {
 	inbox string
 	out   string
 	json  string
 	key   string
 }
 
-var catalogues = map[string]catalogue{
+var catalogs = map[string]catalog{
 	"relic": {
 		inbox: filepath.Join(".scratch", "to-process-relic-art"),
 		out:   filepath.Join("assets", "relic"),
@@ -86,8 +86,8 @@ var catalogues = map[string]catalogue{
 
 // kindList is the -kind flag's vocabulary, sorted, for the error a misspelling gets.
 func kindList() string {
-	names := make([]string, 0, len(catalogues))
-	for k := range catalogues {
+	names := make([]string, 0, len(catalogs))
+	for k := range catalogs {
 		names = append(names, k)
 	}
 	sort.Strings(names)
@@ -95,21 +95,21 @@ func kindList() string {
 }
 
 func main() {
-	kind := flag.String("kind", "relic", "which catalogue to file art for: "+kindList())
-	in := flag.String("in", "", "inbox of generated PNGs (default: the catalogue's own)")
-	out := flag.String("out", "", "where the reduced art is committed (default: the catalogue's own)")
+	kind := flag.String("kind", "relic", "which catalog to file art for: "+kindList())
+	in := flag.String("in", "", "inbox of generated PNGs (default: the catalog's own)")
+	out := flag.String("out", "", "where the reduced art is committed (default: the catalog's own)")
 	done := flag.String("done", "", "where the originals are kept (default: .scratch/processed-<kind>s)")
 	blocky := flag.Bool("blocky", false, "quantize to the 40x56 block grid, then scale up by a whole number")
 	dry := flag.Bool("n", false, "report what would happen and write nothing")
 	flag.Parse()
 
-	cat, ok := catalogues[*kind]
+	cat, ok := catalogs[*kind]
 	if !ok {
 		log.Fatalf("-kind %q is not one of %s", *kind, kindList())
 	}
-	// **The three directory flags default to the catalogue's own and still override**, so the
+	// **The three directory flags default to the catalog's own and still override**, so the
 	// everyday call is `-kind essence` and a one-off batch sitting somewhere else is still one flag
-	// away. An empty string is the sentinel rather than the catalogue being copied into the flag
+	// away. An empty string is the sentinel rather than the catalog being copied into the flag
 	// defaults, because flag defaults are read before -kind is.
 	if *in == "" {
 		*in = cat.inbox
@@ -189,7 +189,7 @@ func main() {
 }
 
 // reduce reads one generated PNG and scales it to the card's own size. The smooth path is
-// CatmullRom, which is what the committed catalogue was made with. The blocky path quantizes to
+// CatmullRom, which is what the committed catalog was made with. The blocky path quantizes to
 // the block grid the prompt asks for and scales back up by a whole number, so every block lands
 // on an exact square instead of being resampled across one.
 func reduce(path string, w, h int, blocky bool) (image.Image, string, error) {
@@ -244,12 +244,12 @@ func writePNG(path string, img image.Image) error {
 	return png.Encode(f, img)
 }
 
-// recordIDs is every key the catalogue's file writes.
+// recordIDs is every key the catalog's file writes.
 //
-// **Decoded into a map rather than a struct**, because the key's field name differs per catalogue
-// — RelicRecord, EssenceRecord, RuneRecord — and a struct per catalogue would be three types
+// **Decoded into a map rather than a struct**, because the key's field name differs per catalog
+// — RelicRecord, EssenceRecord, RuneRecord — and a struct per catalog would be three types
 // that exist to hold one string each. Everything else in the record is ignored here.
-func recordIDs(cat catalogue) (map[string]bool, error) {
+func recordIDs(cat catalog) (map[string]bool, error) {
 	raw, err := os.ReadFile(cat.json)
 	if err != nil {
 		return nil, err
@@ -278,7 +278,7 @@ func recordIDs(cat catalogue) (map[string]bool, error) {
 // would reflow all of it, burying a six-line change in a twelve-hundred-line diff. The essence and
 // rune files are machine-formatted today and would survive a round-trip, but one path through
 // this function is worth more than the difference.
-func setArt(cat catalogue, keys []string) error {
+func setArt(cat catalog, keys []string) error {
 	raw, err := os.ReadFile(cat.json)
 	if err != nil {
 		return err

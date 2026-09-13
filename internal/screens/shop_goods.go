@@ -8,7 +8,7 @@ package screens
 // shelf: a relic is a thing you read and then pay for, and these are paid for and then read.
 //
 // **The bag is the only way a stone is ever got.** A stone raises one rung of the hand ladder by a
-// tenth of its catalogue multiplier, for the rest of the run — see `internal/session/stone.go`.
+// tenth of its catalog multiplier, for the rest of the run — see `internal/session/stone.go`.
 // Choosing it is using it: there is no inventory, so the click that picks a rock is the click that
 // puts it on the ladder.
 //
@@ -78,7 +78,7 @@ const (
 
 // Where the goods row sits, and how the dialog lays its cards out.
 const (
-	// The dialog's four cards, centred in the panel — the bag's and the sack's, which have one
+	// The dialog's four cards, centered in the panel — the bag's and the sack's, which have one
 	// row and nothing under it.
 	goodsChoiceRowPct = 42
 
@@ -183,7 +183,7 @@ func (g *goods) count() int {
 	}
 }
 
-// dealStones is what a bag holds: four of the catalogue, without repeats.
+// dealStones is what a bag holds: four of the catalog, without repeats.
 //
 // **Its own stream** (`seeds.BagStock`), separate from the shelf's relics and from both essence draws —
 // see internal/seeds, where the argument is written down. **Without repeats**, because a bag
@@ -220,13 +220,13 @@ func dealVialEssences(gs *state.GlobalState) []session.Essence {
 	return all
 }
 
-// dealSackRunes is what a sack holds: four of the catalogue, without repeats.
+// dealSackRunes is what a sack holds: four of the catalog, without repeats.
 //
 // **Its own stream** (`seeds.SackStock`), separate from both other goods and from the reward
 // screen's essences — see internal/seeds. **Flat, not weighted**, on the bag's argument: a rune
 // has no rarity, and weighting them would be pricing the effect, which nothing has decided yet.
 //
-// **A catalogue shorter than the sack is not an error.** Four runes ship and the sack holds
+// **A catalog shorter than the sack is not an error.** Four runes ship and the sack holds
 // four, so it currently offers the whole file; the cut is what keeps that true as the list grows.
 func dealSackRunes(gs *state.GlobalState) []session.Rune {
 	all := session.Runes()
@@ -574,7 +574,7 @@ func (g *goods) hint() string {
 // stoneTipLines is what a stone's tooltip says: the rung it raises, what one is worth, and where
 // that rung stands for this run right now.
 //
-// **The run's own figure rather than the catalogue's**, because a second stone on a rung is worth
+// **The run's own figure rather than the catalog's**, because a second stone on a rung is worth
 // exactly what the first was and the player has no other way to see what the first one did.
 func stoneTipLines(gs *state.GlobalState, st session.Stone) []string {
 	worth := session.StoneWorth(st.Hand)

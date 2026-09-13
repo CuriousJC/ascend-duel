@@ -98,7 +98,7 @@ var tmpl = template.Must(template.New("essencesheet").Parse(`<!doctype html>
 <h1>Essence sheet</h1>
 <p class="facts">
   {{.Count}} essences, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no subject
-  paragraph written. {{.Offered}} are offered after a won fight — {{.Share}}% of the catalogue gets
+  paragraph written. {{.Offered}} are offered after a won fight — {{.Share}}% of the catalog gets
   a seat. Essence card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
   border <code>{{index .Style "borderWidth"}}</code>,
@@ -122,14 +122,14 @@ var tmpl = template.Must(template.New("essencesheet").Parse(`<!doctype html>
   <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The quoted
   block under each essence is <code>Draw</code> in <code>data/essences.json</code>: what the thing
   <em>is</em> and what it is doing, in one sentence. Nothing in the game reads it. It is pasted
-  under the shared prompt in <code>docs/art/card_art_prompt.MD</code>, which is the only part of a
-  brief that is not about one record. <strong>An essence with no subject and no art is the
+  under the catalog's own prompt, <code>docs/art/essence_art_prompt.MD</code>, which is the only
+  part of a brief that is not about one record. <strong>An essence with no subject and no art is the
   backlog</strong> — both lines go pink, so the page can be scrolled for what still needs writing
   rather than a worklist being kept in step by hand. <code>default-essence.png</code> is the seat art
   goes into, not a fallback that has gone wrong.
 </p>
 
-<h2>What the catalogue changes</h2>
+<h2>What the catalog changes</h2>
 <p class="note">
   <strong>Every target, and how many essences sit at it.</strong> The target vocabulary is closed —
   a new one is a Go change plus one place applying it, never something a file can assert into
@@ -144,7 +144,7 @@ var tmpl = template.Must(template.New("essencesheet").Parse(`<!doctype html>
 {{end}}
 </ul>
 
-<h2>The catalogue, by family</h2>
+<h2>The catalog, by family</h2>
 <p class="note">
   <strong>Grouped by the motif each essence was authored beside, in the file's own order.</strong>
   <code>Family</code> is authored and the engine ignores it, exactly as it ignores <code>Art</code>

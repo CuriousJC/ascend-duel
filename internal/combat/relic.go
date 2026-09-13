@@ -78,17 +78,17 @@ const (
 	// drawHand.
 	//
 	// **It is the element flip's moment, and the flip is all it holds** *(owner's call,
-	// 2026-08-24)*. It used to be a `deck-built` verb, recolouring the whole fight deck once as it
+	// 2026-08-24)*. It used to be a `deck-built` verb, recoloring the whole fight deck once as it
 	// came out of the run — which deals the same cards, since a flip is unconditional over an
 	// element, and says the wrong thing about *when*. Every one of these relics is worded "every X
 	// card is dealt as a Y card", and dealing is what a draw is.
 	//
 	// **The draw pile therefore holds cards as the run owns them**, and the flip is applied on the
 	// way into the hand. That is the invariant the reshuffle has to keep: a discarded card is put
-	// back as the run owns it, or a second flip would land on the colour the first one made and two
-	// relics would chain a deck to one colour between them. See screens/combat_deck.go.
+	// back as the run owns it, or a second flip would land on the color the first one made and two
+	// relics would chain a deck to one color between them. See screens/combat_deck.go.
 	//
-	// **A card drawn under a flip does not remember what it was.** It carries the colour it became
+	// **A card drawn under a flip does not remember what it was.** It carries the color it became
 	// and nothing else, so a rule firing later — a card-damage relic keyed on ice — matches the card
 	// in the hand rather than the card in the run. What the original is still reachable *from* is
 	// the card's ID, which is a handle for the layers above the rules and never something a rule
@@ -173,10 +173,10 @@ const (
 	// DoApplyStatus puts a status on whoever took the blow.
 	DoApplyStatus
 
-	// DoSetElement is the flip: it recolours a matching card **as that card is drawn**.
+	// DoSetElement is the flip: it recolors a matching card **as that card is drawn**.
 	//
 	// **The only verb at MomentCardDrawn**, and it moved there on 2026-08-24 from `deck-built`,
-	// where it recoloured the whole fight deck in one pass. The cards dealt are the same either way
+	// where it recolored the whole fight deck in one pass. The cards dealt are the same either way
 	// — a flip is unconditional over an element — so what changed is what the game *says*: these
 	// relics are all worded "every X card is dealt as a Y card", and a draw is the dealing.
 	DoSetElement
@@ -249,7 +249,7 @@ const (
 	// fight's deck is dealt: a 3 AP Skewer becomes a 2 AP Thrust, same form, one rung cheaper and
 	// half the damage.
 	//
-	// **It walks `Neighbour`, so the ladder stays a consequence of `duelist_cards.json`** rather
+	// **It walks `Neighbor`, so the ladder stays a consequence of `duelist_cards.json`** rather
 	// than a table here to keep in step with it. A card with no rung below it is left alone — the
 	// bottom of a form is the bottom.
 	DoDemoteCard
@@ -521,7 +521,7 @@ type RelicEffect struct {
 	// Status is what apply-status applies.
 	Status StatusID
 
-	// Element is what set-element recolours a card to.
+	// Element is what set-element recolors a card to.
 	Element Element
 }
 
@@ -689,7 +689,7 @@ func MustRelic(key string) RelicID {
 // RelicCount is how many relics are registered.
 func RelicCount() int { return len(relicRegistry) }
 
-// RelicKeys is every registered key, sorted, for a tool or a test walking the catalogue without
+// RelicKeys is every registered key, sorted, for a tool or a test walking the catalog without
 // depending on registration order.
 func RelicKeys() []string {
 	out := make([]string, 0, len(relicRegistry))
@@ -882,7 +882,7 @@ func (d Duelist) CostOf(cards []Card) int {
 }
 
 // CardDamage is what one card deals in this duelist's hands, before any hand multiplier, blunting or
-// defence — the card's own figure scaled by every relic that matches it.
+// defense — the card's own figure scaled by every relic that matches it.
 //
 // **Compounding, left to right**, which is what makes two matching relics x4 rather than x2. The floor
 // is the one `Card.Damage` holds for the same reason: a card that is meant to deal nothing is not an
@@ -1589,14 +1589,14 @@ func DemoteConcept(worn []WornRelic, card Card) (ConceptID, bool) {
 	if deepest == 0 {
 		return NoConcept, false
 	}
-	return Neighbour(card.Concept, -deepest)
+	return Neighbor(card.Concept, -deepest)
 }
 
-// FlipElement is what colour a card is dealt as, given a worn set. It reports false when no relic
-// touches it, so a caller can leave the card alone rather than writing its own colour back over it.
+// FlipElement is what color a card is dealt as, given a worn set. It reports false when no relic
+// touches it, so a caller can leave the card alone rather than writing its own color back over it.
 //
 // **Every flip reads the card's original element**, which is what stops two of them chaining a deck
-// to one colour: the later relic matches on what the card *is*, not on what the earlier relic made it.
+// to one color: the later relic matches on what the card *is*, not on what the earlier relic made it.
 // The last matching flip wins, and worn order is what decides which that is.
 //
 // **"Original" is now a duty the caller carries** *(2026-08-24)*. While this fired at `deck-built`
@@ -1678,7 +1678,7 @@ func GrowthEffect(w WornRelic) (RelicEffect, bool) {
 
 // CounterLabel is the accumulator badge's figure: what a growing relic is doing right now, written
 // in the units its own effect is written in. A relic that does not grow reads as the empty string,
-// which is most of the catalogue and is what says "draw nothing".
+// which is most of the catalog and is what says "draw nothing".
 //
 // **It is here rather than in the screen because it has two readers** — the worn-ring row and
 // `tools/relicsheet`, which cannot import a package that links a window. Two copies of this

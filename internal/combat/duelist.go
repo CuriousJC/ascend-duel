@@ -1,7 +1,7 @@
 package combat
 
 // The duelist: who is fighting, what they are carrying into the round, and the two things
-// that are spent during one — action points and raised defences.
+// that are spent during one — action points and raised defenses.
 //
 // **A Duelist is a value, not an object.** Every rule in this package takes one and returns a
 // new one rather than mutating in place, which is what lets the resolver work out a whole round
@@ -98,7 +98,7 @@ type Duelist struct {
 	// standing through the opponent's whole turn, gone at the start of its owner's next. See
 	// ClearDefenses, which drops both, and expireDefenses, which says when.
 	//
-	// **An unspent shield is lost rather than kept**, which is what makes a defence a read of the
+	// **An unspent shield is lost rather than kept**, which is what makes a defense a read of the
 	// turn in front of you: raising more than the round throws away is a wasted point, so the
 	// question the card asks is how hard *this* turn hits and never how long you can stockpile.
 	//
@@ -112,14 +112,14 @@ type Duelist struct {
 	//
 	// **It was indexed by element until 2026-08-17**, which is the array the relic grammar could not
 	// use: one element applying two statuses is the case that breaks it, and a status arriving from
-	// something that is not a colour at all has no seat in it. The price moves with the index —
+	// something that is not a color at all has no seat in it. The price moves with the index —
 	// `statuses.json` is now the append-only file, because inserting a record mid-file re-points
 	// every status a duelist is carrying.
 	//
 	// An array rather than named fields for the reason it always was: a new status does not grow
 	// this struct, and *"consume the status this card applies"* stays expressible.
 	//
-	// The defences above deliberately stay where they are. Defend is a card effect rather than a
+	// The defenses above deliberately stay where they are. Defend is a card effect rather than a
 	// status, and filing it in this table would say it was one.
 	Statuses [MaxStatuses]Status
 
@@ -144,7 +144,7 @@ type Duelist struct {
 	// **Enemies never wear one.** The zero value is an empty hand and nothing sets it for them, so
 	// an enemy's elements are inert by construction rather than by a rule written down somewhere
 	// else. Statuses reaching the player by some other route later is expected; it will not be by
-	// an enemy putting on jewellery.
+	// an enemy putting on jewelry.
 	Relics     [MaxWornRelics]WornRelic
 	RelicCount int
 
@@ -182,9 +182,9 @@ type Duelist struct {
 	SoloAttacks bool
 
 	// HandStones is how many stones this duelist holds for each rung of the hand ladder, indexed
-	// by the rung's seat in the catalogue — see stone.go, which owns the seats and the arithmetic.
+	// by the rung's seat in the catalog — see stone.go, which owns the seats and the arithmetic.
 	//
-	// **A run's opinion about the ladder, carried by the fighter rather than by the catalogue.**
+	// **A run's opinion about the ladder, carried by the fighter rather than by the catalog.**
 	// `handTable` is package state shared by every fight and every tool, so a run raising a rung in
 	// place would raise it for the enemy planner and for the review sheets. Equipping is where a
 	// run's stones reach a duelist, which is the same seat `Relics` arrives in.
@@ -194,7 +194,7 @@ type Duelist struct {
 	// two resolved duelists with `==`.
 	//
 	// **Enemies never hold one.** Nothing sets it for them, so the zero value is a duelist reading
-	// the catalogue as written — and an enemy has `SoloAttacks` anyway, so it forms no hands to
+	// the catalog as written — and an enemy has `SoloAttacks` anyway, so it forms no hands to
 	// raise.
 	HandStones [MaxHandSlots]int
 
@@ -225,14 +225,14 @@ func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 // resolving more than one attack — counting incoming blows is meaningless when there is only
 // ever one.
 type PendingDefend struct {
-	// Card is the whole card rather than its concept, **because what a defence is worth is a
+	// Card is the whole card rather than its concept, **because what a defense is worth is a
 	// property of the card** *(2026-08-17)*: an essence can scale one Defend without touching the
 	// others. Storing the ID lost that the moment it was raised.
 	Card Card
 }
 
 // maxPendingDefends bounds the defend set. A turn is capped at MaxActions cards and every one of
-// them could be a defence, so this is everything a legal turn can raise.
+// them could be a defense, so this is everything a legal turn can raise.
 const maxPendingDefends = baseMaxActions
 
 // reductionFor is what one raised card takes off the blow: its own declared Amount, as a
@@ -242,7 +242,7 @@ const maxPendingDefends = baseMaxActions
 // figure however many cards went into it, so total negation would be a whole opposing turn deleted
 // by a single card — a dominant strategy rather than a decision. Something always lands, so the
 // opponent is always still playing. `RegisterConcept` refuses a card declaring 100 or more, and
-// `TestNoDefenceStopsABlowOutright` holds the resolver to it.
+// `TestNoDefenseStopsABlowOutright` holds the resolver to it.
 func reductionFor(card Card) int {
 	if card.Spec().Verb != VerbDefend {
 		return 0
@@ -271,7 +271,7 @@ func (d Duelist) raiseDefend(card Card) Duelist {
 // longer defending", and two mechanics answering it separately is how one of them survives a fight
 // it should not have. Exported because the combat screen resets a duelist between fights and has
 // to be able to clear this without knowing what is in it — a screen that listed the fields by hand
-// is how a raised defence once survived into the next duel.
+// is how a raised defense once survived into the next duel.
 //
 // **An unspent shield is dropped rather than kept.** It expires with the turn it was raised
 // against; see Duelist.Shields.
@@ -359,7 +359,7 @@ func (d Duelist) ActionPoints() int { return d.Actions }
 // enforces this while the player builds a set; ResolveRound trusts what it is given
 // so that a balance sim can deliberately probe outside the rules.
 //
-// **It is the duelist's own costs that are totalled** — see CostOf in relic.go — because a discount
+// **It is the duelist's own costs that are totaled** — see CostOf in relic.go — because a discount
 // relic makes a cost a property of the pairing rather than of the card.
 func (d Duelist) CanAfford(cards []Card) bool {
 	return d.CostOf(cards) <= d.ActionPoints()

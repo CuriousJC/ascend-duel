@@ -34,7 +34,7 @@ import (
 // It presses the same buttons a player would — `toggle` for selection, `startRound` for DUEL!
 // — and `ResolveRound` neither sees it nor is called by it.
 //
-// **It picks its own opening hand by name**, via the seed catalogue in seeds.go. That is what
+// **It picks its own opening hand by name**, via the seed catalog in seeds.go. That is what
 // lets round one be *clicked* rather than forced: `three-bashes` guarantees three Bashes in
 // hand, so the demo selects them through `toggle` exactly as a player would and the hand
 // fires off a real selection. Before named seeds the deal held no three-of-a-kind and the only
@@ -283,7 +283,7 @@ func (s *CombatScene) demoPickRound() {
 
 // **Captures are off unless asked for**, because a 1280x960 PNG is expensive for whoever ends
 // up reading it and most questions do not need one. What the pane *says* is answered by
-// demoReport below for almost nothing; a picture is only needed for how it *looks* — colour,
+// demoReport below for almost nothing; a picture is only needed for how it *looks* — color,
 // spacing, alignment.
 //
 //	go run -tags demoplay .                             # text report only
@@ -338,7 +338,7 @@ func (s *CombatScene) demoDraw(gs *state.GlobalState, screen *ebiten.Image) {
 // demoReport prints the Resolution pane as text: the same rows the pane draws, flattened.
 //
 // **This is the cheap way to check what a round said**, and it is what the captures were being
-// read for most of the time. It cannot answer a question about colour or spacing, and it is
+// read for most of the time. It cannot answer a question about color or spacing, and it is
 // not meant to — it answers "did the hand fire, in the right place, with the right words",
 // which is most of them.
 func (s *CombatScene) demoReport(gs *state.GlobalState, label string) {

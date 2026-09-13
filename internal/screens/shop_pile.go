@@ -10,7 +10,7 @@ package screens
 // **It is deliberately not part of the corner widget.** The column and the bottom line are shared
 // because they are the same controls in the same place on every screen; this pile is *not* where
 // the combat screen's pile is, and pretending otherwise would mean moving one of them. What is
-// shared is the picture and the panel behind it, which is what the player actually recognises.
+// shared is the picture and the panel behind it, which is what the player actually recognizes.
 //
 // **The count is what the run owns, not a fraction.** A fight's pile writes `n/total`, because the
 // numerator is how far through the shuffle the round is; there is no shuffle here and the panel

@@ -20,7 +20,7 @@
 // business and stays there: it needs the worn relics, which are a fact about a duelist in a fight
 // rather than about a card. `screens.cardTip` calls this for the block and appends its own chain.
 //
-// **No colour, no widths, no line breaks.** This hands back plain strings; the caller decides how
+// **No color, no widths, no line breaks.** This hands back plain strings; the caller decides how
 // they are drawn — which is what lets one of them be a tooltip panel and another a table cell in an
 // HTML page.
 package carddesc
@@ -37,7 +37,7 @@ import (
 // panel is set in the same clipped register the card faces use.
 //
 // **An elementless card is just its name.** Every creature card is `basic`, and `BASIC NIP` would
-// be naming a colour that is the absence of one.
+// be naming a color that is the absence of one.
 //
 // **A wildcard is CHROMATIC, not the element it happens to be** *(owner's call, 2026-09-09)*. The
 // card still *is* an arcane Skewer — it burns as one, it is drawn from the arcane row — but the
@@ -54,17 +54,17 @@ func Title(c combat.Card) string {
 
 // Chromatic is what a card counting as every element is called.
 //
-// **A word rather than a colour, because the wheel has none left for "all of them"** — see
+// **A word rather than a color, because the wheel has none left for "all of them"** — see
 // CLAUDE.md. Every hue is spoken for, and a CHROMATIC written in one of the five would be claiming
 // the one thing the word exists to deny, so it takes the panel's own ink and the *word* is the
 // signal.
 const Chromatic = "CHROMATIC"
 
 // ElementWord is what goes in front of a card's name, or empty for a card with nothing to say about
-// colour.
+// color.
 //
 // **Exported so a caller can ask which part of a title is the element** without re-deriving it.
-// The colouring itself needs nobody to ask: `screens.tipLine` runs every tooltip line through
+// The coloring itself needs nobody to ask: `screens.tipLine` runs every tooltip line through
 // `cards.ElementSpans`, which matches whole words, so FIRE in `FIRE JAB` comes out in the fire red
 // for free — and CHROMATIC does not, which is the intended answer rather than a gap.
 func ElementWord(c combat.Card) string {
@@ -99,11 +99,11 @@ func Lines(c combat.Card, cost, dmg, scale int) []string {
 // EffectLine is the one line saying what the card is worth, in the terms its verb is measured in.
 //
 // **Three verbs, three units.** An attack is DMG, a shield is a count of blows eaten whole, and a
-// defence is a percentage off one blow. A single "amount" line would be the same number meaning
+// defense is a percentage off one blow. A single "amount" line would be the same number meaning
 // three different things.
 //
 // **`scale` reaches the attack line and nothing else**, because no relic moment touches a shield's
-// count or a defence's percentage. A scale of zero is read as 100, so a caller that has not thought
+// count or a defense's percentage. A scale of zero is read as 100, so a caller that has not thought
 // about relics gets the bare card rather than a card worth nothing.
 func EffectLine(c combat.Card, dmg, scale int) string {
 	amount := c.Amount()
@@ -166,7 +166,7 @@ func RiderLines(c combat.Card) []string {
 		case combat.RiderGolden:
 			// **The metal is named first and the odds are the fine print under it** *(owner's call,
 			// 2026-09-09)*. The panel opens with what the card *is* — the same line its face carries,
-			// in the same colour — and only then says what that costs and pays. Two rate lines
+			// in the same color — and only then says what that costs and pays. Two rate lines
 			// arriving with nothing over them read as arithmetic about a card whose name the player
 			// has to work out from the wash.
 			//
@@ -215,7 +215,7 @@ func pad(n int) string {
 	return strconv.Itoa(n)
 }
 
-// upper is ASCII upper-casing, which is all the card catalogue needs and is what keeps this
+// upper is ASCII upper-casing, which is all the card catalog needs and is what keeps this
 // package free of the unicode tables for a job it does on a dozen known strings.
 func upper(s string) string {
 	out := []byte(s)
@@ -251,7 +251,7 @@ func upper(s string) string {
 //
 // **Total over combat.RiderKinds(), like RiderLines.** A rider with no face line is a rune the
 // player spent that the card does not mention — the same failure as a rider with no drawing, and
-// the one the wash on its own cannot fix: a colour is what carries across a row of eight cards, and
+// the one the wash on its own cannot fix: a color is what carries across a row of eight cards, and
 // the words are what answers "what does that mean" without a hover.
 func FaceLines(c combat.Card) []string {
 	var out []string
@@ -282,7 +282,7 @@ func FaceLines(c combat.Card) []string {
 		case combat.RiderGolden, combat.RiderSilver:
 			// **The metals say nothing on the face, and they are the only two that may**
 			// *(owner's call, 2026-09-09)*. Every other upgrade is a placeholder tint standing on a
-			// full wheel, so its colour cannot be relied on to name it and the words are what a
+			// full wheel, so its color cannot be relied on to name it and the words are what a
 			// player learns it from — see systems.upgradeTint. Gold and silver are the exception in
 			// exactly that respect: systems.upgradeSheen is not a placeholder, because gold and
 			// silver are what the mechanic is *called*, and a sheen running across a card is
@@ -334,7 +334,7 @@ func lower(s string) string {
 
 // Gold and Silver are what the two gambling upgrades are called, on a card and in a panel alike.
 //
-// **Constants because two packages have to agree on the string.** `internal/screens` colours the
+// **Constants because two packages have to agree on the string.** `internal/screens` colors the
 // word by looking for it in the face's text, so a card writing GOLD and a highlight looking for
 // GOLDEN would be a word that is never lit — the same trap `carddesc.Chromatic` exists to close.
 const (

@@ -1,4 +1,4 @@
-// Package roster renders one opponent-catalogue review sheet: every record in a pool, drawn
+// Package roster renders one opponent-catalog review sheet: every record in a pool, drawn
 // as the card the game draws, beside the deck it fights with and the stats it fights on.
 //
 // # Why this is a library and the other sheets are not
@@ -6,7 +6,7 @@
 // `tools/sheets` says the four existing sheets share nothing but the words `png.Encode`, and
 // that a library between them would exist to be a seam that command already is. That argument
 // is still right and this is not a counter-example to it: the enemy sheet and the boss sheet
-// are not two sheets, they are **one sheet over two pools**. The two catalogues carry the same
+// are not two sheets, they are **one sheet over two pools**. The two catalogs carry the same
 // fields, are drawn by the same style, and are read to answer the same question. Copying four
 // hundred lines so that the second one could differ in a heading and a floor field is how two
 // pages that must agree quietly stop agreeing — a boss sheet that had not learned about a new
@@ -80,7 +80,7 @@ const (
 	stripSplit = 34
 )
 
-// Pool is one catalogue: what it is called, and how to read it.
+// Pool is one catalog: what it is called, and how to read it.
 //
 // **The pool is the only thing the two commands differ by.** Everything a page shows is derived
 // from the entries it hands back.
@@ -97,7 +97,7 @@ type Pool struct {
 	// GroupLabel is what a section of the page is a group of — "floor band", "floor".
 	GroupLabel string
 
-	// Entries reads the catalogue, in the order the page should show it.
+	// Entries reads the catalog, in the order the page should show it.
 	Entries func() []Entry
 }
 
@@ -122,7 +122,7 @@ type Entry struct {
 	// still cut by floor, because the floor is the placement decision and the spread beside each
 	// heading is what a balance review reads — so a Family repeating it would say nothing. What it
 	// adds is the axis the floor does not carry: whether a band is four more slimes or a floor
-	// with a shape of its own. It is printed on each record and summarised on each band's heading.
+	// with a shape of its own. It is printed on each record and summarized on each band's heading.
 	Family string
 	Draw   string
 
@@ -340,7 +340,7 @@ func stripFor(f *cards.Faces, e Entry) (*image.RGBA, error) {
 // **Full life rather than a sample wound**, because the figure a reviewer is reading is the
 // record's HP and a bar drawn at some fraction of it would be inviting the question of which
 // fraction. It carries no status badges for the same reason — a status is something a fight puts
-// on a combatant, and nothing in a catalogue has been in one.
+// on a combatant, and nothing in a catalog has been in one.
 func opponentSpec(e Entry, art image.Image) cards.Spec {
 	return cards.Spec{
 		Name:    e.Name,
@@ -436,8 +436,8 @@ func form(name string) cards.Form {
 	return cards.FormNone
 }
 
-// element is which colour to draw the card in. **Empty means basic**, exactly as the deck builder
-// reads it — see internal/decks. Only the first is drawn: a concept shipping in several colours is
+// element is which color to draw the card in. **Empty means basic**, exactly as the deck builder
+// reads it — see internal/decks. Only the first is drawn: a concept shipping in several colors is
 // several cards in the pile, and a strip showing one of each would say a swarm was a rainbow.
 func element(names []string) cards.Element {
 	if len(names) == 0 {

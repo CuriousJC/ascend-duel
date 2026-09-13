@@ -13,8 +13,8 @@ var (
 )
 
 // **The count is the list**, which is the whole reason this type exists: there is no second place
-// for a count to live, so a pip without a colour cannot be represented and cannot be drawn white.
-func TestEveryStandingPipHasAColour(t *testing.T) {
+// for a count to live, so a pip without a color cannot be represented and cannot be drawn white.
+func TestEveryStandingPipHasAColor(t *testing.T) {
 	var r shieldRow
 	r.add(rowFire, 1)
 	r.add(rowIce, 1)
@@ -22,11 +22,11 @@ func TestEveryStandingPipHasAColour(t *testing.T) {
 	r.hold(3, rowIce)
 
 	if r.count() != len(r.pips) {
-		t.Fatalf("the count is %d and the colours are %d", r.count(), len(r.pips))
+		t.Fatalf("the count is %d and the colors are %d", r.count(), len(r.pips))
 	}
 	for i, p := range r.pips {
 		if p.A == 0 {
-			t.Errorf("pip %d has no colour, so it draws as the bare white mark", i)
+			t.Errorf("pip %d has no color, so it draws as the bare white mark", i)
 		}
 	}
 }
@@ -89,10 +89,10 @@ func TestTheModelIsTheAuthorityUntilSomethingIsAnnounced(t *testing.T) {
 	}
 }
 
-// **An announcement brings a count and the flight brings the colour**, so every pip a raise adds
+// **An announcement brings a count and the flight brings the color**, so every pip a raise adds
 // wears the element of the card that raised it. A brace announcing two into an empty row landed one
-// coloured pip and one bare white mark until the fill was handed in.
-func TestAPaddedPipTakesTheColourItWasGiven(t *testing.T) {
+// colored pip and one bare white mark until the fill was handed in.
+func TestAPaddedPipTakesTheColorItWasGiven(t *testing.T) {
 	var r shieldRow
 	r.raiseTo(2, rowIce)
 

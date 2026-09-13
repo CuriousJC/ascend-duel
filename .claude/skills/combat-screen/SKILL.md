@@ -29,7 +29,7 @@ top of, and they are not repeated below:
   `cards.Spec`, pulls a cached image and blits it; it draws nothing itself. Change how a
   card looks there, then `go run ./tools/cardsheet` and refresh the tab — the tool and the
   screen run the same code, so the sheet cannot lie.
-- **Colour: name one colour and scale it** with `systems.ColorAtStrength` — but that scales
+- **Color: name one color and scale it** with `systems.ColorAtStrength` — but that scales
   toward *black*, so on the off-white card surface it makes things louder, not quieter. Use
   `systems.ColorToward` against a light ground. The card's element is its **border** now,
   not its surface.
@@ -48,7 +48,7 @@ top of, and they are not repeated below:
 
 **Phases.** A round is **a whole turn each**: everything side A
 queued resolves before side B does anything, and within a turn the categories go in order —
-**attack, then everything else**. Defences come last within a turn because the opponent moves
+**attack, then everything else**. Defenses come last within a turn because the opponent moves
 next, so a shield or a guard raised at the end of your turn is up when their blow arrives.
 
 **The attack phase is one blow** *(2026-08-14)*. Every attack card queued is announced with a
@@ -115,18 +115,18 @@ for a faster action to lead. `Spd` still buys action points and still never buys
 
 ### Hands, and the one thing they changed on this screen
 
-The catalogue is `data/hands.json`, the matcher is `internal/combat/hand.go`, and the design is
+The catalog is `data/hands.json`, the matcher is `internal/combat/hand.go`, and the design is
 in `MECHANICS.md`; these are what matter to the screen.
 
 - **A hand is a *hand*, and it is a damage multiplier and nothing else** *(2026-08-17)*.
   `Event.Hand` is a `HandID` and `Event.Multiplier` the percent. `handName` in `prose.go`
   looks it up with `HandByID` and prints `Hand.Name` — "Two Pair" — **assembling nothing**. It used
-  to join a hand to a *mix* counting the distinct colours, and to fill a `{card}` template from the
+  to join a hand to a *mix* counting the distinct colors, and to fill a `{card}` template from the
   concept that formed the hand, so one hand could print as "Duo Bash Flurry"; both axes are gone
   and a hand carries its whole name. **Exactly one fires per turn**, so there is no stacking to draw
   and no ranking to explain.
 - **`Event.Hand` always names a hand** *(corrected 2026-08-19)*. A turn with an attack in it falls
-  back to the catalogue's `high-card`, so `HandNone` never reaches a `KindHand` — the log had a
+  back to the catalog's `high-card`, so `HandNone` never reaches a `KindHand` — the log had a
   branch written against the opposite belief and it had been unreachable for some time. **The High
   Card takes the hand line like any other hand**, and carries its `x 1` in both the line and the
   dialog since 2026-08-19 — **the last place it was written differently from the rest**. What is
@@ -135,9 +135,9 @@ in `MECHANICS.md`; these are what matter to the screen.
   the fallback picks the hardest-hitting card rather than the commonest.
 - **The event carries the arithmetic, and the engine takes its damage from the same field.**
   `Base` is what the hand's own cards deal added up, and `Amount` is `Base` under the multiplier —
-  the blow *before* the attacker's weight and before any defence. `resolveAttackPhase` blunts
+  the blow *before* the attacker's weight and before any defense. `resolveAttackPhase` blunts
   `Amount` rather than re-adding the sum, so the figure printed and the figure landed cannot be two
-  different numbers. The gap between that and the `KindDamage` after it is exactly what the defence
+  different numbers. The gap between that and the `KindDamage` after it is exactly what the defense
   was worth.
 - **The multiplier multiplies the cards** *(2026-08-18, owner's call)*. There is no third term: the
   event carried a `Swing` — one 1x attack at the attacker's DMG, *added* to the cards — until then,
@@ -163,7 +163,7 @@ in `MECHANICS.md`; these are what matter to the screen.
   function the resolver uses, so a previewed hand is the hand that fires by construction rather
   than by two pieces of code agreeing. `previewAttack` calls it on `ResolutionOrder(queue, nil)`
   and **every attack previews, the High Card included** *(2026-08-19, owner's call)*. A single
-  attack card is a hand — the catalogue's `high-card` at the identity multiplier — so the name is
+  attack card is a hand — the catalog's `high-card` at the identity multiplier — so the name is
   on screen from the first attack picked; a queue of nothing but shields names nothing, `BlowFor`
   returning a blow with no cards. **This reverses the old rule**, which was that only a hand of two
   or more previewed, on the argument that HAND! over one Bash empties the word. What makes it
@@ -208,7 +208,7 @@ number the game had decided rather than one they had built.
   rather than a sum of its terms. The tests create no `ebiten.Image` and need no font — the same
   narrow exception the other screen tests take.
 - **The layout is computed once, before anything is shown**, and items are revealed left to right
-  into space already claimed. Laying the line out again as each item appeared would recentre the
+  into space already claimed. Laying the line out again as each item appeared would recenter the
   whole sum on every beat, so figures already on screen would crawl sideways while being read.
 - **It takes its height from the band above the hand and its width from the table, and neither is
   an accident.** The depth is `mathBandHeight`, which is what the Resolution feed's collapsed box
@@ -219,7 +219,7 @@ number the game had decided rather than one they had built.
   dialog that moved with it would re-lay a line of figures out from under a reader mid-flight. The
   **width** was deliberately not the feed's either: `feedRect` spanned `handBand`, which narrows as
   the hand empties, and a two-card hand gives about 330px against a widest sum of roughly 640 — so
-  a centred line that does not wrap and cannot shrink would have run off both ends in exactly the
+  a centered line that does not wrap and cannot shrink would have run off both ends in exactly the
   rounds a duel is decided in. `TestTheWidestSumFitsItsBand` found that and holds it. **The same
   trap is live anywhere else that borrows `handBand` for something that is not the hand.**
 - **Every hand the engine names is shouted, `HIGH CARD!` included** *(2026-08-19, owner's call)*.
@@ -238,14 +238,14 @@ number the game had decided rather than one they had built.
   name that swells while it moves is a second thing happening to it, and the journey plus the
   alpha already say it is committed. `mathNameSize` is now the one size the hand's name is written
   at anywhere, the box's own shout included.
-  **It is centred on the screen and overlays the opponent's cards** *(2026-08-19, owner's call)*.
+  **It is centered on the screen and overlays the opponent's cards** *(2026-08-19, owner's call)*.
   It sat over the player's own half until then, which kept it clear of that row at the cost of
   putting the loudest word on the screen off to one side — and of asking a name at 80 points and
-  growing to fit half a screen. `tableCentre` is the seat now, and the overlap is accepted rather
+  growing to fit half a screen. `tableCenter` is the seat now, and the overlap is accepted rather
   than designed around: the opponent's cards have been read by the time a hand is named, and the
   alternative is shrinking the name, which is the opposite of what its size is for.
 - **The name carries a second line saying what it is worth** *(2026-08-19, owner's call)*:
-  `1.15x DMG`, travelling with it as one object.
+  `1.15x DMG`, traveling with it as one object.
   **The multiplier used to be a number the player first met when it flew out of the word**, several
   beats after the round was committed — so the ladder was something to be told about afterwards
   rather than something to play toward. `handMultiplierLine` formats it through
@@ -264,12 +264,12 @@ number the game had decided rather than one they had built.
   a word left breathing over the hand while the sum finishes and the opponent swings back is
   saying something the round has moved past. The handoff is the damage figure's four-things-matching rule
   applied a second time — same size (`mathMultLineSize` = `mathTermSize`, and `fromScale: 1` so it
-  does not grow like a card's figure), same colour, same place, same frame. **The origin is the
-  `1.15` inside `1.15x DMG`, not the line's centre**, or the figure would start under the `x` and
+  does not grow like a card's figure), same color, same place, same frame. **The origin is the
+  `1.15` inside `1.15x DMG`, not the line's center**, or the figure would start under the `x` and
   shift sideways on its first frame. `handMultiplierOrigin` falls back to the shouted word for a
   hand the banner never carried — an opponent's, which nothing produces today.
   **The point is that it never leaves the screen.** A preview that vanished at DUEL! and a shout
-  that popped in several beats later asked the player to recognise the same word twice instead of
+  that popped in several beats later asked the player to recognize the same word twice instead of
   watching it move — the card-flight argument applied to the one thing on this screen that is not
   a card.
   Three things follow. **The box does not shout what the banner is already saying** — otherwise the
@@ -277,7 +277,7 @@ number the game had decided rather than one they had built.
   `showing` is that check, and a word the banner does *not* carry (an opponent's hand, which
   nothing produces today) still pops on its own. **It is raised in `startRound`**, on the last frame
   `previewAttack` can still be asked, and cleared in `endOfRound` — except on a settled duel, which
-  freezes with its cards and its name up. And **it is centred on `handRowCentre`, never on
+  freezes with its cards and its name up. And **it is centered on `handRowCenter`, never on
   `handBand`**, or it would drift sideways as the row narrowed under it — the same trap the sum's
   width avoids.
 - **The name doubled and is bold** *(2026-08-19, owner's call)*: 80 points, wherever it is
@@ -286,12 +286,12 @@ number the game had decided rather than one they had built.
   kubasta ships one weight. The step is proportional to the size and applied *after* the scale, so
   a breathing word does not pulse between bold and not.
   **`TestTheWidestHandNameFitsTheScreen` is what holds the size**: a name is not a figure —
-  `FOUR OF A KIND!` is fifteen characters — and it is centred, does not wrap and cannot shrink, so
+  `FOUR OF A KIND!` is fifteen characters — and it is centered, does not wrap and cannot shrink, so
   one too wide runs off both edges at once.
   **The margin came back when the name stopped growing** *(2026-08-19)*: at 124 the longest name —
   `ELEMENTAL THREE OF A KIND!`, the three matching axes having given every rung an axis word — was
   1220 pixels of 1280, about 95% of the screen; at the one size of 80 it is around 790. The test
-  still holds the end that matters, and anything that grows either the catalogue's wording or this
+  still holds the end that matters, and anything that grows either the catalog's wording or this
   size trips it.
 - **Both names breathe** — `mathBreath`, a slow ±6% swell read off `gs.Count`. It is on the free
   clock rather than on a script's, because the preview has no clock at all and the shout's own
@@ -310,23 +310,23 @@ number the game had decided rather than one they had built.
   landing damage figure doubled with it and had to, `hitFigureSize` being `mathTotalSize` rather
   than a size of its own. Width still fits with room — the widest sum the rules can produce is
   about 830 against a 1232-wide band, and `TestTheWidestSumFitsItsBand` measures to the ink now
-  rather than to the resting centres. **Depth is the constraint that is nearly spent**: a
-  100-point total is 85 pixels tall against `mathBandHeight`'s 82, so it clears its neighbours but
+  rather than to the resting centers. **Depth is the constraint that is nearly spent**: a
+  100-point total is 85 pixels tall against `mathBandHeight`'s 82, so it clears its neighbors but
   the next increase has to move the band, not only the type.
-- **Every number is drawn in the colour of what produced it** *(2026-08-19, owner's call)*. A
-  card's figure wears that card's element — `cards.BorderOf`, the same colour as the border it
+- **Every number is drawn in the color of what produced it** *(2026-08-19, owner's call)*. A
+  card's figure wears that card's element — `cards.BorderOf`, the same color as the border it
   flies out of — so the sum reads as being made *of the cards* rather than handed down by the
-  game; the multiplier wears `handNameInk`, the hand's own colour, which is also the banner it
+  game; the multiplier wears `handNameInk`, the hand's own color, which is also the banner it
   leaves; the total wears the attack ink, and the damage figure that flies on out of it wears the
   same. Operators stay faded ground ink, being the one thing on the line the game supplied rather
   than the player. **The element is read off the card in the seat, never off the event** —
   `Event.Element` is the blow's lead card and the sum has a figure per card.
-  **Lightning's own colour was darkened to make this work** — `{240,205,55}` to `{214,152,12}`, in
+  **Lightning's own color was darkened to make this work** — `{240,205,55}` to `{214,152,12}`, in
   `cards`, so every lightning border moved with it. A bright yellow is legible on a dark ground and
   nearly invisible on the two light ones this game draws on — the off-white card surface and the
   light screen — and a figure written straight onto the cream is where that finally showed. It is
   now the same value as `attentionYellow`: a collision rather than a shared constant, and the
-  attention colour is the one that moves if they ever have to be told apart.
+  attention color is the one that moves if they ever have to be told apart.
 - **A flown figure travels and grows; an operator is stamped in place.** That difference is the
   whole grammar of the box — something that flies came off a card, something that pops is
   punctuation the game supplied.
@@ -420,7 +420,7 @@ face, the round holds, then the creature swings with what is left.
 - **`Event.Slot` is the index into the turn as it resolved**, the convention `HandCards` already
   uses, and it inherits that convention's known gap: a chilled card is trimmed off the front before
   the indices are handed out while the table row still draws it. Nothing can chill a creature today.
-- **It holds the playback cursor** — `combatTheatre.running` — which is pacing and is allowed. The
+- **It holds the playback cursor** — `combatTheater.running` — which is pacing and is allowed. The
   hold after the break is the longest single one on this screen, deliberately: the round has three
   acts and the middle one had no beat of its own.
 
@@ -442,7 +442,7 @@ between them.
   argument for exactly this reason.
 - **It stops the playback cursor too**, for the dialog's reason: a figure crossing half the screen
   does not fit inside one event's dwell, and the alternative is the bar dropping before the number
-  reaches it. `combatTheatre.running` is what `advancePlayback` waits on. It changes pacing and cannot change
+  reaches it. `combatTheater.running` is what `advancePlayback` waits on. It changes pacing and cannot change
   an outcome.
 - **Where it sets off from is a rule, not a rectangle** — `anchorBlow`. The sum line when the turn
   scored a hand, because the total is already on screen there and two figures for one blow would be
@@ -450,7 +450,7 @@ between them.
   `KindHand` at all and every attack lands its own face damage. `soloAttacker(side)` is the
   predicate that already knows which.
 - **The handoff from the sum is four things matching, and all four are deliberate**: the figure is
-  the total's size (`hitFigureSize` *is* `mathTotalSize`), the total's colour, at the total's
+  the total's size (`hitFigureSize` *is* `mathTotalSize`), the total's color, at the total's
   position, on the frame the box clears — `advancePlayback` clears a finished box at the top of the
   beat the damage lands rather than a tick after the script stops, so the last frame of the sum and
   the first frame of the flight are the same frame. Any one of the four missing and it reads as two
@@ -464,7 +464,7 @@ between them.
   30 of 90 drew `60/90` for the length of the flight and then emptied — health visibly going *up*,
   on the killing blow and nowhere else. `applyEvent` reads the life before it overwrites it and
   hands it to `noteHit`.
-- **`Init` takes the whole theatre down**, which is the lesson the frozen last round taught — anything
+- **`Init` takes the whole theater down**, which is the lesson the frozen last round taught — anything
   tidied up only by the end-of-round spend assumes every round ends in one, and a settled duel does
   not.
 - **`shownLife` walks the list although there is only ever one figure owed.** The cursor holds for a
@@ -484,11 +484,11 @@ had no word for.
 **Two halves, and the burst is the new one.**
 
 - **The burst** is the firework: rays thrown out of the card that fired. It is an *emphasis at the
-  source*, not a journey, which is why it is deliberately **not a `gesture` in the theatre table** —
+  source*, not a journey, which is why it is deliberately **not a `gesture` in the theater table** —
   it composes with whatever row that table already has, and that is what lets the next thing wanting
   fireworks (a scored card, a relic firing) reuse it without the table growing a row per decoration.
   A `gestureBurst` is worth adding the day something bursts and sends nothing anywhere.
-- **The flight** is the figure travelling into the figure it changed: the DMG row, the VITAE row or
+- **The flight** is the figure traveling into the figure it changed: the DMG row, the VITAE row or
   the health bar. The rows come off `cards.DuelistStyle`'s own `StatsTop`/`StatRowPitch` rather than
   from constants typed here, so a card that re-lays out moves the target with it.
 
@@ -496,12 +496,12 @@ had no word for.
 `systems.UpgradeTint`, the same table the card's own face is washed with. The wheel is full, so a
 hue of its own would be claiming one; and the burst then matches the card it comes out of, so the
 two read as one object rather than as a card and an effect near it. Gold sparks for a gold card,
-silver for silver, sparks and figure alike — **one card, one colour, burst to landing**.
+silver for silver, sparks and figure alike — **one card, one color, burst to landing**.
 
 **`RiderVitaeInHand` is the one exception, and it is the game's rather than this widget's.**
 `vitaeInk` is the crimson vitae is written in everywhere it is written, and it is the only red on
 the table precisely so a figure in it says "money" before it is read; that rider's whole subject is
-vitae, so its placeholder blue-grey was the one tint saying the wrong thing. **Silver is deliberately
+vitae, so its placeholder blue-gray was the one tint saying the wrong thing. **Silver is deliberately
 not swept up in it** although it also pays the purse: what a silver card says is that the *metal*
 came up, and the row it lands on is already crimson without the figure agreeing. The core of a burst
 is lifted only a quarter toward white for the same reason — at more than half, a pale tint like
@@ -518,22 +518,22 @@ named. So the screen defers *(owner's call, 2026-09-10)*:
   fly to the duelist card and only then does the hand start counting. Together, because what the
   turn kept back is one fact about the turn rather than several about cards.
 - **Then each played card signals as it scores**, released by `handMathBox.takeSignalSeat` on the
-  beat that card's own term starts. That is **`takeShields` generalised** — a defend card's pips
+  beat that card's own term starts. That is **`takeShields` generalized** — a defend card's pips
   already leave with its figure for the same reason.
 - **The resolver was not reordered to achieve this.** A heal arriving before the blow is a rules
   decision with its own argument in `playRiders`. The screen owns when it draws; the log owns what
   happened.
 - **A turn that never scores flushes at the boundary** — the acting side changing, or the round
-  ending. A hand of nothing but defences forms no hand, so there is no sequence to hang anything on;
+  ending. A hand of nothing but defenses forms no hand, so there is no sequence to hang anything on;
   `noteShieldRaise` keeps the same fallback for pips.
 
 **Every signal holds the playback cursor** *(owner's call: every signal of a card firing holds)*,
-including inside the sum — the box waits on `running(theatre.signals)` before its next term.
+including inside the sum — the box waits on `running(theater.signals)` before its next term.
 
 **`signalShown` is `shownLife`'s idea pointing the other way.** A damage figure lands on a life the
 model has already spent, so the drawing lags. A grant lands on a figure the screen's copy of the
 duelist does not hold until `endOfRound`, so the drawing *leads*: the tally grows when a figure
-arrives and `theatre.adopted()` drops it on the frame the authoritative duelists are taken up.
+arrives and `theater.adopted()` drops it on the frame the authoritative duelists are taken up.
 `duelistSpec` therefore takes DMG and MaxLife as arguments too, for the reason it already took life.
 
 **`combat.Event.Rider` was added for this** *(2026-09-10)*, on `Event.Relic`'s argument: the thing
@@ -599,7 +599,7 @@ cards themselves carry, so what was raised and what is standing are the same pic
   opposing turn after the card that filled it and empty a whole turn after the attack that ate it.
 - **All three changes to the count are announced**: `KindRaised` when a card goes down,
   `KindBlocked` each time one eats an attack, `KindExpired` when the unspent ones lapse. The last of
-  those exists *for this row* — without it the pips would keep drawing a defence the engine had
+  those exists *for this row* — without it the pips would keep drawing a defense the engine had
   already taken away.
 - **It falls back to the model when no event this round has spoken**, which is what makes the
   planning phase right: a shield raised at the end of the last round is standing while the player
@@ -609,36 +609,36 @@ cards themselves carry, so what was raised and what is standing are the same pic
   its own reason and this row inherits it. **`combat.MaxShields` exports it** for the one caller that
   has to predict against it, below.
 - **The pips fly, and they fly on the beat the card that raises them is *scored*** *(owner's call,
-  2026-09-02)*. A defence joins a hand like any other card and pays a `0` into the sum; that 0 was
+  2026-09-02)*. A defense joins a hand like any other card and pays a `0` into the sum; that 0 was
   the whole of what the card appeared to do, with the shield turning up several beats later in the
   defend phase, on a card the player had stopped watching. **What a card creates shows while the
   card is being scored.** They land in the pip row along the bottom of the fighter card rather than
   its middle — a pip joins a row, where a damage figure hits a card.
-- **Two flights, and they differ in where the count comes from.** A defence scored into a hand flies
+- **Two flights, and they differ in where the count comes from.** A defense scored into a hand flies
   before the engine has raised anything, so it *predicts*: capped at `combat.MaxShields`, adding its
   own count on arrival, and corrected by the `KindRaised` that follows, which sets the count
-  absolutely. **A turn of nothing but defences forms no hand at all** — no sum, no dialog, no beat
+  absolutely. **A turn of nothing but defenses forms no hand at all** — no sum, no dialog, no beat
   to leave on — so there the announcement flies them itself and carries `KindRaised.Life`, which the
   row takes outright when they land. The row records the seat, so one card's pips can never fly
   twice — **and forgets it at the end of the round**, because a seat is a position in one round's
-  table: kept across the boundary it silently gagged the next round's defence in the same seat,
-  which then flew nothing and so landed with no colour.
+  table: kept across the boundary it silently gagged the next round's defense in the same seat,
+  which then flew nothing and so landed with no color.
 - **The row is one list, and the count is its length** *(2026-09-02)* — `shield_row.go`. It was
-  four parallel structures for a day: a count, a colour per pip, a "has anything spoken" flag and
+  four parallel structures for a day: a count, a color per pip, a "has anything spoken" flag and
   the set of seats. **Every shield bug in that day was two of them disagreeing** — a count ahead of
-  the colours drew a white pip, a colour list trimmed by something that had taken no shield away
+  the colors drew a white pip, a color list trimmed by something that had taken no shield away
   lost a pip's element, a set of seats outliving its round stopped a flight happening at all. A pip
-  *is* its colour now, so the commonest failure is unrepresentable rather than repaired in two
+  *is* its color now, so the commonest failure is unrepresentable rather than repaired in two
   places. **The rule the type carries**: a raise may only raise, and only a block or an expiry may
   lower — a raise is announced a phase after the pips it describes have landed and names what is
   standing after *its own* card, so the first of two raises is smaller than what is already drawn.
-- **A defence that already flew its pips does not lift on its own announcement** *(owner's call,
-  2026-09-02)*. The engine resolves defences at the end of the turn, several beats after the hand
+- **A defense that already flew its pips does not lift on its own announcement** *(owner's call,
+  2026-09-02)*. The engine resolves defenses at the end of the turn, several beats after the hand
   they were scored into, so the card climbed the table again just as the opponent started swinging
   — which reads as the card firing a second time. The lift says "this card is acting now" and the
   flight already said it. **The flight decides, not the card's kind**: a turn of nothing but
-  defences forms no hand, nothing has flown when its announcement arrives, and that card does lift
-  — it is the only thing on screen saying which defence is going up. `noteResolved`.
+  defenses forms no hand, nothing has flown when its announcement arrives, and that card does lift
+  — it is the only thing on screen saying which defense is going up. `noteResolved`.
 - **A flight whose seat the row no longer holds still flies, from the row's first card.** It used to
   draw nothing while `landShields` paid the pips in anyway, which is a pip appearing without having
   crossed the screen — the one failure this whole gesture exists to prevent.
@@ -646,7 +646,7 @@ cards themselves carry, so what was raised and what is standing are the same pic
 ### The log writes sentences, and the verb is marked in the text
 
 *A line is `<who> <verb> <phrase>` — **"Duelist attacks with a
-heavy strike"** — and the verb is **coloured, bold and underlined**: **red for attack, blue for
+heavy strike"** — and the verb is **colored, bold and underlined**: **red for attack, blue for
 defend, the row's own ink for everything else**. A round can then be scanned for what *kind* of thing
 happened before any of it is read.
 
@@ -666,10 +666,10 @@ that is the argument to answer.
   own run so it can be measured, tinted and underlined independently; slicing it back out of a
   finished sentence would be worse. Rows that are not sentences put everything in `prefix`.
 - **All three marks, on every row, always.** One alone would be ambiguous — the pane already uses
-  colour for the side and for the live row, and bold alone for the live row — so the verb needs
+  color for the side and for the live row, and bold alone for the live row — so the verb needs
   the combination to be unmistakable. **The consequence: the underline is no longer what marks
   the live row.** That row is now distinguished by `nowInk` plus faux-bold on `prefix`/`suffix`,
-  and the verb keeps its category colour there rather than going pink with the rest.
+  and the verb keeps its category color there rather than going pink with the rest.
 - **The underline sits flush with the bottom of the measured line box**, never a constant above
   it. It used to hang under a chip of fixed height; with no chip the only thing to position it
   against is the text, and `text.Measure` reports the full line including descent — which is what
@@ -682,14 +682,14 @@ that is the argument to answer.
   card with no entry drew a blank face. **Every phrase carries an article** so `cardPhrase` can
   slot an element into it — that is a constraint on any new wording here.
 - **Outcomes append to `suffix`**, after the verb, so the mark never moves as a line grows.
-- **The name is said as well as coloured, deliberately.** The swatch already encodes the side,
+- **The name is said as well as colored, deliberately.** The swatch already encodes the side,
   but a line beginning "Bash" reads as an instruction rather than a report, and with both
-  sides in one list the reader would have to hold which colour is which.
+  sides in one list the reader would have to hold which color is which.
 
-**Row highlights and swatches are centred on the measured line height**, not offset from the
+**Row highlights and swatches are centered on the measured line height**, not offset from the
 row top by a constant. The old `rowY-4` / `rowHeight-2` numbers were picked by eye against a
 single 30px pitch and clipped the text the moment a 22px pitch existed. `text.Measure` once per
-pane, centre everything on it, and any pitch works.
+pane, center everything on it, and any pitch works.
 
 **Caps in kubasta are a size question, not a ban.** The character strip shouted HEALTH /
 DISCARDS / VITAE at 12px and `VITAE` rendered as `VITRE` — the uppercase A carries a diagonal
@@ -709,9 +709,9 @@ and there was nothing left for a placement to hold. **The queued-actions pane cl
 those left empty.**
 
 The player's rows carry `playerSwatch` green and the opponent's carry `enemySwatch` yellow, so
-the screen reads as two colours: green is you, yellow is them. `handSwatch` amber is the third
+the screen reads as two colors: green is you, yellow is them. `handSwatch` amber is the third
 and marks a Resolution line that is not a card acting — it belongs to whoever formed the hand,
-but the line is an announcement, and giving it a side's colour would file it in the column of
+but the line is an announcement, and giving it a side's color would file it in the column of
 squares where every entry is a card that resolved.
 
 ## The action box
@@ -762,7 +762,7 @@ it again to take it out, drag sideways to move it along the row.
 ### Sorting the hand
 
 *[combat_sort.go](internal/screens/combat_sort.go), 2026-08-16.* Three 44px square buttons in a
-column against the band's right edge, centred on the cards: **`$` cost, `T` type, `E` element**.
+column against the band's right edge, centered on the cards: **`$` cost, `T` type, `E` element**.
 The active one latches darker than the other two.
 
 - **Sorting a queued hand re-prices it** *(owner's call, 2026-08-26)*. Cross-category order is still
@@ -813,10 +813,10 @@ The active one latches darker than the other two.
 - **All three go dead outside `planning()`** — a resolved card is drawn from the hand slot it
   flew out of, so rearranging mid-round would light the wrong card on the table.
 - **`elementRank` and `categoryRank` are written out**, like `formRank`. `combat.Basic` leads
-  its enum as the zero value and trails on screen: the colours are what the statuses are counted
-  on, and the colourless cards are the plans.
+  its enum as the zero value and trails on screen: the colors are what the statuses are counted
+  on, and the colorless cards are the plans.
 - **The cards lost width to pay for the column.** `cardBandWidth` is the band less
-  `sortColumnReserve`, `handBand` centres on *that* rather than on `PctX(50)` — so the whole row
+  `sortColumnReserve`, `handBand` centers on *that* rather than on `PctX(50)` — so the whole row
   nudged left instead of only its right edge coming in — and `handBandLeftPct` came in from 4% to
   2% to find some of the overlap back. The AP bar and the AP figure travel with it, both being
   measured off `handBand`.

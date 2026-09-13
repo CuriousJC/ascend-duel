@@ -19,7 +19,7 @@ package session
 // Healing is not stored at all: it takes the wound down, which is the one number `life.go` keeps.
 //
 // **This file is where a record becomes something usable and where a bad one is refused**, the job
-// `stone.go` and `essence.go` do for their catalogues. It lives here rather than in `internal/combat`
+// `stone.go` and `essence.go` do for their catalogs. It lives here rather than in `internal/combat`
 // for their reason too: a potion is bought by a *run*, and the rules have never heard of a shop.
 
 import (
@@ -58,14 +58,14 @@ type Potion struct {
 	Price  int
 }
 
-// potions is the validated catalogue, in file order, built once at package init.
+// potions is the validated catalog, in file order, built once at package init.
 //
 // **A bad record panics at init.** A potion naming an effect this build has not got is a card that
 // takes vitae and does nothing, and nothing else in the game would ever notice — the same failure
 // an unearnable achievement is, and it takes the same exit.
 var potions = loadPotions()
 
-// Potions is the whole catalogue, in the order the file writes it, which is the order the shelf
+// Potions is the whole catalog, in the order the file writes it, which is the order the shelf
 // stands in. **Nothing is drawn and nothing is weighted**: every visit offers all three, so there
 // is no roll here and no stream to own.
 func Potions() []Potion {
@@ -87,7 +87,7 @@ func PotionByKey(key string) (Potion, bool) {
 func loadPotions() []Potion {
 	recs := data.LoadPotions()
 	if len(recs) == 0 {
-		panic("potions.json: the catalogue is empty, and the shelf has a pane to fill")
+		panic("potions.json: the catalog is empty, and the shelf has a pane to fill")
 	}
 
 	seen := map[string]bool{}

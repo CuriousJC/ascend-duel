@@ -1,5 +1,5 @@
 // Package scenario plugs a fixed set of relics, a fixed opening hand and a chosen enemy into a
-// launched game, so an interaction between them can be *looked at* rather than played towards.
+// launched game, so an interaction between them can be *looked at* rather than played toward.
 //
 // # Why it exists
 //
@@ -29,7 +29,7 @@
 // # The file is here rather than in data/
 //
 // `scenarios.json` sits beside this package rather than in `data/`, because `data/` is the game's
-// own catalogue — every file there is loaded by every build and describes what the game *is*. A
+// own catalog — every file there is loaded by every build and describes what the game *is*. A
 // scenario describes a thing being tested. Filing it with the cards and the enemies would embed a
 // debug fixture into a release binary and imply the game reads it.
 package scenario

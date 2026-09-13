@@ -38,7 +38,7 @@ func TestOneShieldEatsTheHeaviestBlow(t *testing.T) {
 	actor := Duelist{DMG: 10, SoloAttacks: true}
 	target := Duelist{Shields: 1}
 
-	// Jab is the cheapest attack the player's own catalogue holds and Skewer the dearest, which is
+	// Jab is the cheapest attack the player's own catalog holds and Skewer the dearest, which is
 	// what makes them the two ends to test between. The creature leads with the small one.
 	turn := soloTurn(t, "Jab", "Skewer", "Bash")
 
@@ -100,9 +100,9 @@ func TestATieGoesToTheEarliestCard(t *testing.T) {
 	}
 }
 
-// TestShieldsNeverEatADefence. A creature's plans are not blows, and a shield spent on one would
+// TestShieldsNeverEatADefense. A creature's plans are not blows, and a shield spent on one would
 // be a shield spent on nothing.
-func TestShieldsNeverEatADefence(t *testing.T) {
+func TestShieldsNeverEatADefense(t *testing.T) {
 	actor := Duelist{DMG: 10, SoloAttacks: true}
 	target := Duelist{Shields: 5}
 
@@ -110,7 +110,7 @@ func TestShieldsNeverEatADefence(t *testing.T) {
 	got := eatenKeys(turn, shieldedSlots(actor, target, turn))
 
 	if len(got) != 1 || got[0] != "Jab" {
-		t.Errorf("five shields against one attack and two defences ate %v; only the attack is "+
+		t.Errorf("five shields against one attack and two defenses ate %v; only the attack is "+
 			"something a shield can eat", got)
 	}
 }

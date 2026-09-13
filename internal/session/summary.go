@@ -64,15 +64,15 @@ type RunSummary struct {
 	Vitae int
 }
 
-// Summarise adds the run up.
+// Summarize adds the run up.
 //
 // **The seed is passed in rather than held**, exactly as `Snapshot` takes it: a `Session` derives
 // everything from the run seed and never stores it, so the one caller that knows it hands it over.
 //
-// **A run with no fights in it summarises to zeroes rather than refusing.** A player who starts a
+// **A run with no fights in it summarizes to zeroes rather than refusing.** A player who starts a
 // climb and gives it up on the first screen has a real, if short, run — and a summary that returned
 // an error would be a screen that has to decide what to draw instead.
-func (s *Session) Summarise(runSeed int64, ended string) RunSummary {
+func (s *Session) Summarize(runSeed int64, ended string) RunSummary {
 	out := RunSummary{
 		Seed:  seeds.Code(runSeed),
 		Ended: ended,

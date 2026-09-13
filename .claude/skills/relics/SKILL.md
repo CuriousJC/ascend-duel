@@ -1,6 +1,6 @@
 ---
 name: relics
-description: The relic grammar - how a relic is written as data, the closed vocabularies it draws on, where each moment fires in the code, and what a relic may never do. Load before designing or discussing a new relic, adding an entry to relics.json or statuses.json, adding a moment or an effect verb, or wiring anything that reads a worn relic. Also the relic analyser: given a proposed relic, whether it duplicates one that exists, which siblings it implies across the element/form/concept/tier axes, what it costs to build against the current grammar, and a best guess at its rarity.
+description: The relic grammar - how a relic is written as data, the closed vocabularies it draws on, where each moment fires in the code, and what a relic may never do. Load before designing or discussing a new relic, adding an entry to relics.json or statuses.json, adding a moment or an effect verb, or wiring anything that reads a worn relic. Also the relic analyzer: given a proposed relic, whether it duplicates one that exists, which siblings it implies across the element/form/concept/tier axes, what it costs to build against the current grammar, and a best guess at its rarity.
 ---
 
 # Relics
@@ -86,14 +86,14 @@ which is what makes a relic a *run* concept rather than a combat one.
 
 **`card-drawn` is the only moment a screen owns, and the invariant it costs is worth knowing**
 *(2026-08-24)*. Every flip reads the card's **original** element, so that two of them cannot chain a
-deck to one colour between them — lightning to ice to fire. While the flip fired at `deck-built`
+deck to one color between them — lightning to ice to fire. While the flip fired at `deck-built`
 that was true for free, because the fight deck was built out of the run's own cards once and nothing
-had recoloured anything yet. Firing per draw, the discard pile is full of cards a flip has already
-been through, so **the draw pile has to hold cards in the colours the run owns**: `drawHand`
+had recolored anything yet. Firing per draw, the discard pile is full of cards a flip has already
+been through, so **the draw pile has to hold cards in the colors the run owns**: `drawHand`
 restores a discarded card before folding it back in, and `session.DrawnAs` must never be handed a
 card that has already been drawn. `TestTwoFlipsCannotChainThroughOneCard` is what holds it.
 
-**A drawn card does not remember what it was** *(owner's call, 2026-08-24)*. It carries the colour it
+**A drawn card does not remember what it was** *(owner's call, 2026-08-24)*. It carries the color it
 became and nothing else, so a later rule — a `card-damage` relic keyed on ice — matches the card in
 the hand rather than the card in the run. The original is still reachable, but only through
 `combat.Card.ID` and `session.CardByID`, which are a handle for the layers *above* the rules; **no
@@ -108,7 +108,7 @@ inside the same blow.
 
 | Predicate | Matches on | Example |
 |---|---|---|
-| `Element` | the card's colour | `{ "Element": "ice" }` |
+| `Element` | the card's color | `{ "Element": "ice" }` |
 | `Form` | stab / slash / crush / defend | `{ "Form": "slash" }` |
 | `Concept` | one named card | `{ "Concept": "Bash" }` |
 | `Tier` | **the rung of its form's ladder** a card sits on — its *declared* cost, 1/2/3 | `{ "Tier": 3 }` — Atrophy |
@@ -156,8 +156,8 @@ not ignored.
 | `adjust-cost` | `card-cost` | `Amount` delta | makes a matching card cheaper or dearer |
 | `scale-damage` | `card-damage` | `Amount` percent | 200 is double |
 | `apply-status` | `attack-lands` | `Status` key | puts a status on the target |
-| `set-element` | `card-drawn` | `Element` | the flip: recolours a matching card as it is drawn |
-| `demote-card` | `deck-built` | `Amount` rungs | steps a matching attack **down its own form's ladder** — a 3 AP Skewer is dealt as a 2 AP Thrust. Walks `Neighbour`; a card with no rung below it is left alone |
+| `set-element` | `card-drawn` | `Element` | the flip: recolors a matching card as it is drawn |
+| `demote-card` | `deck-built` | `Amount` rungs | steps a matching attack **down its own form's ladder** — a 3 AP Skewer is dealt as a 2 AP Thrust. Walks `Neighbor`; a card with no rung below it is left alone |
 | `add-dmg` | `fight-start` | `Amount` | flat DMG for the fight |
 | `add-hp` | `fight-start` | `Amount` | flat HP for the fight |
 | `scale-hp` | `fight-start` | `Amount` percent | scales max life; **the one scaling verb meant to go below 100** — 75 takes a quarter off. Applied *after* every `add-hp`, and never below 1 life |
@@ -262,7 +262,7 @@ not — it carries a number that lives on the run:
 - **`grow-on-win` writes an accumulator on the worn relic**, and the relic's own effect amounts are read
   as `Amount + accumulator`. So this relic is +5 HP in fight one and +100 by fight twenty.
 - **`grow-on-hit` writes the same accumulator from inside a *blow*** *(2026-08-22, moved inside the
-  sum 2026-08-26)* — the Enflamed family, +0.1x to their colour on **every matching landing**. A hand
+  sum 2026-08-26)* — the Enflamed family, +0.1x to their color on **every matching landing**. A hand
   with two fire cards is two steps and the second card is counted at the first one's step, so **the
   order the cards are queued in decides what they are worth**; a fire card an echo relic seats three
   times is three steps, each landing counted at the last one's figure. It counts *landings*, which is
@@ -306,7 +306,7 @@ Reach for these first when an idea sounds too easy.
   `MECHANICS.md`. A relic may make five cards cheaper; it may never make it six.
 - **No relic reduces a blow to zero.** Nothing in the game does.
 - **Flips do not compose.** Every `set-element` reads the card's *original* element, so two flips
-  cannot chain a deck to one colour and the order they were bought in cannot change the result.
+  cannot chain a deck to one color and the order they were bought in cannot change the result.
 - **Relics are the duelist's only** *(owner's call, 2026-08-17)*. An enemy wears none; affixes are
   the enemy-side counterpart. `attack-lands` is symmetric in the engine, so nothing has to be
   undone if affixes later reuse the machinery.
@@ -320,14 +320,14 @@ Reach for these first when an idea sounds too easy.
 | Piece | Where |
 |---|---|
 | the vocabulary, `RegisterRelic`, and every applier | `internal/combat/relic.go` |
-| the status catalogue and its lifecycle | `internal/combat/status.go`, `data/statuses.json` |
+| the status catalog and its lifecycle | `internal/combat/status.go`, `data/statuses.json` |
 | parsing `relics.json` into rules, and registering it | `internal/session/relic.go` |
 | what a run wears, and its accumulators | `session.Session` — `Wear`, `Worn`, `WornRelics`, `Grown` |
 | `deck-built` / `fight-start` / `fight-won` | `session.FightDeck`, `session.Equip`, `session.WonFight` |
 | `card-drawn` | `session.DrawnAs`, called per card by `screens.CombatScene.drawHand` |
 | `prizes-dealt` | `session.Picks` and `session.PrizeVitae`, read by `postbattle.go` |
 | the row on screen | `internal/screens/combat_relics.go` — a lookup from worn key to record |
-| the whole catalogue as pictures | `go run ./tools/relicsheet` — **grouped by rarity**, card, price, `Text` and rules side by side, and each tier's share of a shelf draw |
+| the whole catalog as pictures | `go run ./tools/relicsheet` — **grouped by rarity**, card, price, `Text` and rules side by side, and each tier's share of a shelf draw |
 
 **`relics.json` is parsed in `internal/session`**, which already parses essences and for the same
 reason: a relic belongs to a *run*. It hands `combat` rules types — `RegisterRelic(key, name,
@@ -335,7 +335,7 @@ reason: a relic belongs to a *run*. It hands `combat` rules types — `RegisterR
 holding an art key. That is the who-consumes-it test in the `data` skill, answered without a new
 package.
 
-**Bad records panic at load**, like every other catalogue: an unknown moment, a verb used at the
+**Bad records panic at load**, like every other catalog: an unknown moment, a verb used at the
 wrong moment, a predicate the rules cannot resolve, or a status key that is in no file.
 
 **A duelist wears `[MaxWornRelics]WornRelic` plus a count**, not a slice — `Duelist` has to stay
@@ -377,7 +377,7 @@ The questions to put to an idea, in order:
 5. **Does it collide with a relic that exists?** Banker, Soul Taker and Hungry all reached for the
    post-battle screen and two of them nearly did the same job.
 6. **What does it cost the player, and does anything price it?** Nothing in the repo measures what
-   a relic does to a duel, so every price is judgement. Say that rather than guessing at a number.
+   a relic does to a duel, so every price is judgment. Say that rather than guessing at a number.
 
 **Do not grow the vocabulary ahead of the relics.** A moment or a verb with no relic behind it is
 `CostTier` again — see the `data` skill. Ship the rows that have an entry.
@@ -397,10 +397,10 @@ card file, so a sixth element or a new concept joins the grid with nothing edite
 hard-coded axis list is the failure mode**: it goes stale silently, and the whole point of the
 report is to be current.
 
-**This skill is one relic at a time. For the catalogue as a whole, load `relic-balance`** —
+**This skill is one relic at a time. For the catalog as a whole, load `relic-balance`** —
 `.claude/skills/relic-balance/SKILL.md`, and its `classify.py`, which put every relic on six axes
 (category, payload, scope, breadth, build, rarity) derived from its rules. Reach for it when the
-question is "what is the catalogue short of" rather than "is this relic already in it": whether
+question is "what is the catalog short of" rather than "is this relic already in it": whether
 offense is over-weighted at common, whether a proposal's category is thin or crowded, what a batch
 of new commons does to the shelf. **The two grids are complementary** — `coverage.py` walks the
 *grammar's* shape and `classify.py` walks the *game's*, so a cell can be full in one and empty in
@@ -433,7 +433,7 @@ about that cell, and roughly half the time the emptiness is the grammar being ri
 - **`demote-card` on tiers other than 3** is a real question with a real answer — Atrophy steps a
   card down its own ladder, and a tier with nothing below it is a no-op.
 - **The element families are the ones that genuinely want to be complete.** Five hues, five cards
-  of each concept, and a player building around a colour who finds their colour has no cost relic
+  of each concept, and a player building around a color who finds their color has no cost relic
   has found a hole rather than a choice. `adjust-cost`, `scale-damage`, `grow-on-hit` and
   `apply-status` are all complete across five today; the flip grid is complete at 5x4.
 
@@ -459,10 +459,10 @@ a sixth worn relic, and a growing relic with two numeric effects are all already
 "this verb is available here". Read the moment column of the `Then` table, not just the verb
 column.
 
-### 4. Balance and rarity — a best guess, labelled as one
+### 4. Balance and rarity — a best guess, labeled as one
 
-**Nothing in the repo measures what a relic does to a duel**, so every figure here is judgement and
-should be said as judgement. Give a tier anyway — `common` / `uncommon` / `rare` — with the
+**Nothing in the repo measures what a relic does to a duel**, so every figure here is judgment and
+should be said as judgment. Give a tier anyway — `common` / `uncommon` / `rare` — with the
 reasoning, because a proposal with no suggested tier is a proposal the owner has to price from
 scratch.
 
@@ -482,8 +482,8 @@ The comparisons that actually carry weight:
 **Say when a price is a guess and stop there.** Do not invent a damage figure to justify a tier.
 
 **And say what the tier does to the shelf, because the weights make it counter-intuitive.** Tickets
-are 10 / 4 / 1, so a tier's share is taken over the whole catalogue — which means **anything added to
-common devalues every rare in the game**. On 2026-09-05 the catalogue went from 58 relics to 139 and
+are 10 / 4 / 1, so a tier's share is taken over the whole catalog — which means **anything added to
+common devalues every rare in the game**. On 2026-09-05 the catalog went from 58 relics to 139 and
 rare grew from 4 relics to 26; its share of a shelf draw went 2.9% to 3.2%, because 57 commons had
 arrived underneath it. `go run ./tools/relicsheet` prints the three shares — read them after any
 batch, not just after a rarity change.

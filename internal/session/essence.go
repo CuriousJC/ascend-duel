@@ -3,7 +3,7 @@ package session
 // Essences: the alterations a run can make to its own deck.
 //
 // **An essence targets one aspect of a card and gives it a new value**, which is the card language's
-// shape pointed at a card that already exists rather than at a card being defined. The catalogue
+// shape pointed at a card that already exists rather than at a card being defined. The catalog
 // is `data/essences.json`; this file is where a record becomes something applicable, and where a bad
 // record is refused.
 //
@@ -36,7 +36,7 @@ import (
 type EssenceTarget int
 
 const (
-	// TargetElement recolours a card. The concept is untouched, so what changes is which colour
+	// TargetElement recolors a card. The concept is untouched, so what changes is which color
 	// it counts as in a mix and which status it can apply.
 	TargetElement EssenceTarget = iota
 
@@ -55,7 +55,7 @@ const (
 
 	// TargetAmount scales a card's figure, as a percentage — 150 is half again. What the figure
 	// *is* depends on the verb, which is what makes one essence reach every card in the deck: a
-	// defence percentage, a shield count, or a damage multiplier. A defence is clamped
+	// defense percentage, a shield count, or a damage multiplier. A defense is clamped
 	// under 100 by `Card.Amount`, because nothing stops a blow outright.
 	TargetAmount
 
@@ -110,7 +110,7 @@ func (t EssenceTarget) String() string {
 }
 
 // ParseEssenceTarget resolves a target from its name. It reports failure rather than falling back: a
-// essence quietly registered as a recolour because its target was misspelled is a mechanic nobody
+// essence quietly registered as a recolor because its target was misspelled is a mechanic nobody
 // designed.
 func ParseEssenceTarget(name string) (EssenceTarget, bool) {
 	for _, t := range EssenceTargets() {
@@ -142,7 +142,7 @@ type Essence struct {
 	Family string
 	Draw   string
 
-	// Element is the new colour, and is only meaningful for TargetElement.
+	// Element is the new color, and is only meaningful for TargetElement.
 	Element combat.Element
 
 	// Form is the axis a card is told to count on, and is only meaningful for TargetForm.
@@ -153,14 +153,14 @@ type Essence struct {
 	Number int
 }
 
-// essences is the validated catalogue, built once at package init.
+// essences is the validated catalog, built once at package init.
 //
 // **A bad record panics at init**, so it fails on launch rather than the first time a player wins
 // a fight — the same severity a bad card record takes, and for the same reason: an essence that does
 // nothing is a reward that silently is not one.
 var essences, essenceOrder = loadEssences()
 
-// Essences is every essence in the catalogue, in a fixed sorted order.
+// Essences is every essence in the catalog, in a fixed sorted order.
 func Essences() []Essence {
 	out := make([]Essence, 0, len(essenceOrder))
 	for _, key := range essenceOrder {
@@ -194,7 +194,7 @@ func loadEssences() (map[string]Essence, []string) {
 	sort.Strings(keys)
 
 	if len(keys) < 2 {
-		// The offer is two essences, so a catalogue of one cannot fill it. Caught here rather than
+		// The offer is two essences, so a catalog of one cannot fill it. Caught here rather than
 		// producing a screen with a gap in it.
 		panic(fmt.Sprintf("essences.json: %d essences, and an offer needs two", len(keys)))
 	}
@@ -205,7 +205,7 @@ func loadEssences() (map[string]Essence, []string) {
 //
 // **It refuses a value on a target that takes none**, rather than ignoring it. A `remove` essence
 // carrying `"Value": "fire"` is somebody expecting something the mechanic does not do, and
-// accepting it silently is how a catalogue comes to disagree with the game.
+// accepting it silently is how a catalog comes to disagree with the game.
 func resolveEssence(r data.EssenceData) (Essence, error) {
 	if r.EssenceRecord == "" {
 		return Essence{}, fmt.Errorf("an essence has no record key")
@@ -281,10 +281,10 @@ func resolveEssence(r data.EssenceData) (Essence, error) {
 				r.EssenceRecord, r.Value)
 		}
 		if e == combat.Basic {
-			// An essence that greyed a card out would be a way to *lose* a colour rather than choose
-			// one, and no card in the player's deck is drab — the defences stopped being the
+			// An essence that grayed a card out would be a way to *lose* a color rather than choose
+			// one, and no card in the player's deck is drab — the defenses stopped being the
 			// exception on 2026-08-23.
-			return Essence{}, fmt.Errorf("%s turns a card basic, which takes a colour away", r.EssenceRecord)
+			return Essence{}, fmt.Errorf("%s turns a card basic, which takes a color away", r.EssenceRecord)
 		}
 		w.Element = e
 		return w, nil
@@ -312,7 +312,7 @@ func targetList() string {
 //
 // **The one place the deck is altered by an essence**, so there is one place that can get it wrong.
 // It reports whether anything happened: an index the deck does not hold is refused rather than
-// silently landing on a neighbour, which matters because the offer hands out positions and the
+// silently landing on a neighbor, which matters because the offer hands out positions and the
 // deck thins under them.
 func (s *Session) Apply(w Essence, i int) bool {
 	card, ok := s.Card(i)
@@ -355,7 +355,7 @@ func (s *Session) Apply(w Essence, i int) bool {
 		if w.Target == TargetDemote {
 			step = -1
 		}
-		next, ok := combat.Neighbour(card.Concept, step)
+		next, ok := combat.Neighbor(card.Concept, step)
 		if !ok {
 			return false
 		}
@@ -370,7 +370,7 @@ func (s *Session) Apply(w Essence, i int) bool {
 
 // CanApply reports whether this essence would do anything to this card. **The screen asks before it
 // offers**, because an essence that lands and changes nothing is a reward taken away: a Pulverize cannot
-// be promoted, and neither can a Guard — the defences are a ladder of their own since 2026-09-06,
+// be promoted, and neither can a Guard — the defenses are a ladder of their own since 2026-09-06,
 // so the ends stop the same way rather than the whole verb being refused.
 func (s *Session) CanApply(w Essence, i int) bool {
 	card, ok := s.Card(i)
@@ -380,10 +380,10 @@ func (s *Session) CanApply(w Essence, i int) bool {
 
 	switch w.Target {
 	case TargetPromote:
-		_, ok := combat.Neighbour(card.Concept, 1)
+		_, ok := combat.Neighbor(card.Concept, 1)
 		return ok
 	case TargetDemote:
-		_, ok := combat.Neighbour(card.Concept, -1)
+		_, ok := combat.Neighbor(card.Concept, -1)
 		return ok
 	case TargetElement:
 		return card.Element != w.Element

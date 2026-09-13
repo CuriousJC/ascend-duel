@@ -51,7 +51,7 @@ type shieldFlight struct {
 	// count is how many pips arrive, already capped.
 	count int
 
-	// ink is the colour the pips are drawn in: their card's element, the same colour that card
+	// ink is the color the pips are drawn in: their card's element, the same color that card
 	// wears round its border and on its own corner mark. **Cosmetic** *(owner's call,
 	// 2026-09-02)* — nothing about a shield depends on which element raised it, and a fire ward and
 	// an ice ward stop the same attack. What it buys is that the thing crossing the screen looks
@@ -89,10 +89,10 @@ var (
 
 // row is one side's shield row, and nil-safe for a side outside the two.
 func (s *CombatScene) row(side combat.Side) *shieldRow {
-	if side < 0 || int(side) >= len(s.theatre.shieldRows) {
+	if side < 0 || int(side) >= len(s.theater.shieldRows) {
 		return &shieldRow{}
 	}
-	return &s.theatre.shieldRows[side]
+	return &s.theater.shieldRows[side]
 }
 
 // noteShieldFlight raises the pips for one defend card being scored.
@@ -122,13 +122,13 @@ func (s *CombatScene) noteShieldFlight(side combat.Side, seat, count, standing i
 
 // noteShieldRaise flies the pips for an announced raise, for the turn that never formed a hand.
 //
-// **A turn of nothing but defences emits no KindHand at all**, so there is no sum, no dialog and
+// **A turn of nothing but defenses emits no KindHand at all**, so there is no sum, no dialog and
 // no beat on which the pips could have left with a figure — and without this the row simply filled
 // itself. The card that raised them is the one lit right now, which is the card the announcement is
 // about.
 //
 // It reports whether it flew them. **A raise whose card has already sent its pips does not fly
-// again** — a defence in a hand flies on the beat it is scored, and the announcement that follows
+// again** — a defense in a hand flies on the beat it is scored, and the announcement that follows
 // is the same shields being spoken about a second time.
 func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
 	if e.Kind != combat.KindRaised || e.Amount <= 0 {
@@ -146,11 +146,11 @@ func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
 }
 
 // firingSeat is the seat of the card lit on one side right now, and false for none. **The last of
-// them**, because a defence is lit alone and an attack phase lights a set the hand then narrows.
+// them**, because a defense is lit alone and an attack phase lights a set the hand then narrows.
 func (s *CombatScene) firingSeat(side combat.Side) (int, bool) {
-	seats := s.theatre.firingSeats
+	seats := s.theater.firingSeats
 	if side == combat.SideB {
-		seats = s.theatre.enemyFiringSeats
+		seats = s.theater.enemyFiringSeats
 	}
 	if len(seats) == 0 {
 		return 0, false
@@ -162,7 +162,7 @@ func (s *CombatScene) firingSeat(side combat.Side) (int, bool) {
 // twice.
 func (s *CombatScene) flyShields(f shieldFlight) {
 	f.t = newTravel(0, shieldFlyTicks+shieldHoldTicks)
-	s.theatre.shields = append(s.theatre.shields, f)
+	s.theater.shields = append(s.theater.shields, f)
 	s.row(f.side).noteFlight(f.seat)
 }
 
@@ -173,8 +173,8 @@ func (s *CombatScene) flyShields(f shieldFlight) {
 // the count itself and the row takes it. A wrong guess is corrected by the next announcement rather
 // than compounded.
 func (s *CombatScene) landShields() {
-	for i := range s.theatre.shields {
-		f := &s.theatre.shields[i]
+	for i := range s.theater.shields {
+		f := &s.theater.shields[i]
 		if f.landed || !f.arrived() {
 			continue
 		}
@@ -186,9 +186,9 @@ func (s *CombatScene) landShields() {
 			row.add(f.ink, f.count)
 			continue
 		}
-		// **The announcement brings a count; the flight brings the colour.** Every pip this
+		// **The announcement brings a count; the flight brings the color.** Every pip this
 		// flight is responsible for wears its card's element — all `count` of them, not just the
-		// newest, or a brace announcing two would land one coloured pip and one bare white mark.
+		// newest, or a brace announcing two would land one colored pip and one bare white mark.
 		row.raiseTo(f.standing, f.ink)
 		for i := 0; i < f.count && i < row.count(); i++ {
 			row.pips[row.count()-1-i] = f.ink
@@ -196,7 +196,7 @@ func (s *CombatScene) landShields() {
 	}
 }
 
-// shownShieldInks is the colour of each standing pip, for the card to draw them in — and its length
+// shownShieldInks is the color of each standing pip, for the card to draw them in — and its length
 // is the count, which is the whole point of the row being one list.
 func (s *CombatScene) shownShieldInks(side combat.Side) []color.RGBA {
 	return s.row(side).pips
@@ -225,15 +225,15 @@ func (s *CombatScene) shieldsRaisedBy(side combat.Side, seat int) int {
 	var card combat.Card
 	switch {
 	case side == combat.SideB:
-		if seat < 0 || seat >= len(s.theatre.enemyDealt) {
+		if seat < 0 || seat >= len(s.theater.enemyDealt) {
 			return 0
 		}
-		card = s.theatre.enemyDealt[seat].card
+		card = s.theater.enemyDealt[seat].card
 	default:
-		if seat < 0 || seat >= len(s.theatre.resolved) {
+		if seat < 0 || seat >= len(s.theater.resolved) {
 			return 0
 		}
-		card = s.theatre.resolved[seat].card
+		card = s.theater.resolved[seat].card
 	}
 	if combat.ConceptOf(card.Concept).Verb != combat.VerbShield {
 		return 0
@@ -253,7 +253,7 @@ func (s *CombatScene) shieldsRaisedBy(side combat.Side, seat int) int {
 func (s *CombatScene) noteShields(e combat.Event) {
 	switch e.Kind {
 	case combat.KindRaised:
-		// The card being announced is the one lit right now, so its element is the colour any pip
+		// The card being announced is the one lit right now, so its element is the color any pip
 		// this raise adds should be wearing.
 		ink := color.RGBA{}
 		if seat, ok := s.firingSeat(e.Side); ok {
@@ -296,7 +296,7 @@ const (
 
 // drawShields draws every pip in the air.
 func (s *CombatScene) drawShields(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, f := range s.theatre.shields {
+	for _, f := range s.theater.shields {
 		from, ok := s.shieldOrigin(gs, f)
 		if !ok {
 			continue
@@ -330,10 +330,10 @@ func shieldAlpha(f shieldFlight) float32 {
 	return float32(clamp01(1 - held))
 }
 
-// drawShieldPip blits one mark, centred on a point and tinted by its card's element.
+// drawShieldPip blits one mark, centered on a point and tinted by its card's element.
 //
 // **Multiplied rather than repainted.** The mark is drawn art in a near-white palette, so scaling
-// it by a colour keeps its outline and its bevel — the same reason `cards.tintInk` ramps a form
+// it by a color keeps its outline and its bevel — the same reason `cards.tintInk` ramps a form
 // mark instead of filling a silhouette. A zero-alpha ink leaves it as drawn.
 func drawShieldPip(screen *ebiten.Image, at image.Point, scale float64, alpha float32, ink color.RGBA) {
 	img := systems.Glyph(systems.GlyphFormDefend, systems.PaletteWhite)
@@ -356,9 +356,9 @@ func drawShieldPip(screen *ebiten.Image, at image.Point, scale float64, alpha fl
 // shieldOrigin is the seat the pips leave: the card being scored, exactly where its own figure
 // sets off from.
 func (s *CombatScene) shieldOrigin(gs *state.GlobalState, f shieldFlight) (image.Point, bool) {
-	seats := len(s.theatre.resolved)
+	seats := len(s.theater.resolved)
 	if f.side == combat.SideB {
-		seats = len(s.theatre.enemyDealt)
+		seats = len(s.theater.enemyDealt)
 	}
 	if seats == 0 {
 		return image.Point{}, false
@@ -367,13 +367,13 @@ func (s *CombatScene) shieldOrigin(gs *state.GlobalState, f shieldFlight) (image
 	// **A seat the row no longer holds still flies, from the row's first card** *(2026-09-02)*.
 	// It used to draw nothing at all, and `landShields` paid the pips in regardless — so the row
 	// filled with a pip that had never crossed the screen, which is exactly the "some fly and some
-	// do not" the flight exists to prevent. Something travelling from slightly the wrong card is a
+	// do not" the flight exists to prevent. Something traveling from slightly the wrong card is a
 	// far smaller lie than a pip appearing out of nothing.
 	seat := f.seat
 	if seat < 0 || seat >= seats {
 		seat = 0
 	}
-	return s.handCardCentre(gs, f.side, seat), true
+	return s.handCardCenter(gs, f.side, seat), true
 }
 
 // shieldTarget is where the pips land: **the row along the bottom of the fighter card**, not the

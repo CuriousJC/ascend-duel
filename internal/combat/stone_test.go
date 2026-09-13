@@ -32,7 +32,7 @@ func TestStonesStackOnTheBaseRatherThanCompounding(t *testing.T) {
 	}
 }
 
-func TestNoStonesReadsTheCatalogueUntouched(t *testing.T) {
+func TestNoStonesReadsTheCatalogUntouched(t *testing.T) {
 	var d Duelist
 
 	table := d.HandTable()
@@ -41,7 +41,7 @@ func TestNoStonesReadsTheCatalogueUntouched(t *testing.T) {
 	}
 	for i := range table {
 		if table[i].Multiplier != handTable[i].Multiplier {
-			t.Errorf("%s pays %d for a duelist with no stones, want the catalogue's %d",
+			t.Errorf("%s pays %d for a duelist with no stones, want the catalog's %d",
 				table[i].Key, table[i].Multiplier, handTable[i].Multiplier)
 		}
 	}
@@ -50,13 +50,13 @@ func TestNoStonesReadsTheCatalogueUntouched(t *testing.T) {
 func TestAStoneRaisesOnlyItsOwnRung(t *testing.T) {
 	d, ok := Duelist{}.WithHandStone("pair")
 	if !ok {
-		t.Fatal("concept-pair is not a rung the catalogue holds")
+		t.Fatal("concept-pair is not a rung the catalog holds")
 	}
 
 	for _, h := range d.HandTable() {
 		base, found := HandByName(h.Name)
 		if !found {
-			t.Fatalf("%s is not in the catalogue", h.Key)
+			t.Fatalf("%s is not in the catalog", h.Key)
 		}
 		want := base.Multiplier
 		if h.Key == "pair" {
@@ -68,7 +68,7 @@ func TestAStoneRaisesOnlyItsOwnRung(t *testing.T) {
 	}
 }
 
-// A stone naming a rung the catalogue has not got is refused rather than landing on seat zero,
+// A stone naming a rung the catalog has not got is refused rather than landing on seat zero,
 // which is the High Card — the failure the bool on HandSlot exists to prevent.
 func TestAStoneOnANonexistentRungIsRefused(t *testing.T) {
 	if _, ok := HandSlot("no-such-hand"); ok {
@@ -76,7 +76,7 @@ func TestAStoneOnANonexistentRungIsRefused(t *testing.T) {
 	}
 	d, ok := Duelist{}.WithHandStone("no-such-hand")
 	if ok {
-		t.Error("a stone was accepted for a rung the catalogue does not hold")
+		t.Error("a stone was accepted for a rung the catalog does not hold")
 	}
 	if d != (Duelist{}) {
 		t.Error("a refused stone still changed the duelist")
@@ -92,7 +92,7 @@ func TestARaisedRungPaysMoreInARealRound(t *testing.T) {
 	plain := Duelist{DMG: 10, Actions: 6, MaxLife: 100, CurrentLife: 100}
 	stoned, ok := plain.WithHandStone(pair.Key)
 	if !ok {
-		t.Fatalf("%s is not a rung the catalogue holds", pair.Key)
+		t.Fatalf("%s is not a rung the catalog holds", pair.Key)
 	}
 
 	before := blowDamage(t, plain)

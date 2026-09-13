@@ -8,7 +8,7 @@ import (
 // The tooltip's handshake: a scene points at something every tick, and a tick with nothing pointed
 // hides the panel. Everything here is arithmetic over two ints and a string.
 
-// tick is what systems.UpdateTooltip does, written out here so this package can test the behaviour
+// tick is what systems.UpdateTooltip does, written out here so this package can test the behavior
 // without importing the one that drives it. **If the two ever disagree, this test is the one that is
 // wrong** — the driver is the real thing.
 func tick(t *Tooltip) {
@@ -22,7 +22,7 @@ func tick(t *Tooltip) {
 	}
 }
 
-// aTitle is a plain one-run title, which is what a caller that never thinks about colour builds.
+// aTitle is a plain one-run title, which is what a caller that never thinks about color builds.
 func aTitle(s string) TipLine { return TipLine{{Text: s}} }
 
 func aSeat(x int) image.Rectangle { return image.Rect(x, 0, x+100, 200) }
@@ -112,7 +112,7 @@ func TestForgetHidesItImmediately(t *testing.T) {
 	}
 }
 
-// oneLine is a tooltip line in one colour, which is what a caller that never thinks about colour
+// oneLine is a tooltip line in one color, which is what a caller that never thinks about color
 // builds.
 func oneLine(text string) []TipLine {
 	return []TipLine{{{Text: text}}}

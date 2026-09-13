@@ -20,14 +20,14 @@
 // # Output
 //
 // Loose PNGs plus an index.html, written into `docs/sheets/cardsheet/` and **committed**
-// *(owner's call, 2026-08-23)*: the sheets are how the catalogues get reviewed, and requiring a
+// *(owner's call, 2026-08-23)*: the sheets are how the catalogs get reviewed, and requiring a
 // Go toolchain to see one meant only whoever just changed something ever looked. A clone opens
 // `docs/sheets/index.html`.
 //
 // The price is a directory of near-identical binaries rewritten on every run, so **regenerate
 // deliberately** — `go run ./tools/sheets` does all of them and rewrites the index.
 //
-// Loose files rather than one composite because the border colours and the card's parts are still
+// Loose files rather than one composite because the border colors and the card's parts are still
 // moving — the expectation is that some of these become sprites and some stay generated, and that
 // sorting is easier when each piece is its own file.
 package main
@@ -87,7 +87,7 @@ func run(dir string) error {
 
 	page := page{Ground: ground, Style: styleFacts(cards.Hand)}
 
-	// Section one, as specified: every border colour against every AP count. The card
+	// Section one, as specified: every border color against every AP count. The card
 	// underneath is held constant so the only things varying are the two axes.
 	//
 	// **The constant card is a real one**, built from the concept table rather than written out
@@ -110,7 +110,7 @@ func run(dir string) error {
 	}
 
 	// Section two: the four form marks, which is the only axis where the *mark* is
-	// what varies rather than a colour or a count.
+	// what varies rather than a color or a count.
 	//
 	// This row is where the four are judged against each other: they have to be told apart in a
 	// corner at a glance, at the size a card actually draws them.
@@ -129,7 +129,7 @@ func run(dir string) error {
 	page.Forms = append(page.Forms, famRow)
 
 	// Section three: the states. These are here because the redesign changed how they have
-	// to work — the surface used to be the element colour and dimming it was the whole
+	// to work — the surface used to be the element color and dimming it was the whole
 	// signal, and on a constant off-white face that signal is gone. What replaced it is
 	// the border moving toward the surface, and this is where that gets judged.
 	states := []struct {

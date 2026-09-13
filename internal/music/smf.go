@@ -22,7 +22,7 @@ const (
 	metaEndTrack = 0x2F
 )
 
-// Controllers the synth honours. A controller outside this set is parsed and dropped.
+// Controllers the synth honors. A controller outside this set is parsed and dropped.
 const (
 	ccVolume     = 7
 	ccPan        = 10

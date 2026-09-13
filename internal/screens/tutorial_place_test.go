@@ -13,7 +13,7 @@ import (
 // The essence step is the case that forced the distinction *(2026-09-06)*. Its anchor covers the two
 // prizes *and* the row of cards they are aimed at, because taking an essence needs a card selected
 // first — which is most of the screen, so every candidate seat overlaps it and `place` falls back.
-// The fallback used to be "the last seat in the list", which is dead centre, and dead centre is on
+// The fallback used to be "the last seat in the list", which is dead center, and dead center is on
 // top of the two essences the step is telling the player to choose between: a lesson pointing at
 // something it is standing in front of.
 //

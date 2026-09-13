@@ -23,17 +23,17 @@ import (
 // **Two of them are files now, and the reason the rule survives is who drew them.** The
 // attack sword and the defend shield are hand-drawn pixel art by KingSherman1820, one of
 // the two copyright holders — so the provenance question the generator exists to dodge does
-// not arise. See glyphArt below. Art from anywhere else still needs a licence before it can
+// not arise. See glyphArt below. Art from anywhere else still needs a license before it can
 // be in a game that will be sold, and generating it remains the cheaper answer.
 //
 // The important part is that this is a *generator*, not a bitmap. A glyph is a filled
 // silhouette described by horizontal spans; the outline is derived from the silhouette by
-// asking which pixels have a neighbour outside it, and the interior shading is computed
+// asking which pixels have a neighbor outside it, and the interior shading is computed
 // from where a pixel sits in its row and down the sprite. Nothing is hand-placed, so a
 // shape can be nudged without repainting it.
 //
 // Two earlier versions are worth not repeating. The first was a hand-typed character map
-// with one colour and one alpha shade: unresizable, and two values cannot make a bevel. The
+// with one color and one alpha shade: unresizable, and two values cannot make a bevel. The
 // second was this generator at 32x32 drawn on the card at 2x, which gave the game chunky
 // two-pixel blocks and left the shading invisible at the only size that matters.
 
@@ -129,7 +129,7 @@ const (
 )
 
 // GlyphKinds is every glyph, in a fixed order. The contact sheet walks this rather than
-// ranging a map, which Go deliberately randomises.
+// ranging a map, which Go deliberately randomizes.
 func GlyphKinds() []GlyphKind {
 	return []GlyphKind{
 		GlyphDamage, GlyphActionPoints,
@@ -141,8 +141,8 @@ func GlyphKinds() []GlyphKind {
 }
 
 // Palette is the set of roles a glyph is painted with. Five values make the bevel — one
-// colour scaled down cannot, which is why glyphs are the deliberate exception to the
-// name-one-colour rule that governs widgets.
+// color scaled down cannot, which is why glyphs are the deliberate exception to the
+// name-one-color rule that governs widgets.
 //
 // Accent is for detail drawn over the fill, like the clock's hands.
 type Palette struct {
@@ -156,21 +156,21 @@ type Palette struct {
 
 // PaletteName keys a palette. Today there is one, on purpose.
 //
-// **Colour is being kept unspent.** Every glyph is drawn in one hueless palette so that
-// when an element or a block type arrives it can land on colour and mean something on
-// arrival. Painting the glyphs different colours now would look better today and would
+// **Color is being kept unspent.** Every glyph is drawn in one hueless palette so that
+// when an element or a block type arrives it can land on color and mean something on
+// arrival. Painting the glyphs different colors now would look better today and would
 // spend the only channel left for saying "this Bash is fire" — the reader would already
-// have learned that the sword is grey, and the element would read as an inconsistency.
+// have learned that the sword is gray, and the element would read as an inconsistency.
 type PaletteName string
 
 const PaletteWhite PaletteName = "white"
 
 var palettes = map[PaletteName]Palette{
-	// Near-white, shaded to grey. Neutral in the strongest sense: it has no hue at all, so
-	// the first coloured palette to arrive will read as meaning something rather than as
+	// Near-white, shaded to gray. Neutral in the strongest sense: it has no hue at all, so
+	// the first colored palette to arrive will read as meaning something rather than as
 	// one more decorative choice among several.
 	//
-	// Accent is near-black rather than a colour, so detail painted over the fill — the
+	// Accent is near-black rather than a color, so detail painted over the fill — the
 	// clock's hands — reads the way hands on a white dial actually do.
 	PaletteWhite: {
 		Outline:   color.RGBA{R: 22, G: 24, B: 30, A: 255},
@@ -262,7 +262,7 @@ var swordShape = shape{
 // rim leaves something inside them.
 var runShape = shape{
 	fill: map[int][]span{
-		// Head, forward of centre, with a neck pinch so it reads as a head rather than as
+		// Head, forward of center, with a neck pinch so it reads as a head rather than as
 		// the top of the torso.
 		8: {{38, 45}}, 9: {{36, 47}}, 10: {{35, 48}},
 		11: {{35, 48}}, 12: {{35, 48}}, 13: {{35, 48}},
@@ -379,7 +379,7 @@ var mutedSpeakerShape = shape{
 // A cog: a ring with a square hole and eight teeth, at the chrome size.
 //
 // **Eight teeth, four on the axes and four on the diagonals** *(owner's call, 2026-08-27)*. Four
-// was tried first and read as a compass rose rather than a cog — at this size a gear is recognised
+// was tried first and read as a compass rose rather than a cog — at this size a gear is recognized
 // by the *count* of the teeth around it before any one of them is legible, so four is too few
 // whatever they look like individually.
 //
@@ -492,7 +492,7 @@ type point struct{ x, y float64 }
 //
 // It handles convex outlines only — one run per row, from the leftmost crossing to the rightmost.
 // That is all a rock needs, and a shape wanting two runs on a row is one to write out by hand in
-// the span language above rather than to generalise this into.
+// the span language above rather than to generalize this into.
 func scanFill(poly []point, size, min int) map[int][]span {
 	out := map[int][]span{}
 	for y := 0; y < size; y++ {
@@ -537,10 +537,10 @@ func scanFill(poly []point, size, min int) map[int][]span {
 // generator.
 //
 // **The palette is ignored for these.** A generated glyph is painted from a five-value
-// Palette at draw time; a drawing already carries its own colours and is blitted as
-// authored. That is a deliberate spend of the colour channel the hueless palette was
+// Palette at draw time; a drawing already carries its own colors and is blitted as
+// authored. That is a deliberate spend of the color channel the hueless palette was
 // holding — the card's border also carries the element, so an attack card now says
-// something in colour twice. It was the owner's call on 2026-08-10.
+// something in color twice. It was the owner's call on 2026-08-10.
 //
 // **Authored at 64 and drawn at 32.** The art is a 64x64 canvas and the category slot is
 // nothing like that big, so it is downsampled by a whole factor of two. Halving is the one
@@ -560,7 +560,7 @@ type glyphArtwork struct {
 	// It exists because the halving described above is a property of art with interior detail
 	// to average, not a universal rule *(2026-08-23)*. The form marks are authored at their
 	// drawn size and must not be resampled at all: their outline is one pixel, and a 2x2
-	// average of half rim and half surface is a grey pixel where the shape's only edge was.
+	// average of half rim and half surface is a gray pixel where the shape's only edge was.
 	// Setting canvas equal to size gives a factor of one, which downsample returns untouched.
 	canvas int
 }
@@ -583,7 +583,7 @@ const artCanvas = 64
 const categoryArtSize = artCanvas / 2
 
 // formArtSize is the form marks' size, authored and drawn. It is Style.FormSize on both card
-// styles; a mark that did not match its box would be centred in a hole rather than filling one.
+// styles; a mark that did not match its box would be centered in a hole rather than filling one.
 const formArtSize = 32
 
 var glyphArt = map[GlyphKind]glyphArtwork{
@@ -628,7 +628,7 @@ func RenderGlyph(kind GlyphKind, name PaletteName) *image.RGBA {
 
 // RenderGlyphAt draws a glyph at a size the caller names.
 //
-// **Only drawn art can honour it, and that is the whole distinction** *(2026-08-23)*. A painting
+// **Only drawn art can honor it, and that is the whole distinction** *(2026-08-23)*. A painting
 // carries interior detail, so halving it averages a block down to a pixel and the picture
 // survives; a generated silhouette's rim is derived one pixel thick and averaging it away is
 // exactly the failure the author-it-small rule exists for. A generated kind therefore ignores the
@@ -756,7 +756,7 @@ func renderArt(kind GlyphKind, art glyphArtwork, size int) *image.RGBA {
 
 // downsample averages each factor x factor block down to one pixel.
 //
-// **Averaged, not sampled.** Nearest-neighbour at half size keeps every other pixel and
+// **Averaged, not sampled.** Nearest-neighbor at half size keeps every other pixel and
 // throws the rest away, which deletes a one-pixel outline wherever it lands on an odd
 // column — a drawn shield loses half its rim and reads as torn. Averaging keeps it as a
 // darker pixel. This is the opposite of the rule for generated glyphs, and the difference
@@ -764,7 +764,7 @@ func renderArt(kind GlyphKind, art glyphArtwork, size int) *image.RGBA {
 // behind it.
 //
 // image.RGBA is alpha-premultiplied, so the four channels average independently and a
-// transparent neighbour correctly darkens nothing.
+// transparent neighbor correctly darkens nothing.
 func downsample(src *image.RGBA, factor int) *image.RGBA {
 	if factor <= 1 {
 		return src

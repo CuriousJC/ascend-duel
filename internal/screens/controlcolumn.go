@@ -96,8 +96,8 @@ func ControlColumnSlot(gs *state.GlobalState, i int) image.Rectangle {
 	return image.Rect(left, bottom-ControlButtonHeight, left+ControlButtonWidth, bottom)
 }
 
-// ControlColumnSlotCentre is that slot's centre, which is what models.Button stores.
-func ControlColumnSlotCentre(gs *state.GlobalState, i int) image.Point {
+// ControlColumnSlotCenter is that slot's center, which is what models.Button stores.
+func ControlColumnSlotCenter(gs *state.GlobalState, i int) image.Point {
 	r := ControlColumnSlot(gs, i)
 	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
 }
@@ -150,8 +150,8 @@ func ChromeCornerSlot(gs *state.GlobalState, n int) image.Rectangle {
 	return image.Rect(right-ChromeButtonSize, top, right, top+ChromeButtonSize)
 }
 
-// ChromeCornerCentre is that slot's centre, which is what models.Button stores.
-func ChromeCornerCentre(gs *state.GlobalState, n int) image.Point {
+// ChromeCornerCenter is that slot's center, which is what models.Button stores.
+func ChromeCornerCenter(gs *state.GlobalState, n int) image.Point {
 	r := ChromeCornerSlot(gs, n)
 	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
 }

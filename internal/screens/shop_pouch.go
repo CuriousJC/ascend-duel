@@ -13,7 +13,7 @@ package screens
 // there is nothing urgent about spending one mid-fight.
 //
 // **It is a panel and not a row, because the screen has no room for one.** The shelf ends at 684
-// and the Leave button is centred at 845; a full-size card row wants 224 of the 160 between them.
+// and the Leave button is centered at 845; a full-size card row wants 224 of the 160 between them.
 // The S button is the shop's third corner toggle beside D and C, which is a shape the screen
 // already has two of rather than a new kind of thing.
 //
@@ -42,7 +42,7 @@ const (
 	pouchToggleText  = 60
 
 	// Where the stone cards stand inside the panel, as a percentage of its height. **Above
-	// centre**, because the two tabs hang below the cards and need the room under them.
+	// center**, because the two tabs hang below the cards and need the room under them.
 	pouchRowPct = 38
 
 	// The panel's own prompt, on the rune dialog's numbers.
@@ -92,12 +92,12 @@ type pouchToggle struct {
 // pouchCornerPlace is where the S button stands: the bottom line's third square, one in from the
 // deck button and two from the frame's cog. **The frame's own strip** — see ChromeCornerSlot.
 func pouchCornerPlace(gs *state.GlobalState) image.Point {
-	return ChromeCornerCentre(gs, ChromeSlotStones)
+	return ChromeCornerCenter(gs, ChromeSlotStones)
 }
 
 // pouchRow is the run's carried stones, resolved, in the order they were acquired.
 //
-// **A stone the catalogue no longer holds is skipped rather than drawn blank**, which is the belt
+// **A stone the catalog no longer holds is skipped rather than drawn blank**, which is the belt
 // to the braces Carry and Resume already have: a nil record reaching the card renderer is a crash
 // where a missing card is a gap.
 func pouchRow(gs *state.GlobalState) []session.Stone {
@@ -162,7 +162,7 @@ func (t *pouchToggle) tabRects(gs *state.GlobalState) (use, sell image.Rectangle
 	return use, sell
 }
 
-// midOf is a rectangle's centre, which is where a button stores itself.
+// midOf is a rectangle's center, which is where a button stores itself.
 func midOf(r image.Rectangle) (int, int) {
 	return (r.Min.X + r.Max.X) / 2, (r.Min.Y + r.Max.Y) / 2
 }

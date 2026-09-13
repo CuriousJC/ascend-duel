@@ -56,7 +56,7 @@ type RelicData struct {
 	// 2026-09-12)*. Nearly every value here is already implied by the record's own
 	// (When, Do, predicate) — the flips are all card-drawn/set-element, the weapons all
 	// card-damage/scale-damage on a Concept — so this is not a fact the file knows and the rules do
-	// not. **What it buys is legibility for whoever is authoring the catalogue**: a signature is
+	// not. **What it buys is legibility for whoever is authoring the catalog**: a signature is
 	// something to decode and "Jade rings" is something to read, and the three ring families differ
 	// by the gem in the picture as much as by the axis in the rule.
 	//
@@ -94,7 +94,7 @@ type RelicData struct {
 
 	// Rarity is how often the shop offers it, and — through that — what it costs. **One word
 	// decides both**: `common`, `uncommon` or `rare`. A relic does not name a price, because a
-	// catalogue where every relic priced itself drifted into seventeen numbers nobody could hold
+	// catalog where every relic priced itself drifted into seventeen numbers nobody could hold
 	// against each other; three tiers can be read at a glance and a relic can only be moved between
 	// them.
 	//
@@ -103,7 +103,7 @@ type RelicData struct {
 	Rarity Rarity `json:"Rarity"`
 
 	// Rules is what wearing this relic actually does. **A list, forced by the growing stat relics**,
-	// which accumulate at one moment and apply at another; it generalises to any relic wanting two.
+	// which accumulate at one moment and apply at another; it generalizes to any relic wanting two.
 	Rules []RelicRuleData `json:"Rules"`
 }
 
@@ -130,7 +130,7 @@ type RelicRuleData struct {
 // RelicIfData is a rule's predicate. **Every field that is set has to match**, so two of them narrow a
 // rule rather than widening it.
 type RelicIfData struct {
-	// Element is the card's colour: `fire`, `ice`, `lightning`, `earth` or `basic`.
+	// Element is the card's color: `fire`, `ice`, `lightning`, `earth` or `basic`.
 	Element string `json:"Element,omitempty"`
 
 	// Form is `stab`, `slash`, `crush` or `defend`.
@@ -185,7 +185,7 @@ type RelicEffectData struct {
 	// Status is the record key `apply-status` applies — see statuses.json.
 	Status string `json:"Status,omitempty"`
 
-	// Element is what `set-element` recolours a matching card to.
+	// Element is what `set-element` recolors a matching card to.
 	Element string `json:"Element,omitempty"`
 }
 
@@ -225,7 +225,7 @@ func LoadRelics() map[string]RelicData {
 
 // RelicOrder is every record, sorted by key.
 //
-// **Sorted because LoadRelics returns a map and Go randomises that order**, exactly like
+// **Sorted because LoadRelics returns a map and Go randomizes that order**, exactly like
 // EnemyOrder. The relic pane draws whatever this walks, so map order would deal a different
 // row of relics every launch — a determinism breach that would look like a bug in the layout.
 //

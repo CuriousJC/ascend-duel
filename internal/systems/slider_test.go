@@ -80,7 +80,7 @@ func TestTheTrackLeavesRoomForTheLabel(t *testing.T) {
 
 	s.Label, s.Readout = "", ""
 	if got := sliderTrack(s).Max.Y; got != SliderRect(s).Max.Y {
-		t.Errorf("an unlabelled slider's track ends at %d, want the control's own bottom %d",
+		t.Errorf("an unlabeled slider's track ends at %d, want the control's own bottom %d",
 			got, SliderRect(s).Max.Y)
 	}
 }

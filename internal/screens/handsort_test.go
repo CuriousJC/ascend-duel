@@ -73,7 +73,7 @@ func TestTheEssenceOfferIsArrangedByTheSortMode(t *testing.T) {
 }
 
 // TestTheEssenceScreensSortBlockFitsBesideItsRow. The block hangs off the offer row's right edge, and
-// the row is centred and eight cards wide — so the two are competing for the same pixels. A block
+// the row is centered and eight cards wide — so the two are competing for the same pixels. A block
 // running off the screen would be a control the player cannot press.
 func TestTheEssenceScreensSortBlockFitsBesideItsRow(t *testing.T) {
 	gs := testRun()

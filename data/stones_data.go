@@ -38,13 +38,13 @@ type StoneData struct {
 	// the name and the text are not the same sentence twice: the text says which hand it raises.
 	Name string `json:"Name"`
 
-	// Hand is the rung this stone raises, by `hands.json` key. Resolved against the catalogue the
+	// Hand is the rung this stone raises, by `hands.json` key. Resolved against the catalog the
 	// rules loaded — a stone naming a hand this build has not got fails the launch rather than
 	// landing on whichever rung happens to sit first.
 	Hand string `json:"Hand"`
 
 	// Text is what the card says it does, in the same clipped register the essences use. A `\n` is an
-	// authored line break, honoured by `cards.WrapText` — every stone carries one, because the
+	// authored line break, honored by `cards.WrapText` — every stone carries one, because the
 	// eighteen differ only in the rung they name and left to the measurer they would read as
 	// eighteen layouts of one card.
 	//
@@ -54,7 +54,7 @@ type StoneData struct {
 	Text string `json:"Text"`
 }
 
-// LoadStones parses the catalogue into a map keyed by StoneRecord.
+// LoadStones parses the catalog into a map keyed by StoneRecord.
 func LoadStones() map[string]StoneData {
 	var list []StoneData
 	if err := json.Unmarshal(stonesJSON, &list); err != nil {
@@ -70,7 +70,7 @@ func LoadStones() map[string]StoneData {
 
 // StoneOrder is every record, sorted by key.
 //
-// **Sorted for the reason EssenceOrder is**: LoadStones returns a map, Go randomises map order, and
+// **Sorted for the reason EssenceOrder is**: LoadStones returns a map, Go randomizes map order, and
 // the bag of rocks is a shuffle of this list — so an unsorted walk would make which stones a run
 // is offered depend on map iteration and take the run's reproducibility with it. See the
 // `randomness` skill.

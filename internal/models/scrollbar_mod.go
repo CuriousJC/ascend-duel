@@ -19,10 +19,10 @@ import (
 // pouring rows into itself does not have to convert a scroll position into a line number and
 // cannot land half a line off. The pixel arithmetic is entirely inside internal/systems.
 //
-// It follows Button and Slider exactly: a plain struct here, behaviour in internal/systems,
+// It follows Button and Slider exactly: a plain struct here, behavior in internal/systems,
 // owned by whoever draws the list. Nothing about it knows what the rows say.
 type Scrollbar struct {
-	// Width and Height are the whole track. ScreenX and ScreenY are its **centre**, the
+	// Width and Height are the whole track. ScreenX and ScreenY are its **center**, the
 	// convention Button and Slider both use.
 	Width, Height    int
 	ScreenX, ScreenY int
@@ -37,7 +37,7 @@ type Scrollbar struct {
 	// panel reads it to know where to start drawing and writes it to jump somewhere.
 	Offset int
 
-	// BaseColor is the thumb at full strength, following the one-colour rule. The zero value
+	// BaseColor is the thumb at full strength, following the one-color rule. The zero value
 	// means "use the default".
 	BaseColor color.RGBA
 

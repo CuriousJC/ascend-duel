@@ -5,8 +5,8 @@ package combat
 // **One planner, and the deck is what makes an enemy itself** *(2026-08-16)*. PlanFor scores
 // every affordable combination of the hand's attacks through the same blowFor the resolver uses
 // — so it finds that three cheap cards forming a Three of a Kind beat one expensive card — and
-// then spends whatever budget is left on defences, which is what keeps a non-attack
-// card in an enemy deck from being dead content. It replaced four named behaviours chosen by a
+// then spends whatever budget is left on defenses, which is what keeps a non-attack
+// card in an enemy deck from being dead content. It replaced four named behaviors chosen by a
 // string on the enemy record, three of which were unreachable.
 //
 // **A planner may only play what it was dealt.** The shuffle that produced the hand is outside
@@ -46,13 +46,13 @@ package combat
 //
 // **The planner reasons about concepts and carries elements along.** Every choice is made on cost
 // and damage; the element rides on the card it was dealt on and reaches the round untouched. An
-// enemy's colours do nothing until an affix attunes them, so preferring one would be preferring a
+// enemy's colors do nothing until an affix attunes them, so preferring one would be preferring a
 // border.
 func PlanFor(d Duelist, hand []Card) []Card {
 	return planFor(d, hand, handTable)
 }
 
-// planFor is PlanFor with the catalogue injected, so a test can drive a planner against a
+// planFor is PlanFor with the catalog injected, so a test can drive a planner against a
 // synthetic ladder.
 func planFor(d Duelist, hand []Card, hands []Hand) []Card {
 	budget, slots := d.ActionPoints(), d.MaxActions()
@@ -69,18 +69,18 @@ func planFor(d Duelist, hand []Card, hands []Hand) []Card {
 // it falls back to taking the biggest cards that fit — a balance sim deliberately handing an
 // opponent twenty attacks should get a plan rather than a hung process.
 func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand) ([]Card, int) {
-	var offence []int
+	var offense []int
 	for i, c := range hand {
 		s := c.Spec()
 		if s.Verb == VerbAttack {
-			offence = append(offence, i)
+			offense = append(offense, i)
 		}
 	}
-	if len(offence) == 0 {
+	if len(offense) == 0 {
 		return nil, 0
 	}
-	if len(offence) > maxSearchableAttacks {
-		return greedyAttacks(d, hand, offence, budget, slots)
+	if len(offense) > maxSearchableAttacks {
+		return greedyAttacks(d, hand, offense, budget, slots)
 	}
 
 	bestScore, bestCost := -1, 0
@@ -89,10 +89,10 @@ func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand) ([]Car
 	// Ascending masks, and a strictly-better test, so a tie goes to the combination whose cards
 	// were dealt earliest. That is deterministic without inventing a rule — the same tie-break
 	// `matchCountOf` and `biggestAttack` take.
-	for mask := 1; mask < 1<<len(offence); mask++ {
+	for mask := 1; mask < 1<<len(offense); mask++ {
 		var pick []int
 		cost := 0
-		for bit, idx := range offence {
+		for bit, idx := range offense {
 			if mask&(1<<bit) == 0 {
 				continue
 			}
@@ -119,7 +119,7 @@ func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand) ([]Car
 const maxSearchableAttacks = 14
 
 // blowScore is what one candidate turn would actually land, run through the same matcher the
-// resolver uses. It is the blow before any defence, which is all a planner can know — it cannot
+// resolver uses. It is the blow before any defense, which is all a planner can know — it cannot
 // see what the other side has raised.
 func blowScore(d Duelist, hand []Card, pick []int, hands []Hand) int {
 	// **A solo attacker's turn is worth the sum of its cards and nothing else.** No hand is read,
@@ -152,14 +152,14 @@ func blowScore(d Duelist, hand []Card, pick []int, hands []Hand) int {
 
 // greedyAttacks is the fallback for a hand too big to search: the dearest cards that fit, which is
 // what the old brute did.
-func greedyAttacks(d Duelist, hand []Card, offence []int, budget, slots int) ([]Card, int) {
+func greedyAttacks(d Duelist, hand []Card, offense []int, budget, slots int) ([]Card, int) {
 	used := make([]bool, len(hand))
 	var out []Card
 	spent := 0
 
 	for len(out) < slots {
 		best, bestCost := -1, 0
-		for _, i := range offence {
+		for _, i := range offense {
 			if used[i] {
 				continue
 			}
@@ -180,11 +180,11 @@ func greedyAttacks(d Duelist, hand []Card, offence []int, budget, slots int) ([]
 // spareCards fills the slots and points the attacks did not want with whatever else the hand holds.
 //
 // **This is what keeps a non-attack card in an enemy deck from being dead content.** A planner that
-// only maximised damage would never raise a guard, so every `Congeal` authored into the roster
+// only maximized damage would never raise a guard, so every `Congeal` authored into the roster
 // would sit in a discard pile forever. Attacking is still the whole of the plan; this is the change
 // left over.
 //
-// **Defences go up first, then the hand's own order.** A defence is the one leftover that changes
+// **Defenses go up first, then the hand's own order.** A defense is the one leftover that changes
 // whether the enemy is alive to use the next one, so it earns the tie-break; past that the deck
 // author decides by what they put in, and the draw decides which of it turned up.
 func spareCards(hand []Card, chosen []Card, budget, slots int) []Card {

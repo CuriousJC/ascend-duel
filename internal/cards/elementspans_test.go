@@ -7,11 +7,11 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 )
 
-// The element vocabulary: that every status can be coloured, that no authored text names more
-// coloured terms than a card can carry, and that the words are offered longest first.
+// The element vocabulary: that every status can be colored, that no authored text names more
+// colored terms than a card can carry, and that the words are offered longest first.
 
 func TestEveryStatusNamesAnElement(t *testing.T) {
-	// A status shipping without an Element or a Verb goes uncoloured while every other one is lit,
+	// A status shipping without an Element or a Verb goes uncolored while every other one is lit,
 	// which reads as a rendering fault rather than as a missing field. This is the counterpart of
 	// TestEveryStatusElementHasABadge in internal/screens, on the other presentation axis.
 	for _, s := range data.LoadStatuses() {
@@ -20,7 +20,7 @@ func TestEveryStatusNamesAnElement(t *testing.T) {
 		}
 		if s.Verb == "" {
 			t.Errorf("status %q has no Verb, so prose saying it happens rather than stands "+
-				"goes uncoloured", s.StatusRecord)
+				"goes uncolored", s.StatusRecord)
 		}
 		if s.Name == "" {
 			t.Errorf("status %q has no Name", s.StatusRecord)
@@ -28,9 +28,9 @@ func TestEveryStatusNamesAnElement(t *testing.T) {
 	}
 }
 
-func TestEveryStatusWordIsColoured(t *testing.T) {
+func TestEveryStatusWordIsColored(t *testing.T) {
 	// The words themselves, through the real matcher: a status's Name and its Verb both have to
-	// come back as runs, or half the relic catalogue's sentences colour and half do not.
+	// come back as runs, or half the relic catalog's sentences color and half do not.
 	for _, s := range data.LoadStatuses() {
 		for _, word := range []string{s.Name, s.Verb} {
 			found := false
@@ -40,14 +40,14 @@ func TestEveryStatusWordIsColoured(t *testing.T) {
 				}
 			}
 			if !found {
-				t.Errorf("%q, from status %q, is not in the coloured vocabulary", word, s.StatusRecord)
+				t.Errorf("%q, from status %q, is not in the colored vocabulary", word, s.StatusRecord)
 			}
 		}
 	}
 }
 
-func TestTheFiveElementsAreColouredInBothCases(t *testing.T) {
-	// Relics write "Fire" and essences write "FIRE". Both colour, through one vocabulary entry, because
+func TestTheFiveElementsAreColoredInBothCases(t *testing.T) {
+	// Relics write "Fire" and essences write "FIRE". Both color, through one vocabulary entry, because
 	// the match ignores case on both sides.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		for _, word := range []string{strings.ToUpper(e.String()), e.String()} {
@@ -57,33 +57,33 @@ func TestTheFiveElementsAreColouredInBothCases(t *testing.T) {
 				continue
 			}
 			if runs[0].Ink != BorderOf(e) {
-				t.Errorf("%q is not drawn in %v's colour", word, e)
+				t.Errorf("%q is not drawn in %v's color", word, e)
 			}
 		}
 	}
 }
 
-func TestBasicAndRelicAreNotColouredWords(t *testing.T) {
-	// Basic is the absence of an element and its grey is what an uncoloured word already looks
-	// like. Relic is not an element at all, and a text saying "relic" means the jewellery.
+func TestBasicAndRelicAreNotColoredWords(t *testing.T) {
+	// Basic is the absence of an element and its gray is what an uncolored word already looks
+	// like. Relic is not an element at all, and a text saying "relic" means the jewelry.
 	for _, word := range []string{"BASIC", "RELIC"} {
 		if runs := ElementSpans("CARD BECOMES " + word); len(runs) != 0 {
-			t.Errorf("%q was coloured: %v", word, runs)
+			t.Errorf("%q was colored: %v", word, runs)
 		}
 	}
 }
 
-func TestAnElementInsideALongerWordIsNotColoured(t *testing.T) {
+func TestAnElementInsideALongerWordIsNotColored(t *testing.T) {
 	// ICE is inside SLICE, and every rune that turns a card into a Slice says so. A substring
 	// match would light three letters of a card's name in the ice blue.
 	if runs := ElementSpans("CARD BECOMES SLICE"); len(runs) != 0 {
-		t.Errorf("a word inside SLICE was coloured: %v", runs)
+		t.Errorf("a word inside SLICE was colored: %v", runs)
 	}
 }
 
 func TestTheVocabularyIsLongestFirst(t *testing.T) {
 	// SplitSpans lets the first run to claim a position keep it, so BURNING has to be offered before
-	// BURN or the longer word draws as a coloured BURN and a default-ink ING.
+	// BURN or the longer word draws as a colored BURN and a default-ink ING.
 	for i := 1; i < len(elementWords); i++ {
 		if len(elementWords[i-1].word) < len(elementWords[i].word) {
 			t.Fatalf("the vocabulary is not longest first: %q before %q",
@@ -93,13 +93,13 @@ func TestTheVocabularyIsLongestFirst(t *testing.T) {
 }
 
 func TestEveryTextFitsItsHighlights(t *testing.T) {
-	// Spec carries a fixed array, so a text naming more coloured terms than it holds loses the last
+	// Spec carries a fixed array, so a text naming more colored terms than it holds loses the last
 	// of them silently. The strings are authored in this repo, so this is the place that says an
 	// author has run out of room rather than a player finding a half-lit sentence.
 	check := func(what, text string) {
 		t.Helper()
 		if n := len(ElementSpans(text)); n > MaxTextHighlights {
-			t.Errorf("%s names %d coloured terms and a card holds %d: %q",
+			t.Errorf("%s names %d colored terms and a card holds %d: %q",
 				what, n, MaxTextHighlights, text)
 		}
 	}

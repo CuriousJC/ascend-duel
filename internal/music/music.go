@@ -87,7 +87,7 @@ func Level() float64 { return level }
 // **Volume, not Pause, and the difference is what turning the music down means.** Pausing would
 // hold the score at the bar it was on and resume from there, so coming back from silence halfway
 // through a duel would drop the player into a phrase they had already heard. A track that keeps
-// running puts them wherever the music would have got to, which is the behaviour every other
+// running puts them wherever the music would have got to, which is the behavior every other
 // volume control in the world has.
 //
 // The level is recorded whether or not there is a player, so the setting survives a machine with

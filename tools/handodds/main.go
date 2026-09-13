@@ -9,7 +9,7 @@
 // A hand's rarity is a function of how many cards share a concept, a form and an element, so
 // changing `data/duelist_cards.json`, the hand size or the action budget silently invalidates every
 // figure the ladder was tuned against. Re-run it after touching any of those, exactly as the seed
-// catalogue is re-checked.
+// catalog is re-checked.
 //
 // **The arithmetic is tools/hands, shared with tools/handsheet** *(2026-09-05)*, which prints the
 // same figures beside the cards each rung is made of. This command is the tuning view: every rung
@@ -17,7 +17,7 @@
 // "reachable" means and what the model leaves out.
 //
 // It is not a test. There is nothing here to assert — the output is a table to tune against, and
-// the tuning is a judgement call about how much a rarer hand should pay.
+// the tuning is a judgment call about how much a rarer hand should pay.
 package main
 
 import (
@@ -35,12 +35,12 @@ func main() {
 	// an essence's `CostDelta`, Atrophy demoting a card a rung — and a turn playing five cards each a
 	// point cheaper spends what a five-point-larger budget would. It is exact for a discount every
 	// card in the set qualifies for and generous for one that only some do, so a number taken from
-	// a run of it is a number about a *kitted* turn and has to be labelled as one.
+	// a run of it is a number about a *kitted* turn and has to be labeled as one.
 	//
 	// **It is not needed to reach any rung of the ladder**, which was the reason it was added and
 	// stopped being true. Every rung has a build a 6 AP round can pay for — an elemental five of a
-	// kind is Jab, Cut, Thump, Brace and Thrust in one colour, 6 AP exactly, since the defences carry
-	// a colour and join hands. What `-ap` answers now is how much a discount widens the *set* of
+	// kind is Jab, Cut, Thump, Brace and Thrust in one color, 6 AP exactly, since the defenses carry
+	// a color and join hands. What `-ap` answers now is how much a discount widens the *set* of
 	// hands that reach a rung, which is a different and still useful question.
 	budget := flag.Int("ap", hands.Budget(), "action points a turn may spend")
 	// **-price is the tuning view's other half.** The table says how rare each rung is; this says

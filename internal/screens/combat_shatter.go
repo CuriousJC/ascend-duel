@@ -33,7 +33,7 @@ package screens
 // mark starts on are the same picture. See internal/cards/mark.go.
 //
 // **It cannot change an outcome**, like everything else that moves on this screen. It holds the
-// playback cursor — `combatTheatre.running` — which is pacing, and pacing is allowed.
+// playback cursor — `combatTheater.running` — which is pacing, and pacing is allowed.
 
 import (
 	"image"
@@ -51,7 +51,7 @@ import (
 // the one speed.
 var (
 	// shatterFlyTicks is the pip crossing the table. Longer than a shield pip's own flight
-	// (shieldFlyTicks) because this one crosses the *whole* table rather than travelling from a
+	// (shieldFlyTicks) because this one crosses the *whole* table rather than traveling from a
 	// card to the row beneath it, and a journey twice as far at the same speed reads as hurried.
 	shatterFlyTicks = beat(30, 25)
 
@@ -85,9 +85,9 @@ type shieldBreak struct {
 	// seat is the index into the opponent's table row.
 	seat int
 
-	// ink is the colour the pip is drawn in: the element of a shield the player raised, so the
+	// ink is the color the pip is drawn in: the element of a shield the player raised, so the
 	// thing crossing the table looks like what left the row. **Cosmetic**, exactly as the pips'
-	// own colour is — a fire ward and an ice ward break the same attack.
+	// own color is — a fire ward and an ice ward break the same attack.
 	ink color.RGBA
 
 	t travel
@@ -129,19 +129,19 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 
 	ink := s.brokenPipInk()
 	for _, seat := range blocks {
-		if seat < 0 || seat >= len(s.theatre.enemyDealt) {
+		if seat < 0 || seat >= len(s.theater.enemyDealt) {
 			// A seat the row does not hold is dropped rather than flown to nowhere. It means the
 			// engine's slot indices and this row have come apart — see blocksAhead, where the one
 			// way that can happen is written down.
 			continue
 		}
-		s.theatre.breaks = append(s.theatre.breaks, shieldBreak{
+		s.theater.breaks = append(s.theater.breaks, shieldBreak{
 			seat: seat,
 			ink:  ink,
 			t:    newTravel(0, shatterFlyTicks+shatterSpreadTicks+shatterHoldTicks),
 		})
 	}
-	if len(s.theatre.breaks) == 0 {
+	if len(s.theater.breaks) == 0 {
 		return false
 	}
 
@@ -149,7 +149,7 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 	// `hold` clamps, so a prediction that disagrees with the engine costs a few beats of a wrong
 	// count rather than a broken row.
 	row := s.row(combat.SideA)
-	row.hold(row.count()-len(s.theatre.breaks), color.RGBA{})
+	row.hold(row.count()-len(s.theater.breaks), color.RGBA{})
 	return true
 }
 
@@ -181,10 +181,10 @@ func (s *CombatScene) blocksAhead() []int {
 	return out
 }
 
-// brokenPipInk is the colour the crossing pips take: the newest shield in the player's row, which
-// is the one most recently raised and the colour the player just watched land.
+// brokenPipInk is the color the crossing pips take: the newest shield in the player's row, which
+// is the one most recently raised and the color the player just watched land.
 //
-// **A row with no colour recorded hands back a zero**, which `drawShieldPip` reads as "as drawn" —
+// **A row with no color recorded hands back a zero**, which `drawShieldPip` reads as "as drawn" —
 // the bare white mark. That is the same fallback the pips' own flight takes.
 func (s *CombatScene) brokenPipInk() color.RGBA {
 	pips := s.row(combat.SideA).pips
@@ -200,7 +200,7 @@ func (s *CombatScene) brokenPipInk() color.RGBA {
 // and the animation are two drawings of one thing, and both being up at once would double every
 // line.
 func (s *CombatScene) shattered(seat int) bool {
-	return s.theatre.shatteredSeats[seat]
+	return s.theater.shatteredSeats[seat]
 }
 
 // advanceBreaks ticks every break and settles the finished ones into the persistent mark.
@@ -213,7 +213,7 @@ func (s *CombatScene) shattered(seat int) bool {
 //
 // **The handoff is exact**: the frame the animation stops is the frame the baked mark starts, so
 // there is no frame of a card with neither on it.
-func (t *combatTheatre) advanceBreaks() []shieldBreak {
+func (t *combatTheater) advanceBreaks() []shieldBreak {
 	live := t.breaks[:0]
 	for i := range t.breaks {
 		b := &t.breaks[i]
@@ -235,7 +235,7 @@ func (t *combatTheatre) advanceBreaks() []shieldBreak {
 //
 // **It is drawn after the opponent's row**, so the break sits on the card rather than under it.
 func (s *CombatScene) drawShieldBreaks(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, b := range s.theatre.breaks {
+	for _, b := range s.theater.breaks {
 		at, ok := s.breakSeatRect(gs, b.seat)
 		if !ok {
 			continue
@@ -249,7 +249,7 @@ func (s *CombatScene) drawShieldBreaks(gs *state.GlobalState, screen *ebiten.Ima
 			// drawn twice on the frame the two overlap.
 			continue
 		}
-		drawSpreadingCracks(screen, at, s.theatre.enemyDealt[b.seat].card, b.spread())
+		drawSpreadingCracks(screen, at, s.theater.enemyDealt[b.seat].card, b.spread())
 	}
 }
 
@@ -314,11 +314,11 @@ func crackProgress(delay, spread float64) float64 {
 // reached its seat, and a break drawn at the seat while the card was elsewhere would be a crack
 // hanging in the air — so this reads the same `enemyCardAt` the row itself draws with.
 func (s *CombatScene) breakSeatRect(gs *state.GlobalState, seat int) (image.Rectangle, bool) {
-	if seat < 0 || seat >= len(s.theatre.enemyDealt) {
+	if seat < 0 || seat >= len(s.theater.enemyDealt) {
 		return image.Rectangle{}, false
 	}
-	d := s.theatre.enemyDealt[seat]
-	at := s.enemyCardAt(gs, d, seat, len(s.theatre.enemyDealt), s.enemySplit(),
-		lit(s.theatre.enemyFiringSeats, seat))
+	d := s.theater.enemyDealt[seat]
+	at := s.enemyCardAt(gs, d, seat, len(s.theater.enemyDealt), s.enemySplit(),
+		lit(s.theater.enemyFiringSeats, seat))
 	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight), true
 }

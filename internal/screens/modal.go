@@ -35,7 +35,7 @@ import (
 // dialog.
 //
 // **95 rather than 92 since 2026-08-25**, and this one was forced rather than chosen: arcane made
-// the deck overlay's grid five colour rows where it was four, and the panel is what those rows,
+// the deck overlay's grid five color rows where it was four, and the panel is what those rows,
 // the tally band and the toggles all have to fit inside. It moves the frame for every dialog
 // rather than the one that needed it, which is the price of one footprint — and it moves it the
 // way the previous change already argued for, so the panel covers more of the hand rather than
@@ -139,7 +139,7 @@ func drawModalFrame(gs *state.GlobalState, screen *ebiten.Image, head modalHead)
 // already knows means "close".
 //
 // **Red, and the only red control in the game.** Nothing else that closes something is red, so the
-// colour is not overloaded, and a dialog's exit is exactly the thing that should be the brightest
+// color is not overloaded, and a dialog's exit is exactly the thing that should be the brightest
 // object on a covered screen.
 const (
 	modalCloseSize  = 34
@@ -149,7 +149,7 @@ const (
 )
 
 // modalCloseColor is the face at full strength. It rests at 65% of this, like every button; see
-// the colour rule in CLAUDE.md.
+// the color rule in CLAUDE.md.
 var modalCloseColor = color.RGBA{R: 208, G: 52, B: 58, A: 255}
 
 // modalCloser is the X, and it belongs to whichever panel is up.
@@ -233,7 +233,7 @@ type modalToggle struct {
 	button *models.Button
 	tip    models.Tooltip
 
-	// place is where the button's centre goes, asked every frame. Nil means the bottom-right
+	// place is where the button's center goes, asked every frame. Nil means the bottom-right
 	// corner; a screen that has somewhere better says so.
 	place func(gs *state.GlobalState) image.Point
 
@@ -261,7 +261,7 @@ type modalToggle struct {
 func (t *modalToggle) toggle() { t.open = !t.open }
 
 // block takes the button out of the frame while another dialog is up. Called every tick from the
-// scene, never latched, so a panel that closes cannot leave its neighbour dead.
+// scene, never latched, so a panel that closes cannot leave its neighbor dead.
 func (t *modalToggle) block(b bool) { t.blocked = b }
 
 // init wires the button. **The button survives a re-entry and the state does not** — a scene's
@@ -307,7 +307,7 @@ func (t *modalToggle) update(gs *state.GlobalState,
 	place := t.place
 	if place == nil {
 		place = func(gs *state.GlobalState) image.Point {
-			return ChromeCornerCentre(gs, ChromeSlotSettings)
+			return ChromeCornerCenter(gs, ChromeSlotSettings)
 		}
 	}
 	c := place(gs)

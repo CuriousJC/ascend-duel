@@ -11,7 +11,7 @@ import (
 // exception the other tests in this package take. Nothing here creates an ebiten.Image.
 //
 // It exists because the relic row's right edge was a hardcoded 79% chosen to clear an enemy
-// card centred at 88%, and that card moved to the corner the next day. A percentage standing
+// card centered at 88%, and that card moved to the corner the next day. A percentage standing
 // in for something else's position goes stale silently: the failure is a relic drawn
 // underneath a card, which looks like a drawing bug rather than a stale constant.
 

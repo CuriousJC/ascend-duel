@@ -9,9 +9,9 @@ package cards
 // card's situation rather than its identity: this one was stopped, this one was eaten, this one is
 // being altered.
 //
-// # Two flavours, and they are not the same drawing twice
+// # Two flavors, and they are not the same drawing twice
 //
-// **The final state** is what this file rasterises: the mark baked into the card image, cached with
+// **The final state** is what this file rasterizes: the mark baked into the card image, cached with
 // it, and true for as long as the card is drawn. Spec.Mark is where a caller asks for one, so
 // tools/cardsheet can show a marked card and the game and the sheet cannot disagree about what one
 // looks like.
@@ -20,7 +20,7 @@ package cards
 // live here: it changes every frame, and baking a new card image per frame would blow the face
 // cache that internal/screens keys on the whole Spec. So this package exports the mark's *geometry*
 // (ShatterCracks) and the screen draws the same lines on the GPU while they are moving, handing
-// over to the baked version once it settles. **One geometry, two rasterisers**, so the animation
+// over to the baked version once it settles. **One geometry, two rasterizers**, so the animation
 // cannot end on a picture different from the one it hands to.
 //
 // # The pattern is derived, never rolled
@@ -57,7 +57,7 @@ const (
 	MarkNone Mark = 0
 
 	// MarkShattered is an attack that will not fire — a shield ate it. **A broken window rather
-	// than a cross or a grey-out**: the card is still there and still readable, which is the
+	// than a cross or a gray-out**: the card is still there and still readable, which is the
 	// point, because the player needs to see *what* was stopped as well as that something was.
 	MarkShattered Mark = 1 << iota
 
@@ -98,7 +98,7 @@ func (m Mark) Has(bit Mark) bool { return m&bit != 0 }
 const shatterDim = 18
 
 // crackInk is what a crack is drawn in: a near-black at partial alpha, so it darkens whatever it
-// crosses rather than replacing it. **Not an element colour and not the relic pink** — a break is
+// crosses rather than replacing it. **Not an element color and not the relic pink** — a break is
 // not a fifth thing wanting a hue, and the wheel is full (see CLAUDE.md). It reads as absence of
 // card rather than as a mark someone put there.
 var crackInk = color.RGBA{R: 30, G: 27, B: 34, A: 190}
@@ -129,9 +129,9 @@ type Crack struct {
 // **Radials plus chords, and the chords are what make it a window.** Lines running from an impact
 // point to the edges alone read as a starburst — a thing that happened *at* a point. Joining
 // adjacent radials with short chords at two radii turns the same lines into panes of glass, which
-// is the shape a reader recognises without being told.
+// is the shape a reader recognizes without being told.
 //
-// The impact point is offset from centre, because a break centred on a card reads as a decoration
+// The impact point is offset from center, because a break centered on a card reads as a decoration
 // laid on it rather than as something that struck it.
 func ShatterCracks(w, h int, seed uint32) []Crack {
 	if w <= 0 || h <= 0 {
@@ -197,7 +197,7 @@ func along(cx, cy int, end image.Point, f float64) image.Point {
 
 // MarkSeed is the number a card's mark geometry is derived from: its name, hashed.
 //
-// **It is exported because both rasterisers need the same one.** The screen draws the moving
+// **It is exported because both rasterizers need the same one.** The screen draws the moving
 // version and this package bakes the settled one, and a break that rearranged itself on the frame
 // the animation handed over would be the one failure this whole split exists to prevent.
 func MarkSeed(name string) uint32 {
@@ -261,7 +261,7 @@ func drawMark(dst *image.RGBA, mark Mark, name string, w, h, radius int) {
 	}
 }
 
-// PickedInk is the colour MarkPicked washes a card in: the relic pink, which is also a pane's own
+// PickedInk is the color MarkPicked washes a card in: the relic pink, which is also a pane's own
 // chrome. **Read out of the border table rather than written down again**, so the panel's chrome
 // and the cards it is pointing at cannot drift apart.
 var PickedInk = borderColors[Relic]
@@ -274,12 +274,12 @@ var PickedInk = borderColors[Relic]
 // reading as the thing being compared against.
 const pickedWash = 22
 
-// HighlightInk is the colour MarkHighlit washes a card in.
+// HighlightInk is the color MarkHighlit washes a card in.
 //
 // **It is the tutorial's own red and it is exported so there is one of it.** `internal/screens`
-// draws the scrim and the bubble's stroke in the same colour; a card tinted in a second red would
+// draws the scrim and the bubble's stroke in the same color; a card tinted in a second red would
 // read as a different kind of attention. This package still does not know what a tutorial is — it
-// is handed a name for a colour, exactly as Spec.TextInk is handed one.
+// is handed a name for a color, exactly as Spec.TextInk is handed one.
 var HighlightInk = color.RGBA{R: 232, G: 60, B: 48, A: 255}
 
 // highlightWash is how far a highlit card is pulled toward that red, in percent.
@@ -289,13 +289,13 @@ var HighlightInk = color.RGBA{R: 232, G: 60, B: 48, A: 255}
 // look at *this card*, so the name, the cost and the text have to survive the marking.
 const highlightWash = 30
 
-// washInside pulls every pixel of the card toward one colour, leaving the transparent corners
+// washInside pulls every pixel of the card toward one color, leaving the transparent corners
 // alone. It is dimInside against an arbitrary ink rather than against the card surface.
 func washInside(dst *image.RGBA, w, h, radius int, ink color.RGBA, pct int) {
 	washInsideFrom(dst, w, h, radius, pct, func(int, int) color.RGBA { return ink })
 }
 
-// washInsideFrom is washInside with the colour asked for per pixel, which is what an upgrade's ink
+// washInsideFrom is washInside with the color asked for per pixel, which is what an upgrade's ink
 // needs: the wildcard's is five bands running down the card and every other one is flat.
 //
 // **One traversal for both**, so an upgraded card and a marked one cannot disagree about which
@@ -346,9 +346,9 @@ func towardByte(from, to uint8, pct int) uint8 {
 	return uint8(int(from) + (int(to)-int(from))*pct/100)
 }
 
-// DrawCrack rasterises one crack into a card image, clipped to the card's rounded silhouette.
+// DrawCrack rasterizes one crack into a card image, clipped to the card's rounded silhouette.
 //
-// **Exported so the geometry above has exactly one plain-Go rasteriser** rather than one per
+// **Exported so the geometry above has exactly one plain-Go rasterizer** rather than one per
 // caller — anything wanting a still frame of a break draws it through here.
 func DrawCrack(dst *image.RGBA, c Crack, w, h, radius int) {
 	dx, dy := c.To.X-c.From.X, c.To.Y-c.From.Y

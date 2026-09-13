@@ -10,7 +10,7 @@ package systems
 // # It took the left column until 2026-09-09, and now it takes the card
 //
 // The first upgrade was the wildcard, and it said itself by painting the form mark and the cost
-// ticks from a rainbow instead of from one element's colour — which was the right answer while
+// ticks from a rainbow instead of from one element's color — which was the right answer while
 // there was one upgrade and its whole subject was the element. It stopped being the right answer
 // the moment there were ten: nine of them have nothing to do with the element, so a left column in
 // gold would be the element slot saying something that is not about the element.
@@ -21,11 +21,11 @@ package systems
 // keeps: an upgrade is what the card permanently is and is painted into the face, and a mark is the
 // card's situation and is painted over the top of it. A broken gold card reads as both.
 //
-// # Why every upgrade is an ink and not a colour
+// # Why every upgrade is an ink and not a color
 //
 // Nine of the ten are one flat tint and would have been happier as a `color.RGBA`. The tenth is the
 // wildcard, whose subject is that the card has no single element, so its wash is the five element
-// colours in bands — and a vocabulary where one entry is a picture and nine are colours is two
+// colors in bands — and a vocabulary where one entry is a picture and nine are colors is two
 // mechanisms with a `switch` between them. An ink is the shape that holds both: the authored PNG
 // for the one that needs a picture, a generated square for the nine that do not, and one sampling
 // path in `internal/cards` that never asks which it got.
@@ -33,9 +33,9 @@ package systems
 // **What this package must not learn is what a rider is.** An Upgrade is a *presentation* value:
 // something visible has happened to this card, and here is what to paint it with.
 // `internal/screens` is where a rider becomes an Upgrade, on the same terms `Spec.TextInk` is
-// where a relic becomes a colour.
+// where a relic becomes a color.
 //
-// # The colours are placeholders and they are standing on a full wheel
+// # The colors are placeholders and they are standing on a full wheel
 //
 // **Said out loud because it is a real cost** *(2026-09-09)*. CLAUDE.md records that hue is spent:
 // five elements, a relic's pink, the two verbs, the two duelists and now the ground. Ten upgrades
@@ -69,7 +69,7 @@ const (
 	UpgradeNone Upgrade = iota
 
 	// UpgradeWild is a card that counts as every element at once. **The only upgrade whose wash is
-	// a picture**: the five element colours in bands, which is as close to "all five" as one card
+	// a picture**: the five element colors in bands, which is as close to "all five" as one card
 	// can get. It is also the only one that leaves the form mark hueless — see HuelessForm.
 	UpgradeWild
 
@@ -186,7 +186,7 @@ const UpgradeWashPct = 55
 //
 // **Not 100.** The border still says the card's *state* — resting, selected, unaffordable — through
 // `Spec.atState`, and replacing it outright would delete that signal on every upgraded card. Leaving
-// a fifth of the underlying colour is what lets a selected gold card still read as selected.
+// a fifth of the underlying color is what lets a selected gold card still read as selected.
 const UpgradeBorderPct = 80
 
 // UpgradeInkSize is the square every upgrade ink is authored or generated at.
@@ -200,13 +200,13 @@ const UpgradeInkSize = formArtSize
 // key, never a path, so a file can be refiled without touching this.
 //
 // **The wildcard is the only entry and that is the design** — see the file comment. Everything else
-// is a flat tint and is generated from upgradeTint below, which is what a placeholder colour should
+// is a flat tint and is generated from upgradeTint below, which is what a placeholder color should
 // cost: a line, not a PNG somebody has to draw before the mechanic can be looked at.
 var upgradeArt = map[Upgrade]string{
 	UpgradeWild: "wildcardupgrade_png",
 }
 
-// upgradeTint is the flat colour an upgrade washes a card in, for the nine that are not a picture.
+// upgradeTint is the flat color an upgrade washes a card in, for the nine that are not a picture.
 //
 // **Every upgrade in Upgrades() must be in exactly one of these two maps**, which
 // TestEveryUpgradeHasAnInk holds. An upgrade in neither would wash a card in nothing and be
@@ -229,7 +229,7 @@ var upgradeTint = map[Upgrade]color.RGBA{
 	UpgradeHeldVitae:  {R: 128, G: 148, B: 176, A: 255},
 }
 
-// upgradeSheen is the two metals, which are a *gradient* rather than a flat colour.
+// upgradeSheen is the two metals, which are a *gradient* rather than a flat color.
 //
 // **A flat gold on an off-white card is cream, at any wash strength** *(2026-09-09)*. That is not a
 // tuning problem: the card's surface is already a pale warm neutral, so pulling it toward a pale
@@ -240,7 +240,7 @@ var upgradeTint = map[Upgrade]color.RGBA{
 //
 // **The dark end is what does the work.** A metal band that only brightens has nowhere to go on a
 // light card; one that darkens on both shoulders puts a real edge on the card, and the eye reads the
-// pair as a highlight travelling over a surface.
+// pair as a highlight traveling over a surface.
 //
 // The eight flat tints above are deliberately *not* sheened: they are placeholders, and a
 // placeholder that looks finished is one nobody replaces.
@@ -253,7 +253,7 @@ var upgradeSheen = map[Upgrade]color.RGBA{
 // let alone a per-frame one — the same argument artCache is under.
 var upgradeInkCache = map[Upgrade]*image.RGBA{}
 
-// UpgradeInk is the colour source an upgrade washes with, as a premultiplied RGBA square of
+// UpgradeInk is the color source an upgrade washes with, as a premultiplied RGBA square of
 // UpgradeInkSize. It returns nil for UpgradeNone, which is what a caller checks to leave a card
 // alone.
 //
@@ -291,7 +291,7 @@ func UpgradeInk(u Upgrade) *image.RGBA {
 	return out
 }
 
-// flatInk is one colour as an ink square, which is what makes a plain tint indistinguishable from a
+// flatInk is one color as an ink square, which is what makes a plain tint indistinguishable from a
 // picture at the sampling site.
 func flatInk(c color.RGBA) *image.RGBA {
 	out := image.NewRGBA(image.Rect(0, 0, UpgradeInkSize, UpgradeInkSize))
@@ -299,7 +299,7 @@ func flatInk(c color.RGBA) *image.RGBA {
 	return out
 }
 
-// sheenInk is one colour as a diagonal band of light, which is what makes a metal read as metal
+// sheenInk is one color as a diagonal band of light, which is what makes a metal read as metal
 // rather than as tinted paper. See upgradeSheen.
 //
 // **The diagonal, not a row or a column.** A horizontal band would run along the card's text lines
@@ -318,8 +318,8 @@ func sheenInk(c color.RGBA) *image.RGBA {
 	return out
 }
 
-// alongSheen is the metal's colour a fraction of the way across the band: dark at both shoulders,
-// the named colour at the crest, and a little past it into white at the very centre.
+// alongSheen is the metal's color a fraction of the way across the band: dark at both shoulders,
+// the named color at the crest, and a little past it into white at the very center.
 func alongSheen(c color.RGBA, at float64) color.RGBA {
 	// A raised cosine, so the crest is broad and the shoulders fall away smoothly. A linear ramp
 	// gives a visible crease down the middle of every card.
@@ -364,17 +364,17 @@ func decodeInk(key string) *image.RGBA {
 	return out
 }
 
-// UpgradeTint is the flat colour an upgrade is identified by, for a caller that wants the colour
+// UpgradeTint is the flat color an upgrade is identified by, for a caller that wants the color
 // without the ink square UpgradeInk hands out.
 //
-// **It exists so a signal on the combat screen is drawn in the colour of the rider that threw it**
-// *(2026-09-10)* — see screens.cardSignal. A firework in a colour of its own would be a second
+// **It exists so a signal on the combat screen is drawn in the color of the rider that threw it**
+// *(2026-09-10)* — see screens.cardSignal. A firework in a color of its own would be a second
 // vocabulary for something the card face already says, and the two would drift the first time a
 // placeholder tint was retuned.
 //
-// **The metals answer with their sheen's own colour**, since those two are pictures rather than
+// **The metals answer with their sheen's own color**, since those two are pictures rather than
 // flat tints and the sheen is what the card is washed in. UpgradeNone and anything unlisted answer
-// with a zero colour, which a caller checks the same way it checks UpgradeInk for nil.
+// with a zero color, which a caller checks the same way it checks UpgradeInk for nil.
 func UpgradeTint(u Upgrade) color.RGBA {
 	if c, ok := upgradeSheen[u]; ok {
 		return c

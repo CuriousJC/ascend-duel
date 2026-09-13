@@ -60,7 +60,7 @@ func sortColumnRect(gs *state.GlobalState) image.Rectangle {
 func (s *CombatScene) setSort(mode handSort) {
 	s.sortMode = mode
 
-	s.theatre.slides = slidesFor(s.theatre.slides, s.sortHand(),
+	s.theater.slides = slidesFor(s.theater.slides, s.sortHand(),
 		func(i int) actionCard { return s.hand[i].actionCard },
 		func(i int) int { return selectedLift(s.hand[i].selected) })
 

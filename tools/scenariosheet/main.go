@@ -71,11 +71,11 @@ const source = "internal/scenario/scenarios.json"
 const ground = "#a8bcd4"
 
 // placeholderArt is the face this sheet gives anything it is only naming — a rune, a stone, a
-// key the catalogues do not answer to.
+// key the catalogs do not answer to.
 //
-// **It is the essence catalogue's own default rather than a fourth picture**, and it is spelled by
+// **It is the essence catalog's own default rather than a fourth picture**, and it is spelled by
 // reading data.DefaultEssenceArt rather than by writing the string again: a page that showed a
-// picture no catalogue uses would be inventing art in a review tool. This sheet is about what a
+// picture no catalog uses would be inventing art in a review tool. This sheet is about what a
 // fixture *plugs in*, so a face here is a label, not a drawing to judge.
 const placeholderArt = data.DefaultEssenceArt
 
@@ -327,7 +327,7 @@ func goodSpec(name string) cards.Spec {
 	return cards.Spec{Name: name, Element: cards.Relic, Art: artwork(placeholderArt), Enabled: true}
 }
 
-// missingSpec is a key nothing in the catalogues answers to. **Drawn rather than fatal**, unlike
+// missingSpec is a key nothing in the catalogs answers to. **Drawn rather than fatal**, unlike
 // the game, which refuses the launch: the sheet's job is to show what the file says, and a page
 // that would not render because one fixture names a deleted relic would hide the other twenty.
 func missingSpec(key string) cards.Spec {
@@ -540,7 +540,7 @@ func oneLine(s string) string { return strings.ReplaceAll(s, "\n", " ") }
 // artwork decodes an embedded picture, returning nil rather than failing: a card with no face
 // still shows its name, and a sheet that refused to render over one missing key would hide
 // everything else. **The opposite call from the other sheets**, because this one is a picture of
-// fixtures rather than of a catalogue — a fixture naming something that no longer exists is the
+// fixtures rather than of a catalog — a fixture naming something that no longer exists is the
 // finding, not a reason to have no page.
 func artwork(key string) image.Image {
 	raw := assets.LoadImageData()[key]

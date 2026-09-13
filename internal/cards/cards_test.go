@@ -18,7 +18,7 @@ import (
 // "does this look good". It is the wrong tool for "is the border six pixels thick" and
 // "did the disabled card come out louder than the live one", because those are true or
 // false and nobody should have to squint at a PNG to find out. The corners are
-// deliberately hard-edged, so every pixel is exactly one colour and can be compared
+// deliberately hard-edged, so every pixel is exactly one color and can be compared
 // without tolerances.
 
 func faces(t *testing.T) *Faces {
@@ -105,7 +105,7 @@ func TestCornersAreTransparentAndEdgesAreNot(t *testing.T) {
 //
 // **Its outer BorderBevel pixels are the card's light** *(2026-08-24)*, so the walk starts inside
 // them; the bevel has its own test below.
-func TestBorderIsTheNeutralColourAtItsDeclaredWidth(t *testing.T) {
+func TestBorderIsTheNeutralColorAtItsDeclaredWidth(t *testing.T) {
 	st := Hand
 	mid := st.Height / 2
 
@@ -130,7 +130,7 @@ func TestBorderIsTheNeutralColourAtItsDeclaredWidth(t *testing.T) {
 }
 
 // **The card is lit from the top left, like every bevelled thing on screen.** The left edge at the
-// waist is lit and the right edge is shadowed, and neither is the border's own colour — a bevel
+// waist is lit and the right edge is shadowed, and neither is the border's own color — a bevel
 // that had quietly become two copies of the fill would draw identically to no bevel at all.
 func TestTheCardBorderIsLitOnTheTopLeftAndShadowedOnTheBottomRight(t *testing.T) {
 	st := Hand
@@ -154,26 +154,26 @@ func TestTheCardBorderIsLitOnTheTopLeftAndShadowedOnTheBottomRight(t *testing.T)
 	}
 
 	// **The bevel is the outside of the border, not the whole of it.** Four of the six pixels are
-	// still the state colour, which is the signal the border exists to carry.
+	// still the state color, which is the signal the border exists to carry.
 	if got := img.RGBAAt(BorderBevel, mid); got != face {
 		t.Errorf("the pixel just inside the bevel is %v, want the border's own %v", got, face)
 	}
 }
 
 func TestEveryElementBorderIsDistinct(t *testing.T) {
-	// Basic is a mid grey rather than the near-white the screen uses as a surface,
-	// precisely so it is not the same colour as the card it sits on. If someone
+	// Basic is a mid gray rather than the near-white the screen uses as a surface,
+	// precisely so it is not the same color as the card it sits on. If someone
 	// "restores" it to {235,235,235} this fails.
 	seen := map[color.RGBA]Element{}
 	for _, e := range Elements() {
 		c := BorderOf(e)
 		if prev, dup := seen[c]; dup {
-			t.Errorf("%s and %s share the border colour %v", prev, e, c)
+			t.Errorf("%s and %s share the border color %v", prev, e, c)
 		}
 		seen[c] = e
 
 		if c == Surface {
-			t.Errorf("%s border is the same colour as the card surface — it would be invisible", e)
+			t.Errorf("%s border is the same color as the card surface — it would be invisible", e)
 		}
 	}
 }
@@ -200,7 +200,7 @@ func TestCostDrawsOneDashPerPoint(t *testing.T) {
 		s.Cost = cost
 		img := render(t, s, st)
 
-		// The element colour, not the border's: the ticks carry the element and the border does
+		// The element color, not the border's: the ticks carry the element and the border does
 		// not. See Spec.atState, which is what keeps the two in the same state.
 		tick := systems.ColorToward(BorderOf(Fire), Surface, borderRestToward)
 		count := 0
@@ -228,7 +228,7 @@ func TestLeftColumnDoesNotCollide(t *testing.T) {
 
 	st := Hand
 
-	// The mark's box is what the layout names, so it is what has to fit. The mark is centred in
+	// The mark's box is what the layout names, so it is what has to fit. The mark is centered in
 	// it and clipped to it, so nothing can be drawn outside it.
 	formBottom := st.FormTop + st.FormSize
 	dashBottom := st.DashTop + (maxCost-1)*(st.DashHeight+st.DashGap) + st.DashHeight
@@ -244,7 +244,7 @@ func TestLeftColumnDoesNotCollide(t *testing.T) {
 }
 
 func TestTheCostColumnStaysOutOfTheTextColumn(t *testing.T) {
-	// **The text is centred in what the cost column leaves**, so the column's *width* is now
+	// **The text is centered in what the cost column leaves**, so the column's *width* is now
 	// load-bearing in a way it never was while the text ran the full width of the card. One
 	// thing shares a horizontal with the text and therefore sets that width: the dash marks.
 	// That is what a cost column ought to mean, and it is why the column is as narrow as it is.
@@ -371,7 +371,7 @@ func TestMiniRendersEverythingInsideTheVisibleStrip(t *testing.T) {
 }
 
 func TestNameClearsTheFormMark(t *testing.T) {
-	// **The name is centred on the card, not on the space left beside the mark.** So a
+	// **The name is centered on the card, not on the space left beside the mark.** So a
 	// long enough name reaches back into the corner the mark now occupies. Every concept
 	// in the deck is checked, because the failure is invisible on "Jab" and obvious on the
 	// longest one.
@@ -387,7 +387,7 @@ func TestNameClearsTheFormMark(t *testing.T) {
 		w := font.MeasureString(face, n).Ceil()
 		left := (st.Width - w) / 2
 		if left <= markRight {
-			t.Errorf("%q is %dpx wide, so centred it starts at x=%d and runs into the mark ending at x=%d",
+			t.Errorf("%q is %dpx wide, so centered it starts at x=%d and runs into the mark ending at x=%d",
 				n, w, left, markRight)
 		}
 	}
@@ -485,7 +485,7 @@ func TestRelicDrawsArtAndNoCardFurniture(t *testing.T) {
 	cx := st.Width / 2
 	cy := st.ArtTop + st.ArtMaxH/2
 	if got := img.RGBAAt(cx, cy); got.A == 0 || got == Surface {
-		t.Errorf("nothing drawn at the centre of the art box (%d,%d): %v", cx, cy, got)
+		t.Errorf("nothing drawn at the center of the art box (%d,%d): %v", cx, cy, got)
 	}
 
 	// And none of the card's own furniture is on it: a relic has no cost and no phase, so
@@ -518,7 +518,7 @@ func TestDashesDoNotOverprintTheName(t *testing.T) {
 		y := st.DashTop + i*(st.DashHeight+st.DashGap) + st.DashHeight/2
 		for x := st.DashLeft; x < st.DashLeft+st.DashWidth; x++ {
 			if got := img.RGBAAt(x, y); got != tick {
-				t.Fatalf("tick %d is broken at x=%d: %v, want the element colour %v — the name is printing over it",
+				t.Fatalf("tick %d is broken at x=%d: %v, want the element color %v — the name is printing over it",
 					i, x, got, tick)
 			}
 		}
@@ -569,8 +569,8 @@ func TestDisabledIsQuieterThanRestingOnALightCard(t *testing.T) {
 	}
 }
 
-func TestSelectedIsTheColourNamedInTheSource(t *testing.T) {
-	// A widget names the colour it wants at full strength and its other states scale
+func TestSelectedIsTheColorNamedInTheSource(t *testing.T) {
+	// A widget names the color it wants at full strength and its other states scale
 	// down from it. Selected is that full strength, so it must be BorderOf exactly.
 	st := Hand
 	for _, e := range Elements() {
@@ -578,7 +578,7 @@ func TestSelectedIsTheColourNamedInTheSource(t *testing.T) {
 		s.Selected = true
 		got := render(t, s, st).RGBAAt(st.BorderWidth/2, st.Height/2)
 		if got != borderBase(e, "") {
-			t.Errorf("%s selected border is %v, want the named colour %v", e, got, borderBase(e, ""))
+			t.Errorf("%s selected border is %v, want the named color %v", e, got, borderBase(e, ""))
 		}
 	}
 }
@@ -621,7 +621,7 @@ func TestRenderRejectsWhatItCannotDraw(t *testing.T) {
 
 func TestUnknownElementFallsBackRatherThanPanicking(t *testing.T) {
 	// Element is an int and nothing stops a caller inventing one. A card drawn in the
-	// wrong colour is recoverable; a crash in the middle of a duel is not.
+	// wrong color is recoverable; a crash in the middle of a duel is not.
 	if got := BorderOf(Element(99)); got != BorderOf(Basic) {
 		t.Errorf("out-of-range element gave %v, want the Basic border %v", got, BorderOf(Basic))
 	}
@@ -630,7 +630,7 @@ func TestUnknownElementFallsBackRatherThanPanicking(t *testing.T) {
 	}
 }
 
-// distance is how far apart two colours are, summed per channel. Used instead of
+// distance is how far apart two colors are, summed per channel. Used instead of
 // luminance because "quieter" on a light card means closer to the surface, in whichever
 // direction that happens to be.
 func distance(a, b color.RGBA) int {
@@ -751,9 +751,9 @@ func TestStatusBadgesClearTheHealthTextAndTheBorder(t *testing.T) {
 	}
 }
 
-func TestAnEffectRowIsCentredAndClosesUpAsItEmpties(t *testing.T) {
+func TestAnEffectRowIsCenteredAndClosesUpAsItEmpties(t *testing.T) {
 	// Nil entries are skipped rather than drawn as holes, so one status sits in the middle of
-	// the card. What this checks is that the *drawn* row is centred for every count — the
+	// the card. What this checks is that the *drawn* row is centered for every count — the
 	// failure it guards is a row laid out against MaxEffects, which leaves a single badge
 	// hard left with three empty slots beside it.
 	st := EnemyStyle
@@ -782,7 +782,7 @@ func TestAnEffectRowIsCentredAndClosesUpAsItEmpties(t *testing.T) {
 			t.Fatalf("%d badges drew nothing in the effect band", count)
 		}
 
-		// Centred: the margin either side of the drawn row has to match within a pixel, which
+		// Centered: the margin either side of the drawn row has to match within a pixel, which
 		// is all integer division can promise.
 		leftGap, rightGap := band.Min.X, st.Width-band.Max.X
 		if diff := leftGap - rightGap; diff > 1 || diff < -1 {
@@ -922,7 +922,7 @@ func TestTheEnemyNamesItselfAboveItsPortrait(t *testing.T) {
 		"enemy": EnemyStyle, "duelist": DuelistStyle, "hand": Hand,
 	} {
 		if !st.ShowName || !st.NameCentered {
-			t.Errorf("%s does not centre a name across its top", name)
+			t.Errorf("%s does not center a name across its top", name)
 		}
 	}
 	for name, st := range map[string]Style{"relic": RelicStyle, "essence": EssenceStyle} {
@@ -996,7 +996,7 @@ func TestBackRendersWithNoFont(t *testing.T) {
 		t.Fatalf("rendering a back without fonts: %v", err)
 	}
 	if img.RGBAAt(Hand.Width/2, Hand.Height/2) != BackInk {
-		t.Errorf("centre of the back is %v, want the mark %v",
+		t.Errorf("center of the back is %v, want the mark %v",
 			img.RGBAAt(Hand.Width/2, Hand.Height/2), BackInk)
 	}
 }
@@ -1030,7 +1030,7 @@ func TestANewlineIsJustASpace(t *testing.T) {
 
 // TestTheBorderIsTheSameWhateverTheElement is the other half of the 2026-08-23 swap: the border
 // used to be the element signal and is now the state signal, so two cards of different elements
-// in the same state must be indistinguishable at the edge. Without this the old behaviour could
+// in the same state must be indistinguishable at the edge. Without this the old behavior could
 // come back one element at a time and each card would still look defensible on its own.
 func TestTheBorderIsTheSameWhateverTheElement(t *testing.T) {
 	st := Hand
@@ -1046,10 +1046,10 @@ func TestTheBorderIsTheSameWhateverTheElement(t *testing.T) {
 
 // TestARelicBordersByItsRarity is what replaced TestARelicStillBordersPink *(2026-09-13)*. The
 // pink survived the 2026-08-23 swap because that change was about elements and pink was never one;
-// this change is about relics, so the colour it was holding is the colour being spent.
+// this change is about relics, so the color it was holding is the color being spent.
 //
 // What still has to hold is the thing the pink was *for*: no relic may border like a playable
-// card. That is now three colours to check rather than one, which is why this asks the question of
+// card. That is now three colors to check rather than one, which is why this asks the question of
 // every rarity rather than of a constant.
 func TestARelicBordersByItsRarity(t *testing.T) {
 	seen := map[color.RGBA]data.Rarity{}
@@ -1065,7 +1065,7 @@ func TestARelicBordersByItsRarity(t *testing.T) {
 			}
 		}
 		if other, dup := seen[got]; dup {
-			t.Errorf("%s and %s border the same %v — rarity has to be readable off the colour", r, other, got)
+			t.Errorf("%s and %s border the same %v — rarity has to be readable off the color", r, other, got)
 		}
 		seen[got] = r
 	}
@@ -1077,7 +1077,7 @@ func TestARelicBordersByItsRarity(t *testing.T) {
 func TestEveryRarityHasABorder(t *testing.T) {
 	for _, r := range data.Rarities() {
 		if _, ok := rarityBorders[r]; !ok {
-			t.Errorf("rarity %q has no border colour", r)
+			t.Errorf("rarity %q has no border color", r)
 		}
 	}
 	if len(rarityBorders) != len(data.Rarities()) {
@@ -1115,13 +1115,13 @@ func TestCommonIsNotWhite(t *testing.T) {
 	}
 }
 
-// TestTheFormMarkCarriesTheElement is where the colour went. Every pair of elements must draw a
+// TestTheFormMarkCarriesTheElement is where the color went. Every pair of elements must draw a
 // different mark, which is the property the swap was for — if two elements paint the same corner
-// then the border was neutralised and nothing took over from it.
+// then the border was neutralized and nothing took over from it.
 //
-// **It asks for difference rather than for a particular colour**, because the mark's pixels come
+// **It asks for difference rather than for a particular color**, because the mark's pixels come
 // off a ramp between a dark and a light version of the hue and the brightest of them is genuinely
-// not the colour in borderColors. Which hue a ramp is built from is tintInk's question and
+// not the color in borderColors. Which hue a ramp is built from is tintInk's question and
 // TestTintInkFollowsTheHue asks it directly; this one asks the card's.
 func TestTheFormMarkCarriesTheElement(t *testing.T) {
 	st := Hand
@@ -1159,15 +1159,15 @@ func TestTheFormMarkCarriesTheElement(t *testing.T) {
 	}
 }
 
-// TestTintInkFollowsTheHue is the direct question: hand the ramp a neutral grey and the colour
+// TestTintInkFollowsTheHue is the direct question: hand the ramp a neutral gray and the color
 // that comes back must be nearer the hue it was built from than any other element's.
 //
-// A flat grey rather than the real artwork, because the art's own outline and specular are what
+// A flat gray rather than the real artwork, because the art's own outline and specular are what
 // make the rendered mark hard to compare — see the test above. What is being pinned here is that
-// tintInk moves a colour toward the hue it was given and not toward some average of the palette.
+// tintInk moves a color toward the hue it was given and not toward some average of the palette.
 func TestTintInkFollowsTheHue(t *testing.T) {
-	grey := image.NewRGBA(image.Rect(0, 0, 1, 1))
-	grey.SetRGBA(0, 0, color.RGBA{R: 128, G: 128, B: 128, A: 255})
+	gray := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	gray.SetRGBA(0, 0, color.RGBA{R: 128, G: 128, B: 128, A: 255})
 
 	for _, e := range Elements() {
 		if e == Basic {
@@ -1175,7 +1175,7 @@ func TestTintInkFollowsTheHue(t *testing.T) {
 			// other" is not a question with an answer for it.
 			continue
 		}
-		got := tintInk(grey, BorderOf(e)).RGBAAt(0, 0)
+		got := tintInk(gray, BorderOf(e)).RGBAAt(0, 0)
 
 		mine := distance(atPeakOf(got, BorderOf(e)), BorderOf(e))
 		for _, other := range Elements() {
@@ -1183,14 +1183,14 @@ func TestTintInkFollowsTheHue(t *testing.T) {
 				continue
 			}
 			if d := distance(atPeakOf(got, BorderOf(other)), BorderOf(other)); d < mine {
-				t.Errorf("a grey tinted %s came back %v, which is nearer %s (%d) than %s (%d)",
+				t.Errorf("a gray tinted %s came back %v, which is nearer %s (%d) than %s (%d)",
 					e, got, other, d, e, mine)
 			}
 		}
 	}
 }
 
-// atPeakOf rescales c so its brightest channel matches want's, which is what lets two colours of
+// atPeakOf rescales c so its brightest channel matches want's, which is what lets two colors of
 // different brightness be compared for hue alone. See TestTheFormMarkCarriesTheElement.
 func atPeakOf(c, want color.RGBA) color.RGBA {
 	peak := max(int(c.R), max(int(c.G), int(c.B)))
@@ -1210,7 +1210,7 @@ func atPeakOf(c, want color.RGBA) color.RGBA {
 
 // TestTheCostTicksCarryTheElement is the tick half of the 2026-08-23 swap. The mark in the corner
 // and the ticks under it are the whole of the left column, and both say the element — a column
-// where only the top of it is coloured was the first cut and the owner sent it back.
+// where only the top of it is colored was the first cut and the owner sent it back.
 func TestTheCostTicksCarryTheElement(t *testing.T) {
 	st := Hand
 	at := image.Pt(st.DashLeft+st.DashWidth/2, st.DashTop+st.DashHeight/2)
@@ -1225,7 +1225,7 @@ func TestTheCostTicksCarryTheElement(t *testing.T) {
 }
 
 // TestTheTicksAndTheBorderShareOneState is why atState exists. The two are drawn from different
-// base colours and must move together: a selected card with a lit border and resting ticks is the
+// base colors and must move together: a selected card with a lit border and resting ticks is the
 // failure a second copy of the state switch produces, and it looks like a rendering glitch rather
 // than like a bug.
 func TestTheTicksAndTheBorderShareOneState(t *testing.T) {
@@ -1260,7 +1260,7 @@ func TestTheTicksAndTheBorderShareOneState(t *testing.T) {
 }
 
 // **A token says the three things a hand is counted on, and nothing else.** Element is the
-// border colour of its mark and its ticks, form is the mark, cost is the ticks — so a style that
+// border color of its mark and its ticks, form is the mark, cost is the ticks — so a style that
 // stopped drawing one of them would be a row of tokens that cannot be read as a hand.
 func TestATokenSaysElementFormAndCost(t *testing.T) {
 	st := Token
@@ -1293,15 +1293,15 @@ func TestATokenHoldsFourTicks(t *testing.T) {
 	}
 }
 
-// **The mark and the ticks are centred**, because there is no text column to their right for a
-// left-aligned column to line up with — the same reason a relic centres its name.
-func TestATokenCentresItsColumn(t *testing.T) {
+// **The mark and the ticks are centered**, because there is no text column to their right for a
+// left-aligned column to line up with — the same reason a relic centers its name.
+func TestATokenCentersItsColumn(t *testing.T) {
 	st := Token
 	if want := (st.Width - st.FormSize) / 2; st.GlyphInset != want {
-		t.Errorf("the form mark sits at x=%d against a centred %d", st.GlyphInset, want)
+		t.Errorf("the form mark sits at x=%d against a centered %d", st.GlyphInset, want)
 	}
 	if want := (st.Width - st.DashWidth) / 2; st.DashLeft != want {
-		t.Errorf("the ticks sit at x=%d against a centred %d", st.DashLeft, want)
+		t.Errorf("the ticks sit at x=%d against a centered %d", st.DashLeft, want)
 	}
 }
 

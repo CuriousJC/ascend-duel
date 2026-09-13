@@ -10,7 +10,7 @@ package screens
 //
 // **So the panel takes a `deckContents` rather than a scene.** Which cards are in which pile,
 // what the counts line says and how the dialog is closed are all the caller's; what is here is
-// the arrangement — four rows, one per colour, sorted so that a card does not move
+// the arrangement — four rows, one per color, sorted so that a card does not move
 // when it is spent, it only dims.
 //
 // **The extraction was the point, not a side effect.** TODO.md carried this as an entry whose own
@@ -52,7 +52,7 @@ type deckContents struct {
 	// run is where a card's *original* lives, looked up by ID.
 	//
 	// **It is what the alterations toggle is made of** *(2026-08-24)*. A card in the hand or the
-	// discard has been through a draw and carries only the colour a flip relic made it; it does not
+	// discard has been through a draw and carries only the color a flip relic made it; it does not
 	// remember what it was, deliberately, because a rule reading what a card used to be is an
 	// ordering the owner ruled out. The original is not gone — it is on the card the run owns, and
 	// the ID is the way back to it. See combat.Card.ID.
@@ -154,7 +154,7 @@ func (t *deckToggle) initAsPile() {
 // stops a scene's own square landing under the cog.
 func (t *deckToggle) initInCorner(slot int) {
 	t.modalToggle.init(deckToggleLabel, ChromeButtonSize, ChromeButtonSize, pileSlotTextSize,
-		func(gs *state.GlobalState) image.Point { return ChromeCornerCentre(gs, slot) })
+		func(gs *state.GlobalState) image.Point { return ChromeCornerCenter(gs, slot) })
 }
 
 // update runs the button and the tooltip over the panel's cards, and reports whether the screen
@@ -215,7 +215,7 @@ const (
 	// is 684 tall, and the whole deck fits with room over.
 	//
 	// Half rather than a third: a third-size card was 59 pixels wide and could carry
-	// neither a mark nor text, so a row was a line of coloured slivers. At 81 the 16-pixel
+	// neither a mark nor text, so a row was a line of colored slivers. At 81 the 16-pixel
 	// form mark fits, and the visible strip is exactly that mark and the cost ticks under
 	// it — so a row says which form each card is, which element it is, and what it costs.
 	// What it still cannot say is which *concept* each card is.
@@ -228,7 +228,7 @@ const (
 	// grew three percent (modalPanelBottomPct), this gap gave up two pixels, and the tally band
 	// under the grid tightened by fourteen. **The card itself could not help** — Mini is Hand
 	// halved, and the form mark is pixel art on a 32px canvas, so the only scales that keep a legal
-	// mark are a half and a quarter. A *sixth* colour is a redesign of the grid rather than another
+	// mark are a half and a quarter. A *sixth* color is a redesign of the grid rather than another
 	// round of this. TestTheTallyBandFitsBetweenTheGridAndTheButtons is what says so.
 	deckRowGap = 4
 
@@ -238,7 +238,7 @@ const (
 	// for a full row and deliberately never derived from how many cards were in one, on the
 	// grounds that a card should not move when it is discarded — and the price of that was a cap
 	// on the row and a "+N more not shown" line, which is the panel declining to show you your own
-	// deck. A run that recolours nine cards into one element hits that cap immediately. The
+	// deck. A run that recolors nine cards into one element hits that cap immediately. The
 	// owner's call is that the panel never hides a card: a busy row overlaps harder instead. See
 	// rowPitchFor.
 	//
@@ -261,7 +261,7 @@ const (
 
 	// deckRowLabelWidth is the gutter the element name sits in, to the left of each row.
 	// The cards no longer carry any text, so without this a row would be an anonymous
-	// line of coloured slivers.
+	// line of colored slivers.
 	deckRowLabelWidth = 104
 )
 
@@ -299,7 +299,7 @@ func drawDeckPanel(gs *state.GlobalState, screen *ebiten.Image, v *deckView, d d
 // **One answer, read by the drawing, by the cursor and by the column's own figures.** Three call
 // sites derive a grid on the same frame and a second piece of arithmetic saying where a card sits
 // is exactly the bug the one-rectangle rule prevents everywhere else on this screen.
-func deckGridRegion(gs *state.GlobalState) (centreX, width, top float32) {
+func deckGridRegion(gs *state.GlobalState) (centerX, width, top float32) {
 	r := modalPanelRect(gs)
 	left, right := deckGridSpan(r.Min.X, r.Max.X)
 	return float32(left+right) / 2, float32(right - left), float32(r.Min.Y + modalBareBodyTop)
@@ -411,15 +411,15 @@ type pileEntry struct {
 	picked bool
 }
 
-// deckRowElements is the colours the overlay gives a row to, in the fixed order internal/cards
+// deckRowElements is the colors the overlay gives a row to, in the fixed order internal/cards
 // declares them.
 //
 // **Basic is not among them as of 2026-08-15**, because no attack card is basic any more — every
-// attack ships in one of the five colours, and the only basic cards in the deck are the plans,
+// attack ships in one of the five colors, and the only basic cards in the deck are the plans,
 // which have their own row. A basic row would draw an empty gutter label over nothing at all.
 //
 // A function rather than a package-level slice so nothing can append to it, and derived from
-// `cards.Elements()` rather than written out, so a fifth colour added to the drawing package
+// `cards.Elements()` rather than written out, so a fifth color added to the drawing package
 // arrives here without an edit.
 func deckRowElements() []cards.Element {
 	out := make([]cards.Element, 0, len(cards.Elements()))
@@ -432,25 +432,25 @@ func deckRowElements() []cards.Element {
 	return out
 }
 
-// deckRowCount is how many rows the overlay draws: one per colour, and that is all. **Five since
+// deckRowCount is how many rows the overlay draws: one per color, and that is all. **Five since
 // 2026-08-25**, and the number is derived rather than written, so arcane arrived here without an
 // edit — what it did cost was the card's size. See cards.Mini.
 //
-// **The defences lost their own row on 2026-08-23**, when they stopped being basic. They had one
-// because every defence was colourless and no attack was, so the alternative then was a row
-// labelled "basic" holding nothing but defences — naming the colour rather than the thing, on the
-// one row where the colour was the least interesting fact about the cards in it. Now a Brace is a
+// **The defenses lost their own row on 2026-08-23**, when they stopped being basic. They had one
+// because every defense was colorless and no attack was, so the alternative then was a row
+// labeled "basic" holding nothing but defenses — naming the color rather than the thing, on the
+// one row where the color was the least interesting fact about the cards in it. Now a Brace is a
 // fire card, and the row that says "fire" is where a player looks for it.
 //
-// A row therefore holds a colour's whole share of the deck — the nine attacks and the defences —
+// A row therefore holds a color's whole share of the deck — the nine attacks and the defenses —
 // which is inside the width the grid was already sized against.
 var deckRowCount = len(deckRowElements())
 
-// deckRowFor is which row a card belongs to: its colour, and nothing else decides.
+// deckRowFor is which row a card belongs to: its color, and nothing else decides.
 //
 // **A basic card has nowhere to go and lands in the first row**, which is the deck list being
 // wrong rather than this being lenient — `data/duelist_cards.json` ships no basic card of any kind
-// since the plans were coloured, and TestEveryCardLandsInExactlyOneDeckRow is what would catch one
+// since the plans were colored, and TestEveryCardLandsInExactlyOneDeckRow is what would catch one
 // arriving.
 func deckRowFor(c actionCard) int {
 	for i, e := range deckRowElements() {
@@ -461,7 +461,7 @@ func deckRowFor(c actionCard) int {
 	return 0
 }
 
-// deckRowLabel is what a row is called, and the colour it is said in.
+// deckRowLabel is what a row is called, and the color it is said in.
 //
 // **It is keyed on the element rather than on the row index** *(2026-09-11)*, because the word moved:
 // it used to be drawn in a gutter beside the row and is now the label on that row's filter button,
@@ -471,8 +471,8 @@ func deckRowLabel(e cards.Element) (string, color.RGBA) {
 	return e.String(), cards.BorderOf(e)
 }
 
-// drawPileGrid lays **every card you own** into rows by element, centred on centerX. `formRank`
-// puts the plans at the end of their colour's row, after stab, slash and crush.
+// drawPileGrid lays **every card you own** into rows by element, centered on centerX. `formRank`
+// puts the plans at the end of their color's row, after stab, slash and crush.
 //
 // It used to show only what was outside the hand, under the heading "What is left". That
 // made the panel change *shape* as a round went on: eight cards vanished at the start of
@@ -508,7 +508,7 @@ func (d deckContents) grid(v deckView, centerX, width, top float32) pileGridLayo
 	sortPileEntries(entries)
 
 	// One row per element in the fixed order internal/cards declares, then the plans. A slice
-	// indexed by row rather than a map: Go randomises map iteration, and a panel whose rows
+	// indexed by row rather than a map: Go randomizes map iteration, and a panel whose rows
 	// swapped places between looks would be unreadable.
 	rows := make([][]pileEntry, deckRowCount)
 	for _, e := range entries {
@@ -529,8 +529,8 @@ func (d deckContents) grid(v deckView, centerX, width, top float32) pileGridLayo
 		}
 	}
 
-	// The widest row sets the left edge and every row starts there, so the block sits centred in the
-	// space the filter column left it. **Rows do not each centre on their own count** — that would
+	// The widest row sets the left edge and every row starts there, so the block sits centered in the
+	// space the filter column left it. **Rows do not each center on their own count** — that would
 	// move a row sideways as cards were added to it, and the panel's whole idea is that a card stays
 	// where it is.
 	cardsLeft := int(centerX) - widest/2
@@ -584,7 +584,7 @@ func rowWidth(n, pitch int) int {
 // **The panel never hides a card** *(owner's call, 2026-08-23)*, so this is where a row that has
 // outgrown the comfortable pitch pays for it: the cards overlap harder rather than the extras
 // being dropped with a "+N more not shown" line under the grid. That line existed because a
-// twelve-card cap could be exceeded, and it fired for real the moment a run recoloured most of
+// twelve-card cap could be exceeded, and it fired for real the moment a run recolored most of
 // the deck into one element — at which point the panel was hiding exactly the cards the player
 // had gone looking for.
 //
@@ -626,8 +626,8 @@ type pileSlot struct {
 func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, v deckView,
 	d deckContents) pileGridLayout {
 
-	centreX, width, top := deckGridRegion(gs)
-	grid := d.grid(v, centreX, width, top)
+	centerX, width, top := deckGridRegion(gs)
+	grid := d.grid(v, centerX, width, top)
 
 	// **Left to right, so each card is covered on its *right* edge by the next one.** This was
 	// backwards and the screenshot showed it: drawing right to left puts card 0 on top of card 1,

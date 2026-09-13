@@ -99,7 +99,7 @@ func TestGrowthEffectReportsTheEffectTheAccumulatorFeeds(t *testing.T) {
 	}
 }
 
-// A relic with no accumulator has no badge, which is most of the catalogue.
+// A relic with no accumulator has no badge, which is most of the catalog.
 func TestARelicThatDoesNotGrowReportsNoGrowth(t *testing.T) {
 	id := relic(t, "static",
 		RelicRule{When: MomentCardDamage, Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}}})

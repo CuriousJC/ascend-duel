@@ -1,6 +1,6 @@
 package systems
 
-// The behaviour half of models.Slider: dragging a knob along a track, and drawing the result.
+// The behavior half of models.Slider: dragging a knob along a track, and drawing the result.
 //
 // **A slider is a drag, and drag is already in the game's input vocabulary** — the action box and
 // the relic row are built on it. What is new here is that the thing being dragged never leaves its
@@ -24,7 +24,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// Slider geometry. The control is a labelled row: a line of text along the top and the track
+// Slider geometry. The control is a labeled row: a line of text along the top and the track
 // under it, with the knob standing on the track.
 const (
 	// sliderTrackHeight is how thick the groove is. Thin enough to read as a track rather than as
@@ -32,7 +32,7 @@ const (
 	sliderTrackHeight = 14
 
 	// sliderKnobWidth is how wide the thing being dragged is. **It is what bounds the travel**:
-	// the knob's centre runs from half a knob in on the left to half a knob in on the right, so a
+	// the knob's center runs from half a knob in on the left to half a knob in on the right, so a
 	// value of 0 and a value of 1 both draw a knob that is fully on the control.
 	sliderKnobWidth = 22
 
@@ -47,12 +47,12 @@ const (
 	sliderTextSize = 18
 )
 
-// defaultSliderColor is the filled part of the track for a slider that names no colour. The same
+// defaultSliderColor is the filled part of the track for a slider that names no color. The same
 // slate the chrome uses: this is the program rather than the fight.
 var defaultSliderColor = color.RGBA{R: 92, G: 96, B: 108, A: 255}
 
 // sliderGrooveColor is the empty part of the track. Deliberately not a scaled version of the
-// slider's own colour — the groove is the hole the knob runs in, and it reads as one surface
+// slider's own color — the groove is the hole the knob runs in, and it reads as one surface
 // whatever the fill in front of it happens to be.
 var sliderGrooveColor = color.RGBA{R: 46, G: 48, B: 56, A: 255}
 
@@ -61,14 +61,14 @@ var sliderGrooveColor = color.RGBA{R: 46, G: 48, B: 56, A: 255}
 var sliderInkColor = color.RGBA{R: 232, G: 236, B: 242, A: 255}
 
 // How bright the knob and the filled track draw. Same ramp as a button: resting has somewhere to
-// climb to, and a drag in progress is the full colour.
+// climb to, and a drag in progress is the full color.
 const (
 	sliderRestStrength  = 65
 	sliderHoverStrength = 82
 	sliderDragStrength  = 100
 )
 
-// SliderRect is where a slider sits, derived from its centre exactly as a button's is.
+// SliderRect is where a slider sits, derived from its center exactly as a button's is.
 func SliderRect(s *models.Slider) image.Rectangle {
 	left := s.ScreenX - s.Width/2
 	top := s.ScreenY - s.Height/2
@@ -89,14 +89,14 @@ func sliderTrack(s *models.Slider) image.Rectangle {
 func sliderKnob(s *models.Slider) image.Rectangle {
 	track := sliderTrack(s)
 	lo, hi := sliderTravel(s)
-	centre := lo + int(float64(hi-lo)*s.Value+0.5)
+	center := lo + int(float64(hi-lo)*s.Value+0.5)
 	return image.Rect(
-		centre-sliderKnobWidth/2, track.Min.Y-sliderKnobOverhang,
-		centre+sliderKnobWidth/2, track.Max.Y+sliderKnobOverhang,
+		center-sliderKnobWidth/2, track.Min.Y-sliderKnobOverhang,
+		center+sliderKnobWidth/2, track.Max.Y+sliderKnobOverhang,
 	)
 }
 
-// sliderTravel is the two screen x values the knob's centre runs between.
+// sliderTravel is the two screen x values the knob's center runs between.
 //
 // **The track is inset by half a knob at each end**, which is what makes both extremes reachable:
 // without the inset a value of 1 would need the cursor half a knob past the control's right edge.
@@ -193,12 +193,12 @@ func paintSlider(gs *state.GlobalState, s *models.Slider) {
 	knob := sliderKnob(s).Sub(origin)
 
 	// **The groove is sunken and the knob is raised**, which is the geometry saying what the
-	// control is before any colour does: a hole with something standing in it. Same split
+	// control is before any color does: a hole with something standing in it. Same split
 	// BevelFace makes for a pressed button.
 	BevelRect(s.Image, track.Min.X, track.Min.Y, track.Dx(), track.Dy(),
 		PaneBevelWidth, sliderGrooveColor, true)
 
-	// The filled part stops at the knob's centre, so the fill and the knob read as one travelled
+	// The filled part stops at the knob's center, so the fill and the knob read as one traveled
 	// distance rather than as two things that nearly line up.
 	fill := sliderFill(s)
 	if width := knob.Min.X + knob.Dx()/2 - track.Min.X; width > 0 {
@@ -224,7 +224,7 @@ func paintSlider(gs *state.GlobalState, s *models.Slider) {
 	s.RecordPainted()
 }
 
-// sliderFill is the colour of the filled track and the knob at the current state.
+// sliderFill is the color of the filled track and the knob at the current state.
 func sliderFill(s *models.Slider) color.RGBA {
 	full := s.BaseColor
 	if full.A == 0 {

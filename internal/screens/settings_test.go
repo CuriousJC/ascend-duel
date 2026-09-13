@@ -55,7 +55,7 @@ func TestTheTunedSpeedIsOnTheBar(t *testing.T) {
 
 func TestASpeedOfZeroIsIgnoredRatherThanApplied(t *testing.T) {
 	// **A game speed of zero is not a speed** — it stops every clock in the game. profile has
-	// already normalised anything off disk, so this is the last guard rather than the only one.
+	// already normalized anything off disk, so this is the last guard rather than the only one.
 	atSpeed(1, func() {
 		SetSpeed(0)
 		if Speed() != 1 {

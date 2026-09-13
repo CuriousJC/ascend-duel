@@ -69,11 +69,11 @@ type Profile struct {
 	// game writes, and a second one would double the migration policy above for two numbers.
 	//
 	// **Its zero value is not its default**, which is the one thing to know before reading it: a
-	// speed of 0 would stop every clock in the game. LoadProfile normalises, and Defaults says
+	// speed of 0 would stop every clock in the game. LoadProfile normalizes, and Defaults says
 	// what a fresh player gets.
 	Settings Settings `json:"settings"`
 
-	// unknown is every field this build did not recognise, kept byte-for-byte so that saving a
+	// unknown is every field this build did not recognize, kept byte-for-byte so that saving a
 	// profile written by a newer build cannot delete what that build recorded. See loadProfile.
 	unknown map[string]any
 }
@@ -125,13 +125,13 @@ const (
 // Defaults is what a player who has never opened the settings screen is playing at.
 func Defaults() Settings { return Settings{MusicVolume: 0, Speed: 1} }
 
-// normalise brings a settings block read off disk into range.
+// normalize brings a settings block read off disk into range.
 //
 // **A missing field reads as zero, and zero speed is not a speed.** An older profile has no
 // settings block at all, so this is the path every existing profile takes; a hand-edited or
 // corrupt one takes it too. Clamping rather than rejecting keeps the rule that nothing about a
 // save file may ever fail a launch.
-func (s Settings) normalise() Settings {
+func (s Settings) normalize() Settings {
 	if s.Speed == 0 {
 		s.Speed = Defaults().Speed
 	}
@@ -254,8 +254,8 @@ func LoadProfile(s Store) (*Profile, bool, error) {
 		return freshProfile(), s.Dir() != "", nil
 	}
 
-	p.unknown = unrecognised(raw)
-	p.Settings = p.Settings.normalise()
+	p.unknown = unrecognized(raw)
+	p.Settings = p.Settings.normalize()
 	if p.Version > Version {
 		return &p, false, nil
 	}
@@ -273,7 +273,7 @@ func SaveProfile(s Store, p *Profile) error {
 }
 
 // merged is the profile as it goes to disk: this build's fields, plus every field it did not
-// recognise, put back exactly as it found them.
+// recognize, put back exactly as it found them.
 func (p *Profile) merged() map[string]any {
 	out := map[string]any{}
 	for k, v := range p.unknown {
@@ -288,14 +288,14 @@ func (p *Profile) merged() map[string]any {
 	return out
 }
 
-// known is every field name this build writes, which is how unrecognised tells the two apart.
+// known is every field name this build writes, which is how unrecognized tells the two apart.
 var known = map[string]bool{
 	"version": true, "tutorialSeen": true,
 	"achievements": true, "unlocks": true, "handsDiscovered": true,
 	"settings": true,
 }
 
-func unrecognised(raw map[string]any) map[string]any {
+func unrecognized(raw map[string]any) map[string]any {
 	var out map[string]any
 	for k, v := range raw {
 		if known[k] {

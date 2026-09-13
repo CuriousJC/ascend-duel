@@ -6,8 +6,8 @@ package screens
 // It is real as of 2026-09-03 *(owner's call)* and reachable from the title menu.
 //
 // **The licensing block is not decoration.** The project is source-available and intended to be
-// sold, the art is bundle art whose licence permits shipping it inside a game, and the score is
-// synthesised rather than recorded precisely so there is no provenance question — see CLAUDE.md.
+// sold, the art is bundle art whose license permits shipping it inside a game, and the score is
+// synthesized rather than recorded precisely so there is no provenance question — see CLAUDE.md.
 // A game that ships without naming any of that is a game with an attribution problem the day it
 // goes on sale, so the page exists partly to be *correct* and only partly to be read.
 //
@@ -45,7 +45,7 @@ const (
 	// creditsBody is an ordinary line.
 	creditsBody
 
-	// creditsQuiet is a line that has to be there and does not have to be read: the licence
+	// creditsQuiet is a line that has to be there and does not have to be read: the license
 	// wording, the attribution small print.
 	creditsQuiet
 
@@ -91,10 +91,10 @@ var credits = []creditsLine{
 	{"ART AND SOUND", creditsHeading},
 	{"Creature and boss portraits by PVGames", creditsBody},
 	{"Interface art and glyphs generated in-engine", creditsQuiet},
-	{"Score synthesised from MIDI in-engine", creditsQuiet},
+	{"Score synthesized from MIDI in-engine", creditsQuiet},
 	{"", creditsGap},
 
-	{"LICENCE", creditsHeading},
+	{"LICENSE", creditsHeading},
 	{"PolyForm Noncommercial 1.0.0", creditsBody},
 	{"Source-available. Streaming and video of gameplay are permitted,", creditsQuiet},
 	{"monetised or not. See LICENSE for the full terms.", creditsQuiet},
@@ -137,9 +137,9 @@ func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	text.Draw(screen, creditsTitle,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: creditsTitleSize}, heading)
 
-	// **Everything is centred on one axis**, which is what makes a page of unequal-length lines
+	// **Everything is centered on one axis**, which is what makes a page of unequal-length lines
 	// read as a document rather than as a list.
-	centre := float64(gs.PctX(50))
+	center := float64(gs.PctX(50))
 	y := gs.PctY(17)
 
 	for _, l := range credits {
@@ -152,7 +152,7 @@ func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		}
 
 		op := &text.DrawOptions{}
-		op.GeoM.Translate(centre, float64(y))
+		op.GeoM.Translate(center, float64(y))
 		op.PrimaryAlign = text.AlignCenter
 		op.SecondaryAlign = text.AlignCenter
 		op.ColorScale.ScaleWithColor(creditsInk(l.kind))
@@ -165,7 +165,7 @@ func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// The build, at the foot of the page. **The one line here that is not authored** — it comes off
 	// the linker, and it is the thing that makes a bug report able to name a build.
 	version := &text.DrawOptions{}
-	version.GeoM.Translate(centre, float64(gs.PctY(84)))
+	version.GeoM.Translate(center, float64(gs.PctY(84)))
 	version.PrimaryAlign = text.AlignCenter
 	version.SecondaryAlign = text.AlignCenter
 	version.ColorScale.ScaleWithColor(creditsVersionColor)
@@ -187,9 +187,9 @@ func creditsSize(k creditsKind) float64 {
 	}
 }
 
-// creditsInk is the colour a kind is set in. **ColorToward rather than ColorAtStrength**, because
+// creditsInk is the color a kind is set in. **ColorToward rather than ColorAtStrength**, because
 // this page is drawn on the light ground — scaling toward black there makes a line louder, not
-// quieter. See the colour rule in CLAUDE.md.
+// quieter. See the color rule in CLAUDE.md.
 func creditsInk(k creditsKind) color.Color {
 	if k == creditsQuiet {
 		return systems.ColorToward(groundInk, screenGround, creditsQuietPct)

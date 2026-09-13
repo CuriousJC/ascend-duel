@@ -20,7 +20,7 @@ func TestASummaryAddsUpTheAccount(t *testing.T) {
 	s.RecordRound([]LedgerLine{Line(VoicePlain, "four")}, 11)
 	s.EndFight(OutcomeLost)
 
-	got := s.Summarise(0, EndedInDefeat)
+	got := s.Summarize(0, EndedInDefeat)
 
 	if got.Rooms != 3 {
 		t.Errorf("three rooms were entered, got %d", got.Rooms)
@@ -49,7 +49,7 @@ func TestALostFightIsNotADefeatedEnemy(t *testing.T) {
 	s.RecordRound([]LedgerLine{Line(VoicePlain, "nope")}, 5)
 	s.EndFight(OutcomeLost)
 
-	got := s.Summarise(0, EndedInDefeat)
+	got := s.Summarize(0, EndedInDefeat)
 
 	if got.Rooms != 1 {
 		t.Errorf("one room was entered, got %d", got.Rooms)
@@ -82,18 +82,18 @@ func TestTheSummaryReportsTheDeepestFloorReached(t *testing.T) {
 		s.EndFight(f.outcome)
 	}
 
-	if got := s.Summarise(0, EndedInDefeat); got.Floor != 4 {
+	if got := s.Summarize(0, EndedInDefeat); got.Floor != 4 {
 		t.Errorf("the run reached floor 4, the summary says %d", got.Floor)
 	}
 }
 
-// TestAnEmptyRunStillSummarises is the case a player reaches by starting a climb and giving it up
+// TestAnEmptyRunStillSummarizes is the case a player reaches by starting a climb and giving it up
 // before fighting anything. **Zeroes rather than an error**, so the screen never has to decide what
 // to draw instead.
-func TestAnEmptyRunStillSummarises(t *testing.T) {
+func TestAnEmptyRunStillSummarizes(t *testing.T) {
 	s := New(testDeck())
 
-	got := s.Summarise(0, EndedByChoice)
+	got := s.Summarize(0, EndedByChoice)
 
 	if got.Rooms != 0 || got.Defeated != 0 || got.Dealt != 0 || got.Rounds != 0 {
 		t.Errorf("a run with no fights should be all zeroes, got %+v", got)
@@ -103,7 +103,7 @@ func TestAnEmptyRunStillSummarises(t *testing.T) {
 	}
 }
 
-// TestTheSummarysSeedIsTheOneItWasHanded is why Summarise takes the seed rather than reading it. A
+// TestTheSummarysSeedIsTheOneItWasHanded is why Summarize takes the seed rather than reading it. A
 // Session derives everything from the run seed and never stores it, exactly as Snapshot does.
 func TestTheSummarysSeedIsTheOneItWasHanded(t *testing.T) {
 	s := New(testDeck())
@@ -111,7 +111,7 @@ func TestTheSummarysSeedIsTheOneItWasHanded(t *testing.T) {
 	// An arbitrary run inside the code space; the point is that it round-trips to a code.
 	const seed = 563202
 
-	got := s.Summarise(seed, EndedInDefeat)
+	got := s.Summarize(seed, EndedInDefeat)
 	if got.Seed == "" || got.Seed == "000000" {
 		t.Fatalf("the summary did not take the seed it was handed: %q", got.Seed)
 	}

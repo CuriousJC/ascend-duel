@@ -1,4 +1,4 @@
-# The relic catalogue, 2026-09-06
+# The relic catalog, 2026-09-06
 
 **Snapshot date: 2026-09-06.** 137 relics, 800 shelf tickets.
 Produced by `python .claude/skills/relic-balance/classify.py` — every figure below is derived from
@@ -6,7 +6,7 @@ Produced by `python .claude/skills/relic-balance/classify.py` — every figure b
 [the skill](../../.claude/skills/relic-balance/SKILL.md) for the taxonomy.
 
 **Nothing in the repo simulates a duel**, so this counts records. Every conclusion below is
-judgement standing on a count, and the ones that are judgement say so.
+judgment standing on a count, and the ones that are judgment say so.
 
 ---
 
@@ -15,7 +15,7 @@ judgement standing on a count, and the ones that are judgement say so.
 The shelf draws on rarity tickets — 10 / 4 / 1 — so a category living at one tier has a share that
 its record count does not predict. `--shelf`:
 
-| Category | Relics | % of catalogue | **% of a shelf seat** |
+| Category | Relics | % of catalog | **% of a shelf seat** |
 |---|---:|---:|---:|
 | offense | 91 | 66.4% | **78.9%** |
 | enabler | 20 | 14.6% | 10.0% |
@@ -36,7 +36,7 @@ Atrophy, Cold, Dirty, Eerie, Erode, Hefted, Static, Tapered, Warm, Whetted, Whit
 Onslaught (rare, also drawback)          Braced (uncommon)
 ```
 
-Nine and a half per cent of the catalogue is 2.0% of what a player sees. **Twelve of the game's
+Nine and a half per cent of the catalog is 2.0% of what a player sees. **Twelve of the game's
 twenty-six rares are cost discounts**, so nearly half the rare tier is one idea. A player who
 wants to make their deck cheaper has, in practice, no route to it: the whole rare tier is 3.2% of
 a shelf seat.
@@ -76,7 +76,7 @@ Three things fall out:
   written one. Open question, not a defect.
 - **Every hand relic is per-blow, and flat outnumbers multiplicative 17 to 6.** That is the ladder
   relic family: a common flat `add-hand-damage` and a scarcer `scale-hand-damage` per rung. It is
-  the most deliberately-shaped corner of the catalogue and it reads that way.
+  the most deliberately-shaped corner of the catalog and it reads that way.
 - **The enabler column is one cell.** All twenty flips are element-keyed. A flip keyed on *form*
   — "slash cards are drawn as fire" — is legal grammar with nothing in it. See §5.
 
@@ -114,13 +114,13 @@ Relics keyed on each element, by category:
 | **arcane** | 7 | **1** | 1 | 4 | 1 | . | **12** |
 
 **Arcane is a defense relic short.** Earth, ice and lightning each field three; arcane fields one
-(Millstone). The reason is visible in the status catalogue — the three defensive
+(Millstone). The reason is visible in the status catalog — the three defensive
 statuses are CHILLED, SHOCKED and WEIGHTED, seventeen relics apply one, and arcane appears in
 exactly one of them (Millstone, WEIGHTED). Ice reaches three, lightning three, earth three, fire
-two. So a player building arcane is building the one colour
+two. So a player building arcane is building the one color
 with no defensive line.
 
-**Whether that is a hole or a personality is a design call, not a count.** Arcane is the one colour
+**Whether that is a hole or a personality is a design call, not a count.** Arcane is the one color
 whose relics are almost entirely offensive — seven of twelve, against a defensive line of one — and
 making every element identical would erase whatever distinguishes them. The finding is that the asymmetry exists
 and appears to be emergent rather than authored.
@@ -141,8 +141,8 @@ written.
    rung has neither. That looks like an omission rather than a decision, and it is the cheapest
    thing on this page to fix: a record in `relics.json`, no Go.
 2. **`set-element` is element-keyed only.** Twenty flips, all `Element=X → Y`. A form-keyed flip is
-   legal today and would read differently — it recolours by *what a card does* rather than by what
-   it already is, which is a build enabler rather than a colour-fixer.
+   legal today and would read differently — it recolors by *what a card does* rather than by what
+   it already is, which is a build enabler rather than a color-fixer.
 3. **Economy touches no card at all.** All three relics are unconditional, because the three economy
    verbs read the purse and the prize row. Nothing is wrong; it is worth knowing that economy
    cannot be given an element without a new verb.
@@ -157,7 +157,7 @@ written.
 
 ## 6. What I would put in front of the owner, in order
 
-Judgement, and labelled as such. Nothing here measures a duel.
+Judgment, and labeled as such. Nothing here measures a duel.
 
 1. **Decide whether cost discounts are supposed to be rare-only.** This is the one number that
    looks like an accident: twelve rares doing one job, 2.0% of a shelf seat between them. Either a
@@ -166,7 +166,7 @@ Judgement, and labelled as such. Nothing here measures a duel.
    from 2.0% to roughly 5% of a shelf seat, without a single number being retuned.
 2. **Author the `element-elementalist` rung relic.** One record, closes the last gap in the most
    deliberately-complete family in the file.
-3. **Ask whether arcane's single defense relic is the colour's personality.** If yes, write it down
+3. **Ask whether arcane's single defense relic is the color's personality.** If yes, write it down
    in `MECHANICS.md` so it stops looking like a gap on every future run of this report. If no, it
    is one or two records.
 4. **Consider whether the rare tier wants more drawbacks.** Two of twenty-six.

@@ -12,13 +12,13 @@ import (
 // **These live here rather than on the combat screen because every scene stands on them.**
 // They were declared in combat.go, which meant the post-battle screen — and the shop and the
 // room choice after it — had to reach into the combat screen's own file to find out what
-// colour the game is. The ground is not the combat screen's; it is the game's.
+// color the game is. The ground is not the combat screen's; it is the game's.
 //
 // Anything drawn on a surface of its own — a card, a panel, a button — takes that surface's
-// own colours instead. These two are only for what is painted straight onto the table.
+// own colors instead. These two are only for what is painted straight onto the table.
 
 // screenGround is what every screen is painted on. It went cream on 2026-08-14 from the
-// {50,50,50} dark grey the combat screen had been since it existed, and **it went a light slate
+// {50,50,50} dark gray the combat screen had been since it existed, and **it went a light slate
 // blue on 2026-09-07** *(owner's call)*.
 //
 // **Its lightness is the load-bearing part, not its hue.** Everything written straight onto the
@@ -27,25 +27,25 @@ import (
 // *light* ground. That was the whole cost of the 2026-08-14 change and it is documented in
 // CLAUDE.md: `ColorAtStrength` scales toward black and therefore makes things *louder* on a light
 // surface, which is why `ColorToward` exists. So this blue was chosen at the cream's lightness
-// rather than at a hue that read well on its own, and **a darker blue is not a colour change —
+// rather than at a hue that read well on its own, and **a darker blue is not a color change —
 // it is a re-tune of every figure on the table.**
 //
 // **It went bluer twice on the same day** *(owner's call)*, from {168,188,212} through
 // {150,185,228} to this: the red came down and the blue went up, widening the gap between the
-// channels from 44 points to 102, which is what actually reads as blue rather than as grey with
+// channels from 44 points to 102, which is what actually reads as blue rather than as gray with
 // an opinion. **The second step also took real lightness with it** — about nine percent against
 // the cream this replaced — so the paragraph above is no longer describing a swap made at
 // constant lightness. It is still a light ground and `ColorToward` is still the right tool on it,
 // but the margin that made that obviously true is smaller than it was, and the next step down is
-// the one that stops being a colour change.
+// the one that stops being a color change.
 //
 // **It is deeper than the cards stand on** — `cards.Surface` is {240,239,234} — because a card, a
 // panel and the table cannot all be the same near-white or the objects stop having edges. The
 // separation used to come from warmth, the ground being the yellowest of the three; it now comes
 // from hue outright, which is a wider gap than the cream ever had.
 //
-// **It is a single colour even though the screen is painted with a gradient.** Everything that
-// dims toward the ground needs one answer to "what colour is the table", and a per-pixel one
+// **It is a single color even though the screen is painted with a gradient.** Everything that
+// dims toward the ground needs one answer to "what color is the table", and a per-pixel one
 // would make a figure's dimming depend on where on the screen it happened to be drawn. So this is
 // the gradient's midpoint and the two ends are derived from it — see groundTop and groundBottom.
 var screenGround = color.RGBA{R: 126, G: 172, B: 228, A: 255}
@@ -68,18 +68,18 @@ var screenGround = color.RGBA{R: 126, G: 172, B: 228, A: 255}
 //
 // **Two costs, and both are now real rather than theoretical.** Everything dimmed toward the
 // ground reads `screenGround` alone, so a figure dimmed at the very bottom of the screen sits on
-// a surface nearly a third darker than the colour it was dimmed toward; and `groundInk` is near
+// a surface nearly a third darker than the color it was dimmed toward; and `groundInk` is near
 // black, so the bottom band is where text-on-table contrast is thinnest. Both are bounded by the
 // sink and nothing else. **Past about a third the ink has to move too**, and the dim would have
-// to be computed per row — which would make a figure's colour depend on where it happened to be
-// drawn, the thing groundAtRow's neighbours exist to avoid.
+// to be computed per row — which would make a figure's color depend on where it happened to be
+// drawn, the thing groundAtRow's neighbors exist to avoid.
 const (
 	groundLift = 12
 	groundSink = 44
 )
 
 // The two ends of the background gradient, derived from screenGround so that changing the one
-// colour moves the whole screen.
+// color moves the whole screen.
 //
 // **Lighter at the top and darker at the bottom**, which is the direction `systems.BevelEdges`
 // already lights every card, button and panel from. A screen lit from below with objects on it
@@ -107,9 +107,9 @@ var (
 // fillGround paints the background of a screen. It replaces `screen.Fill(screenGround)`, which is
 // what every scene did until the gradient landed.
 //
-// **Every scene calls this rather than filling its own colour.** The ground is the game's, not any
-// one screen's — the same argument that moved these colours out of combat.go in the first place —
-// and a scene painting its own would be the one screen that did not follow when the colour moved.
+// **Every scene calls this rather than filling its own color.** The ground is the game's, not any
+// one screen's — the same argument that moved these colors out of combat.go in the first place —
+// and a scene painting its own would be the one screen that did not follow when the color moved.
 func fillGround(screen *ebiten.Image) {
 	h := screen.Bounds().Dy()
 	if h <= 0 {
@@ -128,7 +128,7 @@ func fillGround(screen *ebiten.Image) {
 	screen.DrawImage(groundStrip, op)
 }
 
-// groundAtRow is the gradient's colour on one row of a screen h tall.
+// groundAtRow is the gradient's color on one row of a screen h tall.
 //
 // **A per-channel interpolation rather than `systems.ColorToward`**, which is the one place in
 // this codebase that rule is deliberately not followed. ColorToward takes a whole-number percent,
@@ -168,9 +168,9 @@ var groundInk = color.RGBA{R: 44, G: 40, B: 34, A: 255}
 // vitaeInk is the crimson vitae is written in, **everywhere it is written** *(owner's call,
 // 2026-08-22)*: the purse on the duelist card, and the word itself in the reward screen's prose.
 //
-// **One colour for one thing.** Vitae is the run's only currency and it is the only red on the
-// table, so a figure in this colour says "money" before it is read. It is louder against the blue
+// **One color for one thing.** Vitae is the run's only currency and it is the only red on the
+// table, so a figure in this color says "money" before it is read. It is louder against the blue
 // ground than it was against the cream, red and blue being opposite ends of the wheel where red
-// and cream were neighbours — which is a gain for a figure whose whole job is to be spotted. It is deliberately not
+// and cream were neighbors — which is a gain for a figure whose whole job is to be spotted. It is deliberately not
 // `lifeColor` — life is a bar and a fraction on a card, and the two reds never share a surface.
 var vitaeInk = color.RGBA{R: 168, G: 26, B: 42, A: 255}

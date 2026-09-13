@@ -77,7 +77,7 @@ func cardTip(c actionCard, h held) (string, []string) {
 // figure the block above already printed, and three lines saying so is a tooltip that trains the
 // player not to read it. What earns the space is a relic having changed something.
 //
-// **It is only ever asked of an attack.** A shield and a defence have no relic moment on their
+// **It is only ever asked of an attack.** A shield and a defense have no relic moment on their
 // figure, so a chain under one would be a heading with nothing beneath it.
 func damageChainLines(c actionCard, h held) []string {
 	if c.Spec().Verb != combat.VerbAttack {
@@ -220,7 +220,7 @@ func statusTexts() map[string]string {
 // one word to a line, and a hover repeating that sentence beside it was the same words twice.
 
 // ordinal is 1st, 2nd, 3rd — for the five positions a relic can be worn in, and nothing else. Written
-// out rather than generalised, because the row is capped at five and a general one would be a rule
+// out rather than generalized, because the row is capped at five and a general one would be a rule
 // about English nobody here needs.
 func ordinal(n int) string {
 	switch n {

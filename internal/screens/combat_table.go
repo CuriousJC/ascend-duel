@@ -75,19 +75,19 @@ func tableRowTop(gs *state.GlobalState) int {
 	return handTop(gs) - mathBandGapAboveCards - firingGap - cardHeight
 }
 
-// tableCentre is the middle of the whole table — both halves — on the row's own centre line.
+// tableCenter is the middle of the whole table — both halves — on the row's own center line.
 //
 // It is where the planned hand is named — see drawPlannedHand — and it is derived from the row
 // rather than written down, so the name follows the table if the table moves.
 //
-// **It is centred on the screen and not on the player's half** *(2026-08-19, owner's call)*. The
+// **It is centered on the screen and not on the player's half** *(2026-08-19, owner's call)*. The
 // name used to sit over the space the player's own cards fly into, which kept it out of the
 // opponent's row at the cost of putting the loudest word on the screen off to one side; at 80
 // points and growing it was also the half's whole width. **Overlaying the opponent's cards is
 // accepted rather than worked around**: those cards have been read by the time a hand is named,
 // the word is up only while the round is being planned and while it plays back, and the
 // alternative — shrinking the name to fit a half — is the opposite of what the size is for.
-func tableCentre(gs *state.GlobalState) image.Point {
+func tableCenter(gs *state.GlobalState) image.Point {
 	return image.Pt(gs.ScreenWidth/2, tableRowTop(gs)+cardHeight/2)
 }
 
@@ -191,21 +191,21 @@ func splitOf(cards []combat.Card) int {
 
 // playedSplit and enemySplit are splitOf over the two rows' own card lists.
 func (s *CombatScene) playedSplit() int {
-	for i, r := range s.theatre.resolved {
+	for i, r := range s.theater.resolved {
 		if r.card.Category() == combat.CategoryDefend {
 			return i
 		}
 	}
-	return len(s.theatre.resolved)
+	return len(s.theater.resolved)
 }
 
 func (s *CombatScene) enemySplit() int {
-	for i, d := range s.theatre.enemyDealt {
+	for i, d := range s.theater.enemyDealt {
 		if d.card.Category() == combat.CategoryDefend {
 			return i
 		}
 	}
-	return len(s.theatre.enemyDealt)
+	return len(s.theater.enemyDealt)
 }
 
 // lift raises a seat by tableFireLift, which is how either row says "this is the card
@@ -266,12 +266,12 @@ func (s *CombatScene) seatEnemyCards() {
 	// whichever card the planner has just put in that seat. It is cleared here rather than in
 	// startRound because this is the line that invalidates it: the row is replaced the moment the
 	// round ends, several seconds before the next DUEL! is pressed.
-	s.theatre.breaks = nil
-	s.theatre.shatteredSeats = nil
+	s.theater.breaks = nil
+	s.theater.shatteredSeats = nil
 
-	s.theatre.enemyDealt = make([]dealtCard, 0, len(queue))
+	s.theater.enemyDealt = make([]dealtCard, 0, len(queue))
 	for i, c := range queue {
-		s.theatre.enemyDealt = append(s.theatre.enemyDealt, dealtCard{
+		s.theater.enemyDealt = append(s.theater.enemyDealt, dealtCard{
 			travel: newTravel(i*flightStaggerPer, riseTicks),
 			card:   c,
 		})
@@ -319,12 +319,12 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, tota
 //
 // **Elements come through from the deck**, and every card is basic because
 // `data/enemy_cards.json` is: MECHANICS.md has affixes transforming a basic deck into an element
-// and none of that exists yet. So they draw with the neutral mid-grey border, which is the truth
+// and none of that exists yet. So they draw with the neutral mid-gray border, which is the truth
 // rather than a placeholder.
 func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
 	split := s.enemySplit()
-	for i, d := range s.theatre.enemyDealt {
-		at := s.enemyCardAt(gs, d, i, len(s.theatre.enemyDealt), split, lit(s.theatre.enemyFiringSeats, i))
+	for i, d := range s.theater.enemyDealt {
+		at := s.enemyCardAt(gs, d, i, len(s.theater.enemyDealt), split, lit(s.theater.enemyFiringSeats, i))
 		// **The opponent's own cost, not the player's** — a discount relic is the player's and a
 		// queued enemy card printing a discounted price would be the screen telling a lie about
 		// whose relic it is.

@@ -3,7 +3,7 @@
 //
 //	go run ./tools/enemysheet
 //
-// It exists because the roster is the least reviewable catalogue in the game: ninety-six records,
+// It exists because the roster is the least reviewable catalog in the game: ninety-six records,
 // met one at a time, three rooms to a floor, and a creature's whole personality is a deck the
 // player only ever sees the played half of. Seeing whether floor five's creatures are actually
 // dearer than floor four's meant reading JSON.

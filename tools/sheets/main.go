@@ -5,7 +5,7 @@
 // It exists because the sheets are committed *(owner's call, 2026-08-23)* and a committed
 // artefact has to be regenerable by one command. A command per sheet, remembered in the right
 // order, is how most of them end up current and one of them ends up lying, and a stale sheet is
-// worse than no sheet — it is a picture of a catalogue that no longer exists.
+// worse than no sheet — it is a picture of a catalog that no longer exists.
 //
 // # It shells out rather than importing
 //
@@ -44,7 +44,7 @@ const root = "docs/sheets"
 //
 // **The blurb is what the index is for.** A directory listing of bare names tells a reader
 // nothing about which one answers their question, and the questions are genuinely different —
-// one is a drawing-board and the rest are reports on the real catalogues.
+// one is a drawing-board and the rest are reports on the real catalogs.
 var sheets = []sheet{
 	{
 		Dir:   "cardsheet",
@@ -119,7 +119,7 @@ var sheets = []sheet{
 		Blurb: "Every fixture in `internal/scenario/scenarios.json` — what it plugs in, what " +
 			"question it was built to answer, and the one-line command that launches it. The " +
 			"scenarios are the fastest way to look at anything in this game and were the least " +
-			"discoverable thing in the repo. **Not a catalogue** — it is a picture of the debug " +
+			"discoverable thing in the repo. **Not a catalog** — it is a picture of the debug " +
 			"fixtures, and none of it is reachable from a shipped binary.",
 	},
 	{
@@ -242,10 +242,10 @@ var tmpl = template.Must(template.New("index").Parse(`<!doctype html>
 <div class="wrap">
   <h1>Review sheets</h1>
   <p class="note">
-    Generated pictures of what the game's catalogues actually hold. They are committed, so this
+    Generated pictures of what the game's catalogs actually hold. They are committed, so this
     page opens from a bare clone with no Go toolchain — but that also means they are only as
     current as the last run of <code>go run ./tools/sheets</code>. Regenerate after changing a
-    catalogue, and not otherwise.
+    catalog, and not otherwise.
   </p>
   <p class="note">
     Every card on every sheet is drawn by <code>internal/cards</code>, the same code the game

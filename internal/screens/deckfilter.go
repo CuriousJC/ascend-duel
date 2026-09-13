@@ -3,7 +3,7 @@ package screens
 // **The deck panel's filter: which cards the panel is being asked about.**
 //
 // The panel used to say three things in numbers under the grid — how much of each form, how much
-// at each price, how much of each colour — and a player who read one of them had no way to ask the
+// at each price, how much of each color — and a player who read one of them had no way to ask the
 // follow-up. "Ten crush" does not say how much of it is cheap, and "seven fire" does not say how
 // much of that is crush. Every one of those counts is now a button, and pressing it marks the
 // cards it counted.
@@ -175,7 +175,7 @@ func countsOf(slots []pileSlot, holder combat.Duelist, f deckFilter) deckCounts 
 	for cost := range seen {
 		c.costs = append(c.costs, cost)
 	}
-	// Sorted, because Go randomises map order and a row of buttons that swapped places between
+	// Sorted, because Go randomizes map order and a row of buttons that swapped places between
 	// frames would be unpressable as well as unreadable.
 	sort.Ints(c.costs)
 	return c

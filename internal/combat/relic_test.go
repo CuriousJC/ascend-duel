@@ -242,8 +242,8 @@ func TestTwoPredicatesNarrowARuleRatherThanWidenIt(t *testing.T) {
 
 func TestAStatusNamesTheRelicThatAppliedIt(t *testing.T) {
 	// **The screen flies the word out of the relic that caused it**, so the event has to say which
-	// relic that was. Nothing else can: the card's colour is not the answer, because a relic may
-	// match on a form or a concept and apply a status with no colour involved at all - which is
+	// relic that was. Nothing else can: the card's color is not the answer, because a relic may
+	// match on a form or a concept and apply a status with no color involved at all - which is
 	// the case the second half of this test pins.
 	burning := MustStatus("burning")
 	chilled := MustStatus("chilled")
@@ -253,7 +253,7 @@ func TestAStatusNamesTheRelicThatAppliedIt(t *testing.T) {
 		If:   RelicCondition{Element: Fire, HasElement: true},
 		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
 	})
-	// A relic that reads the form rather than the colour, which is what makes deriving the relic
+	// A relic that reads the form rather than the color, which is what makes deriving the relic
 	// from the element impossible rather than merely fragile.
 	slash := relic(t, "names-slash", RelicRule{
 		When: MomentAttackLands,
@@ -364,7 +364,7 @@ func TestOneRuleCanApplyTwoStatuses(t *testing.T) {
 
 func TestFlipsDoNotCompose(t *testing.T) {
 	// Every flip reads the card's *original* element, so lightning->ice and fire->ice both land on
-	// their own sources and cannot chain. Without it, two flips could cascade a deck to one colour
+	// their own sources and cannot chain. Without it, two flips could cascade a deck to one color
 	// and the order they were bought in would change the result.
 	toIce := relic(t, "lightning to ice", RelicRule{
 		When: MomentCardDrawn,
@@ -478,7 +478,7 @@ func TestARelicIsOnlyWornOnceTheHandIsNotFull(t *testing.T) {
 
 func TestAnEnemyWearsNothing(t *testing.T) {
 	// **Relics are the duelist's only.** The zero value is an empty hand, which is what an enemy is
-	// hydrated with — so an enemy's colours are inert by construction rather than by a rule written
+	// hydrated with — so an enemy's colors are inert by construction rather than by a rule written
 	// down somewhere else.
 	var enemy Duelist
 	if n := len(enemy.WornRelics()); n != 0 {
@@ -769,7 +769,7 @@ func TestAFourOfAKindGrowsOnceForEachCard(t *testing.T) {
 			"landed, not one per blow", got)
 	}
 
-	// A hand of one colour among others still only pays for its own colour.
+	// A hand of one color among others still only pays for its own color.
 	_, mixed, _ := resolve(attacker, duelist(10, 5, 1000),
 		[]Card{fire, Of(Bash, Ice), fire}, nil, 1)
 	if got := mixed.WornRelics()[0].Grown; got != 20 {
@@ -777,10 +777,10 @@ func TestAFourOfAKindGrowsOnceForEachCard(t *testing.T) {
 	}
 }
 
-func TestMomentumBuildsAcrossTurnsAndADefenceWipesIt(t *testing.T) {
+func TestMomentumBuildsAcrossTurnsAndADefenseWipesIt(t *testing.T) {
 	// Momentum through the real round, because what it measures is a *turn* — the one unit no
 	// applier-level test can see. Written as two rules with no negation anywhere: one grows on every
-	// turn, one resets on a turn holding a defence, and the reset is applied second.
+	// turn, one resets on a turn holding a defense, and the reset is applied second.
 	momentum := relic(t, "dmg-no-shield",
 		RelicRule{
 			When: MomentCardDamage,
@@ -1024,8 +1024,8 @@ func TestAHeldRuleIsRefusedAlongsideABlowPredicate(t *testing.T) {
 func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 	// **Once per match, not once per turn.** The whole point of the relic is that a second held
 	// fire card is worth as much as the first — a flat per-card term, which is what makes holding
-	// a colour a decision rather than a threshold.
-	smoulder := relic(t, "smoulder", RelicRule{
+	// a color a decision rather than a threshold.
+	smolder := relic(t, "smolder", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Element: Fire, HasElement: true},
 		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
@@ -1033,7 +1033,7 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 
 	fire := Of(Bash, Fire)
 	ice := Of(Bash, Ice)
-	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: smoulder})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: smolder})
 
 	for _, tc := range []struct {
 		name string
@@ -1043,7 +1043,7 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 		{"nothing held", nil, 0},
 		{"one fire held", []Card{fire}, 5},
 		{"two fire held", []Card{fire, fire}, 10},
-		{"the wrong colour held", []Card{ice, ice}, 0},
+		{"the wrong color held", []Card{ice, ice}, 0},
 		{"one of each", []Card{fire, ice}, 5},
 	} {
 		got, seats := HeldBonus(wearer.WornRelics(), tc.held)
@@ -1060,7 +1060,7 @@ func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 	// **Through the real round**, because the seat is the thing being tested: the held hand is a
 	// parameter of ResolveRound that only the blow's own sum ever reads, and a verb wired to the
 	// wrong pile would still pass every unit test of HeldBonus.
-	smoulder := relic(t, "smoulder-round", RelicRule{
+	smolder := relic(t, "smolder-round", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Element: Fire, HasElement: true},
 		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
@@ -1071,7 +1071,7 @@ func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 
 	bare, _, _ := ResolveRoundHolding(duelist(10, 5, 100), duelist(10, 5, 100000),
 		played, nil, held, nil, 1, Sources{})
-	worn, _, _ := ResolveRoundHolding(duelist(10, 5, 100).Wearing(WornRelic{Relic: smoulder}),
+	worn, _, _ := ResolveRoundHolding(duelist(10, 5, 100).Wearing(WornRelic{Relic: smolder}),
 		duelist(10, 5, 100000), played, nil, held, nil, 1, Sources{})
 
 	before := handEventOf(t, bare, SideA)

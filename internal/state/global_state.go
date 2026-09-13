@@ -234,7 +234,7 @@ type GlobalState struct {
 	// Neither can reach the other, and the toast belongs to no scene — an achievement can land on
 	// the combat screen, on the post-battle screen or on the way between them.
 	//
-	// **It holds keys, not records.** The catalogue is a package away from either reader and a key
+	// **It holds keys, not records.** The catalog is a package away from either reader and a key
 	// is what the profile stores, so nothing here has to learn what an achievement is.
 	EarnedThisSession []string
 

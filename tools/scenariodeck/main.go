@@ -48,7 +48,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// defaultElements is the colour wheel a generated deck is dealt across when nobody named one.
+// defaultElements is the color wheel a generated deck is dealt across when nobody named one.
 // **All five, in the order `combat.Element` numbers them**, so a deck generated twice is the same
 // deck — the determinism rule applies to a tool that writes a fixture exactly as it applies to the
 // fixture itself.
@@ -62,7 +62,7 @@ func main() {
 	cost := flag.String("cost", "", "action-point band, as N or LOW-HIGH: 1, or 1-2")
 	riders := flag.String("riders", "", "riders every generated card carries: golden:5, wild-element")
 	size := flag.Int("size", 40, "how many cards the deck should hold")
-	perLine := flag.Bool("split", false, "one line per card instead of one line per card-and-colour")
+	perLine := flag.Bool("split", false, "one line per card instead of one line per card-and-color")
 	flag.Parse()
 
 	out, err := run(opts{
@@ -117,8 +117,8 @@ func run(o opts) (string, error) {
 		return "", err
 	}
 
-	// **Round-robin across the picked cards and the chosen colours**, rather than an even split
-	// with a remainder. A deck of 40 over 3 cards and 5 colours is fifteen combinations and forty
+	// **Round-robin across the picked cards and the chosen colors**, rather than an even split
+	// with a remainder. A deck of 40 over 3 cards and 5 colors is fifteen combinations and forty
 	// cards; walking them in order gives every combination either two copies or three, which is
 	// the closest a deck of that size gets to "equal parts" without the tool having an opinion
 	// about which combination deserves the spare card.
@@ -165,7 +165,7 @@ func run(o opts) (string, error) {
 	b.WriteString("\n    ],\n")
 
 	fmt.Fprintf(os.Stderr,
-		"%d cards over %d card%s and %d colour%s, from %d matching the filters\n",
+		"%d cards over %d card%s and %d color%s, from %d matching the filters\n",
 		total, len(picked), plural(len(picked)), len(elements), plural(len(elements)), len(picked))
 	return b.String(), nil
 }

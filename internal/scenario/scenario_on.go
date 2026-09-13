@@ -124,7 +124,7 @@ type record struct {
 	// clock is lifted to DummyRounds.
 	//
 	// **It is not a creature in `data/enemies.json`, deliberately** *(owner's call, 2026-09-11)*.
-	// A training dummy is a fixture, and `data/` is the game's own catalogue — loaded by every
+	// A training dummy is a fixture, and `data/` is the game's own catalog — loaded by every
 	// build, drawn on the roster sheet, and reachable by the climb's own roll. So this changes the
 	// *stats* of whichever opponent the fixture or the climb already named, which means the fight
 	// still has a real portrait, a real deck and a real set of blows to watch. What it does not
@@ -156,7 +156,7 @@ type record struct {
 	// RelicSlots is how many relics the run may wear at once, overriding combat.DefaultRelicSlots.
 	//
 	// **Zero means the run's own**, which is the five every climb is on. It exists because the
-	// whole catalogue is looked at five at a time otherwise, and a batch of new art or a new
+	// whole catalog is looked at five at a time otherwise, and a batch of new art or a new
 	// interaction is a batch: a sixth relic meant playing to a shop, selling one and buying
 	// another, per relic, forever.
 	//
@@ -176,7 +176,7 @@ type record struct {
 	Teach bool `json:"Teach"`
 }
 
-// handCard is one card of a plugged hand: a concept by its label, a colour, and any riders it
+// handCard is one card of a plugged hand: a concept by its label, a color, and any riders it
 // has already been given.
 type handCard struct {
 	Card    string   `json:"Card"`
@@ -184,7 +184,7 @@ type handCard struct {
 	Riders  []string `json:"Riders"`
 }
 
-// deckLine is one line of a replacement deck: a card, a colour, and how many copies.
+// deckLine is one line of a replacement deck: a card, a color, and how many copies.
 //
 // **Copies rather than repeating the line**, because a deck list is read to be counted and five
 // identical lines is a list nobody checks. Absent or zero is one copy, so the common case writes
@@ -328,7 +328,7 @@ func keysOf(list []record) []string {
 //
 // **The relics are checked by the caller, not here.** A relic key is `internal/session`'s to resolve
 // and this package sits below it — `main` hands the list to `session.StartingRelics`, which already
-// refuses a key the catalogue does not hold.
+// refuses a key the catalog does not hold.
 func check(r *record) error {
 	// **A hand is only required of a scenario that opens on a duel.** One jumping straight to the
 	// reward screen or the shop has nothing to deal it to.

@@ -191,7 +191,7 @@ func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 // build has not got is a resumed run that is quietly wrong. It is refused instead, which costs the
 // player one run and is reported to the caller as a fresh start.
 //
-// **A relic the catalogue no longer holds is refused rather than dropped**, on the same grounds: a
+// **A relic the catalog no longer holds is refused rather than dropped**, on the same grounds: a
 // run silently resuming without the relic it was wearing is a run the player would have to work out
 // had changed.
 func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, snap *profile.RunSnapshot) (*Session, int64, error) {
@@ -278,7 +278,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 			return nil, 0, fmt.Errorf("relic %q is not one this build can wear", key)
 		}
 	}
-	// **A rune the catalogue no longer holds is refused rather than dropped**, on the terms a
+	// **A rune the catalog no longer holds is refused rather than dropped**, on the terms a
 	// relic is: a run resumed one consumable lighter is a run the player would have to work out had
 	// changed. Order is acquisition order and is kept, because it is the order the sack draws.
 	for _, key := range snap.Held {
@@ -287,11 +287,11 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		}
 	}
 
-	// **A remembered rune the catalogue no longer holds is forgotten rather than refused**,
+	// **A remembered rune the catalog no longer holds is forgotten rather than refused**,
 	// which is the one place this file is lenient and is deliberate. A held rune is a thing the
 	// player owns and would notice going missing; this is a memory of one already spent, and the
 	// worst it costs is a chimera with nothing to copy — which is a state the mechanic already has
-	// a rule for. Refusing would make deleting a record from the catalogue break every save that
+	// a rule for. Refusing would make deleting a record from the catalog break every save that
 	// had ever used it.
 	if snap.LastRune != "" {
 		if p, ok := RuneByKey(snap.LastRune); ok && p.Target != RuneChimera {
@@ -299,7 +299,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		}
 	}
 
-	// **A carried stone the catalogue no longer holds is refused rather than dropped**, on the
+	// **A carried stone the catalog no longer holds is refused rather than dropped**, on the
 	// terms a rune is. It is checked before the placed counts below because the two are
 	// different failures: this is a rock in the pouch that has stopped existing, and that is a rung
 	// that has.
@@ -310,7 +310,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 	}
 
 	// **A stone naming a rung this build has not got is refused rather than dropped**, exactly as a
-	// relic the catalogue no longer holds is: a run resumed quietly paying less for its Card Pairs is
+	// relic the catalog no longer holds is: a run resumed quietly paying less for its Card Pairs is
 	// a run the player would have to work out had changed.
 	for hand, n := range snap.Stones {
 		if _, ok := combat.HandSlot(hand); !ok {
@@ -336,7 +336,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 
 	for key, n := range snap.Grown {
 		if _, ok := registeredRelics[key]; !ok {
-			return nil, 0, fmt.Errorf("relic %q has grown, and is not in the catalogue", key)
+			return nil, 0, fmt.Errorf("relic %q has grown, and is not in the catalog", key)
 		}
 		s.grown[key] = n
 	}

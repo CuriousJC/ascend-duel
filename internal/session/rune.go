@@ -4,7 +4,7 @@ package session
 //
 // An essence is won between rooms and spent on the spot. A rune is bought, carried in a sack,
 // and spent in the gap between one turn and the next — so the deck a duel started with is not
-// necessarily the deck it ends with. The catalogue is `data/runes.json`; this file is where a
+// necessarily the deck it ends with. The catalog is `data/runes.json`; this file is where a
 // record becomes something applicable, and where a bad record is refused.
 //
 // **It lives here rather than in `internal/combat` for the reason essences do**: a rune acts on
@@ -59,15 +59,15 @@ const (
 	// `CombatScene.takeRune`, which is what puts it in the row.
 	RuneDuplicate
 
-	// RuneElement recolours cards. **Count is two**, which is the difference from the
-	// elemental essences: an essence buys one card of a colour and this buys a pair, which is a hand.
+	// RuneElement recolors cards. **Count is two**, which is the difference from the
+	// elemental essences: an essence buys one card of a color and this buys a pair, which is a hand.
 	RuneElement
 
 	// RuneForm changes what a card counts as on the form axis, without changing the card.
 	//
 	// **A defend card is a legal target** *(owner's call, 2026-09-02)*. A Brace told to be a crush
 	// still shields and now matches crushes, which is a card doing something no card in the
-	// catalogue does. That is the point of it rather than a hole in the checking.
+	// catalog does. That is the point of it rather than a hole in the checking.
 	RuneForm
 
 	// RuneStones hands the run a shower of random stones. **Count is zero** — it touches no
@@ -99,7 +99,7 @@ const (
 	// **The targets are picked again rather than inherited.** The copied rune's cards are long
 	// gone from the hand by the time a chimera is spent — a different turn, sometimes a different
 	// fight — and re-firing against the same identities would be a no-op wherever the effect was
-	// idempotent, which is most of the catalogue.
+	// idempotent, which is most of the catalog.
 	//
 	// **A chimera never becomes the thing to copy.** `lastRune` records the *resolved* record,
 	// so a chimera behind a Goad leaves Goad behind it, and two chimeras in a row both fire Goad
@@ -160,7 +160,7 @@ func ParseRuneChange(name string) (RuneChange, bool) {
 // changeFor is the class a target actually makes, which is what an authored Change is checked
 // against.
 //
-// **A rider is the only upgrade there is.** Everything else in the catalogue moves one of the three
+// **A rider is the only upgrade there is.** Everything else in the catalog moves one of the three
 // facts a card composes freely, or touches no card at all — and a rune that touches no card is
 // normal by the same argument, since there is nothing for it to overwrite.
 func changeFor(t RuneTarget) RuneChange {
@@ -261,21 +261,21 @@ type Rune struct {
 	// Concept is what a swap rune turns a card into, already resolved. NoConcept elsewhere.
 	Concept combat.ConceptID
 
-	// Element is what an element rune recolours to, already resolved. Basic elsewhere.
+	// Element is what an element rune recolors to, already resolved. Basic elsewhere.
 	Element combat.Element
 
 	// Form is what a form rune makes a card count as, already resolved. FormNone elsewhere.
 	Form combat.Form
 }
 
-// runes is the validated catalogue, built once at package init.
+// runes is the validated catalog, built once at package init.
 //
 // **A bad record panics at init**, so it fails on launch rather than the first time a player opens
 // a sack — the same severity a bad essence record takes, and for the same reason: a consumable that
 // does nothing is something bought and taken away.
 var runes, runeOrder = loadRunes()
 
-// Runes is every rune in the catalogue, in a fixed sorted order.
+// Runes is every rune in the catalog, in a fixed sorted order.
 func Runes() []Rune {
 	out := make([]Rune, 0, len(runeOrder))
 	for _, key := range runeOrder {
@@ -309,7 +309,7 @@ func loadRunes() (map[string]Rune, []string) {
 	sort.Strings(keys)
 
 	if len(keys) == 0 {
-		panic("runes.json: the catalogue is empty, and a sack has to hold something")
+		panic("runes.json: the catalog is empty, and a sack has to hold something")
 	}
 	return out, keys
 }
@@ -318,7 +318,7 @@ func loadRunes() (map[string]Rune, []string) {
 //
 // **It refuses a field the target does not read**, rather than ignoring it — a remove rune
 // carrying a rider name is somebody expecting something the mechanic does not do, and accepting it
-// silently is how a catalogue comes to disagree with the game.
+// silently is how a catalog comes to disagree with the game.
 func resolveRune(r data.RuneData) (Rune, error) {
 	if r.RuneRecord == "" {
 		return Rune{}, fmt.Errorf("a rune has no record key")
@@ -450,18 +450,18 @@ func resolveRune(r data.RuneData) (Rune, error) {
 
 	case RuneElement:
 		// **Resolved against the rules' own element list**, for the reason a swap resolves against
-		// the concept registry: a colour this build does not have is a rune that would land
+		// the concept registry: a color this build does not have is a rune that would land
 		// and paint nothing.
 		e, ok := combat.ParseElement(r.Value)
 		if !ok {
-			return Rune{}, fmt.Errorf("%s recolours to %q, which is not an element the rules have",
+			return Rune{}, fmt.Errorf("%s recolors to %q, which is not an element the rules have",
 				r.RuneRecord, r.Value)
 		}
 		if e == combat.Basic {
-			// Basic is the absence of a colour rather than a colour, so a rune painting cards
+			// Basic is the absence of a color rather than a color, so a rune painting cards
 			// basic would be one that takes an element away — a different mechanic, and not one
 			// anybody has asked for.
-			return Rune{}, fmt.Errorf("%s recolours to basic, which is no colour at all",
+			return Rune{}, fmt.Errorf("%s recolors to basic, which is no color at all",
 				r.RuneRecord)
 		}
 		p.Element = e
@@ -491,9 +491,9 @@ func resolveRune(r data.RuneData) (Rune, error) {
 		}
 		if n > len(stoneOrder) {
 			// **Without repeats**, on the bag's argument: the same rock twice is a seat spent
-			// saying nothing. So a record asking for more than the catalogue holds is one that
-			// could not be honoured, and it is refused rather than quietly shortened.
-			return Rune{}, fmt.Errorf("%s hands over %d stones and the catalogue holds %d",
+			// saying nothing. So a record asking for more than the catalog holds is one that
+			// could not be honored, and it is refused rather than quietly shortened.
+			return Rune{}, fmt.Errorf("%s hands over %d stones and the catalog holds %d",
 				r.RuneRecord, n, len(stoneOrder))
 		}
 		p.Number = n
@@ -568,10 +568,10 @@ func (s *Session) HoldFull() bool { return len(s.held) >= MaxHeld }
 
 // Hold puts a rune in the sack, and reports whether it went in.
 //
-// **A rune the catalogue does not have is refused**, rather than held as a key nothing can
+// **A rune the catalog does not have is refused**, rather than held as a key nothing can
 // resolve — a sack carrying a name that means nothing is a slot the player cannot spend.
 //
-// **A full sack refuses too.** It is the last line of defence rather than the control the player
+// **A full sack refuses too.** It is the last line of defense rather than the control the player
 // meets: a seat that could be bought and then silently dropped would be the purchase-for-nothing
 // this returns false to prevent, and the shop is where it is actually stopped.
 func (s *Session) Hold(key string) bool {
@@ -736,7 +736,7 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 
 		// **Everything but the identity** *(owner's call, 2026-09-08)*. It copied the concept alone
 		// until then, so grafting a fire Cut onto an ice Jab produced an ice Cut — a card whose name
-		// said it had become the right-hand card and whose colour said it had not. "BECOMES" is not
+		// said it had become the right-hand card and whose color said it had not. "BECOMES" is not
 		// a partial verb, and the same bug was waiting on the form override, the essence deltas and the
 		// riders.
 		//
@@ -824,8 +824,8 @@ func (s *Session) CanApplyRune(p Rune, ids []int) bool {
 	//
 	// **Compared on everything but the identity**, which is exactly what the apply copies. It asked
 	// only about the concept while only the concept was copied, and that made two same-named cards
-	// of different colours an illegal pick — the pick a player reaching for this most obviously
-	// wants, now that the colour travels with the name.
+	// of different colors an illegal pick — the pick a player reaching for this most obviously
+	// wants, now that the color travels with the name.
 	if p.Target == RuneClone && len(ids) == 2 {
 		first, ok1 := s.CardByID(ids[0])
 		second, ok2 := s.CardByID(ids[1])

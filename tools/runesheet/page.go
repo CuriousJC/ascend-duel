@@ -11,7 +11,7 @@ import "html/template"
 //
 // **The ground is the one the runes actually sit on**, which for these is the panel over a
 // live fight rather than a shop shelf — the sack opens between turns, which is the one thing
-// about this catalogue the page has to say in words because no card can show it.
+// about this catalog the page has to say in words because no card can show it.
 var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
 <meta charset="utf-8">
 <title>Ascending Duel — rune sheet</title>
@@ -99,7 +99,7 @@ var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
 <p class="facts">
   {{.Count}} runes, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no
   subject paragraph written. A sealed sack costs <code>{{.SackPrice}}</code> vitae and draws
-  <code>{{.SackSize}}</code>, keep one — {{.Share}}% of the catalogue gets a seat. One rune
+  <code>{{.SackSize}}</code>, keep one — {{.Share}}% of the catalog gets a seat. One rune
   may name at most <code>{{.MaxTargets}}</code> cards.
   Card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
@@ -124,7 +124,7 @@ var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
 </p>
 <p class="note">
   <strong>They are spent between the turns of a fight, never inside one.</strong> That is the
-  thing about this catalogue no card can show: the sack is gated on planning, because
+  thing about this catalog no card can show: the sack is gated on planning, because
   <code>ResolveRound</code> decides a whole round before playback starts and a card altered
   mid-playback would show a face disagreeing with a blow already computed.
 </p>
@@ -132,21 +132,22 @@ var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
   <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The quoted
   block under each rune is <code>Draw</code> in <code>data/runes.json</code>: what the
   thing <em>is</em> and what it is doing, in one sentence. Nothing in the game reads it. It is
-  pasted under the shared prompt in <code>docs/art/card_art_prompt.MD</code>, which is the only
-  part of a brief that is not about one record. <strong>A rune with no subject and no art is
+  pasted under <code>docs/art/essence_art_prompt.MD</code> — a rune draws on the essence card's
+  style — with its body plan from <code>docs/art/rune_art_prompt.MD</code> between the two. Those
+  are the only parts of a brief that are not about one record. <strong>A rune with no subject and no art is
   the backlog</strong> — both lines go pink, so the page can be scrolled for what still needs
   writing. <code>default-rune.png</code> is the seat art goes into; it was the essence's own
   placeholder until 2026-09-12, and the two split because one shared picture is a page where a
   drawn essence and an undrawn rune look identical.
 </p>
 
-<h2>What the catalogue does</h2>
+<h2>What the catalog does</h2>
 <p class="note">
   <strong>Every target, and how many runes sit at it.</strong> The vocabulary is closed — a new
   target is a Go change plus one place applying it, never something a file can assert into
   existence — so a target with nothing under it is a mechanic built and never reached for. This was
   the page's grouping until families landed, and it made a poor heading once a third of the
-  catalogue was a single <code>swap</code>: the motif is what tells one swap from another.
+  catalog was a single <code>swap</code>: the motif is what tells one swap from another.
 </p>
 <ul class="targets">
 {{range .Targets}}
@@ -155,7 +156,7 @@ var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
 {{end}}
 </ul>
 
-<h2>The catalogue, by family</h2>
+<h2>The catalog, by family</h2>
 <p class="note">
   <strong>Grouped by the motif each rune was authored beside, in the file's own order.</strong>
   <code>Family</code> is authored and the engine ignores it, exactly as it ignores <code>Art</code>

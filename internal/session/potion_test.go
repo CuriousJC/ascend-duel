@@ -20,7 +20,7 @@ func TestASalveMovesTheWoundAndNotTheFightsLastFigure(t *testing.T) {
 
 	salve, ok := PotionByKey("salve")
 	if !ok {
-		t.Fatal("no salve in the catalogue")
+		t.Fatal("no salve in the catalog")
 	}
 	before := s.LifeLeft()
 	if !s.Drink(salve.Record) {

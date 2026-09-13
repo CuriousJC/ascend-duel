@@ -245,8 +245,8 @@ func TestACardHeldBackPaysVitaeEveryTurnItIsHeld(t *testing.T) {
 }
 
 func TestARiddenCardRaisesShieldsAsItIsPlayed(t *testing.T) {
-	// A Jab is an attack card. The point of the rider is that it does a defence's job as well,
-	// which no card in the catalogue does.
+	// A Jab is an attack card. The point of the rider is that it does a defense's job as well,
+	// which no card in the catalog does.
 	a := duelist(10, 3, 100)
 	events, after, _ := resolve(a, duelist(0, 0, 1000),
 		[]Card{carrying(Jab, RiderShieldOnPlay, 1)}, nil, 1)

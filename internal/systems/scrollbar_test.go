@@ -8,7 +8,7 @@ import (
 
 func testBar(total, visible int) *models.Scrollbar {
 	s := models.NewScrollbar(18, 600)
-	s.ScreenX, s.ScreenY = 100, 400 // centre, so the track runs y=100..700
+	s.ScreenX, s.ScreenY = 100, 400 // center, so the track runs y=100..700
 	s.Total, s.Visible = total, visible
 	return s
 }

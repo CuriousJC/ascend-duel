@@ -3,14 +3,14 @@ package combat
 // Stones: **the run's own opinion about what a hand is worth.**
 //
 // A hand's multiplier is written in `data/hands.json` and is a fact about the game. A *stone* is a
-// fact about one run: it raises one rung of the ladder by a tenth of that rung's catalogue value,
+// fact about one run: it raises one rung of the ladder by a tenth of that rung's catalog value,
 // and it does it for the duelist holding it and nobody else.
 //
-// **The bump lives on the duelist rather than on the catalogue** *(owner's call, 2026-08-27)*.
+// **The bump lives on the duelist rather than on the catalog** *(owner's call, 2026-08-27)*.
 // `handTable` is package state built at init, shared by every fight, every tool and every test —
 // a run reaching in to raise the Pair by 10 would raise it for the enemy planner, for
 // `tools/handsheet` and for the next run in the same process. So a duelist carries a count per
-// rung and the catalogue is read *through* it; a duelist with no stones reads the table itself,
+// rung and the catalog is read *through* it; a duelist with no stones reads the table itself,
 // unchanged and unallocated.
 //
 // **Ten percent of the base, per stone, floored** *(owner's call, 2026-08-27)*. Card Two Pair is
@@ -33,19 +33,19 @@ package combat
 //
 // **It exists because `Duelist` has to stay comparable**, exactly as `MaxStatuses` and
 // `MaxWornRelics` do — `TestRoundIsDeterministic` compares two resolved duelists with `==`, and a
-// map on the struct would end that. Thirty-two is well clear of the eighteen rungs the catalogue
-// holds; a catalogue that outgrew it panics at init rather than silently dropping the rungs past
+// map on the struct would end that. Thirty-two is well clear of the eighteen rungs the catalog
+// holds; a catalog that outgrew it panics at init rather than silently dropping the rungs past
 // the end.
 const MaxHandSlots = 32
 
-// handSlots is each hand's seat in the boost array, by key, fixed at init from the catalogue's own
+// handSlots is each hand's seat in the boost array, by key, fixed at init from the catalog's own
 // order.
 //
 // **A seat is a position in `handTable`, never a `HandID`.** IDs are sparse - 1, then 10, then
 // 11..15, 21..25, 31..35 and 38 - so indexing by one would want an array twice the size, and it is
 // the file's numbering rather than the rules', which is the sort of thing that moves.
 //
-// **It is never written down.** A seat is derived from the catalogue this build loaded, so a save
+// **It is never written down.** A seat is derived from the catalog this build loaded, so a save
 // file records the hand's *key* and resolves it back through here, on exactly the terms
 // `ConceptID` and `StatusID` are under.
 var handSlots = buildHandSlots()
@@ -61,7 +61,7 @@ func buildHandSlots() map[string]int {
 	return out
 }
 
-// HandSlot is the seat a hand's stone count sits in, and whether the catalogue holds that hand at
+// HandSlot is the seat a hand's stone count sits in, and whether the catalog holds that hand at
 // all. **The bool is the validation**: a stone naming a rung this build has not got is refused by
 // its caller rather than landing on seat zero, which is the High Card.
 func HandSlot(key string) (int, bool) {
@@ -69,7 +69,7 @@ func HandSlot(key string) (int, bool) {
 	return i, ok
 }
 
-// HandKeys is every hand's key, in catalogue order. It is what a catalogue of stones is checked
+// HandKeys is every hand's key, in catalog order. It is what a catalog of stones is checked
 // against, and what a screen listing them walks.
 func HandKeys() []string {
 	out := make([]string, 0, len(handTable))
@@ -79,12 +79,12 @@ func HandKeys() []string {
 	return out
 }
 
-// stoneStep is what one stone adds to one rung: a tenth of the rung's catalogue multiplier,
-// floored. Zero for a rung so cheap that a tenth of it rounds away — which the catalogue has none
+// stoneStep is what one stone adds to one rung: a tenth of the rung's catalog multiplier,
+// floored. Zero for a rung so cheap that a tenth of it rounds away — which the catalog has none
 // of, since the lowest multiplier in the game is the High Card's 100.
 func stoneStep(base int) int { return base / 10 }
 
-// StoneValue is what `n` stones are worth on a rung whose catalogue multiplier is `base`.
+// StoneValue is what `n` stones are worth on a rung whose catalog multiplier is `base`.
 //
 // **`n` steps, not one step compounded.** Each stone is worth a tenth of the number the file
 // writes down, so the tenth stone is worth exactly what the first was.
@@ -96,7 +96,7 @@ func StoneValue(base, n int) int {
 }
 
 // HandStoneCount is how many stones this duelist holds for one rung, by key. Zero for a rung the
-// catalogue does not hold, which is a rung nothing could have put a stone on.
+// catalog does not hold, which is a rung nothing could have put a stone on.
 func (d Duelist) HandStoneCount(key string) int {
 	i, ok := handSlots[key]
 	if !ok {
@@ -118,7 +118,7 @@ func (d Duelist) WithHandStone(key string) (Duelist, bool) {
 }
 
 // anyHandStones reports whether this duelist has a stone at all. It is what lets the common case —
-// every enemy, every test, a run that has bought nothing — read the catalogue itself rather than a
+// every enemy, every test, a run that has bought nothing — read the catalog itself rather than a
 // copy of it.
 func (d Duelist) anyHandStones() bool {
 	for _, n := range d.HandStones {
@@ -129,7 +129,7 @@ func (d Duelist) anyHandStones() bool {
 	return false
 }
 
-// HandTable is the ladder as this duelist plays it: the catalogue, with each rung raised by
+// HandTable is the ladder as this duelist plays it: the catalog, with each rung raised by
 // whatever stones are on it.
 //
 // **It is the one place a stone becomes a number**, so the resolver, the preview and the hands
@@ -159,6 +159,6 @@ func (d Duelist) handsFrom(hands []Hand) []Hand {
 // BlowFor is what this duelist's turn amounts to, **read through their own stones**.
 //
 // It is what a screen previewing an attack calls. The bare `BlowFor` still exists and still reads
-// the catalogue unaltered; it is the right answer only for a duelist holding no stones, which is
+// the catalog unaltered; it is the right answer only for a duelist holding no stones, which is
 // why the preview on the combat screen goes through this one.
 func (d Duelist) BlowFor(turn []Slot) Blow { return blowFor(turn, d.handsFrom(handTable)) }

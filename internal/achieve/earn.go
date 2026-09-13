@@ -5,7 +5,7 @@ package achieve
 // Every function here is pure. It is handed what happened and hands back keys; nothing is awarded,
 // nothing is written, and nothing is filtered against what the player already has — see
 // `internal/screens/achieve.go`, which is where a key meets a profile. Keeping the filter out of
-// here is what makes the whole catalogue walkable in a test with no profile in sight.
+// here is what makes the whole catalog walkable in a test with no profile in sight.
 
 import (
 	"strconv"
@@ -38,7 +38,7 @@ func CardAltered(label string) Moment {
 func ShieldsRaised(n int) Moment { return Moment{Name: MomentShieldsRaised, N: n} }
 
 // ByMoment is every achievement this moment satisfies.
-func (c *Catalogue) ByMoment(m Moment) []string {
+func (c *Catalog) ByMoment(m Moment) []string {
 	var out []string
 	for _, a := range c.list {
 		t := a.trigger
@@ -68,7 +68,7 @@ func (c *Catalogue) ByMoment(m Moment) []string {
 // is asked once against the settled figures — which is also why it reports everything that is *at
 // or over* its threshold rather than everything that crossed it on the last card. Whether a key is
 // new is the profile's question, not this one's.
-func (c *Catalogue) ByCounts(counts map[string]int) []string {
+func (c *Catalog) ByCounts(counts map[string]int) []string {
 	var out []string
 	for _, a := range c.list {
 		if a.trigger.kind != data.TriggerCount {
@@ -85,8 +85,8 @@ func (c *Catalogue) ByCounts(counts map[string]int) []string {
 //
 // **The turn, not the hand.** A hand counts the cards that scored it and leaves the rest out; these
 // achievements are about what the player put on the table together — "four elements at once" — so
-// Arsenal can ask for a defence beside three attack forms, which no hand on the ladder can say.
-func (c *Catalogue) ByTurn(turn []combat.Card) []string {
+// Arsenal can ask for a defense beside three attack forms, which no hand on the ladder can say.
+func (c *Catalog) ByTurn(turn []combat.Card) []string {
 	if len(turn) == 0 {
 		return nil
 	}

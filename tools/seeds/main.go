@@ -1,16 +1,16 @@
 // Command seeds finds deck seeds that deal a particular opening hand, and re-checks the ones
-// already catalogued in internal/screens.
+// already cataloged in internal/screens.
 //
 // **A seed is an opening hand.** The shuffle is deterministic, so asking "give me a hand I can
 // click a Bash Flurry out of" is answered by a number rather than by relaunching the game
-// until one turns up. The catalogue that number lands in is `seedCatalog`, and this is the
+// until one turns up. The catalog that number lands in is `seedCatalog`, and this is the
 // tool that fills it.
 //
-//	go run ./tools/seeds          # re-check the catalogue, then search for each shape
+//	go run ./tools/seeds          # re-check the catalog, then search for each shape
 //	go run ./tools/seeds -n 50000 # search harder
 //
 // **Re-run it whenever `startingDeck` or `handSize` changes.** A seed is a fact about one
-// particular deck; change the deck and every catalogued number silently becomes a hand nobody
+// particular deck; change the deck and every cataloged number silently becomes a hand nobody
 // asked for. The re-check at the top is there to make that loud — a demo testing a Flurry
 // against a hand that no longer holds three Bashes is worse than no demo, because it passes.
 //
@@ -28,8 +28,8 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/screens"
 )
 
-// A want is a named shape of hand and the predicate that recognises it. The name matches the
-// catalogue entry it fills, so the re-check and the search speak the same language.
+// A want is a named shape of hand and the predicate that recognizes it. The name matches the
+// catalog entry it fills, so the re-check and the search speak the same language.
 type want struct {
 	name  string
 	desc  string
@@ -85,11 +85,11 @@ func main() {
 	search(*limit)
 }
 
-// recheck re-deals every catalogued seed and reports whether it still matches the shape it was
-// catalogued for. **This is the half of the tool that matters most** — searching finds new
-// numbers, but a catalogued number quietly going wrong is the failure that hides.
+// recheck re-deals every cataloged seed and reports whether it still matches the shape it was
+// cataloged for. **This is the half of the tool that matters most** — searching finds new
+// numbers, but a cataloged number quietly going wrong is the failure that hides.
 func recheck() {
-	fmt.Println("catalogue")
+	fmt.Println("catalog")
 	fmt.Println(strings.Repeat("-", 78))
 
 	names, values, descs := screens.Seeds()
@@ -114,7 +114,7 @@ func recheck() {
 	}
 
 	if bad > 0 {
-		fmt.Printf("\n%d catalogued seed(s) no longer deal what they claim.\n", bad)
+		fmt.Printf("\n%d cataloged seed(s) no longer deal what they claim.\n", bad)
 		fmt.Println("The deck or the hand size changed. Take replacements from the search below")
 		fmt.Println("and update seedCatalog in internal/screens/seeds.go.")
 	}
@@ -173,7 +173,7 @@ func tally(hand []combat.ConceptID) map[combat.ConceptID]int {
 }
 
 // handLabel renders a hand as counts in a fixed order. **Sorted by the player's concept list
-// rather than by ranging the tally**, because Go randomises map iteration and a tool whose output
+// rather than by ranging the tally**, because Go randomizes map iteration and a tool whose output
 // reshuffled between runs could not be diffed. See CLAUDE.md.
 func handLabel(hand []combat.ConceptID) string {
 	counts := tally(hand)

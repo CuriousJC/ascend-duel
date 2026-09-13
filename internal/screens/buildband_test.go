@@ -26,7 +26,7 @@ func bandState(t *testing.T) *state.GlobalState {
 
 	// **A run opens bare**, so the fixture puts a relic on rather than skipping — a skipped test
 	// says nothing, and this one is standing in for a tooltip that went missing without failing
-	// anything. `Wear` refuses a key the catalogue does not hold, so a rename fails the test
+	// anything. `Wear` refuses a key the catalog does not hold, so a rename fails the test
 	// rather than quietly emptying it.
 	for _, key := range session.Relics() {
 		if gs.Run.Wear(key) {
@@ -88,10 +88,10 @@ func TestTheRelicSeatIsDrawnWhereItIsClicked(t *testing.T) {
 	}
 }
 
-// **The row is centred and grows outwards, rather than pinned to both edges.** A run wearing two
+// **The row is centered and grows outwards, rather than pinned to both edges.** A run wearing two
 // relics on a band with no enemy card to end it put one beside the duelist card and the other in
 // the far corner; the pitch is capped now, so the slack sits at the two ends of the row.
-func TestTheRelicRowIsCentredAndGrowsOutwards(t *testing.T) {
+func TestTheRelicRowIsCenteredAndGrowsOutwards(t *testing.T) {
 	gs := bandState(t)
 	row := buildRelicRect(gs)
 
@@ -124,16 +124,16 @@ func TestTwoRelicsSitBesideEachOtherRatherThanApart(t *testing.T) {
 	}
 }
 
-// **A full row sits inside the pane and centred on it.**
+// **A full row sits inside the pane and centered on it.**
 //
 // **It used to say the row filled the pane exactly** *(until 2026-09-04)*, because at 1280 wide it
 // did — the cap was read off the gap five relics left in this pane. At 1920 the pane is wider than
-// five capped relics need, so the row centres in it with slack at both ends, and asserting a flush
+// five capped relics need, so the row centers in it with slack at both ends, and asserting a flush
 // left edge would be asserting that the cap must be re-derived from whatever pane it is handed.
-// That is the behaviour relicSlotMaxGap exists to prevent; see the note on it.
+// That is the behavior relicSlotMaxGap exists to prevent; see the note on it.
 //
-// What is still worth holding is that the row is centred and that five of them fit, which is the
-// pair the cap and the centring are between them responsible for.
+// What is still worth holding is that the row is centered and that five of them fit, which is the
+// pair the cap and the centering are between them responsible for.
 func TestAFullRowStillFillsTheCombatPane(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
@@ -150,14 +150,14 @@ func TestAFullRowStillFillsTheCombatPane(t *testing.T) {
 		t.Errorf("the last of five relics ends at x=%d, past the pane's x=%d", last, pane.Max.X)
 	}
 	if before, after := first-pane.Min.X, pane.Max.X-last; before != after {
-		t.Errorf("the row is not centred: %dpx before it and %dpx after", before, after)
+		t.Errorf("the row is not centered: %dpx before it and %dpx after", before, after)
 	}
 }
 
 // **The widest row the array allows still lands inside the pane**, which is the weaker half of the
 // pair above and the half that has to hold past the shipped cap.
 //
-// The two are split because they are different claims *(2026-09-11)*. Exact centring and strictly
+// The two are split because they are different claims *(2026-09-11)*. Exact centering and strictly
 // outward growth are properties of the row a player can actually reach — five — and they come apart
 // by a pixel further up, where `relicSlotPitch` divides the pane by one more seat and the remainder
 // has nowhere to go. What must hold at any width is that nothing is drawn off the end of the pane,
@@ -179,7 +179,7 @@ func TestTheWidestPossibleRelicRowStaysInsideThePane(t *testing.T) {
 			t.Errorf("a row of %d ends at x=%d, past the pane's x=%d", n, last, pane.Max.X)
 		}
 		if before, after := first-pane.Min.X, pane.Max.X-last; before-after > 1 || after-before > 1 {
-			t.Errorf("a row of %d is off centre: %dpx before it and %dpx after", n, before, after)
+			t.Errorf("a row of %d is off center: %dpx before it and %dpx after", n, before, after)
 		}
 	}
 }

@@ -76,7 +76,7 @@ func TestAlterationsAreOnByDefault(t *testing.T) {
 func TestTheAlterationsToggleShowsBothFacesOfOneCard(t *testing.T) {
 	// **A card in the discard has been through a draw and holds only what it became.** Showing it
 	// as the run owns it is a lookup by ID and nothing else — no inversion of the flip, which could
-	// not be done anyway once two relics converge on one colour.
+	// not be done anyway once two relics converge on one color.
 	run := panelRun(t, panelDeck(), "flip-lightning-to-ice")
 
 	owned := run.Deck()

@@ -63,7 +63,7 @@ const (
 	// where the enemy card begins.
 	//
 	// **Both edges are read off the cards themselves** *(2026-08-12)*. The right edge was a
-	// hardcoded 79%, chosen to clear an enemy card centred at 88% — a percentage standing in
+	// hardcoded 79%, chosen to clear an enemy card centered at 88% — a percentage standing in
 	// for a position it could not see, and one that would have quietly overlapped the moment
 	// either card moved. It moved the next day.
 	relicPaneGap = 16
@@ -105,7 +105,7 @@ const (
 // end, nothing said where the middle *began*.
 //
 // So it is the quietest possible answer to that: one step off the background, no border, no
-// title, no hue. A colour that meant something would put it back in competition with the
+// title, no hue. A color that meant something would put it back in competition with the
 // borders it sits behind.
 //
 // **The step goes down now that the ground is light** *(2026-08-14)*. It was one step
@@ -114,8 +114,8 @@ const (
 // cut back to a fill to avoid. Which direction "one step" means is a function of the ground.
 //
 // **It is derived rather than written down** *(2026-09-07)*. It was a hand-picked tan for as long
-// as the ground was one, and a hand-picked colour that is supposed to be "one step off the
-// background" is a colour that silently stops being that the moment the background moves — which
+// as the ground was one, and a hand-picked color that is supposed to be "one step off the
+// background" is a color that silently stops being that the moment the background moves — which
 // is exactly what the ground going blue would have done to it. Nine percent is what the tan
 // actually was, kept so the pane reads as it always did.
 var relicPaneBackColor = systems.ColorAtStrength(screenGround, 91)
@@ -124,7 +124,7 @@ var relicPaneBackColor = systems.ColorAtStrength(screenGround, 91)
 // and dropped relicPaneTopDrop below them.
 //
 // **It is the middle of a three-part row** — duelist card, relics, enemy card — so it takes its
-// edges from its neighbours rather than from percentages of the screen. Whichever card moves,
+// edges from its neighbors rather than from percentages of the screen. Whichever card moves,
 // the row follows, and the one thing that cannot happen is a relic drawn underneath one of them.
 //
 // **The rectangle is the cards and the rule, not the backing.** It is what the slots are cut
@@ -220,7 +220,7 @@ func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, row image.Rectan
 
 // relicSlotMaxGap is the most bare table ever left between two relic cards.
 //
-// **A row's pitch is capped and then the row is centred** *(2026-08-24)*. Without the cap the row
+// **A row's pitch is capped and then the row is centered** *(2026-08-24)*. Without the cap the row
 // spread to whatever pane it was handed, so a run wearing two relics put one against the duelist
 // card and the other in the far corner of an empty screen — two relics reading as two unrelated
 // things rather than as one build. The cap is what makes a growing row *grow*: relics sit at a
@@ -233,7 +233,7 @@ func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, row image.Rectan
 // **It stopped being the gap five relics leave in the pane on the same day.** That was true while
 // the screen was 1280 wide: five relics filled the combat pane exactly, and the cap was read off
 // them. At 1920 the pane is 1443 pixels and a full row is 1039, so there is slack even at five and
-// the row is centred in it. Filling the pane again would mean a gap of 118 — most of a card of bare
+// the row is centered in it. Filling the pane again would mean a gap of 118 — most of a card of bare
 // table between relics, which is precisely the "two unrelated things rather than one build" failure
 // the cap was written to prevent. So the cap is now a chosen pitch rather than a derived one.
 const relicSlotMaxGap = 26
@@ -249,7 +249,7 @@ const relicSlotMaxGap = 26
 // accepted failure mode, not shrinking: a card cannot be scaled, a smaller relic is a
 // *different drawing*, and there is no relic style below this one.
 //
-// **The spread is capped at relicSlotMaxGap and the row is centred in the pane by relicSlotAt**, so
+// **The spread is capped at relicSlotMaxGap and the row is centered in the pane by relicSlotAt**, so
 // a pane wider than the relics in it leaves its slack at both ends rather than between the cards.
 func relicSlotPitch(r image.Rectangle, worn int) int {
 	if worn < 2 {
@@ -275,7 +275,7 @@ func relicSlotRowWidth(r image.Rectangle, worn int) int {
 // which is the top of the character block beside it — the two are aligned directly rather than
 // each being inset inside a frame of its own.
 //
-// **Horizontally the row is centred on the pane**, which is only visible once the pitch is capped:
+// **Horizontally the row is centered on the pane**, which is only visible once the pitch is capped:
 // a full row still starts where it always did, because there is no slack left to share out.
 func relicSlotAt(r image.Rectangle, i, worn int) image.Point {
 	left := r.Min.X + (r.Dx()-relicSlotRowWidth(r, worn))/2
@@ -419,7 +419,7 @@ func drawDraggedRelic(gs *state.GlobalState, screen *ebiten.Image, drag *cardDra
 // resolves the one numeric effect the accumulator feeds and `combat.Scaling` says whether that
 // figure is a percentage — so a multiplier reads as a multiplier and flat life reads as life.
 //
-// **A relic that does not grow has no badge**, which is most of the catalogue: an empty string draws
+// **A relic that does not grow has no badge**, which is most of the catalog: an empty string draws
 // nothing. That is the whole distinction the badge is for — a card carrying one is a card whose
 // number is still moving.
 func relicCounter(w combat.WornRelic) string {
@@ -465,7 +465,7 @@ func runCounters(gs *state.GlobalState) map[string]string {
 // dialog it falls back to the duelist, which is every frame outside a blow.
 func (s *CombatScene) countersNow() map[string]string {
 	worn := s.fighter.Duelist.WornRelics()
-	if grown, ok := s.theatre.mathBox.growthNow(combat.SideA); ok {
+	if grown, ok := s.theater.mathBox.growthNow(combat.SideA); ok {
 		worn = withGrown(worn, grown)
 	}
 	return relicCounters(worn)
@@ -502,7 +502,7 @@ var (
 	// beats together.
 	relicShakeTicks = beat(3, 5)
 
-	// relicShakeSwings is how many times the card crosses its own centre. Three reads as a rattle;
+	// relicShakeSwings is how many times the card crosses its own center. Three reads as a rattle;
 	// one reads as a nudge and five as a wobble.
 	relicShakeSwings = 3.0
 
@@ -541,13 +541,13 @@ func (s *CombatScene) tickShakes(gs *state.GlobalState) {
 		s.cardShake[i].tick()
 	}
 
-	at := s.theatre.mathBox.at
+	at := s.theater.mathBox.at
 	if at == s.shakeItem {
 		return
 	}
 	s.shakeItem = at
 
-	relics, card, ok := s.theatre.mathBox.shaking(combat.SideA)
+	relics, card, ok := s.theater.mathBox.shaking(combat.SideA)
 	if !ok {
 		return
 	}
@@ -584,13 +584,13 @@ func (s *CombatScene) playedCardShake(seat int) int {
 	return shakeOffset(s.cardShake[seat])
 }
 
-// relicCardCentre is the middle of one worn seat's card, which is where that relic's multiplier sets
+// relicCardCenter is the middle of one worn seat's card, which is where that relic's multiplier sets
 // off from on its way into the sum.
 //
 // **It reads the same two functions the row is drawn with** — `relicPaneRect` and `relicSlotAt` — so a
 // figure cannot set off from a seat the card is not in. That is the rule every origin on this screen
-// follows; see `handCardCentre`.
-func (s *CombatScene) relicCardCentre(gs *state.GlobalState, seat int) image.Point {
+// follows; see `handCardCenter`.
+func (s *CombatScene) relicCardCenter(gs *state.GlobalState, seat int) image.Point {
 	at := relicSlotAt(s.relicPaneRect(gs), seat, len(wornRelics(gs)))
 	return image.Pt(at.X+cards.RelicStyle.Width/2, at.Y+cards.RelicStyle.Height/2)
 }
@@ -715,7 +715,7 @@ func (s *CombatScene) updateRelicRow(gs *state.GlobalState) {
 	row := s.relicRow(gs)
 
 	// A modal covering the screen, or a tutorial step holding input elsewhere, takes the row with
-	// it — cancelling rather than returning, for the reason the action box cancels.
+	// it — canceling rather than returning, for the reason the action box cancels.
 	if s.modalUp() || !gs.CursorAllowed() {
 		s.relicDrag.cancel(row)
 		return

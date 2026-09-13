@@ -1,19 +1,19 @@
 package systems
 
-// Bevelling a flat rectangle, from the one colour it names.
+// Bevelling a flat rectangle, from the one color it names.
 //
 // **The glyphs got a bevel and the widgets did not**, which is what left the two reading as
 // different pictures: a pixel-art glyph with a lit rim sitting on a plain filled rectangle. The
 // glyph palette is authored — six named values in glyphs.go, because a silhouette's light has to
 // be drawn rather than computed off a fill. A widget's is not authored and must not be, or every
-// button in the game would need a palette picked for it and CLAUDE.md's "name one colour" rule
+// button in the game would need a palette picked for it and CLAUDE.md's "name one color" rule
 // would be dead.
 //
 // **So the light and the shade are derived from the fill itself.** Highlight moves the fill toward
-// white and shade scales it down, both by a fixed amount, so a button still names one colour and
+// white and shade scales it down, both by a fixed amount, so a button still names one color and
 // gets a lit top edge and a shadowed bottom one for free. That is the correction the rule needed:
 // scaling is how a surface expresses *state*, and a bevel is the surface's own light, which is a
-// different question and does not spend the colour.
+// different question and does not spend the color.
 
 import (
 	"image/color"
@@ -26,7 +26,7 @@ import (
 //
 // **The lit edge moves toward white and the shadowed one scales toward black**, which is the pair
 // of operations already in this package rather than a third one: ColorToward for the light,
-// because a saturated colour has nowhere to climb by scaling, and ColorAtStrength for the shade,
+// because a saturated color has nowhere to climb by scaling, and ColorAtStrength for the shade,
 // because scaling is what holds a hue while it darkens.
 //
 // 34 and 58 are far enough apart to read as a lit edge and a shadowed one at three pixels, and
@@ -99,8 +99,8 @@ func BevelRect(dst *ebiten.Image, x, y, w, h, width int, fill color.RGBA, sunken
 
 // BevelEdges is the lit and the shadowed version of one fill.
 //
-// **Exported because `internal/cards` bevels its border with the same two colours** and must do
-// its own rasterising: that package renders without a graphics context, so it cannot call
+// **Exported because `internal/cards` bevels its border with the same two colors** and must do
+// its own rasterizing: that package renders without a graphics context, so it cannot call
 // BevelFace. Sharing the derivation rather than the drawing is what stops a card's light and a
 // button's light drifting apart while both claim to be lit from the top left.
 func BevelEdges(fill color.RGBA) (light, shade color.RGBA) {

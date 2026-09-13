@@ -10,13 +10,13 @@ package screens
 //
 // # Two halves, and the burst is the new one
 //
-// **The burst** is the firework: rays thrown out of the card that fired, in the colour of the rider
+// **The burst** is the firework: rays thrown out of the card that fired, in the color of the rider
 // that threw them. It says *this card just did something* at the card, which is the one thing a
 // figure landing on a duelist card three hundred pixels away cannot say.
 //
-// **The flight** is the figure travelling into whatever it changed — the DMG row, the vitae row or
+// **The flight** is the figure traveling into whatever it changed — the DMG row, the vitae row or
 // the health bar of the duelist card. That is `anchorActorSeat` to `anchorActorCard`, exactly as
-// the theatre table has said all along.
+// the theater table has said all along.
 //
 // The burst is deliberately not a `gesture` in that table. It is an *emphasis at the source* rather
 // than a journey of its own, so it composes with whatever the row already says a kind does — which
@@ -24,12 +24,12 @@ package screens
 // the table gaining a row per decoration. A `gestureBurst` is worth adding the day something bursts
 // and sends nothing anywhere.
 //
-// # Why the colour is not a colour of its own
+// # Why the color is not a color of its own
 //
 // **A signal is drawn in the tint of the rider that threw it** — `upgradeForRider` into
 // `systems.UpgradeTint`, the same table the card's own face is washed with. The wheel is full, so a
 // firework in a hue of its own would be claiming one; and more usefully, the burst on the card is
-// then the same colour as the card, so the two read as one object rather than as a card and an
+// then the same color as the card, so the two read as one object rather than as a card and an
 // effect that happened near it.
 //
 // # When they fire, which is the part that took a design decision
@@ -42,7 +42,7 @@ package screens
 //
 //   - **A played card signals as it scores.** The signal is collected here, parked against its
 //     seat, and released by the hand dialog on the beat that card's own term starts. That is
-//     `takeShields` generalised — a defend card's pips already leave with its figure for the same
+//     `takeShields` generalized — a defend card's pips already leave with its figure for the same
 //     reason, and `mathItem` already carried a per-item payload for it.
 //   - **Every held card signals at once, as the sum begins.** They are one statement about what the
 //     hand kept back rather than several about cards, and nothing sequences them because nothing
@@ -53,7 +53,7 @@ package screens
 // would be the rules bending to the picture. The screen owns when it draws; the log owns what
 // happened.
 //
-// **What happens when there is no scoring:** a turn of nothing but defences forms no hand, so the
+// **What happens when there is no scoring:** a turn of nothing but defenses forms no hand, so the
 // box never runs and there is no sequence to hang anything on. Anything still parked is flushed
 // when the acting side changes or the round ends, which fires it at its own place in the log. Same
 // fallback `noteShieldRaise` already keeps for pips, and for the same reason.
@@ -63,7 +63,7 @@ package screens
 // **The model has already moved.** `ResolveRound` decided all of this before a frame of it was
 // drawn; a signal in the air is a ghost of something that has happened.
 //
-// **It holds the playback cursor** — `combatTheatre.running` — which is pacing, and pacing is
+// **It holds the playback cursor** — `combatTheater.running` — which is pacing, and pacing is
 // allowed. *(Owner's call, 2026-09-10: every signal of a card firing holds playback.)*
 //
 // **It cannot change an outcome.**
@@ -102,7 +102,7 @@ var (
 )
 
 const (
-	// signalFigureSize is the type size of a travelling figure, and it is the sum's total size for
+	// signalFigureSize is the type size of a traveling figure, and it is the sum's total size for
 	// hitFigureSize's reason: every figure that crosses this screen is the same figure.
 	signalFigureSize = mathTotalSize
 
@@ -132,11 +132,11 @@ const (
 	signalRayWidth = 8.0
 	signalRayTaper = 0.15
 
-	// signalCoreSize is the hot centre, as a fraction of the card's width.
+	// signalCoreSize is the hot center, as a fraction of the card's width.
 	//
 	// **There is no flash disc behind the arms** *(owner's call, 2026-09-10)*. There was, at nearly
 	// two card widths — and on a pale tint it lifted so far toward white that what reached the
-	// screen was a big white circle with some colour round the edge, which is a *flash* and not an
+	// screen was a big white circle with some color round the edge, which is a *flash* and not an
 	// *explosion*. What holds fifteen arms together as one object is a small bright core at the one
 	// place they are all still touching, not a disc large enough to hide the card that threw them.
 	signalCoreSize = 0.30
@@ -155,7 +155,7 @@ const (
 	signalVitae
 
 	// signalLife is the health bar. Two riders land here — a heal and gold's life face — and they
-	// are told apart by their colour rather than by where they go.
+	// are told apart by their color rather than by where they go.
 	signalLife
 )
 
@@ -165,7 +165,7 @@ const (
 // every frame from the geometry that owns them, so a signal survives the row it left re-laying out
 // underneath it — a sort, a slide, or the hand closing up.
 type cardSignal struct {
-	rider  combat.RiderKind // what fired: the colour comes from this and nothing else
+	rider  combat.RiderKind // what fired: the color comes from this and nothing else
 	dest   signalDest
 	amount int
 	side   combat.Side // whose card it lands on, and whose row the seat is measured in
@@ -276,7 +276,7 @@ func (s *CombatScene) noteSignal(e combat.Event) bool {
 		seat = s.heldSeatOf(e)
 	}
 
-	s.theatre.pending = append(s.theatre.pending, cardSignal{
+	s.theater.pending = append(s.theater.pending, cardSignal{
 		rider:  e.Rider,
 		dest:   dest,
 		amount: e.Amount,
@@ -300,7 +300,7 @@ func (s *CombatScene) noteSignal(e combat.Event) bool {
 // than from a seat. That is the honest picture for a payment whose card cannot be pointed at.
 func (s *CombatScene) heldSeatOf(e combat.Event) int {
 	taken := 0
-	for _, p := range s.theatre.pending {
+	for _, p := range s.theater.pending {
 		if p.held && p.rider == e.Rider {
 			taken++
 		}
@@ -342,7 +342,7 @@ func (s *CombatScene) releaseSeatSignals(side combat.Side, seat int) int {
 // against the parked signals' own side rather than against a remembered one, so a screen re-entered
 // mid-round cannot flush a turn it never watched.
 func (s *CombatScene) flushSignalsAtBoundary(e combat.Event) {
-	if len(s.theatre.pending) == 0 {
+	if len(s.theater.pending) == 0 {
 		return
 	}
 	if e.Kind == combat.KindRoundEnd {
@@ -359,19 +359,19 @@ func (s *CombatScene) flushSignals() int {
 
 // releaseSignals moves the parked signals matching a predicate onto the stage, keeping log order.
 func (s *CombatScene) releaseSignals(want func(cardSignal) bool) int {
-	if len(s.theatre.pending) == 0 {
+	if len(s.theater.pending) == 0 {
 		return 0
 	}
-	kept, sent := s.theatre.pending[:0], 0
-	for _, c := range s.theatre.pending {
+	kept, sent := s.theater.pending[:0], 0
+	for _, c := range s.theater.pending {
 		if !want(c) {
 			kept = append(kept, c)
 			continue
 		}
-		s.theatre.signals = append(s.theatre.signals, c)
+		s.theater.signals = append(s.theater.signals, c)
 		sent++
 	}
-	s.theatre.pending = kept
+	s.theater.pending = kept
 	return sent
 }
 
@@ -381,7 +381,7 @@ func (s *CombatScene) releaseSignals(want func(cardSignal) bool) int {
 // on the frame a figure *arrives*, and a mover that ticks and is dropped in one pass gives nobody a
 // chance to notice. The tally is what the fighter cards draw on top of their model until the round
 // is adopted — see signalShown.
-func (t *combatTheatre) advanceSignals() []cardSignal {
+func (t *combatTheater) advanceSignals() []cardSignal {
 	if len(t.signals) == 0 {
 		return t.signals
 	}
@@ -405,7 +405,7 @@ func (t *combatTheatre) advanceSignals() []cardSignal {
 // as `session.Equip` does: a maximum that rose while the bar stayed where it was would read as
 // nothing having happened. A heal has no ceiling to move, and the engine has already capped the
 // amount at the one that exists.
-func (t *combatTheatre) land(c cardSignal) {
+func (t *combatTheater) land(c cardSignal) {
 	if c.side < 0 || int(c.side) >= len(t.shown) {
 		return
 	}
@@ -425,48 +425,48 @@ func (t *combatTheatre) land(c cardSignal) {
 
 // adopted clears what the cards were drawing over their model, because the model now holds it.
 // Called from endOfRound on the frame the authoritative duelists are taken up.
-func (t *combatTheatre) adopted() { t.shown = [2]signalShown{} }
+func (t *combatTheater) adopted() { t.shown = [2]signalShown{} }
 
 // shownDMG, shownMaxLife and shownVitae are the figures a fighter card draws, which are not always
 // the figures the model holds. See signalShown, and shownLife, which is the same idea for the bar.
 func (s *CombatScene) shownDMG(side combat.Side, actual int) int {
-	return actual + s.theatre.shownFor(side).dmg
+	return actual + s.theater.shownFor(side).dmg
 }
 
 func (s *CombatScene) shownMaxLife(side combat.Side, actual int) int {
-	return actual + s.theatre.shownFor(side).maxLife
+	return actual + s.theater.shownFor(side).maxLife
 }
 
 func (s *CombatScene) shownVitae(actual int) int {
-	return actual + s.theatre.shownFor(combat.SideA).vitae
+	return actual + s.theater.shownFor(combat.SideA).vitae
 }
 
-func (t *combatTheatre) shownFor(side combat.Side) signalShown {
+func (t *combatTheater) shownFor(side combat.Side) signalShown {
 	if side < 0 || int(side) >= len(t.shown) {
 		return signalShown{}
 	}
 	return t.shown[side]
 }
 
-// signalInk is what a signal is drawn in, sparks and figure alike: **the colour of the rider that
+// signalInk is what a signal is drawn in, sparks and figure alike: **the color of the rider that
 // threw it**, asked for rather than restated — `upgradeForRider` into `systems.UpgradeTint`, the
-// same table the card's own face is washed with. A colour of its own would be a second vocabulary
+// same table the card's own face is washed with. A color of its own would be a second vocabulary
 // for something the card already says, and the wheel has no room left to spend on one.
 //
 // So a gold card throws gold sparks, a silver card silver ones, and the heal its rose. **One card,
-// one colour, all the way from the burst to the figure landing** — which is what makes the thing on
+// one color, all the way from the burst to the figure landing** — which is what makes the thing on
 // the duelist card readable as having come out of the card it came out of.
 //
 // **The vitae-in-hand rider is the exception, and it is the game's rather than this file's**
 // *(owner's call, 2026-09-10)*. `vitaeInk` is the crimson vitae is written in **everywhere it is
 // written** — the purse on the duelist card, the word in the reward screen's prose — and it is the
 // only red on the table precisely so a figure in it says "money" before it is read. That rider's
-// whole subject is vitae, so its placeholder blue-grey was the one tint saying the wrong thing.
+// whole subject is vitae, so its placeholder blue-gray was the one tint saying the wrong thing.
 //
 // **Silver is deliberately not swept up in that**, although it also pays into the purse. What is
 // being said there is *the metal came up*, and the metal is what the card is; the row it lands on
 // is already crimson and does not need the figure to agree with it. The vitae card has no metal to
-// be, which is exactly why it takes the currency's colour instead.
+// be, which is exactly why it takes the currency's color instead.
 func signalInk(rider combat.RiderKind) color.RGBA {
 	if rider == combat.RiderVitaeInHand {
 		return vitaeInk
@@ -479,7 +479,7 @@ func signalInk(rider combat.RiderKind) color.RGBA {
 
 // drawSignals draws every burst and every figure at wherever it has got to.
 func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, c := range s.theatre.signals {
+	for _, c := range s.theater.signals {
 		from, ok := s.signalOrigin(gs, c)
 		if !ok {
 			continue
@@ -499,7 +499,7 @@ func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 }
 
-// drawBurst throws the sparks. **They grow out of the card and fade rather than travelling**,
+// drawBurst throws the sparks. **They grow out of the card and fade rather than traveling**,
 // because what a firework says is "here", and an arm that drifts is an arm going somewhere.
 //
 // **Two relics and a core, drawn back to front.** The long relic carries the reach, the short relic
@@ -525,13 +525,13 @@ func drawBurst(screen *ebiten.Image, at image.Point, c cardSignal, ink color.RGB
 	drawSparkRelic(screen, x, y, inner*0.7, signalSparkLen, signalRayWidth*0.6, p, arm,
 		burstRays(c, 1))
 
-	// **The core is the ink lifted a little toward white**, not white itself — a saturated colour
+	// **The core is the ink lifted a little toward white**, not white itself — a saturated color
 	// has nowhere to climb by scaling, the same reason `BevelEdges` derives its light edge with
 	// ColorToward. It shrinks as the arms extend, so the burst empties outward.
 	//
 	// **A quarter of the way and no further** *(2026-09-10)*. It was more than half, which on a pale
 	// tint like silver's put a white disc back in the middle of the thing that had just stopped
-	// being one — and the whole point of a card's signal is that it is that card's colour.
+	// being one — and the whole point of a card's signal is that it is that card's color.
 	core := systems.ColorToward(ink, color.RGBA{R: 255, G: 255, B: 255, A: 255}, 25)
 	core.A = uint8(255 * fade)
 	vector.DrawFilledCircle(screen, x, y,
@@ -605,15 +605,15 @@ func (s *CombatScene) signalOrigin(gs *state.GlobalState, c cardSignal) (image.P
 
 	var at image.Point
 	if c.side == combat.SideA {
-		if c.seat < 0 || c.seat >= len(s.theatre.resolved) {
+		if c.seat < 0 || c.seat >= len(s.theater.resolved) {
 			return image.Point{}, false
 		}
-		at = playedSeatAt(gs, c.seat, len(s.theatre.resolved), s.playedSplit())
+		at = playedSeatAt(gs, c.seat, len(s.theater.resolved), s.playedSplit())
 	} else {
-		if c.seat < 0 || c.seat >= len(s.theatre.enemyDealt) {
+		if c.seat < 0 || c.seat >= len(s.theater.enemyDealt) {
 			return image.Point{}, false
 		}
-		at = enemySeatAt(gs, c.seat, len(s.theatre.enemyDealt), s.enemySplit())
+		at = enemySeatAt(gs, c.seat, len(s.theater.enemyDealt), s.enemySplit())
 	}
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }

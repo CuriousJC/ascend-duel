@@ -1,13 +1,13 @@
 package combat
 
 // Elements are what a card is made of, and as of 2026-08-12 they are a rule rather than a
-// colour. They lived on the combat screen as an unexported `element` until then, painting a
+// color. They lived on the combat screen as an unexported `element` until then, painting a
 // border and meaning nothing — which is why three separate mechanics were all blocked on the
 // same sentence in MECHANICS.md: *element must cross into `internal/combat`*. This file is that
 // crossing, and it unblocks the element hands, the relic discount and the flip relic together.
 //
 // **An element does two things.** It is matchable by a hand `Step`, and a landed attack applies
-// its element's status to whoever took the blow. Everything else about an element — its colour,
+// its element's status to whoever took the blow. Everything else about an element — its color,
 // its name on a card — stays presentation and stays in `internal/screens`.
 //
 // **Only attacks apply statuses** *(decided 2026-08-12)*. An ice Guard is an ice card for hand
@@ -17,7 +17,7 @@ package combat
 // inert on the eight concepts that are not attacks, and it buys them nothing until relics land.
 
 // Element is what a card is made of. `Basic` is the absence of an element rather than a fifth
-// colour, which is why it is the zero value: a card that names no element is a plain card, and
+// color, which is why it is the zero value: a card that names no element is a plain card, and
 // so is a zero `Card`.
 //
 // **Append-only, like GlyphKind.** `Duelist.Statuses` and `Duelist.Relics` are arrays indexed by
@@ -32,8 +32,8 @@ const (
 	Lightning
 	Earth
 
-	// Arcane is the fifth colour *(owner's call, 2026-08-25)*, appended rather than inserted for the
-	// reason above. It is a primary like the other four — cards, a colour and a status — and the one
+	// Arcane is the fifth color *(owner's call, 2026-08-25)*, appended rather than inserted for the
+	// reason above. It is a primary like the other four — cards, a color and a status — and the one
 	// thing that makes it a different shape is what its status does: WEAKENED reaches forward into
 	// what happens *to* its carrier rather than what its carrier does. See status.go.
 	Arcane

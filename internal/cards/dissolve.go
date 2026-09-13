@@ -12,12 +12,12 @@ package cards
 //
 // The face is cut into small squares, each with its own moment to go. Drawn, that reads as the
 // card being eaten away in patches rather than as a grid switching off, because **the delays are
-// spatially coherent**: they come from a smooth lattice, so neighbouring squares go at nearly the
+// spatially coherent**: they come from a smooth lattice, so neighboring squares go at nearly the
 // same time and the boundary between what is left and what has gone is a ragged edge that travels.
 // Independent per-square delays would read as television static, which is a different — and much
 // worse — sentence about what happened to the card.
 //
-// # One rasteriser today, and the geometry still lives here
+// # One rasterizer today, and the geometry still lives here
 //
 // Unlike ShatterCracks there is no baked counterpart: a dissolve has no settled state, because the
 // settled state is simply the other card. It is here anyway for two reasons. The pattern is derived
@@ -84,7 +84,7 @@ func DissolveCells(w, h int, seed uint32) []DissolveCell {
 	lo, hi := 1.0, 0.0
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
-			// **A little per-square jitter on top of the smooth value**, so the travelling edge is
+			// **A little per-square jitter on top of the smooth value**, so the traveling edge is
 			// frayed rather than a clean contour. Too much and the patches dissolve back into
 			// static; a sixth of the range is enough to break the line without breaking the shape.
 			d := latticeAt(lat, lw, lh, col, row)*0.84 + r.unit()*0.16

@@ -6,7 +6,7 @@ package screens
 // were all on the shelf every time, which meant the shop asked no question about them: three seats,
 // three goods, and the only decision was what the purse could cover. Two of three makes a visit
 // something to read — and it is what buys the room the potions pane needed on a row that was
-// already too long. All three catalogues stay reachable; which two you meet is the roll.
+// already too long. All three catalogs stay reachable; which two you meet is the roll.
 //
 // **Its own stream, `seeds.PackOffer`.** Sharing the relic shelf's would make authoring a relic change
 // which packs every run was ever offered, and would reroll the packs every time the relics were
@@ -15,7 +15,7 @@ package screens
 // **Rerolls are per pane and they escalate** *(owner's call, 2026-09-06)*: 2 vitae, then 4, then 8,
 // doubling within a visit and starting again at the next shop. The relics and the packs each have
 // their own button and their own count, so pressing one does not make the other dearer. The potions
-// and the brand have no button at all — the potion pane is the whole catalogue every visit, so a
+// and the brand have no button at all — the potion pane is the whole catalog every visit, so a
 // reroll would offer what is already offered, and the brand is one seat.
 //
 // **A reroll advances the visit's cursor rather than seeding a second stream.** The scene holds the
@@ -72,7 +72,7 @@ func shopRNG(gs *state.GlobalState, stream seeds.Stream) *rand.Rand {
 
 // dealPacks picks which two of the three stand on the shelf.
 //
-// **A shuffle of the catalogue, cut to two** rather than two draws without replacement, because the
+// **A shuffle of the catalog, cut to two** rather than two draws without replacement, because the
 // three are equally weighted: there is no rarity here, so a weighted draw would be the relic shelf's
 // machinery doing nothing. The order is the roll's, so the bag is not always on the left.
 func dealPacks(rng *rand.Rand) []goodKind {
@@ -143,7 +143,7 @@ func (s *ShopScene) rerollPacks(gs *state.GlobalState) {
 // and it is drawn on exactly its rarity's tickets like anything else in the pool. The fresh deal
 // has no memory of the old shelf, which is the point: excluding what was just offered would give a
 // rejected relic worse odds than its rarity says it has, and the shelf is a weighted sample of what
-// the run does not own rather than a queue through the catalogue.
+// the run does not own rather than a queue through the catalog.
 //
 // A short pool — fewer unworn relics left than seats — leaves the remaining seats empty rather than
 // keeping what was standing there, so the row never shows a relic the fresh draw did not pick.
@@ -162,7 +162,7 @@ func (s *ShopScene) rerollRelics(gs *state.GlobalState) {
 // paneHasSomethingToReroll is whether a press would change anything. A pane whose every seat is
 // spent has nothing to redraw, and taking vitae for that would be the shop selling nothing.
 //
-// **The relics pane asks the catalogue rather than the shelf**, because a reroll refills bought
+// **The relics pane asks the catalog rather than the shelf**, because a reroll refills bought
 // seats: a shelf where all three have been taken still has something to redraw, so long as the run
 // is not wearing every relic there is.
 func (s *ShopScene) paneHasSomethingToReroll(gs *state.GlobalState, p shopPane) bool {
@@ -179,7 +179,7 @@ func (s *ShopScene) paneHasSomethingToReroll(gs *state.GlobalState, p shopPane) 
 	return false
 }
 
-// unwornRelicExists is whether the catalogue still holds a relic the run is not wearing — the one
+// unwornRelicExists is whether the catalog still holds a relic the run is not wearing — the one
 // thing a relic reroll needs, since the shelf itself is replaced wholesale.
 func (s *ShopScene) unwornRelicExists(gs *state.GlobalState) bool {
 	if gs.Run == nil {

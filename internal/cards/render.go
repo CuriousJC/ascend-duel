@@ -10,7 +10,7 @@ import (
 	xdraw "golang.org/x/image/draw"
 )
 
-// State is expressed by moving colours *toward the card's own surface*, not by scaling
+// State is expressed by moving colors *toward the card's own surface*, not by scaling
 // them down.
 //
 // **This is the one thing about the off-white card that changes how state has to be
@@ -22,7 +22,7 @@ import (
 // this, having been written when the same mistake put the Resolution pane's idle rows in
 // front of its lit one.
 //
-// Selected reaches the colour named in borderColors, which is what full strength means.
+// Selected reaches the color named in borderColors, which is what full strength means.
 // Everything else is some distance from it toward the surface.
 const (
 	borderRestToward     = 20 // percent of the way to the surface
@@ -35,7 +35,7 @@ const (
 	// has to stay clearly apart from unavailable.
 	surfaceDraggingToward = 34
 
-	// The two ends of the form mark's colour ramp: see tintInk. Named here beside the other
+	// The two ends of the form mark's color ramp: see tintInk. Named here beside the other
 	// state figures because they are the same kind of number — a distance, in percent, that
 	// decides how loud something is against the card's surface.
 	tintDarkPct     = 34
@@ -43,11 +43,11 @@ const (
 )
 
 // SurfaceDisabled is the face of a card the fighter cannot afford. It is duller and a
-// shade greyer than Surface rather than darker: a disabled control has to read as
+// shade grayer than Surface rather than darker: a disabled control has to read as
 // unavailable first and as itself second, and on a light card "unavailable" is washed
 // out, not shadowed.
 //
-// Written as its own colour rather than derived, because what it needs to be is a
+// Written as its own color rather than derived, because what it needs to be is a
 // function of the screen background behind the card, which this package cannot see.
 var SurfaceDisabled = color.RGBA{R: 214, G: 213, B: 208, A: 255}
 
@@ -56,7 +56,7 @@ var SurfaceDisabled = color.RGBA{R: 214, G: 213, B: 208, A: 255}
 // The image is exactly Style.Width by Style.Height with transparent corners, so callers
 // composite it at a position and nothing else. The game caches the result; see
 // internal/screens/card_art.go. Rendering is not cheap enough to do per frame — every
-// pixel of the shape is written in Go and the text is rasterised — which is the one cost
+// pixel of the shape is written in Go and the text is rasterized — which is the one cost
 // of moving card drawing off the GPU.
 func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if st.Width <= 0 || st.Height <= 0 {
@@ -99,7 +99,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		draw := drawText
 		if st.NameCentered {
 			// Same signature, so the choice is a value rather than a branch around two
-			// near-identical calls. The centred one takes the card width where the other
+			// near-identical calls. The centered one takes the card width where the other
 			// takes a left edge.
 			draw = func(dst *image.RGBA, f *Faces, size float64, s string, x, y int, c color.RGBA) error {
 				return drawTextHCentered(dst, f, size, s, st.Width, y, c)
@@ -121,8 +121,8 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 
 	// **The ticks carry the element, like the form mark above them, and unlike the border**
 	// *(owner's call, 2026-08-23)*. They are the other thing in the left column, so leaving them
-	// the border's neutral grey would have made the corner the only coloured mark on an
-	// otherwise monochrome column. Same state treatment as the border, different base colour.
+	// the border's neutral gray would have made the corner the only colored mark on an
+	// otherwise monochrome column. Same state treatment as the border, different base color.
 	//
 	// **An upgrade no longer touches the column** *(owner's call, 2026-09-09)*. It took the mark
 	// and the ticks over while the wildcard was the only one there was; now that there are ten and
@@ -154,7 +154,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	return img, nil
 }
 
-// drawCounter puts Spec.Counter on a disc centred on the card’s bottom-right corner.
+// drawCounter puts Spec.Counter on a disc centered on the card’s bottom-right corner.
 //
 // **Last, over everything**, because it is the one thing on the face that says how far a relic has
 // got rather than what the relic is — a figure painted over by the artwork underneath it would be
@@ -166,8 +166,8 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 // which of the two matters: a bare figure in the card’s own border pink, on a card that is mostly
 // artwork, does not read as a *count* at all.
 //
-// **Centred on the corner rather than tucked inside it** *(owner’s call, 2026-09-09)*, which is
-// the discards-left badge’s own arrangement — see screens.drawDiscardsLeft, which centres on the
+// **Centered on the corner rather than tucked inside it** *(owner’s call, 2026-09-09)*, which is
+// the discards-left badge’s own arrangement — see screens.drawDiscardsLeft, which centers on the
 // Discard button’s corner for the same reason. Most of the disc hangs off the card, so it reads as
 // a counter attached to the relic instead of a second thing printed on it, and it costs the artwork
 // nothing at all. **Style.Bleed is what pays for it**: the rendered image is that much larger than
@@ -175,11 +175,11 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 // disc filling the corner.
 //
 // **The disc is the border ink and the figure is the card’s surface**, an inversion of what was
-// there rather than a new colour: the palette has no hue left to claim, so the badge is made
-// obvious by swapping the two colours the card already carries. Both are taken *after* state, like
+// there rather than a new color: the palette has no hue left to claim, so the badge is made
+// obvious by swapping the two colors the card already carries. Both are taken *after* state, like
 // the border, so a relic you cannot act on fades with the rest of its card.
 //
-// **Centred on the disc, and allowed to outgrow it.** Two characters sit inside; `10.5` and `+100`
+// **Centered on the disc, and allowed to outgrow it.** Two characters sit inside; `10.5` and `+100`
 // spill past the curve on both sides, which is the readable failure — the alternative is a figure
 // shrunk to fit the widest case it will ever reach and small for every case it actually shows. The
 // clamp is the image’s own edge, which is the bleed rather than the card.
@@ -197,7 +197,7 @@ func drawCounter(dst *image.RGBA, s Spec, st Style, f *Faces, ink color.RGBA) er
 		return err
 	}
 
-	// The centre, measured in from the card’s right and bottom edges like everything else here.
+	// The center, measured in from the card’s right and bottom edges like everything else here.
 	// Both offsets are zero on the one style that has a counter, which is what puts it on the
 	// corner; they are kept so a style can pull it inboard without a second rule.
 	cx := st.Width - st.CounterRight
@@ -220,7 +220,7 @@ func drawCounter(dst *image.RGBA, s Spec, st Style, f *Faces, ink color.RGBA) er
 	return drawText(dst, f, st.CounterSize, s.Counter, x, y, Surface)
 }
 
-// drawEffects lays the status badges out in a centred row along the bottom of the card.
+// drawEffects lays the status badges out in a centered row along the bottom of the card.
 //
 // **The row is sized to what is actually there.** Nil entries are skipped before the width is
 // worked out, so one status sits in the middle of the card and four spread across it — rather
@@ -228,12 +228,12 @@ func drawCounter(dst *image.RGBA, s Spec, st Style, f *Faces, ink color.RGBA) er
 // more statuses it may never take.
 //
 // **Fitted and resampled like the portrait, not blitted like a glyph.** These are 500-pixel
-// drawings landing in a twenty-pixel box; nearest-neighbour at that ratio throws away 24 rows
+// drawings landing in a twenty-pixel box; nearest-neighbor at that ratio throws away 24 rows
 // out of every 25 and what survives is noise. `drawArt`'s argument applies with more force here,
 // and this runs once per distinct card rather than per frame.
 //
 // Each badge is fitted into its own square without distorting, so a picture that is not square
-// keeps its shape and is centred in the slot it was given.
+// keeps its shape and is centered in the slot it was given.
 func drawEffects(dst *image.RGBA, s Spec, st Style) {
 	if st.EffectSize <= 0 {
 		return
@@ -259,7 +259,7 @@ func drawEffects(dst *image.RGBA, s Spec, st Style) {
 	}
 }
 
-// fitInto scales src to fit box without distorting it and centres it there. It is drawArt's
+// fitInto scales src to fit box without distorting it and centers it there. It is drawArt's
 // arithmetic with the box named by the caller rather than read off the style, which is what lets
 // a row of small badges and one large portrait share it.
 func fitInto(dst *image.RGBA, src image.Image, box image.Rectangle) {
@@ -295,7 +295,7 @@ func (st Style) needsFont() bool {
 		st.CounterHeight > 0
 }
 
-// drawStats writes the labelled figures down the face: label against the left margin,
+// drawStats writes the labeled figures down the face: label against the left margin,
 // figure against the right, one per row at the style's pitch.
 //
 // **A blank entry leaves its row empty rather than closing up.** The rows are a fixed
@@ -331,7 +331,7 @@ func drawStats(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA)
 // colors resolves the card's state into the three things that vary with it: the border,
 // the surface, and a function that adjusts any ink for the state.
 //
-// Ink is a function rather than a colour because the card has more than one, and all of
+// Ink is a function rather than a color because the card has more than one, and all of
 // them move the same distance toward the same ground. Passing the rule rather than the
 // results keeps that a single number.
 func (s Spec) colors() (border, surface color.RGBA, ink func(color.RGBA) color.RGBA) {
@@ -354,15 +354,15 @@ func (s Spec) colors() (border, surface color.RGBA, ink func(color.RGBA) color.R
 	}
 }
 
-// atState is how far a colour is carried from full strength for the card's current state.
+// atState is how far a color is carried from full strength for the card's current state.
 //
 // **It is shared by the border and the cost ticks** *(2026-08-23)*, which is why it is its own
-// function. The two are drawn in different colours now — the border is neutral and the ticks carry
+// function. The two are drawn in different colors now — the border is neutral and the ticks carry
 // the element — but they are the same *kind* of mark and must respond to selection and to being
 // unaffordable identically. Two copies of this switch is how a selected card ends up with a lit
 // border and resting ticks.
 //
-// Selected and dragging are full strength, which is what "the widget names the colour it wants at
+// Selected and dragging are full strength, which is what "the widget names the color it wants at
 // full strength" means here. Everything else is some distance toward the ground the card is
 // sitting on — the surface, or the duller surface a disabled card draws.
 func (s Spec) atState(base color.RGBA) color.RGBA {
@@ -405,7 +405,7 @@ func drawForm(dst *image.RGBA, s Spec, st Style) {
 		st.GlyphInset+st.FormSize, st.FormTop+st.FormSize)
 
 	// **At the box's size, not the art's** *(2026-08-23)*. The mark used to come back at whatever
-	// size it was authored at and be centred in whatever box the style named, which is how the
+	// size it was authored at and be centered in whatever box the style named, which is how the
 	// overlay's half-size card ended up carrying a full-size mark. Drawn art can be halved; see
 	// systems.RenderGlyphAt for why a generated silhouette still cannot.
 	// **The wildcard is the one upgrade that leaves the mark hueless** — see
@@ -418,13 +418,13 @@ func drawForm(dst *image.RGBA, s Spec, st Style) {
 	}
 	at := placeInk(dst, glyph, box, st.GlyphScale, st)
 	if !s.Enabled && !at.Empty() {
-		// A mark carries its own colours rather than a state ink, so a disabled card fades one
+		// A mark carries its own colors rather than a state ink, so a disabled card fades one
 		// in place instead of choosing a duller one to draw it with.
 		fadeRegion(dst, at, glyphDisabledToward)
 	}
 }
 
-// placeInk composites src so its *inked* bounds come out centred in box, clipped to the card's
+// placeInk composites src so its *inked* bounds come out centered in box, clipped to the card's
 // own rounded silhouette. It returns the rectangle the ink landed in, which is what a fade pass
 // has to walk — the canvas around it is transparent and fading it would fill in the corner
 // blitGlyph just protected.
@@ -435,7 +435,7 @@ func placeInk(dst *image.RGBA, src *image.RGBA, box image.Rectangle, scale int, 
 	}
 	ink = image.Rectangle{Min: ink.Min.Mul(scale), Max: ink.Max.Mul(scale)}
 
-	// Where the canvas has to sit for the ink to come out centred in the box.
+	// Where the canvas has to sit for the ink to come out centered in the box.
 	at := box.Min.Sub(ink.Min).Add(image.Pt(
 		(box.Dx()-ink.Dx())/2,
 		(box.Dy()-ink.Dy())/2,
@@ -492,8 +492,8 @@ func inkBounds(g *image.RGBA) image.Rectangle {
 // The stack has the rest of the card's height to grow into now that the damage badge is gone,
 // and TestLeftColumnDoesNotCollide fails at the point it would run off the bottom.
 //
-// They are drawn in the border colour, so the two things the card says about itself in
-// colour say it in the same colour.
+// They are drawn in the border color, so the two things the card says about itself in
+// color say it in the same color.
 func drawDashes(dst *image.RGBA, s Spec, st Style, c color.RGBA) {
 	if s.Cost <= 0 || st.DashWidth <= 0 || st.DashHeight <= 0 {
 		return
@@ -507,12 +507,12 @@ func drawDashes(dst *image.RGBA, s Spec, st Style, c color.RGBA) {
 	}
 }
 
-// The health bar's two colours, and the fraction under it.
+// The health bar's two colors, and the fraction under it.
 //
 // **Red for what is left, not for what is lost.** The bar is a quantity the reader is
-// tracking downward, so the saturated colour has to be the part that shrinks — a bar where
+// tracking downward, so the saturated color has to be the part that shrinks — a bar where
 // the red grows as the enemy weakens says the opposite of what it means. The empty part is
-// a dim version of the same hue rather than a neutral grey, so the two read as one bar
+// a dim version of the same hue rather than a neutral gray, so the two read as one bar
 // partly filled instead of as two bars.
 var (
 	HealthFull  = color.RGBA{R: 198, G: 46, B: 46, A: 255}
@@ -552,17 +552,17 @@ func drawHealth(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 		fmt.Sprintf("%d/%d", life, s.MaxLife), st.Width, st.HealthTextTop, NumberInk)
 }
 
-// drawEffectText writes what the card does, as a block centred in the space the left column
+// drawEffectText writes what the card does, as a block centered in the space the left column
 // leaves.
 //
-// **Centred both ways, against the name being centred on the whole card.** The name spans the
-// card and the text does not — it owns everything right of the cost column — so centring it on
-// the card would push every line left, under the dashes. It is centred on its own column
+// **Centered both ways, against the name being centered on the whole card.** The name spans the
+// card and the text does not — it owns everything right of the cost column — so centering it on
+// the card would push every line left, under the dashes. It is centered on its own column
 // instead, and vertically inside the band, so a one-line card and a five-line card are the
 // same design rather than two.
 //
 // It is set in LabelInk rather than NameInk, the same distinction the stat rows make with
-// colour: the name stays the loudest thing on a card that is now mostly words. **Spec.TextInk
+// color: the name stays the loudest thing on a card that is now mostly words. **Spec.TextInk
 // overrides that** for a card whose figure something else has changed.
 //
 // **Every wrapped line is drawn, including one past the band.** Clamping to TextLines() would
@@ -580,7 +580,7 @@ func drawEffectText(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.
 		return err
 	}
 
-	// Centred in the band, and never above it: text that overruns grows downward off the card
+	// Centered in the band, and never above it: text that overruns grows downward off the card
 	// where it is visible, rather than upward into the name where it would look like a
 	// different bug.
 	top := st.TextBandTop + (st.TextBandBottom-st.TextBandTop-len(lines)*st.TextLineHeight)/2
@@ -598,7 +598,7 @@ func drawEffectText(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.
 	return nil
 }
 
-// drawMarkedLine draws one centred line with any number of its runs in their own colours.
+// drawMarkedLine draws one centered line with any number of its runs in their own colors.
 //
 // **Segments measured and placed rather than one string drawn twice.** Overdrawing a marked run on
 // top of the full line would composite two sets of antialiased edges and read as a smudge at 18pt,
@@ -610,7 +610,7 @@ func drawEffectText(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.
 // runs rather than glyph ranges.
 //
 // **The state's ink function is applied to every segment**, not only the plain one, so a card whose
-// text is half in element colours still fades as a whole when it is disabled.
+// text is half in element colors still fades as a whole when it is disabled.
 func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line string, runs []TextSpan,
 	left, width, y int, ink func(color.RGBA) color.RGBA) error {
 
@@ -640,9 +640,9 @@ func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line string, runs [
 	return nil
 }
 
-// Segment is one stretch of a line drawn in one colour.
+// Segment is one stretch of a line drawn in one color.
 //
-// **A zero-alpha Ink means the caller's own default**, the convention every optional colour here
+// **A zero-alpha Ink means the caller's own default**, the convention every optional color here
 // follows — so the card face reads it as LabelInk and a tooltip reads it as the panel's ink, and
 // neither has to know what the other calls "plain".
 type Segment struct {
@@ -650,28 +650,28 @@ type Segment struct {
 	Ink  color.RGBA
 }
 
-// SplitSpans cuts a line into coloured segments, in order, covering the whole line.
+// SplitSpans cuts a line into colored segments, in order, covering the whole line.
 //
-// **Exported because two rasterisers draw this game's words.** This package sets a card's own text
+// **Exported because two rasterizers draw this game's words.** This package sets a card's own text
 // and everything else on screen goes through Ebitengine's text/v2 in internal/screens; they share
 // no drawing code and cannot, so they share the cut instead. A second implementation over there
 // would be a second set of answers to where BURN ends inside BURNING.
 //
-// **Every occurrence of every run is coloured**, so one entry carries a word a sentence repeats —
+// **Every occurrence of every run is colored**, so one entry carries a word a sentence repeats —
 // "apply BURNING status … BURNING enemies" — without spending a second seat in a fixed array.
 //
 // **Matching ignores case and the line keeps its own spelling.** Relics write "Fire" and essences write
 // "FIRE", and neither the file nor the caller's vocabulary should have to pick one.
 //
 // **A run only matches at a word boundary**: ICE is inside SLICE and BURN is inside BURNING, and a
-// plain substring match would paint half a word in a colour naming something else.
+// plain substring match would paint half a word in a color naming something else.
 //
 // **The first run to claim a position keeps it**, which is why the caller sorts by length —
 // otherwise BURN would take the front of BURNING and leave ING in the default ink.
 func SplitSpans(line string, runs []TextSpan) []Segment {
 	folded := strings.ToLower(line)
 
-	// paint[i] is the colour byte i is drawn in, or nil where the default ink applies.
+	// paint[i] is the color byte i is drawn in, or nil where the default ink applies.
 	paint := make([]*color.RGBA, len(line))
 	for i := range runs {
 		r := runs[i]
@@ -724,9 +724,9 @@ func SplitSpans(line string, runs []TextSpan) []Segment {
 // exported so a caller can decide which spans are worth handing over without writing a second copy
 // of it.
 //
-// **A second copy is the failure this exists to prevent.** internal/screens picks the coloured
+// **A second copy is the failure this exists to prevent.** internal/screens picks the colored
 // words out of a piece of prose and this package paints them; a span harvested there by one rule and
-// declined here by another is a colour that silently does nothing, which is the hardest kind of
+// declined here by another is a color that silently does nothing, which is the hardest kind of
 // missing to notice.
 //
 // Case is ignored and the match is whole-word, for the reasons SplitSpans gives.
@@ -758,7 +758,7 @@ func wholeWord(s string, at, n int) bool {
 	return true
 }
 
-// The mark is as wide as the card allows, and centred on it.
+// The mark is as wide as the card allows, and centered on it.
 //
 // **Derived rather than a Style field, unlike every other measurement here.** The face
 // cannot work that way — its glyphs are 1:1 pixel art with a one-pixel rim, so a smaller card
@@ -773,7 +773,7 @@ func wholeWord(s string, at, n int) bool {
 // object at any size — which is the whole reason the back is one proportion rather than a
 // per-Style number.
 //
-// It stays vertically centred. Hanging the apex from the top row was tried the same day and
+// It stays vertically centered. Hanging the apex from the top row was tried the same day and
 // left the whole mark sitting high with a band of empty card under it; an equilateral
 // triangle is wider than it is tall in a portrait rectangle, so the space it leaves has to
 // be split rather than pushed to one end. Heights, for the three sizes that exist:
@@ -798,7 +798,7 @@ const (
 // backMarkWidth is the mark's base: the card less its rims, scaled, and then nudged to the
 // card's own parity.
 //
-// **The parity step is what makes "centred" exact rather than nearly.** A row is placed at
+// **The parity step is what makes "centered" exact rather than nearly.** A row is placed at
 // `(Width-span)/2`, so a base whose width differs in parity from the card leaves the extra
 // pixel on one side and the whole triangle leans. Rounding the width by one is invisible;
 // the lean is not, at the draw pile's 44 pixels.
@@ -819,14 +819,14 @@ func backMarkWidth(st Style) int {
 const backRimWidth = 1
 
 // drawBack draws the back of a card: the same silhouette as a face, filled dark, with a
-// pale triangle centred on it.
+// pale triangle centered on it.
 //
 // **The silhouette has to match the face exactly** — same footprint, same corner radius —
 // because these are the same object seen from the other side. A back with its own shape
 // would change outline halfway through a flip, and a stack of them would read as a
 // different kind of thing sitting next to the hand rather than as the cards in it.
 //
-// The edge is a thin neutral rim rather than the face's thick coloured border. The face's
+// The edge is a thin neutral rim rather than the face's thick colored border. The face's
 // border is where the element is said, so a back carrying one would name the card under it;
 // a hueless one-pixel edge says only "this is where the card stops", which the draw pile
 // needs — see BackRim.
@@ -899,11 +899,11 @@ func blitGlyph(dst *image.RGBA, at image.Rectangle, glyph *image.RGBA, scale int
 	}
 }
 
-// drawArt scales Spec.Art to fit the style's art box and centres it there.
+// drawArt scales Spec.Art to fit the style's art box and centers it there.
 //
 // **Smoothly resampled, unlike everything else here.** The generated glyphs are pixel art
 // and must never be filtered; a relic is a photograph-like asset several times the size of
-// the box it lands in, and nearest-neighbour downsampling one of those drops every other
+// the box it lands in, and nearest-neighbor downsampling one of those drops every other
 // row and produces visible stair-stepping. CatmullRom is the expensive option and this
 // runs once per distinct card, not per frame.
 func drawArt(dst *image.RGBA, s Spec, st Style) {
@@ -933,19 +933,19 @@ func fadeRegion(dst *image.RGBA, r image.Rectangle, pct int) {
 	}
 }
 
-// tintInk recolours a glyph to one hue, keeping its own light and shade.
+// tintInk recolors a glyph to one hue, keeping its own light and shade.
 //
 // **This is where the element is said now** *(owner's call, 2026-08-23)*. It used to be the
 // border, and the swap is argued in `borderBase`: the corner mark is the thing a hand is counted
-// on, so it is the thing worth spending the only colour channel left on.
+// on, so it is the thing worth spending the only color channel left on.
 //
 // **A ramp between a dark and a light version of the hue, not a multiply.** Multiplying each
-// channel by the pixel's brightness is the obvious recolour and it fails on this art: the four
+// channel by the pixel's brightness is the obvious recolor and it fails on this art: the four
 // form marks are drawn with a near-black outline, so a multiply leaves the loudest part of every
 // mark near-black and the element shows only in the interior. Mapping brightness onto a ramp
 // instead keeps the *ordering* of the art's own shading — outline darkest, specular lightest —
-// while putting the hue in both ends, so the mark reads as coloured at a glance rather than as a
-// grey drawing with a tinted middle.
+// while putting the hue in both ends, so the mark reads as colored at a glance rather than as a
+// gray drawing with a tinted middle.
 //
 // **Premultiplied throughout.** image.RGBA is alpha-premultiplied and the art arrives
 // downsampled, so its edge pixels are partly transparent; brightness is therefore taken from the
@@ -960,8 +960,8 @@ func tintInk(src *image.RGBA, hue color.RGBA) *image.RGBA {
 	out := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
 
 	// The two ends of the ramp. The dark end is the hue at a third strength rather than black,
-	// which is what keeps an outline coloured; the light end stops well short of white, because a
-	// mark that reached it would have a colourless highlight on a near-white card and lose its
+	// which is what keeps an outline colored; the light end stops well short of white, because a
+	// mark that reached it would have a colorless highlight on a near-white card and lose its
 	// edge against the surface.
 	dark := systems.ColorAtStrength(hue, tintDarkPct)
 	light := systems.ColorToward(hue, color.RGBA{R: 255, G: 255, B: 255, A: 255}, tintLightToward)
@@ -976,7 +976,7 @@ func tintInk(src *image.RGBA, hue color.RGBA) *image.RGBA {
 
 			// Unpremultiply to 0..255 and take the brightest channel as the pixel's own light.
 			// The brightest rather than a luminance average: the art is nearly hueless already,
-			// and an average would take a near-white specular down to a mid grey.
+			// and an average would take a near-white specular down to a mid gray.
 			lum := int(c.R)
 			if int(c.G) > lum {
 				lum = int(c.G)

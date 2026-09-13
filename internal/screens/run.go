@@ -180,10 +180,10 @@ func EndRunInDefeat(gs *state.GlobalState) { endRun(gs, session.EndedInDefeat) }
 // nothing has to learn a new case.
 //
 // **The seed is not rerolled here.** NewRun does that at the moment a tower is actually built, so
-// the code the summary prints is the code that dealt the run being summarised.
+// the code the summary prints is the code that dealt the run being summarized.
 func endRun(gs *state.GlobalState, ended string) {
 	if gs.Run != nil {
-		summary := gs.Run.Summarise(gs.RunSeed, ended)
+		summary := gs.Run.Summarize(gs.RunSeed, ended)
 		gs.Summary = &summary
 	}
 

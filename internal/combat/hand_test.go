@@ -44,7 +44,7 @@ func damageDealtBy(events []Event, by Side) int {
 	return total
 }
 
-// handByKey finds a catalogue entry by its key rather than by the name it prints, so a rung
+// handByKey finds a catalog entry by its key rather than by the name it prints, so a rung
 // renamed does not silently stop being asserted about.
 func handByKey(key string) (Hand, bool) {
 	id, ok := HandIDForKey(key)
@@ -144,7 +144,7 @@ func TestDamageIsTheHandsCardsTimesTheMultiplier(t *testing.T) {
 
 	pair, ok := handByKey("pair")
 	if !ok {
-		t.Fatal("the catalogue has no pair")
+		t.Fatal("the catalog has no pair")
 	}
 
 	events, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
@@ -185,10 +185,10 @@ func TestTheSameHandPaysMoreOnBiggerCards(t *testing.T) {
 	}
 }
 
-// **Every multiplier the catalogue holds is worth what it says against the cards.** The ladder is
+// **Every multiplier the catalog holds is worth what it says against the cards.** The ladder is
 // tuned by editing hands.json alone, which is only true while nothing in the resolver adds to the
 // figure the file's percent is applied to.
-func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
+func TestEveryHandIsWorthItsCatalogMultiplier(t *testing.T) {
 	a, b := duelist(10, 8, 5000), duelist(10, 8, 5000)
 
 	for _, tc := range []struct {
@@ -202,7 +202,7 @@ func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
 	} {
 		h, ok := handByKey(tc.key)
 		if !ok {
-			t.Fatalf("the catalogue has no %q", tc.key)
+			t.Fatalf("the catalog has no %q", tc.key)
 		}
 
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
@@ -252,10 +252,10 @@ func TestTheHandAmountsAddUpToTheBase(t *testing.T) {
 	}
 }
 
-// **The hand is the whole multiplier** *(2026-08-17)*. A second axis counted the distinct colours
-// in the formed hand and added its own multiplier on top, so a coloured pair paid more than a plain
-// one. Colour buys statuses now and nothing else, and a pair of any two colours is worth exactly
-// what the catalogue says a pair is worth.
+// **The hand is the whole multiplier** *(2026-08-17)*. A second axis counted the distinct colors
+// in the formed hand and added its own multiplier on top, so a colored pair paid more than a plain
+// one. Color buys statuses now and nothing else, and a pair of any two colors is worth exactly
+// what the catalog says a pair is worth.
 func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
@@ -266,8 +266,8 @@ func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 		turn []Card
 	}{
 		{"two basics", PlainCards(Bash, Bash)},
-		{"one colour", []Card{Of(Bash, Ice), Of(Bash, Ice)}},
-		{"two colours", []Card{Of(Bash, Fire), Of(Bash, Ice)}},
+		{"one color", []Card{Of(Bash, Ice), Of(Bash, Ice)}},
+		{"two colors", []Card{Of(Bash, Fire), Of(Bash, Ice)}},
 	} {
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
 
@@ -311,7 +311,7 @@ func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 
 		want, ok := handByKey(tc.want)
 		if !ok {
-			t.Fatalf("the catalogue has no %q", tc.want)
+			t.Fatalf("the catalog has no %q", tc.want)
 		}
 		events, _, _ := resolve(a, b, turn, nil, 1)
 		if got := handsFormed(events, SideA); len(got) != 1 || got[0] != want.ID {
@@ -357,11 +357,11 @@ func TestAHandIgnoresWhatSitsBetweenItsCards(t *testing.T) {
 	}
 }
 
-// **A turn of nothing but defences is a hand, and it lands nothing** *(owner's call, 2026-09-02)*.
+// **A turn of nothing but defenses is a hand, and it lands nothing** *(owner's call, 2026-09-02)*.
 // Every card carries a form and an element and every card is counted, so three Blocks are three of
 // a kind — the ladder can see a shield build. What the hand does not do is attack: no damage, and
 // nothing of the target's is spent.
-func TestATurnOfDefencesFormsAHandAndLandsNothing(t *testing.T) {
+func TestATurnOfDefensesFormsAHandAndLandsNothing(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, after := resolve(a, b, PlainCards(Block, Block, Block), nil, 1)
@@ -370,7 +370,7 @@ func TestATurnOfDefencesFormsAHandAndLandsNothing(t *testing.T) {
 		t.Fatalf("three Blocks formed %v, want one hand", got)
 	}
 	if n := kindCount(events, KindDamage); n != 0 {
-		t.Fatalf("a turn of defences dealt damage %d times, want 0", n)
+		t.Fatalf("a turn of defenses dealt damage %d times, want 0", n)
 	}
 	if after.CurrentLife != b.CurrentLife {
 		t.Errorf("the target is on %d life, want the %d it started with",
@@ -406,7 +406,7 @@ func TestTheHighCardIsNamedAndPaysTheIdentityMultiplier(t *testing.T) {
 	}
 	high, ok := handByKey("high-card")
 	if !ok {
-		t.Fatal("the catalogue holds no High Card")
+		t.Fatal("the catalog holds no High Card")
 	}
 	if e.Hand != high.ID {
 		t.Errorf("three different attacks were named %v, want the High Card", e.Hand)
@@ -423,12 +423,12 @@ func TestTheHighCardIsNamedAndPaysTheIdentityMultiplier(t *testing.T) {
 	}
 }
 
-// --- the hand's colours ---------------------------------------------------------------------
+// --- the hand's colors ---------------------------------------------------------------------
 
-// **The colours in the formed hand are what land, and basic is not one.** This used to be counted
+// **The colors in the formed hand are what land, and basic is not one.** This used to be counted
 // into a "mix" that paid its own multiplier; what survives is the list, which decides the statuses
 // and nothing else.
-func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
+func TestTheHandsColorsDecideWhichStatusesLand(t *testing.T) {
 	for _, tc := range []struct {
 		what string
 		turn []Card
@@ -440,7 +440,7 @@ func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
 		{"ice and fire", []Card{Of(Bash, Ice), Of(Bash, Fire)}, []Element{Ice, Fire}},
 		{"ice, fire and a basic", []Card{Of(Bash, Ice), Of(Bash, Fire), Plain(Bash)},
 			[]Element{Ice, Fire}},
-		{"five colours", []Card{
+		{"five colors", []Card{
 			Of(Bash, Ice), Of(Bash, Fire), Of(Bash, Earth), Of(Bash, Lightning),
 			Of(Bash, Arcane),
 		}, []Element{Ice, Fire, Earth, Lightning, Arcane}},
@@ -465,9 +465,9 @@ func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
 	}
 }
 
-// **Only the cards in the hand carry colour.** An off-colour card that contributed to no hand
+// **Only the cards in the hand carry color.** An off-color card that contributed to no hand
 // cannot put its status on anybody.
-func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
+func TestACardOutsideTheHandDoesNotColorIt(t *testing.T) {
 	a, b := reliced(duelist(10, 4, 5000)), duelist(10, 4, 5000)
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Bash, Ice), Of(Jab, Fire), Of(Bash, Ice)}, nil, 1)
@@ -480,9 +480,9 @@ func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
 	}
 }
 
-// **One status per colour in the hand**, so one colour lands one and four land four — for a
+// **One status per color in the hand**, so one color lands one and four land four — for a
 // duelist wearing all four relics, which is what a status needs since 2026-08-16.
-func TestEveryColourInTheHandLandsItsStatus(t *testing.T) {
+func TestEveryColorInTheHandLandsItsStatus(t *testing.T) {
 	a, b := reliced(duelist(10, 4, 10000)), duelist(10, 4, 10000)
 
 	events, _, bAfter := resolve(a, b, []Card{
@@ -499,13 +499,13 @@ func TestEveryColourInTheHandLandsItsStatus(t *testing.T) {
 	}
 }
 
-func TestAColourlessHandLandsNoStatus(t *testing.T) {
+func TestAColorlessHandLandsNoStatus(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
 
 	if n := kindCount(events, KindStatus); n != 0 {
-		t.Errorf("a colourless pair landed %d statuses, want 0 — basic is not a colour", n)
+		t.Errorf("a colorless pair landed %d statuses, want 0 — basic is not a color", n)
 	}
 }
 
@@ -668,7 +668,7 @@ func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 }
 
 // **A blow of nothing may not spend anything of the target's** *(owner's call, 2026-09-02)*. A
-// shield eats one attack whole and defences are cleared by the turn they answer, so a turn of
+// shield eats one attack whole and defenses are cleared by the turn they answer, so a turn of
 // shields that counted as an attack would strip an opponent's guard for free — which is the whole
 // reason the zero blow is counted and not thrown.
 func TestAZeroBlowSpendsNothingOfTheTargets(t *testing.T) {

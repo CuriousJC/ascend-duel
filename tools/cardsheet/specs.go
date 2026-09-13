@@ -28,7 +28,7 @@ func titled(s string) string {
 // The tool could import both and build the real deck, and it deliberately does not: a
 // review sheet that derives its contents from the rules can only show what the rules
 // currently produce, and the whole point is to look at cards the game cannot deal yet —
-// a fifth cost tier, a relic, a border colour nothing uses. It is a drawing-board, not a
+// a fifth cost tier, a relic, a border color nothing uses. It is a drawing-board, not a
 // report.
 //
 // The cost of that is drift: the names and costs below are a snapshot of the nineteen
@@ -56,14 +56,14 @@ type concept struct {
 }
 
 // The nineteen concepts, in duelist_cards.json's order, which is grid order: three attack forms
-// of five tiers, then the defences.
+// of five tiers, then the defenses.
 //
 // **Three forms by five tiers, and the tiers cost and hit the same in each** *(2026-08-24)*.
 // 0 AP is a quarter, 1 AP is half, 2 AP is one, 3 AP is two, 4 AP is four, in Stab and Slash and
 // Crush alike. So a form is *which* pair you are building rather than a stronger or weaker way to
 // build one, and the only thing separating Skewer from Cleave is what it pairs with.
 //
-// **The defences are a four-rung ladder of their own** *(2026-09-06)*, Flinch through Guard, with
+// **The defenses are a four-rung ladder of their own** *(2026-09-06)*, Flinch through Guard, with
 // the shield count where the attacks have a damage multiplier — so an Exalt or a Debase walks it too.
 //
 // **The outer rungs ship at zero copies** — both ends of each attack form, and Flinch and Guard —
@@ -101,7 +101,7 @@ var concepts = []concept{
 }
 
 // realCards is **all nineteen concepts at hand size**, one element after another so the row
-// also walks the border colours.
+// also walks the border colors.
 //
 // **It was a spread of six until 2026-08-14**, chosen to break the layout: the longest name,
 // the biggest damage badge, both cost extremes. That was the right row while the only thing
@@ -166,7 +166,7 @@ func disabled(s cards.Spec) cards.Spec { s.Enabled = false; return s }
 // reads as the same game.
 //
 // **It draws one card per rarity** *(2026-09-13)*, because the border is what a rarity says now
-// and three colours side by side is the only way to review whether they are actually telling
+// and three colors side by side is the only way to review whether they are actually telling
 // each other apart. One picture is used for all of them on purpose: the art is the variable being
 // held still so the ring is the thing being compared.
 func relicSpecs() ([]cards.Spec, error) {
@@ -200,7 +200,7 @@ func relicSpecs() ([]cards.Spec, error) {
 // status badge.
 //
 // **The badges are drawn at every count from none to four** *(2026-08-16)*, because the row is
-// centred and closes up as it fills — the same property the relic row has, and the same failure
+// centered and closes up as it fills — the same property the relic row has, and the same failure
 // available: a row laid out against the maximum leaves a single badge hard left. Twenty pixels
 // is small enough that this is a thing to look at rather than to reason about.
 //
@@ -221,7 +221,7 @@ func enemySpecs() ([]cards.Spec, error) {
 
 		// The status badges along the bottom, by assets key. **The counts are what matter
 		// here** — one badge and four are different layouts, and a row that is right at four
-		// and off-centre at one is the failure mode the sheet exists to catch by eye.
+		// and off-center at one is the failure mode the sheet exists to catch by eye.
 		effects []string
 	}{
 		{"Giant Rat", "giantrat-portrait", 50, 50, nil},

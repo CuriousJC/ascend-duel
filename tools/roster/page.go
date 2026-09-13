@@ -46,7 +46,7 @@ type plate struct {
 	Rows []row
 }
 
-// group is one floor's worth of the catalogue, with the band's own spread beside it.
+// group is one floor's worth of the catalog, with the band's own spread beside it.
 //
 // **The spread is what makes the grouping worth having.** A band whose HP runs 120 to 900 is not a
 // band, it is two; and that is invisible while reading cards one at a time.
@@ -153,7 +153,7 @@ func stretch(lo, hi *int, v int) {
 // sheet lie about the art. A strip is wider than most windows, so it scrolls inside its own box
 // rather than being shrunk to fit.
 //
-// **The ground is the one the cards actually sit on**, not a page colour chosen to flatter them.
+// **The ground is the one the cards actually sit on**, not a page color chosen to flatter them.
 var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
 <meta charset="utf-8">
 <title>Ascending Duel — {{.Title}}</title>

@@ -13,7 +13,7 @@ package screens
 // internal/session/rune.go, and the shop's sack seat, which goes dim rather than selling a
 // rune there is no room for.
 //
-// **It is the relics pane's twin and shares everything it can**: the same backing colour, the same
+// **It is the relics pane's twin and shares everything it can**: the same backing color, the same
 // eight pixels of padding, the same drop below the cards on either side, and the same count hung
 // off the bottom-right corner. Two panes that were nearly alike would read as an inconsistency; two
 // that are identical apart from their width read as one row divided.
@@ -107,9 +107,9 @@ func topRowPanes(left, right, top int) (relics, consumables image.Rectangle) {
 // function the relics use, asked for maxHeld every time. That is what makes the two panes share a
 // rhythm: the pane was sized from the same pitch, so a full row lands exactly on its edges.
 //
-// **Left-aligned and never re-centred**, deliberately unlike the relic row. This row is two fixed
+// **Left-aligned and never re-centered**, deliberately unlike the relic row. This row is two fixed
 // seats with the empty one drawn, so a card that shifted as the sack filled would move the one
-// thing the player is being shown. The relics centre because their seats appear and disappear.
+// thing the player is being shown. The relics center because their seats appear and disappear.
 func consumableSlotAt(r image.Rectangle, i int) image.Point {
 	return image.Pt(r.Min.X+i*relicSlotPitch(r, maxHeld), r.Min.Y)
 }

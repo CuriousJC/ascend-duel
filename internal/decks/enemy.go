@@ -13,7 +13,7 @@ import (
 // fails on launch rather than mid-duel.
 //
 // **One deck per enemy, not one for the roster** *(2026-08-16)*. Every opponent used to draw from
-// `enemy_cards.json`, twelve Attacks and twelve Heavies, and its behaviour came from a `PlanStyle`
+// `enemy_cards.json`, twelve Attacks and twelve Heavies, and its behavior came from a `PlanStyle`
 // string picking one of four planners. Both are gone: an enemy is what it holds.
 var enemyDecks = buildEnemyDecks()
 
@@ -62,7 +62,7 @@ func buildEnemyDecks() map[string][]combat.Card {
 
 			elements := c.Elements
 			if len(elements) == 0 {
-				// **Empty means basic**, which is what every enemy card is today. An enemy's colour
+				// **Empty means basic**, which is what every enemy card is today. An enemy's color
 				// does nothing until an elemental affix attunes it — see MECHANICS.md — so writing
 				// one in now would hand it a status it has no source for.
 				elements = []string{combat.Basic.String()}

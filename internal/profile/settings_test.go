@@ -41,7 +41,7 @@ func TestAProfileWithNoSettingsBlockGetsTheDefaults(t *testing.T) {
 	// **This is the path every profile that already exists takes.** An older file has no settings
 	// object at all, so both fields read as zero — and a speed of zero would stop every clock in
 	// the game rather than merely being slow. Nothing about a save file may fail a launch, so it
-	// is normalised rather than rejected.
+	// is normalized rather than rejected.
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, profileFile),
 		[]byte(`{"version":1,"tutorialSeen":true}`), 0o644); err != nil {

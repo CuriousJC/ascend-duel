@@ -12,7 +12,7 @@ package screens
 // one is a small box in the middle.
 //
 // **It stays in the family.** Same scrim, same bevelled panel, same pink stroke, and the
-// destructive answer is the modal X's red — the only red in the game, and already the colour of
+// destructive answer is the modal X's red — the only red in the game, and already the color of
 // "this is the way out of here". What it does *not* borrow is the X itself: an X means "put this
 // away", and a question with an X on it has three answers where it should have two.
 //
@@ -45,7 +45,7 @@ const (
 	confirmTitleTop = 74
 	confirmBodyTop  = 132
 
-	// The answer row: two buttons, centred as a pair, sitting off the bottom edge.
+	// The answer row: two buttons, centered as a pair, sitting off the bottom edge.
 	confirmButtonWidth  = 330
 	confirmButtonHeight = 74
 	confirmButtonGap    = 24
@@ -53,7 +53,7 @@ const (
 )
 
 // confirmCancelColor is the safe answer: the same flat slate the chrome and the settings sliders
-// take, which is this game's colour for "the program, not the fight".
+// take, which is this game's color for "the program, not the fight".
 var confirmCancelColor = color.RGBA{R: 92, G: 96, B: 108, A: 255}
 
 // confirmDialog is a question with two answers.
@@ -142,17 +142,17 @@ func (d *confirmDialog) draw(gs *state.GlobalState, screen *ebiten.Image) {
 	vector.StrokeRect(screen, float32(box.Min.X), float32(box.Min.Y),
 		float32(box.Dx()), float32(box.Dy()), 2, panelBlue, false)
 
-	centre := float64(box.Min.X + box.Dx()/2)
+	center := float64(box.Min.X + box.Dx()/2)
 
 	title := &text.DrawOptions{}
-	title.GeoM.Translate(centre, float64(box.Min.Y+confirmTitleTop))
+	title.GeoM.Translate(center, float64(box.Min.Y+confirmTitleTop))
 	title.PrimaryAlign = text.AlignCenter
 	title.SecondaryAlign = text.AlignCenter
 	text.Draw(screen, d.title,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: confirmTitleSize}, title)
 
 	body := &text.DrawOptions{}
-	body.GeoM.Translate(centre, float64(box.Min.Y+confirmBodyTop))
+	body.GeoM.Translate(center, float64(box.Min.Y+confirmBodyTop))
 	body.PrimaryAlign = text.AlignCenter
 	body.SecondaryAlign = text.AlignCenter
 	body.ColorScale.ScaleWithColor(color.RGBA{R: 198, G: 198, B: 208, A: 255})
@@ -163,7 +163,7 @@ func (d *confirmDialog) draw(gs *state.GlobalState, screen *ebiten.Image) {
 	systems.DrawButton(gs, screen, d.yes)
 }
 
-// confirmRect is the box: centred on the screen, at a fixed size. **Not a percentage** — see the
+// confirmRect is the box: centered on the screen, at a fixed size. **Not a percentage** — see the
 // note at the top of this file about a question the size of a page.
 func confirmRect(gs *state.GlobalState) image.Rectangle {
 	left := gs.PctX(50) - confirmWidth/2

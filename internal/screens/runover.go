@@ -39,8 +39,8 @@ const (
 	runOverTitleSize = 44
 
 	// The totals block: a two-column list, labels right-aligned into the middle and figures left of
-	// it. **Aligned on the gutter rather than centred as lines**, because a column of figures is
-	// read by scanning down it and centred rows put every number in a different place.
+	// it. **Aligned on the gutter rather than centered as lines**, because a column of figures is
+	// read by scanning down it and centered rows put every number in a different place.
 	runOverRowHeight  = 40
 	runOverLabelSize  = 20
 	runOverFigureSize = 26
@@ -63,7 +63,7 @@ var runOverWords = map[string]string{
 }
 
 // runOverSeedFill is the seed box's face. **A cool slate against the light ground**, which is the
-// same "this is the program, not the fight" colour the chrome and the sliders take — the code is a
+// same "this is the program, not the fight" color the chrome and the sliders take — the code is a
 // fact about the software rather than about the duel.
 var (
 	runOverSeedFill = color.RGBA{R: 58, G: 62, B: 74, A: 255}
@@ -103,7 +103,7 @@ func (s *RunOverScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		return
 	}
 	sum := *gs.Summary
-	centre := float64(gs.PctX(50))
+	center := float64(gs.PctX(50))
 
 	// An ending this build does not have a phrase for still gets a page. **The summary is the point
 	// and the wording is decoration.**
@@ -113,7 +113,7 @@ func (s *RunOverScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	head := &text.DrawOptions{}
-	head.GeoM.Translate(centre, float64(gs.PctY(13)))
+	head.GeoM.Translate(center, float64(gs.PctY(13)))
 	head.PrimaryAlign = text.AlignCenter
 	head.SecondaryAlign = text.AlignCenter
 	head.ColorScale.ScaleWithColor(groundInk)
@@ -184,10 +184,10 @@ func (s *RunOverScene) drawSeed(gs *state.GlobalState, screen *ebiten.Image, cod
 	systems.BevelRect(screen, left, top, runOverSeedBoxW, runOverSeedBoxH,
 		systems.PaneBevelWidth, runOverSeedFill, false)
 
-	centre := float64(left + runOverSeedBoxW/2)
+	center := float64(left + runOverSeedBoxW/2)
 
 	cap := &text.DrawOptions{}
-	cap.GeoM.Translate(centre, float64(top+22))
+	cap.GeoM.Translate(center, float64(top+22))
 	cap.PrimaryAlign = text.AlignCenter
 	cap.SecondaryAlign = text.AlignCenter
 	cap.ColorScale.ScaleWithColor(runOverSeedCap)
@@ -195,7 +195,7 @@ func (s *RunOverScene) drawSeed(gs *state.GlobalState, screen *ebiten.Image, cod
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverSeedCapSize}, cap)
 
 	seed := &text.DrawOptions{}
-	seed.GeoM.Translate(centre, float64(top+62))
+	seed.GeoM.Translate(center, float64(top+62))
 	seed.PrimaryAlign = text.AlignCenter
 	seed.SecondaryAlign = text.AlignCenter
 	seed.ColorScale.ScaleWithColor(runOverSeedInk)

@@ -10,7 +10,7 @@ import (
 // duelist builds a full-health duelist for tests.
 // resolve is ResolveRound with **no randomness at all**, which is what almost every test here
 // wants: a nil source means the shock roll never fires, so everything that is still exact stays
-// exact and a test about defences is not a test about luck.
+// exact and a test about defenses is not a test about luck.
 //
 // The rolled path has its own tests, which pass a decided source deliberately — see below and
 // status_test.go.
@@ -42,7 +42,7 @@ func duelist(dmg, actions, life int) Duelist {
 	return Duelist{DMG: dmg, Actions: actions, MaxLife: life, CurrentLife: life}
 }
 
-// testGuard is the percentage defence, registered here because no player card carries one any more
+// testGuard is the percentage defense, registered here because no player card carries one any more
 // and the rule that implements it still has to be testable from inside this package.
 //
 // **It is a creature card in everything but scope.** Ninety records in `enemies.json` and
@@ -97,7 +97,7 @@ func actionOrder(events []Event) []Side {
 
 // playedCards returns the cards in the order they resolved, element included — so a test can
 // compare a played round against the PlainCards or Of() list it queued, without either side
-// having to strip a colour off.
+// having to strip a color off.
 func playedCards(events []Event) []Card {
 	var played []Card
 	for _, e := range events {
@@ -152,7 +152,7 @@ func TestSideATakesItsWholeTurnFirst(t *testing.T) {
 
 func TestATurnResolvesInCategoryOrder(t *testing.T) {
 	// Attacks, then plans, whatever order the cards were queued in. The plans go last within a
-	// turn because the *opponent* moves next, so a defence raised at the end of a turn is up when
+	// turn because the *opponent* moves next, so a defense raised at the end of a turn is up when
 	// the blow arrives.
 	a := duelist(10, 5, 500)
 	b := duelist(10, 5, 500)
@@ -284,7 +284,7 @@ func TestJabHitsForHalfButNeverZero(t *testing.T) {
 }
 
 func TestOnlyAttacksDealDamage(t *testing.T) {
-	// **Nothing in the plan form hits back.** A defence is a wall, not a counter, so a turn made
+	// **Nothing in the plan form hits back.** A defense is a wall, not a counter, so a turn made
 	// of plans alone is a turn in which nobody is hurt.
 	for _, a := range []ConceptID{Block, Brace, testGuard} {
 		events, _, bAfter := resolve(duelist(10, 5, 100), duelist(10, 5, 100),
@@ -337,10 +337,10 @@ func TestADefendCoversExactlyOneOpposingTurn(t *testing.T) {
 	if hit := firstDamage(t, round1, SideB); hit.Amount != 5 {
 		t.Errorf("round 1 hit into a fresh testGuard = %d, want 5", hit.Amount)
 	}
-	// **Spent, not standing.** A defence answers exactly one blow and goes with it, so B's Bash
+	// **Spent, not standing.** A defense answers exactly one blow and goes with it, so B's Bash
 	// is what consumed it — which is the same reason round two below arrives at full strength.
 	if a1.DefendCount != 0 {
-		t.Fatalf("A ended the round holding %d defences, want the testGuard spent on B's blow", a1.DefendCount)
+		t.Fatalf("A ended the round holding %d defenses, want the testGuard spent on B's blow", a1.DefendCount)
 	}
 
 	round2, _, _ := resolve(a1, b1, PlainCards(Jab), PlainCards(Bash), 2)
@@ -349,8 +349,8 @@ func TestADefendCoversExactlyOneOpposingTurn(t *testing.T) {
 	}
 }
 
-func TestSideBsDefenceProtectsItInTheFollowingRound(t *testing.T) {
-	// The asymmetry the expiry rule exists for. B acts last, so its defence cannot cover
+func TestSideBsDefenseProtectsItInTheFollowingRound(t *testing.T) {
+	// The asymmetry the expiry rule exists for. B acts last, so its defense cannot cover
 	// anything in the round it was raised — it has to survive the boundary and cover A's
 	// next turn, or the card would be worthless in B's hands.
 	a := duelist(10, 5, 500)
@@ -367,8 +367,8 @@ func TestSideBsDefenceProtectsItInTheFollowingRound(t *testing.T) {
 	}
 }
 
-func TestAnIdleDuelistLosesItsDefence(t *testing.T) {
-	// A turn happens whether or not anything is queued into it, and a defence expires at
+func TestAnIdleDuelistLosesItsDefense(t *testing.T) {
+	// A turn happens whether or not anything is queued into it, and a defense expires at
 	// the start of its owner's turn. Standing still therefore does not bank one.
 	a := duelist(10, 5, 500)
 	b := duelist(10, 5, 500)
@@ -377,11 +377,11 @@ func TestAnIdleDuelistLosesItsDefence(t *testing.T) {
 
 	round2, _, _ := resolve(a1, b1, nil, PlainCards(Bash), 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
-		t.Errorf("hit in round 2 = %d, want full 10 — an idle turn still expires a defence", hit.Amount)
+		t.Errorf("hit in round 2 = %d, want full 10 — an idle turn still expires a defense", hit.Amount)
 	}
 }
 
-func TestTheOrderDefencesWereRaisedInChangesNothing(t *testing.T) {
+func TestTheOrderDefensesWereRaisedInChangesNothing(t *testing.T) {
 	// **The raise-order rule is retired** *(2026-08-14)*. It stood for a day, and one attack per
 	// turn removed its content: there is no "first blow" for the first card to answer, so every
 	// raised card meets the same one and they compose.
@@ -419,7 +419,7 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 
 	round2, _, _ := resolve(a1, b1, PlainCards(Jab), PlainCards(Bash), 2)
 	if n := damageCount(round2); n != 2 {
-		t.Errorf("damage events in round 2 = %d, want 2 — the defence expired at A's turn", n)
+		t.Errorf("damage events in round 2 = %d, want 2 — the defense expired at A's turn", n)
 	}
 }
 
@@ -704,7 +704,7 @@ func TestThePlannerBuildsTheHardestHittingHand(t *testing.T) {
 
 func TestThePlannerSpendsWhatTheAttacksDidNotWant(t *testing.T) {
 	// **This is what keeps a non-attack card in an enemy deck from being dead content.** A planner
-	// that only maximised damage would never raise a shield, so every defensive card authored into
+	// that only maximized damage would never raise a shield, so every defensive card authored into
 	// the roster would sit in a discard pile forever.
 	d := duelist(10, 5, 100) // 2 AP of attack, 3 left over
 	hand := PlainCards(Bash, testGuard)
@@ -726,7 +726,7 @@ func TestThePlannerSpendsWhatTheAttacksDidNotWant(t *testing.T) {
 }
 
 func TestThePlannerPrefersAShieldToABank(t *testing.T) {
-	// The one tie-break among the leftovers, and the reason for it: a defence is the leftover that
+	// The one tie-break among the leftovers, and the reason for it: a defense is the leftover that
 	// decides whether the enemy is alive to use the next one.
 	d := duelist(10, 5, 100)
 	hand := PlainCards(Bash, Block, testGuard)

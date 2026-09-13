@@ -18,10 +18,10 @@ import "github.com/curiousjc/ascend-duel/internal/combat"
 // read them; it carries no play counts, because a hand pays what it pays however often it has been
 // formed. Anything that wanted to change that would be a mechanic, and would go through stones.
 
-// RecordHandPlayed adds one to a rung's tally, by hand key, and reports whether the catalogue holds
+// RecordHandPlayed adds one to a rung's tally, by hand key, and reports whether the catalog holds
 // that rung.
 //
-// **The bool is the validation**, exactly as `combat.HandSlot`'s is: a key nothing recognises is a
+// **The bool is the validation**, exactly as `combat.HandSlot`'s is: a key nothing recognizes is a
 // caller reading the wrong field, and a tally that quietly accepted one would grow a column the
 // panel could never draw.
 func (s *Session) RecordHandPlayed(hand string) bool {
@@ -52,7 +52,7 @@ func (s *Session) PlayCounts() map[string]int {
 	return out
 }
 
-// knownHand reports whether the catalogue this build loaded holds a rung by that key. It asks
+// knownHand reports whether the catalog this build loaded holds a rung by that key. It asks
 // `combat.HandSlot`, which is the same question a stone is validated with, so a tally and an
 // upgrade cannot disagree about which rungs exist.
 func knownHand(hand string) bool {

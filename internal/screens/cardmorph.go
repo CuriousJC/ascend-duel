@@ -53,7 +53,7 @@ var (
 	// the player had not finished reading, so the card lands, is still for a beat, and then goes.
 	morphWaitTicks = beat(1, 2)
 
-	// morphTicks is the dissolve itself. Long enough that the ragged edge is seen travelling across
+	// morphTicks is the dissolve itself. Long enough that the ragged edge is seen traveling across
 	// the face rather than flickering over it, short enough that it is one beat of a screen rather
 	// than a scene of its own.
 	morphTicks = beat(5, 4)
@@ -63,13 +63,13 @@ var (
 //
 // **Every square takes the same share**, so a late square is as quick as an early one rather than
 // being crushed into whatever is left — the same rule `crackProgress` follows for a break. The
-// value is what decides how soft the travelling edge is: at 1 every square is changing at once and
+// value is what decides how soft the traveling edge is: at 1 every square is changing at once and
 // the dissolve is a plain cross-fade, and near 0 it is a hard boundary sweeping across.
 const morphWindow = 0.34
 
-// morphGlow is how brightly a square flares as it turns over. **Light rather than a colour**: the
+// morphGlow is how brightly a square flares as it turns over. **Light rather than a color**: the
 // hue wheel is full (see CLAUDE.md) and a burning edge in a fifth hue would be claiming one. The
-// square is simply drawn a second time additively at its peak, so it brightens in its own colours
+// square is simply drawn a second time additively at its peak, so it brightens in its own colors
 // and settles back — the same trick `BevelEdges` plays, one step further.
 const morphGlow = 0.5
 

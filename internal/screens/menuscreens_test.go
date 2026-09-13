@@ -11,17 +11,17 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
-// TestEveryAchievementInTheCatalogueHasBothHalves is the one thing that can go wrong in a
-// catalogue nobody looks at: a row with a key and no words. A blank row draws a blank card, which
+// TestEveryAchievementInTheCatalogHasBothHalves is the one thing that can go wrong in a
+// catalog nobody looks at: a row with a key and no words. A blank row draws a blank card, which
 // reads as a bug in the page rather than as a mistake in the list.
 //
 // **The shape checks moved to internal/achieve on 2026-09-06**, where the file is parsed and a bad
 // record fails the launch. What is left here is the half that is this screen's: that every record
 // carries the two strings this page draws.
-func TestEveryAchievementInTheCatalogueHasBothHalves(t *testing.T) {
+func TestEveryAchievementInTheCatalogHasBothHalves(t *testing.T) {
 	all := achieve.Loaded().All()
 	if len(all) == 0 {
-		t.Fatal("the catalogue is empty, so the page has nothing to say")
+		t.Fatal("the catalog is empty, so the page has nothing to say")
 	}
 	for _, a := range all {
 		if a.Name == "" || a.How == "" {
@@ -30,15 +30,15 @@ func TestEveryAchievementInTheCatalogueHasBothHalves(t *testing.T) {
 	}
 }
 
-// TestTheOldFirstStepsKeyIsStillInTheCatalogue is the one seam a data move can quietly break. The
+// TestTheOldFirstStepsKeyIsStillInTheCatalog is the one seam a data move can quietly break. The
 // key is the contract on disk — every profile already written holds `first-steps` — and the
-// catalogue that awards it is now a JSON file, so nothing but this says the two still agree.
+// catalog that awards it is now a JSON file, so nothing but this says the two still agree.
 //
 // **profile.AchievementFirstSteps is the Go side of that contract**, and it is kept for exactly
-// this: a constant naming the one key that shipped before the catalogue existed.
-func TestTheOldFirstStepsKeyIsStillInTheCatalogue(t *testing.T) {
+// this: a constant naming the one key that shipped before the catalog existed.
+func TestTheOldFirstStepsKeyIsStillInTheCatalog(t *testing.T) {
 	if _, ok := achieve.Loaded().Find(profile.AchievementFirstSteps); !ok {
-		t.Fatalf("every profile on disk holds %q; the catalogue no longer has it",
+		t.Fatalf("every profile on disk holds %q; the catalog no longer has it",
 			profile.AchievementFirstSteps)
 	}
 }

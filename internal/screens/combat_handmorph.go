@@ -57,7 +57,7 @@ func (h handMorph) done() bool { return h.m.done() }
 //
 // **Taken before a rune is applied and again after**, because what changed is the difference
 // between the two — which is the only way to raise a morph without this file learning what each
-// rune does. A borer recolours, a grub reforms, a graft overwrites, a rider takes the left
+// rune does. A borer recolors, a grub reforms, a graft overwrites, a rider takes the left
 // column: all of them are "this face is not the face that was here", and none of them needs a case.
 func (s *CombatScene) handFaces(gs *state.GlobalState) (map[int]cards.Spec, map[int]image.Rectangle) {
 	faces := make(map[int]cards.Spec, len(s.hand))
@@ -95,11 +95,11 @@ func (s *CombatScene) raiseHandMorphs(gs *state.GlobalState, was map[int]cards.S
 		switch {
 		case !had:
 			// A card that was not in the hand a moment ago: a copy, arriving out of nothing.
-			s.theatre.morphs = append(s.theatre.morphs, handMorph{
+			s.theater.morphs = append(s.theater.morphs, handMorph{
 				id: id, at: at, m: morphIn(now, cards.Hand),
 			})
 		case before != now:
-			s.theatre.morphs = append(s.theatre.morphs, handMorph{
+			s.theater.morphs = append(s.theater.morphs, handMorph{
 				id: id, at: at, m: morphInto(before, now, cards.Hand),
 			})
 		}
@@ -116,7 +116,7 @@ func (s *CombatScene) raiseHandMorphs(gs *state.GlobalState, was map[int]cards.S
 		if live[id] {
 			continue
 		}
-		s.theatre.morphs = append(s.theatre.morphs, handMorph{
+		s.theater.morphs = append(s.theater.morphs, handMorph{
 			id: id, at: seats[id], m: morphAway(before, cards.Hand),
 		})
 	}
@@ -124,7 +124,7 @@ func (s *CombatScene) raiseHandMorphs(gs *state.GlobalState, was map[int]cards.S
 
 // handMorphFor is the morph running on one hand card, if there is one.
 func (s *CombatScene) handMorphFor(id int) (handMorph, bool) {
-	for _, h := range s.theatre.morphs {
+	for _, h := range s.theater.morphs {
 		if h.id == id {
 			return h, true
 		}
@@ -138,14 +138,14 @@ func (s *CombatScene) handMorphFor(id int) (handMorph, bool) {
 // keeps a changing card in the place the player last saw it. Only a card that has left has nowhere
 // to be drawn from, so only those are drawn here.
 func (s *CombatScene) drawHandMorphs(gs *state.GlobalState, screen *ebiten.Image) {
-	if len(s.theatre.morphs) == 0 {
+	if len(s.theater.morphs) == 0 {
 		return
 	}
 	live := make(map[int]bool, len(s.hand))
 	for _, c := range s.hand {
 		live[c.actionCard.ID] = true
 	}
-	for _, h := range s.theatre.morphs {
+	for _, h := range s.theater.morphs {
 		if live[h.id] {
 			continue
 		}

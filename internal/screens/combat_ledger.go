@@ -69,7 +69,7 @@ func (s *CombatScene) closeLedgerFight() {
 }
 
 // dealtBy is what one side's blows came to in a round: the damage that actually landed on the
-// other duelist, after everything the defence took off it.
+// other duelist, after everything the defense took off it.
 //
 // **The landed figure rather than the hand's**, because the summary line it feeds is answering
 // "how did this fight go" — and a fight lost to shields is a fight where the hands were fine and

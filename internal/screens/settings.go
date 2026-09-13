@@ -54,7 +54,7 @@ const (
 	// settingsSliderHeight is the label band plus the track plus the knob's overhang.
 	settingsSliderHeight = 56
 
-	// settingsRowGap is the space between one bar and the next, measured from centre to centre.
+	// settingsRowGap is the space between one bar and the next, measured from center to center.
 	settingsRowGap = 100
 
 	// settingsToggleHeight is the fullscreen button. **Shorter than a bar's row**, because a
@@ -149,7 +149,7 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 
 		s.abandon = models.NewButton(760, 76, settingsAbandonLabel, func() { s.askAbandon(gs) })
 
-		// **The modal X's red, which is the only red in the game.** It is already the colour of
+		// **The modal X's red, which is the only red in the game.** It is already the color of
 		// the one control that gets you out of somewhere, and this is the largest version of that
 		// there is. Nothing else on this screen is anything but slate.
 		s.abandon.BaseColor = modalCloseColor
@@ -174,18 +174,18 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	// it cannot — the same rule the chrome's mute button was under before it became a cog.
 	s.music.Disabled = !music.Available()
 
-	centre := gs.PctX(50)
+	center := gs.PctX(50)
 	top := gs.PctY(38)
 
-	s.music.ScreenX, s.music.ScreenY = centre, top
-	s.speed.ScreenX, s.speed.ScreenY = centre, top+settingsRowGap
-	s.full.ScreenX, s.full.ScreenY = centre, top+2*settingsRowGap
+	s.music.ScreenX, s.music.ScreenY = center, top
+	s.speed.ScreenX, s.speed.ScreenY = center, top+settingsRowGap
+	s.full.ScreenX, s.full.ScreenY = center, top+2*settingsRowGap
 
 	// The abandon band, below the rule; Back stays last, at the bottom of the screen, because the
 	// way out of a screen is the last thing on it.
-	s.abandon.ScreenX, s.abandon.ScreenY = centre, s.abandonRuleY(gs)+56
-	s.exit.ScreenX, s.exit.ScreenY = centre, s.abandon.ScreenY+settingsExitGap
-	s.back.ScreenX, s.back.ScreenY = centre, gs.PctY(88)
+	s.abandon.ScreenX, s.abandon.ScreenY = center, s.abandonRuleY(gs)+56
+	s.exit.ScreenX, s.exit.ScreenY = center, s.abandon.ScreenY+settingsExitGap
+	s.back.ScreenX, s.back.ScreenY = center, gs.PctY(88)
 }
 
 // abandonRuleY is where the rule between the settings and the abandon band is drawn. One function
@@ -268,7 +268,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	systems.DrawButton(gs, screen, s.back)
 
 	// **The note under a dead music bar, and nothing when it is live.** A control that has gone
-	// grey for a reason outside the game has to say what the reason was, or it reads as a bug.
+	// gray for a reason outside the game has to say what the reason was, or it reads as a bug.
 	if s.music.Disabled {
 		r := systems.SliderRect(s.music)
 		note := &text.DrawOptions{}
@@ -338,7 +338,7 @@ func (s *SettingsScene) commit(gs *state.GlobalState) {
 // speedFor maps a bar position onto a game-speed multiplier, and speedValue maps one back.
 //
 // **The scale is linear between the two bounds and 1 is not the middle of it**: the range is
-// 0.5x to 2x, so the tuned speed sits a third of the way along. A geometric scale would centre it,
+// 0.5x to 2x, so the tuned speed sits a third of the way along. A geometric scale would center it,
 // and was not taken — a bar whose left half covers a two-fold slowdown and whose right half covers
 // a two-fold speed-up reads correctly but makes every position a different size of step, which is
 // harder to describe than it is worth for a control with a readout on it.
@@ -367,7 +367,7 @@ func ApplySettings(s profile.Settings) {
 	music.SetLevel(s.MusicVolume)
 
 	// A zero speed is ignored by SetSpeed rather than applied, and profile.LoadProfile has
-	// already normalised one off disk — so an older profile with no settings block at all lands
+	// already normalized one off disk — so an older profile with no settings block at all lands
 	// on the tuned speed rather than on a stopped clock.
 	SetSpeed(s.Speed)
 

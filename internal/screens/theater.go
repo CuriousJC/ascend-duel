@@ -1,6 +1,6 @@
 package screens
 
-// **A theatre is everything a scene has moving on it, and the rules that apply to all of it.**
+// **A theater is everything a scene has moving on it, and the rules that apply to all of it.**
 //
 // It is a shared contract rather than a shared struct: what each scene has moving is its own —
 // cards flying to a table, a damage figure crossing to a health bar, a won card settling into the
@@ -10,7 +10,7 @@ package screens
 // Three rules, and they are the reason this is a type rather than a paragraph:
 //
 //   - **It is presentation and may never change an outcome.** A whole round is resolved before
-//     playback begins. Nothing reachable through a theatre may touch a duelist, a deck or a purse.
+//     playback begins. Nothing reachable through a theater may touch a duelist, a deck or a purse.
 //   - **It runs on the game's one speed.** Every duration in it is a `beat` — see clock.go.
 //   - **It is taken down all at once.** Anything cleaned up only at the end of a round is assuming
 //     every round ends in one, and a settled duel does not. That lesson cost two separate bugs and
@@ -21,14 +21,14 @@ package screens
 // screen use the same vocabulary rather than reinventing it, which is how the game ended up with
 // two clocks — see clock.go for the other half of that story.
 
-// theatre is what every scene's theatre answers. **Three methods, and a scene that has anything
-// moving implements all three or none** — a theatre that can be advanced but not taken down is the
+// theater is what every scene's theater answers. **Three methods, and a scene that has anything
+// moving implements all three or none** — a theater that can be advanced but not taken down is the
 // bug the third rule above exists to prevent.
 //
-// Nothing takes a `theatre` as a parameter today; it is here so that a second scene's theatre is
-// obliged to be the same shape as the first, checked at compile time by a `var _ theatre`
+// Nothing takes a `theater` as a parameter today; it is here so that a second scene's theater is
+// obliged to be the same shape as the first, checked at compile time by a `var _ theater`
 // assertion beside each one.
-type theatre interface {
+type theater interface {
 	// tick advances everything by one frame and drops whatever has finished.
 	tick()
 

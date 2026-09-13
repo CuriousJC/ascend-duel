@@ -186,7 +186,7 @@ func New(deck []combat.Card) *Session {
 	for _, key := range StartingRelics {
 		s.Wear(key)
 	}
-	// **The sack is filled the same way the fingers are**, and a key the catalogue has not got is
+	// **The sack is filled the same way the fingers are**, and a key the catalog has not got is
 	// dropped rather than held — `Hold` is what refuses it. See StartingRunes, which is empty
 	// as shipped.
 	//
@@ -200,7 +200,7 @@ func New(deck []combat.Card) *Session {
 	for _, key := range StartingRunes {
 		s.hold(key)
 	}
-	// **And the pouch the same way**, with a key the catalogue has not got dropped rather than
+	// **And the pouch the same way**, with a key the catalog has not got dropped rather than
 	// carried — `Carry` is what refuses it. See StartingStones, which is empty as shipped.
 	for _, key := range StartingStones {
 		s.Carry(key)
@@ -245,8 +245,8 @@ func (s *Session) Remove(i int) bool {
 	return true
 }
 
-// SetElement recolours a card. The concept is untouched: an essence varies a card the game already
-// defines rather than inventing one, so what changes is which colour it counts as in a mix and
+// SetElement recolors a card. The concept is untouched: an essence varies a card the game already
+// defines rather than inventing one, so what changes is which color it counts as in a mix and
 // which status it can apply.
 func (s *Session) SetElement(i int, e combat.Element) bool {
 	if i < 0 || i >= len(s.deck) {

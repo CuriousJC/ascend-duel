@@ -560,7 +560,7 @@
         "Copies": 4
       },
       {
-        "Label": "Duelling Thrust",
+        "Label": "Dueling Thrust",
         "Verb": "attack",
         "Amount": 250,
         "Cost": 3,

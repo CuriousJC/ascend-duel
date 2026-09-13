@@ -23,13 +23,13 @@ const maxShieldPips = cards.MaxEffects
 // The standing shields on one duelist card, as playback has reached them.
 //
 // **One list, and the count is its length** *(2026-09-02)*. This replaced four parallel structures
-// — a count, a colour list, a "has anything spoken this round" flag and a set of seats — three of
+// — a count, a color list, a "has anything spoken this round" flag and a set of seats — three of
 // which had to be kept in step by hand at every event. Every shield bug so far was two of them
-// disagreeing: a count ahead of the colours drew a white pip, a colour list trimmed by something
+// disagreeing: a count ahead of the colors drew a white pip, a color list trimmed by something
 // that had taken no shield away lost a pip's element, and a set of seats that outlived its round
-// gagged the next round's defence so nothing flew and no colour was ever recorded.
+// gagged the next round's defense so nothing flew and no color was ever recorded.
 //
-// **So the disagreement is made unrepresentable rather than repaired.** A pip *is* its colour;
+// **So the disagreement is made unrepresentable rather than repaired.** A pip *is* its color;
 // there is no second place a count can live. What is left to get wrong is which pips are there,
 // which is one question with one answer.
 //
@@ -38,8 +38,8 @@ const maxShieldPips = cards.MaxEffects
 // filled it. Nothing here may change an outcome — the round was decided before a frame of it was
 // drawn.
 type shieldRow struct {
-	// pips is one colour per standing shield, oldest first, and its length is the count. The
-	// colour is the element of the card that raised it — cosmetic, per the owner's call: a fire
+	// pips is one color per standing shield, oldest first, and its length is the count. The
+	// color is the element of the card that raised it — cosmetic, per the owner's call: a fire
 	// ward and an ice ward stop the same attack.
 	pips []color.RGBA
 
@@ -66,11 +66,11 @@ func (r *shieldRow) add(ink color.RGBA, n int) {
 }
 
 // hold makes the row exactly n pips, taking the oldest away first and filling any shortfall with
-// the newest colour it has.
+// the newest color it has.
 //
 // **Oldest out** is a choice the engine does not make for us: it draws no distinction between one
 // standing shield and another, so the readout picks the reading that keeps the newest pip the one
-// just raised. **Filling repeats** because a pip with no colour recorded draws as the bare white
+// just raised. **Filling repeats** because a pip with no color recorded draws as the bare white
 // mark, which reads as a different kind of shield rather than as one nobody watched being raised.
 func (r *shieldRow) hold(n int, fill color.RGBA) {
 	r.seen = true
@@ -83,9 +83,9 @@ func (r *shieldRow) hold(n int, fill color.RGBA) {
 	case n < len(r.pips):
 		r.pips = append([]color.RGBA(nil), r.pips[len(r.pips)-n:]...)
 	case n > len(r.pips):
-		// **The caller's colour first, the newest pip second.** An announcement knows the card it
+		// **The caller's color first, the newest pip second.** An announcement knows the card it
 		// is about and hands its element in; a count with no card behind it can only repeat what
-		// the row is already wearing. Either beats leaving a pip colourless, which draws as the
+		// the row is already wearing. Either beats leaving a pip colorless, which draws as the
 		// bare white mark.
 		if fill.A == 0 && len(r.pips) > 0 {
 			fill = r.pips[len(r.pips)-1]
@@ -115,7 +115,7 @@ func (r *shieldRow) raiseTo(n int, fill color.RGBA) {
 //
 // **This is what makes the planning phase right.** A shield raised at the end of the last round is
 // standing while the player builds this one and nothing has announced it, so the model is the only
-// thing that knows — and the colours from last round are the honest picture of it.
+// thing that knows — and the colors from last round are the honest picture of it.
 func (r *shieldRow) fitTo(model int) {
 	if r.seen {
 		return
@@ -138,7 +138,7 @@ func (r *shieldRow) noteFlight(seat int) {
 }
 
 // endRound hands authority back to the model and forgets this round's seats. **The pips stay**:
-// the shields themselves survive the round, and their colours are the only account of what raised
+// the shields themselves survive the round, and their colors are the only account of what raised
 // them.
 func (r *shieldRow) endRound() {
 	r.seen = false

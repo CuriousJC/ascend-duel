@@ -35,7 +35,7 @@ func ResolveRoundHolding(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, roun
 	return resolveRound(a, b, aCards, bCards, aHeld, bHeld, round, handTable, src)
 }
 
-// resolveRound is ResolveRound with the catalogue injected. It exists so a test can drive a
+// resolveRound is ResolveRound with the catalog injected. It exists so a test can drive a
 // synthetic hand through the whole engine rather than only through the matcher.
 func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, hands []Hand, src Sources) (events []Event, aAfter, bAfter Duelist) {
 	events = make([]Event, 0, 16)
@@ -111,7 +111,7 @@ func playTurn(
 
 	// A chill comes off the front, which needs no tie-break and so is the only pick that is
 	// deterministic without inventing a rule. **The front of a turn is its attacks** — the phase
-	// order puts them before the defences — so what a chill costs first is the blow, which is what
+	// order puts them before the defenses — so what a chill costs first is the blow, which is what
 	// makes it worth planning around rather than merely suffering.
 	//
 	// **The action points are not refunded.** They were committed when the cards were queued,
@@ -154,9 +154,9 @@ func playTurn(
 	// Bashes are not five hits; they are one Four of a Kind.
 	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands, src.Roll)
 
-	// **The defend phase comes second, and that is what a defence needs** *(2026-08-15)*. A guard
+	// **The defend phase comes second, and that is what a defense needs** *(2026-08-15)*. A guard
 	// and a shield both answer the *opponent's* blow, and the opponent acts after this turn ends —
-	// so a defence raised at the end of a turn is the only one that is standing when anything is
+	// so a defense raised at the end of a turn is the only one that is standing when anything is
 	// aimed at it.
 	//
 	// **It is skipped if either side fell**, since a corpse raising a shield is a line in the log
@@ -208,7 +208,7 @@ func resolveDefend(
 
 	// **The switch is on the verb, not on the card** *(2026-08-16)*. It used to name the player's
 	// three cards one at a time, which meant an enemy's `Congeal` could not guard anything however
-	// obviously it was a defence. Two verbs, any number of cards.
+	// obviously it was a defense. Two verbs, any number of cards.
 	spec := card.Spec()
 	switch spec.Verb {
 	case VerbShield:
@@ -311,7 +311,7 @@ func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist
 	return events, tickStatuses(d)
 }
 
-// resolveAttackPhase is the whole of one side's offence: every attack card it queued, the hand
+// resolveAttackPhase is the whole of one side's offense: every attack card it queued, the hand
 // they form, and the single blow that follows.
 //
 // **One blow per turn** *(2026-08-14)*. Attack cards no longer resolve one at a time; they are
@@ -365,7 +365,7 @@ func resolveAttackPhase(
 	}
 	// **A turn with no attack in it still forms a hand** *(owner's call, 2026-09-02)*, and the
 	// `attacks` count above is only about announcements: every attack card gets its own beat, and a
-	// defence gets one later in its own phase. What used to stop here was the whole scoring of the
+	// defense gets one later in its own phase. What used to stop here was the whole scoring of the
 	// turn, so a hand of nothing but shields was the one hand the ladder could not see — which
 	// makes a shield build unreachable the moment a relic or an authored card wants one. The blow it
 	// forms sums to zero and is declined below, before anything of the target's is spent.
@@ -381,7 +381,7 @@ func resolveAttackPhase(
 
 	// The hand is announced before the blow lands, so a boosted figure never arrives before the
 	// reason for it. **Every turn with an attack in it announces a hand** — a lone attack is the
-	// High Card, which is a catalogue entry like any other rather than an absence.
+	// High Card, which is a catalog entry like any other rather than an absence.
 	//
 	// **It also carries the sum**, which is what the damage below is taken from — see handEvent.
 	//
@@ -394,7 +394,7 @@ func resolveAttackPhase(
 
 	// **A blow of nothing is counted and not thrown** *(owner's call, 2026-09-02)*. The hand above
 	// is named, multiplied and written into the account like any other; what stops here is the
-	// *attack*, so a turn of shields cannot spend the target's shield, clear the defences they
+	// *attack*, so a turn of shields cannot spend the target's shield, clear the defenses they
 	// raised, roll for a miss, land a status or grow a relic. The gate is the sum the hand carries,
 	// which is the same figure the screen has just drawn — a card given damage, or a shield card
 	// authored with some, walks straight past it and is an attack like any other.
@@ -402,7 +402,7 @@ func resolveAttackPhase(
 		return events, actor, target
 	}
 
-	// A shocked attacker may miss outright, and misses before anything else happens — no defence
+	// A shocked attacker may miss outright, and misses before anything else happens — no defense
 	// spent, no status applied. The attack did not occur.
 	//
 	// **This is a roll**, and the only one in the package. See shockMissPct. Nothing is consumed
@@ -440,14 +440,14 @@ func resolveAttackPhase(
 
 	// **Then the target's own vulnerability**, which is the one modifier read off the duelist being
 	// hit rather than the one swinging — see EffectDamageAmplification. It sits after weight and
-	// before the defences for the same reason weight sits before both: weight says how hard the
+	// before the defenses for the same reason weight sits before both: weight says how hard the
 	// attacker can still swing and vulnerability says how hard this body takes it, and a card
 	// raised in answer to the blow is spent on the figure the two of them produced.
 	dmg = amplify(dmg, target.vulnerability())
 
 	events, dmg = applyDefends(events, side, target, dmg, round)
 
-	// Every defence is spent on the turn it answered.
+	// Every defense is spent on the turn it answered.
 	target = ClearDefenses(target)
 
 	target.CurrentLife = reduce(target.CurrentLife, dmg)
@@ -467,7 +467,7 @@ func resolveAttackPhase(
 	//
 	// **Every status comes off a worn relic** *(2026-08-16, re-expressed in the grammar 2026-08-17)*.
 	// A rainbow thrown by a duelist wearing two elemental relics lands two statuses; thrown by an
-	// enemy it lands none. The colours still count toward the hand either way — what a relic buys is
+	// enemy it lands none. The colors still count toward the hand either way — what a relic buys is
 	// the status, not the multiplier.
 	//
 	// The cards of the hand are what the relics match against, so a form relic or a concept relic
@@ -547,7 +547,7 @@ func blockedByShield(events []Event, side Side, target Duelist, card Card, slot,
 // applyDefends runs every card the target has raised over one incoming blow and reports what is
 // left of it, announcing each as it bites.
 //
-// **It does not spend them, and the caller clears them once the turn is over.** A defence covers
+// **It does not spend them, and the caller clears them once the turn is over.** A defense covers
 // exactly one opposing *turn* — see expireDefenses — which is one blow from a hand-forming duelist and
 // several from a solo one. Spending them on the first blow would make a Defend nearly worthless
 // against the very opponents that swing more than once.
@@ -594,7 +594,7 @@ func applyDefends(events []Event, side Side, target Duelist, dmg, round int) ([]
 //     rolling per card would both change what the status means and advance the one random stream in
 //     the package a different number of times per round. A shocked solo attacker misses with
 //     everything and says so on each card.
-//   - **Weight, vulnerability, then defences, then statuses**, in that order, for the reason the
+//   - **Weight, vulnerability, then defenses, then statuses**, in that order, for the reason the
 //     other phase gives: weight is a property of the attacker and vulnerability of the target, so
 //     everything the defender actively does happens to a blow both of them have already shaped.
 func resolveSoloAttacks(
@@ -699,7 +699,7 @@ func resolveSoloAttacks(
 		}
 	}
 
-	// **The defences are spent only if something was swung at them**, which is the hand-forming
+	// **The defenses are spent only if something was swung at them**, which is the hand-forming
 	// phase's rule too: a turn with no attacks in it returns before clearing, and expireDefenses
 	// takes them at the start of their owner's next turn instead.
 	if attacked {
@@ -1049,7 +1049,7 @@ func other(s Side) Side {
 //
 // **Ranked on CardDamage alone, and that is the whole of the arithmetic rather than a shortcut.**
 // Everything downstream of a card's own damage — the attacker's weight, the target's vulnerability
-// and every defence the target raised — is one multiplier applied identically to every attack in
+// and every defense the target raised — is one multiplier applied identically to every attack in
 // the turn, so none of them can reorder two cards. Projecting the whole pipeline per card would be
 // a second resolver that agreed with the first, which is the drift `Base` and `Multiplier` are on
 // the event to prevent.

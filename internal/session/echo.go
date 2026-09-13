@@ -29,7 +29,7 @@ func (s *Session) Echoes(p Rune) (Rune, bool) {
 	}
 	echoed, ok := RuneByKey(s.lastRune)
 	if !ok || echoed.Target == RuneChimera {
-		// A key the catalogue no longer holds, or a chimera that somehow recorded itself. Neither
+		// A key the catalog no longer holds, or a chimera that somehow recorded itself. Neither
 		// can happen today — `rememberRune` writes a resolved record and `Resume` refuses an
 		// unknown one — and both would be a chimera firing nothing if they did.
 		return Rune{}, false

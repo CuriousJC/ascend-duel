@@ -21,7 +21,7 @@ import (
 )
 
 // MatchValue is what one card counts as on an axis, and whether it counts at all: a card with no
-// form or no colour carries no value on that axis, so it can never be counted on it.
+// form or no color carries no value on that axis, so it can never be counted on it.
 //
 // **It was a three-line mirror of the matcher's own rule until 2026-09-06**, on the argument that
 // copying something that small was a smaller risk than exporting it. `internal/achieve` then needed

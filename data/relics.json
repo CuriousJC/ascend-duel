@@ -1103,7 +1103,7 @@
   },
   {
     "RelicRecord": "jar-fire",
-    "Name": "Smouldering Jar",
+    "Name": "Smoldering Jar",
     "Family": "Elements held",
     "Art": "jar-fire",
     "Draw": "a jar with burning coals inside, the jar is made of clear glass with a copper lid",
@@ -1234,7 +1234,7 @@
     "Name": "Earth",
     "Family": "Elemental damage",
     "Art": "dmgx-earth",
-    "Draw": "angled ring made of woven grey rock with a thick band",
+    "Draw": "angled ring made of woven gray rock with a thick band",
     "Text": "Earth cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1598,7 +1598,7 @@
     "RelicRecord": "handmult-four",
     "Name": "Quartered Rings",
     "Family": "Hand multipliers",
-    "Art": "",
+    "Art": "handmult-four",
     "Draw": "an amulet with with 4 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
     "Text": "Every Four of a Kind\ndeals 4x DMG.",
     "Rarity": "rare",
@@ -2082,7 +2082,7 @@
     "Name": "Ebb & Flow",
     "Family": "Shield streaks",
     "Art": "dmg-shield-use",
-    "Draw": "a tower shield with an embedded rainbow gem in the centre",
+    "Draw": "a tower shield with an embedded rainbow gem in the center",
     "Text": "Every card gains 0.2x DMG\nfor each shield card\nyou play. Grows while worn.",
     "Rarity": "rare",
     "Rules": [

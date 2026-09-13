@@ -224,25 +224,25 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 	}
 }
 
-// The arithmetic is set in from the left rather than centred. **A column of figures is the one
-// layout centring cannot survive**, and drawPane centres any row with no swatch and no verb — so
+// The arithmetic is set in from the left rather than centered. **A column of figures is the one
+// layout centering cannot survive**, and drawPane centers any row with no swatch and no verb — so
 // the indent is what keeps the working readable, and it is easy to lose.
-func TestTheWorkingIsIndentedRatherThanCentred(t *testing.T) {
+func TestTheWorkingIsIndentedRatherThanCentered(t *testing.T) {
 	rows := paneRowsFor([]session.LedgerLine{
 		session.Line(session.VoiceTerm, "Bash 20"),
 		session.Line(session.VoicePlain, "- Round 1 -"),
 	})
 
 	if rows[0].indent == 0 {
-		t.Error("a term row is not indented, so it will be drawn centred")
+		t.Error("a term row is not indented, so it will be drawn centered")
 	}
 	if rows[1].indent != 0 {
-		t.Error("a heading is indented, so it will not be centred")
+		t.Error("a heading is indented, so it will not be centered")
 	}
 }
 
 // The hand's name leads with the rung and carries its axis in brackets, because the loudest line
-// of the round should not open on the least interesting word in it. A name the catalogue does not
+// of the round should not open on the least interesting word in it. A name the catalog does not
 // write an axis in front of is left alone.
 func TestAHandIsNamedRungFirst(t *testing.T) {
 	for _, c := range []struct{ name, want string }{
@@ -257,10 +257,10 @@ func TestAHandIsNamedRungFirst(t *testing.T) {
 	}
 }
 
-// The account is coloured the way the screen is: a figure in its card's element, a relic's
-// multiplier in the relic pink, the hand's own in the hand's colour. **It is the reason a line is
+// The account is colored the way the screen is: a figure in its card's element, a relic's
+// multiplier in the relic pink, the hand's own in the hand's color. **It is the reason a line is
 // runs rather than a string**, and it is the part a refactor would quietly flatten.
-func TestTheWorkingIsColouredLikeTheScreen(t *testing.T) {
+func TestTheWorkingIsColoredLikeTheScreen(t *testing.T) {
 	s := &CombatScene{}
 
 	e := combat.Event{Kind: combat.KindHand, HandCardCount: 1, Multiplier: 200, Amount: 40}
@@ -292,16 +292,16 @@ func TestTheWorkingIsColouredLikeTheScreen(t *testing.T) {
 			t.Errorf("a run of the sum is underlined: %q", r.text)
 		}
 		if r.ink == cards.BorderOf(cards.Arcane) {
-			t.Errorf("a run of the sum is written in the arcane element's colour: %q", r.text)
+			t.Errorf("a run of the sum is written in the arcane element's color: %q", r.text)
 		}
 	}
 	if !sawRelic {
-		t.Error("the relic's figure in the sum is not in the relic's colour")
+		t.Error("the relic's figure in the sum is not in the relic's color")
 	}
 }
 
 // **A fight is a block with a lid**: its heading on a dark band and everything under it on a tint
-// of the same colour, so a panel scrolled past the heading still says which fight is being read.
+// of the same color, so a panel scrolled past the heading still says which fight is being read.
 func TestAnOpenedFightIsBanded(t *testing.T) {
 	gs := testState()
 	gs.Run = ledgerRun()
@@ -309,7 +309,7 @@ func TestAnOpenedFightIsBanded(t *testing.T) {
 	rows := ledgerRows(gs, map[int]bool{1: true})
 
 	// **Consecutive fights alternate between the two blues**, so the walk tracks which pair the
-	// current fight is on rather than asserting one colour: what the ledger promises is that a
+	// current fight is on rather than asserting one color: what the ledger promises is that a
 	// heading and its own rows match and that the next fight's do not.
 	heads := 0
 	pair := -1
@@ -331,7 +331,7 @@ func TestAnOpenedFightIsBanded(t *testing.T) {
 		}
 	}
 	if ledgerBands[0] == ledgerBands[1] || ledgerGrounds[0] == ledgerGrounds[1] {
-		t.Error("the two fight colours are the same, so nothing alternates")
+		t.Error("the two fight colors are the same, so nothing alternates")
 	}
 	if heads != 2 {
 		t.Errorf("%d headings were banded, want 2", heads)
@@ -340,7 +340,7 @@ func TestAnOpenedFightIsBanded(t *testing.T) {
 
 // An attack says what it multiplies its owner's damage by, which is the only account of why a
 // Giant Rat's gnaw and its maul land such different figures. **The identity is not written** — a
-// bracket saying 1x on most swings in the game is a bracket that says nothing — and a defence
+// bracket saying 1x on most swings in the game is a bracket that says nothing — and a defense
 // multiplies nothing, so it says nothing either.
 func TestAnAttackSaysWhatItWeighs(t *testing.T) {
 	for _, id := range []combat.ConceptID{combat.Jab, combat.Bash, combat.Cut} {
@@ -361,6 +361,6 @@ func TestAnAttackSaysWhatItWeighs(t *testing.T) {
 		return
 	}
 	if got := cardWeight(combat.Plain(ward)); got != "" {
-		t.Errorf("a defence writes %q, and multiplies nothing", got)
+		t.Errorf("a defense writes %q, and multiplies nothing", got)
 	}
 }

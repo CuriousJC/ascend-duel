@@ -25,12 +25,12 @@
 //   - One hand dealt uniformly from the whole deck — round one. Later rounds draw from a depleted
 //     pile and keep what was not spent, which this does not model.
 //   - The real budget and the real bound: `Actions` from data/duelists.json, and five cards.
-//   - **Every card counts, defences included** *(2026-08-23)*. They carry an element and a form and
+//   - **Every card counts, defenses included** *(2026-08-23)*. They carry an element and a form and
 //     join hands like anything else, bringing no damage — which is not measured here anyway. It is
-//     reachability, and a hand of defences is as reachable as any other.
+//     reachability, and a hand of defenses is as reachable as any other.
 //
 // Nothing here asserts anything. The output is a table to tune against, and the tuning is a
-// judgement call about how much a rarer hand should pay.
+// judgment call about how much a rarer hand should pay.
 package hands
 
 import (
@@ -64,7 +64,7 @@ const (
 var MaxCards = combat.Duelist{}.MaxActions()
 
 // Budget is the fighter's action points. **Named, never the first entry of the map** — the roster
-// is keyed and Go randomises map order, so taking whichever came out first would make every figure
+// is keyed and Go randomizes map order, so taking whichever came out first would make every figure
 // below depend on nothing.
 func Budget() int { return data.LoadDuelists()["Fighter1"].Actions }
 
@@ -90,7 +90,7 @@ func StartingDeck() []combat.Card {
 	return out
 }
 
-// Built is every rung of two cards or more, in catalogue order. The High Card is left out: it is
+// Built is every rung of two cards or more, in catalog order. The High Card is left out: it is
 // the fallback rather than something a player reaches for, and it is reachable from any turn with
 // an attack in it.
 func Built() []combat.Hand {
@@ -117,8 +117,8 @@ func Attacks(deck []combat.Card) int {
 // PerValue is how many cards share the commonest value on an axis, which is the whole reason the
 // three ladders are priced apart.
 //
-// **It counts defences** *(2026-08-23)*, which is most of what it is: the element axis went from
-// nine cards a colour to twelve when they were coloured, and the form axis gained a fourth value.
+// **It counts defenses** *(2026-08-23)*, which is most of what it is: the element axis went from
+// nine cards a color to twelve when they were colored, and the form axis gained a fourth value.
 // It asks `decks.MatchValue` — the matcher's own rule — rather than reading the enums, so a card
 // that carries no value on an axis is left out here for the same reason it is left out of a hand.
 func PerValue(deck []combat.Card, a combat.Axis) int {
@@ -187,7 +187,7 @@ type Table struct {
 }
 
 // Find is one rung's odds by key, and whether the sample holds it. The High Card is not in a
-// sample, so a caller walking the whole catalogue has to be able to ask and be told no.
+// sample, so a caller walking the whole catalog has to be able to ask and be told no.
 func (t Table) Find(key string) (Odds, bool) {
 	for _, o := range t.Rungs {
 		if o.Hand.Key == key {
@@ -228,7 +228,7 @@ func Measure(deck []combat.Card, budget, handSize, trials int) Table {
 			}
 			reach[i]++
 			any = true
-			// The rungs are walked in catalogue order, which is axis by axis and cheapest rung
+			// The rungs are walked in catalog order, which is axis by axis and cheapest rung
 			// first, so "the last one that fit" is the top of that axis's ladder only if the whole
 			// axis is contiguous. Compare on the multiplier instead, which needs no such promise.
 			if best < 0 || h.Multiplier > rungs[best].Multiplier {

@@ -54,7 +54,7 @@ func TestARelicCounterStaysInItsCorner(t *testing.T) {
 			continue
 		}
 
-		// **Out to the bleed, not to the card's own edges** *(2026-09-09)*: the badge is centred
+		// **Out to the bleed, not to the card's own edges** *(2026-09-09)*: the badge is centered
 		// on the bottom-right corner, so most of it lies outside the card in the room Style.Bleed
 		// makes for it. What the box still holds is the half of the card it may not cross, the art
 		// box it may not reach back into, and the edge of the image — a figure wider than the
@@ -89,7 +89,7 @@ func TestOnlyARelicCardDrawsACounter(t *testing.T) {
 // That reverses the 2026-08-26 call that the counter should be bare ink; see drawCounter for why.
 //
 // The check is the inversion, read *inside the circle*, where the badge is the only thing there is:
-// every pixel has to be either the card’s border colour or the card’s own surface, and both have
+// every pixel has to be either the card’s border color or the card’s own surface, and both have
 // to be present — all border would be a disc with no figure on it, all surface no disc at all.
 func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
 	st := RelicStyle
@@ -102,8 +102,8 @@ func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
 	r := st.CounterRadius
 	cx, cy := st.Width-st.CounterRight, st.Height-st.CounterBottom
 
-	// The disc’s left edge, which is inside the circle and clear of a figure centred on the
-	// middle of it — so it is the border colour whatever the figure happens to be.
+	// The disc’s left edge, which is inside the circle and clear of a figure centered on the
+	// middle of it — so it is the border color whatever the figure happens to be.
 	if got := img.RGBAAt(cx-r+1, cy); !near(got, border) {
 		t.Errorf("the disc reads %v at its left edge, want the border %v", got, border)
 	}
@@ -127,14 +127,14 @@ func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
 		}
 	}
 	if disc == 0 {
-		t.Error("nothing inside the circle is the border colour, so there is no disc")
+		t.Error("nothing inside the circle is the border color, so there is no disc")
 	}
 	if surface == 0 {
 		t.Error("nothing inside the circle is the card’s surface, so the figure is not showing through")
 	}
 }
 
-// **Most of the badge lies outside the card**, which is what centring it on the corner means and
+// **Most of the badge lies outside the card**, which is what centering it on the corner means and
 // what Style.Bleed exists to make room for. A card image that went back to being exactly its style
 // size would clip it to a quarter disc in the corner, and nothing else in the package would notice.
 func TestTheBadgeHangsOffTheCard(t *testing.T) {
@@ -170,7 +170,7 @@ func between(got, a, b color.RGBA) bool {
 	return within(got.R, a.R, b.R) && within(got.G, a.G, b.G) && within(got.B, a.B, b.B)
 }
 
-// near allows the rounding the rasteriser does at an edge without letting a different colour past.
+// near allows the rounding the rasterizer does at an edge without letting a different color past.
 func near(got, want color.RGBA) bool {
 	d := func(a, b uint8) int {
 		if a > b {

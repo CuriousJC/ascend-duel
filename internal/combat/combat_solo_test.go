@@ -6,7 +6,7 @@ import "testing"
 // the set. It is what an enemy is as of 2026-08-17 — see Duelist.SoloAttacks.
 //
 // These are the properties the hand-forming phase does *not* have, so nothing above covers them: one
-// damage event per card rather than one per turn, no hand event at all, and a defence that has to
+// damage event per card rather than one per turn, no hand event at all, and a defense that has to
 // survive long enough to answer every blow of the turn instead of just the first.
 
 // soloist is a duelist whose attack cards form no hands.
@@ -78,7 +78,7 @@ func TestASoloAttackerLandsItsCardsInQueueOrder(t *testing.T) {
 }
 
 func TestADefendAnswersEverySwingOfASoloTurn(t *testing.T) {
-	// **The rule this exists to hold.** A defence covers one opposing *turn*; spending it on the
+	// **The rule this exists to hold.** A defense covers one opposing *turn*; spending it on the
 	// first blow would make it nearly worthless against the only opponents that swing more than
 	// once, which is every enemy in the game.
 	b := soloist(10, 9, 500)

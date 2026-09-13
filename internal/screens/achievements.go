@@ -6,12 +6,12 @@ package screens
 // the program's rather than a climb's — like the settings screen, it never touches `session.Phase`
 // and puts the player back where they came from.
 //
-// **It shows locked entries as well as earned ones**, greyed, with the name and the line still
+// **It shows locked entries as well as earned ones**, grayed, with the name and the line still
 // legible. An achievements page that listed only what you already have is a page that says nothing
 // on the day a player most wants to read it. Nothing here is a spoiler yet; the day one is, that
 // entry gets a hidden flag rather than the page getting a policy.
 //
-// **The catalogue moved to `data/achievements.json` on 2026-09-06**, which is exactly the move the
+// **The catalog moved to `data/achievements.json` on 2026-09-06**, which is exactly the move the
 // old note in this file said it would make once there were enough of these to scroll. Eleven records
 // carrying trigger grammars is well past that line, and the argument that a name and a sentence do
 // not earn a loader stopped holding the moment a record had to say *what earns it*. `internal/achieve`
@@ -71,7 +71,7 @@ const (
 // The two grounds a row is drawn on: earned, and not.
 //
 // **Earned is a warmer, lighter card and locked is nearly the screen itself.** The distinction is
-// carried by *weight* rather than by hue, per the colour rule in CLAUDE.md — the wheel belongs to
+// carried by *weight* rather than by hue, per the color rule in CLAUDE.md — the wheel belongs to
 // the elements and an achievements page has no business claiming one.
 var (
 	achievementEarnedFill = color.RGBA{R: 244, G: 234, B: 214, A: 255}

@@ -46,12 +46,12 @@ func TestTheDissolveStartsAtZeroAndFinishesAtOne(t *testing.T) {
 	}
 }
 
-// TestNeighbouringSquaresGoTogether is the property that makes this a dissolve rather than static.
+// TestNeighboringSquaresGoTogether is the property that makes this a dissolve rather than static.
 //
 // **It is the whole reason the delays come off a lattice** — independent per-square delays would
 // pass every other test in this file and read as television noise. Adjacent squares should be far
 // closer in time than two squares picked at random.
-func TestNeighbouringSquaresGoTogether(t *testing.T) {
+func TestNeighboringSquaresGoTogether(t *testing.T) {
 	const w, h = 162, 224
 	cells := DissolveCells(w, h, MarkSeed("Jab"))
 	cols := (w + DissolveCellSize - 1) / DissolveCellSize
@@ -69,10 +69,10 @@ func TestNeighbouringSquaresGoTogether(t *testing.T) {
 	near /= nearN
 
 	// Two squares with no relation average a third of the range apart, which is what a uniform
-	// spread gives. Neighbours have to be well inside that.
+	// spread gives. Neighbors have to be well inside that.
 	const unrelated = 1.0 / 3.0
 	if near > unrelated/2 {
-		t.Errorf("neighbouring squares differ by %.3f on average; unrelated ones differ by about "+
+		t.Errorf("neighboring squares differ by %.3f on average; unrelated ones differ by about "+
 			"%.3f, so the pattern is closer to noise than to patches", near, unrelated)
 	}
 }

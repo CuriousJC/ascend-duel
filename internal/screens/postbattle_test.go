@@ -115,7 +115,7 @@ func TestThePrizeRowIsTwoEssences(t *testing.T) {
 
 // TestTwoDistinctEssencesAreOffered. Two so the choice is a comparison; distinct because being
 // offered the same essence twice is a choice that is not one, and it is a property of shuffling the
-// catalogue rather than drawing from it twice.
+// catalog rather than drawing from it twice.
 func TestTwoDistinctEssencesAreOffered(t *testing.T) {
 	gs := testRun()
 
@@ -146,7 +146,7 @@ func TestTheEssenceOfferIsAFunctionOfTheFight(t *testing.T) {
 	}
 }
 
-// TestTheEssencesAndTheCardsDoNotShareAStream. Adding an essence to the catalogue must not change which
+// TestTheEssencesAndTheCardsDoNotShareAStream. Adding an essence to the catalog must not change which
 // *cards* a fight offers — that is the failure the salts exist to prevent, and it is checkable
 // here because both offers are functions of the same run and fight.
 func TestTheEssencesAndTheCardsDoNotShareAStream(t *testing.T) {
@@ -192,11 +192,11 @@ func TestTheSkipButtonStandsBetweenTheEssences(t *testing.T) {
 			button.Min.X, button.Max.X, prizes[0].Max.X, prizes[1].Min.X)
 	}
 
-	// **Centred on the row it stands in**, or it reads as a control that happens to be near the
+	// **Centered on the row it stands in**, or it reads as a control that happens to be near the
 	// cards rather than as the third answer beside them.
 	rowMid, buttonMid := (prizes[0].Min.Y+prizes[0].Max.Y)/2, (button.Min.Y+button.Max.Y)/2
 	if rowMid != buttonMid {
-		t.Errorf("the button is centred at y=%d against a card row centred at y=%d", buttonMid, rowMid)
+		t.Errorf("the button is centered at y=%d against a card row centered at y=%d", buttonMid, rowMid)
 	}
 }
 

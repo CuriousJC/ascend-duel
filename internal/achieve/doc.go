@@ -28,7 +28,7 @@
 // never pushes is refused at load instead of quietly never firing.
 //
 // **It imports `data` and `combat` and nothing else of ours**, which puts it beside `internal/decks`
-// in the graph and keeps it free of Ebitengine — so the whole catalogue is walked in a test rather
+// in the graph and keeps it free of Ebitengine — so the whole catalog is walked in a test rather
 // than by playing to the end of it.
 //
 // **It never touches the profile and never writes to disk.** It is handed what has happened and

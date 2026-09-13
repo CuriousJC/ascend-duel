@@ -17,7 +17,7 @@ package screens
 // a 1920-wide screen before a pane's padding or a gutter is paid for, so a row that did not overlap
 // could not exist — see shopPitch, which solves for the pitch that makes all four panes full at
 // once, exactly as topRowPitch does for the two panes above. About nineteen pixels of each card is
-// covered by its neighbour, against the thirty-four the hand of eight has always overlapped by.
+// covered by its neighbor, against the thirty-four the hand of eight has always overlapped by.
 //
 // **One pitch across all four panes**, for the reason the top row has one: two rhythms on one line
 // read as two rows that happen to be level with each other.
@@ -169,7 +169,7 @@ func shopFigureBottom(gs *state.GlobalState) int {
 	return shopPaneBackRect(gs, shopPaneRelics).Max.Y + shopFigureGap + shopFigureSize
 }
 
-// shopRerollRect is where a pane's reroll button hangs: centred under it, below the prices.
+// shopRerollRect is where a pane's reroll button hangs: centered under it, below the prices.
 func shopRerollRect(gs *state.GlobalState, p shopPane) image.Rectangle {
 	back := shopPaneBackRect(gs, p)
 	cx := (back.Min.X + back.Max.X) / 2
@@ -179,7 +179,7 @@ func shopRerollRect(gs *state.GlobalState, p shopPane) image.Rectangle {
 
 // drawShopPaneBack paints one pane's surface.
 //
-// **Flat, and the same colour the worn relics stand on.** It covers nothing, so there is no lit edge
+// **Flat, and the same color the worn relics stand on.** It covers nothing, so there is no lit edge
 // to say it is in front of anything — the argument drawRelicPane already makes, and the reason the
 // bevelled cards standing on it are what gets read.
 func drawShopPaneBack(gs *state.GlobalState, screen *ebiten.Image, p shopPane) {

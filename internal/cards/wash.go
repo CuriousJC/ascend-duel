@@ -1,11 +1,11 @@
 package cards
 
 // **Writing a word in an upgrade's own wash**, which is the one place in the game a single word is
-// set in more than one colour.
+// set in more than one color.
 //
 // It is here rather than in `internal/screens` for `ElementSpans`' reason and `internal/carddesc`'s:
 // the review sheets print the same titles the game does, and a tool cannot import a package that
-// links Ebitengine. Two rasterisers draw this game's words and they share no code — so what is
+// links Ebitengine. Two rasterizers draw this game's words and they share no code — so what is
 // shared is the vocabulary, and this is one more entry in it.
 
 import (
@@ -17,20 +17,20 @@ import (
 )
 
 // SplitWash cuts one segment around a word, replacing that word with one segment per letter, each in
-// the colour the upgrade's wash is at that point across a card.
+// the color the upgrade's wash is at that point across a card.
 //
 // **CHROMATIC is what wanted it** *(owner's call, 2026-09-09)*. `carddesc.Chromatic` exists because
 // the wheel has no hue left for "all of them", and it took the panel's plain ink on the argument
 // that the *word* was the signal — which is true of the word and untrue of the panel around it: a
-// card washed in five colours, explained by a title in grey, is the one tooltip that does not look
-// like the thing under the cursor. Five colours across nine letters is not a sixth hue being
+// card washed in five colors, explained by a title in gray, is the one tooltip that does not look
+// like the thing under the cursor. Five colors across nine letters is not a sixth hue being
 // claimed. It is the five.
 //
-// **The colours are sampled out of the wash rather than listed anywhere.** `systems.UpgradeInk` is
+// **The colors are sampled out of the wash rather than listed anywhere.** `systems.UpgradeInk` is
 // what paints the card, so a repaint of the ink moves the word with it; writing the five element
 // inks out instead would be a second palette that agrees with the card only until one is retuned.
 //
-// **Only an uncoloured segment is looked at.** A segment that already carries an ink was coloured by
+// **Only an uncolored segment is looked at.** A segment that already carries an ink was colored by
 // the element vocabulary, and a word cannot be two things — which is what makes the order of the two
 // passes at the call site a rule rather than a preference.
 //
@@ -59,8 +59,8 @@ func SplitWash(seg Segment, word string, u systems.Upgrade) []Segment {
 // WashSegments is one word as one segment per letter, across the upgrade's ink.
 //
 // **Per letter, not per band.** A segment boundary can only fall between letters, so a word shorter
-// than the bands still reads as a spectrum rather than as two letters in two colours. A word with
-// nothing to sample comes back uncoloured rather than black.
+// than the bands still reads as a spectrum rather than as two letters in two colors. A word with
+// nothing to sample comes back uncolored rather than black.
 func WashSegments(word string, u systems.Upgrade) []Segment {
 	ink := systems.UpgradeInk(u)
 	letters := []rune(word)
@@ -76,22 +76,22 @@ func WashSegments(word string, u systems.Upgrade) []Segment {
 	return out
 }
 
-// WashLift is how far a sampled colour is moved toward the light, and toward what.
+// WashLift is how far a sampled color is moved toward the light, and toward what.
 //
 // **The wash was mixed for an off-white card and a tooltip panel is nearly black.** The bands are
-// chosen to read as colour *over paper*; the darkest of them sits at about the panel's own surface in
-// weight, so a title set in it reads as dim rather than as coloured. This is the light-ground rule
+// chosen to read as color *over paper*; the darkest of them sits at about the panel's own surface in
+// weight, so a title set in it reads as dim rather than as colored. This is the light-ground rule
 // the other way round — on a dark panel the move is toward white, the way ColorToward moves
 // everything on the table toward the table.
 //
 // **A third of the way**, which is enough to bring the darkest band up to the weight the rest of a
-// title is set at and little enough that every band is still recognisably the colour on the card.
+// title is set at and little enough that every band is still recognizably the color on the card.
 var (
 	WashLight   = color.RGBA{R: 245, G: 242, B: 236, A: 255}
 	WashLiftPct = 33
 )
 
-// washInk is the ink's colour a fraction of the way across it, lifted for a dark panel.
+// washInk is the ink's color a fraction of the way across it, lifted for a dark panel.
 //
 // **Sampled down the middle**, because the wildcard's ink is bands running top to bottom and the
 // row is therefore the one axis carrying no information. systems.UpgradeInk hands the square out
@@ -127,7 +127,7 @@ type WashWord struct {
 // of `carddesc.Gold` and `carddesc.Silver`.
 //
 // **A knowingly accepted duplicate, held by a test.** `internal/carddesc` writes the words and this
-// package colours them, and the arrow between the two goes neither way: carddesc must not import a
+// package colors them, and the arrow between the two goes neither way: carddesc must not import a
 // package that reaches Ebitengine, and this one must not learn what a `combat.Card` is.
 // TestTheMetalWordsAgree in `internal/screens` — the one package that imports both — is what stops
 // carddesc writing GOLD while this looks for GOLDEN, which would be a word never lit and nothing
@@ -138,9 +138,9 @@ var MetalWords = []WashWord{
 }
 
 // SplitName cuts one segment around a word, replacing that word with a single segment in the one
-// colour the upgrade's ink names it — GOLD in gold, on a dark panel.
+// color the upgrade's ink names it — GOLD in gold, on a dark panel.
 //
-// **One colour rather than SplitWash's spectrum, because the metals are one colour.** The wildcard's
+// **One color rather than SplitWash's spectrum, because the metals are one color.** The wildcard's
 // ink is five bands and reads as a spectrum only if the letters are cut apart; a sheen is one hue
 // with a light running over it, and a letter-by-letter gold would be a gradient nobody could see
 // spent on nine spans. Which of the two a word takes is a fact about its ink, so the two cuts are
@@ -174,7 +174,7 @@ func SplitName(seg Segment, word string, u systems.Upgrade) []Segment {
 	return out
 }
 
-// SplitMetals is SplitName over every word in MetalWords, which is what a caller colouring a line of
+// SplitMetals is SplitName over every word in MetalWords, which is what a caller coloring a line of
 // panel text wants — one call rather than a loop each site has to get the order of.
 func SplitMetals(segs []Segment) []Segment {
 	for _, w := range MetalWords {

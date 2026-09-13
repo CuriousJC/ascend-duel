@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	// ScrimSurface is the ground a bleeding card's type actually sits on: the colour the scrim
+	// ScrimSurface is the ground a bleeding card's type actually sits on: the color the scrim
 	// converges to where it is most opaque. It is the ink set's Surface, and it is what a
 	// disabled bleeding card fades toward, for the reason SurfaceDisabled exists on the other
 	// path — a state has to be expressed as distance to whatever the thing is drawn on.
@@ -45,7 +45,7 @@ var (
 	// **It is not the quiet one, unlike the ink it stands in for.** LabelInk is a stat row's
 	// *word* on a card that also carries figures, where it is deliberately quieter than what it
 	// labels. What arrives here as LabelInk is an essence's sentence — the whole content of its card —
-	// because drawMarkedLine falls back to LabelInk for any run with no colour of its own. Set as
+	// because drawMarkedLine falls back to LabelInk for any run with no color of its own. Set as
 	// quietly as its name suggests, it read as a caption on a picture.
 	LabelInkOnScrim = color.RGBA{R: 222, G: 224, B: 232, A: 255}
 )
@@ -60,14 +60,14 @@ const (
 	// stopping exactly on the ink reads as a highlighter rather than as a surface.
 	scrimPad = 6
 
-	// elementLiftToward is how far an authored element colour is carried toward white on a
+	// elementLiftToward is how far an authored element color is carried toward white on a
 	// bleeding card. The five element inks were chosen to read against off-white, and arcane and
-	// earth in particular go dark; on a scrim they need lifting or the coloured run in a
+	// earth in particular go dark; on a scrim they need lifting or the colored run in a
 	// sentence is the one part of it that cannot be read.
 	elementLiftToward = 34
 )
 
-// scrimWhite is what elementLiftToward carries a colour toward. Not the glyph palette's pure
+// scrimWhite is what elementLiftToward carries a color toward. Not the glyph palette's pure
 // white, which would wash the five hues into one another at this distance.
 var scrimWhite = color.RGBA{R: 244, G: 246, B: 250, A: 255}
 
@@ -107,7 +107,7 @@ func drawArtBleed(dst *image.RGBA, s Spec, st Style) {
 	}
 }
 
-// coverInto scales src to cover box without distorting it and centres it there, cropping
+// coverInto scales src to cover box without distorting it and centers it there, cropping
 // whichever axis is long. It is fitInto's opposite and the only difference is which of the two
 // scales wins.
 func coverInto(dst *image.RGBA, src image.Image, box image.Rectangle) {
@@ -184,7 +184,7 @@ func scrimBand(dst *image.RGBA, st Style, band image.Rectangle) {
 }
 
 // blend mixes over into under by alpha out of 255. Plain Go arithmetic, like everything else
-// this package rasterises: there is no graphics context here to ask for a blend mode.
+// this package rasterizes: there is no graphics context here to ask for a blend mode.
 func blend(under, over color.RGBA, alpha int) color.RGBA {
 	m := func(u, o uint8) uint8 {
 		return uint8((int(u)*(255-alpha) + int(o)*alpha) / 255)
@@ -193,10 +193,10 @@ func blend(under, over color.RGBA, alpha int) color.RGBA {
 }
 
 // onScrim is the ink rule for a bleeding card: the card's own body ink is swapped for its light
-// counterpart, an authored colour is lifted toward white, and the state transform runs after both
+// counterpart, an authored color is lifted toward white, and the state transform runs after both
 // against ScrimSurface rather than against the off-white one.
 //
-// **A named swap rather than a luminance test.** Flipping any dark colour would catch the element
+// **A named swap rather than a luminance test.** Flipping any dark color would catch the element
 // inks too and turn a fire run and an arcane run into the same near-white; naming the one ink is
 // what keeps "this ink is type" and "this ink is an element" different questions.
 func onScrim(s Spec) func(color.RGBA) color.RGBA {

@@ -104,7 +104,7 @@ type RunSnapshot struct {
 
 	// Stones is how many stones the run has put on each rung of the hand ladder, by **hand key**.
 	// A name rather than a seat, on the same terms `Worn` names a relic record: a seat is a position
-	// in the catalogue this build loaded, and a file outlives the build that wrote it.
+	// in the catalog this build loaded, and a file outlives the build that wrote it.
 	Stones map[string]int `json:"stones"`
 
 	// Plays is how many times the run has *formed* each rung, by **hand key**, on the same terms
@@ -151,7 +151,7 @@ type RunSnapshot struct {
 	// **It is the one part of a snapshot that is prose rather than state** *(owner's call,
 	// 2026-09-02)*. Everything else here is resumed *into* the run; this is only ever read back and
 	// shown. That is what makes it safe to carry, and it is also why it may never fail a resume —
-	// see session.Resume, where an unrecognised ink draws plain instead of costing the player a run
+	// see session.Resume, where an unrecognized ink draws plain instead of costing the player a run
 	// over a sentence.
 	//
 	// **Sentences rather than events**, because a run of combat.Events is megabytes of mostly-zero
@@ -189,10 +189,10 @@ type LedgerRoundSnapshot struct {
 
 // LedgerLineSnapshot is one line of the account.
 //
-// **Spans rather than one string**, because the panel colours a line in pieces: the verb by its
+// **Spans rather than one string**, because the panel colors a line in pieces: the verb by its
 // category, a figure by its card's element, a relic's multiplier in the relic pink. Voice and Ink are
 // short closed vocabularies written as words, on the rule every other name in this file is under —
-// a colour in a save file would be a palette decision frozen into a run.
+// a color in a save file would be a palette decision frozen into a run.
 type LedgerLineSnapshot struct {
 	Voice string               `json:"voice,omitempty"`
 	Spans []LedgerSpanSnapshot `json:"spans,omitempty"`

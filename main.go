@@ -27,14 +27,14 @@ import (
 //
 // **The point is that a bug report can name a build.** Someone who downloaded an exe and
 // says "it crashed on the third fight" is only useful if the build they ran is identifiable,
-// and the filename stops travelling with the binary the moment it is renamed or a screenshot
+// and the filename stops traveling with the binary the moment it is renamed or a screenshot
 // is all you have. It is shown in the window title, which any screenshot of the window
 // carries, and on the title screen.
 var version = "dev"
 
 // fixedRunSeed pins the run seed for a debugging session, where the same enemies in the same
 // order is the point. **Empty means roll a new one from the clock every launch**, which is the
-// shipping behaviour and the default.
+// shipping behavior and the default.
 //
 // It is written as a **run code** — six Crockford base32 characters, the same spelling a player reads off
 // the screen and will one day type back in. A code that is not one fails the launch rather than
@@ -59,7 +59,7 @@ const (
 // and 8/8 — the 1:1 case the art is authored for — is reached on any display with room for it
 // rather than having to be asked for.
 //
-// **It is a launch size and not a constraint.** The player can resize, maximise, or take the
+// **It is a launch size and not a constraint.** The player can resize, maximize, or take the
 // fullscreen toggle on the settings screen; Layout does not care what any of them do.
 //
 // **A monitor that will not answer falls back to three quarters**, which is the figure this was
@@ -245,7 +245,7 @@ func main() {
 		}
 	}
 
-	// The score is a MIDI file synthesised to PCM here at startup rather than a
+	// The score is a MIDI file synthesized to PCM here at startup rather than a
 	// recorded track — see internal/music for why. It loops for the whole session
 	// across every screen. How loud it is comes off the profile above — see the settings screen,
 	// which is reached from the cog in the game's chrome. That is a button rather than a hotkey:

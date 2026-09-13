@@ -4,8 +4,8 @@ package data
 //
 // **A status is its own thing as of 2026-08-17, and no longer the same object as an element.**
 // Fire did not burn because it was fire — it burned because the rules held four constants indexed
-// by colour, which made "a second fire status" inexpressible and left every relic with the same
-// one thing to sell. The colour is now only a *predicate* a relic matches on; what happens is a
+// by color, which made "a second fire status" inexpressible and left every relic with the same
+// one thing to sell. The color is now only a *predicate* a relic matches on; what happens is a
 // record in this file, named by a relic's `apply-status` effect. See the `relics` skill.
 //
 // **`internal/combat` reads this file directly**, which is the third such file after
@@ -73,22 +73,22 @@ type StatusData struct {
 	// Text is one line saying what carrying this does, for the long press that does not exist yet.
 	Text string `json:"Text"`
 
-	// Element is which of the five colours this status belongs to, by the name `combat.ParseElement`
+	// Element is which of the five colors this status belongs to, by the name `combat.ParseElement`
 	// reads. **The engine ignores it, exactly as it ignores Badge** — a status is applied by a relic
-	// naming it, and the rules never ask what colour it is.
+	// naming it, and the rules never ask what color it is.
 	//
-	// **It exists so the words that name a status are drawn in that element's colour** *(owner's
+	// **It exists so the words that name a status are drawn in that element's color** *(owner's
 	// call, 2026-09-08)*: BURNING is written in the fire orange wherever it is written. It is a
-	// field rather than a guess off Badge, because deriving a colour from an assets key would tie
+	// field rather than a guess off Badge, because deriving a color from an assets key would tie
 	// the palette to a filename — and `TestEveryStatusNamesAnElement` in internal/screens fails on
-	// a record that names none, so a new status cannot ship uncoloured.
+	// a record that names none, so a new status cannot ship uncolored.
 	Element string `json:"Element"`
 
 	// Verb is how prose says this status happening rather than standing: BURN against BURNING.
 	//
 	// **Ignored by the engine too**, and it exists for the same reason Element does — a relic reading
 	// "Fire attacks BURN and CHILL the target." names two statuses and neither by its Name. Without
-	// it, half the catalogue's sentences would colour and half would not.
+	// it, half the catalog's sentences would color and half would not.
 	Verb string `json:"Verb"`
 }
 

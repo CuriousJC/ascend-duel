@@ -55,7 +55,7 @@ func (s *CombatScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 		// is a card the player can see is broken; one still crossing the table is not yet
 		// anything. Reading the resolved log instead would let a step fire on a break that had not
 		// been drawn.
-		ShieldBreaks: len(s.theatre.shatteredSeats),
+		ShieldBreaks: len(s.theater.shatteredSeats),
 	}
 	match := s.matchingCards(gs)
 	f.Matching = len(match)
@@ -165,15 +165,15 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		// heaviest blows and a creature does not queue them in order — so the box round them would
 		// light the cards that *did* land, which is the opposite of what the step is saying.
 		//
-		// **Walked in seat order rather than over the map**, because Go randomises map iteration
+		// **Walked in seat order rather than over the map**, because Go randomizes map iteration
 		// and the spotlight sorts what it is given: a stable order costs nothing and keeps the
 		// picture the same frame to frame.
 		//
 		// **It reads the same layout the row draws with**, through breakSeatRect, so a card still
 		// flying to its seat is lit where it actually is.
 		var broken []image.Rectangle
-		for seat := range s.theatre.enemyDealt {
-			if !s.theatre.shatteredSeats[seat] {
+		for seat := range s.theater.enemyDealt {
+			if !s.theater.shatteredSeats[seat] {
 				continue
 			}
 			at, ok := s.breakSeatRect(gs, seat)
@@ -191,7 +191,7 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		return one(deckStackBounds(gs)), true
 	case tutorial.AnchorMathBand:
 		// The band the blow is added up in. **The whole band rather than the figures in it**: the
-		// sum is laid out centred and its width is a function of how many terms the round produced,
+		// sum is laid out centered and its width is a function of how many terms the round produced,
 		// so a rectangle round the figures would be a different size every round and the square
 		// would appear to twitch.
 		return one(s.handMathRect(gs)), true
@@ -232,7 +232,7 @@ func (s *CombatScene) tutorialCovered(*state.GlobalState) bool { return s.modalU
 // condition cannot describe different cards.
 //
 // **The axis comes from the script** *(2026-08-25)*. It counted concepts and nothing else while the
-// lesson was five Jabs; the taught hand is now four cards of one colour, and a set is only a set
+// lesson was five Jabs; the taught hand is now four cards of one color, and a set is only a set
 // relative to the axis it is counted on — see tutorial.MatchAxis, which is refused rather than
 // defaulted for exactly this reason.
 //

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// Spec.Highlights: runs of a card's text set in their own colour. These assert pixels, like the
+// Spec.Highlights: runs of a card's text set in their own color. These assert pixels, like the
 // rest of this package's tests.
 
 var (
@@ -28,7 +28,7 @@ func markedSpec(runs ...TextSpan) Spec {
 	return s
 }
 
-// inkedPixels counts how many pixels of the rendered card are near enough to a colour to have been
+// inkedPixels counts how many pixels of the rendered card are near enough to a color to have been
 // drawn in it. **Near enough**, because text is antialiased: an exact match would count only the
 // solid core of a glyph, which is a handful of pixels at 18pt and would make the test flap.
 func inkedPixels(img *image.RGBA, want color.RGBA) int {
@@ -52,9 +52,9 @@ func inkedPixels(img *image.RGBA, want color.RGBA) int {
 	return n
 }
 
-func TestOnlyTheMarkedRunTakesTheSecondColour(t *testing.T) {
-	// **The figure, not the sentence** *(owner's call, 2026-08-21)*. Colouring the whole line says a
-	// relic changed the card; colouring "4x" says it changed the number, which is what happened.
+func TestOnlyTheMarkedRunTakesTheSecondColor(t *testing.T) {
+	// **The figure, not the sentence** *(owner's call, 2026-08-21)*. Coloring the whole line says a
+	// relic changed the card; coloring "4x" says it changed the number, which is what happened.
 	f := faces(t)
 
 	marked, err := Render(markedSpec(TextSpan{Span: "4x", Ink: pinkInk}), Hand, f)
@@ -74,17 +74,17 @@ func TestOnlyTheMarkedRunTakesTheSecondColour(t *testing.T) {
 	few, many := inkedPixels(marked, pinkInk), inkedPixels(whole, pinkInk)
 
 	if few == 0 {
-		t.Fatal("the marked run was not drawn in the second colour at all")
+		t.Fatal("the marked run was not drawn in the second color at all")
 	}
 	if few >= many {
-		t.Errorf("marking one run coloured %d pixels and marking every word coloured %d: "+
+		t.Errorf("marking one run colored %d pixels and marking every word colored %d: "+
 			"the highlight is not narrowing anything", few, many)
 	}
 }
 
 func TestAMarkThatIsNotInTheTextChangesNothing(t *testing.T) {
 	// A card whose wording moves on without its mark must render as a plain card rather than as a
-	// blank or a panic. The mark is looked for and not found; the line is drawn in one colour.
+	// blank or a panic. The mark is looked for and not found; the line is drawn in one color.
 	f := faces(t)
 
 	missing, err := Render(markedSpec(TextSpan{Span: "nowhere", Ink: pinkInk}), Hand, f)
@@ -101,9 +101,9 @@ func TestAMarkThatIsNotInTheTextChangesNothing(t *testing.T) {
 	}
 }
 
-func TestTwoRunsTakeTwoColoursOnOneCard(t *testing.T) {
+func TestTwoRunsTakeTwoColorsOnOneCard(t *testing.T) {
 	// The case the single-run version could not draw: a relic naming an element and a status that
-	// belongs to a different one. Both have to appear, in their own colours, on one face.
+	// belongs to a different one. Both have to appear, in their own colors, on one face.
 	f := faces(t)
 
 	spec := markedSpec(
@@ -116,10 +116,10 @@ func TestTwoRunsTakeTwoColoursOnOneCard(t *testing.T) {
 	}
 
 	if n := inkedPixels(img, fireInk); n == 0 {
-		t.Error("the first run was not drawn in its own colour")
+		t.Error("the first run was not drawn in its own color")
 	}
 	if n := inkedPixels(img, arcaneInk); n == 0 {
-		t.Error("the second run was not drawn in its own colour")
+		t.Error("the second run was not drawn in its own color")
 	}
 }
 
@@ -128,7 +128,7 @@ func TestTwoRunsTakeTwoColoursOnOneCard(t *testing.T) {
 
 func TestARunOnlyMatchesAWholeWord(t *testing.T) {
 	// ICE is inside SLICE and PRICE. A substring match would paint three letters of a card's name
-	// in the ice blue, which reads as a rendering fault rather than as a colour meaning something.
+	// in the ice blue, which reads as a rendering fault rather than as a color meaning something.
 	segs := SplitSpans("CARD BECOMES SLICE", []TextSpan{{Span: "ICE", Ink: fireInk}})
 
 	if len(segs) != 1 || segs[0].Ink.A != 0 {
@@ -136,7 +136,7 @@ func TestARunOnlyMatchesAWholeWord(t *testing.T) {
 	}
 }
 
-func TestEveryOccurrenceOfARunIsColoured(t *testing.T) {
+func TestEveryOccurrenceOfARunIsColored(t *testing.T) {
 	// One entry covers a word a sentence says twice — "apply BURNING status … BURNING enemies" —
 	// so a repeat does not cost a second seat in a fixed array.
 	segs := SplitSpans("BURNING and BURNING", []TextSpan{{Span: "BURNING", Ink: fireInk}})
@@ -148,13 +148,13 @@ func TestEveryOccurrenceOfARunIsColoured(t *testing.T) {
 		}
 	}
 	if n != 2 {
-		t.Errorf("coloured %d occurrences of BURNING, want 2: %v", n, segs)
+		t.Errorf("colored %d occurrences of BURNING, want 2: %v", n, segs)
 	}
 }
 
 func TestTheFirstRunToClaimAPositionKeepsIt(t *testing.T) {
 	// The caller sorts by length, so BURNING is offered before BURN. If the shorter one could take
-	// the front of the longer, "BURNING" would draw as a coloured BURN and a default-ink ING.
+	// the front of the longer, "BURNING" would draw as a colored BURN and a default-ink ING.
 	segs := SplitSpans("BURNING", []TextSpan{
 		{Span: "BURNING", Ink: fireInk},
 		{Span: "BURN", Ink: arcaneInk},

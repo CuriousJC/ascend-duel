@@ -26,16 +26,16 @@ type Style struct {
 	NameTop  int
 	NameSize float64
 
-	// NameCentered centres the name across the card instead of starting it at TextLeft.
+	// NameCentered centers the name across the card instead of starting it at TextLeft.
 	// Relics use it: with no glyph column down the left there is nothing for a
-	// left-aligned name to line up with, and it reads as having slipped off centre.
+	// left-aligned name to line up with, and it reads as having slipped off center.
 	NameCentered bool
 
-	// The form mark, above the cost stack: the box its art is centred in.
+	// The form mark, above the cost stack: the box its art is centered in.
 	//
 	// **The box is a number here rather than `systems.SizeOf`** *(2026-08-15)*. It was, while the
 	// mark was a generated glyph and the glyph's own size was the authority — assuming one was
-	// how a 22-pixel shape got a 64-pixel hole. The layout names the space instead, and centring
+	// how a 22-pixel shape got a 64-pixel hole. The layout names the space instead, and centering
 	// by ink means the mark fills it whatever the drawing leaves as margin. A glyph bigger than
 	// this box overflows it rather than resizing it, so the box is the one number to change —
 	// see `systems.formArtSize`, which is the size the four marks are authored at to match.
@@ -71,14 +71,14 @@ type Style struct {
 	GlyphScale int
 	GlyphInset int
 
-	// Spec.Text, wrapped and set as a block **centred in the space the left column leaves**.
+	// Spec.Text, wrapped and set as a block **centered in the space the left column leaves**.
 	// A zero TextLineHeight means the style has none, which is every style but Hand — the
 	// block exists only on a card big enough to read.
 	//
 	// **The left column is treated as a column and the text gets the rest** *(2026-08-14)*.
 	// TextColumnLeft is where the text may start; everything left of it belongs to the category
-	// glyph, the cost dashes and the damage figure. Inside that column the block is centred
-	// horizontally, and vertically it is centred in TextBandTop..TextBandBottom — under the
+	// glyph, the cost dashes and the damage figure. Inside that column the block is centered
+	// horizontally, and vertically it is centered in TextBandTop..TextBandBottom — under the
 	// name, down to the inside of the bottom border. Short text sits in the middle of the card
 	// rather than clinging to the bottom edge.
 	//
@@ -94,7 +94,7 @@ type Style struct {
 	TextLineHeight int
 
 	// ArtTop and ArtInset frame Spec.Art on a style that does *not* bleed. The art is scaled to
-	// fit the box they describe and centred in it, leaving the off-white surface around it.
+	// fit the box they describe and centered in it, leaving the off-white surface around it.
 	//
 	// **Ignored entirely when ArtBleed is set**, which is what makes the two paths a choice
 	// rather than a pair of numbers that can half-agree.
@@ -118,7 +118,7 @@ type Style struct {
 	// **One size for both halves of a row.** A quieter label and a louder figure was the
 	// character block's shape and it worked there because the two were stacked; on one
 	// baseline, two sizes read as a typo rather than as a hierarchy. The label is set in
-	// LabelInk instead, which is the same distinction made with colour.
+	// LabelInk instead, which is the same distinction made with color.
 	StatsTop     int
 	StatRowPitch int
 	StatSize     float64
@@ -136,12 +136,12 @@ type Style struct {
 	HealthTextTop   int
 	HealthTextSize  float64
 
-	// Spec.Effects drawn as a centred row of squares along the bottom edge. A zero
+	// Spec.Effects drawn as a centered row of squares along the bottom edge. A zero
 	// EffectSize means the style shows none, which is every style but the two fighter cards.
 	//
 	// **A square box each, and the badge is fitted into it** — the art is 500px and this is
 	// twenty, so it is scaled like the portrait rather than blitted like a glyph. The row is
-	// centred on the card and closes up as badges come and go, so two statuses sit in the
+	// centered on the card and closes up as badges come and go, so two statuses sit in the
 	// middle rather than clinging to the left.
 	EffectSize int
 	EffectTop  int
@@ -155,7 +155,7 @@ type Style struct {
 	// would have to be recomputed by hand every time the card's size changed, and the one thing
 	// this badge must never do is drift off the card it is counting.
 	//
-	// **CounterHeight is the band the figure is centred in, not a box drawn around it.** There is
+	// **CounterHeight is the band the figure is centered in, not a box drawn around it.** There is
 	// nothing behind the text; the height is fixed so a two-character figure and a four-character
 	// one sit on the same line, which is what lets a row of relics be read across.
 	CounterHeight int
@@ -173,7 +173,7 @@ type Style struct {
 	// **A card image is the card’s own size everywhere else, and that is worth keeping true**:
 	// every caller draws it at a top-left point and measures its hit box off the style, so an image
 	// that is quietly larger than the card is a thing to be able to point at. This is the one
-	// reason there is a field for it rather than a constant — the accumulator badge is centred on
+	// reason there is a field for it rather than a constant — the accumulator badge is centered on
 	// the bottom-right corner, so three quarters of it lies outside the card, and a badge clipped
 	// to the card would be a quarter disc filling the corner instead.
 	//
@@ -192,13 +192,13 @@ type Style struct {
 // so the height came off the empty strip and nothing else. That strip is what the effect text
 // occupies now.
 //
-// The face reads: the name centred across the top, the category glyph in the corner, a stack
+// The face reads: the name centered across the top, the category glyph in the corner, a stack
 // of cost dashes down the left edge, and the effect text filling everything else.
 //
 //	  0  category glyph      0..32    (32px at the largest, in the corner, cropped by the curve)
-//	 14  name               centred
+//	 14  name               centered
 //	 48  cost dashes        48..95    (four at 8 on a 5 gap)
-//	 44  effect text        44..214   (x=26..154, block centred both ways)
+//	 44  effect text        44..214   (x=26..154, block centered both ways)
 //	218  inside of the bottom border
 //
 // **The cost column is 26px and the glyph is not in it.** The glyph is 32 wide and would set
@@ -211,21 +211,21 @@ type Style struct {
 // from somewhere. They are still at 48 with the glyph hard in the corner, which leaves 16
 // pixels of air between the two rather than a join.
 //
-// **The name is centred and the glyph is in the corner beside it, not under it.** Those
-// two go together: a left-aligned name would sit directly on top of the glyph, and centring it
-// is what clears the space. The name is centred on the *card*, not on the room left over
+// **The name is centered and the glyph is in the corner beside it, not under it.** Those
+// two go together: a left-aligned name would sit directly on top of the glyph, and centering it
+// is what clears the space. The name is centered on the *card*, not on the room left over
 // beside the glyph, so a long enough name would still reach back into it —
 // TestNameClearsTheCategoryGlyph checks every concept in the deck against that.
 //
 // **The card is a column and a paragraph** *(2026-08-14)*. There is no damage badge at all any
 // more — not the 64-pixel sword and not the figure that briefly replaced it — because the text
 // says what the card deals and a number beside it was the same fact multiplied out. The column
-// is the cost dashes; the text takes everything right of them and is centred in it, both ways,
+// is the cost dashes; the text takes everything right of them and is centered in it, both ways,
 // in the band running from under the name to the inside of the bottom border.
 //
-// **Centred rather than top-left because the block is the card's whole right-hand side.** A
+// **Centered rather than top-left because the block is the card's whole right-hand side.** A
 // two-line effect pinned to the top of a 170-pixel band reads as a caption that has come
-// unstuck; centred, a short card and a long one look like the same design.
+// unstuck; centered, a short card and a long one look like the same design.
 //
 // What that buys is size: 18pt against the 13 the text was set in when it ran the full width
 // under a badge. What it costs is measure — 128 pixels, and the wording has to be short words.
@@ -245,7 +245,7 @@ var Hand = Style{
 	NameSize:     25,
 	NameCentered: true,
 
-	// The mark is centred on its ink in this box, so the box is what the layout tests hold.
+	// The mark is centered on its ink in this box, so the box is what the layout tests hold.
 	//
 	// **It sits inside the card rather than hanging off the corner** *(2026-08-15)*. A glyph
 	// placed at 0,0 is cropped by the card's own curve, which a silhouette survives — it loses a
@@ -318,7 +318,7 @@ func (st Style) Scaled(num, den int) Style {
 			return 0
 		}
 		// Rounded to nearest rather than truncated: a truncating scale walks every offset
-		// upward and to the left, so the whole face creeps off centre as the factor shrinks.
+		// upward and to the left, so the whole face creeps off center as the factor shrinks.
 		return (v*num*2 + den) / (den * 2)
 	}
 	f := func(v float64) float64 { return v * float64(num) / float64(den) }
@@ -394,14 +394,14 @@ func (st Style) Scaled(num, den int) Style {
 // **`Style.Scaled` stays**, because Mini and Stack are genuinely derived sizes and a field added
 // to Hand has to reach them without anyone remembering to halve it.
 
-// centringItsMark puts the glyph inset back on the centre line of a card that has no text column
+// centeringItsMark puts the glyph inset back on the center line of a card that has no text column
 // to line a mark up against.
 //
 // **Token is the only style whose `GlyphInset` is an arithmetic rather than a measurement** — it is
 // authored as `(Width - FormSize) / 2` — so holding `FormSize` back while the card grows leaves the
-// mark off centre by the difference. Hand's inset is a left margin and means what it says at any
-// size; this one has to be recomputed. TestATokenCentresItsColumn is what fails otherwise.
-func centringItsMark(st Style) Style {
+// mark off center by the difference. Hand's inset is a left margin and means what it says at any
+// size; this one has to be recomputed. TestATokenCentersItsColumn is what fails otherwise.
+func centeringItsMark(st Style) Style {
 	st.GlyphInset = (st.Width - st.FormSize) / 2
 	return st
 }
@@ -411,8 +411,8 @@ var Mini = Hand.Scaled(1, 2)
 // Stack is the draw pile's card, derived from Hand — see stackOf.
 var Stack = stackOf(Hand)
 
-// Token is the hands panel's card, centred on its mark — see tokenBase and centringItsMark.
-var Token = centringItsMark(tokenBase)
+// Token is the hands panel's card, centered on its mark — see tokenBase and centeringItsMark.
+var Token = centeringItsMark(tokenBase)
 
 // Stack is the draw pile's card: a back, and nothing else, at **three quarters of Hand**
 // *(2026-09-04, owner's call)*.
@@ -449,11 +449,11 @@ func stackOf(st Style) Style {
 //
 // The face reads top to bottom: name, portrait, bar, numbers.
 //
-//	 15  name              centred   (15..46 at 25pt)
-//	 55  portrait          55..195   (Spec.Art, scaled to fit and centred)
+//	 15  name              centered   (15..46 at 25pt)
+//	 55  portrait          55..195   (Spec.Art, scaled to fit and centered)
 //	201  health bar        201..219
-//	225  hit points        "42/60", centred
-//	246  status badges     246..271  (Spec.Effects, a centred row)
+//	225  hit points        "42/60", centered
+//	246  status badges     246..271  (Spec.Effects, a centered row)
 //	272  inside of the bottom border
 //
 // **The badges are on this card and not the duelist's** *(2026-08-16)*, which breaks the
@@ -466,7 +466,7 @@ func stackOf(st Style) Style {
 //
 // **The strip they sit in is what was left, not what was wanted.** The fraction's ink ends
 // around y=246 and the border starts at 272, so the badges get twenty-five pixels — small
-// for a 500-pixel drawing, and legible because what a badge has to say is a colour and a rough
+// for a 500-pixel drawing, and legible because what a badge has to say is a color and a rough
 // shape rather than a picture. `TestStatusBadgesClearTheHealthTextAndTheBorder` holds both
 // ends of that strip; making them bigger means moving the fraction on *both* fighter cards.
 //
@@ -487,7 +487,7 @@ func stackOf(st Style) Style {
 //
 // What it drops is everything describing a *play* — no category glyph, no cost dashes, no
 // damage badge — for the same reason RelicStyle does: none of them are things an enemy card
-// is. `Element` is Basic, so the border is the neutral mid grey rather than claiming the
+// is. `Element` is Basic, so the border is the neutral mid gray rather than claiming the
 // opponent is made of fire.
 var EnemyStyle = Style{
 	Width: 200, Height: 280,
@@ -529,18 +529,18 @@ var EnemyStyle = Style{
 //
 // The face reads top to bottom: name, stat rows, bar, numbers.
 //
-//	 18  name              centred   (18..48 at 25pt)
+//	 18  name              centered   (18..48 at 25pt)
 //	 70  DMG               70..96     label left, figure right
 //	108  AP               108..134
 //	146  Vitae            146..172
 //	201  health bar        201..219
-//	225  hit points        "42/60", centred
-//	246  shield pips       246..271  (Spec.Effects, a centred row)
+//	225  hit points        "42/60", centered
+//	246  shield pips       246..271  (Spec.Effects, a centered row)
 //	272  inside of the bottom border
 //
 // **The shield row is the enemy's badge row, seat for seat** *(2026-08-31)*. It holds five, which
 // is `combat`'s cap on a duelist's shields for the same reason — a turn is five cards, so a sixth
-// shield could never be spent. The row closes up as shields are eaten, so three pips sit centred
+// shield could never be spent. The row closes up as shields are eaten, so three pips sit centered
 // rather than clinging to the left, and an unshielded duelist draws nothing at all.
 //
 // **The bar and the fraction are at exactly the enemy card's offsets**, deliberately: the two
@@ -551,8 +551,8 @@ var EnemyStyle = Style{
 //
 // What it drops is everything describing a *play*, like EnemyStyle and RelicStyle: a duelist
 // is not something you put down from a hand. `Element` is Basic, so the border is the neutral
-// mid grey — the same as the enemy's, since neither card is made of an element. If the two
-// corners ever need telling apart by colour, that is one entry in the Element enum and not a
+// mid gray — the same as the enemy's, since neither card is made of an element. If the two
+// corners ever need telling apart by color, that is one entry in the Element enum and not a
 // change here.
 var DuelistStyle = Style{
 	Width: 200, Height: 280,
@@ -605,10 +605,10 @@ var EssenceStyle = Style{
 	BorderWidth:  4,
 
 	// **A bleeding card does not name itself** *(owner's call, 2026-09-11)*. The picture is the
-	// card: a relic is recognised by its art the way a playing card is recognised by its suit, and
+	// card: a relic is recognized by its art the way a playing card is recognized by its suit, and
 	// a title bar across the top of a full-bleed illustration covers the one thing worth looking
 	// at to repeat what it already says. The full name still titles every tooltip, which is where
-	// a player who does not recognise a picture yet goes.
+	// a player who does not recognize a picture yet goes.
 	ShowName: false,
 	ShowForm: false,
 
@@ -621,8 +621,8 @@ var EssenceStyle = Style{
 	// the price of one card format rather than two.
 	ArtBleed: true,
 
-	// The full width, unlike Hand — there is no cost column to leave room for. Centred in the band
-	// under the art for the same reason Hand centres in its own: a one-line essence and a two-line one
+	// The full width, unlike Hand — there is no cost column to leave room for. Centered in the band
+	// under the art for the same reason Hand centers in its own: a one-line essence and a two-line one
 	// should look like the same card.
 	TextColumnLeft: 15,
 	TextInset:      10,
@@ -649,10 +649,10 @@ var RelicStyle = Style{
 	BorderWidth:  4,
 
 	// **A bleeding card does not name itself** *(owner's call, 2026-09-11)*. The picture is the
-	// card: a relic is recognised by its art the way a playing card is recognised by its suit, and
+	// card: a relic is recognized by its art the way a playing card is recognized by its suit, and
 	// a title bar across the top of a full-bleed illustration covers the one thing worth looking
 	// at to repeat what it already says. The full name still titles every tooltip, which is where
-	// a player who does not recognise a picture yet goes.
+	// a player who does not recognize a picture yet goes.
 	ShowName: false,
 	ShowForm: false,
 
@@ -682,7 +682,7 @@ var RelicStyle = Style{
 	CounterRadius: 18,
 
 	// Enough for the disc's overhang and for the widest figure past it: the disc is 36 across and
-	// centred on the corner, so this is a little over the half of it. A figure wider than the bleed
+	// centered on the corner, so this is a little over the half of it. A figure wider than the bleed
 	// is pulled back inside it rather than cut.
 	Bleed: 28,
 }
@@ -700,7 +700,7 @@ var RelicStyle = Style{
 //
 // **The left column, standing on its own.** Everything it draws — a tinted form mark with the
 // cost ticks under it — is exactly what a Hand card puts down its left edge, so a row of these
-// is the same reading in the same colours, and nothing here can drift from the card it stands
+// is the same reading in the same colors, and nothing here can drift from the card it stands
 // for except by that column moving.
 //
 // The hands panel is the caller: eighteen rungs, each shown as the cards that build it, is a

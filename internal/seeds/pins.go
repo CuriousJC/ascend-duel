@@ -7,7 +7,7 @@ package seeds
 //
 // **Only shared pins live here.** A pin owned by one caller stays with that caller:
 // `fixedRunSeed` is `main`'s, and `deckSeedName`/`deckSeed` belong to `internal/screens` because
-// they name an entry in that package's own hand catalogue. What lands in this package is a pin
+// they name an entry in that package's own hand catalog. What lands in this package is a pin
 // two packages have to agree on.
 
 // EnemyDeckPin is the pinned opponent shuffle, so a pinned duel deals the same cards both sides.

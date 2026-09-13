@@ -104,7 +104,7 @@ func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag 
 // drawBuildCard is the duelist half of the band on its own.
 //
 // **It is split out for the shop** *(2026-08-22)*, which draws the relic row itself: a relic there is
-// a thing you can sell, so it carries a price under it and it moves when the row re-centres. The
+// a thing you can sell, so it carries a price under it and it moves when the row re-centers. The
 // row's *geometry* is still `buildRelicRect` and `relicSlotAt`, so the two screens cannot disagree
 // about where a finger is — only about what is drawn on it.
 func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {

@@ -340,7 +340,7 @@ func TestAScriptWithNoMatchingStepNeedsNoAxis(t *testing.T) {
 
 // The axis vocabulary is closed like the other three, and an invented word does not exist.
 func TestAnInventedAxisIsRefused(t *testing.T) {
-	if _, err := Parse(data.TutorialData{Match: "colour", Steps: []data.TutorialStepData{
+	if _, err := Parse(data.TutorialData{Match: "color", Steps: []data.TutorialStepData{
 		{StepRecord: "hello", Text: "hello", Until: "next"},
 	}}); err == nil {
 		t.Error("an invented axis was accepted")

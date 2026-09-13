@@ -23,13 +23,13 @@ import "sort"
 // at.
 // That last case is the whole of what the change buys, and the whole of what it costs.
 //
-// **The colours a hand shows include its defences**, so a fire Brace arms a burn on a turn with no
+// **The colors a hand shows include its defenses**, so a fire Brace arms a burn on a turn with no
 // fire attack in it. That follows from the same decision and is the sharper half of it.
 //
 // **What "agree" means is the hand's own business** *(2026-08-19)*. Most rungs exist three times
 // over, once per `Axis`: two Thumps are a Card Two Pair only if a second pair joins them, a Thump and
 // a Cleave agree on no form - they have different ones - and an ice Thump beside an ice Thrust is an
-// elemental hand though the two agree on nothing else. Those are separate catalogue entries rather
+// elemental hand though the two agree on nothing else. Those are separate catalog entries rather
 // than one entry with three readings, so each is priced on how often it can actually be built.
 //
 // **The Pair is the exception and is one entry read on all three** *(owner's call, 2026-09-05)*.
@@ -45,7 +45,7 @@ import "sort"
 // 0.6x on Skewers, so the ladder paid least to the decks that had climbed furthest. The High Card
 // carries 100 for the same reason, and it is what makes a lone attack land its own face damage.
 //
-// **That is deliberately narrow.** Hands used to carry a second axis counting the distinct colours
+// **That is deliberately narrow.** Hands used to carry a second axis counting the distinct colors
 // in the formed hand, and a reward vocabulary that could bank action points or take actions off the
 // opponent's next turn. Both are gone: statuses come from **elements and the relics that arm them**,
 // so a hand is one number and there is exactly one place to look for what a hand is worth.
@@ -67,7 +67,7 @@ import "sort"
 // Hands are eventually **discovered rather than given**, persisting on the profile as part of
 // the unlock structure — see MECHANICS.md. **The profile exists as of 2026-08-25 and does not gate
 // this**: `profile.Profile.HandsDiscovered` is the field waiting for it, and everything in the
-// catalogue is still always live. When it does, discovery gates the *catalogue*, not the matcher.
+// catalog is still always live. When it does, discovery gates the *catalog*, not the matcher.
 
 // HandID identifies a hand. It travels on the KindHand event so the screen can name what fired
 // without knowing the rule that fired it.
@@ -107,7 +107,7 @@ const (
 	// player's forty-eight cards share it, which makes it the commonest value on this axis.
 	AxisForm
 
-	// AxisElement counts cards of the same colour. `Basic` never counts, for the same reason.
+	// AxisElement counts cards of the same color. `Basic` never counts, for the same reason.
 	AxisElement
 )
 
@@ -145,10 +145,10 @@ func ParseAxis(name string) (Axis, bool) {
 //
 // **`FormNone` and `Basic` are absences rather than values** *(2026-08-19)*, so a card carrying
 // one matches nothing on that axis. Every enemy card is both, which is what stops a formless,
-// colourless deck from reading as a table full of elemental hands.
+// colorless deck from reading as a table full of elemental hands.
 //
-// **The player has no basic card left** *(2026-08-23)*. The defences used to be the exception and
-// were excluded before this was asked anyway; they now ship in the five colours like every attack,
+// **The player has no basic card left** *(2026-08-23)*. The defenses used to be the exception and
+// were excluded before this was asked anyway; they now ship in the five colors like every attack,
 // so `FormDefend` and every element are live values here and the absences belong to the enemies.
 // **It was unexported until 2026-09-06.** `internal/decks` mirrored it in three lines rather than
 // have it exported, on the argument that copying a rule that small was the smaller risk;
@@ -248,10 +248,10 @@ func (h Hand) Cards() int {
 	return n
 }
 
-// catalogue is every hand in the game, read from data/hands.json at package init.
-var handTable = loadCatalogue()
+// catalog is every hand in the game, read from data/hands.json at package init.
+var handTable = loadCatalog()
 
-// Hands is the live catalogue. It exists so a reference screen can list the ladder without
+// Hands is the live catalog. It exists so a reference screen can list the ladder without
 // reaching into the table, and so the discovery gate has one place to land.
 func Hands() []Hand {
 	out := make([]Hand, len(handTable))
@@ -281,7 +281,7 @@ func HandByName(name string) (Hand, bool) {
 	return Hand{}, false
 }
 
-// HandIDForKey is the number the catalogue gives one entry.
+// HandIDForKey is the number the catalog gives one entry.
 //
 // **One ID per key, written in the file.** An entry used to produce one hand *per attack concept*
 // with `base + int(concept)` for an ID, which held twelve concepts and could not hold the four
@@ -316,7 +316,7 @@ type Blow struct {
 	Lead int
 
 	// Hand is what formed, and **it is always a hand**: a turn that builds nothing bigger falls
-	// back to the catalogue's High Card. A blow with no cards in it at all — a turn with no attack
+	// back to the catalog's High Card. A blow with no cards in it at all — a turn with no attack
 	// — is the zero Blow, and `len(Cards) == 0` is how a caller asks that.
 	Hand Hand
 
@@ -325,8 +325,8 @@ type Blow struct {
 	// one source today. 100 is the identity: it is what the High Card carries.
 	Multiplier int
 
-	// Elements is every distinct non-basic colour in the hand, in element order. It is what
-	// decides which statuses land, and it is the *only* thing colour does to a blow — it buys no
+	// Elements is every distinct non-basic color in the hand, in element order. It is what
+	// decides which statuses land, and it is the *only* thing color does to a blow — it buys no
 	// damage.
 	Elements []Element
 }
@@ -338,7 +338,7 @@ type Blow struct {
 // nothing else pays.
 //
 // **When no hand of two or more forms, the High Card is the blow**: the single attack that hits
-// hardest, at the catalogue's identity multiplier, so what lands is the card's own face damage.
+// hardest, at the catalog's identity multiplier, so what lands is the card's own face damage.
 // Ties go to the card queued first, which needs no tie-break rule beyond the order the turn is
 // already in.
 func BlowFor(turn []Slot) Blow {
@@ -366,12 +366,12 @@ func blowFor(turn []Slot, hands []Hand) Blow {
 	}
 }
 
-// highCardKey is the catalogue entry naming the fallback. **It is in `hands.json` rather than
+// highCardKey is the catalog entry naming the fallback. **It is in `hands.json` rather than
 // written out here** so the one thing every turn can produce is named and numbered where the rest
 // of the ladder is, and the feed can look it up like any other hand.
 const highCardKey = "high-card"
 
-// highCard is the catalogue's fallback entry. It is required to exist — loadCatalogue panics
+// highCard is the catalog's fallback entry. It is required to exist — loadCatalog panics
 // without it — because a turn with an attack in it always produces a hand, and one the engine
 // could not name is the single failure this model can have.
 func highCard(hands []Hand) Hand {
@@ -391,7 +391,7 @@ func highCard(hands []Hand) Hand {
 // is also what picks between the readings of a merged rung, which all carry one multiplier.
 //
 // **The one-card hand is skipped rather than matched** *(2026-08-15)*. The High Card is in the
-// catalogue and would match against any attack at all, but counting is the wrong way to pick it:
+// catalog and would match against any attack at all, but counting is the wrong way to pick it:
 // `matchCountOf` fills groups largest-count-first, so it would hand back whichever concept
 // appeared most rather than the card that hits hardest. Which card is the High Card is a question
 // about damage, and `biggestAttack` is what answers it.
@@ -427,14 +427,14 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 
 // matchCountOf reads the turn as a set: how many cards carry each value on the hand's own axis,
 // and whether that satisfies its groups. A card with no value on that axis — a formless or
-// colourless one — is skipped rather than tallied under a zero everything else would join.
+// colorless one — is skipped rather than tallied under a zero everything else would join.
 //
-// **Which cards are counted is the matcher's rule rather than the catalogue's** *(2026-08-17)*. An
+// **Which cards are counted is the matcher's rule rather than the catalog's** *(2026-08-17)*. An
 // entry used to name the categories it counted, and it could never change what was counted — it
 // only invited an entry to claim otherwise.
 //
-// **It counts every card in the turn** *(2026-08-23)*. Defences are in, so a pair of Braces is a Card
-// Pair and a turn of one colour is an elemental hand whether it swung or not; they bring no damage
+// **It counts every card in the turn** *(2026-08-23)*. Defenses are in, so a pair of Braces is a Card
+// Pair and a turn of one color is an elemental hand whether it swung or not; they bring no damage
 // with them, since `Card.Damage` is zero for every verb that is not an attack. What is left out is
 // decided by `matchValue` — a card with no value on the hand's own axis — and by nothing else.
 //
@@ -539,7 +539,7 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 // biggestAttack is the High Card: the single attack that hits hardest, or — for a turn that queued
 // no damage at all — the first card in it.
 //
-// **A turn of nothing but defences is a hand too** *(owner's call, 2026-09-02)*. Every card carries
+// **A turn of nothing but defenses is a hand too** *(owner's call, 2026-09-02)*. Every card carries
 // a form and an element and every card is counted toward a hand, so the one turn that could not
 // name one was the turn whose cards all deal zero — which made a shield build a build the ladder
 // could not see. The blow it forms sums to nothing and lands nothing, and the hand is still named
@@ -585,15 +585,15 @@ func (c Card) formsBlow() bool {
 // enough that Jab's `dmg/2` floor of 1 cannot flatten the ladder.
 const damageRankDMG = 100
 
-// elementsOf is every distinct non-basic colour among the cards that formed the hand, in element
+// elementsOf is every distinct non-basic color among the cards that formed the hand, in element
 // order.
 //
-// **Colour buys no damage, only statuses** *(2026-08-17)*. This list is read by the resolver to
+// **Color buys no damage, only statuses** *(2026-08-17)*. This list is read by the resolver to
 // decide what lands, gated on the relics the attacker wears; the count of it used to be a second
 // multiplier and is not any more.
 //
-// **Basic is skipped.** It is the absence of an element, so a basic card neither adds a colour nor
-// spoils one — two basic Bashes and an ice Bash show one colour. That is what makes a plain
+// **Basic is skipped.** It is the absence of an element, so a basic card neither adds a color nor
+// spoils one — two basic Bashes and an ice Bash show one color. That is what makes a plain
 // draw neutral rather than a punishment.
 func elementsOf(turn []Slot, cards []int) []Element {
 	var seen [ElementCount]bool

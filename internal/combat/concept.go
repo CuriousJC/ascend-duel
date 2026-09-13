@@ -44,7 +44,7 @@ const (
 	// outright — see Duelist.Shields and blockedByShield.
 	//
 	// **It is a count, not a percentage, and that is what separates it from VerbDefend.** The two
-	// answer different offences: an enemy is a solo attacker, so its turn is several discrete
+	// answer different offenses: an enemy is a solo attacker, so its turn is several discrete
 	// blows a player can decide how many of to take, while the player forms hands and lands one
 	// figure, which a count could only ever delete whole. See MECHANICS.md §Shields.
 	VerbShield
@@ -103,7 +103,7 @@ type Concept struct {
 // registry is every concept the process knows, in registration order, plus the key index.
 //
 // **Package state, and mutable, which is unusual for this package and worth justifying.** The
-// alternative was threading a catalogue through `ResolveRound`, `ResolutionOrder`, `PlanFor`,
+// alternative was threading a catalog through `ResolveRound`, `ResolutionOrder`, `PlanFor`,
 // every `Card` method and every test, to describe something that is loaded once from embedded
 // data and never changes afterwards. What the rules must not carry is a *clock* or a *global
 // random source*; a lookup table read from an embedded file is neither. Registration is
@@ -276,18 +276,18 @@ func registerPlayerConcepts() map[string]ConceptID {
 // `combat.Bash` rather than looking a string up.
 //
 // **Eight of them ship at zero copies** — the 0 AP and 4 AP rung of each attack form *(2026-08-24)*,
-// and Flinch and Guard at the two ends of the defences *(2026-09-06)*.
+// and Flinch and Guard at the two ends of the defenses *(2026-09-06)*.
 // They are not in the starting deck and cannot be bought; the only way to hold one is a Debase or a
 // Exalt essence walking a card off the end of the rungs the deck does ship. They are registered concepts all the
-// same, because `Neighbour` derives the ladder from this registry and a rung that does not exist is
+// same, because `Neighbor` derives the ladder from this registry and a rung that does not exist is
 // a rung an essence cannot step onto.
 //
 // **They are resolved from the file rather than defining it.** Renaming a card in
 // `duelist_cards.json` fails here, at startup, with the name that went missing — which is the loud
 // failure a deck quietly one concept short never gave.
 //
-// Each depends on `playerConcepts`, which is what orders these after registration: Go initialises a
-// package-level variable after everything its initialiser references.
+// Each depends on `playerConcepts`, which is what orders these after registration: Go initializes a
+// package-level variable after everything its initializer references.
 var (
 	// Stab.
 	Poke   = mustPlayer("Poke")
@@ -346,7 +346,7 @@ func PlayerConcepts() []ConceptID {
 // deliberate: an essence that cheapened a Bash must not thereby turn it into a Jab.
 func (c Concept) Tier() int { return c.Cost }
 
-// Neighbour is the concept one rung up or down the same form's ladder, or false if there is
+// Neighbor is the concept one rung up or down the same form's ladder, or false if there is
 // none — the top of a form cannot be promoted and the bottom cannot be demoted.
 //
 // **A form with no name has no ladder.** Every enemy card is `FormNone`, and they share this
@@ -354,7 +354,7 @@ func (c Concept) Tier() int { return c.Cost }
 // Slime's. The player's cards are the only ones with a form, which is exactly the set that has a
 // ladder to walk.
 //
-// **The verb is matched rather than required to be an attack** *(2026-09-06)*. The defences are a
+// **The verb is matched rather than required to be an attack** *(2026-09-06)*. The defenses are a
 // ladder too — Flinch, Brace, Block, Guard at 0/1/2/3 AP for 1/1/2/3 shields — so an Exalt or a Debase
 // reaches them the same way it reaches a Jab. Matching `from.Verb` rather than pinning `VerbAttack`
 // is what keeps the two ladders separate while there is only one registry: a defend card and an
@@ -362,7 +362,7 @@ func (c Concept) Tier() int { return c.Cost }
 //
 // It scans the registry rather than reading a table, so the ladder is a *consequence* of what
 // `data/duelist_cards.json` declares rather than a second list to keep in step with it.
-func Neighbour(id ConceptID, step int) (ConceptID, bool) {
+func Neighbor(id ConceptID, step int) (ConceptID, bool) {
 	from := ConceptOf(id)
 	if from.Form == FormNone {
 		return NoConcept, false

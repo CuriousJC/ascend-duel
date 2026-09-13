@@ -8,9 +8,9 @@ import (
 )
 
 // **A bevel's two edges have to differ from the face and from each other**, or the widget is a
-// flat rectangle with extra drawing in it. Asserted on the colours rather than on a rendered face,
+// flat rectangle with extra drawing in it. Asserted on the colors rather than on a rendered face,
 // so the check needs no graphics context — and the four fills are the cases the derivation can
-// fail on: a saturated colour has nowhere to climb by scaling, and the two ends of the range have
+// fail on: a saturated color has nowhere to climb by scaling, and the two ends of the range have
 // little room left in one direction.
 func TestABevelIsLitOnOneSideAndShadowedOnTheOther(t *testing.T) {
 	fills := []color.RGBA{

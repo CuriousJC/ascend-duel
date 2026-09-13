@@ -14,7 +14,7 @@
 // "does this one look right" but "do these read as a *set*, and can a player tell two of them apart
 // at 162 pixels". A page per upgrade could never answer that, which is the relic sheet's argument.
 //
-// **Eight of the ten colours are placeholders standing on a full wheel**, which is exactly what
+// **Eight of the ten colors are placeholders standing on a full wheel**, which is exactly what
 // this page is for: `systems.upgradeTint` is one line each, so retuning them is a change to that
 // map, a re-run of this, and a look.
 //
@@ -36,7 +36,7 @@
 //
 // **The actual-size row before the enlarged one.** The same rule the glyph sheet is under:
 // reviewing only the blown-up row is how a mark comes to look acceptable in review and clunky in
-// play. The enlargement here is CSS with `image-rendering: pixelated`, so it is a nearest-neighbour
+// play. The enlargement here is CSS with `image-rendering: pixelated`, so it is a nearest-neighbor
 // blow-up of the real pixels rather than a second, kinder rendering.
 //
 // **The plain card in every row.** An upgrade is only legible against what an ordinary card looks
@@ -59,7 +59,7 @@
 //
 // Same split as relicsheet against cardsheet. The upgrades come from `systems.Upgrades()`, the
 // riders from `combat.RiderKinds()` and the runes from `internal/session`, which validates the
-// catalogue at init — so an upgrade this page cannot draw is one the game cannot draw either.
+// catalog at init — so an upgrade this page cannot draw is one the game cannot draw either.
 //
 // **It also walks the riders the other way round**, and says so when a rider kind draws nothing: an
 // upgrade nobody can acquire and a rider nobody can see are the same failure from opposite ends.
@@ -150,7 +150,7 @@ func run(dir string) error {
 	}
 
 	// The control row: the same four cards with no upgrade at all. It goes first because every
-	// judgement below it is a comparison against this.
+	// judgment below it is a comparison against this.
 	plain, err := renderRow(dir, faces, systems.UpgradeNone, cards.DefaultUpgradeStyle, "plain")
 	if err != nil {
 		return err
@@ -319,7 +319,7 @@ var riderUpgrade = map[combat.RiderKind]systems.Upgrade{
 	combat.RiderVitaeInHand:  systems.UpgradeHeldVitae,
 }
 
-// grantsFor names every rune in the catalogue that attaches this upgrade's rider, or an empty
+// grantsFor names every rune in the catalog that attaches this upgrade's rider, or an empty
 // string if nothing does.
 //
 // **An upgrade nothing grants is a drawing with no way into the game.** That is exactly as
@@ -360,11 +360,11 @@ func tipFor(u systems.Upgrade) tip {
 	return out
 }
 
-// tipRuns cuts one line into the runs the game draws it as, with each colour written out as CSS.
+// tipRuns cuts one line into the runs the game draws it as, with each color written out as CSS.
 //
 // **It is `screens.tipLine` through the same vocabulary**, which is the whole reason `ElementSpans`
 // lives in `internal/cards`: the page cannot import the screen, but it can import the table the
-// screen reads. A word coloured here is coloured under the cursor.
+// screen reads. A word colored here is colored under the cursor.
 func tipRuns(line string) []tipRun {
 	var out []tipRun
 	for _, seg := range washed(line) {
@@ -377,10 +377,10 @@ func tipRuns(line string) []tipRun {
 	return out
 }
 
-// washed is one line cut into its coloured segments — the element words first, then CHROMATIC into
+// washed is one line cut into its colored segments — the element words first, then CHROMATIC into
 // the wildcard's own wash.
 //
-// **The order is a rule.** cards.SplitWash only touches a segment nothing has coloured, so running
+// **The order is a rule.** cards.SplitWash only touches a segment nothing has colored, so running
 // the element vocabulary first is what lets a word be an element or the wildcard and never both.
 // `screens.chromatic` is the same two lines against the same two functions; what stops the two
 // drifting is that both cuts live in `internal/cards`.
@@ -472,7 +472,7 @@ type cell struct {
 	Height int
 }
 
-// tipRun is one stretch of a tooltip line in its own colour, as CSS. An empty Ink is the panel's
+// tipRun is one stretch of a tooltip line in its own color, as CSS. An empty Ink is the panel's
 // own. **Named for the tooltip rather than just `run`**, because `run` is this command's entry point.
 type tipRun struct {
 	Text string

@@ -27,7 +27,7 @@ func TestTheStartingListCannotBeEditedByARun(t *testing.T) {
 	run.Remove(1)
 
 	if start[0].Element != combat.Fire {
-		t.Errorf("recolouring the run changed the list it was built from: %v", start[0])
+		t.Errorf("recoloring the run changed the list it was built from: %v", start[0])
 	}
 	if len(start) != 4 {
 		t.Errorf("removing from the run shortened the list it was built from: %d", len(start))
@@ -68,7 +68,7 @@ func TestRemoveThins(t *testing.T) {
 }
 
 // TestAnOutOfRangeIndexIsRefused. The offer hands out positions and the deck thins under them, so
-// a stale index has to be a no-op rather than a panic mid-run or a silent hit on a neighbour.
+// a stale index has to be a no-op rather than a panic mid-run or a silent hit on a neighbor.
 func TestAnOutOfRangeIndexIsRefused(t *testing.T) {
 	run := New(testDeck())
 
@@ -86,7 +86,7 @@ func TestAnOutOfRangeIndexIsRefused(t *testing.T) {
 }
 
 // TestModifyKeepsTheConcept is the rule that makes an essence safe: it varies a card the game already
-// defines. If a recolour could change what card it was, the screen could produce something
+// defines. If a recolor could change what card it was, the screen could produce something
 // `internal/combat` had never registered.
 func TestModifyKeepsTheConcept(t *testing.T) {
 	run := New(testDeck())
@@ -98,10 +98,10 @@ func TestModifyKeepsTheConcept(t *testing.T) {
 	after, _ := run.Card(2)
 
 	if after.Concept != before.Concept {
-		t.Errorf("recolouring changed the concept: %v became %v", before.Concept, after.Concept)
+		t.Errorf("recoloring changed the concept: %v became %v", before.Concept, after.Concept)
 	}
 	if after.Element != combat.Fire {
-		t.Errorf("recolour did not take: element is %v", after.Element)
+		t.Errorf("recolor did not take: element is %v", after.Element)
 	}
 }
 
@@ -120,9 +120,9 @@ func TestOnlyAWinAdvancesTheRun(t *testing.T) {
 	}
 }
 
-// TestTheCatalogueLoads. A bad record panics at init, so reaching this at all is most of the
+// TestTheCatalogLoads. A bad record panics at init, so reaching this at all is most of the
 // check; what is left is that the shipped file is not one essence short of an offer.
-func TestTheCatalogueLoads(t *testing.T) {
+func TestTheCatalogLoads(t *testing.T) {
 	all := Essences()
 	if len(all) < 2 {
 		t.Fatalf("%d essences, and an offer needs two", len(all))
@@ -139,7 +139,7 @@ func TestTheCatalogueLoads(t *testing.T) {
 			t.Errorf("%s is missing a name or its text", w.Record)
 		}
 		if w.Target == TargetElement && w.Element == combat.Basic {
-			t.Errorf("%s recolours a card to basic, which takes a colour away", w.Record)
+			t.Errorf("%s recolors a card to basic, which takes a color away", w.Record)
 		}
 	}
 }
@@ -158,7 +158,7 @@ func TestABadEssenceIsRefused(t *testing.T) {
 		{"unknown target", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "sharpen", Text: "t"}},
 		{"element with no value", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "element", Text: "t"}},
 		{"element the rules lack", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "element", Value: "wind", Text: "t"}},
-		{"recolour to basic", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "element", Value: "basic", Text: "t"}},
+		{"recolor to basic", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "element", Value: "basic", Text: "t"}},
 		{"value nothing reads", data.EssenceData{EssenceRecord: "x", Name: "X", Target: "remove", Value: "fire", Text: "t"}},
 	} {
 		if _, err := resolveEssence(c.rec); err == nil {
@@ -180,13 +180,13 @@ func TestApplyDoesWhatTheTargetSays(t *testing.T) {
 
 		after, _ := run.Card(0)
 		if after.Concept != before.Concept {
-			t.Errorf("recolour changed the concept: %v became %v", before.Concept, after.Concept)
+			t.Errorf("recolor changed the concept: %v became %v", before.Concept, after.Concept)
 		}
 		if after.Element != combat.Earth {
-			t.Errorf("recolour did not take: %v", after.Element)
+			t.Errorf("recolor did not take: %v", after.Element)
 		}
 		if run.Size() != 4 {
-			t.Errorf("recolour changed the deck size to %d", run.Size())
+			t.Errorf("recolor changed the deck size to %d", run.Size())
 		}
 	})
 
@@ -278,7 +278,7 @@ func TestTheNumericTargetsApply(t *testing.T) {
 
 // TestTheLadderEssencesMoveOneRung, and refuse rather than doing nothing at the ends.
 func TestTheLadderEssencesMoveOneRung(t *testing.T) {
-	up, _ := combat.Neighbour(combat.Jab, 1)
+	up, _ := combat.Neighbor(combat.Jab, 1)
 
 	run := New([]combat.Card{{Concept: combat.Jab, Element: combat.Fire}})
 	if !run.Apply(Essence{Target: TargetPromote}, 0) {
@@ -314,10 +314,10 @@ func TestCanApplyRefusesAEssenceThatWouldDoNothing(t *testing.T) {
 	run := New([]combat.Card{{Concept: combat.Bash, Element: combat.Fire}})
 
 	if run.CanApply(Essence{Target: TargetElement, Element: combat.Fire}, 0) {
-		t.Error("recolouring a fire card to fire was offered")
+		t.Error("recoloring a fire card to fire was offered")
 	}
 	if !run.CanApply(Essence{Target: TargetElement, Element: combat.Ice}, 0) {
-		t.Error("recolouring a fire card to ice was refused")
+		t.Error("recoloring a fire card to ice was refused")
 	}
 	if run.CanApply(Essence{Target: TargetRemove}, 99) {
 		t.Error("an index the deck does not hold was offered")

@@ -9,8 +9,8 @@ import "html/template"
 // relic sheet's template gives: a card's rim is one pixel thick and a browser that scales it
 // resamples that rim into a blur, which makes the sheet lie about the art.
 //
-// **The ground is the one the stones actually sit on.** A grey border on white is a different
-// card from a grey border on the game's own blue.
+// **The ground is the one the stones actually sit on.** A gray border on white is a different
+// card from a gray border on the game's own blue.
 //
 // **A rung with no stone is still a row**, drawn as an empty seat rather than skipped. That is the
 // one layout decision this template makes that the essence sheet's does not, and it is why the page
@@ -85,7 +85,7 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
 <p class="facts">
   {{.Count}} stones over {{.Rungs}} rungs{{if .Unstoned}} — {{.Unstoned}} rung(s) have none{{end}}.
   A sealed bag costs <code>{{.BagPrice}}</code> vitae and draws <code>{{.BagSize}}</code>, keep
-  one — {{.Share}}% of the catalogue gets a seat.
+  one — {{.Share}}% of the catalog gets a seat.
   Stone card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
   border <code>{{index .Style "borderWidth"}}</code>,
@@ -101,7 +101,7 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
   stone this page refuses to draw is a stone the game refuses to start with.
 </p>
 <p class="note">
-  <strong>The +N is computed, not authored.</strong> A stone adds a tenth of its rung's catalogue
+  <strong>The +N is computed, not authored.</strong> A stone adds a tenth of its rung's catalog
   multiplier — <code>combat.StoneValue</code> — so the figure on the face follows
   <code>hands.json</code> without anything being edited here. That is the split worth
   sanity-checking: the record carries the sentence, the rules carry the arithmetic.
@@ -120,7 +120,7 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
 
 <h2>The ladder, by axis</h2>
 <p class="note">
-  <strong>Grouped by what a rung counts on</strong>, and walked in the catalogue's own order
+  <strong>Grouped by what a rung counts on</strong>, and walked in the catalog's own order
   inside each. This is deliberately not the hand sheet's layout: that one interleaves all three
   axes by ascending multiplier, because a player forming a hand chooses among all of them at once.
   A stone is bought against one rung, so the question here is whether an axis' ladder is priced
@@ -156,7 +156,7 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
           <p class="name">{{.Hand}}</p>
           <div class="record">{{.HandKey}}</div>
           <p class="worth"><b>{{.Multiplier}}</b> — nothing can raise it</p>
-          <p class="art">a rung the catalogue has not authored a stone for</p>
+          <p class="art">a rung the catalog has not authored a stone for</p>
         {{end}}
         <p class="rule">{{.CardsWanted}} cards, counted on {{.Axis}}</p>
       </div>

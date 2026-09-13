@@ -76,7 +76,7 @@ var shermanshield_png []byte
 //
 // **Authored at 32 and drawn at 32.** Unlike the Sherman pair these are not halved, because
 // their outline is one pixel: averaging a 2x2 block that is half rim and half surface turns a
-// black edge into a grey one, and at this size that edge is the whole of what holds the shape
+// black edge into a gray one, and at this size that edge is the whole of what holds the shape
 // against an off-white card. See glyphArtwork.canvas in internal/systems/glyphs.go.
 //
 // Provenance: cut down by the owner from a spritesheet authored for this game, so there is
@@ -96,14 +96,14 @@ var formdefend_png []byte
 
 // UPGRADE ART
 //
-// The colour a *visible upgrade* paints a card's left column from. A card the run has altered
+// The color a *visible upgrade* paints a card's left column from. A card the run has altered
 // used to look exactly like one it had not — sixteen runes attach seven kinds of rider and
 // the only place any of them was visible was the tooltip prose — and this is the first of them
 // that says so on the face.
 //
-// **It is a colour source, not a picture.** Nothing blits this file: `internal/systems` decodes
+// **It is a color source, not a picture.** Nothing blits this file: `internal/systems` decodes
 // it and `internal/cards` samples it to paint the form mark and the cost ticks, exactly where the
-// element's own colour would otherwise go. So it is authored at the form marks' 32x32, the box it
+// element's own color would otherwise go. So it is authored at the form marks' 32x32, the box it
 // has to cover, rather than at the 64 the drawn glyphs use.
 //
 // **Its own group rather than `form/`**, because more visible upgrades are coming and the next
@@ -134,7 +134,7 @@ var wildcardupgrade_png []byte
 // entries, and it is checked — an enemy whose Portrait names no file draws a card with a
 // hole in it and logs once.
 //
-// Provenance: PVGames, bought in the Humble *Isometric Assets Galore* bundle. The licence
+// Provenance: PVGames, bought in the Humble *Isometric Assets Galore* bundle. The license
 // permits shipping them inside a game; see the README in that folder.
 //
 //go:embed enemy/*-portrait.png
@@ -155,7 +155,7 @@ var bossPortraits embed.FS
 // `fire`, which is what `data/relics.json` writes in its Art field.
 //
 // **It became a family on 2026-09-11**, having been one `//go:embed` var per file. Five pictures
-// is three edits each and readable; a catalogue of a hundred and thirty-seven relics being drawn
+// is three edits each and readable; a catalog of a hundred and thirty-seven relics being drawn
 // is not, and the var names were the key, so every one of them was also a line in two loaders.
 // The cost is the documented one — a relic's key is now tied to its filename, so renaming a file
 // means editing `relics.json`.
@@ -177,7 +177,7 @@ var essenceArt embed.FS
 
 // The rune faces, a family of their own as of 2026-09-12. **They wore the essence's placeholder
 // until then**, and the same argument that split the essence's off the relic's splits this off the
-// essence's: the day either catalogue gets art, one shared picture is a page where a drawn essence and
+// essence's: the day either catalog gets art, one shared picture is a page where a drawn essence and
 // an undrawn rune look identical, and a backlog you cannot see is a backlog nobody clears.
 //
 //go:embed rune/*.png
@@ -204,9 +204,9 @@ var defaulteffect_png []byte
 
 // MUSIC
 //
-// Scores are Standard MIDI Files, not recorded audio: internal/music synthesises them
+// Scores are Standard MIDI Files, not recorded audio: internal/music synthesizes them
 // at startup. That is why a whole track is a kilobyte and why there is no soundfont
-// here whose licence would have to be cleared before the game could be sold.
+// here whose license would have to be cleared before the game could be sold.
 //
 //go:embed sounds/ascending.mid
 var ascending_mid []byte

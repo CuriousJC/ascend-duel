@@ -14,7 +14,7 @@ import (
 func TestDeckRowRunsFormByForm(t *testing.T) {
 	// **One card of every concept the deck holds, rather than one row of the panel** *(2026-08-15)*.
 	// It used to take the basic row, which held all twelve concepts back when attacks shipped in a
-	// drab variant. They no longer do — the attacks are coloured and only the plans are basic — so
+	// drab variant. They no longer do — the attacks are colored and only the plans are basic — so
 	// no *row* crosses a form boundary at all, and a per-row sample would assert nothing.
 	//
 	// The sort is a function of the cards it is handed, so a synthetic row exercises it exactly as

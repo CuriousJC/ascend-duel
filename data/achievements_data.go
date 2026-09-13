@@ -2,7 +2,7 @@ package data
 
 // The achievements: **what the player has done, as opposed to what a run has.**
 //
-// It is the first catalogue in this directory whose records are not offered, bought or played. An
+// It is the first catalog in this directory whose records are not offered, bought or played. An
 // achievement is a *record* — it changes nothing about a duel — and the thing it may hand out is an
 // unlock, which is a different key on a different list. See `internal/profile`, which holds both
 // and keeps them apart.
@@ -62,7 +62,7 @@ const (
 	ModeSame = "same"
 
 	// ModeCount is at least N filtered cards, and is the one mode with no axis. It exists for the
-	// half of Arsenal that is "and a defence" — a presence rather than a shape.
+	// half of Arsenal that is "and a defense" — a presence rather than a shape.
 	ModeCount = "count"
 )
 
@@ -77,7 +77,7 @@ const (
 // **The filter is on the clause rather than on the pattern**, which is the one shape decision worth
 // arguing with. A pattern-level filter would be tidier for four of the five turn achievements and
 // could not express the fifth at all: Arsenal counts forms among the attacks *and* asks for a
-// defence beside them, which is two different selections of the same turn.
+// defense beside them, which is two different selections of the same turn.
 type ClauseData struct {
 	// Of is which cards this clause looks at: `attack`, `defend`, or empty for the whole turn.
 	Of string `json:"Of,omitempty"`
@@ -170,7 +170,7 @@ type AchievementData struct {
 	Trigger TriggerData `json:"Trigger"`
 }
 
-// LoadAchievements parses the catalogue.
+// LoadAchievements parses the catalog.
 //
 // **A slice rather than a map, deliberately** — the same call LoadDuelistCards makes. File order is
 // page order: the achievements screen has listed its rows in an authored order since it was written,

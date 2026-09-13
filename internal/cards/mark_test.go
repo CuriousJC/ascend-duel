@@ -22,7 +22,7 @@ func TestMarksCompose(t *testing.T) {
 }
 
 // **A mark has to change the picture, and a set of them has to change it differently from either
-// one alone.** The rasterisers are pixel work with no other check on them: a wash that landed
+// one alone.** The rasterizers are pixel work with no other check on them: a wash that landed
 // outside the rounded silhouette, or a compose order that let one mark overwrite the other
 // entirely, would both look like nothing being wrong.
 func TestEveryMarkChangesTheFace(t *testing.T) {

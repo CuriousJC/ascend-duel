@@ -7,8 +7,8 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// **CHROMATIC is written in the card's own colours**, which is the whole point of the word — a card
-// washed in five colours explained by a grey title is the one tooltip that does not look like the
+// **CHROMATIC is written in the card's own colors**, which is the whole point of the word — a card
+// washed in five colors explained by a gray title is the one tooltip that does not look like the
 // thing under the cursor.
 func TestTheChromaticTitleIsWrittenInTheWash(t *testing.T) {
 	wild := combat.Plain(combat.Skewer).SetRider(combat.Rider{Kind: combat.RiderWildElement})
@@ -27,7 +27,7 @@ func TestTheChromaticTitleIsWrittenInTheWash(t *testing.T) {
 	// Five bands, and a run boundary can only fall between letters — so a nine-letter word cannot
 	// land on fewer than a few of them however the bands are drawn.
 	if len(inks) < 3 {
-		t.Errorf("CHROMATIC is written in %d colours, which does not read as a spectrum", len(inks))
+		t.Errorf("CHROMATIC is written in %d colors, which does not read as a spectrum", len(inks))
 	}
 }
 
@@ -65,7 +65,7 @@ func TestAWordContainingChromaticIsNotLit(t *testing.T) {
 	}
 }
 
-// **An ordinary line is still one run.** Most tooltip lines have nothing to colour and must be
+// **An ordinary line is still one run.** Most tooltip lines have nothing to color and must be
 // drawn exactly as they were before any of this existed.
 func TestAPlainLineIsStillOneRun(t *testing.T) {
 	if runs := tipLine("3 AP"); len(runs) != 1 || runs[0].Ink.A != 0 {

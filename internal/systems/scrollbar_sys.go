@@ -1,6 +1,6 @@
 package systems
 
-// The behaviour half of models.Scrollbar: dragging a thumb down a track, and drawing it.
+// The behavior half of models.Scrollbar: dragging a thumb down a track, and drawing it.
 //
 // **Everything here is a drag, which is already in the input vocabulary.** There is no wheel and
 // no keyboard — see CLAUDE.md — so the thumb is the whole of how a long list is reached, and it
@@ -33,21 +33,21 @@ const (
 )
 
 // The thumb's ramp, matching the button's and the slider's: resting has somewhere to climb to and
-// a live drag is the full colour.
+// a live drag is the full color.
 const (
 	scrollRestStrength  = 62
 	scrollHoverStrength = 80
 	scrollDragStrength  = 100
 )
 
-// defaultScrollColor is the thumb for a bar that names no colour: the chrome's slate, because a
+// defaultScrollColor is the thumb for a bar that names no color: the chrome's slate, because a
 // scrollbar is the program rather than the fight.
 var defaultScrollColor = color.RGBA{R: 92, G: 96, B: 108, A: 255}
 
 // defaultScrollGround is what the track is toned toward for a bar that names no ground.
 var defaultScrollGround = color.RGBA{R: 46, G: 48, B: 56, A: 255}
 
-// ScrollbarRect is where a bar sits, derived from its centre exactly as a button's is.
+// ScrollbarRect is where a bar sits, derived from its center exactly as a button's is.
 func ScrollbarRect(s *models.Scrollbar) image.Rectangle {
 	left := s.ScreenX - s.Width/2
 	top := s.ScreenY - s.Height/2
@@ -117,7 +117,7 @@ func UpdateScrollbar(gs *state.GlobalState, s *models.Scrollbar) {
 		s.Dragging = true
 
 		// **A press on the thumb keeps its grip; a press on the track jumps.** Picking the thumb
-		// up where it was grabbed is what stops it snapping its centre under the cursor, and a
+		// up where it was grabbed is what stops it snapping its center under the cursor, and a
 		// press anywhere else is the player pointing at where they want to be.
 		if at.In(thumb) {
 			s.SetGrab(at.Y - thumb.Min.Y)

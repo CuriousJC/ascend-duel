@@ -1,11 +1,11 @@
 ---
 name: relic-balance
-description: The relic taxonomy and the aggregate view of the catalogue - what a relic *is* (offense, defense, tempo, economy, enabler, growth, drawback) and how flat, multiplicative, repeat, status and stateful payloads are spread across rarity, element, form and hand. Load before answering any question about the catalogue as a whole - is offense over-represented at common, does every element have a cost relic, what would this proposal do to the shape of the shelf - or before adding a category, an axis, or a new verb that has to be classified. The `relics` skill is one relic at a time; this one is all of them at once.
+description: The relic taxonomy and the aggregate view of the catalog - what a relic *is* (offense, defense, tempo, economy, enabler, growth, drawback) and how flat, multiplicative, repeat, status and stateful payloads are spread across rarity, element, form and hand. Load before answering any question about the catalog as a whole - is offense over-represented at common, does every element have a cost relic, what would this proposal do to the shape of the shelf - or before adding a category, an axis, or a new verb that has to be classified. The `relics` skill is one relic at a time; this one is all of them at once.
 ---
 
-# Relic balance — the catalogue as a shape
+# Relic balance — the catalog as a shape
 
-**The `relics` skill answers "is this relic good".** This one answers "is the *catalogue* good" —
+**The `relics` skill answers "is this relic good".** This one answers "is the *catalog* good" —
 what the 137 records add up to, where the weight sits, and which of the empty cells are questions.
 
 **Nothing here is authored.** Every classification is derived from a relic's own rules by
@@ -69,7 +69,7 @@ of its own. The alternative was a **control** bucket, and it was declined becaus
 draws is between two ways of achieving the same thing rather than between two things.
 
 **`apply-status` is the one verb that cannot be classified by its own name**, and it is why the
-status catalogue is read too: BURNING is offense and CHILLED is defense through the identical
+status catalog is read too: BURNING is offense and CHILLED is defense through the identical
 verb. `STATUS_EFFECTS` maps the five effect *kinds*, not the five records, so a sixth status
 classifies itself.
 
@@ -83,7 +83,7 @@ Enflamed family both grows and swings; a taxonomy forcing a choice would have to
 **This is the +DMG versus xDMG axis and it is deliberately not folded into `category`.** They cut
 across each other: offense comes in all five payloads, and a flat economy relic and a flat offense
 relic have more in common with each other, price-wise, than either has with its multiplicative
-sibling. It is the axis that answers **how much of the catalogue compounds** — relics fire left to
+sibling. It is the axis that answers **how much of the catalog compounds** — relics fire left to
 right and multiply, so two multiplicative relics are a build and two flat ones are an addition.
 
 **`repeat` is kept apart from `multiplicative` on purpose.** `repeat-card` at 2 landings and
@@ -116,18 +116,18 @@ nothing in most runs.
 ### `build` — *which* element, form, concept, tier or rung
 
 The predicate's **value**, as `Element=fire` or `Hand=pair`. This is what `--holes` walks, and it
-is the axis that finds a colour with no cost relic.
+is the axis that finds a color with no cost relic.
 
 ### `rarity` — the record's own tier
 
 The only authored axis, and the only pricing dial there is. Tickets are 10 / 4 / 1, so **anything
 added to common devalues every rare in the game** — `--shelf` computes the share off those weights,
-and `go run ./tools/relicsheet` prints the same three figures on the catalogue page.
+and `go run ./tools/relicsheet` prints the same three figures on the catalog page.
 
 ## Reading the report
 
 **Counts are not shares, and `--shelf` prints both.** 91 of 137 relics are offense — 66% of the
-catalogue — but the shelf draws on rarity tickets, so offense is 79% of a *seat*. Tempo is the
+catalog — but the shelf draws on rarity tickets, so offense is 79% of a *seat*. Tempo is the
 opposite: 9.5% of the records and 2.0% of a seat, because twelve of its thirteen relics are rare.
 **Always say which of the two you are quoting**, and quote the share when the question is about
 what a run actually meets.
@@ -139,7 +139,7 @@ because a defend card deals nothing. A category keyed on no card at all — econ
 noise.
 
 **Nothing in the repo measures what a relic does to a duel.** This counts records; it does not
-simulate. Every balance conclusion drawn from it is judgement standing on a count, and should be
+simulate. Every balance conclusion drawn from it is judgment standing on a count, and should be
 said that way — the same caveat the `relics` skill puts on a suggested rarity.
 
 ## Writing a report down
@@ -172,7 +172,7 @@ under-report the exact thing that just changed.
 | Question | Skill |
 |---|---|
 | does this proposed relic already exist, what does it cost to build, what tier | `relics` |
-| what is the catalogue short of, is offense over-weighted, what does adding N commons do | this one |
+| what is the catalog short of, is offense over-weighted, what does adding N commons do | this one |
 | which cell of the grammar is empty | `relics` — `coverage.py` walks `(When, Do, If)` |
 | which *kind of thing* is empty | this one — `--holes` walks category against build |
 

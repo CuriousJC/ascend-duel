@@ -67,15 +67,15 @@ func UpdateButton(gs *state.GlobalState, button *models.Button) {
 }
 
 // defaultButtonColor is the full-strength fill for any button that does not name its
-// own. It is the old olive ramp's brightest step, so buttons that never set a colour
+// own. It is the old olive ramp's brightest step, so buttons that never set a color
 // land within a shade or two of where they have always looked.
 var defaultButtonColor = color.RGBA{R: 95, G: 95, B: 40, A: 255}
 
-// disabledButtonColor is flat grey for every button. A disabled control should read as
+// disabledButtonColor is flat gray for every button. A disabled control should read as
 // unavailable first and as itself second, so it deliberately ignores BaseColor.
 var disabledButtonColor = color.RGBA{R: 35, G: 35, B: 35, A: 255}
 
-// How bright each state draws, as a percentage of the button's full colour. Resting at
+// How bright each state draws, as a percentage of the button's full color. Resting at
 // two thirds means hover and press have somewhere to climb to.
 //
 // **Latched is the one that goes the other way.** A mode that is on is drawn *darker* than
@@ -89,11 +89,11 @@ const (
 	latchedStrength = 38
 )
 
-// buttonStateColor picks the fill for a button's current state by dimming its colour
+// buttonStateColor picks the fill for a button's current state by dimming its color
 // rather than adding to it. Adding a fixed step to every channel walks a saturated
-// colour toward white — crimson hovered to a washed-out pink instead of a brighter red,
-// and a colour already near 255 had nowhere to go at all. Scaling keeps the hue and
-// lets the button light up to exactly the colour it names when pressed.
+// color toward white — crimson hovered to a washed-out pink instead of a brighter red,
+// and a color already near 255 had nowhere to go at all. Scaling keeps the hue and
+// lets the button light up to exactly the color it names when pressed.
 func buttonStateColor(button *models.Button) color.RGBA {
 	full := button.BaseColor
 	if full.A == 0 {
@@ -114,16 +114,16 @@ func buttonStateColor(button *models.Button) color.RGBA {
 	}
 }
 
-// ColorAtStrength scales each colour channel to pct of its full value, leaving alpha
+// ColorAtStrength scales each color channel to pct of its full value, leaving alpha
 // alone so dimming never turns into fading out. Exported because dimming one named
-// colour is how anything else gets a matching background without picking a second
-// colour by hand.
+// color is how anything else gets a matching background without picking a second
+// color by hand.
 func ColorAtStrength(c color.RGBA, pct int) color.RGBA {
 	scale := func(v uint8) uint8 { return uint8(int(v) * pct / 100) }
 	return color.RGBA{R: scale(c.R), G: scale(c.G), B: scale(c.B), A: c.A}
 }
 
-// ColorToward moves a colour pct of the way to `ground`, which is **what dimming means when
+// ColorToward moves a color pct of the way to `ground`, which is **what dimming means when
 // the background is light**.
 //
 // `ColorAtStrength` scales toward black, and that reads as "quieter" only because the screen
@@ -210,11 +210,11 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 		BevelFace(button.Image, button.Width, button.Height, fill, buttonSunken(button))
 	}
 
-	// Text is centred by alignment against the button's midpoint rather than by a fixed
+	// Text is centered by alignment against the button's midpoint rather than by a fixed
 	// offset. The old hardcoded Translate(50, 50) only landed correctly on a button of
 	// one particular size and put the label off the bottom edge of a shorter one.
 	// A sunken face moves its label with it. One pixel, because the bevel it is following is
-	// three: a label that travelled the whole depth would read as a second animation rather than
+	// three: a label that traveled the whole depth would read as a second animation rather than
 	// as the same surface going down.
 	nudge := 0.0
 	if button.State != models.ButtonStateDisabled && buttonSunken(button) {

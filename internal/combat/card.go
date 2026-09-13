@@ -66,7 +66,7 @@ type Card struct {
 	// before a relic got to it.
 	//
 	// **That is what the element flip needs.** A flip fires as a card is drawn and the drawn card
-	// carries only the colour it became — it does not remember what it was, because a rule reading
+	// carries only the color it became — it does not remember what it was, because a rule reading
 	// what a card *used* to be is exactly the ordering the owner ruled out. The original is not
 	// gone, it simply lives where it always did: on the card the run owns, reachable by this
 	// number. The deck panel draws either face from it; see screens/deckpanel.go.
@@ -98,7 +98,7 @@ func Plain(id ConceptID) Card { return Card{Concept: id} }
 func Of(id ConceptID, e Element) Card { return Card{Concept: id, Element: e} }
 
 // PlainCards lifts a list of concepts into elementless cards. It exists for tests, which reason
-// about concepts and have nothing to say about colour.
+// about concepts and have nothing to say about color.
 func PlainCards(ids ...ConceptID) []Card {
 	out := make([]Card, len(ids))
 	for i, id := range ids {
@@ -133,14 +133,14 @@ func (c Card) Cost() int {
 // happened not to have a floor.
 const minCardCost = 0
 
-// Amount is the card's figure, read against its verb: a defence percentage, shields raised, or the
+// Amount is the card's figure, read against its verb: a defense percentage, shields raised, or the
 // damage multiplier.
 //
 // **It is the seat an essence's scaling sits in**, the same shape Cost is, and it is why the three
 // places that used to read `Spec().Amount` directly now go through the card. A modified card that
 // still reported its concept's figure would behave differently from what its own face says.
 //
-// **A defence is clamped below 100, a shield count at maxShields, and everything is floored at 1.**
+// **A defense is clamped below 100, a shield count at maxShields, and everything is floored at 1.**
 // `RegisterConcept` refuses a concept declaring either out of range; an essence stacking onto one has to
 // obey the same rule, and it clamps rather than being refused — a reward that silently did nothing
 // would be worse than one that hits its ceiling.
@@ -192,7 +192,7 @@ const MaxShields = maxShields
 
 // Category is which phase this card resolves in, and it falls out of the verb: an attack resolves
 // in the attack phase and everything else in the defend phase. A fire Guard and a plain Guard are
-// both defences — the element never moves a card between phases.
+// both defenses — the element never moves a card between phases.
 func (c Card) Category() Category {
 	if c.Spec().Verb == VerbAttack {
 		return CategoryAttack
@@ -212,7 +212,7 @@ func (c Card) Form() Form {
 func (c Card) Label() string { return c.Spec().Label }
 
 // Damage is what this card deals in the hands of a duelist with this DMG, before any multiplier,
-// blunting or defence.
+// blunting or defense.
 //
 // **The ladder is a number on the card now** *(2026-08-16)*. It was three switch cases — half DMG,
 // DMG, double — which is exactly the 50/100/200 the player's nine attacks still declare. What
@@ -270,7 +270,7 @@ const (
 
 // Categories is every phase in resolution order, and the order a turn is played in.
 //
-// **Attacks first, defences second.** A defence has to go up at the *end* of your turn, because
+// **Attacks first, defenses second.** A defense has to go up at the *end* of your turn, because
 // the opponent acts afterwards and that is the blow it answers. Resolving them first would mean
 // every guard and every shield expired before anything could be aimed at it.
 //
@@ -303,7 +303,7 @@ func ParseCategory(name string) (Category, bool) {
 	return CategoryAttack, false
 }
 
-// Form is which group of cards an action belongs to: three ways of hitting, plus the defences.
+// Form is which group of cards an action belongs to: three ways of hitting, plus the defenses.
 //
 // **It is what the card's corner says, and it is not the same axis as Category** *(2026-08-15)*.
 // Category is when a card resolves and there are two of those; a form is what kind of card it

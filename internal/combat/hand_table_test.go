@@ -8,14 +8,14 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 )
 
-// The catalogue is a file, so these are the tests that used to be unnecessary: a Go table could
+// The catalog is a file, so these are the tests that used to be unnecessary: a Go table could
 // not be malformed and JSON can. **A hand silently dropped is a balance change nobody made**,
-// which is why loadCatalogue panics rather than skipping an entry.
+// which is why loadCatalog panics rather than skipping an entry.
 
-func TestTheShippingCatalogueLoads(t *testing.T) {
+func TestTheShippingCatalogLoads(t *testing.T) {
 	for _, h := range Hands() {
 		if h.Key == "" {
-			t.Errorf("hand %q has no catalogue key", h.Name)
+			t.Errorf("hand %q has no catalog key", h.Name)
 		}
 		if h.Cards() == 0 {
 			t.Errorf("hand %q counts nothing", h.Name)
@@ -69,12 +69,12 @@ func TestTheLadderIsThePokerHandsOnEveryAxis(t *testing.T) {
 	}
 
 	if got := len(Hands()); got != len(want) {
-		t.Errorf("the catalogue holds %d hands, want %d - five rungs on each of three of-a-kind axes, the merged Pair, the Elementalist, plus the High Card", got, len(want))
+		t.Errorf("the catalog holds %d hands, want %d - five rungs on each of three of-a-kind axes, the merged Pair, the Elementalist, plus the High Card", got, len(want))
 	}
 	for key, name := range want {
 		h, ok := handByKey(key)
 		if !ok {
-			t.Errorf("the catalogue has no %q", key)
+			t.Errorf("the catalog has no %q", key)
 			continue
 		}
 		if h.Name != name {
@@ -83,7 +83,7 @@ func TestTheLadderIsThePokerHandsOnEveryAxis(t *testing.T) {
 	}
 }
 
-// **One hand per catalogue key** *(2026-08-16)*. An entry used to expand into one hand per attack
+// **One hand per catalog key** *(2026-08-16)*. An entry used to expand into one hand per attack
 // concept, numbered `base + int(concept)`, with bands a hundred apart — which held twelve concepts
 // and could not hold the four hundred a per-enemy deck list produces.
 func TestEachLadderRungIsOneHand(t *testing.T) {
@@ -198,7 +198,7 @@ func TestEveryRungExistsOnEveryOfAKindAxis(t *testing.T) {
 			key := axis.String() + "-" + rung
 			h, ok := handByKey(key)
 			if !ok {
-				t.Errorf("the catalogue has no %q", key)
+				t.Errorf("the catalog has no %q", key)
 				continue
 			}
 			if h.Match != axis {
@@ -213,7 +213,7 @@ func TestEveryRungExistsOnEveryOfAKindAxis(t *testing.T) {
 func TestThePairIsReadOnEveryOfAKindAxis(t *testing.T) {
 	pair, ok := handByKey("pair")
 	if !ok {
-		t.Fatal("the catalogue has no pair")
+		t.Fatal("the catalog has no pair")
 	}
 	want := []Axis{AxisConcept, AxisForm, AxisElement}
 	if len(pair.Axes) != len(want) {
@@ -254,7 +254,7 @@ func TestEveryHandsKeyNamesItsAxis(t *testing.T) {
 // build the card one.
 //
 // **Element is not in this and never was entitled to be** *(owner's call, 2026-09-05)*. A concept
-// does *not* fix an element — a fire Jab and an ice Jab are one concept and two colours — so there
+// does *not* fix an element — a fire Jab and an ice Jab are one concept and two colors — so there
 // is no containment between the two axes and no reason the card rung must outpay the elemental one.
 // The measurements say it often should not: an Elemental Two Pair is rarer than a Form Two Pair and
 // is priced above it. This used to require concept > element at every rung, which was an assumption
@@ -264,11 +264,11 @@ func TestACardHandPaysMoreThanTheFormHandInsideIt(t *testing.T) {
 		"five-of-a-kind"} {
 		card, ok := handByKey("concept-" + rung)
 		if !ok {
-			t.Fatalf("the catalogue has no concept-%s", rung)
+			t.Fatalf("the catalog has no concept-%s", rung)
 		}
 		form, ok := handByKey("form-" + rung)
 		if !ok {
-			t.Fatalf("the catalogue has no form-%s", rung)
+			t.Fatalf("the catalog has no form-%s", rung)
 		}
 		if form.Multiplier >= card.Multiplier {
 			t.Errorf("form-%s pays x%d, matching or beating the concept-%s it is contained by at x%d",

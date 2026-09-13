@@ -24,7 +24,7 @@ import (
 // internal/cards draws a card into a plain Go image so that `go run ./tools/cardsheet`
 // can render one without a window. That is the right trade for a review tool and the
 // wrong one for a game loop: every pixel of the shape is written in Go and the text is
-// rasterised, so building a card costs far too much to do sixty times a frame. This file
+// rasterized, so building a card costs far too much to do sixty times a frame. This file
 // is the cache that makes it affordable, and it is the only thing the game adds.
 
 // cardKey identifies a rendered card. Two cards that key the same are the same picture.
@@ -75,7 +75,7 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // cardSpec turns the screen's own types into the plain data internal/cards draws from.
 //
 // **The face says what the *card* does and nothing about who is holding it** *(owner's call,
-// 2026-08-26)*, damage-wise. A relic's multiplier was written into the figure and coloured pink from
+// 2026-08-26)*, damage-wise. A relic's multiplier was written into the figure and colored pink from
 // 2026-08-21 until today; what took it off is that the figure stopped being stable. A growing relic
 // steps between the cards of one blow, so the same Bash is worth one thing queued first and
 // another queued third — and a face stating either would be wrong somewhere. The owner's call went
@@ -115,7 +115,7 @@ func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
 //
 // **`internal/cards` may not do this and neither may `internal/systems`.** Neither knows what a
 // rider is, and neither should: this is the same separation Spec.TextInk draws, where a relic
-// becomes a colour up here and the renderer is handed the answer. It is why an upgrade is a
+// becomes a color up here and the renderer is handed the answer. It is why an upgrade is a
 // closed vocabulary in `systems` rather than a field on `combat.Rider`.
 //
 // **A card carries one rider and every kind of rider shows** *(owner's call, 2026-09-09)*. That is
@@ -146,20 +146,20 @@ var upgradeForRider = map[combat.RiderKind]systems.Upgrade{
 }
 
 // boostInk is what a figure a relic has changed is written in. **The relic pink** — `cards.Relic` is
-// the border colour a relic card carries, so the colour already means "a relic did this" everywhere
+// the border color a relic card carries, so the color already means "a relic did this" everywhere
 // else on screen, and spending a second hue on the same fact would be saying it twice.
 var boostInk = cards.BorderOf(cards.Relic)
 
 // held is the pairing a card is drawn in: what it costs the holder, what the holder hits for, and
 // which relics the holder is wearing.
 //
-// **Cost travelled alone until 2026-08-21 and that was already the same idea** — a discount relic
+// **Cost traveled alone until 2026-08-21 and that was already the same idea** — a discount relic
 // makes a cost a property of the pairing rather than of the card, and a damage relic does exactly
 // that to the figure on the face. Grouping them is what stops the two drifting apart at a call site
 // that remembered one and not the other.
 //
 // **The zero value is a card nobody is holding**: no relics, no strength, and its own printed cost.
-// `tools/cardsheet` and any panel drawing the catalogue want that, and so does an enemy's queued
+// `tools/cardsheet` and any panel drawing the catalog want that, and so does an enemy's queued
 // card — relics are the duelist's only.
 type held struct {
 	cost int
@@ -391,9 +391,9 @@ func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 	//
 	// **`combat` caps a duelist at as many shields as this row holds**, so a count that would
 	// overflow cannot exist rather than being silently trimmed here — see Duelist.raiseShields.
-	// **Each pip keeps the colour of the card that raised it** *(owner's call, 2026-09-02)*, which
-	// is the colour it was drawn in while it flew. Cosmetic: nothing about a shield depends on the
-	// element behind it, and a pip that changed colour on landing would say the opposite. A pip with
+	// **Each pip keeps the color of the card that raised it** *(owner's call, 2026-09-02)*, which
+	// is the color it was drawn in while it flew. Cosmetic: nothing about a shield depends on the
+	// element behind it, and a pip that changed color on landing would say the opposite. A pip with
 	// no ink — a shield standing from a round nobody watched, or one drawn outside a duel — is the
 	// mark as drawn.
 	if shields > 0 {
@@ -424,17 +424,17 @@ func shieldPip(gs *state.GlobalState, ink color.RGBA) image.Image {
 	return tintedPip(img, ink)
 }
 
-// tintedPips is one tinted copy of the mark per colour asked for.
+// tintedPips is one tinted copy of the mark per color asked for.
 //
-// **Cached, and that is load-bearing rather than an optimisation.** `cardImage` keys its cache on
+// **Cached, and that is load-bearing rather than an optimization.** `cardImage` keys its cache on
 // the whole Spec, and a Spec holds these as interface values — so a fresh image every frame would
 // be a fresh key every frame, and the card would be re-rendered sixty times a second.
 var tintedPips = map[color.RGBA]image.Image{}
 
-// tintedPip multiplies the mark by a colour, keeping its outline and its shading.
+// tintedPip multiplies the mark by a color, keeping its outline and its shading.
 //
 // **Multiplied rather than filled**, the argument `cards.tintInk` makes for the form marks on a
-// card face: a flat silhouette in the element's colour throws away the interior detail that is the
+// card face: a flat silhouette in the element's color throws away the interior detail that is the
 // whole reason these are drawn art rather than generated glyphs.
 func tintedPip(src image.Image, ink color.RGBA) image.Image {
 	if img, ok := tintedPips[ink]; ok {
@@ -468,9 +468,9 @@ func tintedPip(src image.Image, ink color.RGBA) image.Image {
 // element a relic card carries, and what it paints the border from is the *rarity*
 // *(owner's call, 2026-09-13)* — the pink it used to paint is in cards.rarityBorders' history.
 // `RelicData.Element` says which element the relic will eventually *discount*; it is a rule, not
-// a colour, and it has nowhere to be read yet.
+// a color, and it has nowhere to be read yet.
 //
-// **The rarity does reach it, and it is the only record field that becomes a colour here.** A
+// **The rarity does reach it, and it is the only record field that becomes a color here.** A
 // relic is bought off a shelf, so how scarce it is the fact worth carrying on the face.
 //
 // No cost, no category, no damage: a relic is not played from a hand and has no phase.
@@ -494,7 +494,7 @@ func relicSpec(gs *state.GlobalState, r data.RelicData, counter string, enabled,
 // than at load, because `internal/entities` must not import the drawing package — the same
 // separation the element mapping below exists for.
 //
-// An unrecognised name falls back to the triangle and says so once. A back is cosmetic;
+// An unrecognized name falls back to the triangle and says so once. A back is cosmetic;
 // refusing to draw the draw pile over one would be a worse outcome than the wrong shape.
 func (s *CombatScene) backSpec() cards.Spec {
 	mark, ok := cards.ParseBackMark(s.fighter.CardBack)
@@ -522,7 +522,7 @@ var warnedBack bool
 // type — which is the one thing the collapse to `combat.Element` cost.
 //
 // The default is Basic rather than a panic. An unmapped element is a card in the wrong
-// colour, which is a visual bug; crashing mid-duel over one would be worse.
+// color, which is a visual bug; crashing mid-duel over one would be worse.
 func artFor(e combat.Element) cards.Element {
 	switch e {
 	case combat.Fire:
@@ -566,7 +566,7 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 	return c.Label(), c.Category().String(), c.Form().String(), c.Damage(dmg), c.Cost()
 }
 
-// essenceSpec is an essence drawn as a card: a name, a line of what it does, and the colour of whatever
+// essenceSpec is an essence drawn as a card: a name, a line of what it does, and the color of whatever
 // it grants.
 //
 // **It borrows `cards.Hand` at the call site rather than taking a style of its own**, because a
@@ -579,9 +579,9 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 // placeholder and one that has been drawn wears its own, and this call site does not know which.
 //
 // **The border carries the element for the same reason a card's does**: an Ember Essence is red
-// because what it hands you is red. The ones that take a card away rather than colour it are
-// basic, which is the mid grey `cards.BorderOf` gives that element — deliberately not a fifth hue,
-// since removal is the absence of a colour rather than one of its own.
+// because what it hands you is red. The ones that take a card away rather than color it are
+// basic, which is the mid gray `cards.BorderOf` gives that element — deliberately not a fifth hue,
+// since removal is the absence of a color rather than one of its own.
 func essenceSpec(gs *state.GlobalState, w session.Essence, enabled bool) cards.Spec {
 	return cards.Spec{
 		Name:       w.Name,
@@ -598,17 +598,17 @@ func essenceSpec(gs *state.GlobalState, w session.Essence, enabled bool) cards.S
 // stoneSpec is a stone drawn as a card: a name, the rung it raises, and what it is worth.
 //
 // **The figure is computed rather than authored** *(2026-08-27)*. What a stone adds is a tenth of
-// its rung's catalogue multiplier, so `+11` written into `data/stones.json` would be a number that
+// its rung's catalog multiplier, so `+11` written into `data/stones.json` would be a number that
 // went stale the first time `hands.json` was tuned — silently, since nothing reads a card's text.
 // The record carries the sentence and this carries the arithmetic, which is the same split a
 // card's face already makes between its label and its damage.
 //
 // **The picture is a generated glyph rather than a file**, which is the pattern this game reaches
-// for first: no provenance question, and no asset to licence in a product that will be sold. See
+// for first: no provenance question, and no asset to license in a product that will be sold. See
 // `systems.GlyphStone`, authored at 96 so it lands in the art box at 1:1.
 //
-// **Basic, not an element.** A stone raises a rung of the ladder, and a rung is not a colour — the
-// axis a hand counts on is not one of the five. So its border is the mid grey `cards.BorderOf`
+// **Basic, not an element.** A stone raises a rung of the ladder, and a rung is not a color — the
+// axis a hand counts on is not one of the five. So its border is the mid gray `cards.BorderOf`
 // gives `basic`, exactly as a Devour essence's is.
 func stoneSpec(gs *state.GlobalState, st session.Stone, enabled bool) cards.Spec {
 	return cards.Spec{
@@ -637,9 +637,9 @@ func stoneLine(st session.Stone) string {
 // than a gap in the design — so the text states the *shape* of the offer ("4 stones, keep 1") and
 // nothing about the four.
 //
-// **They borrow their own catalogue's picture**: the bag draws the boulder every stone card draws,
-// the vial the essence catalogue's default face, the sack the rune catalogue's. A picture of
-// their own would be a third thing to recognise for no gain — what is in the good is exactly what
+// **They borrow their own catalog's picture**: the bag draws the boulder every stone card draws,
+// the vial the essence catalog's default face, the sack the rune catalog's. A picture of
+// their own would be a third thing to recognize for no gain — what is in the good is exactly what
 // the picture shows. See goodArt, which is where the three are chosen.
 func goodSpec(gs *state.GlobalState, name, line string, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{

@@ -51,7 +51,7 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
   }
   .cells { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
   /* Overlapped: each card slides left over the one before it, so only its left edge
-     shows. That edge is where the border colour and the cost dashes are, which is the
+     shows. That edge is where the border color and the cost dashes are, which is the
      whole argument for the deck overlay doing this. */
   .stack { display: flex; align-items: flex-start; padding-left: 4px; }
   .stack img + img { margin-left: calc(var(--overlap) - 90px); }
@@ -84,7 +84,7 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
   page is what the game draws.
 </p>
 
-<h2>Border colour &times; action-point cost</h2>
+<h2>Border color &times; action-point cost</h2>
 {{range .Borders}}
   <div class="row">
     <div class="row-label">{{.Label}}</div>
@@ -101,9 +101,9 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
 
 <h2>Card state</h2>
 <p class="note">
-  State used to be carried by dimming the element-coloured surface. With the surface now
+  State used to be carried by dimming the element-colored surface. With the surface now
   constant, it is the border moving toward that surface instead — away from it for
-  selected, toward it for disabled. Note that scaling a colour down (the usual rule) would
+  selected, toward it for disabled. Note that scaling a color down (the usual rule) would
   do the wrong thing here: on a light card a darker border reads as <em>louder</em>, not
   quieter.
 </p>
@@ -192,7 +192,7 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
   shown&rdquo; on every look. <strong>A third-size card shows no glyph and no text</strong>,
   and that is forced rather than chosen: 64-pixel art cannot be scaled to fit 59 pixels
   without destroying a one-pixel rim, and text at a third size is unreadable. What survives
-  is the border colour and the count of dashes, so a row says how many of an element you
+  is the border color and the count of dashes, so a row says how many of an element you
   hold and at what costs &mdash; but no longer <em>which concepts</em>. That is the real
   loss and the thing to judge here.
 </p>
@@ -215,7 +215,7 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
 </p>
 <p class="note">
   The artwork is <code>assets/fire-ring.png</code> &mdash; the one thing on this page that is
-  not generated, and first-party work, so it ships without a licence question. Only the
+  not generated, and first-party work, so it ships without a license question. Only the
   sheets prefixed <code>tyrian_</code> come from the Tyrian set that CLAUDE.md names as a
   release blocker; this is not one of them.
 </p>

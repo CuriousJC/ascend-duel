@@ -4,14 +4,14 @@
 //	go run ./tools/essencesheet
 //
 // It exists for the reason tools/relicsheet does. An essence is offered two at a time, once per won
-// fight, from a catalogue of ten — so seeing all of them in a launched game means winning five
+// fight, from a catalog of ten — so seeing all of them in a launched game means winning five
 // fights and being lucky about the shuffle. This draws all of them at once.
 //
 // # It is a report, not a drawing-board
 //
 // Same split as relicsheet against cardsheet: this reads the real file, because the question it
-// answers is "what does the catalogue actually hold". It goes through internal/session, which
-// means the catalogue is *validated* before anything is drawn — an unknown target, a value on a
+// answers is "what does the catalog actually hold". It goes through internal/session, which
+// means the catalog is *validated* before anything is drawn — an unknown target, a value on a
 // target that takes none, a missing one on a target that needs it, all panic at init exactly as
 // they would in the game. An essence this page refuses to draw is an essence the game refuses to start
 // with.
@@ -22,8 +22,8 @@
 // card prints verbatim and nothing checks against the rule that fires — the same hazard a relic's
 // sentence carries, and this is the only place the two are visible together.
 //
-// **The border colours.** An essence's border carries the element it grants; the ones that grant no
-// element are basic grey. How many of each is a fact about the offer, not a detail.
+// **The border colors.** An essence's border carries the element it grants; the ones that grant no
+// element are basic gray. How many of each is a fact about the offer, not a detail.
 //
 // **How much art there is not.** An essence with no `Art` of its own draws `default-essence.png` and the
 // page marks it, exactly as the relic sheet marks an undrawn relic — so a column of identical
@@ -33,7 +33,7 @@
 // # Output
 //
 // Loose PNGs plus an index.html, written into `docs/sheets/essencesheet/` and **committed**
-// *(owner's call, 2026-08-23)*: the sheets are how the catalogues get reviewed, and requiring a
+// *(owner's call, 2026-08-23)*: the sheets are how the catalogs get reviewed, and requiring a
 // Go toolchain to see one meant only whoever just changed something ever looked. A clone opens
 // `docs/sheets/index.html`.
 //
@@ -91,7 +91,7 @@ func run(dir string) error {
 	}
 
 	// **The page walks the file's own order and the offer walks the sorted one.**
-	// data.EssenceFileOrder is the motif order the catalogue is authored in — the five recolours
+	// data.EssenceFileOrder is the motif order the catalog is authored in — the five recolors
 	// together, the two that resize a card beside each other — which is what makes the family
 	// headings read as blocks. session.Essences stays the shuffle's order, and nothing on this page
 	// decides an outcome, so the two never meet. Same split the relic sheet makes.
@@ -185,7 +185,7 @@ func run(dir string) error {
 	}
 
 	fmt.Printf("wrote %s and %d PNGs — %d essences, %d with art of their own and %d with a subject; "+
-		"%d offered a fight, %s%% of the catalogue a seat\n",
+		"%d offered a fight, %s%% of the catalog a seat\n",
 		out, len(plates)+len(page.States), page.Count,
 		page.Count-page.Undrawn, page.Count-page.Unwritten, offered, page.Share)
 	for _, f := range page.Families {
@@ -195,7 +195,7 @@ func run(dir string) error {
 }
 
 // specFor is an essence as the card the reward screen draws, and it fills the same fields
-// screens.essenceSpec does: a name, the line, and the colour of whatever it grants. No form and no
+// screens.essenceSpec does: a name, the line, and the color of whatever it grants. No form and no
 // cost, which EssenceStyle draws as nothing.
 func specFor(w session.Essence, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
@@ -268,8 +268,8 @@ func valueOf(w session.Essence) string {
 	}
 }
 
-// elementName is the colour the border carries, and says so in words for the essences that carry
-// none — a grey border is a decision rather than an omission.
+// elementName is the color the border carries, and says so in words for the essences that carry
+// none — a gray border is a decision rather than an omission.
 func elementName(w session.Essence) string {
 	if w.Target != session.TargetElement {
 		return "basic — grants no element"
@@ -277,10 +277,10 @@ func elementName(w session.Essence) string {
 	return w.Element.String()
 }
 
-// groupByTarget splits the catalogue by what an essence changes, in session.EssenceTargets' order.
+// groupByTarget splits the catalog by what an essence changes, in session.EssenceTargets' order.
 //
 // **By target rather than alphabetically**, for the reason relicsheet groups by rarity: the target
-// is the design axis, so what a review needs is every recolour side by side and then the count of
+// is the design axis, so what a review needs is every recolor side by side and then the count of
 // everything else. An empty group still gets a heading, because a target nobody has authored into
 // is a fact worth seeing rather than a section to omit.
 func groupByTarget(plates []plate) []group {
@@ -298,11 +298,11 @@ func groupByTarget(plates []plate) []group {
 	return out
 }
 
-// groupByFamily splits the catalogue into the motifs its records are authored in.
+// groupByFamily splits the catalog into the motifs its records are authored in.
 //
 // **In first-appearance order, which is the file's order**, so the page reads as data/essences.json
 // does and an essence lands where its siblings were written rather than where the alphabet puts it.
-// It is the relic sheet's function over a different catalogue, and it earns its place here for the
+// It is the relic sheet's function over a different catalog, and it earns its place here for the
 // reason that one does: a family is a block to review at once.
 //
 // **The target grouping did not go — it moved to the header**, as a list of counts. Grouping by
@@ -414,14 +414,14 @@ type plate struct {
 	Default bool
 }
 
-// group is one target's worth of the catalogue.
+// group is one target's worth of the catalog.
 type group struct {
 	Target   string
 	Count    int
 	Essences []plate
 }
 
-// family is one motif's worth of the catalogue: every essence authored in that block.
+// family is one motif's worth of the catalog: every essence authored in that block.
 type family struct {
 	Name     string
 	Count    int

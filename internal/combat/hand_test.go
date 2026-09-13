@@ -291,7 +291,7 @@ func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 // least its size, so five of one card was still the four — and the ladder now goes one further on
 // every axis. Five copies of a concept could not be dealt from the 48-card deck of the time, which
 // shipped four of each; arcane made a concept five cards on 2026-08-25, so the rung is dealable and
-// the `duplicate` worm is no longer the only way to it.
+// the `duplicate` essence is no longer the only way to it.
 func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 	a, b := duelist(10, 4, 10000), duelist(10, 4, 10000)
 

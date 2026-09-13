@@ -2,7 +2,7 @@ package screens
 
 // Spending a parasite: the run's half, with no dialog in front of it.
 //
-// **A worm is spent between rooms and a parasite is spent between turns**, which is most of what
+// **An essence is spent between rooms and a parasite is spent between turns**, which is most of what
 // makes them different things. The catalogue and the rules are `internal/session/parasite.go`; this
 // file is what the screen does with them, and it decides nothing — it hands the run a parasite and
 // the cards it names, and brings the hand back into line with what the run says afterwards.
@@ -65,7 +65,7 @@ func heldParasites(gs *state.GlobalState) []session.Parasite {
 // parasiteSpec is a parasite drawn as a card.
 //
 // **The picture comes off the record** *(2026-09-12)*, through `data.ParasiteData.ArtKey`, already
-// resolved by the time a `session.Parasite` exists. It borrowed the worm's placeholder through one
+// resolved by the time a `session.Parasite` exists. It borrowed the essence's placeholder through one
 // constant until then, and the note on that constant said the day parasites got art it should be a
 // `data/parasites.json` field appearing rather than a fallback being unpicked — so the fallback is
 // `assets/parasite/default-parasite.png` now, a seat of the catalogue's own.
@@ -217,7 +217,7 @@ func (s *CombatScene) spendParasite(gs *state.GlobalState, i int) {
 	// card would still be sitting in the row.
 	s.resyncHandFromRun(gs)
 
-	// **A copy joins the hand it was copied from** *(owner's call, 2026-09-02)*. The worm version
+	// **A copy joins the hand it was copied from** *(owner's call, 2026-09-02)*. The essence version
 	// of this only has to put a card in the deck, because it is spent between fights; a parasite is
 	// spent in the middle of one, and the fight's piles were dealt before it existed — so a copy
 	// that went only into the run would not be playable until the next fight and would read as a

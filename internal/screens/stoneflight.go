@@ -116,7 +116,7 @@ func fadeOnArrival(p float64) float64 {
 func drawStoneCardFading(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	st session.Stone, alpha float64) {
 
-	img := cardImage(gs, stoneSpec(gs, st, true), cards.WormStyle)
+	img := cardImage(gs, stoneSpec(gs, st, true), cards.EssenceStyle)
 	if img == nil {
 		return
 	}

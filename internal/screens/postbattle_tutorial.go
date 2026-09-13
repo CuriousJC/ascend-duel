@@ -21,9 +21,9 @@ func (s *PostBattleScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 	return tutorial.Facts{Phase: gs.Run.Phase().String()}
 }
 
-// tutorialRect answers for the one anchor this screen draws: the row of offered worms.
+// tutorialRect answers for the one anchor this screen draws: the row of offered essences.
 //
-// **It is the row rather than one card**, because the lesson is that a worm is the prize and
+// **It is the row rather than one card**, because the lesson is that an essence is the prize and
 // either of them is a legitimate answer. Spotlighting one would be telling the player which to
 // take, which is the opposite of what the screen is asking them.
 func (s *PostBattleScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]image.Rectangle, bool) {
@@ -33,17 +33,17 @@ func (s *PostBattleScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor
 	if a == tutorial.AnchorBuildCard {
 		return one(buildCardRect(gs)), true
 	}
-	if a != tutorial.AnchorRewardWorms || len(s.prizes) == 0 {
+	if a != tutorial.AnchorRewardEssences || len(s.prizes) == 0 {
 		return nil, false
 	}
-	r := s.wormSlot(gs, 0)
+	r := s.essenceSlot(gs, 0)
 	for i := 1; i < len(s.prizes); i++ {
-		r = r.Union(s.wormSlot(gs, i))
+		r = r.Union(s.essenceSlot(gs, i))
 	}
 
 	// **The offer row is inside the anchor since the gesture reversed** *(2026-09-06)*. The lit
-	// square is also the one legal click, so an anchor covering only the worms would have been a
-	// lock-up the moment taking one required a card to be selected first: every worm dim, every
+	// square is also the one legal click, so an anchor covering only the essences would have been a
+	// lock-up the moment taking one required a card to be selected first: every essence dim, every
 	// card unclickable, and a step waiting for a phase that could never arrive. This is the failure
 	// CLAUDE.md warns about — the machinery can refuse an ungated step, and cannot tell whether an
 	// anchor shows the player how to satisfy its own condition.

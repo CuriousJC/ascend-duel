@@ -139,7 +139,7 @@ func (s *CombatScene) addFlight(f cardFlight) {
 	s.theatre.flights = append(s.theatre.flights, f)
 }
 
-// The hand's slides are cardSlide, and the mover is cardslide.go — shared with the worm screen's
+// The hand's slides are cardSlide, and the mover is cardslide.go — shared with the essence screen's
 // offer row since 2026-09-05. What stays here is what a *hand* slide is: the seat it uses, and the
 // fact that a queued card is drawn standing proud of the row.
 

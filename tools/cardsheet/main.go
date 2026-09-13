@@ -46,7 +46,7 @@ import (
 )
 
 // minCost and maxCost are the action-point range the sheet sweeps. Costs run 0 to 4 in
-// internal/combat today — 0 both because Whetworm can drive a card free and because the ladder
+// internal/combat today — 0 both because a Hone can drive a card free and because the ladder
 // grew a 0 AP rung — and the sheet goes to that and no further, because a row of impossible cards
 // would be reviewing a card the game cannot deal.
 const (

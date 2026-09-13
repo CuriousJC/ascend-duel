@@ -73,7 +73,7 @@ func TestARelicCounterStaysInItsCorner(t *testing.T) {
 func TestOnlyARelicCardDrawsACounter(t *testing.T) {
 	for name, st := range map[string]Style{
 		"hand": Hand, "mini": Mini, "token": Token,
-		"enemy": EnemyStyle, "duelist": DuelistStyle, "worm": WormStyle,
+		"enemy": EnemyStyle, "duelist": DuelistStyle, "essence": EssenceStyle,
 	} {
 		bare := strike(Fire)
 		withCounter := bare

@@ -55,7 +55,7 @@ const handSize = 8
 // deckSize is how many cards the player owns right now, counting all three piles.
 //
 // **It counts rather than reading a constant** *(2026-08-17)*. It used to total the authored
-// starting list, which was the same number every time and stopped being true the moment a worm
+// starting list, which was the same number every time and stopped being true the moment an essence
 // could remove a card. The piles are conserved — nothing is created or destroyed mid-fight — so
 // their sum is the run's deck size for as long as the fight lasts.
 func (s *CombatScene) deckSize() int {
@@ -228,7 +228,7 @@ func (s *CombatScene) toggleDeck() {
 // opening hand.
 //
 // **The deck comes from the run now, not from the authored list** *(2026-08-17)*. That is the
-// whole of what makes a worm stick: the piles are rebuilt on every `Init`, and `Init` is how the
+// whole of what makes an essence stick: the piles are rebuilt on every `Init`, and `Init` is how the
 // next fight starts, so a deck edit held anywhere on this scene would be thrown away between
 // rooms.
 //
@@ -358,7 +358,7 @@ func (s *CombatScene) drawnAs(c actionCard) actionCard {
 // only the flip has anything to undo.
 //
 // **A card the run has never heard of is left alone.** That covers a scene dealt with no run and a
-// card whose original a worm has since eaten; drawing what is actually in hand is the honest
+// card whose original an essence has since eaten; drawing what is actually in hand is the honest
 // answer to both.
 func (s *CombatScene) restoreToDeck(c actionCard) actionCard {
 	if s.run == nil {

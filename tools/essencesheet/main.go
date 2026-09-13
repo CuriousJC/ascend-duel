@@ -1,9 +1,9 @@
-// Command wormsheet renders every worm in data/worms.json to a PNG and writes an HTML page
+// Command essencesheet renders every essence in data/essences.json to a PNG and writes an HTML page
 // that shows each one beside what it targets and what it says.
 //
-//	go run ./tools/wormsheet
+//	go run ./tools/essencesheet
 //
-// It exists for the reason tools/relicsheet does. A worm is offered two at a time, once per won
+// It exists for the reason tools/relicsheet does. An essence is offered two at a time, once per won
 // fight, from a catalogue of ten — so seeing all of them in a launched game means winning five
 // fights and being lucky about the shuffle. This draws all of them at once.
 //
@@ -13,26 +13,26 @@
 // answers is "what does the catalogue actually hold". It goes through internal/session, which
 // means the catalogue is *validated* before anything is drawn — an unknown target, a value on a
 // target that takes none, a missing one on a target that needs it, all panic at init exactly as
-// they would in the game. A worm this page refuses to draw is a worm the game refuses to start
+// they would in the game. An essence this page refuses to draw is an essence the game refuses to start
 // with.
 //
 // # What to look at
 //
-// **The authored line against the rule beside it.** worms.json carries a Text field that the
+// **The authored line against the rule beside it.** essences.json carries a Text field that the
 // card prints verbatim and nothing checks against the rule that fires — the same hazard a relic's
 // sentence carries, and this is the only place the two are visible together.
 //
-// **The border colours.** A worm's border carries the element it grants; the ones that grant no
+// **The border colours.** An essence's border carries the element it grants; the ones that grant no
 // element are basic grey. How many of each is a fact about the offer, not a detail.
 //
-// **How much art there is not.** A worm with no `Art` of its own draws `default-worm.png` and the
+// **How much art there is not.** An essence with no `Art` of its own draws `default-essence.png` and the
 // page marks it, exactly as the relic sheet marks an undrawn relic — so a column of identical
 // faces reads as a backlog rather than as a bug. Its `Draw` is the subject paragraph an art
 // generator would be given, and a record with neither is the backlog twice over.
 //
 // # Output
 //
-// Loose PNGs plus an index.html, written into `docs/sheets/wormsheet/` and **committed**
+// Loose PNGs plus an index.html, written into `docs/sheets/essencesheet/` and **committed**
 // *(owner's call, 2026-08-23)*: the sheets are how the catalogues get reviewed, and requiring a
 // Go toolchain to see one meant only whoever just changed something ever looked. A clone opens
 // `docs/sheets/index.html`.
@@ -59,19 +59,19 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
-// ground is screens.screenGround, the light slate blue a worm is actually offered on. Judging a card
+// ground is screens.screenGround, the light slate blue an essence is actually offered on. Judging a card
 // against a white browser page would be the same failure as previewing art at a scale the game
 // does not use.
 const ground = "#a8bcd4"
 
-// offered is how many worms a won fight puts up. It is dealWorms' cut, written down here because
+// offered is how many essences a won fight puts up. It is dealEssences' cut, written down here because
 // that function lives in internal/screens and links Ebitengine. It is used for one derived
-// number — the share of the offer a single worm can take — and is printed, so a stale copy is
+// number — the share of the offer a single essence can take — and is printed, so a stale copy is
 // visible rather than silent.
 const offered = 2
 
 func main() {
-	dir := flag.String("dir", filepath.Join("docs", "sheets", "wormsheet"),
+	dir := flag.String("dir", filepath.Join("docs", "sheets", "essencesheet"),
 		"directory to write the PNGs and index.html into")
 	flag.Parse()
 
@@ -91,15 +91,15 @@ func run(dir string) error {
 	}
 
 	// **The page walks the file's own order and the offer walks the sorted one.**
-	// data.WormFileOrder is the motif order the catalogue is authored in — the five recolours
+	// data.EssenceFileOrder is the motif order the catalogue is authored in — the five recolours
 	// together, the two that resize a card beside each other — which is what makes the family
-	// headings read as blocks. session.Worms stays the shuffle's order, and nothing on this page
+	// headings read as blocks. session.Essences stays the shuffle's order, and nothing on this page
 	// decides an outcome, so the two never meet. Same split the relic sheet makes.
-	order := data.WormFileOrder()
+	order := data.EssenceFileOrder()
 
 	page := page{
 		Ground:  ground,
-		Style:   styleFacts(cards.WormStyle),
+		Style:   styleFacts(cards.EssenceStyle),
 		Count:   len(order),
 		Offered: offered,
 	}
@@ -109,9 +109,9 @@ func run(dir string) error {
 
 	var plates []plate
 	for _, key := range order {
-		w, ok := session.WormByKey(key)
+		w, ok := session.EssenceByKey(key)
 		if !ok {
-			return fmt.Errorf("worms.json writes %q and internal/session resolved no such worm", key)
+			return fmt.Errorf("essences.json writes %q and internal/session resolved no such essence", key)
 		}
 
 		art, err := artwork(w.Art)
@@ -119,7 +119,7 @@ func run(dir string) error {
 			return err
 		}
 		spec := specFor(w, art, true)
-		cell, err := write(dir, faces, spec, cards.WormStyle, "worm-"+w.Record+".png", w.Name)
+		cell, err := write(dir, faces, spec, cards.EssenceStyle, "essence-"+w.Record+".png", w.Name)
 		if err != nil {
 			return err
 		}
@@ -135,9 +135,9 @@ func run(dir string) error {
 			Family:  w.Family,
 			Draw:    w.Draw,
 			Art:     w.Art,
-			Default: w.Art == data.DefaultWormArt,
+			Default: w.Art == data.DefaultEssenceArt,
 		})
-		if w.Art == data.DefaultWormArt {
+		if w.Art == data.DefaultEssenceArt {
 			page.Undrawn++
 		}
 		if w.Draw == "" {
@@ -148,10 +148,10 @@ func run(dir string) error {
 	page.Targets = groupByTarget(plates)
 	page.Families = groupByFamily(plates)
 
-	// The two states a worm card is drawn in. **Not "chosen"** — the reward screen dims the one
+	// The two states an essence card is drawn in. **Not "chosen"** — the reward screen dims the one
 	// that was not taken rather than lighting the one that was, so those are the two.
 	if len(order) > 0 {
-		first, _ := session.WormByKey(order[0])
+		first, _ := session.EssenceByKey(order[0])
 		art, err := artwork(first.Art)
 		if err != nil {
 			return err
@@ -165,7 +165,7 @@ func run(dir string) error {
 			{"disabled", first.Name + " — the offer not taken", false},
 		} {
 			cell, err := write(dir, faces, specFor(first, art, st.enabled),
-				cards.WormStyle, "state-"+st.name+".png", st.label)
+				cards.EssenceStyle, "state-"+st.name+".png", st.label)
 			if err != nil {
 				return err
 			}
@@ -184,7 +184,7 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d worms, %d with art of their own and %d with a subject; "+
+	fmt.Printf("wrote %s and %d PNGs — %d essences, %d with art of their own and %d with a subject; "+
 		"%d offered a fight, %s%% of the catalogue a seat\n",
 		out, len(plates)+len(page.States), page.Count,
 		page.Count-page.Undrawn, page.Count-page.Unwritten, offered, page.Share)
@@ -194,10 +194,10 @@ func run(dir string) error {
 	return nil
 }
 
-// specFor is a worm as the card the reward screen draws, and it fills the same fields
-// screens.wormSpec does: a name, the line, and the colour of whatever it grants. No form and no
-// cost, which WormStyle draws as nothing.
-func specFor(w session.Worm, art image.Image, enabled bool) cards.Spec {
+// specFor is an essence as the card the reward screen draws, and it fills the same fields
+// screens.essenceSpec does: a name, the line, and the colour of whatever it grants. No form and no
+// cost, which EssenceStyle draws as nothing.
+func specFor(w session.Essence, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
 		Name:       w.Name,
 		Form:       cards.FormNone,
@@ -230,12 +230,12 @@ func artFor(e combat.Element) cards.Element {
 	}
 }
 
-// ruleLine is what the worm does, in the file's own vocabulary.
+// ruleLine is what the essence does, in the file's own vocabulary.
 //
 // **Deliberately not prose**, for relicsheet's reason: the sentence a player reads is Text,
 // printed beside this, and generating a second English sentence would give the page two
 // descriptions and no way to tell which one the game agrees with.
-func ruleLine(w session.Worm) string {
+func ruleLine(w session.Essence) string {
 	switch w.Target {
 	case session.TargetElement:
 		return "element → " + w.Element.String()
@@ -256,8 +256,8 @@ func withSign(n int) string {
 }
 
 // valueOf is the record's value as the page prints it, or empty for the targets that take none.
-// Read off the resolved worm rather than the JSON, so it is the number the rules hold.
-func valueOf(w session.Worm) string {
+// Read off the resolved essence rather than the JSON, so it is the number the rules hold.
+func valueOf(w session.Essence) string {
 	switch w.Target {
 	case session.TargetElement:
 		return w.Element.String()
@@ -268,31 +268,31 @@ func valueOf(w session.Worm) string {
 	}
 }
 
-// elementName is the colour the border carries, and says so in words for the worms that carry
+// elementName is the colour the border carries, and says so in words for the essences that carry
 // none — a grey border is a decision rather than an omission.
-func elementName(w session.Worm) string {
+func elementName(w session.Essence) string {
 	if w.Target != session.TargetElement {
 		return "basic — grants no element"
 	}
 	return w.Element.String()
 }
 
-// groupByTarget splits the catalogue by what a worm changes, in session.WormTargets' order.
+// groupByTarget splits the catalogue by what an essence changes, in session.EssenceTargets' order.
 //
 // **By target rather than alphabetically**, for the reason relicsheet groups by rarity: the target
 // is the design axis, so what a review needs is every recolour side by side and then the count of
 // everything else. An empty group still gets a heading, because a target nobody has authored into
 // is a fact worth seeing rather than a section to omit.
 func groupByTarget(plates []plate) []group {
-	out := make([]group, 0, len(session.WormTargets()))
-	for _, t := range session.WormTargets() {
+	out := make([]group, 0, len(session.EssenceTargets()))
+	for _, t := range session.EssenceTargets() {
 		g := group{Target: t.String()}
 		for _, p := range plates {
 			if p.Target == t.String() {
-				g.Worms = append(g.Worms, p)
+				g.Essences = append(g.Essences, p)
 			}
 		}
-		g.Count = len(g.Worms)
+		g.Count = len(g.Essences)
 		out = append(out, g)
 	}
 	return out
@@ -300,17 +300,17 @@ func groupByTarget(plates []plate) []group {
 
 // groupByFamily splits the catalogue into the motifs its records are authored in.
 //
-// **In first-appearance order, which is the file's order**, so the page reads as data/worms.json
-// does and a worm lands where its siblings were written rather than where the alphabet puts it.
+// **In first-appearance order, which is the file's order**, so the page reads as data/essences.json
+// does and an essence lands where its siblings were written rather than where the alphabet puts it.
 // It is the relic sheet's function over a different catalogue, and it earns its place here for the
 // reason that one does: a family is a block to review at once.
 //
 // **The target grouping did not go — it moved to the header**, as a list of counts. Grouping by
 // target was right while the target was the only axis the file had; now that a record says which
-// motif it belongs to, the target is a fact about one worm and the family is a block of them. A
+// motif it belongs to, the target is a fact about one essence and the family is a block of them. A
 // target nobody has authored into is still visible, in that list.
 //
-// A record with no Family lands under "unfamilied" rather than being dropped — an ungrouped worm
+// A record with no Family lands under "unfamilied" rather than being dropped — an ungrouped essence
 // is a thing to see, not a thing to omit.
 func groupByFamily(plates []plate) []family {
 	order := make([]string, 0, 8)
@@ -328,10 +328,10 @@ func groupByFamily(plates []plate) []family {
 
 	out := make([]family, 0, len(order))
 	for _, name := range order {
-		f := family{Name: name, Worms: byName[name], Count: len(byName[name])}
-		f.Noun = "worms"
+		f := family{Name: name, Essences: byName[name], Count: len(byName[name])}
+		f.Noun = "essences"
 		if f.Count == 1 {
-			f.Noun = "worm"
+			f.Noun = "essence"
 		}
 		out = append(out, f)
 	}
@@ -394,7 +394,7 @@ type cell struct {
 	Height int
 }
 
-// plate is one worm: the card, and everything the file says about it.
+// plate is one essence: the card, and everything the file says about it.
 type plate struct {
 	Cell    cell
 	Record  string
@@ -416,17 +416,17 @@ type plate struct {
 
 // group is one target's worth of the catalogue.
 type group struct {
-	Target string
-	Count  int
-	Worms  []plate
+	Target   string
+	Count    int
+	Essences []plate
 }
 
-// family is one motif's worth of the catalogue: every worm authored in that block.
+// family is one motif's worth of the catalogue: every essence authored in that block.
 type family struct {
-	Name  string
-	Count int
-	Noun  string
-	Worms []plate
+	Name     string
+	Count    int
+	Noun     string
+	Essences []plate
 }
 
 type page struct {

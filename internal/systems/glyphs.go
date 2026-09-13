@@ -437,7 +437,7 @@ var glyphShapes = map[GlyphKind]shape{
 	GlyphStone:        boulderShape(stoneGlyphSize),
 }
 
-// stoneGlyphSize is the boulder's canvas: **96, which is `cards.WormStyle.ArtMaxH`**. The art box
+// stoneGlyphSize is the boulder's canvas: **96, which is `cards.EssenceStyle.ArtMaxH`**. The art box
 // on a stone card is that tall, and a glyph drawn at its own size lands in it at 1:1 rather than
 // being resampled to fit. The two numbers are the same on purpose and this is the comment saying
 // so; there is no import between the packages to make it literal, because `systems` may not

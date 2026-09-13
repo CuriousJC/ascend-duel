@@ -49,10 +49,10 @@ and both are things the repo produced. These are things the repo consumes.
 
 | File | Holds |
 |---|---|
-| `card_art_prompt.MD` | the prompt, for every card that carries a picture — relics on `cards.RelicStyle`, parasites and worms and stones on `cards.WormStyle`. Two composition blocks, one per style; pick one |
+| `card_art_prompt.MD` | the prompt, for every card that carries a picture — relics on `cards.RelicStyle`, parasites and essences and stones on `cards.EssenceStyle`. Two composition blocks, one per style; pick one |
 | `parasite_art_prompt.MD` | the closed list of parasite body plans, pasted into that prompt. A creature needs a shape where an object does not |
 
 **Neither bleeding card names itself** *(owner's call, 2026-09-11)*, so no prompt has to keep a
 title band clear: the picture is the card. What a relic card draws over its art is one counter
-disc in the bottom-right; what a worm card draws over its art is the sentence saying what it
+disc in the bottom-right; what an essence card draws over its art is the sentence saying what it
 does. Those are the only two reservations any of these files carries.

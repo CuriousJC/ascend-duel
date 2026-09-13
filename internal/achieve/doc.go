@@ -1,7 +1,7 @@
 // Package achieve decides what the player has earned, and nothing else.
 //
 // **It is the seat every word in `data/achievements.json` is refused at**, the same job
-// `internal/session` does for a worm's target and `internal/combat` does for a card's verb. A
+// `internal/session` does for an essence's target and `internal/combat` does for a card's verb. A
 // trigger kind, a clause mode, an axis, a moment name and a counter name are all closed
 // vocabularies here; a file inventing one fails the launch rather than producing an achievement
 // that can never land, which is the failure this shape exists to prevent — an achievement nobody

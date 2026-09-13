@@ -166,7 +166,7 @@ func TextWidth(f *Faces, size float64, s string) (int, error) {
 // **It breaks at every space** *(owner's call, 2026-09-05)*, one word to a line — except that a
 // figure stays on its unit's line, `-1 AP` drawn as `AP -1`; see unitLines. Which is what a
 // relic's name already does. Width no longer decides where a line ends, so a *set* of cards breaks
-// in the same place for free: the elemental worms differ only in the colour they name, and FIRE
+// in the same place for free: the elemental essences differ only in the colour they name, and FIRE
 // used to fit the line where LIGHTNING all but filled it, which made four layouts of one card.
 // That is what the authored newline was for, and it is why there is no longer one — a newline in
 // the source now reads as an ordinary space.

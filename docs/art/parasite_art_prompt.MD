@@ -2,7 +2,7 @@
 
 **The one thing a parasite prompt needs that a relic's does not.** The prompt itself is
 [card_art_prompt.MD](card_art_prompt.MD) — pasted with its **upper band** composition block,
-because a parasite draws through `cards.WormStyle` and the text band covers everything below
+because a parasite draws through `cards.EssenceStyle` and the text band covers everything below
 y 140. This file is the body plan, pasted between the two.
 
 **Why it exists.** A relic is an object and can be described from nothing. A parasite is a

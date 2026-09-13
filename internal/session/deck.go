@@ -4,7 +4,7 @@ package session
 //
 // **It moved here from the combat screen on 2026-08-21.** A starting deck is a fact about a run,
 // not about the screen that happens to deal from it first — and while it lived on that screen,
-// `main` had to import `internal/screens` to start a run at all. The shop and the worms both edit
+// `main` had to import `internal/screens` to start a run at all. The shop and the essences both edit
 // this list; none of them should have to know which screen built it.
 //
 // **It is data, not a Go expression** *(2026-08-08)*: nine attack concepts x five colours, plus
@@ -13,7 +13,7 @@ package session
 //
 // **The file holds more concepts than the deck holds cards** *(2026-08-24)*. The 0 AP and 4 AP rung
 // of each attack form ship at `Copies: 0`, so they are registered with the rules — which is what
-// lets a Shrink or a Grow worm step a card onto them — and expand to nothing here. A zero-copy
+// lets a Debase or an Exalt essence step a card onto them — and expand to nothing here. A zero-copy
 // record is a rung, not a card.
 
 import (
@@ -79,7 +79,7 @@ func buildStartingDeck() []deckEntry {
 // what `main` hands to `session.New`.
 //
 // Exported because a *run* starts outside this package now. Nothing here owns the deck any more:
-// the piles are dealt from `GlobalState.Run` and a worm can thin or recolour it between fights,
+// the piles are dealt from `GlobalState.Run` and an essence can thin or recolour it between fights,
 // so this is the list a run begins from rather than the list it plays with.
 func StartingDeck() []combat.Card {
 	out := make([]combat.Card, 0, 48)

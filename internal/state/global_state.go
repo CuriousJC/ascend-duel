@@ -154,7 +154,7 @@ type GlobalState struct {
 	//
 	// **It lives here because it is one preference over every screen that deals a hand**
 	// *(owner's call, 2026-09-05)*, rather than one per screen. It was a field on CombatScene,
-	// which was right while the combat screen was the only place a hand was laid out; the worm
+	// which was right while the combat screen was the only place a hand was laid out; the essence
 	// screen deals one too, and a player who arranged their hand by element and then met a row
 	// sorted by cost would be setting the same preference twice.
 	//

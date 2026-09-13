@@ -2,13 +2,13 @@ package data
 
 // The parasites: **what the player may do to their deck during a fight.**
 //
-// A worm is won and spent between rooms; a parasite is bought, carried, and spent between the
+// An essence is won and spent between rooms; a parasite is bought, carried, and spent between the
 // turns of a duel. They overlap on purpose — both alter the run's deck and some of them do the
 // same thing — and they are separate things because *when* you spend one is most of what it is.
 // See MECHANICS.md.
 //
-// **A record is a target, a count and a value**, which is the worm record's shape plus the one
-// field a worm never needed: how many cards this one eats. A worm was always aimed at exactly
+// **A record is a target, a count and a value**, which is the essence record's shape plus the one
+// field an essence never needed: how many cards this one eats. An essence was always aimed at exactly
 // one card; a parasite may name two.
 //
 // **The rules read one field of this and only one.** A rider has to be consulted while a round is
@@ -28,7 +28,7 @@ var parasitesJSON []byte
 // ParasiteData is one consumable the player can be sold.
 type ParasiteData struct {
 	// ParasiteRecord is the key, and what anything holding a parasite stores. Kebab-case, like a
-	// worm's and a relic's.
+	// essence's and a relic's.
 	ParasiteRecord string `json:"ParasiteRecord"`
 
 	// Name is what is written across the top of the card.
@@ -49,7 +49,7 @@ type ParasiteData struct {
 	// Art is the assets.LoadImageData key for the picture on the face. **Empty means the default
 	// parasite face** — see ArtKey.
 	//
-	// **The parasite borrowed the worm's placeholder until 2026-09-12**, through one constant in
+	// **The parasite borrowed the essence's placeholder until 2026-09-12**, through one constant in
 	// internal/screens whose own note said the day parasites got art it should become a field here
 	// rather than a fallback being unpicked. This is that field, and the placeholder is a parasite's
 	// own now: two catalogues wearing one picture is two backlogs that cannot be told apart.
@@ -81,7 +81,7 @@ type ParasiteData struct {
 	// Target is what this parasite does, from a closed vocabulary resolved by
 	// `session.ParseParasiteTarget`: `rider`, `remove`, `swap`, `vitae`.
 	//
-	// **Closing it is the point**, exactly as with a card's verb and a worm's target. A new target
+	// **Closing it is the point**, exactly as with a card's verb and an essence's target. A new target
 	// is a Go change plus one place applying it, never something a JSON file can assert into
 	// existence.
 	Target string `json:"Target"`
@@ -108,9 +108,9 @@ type ParasiteData struct {
 // DefaultParasiteArt is the face a record with no Art of its own draws:
 // assets/parasite/default-parasite.png.
 //
-// **A picture of its own rather than the worm's** *(2026-09-12)*. The two catalogues wore one
+// **A picture of its own rather than the essence's** *(2026-09-12)*. The two catalogues wore one
 // placeholder while neither had art, and the moment either gets some that becomes a page where a
-// drawn worm and an undrawn parasite are the same picture — so the backlogs are told apart by
+// drawn essence and an undrawn parasite are the same picture — so the backlogs are told apart by
 // giving each its own seat. **Keys are not file paths**: LoadImageData files that picture under
 // this.
 const DefaultParasiteArt = "default-parasite"

@@ -28,18 +28,18 @@ func TestABagHoldsFourDifferentStones(t *testing.T) {
 	}
 }
 
-func TestACanHoldsFourDifferentWorms(t *testing.T) {
+func TestACanHoldsFourDifferentEssences(t *testing.T) {
 	gs := testRun()
 
-	got := dealCanWorms(gs)
-	if len(got) != session.CanSize() {
-		t.Fatalf("a can holds %d worms, want %d", len(got), session.CanSize())
+	got := dealVialEssences(gs)
+	if len(got) != session.VialSize() {
+		t.Fatalf("a vial holds %d essences, want %d", len(got), session.VialSize())
 	}
 
 	seen := map[string]bool{}
 	for _, w := range got {
 		if seen[w.Record] {
-			t.Errorf("the can holds %s twice", w.Record)
+			t.Errorf("the vial holds %s twice", w.Record)
 		}
 		seen[w.Record] = true
 	}
@@ -61,7 +61,7 @@ func TestTheSameFightOpensTheSameBag(t *testing.T) {
 	}
 }
 
-// **The bag is not the shelf and not the reward screen's worms.** Sharing a stream would make
+// **The bag is not the shelf and not the reward screen's essences.** Sharing a stream would make
 // authoring a stone change which relics a run was offered — the exact failure internal/seeds exists
 // to prevent, and one that nothing else would catch.
 func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
@@ -70,9 +70,9 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	shelf := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
 	before := append([]string(nil), shelf...)
 
-	// Drawing a bag and a can must not have consumed anything the shelf reads.
+	// Drawing a bag and a vial must not have consumed anything the shelf reads.
 	dealStones(gs)
-	dealCanWorms(gs)
+	dealVialEssences(gs)
 
 	after := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
 	for i := range before {
@@ -81,10 +81,10 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 		}
 	}
 
-	// And the can is not the reward screen's offer: two draws off one stream would be the same
-	// four worms in the same order.
-	reward := dealWorms(gs)
-	can := dealCanWorms(gs)
+	// And the vial is not the reward screen's offer: two draws off one stream would be the same
+	// four essences in the same order.
+	reward := dealEssences(gs)
+	can := dealVialEssences(gs)
 	same := len(reward) > 0
 	for i := range reward {
 		if i >= len(can) || can[i].Record != reward[i].Record {
@@ -93,7 +93,7 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 		}
 	}
 	if same {
-		t.Error("the can opened with the same worms the reward screen offered, in the same order")
+		t.Error("the vial opened with the same essences the reward screen offered, in the same order")
 	}
 }
 
@@ -124,14 +124,14 @@ func TestAVisitOffersTwoDifferentPacks(t *testing.T) {
 // The pack seats are the pane's, so a good is drawn and clicked where the row solved for it.
 func TestTheGoodsStandInTheirPane(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
-	s := &ShopScene{shelf: make([]shelfItem, shelfSize), offered: []goodKind{goodBag, goodCan}}
+	s := &ShopScene{shelf: make([]shelfItem, shelfSize), offered: []goodKind{goodBag, goodVial}}
 
-	bag, can := s.goodSlot(gs, goodBag), s.goodSlot(gs, goodCan)
+	bag, can := s.goodSlot(gs, goodBag), s.goodSlot(gs, goodVial)
 	if bag.Empty() || can.Empty() {
 		t.Fatal("an offered pack has no seat")
 	}
 	if bag.Min.X >= can.Min.X {
-		t.Errorf("the bag at %d is not left of the can at %d", bag.Min.X, can.Min.X)
+		t.Errorf("the bag at %d is not left of the vial at %d", bag.Min.X, can.Min.X)
 	}
 	if bag.Min.Y != s.shelfSlot(gs, 0).Min.Y {
 		t.Errorf("the packs sit at %d and the relics at %d, so the shelf is not one row",
@@ -157,12 +157,12 @@ func TestADialogAlwaysHasSomethingToClick(t *testing.T) {
 	}
 	g.reset()
 
-	g.open(gs, goodCan)
+	g.open(gs, goodVial)
 	if g.count() == 0 {
-		t.Fatal("a can opened with no worms in it")
+		t.Fatal("a vial opened with no essences in it")
 	}
 	if len(g.offer) == 0 {
-		t.Fatal("a can opened with no cards to aim at")
+		t.Fatal("a vial opened with no cards to aim at")
 	}
 	g.reset()
 
@@ -173,28 +173,28 @@ func TestADialogAlwaysHasSomethingToClick(t *testing.T) {
 }
 
 // **Both rows are up at once and the card is chosen first**, which is the gesture every consumable
-// in the game now shares. What has to hold is that a worm is dead until a card it can change is
-// selected — a worm that looked available and did nothing is the failure this predicate exists for.
-func TestAWormIsDeadUntilACardIsSelected(t *testing.T) {
+// in the game now shares. What has to hold is that an essence is dead until a card it can change is
+// selected — an essence that looked available and did nothing is the failure this predicate exists for.
+func TestAEssenceIsDeadUntilACardIsSelected(t *testing.T) {
 	gs := testRun()
 
 	var g goods
-	g.open(gs, goodCan)
+	g.open(gs, goodVial)
 
-	for _, w := range g.worms {
-		if g.wormSpendable(gs, w) {
+	for _, w := range g.essences {
+		if g.essenceSpendable(gs, w) {
 			t.Errorf("%s was spendable with nothing selected", w.Record)
 		}
 	}
 
-	// With a card picked, a worm is live exactly when the run says it can change that card.
+	// With a card picked, an essence is live exactly when the run says it can change that card.
 	g.selectCard(0)
 	idx, ok := g.selectedDeckIndex()
 	if !ok {
 		t.Fatal("selecting the first offered card left no deck index")
 	}
-	for _, w := range g.worms {
-		if got, want := g.wormSpendable(gs, w), gs.Run.CanApply(w, idx); got != want {
+	for _, w := range g.essences {
+		if got, want := g.essenceSpendable(gs, w), gs.Run.CanApply(w, idx); got != want {
 			t.Errorf("%s reads spendable=%v against CanApply=%v", w.Record, got, want)
 		}
 	}
@@ -206,12 +206,12 @@ func TestAWormIsDeadUntilACardIsSelected(t *testing.T) {
 	}
 }
 
-// A worm taken from the can eats the card that was selected, and nothing else.
-func TestTheCanAppliesTheWormToTheSelectedCard(t *testing.T) {
+// An essence taken from the vial eats the card that was selected, and nothing else.
+func TestTheCanAppliesTheEssenceToTheSelectedCard(t *testing.T) {
 	gs := testRun()
 
 	var g goods
-	g.open(gs, goodCan)
+	g.open(gs, goodVial)
 	g.selectCard(0)
 
 	idx, ok := g.selectedDeckIndex()
@@ -220,14 +220,14 @@ func TestTheCanAppliesTheWormToTheSelectedCard(t *testing.T) {
 	}
 
 	pick := -1
-	for i, w := range g.worms {
-		if g.wormSpendable(gs, w) {
+	for i, w := range g.essences {
+		if g.essenceSpendable(gs, w) {
 			pick = i
 			break
 		}
 	}
 	if pick < 0 {
-		t.Skip("no worm in this can can change the first offered card")
+		t.Skip("no essence in this can can change the first offered card")
 	}
 
 	before, _ := gs.Run.Card(idx)
@@ -235,11 +235,11 @@ func TestTheCanAppliesTheWormToTheSelectedCard(t *testing.T) {
 	g.take(gs, pick)
 
 	if g.openNow() {
-		t.Error("the dialog is still up after a worm was taken")
+		t.Error("the dialog is still up after an essence was taken")
 	}
 	after, still := gs.Run.Card(idx)
 	if gs.Run.Size() == size && still && after == before {
-		t.Error("the worm was taken and the card it was aimed at is unchanged")
+		t.Error("the essence was taken and the card it was aimed at is unchanged")
 	}
 }
 
@@ -263,28 +263,28 @@ func TestTakingAStoneRaisesTheRunsRung(t *testing.T) {
 	}
 }
 
-// Both of the can's rows have to fit inside the modal panel, with the lift a selected card takes.
+// Both of the vial's rows have to fit inside the modal panel, with the lift a selected card takes.
 // **The failure this exists for shipped once**: the offer row ended exactly on the panel's bottom
-// edge, which was survivable while it was the only row on screen and was not once the worms stayed
+// edge, which was survivable while it was the only row on screen and was not once the essences stayed
 // up beside it.
 func TestTheCansTwoRowsFitInsideThePanel(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = state.ScreenWidth, state.ScreenHeight
 
 	var g goods
-	g.open(gs, goodCan)
+	g.open(gs, goodVial)
 
 	panel := modalPanelRect(gs)
-	worms := g.slot(gs, 0)
-	if worms.Min.Y < panel.Min.Y+goodsHintTop {
-		t.Errorf("the worms start at %d, over the hint at %d",
-			worms.Min.Y, panel.Min.Y+goodsHintTop)
+	essences := g.slot(gs, 0)
+	if essences.Min.Y < panel.Min.Y+goodsHintTop {
+		t.Errorf("the essences start at %d, over the hint at %d",
+			essences.Min.Y, panel.Min.Y+goodsHintTop)
 	}
 
 	g.selectCard(0)
 	offer := g.offerSlot(gs, 0)
-	if offer.Min.Y < worms.Max.Y {
-		t.Errorf("a lifted card starts at %d and the worms end at %d", offer.Min.Y, worms.Max.Y)
+	if offer.Min.Y < essences.Max.Y {
+		t.Errorf("a lifted card starts at %d and the essences end at %d", offer.Min.Y, essences.Max.Y)
 	}
 	if offer.Max.Y > panel.Max.Y {
 		t.Errorf("the offer row ends at %d, past the panel's %d", offer.Max.Y, panel.Max.Y)

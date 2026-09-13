@@ -1,6 +1,6 @@
 package screens
 
-// **What the reward screen says, and where the worms come in from.**
+// **What the reward screen says, and where the essences come in from.**
 //
 // The sentences are here rather than in prose.go because prose.go is the vocabulary a *log* line
 // draws on — a verb for an attack, a name for a status — and this is a fixed script that happens
@@ -75,7 +75,7 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	}})
 
 	lines = append(lines, proseLine{runs: []proseRun{
-		{text: "Worms flee your enemy, you can only catch one."},
+		{text: "Essence bleeds from your enemy, you can only bottle one."},
 	}})
 
 	return lines
@@ -101,33 +101,33 @@ func (s *PostBattleScene) drawProse(gs *state.GlobalState, screen *ebiten.Image,
 	s.prose.drawVitaeFlight(gs, screen, face)
 }
 
-// beginOffer is what the last sentence leads to: the worms come in from the sides.
+// beginOffer is what the last sentence leads to: the essences come in from the sides.
 //
 // **They fly rather than appear**, which is the rule everywhere in this game and is doing real work
-// here — the line just read says two creatures are fleeing the enemy, and a card that was already
+// here — the line just read says two essences are bleeding from the enemy, and a card that was already
 // on screen would contradict it.
 func (s *PostBattleScene) beginOffer(gs *state.GlobalState) {
 	s.stage = choosing
 	for i := range s.entry {
-		s.entry[i] = newTravel(i*wormEntryStagger, wormEntryTicks)
+		s.entry[i] = newTravel(i*essenceEntryStagger, essenceEntryTicks)
 	}
 	s.place(gs)
 }
 
-// The worms' arrival: how long one takes to cross in, and how far apart the two set off.
+// The essences' arrival: how long one takes to cross in, and how far apart the two set off.
 var (
-	wormEntryTicks   = beat(1, 1)
-	wormEntryStagger = beat(1, 4)
+	essenceEntryTicks   = beat(1, 1)
+	essenceEntryStagger = beat(1, 4)
 )
 
-// wormArrivingAt is where one offered worm is *drawn* while it flies in — off the near side of the
+// essenceArrivingAt is where one offered essence is *drawn* while it flies in — off the near side of the
 // screen at the start of its journey, and in its seat by the end.
 //
-// **The seat itself never moves**, which is why this is separate from `wormSlot`: the hit test is
+// **The seat itself never moves**, which is why this is separate from `essenceSlot`: the hit test is
 // against the seat, so a card can be clicked the moment it is on screen and the flight stays a
 // thing to look at. Presentation may never change what a click means.
-func (s *PostBattleScene) wormArrivingAt(gs *state.GlobalState, i int) image.Point {
-	seat := s.wormSlot(gs, i)
+func (s *PostBattleScene) essenceArrivingAt(gs *state.GlobalState, i int) image.Point {
+	seat := s.essenceSlot(gs, i)
 	if i >= len(s.entry) || s.entry[i].done() {
 		return seat.Min
 	}

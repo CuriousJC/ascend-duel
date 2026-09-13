@@ -432,7 +432,7 @@ type CombatScene struct {
 	//
 	// **sortMode is this screen's working copy of `gs.HandSort`** *(2026-09-05)*, not the
 	// preference itself: Init loads it and updateSortButtons writes it back, so the arrangement
-	// a player chose here is the one the worm screen's offer arrives in. It was the one field
+	// a player chose here is the one the essence screen's offer arrives in. It was the one field
 	// Init did not reset, which is now true of the global one instead.
 	sortMode handSort
 	sortTabs *sortTabs

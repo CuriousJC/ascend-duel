@@ -1,0 +1,148 @@
+[
+  {
+    "EssenceRecord": "dissolve",
+    "Name": "DISSOLVE",
+    "Family": "Dissolve and multiply",
+    "Art": "",
+    "Draw": "",
+    "Target": "remove",
+    "Text": "DESTROY CARD"
+  },
+  {
+    "EssenceRecord": "multiply",
+    "Name": "MULTIPLY",
+    "Family": "Dissolve and multiply",
+    "Art": "",
+    "Draw": "",
+    "Target": "duplicate",
+    "Text": "COPY CARD"
+  },
+  {
+    "EssenceRecord": "ember",
+    "Name": "EMBER",
+    "Family": "Elemental essences",
+    "Art": "",
+    "Draw": "",
+    "Target": "element",
+    "Value": "fire",
+    "Text": "CARD BECOMES FIRE"
+  },
+  {
+    "EssenceRecord": "rime",
+    "Name": "RIME",
+    "Family": "Elemental essences",
+    "Art": "",
+    "Draw": "",
+    "Target": "element",
+    "Value": "ice",
+    "Text": "CARD BECOMES ICE"
+  },
+  {
+    "EssenceRecord": "arc",
+    "Name": "ARC",
+    "Family": "Elemental essences",
+    "Art": "",
+    "Draw": "",
+    "Target": "element",
+    "Value": "lightning",
+    "Text": "CARD BECOMES LIGHTNING"
+  },
+  {
+    "EssenceRecord": "loam",
+    "Name": "LOAM",
+    "Family": "Elemental essences",
+    "Art": "",
+    "Draw": "",
+    "Target": "element",
+    "Value": "earth",
+    "Text": "CARD BECOMES EARTH"
+  },
+  {
+    "EssenceRecord": "hex",
+    "Name": "HEX",
+    "Family": "Elemental essences",
+    "Art": "",
+    "Draw": "",
+    "Target": "element",
+    "Value": "arcane",
+    "Text": "CARD BECOMES ARCANE"
+  },
+  {
+    "EssenceRecord": "hone",
+    "Name": "HONE",
+    "Family": "Card strength",
+    "Art": "",
+    "Draw": "",
+    "Target": "cost",
+    "Value": "-1",
+    "Text": "CARD BECOMES EASIER -1 AP"
+  },
+  {
+    "EssenceRecord": "swell",
+    "Name": "SWELL",
+    "Family": "Card strength",
+    "Art": "",
+    "Draw": "",
+    "Target": "amount",
+    "Value": "150",
+    "Text": "CARD GAINS DMG +50%"
+  },
+  {
+    "EssenceRecord": "exalt",
+    "Name": "EXALT",
+    "Family": "Card strength",
+    "Art": "",
+    "Draw": "",
+    "Target": "promote",
+    "Text": "CARD GAINS STRENGTH +1 AP"
+  },
+  {
+    "EssenceRecord": "debase",
+    "Name": "DEBASE",
+    "Family": "Card strength",
+    "Art": "",
+    "Draw": "",
+    "Target": "demote",
+    "Text": "CARD LOSES STRENGTH -1 AP"
+  },
+  {
+    "EssenceRecord": "blunt",
+    "Name": "BLUNT",
+    "Family": "Form essences",
+    "Art": "",
+    "Draw": "",
+    "Target": "form",
+    "Value": "crush",
+    "Text": "CARD BECOMES CRUSH"
+  },
+  {
+    "EssenceRecord": "edge",
+    "Name": "EDGE",
+    "Family": "Form essences",
+    "Art": "",
+    "Draw": "",
+    "Target": "form",
+    "Value": "slash",
+    "Text": "CARD BECOMES SLASH"
+  },
+  {
+    "EssenceRecord": "spike",
+    "Name": "SPIKE",
+    "Family": "Form essences",
+    "Art": "",
+    "Draw": "",
+    "Target": "form",
+    "Value": "stab",
+    "Text": "CARD BECOMES STAB"
+  },
+  {
+    "EssenceRecord": "aegis",
+    "Name": "AEGIS",
+    "Family": "Form essences",
+    "Art": "",
+    "Draw": "",
+    "Target": "form",
+    "Value": "defend",
+    "Text": "CARD BECOMES DEFEND"
+  }
+]

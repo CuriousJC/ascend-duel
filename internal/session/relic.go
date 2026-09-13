@@ -2,7 +2,7 @@ package session
 
 // Relics: the catalogue, what the run is wearing, and the moments that fire outside combat.
 //
-// **`relics.json` is parsed here for the reason the worms are** — a relic belongs to a *run*. Three of
+// **`relics.json` is parsed here for the reason the essences are** — a relic belongs to a *run*. Three of
 // its ten moments are `deck-built`, `fight-start` and `fight-won`, none of which happen inside
 // `internal/combat` at all, and the accumulator a growing relic carries has to survive a fight. This
 // package is what survives one.

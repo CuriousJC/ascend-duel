@@ -111,10 +111,10 @@ or weaker way to build one.
 
 **The middle three rungs are the deck; the two ends ship at zero copies** *(owner's call,
 2026-08-24)*. A run opens holding 1/2/3 AP cards and can never buy anything else, so the only way
-to hold a Poke or an Impale is a **Shrink** or a **Grow** worm walking a card off the end of the
+to hold a Poke or an Impale is a **Debase** or a **Exalt** essence walking a card off the end of the
 three. They are real registered concepts all the same, because `combat.Neighbour` derives the
-ladder from the registry — a rung that does not exist is a rung a worm cannot step onto, which is
-what used to make Shrink dead on every 1 AP card and Grow dead on every 3 AP one.
+ladder from the registry — a rung that does not exist is a rung an essence cannot step onto, which is
+what used to make Debase dead on every 1 AP card and Exalt dead on every 3 AP one.
 
 | Form | 0 AP · 0.25× | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 2× | 4 AP · 4× |
 |---|---|---|---|---|---|
@@ -139,7 +139,7 @@ cheaper cards.
 
 **The defend ladder is four rungs and the dealt two are the middle** *(owner's call, 2026-09-06)*.
 `Flinch` at 0 AP and `Guard` at 3 AP ship at zero copies exactly as the outer attack rungs do, so
-the deck opens on Brace and Block and the two ends are somewhere a worm can walk a card to. Guard
+the deck opens on Brace and Block and the two ends are somewhere an essence can walk a card to. Guard
 left the deck on 2026-09-01; Flinch was added to give the defences the same shape.
 
 **Nine attack concepts × five colours = 45 cards; two defences × five colours = 10.** A **55-card
@@ -147,10 +147,10 @@ starting deck** — the zero-copy rungs are in the file and not in the pile. **N
 is drab** *(2026-08-25)*: every card ships in one of the five elements, the defences included.
 
 **A 0 AP card is bounded by the count rather than the cost**, which is the shift `minCardCost`
-already took deliberately when Whetworm could drive a card to free: a turn is capped at
+already took deliberately when a Hone could drive a card to free: a turn is capped at
 `MaxActions` cards however cheap they are. **A 4 AP card is the first single card that beats a
 whole cheap turn**, at 1.33× a Skewer for 1.33× the price — which is the rung the 3 AP raise to
-triple flattened, and it is now priced level rather than above — the reason it is a worm's prize rather
+triple flattened, and it is now priced level rather than above — the reason it is an essence's prize rather
 than something a run can stock.
 
 **The defences sit on the same ladder the attacks do**, 0 through 3 AP. **The price is the count**:
@@ -163,11 +163,11 @@ on it would make the top card the only one worth holding.
 2026-09-06)*. A shield eats a whole blow, so there is no fraction of one to fall to: where Poke is a
 Jab at a quarter of the damage, Flinch is a Brace at none of the cost. What bounds it is the count —
 a turn plays at most `MaxActions` cards however cheap they are — rather than the budget, which is
-the same shift `minCardCost` took when Whetworm could drive a card to free. **The duelist's own
+the same shift `minCardCost` took when a Hone could drive a card to free. **The duelist's own
 shield cap is not part of that bound any more**; see §Shields.
 
-**`combat.Neighbour` walks this ladder** *(owner's call, 2026-09-06)*, so a Grow promotes a Brace and
-a Shrink demotes a Guard. **This reverses the 2026-08-31 call** that kept the worms to the damage
+**`combat.Neighbour` walks this ladder** *(owner's call, 2026-09-06)*, so an Exalt promotes a Brace and
+a Debase demotes a Guard. **This reverses the 2026-08-31 call** that kept the essences to the damage
 ladders on the argument that a free shield changes how many hits a run takes for the rest of the
 tower — which is still true, and is now something a run is allowed to build toward: a deck of ten
 defences shrunk to Flinches is five free shields a turn, and since 2026-09-09 nothing takes the
@@ -321,7 +321,7 @@ painted in belongs to the renderer rather than to whoever asks. The second is **
 highlight**: a card the lesson is pointing at is washed in the tutorial's red rather than having a
 red frame drawn round it. A frame outside a card is a thing near the card; a tinted card is the card
 answering — and where a step names several cards, a frame each is a row of loose rectangles while a
-tint each is just the cards. Relics and worms are expected to take marks too.
+tint each is just the cards. Relics and essences are expected to take marks too.
 
 ### Concepts and deck composition
 
@@ -347,10 +347,10 @@ share an element — is a fact about round one of fight one and about nothing el
 **Three mechanisms change it, at three different lifetimes.** Keeping them apart is what stops "my
 deck is half ice" from being confused with "my deck contains more ice cards".
 
-- **A worm edits the run's deck itself, permanently.** A won fight offers two; each names a card and
+- **An essence edits the run's deck itself, permanently.** A won fight offers two; each names a card and
   an aspect — `element`, `remove`, `duplicate`, `cost`, `amount`, `promote`, `demote`. After a
-  `remove` the card is gone from every pile and the deck is genuinely smaller; after Grow or Shrink
-  it is a different concept from then on. Nothing takes a worm back.
+  `remove` the card is gone from every pile and the deck is genuinely smaller; after Exalt or Debase
+  it is a different concept from then on. Nothing takes an essence back.
 - **A relic can rewrite the deck as a fight's deck is built** — the `deck-built` moment. Atrophy
   steps every 3 AP attack one rung down its own form's ladder, so a Skewer is dealt as a Thrust for
   the whole fight. It lasts as long as the relic is worn and no longer.
@@ -366,13 +366,13 @@ composition any tool prints.
 **Every axis a hand is scored on can be moved, so a build can manufacture any of them.**
 Elements are the loudest case: two common relics fold two colours into a third, and a deck that is
 half one element makes an Elemental Five of a Kind an ordinary turn rather than the hand
-the round-one simulation reports at a 0.29% score. **Cost moves too**: a relic or a worm taking a point off a card changes which cost tier it sits in,
+the round-one simulation reports at a 0.29% score. **Cost moves too**: a relic or an essence taking a point off a card changes which cost tier it sits in,
 and no rung counts cost today, so what that moves is what a turn can *afford* rather than what it
 forms. **Concepts and forms move too** — promote and demote walk a card along
-its form's ladder, so Shrink and Atrophy both turn dear cards into copies of the cheap card below
+its form's ladder, so Debase and Atrophy both turn dear cards into copies of the cheap card below
 them, which is a Card Two Pair the starting deck could not deal. Only the *form* survives a rung change,
 since a ladder is one form's. **All of it is the intended shape of a build, not a leak**: the ladder
-is priced against the starting deck on purpose, and out-earning that price is what relics and worms
+is priced against the starting deck on purpose, and out-earning that price is what relics and essences
 are for.
 
 **So read `tools/handodds` and `tools/handsheet` as describing fight one.** Both deal from the
@@ -384,7 +384,7 @@ No attack concept ships more than five times, so **a Card Four of a Kind necessa
 the five colours** — copies of a concept are all different elements, so it is also the hand that
 lands most of the statuses the player is reliced for. **A Card Five of a Kind became dealable on
 2026-08-25** and is the whole colour set in one concept; it was reachable only after a `duplicate`
-worm while the deck held four copies. See the reachability table below.
+essence while the deck held four copies. See the reachability table below.
 
 **The deck list is data.** `data/duelist_cards.json` holds the twelve concepts, the form and
 category each declares, the elements each ships in, and how many copies. `startingDeck` is built
@@ -520,7 +520,7 @@ grey rather than the near-white it used to be, because the surface went off-whit
 near-white border on it is invisible.
 
 **Every word that names an element is written in that element's colour** *(owner's call,
-2026-09-08)*. A worm reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple; a relic reading
+2026-09-08)*. An essence reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple; a relic reading
 "Fire attacks BURN and CHILL the target." sets three words across two colours. It reaches the card
 faces, the tooltips and the fight log, because the words are the same words wherever they are read.
 
@@ -1265,7 +1265,7 @@ consecutive in, and the grammar has no notion of consecutiveness for one to be w
 What keeps the top of the ladder rare is the deck and the budget: three Bashes is exactly 6 AP,
 a starting fighter's entire budget, and **five Bashes is 10 AP**, reachable only by spending a
 whole round on shields. **Five Bashes is dealable as of 2026-08-25** — the deck holds five, one
-per colour — which is what turned the concept five-of-a-kind from a worm's rung into the rarest
+per colour — which is what turned the concept five-of-a-kind from an essence's rung into the rarest
 measurable hand in the game. Being dealable and being affordable are still two different questions,
 which is why the wide five-of-a-kind rungs are the cheapest cards of a form or a colour rather than
 of a concept.
@@ -1418,7 +1418,7 @@ moment lands on, and the questions to put to a new relic idea live in
 shape.
 
 **A relic is the only collected thing that is never played.** A card resolves in the turn you
-queued it, a worm fires when you pick it, a hand is scored when the attack phase runs — each
+queued it, an essence fires when you pick it, a hand is scored when the attack phase runs — each
 already knows *when*. A relic waits, so it says so itself, and that is the third part the card
 language does not need.
 
@@ -1429,7 +1429,7 @@ language does not need.
 - **Seven moments, and only four are in `internal/combat`.** The other three fire in `session`
   and on the post-battle screen, which is what makes a relic a **run** concept the rules consult
   rather than a combat one. `relics.json` is therefore parsed in `internal/session`, beside the
-  worms and for the same reason.
+  essences and for the same reason.
 - **Relics fire left to right, in worn order.** A determinism rule, not a preference: multiplicative
   effects are order-sensitive, and worn order is the only order the player can see. **Compounding
   is intended** — two slash relics are ×4.
@@ -1630,7 +1630,7 @@ because the card genuinely is a Thrust.
   6 AP turn; three Thrusts cost 6 and do. It trades damage per card for cards per turn, which is a
   hand-ladder decision rather than a damage one — a Three of a Kind of Thrusts against one Skewer and
   a Jab.
-- **`combat.Neighbour` already existed**, built for worms, so the ladder is still a consequence of
+- **`combat.Neighbour` already existed**, built for essences, so the ladder is still a consequence of
   `duelist_cards.json` rather than a table written twice. A card with no rung below it is left alone.
 - **`Tier` is a new predicate and it reads the *declared* cost.** A discount relic cannot move a card
   out of Atrophy's reach, which would otherwise make two worn relics switch each other off in an
@@ -1872,16 +1872,16 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
   replacement**, rather than a shuffle: each seat draws on rarity tickets and the drawn relic leaves
   the pool, so the shelf never offers the same relic twice.
 
-### The two sealed goods: a bag of rocks and a can of worms *(owner's call, 2026-08-27)*
+### The two sealed goods: a bag of rocks and a vial of essence *(owner's call, 2026-08-27)*
 
-**The shelf is five seats now: three relics, a bag of rocks and a can of worms.** Both goods cost
+**The shelf is five seats now: three relics, a bag of rocks and a vial of essence.** Both goods cost
 **5 vitae**, both hold **four of something**, and both give the player **exactly one of the four** —
 the other three are gone.
 
 - **What is bought is the choice, not the thing.** A relic is read and then paid for; a good is paid
   for and then read. That is the whole design, and it is why neither card names its contents: the
   face says the shape of the offer ("4 stones, keep 1") and nothing about which four.
-- **A bag holds four stones; a can holds four worms.** See the stones section below. The can is the
+- **A bag holds four stones; a vial holds four essences.** See the stones section below. The vial is the
   reward screen's mechanic bought rather than won — pick one of four, then pick the card it eats —
   and what five vitae buys over the free offer of two is twice the choice, at the shop rather than
   at the end of a fight.
@@ -1891,9 +1891,9 @@ the other three are gone.
 - **They are the answer to "vitae has nothing to buy but swaps"**, which the shop section above
   records as the thing it wanted next. A run with five fingers full now has somewhere for its purse
   to go that is not a relic it will sell back at a loss.
-- **Each draws from its own seeded stream** — `seeds.BagStock` and `seeds.CanStock`, both per fight.
-  The can's is deliberately not the reward screen's `WormOffer`: sharing would make the shop's four
-  a function of which two had just been offered free, so buying the can could guarantee — or rule
+- **Each draws from its own seeded stream** — `seeds.BagStock` and `seeds.VialStock`, both per fight.
+  The vial's is deliberately not the reward screen's `EssenceOffer`: sharing would make the shop's four
+  a function of which two had just been offered free, so buying the vial could guarantee — or rule
   out — the pair the player had turned down. A rule nobody designed, arriving out of an
   implementation detail.
 - **The dialog has no close button, and that is deliberate.** Every other modal in the game is a
@@ -1971,7 +1971,7 @@ means a verb that raises, keeps or spends a shield, and that has not been design
 
 ## Stones — altering the hand ladder *(owner's call, 2026-08-27)*
 
-**A worm alters a card; a stone alters a rung.** One stone raises one hand's multiplier by **a tenth
+**An essence alters a card; a stone alters a rung.** One stone raises one hand's multiplier by **a tenth
 of the figure `hands.json` writes down**, for the rest of the run.
 
 - **There is a stone for every rung**, all eighteen, and `data/stones.json` is refused at load if one
@@ -1989,7 +1989,7 @@ of the figure `hands.json` writes down**, for the rest of the run.
 - **Using it is the whole of owning it.** There is no inventory: the click that picks a rock out of
   the bag is the click that puts it on the ladder. A run holds counts per rung, not stones.
 - **It belongs to the run, not to the profile.** Stones are gone when the run is — the same lifetime
-  as relics, worms and the deck — and they are written into `run.json` by hand *key*, so a rung this
+  as relics, essences and the deck — and they are written into `run.json` by hand *key*, so a rung this
   build has not got refuses the resume rather than being dropped.
 - **The bump rides on the duelist, never on the catalogue.** `combat.handTable` is package state
   shared by every fight, every review tool and every test, so a run raising a rung in place would
@@ -2003,7 +2003,7 @@ of the figure `hands.json` writes down**, for the rest of the run.
   never build. Weighting them would be pricing the *hand*, which the ladder already does.
 - **Nothing measures whether a tenth is the right number**, on the same terms as every price in the
   shop section above. What it is worth in practice depends on which rung a run keeps hitting, which
-  `tools/handodds` measures for the shipped deck and not for a run that has been worming it.
+  `tools/handodds` measures for the shipped deck and not for a run that has been distilling it.
 
 ### The pouch — carrying stones *(owner's call, 2026-09-02)*
 
@@ -2067,25 +2067,25 @@ many times the run has formed the rung, they are earned, and they move nothing a
   player is actually working on.
 
 
-## Worms — altering the deck between fights
+## Essences — altering the deck between fights
 
-**A worm is a change to a card you already own.** It recolours it, removes it, or copies it. It
+**An essence is a change to a card you already own.** It recolours it, removes it, or copies it. It
 never invents one, and that restriction is the whole safety property: the *concept* is never
-touched, so nothing a worm produces can be a card `internal/combat` has not registered.
+touched, so nothing an essence produces can be a card `internal/combat` has not registered.
 
-**Offered after a won fight, on the post-battle screen.** Two worms are drawn from the catalogue
+**Offered after a won fight, on the post-battle screen.** Two essences are drawn from the catalogue
 and shown as cards; pick one, pick the card it takes, **see what it would become**, and confirm.
 
 | | |
 |---|---|
 | When | after a won fight, before the next room |
 | First | the win is **read out**: interest, a tenth of the life kept, what the room pays |
-| Offered | **two cards**: two worms from `data/worms.json` |
+| Offered | **two cards**: two essences from `data/essences.json` |
 | Then | a hand dealt fresh off the whole run deck, at the combat hand size |
 | Then | a **morph**: the card before and after, side by side, nothing committed |
-| Choice | one worm and one card, or **Let them escape** |
+| Choice | one essence and one card, or **Let them escape** |
 
-- **Worm first, card second, and it turned round to get there** *(2026-08-17)*. The first version
+- **Essence first, card second, and it turned round to get there** *(2026-08-17)*. The first version
   asked for a card and then offered verbs on it, which made the reward look like a property of the
   card. **What you were given for winning has to be the thing on the screen when you arrive.**
 - **Two options, so the choice is a comparison.** One is an instruction; three is a menu to read
@@ -2093,13 +2093,13 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
   catalogue rather than drawing from it twice.
 - **The card offer is dealt off the *whole deck*, not off what the fight left in the piles.** A
   reward is about what you own.
-- **Two random streams, and they are separate on purpose.** Which worms and which cards are
-  drawn from different lists and change on different schedules: sharing would mean adding a worm
+- **Two random streams, and they are separate on purpose.** Which essences and which cards are
+  drawn from different lists and change on different schedules: sharing would mean adding an essence
   to the catalogue silently rerolled which cards every fight of every run offered.
 - **Nothing is committed until the take.** Back steps out of the morph to the cards and out of the
-  cards to the worms, so a player who picked up the wrong worm or aimed it at the wrong card is
+  cards to the essences, so a player who picked up the wrong essence or aimed it at the wrong card is
   never stuck with either.
-- **The preview runs the real worm against a throwaway copy of the run**, never a second
+- **The preview runs the real essence against a throwaway copy of the run**, never a second
   implementation of what each target does. A preview with its own arithmetic is a preview that can
   disagree with the thing it previews.
 - **The result flies to the middle and is held there.** A card won and immediately lost into a
@@ -2115,25 +2115,25 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
   the fast path pays through the same claims as the slow one — presentation may never change an
   outcome.
 - **Your build is on screen throughout**: the duelist card in its usual corner and the worn relics
-  beside it, so a worm is chosen against the thing it would be changing, and the purse the payout
+  beside it, so an essence is chosen against the thing it would be changing, and the purse the payout
   lands in is visible while it climbs.
-- **The vitae card is gone and taking neither worm is a button again** *(owner's call,
+- **The vitae card is gone and taking neither essence is a button again** *(owner's call,
   2026-08-22)*. A third card paying +5 was charging for something the win now pays by itself, and
   the offer is the two creatures the prose says are fleeing. **The offer is free**, so walking away
   costs nothing and does not need to look like a card.
-- **The worms fly in from the sides** once the last sentence lands, because the sentence before
+- **The essences fly in from the sides** once the last sentence lands, because the sentence before
   them says two creatures are fleeing — a card already sitting there would contradict it.
 - **Run-scoped, never persisted.** Two runs from the same seed may hold different decks, because
   an alteration is a *choice*: replay is a seed plus a choice log. See the `randomness` skill.
 
 ### The grammar: a target and a new value
 
-A worm record is the card language pointed at a card that already exists — see `data/worms.json`
-and `internal/session/worm.go`, which is where a record is validated.
+An essence record is the card language pointed at a card that already exists — see `data/essences.json`
+and `internal/session/essence.go`, which is where a record is validated.
 
 | Target | Value | What it does |
 |---|---|---|
-| `element` | a colour | recolours one card — **one worm per colour, five since 2026-08-25** |
+| `element` | a colour | recolours one card — **one essence per colour, five since 2026-08-25** |
 | `remove` | — | takes one card out of the run |
 | `duplicate` | — | puts a second copy of one card into the run |
 | `cost` | a signed delta | changes what one card costs |
@@ -2146,13 +2146,13 @@ plus one place applying it, never something a JSON file can assert into existenc
 an unknown target, an element the rules lack, a value on a target that reads none — **panics at
 init**.
 
-**`amount` reaches every card in the deck with one worm**, because what the figure *is* depends on
+**`amount` reaches every card in the deck with one essence**, because what the figure *is* depends on
 the verb: a defence percentage, shields raised, or a damage multiplier. That is the
-card language paying off — one worm, four meanings, no special cases.
+card language paying off — one essence, four meanings, no special cases.
 
 **Cost and amount are per-card and the rest of a card is not.** `combat.Card` carries `CostDelta`
 and `AmountPct`; `Cost()`, `Amount()` and `Damage()` are the three methods that read them, which is
-where the bounds live. **Form and label are still concept-wide**, so a worm reaching for one of
+where the bounds live. **Form and label are still concept-wide**, so an essence reaching for one of
 those would change every copy of that card in the deck — that is the argument to make again from
 scratch before adding one.
 
@@ -2166,15 +2166,15 @@ scratch before adding one.
 - **A card may be driven to 0 AP** *(owner's call, 2026-08-17)*, and that moves the game onto its
   other bound: a round is capped by cost *and* by count independently, so a free card is limited by
   `MaxActions` rather than by the budget. Taken with that in view, not as an oversight.
-- **Nothing stops a blow outright, however many worms are stacked on a Defend.** `RegisterConcept`
+- **Nothing stops a blow outright, however many essences are stacked on a Defend.** `RegisterConcept`
   refuses a *concept* declaring 100 or more; `Card.Amount` clamps a *modified* one. It clamps
   rather than refusing, because a reward that silently did nothing is worse than one that hits its
   ceiling.
-- **`amount` compounds rather than replaces** — 150% twice is 225% — so a second worm on the same
+- **`amount` compounds rather than replaces** — 150% twice is 225% — so a second essence on the same
   card is worth taking.
 - **A ladder has two ends.** A Smash cannot be promoted and a Jab cannot be demoted, and a defend
   card is not an attack, so `Neighbour` refuses it a ladder at all. The screen asks `CanApply` before offering a card, so
-  a worm that would do nothing is never presented as a choice.
+  an essence that would do nothing is never presented as a choice.
 
 ### The card says what the card does
 
@@ -2184,21 +2184,21 @@ actually cuts and an altered Brace prints the shields it actually raises. **A ca
 with its behaviour is the worst thing an alteration mechanic can produce**, and it is the reason
 this was not deferred.
 
-**A worm may not recolour a card to basic.** That would be a way to *lose* a colour rather than
+**An essence may not recolour a card to basic.** That would be a way to *lose* a colour rather than
 choose one, and no attack card in the deck is drab.
 
-**The recolour worms are one per colour, and the set has to stay complete** *(owner's call,
-2026-08-25)*. **Hex Worm** landed with arcane for that reason: four recolour worms against five
+**The recolour essences are one per colour, and the set has to stay complete** *(owner's call,
+2026-08-25)*. **Hex** landed with arcane for that reason: four recolour essences against five
 colours is a hole a player can see — every other colour can be built toward out of the post-battle
 offer and one cannot. The catalogue goes eleven, so the two seats a fight offers are drawn from a
-slightly bigger pot and every individual worm is a little rarer; that dilution is the same one the
+slightly bigger pot and every individual essence is a little rarer; that dilution is the same one the
 flip relics took and it is accepted for the same reason.
 
 ### REMOVE is the strongest option, and that is accepted
 
 Thinning a 55-card deck against a fixed hand of eight raises consistency every time — **more so
 since arcane**, which added twelve cards without adding a card to the hand. It is
-deliberate rather than unnoticed: the offer is two worms out of a growing catalogue, so removal
+deliberate rather than unnoticed: the offer is two essences out of a growing catalogue, so removal
 being the best of what is on the table is only sometimes the question. **`duplicate` is the one
 most likely to need a cost** — copies are the sharpest dial in the game, since four of one concept
 in a turn is a Four of a Kind.
@@ -2232,8 +2232,8 @@ from the shop in a **bucket of parasites**, held in the run, and spent from a bo
 combat screen — clicked in the **consumables pane** on the top row, aimed with the hand's own
 selection. See the section below.
 
-**They overlap with worms on purpose** *(owner's call)*. Several parasites do what a worm already
-does. What makes them a different thing is *when* you spend one: a worm is won after a fight and
+**They overlap with essences on purpose** *(owner's call)*. Several parasites do what an essence already
+does. What makes them a different thing is *when* you spend one: an essence is won after a fight and
 applied on the spot, and a parasite is carried and spent in the gap between one turn and the next.
 The overlap is accepted rather than designed around; the two catalogues are separate files with
 separate grammars.
@@ -2251,7 +2251,7 @@ separate grammars.
 **"LEFT CARD BECOMES RIGHT CARD" is not a partial verb.** The graft copied the *concept* alone, so
 grafting a fire Cut onto an ice Jab produced an ice Cut — a card whose name said it had become the
 right-hand card and whose colour said it had not. Everything the right card is now travels:
-concept, element, form override, the worm-written cost and damage deltas, and the riders.
+concept, element, form override, the essence-written cost and damage deltas, and the riders.
 
 - **The identity does not travel.** `combat.Card.ID` says *which* card this is rather than what it
   is, so the run holds the same cards it held before, each findable by the handle it has always had.
@@ -2282,8 +2282,8 @@ parasites on the right.
 - **The shop's bucket seat goes dim when the bucket is full**, rather than taking five vitae for a
   parasite that would be refused. It is the same courtesy an unaffordable good already gets, and it
   is the control the player actually meets — `Hold` refusing is the belt behind it.
-- **Only the bucket needs it.** A stone is spent in the dialog that opened the bag and a worm in the
-  dialog that opened the can, so neither hands the run something it has no room for.
+- **Only the bucket needs it.** A stone is spent in the dialog that opened the bag and an essence in the
+  dialog that opened the vial, so neither hands the run something it has no room for.
 - **The pane is where a parasite is visible at all.** Before this the only readout was behind the
   `P` button, two clicks into a dialog that exists mid-duel — so what a run was carrying was
   invisible on the two screens where it decides what to carry.
@@ -2305,7 +2305,7 @@ parasites on the right.
 **The gesture reversed.** Spending a parasite used to be arm-then-aim behind the `P` button: open a
 dialog, click the parasite, then click the cards it eats, in a second drawing of the hand one row
 lower. It is now **select the cards in the hand, then click the parasite in the consumables pane**.
-The worm offer follows the same order, so there is one way to point a consumable at a card anywhere
+The essence offer follows the same order, so there is one way to point a consumable at a card anywhere
 in the game.
 
 - **The `P` button and its dialog are gone.** What went with them: a modal, a two-stage prompt, a
@@ -2326,15 +2326,15 @@ in the game.
 - **A rock shower's stones fly to the duelist card** rather than putting a receipt up to be
   dismissed. They are in the pouch before the first frame is drawn — the flight is a picture of
   where they went, not a confirmation, and it cannot change an outcome.
-- **The worm offer reversed with it, and lost a stage doing so.** The reward screen was two stages —
-  pick a worm, then pick the card it eats — and is now one: both rows on screen, select the card,
-  click the worm. The legality moved with the order, so the *cards* are all selectable and the
-  *worms* go dim, where it used to be the other way round.
-- **The narration clears a stage earlier than it did**, and that is the cost. The worms used to sit
+- **The essence offer reversed with it, and lost a stage doing so.** The reward screen was two stages —
+  pick an essence, then pick the card it eats — and is now one: both rows on screen, select the card,
+  click the essence. The legality moved with the order, so the *cards* are all selectable and the
+  *essences* go dim, where it used to be the other way round.
+- **The narration clears a stage earlier than it did**, and that is the cost. The essences used to sit
   under the payout at 58% so that what a win paid and what it is offering read as one picture;
   two rows of full-size cards do not fit under it, so the prose now ends when the offer arrives.
 - **The tutorial's anchor had to grow to cover both rows.** The lit square is also the one legal
-  click, so a step lighting only the worms would have been a lock-up the moment taking one required
+  click, so a step lighting only the essences would have been a lock-up the moment taking one required
   a selection first.
 
 ### Why between turns, and never inside one
@@ -2348,13 +2348,13 @@ card in flight**, arriving at the one mechanic that genuinely wanted to break it
 **Card identity is what makes it possible at all.** MECHANICS used to say mid-fight alteration
 would need a real card ID; `combat.Card.ID` landed on 2026-08-24 for the element flip, and a
 parasite's targets are identities rather than deck positions. That matters more here than it does
-for a worm: a parasite may name two cards, and it is spent while a hand, a draw pile and a discard
+for an essence: a parasite may name two cards, and it is spent while a hand, a draw pile and a discard
 pile are all live holding copies of the same cards, so a position would be meaningless by the time
 the player confirmed.
 
 ### The grammar: a target, a count and a value
 
-A parasite record is the worm record's shape plus the two fields a worm never needed — **how many
+A parasite record is the essence record's shape plus the two fields an essence never needed — **how many
 cards it takes**, and **what class of change it makes**. See `data/parasites.json` and
 `internal/session/parasite.go`, where a record is validated.
 
@@ -2399,7 +2399,7 @@ changed my card", and what separates them is what the *next* parasite does.
 
 **Four targets landed on 2026-09-02** *(owner's call)*, and three of them are worth saying twice:
 
-- **`duplicate` is the mid-fight `spawn`, and the copy has to reach the hand.** A worm copying a
+- **`duplicate` is the mid-fight `spawn`, and the copy has to reach the hand.** An essence copying a
   card only has to put it in the deck, because it is spent between fights. A parasite is spent in
   the middle of one, and the fight's piles were dealt before the copy existed — so a copy that went
   only into the run would not be playable until the *next* fight and would read as a dud. The copy
@@ -2514,7 +2514,7 @@ spent two parasites on stays the card they invested in; what changes is which ca
 a fresh identity would take the investment with it.
 
 **`MaxParasiteTargets` is 2**, because the picker shows the targets side by side and a picker that
-scrolled would be a menu to read rather than a decision to make — the two-worm offer's argument.
+scrolled would be a menu to read rather than a decision to make — the two-essence offer's argument.
 
 ### Riders: a rule carried by one card
 
@@ -2606,7 +2606,7 @@ for a defence — and then a line per thing the upgrade adds.
 
 **It used to be arithmetic and nothing else** — `5 DMG, yours` / `1x the card` / `= 5 DMG` — which
 is three lines deriving a number the player wanted to be told. The derivation is still the reason
-the panel exists, and it is still printed: **underneath the block, and only when a relic or a worm
+the panel exists, and it is still printed: **underneath the block, and only when a relic or an essence
 has actually moved something.** A card nothing has touched derives to itself, and three lines saying
 so is a panel that trains the player not to read it.
 
@@ -2747,9 +2747,9 @@ it is drawn.
 
 ### The bucket, on the shelf
 
-The bucket is the shop's **third sealed good** and takes the bag's and the can's shape exactly: 5
+The bucket is the shop's **third sealed good** and takes the bag's and the vial's shape exactly: 5
 vitae, four inside, keep one, its own per-fight stream (`seeds.BucketStock`), one per visit. It
-differs in one way and it is the interesting one — **a stone and a worm are spent the moment they
+differs in one way and it is the interesting one — **a stone and an essence are spent the moment they
 are chosen, and a parasite goes into the bucket to be spent later.**
 
 **The shelf is six seats now.** `rowSlot`'s fixed pitch puts six cards in 1172 pixels of 1280, so
@@ -2794,7 +2794,7 @@ for the `data/` pattern: JSON beside a small Go loader.
 The currency. Earned from fights, spent in the shop. `Session` carries the purse; **winning a fight
 is the only thing that adds to it** and **the shop is what takes it out** *(2026-08-21)* —
 `Session.SpendVitae` is the one place a purse goes down. Its callers are `Session.Buy`, and since
-2026-08-27 `BuyBag` and `BuyCan`, the two sealed goods.
+2026-08-27 `BuyBag` and `BuyVial`, the two sealed goods.
 
 **Vitae is crimson wherever it is written** *(owner's call, 2026-08-22)* — the purse on the duelist
 card and the word itself in the reward screen's prose. It is the run's only currency and now the
@@ -3228,8 +3228,8 @@ from 0 AP to 4 AP with the two ends shipped at zero copies, so a run reaches the
 or demoting — which makes "five 4 AP attacks of one card" a statement about a deck the player
 *built*, and the reason those two achievements are worth naming at all.
 
-**It reads `Card.Cost()` and not the concept's figure.** A worm's `CostDelta` is part of what the
-turn cost, so five Skewers a Grow pushed to 4 AP count and five Impales a Whetworm made cheap do not.
+**It reads `Card.Cost()` and not the concept's figure.** An essence's `CostDelta` is part of what the
+turn cost, so five Skewers an Exalt pushed to 4 AP count and five Impales a Hone made cheap do not.
 The achievement is about what was paid.
 
 **Zero is a filter and not an absence**, which is why the field is a pointer in the JSON struct —
@@ -3374,7 +3374,7 @@ The rules that hold it up:
 ### The gap between two fights is part of the account *(owner's call, 2026-09-12)*
 
 **Under each fight's rounds sits an `After` block: what the player did with what that fight paid
-them.** The card taken and the card cut on the reward screen, the worm spent on one of them, the
+them.** The card taken and the card cut on the reward screen, the essence spent on one of them, the
 relic bought or sold, the stone spent and the rung it raised, and what the purse gained and paid.
 
 - **It hangs off the fight rather than sitting between two of them.** The panel folds by fight, so

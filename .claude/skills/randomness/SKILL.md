@@ -102,26 +102,26 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.PlayerDeck` | fight | `CombatScene.rng` | every catalogued hand in `internal/screens/seeds.go` |
 | `seeds.EnemyDeck` | fight | `decks.EnemyPile` | the player's opening hand, per the entry below |
 | `seeds.RewardHand` | fight | `dealOffer` (`internal/screens/postbattle.go`) | which cards a win offers you to alter |
-| `seeds.WormOffer` | fight | `dealWorms` (`internal/screens/postbattle.go`) | which alterations are offered, on any change to the reward hand |
-| `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which relics are for sale, on any change to the worm catalogue |
+| `seeds.EssenceOffer` | fight | `dealEssences` (`internal/screens/postbattle.go`) | which alterations are offered, on any change to the reward hand |
+| `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which relics are for sale, on any change to the essence catalogue |
 | `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which four stones a bag of rocks holds, on any change to the relic shelf |
-| `seeds.CanStock` | fight | `dealCanWorms` and `dealCanOffer` (`internal/screens/shop_goods.go`) | which four worms a can holds, on any change to the free offer |
+| `seeds.VialStock` | fight | `dealVialEssences` and `dealVialOffer` (`internal/screens/shop_goods.go`) | which four essences a vial holds, on any change to the free offer |
 | `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to the shock roll |
 | Loot offers | — | **not built** | — |
 | Floor offers | — | **not built** | — |
 
-**`CanStock` is the sharpest case in the table** *(2026-08-27)*: it draws worms from the same
-catalogue `WormOffer` does, at the same station of the loop, and it still gets its own stream. Two
+**`VialStock` is the sharpest case in the table** *(2026-08-27)*: it draws essences from the same
+catalogue `EssenceOffer` does, at the same station of the loop, and it still gets its own stream. Two
 draws off one sequence would make the shop's four a *function* of the two the reward screen had
-already put up — so buying the can could guarantee, or rule out, the pair the player had just turned
+already put up — so buying the vial could guarantee, or rule out, the pair the player had just turned
 down. A rule nobody designed, arriving out of an implementation detail. **Same catalogue is not the
 question; same decision is.**
 
 **The between-fight streams are the worked example of "one stream or two"**, and the question
 was asked each time rather than assumed. The reward hand is a fresh deal off the whole run deck, so
 sharing the player's shuffle would make the offer a function of how many cards were drawn in the
-fight just won. The worm menu is drawn from a *catalogue* rather than from the deck, so sharing the
-reward hand would make authoring a worm change which cards every fight offered. The shop's shelf is
+fight just won. The essence menu is drawn from a *catalogue* rather than from the deck, so sharing the
+reward hand would make authoring an essence change which cards every fight offered. The shop's shelf is
 a third list on a third schedule, and the same argument separates it from both.
 
 **Tower layout draws no randomness.** It is fixed at 8 floors × 3 fights, endless later.

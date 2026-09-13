@@ -44,7 +44,7 @@ func TestTheShelfHoldsThreeRelicsTheRunIsNotWearing(t *testing.T) {
 }
 
 func TestTheSameFightWalksIntoTheSameShop(t *testing.T) {
-	// **Per fight, like the opponent and the worm offer**, so a defeat and a retry meet the same
+	// **Per fight, like the opponent and the essence offer**, so a defeat and a retry meet the same
 	// shelf rather than rerolling it. The stream is what makes that true; this is what says so.
 	first := shelfKeys(dealShelfFor(testRun()))
 	again := shelfKeys(dealShelfFor(testRun()))

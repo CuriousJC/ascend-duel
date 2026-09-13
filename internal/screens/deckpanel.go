@@ -4,7 +4,7 @@ package screens
 //
 // It was the combat screen's own overlay until 2026-08-22 — drawn and hit-tested off
 // `CombatScene`'s three piles, so no other scene could show it. The reward screen and the shop
-// both want it, for the same reason and behind the same kind of button: a player choosing a worm
+// both want it, for the same reason and behind the same kind of button: a player choosing an essence
 // or a relic is making a decision about a deck, and being unable to look at that deck while
 // deciding is the one thing this panel exists to fix.
 //
@@ -73,7 +73,7 @@ type deckContents struct {
 //
 // **It reads `Session.Deck` rather than `FightDeck`**, which is the difference between what you
 // own and what a flip relic would deal you next fight. This panel answers the first question — it
-// is what a worm is about to edit and what a relic is being bought against.
+// is what an essence is about to edit and what a relic is being bought against.
 func ownedContents(gs *state.GlobalState) deckContents {
 	d := deckContents{run: gs.Run}
 	if gs.Run != nil {
@@ -88,7 +88,7 @@ func ownedContents(gs *state.GlobalState) deckContents {
 // ownedOf is a card as the run owns it: what it was before a demoting or flipping relic got to it.
 //
 // **The card itself when there is no original to find**, which covers a panel with no run behind
-// it, a card with no identity, and a card whose original a worm has since eaten. Drawing the card
+// it, a card with no identity, and a card whose original an essence has since eaten. Drawing the card
 // actually in hand is the honest answer to all three.
 func (d deckContents) ownedOf(c combat.Card) combat.Card {
 	if d.run == nil {

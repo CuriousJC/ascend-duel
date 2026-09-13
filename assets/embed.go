@@ -167,17 +167,17 @@ var bossPortraits embed.FS
 //go:embed relic/*.png
 var relicArt embed.FS
 
-// The worm faces, the same way and for the same reason. `worm/default-worm.png` is what a worm
+// The essence faces, the same way and for the same reason. `essence/default-essence.png` is what an essence
 // with no Art of its own draws — **a copy of the relic's default rather than a share of it**
 // *(owner's call, 2026-08-22)*: two files that happen to look alike today are two files that can
 // be replaced one at a time.
 //
-//go:embed worm/*.png
-var wormArt embed.FS
+//go:embed essence/*.png
+var essenceArt embed.FS
 
-// The parasite faces, a family of their own as of 2026-09-12. **They wore the worm's placeholder
-// until then**, and the same argument that split the worm's off the relic's splits this off the
-// worm's: the day either catalogue gets art, one shared picture is a page where a drawn worm and
+// The parasite faces, a family of their own as of 2026-09-12. **They wore the essence's placeholder
+// until then**, and the same argument that split the essence's off the relic's splits this off the
+// essence's: the day either catalogue gets art, one shared picture is a page where a drawn essence and
 // an undrawn parasite look identical, and a backlog you cannot see is a backlog nobody clears.
 //
 //go:embed parasite/*.png
@@ -238,7 +238,7 @@ func LoadAssets() map[string]*ebiten.Image {
 	// LoadImageData instead — and decoding 96 of them here at startup would cost about
 	// 20 MB of resident memory for pictures most of which no run ever shows.
 	//
-	// **The relic and worm art joined them on 2026-09-11**, having been decoded here as well as
+	// **The relic and essence art joined them on 2026-09-11**, having been decoded here as well as
 	// handed over as bytes. Nothing ever read the decoded copy — every caller goes through
 	// `screens.artwork`, which decodes out of `ImageData` and caches — and full-bleed art is
 	// authored at 1060x1484, which is 6 MB of RGBA each. Fifteen of those is ninety megabytes
@@ -283,7 +283,7 @@ func LoadImageData() map[string][]byte {
 	// The four families read out of an embedded directory rather than listed one by one. See
 	// embedFamily, and the //go:embed lines above for what each key ends up being.
 	embedFamily(images, relicArt, "relic")
-	embedFamily(images, wormArt, "worm")
+	embedFamily(images, essenceArt, "essence")
 	embedFamily(images, parasiteArt, "parasite")
 	embedFamily(images, portraits, "enemy")
 	embedFamily(images, bossPortraits, "boss")
@@ -325,7 +325,7 @@ func LoadImageData() map[string][]byte {
 // writes in its Portrait field, and `relic/fire.png` is `fire`.
 //
 // **Four directories read the same way, so it is one function** *(2026-09-11)*. It was two
-// hand-written walks for the two portrait families; the relic and worm art joined them and a
+// hand-written walks for the two portrait families; the relic and essence art joined them and a
 // third and fourth copy of the same eight lines is how one of them comes to skip a file or key
 // it differently.
 //

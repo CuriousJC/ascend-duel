@@ -136,7 +136,7 @@ func TestASealedGoodCostsWhatItSays(t *testing.T) {
 	// and a test that assumed an empty one would be pinning `startingVitae` by accident.
 	s := New(nil)
 	s.SpendVitae(s.Vitae())
-	s.AddVitae(BagPrice() + CanPrice())
+	s.AddVitae(BagPrice() + VialPrice())
 	start := s.Vitae()
 
 	if !s.BuyBag() {
@@ -145,8 +145,8 @@ func TestASealedGoodCostsWhatItSays(t *testing.T) {
 	if got, want := s.Vitae(), start-BagPrice(); got != want {
 		t.Errorf("the purse is %d after a bag, want %d", got, want)
 	}
-	if !s.BuyCan() {
-		t.Fatal("the can was refused with the purse still covering it")
+	if !s.BuyVial() {
+		t.Fatal("the vial was refused with the purse still covering it")
 	}
 	if got := s.Vitae(); got != 0 {
 		t.Errorf("the purse is %d after both, want 0", got)

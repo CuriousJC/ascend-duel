@@ -138,7 +138,7 @@ type RunSnapshot struct {
 	Spoils SpoilsSnapshot `json:"spoils"`
 
 	// NextCardID is the identity counter. **It is saved rather than recomputed from the deck's
-	// highest id**, because the counter only ever goes up: a card removed by a worm must not have
+	// highest id**, because the counter only ever goes up: a card removed by an essence must not have
 	// its number handed out again to a card added later, and the highest surviving id has forgotten
 	// that the removed one existed.
 	NextCardID int `json:"nextCardID"`
@@ -227,7 +227,7 @@ type CardSnapshot struct {
 	// Element is the element's name.
 	Element string `json:"element"`
 
-	// CostDelta and AmountPct are the per-card modifiers a worm writes, with zero meaning
+	// CostDelta and AmountPct are the per-card modifiers an essence writes, with zero meaning
 	// unmodified. Omitted when empty, so an unaltered deck reads as a plain list.
 	CostDelta int `json:"costDelta,omitempty"`
 	AmountPct int `json:"amountPct,omitempty"`

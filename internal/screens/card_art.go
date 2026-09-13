@@ -566,23 +566,23 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 	return c.Label(), c.Category().String(), c.Form().String(), c.Damage(dmg), c.Cost()
 }
 
-// wormSpec is a worm drawn as a card: a name, a line of what it does, and the colour of whatever
+// essenceSpec is an essence drawn as a card: a name, a line of what it does, and the colour of whatever
 // it grants.
 //
 // **It borrows `cards.Hand` at the call site rather than taking a style of its own**, because a
-// worm has no cost and no form and that style draws both as nothing — no dashes for a zero cost,
+// essence has no cost and no form and that style draws both as nothing — no dashes for a zero cost,
 // no mark for FormNone. What is left is exactly the name and the text, which is the whole of
-// what a worm has to say. A style of its own is what this wants the day a worm has art.
+// what an essence has to say. A style of its own is what this wants the day an essence has art.
 //
-// **The picture comes off the record** *(2026-09-12)*, through `data.WormData.ArtKey`, which is
-// already resolved by the time a `session.Worm` exists — so a worm nobody has drawn wears the
+// **The picture comes off the record** *(2026-09-12)*, through `data.EssenceData.ArtKey`, which is
+// already resolved by the time a `session.Essence` exists — so an essence nobody has drawn wears the
 // placeholder and one that has been drawn wears its own, and this call site does not know which.
 //
-// **The border carries the element for the same reason a card's does**: an Ember Worm is red
+// **The border carries the element for the same reason a card's does**: an Ember Essence is red
 // because what it hands you is red. The ones that take a card away rather than colour it are
 // basic, which is the mid grey `cards.BorderOf` gives that element — deliberately not a fifth hue,
 // since removal is the absence of a colour rather than one of its own.
-func wormSpec(gs *state.GlobalState, w session.Worm, enabled bool) cards.Spec {
+func essenceSpec(gs *state.GlobalState, w session.Essence, enabled bool) cards.Spec {
 	return cards.Spec{
 		Name:       w.Name,
 		Form:       cards.FormNone,
@@ -609,7 +609,7 @@ func wormSpec(gs *state.GlobalState, w session.Worm, enabled bool) cards.Spec {
 //
 // **Basic, not an element.** A stone raises a rung of the ladder, and a rung is not a colour — the
 // axis a hand counts on is not one of the five. So its border is the mid grey `cards.BorderOf`
-// gives `basic`, exactly as a Devour worm's is.
+// gives `basic`, exactly as a Devour essence's is.
 func stoneSpec(gs *state.GlobalState, st session.Stone, enabled bool) cards.Spec {
 	return cards.Spec{
 		Name:       st.Name,
@@ -630,7 +630,7 @@ func stoneLine(st session.Stone) string {
 	return fmt.Sprintf("%s\n+%d", st.Text, session.StoneWorth(st.Hand))
 }
 
-// goodSpec is one of the shop's two sealed goods as a card: the bag of rocks, or the can of worms.
+// goodSpec is one of the shop's two sealed goods as a card: the bag of rocks, or the vial of essence.
 //
 // **A sealed good is a card that says what is inside without saying which.** The name and the line
 // under it are the whole of what a player can know before paying, which is the mechanic rather
@@ -638,7 +638,7 @@ func stoneLine(st session.Stone) string {
 // nothing about the four.
 //
 // **They borrow their own catalogue's picture**: the bag draws the boulder every stone card draws,
-// the can the worm catalogue's default face, the bucket the parasite catalogue's. A picture of
+// the vial the essence catalogue's default face, the bucket the parasite catalogue's. A picture of
 // their own would be a third thing to recognise for no gain — what is in the good is exactly what
 // the picture shows. See goodArt, which is where the three are chosen.
 func goodSpec(gs *state.GlobalState, name, line string, art image.Image, enabled bool) cards.Spec {

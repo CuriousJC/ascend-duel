@@ -9,7 +9,7 @@ package screens
 // what they are derived from.
 //
 // **Read off the run, not announced by the screens** *(owner's call, 2026-09-12)*. The obvious
-// version is a call beside every commit — the worm applied, the relic bought, the stone spent, the
+// version is a call beside every commit — the essence applied, the relic bought, the stone spent, the
 // card taken — and that is a list a new mechanic gets left off, silently, because a missing
 // announcement and a deliberate silence read identically. This watches the run instead and words
 // whatever moved, which is combat_handmorph.go's rule one screen over: what changed is read off the
@@ -133,7 +133,7 @@ func sameFace(a, b combat.Card) bool {
 // cardWords is what a card is called in a sentence about the deck.
 //
 // **Not the card's title**, which is set in capitals because a card face shouts and a line in the
-// account is prose. The form is named only when a worm has moved it, since that is the one thing
+// account is prose. The form is named only when an essence has moved it, since that is the one thing
 // about an altered card the name would otherwise not say — the same gap that had an altered Crush
 // drawing a spear over the word CRUSH.
 func cardWords(c combat.Card) string {

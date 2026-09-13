@@ -18,7 +18,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `relics.json` | `LoadRelics` | the relics that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies a blow by |
-| `worms.json` | `LoadWorms` | the deck alterations offered between fights |
+| `essences.json` | `LoadEssences` | the deck alterations offered between fights |
 | `parasites.json` | `LoadParasites` | the deck alterations spent *during* a fight |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
@@ -79,7 +79,7 @@ enemies'. Eight fields:
   — has only `Copies`, so that field carries its whole deck size.
 - **Deck size is a consequence of a file you can read**: 9 attacks × 5 colours plus 2 defences × 5
   colours = **55** *(Guard went to zero copies on 2026-09-01)*. That is the deck a run *starts*
-  with — see MECHANICS.md §The deck is a starting position, because worms and relics change it.
+  with — see MECHANICS.md §The deck is a starting position, because essences and relics change it.
 - **There is no `Category` column.** Which phase a card is in falls out of the verb. Carrying both would
   let a file say a card is an attack that raises shields.
 - **`Copies` is the difficulty dial and it is sharper than it looks** — four copies of a 1 AP
@@ -196,14 +196,14 @@ deliberately not a field** — it is the tier's own figure, 1 / 2 / 3, computed 
 `internal/session/shop.go`. A record whose rarity is absent or misspelled **panics at load**, like
 every other word this file gets wrong.
 
-### Worms
+### Essences
 
-`worms.json` is **the card language pointed at a card that already exists**: a `Target` naming
+`essences.json` is **the card language pointed at a card that already exists**: a `Target` naming
 which aspect changes, and a `Value` where the target needs one. `element` takes a colour;
 `remove` and `duplicate` take none and **refuse one if it is supplied** — a record carrying a
 value nothing reads is somebody expecting a mechanic the game does not have.
 
-**Parsed and validated in `internal/session`, not in `internal/combat`.** A worm acts on the
+**Parsed and validated in `internal/session`, not in `internal/combat`.** An essence acts on the
 *run's* deck, and the rules have no deck — the who-consumes-it test again.
 
 **It carries `Family`, `Art` and `Draw`, and the engine reads none of them** *(2026-09-12)* — see
@@ -215,21 +215,21 @@ it, never something a file can assert into existence.
 
 **`cost` and `amount` are per-card**, carried on `combat.Card` as `CostDelta` and `AmountPct`, and
 their bounds live in `Card.Cost()` and `Card.Amount()`. **Form and label are still
-concept-wide**, so a worm targeting one of those would change every copy of that card in the deck —
+concept-wide**, so an essence targeting one of those would change every copy of that card in the deck —
 make the argument in MECHANICS.md again before adding one.
 
-**`amount` reaches every card with one worm**, because what the figure means depends on the verb.
+**`amount` reaches every card with one essence**, because what the figure means depends on the verb.
 That is the card language paying off, and it is the shape to reach for before adding a target.
 
 ### The three fields no catalogue's rules read
 
 **`Family`, `Art` and `Draw` are authored, ignored, and read only by a review sheet.** They landed
-on `relics.json` first and were taken to `worms.json` and `parasites.json` on 2026-09-12;
+on `relics.json` first and were taken to `essences.json` and `parasites.json` on 2026-09-12;
 `enemies.json` and `bosses.json` carry `Family` and `Draw` without an `Art`, because a portrait
 key is what those two already have.
 
 - **`Family` is the motif a record was authored beside**, and it is what its sheet groups by —
-  "Elemental worms", "Concept swaps", "Slimes", "Stairway keepers". It is **authored rather than
+  "Elemental essences", "Concept swaps", "Slimes", "Stairway keepers". It is **authored rather than
   derived** for the argument `RelicData.Family` records: nearly every value is implied by the
   record's own rules, so a derived grouping would reproduce it almost exactly, and what an authored
   one buys is a name to read instead of a signature to decode. **It is not the `CostTier` mistake**,
@@ -237,7 +237,7 @@ key is what those two already have.
   and no test fails**, so re-read the block when a record's rules change.
 - **`Art` is an `assets.LoadImageData` key**, and **empty means the catalogue's default face**.
   Every catalogue that has one exposes an `ArtKey()` on its record — `DefaultRelicArt`,
-  `DefaultWormArt`, `DefaultParasiteArt` — so the fallback is in `data/` and not in a screen: one
+  `DefaultEssenceArt`, `DefaultParasiteArt` — so the fallback is in `data/` and not in a screen: one
   that lives in `internal/screens` is one the review tools do not have.
 - **`Draw` is the subject paragraph an art generator is given**, one sentence saying what the thing
   *is* and what it is doing. The *generic* prompt is `docs/art/card_art_prompt.MD` and is about no
@@ -245,17 +245,17 @@ key is what those two already have.
   the backlog each sheet marks in pink. **Every enemy and boss `Draw` reads `TO BE DETERMINED`**:
   those portraits are licensed art rather than generated pictures, so the field is a seat rather
   than a backlog.
-- **`go run ./tools/relicart -kind relic|worm|parasite`** files a generated picture into any of the
+- **`go run ./tools/relicart -kind relic|essence|parasite`** files a generated picture into any of the
   three: reduce to the card's size, commit under the family's asset directory, write `Art` on the
   record.
 
 ### Stones
 
-`stones.json` is **the worms' shape pointed at the hand ladder instead of at a card**: a record
+`stones.json` is **the essences' shape pointed at the hand ladder instead of at a card**: a record
 names a rung by its `hands.json` key, and using one raises that rung's multiplier by a tenth of the
 catalogue figure for the rest of the run.
 
-**Parsed and validated in `internal/session`, like the worms and for the same reason** — a stone is
+**Parsed and validated in `internal/session`, like the essences and for the same reason** — a stone is
 held by a *run*. `internal/combat` owns the arithmetic and the seat a count sits in
 (`combat/stone.go`), because what a rung pays is a rule.
 
@@ -418,8 +418,8 @@ The data is about to grow three ways at once, which is why this was carved out o
 - **More relics.** The grammar is built and seventeen are authored; growing the *vocabulary* — a new
   moment or a new effect verb — is a Go change, and is meant to be. Buying and selling landed on
   2026-08-21, so a new record needs a `Rarity` as well as its rules.
-- **More worms.** `worms.json` exists and spans seven targets. Growing it is one record each;
-  growing the *target vocabulary* is not, and MECHANICS.md says why. `go run ./tools/wormsheet` is
+- **More essences.** `essences.json` exists and spans seven targets. Growing it is one record each;
+  growing the *target vocabulary* is not, and MECHANICS.md says why. `go run ./tools/essencesheet` is
   what the catalogue is read on.
 - **Brands** — permanent for the run, altering the container where relics alter the contents. The
   mechanic is decided in `MECHANICS.md`; there is no `brands.json` and no acquisition.

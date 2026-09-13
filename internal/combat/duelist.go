@@ -226,7 +226,7 @@ func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 // ever one.
 type PendingDefend struct {
 	// Card is the whole card rather than its concept, **because what a defence is worth is a
-	// property of the card** *(2026-08-17)*: a worm can scale one Defend without touching the
+	// property of the card** *(2026-08-17)*: an essence can scale one Defend without touching the
 	// others. Storing the ID lost that the moment it was raised.
 	Card Card
 }

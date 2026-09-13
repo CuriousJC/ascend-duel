@@ -282,7 +282,7 @@ func TestFloorReachedIsAThreshold(t *testing.T) {
 	}
 }
 
-// TestCardAlteredMatchesOnTheResultingCard, not on the worm. Several worms can arrive at a Flinch
+// TestCardAlteredMatchesOnTheResultingCard, not on the essence. Several essences can arrive at a Flinch
 // and the achievement is about the card that came out.
 func TestCardAlteredMatchesOnTheResultingCard(t *testing.T) {
 	found := false
@@ -465,8 +465,8 @@ func TestAnAxisReadsTheSameWayTheHandMatcherDoes(t *testing.T) {
 }
 
 // **A cost clause reads the card's cost, not its concept's** *(2026-09-09)*. That is what makes
-// godslayer true of five promoted Skewers and false of five Impales a Whetworm has made cheap — the
-// achievement is about what the turn actually cost, and Card.Cost is where a worm's CostDelta lands.
+// godslayer true of five promoted Skewers and false of five Impales a Hone essence has made cheap — the
+// achievement is about what the turn actually cost, and Card.Cost is where an essence's CostDelta lands.
 func TestACostClauseReadsTheCardRatherThanTheConcept(t *testing.T) {
 	turn := func(delta int) []combat.Card {
 		out := make([]combat.Card, 0, 5)
@@ -493,10 +493,10 @@ func TestACostClauseReadsTheCardRatherThanTheConcept(t *testing.T) {
 		t.Error("five plain Impales are five 4 AP attacks of one card and must earn godslayer")
 	}
 	if earned(turn(-1)) {
-		t.Error("five Impales a worm made 3 AP are not five 4 AP attacks")
+		t.Error("five Impales an essence made 3 AP are not five 4 AP attacks")
 	}
 
-	// And the other direction: a Skewer a worm made dearer *is* a 4 AP attack.
+	// And the other direction: a Skewer an essence made dearer *is* a 4 AP attack.
 	lunges := make([]combat.Card, 0, 5)
 	for _, e := range []combat.Element{
 		combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Arcane,
@@ -506,7 +506,7 @@ func TestACostClauseReadsTheCardRatherThanTheConcept(t *testing.T) {
 		lunges = append(lunges, c)
 	}
 	if !earned(lunges) {
-		t.Error("five Skewers a worm made 4 AP are five 4 AP attacks of one card")
+		t.Error("five Skewers an essence made 4 AP are five 4 AP attacks of one card")
 	}
 }
 

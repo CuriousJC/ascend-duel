@@ -4,7 +4,7 @@ Ascending Duel is a roguelike game where you must duel up a tower and build your
 
 It is still a prototype, but the shape of a run is there. A duel is a hand of cards, an
 action-point budget and an order you choose; cards that match make a *hand*, and a hand
-multiplies the whole blow. Win and you take a **worm** that rewrites a card in your deck,
+multiplies the whole blow. Win and you choose an **essence** to alter a card in your deck,
 spend **vitae** in the shop on a **relic** off a shelf of three, and climb — eight floors of
 three rooms, every third one a named stairway boss. Picking the room ahead is the one
 station of that loop still to be built.
@@ -52,13 +52,13 @@ nothing.
 
 **Duelist cards** in four forms — stab, slash, crush and defend — across five elements.
 **Hands** on three axes, concept, form and element, wearing poker's names. **Relics**, bought
-and sold in the shop and priced by rarity. **Worms**, each rewriting one card in your deck
-after a win. **Creatures** sorted into floor bands, each with its own deck, and **bosses**
-guarding every stairway. Every one of those is a file in [data/](data/), and they are still
-being authored.
+and sold in the shop and priced by rarity. **Essences**, chosen after a
+win to alter one card in your deck. **Creatures** sorted into floor bands, each with its
+own deck, and **bosses** guarding every stairway. Every one of those is a file in
+[data/](data/), and they are still being authored.
 
 **Every catalogue is browsable without launching the game.** [docs/sheets/](docs/sheets/)
-holds a rendered page per catalogue — every card, relic, worm, hand, creature and boss, as
+holds a rendered page per catalogue — every card, relic, essence, hand, creature and boss, as
 the game actually draws them, with the rules that fire beside the text a player reads.
 Open [docs/sheets/index.html](docs/sheets/index.html).
 

@@ -73,11 +73,11 @@ const ground = "#a8bcd4"
 // placeholderArt is the face this sheet gives anything it is only naming — a parasite, a stone, a
 // key the catalogues do not answer to.
 //
-// **It is the worm catalogue's own default rather than a fourth picture**, and it is spelled by
-// reading data.DefaultWormArt rather than by writing the string again: a page that showed a
+// **It is the essence catalogue's own default rather than a fourth picture**, and it is spelled by
+// reading data.DefaultEssenceArt rather than by writing the string again: a page that showed a
 // picture no catalogue uses would be inventing art in a review tool. This sheet is about what a
 // fixture *plugs in*, so a face here is a label, not a drawing to judge.
-const placeholderArt = data.DefaultWormArt
+const placeholderArt = data.DefaultEssenceArt
 
 // stripGap is the space between two cards in a row, and stripSplit the wider one between a row's
 // sections. Same two figures tools/roster uses, for the same reason: a strip has to say where one
@@ -292,7 +292,7 @@ func wornSpecs(r record) section {
 	}
 
 	// **The parasites and the stones are drawn in the relic style too**, because a strip is one
-	// style wide: WormStyle and RelicStyle are the same size, and mixing them in a row would be the
+	// style wide: EssenceStyle and RelicStyle are the same size, and mixing them in a row would be the
 	// only place in the project two card formats stand side by side pretending to be a set.
 	if len(r.Parasites) > 0 {
 		s.splits = append(s.splits, len(s.specs))

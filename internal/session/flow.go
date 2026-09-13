@@ -26,7 +26,7 @@ const (
 	// PhaseFight is the duel. A run opens here — the first thing that happens is a fight.
 	PhaseFight Phase = iota
 
-	// PhaseReward is the worm and the card it eats: the post-battle screen.
+	// PhaseReward is the essence and the card it eats: the post-battle screen.
 	PhaseReward
 
 	// PhaseShop is spending what the fight paid: relics bought and sold with vitae. Built on

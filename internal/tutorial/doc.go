@@ -21,7 +21,7 @@
 //
 // A step advances when something happens in the game. The obvious way to do that is an event call
 // at every site where something can happen — `tut.Did("duel-pressed")` in the DUEL! handler, one
-// in the worm handler, one per screen — and it is the wrong way, because the failure of a
+// in the essence handler, one per screen — and it is the wrong way, because the failure of a
 // forgotten call is a tutorial that silently stops advancing.
 //
 // So the traffic goes the other way. Each scene publishes a [Facts] once a frame, describing what

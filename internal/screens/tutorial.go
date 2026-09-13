@@ -339,9 +339,9 @@ func (t *tutorialOverlay) placeButtons(step tutorial.Step) {
 //
 // **A step whose anchor rules out every seat gets the one that covers least of it** *(owner's call,
 // 2026-09-06)*, rather than the last seat in the list. The reward screen is what wanted it: its
-// worm anchor covers the prizes *and* the row of cards they are aimed at — the whole middle of the
+// essence anchor covers the prizes *and* the row of cards they are aimed at — the whole middle of the
 // screen — so every seat overlaps, and falling through to dead centre put the bubble squarely over
-// the two worms the step was telling the player to choose between. Top-centre misses by 27 pixels.
+// the two essences the step was telling the player to choose between. Top-centre misses by 27 pixels.
 // A bubble overlapping a spotlit anchor is legible where no bubble at all would be a lesson with no
 // words, so the fallback still places one; it just stops picking the worst available spot on
 // purpose.

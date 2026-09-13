@@ -3,7 +3,7 @@ package screens
 // The potions pane, and the brand seat beside it.
 //
 // **A potion is the one thing in the shop that changes the duelist** *(owner's call, 2026-09-06)*.
-// A relic is worn, a stone raises a rung, a worm eats a card, a parasite waits in a bucket; a potion
+// A relic is worn, a stone raises a rung, an essence eats a card, a parasite waits in a bucket; a potion
 // is drunk on the spot and moves one of the three figures the fighter is made of. See
 // `internal/session/potion.go`, which owns what each one does and refuses a record the rules cannot
 // apply.
@@ -49,7 +49,7 @@ const (
 
 	// brandArtKey is the placeholder picture: the relic catalogue's own fallback. **A relic's
 	// default rather than a drawing of its own**, on the argument the bucket already borrowed the
-	// worm's: a placeholder something else already wears is better than a blank face, and it will
+	// essence's: a placeholder something else already wears is better than a blank face, and it will
 	// be replaced by a key on a record the day brands become one.
 	brandArtKey = "default-relic"
 )
@@ -75,7 +75,7 @@ func (s *ShopScene) drawPotions(gs *state.GlobalState, screen *ebiten.Image) {
 		}
 
 		lit := gs.Run != nil && gs.Run.CanDrink(p.Record)
-		blitCard(gs, screen, at.Min, potionSpec(gs, p, lit), cards.WormStyle)
+		blitCard(gs, screen, at.Min, potionSpec(gs, p, lit), cards.EssenceStyle)
 		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", p.Price), lit)
 	}
 }
@@ -86,7 +86,7 @@ func (s *ShopScene) drawBrand(gs *state.GlobalState, screen *ebiten.Image) {
 	drawShopPaneBack(gs, screen, shopPaneBrand)
 
 	at := brandSeat(gs)
-	blitCard(gs, screen, at.Min, brandSpec(gs), cards.WormStyle)
+	blitCard(gs, screen, at.Min, brandSpec(gs), cards.EssenceStyle)
 	s.figure(gs, screen, at, fmt.Sprintf("%d vitae", brandPrice), false)
 }
 

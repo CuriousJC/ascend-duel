@@ -22,7 +22,7 @@ import (
 // Start begins a real run: the authored deck, and a climb rolled from the run's own seed.
 //
 // **It is the constructor the game uses; `New` is the one tests use.** New takes a deck and
-// builds a run with no climb in it, which is right for a test about a purse or a worm and wrong
+// builds a run with no climb in it, which is right for a test about a purse or an essence and wrong
 // for a game — an opponent has to come from somewhere. Keeping them separate is what stops a test
 // deck quietly becoming a way to start a run.
 //
@@ -34,7 +34,7 @@ func Start(enemies map[string]data.EnemyData, bosses map[string]data.BossData, r
 	deck := StartingDeck()
 	if StartingDeckList != nil {
 		// A chosen deck, for a fixture or a lesson. Copied, so the caller's slice cannot be
-		// aliased by a run that then edits it with a worm.
+		// aliased by a run that then edits it with an essence.
 		deck = append([]combat.Card(nil), StartingDeckList...)
 	}
 	s := New(deck)

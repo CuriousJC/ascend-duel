@@ -53,7 +53,7 @@ func MatchValue(c combat.Card, a combat.Axis) (int, bool) { return combat.MatchV
 // No attack concept ships more than its four elemental copies, so a Card Five of a Kind cannot be
 // dealt — and this used to report that by coming back empty, which cost every caller a branch and
 // put an apology on the panel where a picture belongs. **Whether a rung is reachable today is a
-// fact about the deck, not about the ladder**: the rung exists, it pays what it pays, and a worm
+// fact about the deck, not about the ladder**: the rung exists, it pays what it pays, and an essence
 // or a shop card could make it reachable tomorrow. So the illustration is always drawn, and a
 // repeated card is the honest way to draw a hand of five from four.
 //

@@ -106,7 +106,7 @@ type deckView struct {
 	clear       *models.Button
 
 	// The three blocks. **Keyed maps rather than slices**, because the cost block's members are a
-	// function of the deck rather than of this file — a worm that invents a price has to get a
+	// function of the deck rather than of this file — an essence that invents a price has to get a
 	// button without an edit here.
 	forms    map[combat.Form]*models.Button
 	costs    map[int]*models.Button
@@ -399,7 +399,7 @@ var deckColumnInk = color.RGBA{R: 236, G: 236, B: 240, A: 255}
 var deckColumnFadedInk = color.RGBA{R: 130, G: 130, B: 144, A: 255}
 
 // maxFilterCost is how far up the cost axis the column will look. **A ceiling on the walk, not a
-// cap on a card**: a card declares its own cost and a stack of worms could in principle push one
+// cap on a card**: a card declares its own cost and a stack of essences could in principle push one
 // past this, at which point it would be filterable by form and element and missing from the AP
 // block. Ten is far enough above the four the game ships that reaching it means something else is
 // wrong.

@@ -479,7 +479,7 @@ func multiplierText(amount int) string {
 // round* — "attacks with a heavy strike" — and this is a rules description read while deciding
 // whether to play the thing.
 // **It reads the card, not the concept** *(2026-08-17)*. Every figure printed here comes from
-// `Card.Amount()`, which is where a worm's scaling is applied — so an altered Defend says the
+// `Card.Amount()`, which is where an essence's scaling is applied — so an altered Defend says the
 // percentage it actually cuts and an altered shield card says how many it actually raises. The wording was
 // already a template over the value; what changed is which value it reads. A card whose face
 // disagreed with its behaviour would be the worst thing an alteration mechanic could produce.
@@ -487,7 +487,7 @@ func multiplierText(amount int) string {
 // **And it reads the holder's relics** *(2026-08-21)*. A slash card in the hands of someone wearing
 // Keen said "Slashes for 2x DMG" and dealt four times its owner's DMG, because the multiplier is the
 // card's and the doubling is the relic's, applied later in `Duelist.CardDamage`. The face said a true
-// thing about the card and a false thing about the attack, which is the same failure the worm
+// thing about the card and a false thing about the attack, which is the same failure the essence
 // scaling above was fixed for.
 //
 // **It hands back the run of text a relic changed, not a flag** *(2026-08-21)*. The caller colours
@@ -507,7 +507,7 @@ func cardEffect(card combat.Card) string {
 		return "SHIELD\n" + strconv.Itoa(amount)
 	}
 
-	// **The form is read off the card, not off its concept** *(2026-09-12)*. A worm that turns a
+	// **The form is read off the card, not off its concept** *(2026-09-12)*. An essence that turns a
 	// Crush into a Stab writes `FormOverride`, which `Card.Form` honours and `Concept.Form` knows
 	// nothing about — so the corner mark became a spear while the line under it still read CRUSH.
 	// Same failure the figures above were fixed for, one field over.

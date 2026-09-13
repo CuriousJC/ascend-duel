@@ -149,8 +149,8 @@ func (c clause) holds(turn []combat.Card) bool {
 
 // costs narrows a selection to the cards of one AP, or leaves it alone when the clause named none.
 //
-// **`Card.Cost()` rather than the concept's figure**, so a worm's CostDelta is read — which is what
-// makes "five 4 AP attacks" true of five promoted Skewers and false of five Impales a Whetworm has
+// **`Card.Cost()` rather than the concept's figure**, so an essence's CostDelta is read — which is what
+// makes "five 4 AP attacks" true of five promoted Skewers and false of five Impales a Hone essence has
 // made cheap. See data.ClauseData.Cost.
 func (c clause) costs(cards []combat.Card) []combat.Card {
 	if c.cost == nil {

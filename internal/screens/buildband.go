@@ -5,7 +5,7 @@ package screens
 // The combat screen has drawn this since the character block became a card — a duelist card in the
 // top-left corner and the worn relics in a row beside it. **The reward screen wants the same thing**
 // *(owner's call, 2026-08-22)*: the payout it narrates lands on the purse written on that card, and
-// choosing a worm is a choice about a deck you can only judge against the build you are holding.
+// choosing an essence is a choice about a deck you can only judge against the build you are holding.
 //
 // **The shop draws it too** *(2026-08-22)*, and it is what took the shop's second relic row away:
 // with the band up, a separate "worn" row was the same five relics drawn twice. The shop calls the

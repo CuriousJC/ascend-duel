@@ -344,9 +344,9 @@ func TestEveryStatusTheRulesHoldFitsTheDuelistArray(t *testing.T) {
 	}
 }
 
-func TestEveryWormTextFitsItsCard(t *testing.T) {
+func TestEveryEssenceTextFitsItsCard(t *testing.T) {
 	// **The gap this closes** *(2026-08-23)*: the two tests above hold the *duelist* cards against
-	// their band, and nothing held a worm against WormStyle's. A worm's line is the whole of what
+	// their band, and nothing held an essence against EssenceStyle's. An essence's line is the whole of what
 	// the card says, and it was one string away from overrunning — "make one card LIGHTNING" is
 	// 135px in a 142px band — with nothing to fail if the next element name were longer.
 	//
@@ -362,10 +362,10 @@ func TestEveryWormTextFitsItsCard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	st := cards.WormStyle
+	st := cards.EssenceStyle
 	width := st.Width - st.TextColumnLeft - st.TextInset
 
-	for _, w := range session.Worms() {
+	for _, w := range session.Essences() {
 		lines, err := cards.WrapText(f, st.TextSize, w.Text, width)
 		if err != nil {
 			t.Fatalf("%s: %v", w.Record, err)
@@ -387,9 +387,9 @@ func TestEveryWormTextFitsItsCard(t *testing.T) {
 	}
 }
 
-func TestTheElementalWormsAllBreakInTheSamePlace(t *testing.T) {
+func TestTheElementalEssencesAllBreakInTheSamePlace(t *testing.T) {
 	// **Why the authored break exists**, pinned so it cannot be quietly undone by deleting a `\n`
-	// from worms.json. The four recolouring worms differ only in the element they name, and the
+	// from essences.json. The four recolouring essences differ only in the element they name, and the
 	// names differ in width — FIRE sits comfortably on the line where LIGHTNING all but fills it —
 	// so left to the measurer the four read as four layouts of one card.
 	ttf := assets.LoadFontData()["kubasta"]
@@ -401,11 +401,11 @@ func TestTheElementalWormsAllBreakInTheSamePlace(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	st := cards.WormStyle
+	st := cards.EssenceStyle
 	width := st.Width - st.TextColumnLeft - st.TextInset
 
 	want := 0
-	for _, w := range session.Worms() {
+	for _, w := range session.Essences() {
 		if w.Target != session.TargetElement {
 			continue
 		}
@@ -417,7 +417,7 @@ func TestTheElementalWormsAllBreakInTheSamePlace(t *testing.T) {
 			want = len(lines)
 		}
 		if len(lines) != want {
-			t.Errorf("%s draws on %d lines where another elemental worm draws on %d: %q",
+			t.Errorf("%s draws on %d lines where another elemental essence draws on %d: %q",
 				w.Record, len(lines), want, w.Text)
 		}
 		if len(lines) < 2 {
@@ -426,7 +426,7 @@ func TestTheElementalWormsAllBreakInTheSamePlace(t *testing.T) {
 		}
 	}
 	if want == 0 {
-		t.Error("no worm targets an element — this test is checking nothing")
+		t.Error("no essence targets an element — this test is checking nothing")
 	}
 }
 
@@ -784,7 +784,7 @@ func TestEveryBleedingCardArtIsTheCardsOwnSize(t *testing.T) {
 	// 4.9 MB of sheets as a cost worth managing. At the card's size it is about 57 KB each.
 	//
 	// So: keep the generator's output in `.scratch/relic-art`, and commit the 200x280 reduction.
-	for _, st := range []cards.Style{cards.RelicStyle, cards.WormStyle} {
+	for _, st := range []cards.Style{cards.RelicStyle, cards.EssenceStyle} {
 		if !st.ArtBleed {
 			t.Fatal("a style in this list no longer bleeds — the test is checking the wrong thing")
 		}
@@ -792,7 +792,7 @@ func TestEveryBleedingCardArtIsTheCardsOwnSize(t *testing.T) {
 
 	w, h := cards.RelicStyle.Width, cards.RelicStyle.Height
 	for key, raw := range assets.LoadImageData() {
-		if !strings.HasSuffix(key, "-ring") && !strings.HasSuffix(key, "-worm") {
+		if !strings.HasSuffix(key, "-ring") && !strings.HasSuffix(key, "-essence") {
 			continue
 		}
 		cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))

@@ -141,7 +141,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **8 floors, 3 fights each — 24 fights to the top.** The layout is fixed, not
         generated. Only the enemies and the offers are random.
       - **A binary loot choice after every fight.** Two options, pick one. **Built** as
-        `PhaseReward` — the worm and the card it eats.
+        `PhaseReward` — the essence and the card it eats.
       - **A binary floor choice after the last fight on a floor**, on top of that fight's
         loot choice. **`PhaseChoice` is the station and it has no screen**, so `advanceRun`
         walks past it.

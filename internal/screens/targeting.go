@@ -4,7 +4,7 @@ package screens
 //
 // **The gesture reversed on 2026-09-06** *(owner's call)*. It used to be arm-then-aim — open a
 // dialog, click the parasite, then click the cards it eats — and it is now select-then-apply, on
-// the row of cards the player is already looking at. The worm offer follows the same order, so
+// the row of cards the player is already looking at. The essence offer follows the same order, so
 // there is one way to point a consumable at a card anywhere in the game.
 //
 // **What it costs, said out loud.** On the combat screen a selected card is also a card queued for
@@ -23,8 +23,8 @@ package screens
 //
 // **The count is the record's and the legality is the run's.** Neither is this file's to decide —
 // `session.Parasite.Count` says how many cards, `Session.CanApplyParasite` says whether these ones
-// can take it, and a worm answers both through its own offer. What is here is the one rule that
-// joins them, so the parasite pane and the worm row cannot come to two different conclusions about
+// can take it, and an essence answers both through its own offer. What is here is the one rule that
+// joins them, so the parasite pane and the essence row cannot come to two different conclusions about
 // whether a click should be allowed.
 type consumableTarget struct {
 	// needs is how many cards must be selected. **Zero is a consumable that takes no target at

@@ -32,7 +32,7 @@ func main() {
 	trials := flag.Int("n", hands.Trials, "how many hands to deal")
 	// **-ap models a turn holding discounts, and it is a proxy rather than a stat.** Nothing in
 	// the game raises the budget; what a run buys is cheaper *cards* — a `card-cost` relic at -1,
-	// a worm's `CostDelta`, Atrophy demoting a card a rung — and a turn playing five cards each a
+	// an essence's `CostDelta`, Atrophy demoting a card a rung — and a turn playing five cards each a
 	// point cheaper spends what a five-point-larger budget would. It is exact for a discount every
 	// card in the set qualifies for and generous for one that only some do, so a number taken from
 	// a run of it is a number about a *kitted* turn and has to be labelled as one.

@@ -11,14 +11,14 @@
 // the Draw field on the same record — the catalogue's review sheet counts both and marks both.
 //
 //	go run ./tools/relicart                    # file everything in the relic inbox
-//	go run ./tools/relicart -kind worm         # the worms instead
+//	go run ./tools/relicart -kind essence         # the essences instead
 //	go run ./tools/relicart -kind parasite     # the parasites instead
 //	go run ./tools/relicart -n                 # say what would happen and touch nothing
 //	go run ./tools/relicart -blocky            # quantize to the block grid on the way down
 //
 // # Three catalogues, one command
 //
-// **Relics, worms and parasites all carry Art and Draw and all draw a full-bleed card**, so filing
+// **Relics, essences and parasites all carry Art and Draw and all draw a full-bleed card**, so filing
 // a picture is the identical four steps for each and a second command would be this file copied
 // with three strings changed. `-kind` is the parameter and `catalogues` is the whole difference:
 // an inbox, an asset directory, a JSON file, and the name of that file's record key. The name
@@ -70,11 +70,11 @@ var catalogues = map[string]catalogue{
 		json:  "data/relics.json",
 		key:   "RelicRecord",
 	},
-	"worm": {
-		inbox: filepath.Join(".scratch", "to-process-worm-art"),
-		out:   filepath.Join("assets", "worm"),
-		json:  "data/worms.json",
-		key:   "WormRecord",
+	"essence": {
+		inbox: filepath.Join(".scratch", "to-process-essence-art"),
+		out:   filepath.Join("assets", "essence"),
+		json:  "data/essences.json",
+		key:   "EssenceRecord",
 	},
 	"parasite": {
 		inbox: filepath.Join(".scratch", "to-process-parasite-art"),
@@ -108,7 +108,7 @@ func main() {
 		log.Fatalf("-kind %q is not one of %s", *kind, kindList())
 	}
 	// **The three directory flags default to the catalogue's own and still override**, so the
-	// everyday call is `-kind worm` and a one-off batch sitting somewhere else is still one flag
+	// everyday call is `-kind essence` and a one-off batch sitting somewhere else is still one flag
 	// away. An empty string is the sentinel rather than the catalogue being copied into the flag
 	// defaults, because flag defaults are read before -kind is.
 	if *in == "" {
@@ -121,7 +121,7 @@ func main() {
 		*done = filepath.Join(".scratch", "processed-"+*kind+"s")
 	}
 
-	// **Every one of the three draws a full-bleed card at RelicStyle's size.** WormStyle is the
+	// **Every one of the three draws a full-bleed card at RelicStyle's size.** EssenceStyle is the
 	// same width and height — the two differ in the text band, not in the picture — so one target
 	// size is a fact about the card rather than a shortcut. TestEveryBleedingCardArtIsTheCardsOwnSize
 	// is what fails if that stops being true.
@@ -247,7 +247,7 @@ func writePNG(path string, img image.Image) error {
 // recordIDs is every key the catalogue's file writes.
 //
 // **Decoded into a map rather than a struct**, because the key's field name differs per catalogue
-// — RelicRecord, WormRecord, ParasiteRecord — and a struct per catalogue would be three types
+// — RelicRecord, EssenceRecord, ParasiteRecord — and a struct per catalogue would be three types
 // that exist to hold one string each. Everything else in the record is ignored here.
 func recordIDs(cat catalogue) (map[string]bool, error) {
 	raw, err := os.ReadFile(cat.json)
@@ -275,7 +275,7 @@ func recordIDs(cat catalogue) (map[string]bool, error) {
 
 // setArt rewrites one line per record rather than re-encoding the file. data/relics.json is
 // hand-formatted — a rule's If clause sits on one line — and a round-trip through encoding/json
-// would reflow all of it, burying a six-line change in a twelve-hundred-line diff. The worm and
+// would reflow all of it, burying a six-line change in a twelve-hundred-line diff. The essence and
 // parasite files are machine-formatted today and would survive a round-trip, but one path through
 // this function is worth more than the difference.
 func setArt(cat catalogue, keys []string) error {

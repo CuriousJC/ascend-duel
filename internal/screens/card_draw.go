@@ -64,7 +64,7 @@ func drawMarkedCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	blitCard(gs, screen, at, spec, st)
 }
 
-// drawSpecCard draws a card that is not out of the deck — a prize, a relic, a worm — at hand
+// drawSpecCard draws a card that is not out of the deck — a prize, a relic, an essence — at hand
 // size. The caller has already said what it looks like.
 func drawSpecCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, spec cards.Spec) {
 	blitCard(gs, screen, at, spec, cards.Hand)
@@ -86,11 +86,11 @@ func drawRelicCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	blitCard(gs, screen, at, relicSpec(gs, r, counter, enabled, lit), cards.RelicStyle)
 }
 
-// drawWormCard draws a worm as the card it is offered as.
-func drawWormCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
-	w session.Worm, enabled bool) {
+// drawEssenceCard draws an essence as the card it is offered as.
+func drawEssenceCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+	w session.Essence, enabled bool) {
 
-	blitCard(gs, screen, at, wormSpec(gs, w, enabled), cards.WormStyle)
+	blitCard(gs, screen, at, essenceSpec(gs, w, enabled), cards.EssenceStyle)
 }
 
 // drawFlyingCard draws a card mid-journey, under whatever transform the flight has worked out
@@ -106,20 +106,20 @@ func drawFlyingCard(gs *state.GlobalState, screen *ebiten.Image, spec cards.Spec
 	screen.DrawImage(img, op)
 }
 
-// drawStoneCard draws a stone as the card it is offered as. Same style as a worm — a picture with
+// drawStoneCard draws a stone as the card it is offered as. Same style as an essence — a picture with
 // its text under it — because they are the same kind of thing to a player: one card, taken out of
 // a set, that changes the run rather than being played in it.
 func drawStoneCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	st session.Stone, enabled bool) {
 
-	blitCard(gs, screen, at, stoneSpec(gs, st, enabled), cards.WormStyle)
+	blitCard(gs, screen, at, stoneSpec(gs, st, enabled), cards.EssenceStyle)
 }
 
 // drawGoodCard draws one of the shop's two sealed goods.
 func drawGoodCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	name, line string, art image.Image, enabled bool) {
 
-	blitCard(gs, screen, at, goodSpec(gs, name, line, art, enabled), cards.WormStyle)
+	blitCard(gs, screen, at, goodSpec(gs, name, line, art, enabled), cards.EssenceStyle)
 }
 
 // marksFor is what a card in this seat is wearing, given where it is drawn.

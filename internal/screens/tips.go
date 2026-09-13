@@ -13,7 +13,7 @@ package screens
 // with no explanation is a better lie than one reading 2x, because it is believable.
 //
 // **A card's tooltip opens with a stat block rather than with the derivation** *(owner's call,
-// 2026-09-09)*, and the derivation is printed underneath it only when a relic or a worm has actually
+// 2026-09-09)*, and the derivation is printed underneath it only when a relic or an essence has actually
 // moved something. See cardTip. The block's wording lives in `internal/carddesc`, which is
 // windowless, so the review sheets print the same strings the game does.
 //
@@ -63,7 +63,7 @@ func cardTip(c actionCard, h held) (string, []string) {
 	lines := carddesc.Lines(c, h.cost, h.dmg, relicScale(c, h))
 	lines = append(lines, damageChainLines(c, h)...)
 	if c.AmountPct != 0 {
-		lines = append(lines, "a worm changed this card")
+		lines = append(lines, "an essence changed this card")
 	}
 	lines = append(lines, costTipLines(c, h)...)
 
@@ -216,7 +216,7 @@ func statusTexts() map[string]string {
 	return out
 }
 
-// **A worm has no tooltip** *(owner's call, 2026-09-05)*. The card's own face says what it does,
+// **An essence has no tooltip** *(owner's call, 2026-09-05)*. The card's own face says what it does,
 // one word to a line, and a hover repeating that sentence beside it was the same words twice.
 
 // ordinal is 1st, 2nd, 3rd — for the five positions a relic can be worn in, and nothing else. Written

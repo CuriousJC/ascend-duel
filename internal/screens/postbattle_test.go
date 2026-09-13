@@ -97,71 +97,71 @@ func TestAnEmptyRunOffersNothing(t *testing.T) {
 	}
 }
 
-// TestThePrizeRowIsTwoWorms. **The money card went on 2026-08-22** — a win pays vitae by itself
+// TestThePrizeRowIsTwoEssences. **The money card went on 2026-08-22** — a win pays vitae by itself
 // now, read out at the top of the screen — so the offer is the two creatures and nothing else, and
 // taking neither is a button rather than a third card.
-func TestThePrizeRowIsTwoWorms(t *testing.T) {
+func TestThePrizeRowIsTwoEssences(t *testing.T) {
 	ps := dealPrizes(testRun())
 
-	if len(ps) != wormsOffered {
-		t.Fatalf("offered %d prizes, want %d", len(ps), wormsOffered)
+	if len(ps) != essencesOffered {
+		t.Fatalf("offered %d prizes, want %d", len(ps), essencesOffered)
 	}
 	for _, p := range ps {
-		if p.worm.Record == "" {
-			t.Error("a prize seat is holding something that is not a worm")
+		if p.essence.Record == "" {
+			t.Error("a prize seat is holding something that is not an essence")
 		}
 	}
 }
 
-// TestTwoDistinctWormsAreOffered. Two so the choice is a comparison; distinct because being
-// offered the same worm twice is a choice that is not one, and it is a property of shuffling the
+// TestTwoDistinctEssencesAreOffered. Two so the choice is a comparison; distinct because being
+// offered the same essence twice is a choice that is not one, and it is a property of shuffling the
 // catalogue rather than drawing from it twice.
-func TestTwoDistinctWormsAreOffered(t *testing.T) {
+func TestTwoDistinctEssencesAreOffered(t *testing.T) {
 	gs := testRun()
 
-	offer := dealWorms(gs)
-	if len(offer) != wormsOffered {
-		t.Fatalf("offered %d worms, want %d", len(offer), wormsOffered)
+	offer := dealEssences(gs)
+	if len(offer) != essencesOffered {
+		t.Fatalf("offered %d essences, want %d", len(offer), essencesOffered)
 	}
 	if offer[0].Record == offer[1].Record {
 		t.Errorf("both options are %s", offer[0].Record)
 	}
 }
 
-// TestTheWormOfferIsAFunctionOfTheFight, like the cards: re-entering the screen must not reroll
+// TestTheEssenceOfferIsAFunctionOfTheFight, like the cards: re-entering the screen must not reroll
 // the reward, and the next fight must not repeat it verbatim.
-func TestTheWormOfferIsAFunctionOfTheFight(t *testing.T) {
+func TestTheEssenceOfferIsAFunctionOfTheFight(t *testing.T) {
 	gs := testRun()
 
-	first := dealWorms(gs)
-	again := dealWorms(gs)
+	first := dealEssences(gs)
+	again := dealEssences(gs)
 	if first[0].Record != again[0].Record || first[1].Record != again[1].Record {
 		t.Errorf("the same fight offered %v then %v", prizeNames(toPrizes(first)), prizeNames(toPrizes(again)))
 	}
 
 	gs.Run.WonFight(0, 0)
-	next := dealWorms(gs)
+	next := dealEssences(gs)
 	if first[0].Record == next[0].Record && first[1].Record == next[1].Record {
 		t.Errorf("fight 2 offered the same pair as fight 1: %v", prizeNames(toPrizes(next)))
 	}
 }
 
-// TestTheWormsAndTheCardsDoNotShareAStream. Adding a worm to the catalogue must not change which
+// TestTheEssencesAndTheCardsDoNotShareAStream. Adding an essence to the catalogue must not change which
 // *cards* a fight offers — that is the failure the salts exist to prevent, and it is checkable
 // here because both offers are functions of the same run and fight.
-func TestTheWormsAndTheCardsDoNotShareAStream(t *testing.T) {
+func TestTheEssencesAndTheCardsDoNotShareAStream(t *testing.T) {
 	gs := testRun()
 
-	if seeds.ForFight(gs.RunSeed, seeds.WormOffer, gs.Run.Fight()) ==
+	if seeds.ForFight(gs.RunSeed, seeds.EssenceOffer, gs.Run.Fight()) ==
 		seeds.ForFight(gs.RunSeed, seeds.RewardHand, gs.Run.Fight()) {
-		t.Error("the worm offer and the card offer are seeded identically")
+		t.Error("the essence offer and the card offer are seeded identically")
 	}
 }
 
-func toPrizes(ws []session.Worm) []prize {
+func toPrizes(ws []session.Essence) []prize {
 	out := make([]prize, 0, len(ws))
 	for _, w := range ws {
-		out = append(out, prize{worm: w})
+		out = append(out, prize{essence: w})
 	}
 	return out
 }
@@ -180,15 +180,15 @@ func sameInts(a, b []int) bool {
 
 // The reward screen puts both rows on one screen, and the two ways that goes wrong are a control
 // under the cards and a selection nobody can see. Arithmetic, so it is checkable without a window.
-func TestTheSkipButtonStandsBetweenTheWorms(t *testing.T) {
+func TestTheSkipButtonStandsBetweenTheEssences(t *testing.T) {
 	gs := testState()
-	prizes, button := wormRowSeats(gs, 2)
+	prizes, button := essenceRowSeats(gs, 2)
 
 	if len(prizes) != 2 {
 		t.Fatalf("laid out %d prize seats, want 2", len(prizes))
 	}
 	if button.Min.X < prizes[0].Max.X || button.Max.X > prizes[1].Min.X {
-		t.Errorf("the button runs %d..%d, not between worms ending at %d and starting at %d",
+		t.Errorf("the button runs %d..%d, not between essences ending at %d and starting at %d",
 			button.Min.X, button.Max.X, prizes[0].Max.X, prizes[1].Min.X)
 	}
 
@@ -200,16 +200,16 @@ func TestTheSkipButtonStandsBetweenTheWorms(t *testing.T) {
 	}
 }
 
-// **A lifted card must not reach the worms above it.** The lift is what says which card is
-// selected, and the row it lifts into is the one the worms stand in — see offerRowPct, which moved
+// **A lifted card must not reach the essences above it.** The lift is what says which card is
+// selected, and the row it lifts into is the one the essences stand in — see offerRowPct, which moved
 // to buy this clearance.
-func TestASelectedOfferCardClearsTheWormRow(t *testing.T) {
+func TestASelectedOfferCardClearsTheEssenceRow(t *testing.T) {
 	gs := testState()
-	prizes, _ := wormRowSeats(gs, 2)
+	prizes, _ := essenceRowSeats(gs, 2)
 	row := offerRowOf(gs, handSize)
 
 	if top := row.Min.Y - offerSelectedNudge; top <= prizes[0].Max.Y {
-		t.Errorf("a lifted offer card reaches y=%d, inside a worm row ending at y=%d",
+		t.Errorf("a lifted offer card reaches y=%d, inside an essence row ending at y=%d",
 			top, prizes[0].Max.Y)
 	}
 	if row.Max.Y > gs.ScreenHeight {

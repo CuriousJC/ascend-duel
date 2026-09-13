@@ -1,6 +1,6 @@
 package screens
 
-// The post-battle screen: **pick a worm, then pick the card it eats.**
+// The post-battle screen: **pick an essence, then pick the card it eats.**
 //
 // It is the first of the between-fight scenes — a shop and a room choice come after it — and all
 // of them are ordinary scenes in the registry rather than modes of the combat screen. That is
@@ -10,18 +10,18 @@ package screens
 // **It opens by reading the win out** *(2026-08-22)*. Before anything is offered, the screen types
 // what the fight paid — interest, a tenth of the life you kept, what the room is worth — and each
 // figure flies to the duelist card as its sentence lands. The build is on screen the whole time: the
-// player's card in the corner and their relics beside it, so a worm is chosen against the thing it
+// player's card in the corner and their relics beside it, so an essence is chosen against the thing it
 // would be changing. See postbattle_prose.go and buildband.go.
 //
-// **Two stages after that, worm first** *(2026-08-17)*. Two worms are drawn from the catalogue and offered
+// **Two stages after that, essence first** *(2026-08-17)*. Two essences are drawn from the catalogue and offered
 // as cards; choosing one deals a hand off the run deck to apply it to. It ran the other way round
-// first — pick a card, then say what to do to it — and the reason it turned is that the *worm* is
+// first — pick a card, then say what to do to it — and the reason it turned is that the *essence* is
 // the reward. What you were given for winning has to be the thing on the screen when you arrive,
 // and a menu of verbs under a chosen card made the reward look like a property of the card.
 //
-// **A worm varies a card the game already defines.** It recolours it, removes it, or copies it;
+// **An essence varies a card the game already defines.** It recolours it, removes it, or copies it;
 // the concept is never touched, so nothing here can produce a card `internal/combat` cannot
-// resolve. See `internal/session/worm.go` for the target vocabulary and why it is short.
+// resolve. See `internal/session/essence.go` for the target vocabulary and why it is short.
 //
 // **The offer is indices into the run deck, not cards.** Alteration happens between fights, when
 // no pile is live and nothing else is touching the list, so a position is unambiguous for exactly
@@ -50,46 +50,46 @@ import (
 	"image/color"
 )
 
-// wormsOffered is how many alterations a win puts up.
+// essencesOffered is how many alterations a win puts up.
 //
-// **Two worms and nothing else** *(owner's call, 2026-08-22)*. A third card paying vitae used to
+// **Two essences and nothing else** *(owner's call, 2026-08-22)*. A third card paying vitae used to
 // stand beside them, so that declining a change to the deck was a choice among three with a price.
 // The win pays vitae by itself now — read out at the top of this screen — so the money card was
-// charging for something the player had already been given, and the offer is the two creatures the
-// prose says are fleeing. **Taking neither is a button again**, deliberately: the offer is free, so
+// charging for something the player had already been given, and the offer is the two essences the
+// prose says are bleeding from it. **Taking neither is a button again**, deliberately: the offer is free, so
 // walking away costs nothing and does not need to look like a card.
-const wormsOffered = 2
+const essencesOffered = 2
 
-// prize is one of the cards on the table. **Every one of them is a worm** since the vitae card went
-// — the struct survives because a prize is a worm *plus what this visit has done with it*, which
+// prize is one of the cards on the table. **Every one of them is an essence** since the vitae card went
+// — the struct survives because a prize is an essence *plus what this visit has done with it*, which
 // the catalogue record has no business carrying.
 type prize struct {
 	// taken is set once this prize has been picked. **It stays in the row rather than being removed
 	// from it** — a card leaving would move the one beside it. Only a relic that adds a pick can
 	// produce a row with a taken card still in it.
-	taken bool
-	worm  session.Worm
+	taken   bool
+	essence session.Essence
 }
 
-func (p prize) name() string { return p.worm.Name }
+func (p prize) name() string { return p.essence.Name }
 
 // Where the two rows sit and where the controls sit under them. Percentages anchor the groups;
 // offsets inside a group stay in pixels, per CLAUDE.md.
 const (
 	// **The prose has done its job once the offer is up, and the two rows take the screen** — the
-	// worms where the eye lands, the cards they may eat below them.
+	// essences where the eye lands, the cards they may eat below them.
 	//
-	// **The worms used to sit at 58% under the payout** *(owner's call, 2026-08-22)*, on the
+	// **The essences used to sit at 58% under the payout** *(owner's call, 2026-08-22)*, on the
 	// argument that what a win paid and what it is offering are one picture. That could not
-	// survive both rows being on screen at once: a worm row at 58% is 280 tall against a button
+	// survive both rows being on screen at once: an essence row at 58% is 280 tall against a button
 	// strip at 88%, so there is nowhere for the cards to go. **The narration therefore clears when
 	// the offer arrives rather than one stage later**, which is the cost of the reversed gesture
 	// and was taken deliberately.
-	wormChosenRowPct = 34
+	essenceChosenRowPct = 34
 
 	// **64 rather than 62 since 2026-09-06**, to buy the headroom a selected card lifts into. See
 	// offerSelectedNudge: the row is a card tall and rises by 26 when one is picked, and at 62 the
-	// lifted card's top edge landed inside the worm row above it.
+	// lifted card's top edge landed inside the essence row above it.
 	offerRowPct = 64
 
 	// The title, the hint and the narration all hang off the bottom of the build band, each by its
@@ -109,15 +109,15 @@ const (
 	offerButtonWidth  = 400
 	offerButtonHeight = 76
 
-	// wormRowGap is the air on each side of the skip button, which stands **in** the worm row
+	// essenceRowGap is the air on each side of the skip button, which stands **in** the essence row
 	// rather than under it *(owner's call, 2026-09-06)*. It was centred at offerButtonsPct — 88%,
 	// the seat the shop's Leave button takes — and with both rows of cards on screen the offer row
 	// reached y=949 against a button centred at 950, so the cards were drawn straight over it.
 	//
-	// **Between the two worms rather than beside them**, which is what makes it read as one row:
+	// **Between the two essences rather than beside them**, which is what makes it read as one row:
 	// taking neither is the third answer to the question the two cards are asking, so it stands
 	// where a third card would.
-	wormRowGap = 40
+	essenceRowGap = 40
 
 	// offerSelectedNudge is how far a picked card lifts out of the offer row.
 	//
@@ -132,13 +132,13 @@ type stage int
 
 const (
 	// narrate: the win is being read out and nothing is offered yet. **Every visit starts here**,
-	// because the payout is the first thing that happened and the worms are what it leads to.
+	// because the payout is the first thing that happened and the essences are what it leads to.
 	narrate stage = iota
 
-	// choosing: both rows are up — the worms, and the cards they may eat.
+	// choosing: both rows are up — the essences, and the cards they may eat.
 	//
-	// **It was two stages until 2026-09-06** *(owner's call)*, worm first and then the card. The
-	// order reversed with the parasite's: **select the card, then click the worm**, so a consumable
+	// **It was two stages until 2026-09-06** *(owner's call)*, essence first and then the card. The
+	// order reversed with the parasite's: **select the card, then click the essence**, so a consumable
 	// is pointed at a card the same way everywhere in the game. One gesture in one order meant one
 	// stage — the two rows are on screen together, because the player is choosing between them
 	// rather than passing through them.
@@ -173,7 +173,7 @@ var (
 
 // PostBattleScene offers one alteration to the run deck.
 type PostBattleScene struct {
-	// prizes is the three cards on the table — two worms and the vitae — and chosen is which one,
+	// prizes is the three cards on the table — two essences and the vitae — and chosen is which one,
 	// an index into it, or -1.
 	prizes []prize
 	chosen int
@@ -189,9 +189,9 @@ type PostBattleScene struct {
 	// card. See postbattle_prose.go.
 	prose typewriter
 
-	// entry is each offered worm's flight in from the side of the screen — one per prize, indexed
-	// alike. **Cards fly; they never appear**, and a worm arriving from off-screen is the picture
-	// the prose has just described: two creatures fleeing the enemy you beat.
+	// entry is each offered essence's flight in from the side of the screen — one per prize, indexed
+	// alike. **Cards fly; they never appear**, and an essence arriving from off-screen is the picture
+	// the prose has just described: two essences bleeding from the enemy you beat.
 	entry []travel
 
 	// relicDrag is the press in progress over the worn relic row in the build band. **The row is
@@ -200,24 +200,24 @@ type PostBattleScene struct {
 	relicDrag cardDrag
 
 	// **Skipping is a button again** *(2026-08-22)*, after the vitae card that replaced it was
-	// removed. It takes neither worm and pays nothing extra — the win has already paid — so it is
+	// removed. It takes neither essence and pays nothing extra — the win has already paid — so it is
 	// an exit rather than a third choice, which is exactly why it is not a card.
 	skipButton *models.Button
 
 	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
 	tut tutorialOverlay
 
-	// selected is which offered card is picked out, or -1. **A worm takes exactly one target**, so
+	// selected is which offered card is picked out, or -1. **An essence takes exactly one target**, so
 	// this is one index rather than a set — see consumableTarget, which is what asks whether it is
-	// enough for the worm being clicked.
+	// enough for the essence being clicked.
 	//
 	// **It is the offer row's counterpart of the hand's `selected` flag**, and it is deliberately a
 	// different shape: the hand's selection is also the round's queue and may hold five, where this
-	// selects the one card a worm is about to eat.
+	// selects the one card an essence is about to eat.
 	selected int
 
-	// aimed is which offered card the worm was pointed at, and after is what it became.
-	// **Computed once, when the card is picked** rather than every frame: the worm is run against a
+	// aimed is which offered card the essence was pointed at, and after is what it became.
+	// **Computed once, when the card is picked** rather than every frame: the essence is run against a
 	// throwaway copy of the run, and doing that in Draw would be a screen that alters the deck
 	// sixty times a second.
 	aimed int
@@ -233,7 +233,7 @@ type PostBattleScene struct {
 	before combat.Card
 
 	// change is the alteration happening: the old face coming apart and the new one coming through
-	// it. Which of the three shapes it takes is decided in aimAt, by what the worm did.
+	// it. Which of the three shapes it takes is decided in aimAt, by what the essence did.
 	change morph
 
 	// removes says the alteration has no "after" card, because the card is gone. What is left when
@@ -265,13 +265,13 @@ type PostBattleScene struct {
 	// pendingWhat is what the trace line will say once the alteration lands.
 	pendingWhat string
 
-	// tip explains whichever card the cursor is on: what a worm will do and how long it lasts, or
+	// tip explains whichever card the cursor is on: what an essence will do and how long it lasts, or
 	// what one of the offered deck cards is worth.
 	tip models.Tooltip
 
 	// How the offer row is arranged, and the block of tabs that chooses it — the same widget the
 	// combat screen's hand carries *(owner's call, 2026-09-05)*. **Eight overlapping cards are
-	// eight overlapping cards wherever they are dealt**, so the row a worm is pointed at is read
+	// eight overlapping cards wherever they are dealt**, so the row an essence is pointed at is read
 	// the same way a hand is.
 	//
 	// **sortMode is the working copy of `gs.HandSort`**, exactly as CombatScene's is: the button
@@ -291,7 +291,7 @@ type PostBattleScene struct {
 	//
 	// **A second pick is another card out of the same row**, not a fresh row: the offer was dealt
 	// once, and re-dealing it would make the second pick a different draw of the same fight. The card
-	// offer *is* re-dealt, because a worm may have removed a card and every index after it has moved.
+	// offer *is* re-dealt, because an essence may have removed a card and every index after it has moved.
 	picksLeft int
 }
 
@@ -339,36 +339,36 @@ func prizeNames(ps []prize) []string {
 	return out
 }
 
-// dealPrizes is the offer: two worms drawn from the catalogue.
+// dealPrizes is the offer: two essences drawn from the catalogue.
 func dealPrizes(gs *state.GlobalState) []prize {
-	out := make([]prize, 0, wormsOffered)
-	for _, w := range dealWorms(gs) {
-		out = append(out, prize{worm: w})
+	out := make([]prize, 0, essencesOffered)
+	for _, w := range dealEssences(gs) {
+		out = append(out, prize{essence: w})
 	}
 	return out
 }
 
-// dealWorms picks which alterations are offered: a shuffle of the catalogue, cut to two.
+// dealEssences picks which alterations are offered: a shuffle of the catalogue, cut to two.
 //
-// **Its own stream** (`seeds.WormOffer`), separate from the cards. They are drawn from different
-// lists and change on different schedules — adding a worm to the catalogue would otherwise reroll
+// **Its own stream** (`seeds.EssenceOffer`), separate from the cards. They are drawn from different
+// lists and change on different schedules — adding an essence to the catalogue would otherwise reroll
 // which *cards* every fight of every run offered.
 //
 // **Distinct by construction**, since it shuffles the catalogue rather than drawing twice: being
-// offered the same worm as both options would be a choice that is not one.
-func dealWorms(gs *state.GlobalState) []session.Worm {
-	all := session.Worms()
+// offered the same essence as both options would be a choice that is not one.
+func dealEssences(gs *state.GlobalState) []session.Essence {
+	all := session.Essences()
 
-	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.WormOffer, gs.Run.Fight())))
+	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.EssenceOffer, gs.Run.Fight())))
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
-	if len(all) > wormsOffered {
-		all = all[:wormsOffered]
+	if len(all) > essencesOffered {
+		all = all[:essencesOffered]
 	}
 	return all
 }
 
-// dealOffer picks which cards the worm may be applied to: a shuffle of every index in the run
+// dealOffer picks which cards the essence may be applied to: a shuffle of every index in the run
 // deck, cut to the hand size.
 //
 // **Its own stream** (`seeds.RewardHand`), and per fight. Sharing the player's shuffle would make
@@ -412,10 +412,10 @@ func sortInts(v []int) {
 	}
 }
 
-// place puts the skip button in its seat in the worm row. **Read off wormRowSeats**, so the button
+// place puts the skip button in its seat in the essence row. **Read off essenceRowSeats**, so the button
 // and the cards beside it cannot disagree about where the row is.
 func (s *PostBattleScene) place(gs *state.GlobalState) {
-	_, button := wormRowSeats(gs, len(s.prizes))
+	_, button := essenceRowSeats(gs, len(s.prizes))
 	s.skipButton.ScreenX = button.Min.X + button.Dx()/2
 	s.skipButton.ScreenY = button.Min.Y + button.Dy()/2
 }
@@ -426,11 +426,11 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	s.tut.update(gs, s)
 
 	// **The narration is the whole screen while it runs.** Nothing is clickable but the click that
-	// reads it, which is what keeps a payout from being half-read while a worm is already being
+	// reads it, which is what keeps a payout from being half-read while an essence is already being
 	// chosen.
 	//
 	// **Two clicks, not one** *(owner's call, 2026-09-08)*: the first fills the block, the second
-	// hands the screen to the worms. One gesture doing both meant the only way to see the whole
+	// hands the screen to the essences. One gesture doing both meant the only way to see the whole
 	// payout at once was also the way past it.
 	//
 	// **The click is not gated** — deliberately, and it is the one place on this screen that
@@ -481,10 +481,10 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 				trace.Logf("postbattle", "%s, deck now %d", s.pendingWhat, gs.Run.Size())
 				s.applyNow = nil
 
-				// **The alteration is a moment, raised where the deck actually changes.** A worm
+				// **The alteration is a moment, raised where the deck actually changes.** An essence
 				// that removed a card leaves nothing behind, so there is nothing to name and the
 				// moment is not raised — see achieve.MomentCardAltered, which carries the resulting
-				// card's label rather than the worm's, because several worms can arrive at one card.
+				// card's label rather than the essence's, because several essences can arrive at one card.
 				if !s.removes {
 					earnMoment(gs, achieve.CardAltered(s.after.Label()))
 				}
@@ -499,12 +499,12 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 
 	if s.skipping {
 		s.skipping = false
-		trace.Logf("postbattle", "caught neither worm")
+		trace.Logf("postbattle", "took neither essence")
 		advanceRun(gs)
 		return nil
 	}
 
-	// The worms' arrival. **They are clickable while they fly** — a card is where its layout
+	// The essences' arrival. **They are clickable while they fly** — a card is where its layout
 	// function says it is, and the flight is a ghost over that seat, the same rule the combat
 	// screen's hand follows.
 	for i := range s.entry {
@@ -520,7 +520,7 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 
 		// **Placed every tick rather than at Init**, unlike every other widget on this screen: the
 		// block hangs off the offer row's right edge, and a second pick re-deals that row against a
-		// deck a worm may have shortened. A block placed once would then stand beside a row that
+		// deck an essence may have shortened. A block placed once would then stand beside a row that
 		// had moved out from under it.
 		s.sortTabs.place(gs)
 		s.sortTabs.update(gs, true)
@@ -550,7 +550,7 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 	// **The band is live at every stage, so its relics are explained at every stage.** They are not
 	// a choice this screen offers — which is exactly why the rule above does not cover them: a
 	// worn relic is what the choice is being *judged against*, and "what does the one I am wearing
-	// actually do" is the question a worm is picked by.
+	// actually do" is the question an essence is picked by.
 	if hoverBuildRelics(gs, at, &s.tip) {
 		return
 	}
@@ -558,7 +558,7 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 	switch s.stage {
 	case choosing:
 		// **The prizes are deliberately not tooltipped**, as they were not before the two stages
-		// merged: a worm's whole rule is printed on its face, where a deck card's is not. What a
+		// merged: an essence's whole rule is printed on its face, where a deck card's is not. What a
 		// dim prize means — "not for the card you have selected" — is the one thing that is new
 		// here and is left to the row rather than to a tooltip.
 		for i, deckIndex := range s.offer {
@@ -575,7 +575,7 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 }
 
 // click is the press on whichever row is live. **Only one row is clickable at a time**, which is
-// what keeps the two stages honest: a card cannot be chosen before a worm names what would happen
+// what keeps the two stages honest: a card cannot be chosen before an essence names what would happen
 // to it.
 func (s *PostBattleScene) click(gs *state.GlobalState) {
 	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) || !gs.CursorAllowed() {
@@ -588,7 +588,7 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 	}
 
 	// **The card row is asked first**, because it is the row a click is most often meant for and
-	// the two do not overlap. Selecting is free and reversible; clicking a worm spends the pick.
+	// the two do not overlap. Selecting is free and reversible; clicking an essence spends the pick.
 	for i := range s.offer {
 		if at.In(s.offerSlot(gs, i)) {
 			s.selectOffered(i)
@@ -597,7 +597,7 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 	}
 
 	for i := range s.prizes {
-		if at.In(s.wormSlot(gs, i)) {
+		if at.In(s.essenceSlot(gs, i)) {
 			s.takePrize(gs, i)
 			return
 		}
@@ -610,7 +610,7 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 // into the queue is clicked out of it — so the one thing a player already knows how to undo works
 // here too.
 //
-// **One card at a time.** A worm eats exactly one, so a second click moves the selection rather than
+// **One card at a time.** An essence eats exactly one, so a second click moves the selection rather than
 // adding to it; there is no set for it to be wrong about.
 func (s *PostBattleScene) selectOffered(i int) {
 	if s.selected == i {
@@ -630,18 +630,18 @@ func (s *PostBattleScene) selectedDeckIndex() (int, bool) {
 	return s.offer[s.selected], true
 }
 
-// wormSpendable is whether clicking this prize now would take it: a card is selected, and this worm
+// essenceSpendable is whether clicking this prize now would take it: a card is selected, and this essence
 // can actually change that card.
 //
 // **It is the same question the click asks and the same one the card's lit state reads**, which is
 // what stops a prize looking available and doing nothing. See consumableTarget.
-func (s *PostBattleScene) wormSpendable(gs *state.GlobalState, p prize) bool {
+func (s *PostBattleScene) essenceSpendable(gs *state.GlobalState, p prize) bool {
 	if p.taken {
 		return false
 	}
 	target := consumableTarget{
 		needs: 1,
-		legal: func(ids []int) bool { return gs.Run.CanApply(p.worm, ids[0]) },
+		legal: func(ids []int) bool { return gs.Run.CanApply(p.essence, ids[0]) },
 	}
 	if idx, ok := s.selectedDeckIndex(); ok {
 		return target.satisfiedBy([]int{idx})
@@ -649,12 +649,12 @@ func (s *PostBattleScene) wormSpendable(gs *state.GlobalState, p prize) bool {
 	return target.satisfiedBy(nil)
 }
 
-// takePrize is the click on the prize row: this worm is spent on the card that is selected.
+// takePrize is the click on the prize row: this essence is spent on the card that is selected.
 //
 // **It refuses rather than falling back**, on the predicate the card's lit state already read — a
 // prize drawn dim cannot be taken, and a prize drawn lit always works.
 func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
-	if i < 0 || i >= len(s.prizes) || !s.wormSpendable(gs, s.prizes[i]) {
+	if i < 0 || i >= len(s.prizes) || !s.essenceSpendable(gs, s.prizes[i]) {
 		return
 	}
 	slot, ok := s.selected, true
@@ -669,7 +669,7 @@ func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
 // rearm is what a second pick is: the taken prize is struck off, the row stays where it is, and the
 // screen goes back to the top. It reports whether another pick is owed.
 //
-// **The card offer is re-dealt and the prize row is not.** A worm may have removed a card, so every
+// **The card offer is re-dealt and the prize row is not.** An essence may have removed a card, so every
 // index the old offer held has moved — where the prizes are the same three cards they always were,
 // one of them now spent. The seed is the same, which is deliberate: it is the same fight's offer,
 // re-resolved against a deck that changed.
@@ -708,36 +708,36 @@ func (s *PostBattleScene) settle(gs *state.GlobalState, from image.Rectangle) {
 	s.arrivedFrom = from
 }
 
-// aimAt points the chosen worm at one offered card and works out what it would become.
+// aimAt points the chosen essence at one offered card and works out what it would become.
 //
-// **The preview runs the real worm against a throwaway copy of the run**, rather than a second
+// **The preview runs the real essence against a throwaway copy of the run**, rather than a second
 // implementation of what each target does. A preview computed by its own arithmetic is a preview
 // that can disagree with the thing it is previewing, which is the one failure this screen exists
 // to prevent.
 func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
-	worm, ok := s.chosenWorm()
+	essence, ok := s.chosenEssence()
 	if !ok || slot < 0 || slot >= len(s.offer) {
 		return
 	}
 	deckIndex := s.offer[slot]
 
 	before, ok := gs.Run.Card(deckIndex)
-	if !ok || !gs.Run.CanApply(worm, deckIndex) {
-		// **A worm that would change nothing is refused rather than shown** — a Smash cannot be
+	if !ok || !gs.Run.CanApply(essence, deckIndex) {
+		// **An essence that would change nothing is refused rather than shown** — a Smash cannot be
 		// promoted and a defend card has no ladder — so the click does nothing and the card stays
 		// pickable. Saying no here is why CanApply exists.
 		return
 	}
 
 	trial := session.New(gs.Run.Deck())
-	if !trial.Apply(worm, deckIndex) {
+	if !trial.Apply(essence, deckIndex) {
 		return
 	}
 
 	s.aimed = slot
 	s.before = before
-	s.removes = worm.Target == session.TargetRemove
-	s.copied = worm.Target == session.TargetDuplicate
+	s.removes = essence.Target == session.TargetRemove
+	s.copied = essence.Target == session.TargetDuplicate
 
 	switch {
 	case s.copied:
@@ -748,8 +748,8 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 		s.after, _ = trial.Card(deckIndex)
 	}
 
-	// **What the worm did decides which shape the change takes**, and the three cases are the
-	// three things a worm can be: it recoloured the card, it ate it, or it made a second one. See
+	// **What the essence did decides which shape the change takes**, and the three cases are the
+	// three things an essence can be: it recoloured the card, it ate it, or it made a second one. See
 	// cardmorph.go — the morph is handed two finished faces and works out the rest.
 	beforeSpec := cardSpec(before, heldByRun(gs, before), true, false)
 	switch {
@@ -769,31 +769,31 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 	// Back under it; picking the card is now the whole decision, and what follows is the result
 	// being shown rather than a question about it. The deck is still not touched until the settled
 	// stage is over — see applyNow — so the card on screen is drawn from the trial run above.
-	s.pendingWhat = fmt.Sprintf("%s on card %d", worm.Record, deckIndex)
-	s.applyNow = func(run *session.Session) { run.Apply(worm, deckIndex) }
+	s.pendingWhat = fmt.Sprintf("%s on card %d", essence.Record, deckIndex)
+	s.applyNow = func(run *session.Session) { run.Apply(essence, deckIndex) }
 	s.tip.Forget()
 	s.settle(gs, s.offerSlot(gs, slot))
 }
 
-// wormSlot is where one offered worm is drawn, and the rectangle it is clicked in.
+// essenceSlot is where one offered essence is drawn, and the rectangle it is clicked in.
 //
 // **One function for both**, the same rule the hand follows: a card hit-tested against a
 // rectangle it is not drawn in is exactly the bug this shape prevents.
 //
-// In the second stage the chosen worm stays on screen, alone and centred, so what is about to
+// In the second stage the chosen essence stays on screen, alone and centred, so what is about to
 // happen is still stated while the card is picked.
-func (s *PostBattleScene) wormSlot(gs *state.GlobalState, i int) image.Rectangle {
-	// **The row sits where the chosen worm used to** *(2026-09-06)*. Both rows are up at once now,
-	// so the worms take the seat the prose vacates and the cards they may eat go below them —
+func (s *PostBattleScene) essenceSlot(gs *state.GlobalState, i int) image.Rectangle {
+	// **The row sits where the chosen essence used to** *(2026-09-06)*. Both rows are up at once now,
+	// so the essences take the seat the prose vacates and the cards they may eat go below them —
 	// which is the layout the second stage already had, with every prize in it rather than one.
-	seats, _ := wormRowSeats(gs, len(s.prizes))
+	seats, _ := essenceRowSeats(gs, len(s.prizes))
 	if i < 0 || i >= len(seats) {
 		return image.Rectangle{}
 	}
 	return seats[i]
 }
 
-// wormRowSeats lays the whole worm row out: a seat per prize, and the skip button standing between
+// essenceRowSeats lays the whole essence row out: a seat per prize, and the skip button standing between
 // them.
 //
 // **One function for the cards and the button**, which is the rule every row in this game follows —
@@ -803,11 +803,11 @@ func (s *PostBattleScene) wormSlot(gs *state.GlobalState, i int) image.Rectangle
 // **The button takes the middle slot.** With the usual two prizes that is literally between them;
 // with an odd number it sits left of centre, which is arbitrary and harmless — nothing deals an odd
 // number today, and a row that refused to lay one out would be worse than one that leans.
-func wormRowSeats(gs *state.GlobalState, n int) (prizes []image.Rectangle, button image.Rectangle) {
-	top := gs.PctY(wormChosenRowPct)
+func essenceRowSeats(gs *state.GlobalState, n int) (prizes []image.Rectangle, button image.Rectangle) {
+	top := gs.PctY(essenceChosenRowPct)
 
 	// The row is n cards and one button, with a gap between every pair.
-	width := n*cardWidth + offerButtonWidth + (n)*wormRowGap
+	width := n*cardWidth + offerButtonWidth + (n)*essenceRowGap
 	x := gs.PctX(50) - width/2
 
 	mid := n / 2
@@ -816,10 +816,10 @@ func wormRowSeats(gs *state.GlobalState, n int) (prizes []image.Rectangle, butto
 		if i == mid {
 			button = image.Rect(x, top+(cardHeight-offerButtonHeight)/2,
 				x+offerButtonWidth, top+(cardHeight+offerButtonHeight)/2)
-			x += offerButtonWidth + wormRowGap
+			x += offerButtonWidth + essenceRowGap
 		}
 		prizes = append(prizes, image.Rect(x, top, x+cardWidth, top+cardHeight))
-		x += cardWidth + wormRowGap
+		x += cardWidth + essenceRowGap
 	}
 	if mid >= n {
 		button = image.Rect(x, top+(cardHeight-offerButtonHeight)/2,
@@ -850,7 +850,7 @@ func offerRowOf(gs *state.GlobalState, n int) image.Rectangle {
 //
 // **A selected card lifts out of the row**, the hand's own gesture — see cardSlot, which does the
 // same thing for the same reason. It was the card's `Selected` border alone until 2026-09-06, and
-// that was not enough to see: with the worms lit by the selection, the screen said a card had been
+// that was not enough to see: with the essences lit by the selection, the screen said a card had been
 // picked and did not say which one.
 //
 // **The lift is in this function rather than in the drawing**, so the protruding part of a card is
@@ -946,7 +946,7 @@ func (s *PostBattleScene) sortOffer(gs *state.GlobalState) {
 
 // drawSlides draws the offered cards moving within their row, on the shared mover.
 //
-// **A sliding card is drawn usable**, whatever the worm could do to it. The dimming says "this one
+// **A sliding card is drawn usable**, whatever the essence could do to it. The dimming says "this one
 // cannot be picked", which is a fact about a card sitting in a seat waiting to be clicked; a card
 // in flight is not being offered yet, and re-deriving it mid-slide would make the row flicker as
 // cards crossed each other.
@@ -965,13 +965,13 @@ func (s *PostBattleScene) chosenPrize() (prize, bool) {
 	return s.prizes[s.chosen], true
 }
 
-// chosenWorm is the worm the player picked, if they have.
-func (s *PostBattleScene) chosenWorm() (session.Worm, bool) {
+// chosenEssence is the essence the player picked, if they have.
+func (s *PostBattleScene) chosenEssence() (session.Essence, bool) {
 	p, ok := s.chosenPrize()
 	if !ok {
-		return session.Worm{}, false
+		return session.Essence{}, false
 	}
-	return p.worm, true
+	return p.essence, true
 }
 
 func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
@@ -982,10 +982,10 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 26}
 
 	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,
-	// and what a worm is about to change.
+	// and what an essence is about to change.
 	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.relicDrag)
 
-	// **The narration stays up while the offer is made**, and only clears once a worm is chosen.
+	// **The narration stays up while the offer is made**, and only clears once an essence is chosen.
 	if s.stage == narrate {
 		s.drawProse(gs, screen, prose)
 	}
@@ -1002,8 +1002,8 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		text.Draw(screen, msg, face, op)
 	}
 
-	// **Neither stage that offers a choice is titled** *(owner's call, 2026-09-05)*. The worms
-	// arrive under the sentence saying they are fleeing, and the card row under the worm that is
+	// **Neither stage that offers a choice is titled** *(owner's call, 2026-09-05)*. The essences
+	// arrive under the sentence saying they are bleeding out, and the card row under the essence that is
 	// going to eat one — in both cases the thing on screen says what the screen is for, and a
 	// heading over it was a caption on a picture nobody had trouble reading.
 	if s.stage != choosing {
@@ -1019,7 +1019,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		return
 	}
 
-	s.drawWorms(gs, screen)
+	s.drawEssences(gs, screen)
 
 	if s.stage == choosing {
 		systems.DrawButton(gs, screen, s.skipButton)
@@ -1037,10 +1037,10 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 			if slideInto(s.slides, i) {
 				continue
 			}
-			// **Every card is selectable and the worms are what go dim** *(2026-09-06)*. The row
-			// used to dim a card the chosen worm could not change, which was the same rule read in
-			// the other direction — with the card picked first there is no worm yet to ask, so the
-			// legality lands on the prize row instead. See wormSpendable.
+			// **Every card is selectable and the essences are what go dim** *(2026-09-06)*. The row
+			// used to dim a card the chosen essence could not change, which was the same rule read in
+			// the other direction — with the card picked first there is no essence yet to ask, so the
+			// legality lands on the prize row instead. See essenceSpendable.
 			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, heldByRun(gs, card),
 				true, i == s.selected)
 		}
@@ -1068,13 +1068,13 @@ func settledSeats(gs *state.GlobalState, n int) []image.Rectangle {
 		n = 1
 	}
 	top := gs.PctY(36)
-	width := n*cardWidth + (n-1)*wormRowGap
+	width := n*cardWidth + (n-1)*essenceRowGap
 	x := gs.PctX(50) - width/2
 
 	out := make([]image.Rectangle, 0, n)
 	for i := 0; i < n; i++ {
 		out = append(out, image.Rect(x, top, x+cardWidth, top+cardHeight))
-		x += cardWidth + wormRowGap
+		x += cardWidth + essenceRowGap
 	}
 	return out
 }
@@ -1088,7 +1088,7 @@ func settledSeats(gs *state.GlobalState, n int) []image.Rectangle {
 // re-read to find out what happened. See cardmorph.go.
 //
 // **The flight carries the old face and the morph carries the new one**, which is why nothing here
-// asks what the worm did: `change` was handed the two faces in aimAt and is the only thing that
+// asks what the essence did: `change` was handed the two faces in aimAt and is the only thing that
 // knows which of the three shapes this is. A removal ends on an empty seat, a duplicate ends on two
 // cards, everything else ends on one.
 func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Image) {
@@ -1129,7 +1129,7 @@ func (s *PostBattleScene) title() string {
 	case narrate:
 		return ""
 	default:
-		return "WORMS FLEE"
+		return "ESSENCES FLEE"
 	}
 }
 
@@ -1137,24 +1137,24 @@ func (s *PostBattleScene) title() string {
 func drawPrizeCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	p prize, enabled bool) {
 
-	drawWormCard(gs, screen, at, p.worm, enabled)
+	drawEssenceCard(gs, screen, at, p.essence, enabled)
 }
 
-// drawWorms puts the offer up as cards. **A worm is a card because it is a thing you are given**,
+// drawEssences puts the offer up as cards. **An essence is a card because it is a thing you are given**,
 // and the game already has one visual language for that — a name, a border colour and a line
 // saying what it does.
 //
-// It borrows `cards.Hand` rather than taking a style of its own: a worm has no cost and no form,
+// It borrows `cards.Hand` rather than taking a style of its own: an essence has no cost and no form,
 // which that style draws as nothing at all, so what is left is exactly the name and the text. A
-// dedicated style is what this wants once a worm has art.
+// dedicated style is what this wants once an essence has art.
 // **A prize is lit exactly when clicking it would take it** *(2026-09-06)*, which is what makes
 // select-then-click readable: with no card selected the whole row is dim, and selecting one lights
-// the worms that could eat it. It is the same rule the parasite pane is under — see
+// the essences that could eat it. It is the same rule the parasite pane is under — see
 // consumableTarget — and the same rule the offer row itself already followed in the other
 // direction.
-func (s *PostBattleScene) drawWorms(gs *state.GlobalState, screen *ebiten.Image) {
+func (s *PostBattleScene) drawEssences(gs *state.GlobalState, screen *ebiten.Image) {
 	for i, p := range s.prizes {
-		drawPrizeCard(gs, screen, s.wormArrivingAt(gs, i), p, s.wormSpendable(gs, p))
+		drawPrizeCard(gs, screen, s.essenceArrivingAt(gs, i), p, s.essenceSpendable(gs, p))
 	}
 }
 
@@ -1178,7 +1178,7 @@ func (s *PostBattleScene) hint(gs *state.GlobalState) string {
 // updateRelicRow runs the drag over the worn row in the build band.
 //
 // **A click on a relic does nothing here**, as on the combat screen: this screen's clicks belong to
-// the worms it is offering, and a relic that did something on a press would be a second meaning for
+// the essences it is offering, and a relic that did something on a press would be a second meaning for
 // the gesture that reorders it.
 func (s *PostBattleScene) updateRelicRow(gs *state.GlobalState) {
 	row := buildRelicRow(gs, nil)

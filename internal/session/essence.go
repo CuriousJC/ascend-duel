@@ -1,13 +1,13 @@
 package session
 
-// Worms: the alterations a run can make to its own deck.
+// Essences: the alterations a run can make to its own deck.
 //
-// **A worm targets one aspect of a card and gives it a new value**, which is the card language's
+// **An essence targets one aspect of a card and gives it a new value**, which is the card language's
 // shape pointed at a card that already exists rather than at a card being defined. The catalogue
-// is `data/worms.json`; this file is where a record becomes something applicable, and where a bad
+// is `data/essences.json`; this file is where a record becomes something applicable, and where a bad
 // record is refused.
 //
-// **It lives here rather than in `internal/combat` because a worm acts on the *run's* deck.** The
+// **It lives here rather than in `internal/combat` because an essence acts on the *run's* deck.** The
 // rules resolve rounds and have no deck; the run has one. That is the same who-consumes-it test
 // every file in `data/` answers.
 
@@ -20,31 +20,31 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// WormTarget is which aspect of a card a worm changes.
+// EssenceTarget is which aspect of a card an essence changes.
 //
 // **A closed vocabulary, and closing it is the point** — the same posture `combat.Verb` takes.
 // The set is short for a structural reason rather than a lack of imagination: `combat.Card` is a
 // concept plus an element, and **the element is the only per-instance field**. Cost, damage,
-// form and label all live on the shared concept, so a worm targeting one of those would change
+// form and label all live on the shared concept, so an essence targeting one of those would change
 // every copy of that card in the deck rather than the one the player picked.
 //
 // **Cost and amount became per-card on 2026-08-17** — `Card.CostDelta` and `Card.AmountPct` — and
 // it was cheaper than it looked: `Cost()` and `Damage()` were already methods on the card, so the
 // override went in one place each, and `Amount()` was added beside them for the three sites that
-// read `Spec().Amount` directly. **Form and label are still concept-wide**, and a worm reaching
+// read `Spec().Amount` directly. **Form and label are still concept-wide**, and an essence reaching
 // for one of those is the moment to make the same argument again from scratch.
-type WormTarget int
+type EssenceTarget int
 
 const (
 	// TargetElement recolours a card. The concept is untouched, so what changes is which colour
 	// it counts as in a mix and which status it can apply.
-	TargetElement WormTarget = iota
+	TargetElement EssenceTarget = iota
 
 	// TargetRemove takes a card out of the run for good.
 	TargetRemove
 
 	// TargetDuplicate puts a second copy of a card into the run. **Copies are the sharpest dial
-	// in the game** — four of one concept in a turn is a Barrage — so this is the worm most
+	// in the game** — four of one concept in a turn is a Barrage — so this is the essence most
 	// likely to need a cost.
 	TargetDuplicate
 
@@ -54,7 +54,7 @@ const (
 	TargetCost
 
 	// TargetAmount scales a card's figure, as a percentage — 150 is half again. What the figure
-	// *is* depends on the verb, which is what makes one worm reach every card in the deck: a
+	// *is* depends on the verb, which is what makes one essence reach every card in the deck: a
 	// defence percentage, a shield count, or a damage multiplier. A defence is clamped
 	// under 100 by `Card.Amount`, because nothing stops a blow outright.
 	TargetAmount
@@ -69,11 +69,11 @@ const (
 	// copies rather than damage.
 	TargetDemote
 
-	// TargetForm changes what one card counts as on the form axis — the element worms' trick on
+	// TargetForm changes what one card counts as on the form axis — the element essences' trick on
 	// the other matching axis.
 	//
 	// **It writes `Card.FormOverride`, which a parasite already owns**, so this is the vocabulary
-	// arriving at a mechanic rather than a new one: form is concept-wide and a worm swapping the
+	// arriving at a mechanic rather than a new one: form is concept-wide and an essence swapping the
 	// concept's form would change every copy in the deck, which is the argument the target list
 	// was closed against. The override is per-card and only `Card.Form` reads it.
 	//
@@ -82,13 +82,13 @@ const (
 	TargetForm
 )
 
-// WormTargets is every target in a fixed order, for anything that walks them.
-func WormTargets() []WormTarget {
-	return []WormTarget{TargetElement, TargetRemove, TargetDuplicate,
+// EssenceTargets is every target in a fixed order, for anything that walks them.
+func EssenceTargets() []EssenceTarget {
+	return []EssenceTarget{TargetElement, TargetRemove, TargetDuplicate,
 		TargetCost, TargetAmount, TargetPromote, TargetDemote, TargetForm}
 }
 
-func (t WormTarget) String() string {
+func (t EssenceTarget) String() string {
 	switch t {
 	case TargetRemove:
 		return "remove"
@@ -109,11 +109,11 @@ func (t WormTarget) String() string {
 	}
 }
 
-// ParseWormTarget resolves a target from its name. It reports failure rather than falling back: a
-// worm quietly registered as a recolour because its target was misspelled is a mechanic nobody
+// ParseEssenceTarget resolves a target from its name. It reports failure rather than falling back: a
+// essence quietly registered as a recolour because its target was misspelled is a mechanic nobody
 // designed.
-func ParseWormTarget(name string) (WormTarget, bool) {
-	for _, t := range WormTargets() {
+func ParseEssenceTarget(name string) (EssenceTarget, bool) {
+	for _, t := range EssenceTargets() {
 		if t.String() == name {
 			return t, true
 		}
@@ -121,24 +121,24 @@ func ParseWormTarget(name string) (WormTarget, bool) {
 	return TargetElement, false
 }
 
-// Worm is one alteration, resolved against the rules.
+// Essence is one alteration, resolved against the rules.
 //
 // Comparable, so a screen can hold one by value and compare two without reaching for the key.
-type Worm struct {
+type Essence struct {
 	Record string
 	Name   string
 	Text   string
-	Target WormTarget
+	Target EssenceTarget
 
-	// Art is the assets key of the picture this worm draws, already resolved through
-	// data.WormData.ArtKey — so it is never empty, and a worm nobody has drawn carries the
-	// placeholder rather than a hole. Carried here so the reward screen and tools/wormsheet read
+	// Art is the assets key of the picture this essence draws, already resolved through
+	// data.EssenceData.ArtKey — so it is never empty, and an essence nobody has drawn carries the
+	// placeholder rather than a hole. Carried here so the reward screen and tools/essencesheet read
 	// one answer.
 	Art string
 
 	// Family and Draw are authored, ignored by everything that plays the game, and read only by
-	// tools/wormsheet — the motif the record was written under, and the art brief for its picture.
-	// They ride along here so the sheet does not have to open data/worms.json a second time.
+	// tools/essencesheet — the motif the record was written under, and the art brief for its picture.
+	// They ride along here so the sheet does not have to open data/essences.json a second time.
 	Family string
 	Draw   string
 
@@ -153,36 +153,36 @@ type Worm struct {
 	Number int
 }
 
-// worms is the validated catalogue, built once at package init.
+// essences is the validated catalogue, built once at package init.
 //
 // **A bad record panics at init**, so it fails on launch rather than the first time a player wins
-// a fight — the same severity a bad card record takes, and for the same reason: a worm that does
+// a fight — the same severity a bad card record takes, and for the same reason: an essence that does
 // nothing is a reward that silently is not one.
-var worms, wormOrder = loadWorms()
+var essences, essenceOrder = loadEssences()
 
-// Worms is every worm in the catalogue, in a fixed sorted order.
-func Worms() []Worm {
-	out := make([]Worm, 0, len(wormOrder))
-	for _, key := range wormOrder {
-		out = append(out, worms[key])
+// Essences is every essence in the catalogue, in a fixed sorted order.
+func Essences() []Essence {
+	out := make([]Essence, 0, len(essenceOrder))
+	for _, key := range essenceOrder {
+		out = append(out, essences[key])
 	}
 	return out
 }
 
-// WormByKey finds one by its record key.
-func WormByKey(key string) (Worm, bool) {
-	w, ok := worms[key]
+// EssenceByKey finds one by its record key.
+func EssenceByKey(key string) (Essence, bool) {
+	w, ok := essences[key]
 	return w, ok
 }
 
-func loadWorms() (map[string]Worm, []string) {
-	recs := data.LoadWorms()
+func loadEssences() (map[string]Essence, []string) {
+	recs := data.LoadEssences()
 
-	out := make(map[string]Worm, len(recs))
-	for _, key := range data.WormOrder(recs) {
-		w, err := resolveWorm(recs[key])
+	out := make(map[string]Essence, len(recs))
+	for _, key := range data.EssenceOrder(recs) {
+		w, err := resolveEssence(recs[key])
 		if err != nil {
-			panic("worms.json: " + err.Error())
+			panic("essences.json: " + err.Error())
 		}
 		out[key] = w
 	}
@@ -194,49 +194,49 @@ func loadWorms() (map[string]Worm, []string) {
 	sort.Strings(keys)
 
 	if len(keys) < 2 {
-		// The offer is two worms, so a catalogue of one cannot fill it. Caught here rather than
+		// The offer is two essences, so a catalogue of one cannot fill it. Caught here rather than
 		// producing a screen with a gap in it.
-		panic(fmt.Sprintf("worms.json: %d worms, and an offer needs two", len(keys)))
+		panic(fmt.Sprintf("essences.json: %d essences, and an offer needs two", len(keys)))
 	}
 	return out, keys
 }
 
-// resolveWorm turns a record into a worm, or says why it cannot.
+// resolveEssence turns a record into an essence, or says why it cannot.
 //
-// **It refuses a value on a target that takes none**, rather than ignoring it. A `remove` worm
+// **It refuses a value on a target that takes none**, rather than ignoring it. A `remove` essence
 // carrying `"Value": "fire"` is somebody expecting something the mechanic does not do, and
 // accepting it silently is how a catalogue comes to disagree with the game.
-func resolveWorm(r data.WormData) (Worm, error) {
-	if r.WormRecord == "" {
-		return Worm{}, fmt.Errorf("a worm has no record key")
+func resolveEssence(r data.EssenceData) (Essence, error) {
+	if r.EssenceRecord == "" {
+		return Essence{}, fmt.Errorf("an essence has no record key")
 	}
 	if r.Name == "" {
-		return Worm{}, fmt.Errorf("%s has no name", r.WormRecord)
+		return Essence{}, fmt.Errorf("%s has no name", r.EssenceRecord)
 	}
 	if r.Text == "" {
 		// The card is a name and a line of text and nothing else — there is no glyph and no
-		// figure — so a worm with no text is a card that does not say what it does.
-		return Worm{}, fmt.Errorf("%s has no text, so its card says nothing", r.WormRecord)
+		// figure — so an essence with no text is a card that does not say what it does.
+		return Essence{}, fmt.Errorf("%s has no text, so its card says nothing", r.EssenceRecord)
 	}
 
-	target, ok := ParseWormTarget(r.Target)
+	target, ok := ParseEssenceTarget(r.Target)
 	if !ok {
-		return Worm{}, fmt.Errorf("%s names target %q, which is not one of %s",
-			r.WormRecord, r.Target, targetList())
+		return Essence{}, fmt.Errorf("%s names target %q, which is not one of %s",
+			r.EssenceRecord, r.Target, targetList())
 	}
 
-	w := Worm{Record: r.WormRecord, Name: r.Name, Text: r.Text, Target: target,
+	w := Essence{Record: r.EssenceRecord, Name: r.Name, Text: r.Text, Target: target,
 		Art: r.ArtKey(), Family: r.Family, Draw: r.Draw}
 
 	switch target {
 	case TargetCost:
 		n, err := strconv.Atoi(r.Value)
 		if err != nil {
-			return Worm{}, fmt.Errorf("%s targets cost and its value %q is not a number",
-				r.WormRecord, r.Value)
+			return Essence{}, fmt.Errorf("%s targets cost and its value %q is not a number",
+				r.EssenceRecord, r.Value)
 		}
 		if n == 0 {
-			return Worm{}, fmt.Errorf("%s changes a cost by nothing", r.WormRecord)
+			return Essence{}, fmt.Errorf("%s changes a cost by nothing", r.EssenceRecord)
 		}
 		w.Number = n
 		return w, nil
@@ -244,16 +244,16 @@ func resolveWorm(r data.WormData) (Worm, error) {
 	case TargetAmount:
 		n, err := strconv.Atoi(r.Value)
 		if err != nil {
-			return Worm{}, fmt.Errorf("%s targets amount and its value %q is not a percentage",
-				r.WormRecord, r.Value)
+			return Essence{}, fmt.Errorf("%s targets amount and its value %q is not a percentage",
+				r.EssenceRecord, r.Value)
 		}
 		if n <= 0 {
-			return Worm{}, fmt.Errorf("%s scales an amount to %d%%, which is nothing at all",
-				r.WormRecord, n)
+			return Essence{}, fmt.Errorf("%s scales an amount to %d%%, which is nothing at all",
+				r.EssenceRecord, n)
 		}
 		if n == 100 {
-			return Worm{}, fmt.Errorf("%s scales an amount to 100%%, which changes nothing",
-				r.WormRecord)
+			return Essence{}, fmt.Errorf("%s scales an amount to 100%%, which changes nothing",
+				r.EssenceRecord)
 		}
 		w.Number = n
 		return w, nil
@@ -262,13 +262,13 @@ func resolveWorm(r data.WormData) (Worm, error) {
 	if target == TargetForm {
 		f, ok := combat.ParseForm(r.Value)
 		if !ok {
-			return Worm{}, fmt.Errorf("%s names form %q, which the rules do not have",
-				r.WormRecord, r.Value)
+			return Essence{}, fmt.Errorf("%s names form %q, which the rules do not have",
+				r.EssenceRecord, r.Value)
 		}
 		if f == combat.FormNone {
 			// A card counting on no axis is a card that can never join a form hand, which is a
-			// worm that takes something away rather than giving it.
-			return Worm{}, fmt.Errorf("%s takes a card's form away", r.WormRecord)
+			// essence that takes something away rather than giving it.
+			return Essence{}, fmt.Errorf("%s takes a card's form away", r.EssenceRecord)
 		}
 		w.Form = f
 		return w, nil
@@ -277,29 +277,29 @@ func resolveWorm(r data.WormData) (Worm, error) {
 	if target == TargetElement {
 		e, ok := combat.ParseElement(r.Value)
 		if !ok {
-			return Worm{}, fmt.Errorf("%s names element %q, which the rules do not have",
-				r.WormRecord, r.Value)
+			return Essence{}, fmt.Errorf("%s names element %q, which the rules do not have",
+				r.EssenceRecord, r.Value)
 		}
 		if e == combat.Basic {
-			// A worm that greyed a card out would be a way to *lose* a colour rather than choose
+			// An essence that greyed a card out would be a way to *lose* a colour rather than choose
 			// one, and no card in the player's deck is drab — the defences stopped being the
 			// exception on 2026-08-23.
-			return Worm{}, fmt.Errorf("%s turns a card basic, which takes a colour away", r.WormRecord)
+			return Essence{}, fmt.Errorf("%s turns a card basic, which takes a colour away", r.EssenceRecord)
 		}
 		w.Element = e
 		return w, nil
 	}
 
 	if r.Value != "" {
-		return Worm{}, fmt.Errorf("%s targets %s and carries the value %q, which nothing reads",
-			r.WormRecord, target, r.Value)
+		return Essence{}, fmt.Errorf("%s targets %s and carries the value %q, which nothing reads",
+			r.EssenceRecord, target, r.Value)
 	}
 	return w, nil
 }
 
 func targetList() string {
 	out := ""
-	for i, t := range WormTargets() {
+	for i, t := range EssenceTargets() {
 		if i > 0 {
 			out += ", "
 		}
@@ -308,13 +308,13 @@ func targetList() string {
 	return out
 }
 
-// Apply performs a worm on one card of the run, by its position in the deck.
+// Apply performs an essence on one card of the run, by its position in the deck.
 //
-// **The one place the deck is altered by a worm**, so there is one place that can get it wrong.
+// **The one place the deck is altered by an essence**, so there is one place that can get it wrong.
 // It reports whether anything happened: an index the deck does not hold is refused rather than
 // silently landing on a neighbour, which matters because the offer hands out positions and the
 // deck thins under them.
-func (s *Session) Apply(w Worm, i int) bool {
+func (s *Session) Apply(w Essence, i int) bool {
 	card, ok := s.Card(i)
 	if !ok {
 		return false
@@ -335,7 +335,7 @@ func (s *Session) Apply(w Worm, i int) bool {
 
 	case TargetAmount:
 		// **Percentages compound rather than replace.** A card scaled twice by 150 is at 225, not
-		// back at 150, so a second worm on the same card is worth something — and `Card.Amount`
+		// back at 150, so a second essence on the same card is worth something — and `Card.Amount`
 		// does the clamping, so a Defend walked up repeatedly stops at its ceiling instead of
 		// being refused.
 		if card.AmountPct == 0 {
@@ -368,11 +368,11 @@ func (s *Session) Apply(w Worm, i int) bool {
 	}
 }
 
-// CanApply reports whether this worm would do anything to this card. **The screen asks before it
-// offers**, because a worm that lands and changes nothing is a reward taken away: a Pulverize cannot
+// CanApply reports whether this essence would do anything to this card. **The screen asks before it
+// offers**, because an essence that lands and changes nothing is a reward taken away: a Pulverize cannot
 // be promoted, and neither can a Guard — the defences are a ladder of their own since 2026-09-06,
 // so the ends stop the same way rather than the whole verb being refused.
-func (s *Session) CanApply(w Worm, i int) bool {
+func (s *Session) CanApply(w Essence, i int) bool {
 	card, ok := s.Card(i)
 	if !ok {
 		return false

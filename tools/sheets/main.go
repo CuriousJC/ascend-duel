@@ -63,11 +63,11 @@ var sheets = []sheet{
 			"can be read against each other.",
 	},
 	{
-		Dir:   "wormsheet",
-		Tool:  "./tools/wormsheet",
-		Title: "Worm sheet",
-		Blurb: "Every worm, grouped by what it changes about a card. Two are offered after a won " +
-			"fight, so this is the whole catalogue a run sees a fifth of.",
+		Dir:   "essencesheet",
+		Tool:  "./tools/essencesheet",
+		Title: "Essence sheet",
+		Blurb: "Every essence, grouped by what it changes about a card. Two are offered after a won " +
+			"fight and one is kept, so a run only ever meets a slice of what is here.",
 	},
 	{
 		Dir:   "enemysheet",

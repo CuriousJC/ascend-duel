@@ -12,7 +12,7 @@ import (
 // How the *hand* is arranged: what the combat screen does when a sort tab is pressed.
 //
 // **The modes, the comparisons and the tab block itself are in handsort.go** *(2026-09-05)*, which
-// belongs to no screen — the worm screen sorts its offer with the same three tabs. What is left
+// belongs to no screen — the essence screen sorts its offer with the same three tabs. What is left
 // here is the half only a duel has: a queue to resync and a row of cards to send sliding.
 //
 // **The order of the queue is a rule as of 2026-08-26** *(owner's call)*. It was not one for the

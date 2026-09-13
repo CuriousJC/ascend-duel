@@ -13,13 +13,13 @@ import (
 // (a burn ticks twice, a status is gone by the round after, a second hit does not stack), which
 // is the thing that must not move without somebody deciding it should.
 
-// **These tests talk in colours and the rules no longer do** *(2026-08-17)*. A status is its own
+// **These tests talk in colors and the rules no longer do** *(2026-08-17)*. A status is its own
 // record and a relic is what connects the two, so the four relics below are built here — this package
 // cannot read `relics.json`, which is parsed in `internal/session` — and every element-shaped helper
 // goes through them. What that buys is that a test about the *lifecycle* stays written the way the
 // mechanic is discussed, while the decoupling is exercised by the wiring underneath it.
 
-// statusOf is the status the named colour's relic applies, by the pairing `relics.json` ships.
+// statusOf is the status the named color's relic applies, by the pairing `relics.json` ships.
 func statusOf(e Element) StatusID {
 	switch e {
 	case Fire:
@@ -69,7 +69,7 @@ func registerTestRelics() map[Element]RelicID {
 
 // wearing returns the duelist with relics for the named elements on. **Every status test needs
 // one**, which is the whole point of the 2026-08-16 rule: without a relic an element is a border
-// colour and a hand axis and nothing else.
+// color and a hand axis and nothing else.
 func wearing(d Duelist, es ...Element) Duelist {
 	for _, e := range es {
 		d = d.Wearing(WornRelic{Relic: testRelics[e]})
@@ -81,7 +81,7 @@ func wearing(d Duelist, es ...Element) Duelist {
 // **Five is exactly MaxWornRelics**, so an element added past arcane cannot join this hand.
 func reliced(d Duelist) Duelist { return wearing(d, Fire, Ice, Lightning, Earth, Arcane) }
 
-// statusEvents returns the KindStatus events for the status one colour's relic applies.
+// statusEvents returns the KindStatus events for the status one color's relic applies.
 func statusEvents(events []Event, e Element) []Event {
 	var out []Event
 	for _, ev := range events {
@@ -105,7 +105,7 @@ func countKind(events []Event, k EventKind) int {
 // --- the relic gate ---------------------------------------------------------------------------
 
 func TestAnElementAppliesNothingWithoutItsRelic(t *testing.T) {
-	// **The headline rule** *(2026-08-16)*. A coloured attack from a duelist wearing no relic is a
+	// **The headline rule** *(2026-08-16)*. A colored attack from a duelist wearing no relic is a
 	// plain attack: it still counts toward the mix multiplier, and it leaves nothing behind.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		a, b := duelist(10, 5, 500), duelist(10, 5, 500)
@@ -131,7 +131,7 @@ func TestOnlyTheRelicWornSwitchesItsOwnElementOn(t *testing.T) {
 		[]Card{Of(Jab, Fire), Of(Jab, Ice), Of(Jab, Lightning), Of(Jab, Earth)}, nil, 1)
 
 	if !bAfter.Statuses[statusOf(Fire)].Active() {
-		t.Error("the fire relic's own colour left no burn")
+		t.Error("the fire relic's own color left no burn")
 	}
 	for _, e := range []Element{Ice, Lightning, Earth} {
 		if bAfter.Statuses[statusOf(e)].Active() {
@@ -154,7 +154,7 @@ func TestTheRelicIsReadOffTheAttackerNotTheVictim(t *testing.T) {
 }
 
 func TestABasicAttackAppliesNothingHoweverManyRelicsAreWorn(t *testing.T) {
-	// Basic is the absence of an element rather than a fifth colour, so no elemental relic can match
+	// Basic is the absence of an element rather than a fifth color, so no elemental relic can match
 	// it. A duelist wearing all four and swinging a plain card leaves nothing behind — which is what
 	// keeps "drab lands none" true from the relic's side as well as the card's.
 	a, b := reliced(duelist(10, 5, 500)), duelist(10, 5, 500)
@@ -226,24 +226,24 @@ func TestABlockedBlowStillAppliesItsStatus(t *testing.T) {
 	// conditional on the final figure would let a defensive card silently un-apply an element the
 	// attacker had already paid for, and under one blow per turn that would be every defensive
 	// card in the game.
-	for _, defence := range []ConceptID{testGuard} {
+	for _, defense := range []ConceptID{testGuard} {
 		a, b := reliced(duelist(10, 5, 500)), duelist(10, 8, 500)
 
-		// B raises the defence in round one, A swings into it in round two.
-		_, a1, b1 := resolve(a, b, nil, []Card{Plain(defence)}, 1)
+		// B raises the defense in round one, A swings into it in round two.
+		_, a1, b1 := resolve(a, b, nil, []Card{Plain(defense)}, 1)
 		events, _, bAfter := resolve(a1, b1, []Card{Of(Bash, Fire)}, nil, 2)
 
 		if n := len(statusEvents(events, Fire)); n != 1 {
-			t.Errorf("a Bash met by a %v applied its burn %d times, want 1", defence, n)
+			t.Errorf("a Bash met by a %v applied its burn %d times, want 1", defense, n)
 		}
 		if !bAfter.Statuses[statusOf(Fire)].Active() {
-			t.Errorf("a Bash met by a %v left no burn", defence)
+			t.Errorf("a Bash met by a %v left no burn", defense)
 		}
 	}
 }
 
-func TestOneColourInAHandIsOneStatusHoweverManyCardsCarryIt(t *testing.T) {
-	// The mix counts **distinct** colours, not coloured cards, so this is the rule that decides
+func TestOneColorInAHandIsOneStatusHoweverManyCardsCarryIt(t *testing.T) {
+	// The mix counts **distinct** colors, not colored cards, so this is the rule that decides
 	// status volume now. Two fire Jabs are a mono fire Pair and land one burn — where under the
 	// per-card model they landed two.
 	a, b := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
@@ -259,9 +259,9 @@ func TestOneColourInAHandIsOneStatusHoweverManyCardsCarryIt(t *testing.T) {
 	}
 }
 
-func TestEachColourInTheHandLandsItsOwnStatus(t *testing.T) {
+func TestEachColorInTheHandLandsItsOwnStatus(t *testing.T) {
 	// The other end of the same rule: a duo hand lands both, which is what the mix multiplier is
-	// paying for besides damage — given a relic for each colour.
+	// paying for besides damage — given a relic for each color.
 	a, b := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Ice)}, nil, 1)
@@ -274,7 +274,7 @@ func TestEachColourInTheHandLandsItsOwnStatus(t *testing.T) {
 	}
 }
 
-func TestACardOutsideTheHandCarriesNoColour(t *testing.T) {
+func TestACardOutsideTheHandCarriesNoColor(t *testing.T) {
 	// Attack cards that build no hand are announced and contribute nothing — not damage and not
 	// an element. `Bash, Jab, Bash` is a Bash Pair and the Jab is not in it, so a fire Jab
 	// alongside two plain Bashes burns nobody.
@@ -459,7 +459,7 @@ func TestAShockIsARollAndTheSourceDecidesIt(t *testing.T) {
 func TestAShockIsAFlatChanceThatCanNeverBeCertain(t *testing.T) {
 	// **The chance is the Amount now that nothing stacks**, and the cap that used to hold four
 	// stacks under a certainty went with the stacking. What has to stay true is the reason the cap
-	// existed: a defence that always works deletes a whole opposing turn for one card.
+	// existed: a defense that always works deletes a whole opposing turn for one card.
 	if shockPct() >= 100 {
 		t.Errorf("a shock misses %d%% of the time, which is the certain miss this replaced",
 			shockPct())
@@ -509,7 +509,7 @@ func TestAShockRollsAgainOnEveryAttackItOutlives(t *testing.T) {
 }
 
 func TestAShockDeletesTheWholeTurnBecauseATurnIsOneBlow(t *testing.T) {
-	// Under the multi-blow model a shock cancelled one attack out of several. A turn now resolves
+	// Under the multi-blow model a shock canceled one attack out of several. A turn now resolves
 	// a single blow, so a landed roll deletes all of it — which is the whole reason the certain
 	// miss had to become a roll. See MECHANICS.md.
 	a, b := wearing(duelist(10, 5, 500), Lightning), duelist(10, 8, 500)
@@ -529,7 +529,7 @@ func TestAShockDeletesTheWholeTurnBecauseATurnIsOneBlow(t *testing.T) {
 }
 
 func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
-	// The miss happens before any defence is spent and before any status is applied. The attack
+	// The miss happens before any defense is spent and before any status is applied. The attack
 	// did not occur.
 	//
 	// **What it does not undo is the hand's own reward** — a stagger is paid on forming the hand,
@@ -544,7 +544,7 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 		[]Card{Plain(testGuard)}, []Card{Of(Bash, Fire)}, 2)
 
 	if n := countKind(events, KindNegated); n != 0 {
-		t.Error("a missed attack still spent the defence that was waiting for it")
+		t.Error("a missed attack still spent the defense that was waiting for it")
 	}
 	if n := len(statusEvents(events, Fire)); n != 0 {
 		t.Error("a missed attack still applied its burn")
@@ -788,7 +788,7 @@ func TestWeakenedAmplifiesABurnTick(t *testing.T) {
 	}
 
 	// The same fire card, plus an arcane one to weaken with. **Both have to be Bashes**: only the
-	// cards that formed the hand carry colour, so a Jab beside a Bash is a High Card and the
+	// cards that formed the hand carry color, so a Jab beside a Bash is a High Card and the
 	// arcane card would land nothing. A burn is a share of the attacker's DMG rather than of the
 	// blow, so the tick is lit from the same figure either way and only its *arrival* differs.
 	events, _, _ := resolve(a, b, []Card{Of(Bash, Fire), Of(Bash, Arcane)}, nil, 1)

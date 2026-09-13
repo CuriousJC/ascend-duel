@@ -25,9 +25,9 @@ package session
 // and `Category` are short closed vocabularies written as words, on the rule every other snapshot
 // is under. See save.go.
 
-// The voices a line can be spoken in. **A name rather than a colour**, because a colour in a save
+// The voices a line can be spoken in. **A name rather than a color**, because a color in a save
 // file is a palette decision frozen into a run — the screen maps these onto its swatches, so a
-// re-coloured pane re-colours every ledger already written.
+// re-colored pane re-colors every ledger already written.
 const (
 	// VoiceYou and VoiceFoe are one duelist doing something. They carry that side's swatch.
 	VoiceYou = "you"
@@ -46,12 +46,12 @@ const (
 	VoicePlain = "plain"
 )
 
-// The inks a run of text can be written in. **A name rather than a colour**, because a colour in a
+// The inks a run of text can be written in. **A name rather than a color**, because a color in a
 // save file is a palette decision frozen into a run — the screen maps these onto what it paints
-// with today, so a re-coloured panel re-colours every ledger already written.
+// with today, so a re-colored panel re-colors every ledger already written.
 //
 // The five **element names are inks too**, spelled as `combat.Element.String()` spells them, so the
-// figures in a blow's working carry their own cards' colours exactly as the hand dialog's do.
+// figures in a blow's working carry their own cards' colors exactly as the hand dialog's do.
 const (
 	// InkAttack and InkDefend are an action line's marked verb, which is how a round can be scanned
 	// for what *kind* of thing happened before any of it is read.
@@ -60,7 +60,7 @@ const (
 
 	// InkHand is the hand: its name, and the multiplier in the sum that came off it.
 	//
-	// **It resolves to no colour at all** *(owner's call, 2026-09-02)*. Hue belongs to the elements
+	// **It resolves to no color at all** *(owner's call, 2026-09-02)*. Hue belongs to the elements
 	// — five of them, plus pink for a relic and red and blue for the two verbs — and there is none
 	// left that is not a near-collision. A hand is marked by weight and by the amber swatch on its
 	// row instead, which is why these spans carry Mark. See screens.inkNamed.
@@ -69,7 +69,7 @@ const (
 	// InkRelic is what a worn relic did — the figure it priced a term at, or the landing it bought.
 	InkRelic = "relic"
 
-	// InkTotal is what the blow came to. The damage colour rather than the hand's, because that is
+	// InkTotal is what the blow came to. The damage color rather than the hand's, because that is
 	// the figure that leaves the sum and lands in a life bar.
 	InkTotal = "total"
 )
@@ -81,10 +81,10 @@ const (
 	OutcomeLost = "lost"
 )
 
-// LedgerSpan is one run of text inside a line, with the colour it is written in.
+// LedgerSpan is one run of text inside a line, with the color it is written in.
 //
 // **A line is spans rather than one string**, because the ledger is trying to look like the screen
-// it is an account of: the verb coloured by category, a figure by its card's element, a relic's
+// it is an account of: the verb colored by category, a figure by its card's element, a relic's
 // multiplier in the relic pink. One ink a line could say none of that.
 type LedgerSpan struct {
 	Text string
@@ -94,19 +94,19 @@ type LedgerSpan struct {
 
 	// Mark draws the run bold and underlined. **It marks what happened** — an action's verb, and a
 	// hand's name and multiplier, which have no hue of their own. One mark would be ambiguous on a
-	// panel that also uses colour for the side; two together are not, and no line carries both a
+	// panel that also uses color for the side; two together are not, and no line carries both a
 	// verb and a hand.
 	Mark bool
 }
 
-// LedgerLine is one line of the account, already worded and already coloured.
+// LedgerLine is one line of the account, already worded and already colored.
 //
 // **Worded once, when it happened**, so a line read back three fights later is the line that was on
 // screen while it was happening. See internal/screens/prose.go, the one place the words are chosen.
 type LedgerLine struct {
 	Spans []LedgerSpan
 
-	// Voice is who is speaking, from the list above. An unrecognised voice draws plain rather than
+	// Voice is who is speaking, from the list above. An unrecognized voice draws plain rather than
 	// failing anything — see resumeLedger in save.go for why a line may never refuse a run.
 	Voice string
 }

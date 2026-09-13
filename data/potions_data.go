@@ -48,16 +48,16 @@ type PotionData struct {
 	// pricing mechanism with one member per band.
 	Price int `json:"Price"`
 
-	// Text is what the card says it does. A `\n` is an authored line break, honoured by
+	// Text is what the card says it does. A `\n` is an authored line break, honored by
 	// `cards.WrapText`, for the reason every stone carries one: three cards differing only in a
 	// figure would otherwise read as three layouts of one card.
 	Text string `json:"Text"`
 }
 
-// LoadPotions parses the catalogue **as a slice, in file order**.
+// LoadPotions parses the catalog **as a slice, in file order**.
 //
 // It is the one shape `LoadDuelistCards` uses and for the same reason: file order is shelf order.
-// The whole catalogue stands on the shelf every visit — nothing is drawn, weighted or shuffled —
+// The whole catalog stands on the shelf every visit — nothing is drawn, weighted or shuffled —
 // so there is no map to iterate and no sorted walk to protect, and the order the three vessels
 // stand in is a decision made by editing the file.
 func LoadPotions() []PotionData {

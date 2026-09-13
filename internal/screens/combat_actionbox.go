@@ -61,7 +61,7 @@ const (
 	//
 	// The arithmetic, because it is a coincidence of five constants and not a round number:
 	// PctY(66) is 633, plus a 224px card, plus apBarBelow, apBarHeight and apFigureBelowBar
-	// is 887 — and the button strip's centre at PctY(95) less half a 50px button is 887 too.
+	// is 887 — and the button strip's center at PctY(95) less half a 50px button is 887 too.
 	// **Nothing enforces that**, so TestTheAPFigureLinesUpWithTheButtonStrip does.
 	//
 	// The bar's own y is measured from this row and the band above the hand from it as well, so
@@ -96,9 +96,9 @@ const (
 	apBarHeight = 8
 
 	// The strip under the bar: the AP figure, the two buttons and the deck pile, all on one
-	// line. buttonStripPct is that line's centre and every one of them is placed against it.
+	// line. buttonStripPct is that line's center and every one of them is placed against it.
 	// **Kept as the resting value the strip had, and no longer what places it** *(2026-09-04)*.
-	// See buttonStripY: the strip's centre is now derived from the action-point figure, because
+	// See buttonStripY: the strip's center is now derived from the action-point figure, because
 	// the alignment the owner asked for on 2026-08-12 was a coincidence of five constants that
 	// held at 960 tall and does not survive a change of resolution — at 1080 the nearest integer
 	// percentage lands two pixels off, and there is no percentage in between. This is here so the
@@ -117,10 +117,10 @@ const (
 	// they were the same choice made two ways, and they are separate choices now.
 	//
 	// **150 rather than 60** *(2026-09-04, owner's call)*, two and a half times what the pair first
-	// stood at. The pair is centred under the hand, so this pushes both buttons outward from the
+	// stood at. The pair is centered under the hand, so this pushes both buttons outward from the
 	// middle rather than moving one: what it buys is that Discard and DUEL! are read as two
 	// decisions taken from opposite ends of the row, and what it spends is the clear air on either
-	// side of the pair. TestTheButtonsAreCentredUnderTheHand holds the left end of it against the
+	// side of the pair. TestTheButtonsAreCenteredUnderTheHand holds the left end of it against the
 	// action-point figure's column.
 	stripButtonGap = 150
 
@@ -219,7 +219,7 @@ func apBarBottom(gs *state.GlobalState) int {
 	return handTop(gs) + cardHeight + apBarBelow + apBarHeight
 }
 
-// buttonStripY is the centre line the Discard and DUEL! buttons sit on.
+// buttonStripY is the center line the Discard and DUEL! buttons sit on.
 //
 // **Derived from the deck pile rather than from a percentage of its own** *(2026-09-04)*.
 //
@@ -234,7 +234,7 @@ func buttonStripY(gs *state.GlobalState) int {
 	return pile - discardBadgeRadius - stripButtonHeight/2
 }
 
-// The card's look — its geometry, colours, rounded corners and cost dashes — lives in
+// The card's look — its geometry, colors, rounded corners and cost dashes — lives in
 // internal/cards, which draws a card into a plain Go image with no graphics context.
 // cards.Hand and cards.Deck are the two styles that used to be cards.Hand and
 // deckCardStyle here.
@@ -332,7 +332,7 @@ func (s *CombatScene) updateActionBox(gs *state.GlobalState) {
 		return
 	}
 
-	// **A tutorial step holding input elsewhere takes the hand with it.** Cancelling rather than
+	// **A tutorial step holding input elsewhere takes the hand with it.** Canceling rather than
 	// simply returning, for the reason the branch above cancels: a gate coming up mid-press would
 	// otherwise leave a card stuck to the cursor with no release that can put it down.
 	if !gs.CursorAllowed() {
@@ -400,7 +400,7 @@ func (s *CombatScene) insertCard(at int, card paletteCard) {
 }
 
 // laidOutCount is how many slots the row is drawn to hold. A card in flight still owns
-// the slot it left, so the row keeps its width and stays centred while a card is up —
+// the slot it left, so the row keeps its width and stays centered while a card is up —
 // otherwise the whole hand would slide half a card sideways the moment one was lifted.
 func (s *CombatScene) laidOutCount() int {
 	n := len(s.hand)
@@ -414,13 +414,13 @@ func (s *CombatScene) laidOutCount() int {
 //
 // A small hand sits side by side at cardWidth+cardGap. Once that would carry the row past
 // the band, the pitch shrinks so the row lands exactly on the band's width and the cards
-// overlap instead — each one covering the right-hand part of its neighbour, like a hand
+// overlap instead — each one covering the right-hand part of its neighbor, like a hand
 // held in one fist. Eight cards already need this: eight at full pitch is 1536 pixels
 // against a 1280 screen.
 //
 // **There is no floor.** The row always fits, so a very large hand compresses until the
-// cards are stripes of colour. That is the deliberate choice: a hand that has to be
-// scrolled or truncated is worse than one that has to be hovered, and the element colour
+// cards are stripes of color. That is the deliberate choice: a hand that has to be
+// scrolled or truncated is worse than one that has to be hovered, and the element color
 // survives compression better than anything else on the card.
 func handPitch(gs *state.GlobalState, n int) int {
 	full := cardWidth + cardGap
@@ -444,7 +444,7 @@ func handPitch(gs *state.GlobalState, n int) int {
 // is the enemy card's. The cards pay for the narrowing in overlap, which is what handPitch is for.
 //
 // **One function rather than the arithmetic written twice**, because the pitch and the row's
-// centre both need it and the two disagreeing would put the row half a card off centre.
+// center both need it and the two disagreeing would put the row half a card off center.
 func cardBandWidth(gs *state.GlobalState) int {
 	return ControlColumnLeft(gs) - sortColumnGap - handBandLeft(gs)
 }
@@ -456,22 +456,22 @@ func cardBandWidth(gs *state.GlobalState) int {
 // is one figure rather than a span. The left is the relic row's, so the relics and the hand start
 // together; the right is the control column — the enemy card's *left* edge, where the sort buttons
 // stand — see ControlColumnLeft. Nothing is laid out to the enemy card's *right* edge any more:
-// DUEL! was, for an afternoon, and it is centred under the hand now.
+// DUEL! was, for an afternoon, and it is centered under the hand now.
 func handBandLeft(gs *state.GlobalState) int {
 	l, _ := relicRowSpan(gs)
 	return l
 }
 
-// handBand is the rectangle a row of n cards occupies, centred on the screen rather than
+// handBand is the rectangle a row of n cards occupies, centered on the screen rather than
 // pinned to a pane.
 //
 // This is the single authority on that width. The AP bar spans it, the caption box above
 // the hand matches it, and the card slots are cut out of it, so none of them can drift
 // apart when the hand size changes.
 //
-// **It is centred on the space the cards actually have, not on the screen** *(2026-08-16)*.
-// The sort column stands against the band's right edge, so centring on PctX(50) would push the
-// widest row under it. Centring on the reduced band is what the owner asked for as "nudge the
+// **It is centered on the space the cards actually have, not on the screen** *(2026-08-16)*.
+// The sort column stands against the band's right edge, so centering on PctX(50) would push the
+// widest row under it. Centering on the reduced band is what the owner asked for as "nudge the
 // hand left": the whole row moves rather than only its right edge coming in, and the AP bar and
 // the action-point figure travel with it because both are measured from this rectangle.
 func handBand(gs *state.GlobalState, n int) image.Rectangle {
@@ -479,17 +479,17 @@ func handBand(gs *state.GlobalState, n int) image.Rectangle {
 		n = 1
 	}
 	w := (n-1)*handPitch(gs, n) + cardWidth
-	left := handRowCentre(gs).X - w/2
+	left := handRowCenter(gs).X - w/2
 	top := handTop(gs)
 	return image.Rect(left, top, left+w, top+cardHeight)
 }
 
-// handRowCentre is the middle of the resting hand row, and it is **not a function of how many
-// cards are in it**. `handBand` narrows as the hand empties and centres itself on this point, so
+// handRowCenter is the middle of the resting hand row, and it is **not a function of how many
+// cards are in it**. `handBand` narrows as the hand empties and centers itself on this point, so
 // anything that wants "the middle of the row" for something that is not a card — the fired shout
 // does — takes it from here rather than from the band, or it would drift sideways as cards were
 // spent while it was on screen.
-func handRowCentre(gs *state.GlobalState) image.Point {
+func handRowCenter(gs *state.GlobalState) image.Point {
 	return image.Pt(handBandLeft(gs)+cardBandWidth(gs)/2, handTop(gs)+cardHeight/2)
 }
 
@@ -517,7 +517,7 @@ func (s *CombatScene) dropIndex(gs *state.GlobalState) int {
 
 // handZone is the band across the bottom holding the row, and the region a drag has to be
 // released inside for it to count as a reorder. It spans the full width rather than just
-// the cards: the row is centred with nothing beside it, so a drop that is merely wide of
+// the cards: the row is centered with nothing beside it, so a drop that is merely wide of
 // the last card is obviously still a drop into the hand. It reaches up by selectedNudge
 // because a selected card does.
 func handZone(gs *state.GlobalState) image.Rectangle {
@@ -642,7 +642,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 // is.
 //
 // **Every attack previews, the High Card included** *(2026-08-19, owner's call)*. A single attack
-// card is a hand — the catalogue's `high-card`, at the identity multiplier — and the name says so
+// card is a hand — the catalog's `high-card`, at the identity multiplier — and the name says so
 // while it is being chosen, so the label is on screen from the first attack picked rather than
 // appearing only when a pair happens to form. A queue of nothing but plans still names nothing:
 // `BlowFor` returns a blow with no cards and there is no attack to be one.
@@ -673,7 +673,7 @@ func (s *CombatScene) previewBlow() (combat.Blow, []combat.Slot, bool) {
 	}
 	turn := combat.ResolutionOrder(s.fighterActions, nil)
 	// **The fighter's own ladder**, so a rung a stone has raised previews at what it will actually
-	// pay. `combat.BlowFor` reads the catalogue as shipped and is the right answer only for a
+	// pay. `combat.BlowFor` reads the catalog as shipped and is the right answer only for a
 	// duelist holding no stones — see combat/stone.go.
 	blow := s.fighter.BlowFor(turn)
 	if len(blow.Cards) == 0 {
@@ -698,13 +698,13 @@ func (s *CombatScene) drawAPFigure(gs *state.GlobalState, screen *ebiten.Image, 
 	label := fmt.Sprintf("%d/%d AP", spent, budget)
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(left), float64(barBottom+apFigureBelowBar))
-	// **The figure is written in the bar's own colours** *(owner's call, 2026-09-10)*, so the
+	// **The figure is written in the bar's own colors** *(owner's call, 2026-09-10)*, so the
 	// caption and the thing it captions say one thing: amber for a spend the budget covers, the
 	// game's red once it does not. It was the table's near-black ink until then, which left the
 	// bar and its own figure looking like two readouts that happened to be adjacent.
 	//
 	// One ScaleWithColor, never two — the scale multiplies, so setting the ink and then the
-	// warning colour would give a near-black red rather than the red.
+	// warning color would give a near-black red rather than the red.
 	ink := apSpentColor
 	if spent > budget {
 		label = fmt.Sprintf("%s  +%d over", label, spent-budget)
@@ -712,7 +712,7 @@ func (s *CombatScene) drawAPFigure(gs *state.GlobalState, screen *ebiten.Image, 
 	}
 	// **The word is thickened rather than shadowed** *(owner's call, 2026-09-11)*. Amber at 18pt
 	// on the light table is the faintest figure on this screen — the ground went to a light slate
-	// blue on 2026-09-07 and the caption took the bar's colours on 2026-09-10, and neither
+	// blue on 2026-09-07 and the caption took the bar's colors on 2026-09-10, and neither
 	// decision was taken against the other. A shadow was tried first and does not help: it buys an
 	// edge on a stroke that is already too thin to read, where what the figure needs is more ink.
 	//
@@ -735,8 +735,8 @@ func apFigureRight(gs *state.GlobalState) int {
 	return handBand(gs, handSize).Min.X + apFigureReserve
 }
 
-// buttonStripSlots is where the two buttons sit: **the pair centred under the dealt hand**.
-// Returns centres, which is what models.Button stores.
+// buttonStripSlots is where the two buttons sit: **the pair centered under the dealt hand**.
+// Returns centers, which is what models.Button stores.
 //
 // **They float in the middle rather than being spread or pinned** *(2026-09-04, owner's call)*.
 // Both earlier arrangements anchored the strip to something at its ends — three equal gaps between
@@ -745,15 +745,15 @@ func apFigureRight(gs *state.GlobalState) int {
 // is the hand above them: Discard throws some of it away and DUEL! commits it, so the pair belongs
 // under the cards it acts on.
 //
-// **Centred on handRowCentre, never on handBand** — the band narrows as the hand is spent, so a
-// pair centred on it would drift sideways while the round is being planned. Same trap the hand's
+// **Centered on handRowCenter, never on handBand** — the band narrows as the hand is spent, so a
+// pair centered on it would drift sideways while the round is being planned. Same trap the hand's
 // own name and the arithmetic band avoid.
 //
 // **stripButtonGap keeps them apart**, because they are separate choices rather than one choice
 // made two ways — see Init.
 func buttonStripSlots(gs *state.GlobalState, discardWidth, duelWidth int) (int, int) {
 	pair := discardWidth + stripButtonGap + duelWidth
-	left := handRowCentre(gs).X - pair/2
+	left := handRowCenter(gs).X - pair/2
 
 	return left + discardWidth/2, left + discardWidth + stripButtonGap + duelWidth/2
 }
@@ -782,7 +782,7 @@ func buttonStripSlots(gs *state.GlobalState, discardWidth, duelWidth int) (int, 
 //
 // The cells still make the budget boundary draw itself. Where amber meets red *is* the edge of
 // what can be afforded, so the white tick that used to mark it is gone — it was pointing at
-// something the colours now say on their own.
+// something the colors now say on their own.
 func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) {
 	budget := s.fighter.ActionPoints()
 	if budget <= 0 {
@@ -798,7 +798,7 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 	}
 
 	// **The empty cell is the round timer's, not a dimmed version of the fill.** It was
-	// `ColorToward(bar colour, ground, 50)` while the fill was blue, which made an unspent cell a
+	// `ColorToward(bar color, ground, 50)` while the fill was blue, which made an unspent cell a
 	// quiet copy of a spent one; now that a spent cell is red, a red at half strength would read
 	// as a *partly* spent point. The ground's ink at a quarter strength is present enough to be
 	// counted and says nothing about the resource. `ColorToward` rather than `ColorAtStrength`,
@@ -871,7 +871,7 @@ func abs(n int) int {
 // column and overhang to the right, because a word is wider than one character; the column is a
 // card wide and every label in it is a word.
 func handsButtonPlace(gs *state.GlobalState) image.Point {
-	return ControlColumnSlotCentre(gs, SlotHands)
+	return ControlColumnSlotCenter(gs, SlotHands)
 }
 
 // selectedLift is selectedNudge or nothing, as a cardSlide's lift.

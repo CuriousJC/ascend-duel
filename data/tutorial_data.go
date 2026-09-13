@@ -106,7 +106,7 @@ type TutorialStepData struct {
 // LoadTutorial parses the script, steps in file order.
 //
 // **The steps are a slice and there is no `TutorialOrder`.** The sorted-key walk every
-// map-returning loader here carries exists because Go randomises map iteration and an outcome must
+// map-returning loader here carries exists because Go randomizes map iteration and an outcome must
 // not depend on it; a slice is already ordered, and this one's order is the whole meaning of the
 // file.
 func LoadTutorial() TutorialData {

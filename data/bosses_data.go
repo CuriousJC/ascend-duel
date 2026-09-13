@@ -37,7 +37,7 @@ type BossData struct {
 	// Name is what the boss is called on screen, and it is the bare first name — `Jerry`, `Thera`.
 	//
 	// **The title moved into its own field on 2026-08-24** *(owner's call)*. It was one string,
-	// `Jerry the Toll-Taker`, and the card could not hold it: `EnemyStyle` centres a name on one
+	// `Jerry the Toll-Taker`, and the card could not hold it: `EnemyStyle` centers a name on one
 	// line without wrapping, so half the thirty rendered with a letter clipped off each end. The
 	// card takes the name; the title is what a hover will say.
 	Name string `json:"Name"`
@@ -47,7 +47,7 @@ type BossData struct {
 	//
 	// **The engine ignores it, exactly as it ignores Draw and a relic's Family.** Nothing picks an
 	// opponent by it and nothing resolves a round differently because of it; it is a heading on the
-	// roster sheet and a word for whoever is reading the catalogue.
+	// roster sheet and a word for whoever is reading the catalog.
 	//
 	// **It is deliberately not the floor band** *(owner's call, 2026-09-12)*. The sheet already
 	// groups by floor and prints the band on every heading, so a Family repeating that would be a

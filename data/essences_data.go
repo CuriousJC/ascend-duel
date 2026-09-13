@@ -39,22 +39,19 @@ type EssenceData struct {
 	// **The engine ignores it, exactly as it ignores Art and Draw.** It groups the review page and
 	// nothing else reads it; an essence with no Family still loads and is still offered.
 	//
-	// **It is the relic catalogue's field brought over** *(owner's call, 2026-09-12)*. The same
-	// argument holds and the same caveat does: nearly every value here is implied by the record's
-	// own Target and Value — the five elemental essences are one block because they all recolour — so
-	// this is legibility for whoever is authoring rather than a fact the file knows and the rules
-	// do not. It can go quietly out of date when an essence is retargeted, and no test fails, so
-	// re-read the block when you change what an essence does.
+	// **It is authored rather than derived**, the relic catalog's field brought over. Nearly every
+	// value here is implied by the record's own Target and Value, so it is legibility for whoever is
+	// authoring rather than a fact the file knows and the rules do not — and it can go quietly out of
+	// date when an essence is retargeted, with no test failing. Re-read the block when you change
+	// what an essence does.
 	Family string `json:"Family"`
 
 	// Art is the assets.LoadImageData key for the picture on the face. **Empty means the default
 	// essence face** — see ArtKey.
 	//
-	// **It became a field on 2026-09-12**, having been the one constant `screens.essenceArtKey`. The
-	// note on that constant said the day essences got art it should become a field appearing here
-	// rather than a fallback being unpicked, and this is that day: the fallback is `ArtKey`, which
-	// is the shape `RelicData.ArtKey` already had, so an essence with no art of its own draws the
-	// placeholder and one with art draws it.
+	// **The fallback is `ArtKey` rather than a constant in a screen**, which is the shape
+	// `RelicData.ArtKey` has, and for its reason: a fallback living in `internal/screens` is one the
+	// review tool does not have, which is how a sheet comes to disagree with the game.
 	Art string `json:"Art"`
 
 	// Draw is the subject paragraph the art generator is given for this essence — what the thing
@@ -65,30 +62,37 @@ type EssenceData struct {
 	// essence sheet reports as the backlog.
 	Draw string `json:"Draw"`
 
-	// Target is which aspect of a card this essence changes. A closed vocabulary, resolved by
-	// `session.ParseEssenceTarget`: `element`, `remove`, `duplicate`.
+	// Target is which aspect of a card this essence changes. **A closed vocabulary, and
+	// `session.EssenceTarget` is the list** — `element`, `remove`, `duplicate`, `cost`, `amount`,
+	// `promote`, `demote`, `form` — resolved by `session.ParseEssenceTarget`, which reports failure
+	// rather than falling back.
 	//
-	// **Closing it is the point**, exactly as with a card's verb. The set is short because
-	// `combat.Card` is a concept plus an element and the element is the only per-instance field —
-	// an essence that changed a card's *cost* would be changing the concept, and so every copy of
-	// that card in the deck. Making cost per-card is a field on `combat.Card` and a change at
-	// every `Cost()` call site, which is a price worth charging deliberately rather than
-	// discovering because a JSON file asked for it.
+	// **Closing it is the point**, exactly as with a card's verb: an essence quietly registered as a
+	// recolor because its target was misspelled is a mechanic nobody designed. **What a new target
+	// costs is a per-card field on `combat.Card`**, since everything else about a card lives on the
+	// shared concept and altering one copy would otherwise alter every copy in the deck. That price
+	// is worth charging deliberately rather than discovering because a JSON file asked for it — see
+	// `session.EssenceTarget`, which holds the argument for each target it has been paid for.
 	Target string `json:"Target"`
 
-	// Value is the new value, read against the target. An element name for `element`; empty for
-	// the targets that need none, and refused if one is supplied anyway.
+	// Value is the new value, read against the target: an element name for `element`, a form name
+	// for `form`, a signed delta for `cost`, a percentage for `amount`. **Empty for the targets that
+	// need none, and refused if one is supplied anyway** — a value nothing reads is somebody
+	// expecting something the mechanic does not do.
 	Value string `json:"Value,omitempty"`
 
-	// Text is what the card says it does, in the same clipped register the action cards use —
-	// the column is about a dozen characters wide.
+	// Text is what the card says it does, in the same clipped register the action cards use — the
+	// column is about a dozen characters wide, and `TestEveryEssenceTextFitsItsCard` fails on a
+	// string that wraps past the band rather than letting it run off the bottom of the card.
 	//
-	// **A `\n` is an authored line break** *(2026-08-23)*, honoured by `cards.WrapText` before the
-	// width is measured and split back into lines by the tooltip. The four elemental essences carry
-	// one, because they differ only in the element they name and FIRE sits comfortably on the line
-	// where LIGHTNING all but fills it — so left to the measurer the four read as four layouts of
-	// the same card. A break is the author saying where it goes; it can only ever add a line,
-	// since a too-wide authored line still wraps.
+	// **A `\n` is an authored line break** *(2026-08-23)*, honored by `cards.WrapText` before the
+	// width is measured and split back into lines by the tooltip. It can only ever add a line, since
+	// a too-wide authored line still wraps, so it is not a way past the column.
+	//
+	// **The elemental essences have to break in the same place**, because they differ only in the
+	// element they name and left to the measurer they would read as five layouts of one card. They
+	// do it by wrapping rather than by an authored break today, and
+	// `TestTheElementalEssencesAllBreakInTheSamePlace` is what holds the set together either way.
 	Text string `json:"Text"`
 }
 
@@ -114,7 +118,7 @@ func (w EssenceData) ArtKey() string {
 // EssenceFileOrder is every record id in the order data/essences.json writes them.
 //
 // **File order rather than EssenceOrder's sorted keys**, and it is for the review page alone: the
-// catalogue is authored in motif order — the five recolours together, the two that resize a card
+// catalog is authored in motif order — the five recolors together, the two that resize a card
 // beside each other — and sorting by key throws exactly that away. It is as deterministic as
 // sorted order and carries more.
 //
@@ -132,7 +136,7 @@ func EssenceFileOrder() []string {
 	return out
 }
 
-// LoadEssences parses the catalogue into a map keyed by EssenceRecord.
+// LoadEssences parses the catalog into a map keyed by EssenceRecord.
 func LoadEssences() map[string]EssenceData {
 	var list []EssenceData
 	if err := json.Unmarshal(essencesJSON, &list); err != nil {
@@ -148,7 +152,7 @@ func LoadEssences() map[string]EssenceData {
 
 // EssenceOrder is every record, sorted by key.
 //
-// **Sorted because LoadEssences returns a map and Go randomises that order**, and this one decides
+// **Sorted because LoadEssences returns a map and Go randomizes that order**, and this one decides
 // an outcome rather than a layout: the offer is a shuffle of this list, so an unsorted walk would
 // make which essences you are offered depend on map iteration and take the run's reproducibility
 // with it. See the `randomness` skill.

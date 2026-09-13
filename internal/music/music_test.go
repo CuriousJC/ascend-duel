@@ -8,7 +8,7 @@ import (
 )
 
 // These tests exist because the score is *generated*, and generated output fails
-// quietly. A recorded track that fails to load is silent and obvious; a synthesiser
+// quietly. A recorded track that fails to load is silent and obvious; a synthesizer
 // handed a file it half-understands plays something, and what it plays is wrong in a
 // way nobody notices until they go looking. So the shape of the real file is pinned
 // here, and every one of these numbers is a fact about assets/ascending.mid.
@@ -135,7 +135,7 @@ func TestRenderProducesAWholeLoopOfAudibleStereo(t *testing.T) {
 			len(pcm), loopBytes)
 	}
 
-	// Normalisation targets a fixed peak, so a silent render and a clipped one are both
+	// Normalization targets a fixed peak, so a silent render and a clipped one are both
 	// caught by looking at the loudest sample.
 	peak := 0
 	for i := 0; i+1 < len(pcm); i += 2 {

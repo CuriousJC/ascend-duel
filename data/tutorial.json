@@ -46,7 +46,7 @@
     },
     {
       "StepRecord": "take-them-all",
-      "Text": "Now look closer. Four cards burn the same colour. Matching cards make a hand, and a hand multiplies the whole blow - so take the other three.",
+      "Text": "Now look closer. Four cards burn the same color. Matching cards make a hand, and a hand multiplies the whole blow - so take the other three.",
       "Anchor": "matching-cards-left",
       "Until": "matching-queued"
     },
@@ -58,7 +58,7 @@
     },
     {
       "StepRecord": "swing",
-      "Text": "Elemental Four of a Kind. Matching colours count, not just matching cards.",
+      "Text": "Elemental Four of a Kind. Matching colors count, not just matching cards.",
       "Anchor": "duel-button",
       "Until": "duel-pressed"
     },

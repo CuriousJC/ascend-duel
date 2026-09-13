@@ -14,7 +14,7 @@ type Combatant struct {
 
 	// Record is which roster entry this combatant was built from, and it is what names its deck
 	// in `internal/decks` *(2026-08-16)*. It replaced `Style combat.PlanStyle`: an enemy's
-	// behaviour used to be a string picking one of four planners and is now the cards it holds,
+	// behavior used to be a string picking one of four planners and is now the cards it holds,
 	// so what a caller needs from this struct is the key to those cards.
 	//
 	// Empty for the player, whose deck is built by the screen.

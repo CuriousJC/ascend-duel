@@ -7,7 +7,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// The catalogue, the worn set, and the three moments that fire out here rather than in a round.
+// The catalog, the worn set, and the three moments that fire out here rather than in a round.
 
 // bare is a run wearing nothing, which is what most of these want: `New` opens wearing
 // StartingRelics, which is empty as shipped — so this is belt and braces against the day it is
@@ -33,7 +33,7 @@ func wearing(t *testing.T, keys ...string) *Session {
 }
 
 func TestEveryRelicInTheFileRegisters(t *testing.T) {
-	// **The whole catalogue is parsed at package init and panics on a bad record**, so reaching this
+	// **The whole catalog is parsed at package init and panics on a bad record**, so reaching this
 	// test at all is most of the check. What it adds is the count: a record silently dropped would
 	// otherwise look exactly like a relic nobody has authored yet.
 	records := data.LoadRelics()
@@ -73,7 +73,7 @@ func TestARelicIsWornOnceAndNoMoreThanFiveAreWornAtAll(t *testing.T) {
 		t.Errorf("a %dth relic went on, cap is %d", combat.DefaultRelicSlots+1, combat.DefaultRelicSlots)
 	}
 	if run.Wear("no-such-ring") {
-		t.Error("a record the catalogue does not hold went on")
+		t.Error("a record the catalog does not hold went on")
 	}
 }
 
@@ -202,9 +202,9 @@ func TestSoulTakerPaysFlatAndHungryAddsAPick(t *testing.T) {
 	}
 }
 
-func TestAFlipRecoloursTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
+func TestAFlipRecolorsTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
 	// **A flip fires as a card is drawn, not as the deck is built** *(2026-08-24)*. The pile a
-	// fight opens with therefore holds the run's own colours, and the recolour lands one card at a
+	// fight opens with therefore holds the run's own colors, and the recolor lands one card at a
 	// time on the way into the hand — which is what every one of these relics' text has always said.
 	run := wearing(t, "flip-lightning-to-ice")
 	run.deck = []combat.Card{
@@ -231,11 +231,11 @@ func TestAFlipRecoloursTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
 }
 
 func TestTwoFlipsCannotChainThroughOneCard(t *testing.T) {
-	// **The failure this guards is a redraw.** Every flip reads the card's *original* colour, which
-	// was true for free while the whole deck was recoloured once — nothing had been flipped yet.
-	// Firing per draw, a card that has been through the hand and the discard is holding a colour a
+	// **The failure this guards is a redraw.** Every flip reads the card's *original* color, which
+	// was true for free while the whole deck was recolored once — nothing had been flipped yet.
+	// Firing per draw, a card that has been through the hand and the discard is holding a color a
 	// relic made, so handing that card back to DrawnAs is asking the second flip to read the first
-	// one's answer: lightning to ice to fire, and a deck walked to one colour by two relics that
+	// one's answer: lightning to ice to fire, and a deck walked to one color by two relics that
 	// each claim to touch one.
 	run := wearing(t, "flip-lightning-to-ice", "flip-ice-to-fire")
 	owned := combat.Card{Concept: combat.Bash, Element: combat.Lightning}
@@ -250,7 +250,7 @@ func TestTwoFlipsCannotChainThroughOneCard(t *testing.T) {
 	}
 	if chained := run.DrawnAs(drawn); chained.Element != combat.Fire {
 		t.Errorf("feeding a drawn card back in came up %v; ice-to-fire is expected here, and it "+
-			"is why the draw pile has to hold the run's colours - see screens.restoreToDeck",
+			"is why the draw pile has to hold the run's colors - see screens.restoreToDeck",
 			chained.Element)
 	}
 }

@@ -7,7 +7,7 @@ import "html/template"
 //
 // **Images are shown at their natural size first with image-rendering: pixelated.** A card's rim is
 // one pixel thick and a browser that scales it resamples that rim into a blur, which makes the
-// sheet lie about the art. The enlarged row is an honest nearest-neighbour blow-up of the same file
+// sheet lie about the art. The enlarged row is an honest nearest-neighbor blow-up of the same file
 // rather than a second rendering — a kinder render at 3x would be a picture of a card the game
 // never draws.
 //
@@ -74,7 +74,7 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   img.big { width: {{mul (index .Style "width") .Zoom}}px; height: auto; }
   .grants { margin: 8px 0 0; font-size: 13px; }
   /* The tooltip as the game draws it: a titled box of short lines, dark on the game's own panel
-     colours rather than on the page, so a line is judged against the ground it lands on. */
+     colors rather than on the page, so a line is judged against the ground it lands on. */
   .tip {
     display: inline-block; margin: 12px 0 0; padding: 9px 14px 11px;
     background: #f0eee8; border: 2px solid #8d8b84; border-radius: 7px;
@@ -111,7 +111,7 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   cards in a row is the failure mode the border style exists to avoid.
 </p>
 <p class="note">
-  <strong>Eight of these colours are placeholders.</strong> Hue is spent — five elements, the relic
+  <strong>Eight of these colors are placeholders.</strong> Hue is spent — five elements, the relic
   pink, the two verbs, the two duelists, the ground — so what is here is picked to be told apart
   rather than to mean anything. Gold and silver are the exception: they are metals, and they are
   what the mechanic is called. Retune the rest in <code>systems.upgradeTint</code> and re-run.
@@ -122,14 +122,14 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   <code>internal/carddesc</code> — the same call <code>screens.cardTip</code> makes, not a copy of
   it. The card is a fire Skewer and the duelist behind it hits for 10, so a figure that looks wrong
   can be checked by eye. There are no relics on, which is why the block is the whole panel: the game
-  appends its damage chain only when a relic has moved something. <strong>The colouring is the game's
+  appends its damage chain only when a relic has moved something. <strong>The coloring is the game's
   too</strong> — the same <code>cards.ElementSpans</code> table the screen reads — which is why FIRE
   is red and CHROMATIC is not: the wheel has no hue left for "all of them".
 </p>
 
 <h2>The plain card</h2>
 <p class="note">
-  What the player has fifty-five of. Every judgement below is a comparison against this row, so it
+  What the player has fifty-five of. Every judgment below is a comparison against this row, so it
   is here rather than at the bottom.
 </p>
 <div class="row">
@@ -166,7 +166,7 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
 
 <h4>enlarged, {{$.Zoom}}×</h4>
 <p class="note">
-  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  The same files, blown up nearest-neighbor, one row per style in the same order. Read it
   <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
   that does not work.
 </p>
@@ -183,7 +183,7 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
 
 <h4>states</h4>
 <p class="note">
-  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  In the style the game draws. The upgrade goes on after the state coloring, so a card that cannot
   be afforded has to still read as unavailable through it and a queued one has to still read as
   queued — which is the sharpest test of the border style, since state is what the border was
   already saying. A row where the three look the same is a bug in the order, not a matter of taste.

@@ -37,9 +37,9 @@ const (
 	// EssenceOffer is which two alterations are offered after a fight. Per fight.
 	//
 	// **A separate stream from RewardHand, and the question was asked rather than assumed.** They
-	// are drawn from different lists — one from the catalogue, one from the run deck — and they
+	// are drawn from different lists — one from the catalog, one from the run deck — and they
 	// change on different schedules: adding an essence to `data/essences.json` would otherwise reroll
-	// which *cards* every fight of every run offered, which is a retune of the catalogue silently
+	// which *cards* every fight of every run offered, which is a retune of the catalog silently
 	// changing the game around it. That is the exact failure the salts exist to prevent.
 	EssenceOffer
 
@@ -47,7 +47,7 @@ const (
 	//
 	// **Its own stream, and the question was asked.** Sharing EssenceOffer would draw the shop's
 	// three relics off the same sequence as the two essences, so authoring a new essence would change
-	// which relics every run was ever offered — the catalogue-retune failure this package exists to
+	// which relics every run was ever offered — the catalog-retune failure this package exists to
 	// prevent, one file over. Sharing RewardHand would make the shelf a function of the run deck's
 	// size, which is a thing the player changes on the screen immediately before the shop.
 	ShopStock
@@ -63,7 +63,7 @@ const (
 
 	// VialStock is which four essences a vial of essence holds. Per fight.
 	//
-	// **Separate from EssenceOffer even though both draw essences from one catalogue**, which is the
+	// **Separate from EssenceOffer even though both draw essences from one catalog**, which is the
 	// case worth stating: they are two draws that happen in one run at two different stations, and
 	// sharing the stream would make the shop's four a function of which two the reward screen had
 	// already put up. Buying the vial would then be able to *guarantee* the pair you had just
@@ -73,8 +73,8 @@ const (
 
 	// SackStock is which four runes a sack of runes holds. Per fight.
 	//
-	// **Its own stream, on exactly the argument VialStock is under.** A rune catalogue and a
-	// essence catalogue grow on different schedules and are drawn at the same station, so sharing
+	// **Its own stream, on exactly the argument VialStock is under.** A rune catalog and a
+	// essence catalog grow on different schedules and are drawn at the same station, so sharing
 	// either of the other two goods' streams would make one good's contents a function of the
 	// other's — and authoring a rune would silently reroll every bag every run has ever
 	// opened.
@@ -199,7 +199,7 @@ func For(runSeed int64, s Stream) int64 {
 }
 
 // ForFight is the seed for a per-fight stream, taking the **zero-based** fight index the scene
-// already carries. The `+1` that keeps fight zero from cancelling the stride lives here rather
+// already carries. The `+1` that keeps fight zero from canceling the stride lives here rather
 // than at the call site, which is where it used to be forgotten.
 func ForFight(runSeed int64, s Stream, fightIndex int) int64 {
 	def := lookup(s)

@@ -40,7 +40,7 @@ type RuneData struct {
 	// **The engine ignores it, exactly as it ignores Art and Draw.** It groups the review page and
 	// nothing else reads it; a rune with no Family still loads and is still sold.
 	//
-	// **It is the relic catalogue's field brought over** *(owner's call, 2026-09-12)*, with the
+	// **It is the relic catalog's field brought over** *(owner's call, 2026-09-12)*, with the
 	// same argument and the same caveat: it is legibility for whoever is authoring rather than a
 	// fact the file knows and the rules do not, and it can go quietly out of date when a record is
 	// retargeted without anything failing. Re-read the block when you change what a rune does.
@@ -52,7 +52,7 @@ type RuneData struct {
 	// **The rune borrowed the essence's placeholder until 2026-09-12**, through one constant in
 	// internal/screens whose own note said the day runes got art it should become a field here
 	// rather than a fallback being unpicked. This is that field, and the placeholder is a rune's
-	// own now: two catalogues wearing one picture is two backlogs that cannot be told apart.
+	// own now: two catalogs wearing one picture is two backlogs that cannot be told apart.
 	Art string `json:"Art"`
 
 	// Draw is the subject paragraph the art generator is given for this rune — what the thing
@@ -100,7 +100,7 @@ type RuneData struct {
 	Count int `json:"Count"`
 
 	// Text is what the card says it does, in the clipped register the action cards use — the
-	// column is about a dozen characters wide, and a `\n` is an authored line break honoured by
+	// column is about a dozen characters wide, and a `\n` is an authored line break honored by
 	// `cards.WrapText`.
 	Text string `json:"Text"`
 }
@@ -108,7 +108,7 @@ type RuneData struct {
 // DefaultRuneArt is the face a record with no Art of its own draws:
 // assets/rune/default-rune.png.
 //
-// **A picture of its own rather than the essence's** *(2026-09-12)*. The two catalogues wore one
+// **A picture of its own rather than the essence's** *(2026-09-12)*. The two catalogs wore one
 // placeholder while neither had art, and the moment either gets some that becomes a page where a
 // drawn essence and an undrawn rune are the same picture — so the backlogs are told apart by
 // giving each its own seat. **Keys are not file paths**: LoadImageData files that picture under
@@ -130,7 +130,7 @@ func (p RuneData) ArtKey() string {
 // RuneFileOrder is every record id in the order data/runes.json writes them.
 //
 // **File order rather than RuneOrder's sorted keys**, and it is for the review page alone: the
-// catalogue is authored in motif order — the five marks together, the four staves, the metals
+// catalog is authored in motif order — the five marks together, the four staves, the metals
 // beside each other — and sorting by key throws exactly that away.
 //
 // **Nothing that decides an outcome may walk this.** What a sack holds is a shuffle of
@@ -147,7 +147,7 @@ func RuneFileOrder() []string {
 	return out
 }
 
-// LoadRunes parses the catalogue into a map keyed by RuneRecord.
+// LoadRunes parses the catalog into a map keyed by RuneRecord.
 func LoadRunes() map[string]RuneData {
 	var list []RuneData
 	if err := json.Unmarshal(runesJSON, &list); err != nil {
@@ -163,7 +163,7 @@ func LoadRunes() map[string]RuneData {
 
 // RuneOrder is every record, sorted by key.
 //
-// **Sorted because LoadRunes returns a map and Go randomises that order**, and this one
+// **Sorted because LoadRunes returns a map and Go randomizes that order**, and this one
 // decides an outcome rather than a layout: what a sack holds is a shuffle of this list, so an
 // unsorted walk would make a purchase depend on map iteration and take the run's reproducibility
 // with it. See the `randomness` skill.

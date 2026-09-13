@@ -1,6 +1,6 @@
 package session
 
-// Relics: the catalogue, what the run is wearing, and the moments that fire outside combat.
+// Relics: the catalog, what the run is wearing, and the moments that fire outside combat.
 //
 // **`relics.json` is parsed here for the reason the essences are** — a relic belongs to a *run*. Three of
 // its ten moments are `deck-built`, `fight-start` and `fight-won`, none of which happen inside
@@ -16,7 +16,7 @@ package session
 // never reads a file it has no business in, and this file never grows an opinion about what a
 // status is worth. Same division `decks.EnemyCards` draws for enemy cards.
 //
-// **Bad records panic at load**, like every other catalogue: an unknown moment, a verb used at the
+// **Bad records panic at load**, like every other catalog: an unknown moment, a verb used at the
 // wrong moment, a predicate the rules cannot resolve, or a status key that is in no file.
 
 import (
@@ -96,7 +96,7 @@ func resumeRelicSlots(saved int) int {
 	return saved
 }
 
-// registeredRelics is every relic in the catalogue, registered with the rules at package init and
+// registeredRelics is every relic in the catalog, registered with the rules at package init and
 // indexed by record key.
 //
 // **Walked in sorted key order**, per the determinism rules: `LoadRelics` hands back a map, and
@@ -151,7 +151,7 @@ func registerRelics() (map[string]combat.RelicID, map[string]int, map[string]int
 	return out, prices, sells, weights
 }
 
-// Relics is every registered record key, sorted. For a tool or a screen that wants the catalogue
+// Relics is every registered record key, sorted. For a tool or a screen that wants the catalog
 // rather than what is worn.
 func Relics() []string {
 	out := make([]string, 0, len(registeredRelics))
@@ -276,7 +276,7 @@ func relicEffect(key string, in data.RelicEffectData) (combat.RelicEffect, error
 	return out, nil
 }
 
-// Wear puts a relic on, at the right-hand end of the row. It reports false for a record the catalogue
+// Wear puts a relic on, at the right-hand end of the row. It reports false for a record the catalog
 // does not hold, for one already worn, and for the sixth relic.
 //
 // **Worn order is the order relics fire in**, so appending is what makes the row on screen the rule:
@@ -460,7 +460,7 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 //
 // **It is the demotions and nothing else as of 2026-08-24.** The element flip used to be applied
 // here too and now fires per card at `card-drawn` — see combat.MomentCardDrawn for why. The cards
-// a fight ends up playing are unchanged; what changed is that this pile holds them in the colours
+// a fight ends up playing are unchanged; what changed is that this pile holds them in the colors
 // the run owns, and the flip lands on the way into the hand.
 //
 // **The stored deck is untouched.** Each card is read as the run owns it, so two demoting relics
@@ -513,13 +513,13 @@ func (s *Session) AlteredAs(c combat.Card) combat.Card {
 	return out
 }
 
-// DrawnAs is what a card is dealt as: the colour the worn flips make it, or the card unchanged
+// DrawnAs is what a card is dealt as: the color the worn flips make it, or the card unchanged
 // when none of them match it.
 //
 // **It is the `card-drawn` moment, and the run is where it lives** because the fight's piles are a
 // screen's and the worn relics are the run's. The caller passes the card *as the run owns it* — see
 // combat.FlipElement, which reads the original element and would chain if handed a card it had
-// already recoloured.
+// already recolored.
 func (s *Session) DrawnAs(c combat.Card) combat.Card {
 	if e, flipped := combat.FlipElement(s.WornRelics(), c); flipped {
 		c.Element = e

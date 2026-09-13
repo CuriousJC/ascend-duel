@@ -6,10 +6,10 @@ import (
 )
 
 // TipLine is one line of a tooltip, in the spans it is drawn as. A line with one span is a line in
-// one colour, which is what most of them are.
+// one color, which is what most of them are.
 type TipLine []TextSpan
 
-// Text is the line's words with the colouring dropped — what a caller keying on a tooltip's
+// Text is the line's words with the coloring dropped — what a caller keying on a tooltip's
 // identity compares, and what a test asserts against.
 func (l TipLine) Text() string {
 	out := ""
@@ -19,10 +19,10 @@ func (l TipLine) Text() string {
 	return out
 }
 
-// TextSpan is one stretch of a line drawn in its own colour.
+// TextSpan is one stretch of a line drawn in its own color.
 //
-// **A zero-alpha Ink means the panel's own ink**, which is the convention every optional colour in
-// this codebase follows — so a caller that never thinks about colour builds a line of one span and
+// **A zero-alpha Ink means the panel's own ink**, which is the convention every optional color in
+// this codebase follows — so a caller that never thinks about color builds a line of one span and
 // nothing changes.
 type TextSpan struct {
 	Text string
@@ -33,7 +33,7 @@ type TextSpan struct {
 //
 // **It is a widget rather than a screen's own drawing** for the reason `Button` is: four scenes
 // want it, they want it to behave identically, and the thing that varies between them is only the
-// words. Behaviour lives in `internal/systems`, exactly like every other widget here.
+// words. Behavior lives in `internal/systems`, exactly like every other widget here.
 //
 // **A scene points it at something every tick, and a tick with nothing pointed hides it.** That is
 // the same shape `state.ModalOpen` takes — cleared by the frame, re-asserted by whoever still means
@@ -50,12 +50,12 @@ type Tooltip struct {
 	// an arithmetic, and both know their own shape better than a wrapper would.
 	//
 	// **A line is spans rather than a string** *(owner's call, 2026-09-08)*, so a word naming an
-	// element can be drawn in that element's colour where the rest of the line is not. This package
-	// knows nothing about why a span has a colour — the caller decides that, exactly as it decides
+	// element can be drawn in that element's color where the rest of the line is not. This package
+	// knows nothing about why a span has a color — the caller decides that, exactly as it decides
 	// where a line breaks.
 	//
 	// **The title is spans too, as of 2026-09-09** *(owner's call)*. It was a plain string, which
-	// made it the one place in the game an element word was not written in its element's colour —
+	// made it the one place in the game an element word was not written in its element's color —
 	// and a card's title is `FIRE JAB`, so it was the place that mattered most. The two now take
 	// the same type and go through the same drawing.
 	Title TipLine
@@ -85,9 +85,9 @@ type Tooltip struct {
 // Point aims the tooltip at something, and is called every tick the cursor is still on it. It
 // restarts the dwell when the thing under the cursor changes.
 //
-// **The key is the title's *words*, not its spans.** Recolouring a title without changing what it
+// **The key is the title's *words*, not its spans.** Recoloring a title without changing what it
 // says is not a different thing under the cursor, and restarting the dwell on it would make a
-// tooltip flicker at whatever recoloured it.
+// tooltip flicker at whatever recolored it.
 func (t *Tooltip) Point(at image.Rectangle, title TipLine, lines []TipLine) {
 	key := title.Text() + at.String()
 	if key != t.key {

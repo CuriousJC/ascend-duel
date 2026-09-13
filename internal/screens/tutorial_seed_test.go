@@ -11,7 +11,7 @@ import (
 
 // **The check CLAUDE.md said did not exist, and the bug it would have caught.**
 //
-// The lesson tells the player four of their cards burn the same colour, to take all four, that one
+// The lesson tells the player four of their cards burn the same color, to take all four, that one
 // of them is a shield, and that what is left of the creature swings back. Every one of those is a
 // promise about one particular deal off the shipping deck against one particular creature — and for a while nothing held them: the script was
 // pinned to a seed by a scenario, and when the profile became the real trigger the lesson ran on
@@ -90,7 +90,7 @@ func TestTheTutorialsSeedDealsTheHandTheLessonDescribes(t *testing.T) {
 
 	// **A shield in the taught set is now required rather than reported** *(2026-09-06)*. It was
 	// an error here for as long as the lesson was four attacks and a kill in one; the lesson now
-	// teaches that a defence carries an element and joins a hand like anything else, so the set has
+	// teaches that a defense carries an element and joins a hand like anything else, so the set has
 	// to contain exactly one — and, since the shield brings no damage, the blow no longer kills and
 	// the creature gets the turn the shield is there to answer.
 	cost, sum, shields := 0, 0, 0
@@ -141,7 +141,7 @@ func TestTheTutorialsSeedDealsTheHandTheLessonDescribes(t *testing.T) {
 	}
 }
 
-// multiplierFor is what the ladder pays an elemental set of n, read off the catalogue rather than
+// multiplierFor is what the ladder pays an elemental set of n, read off the catalog rather than
 // written down here — the whole point being that a rebalanced ladder shows up as this test failing.
 func multiplierFor(t *testing.T, n int) int {
 	t.Helper()

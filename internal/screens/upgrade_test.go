@@ -75,7 +75,7 @@ func TestTheFaceShowsTheLastUpgradePutOn(t *testing.T) {
 	}
 }
 
-// **Every rider a rune can attach is one the catalogue actually grants**, and every rider the
+// **Every rider a rune can attach is one the catalog actually grants**, and every rider the
 // rules have is attachable. An upgrade nobody can acquire is a drawing with no way into the game,
 // which is as invisible as a rider with no drawing — see tools/upgradesheet, which says so on the
 // page for the same reason.

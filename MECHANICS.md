@@ -37,7 +37,7 @@ cards, free cards, and stats too, since a stat is just another rule to bend. Eve
 below is a candidate for something to bend.
 
 The consequence for the code: rules cannot stay `const`. **Most of them already stopped being
-constants** *(2026-08-16)* — a card's cost, damage, defence percentage and shield count are fields on
+constants** *(2026-08-16)* — a card's cost, damage, defense percentage and shield count are fields on
 its record, so retuning one is a file edit. What is left as a compile-time constant is the
 actions-per-round cap and the status magnitudes, read by functions with no access to the run. They need a **carrier** — a modifier set
 passed alongside the duelists that `internal/combat` reads instead of the constants. Cost
@@ -112,7 +112,7 @@ or weaker way to build one.
 **The middle three rungs are the deck; the two ends ship at zero copies** *(owner's call,
 2026-08-24)*. A run opens holding 1/2/3 AP cards and can never buy anything else, so the only way
 to hold a Poke or an Impale is a **Debase** or a **Exalt** essence walking a card off the end of the
-three. They are real registered concepts all the same, because `combat.Neighbour` derives the
+three. They are real registered concepts all the same, because `combat.Neighbor` derives the
 ladder from the registry — a rung that does not exist is a rung an essence cannot step onto, which is
 what used to make Debase dead on every 1 AP card and Exalt dead on every 3 AP one.
 
@@ -140,11 +140,11 @@ cheaper cards.
 **The defend ladder is four rungs and the dealt two are the middle** *(owner's call, 2026-09-06)*.
 `Flinch` at 0 AP and `Guard` at 3 AP ship at zero copies exactly as the outer attack rungs do, so
 the deck opens on Brace and Block and the two ends are somewhere an essence can walk a card to. Guard
-left the deck on 2026-09-01; Flinch was added to give the defences the same shape.
+left the deck on 2026-09-01; Flinch was added to give the defenses the same shape.
 
-**Nine attack concepts × five colours = 45 cards; two defences × five colours = 10.** A **55-card
+**Nine attack concepts × five colors = 45 cards; two defenses × five colors = 10.** A **55-card
 starting deck** — the zero-copy rungs are in the file and not in the pile. **No card in the player's deck
-is drab** *(2026-08-25)*: every card ships in one of the five elements, the defences included.
+is drab** *(2026-08-25)*: every card ships in one of the five elements, the defenses included.
 
 **A 0 AP card is bounded by the count rather than the cost**, which is the shift `minCardCost`
 already took deliberately when a Hone could drive a card to free: a turn is capped at
@@ -153,7 +153,7 @@ whole cheap turn**, at 1.33× a Skewer for 1.33× the price — which is the run
 triple flattened, and it is now priced level rather than above — the reason it is an essence's prize rather
 than something a run can stock.
 
-**The defences sit on the same ladder the attacks do**, 0 through 3 AP. **The price is the count**:
+**The defenses sit on the same ladder the attacks do**, 0 through 3 AP. **The price is the count**:
 one AP buys one shield, and that is the whole of the pricing decision. It is the flattest rung in
 the game on purpose — the attack tiers buy 0.25x, 0.5x, 1x, 2x and 4x, where the defend tiers buy
 one, two and three — because a shield is *a hit you do not take* rather than a figure, and a curve
@@ -166,11 +166,11 @@ a turn plays at most `MaxActions` cards however cheap they are — rather than t
 the same shift `minCardCost` took when a Hone could drive a card to free. **The duelist's own
 shield cap is not part of that bound any more**; see §Shields.
 
-**`combat.Neighbour` walks this ladder** *(owner's call, 2026-09-06)*, so an Exalt promotes a Brace and
+**`combat.Neighbor` walks this ladder** *(owner's call, 2026-09-06)*, so an Exalt promotes a Brace and
 a Debase demotes a Guard. **This reverses the 2026-08-31 call** that kept the essences to the damage
 ladders on the argument that a free shield changes how many hits a run takes for the rest of the
 tower — which is still true, and is now something a run is allowed to build toward: a deck of ten
-defences shrunk to Flinches is five free shields a turn, and since 2026-09-09 nothing takes the
+defenses shrunk to Flinches is five free shields a turn, and since 2026-09-09 nothing takes the
 fifth away. It is matched on the *verb* rather than pinned to attacks, so the two ladders can never
 step onto each other.
 
@@ -268,7 +268,7 @@ redesign of the band rather than a bigger number.
 #### The asymmetry is the mechanic, not a gap in it
 
 **Only the player raises shields, and only creatures raise percentage guards.** The two answer
-different offences and neither survives being pointed the other way:
+different offenses and neither survives being pointed the other way:
 
 - **A creature is a solo attacker.** Its turn resolves card by card with a figure each, so a count
   buys one blow out of several — a real decision about how much of a turn to absorb.
@@ -326,8 +326,8 @@ tint each is just the cards. Relics and essences are expected to take marks too.
 ### Concepts and deck composition
 
 **An attack concept ships as five cards: one per primary element.** That is the rule for adding an
-attack, not just a description of the starting deck. **A defence ships in the same five**, because
-it carries a colour for the relic discount and for the hand axis even though nothing it does is
+attack, not just a description of the starting deck. **A defense ships in the same five**, because
+it carries a color for the relic discount and for the hand axis even though nothing it does is
 elemental.
 
 45 + 10 = **55 cards** *(2026-09-01, down from 60 when Guard left the deck)*. A hand of eight
@@ -340,7 +340,7 @@ shields replaced it, so the hand is a constant eight again.
 **Every count on this page describes the deck a run opens with, and a run spends itself changing
 it** *(owner's call, 2026-09-01)*. This is the single easiest thing to forget when reasoning about
 hands, costs or reachability: the 55-card grid above is where the player *begins*, and by floor
-three it may be a different deck in size, in colour and in what it costs to play. A figure derived
+three it may be a different deck in size, in color and in what it costs to play. A figure derived
 from the starting composition — a rung's odds, the cheapest way to build a hand, how many cards
 share an element — is a fact about round one of fight one and about nothing else.
 
@@ -356,15 +356,15 @@ deck is half ice" from being confused with "my deck contains more ice cards".
   the whole fight. It lasts as long as the relic is worn and no longer.
 - **A relic can also rewrite a card as it is dealt** — the `card-drawn` moment, which leaves even
   the fight's deck alone. Frozen Lightning and Frozen Orb both `set-element` to ice, which is why a
-  run wearing the pair reads as zero lightning and zero arcane; take them off and the colours come
-  back. `card-cost` relics are the same shape applied to the price rather than the colour.
+  run wearing the pair reads as zero lightning and zero arcane; take them off and the colors come
+  back. `card-cost` relics are the same shape applied to the price rather than the color.
 
 **The deck panel shows the *effective* deck** — what the run will actually be dealt, with every one
 of the three applied — which is the number to trust when reasoning about a live run, and is not the
 composition any tool prints.
 
 **Every axis a hand is scored on can be moved, so a build can manufacture any of them.**
-Elements are the loudest case: two common relics fold two colours into a third, and a deck that is
+Elements are the loudest case: two common relics fold two colors into a third, and a deck that is
 half one element makes an Elemental Five of a Kind an ordinary turn rather than the hand
 the round-one simulation reports at a 0.29% score. **Cost moves too**: a relic or an essence taking a point off a card changes which cost tier it sits in,
 and no rung counts cost today, so what that moves is what a turn can *afford* rather than what it
@@ -381,9 +381,9 @@ particular run. Neither says anything about a deck that has been played with.
 
 **Five copies of a concept is the ceiling of the *starting deck*, and it shapes the hand table.**
 No attack concept ships more than five times, so **a Card Four of a Kind necessarily shows four of
-the five colours** — copies of a concept are all different elements, so it is also the hand that
+the five colors** — copies of a concept are all different elements, so it is also the hand that
 lands most of the statuses the player is reliced for. **A Card Five of a Kind became dealable on
-2026-08-25** and is the whole colour set in one concept; it was reachable only after a `duplicate`
+2026-08-25** and is the whole color set in one concept; it was reachable only after a `duplicate`
 essence while the deck held four copies. See the reachability table below.
 
 **The deck list is data.** `data/duelist_cards.json` holds the twelve concepts, the form and
@@ -408,13 +408,13 @@ Eight fields, and the player's twelve are written in the same language as every 
 | `Cost` | action points |
 | `Target` | **opponent · self** |
 | `Form` | stab / slash / crush / defend, or none — the player's deck axis |
-| `Elements` | which colours the concept ships in |
+| `Elements` | which colors the concept ships in |
 | `Copies` | how many of each |
 
 - **There is no `Category` column.** Which phase a card is in falls out of the verb, and carrying both would
   let a file say a card is an attack that raises shields.
 - **`Elements` and `Copies` are two axes and neither substitutes for the other.** The player's
-  attacks ship one per colour and its defences one per colour — the same cards reached along
+  attacks ship one per color and its defenses one per color — the same cards reached along
   different axes. An enemy's cards are all `basic`, so `Copies` carries its whole deck size.
 - **A key is scoped to its owner** (`ClearSlime1.Engulf`). Forty creatures want a card called
   `Bite` and they do not all want it at the same multiplier; the label collides freely, the key
@@ -424,17 +424,17 @@ Eight fields, and the player's twelve are written in the same language as every 
   aimed anywhere the rules do not resolve, and nothing has to be validated to stop it.
 - **Validation replaced the cross-check.** `CheckCostTiers` compared a declared cost against the
   rules and had nothing left to compare once the file became the rules. `combat.RegisterConcept`
-  refuses an unknown verb, a defence of 100% or more, a zero amount, and the unbuilt half of the
+  refuses an unknown verb, a defense of 100% or more, a zero amount, and the unbuilt half of the
   grid. A bad record panics at init.
 
-**A card never names a status, and that is load-bearing.** See *Elements* — what a colour does is
-decided by the source of that colour on the card's owner, and a relic may later decide *which* fire
+**A card never names a status, and that is load-bearing.** See *Elements* — what a color does is
+decided by the source of that color on the card's owner, and a relic may later decide *which* fire
 a fire card applies. A card that named its own status would be deciding something that is not its
 to decide.
 
 **52 was considered and rejected**, and the arithmetic has changed twice since without changing the
 answer. The playing-card instinct argues for 13 ranks × 4 suits; the ladder decides it instead, and
-nine *dealt* attack concepts by however many colours exist is what three forms by three dealt tiers
+nine *dealt* attack concepts by however many colors exist is what three forms by three dealt tiers
 produces. `basic` is still the absence of an element rather than a suit, and arcane is a suit rather
 than a variant of nothing.
 
@@ -481,55 +481,55 @@ toggles selection. The distance and time thresholds must not fight each other.
 | **primary** | ice, fire, lightning, earth, arcane |
 
 **There are five elements and no more** *(arcane added by the owner, 2026-08-25)*. Every one of
-them has cards, a colour and a status, so an element is a complete thing rather than a name waiting
+them has cards, a color and a status, so an element is a complete thing rather than a name waiting
 for rules. **Arcane arrived with all three and nothing was waived**: twelve cards, purple, and
 WEAKENED. Anything wanting a sixth has to do the same.
 
-**What a fifth colour cost, so a sixth can be priced before it is proposed.** None of it was the
+**What a fifth color cost, so a sixth can be priced before it is proposed.** None of it was the
 cards; the cards were one line of JSON.
 
-- **Every elemental hand got harder and the whole ladder was re-derived.** A colour is now one in
+- **Every elemental hand got harder and the whole ladder was re-derived.** A color is now one in
   five rather than one in four, so an Elemental Four of a Kind fell from 6.9% to 3.7% reachable.
   See the reachability table.
 - **A Card Five of a Kind became dealable**, at about one hand in 22,000, because a concept ships
-  one card per colour and there are now five. The rung had no probability behind it since it was
+  one card per color and there are now five. The rung had no probability behind it since it was
   written; it has one now.
 - **The deck overlay ran out of room.** Five rows of cards plus the tally band did not fit the
   modal, and the fix came out of three places at once — see `internal/screens/deckpanel.go`. The
   card itself could not shrink: the form mark is pixel art on a 32px canvas.
-- **Twelve relics, not one.** Each colour carries four of its own — damage, status, discount, growth
+- **Twelve relics, not one.** Each color carries four of its own — damage, status, discount, growth
   — and the flip relics are a full cross-product, which went from 12 to 20.
-- **Every catalogued deck seed had to be re-checked**, and two of the five were re-found.
+- **Every cataloged deck seed had to be re-checked**, and two of the five were re-found.
 
-`basic` is the absence of an element, not a fifth colour. It replaced `none`/`plain` in the
+`basic` is the absence of an element, not a fifth color. It replaced `none`/`plain` in the
 code's naming.
 
-### Colour
+### Color
 
-| Element | Colour |
+| Element | Color |
 |---|---|
-| basic | mid grey |
+| basic | mid gray |
 | fire | orange |
 | ice | medium blue |
 | lightning | yellow |
 | earth | green |
 | arcane | purple |
 
-`cards.BorderOf` is the live table; this one says what the colours are *for*. Basic is a mid
-grey rather than the near-white it used to be, because the surface went off-white and a
+`cards.BorderOf` is the live table; this one says what the colors are *for*. Basic is a mid
+gray rather than the near-white it used to be, because the surface went off-white and a
 near-white border on it is invisible.
 
-**Every word that names an element is written in that element's colour** *(owner's call,
+**Every word that names an element is written in that element's color** *(owner's call,
 2026-09-08)*. An essence reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple; a relic reading
-"Fire attacks BURN and CHILL the target." sets three words across two colours. It reaches the card
+"Fire attacks BURN and CHILL the target." sets three words across two colors. It reaches the card
 faces, the tooltips and the fight log, because the words are the same words wherever they are read.
 
-- **A status is written in the colour of the element it belongs to**, so BURNING is fire orange
+- **A status is written in the color of the element it belongs to**, so BURNING is fire orange
   wherever it appears. `statuses.json` carries an `Element` and a `Verb` — BURN against BURNING —
-  and a status shipping without either fails a test rather than going quietly uncoloured while
+  and a status shipping without either fails a test rather than going quietly uncolored while
   every other one is lit.
-- **No new colours.** The vocabulary is `cards.BorderOf` exactly, which is what the border, the
-  tinted form mark and the deck panel's row labels already read — so a colour cannot drift between
+- **No new colors.** The vocabulary is `cards.BorderOf` exactly, which is what the border, the
+  tinted form mark and the deck panel's row labels already read — so a color cannot drift between
   a card and the sentence describing it. Lightning and earth read thinnest as text, lightning
   having already been darkened once to survive the off-white card; if either becomes unreadable the
   answer is to move `BorderOf`, which moves the whole set together, rather than to open a
@@ -538,10 +538,10 @@ faces, the tooltips and the fight log, because the words are the same words wher
   faking one by overdrawing is the smudge the run-splitting drawing exists to avoid.
 
 One collision is live: **the player's green swatch sits near earth's green**, which earth's
-move off brown on 2026-08-14 made sharper rather than created. "Green is you, grey is them" is
+move off brown on 2026-08-14 made sharper rather than created. "Green is you, gray is them" is
 a screen-wide rule and an element breaks it. What holds it together for now is that the two are
 never seen side by side — a swatch is a square in a pane row, a border is the edge of a card —
-so the fix is deferred rather than done. Either the sides stop being colour-coded or earth
+so the fix is deferred rather than done. Either the sides stop being color-coded or earth
 takes a green far enough from `playerSwatch` to read as a different idea.
 
 ### Statuses
@@ -584,17 +584,17 @@ applying anything.
 **Why the reversal.** Statuses given away free left the first three relics with nothing to *be* —
 every relic had to invent a second mechanic to sell, because the thing its element does was
 already happening. Charging a relic for it makes the element set a hand axis on its own terms and
-makes a relic the thing that turns a colour into a rule. It also gives the loot a shape: what a
+makes a relic the thing that turns a color into a rule. It also gives the loot a shape: what a
 relic buys is legible in one line of card text, and the second and third relics are worth buying
 because one relic is one element.
 
 **Enemies never wear relics.** The zero value is what an enemy is hydrated with and nothing sets
-it, so an enemy's colours are inert by construction rather than by a rule written down somewhere
+it, so an enemy's colors are inert by construction rather than by a rule written down somewhere
 else.
 
 ### One rule, two sources — the intersection *(2026-08-16, owner's call)*
 
-**An element does something only where a card's colour meets a source of that colour on its
+**An element does something only where a card's color meets a source of that color on its
 owner.** The player's source is a **relic**. An enemy's is an **elemental affix** — its own, or the
 floor's. Neither side gets statuses free; both get them at an intersection.
 
@@ -607,7 +607,7 @@ relic may later confer *which* fire a fire card applies — different relics, di
 decision belongs to the source and not to the card. See *The card language*.
 
 **Enemy statuses are blocked on affixes, which do not exist.** Every enemy card is authored
-`basic`, so today the whole element system still runs in one direction only. Colouring an enemy
+`basic`, so today the whole element system still runs in one direction only. Coloring an enemy
 card before an affix can gate it would hand it a free status, which is exactly what this rule
 forbids.
 
@@ -620,7 +620,7 @@ on without playing to a shop — the relic counterpart of `deckSeedName` — and
 `assets/effect/`. It is the only place a standing status is stated, and it has to be: two of the
 four bite something the player has not done yet — a chill takes a card off a turn not yet queued,
 a weight blunts a blow not yet swung — so without a badge they are learned by being surprised.
-The row is centred and closes up as it fills. Earth's art is a placeholder. **The player's card
+The row is centered and closes up as it fills. Earth's art is a placeholder. **The player's card
 carries no badges**, because nothing can put a status on the player: the enemy wears no relics.
 
 **Element crossed into `internal/combat` on 2026-08-12**, which is what this section had been
@@ -640,23 +640,23 @@ is what everything that spends or checks a budget reads.
 **Decided, rewritten by one blow per turn, and rewritten again by the relic grammar** *(2026-08-17)*.
 The relics match against **the cards that formed the attack**, and each `apply-status` they fire lands
 once however many cards matched it — so the four elemental relics still read as "one status per
-distinct non-basic colour", and a form or concept relic reaches the same moment by the same route.
-An all-basic hand lands nothing, because no elemental rule matches a colourless card. A defend card
+distinct non-basic color", and a form or concept relic reaches the same moment by the same route.
+An all-basic hand lands nothing, because no elemental rule matches a colorless card. A defend card
 carries its element for the relic discount and applies nothing itself;
 the alternative — every card applying its status — would make a 1-AP Brace as good a delivery as
 a 1-AP Jab and turn the defend phase into the status engine. (This
 is a rule waiting for a card rather than one currently biting.)
 
-**This is the whole of what colour does to a blow** *(2026-08-17)*. Distinct colours used to pay a
+**This is the whole of what color does to a blow** *(2026-08-17)*. Distinct colors used to pay a
 second damage multiplier on top of the hand's — the *mix* axis — and that is gone: an element earns
 its keep by what it leaves on the victim, not by hitting harder.
 
 Three consequences, all of them changes from the per-card version:
 
-- **A colour is counted once however many cards carry it.** Two ice Bashes and an ice Jab land
+- **A color is counted once however many cards carry it.** Two ice Bashes and an ice Jab land
   one chill, where three separate ice hits used to land three. Status volume moved from "how many
-  coloured cards" to "how many *different* coloured cards".
-- **Cards outside the hand carry no colour at all.** `Bash, Jab, Bash` in fire, ice, fire is a
+  colored cards" to "how many *different* colored cards".
+- **Cards outside the hand carry no color at all.** `Bash, Jab, Bash` in fire, ice, fire is a
   fire Pair — one burn — and the ice Jab contributes neither damage nor a chill.
 - **The status lands because the hand formed, not because the blow hurt.** A hand halved by a
   guard still connected, and making the status conditional on the final figure would let a
@@ -699,7 +699,7 @@ whole turn, so a 1 AP lightning Jab could erase an 8 AP Four of a Kind outright.
 considered were breaking the hand or cutting the multiplier; a roll was chosen because lightning
 should feel unreliable, which is a design reason rather than a balance one.
 
-**It can never be a certainty**, which is what one blow per turn demands: a defence that always
+**It can never be a certainty**, which is what one blow per turn demands: a defense that always
 works deletes a whole opposing turn for the price of one card. That used to need a cap over four
 stacks; with stacking gone the ceiling is the number itself.
 
@@ -740,13 +740,13 @@ stacks; with stacking gone the ceiling is the number itself.
     side B, and the screen's `applyEvent` reads it alongside `KindDamage` because a burn changes a
     life total with nobody acting. **A burn can kill**, and produces a
     `KindDefeated` when it does.
-- **Earth applies attacker-side, before any defence.** Weight says how hard you can still swing,
+- **Earth applies attacker-side, before any defense.** Weight says how hard you can still swing,
   so the order is: the hand's own cards, the hand multiplier, the attacker's weight, then every
   raised guard. Everything the defender does therefore happens to a blow that has already been
   blunted. **Rounding is toward zero**, matching the defend reductions and `scaleDamage`, so it is
   predictable from the reductions already in the game. **It is 25%**, because a smaller cut that
   cannot stack is a status nobody notices landing.
-- **Arcane applies victim-side, after the weight and before any defence.** Vulnerability says how
+- **Arcane applies victim-side, after the weight and before any defense.** Vulnerability says how
   hard *this body* takes a blow, so the order is: the hand's own cards, the hand multiplier, the
   attacker's weight, the target's vulnerability, then every raised guard. A card raised in
   answer to the blow is therefore spent on the figure both statuses have already produced.
@@ -759,7 +759,7 @@ stacks; with stacking gone the ceiling is the number itself.
   not by element and not as named fields. That is what makes *"consume the status this card
   applies"* expressible and is the difference between a system and a handful of ad-hoc fields. The
   price: **`StatusID` is append-only and the file decides the order**, the hazard `Element` and
-  `GlyphKind` also carry. The raised-defence set stays where it is — those are card effects, and
+  `GlyphKind` also carry. The raised-defense set stays where it is — those are card effects, and
   filing them in this table would say they were not.
 
 ## Resolution — phases
@@ -771,20 +771,20 @@ A round is **a whole turn each**. Everything one side queued resolves before the
 does anything, and within a turn the two categories go in order:
 
 1. that side's **attack** — *one* blow, whatever it was assembled from
-2. that side's **defences**, one card at a time: shields raised, guards put up
+2. that side's **defenses**, one card at a time: shields raised, guards put up
 3. then the other side, the same way
 
-**Defences come last** *within a turn* because the opponent moves next, so anything raised at the
-end of your turn is up when their blow arrives. Resolving them first would mean every defence
+**Defenses come last** *within a turn* because the opponent moves next, so anything raised at the
+end of your turn is up when their blow arrives. Resolving them first would mean every defense
 expired before anything could be aimed at it.
 
 **The combat screen lays a turn out in exactly this order**, and leaves a gap at the boundary — the
-row on the table reads attacks, break, defences. That is not decoration: it is the round's two phases
+row on the table reads attacks, break, defenses. That is not decoration: it is the round's two phases
 made visible in the one place the round is a picture rather than a list.
 
 **The attack phase is a single event, and that is the 2026-08-14 change.** Every attack card
 queued is announced, the hand they form is announced, and then one figure of damage lands. The
-defences are now the only cards that still resolve one at a time, because each does something to
+defenses are now the only cards that still resolve one at a time, because each does something to
 its own duelist rather than contributing to a shared blow.
 
 **And the phase says one thing, not one thing per card.** The announcements still happen — each is
@@ -806,7 +806,7 @@ nothing**, and the one thing it changes is pacing — playback holds while it ru
 
 **The prepare phase is gone** *(2026-08-15, and the last card in it went on 2026-08-31)*. Banks
 used to run *before* the attack, on the grounds that nothing they did reached it; with three
-categories collapsed to two they joined the defences at the end of the turn, and nothing banks at
+categories collapsed to two they joined the defenses at the end of the turn, and nothing banks at
 all now. A card that *did* feed the hand would need the phase order reopened, and that is the
 argument to make rather than to quietly reorder.
 
@@ -863,7 +863,7 @@ roguelike unlock structure, not the run. **The profile exists as of 2026-08-25 a
 this yet** — `profile.Profile.HandsDiscovered` is the field waiting for it, and every hand is still
 live. Gating the *table* is the whole of the change when it lands; nothing else moves.
 
-### The catalogue is data
+### The catalog is data
 
 *`data/hands.json`, with `data/hands_data.go` holding its shape and
 `internal/combat/hand_table.go` turning it into rules. The vocabulary and the matcher are in
@@ -872,7 +872,7 @@ live. Gating the *table* is the whole of the change when it lands; nothing else 
 **`data` holds the shape, `internal/combat` holds the meaning**, which is the division
 `RegisterConcept` already draws for the deck lists. The file says how many copies of a card a rung
 wants and what it pays; only the rules can say what a turn is and how wide one can be, so that is
-where a malformed catalogue is refused.
+where a malformed catalog is refused.
 
 **This is the one thing in `data/` that the rules themselves read**, and it is why
 `internal/combat` imports that package at all. Everything else there is consumed by `screens`,
@@ -881,7 +881,7 @@ line to hold if a seventh list is proposed: **ask who reads it, not whether it i
 imports nothing but the standard library, so the edge costs `internal/combat` neither its
 testability nor its freedom from Ebitengine.
 
-**A malformed catalogue panics at package init**, exactly as a deck whose declared cost tiers
+**A malformed catalog panics at package init**, exactly as a deck whose declared cost tiers
 disagree with the rules does. A hand silently dropped is a balance change nobody made.
 
 ### The pattern: four axes, and the of-a-kind rungs wear poker's names
@@ -907,9 +907,9 @@ another name. **Every card carries a cost, so this axis has no absence**, unlike
 `Basic`.
 
 **The of-a-kind ladder exists once per axis on the first three above the Pair**, as its own
-catalogue entry rather than as one entry with three readings — so a Card Three of a Kind and an
+catalog entry rather than as one entry with three readings — so a Card Three of a Kind and an
 Elemental Three of a Kind can be priced apart, which they have to be: one wants three copies of a
-five-copy concept and the other three of eleven cards sharing a colour. **The Pair is the one rung
+five-copy concept and the other three of eleven cards sharing a color. **The Pair is the one rung
 that is a single entry read three ways** — see *The pairs are one rung* below, which is also where
 the argument for keeping the rest apart is written down.
 
@@ -919,9 +919,9 @@ Thump beside a fire Thump is a card hand and no kind of elemental one. That asym
 tie-break and the multiplier ordering below both exist to answer.
 
 **A card with no value on an axis matches nothing on it.** `FormNone` and `Basic` are absences
-rather than values, so an enemy's formless colourless deck cannot build a form or an elemental hand
+rather than values, so an enemy's formless colorless deck cannot build a form or an elemental hand
 at all — its whole ladder is the concept axis, which is what its `Copies` field was always buying.
-The player's defences carry a colour like everything else, and it is inert for the same reason.
+The player's defenses carry a color like everything else, and it is inert for the same reason.
 
 **Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Thumps and two Cleaves
 satisfy the Card Two Pair and the Form Two Pair at once; the narrower one is what the player aimed
@@ -938,18 +938,18 @@ hardest-hitting attack card is the blow, ties going to the card queued first.
 
 **The fallback almost never fires any more, and that is the biggest single consequence of the three
 axes** *(2026-08-19)*. Two attacks used to have to be the same card to both count; now they need
-only share a form or a colour, so a turn of two mismatched attacks that landed the bigger one alone
+only share a form or a color, so a turn of two mismatched attacks that landed the bigger one alone
 lands the sum of both times a multiplier. Smash + Bash at DMG 10 goes from **20** — the Smash, by
 itself — to **33**, and none of that comes from the multiplier being generous: 1.1x of two cards
 beats 1.0x of one. Two attacks that agree on nothing at all are now the rare case rather than the
 common one, and the High Card is what names it.
 
 **Attack cards outside the hand contribute nothing.** `Bash, Jab, Bash` is a Pair; the Jab is
-announced, is not in the hand, adds no damage and carries no colour. That is a stated rule rather
+announced, is not in the hand, adds no damage and carries no color. That is a stated rule rather
 than a consequence — it is what makes *choosing a shape* pay more than throwing everything you
 drew.
 
-**Every card in the turn is counted, and that is the matcher's rule rather than the catalogue's**
+**Every card in the turn is counted, and that is the matcher's rule rather than the catalog's**
 *(2026-08-17, widened 2026-08-23)*. An entry used to name the categories it counted and could never
 change what was counted, so the field only invited an entry to claim otherwise. What is left out is
 decided by the axis — a card with no value on it — and by nothing else. **A Brace joins a hand**
@@ -1003,9 +1003,9 @@ that hits hardest — so `matchHand` skips every one-card hand and `biggestAttac
 question on damage. `Blow.Formed()` draws the same line for the screen's hand preview: the High
 Card is a hand, and it is not something anybody built.
 
-**Colour buys statuses and no damage** *(2026-08-17)*. The distinct non-basic elements in the
+**Color buys statuses and no damage** *(2026-08-17)*. The distinct non-basic elements in the
 formed hand each land their status, gated on the attacker wearing that element's relic; basic is
-not a colour and never counts, so two basic Bashes and an ice Bash show one colour. That list
+not a color and never counts, so two basic Bashes and an ice Bash show one color. That list
 is all that survives of the second axis.
 
 ### What the axis costs
@@ -1021,15 +1021,15 @@ is all that survives of the second axis.
   bottom of the ladder legible.
 - **Poker's ranking does not transfer to this deck, and the ladders are now priced off measured
   rarity rather than off poker** *(2026-08-19)*. Poker's ordering comes from 52 cards, 4 suits and
-  13 ranks; here a concept has 5 copies and a colour and a form 12 each since the defences were
-  coloured, and the turn is bounded by AP rather than by the draw. See *The multipliers come from how often a hand can actually be built*
+  13 ranks; here a concept has 5 copies and a color and a form 12 each since the defenses were
+  colored, and the turn is bounded by AP rather than by the draw. See *The multipliers come from how often a hand can actually be built*
   above for the model and the table.
 - **A turn's mismatched attacks sum**, rather than the biggest one landing alone, so a hand is
   worth more the dearer its cards are: at DMG 10 four Skewers are **400** where four Jabs are
   **100** and three Thumps are **30**. **Nothing on the enemy side is tuned against that** — the
   ladder, the ascent curve and the roster are independent, and the ladder is one file.
 
-### The catalogue's shape
+### The catalog's shape
 
 `data/hands.json` holds one list of **eighteen** entries: five of-a-kind rungs on each of three
 axes, the merged Pair, the Elementalist, plus the one High Card they all fall back to. **A hand
@@ -1079,10 +1079,10 @@ five distinct values on the hand's own axis.
 
 | Rung | Axis | Shape | What it asks for |
 |---|---|---|---|
-| Elementalist | `element` | `[1,1,1,1,1]` | five cards, all five colours |
+| Elementalist | `element` | `[1,1,1,1,1]` | five cards, all five colors |
 
 **It is the top of the element axis and there is no ladder under it** *(owner's call, 2026-09-05)*.
-A rung asking for three or four colours out of five scores at or beside the identity, and a rung the
+A rung asking for three or four colors out of five scores at or beside the identity, and a rung the
 curve has nowhere to put is a rung nobody can aim at.
 
 **The grammar is three axes and nothing else** *(owner's call, 2026-09-05)*: `concept`, `form`,
@@ -1106,22 +1106,22 @@ what that shape is worth.
 
 ### The multipliers come from how often a hand can actually be built *(2026-08-19)*
 
-**Defences carry an element and join hands** *(owner's call, 2026-08-23)*. Every one of the fifty-five
-cards is one of the five colours — the defences ship one copy per colour where they used to
+**Defenses carry an element and join hands** *(owner's call, 2026-08-23)*. Every one of the fifty-five
+cards is one of the five colors — the defenses ship one copy per color where they used to
 ship four basic copies — and the matcher counts them like anything
 else. A hand is **what you played, not what you hit with**.
 
 What that changed, in order of how much it matters:
 
-- **The element axis went from nine cards a colour to twelve**, which is exactly as wide as the form
+- **The element axis went from nine cards a color to twelve**, which is exactly as wide as the form
   axis. The two ladders are now priced identically at every rung, because they are now equally hard.
-- **`defend` is a fourth countable form.** Any two defences are a Pair regardless of concept or
-  colour, and twelve of forty-eight cards carry it.
-- **A defence brings no damage into the hand it joins.** `Card.Damage` is zero for every verb that is
+- **`defend` is a fourth countable form.** Any two defenses are a Pair regardless of concept or
+  color, and twelve of forty-eight cards carry it.
+- **A defense brings no damage into the hand it joins.** `Card.Damage` is zero for every verb that is
   not an attack, so the multiplier multiplies the attacks that are in there with it — a fire Brace
   beside two fire Bashes turns a Pair into an Elemental Three of a Kind and pays it on the two
   Bashes' damage. That is the whole of what the change buys.
-- **A defence's colour arms a status.** `elementsOf` reads the formed hand, so a fire Brace shows fire
+- **A defense's color arms a status.** `elementsOf` reads the formed hand, so a fire Brace shows fire
   and lands a burn on a turn with no fire attack in it. That is the sharper half of the same
   decision.
 - **A hand of nothing but shields is real and lands nothing**, which is the accepted cost — see the
@@ -1132,8 +1132,8 @@ What that changed, in order of how much it matters:
 - **A blow of zero is counted and not thrown** *(owner's call, 2026-09-02)*. The gate is the sum the
   hand carries: below it the turn spends nothing of the target's — no shield eaten, no raised guard
   cleared, no miss rolled, no status landed and no relic grown — because a shield build stripping an
-  opponent's defences for free is an attack in everything but the arithmetic. **It reads the sum
-  rather than the cards**, so a shield card authored with damage, or a relic that gives a defence
+  opponent's defenses for free is an attack in everything but the arithmetic. **It reads the sum
+  rather than the cards**, so a shield card authored with damage, or a relic that gives a defense
   some, is an attack like any other with nothing else to change.
 
 The ladders are **not** the same numbers, and no two of them are. The starting deck is 55 cards —
@@ -1229,7 +1229,7 @@ Three things fall out of it and are worth keeping:
   a concept also shares a form — if the form rung paid the same, nobody would ever have a reason to
   build the narrower one. `TestACardHandPaysMoreThanTheFormHandInsideIt` holds it.
 - **That does not extend to element** *(owner's call, 2026-09-05)*. A concept does *not* fix an
-  element — a fire Jab and an ice Jab are one concept and two colours — so there is no containment
+  element — a fire Jab and an ice Jab are one concept and two colors — so there is no containment
   between those axes and no reason the card rung must outpay the elemental one. The measurements say
   an Elemental Two Pair is rarer than a Form Two Pair, and it is priced above it.
 - **The ladders cross, and that is intended.** A Form Full House pays 202 against a Card Two Pair's
@@ -1238,20 +1238,20 @@ Three things fall out of it and are worth keeping:
 
 **The best hand is chosen on multiplier, not on what it would deal, and that is now a decision**
 *(owner's call, 2026-08-23)*. It was an open question while the two could only disagree by a little;
-defences joining hands made them disagree by everything, and the answer is to leave the matcher alone.
+defenses joining hands made them disagree by everything, and the answer is to leave the matcher alone.
 
 The case that forced it: a turn of `Bash + two shields` forms a **Pair on zero damage**, because
-any two defences share `FormDefend` and a formed hand beats the High Card fallback — so the Bash is
+any two defenses share `FormDefend` and a formed hand beats the High Card fallback — so the Bash is
 announced and lands nothing, where the Bash alone would have landed its face damage. **The Pair
 dropping to 1x narrowed this rather than closing it** *(2026-09-05)*: the two are level on
 multiplier now, and what still costs the player the blow is that the pair's own cards are the two
-shields, which deal nothing. Playing defences beside a single attack can cost you the blow, and
+shields, which deal nothing. Playing defenses beside a single attack can cost you the blow, and
 **reading the board to avoid that is part of the game** rather than a bug to design out.
 
 **Hand IDs are written in the file, and the hazard is gone** *(2026-08-16)*. An entry's ID used to
 be the base in `hands.json` plus the card's enum value, so inserting a card mid-enum shifted every
 ID above it — an open question against profile discovery. One entry now covers every concept in the
-game, so there is **one ID per catalogue key** and it is written down rather than derived.
+game, so there is **one ID per catalog key** and it is written down rather than derived.
 Reordering the cards cannot renumber a hand a player has already found. **They are banded by axis**
 — 1 for the High Card, 10 for the merged Pair, 11–15 concept, 21–25 form, 31–38 element — renumbered
 on 2026-08-19 while no profile exists to record them. The banding has paid for itself every time it
@@ -1265,17 +1265,17 @@ consecutive in, and the grammar has no notion of consecutiveness for one to be w
 What keeps the top of the ladder rare is the deck and the budget: three Bashes is exactly 6 AP,
 a starting fighter's entire budget, and **five Bashes is 10 AP**, reachable only by spending a
 whole round on shields. **Five Bashes is dealable as of 2026-08-25** — the deck holds five, one
-per colour — which is what turned the concept five-of-a-kind from an essence's rung into the rarest
+per color — which is what turned the concept five-of-a-kind from an essence's rung into the rarest
 measurable hand in the game. Being dealable and being affordable are still two different questions,
-which is why the wide five-of-a-kind rungs are the cheapest cards of a form or a colour rather than
+which is why the wide five-of-a-kind rungs are the cheapest cards of a form or a color rather than
 of a concept.
 
-**A colour's cheapest five now includes a defence** *(2026-08-23)* — fire Jab, Cut, Thump and Brace at
+**A color's cheapest five now includes a defense** *(2026-08-23)* — fire Jab, Cut, Thump and Brace at
 1 AP each plus a fire Thrust at 2 is **6 AP**, which is a plain round's whole budget and the first
 time an elemental five-of-a-kind has been affordable out of a plain budget. It used to be 7 AP, because a
-colour held one card per form per tier and nothing cheaper. The Brace pays nothing into the 5.65x;
+color held one card per form per tier and nothing cheaper. The Brace pays nothing into the 5.65x;
 what it does is take the place of the second 2 AP attack the hand used to need, so it is a rung the
-defences *open* rather than a rung they win. `go run ./tools/handsheet` draws it.
+defenses *open* rather than a rung they win. `go run ./tools/handsheet` draws it.
 
 ### Requirements
 
@@ -1327,7 +1327,7 @@ reverses the reason it was made a method — "so a brand or relic raising it has
   rather than a coincidence of how big your hand happened to get. The named five-card shapes are
   built — a Full House wants five cards in a 3-and-2 shape — and every one of them needs the five
   to be a constant the player can plan against for the life of a run.
-  The catalogue loader enforces it directly: **a hand asking for more cards than a turn can hold
+  The catalog loader enforces it directly: **a hand asking for more cards than a turn can hold
   is refused at package init.**
 - **A growable cap would dilute every shape as it grew.** A Four of a Kind is an all-in commitment
   at a cap of five and routine at a cap of seven. The hands would quietly get cheaper every time
@@ -1357,7 +1357,7 @@ them — and it is the reason a duel is a race rather than a siege.
 **What it is for.** Without it the correct play against anything dangerous is to stall: raise
 shields, hold cards back, and win on attrition against a creature whose deck cannot out-scale a
 defended turn. Attrition is the one strategy that gets *stronger* the worse the matchup is, which
-is backwards. A clock makes damage the thing every build has to solve, and it prices defence
+is backwards. A clock makes damage the thing every build has to solve, and it prices defense
 honestly: a shield buys a round, and rounds are now finite.
 
 **Timing out is a death, not a loss on points.** The duelist's life goes to zero and the run ends
@@ -1423,7 +1423,7 @@ already knows *when*. A relic waits, so it says so itself, and that is the third
 language does not need.
 
 - **A relic holds a *list* of rules.** Forced by the growing stat relics, which accumulate at one
-  moment and apply at another; it generalises to any relic wanting two.
+  moment and apply at another; it generalizes to any relic wanting two.
 - **`Then` is a list too**, which is what buys a lightning relic that shocks *and* chills with no
   new vocabulary.
 - **Seven moments, and only four are in `internal/combat`.** The other three fire in `session`
@@ -1491,7 +1491,7 @@ the sum**, and each landing is counted at the accumulator the one before it left
 **Fully decoupled — fire does not burn on its own**, including for the four relics that ship. This
 holds the 2026-08-16 position rather than reversing it: the statuses being free is what left
 relics with nothing to be, and a *second* fire status arriving on a different relic later is only
-possible if the first was never inherent to the colour.
+possible if the first was never inherent to the color.
 
 **What it cost, all of it paid on 2026-08-17:** `Duelist.Statuses` re-indexed from element to
 status, and its width is now `MaxStatuses` — an array width rather than a design cap, which
@@ -1509,10 +1509,10 @@ off each status record's `Badge`. And `StatusID` is append-only, carrying the ha
 flip predate the grammar**; the rest came out of it. **All of them are reachable in a run since
 2026-08-21**, bought and sold in the shop — see The shop, below.
 
-**This table is the original set and stopped being the catalogue on 2026-09-05**, when nine more
+**This table is the original set and stopped being the catalog on 2026-09-05**, when nine more
 families landed and the count reached 139. It is kept because each row is the *argument* for a
 shape; for what is actually in the game, read `docs/sheets/relicsheet/index.html`. **The rarities in
-it are also stale** — see "The catalogue tripled, and the tiers moved", below.
+it are also stale** — see "The catalog tripled, and the tiers moved", below.
 
 **Bulwark** (+25 HP) is the one name still invented rather than taken from this table — Heart is the
 skill's own name for the growing one. The discount relic was **Thrifty** until 2026-08-22, when it
@@ -1520,8 +1520,8 @@ became **Warm** and grew three siblings.
 
 | Relic | Moment | Does |
 |---|---|---|
-| **Burning / Chilling / Shocking / Weighted / Weakening** | `attack-lands` | the five colours' status relics, split off on 2026-08-22 and priced uncommon |
-| **Fire / Ice / Lightning / Earth / Arcane** | `card-damage` | doubles every card of that colour — *element* multipliers, where Keen/Heavy/Needle are form ones |
+| **Burning / Chilling / Shocking / Weighted / Weakening** | `attack-lands` | the five colors' status relics, split off on 2026-08-22 and priced uncommon |
+| **Fire / Ice / Lightning / Earth / Arcane** | `card-damage` | doubles every card of that color — *element* multipliers, where Keen/Heavy/Needle are form ones |
 | **Storm** | `attack-lands` | lightning shocks *and* chills |
 | **Keen / Heavy / Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn |
 | **Striker** | `card-damage` | doubles every Bash — a concept relic, 5 cards where a form covers 15, and priced accordingly |
@@ -1530,37 +1530,37 @@ became **Warm** and grew three siblings.
 | **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
 | **stat relics** | `fight-start` | +10 DMG, +25 HP — and growing variants that gain per fight |
 | **Momentum** | `card-damage` + `turn-taken` | every card gains +0.2x DMG per turn with no defend card in it; a defend card wipes the streak |
-| **Enflamed / Frostbitten / Lithium / Granite / Unravelled** | `card-damage` + `attack-lands` | their colour gains +0.1x DMG per landed hit of that colour, and keeps it while worn |
+| **Enflamed / Frostbitten / Lithium / Granite / Unravelled** | `card-damage` + `attack-lands` | their color gains +0.1x DMG per landed hit of that color, and keeps it while worn |
 | **Echo** | `blow-formed` | the blow's first attack card lands three times: full, 2/3, 1/3 |
 | **Flurry / Rend / Aftershock** | `blow-formed` | every stab / slash / crush card lands **twice**, both at full DMG |
 | **Atrophy** | `deck-built` | every 3 AP attack is dealt as its 2 AP version |
 | **Onslaught** | `card-cost` + `fight-start` | every card 1 AP cheaper, and a quarter off your life — the first relic with a drawback, and the first rare |
-| **Warm / Cold / Static / Dirty / Eerie** | `card-cost` | every card of that colour costs 1 AP less — one per colour |
-| **flip x20** | `card-drawn` | recolours a card of one colour as another **as it is drawn** — one for each ordered pair; see below |
+| **Warm / Cold / Static / Dirty / Eerie** | `card-cost` | every card of that color costs 1 AP less — one per color |
+| **flip x20** | `card-drawn` | recolors a card of one color as another **as it is drawn** — one for each ordered pair; see below |
 
 **A concept relic and a form relic are not the same object** and must not be priced as one.
 Striker covers 5 cards, Keen covers 15.
 
 **Arcane brought twelve relics, not one** *(2026-08-25)*, and that is the number to expect from a
-sixth colour rather than the one a card list suggests. Four are the colour's own seats in families
+sixth color rather than the one a card list suggests. Four are the color's own seats in families
 that already existed — **Arcane** (2x DMG), **Weakening** (applies WEAKENED), **Eerie** (1 AP off),
 **Unravelled** (grows +0.1x per landed arcane hit). The other eight are the flip cross-product,
 which is quadratic: **Burning Mana / Frozen Mana / Electrified Mana / Enchanted Earth** turn fire,
 ice, lightning and earth into arcane, and **Burning Orb / Frozen Orb / Charged Orb / Stone Orb** turn
 arcane into each of them.
-Twelve ordered pairs became twenty. **A sixth colour would bring fourteen**, ten of them flips.
+Twelve ordered pairs became twenty. **A sixth color would bring fourteen**, ten of them flips.
 
 **Weakening is the strongest of the five status relics and is priced the same as the others.** That
 is deliberate rather than unexamined: WEAKENED doubles everything the target takes for two rounds,
 where a weight blunts a quarter and a chill takes one card, so its tier is the thing to move first
 if the arcane build turns out to dominate. Nothing in the repo measures what a relic does to a duel,
-so the price is judgement — see the relics skill.
+so the price is judgment — see the relics skill.
 
 ### Momentum — a streak that belongs to the duel *(2026-08-22, owner's call)*
 
 **Every card gains +0.2x DMG for each turn played without a defend card, and a defend card wipes
 it.**
-Uncommon. It scales the *duelist* rather than a colour or a form: the `card-damage` rule carries no
+Uncommon. It scales the *duelist* rather than a color or a form: the `card-damage` rule carries no
 predicate at all, so the streak is worth the same on every card in the hand.
 
 - **It is written as two positive rules and no negation.** One grows on every turn, one resets on a
@@ -1585,8 +1585,8 @@ predicate at all, so the streak is worth the same on every card in the hand.
 
 ### The Enflamed family — growth inside a fight *(2026-08-22, owner's call)*
 
-**Enflamed (fire), Frostbitten (ice), Lithium (lightning), Granite (earth)**: their colour gains
-**+0.1x DMG every time an attack of that colour lands**, and keeps it for as long as the relic is
+**Enflamed (fire), Frostbitten (ice), Lithium (lightning), Granite (earth)**: their color gains
+**+0.1x DMG every time an attack of that color lands**, and keeps it for as long as the relic is
 worn. Uncommon.
 
 **They are the first accumulator that moves during a fight.** Heart and the growing stat relics step
@@ -1621,7 +1621,7 @@ duelist away.
 Smash becomes Bash. Rare.
 
 **It is the flip's shape applied to the other axis, at the other moment.** A flip changes a card's
-colour as that card is *drawn*; Atrophy changes its *concept* as the fight's draw pile is built, one
+color as that card is *drawn*; Atrophy changes its *concept* as the fight's draw pile is built, one
 rung down the same form's ladder. The two moments matter for how the deck panel shows a card and for
 nothing else in play — see the flip relics below. Everything downstream — cost, damage, the hand it forms, the card face — follows
 because the card genuinely is a Thrust.
@@ -1630,7 +1630,7 @@ because the card genuinely is a Thrust.
   6 AP turn; three Thrusts cost 6 and do. It trades damage per card for cards per turn, which is a
   hand-ladder decision rather than a damage one — a Three of a Kind of Thrusts against one Skewer and
   a Jab.
-- **`combat.Neighbour` already existed**, built for essences, so the ladder is still a consequence of
+- **`combat.Neighbor` already existed**, built for essences, so the ladder is still a consequence of
   `duelist_cards.json` rather than a table written twice. A card with no rung below it is left alone.
 - **`Tier` is a new predicate and it reads the *declared* cost.** A discount relic cannot move a card
   out of Atrophy's reach, which would otherwise make two worn relics switch each other off in an
@@ -1691,28 +1691,28 @@ repeat is the card played again.
   `MaxEchoLandings` times. A repeat matches on form, so five crush cards is five cards landing
   twice, where an echo only ever touched one card.
 
-### The discount relics — one per colour *(2026-08-22, owner's call)*
+### The discount relics — one per color *(2026-08-22, owner's call)*
 
-**Warm, Cold, Static and Dirty**: every card of one colour costs **1 AP less**, at `card-cost`. All
+**Warm, Cold, Static and Dirty**: every card of one color costs **1 AP less**, at `card-cost`. All
 four common. The discount was one relic named Thrifty, matching fire and named after nothing in the
-game; naming it for the *colour it warms* generalises to four and drops a word the design never
+game; naming it for the *color it warms* generalizes to four and drops a word the design never
 owned.
 
-**They are the third thing a colour relic can be**, after the damage doubler and the status relic, and
+**They are the third thing a color relic can be**, after the damage doubler and the status relic, and
 the one that changes what a turn can hold rather than what it does: a 6 AP budget buying four cheap
 cards instead of three is a different hand ladder, not a bigger number. **Nothing measures that**, so
-what a colour's discount is worth against a colour's doubling is unknown, and reads as the bigger of
+what a color's discount is worth against a color's doubling is unknown, and reads as the bigger of
 the two.
 
 **`static-ring` is the lightning discount and not the earth→lightning flip.** The flip held that key
 for a few hours on 2026-08-22 and is now **Dust Storm**; the record key moved with the name.
 
-### The colour relics
+### The color relics
 
-`data/relics.json` holds them, each as one `attack-lands` rule matching one colour and applying one
+`data/relics.json` holds them, each as one `attack-lands` rule matching one color and applying one
 status. **There is no special case for them in the engine** *(2026-08-17)* — they are the plainest
 thing the grammar can say, which is what the grammar was checked against. One relic is one element,
-so wearing one and swinging a hand of all four colours lands one status and nothing else — which is
+so wearing one and swinging a hand of all four colors lands one status and nothing else — which is
 what makes the second and third worth buying.
 
 | Relic | Element | What wearing it does |
@@ -1724,10 +1724,10 @@ what makes the second and third worth buying.
 
 ### The flip relics — one for every ordered pair *(2026-08-22, owner's call)*
 
-**Twenty relics, each `card-drawn` / one colour in / another colour out.** Frozen Lightning was the
-only one for five days; the pattern generalised to every ordered pair, and all twenty are **common**.
-**It is a cross-product, so it grows quadratically**: four colours were twelve relics and five are
-twenty. That is the cost line to read before proposing a sixth colour — it would be thirty. The names are thematic rather than mechanical — "Permafrost" says earth into
+**Twenty relics, each `card-drawn` / one color in / another color out.** Frozen Lightning was the
+only one for five days; the pattern generalized to every ordered pair, and all twenty are **common**.
+**It is a cross-product, so it grows quadratically**: four colors were twelve relics and five are
+twenty. That is the cost line to read before proposing a sixth color — it would be thirty. The names are thematic rather than mechanical — "Permafrost" says earth into
 ice without saying either word — which is a deliberate cost: the *card* has to be read to know what
 it does, and the tooltip is what says it.
 
@@ -1741,7 +1741,7 @@ it does, and the tooltip is what says it.
 
 **The eight arcane names follow a convention the original twelve do not** *(owner's call,
 2026-09-12)*. Everything *out of* arcane is an **Orb** and everything *into* it is a **Mana**, each
-qualified by the colour at the other end of the flip — Burning Orb is arcane dealt as fire, Burning
+qualified by the color at the other end of the flip — Burning Orb is arcane dealt as fire, Burning
 Mana is fire dealt as arcane. Enchanted Earth is the one that breaks the second half of the
 pattern, because "Earthen Mana" says the direction backwards. That half-convention is deliberate:
 sixteen thematic one-off names is more than a player can hold, and a name that says which way the
@@ -1749,42 +1749,42 @@ flip runs is worth more than another eight inventions.
 
 **They fire as a card is drawn, not as the deck is built** *(owner's call, 2026-08-24)*. Every one of
 them is worded "every X card is dealt as a Y card", and the dealing is the draw. The cards a fight
-plays are identical either way — a flip is unconditional over a colour, so recolouring the whole pile
-once and recolouring each card on its way out produce the same hand — so what this buys is not an
+plays are identical either way — a flip is unconditional over a color, so recoloring the whole pile
+once and recoloring each card on its way out produce the same hand — so what this buys is not an
 outcome but a **place**: the draw pile holds the deck the run owns, and the alteration is something
 that happens to a card, at a moment, on its way to the hand. That is the shape the next kind of
 alteration will need, and it is what the deck panel's ALTERATIONS toggle is a picture of.
 
-**A drawn card does not remember what it was.** It carries the colour it became; a `card-damage` relic
+**A drawn card does not remember what it was.** It carries the color it became; a `card-damage` relic
 keyed on ice fires on a card that is ice *now*, and never on one that used to be. That was the
 owner's call and it is what stops an alteration turning every later rule into a question about
 history. What the original is still reachable from is the card's **identity** — every card a run owns
 carries an ID, so the deck panel can show either face of a card wherever it is sitting. **No rule may
 read that ID**; it is a handle for the screens.
 
-- **A flip is what makes a colour relic worth wearing**, which is the whole point of the pair: Fire
+- **A flip is what makes a color relic worth wearing**, which is the whole point of the pair: Fire
   Relic doubles fire cards and there are only so many, so Frostbite-and-friends is how a deck is bent
-  toward the colour a run has bought into. It is also how the *status* relics get fed.
+  toward the color a run has bought into. It is also how the *status* relics get fed.
 - **Flips do not compose**, and that is enforced rather than emergent — `combat.FlipElement` reads
   each card's **original** element, so Frostbite (fire→ice) and Meltdown (ice→fire) worn together do
-  not cascade a deck to one colour. See `TestFlipsDoNotCompose`.
+  not cascade a deck to one color. See `TestFlipsDoNotCompose`.
 - **Two flips naming the same source is the new case the twelve introduce, and last-worn wins**
   *(owner's call, 2026-08-22)*. Frostbite and Heat Lightning both claim fire; the later relic in the
   row takes it, by the same rule that orders every other multiplicative effect. Decided rather than
   merely observed — nothing warns the player and there is still no way to reorder the row, and both
   of those are accepted.
 - **They are twenty of fifty-eight records, and the dilution is accepted** *(owner's call,
-  2026-08-22, unchanged by arcane)*. The catalogue is now more than a third flips, so a common relic's ten tickets are ten
+  2026-08-22, unchanged by arcane)*. The catalog is now more than a third flips, so a common relic's ten tickets are ten
   out of a much bigger pot than they were at seventeen relics — and more relics are coming, which is
   what makes that fine. If the shelf ever does need thinning, the lever is a weight or a tier, not
   a price.
 
-**Every colour is two relics as of 2026-08-22** *(owner's call)*. **Fire, Ice, Lightning, Earth and
-Arcane** are now `card-damage` doublers on their colour — the first *element* multipliers, where Keen, Heavy
-and Needle multiply a form — each common and each keeping the colour's artwork. The status each used
+**Every color is two relics as of 2026-08-22** *(owner's call)*. **Fire, Ice, Lightning, Earth and
+Arcane** are now `card-damage` doublers on their color — the first *element* multipliers, where Keen, Heavy
+and Needle multiply a form — each common and each keeping the color's artwork. The status each used
 to apply moved to a second relic — **Burning, Chilling, Shocking, Weighted, Weakening** — all uncommon
-and all drawing the default relic face. So a colour offers cheap damage or a dearer, rarer status, and
-ten of the fifty-eight records are now colour relics.
+and all drawing the default relic face. So a color offers cheap damage or a dearer, rarer status, and
+ten of the fifty-eight records are now color relics.
 
 **Two records and two files were renamed with it**: `frozen-ring` → `ice-ring` and `thunder-ring` →
 `lightning-ring`, with `assets/relic/frozen-ring.png` → `ice-ring.png` and `thunder-ring.png` →
@@ -1792,7 +1792,7 @@ ten of the fifty-eight records are now colour relics.
 "Thunder" are free again and may come back for something else.
 
 **BURNING went from 10% to 50% of the attacker's DMG in the same call**, over the same two rounds.
-That is a fivefold change to a status nothing measures, so it is a judgement, and a large one: at 50% over two rounds a burn is
+That is a fivefold change to a status nothing measures, so it is a judgment, and a large one: at 50% over two rounds a burn is
 roughly a whole extra attack, which is what the uncommon tier is meant to be paying for.
 
 **The relic is read off the attacker, never the victim.** Your fire relic makes *your* fire attacks
@@ -1806,7 +1806,7 @@ playing to a shop, and ships empty. The worn set moved off the combat screen and
 2026-08-17, which is what makes a bought relic survive a fight.
 
 **What that costs, stated rather than discovered:** a run holds 5 vitae and a base relic is 3, so
-**the bare opening lasts exactly one fight** — the first shop can already afford a colour, and the
+**the bare opening lasts exactly one fight** — the first shop can already afford a color, and the
 first duel is the only one fought with every element inert. That is a much shorter gap than the
 first pricing draft produced, and it is the deliberate consequence of a base relic being cheap.
 
@@ -1828,10 +1828,10 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
   | rare | 7 | 3 | 1 |
 
   **A common relic is still 3, the base**, so the pacing below is unchanged: one of the four that
-  give a colour its status is the plainest thing the grammar can say and the thing everything else
+  give a color its status is the plainest thing the grammar can say and the thing everything else
   is read against.
 - **Three tiers rather than seventeen numbers.** A per-ring price could only be judged one relic at a
-  time and was drifting; a tier can be read against the whole catalogue at a glance, and rebalancing
+  time and was drifting; a tier can be read against the whole catalog at a glance, and rebalancing
   a relic is moving it rather than inventing a figure. **What that costs, said out loud:** two relics
   in the same tier cost the same even when one is plainly stronger — the answer to that is which
   tier it belongs in, not a fourth tier.
@@ -1840,7 +1840,7 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
   2026-08-22)* spans exactly what the seventeen hand-written prices used to. What makes it rare is that a run mostly
   does not see it; a price tracking the odds would make it unbuyable on the one visit it turns up.
 - **Every relic is `common` as of 2026-08-22**, which is the migration's starting position and not a
-  judgement about any of them. The tiers are assigned by hand.
+  judgment about any of them. The tiers are assigned by hand.
 - **That is a full relic or two a fight against an income of roughly 5–10**, so **the purse stops
   binding once the five fingers are full** — around the fourth or fifth fight, after which vitae has
   nothing to buy but swaps. The first draft priced a base relic at 20 and made the whole run about
@@ -1848,7 +1848,7 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
   else to spend on rather than dearer relics. **That arrived on 2026-08-27**: the two sealed goods
   below.
 - **Nothing measures whether any of those numbers is right.** Nothing in the repo measures what a
-  relic does to a duel, so what a doubling of every slash card is worth in vitae is a judgement. Recorded as a judgement rather than dressed up as a derivation.
+  relic does to a duel, so what a doubling of every slash card is worth in vitae is a judgment. Recorded as a judgment rather than dressed up as a derivation.
 - **Selling pays the tier's own figure — 1, 2 or 3** *(owner's call, 2026-08-22)*. It was a quarter
   of the price rounded up, which across three prices paid an uncommon and a rare the same 2: three
   tiers is three numbers, and writing them down beats arithmetic that has to be argued with. The
@@ -1905,10 +1905,10 @@ the other three are gone.
   two sentences of narration and the Leave button at 88%, and a card is 224. There is room for one
   row of cards, not two.
 
-### The catalogue tripled, and the tiers moved *(owner's call, 2026-09-05)*
+### The catalog tripled, and the tiers moved *(owner's call, 2026-09-05)*
 
 **139 relics.** The table above is the *original* set and is kept as the argument for each shape; it
-is no longer the catalogue. **`docs/sheets/relicsheet/index.html` is the catalogue** — art, price,
+is no longer the catalog. **`docs/sheets/relicsheet/index.html` is the catalog** — art, price,
 authored text and resolved rules for every relic, grouped by rarity — and it is the only place that
 can be current, because a table of 139 rows in a file loaded every session is a cost paid forever.
 
@@ -1918,26 +1918,26 @@ can be current, because a table of 139 rows in a file loaded every session is a 
 | Family | Count | Tier | What it is |
 |---|---|---|---|
 | **concept relics** | 14 + Striker | common | one per attack card — Prodder, Boxer, Lancer, Fencer, Impaler; Skirmisher, Cutter, Slasher, Cleaver, Headsman; Knocker, Brass Knuckles, Smasher, Grinder. `scale-damage 200`, exactly Striker's shape |
-| **form cost relics** | 3 | rare | Whetted, Hefted, Tapered — the form counterparts of Warm's colour family |
+| **form cost relics** | 3 | rare | Whetted, Hefted, Tapered — the form counterparts of Warm's color family |
 | **form status / growth** | 3 + 3 | uncommon | Sundering / Bruising / Pinning, and Sharpening / Pounding / Quickening |
 | **tier relics** | 4 | rare / uncommon | Erode and Whittle demote; Swarm and Crown pay a tier |
 | **rung relics, flat** | 19 | common | one per rung, `add-hand-damage`, bonus = the rung's multiplier over 50 |
 | **rung relics, multiplying** | 5 | uncommon / rare | Pairing, Triplicate Form, House of Pain; **Oak and Pentacle are rare** — 4x on a Four of a Kind and 5x on a Five of a Kind are 20x and 39x blows, and a relic that turns the two rarest hands in the game into those is not a common shelf offer |
 | **double-status** | 9 | rare | one per unordered status pair, each triggered by an element holding one of the two |
-| **element repeats** | 5 | uncommon | Backdraft, Shatter, Forked, Landslide, Recursion — the colour half of Flurry/Rend/Aftershock |
-| **held-card relics** | 8 | common | +5 DMG per matching card **kept back**, 5 colours and 3 forms |
+| **element repeats** | 5 | uncommon | Backdraft, Shatter, Forked, Landslide, Recursion — the color half of Flurry/Rend/Aftershock |
+| **held-card relics** | 8 | common | +5 DMG per matching card **kept back**, 5 colors and 3 forms |
 
 **Four tier moves, and the reasoning is worth more than the list:**
 
 - **Every card-cost reducer is rare.** A discount is worth a fraction of a turn every turn, forever;
   nothing else at common compounds like that.
 - **Every flip relic is uncommon.** They were common as enablers, which undersold them: a flip is what
-  makes a mono-colour build reachable at all, and the colour payoffs it feeds are uncommon already.
+  makes a mono-color build reachable at all, and the color payoffs it feeds are uncommon already.
 - **Erode and Whittle are rare, with the cost family.** Demoting a whole tier is a discount written
   the other way round, and the narrow version being dearer than the wide one was the inconsistency.
 - **Heart, Momentum and the eight held-card relics are common.** Each is flat, self-capping and
   unable to compound. Momentum additionally has a dead case a player cannot always steer away from —
-  being attacked and having to defend — where a colour relic's dead case is a build you chose.
+  being attacked and having to defend — where a color relic's dead case is a build you chose.
 
 **The weights invert what "adding a common" means, and this is the thing to know before adding
 another.** At 10 / 4 / 1 tickets, **anything added to common devalues every rare in the game**, because
@@ -1991,13 +1991,13 @@ of the figure `hands.json` writes down**, for the rest of the run.
 - **It belongs to the run, not to the profile.** Stones are gone when the run is — the same lifetime
   as relics, essences and the deck — and they are written into `run.json` by hand *key*, so a rung this
   build has not got refuses the resume rather than being dropped.
-- **The bump rides on the duelist, never on the catalogue.** `combat.handTable` is package state
+- **The bump rides on the duelist, never on the catalog.** `combat.handTable` is package state
   shared by every fight, every review tool and every test, so a run raising a rung in place would
   raise it for the enemy planner and for `tools/handsheet`. A duelist carries a count per rung and
   the ladder is read *through* it; a duelist with no stones reads the shipped table untouched.
 - **The hands panel shows what a hand pays this run**, with a raised figure written in the relic pink
-  — the same colour a relic-moved figure takes on a card. The shared reading is *something you bought
-  moved this number*; a second hue for the second source would be two colours to learn one fact.
+  — the same color a relic-moved figure takes on a card. The shared reading is *something you bought
+  moved this number*; a second hue for the second source would be two colors to learn one fact.
 - **A stone has no rarity and the bag is a flat draw.** Every rung is worth a tenth of itself, so a
   Card Five stone is not a better rock than a Pair stone — it is a rock for a rung you may
   never build. Weighting them would be pricing the *hand*, which the ladder already does.
@@ -2031,7 +2031,7 @@ its rung, the other three were gone. The rock-shower rune is what changed it —
 - **It is the shop and not the combat screen**, because selling is a trade and the shop is the only
   screen that trades. Splitting *use* onto another screen would make one row of cards into two board
   pieces answering the same question.
-- **A panel, not a row.** The shelf ends at y=684 and Leave is centred at 845; a card row wants 224
+- **A panel, not a row.** The shelf ends at y=684 and Leave is centered at 845; a card row wants 224
   of the 160 between them. So the pouch is the shop's third corner toggle beside `D` and `C`.
 - **Spending asks twice**, on the worn row's own argument: a stone armed by a click puts two tabs
   under it, because a rung raised cannot be lowered and a sale cannot be undone.
@@ -2069,11 +2069,11 @@ many times the run has formed the rung, they are earned, and they move nothing a
 
 ## Essences — altering the deck between fights
 
-**An essence is a change to a card you already own.** It recolours it, removes it, or copies it. It
+**An essence is a change to a card you already own.** It recolors it, removes it, or copies it. It
 never invents one, and that restriction is the whole safety property: the *concept* is never
 touched, so nothing an essence produces can be a card `internal/combat` has not registered.
 
-**Offered after a won fight, on the post-battle screen.** Two essences are drawn from the catalogue
+**Offered after a won fight, on the post-battle screen.** Two essences are drawn from the catalog
 and shown as cards; pick one, pick the card it takes, **see what it would become**, and confirm.
 
 | | |
@@ -2090,12 +2090,12 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
   card. **What you were given for winning has to be the thing on the screen when you arrive.**
 - **Two options, so the choice is a comparison.** One is an instruction; three is a menu to read
   rather than a decision to make. They are distinct by construction — the offer shuffles the
-  catalogue rather than drawing from it twice.
+  catalog rather than drawing from it twice.
 - **The card offer is dealt off the *whole deck*, not off what the fight left in the piles.** A
   reward is about what you own.
 - **Two random streams, and they are separate on purpose.** Which essences and which cards are
   drawn from different lists and change on different schedules: sharing would mean adding an essence
-  to the catalogue silently rerolled which cards every fight of every run offered.
+  to the catalog silently rerolled which cards every fight of every run offered.
 - **Nothing is committed until the take.** Back steps out of the morph to the cards and out of the
   cards to the essences, so a player who picked up the wrong essence or aimed it at the wrong card is
   never stuck with either.
@@ -2133,7 +2133,7 @@ and `internal/session/essence.go`, which is where a record is validated.
 
 | Target | Value | What it does |
 |---|---|---|
-| `element` | a colour | recolours one card — **one essence per colour, five since 2026-08-25** |
+| `element` | a color | recolors one card — **one essence per color, five since 2026-08-25** |
 | `remove` | — | takes one card out of the run |
 | `duplicate` | — | puts a second copy of one card into the run |
 | `cost` | a signed delta | changes what one card costs |
@@ -2147,7 +2147,7 @@ an unknown target, an element the rules lack, a value on a target that reads non
 init**.
 
 **`amount` reaches every card in the deck with one essence**, because what the figure *is* depends on
-the verb: a defence percentage, shields raised, or a damage multiplier. That is the
+the verb: a defense percentage, shields raised, or a damage multiplier. That is the
 card language paying off — one essence, four meanings, no special cases.
 
 **Cost and amount are per-card and the rest of a card is not.** `combat.Card` carries `CostDelta`
@@ -2161,7 +2161,7 @@ scratch before adding one.
 | | Floor | Ceiling |
 |---|---|---|
 | Cost | **0** | none declared; concepts run 1–3 |
-| Amount | 1 | a defence is clamped **under 100** |
+| Amount | 1 | a defense is clamped **under 100** |
 
 - **A card may be driven to 0 AP** *(owner's call, 2026-08-17)*, and that moves the game onto its
   other bound: a round is capped by cost *and* by count independently, so a free card is limited by
@@ -2173,7 +2173,7 @@ scratch before adding one.
 - **`amount` compounds rather than replaces** — 150% twice is 225% — so a second essence on the same
   card is worth taking.
 - **A ladder has two ends.** A Smash cannot be promoted and a Jab cannot be demoted, and a defend
-  card is not an attack, so `Neighbour` refuses it a ladder at all. The screen asks `CanApply` before offering a card, so
+  card is not an attack, so `Neighbor` refuses it a ladder at all. The screen asks `CanApply` before offering a card, so
   an essence that would do nothing is never presented as a choice.
 
 ### The card says what the card does
@@ -2181,16 +2181,16 @@ scratch before adding one.
 **Effect text reads the card, not the concept** *(2026-08-17)*. It was already a template over the
 value; what changed is which value it reads. So an altered Defend prints the percentage it
 actually cuts and an altered Brace prints the shields it actually raises. **A card whose face disagreed
-with its behaviour is the worst thing an alteration mechanic can produce**, and it is the reason
+with its behavior is the worst thing an alteration mechanic can produce**, and it is the reason
 this was not deferred.
 
-**An essence may not recolour a card to basic.** That would be a way to *lose* a colour rather than
+**An essence may not recolor a card to basic.** That would be a way to *lose* a color rather than
 choose one, and no attack card in the deck is drab.
 
-**The recolour essences are one per colour, and the set has to stay complete** *(owner's call,
-2026-08-25)*. **Hex** landed with arcane for that reason: four recolour essences against five
-colours is a hole a player can see — every other colour can be built toward out of the post-battle
-offer and one cannot. The catalogue goes eleven, so the two seats a fight offers are drawn from a
+**The recolor essences are one per color, and the set has to stay complete** *(owner's call,
+2026-08-25)*. **Hex** landed with arcane for that reason: four recolor essences against five
+colors is a hole a player can see — every other color can be built toward out of the post-battle
+offer and one cannot. The catalog goes eleven, so the two seats a fight offers are drawn from a
 slightly bigger pot and every individual essence is a little rarer; that dilution is the same one the
 flip relics took and it is accepted for the same reason.
 
@@ -2198,7 +2198,7 @@ flip relics took and it is accepted for the same reason.
 
 Thinning a 55-card deck against a fixed hand of eight raises consistency every time — **more so
 since arcane**, which added twelve cards without adding a card to the hand. It is
-deliberate rather than unnoticed: the offer is two essences out of a growing catalogue, so removal
+deliberate rather than unnoticed: the offer is two essences out of a growing catalog, so removal
 being the best of what is on the table is only sometimes the question. **`duplicate` is the one
 most likely to need a cost** — copies are the sharpest dial in the game, since four of one concept
 in a turn is a Four of a Kind.
@@ -2235,7 +2235,7 @@ selection. See the section below.
 **They overlap with essences on purpose** *(owner's call)*. Several runes do what an essence already
 does. What makes them a different thing is *when* you spend one: an essence is won after a fight and
 applied on the spot, and a rune is carried and spent in the gap between one turn and the next.
-The overlap is accepted rather than designed around; the two catalogues are separate files with
+The overlap is accepted rather than designed around; the two catalogs are separate files with
 separate grammars.
 
 | | |
@@ -2250,7 +2250,7 @@ separate grammars.
 
 **"LEFT CARD BECOMES RIGHT CARD" is not a partial verb.** The graft copied the *concept* alone, so
 grafting a fire Cut onto an ice Jab produced an ice Cut — a card whose name said it had become the
-right-hand card and whose colour said it had not. Everything the right card is now travels:
+right-hand card and whose color said it had not. Everything the right card is now travels:
 concept, element, form override, the essence-written cost and damage deltas, and the riders.
 
 - **The identity does not travel.** `combat.Card.ID` says *which* card this is rather than what it
@@ -2262,7 +2262,7 @@ concept, element, form override, the essence-written cost and damage deltas, and
   rather than it being copied separately.
 - **A rune that changes the *run* rather than a card cannot be grafted**, by construction. Hoard
   and Cairn take no targets, so there is nothing on a card for the graft to find.
-- **The offer moved with the rule.** It refused any pair sharing a concept, which made two colours
+- **The offer moved with the rule.** It refused any pair sharing a concept, which made two colors
   of one card an illegal pick — the pick a player reaching for this most obviously wants. It now
   compares everything the apply copies.
 
@@ -2365,7 +2365,7 @@ cards it takes**, and **what class of change it makes**. See `data/runes.json` a
 | `swap` | normal | a concept key | 1–2 | turns a card into a different card the game already defines |
 | `vitae` | normal | a figure | **0** | fills the purse and touches no card |
 | `duplicate` | normal | — | 1–2 | copies a card — **and the copy joins the dealt hand** |
-| `element` | normal | an element name | 1–2 | recolours cards |
+| `element` | normal | an element name | 1–2 | recolors cards |
 | `form` | normal | a form name | 1–2 | changes what cards **count as** on the form axis |
 | `stones` | normal | how many | **0** | puts that many random stones in the run's **pouch** |
 | `clone` | normal | — | **2** | the first card picked becomes the second |
@@ -2407,7 +2407,7 @@ changed my card", and what separates them is what the *next* rune does.
 - **`form` is an override on the card, not a swap of the concept.** A Brace told to be a crush is
   still a Brace: it still shields, and it now counts as a crush when the hand is matched. **A defend
   card is a legal target and that is the point** *(owner's call)* — it produces a card that shields
-  and matches on an attack axis, which nothing in the catalogue does. `combat.Card.FormOverride` is
+  and matches on an attack axis, which nothing in the catalog does. `combat.Card.FormOverride` is
   the field and `Card.Form` is the one chokepoint that reads it.
 - **`stones` is the first thing in the game that rolls while it is being *spent*.** Every other
   draw decides what a shelf is offering and is a function of the fight; a run may carry three rock
@@ -2445,7 +2445,7 @@ die with a losing face is a gamble a player can hold in their head.
 is the exception rather than the precedent: certainty is usually the better game as well as the
 cheaper code. The exception here is that **the card's whole subject is luck**. Every other
 random-sounding rule in the game had a deterministic rewrite that was at least as good; this one does
-not, because a metal that always paid is a purchase, and a purchase is a thing the catalogue already
+not, because a metal that always paid is a purchase, and a purchase is a thing the catalog already
 has thirty-four of.
 
 - **The roll is in `internal/combat`, because the card is played there.** It is the second thing in
@@ -2493,11 +2493,11 @@ asks for none.
 - **The targets are picked again rather than inherited.** The copied rune's cards are long gone
   from the hand by the time a chimera is spent — a different turn, sometimes a different fight — and
   re-firing against the same identities would be a no-op wherever the effect was idempotent, which
-  is most of the catalogue.
+  is most of the catalog.
 - **A chimera never becomes the thing to copy.** `rememberRune` records the *resolved* record, so
   two chimeras in a row both fire the rune behind them rather than the second copying the first
   into nothing.
-- **A remembered record the catalogue no longer holds is forgotten rather than refused**, which is
+- **A remembered record the catalog no longer holds is forgotten rather than refused**, which is
   the one place `Resume` is lenient and is deliberate: a *held* rune is a thing the player owns
   and would notice going missing, where this is a memory of one already spent. The worst it costs is
   a chimera with nothing to copy, which is a state the mechanic already has a rule for.
@@ -2562,7 +2562,7 @@ hand and the discard, and fires only when that card is played.
 - **The vocabulary is a Go enum in `internal/combat`, not a data record.** Everything else a
   rune does happens to the run; a rider is the one thing read while a round resolves, and that
   package is at the bottom of the graph and reads no JSON. The *amount* rides on the card, so the
-  rules need no lookup table and nothing to keep in step with a catalogue.
+  rules need no lookup table and nothing to keep in step with a catalog.
 - **A card carries one rider — `MaxCardRiders` is 1** *(owner's call, 2026-09-09)*, because a rider
   *is* the card's one upgrade. See §Normal and upgrade above, which is where the grammar it belongs
   to is written down.
@@ -2581,11 +2581,11 @@ hand and the discard, and fires only when that card is played.
 ### The card says what the card carries
 
 Effect text reads the card, so an upgraded card prints an extra line — `+10 LIFE`, `GOLD` — under
-its own. **It is not written in the relic pink**: that colour means "a relic did this" everywhere
+its own. **It is not written in the relic pink**: that color means "a relic did this" everywhere
 else, and a rune is not a relic.
 
 **Every rider is visible as of 2026-09-09**, in three places: the line on the face, the wash over
-the card, and the tooltip. None is redundant with the others — the colour carries at a glance across
+the card, and the tooltip. None is redundant with the others — the color carries at a glance across
 a row of eight, the face's line answers "what does that mean" without a hover, and the tooltip
 carries the figures neither has room for. See §An upgrade is painted on the card, and §The tooltip.
 
@@ -2602,7 +2602,7 @@ FIRE JAB
 
 The title is the element and the name; then the AP the *holder* pays, the figure the card is worth
 in the unit its verb is measured in — DMG for an attack, `1 SHIELD` for a shield, `50% OFF ONE BLOW`
-for a defence — and then a line per thing the upgrade adds.
+for a defense — and then a line per thing the upgrade adds.
 
 **It used to be arithmetic and nothing else** — `5 DMG, yours` / `1x the card` / `= 5 DMG` — which
 is three lines deriving a number the player wanted to be told. The derivation is still the reason
@@ -2620,15 +2620,15 @@ so is a panel that trains the player not to read it.
   whole job here is "does this read right".
 - **Gold gets two lines and every other upgrade gets one.** Its payouts are mutually exclusive, and
   one line joining them with "or" reads as a card that pays both.
-- **The element word in the title *is* coloured** *(owner's call, 2026-09-09)*.
+- **The element word in the title *is* colored** *(owner's call, 2026-09-09)*.
   `models.Tooltip.Title` was a plain string where `Lines` were runs, which made it the one place the
-  "every element word is written in its element's colour" rule did not reach — and a card's title is
+  "every element word is written in its element's color" rule did not reach — and a card's title is
   `FIRE JAB`, so it was the place that mattered most. Both are `TipLine` now and go through one
   drawing.
 - **A wildcard is CHROMATIC, not the element it happens to be.** The card still *is* an arcane
   Skewer — it burns as one, it is drawn from the arcane row, `Blow.Elements` reports arcane — but the
   title says what the player is holding, and `ARCANE SKEWER` over a line reading `COUNTS AS EVERY
-  ELEMENT` is a panel contradicting itself in two lines. **CHROMATIC takes no colour**: the wheel
+  ELEMENT` is a panel contradicting itself in two lines. **CHROMATIC takes no color**: the wheel
   has none left for "all of them", and writing it in one of the five would claim the one thing the
   word exists to deny.
 
@@ -2679,7 +2679,7 @@ per rider kind, and every one draws: a card the run has altered says so from acr
 upgrade's ink and the ring itself is left exactly as it was.
 
 **What settled it is that the border is already saying something.** It carries the card's *state* —
-resting, selected, unaffordable, being dragged — in a wash away from the neutral grey, so an upgrade
+resting, selected, unaffordable, being dragged — in a wash away from the neutral gray, so an upgrade
 painted over it would be a second thing in the one place the card says the first. Keeping them apart
 is what lets a queued gold card read as queued *and* gold rather than as one of the two winning. It
 also keeps the card's outline against the table, which is what tells eight cards in a row apart
@@ -2694,10 +2694,10 @@ same reason: how loud an upgrade should be is not a question anybody wins by arg
 - **A relic card is the one card this must never touch**, and it does not: a relic carries no rider,
   so its pink is never washed.
 - **`UpgradeBorderPct` is 80 rather than 100**, for the `border` style, so a fifth of the state
-  colour still shows through the ink.
+  color still shows through the ink.
 
 **It took the left column until 2026-09-09**, painting the form mark and the cost ticks from a
-rainbow rather than from one element's colour. That was the right answer while there was one upgrade
+rainbow rather than from one element's color. That was the right answer while there was one upgrade
 and its whole subject was the element; it stopped being right the moment there were ten, because
 nine of them have nothing to do with the element and a left column in gold is the element slot
 saying something that is not about the element. **The old mechanism was deleted rather than kept** —
@@ -2706,28 +2706,28 @@ removal is a deletion.
 
 - **`systems.Upgrade` is the vocabulary** and it is *presentation*: something visible has happened
   to this card, and here is what to paint it with. `internal/screens` is where a rider becomes one,
-  on exactly the terms `Spec.TextInk` is where a relic becomes a colour — neither `internal/cards`
+  on exactly the terms `Spec.TextInk` is where a relic becomes a color — neither `internal/cards`
   nor `internal/systems` learns what a rider is.
 - **An upgrade is painted into the face; a mark is painted over it.** Under the `wash` style both
   cover the whole card, so the drawing does not tell them apart — what does is ownership. An upgrade is what the card
   permanently *is*; a `cards.Mark` is the card's situation. A shattered gold card reads as gold and
   broken, in that order, and the order is fixed in `Render` so one pair of facts draws one way.
-- **Every upgrade is an ink, and nine of the ten are one flat colour.** The tenth is the wildcard,
-  whose wash is the five element colours in bands — and a vocabulary where one entry is a picture
-  and nine are colours would be two mechanisms with a `switch` between them. An ink holds both: the
+- **Every upgrade is an ink, and nine of the ten are one flat color.** The tenth is the wildcard,
+  whose wash is the five element colors in bands — and a vocabulary where one entry is a picture
+  and nine are colors would be two mechanisms with a `switch` between them. An ink holds both: the
   authored PNG for the one that needs a picture, a generated square for the rest, and one sampling
   path that never asks which it got.
 - **The wildcard is the one upgrade that leaves the form mark hueless.** The left column exists to
   state the element; a wildcard's element is still what the card *is*, but what it *counts as* is
   every element at once, so a column stating one of them states the less useful half of the truth.
   Every other upgrade leaves the element's tint alone, because none of them is about the element.
-- **Eight of the ten colours are placeholders and they are standing on a full wheel** *(2026-09-09)*.
+- **Eight of the ten colors are placeholders and they are standing on a full wheel** *(2026-09-09)*.
   Hue is spent — five elements, the relic pink, the two verbs, the two duelists, the ground — so what
   is there is picked to be *told apart* rather than to mean anything. Gold and silver are the
   exception: they are metals, and they are what the mechanic is called. `go run ./tools/upgradesheet`
   is the page to retune them against.
 - **The wash is 55% of the way toward the ink, and the two metals are a *sheen* rather than a flat
-  colour.** Both of those are the card's own surface pushing back: it is a pale warm neutral, so a
+  color.** Both of those are the card's own surface pushing back: it is a pale warm neutral, so a
   gentle wash of gold moves the hue a little and the lightness not at all, and the card comes out as
   warm paper. 22, 34 and 40 were all tried and all read as cream. What makes metal read as metal is a
   light running across it, so gold and silver are generated as a diagonal band — dark shoulders, a
@@ -2759,7 +2759,7 @@ pitch or find a second row.
 ### Run-scoped, and saved
 
 The sack and every rider are written into `run.json`, **by name and never by ordinal** — the
-rule every other vocabulary in a snapshot is under. A rune the catalogue no longer holds, or a
+rule every other vocabulary in a snapshot is under. A rune the catalog no longer holds, or a
 rider the rules lack, is **refused on resume rather than dropped**: a run that came back one
 consumable lighter is a run the player would have to work out had changed.
 
@@ -2798,7 +2798,7 @@ is the only thing that adds to it** and **the shop is what takes it out** *(2026
 
 **Vitae is crimson wherever it is written** *(owner's call, 2026-08-22)* — the purse on the duelist
 card and the word itself in the reward screen's prose. It is the run's only currency and now the
-only red on a light screen, so a figure in that colour says "money" before it is read.
+only red on a light screen, so a figure in that color says "money" before it is read.
 
 ### What a win pays *(owner's call, 2026-08-22)*
 
@@ -2854,7 +2854,7 @@ faster.
 **8 floors × 3 fights.** Fixed layout, drawing no randomness — what is *in* it is random, the
 shape is not. *(ideas.md's "one enemy per level" is superseded.)*
 
-- **Every third fight is a floor boss, and the bosses are their own catalogue** *(2026-08-23)*.
+- **Every third fight is a floor boss, and the bosses are their own catalog** *(2026-08-23)*.
   `data/bosses.json` holds thirty named stairway protectors, three or four authored per floor, and
   a run draws one for each floor when the climb is rolled — so a floor's stairway is a face the
   player can be told about rather than a creature from the same roster with bigger numbers. They
@@ -2968,7 +2968,7 @@ enemy "formed" was an accident of what its planner could afford. Now
 three cards on the table mean three blows, which is a round the player can read off the table
 before pressing DUEL!.
 
-- **A defence still covers the whole turn.** Raised cards answer *every* blow of the opposing turn
+- **A defense still covers the whole turn.** Raised cards answer *every* blow of the opposing turn
   and are spent once it is over — see `applyDefends`. Spending a Defend on the first swing would
   make it nearly worthless against the only opponents that swing more than once.
 - **One shock roll per turn, not one per card.** A shock is "the turn's attack misses". Rolling per
@@ -2990,9 +2990,9 @@ is the plan the engine will score. **A solo attacker is scored as the sum of wha
 is the same arithmetic its phase performs — so the search is looking for the most damage the budget
 buys rather than for the best combination.
 
-**Then it spends what the attacks did not want**, on defences first and the hand's own order after.
+**Then it spends what the attacks did not want**, on defenses first and the hand's own order after.
 That second pass is what keeps a non-attack card in an enemy deck from being dead content: a
-planner that only maximised damage would never raise a guard, and every `Congeal` in the roster
+planner that only maximized damage would never raise a guard, and every `Congeal` in the roster
 would sit in a discard pile forever.
 
 **`Copies` was the difficulty dial and it is a blunter one now.** Under hands, four copies of a
@@ -3117,16 +3117,16 @@ would be a run that is over and still resumable.
 the profile and a list of names, they never touch `session.Phase`, and each records where the player
 came from so Back works from anywhere — the same shape the settings screen has.
 
-- **Achievements lists what has not been earned as well as what has**, greyed. A page showing only
+- **Achievements lists what has not been earned as well as what has**, grayed. A page showing only
   what you already have says nothing on the day you most want to read it. There is one achievement
   today, `first-steps`; the page is built to grow.
 - **Credits names both copyright holders, the two dependencies, the portrait source and the
-  licence.** It is partly a page to read and partly a page to be *correct*: the project is
+  license.** It is partly a page to read and partly a page to be *correct*: the project is
   source-available and meant to be sold, so the attribution has to exist somewhere the player can
   see it.
 
 Both are deliberately simple. When either outgrows the screen it takes a `models.Scrollbar`, which
-already exists, and the achievements catalogue moves from a table in its own file to
+already exists, and the achievements catalog moves from a table in its own file to
 `data/achievements.json`.
 
 **Resuming is not replaying, and the distinction is load-bearing.** A run is *not* replayable from
@@ -3149,7 +3149,7 @@ mistake that cannot be repaired afterwards.
 index-shaped — `ConceptID`, `Element`, `StatusID`, `GlyphKind`, `Phase` — so an ordinal in a file
 that outlives its build is an ordinal that will eventually mean something else. **The stones are the
 newest case** *(2026-08-27)*: a run's raised rungs are saved by hand *key*, never by the seat the
-count actually sits in, because a seat is a position in the catalogue this build happened to load.
+count actually sits in, because a seat is a position in the catalog this build happened to load.
 
 ### Settings *(owner's call, 2026-08-27)*
 
@@ -3189,7 +3189,7 @@ that is what lets an achievement be reworded or retired without orphaning the th
 Nothing is gated on one yet; the bridge is a field on the record so the day one is, it is a line of
 JSON.
 
-**Fourteen of them, in `data/achievements.json`.** The catalogue was a Go table on the achievements
+**Fourteen of them, in `data/achievements.json`.** The catalog was a Go table on the achievements
 screen until this change, on the argument that one record whose fields were a name and a sentence
 did not earn a loader. That argument stopped holding the moment a record had to say *what earns it*.
 
@@ -3199,7 +3199,7 @@ The list looks heterogeneous and is not. It is three families, and only one of t
 
 - **A turn shape** — what the player put on the table together. Spectrum (four elements at once),
   Elementalist (five), Weaponmaster (three attack forms), Arsenal (three attack forms and a
-  defence), Prism (one form or one card, in all five colours), and since 2026-09-09 the two ends of
+  defense), Prism (one form or one card, in all five colors), and since 2026-09-09 the two ends of
   the cost ladder — Tiny But Fierce (five free attacks of one card) and Godslayer (five 4 AP ones).
   **This family is pure grammar**, and four of them were rungs of the hand ladder until 2026-09-05 —
   cut because the ladder could not *price* them, not because they could not be matched. This is
@@ -3211,7 +3211,7 @@ The list looks heterogeneous and is not. It is three families, and only one of t
   deliberately the short one.
 
 **The turn family reads the turn, not the hand.** A hand counts the cards that scored it and leaves
-the rest out; these are about what was played together, which is why Arsenal can ask for a defence
+the rest out; these are about what was played together, which is why Arsenal can ask for a defense
 beside three attack forms — something no rung on the ladder can say, because a hand can only state
 what its cards must *agree* on.
 
@@ -3269,7 +3269,7 @@ own salted stream and its own argument; several lines together cost neither.
 
 **An achievement announces itself and is clicked out of.** Nothing announced one until now — the
 record was visible on a screen the player had to think to open. It is the confirm dialog's shape
-with one answer instead of two: a small centred box, on confirm.go's argument that a notice the size
+with one answer instead of two: a small centered box, on confirm.go's argument that a notice the size
 of a page reads as something having gone wrong. **It is drawn by the frame rather than by a scene**,
 because an achievement can land during a duel, on the post-battle screen, or on the transition
 between them. Like every dialog it freezes pacing and cannot change an outcome.
@@ -3284,7 +3284,7 @@ tallies and nothing else. **A lost duel settles them too** — what a defeat cos
 the record of what was swung on the way up.
 
 **Counters are per concept and per form, and never per concept and element** *(owner's call)*. Five
-colours of twelve concepts is sixty tallies to say what twelve say. Both axes are counted because
+colors of twelve concepts is sixty tallies to say what twelve say. Both axes are counted because
 the two questions are genuinely different: "how many slashing cards" is the form and "how many
 Bashes" is the concept.
 
@@ -3360,13 +3360,13 @@ The rules that hold it up:
   second arithmetic.
 - **It is saved with the run**, so "how did my whole climb go" survives a resume. It is the one
   part of a snapshot that is prose rather than state, and therefore the one part that may never
-  fail a resume: an unrecognised voice draws plain rather than costing the player the run.
+  fail a resume: an unrecognized voice draws plain rather than costing the player the run.
 - **It is reachable everywhere**, from a button beside the cog rather than from the combat screen.
   It is chrome, not a screen — see CLAUDE.md, and note that a screen could not have done it:
   navigating away from a duel and back re-deals it.
-- **It is coloured like the screen it accounts for**: a figure in its card's element, a relic's
-  multiplier in the relic pink, a verb in its category's colour. The hand itself is *marked* rather
-  than coloured — bold and underlined — because hue belongs to the elements and there is none left
+- **It is colored like the screen it accounts for**: a figure in its card's element, a relic's
+  multiplier in the relic pink, a verb in its category's color. The hand itself is *marked* rather
+  than colored — bold and underlined — because hue belongs to the elements and there is none left
   that is not a near-collision. See CLAUDE.md.
 - **Scrolling is a dragged scrollbar** *(owner's call)*. The input vocabulary is clicks, drags and
   hover; the wheel stays out of the game.
@@ -3423,9 +3423,9 @@ not *loud*. Freezing the screen for a splash-length `KindHand` remains free.
 
 Collected from above.
 
-- `[?]` **Every same-concept hand shows all-distinct colours**, because the deck holds one copy per
-  concept per colour. It no longer costs a multiplier, but it does mean a built hand always lands
-  every status the player is reliced for — the colours are not a choice.
+- `[?]` **Every same-concept hand shows all-distinct colors**, because the deck holds one copy per
+  concept per color. It no longer costs a multiplier, but it does mean a built hand always lands
+  every status the player is reliced for — the colors are not a choice.
 - `[?]` **The shock roll is conditional**, against a written rule that it should be unconditional.
   Settle it before the save format lands.
 - `[?]` Duration, stacking and refresh for every status.

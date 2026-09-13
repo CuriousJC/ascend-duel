@@ -9,7 +9,7 @@ func TestAPlayIsCountedAgainstItsOwnRung(t *testing.T) {
 	s := New(nil)
 
 	if !s.RecordHandPlayed("pair") {
-		t.Fatal("pair is not a rung the catalogue holds")
+		t.Fatal("pair is not a rung the catalog holds")
 	}
 	s.RecordHandPlayed("pair")
 	s.RecordHandPlayed("concept-full-house")
@@ -25,7 +25,7 @@ func TestAPlayIsCountedAgainstItsOwnRung(t *testing.T) {
 	}
 }
 
-// **A rung the catalogue has not got is refused rather than tallied.** A key nothing recognises is
+// **A rung the catalog has not got is refused rather than tallied.** A key nothing recognizes is
 // a caller reading the wrong field, and a count filed under one would be a column the panel could
 // never draw.
 func TestATallyOnARungThatDoesNotExistIsRefused(t *testing.T) {
@@ -44,7 +44,7 @@ func TestATallyDoesNotMoveWhatARungPays(t *testing.T) {
 	s := New(nil)
 	before, ok := s.HandMultiplier("pair")
 	if !ok {
-		t.Fatal("the catalogue has no pair")
+		t.Fatal("the catalog has no pair")
 	}
 	for i := 0; i < 20; i++ {
 		s.RecordHandPlayed("pair")

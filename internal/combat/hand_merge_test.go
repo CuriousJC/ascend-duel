@@ -3,7 +3,7 @@ package combat
 import "testing"
 
 // **The Pair is one rung read three ways** *(owner's call, 2026-09-05)*. Card Pair, Form Pair and
-// Elemental Pair were three catalogue entries, three stones and three relics describing the same two
+// Elemental Pair were three catalog entries, three stones and three relics describing the same two
 // cards; a player forming a pair does not care which axis let them, so the ladder says so once.
 //
 // This is the whole of what the merge has to be true for: two cards agreeing on *any* of the three
@@ -11,7 +11,7 @@ import "testing"
 func TestThePairFormsOnWhicheverAxisAgrees(t *testing.T) {
 	pair, ok := handByKey("pair")
 	if !ok {
-		t.Fatal("the catalogue has no pair")
+		t.Fatal("the catalog has no pair")
 	}
 
 	for _, tc := range []struct {
@@ -20,8 +20,8 @@ func TestThePairFormsOnWhicheverAxisAgrees(t *testing.T) {
 	}{
 		// Two Bashes agree on the concept, and so on everything narrower than it.
 		{"two of one card", PlainCards(Bash, Bash)},
-		// A fire Bash and an ice Bash are one concept and two colours.
-		{"one card in two colours", []Card{Of(Bash, Fire), Of(Bash, Ice)}},
+		// A fire Bash and an ice Bash are one concept and two colors.
+		{"one card in two colors", []Card{Of(Bash, Fire), Of(Bash, Ice)}},
 	} {
 		a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
@@ -48,8 +48,8 @@ func TestTheMergedPairReportsTheAxisThatFormedIt(t *testing.T) {
 		{"two of one card", PlainCards(Bash, Bash), AxisConcept},
 		// A stab and a slash, one fire and one ice, agree on neither concept nor element.
 		{"two forms that match", []Card{Of(Jab, Fire), Of(Thrust, Ice)}, AxisForm},
-		// Two different concepts in two different forms, agreeing only on their colour.
-		{"two colours that match", []Card{Of(Jab, Fire), Of(Slice, Fire)}, AxisElement},
+		// Two different concepts in two different forms, agreeing only on their color.
+		{"two colors that match", []Card{Of(Jab, Fire), Of(Slice, Fire)}, AxisElement},
 	} {
 		turn := make([]Slot, len(tc.cards))
 		for i, c := range tc.cards {

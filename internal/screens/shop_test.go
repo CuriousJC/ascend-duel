@@ -87,7 +87,7 @@ func sameKeys(a, b []string) bool {
 }
 
 func TestTheShelfIsCutToThreeAndNotPaddedToIt(t *testing.T) {
-	// **The row is what is left, cut to three**, so a catalogue smaller than the shelf draws a short
+	// **The row is what is left, cut to three**, so a catalog smaller than the shelf draws a short
 	// row rather than one with holes in it. That case is unreachable today — seventeen relics against
 	// a cap of five leaves at least twelve unworn — so what is checkable is the cut itself, and the
 	// case that *is* reachable: a scene reached before main built a run.
@@ -95,7 +95,7 @@ func TestTheShelfIsCutToThreeAndNotPaddedToIt(t *testing.T) {
 		t.Errorf("a fresh run was offered %d relics, want %d", got, shelfSize)
 	}
 	if len(session.Relics())-combat.MaxWornRelics < shelfSize {
-		t.Errorf("the catalogue holds %d relics, which is no longer enough to fill a shelf against a "+
+		t.Errorf("the catalog holds %d relics, which is no longer enough to fill a shelf against a "+
 			"cap of %d — dealShelf's cut is now load-bearing and wants a test of its own",
 			len(session.Relics()), combat.MaxWornRelics)
 	}
@@ -106,7 +106,7 @@ func TestTheShelfIsCutToThreeAndNotPaddedToIt(t *testing.T) {
 }
 
 // The shelf is four panes on one line, and the row is solved rather than laid out by eye — so what
-// has to hold is that every pane fits between its neighbours, that the whole row stays on screen,
+// has to hold is that every pane fits between its neighbors, that the whole row stays on screen,
 // and that what hangs under it clears the button at the bottom. **A row that overlaps inside a pane
 // is expected**, which is why the check is on the panes rather than on the cards: nine full-size
 // cards cannot sit apart on a 1920-wide screen and shopPitch is what admits it.
@@ -299,7 +299,7 @@ func TestTheTabsUnderAnArmedStoneStayInsideThePanel(t *testing.T) {
 	run := session.New(combat.PlainCards(combat.Bash))
 	for _, key := range []string{"agate", "jasper", "onyx"} {
 		if !run.Carry(key) {
-			t.Fatalf("the catalogue has no stone %q", key)
+			t.Fatalf("the catalog has no stone %q", key)
 		}
 	}
 	gs.Run = run
@@ -365,7 +365,7 @@ func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
 func TestARerollRefillsABoughtSeat(t *testing.T) {
 	gs := testRun()
 	// The purchase is the setup, not the subject, so the purse is filled rather than left at
-	// what a run opens with: which tier lands in seat 0 is a function of the catalogue, and a
+	// what a run opens with: which tier lands in seat 0 is a function of the catalog, and a
 	// rare there made this fail on affordability while saying nothing about rerolling.
 	gs.Run.AddVitae(20)
 	s := &ShopScene{stockRNG: shopRNG(gs, seeds.ShopStock)}

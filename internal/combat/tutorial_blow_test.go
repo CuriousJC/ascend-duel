@@ -9,7 +9,7 @@ import (
 // **The tutorial promises a blow that wounds and does not kill, and several files can quietly
 // break it in either direction.**
 //
-// The lesson `data/tutorial.json` teaches is four cards of one colour — a Jab, a Brace, a Thrust
+// The lesson `data/tutorial.json` teaches is four cards of one color — a Jab, a Brace, a Thrust
 // and a Bash, all lightning — swung at a GiantBat: an Elemental Four of a Kind against the
 // gentlest opponent on floor one. **One of the four is a shield**, which is the whole of the
 // second lesson: it deals nothing, it counts toward the hand anyway, and it eats one of the

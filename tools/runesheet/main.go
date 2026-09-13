@@ -3,19 +3,19 @@
 //
 //	go run ./tools/runesheet
 //
-// It exists for the reason tools/relicsheet does, and the catalogue being small today is not an
+// It exists for the reason tools/relicsheet does, and the catalog being small today is not an
 // argument against it. A rune is the least readable record in `data/` — a `Target`, a `Rider`,
 // a `Value` and a `Count`, where which of those the rules read depends entirely on the target, and
 // three of the four are refused outright on the targets that do not read them. The sentence the
 // card prints is authored separately and checked against none of it.
 //
 // **So the page's whole job is putting the authored line and the resolved rule side by side.**
-// That is the relic sheet's job too, and it is the one review a growing catalogue needs from the
+// That is the relic sheet's job too, and it is the one review a growing catalog needs from the
 // first record rather than the fortieth.
 //
 // # It is a report, not a drawing-board
 //
-// This reads the real file, through internal/session, which means the catalogue is *validated*
+// This reads the real file, through internal/session, which means the catalog is *validated*
 // before anything is drawn: an unknown target, a rider named on a target that reads none, a count
 // past `MaxRuneTargets`, a swap naming a card this build has not registered — all panic at
 // init exactly as they would in the game. A rune this page refuses to draw is a rune the
@@ -29,7 +29,7 @@
 //
 // **How many cards each one asks for.** The board piece shows targets side by side and
 // `MaxRuneTargets` is two, so the counts here are the whole of what the picker ever has to
-// lay out. A catalogue drifting towards two-target runes is a layout decision being made by
+// lay out. A catalog drifting toward two-target runes is a layout decision being made by
 // accident.
 //
 // **Which targets nobody has authored into.** The vocabulary is closed and every target gets a
@@ -85,7 +85,7 @@ func run(dir string) error {
 	}
 
 	// **The page walks the file's own order and the sack walks the sorted one.**
-	// data.RuneFileOrder is the motif order the catalogue is authored in — the five bores
+	// data.RuneFileOrder is the motif order the catalog is authored in — the five bores
 	// together, the four grubs, the metals beside each other — which is what makes the family
 	// headings read as blocks. session.Runes stays the sack's order, and nothing on this page
 	// decides an outcome, so the two never meet. Same split the relic sheet makes.
@@ -183,7 +183,7 @@ func run(dir string) error {
 	}
 
 	fmt.Printf("wrote %s and %d PNGs — %d runes, %d with art of their own and %d with a subject; "+
-		"%d drawn from a %d-vitae sack, %s%% of the catalogue a seat\n",
+		"%d drawn from a %d-vitae sack, %s%% of the catalog a seat\n",
 		out, len(plates)+len(page.States), page.Count,
 		page.Count-page.Undrawn, page.Count-page.Unwritten,
 		page.SackSize, page.SackPrice, page.Share)
@@ -194,8 +194,8 @@ func run(dir string) error {
 }
 
 // specFor is a rune as the card the sack draws, and it fills the same fields
-// screens.runeSpec does: a name, the line, no form and no cost. **Basic, not a colour** — a
-// rune grants no element, so its border is the mid grey `cards.BorderOf` gives `basic`.
+// screens.runeSpec does: a name, the line, no form and no cost. **Basic, not a color** — a
+// rune grants no element, so its border is the mid gray `cards.BorderOf` gives `basic`.
 func specFor(p session.Rune, art image.Image, enabled, selected bool) cards.Spec {
 	return cards.Spec{
 		Name:       p.Name,
@@ -271,7 +271,7 @@ func cardsWanted(p session.Rune) string {
 	return strconv.Itoa(p.Count)
 }
 
-// groupByTarget splits the catalogue by what a rune does, in session.RuneTargets' order.
+// groupByTarget splits the catalog by what a rune does, in session.RuneTargets' order.
 //
 // **An empty group still gets a heading**, exactly as the essence sheet's do: the vocabulary is
 // closed, so a target nobody has authored into is a mechanic built and never reached for. That is
@@ -292,11 +292,11 @@ func groupByTarget(plates []plate) []group {
 	return out
 }
 
-// groupByFamily splits the catalogue into the motifs its records are authored in.
+// groupByFamily splits the catalog into the motifs its records are authored in.
 //
 // **In first-appearance order, which is the file's order**, so the page reads as
 // data/runes.json does and a rune lands where its siblings were written rather than where
-// the alphabet puts it. It is the relic sheet's function over a different catalogue.
+// the alphabet puts it. It is the relic sheet's function over a different catalog.
 //
 // **The target grouping did not go — it moved to the header**, as a list of counts. That grouping
 // was right while the target was the only axis the file had, and it is a poor block heading now
@@ -409,14 +409,14 @@ type plate struct {
 	Default bool
 }
 
-// group is one target's worth of the catalogue.
+// group is one target's worth of the catalog.
 type group struct {
 	Target string
 	Count  int
 	Runes  []plate
 }
 
-// family is one motif's worth of the catalogue: every rune authored in that block.
+// family is one motif's worth of the catalog: every rune authored in that block.
 type family struct {
 	Name  string
 	Count int

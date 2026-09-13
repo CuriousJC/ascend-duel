@@ -59,7 +59,7 @@ that unmarshals it, and — for anything returning a map — a sorted `…Order`
 - **A bad file panics**, with the filename in the message. It fails at launch rather than
   producing a roster quietly missing a record.
 - **`EnemyOrder` and `RelicOrder` are not optional.** `LoadEnemies` and `LoadRelics` return maps
-  and Go randomises map iteration, so anything whose *outcome* depends on order must walk a
+  and Go randomizes map iteration, so anything whose *outcome* depends on order must walk a
   sorted key slice. See the `randomness` skill.
 - **`LoadDuelistCards` returns a slice**, deliberately: the deck is built by walking it in
   order, and file order is grid order, so the JSON reads as the table in `MECHANICS.md`.
@@ -75,21 +75,21 @@ enemies'. Eight fields:
 `Target` (opponent / self) · `Form` · `Elements` · `Copies`
 
 - **`Elements` and `Copies` are two axes and neither substitutes for the other.** The player's
-  attacks ship one per colour; its defences ship one per colour too; an enemy — all `basic`
+  attacks ship one per color; its defenses ship one per color too; an enemy — all `basic`
   — has only `Copies`, so that field carries its whole deck size.
-- **Deck size is a consequence of a file you can read**: 9 attacks × 5 colours plus 2 defences × 5
-  colours = **55** *(Guard went to zero copies on 2026-09-01)*. That is the deck a run *starts*
+- **Deck size is a consequence of a file you can read**: 9 attacks × 5 colors plus 2 defenses × 5
+  colors = **55** *(Guard went to zero copies on 2026-09-01)*. That is the deck a run *starts*
   with — see MECHANICS.md §The deck is a starting position, because essences and relics change it.
 - **There is no `Category` column.** Which phase a card is in falls out of the verb. Carrying both would
   let a file say a card is an attack that raises shields.
 - **`Copies` is the difficulty dial and it is sharper than it looks** — four copies of a 1 AP
   card in one turn is a Four of a Kind at 5x. Four is also the ceiling of the hand ladder.
 - **No player card is drab** *(2026-08-25)*. Every card in the deck ships in one of the five
-  elements, the defences included — a colour is worth a hand axis and a relic discount even
+  elements, the defenses included — a color is worth a hand axis and a relic discount even
   where nothing the card does is elemental.
 - **Enemy cards are all `basic` and `FormNone`**, and that is deliberate rather than sloppy.
-  The colour is read and carried, but `MECHANICS.md` has affixes *transforming* a basic deck
-  into an element, so a colour typed into `enemies.json` would pre-empt a mechanic that does not
+  The color is read and carried, but `MECHANICS.md` has affixes *transforming* a basic deck
+  into an element, so a color typed into `enemies.json` would pre-empt a mechanic that does not
   exist. A form would be worse: it would claim an enemy card forms hands, and hands are the
   player's axis.
 
@@ -101,13 +101,13 @@ switch statements over a closed `ActionKind` enum with a `CostTier` in the JSON 
 ~400 a per-enemy deck list produces, so the card became a record and both went.
 
 What is checked now: a verb the vocabulary has, a cost that can be paid, an amount that does
-something, a defence under 100% (**nothing may stop a blow outright**), and a shield count no higher
+something, a defense under 100% (**nothing may stop a blow outright**), and a shield count no higher
 than the attacks one turn can throw. **A card does not say
 who it lands on** — the verb decides, an attack on the opponent and everything else on its own
 duelist, and there is no field to disagree with.
 
 **A bad record panics at package init**, so it fails on launch rather than mid-duel. A deck list
-or a catalogue naming something the rules cannot resolve is the same failure and takes the same
+or a catalog naming something the rules cannot resolve is the same failure and takes the same
 exit.
 
 **Concept IDs are registration-ordered and must never be serialized.** The player's twelve
@@ -157,7 +157,7 @@ trust the floors.
   60/120/250/300 against 50/100/200, and a 60% guard against 50%. `TestABossIsToughAgainstTheFloorItGuards`
   in `internal/pyramid` fails on a boss the floor below it could out-hit.
 - **`Name` is the bare first name and `Title` is the rest** *(owner's call, 2026-08-24)* — `Jerry`
-  and `the Toll-Taker`. They were one string, and the card could not hold it: `EnemyStyle` centres
+  and `the Toll-Taker`. They were one string, and the card could not hold it: `EnemyStyle` centers
   a name on one unwrapped line, so half the thirty rendered with a letter clipped off each end.
   The card takes `Name`; `Title` is for a hover nothing has built yet, and **nothing in the game
   reads it today**. `BossData.FullName()` joins them, so the hover and a review sheet cannot join
@@ -199,7 +199,7 @@ every other word this file gets wrong.
 ### Essences
 
 `essences.json` is **the card language pointed at a card that already exists**: a `Target` naming
-which aspect changes, and a `Value` where the target needs one. `element` takes a colour;
+which aspect changes, and a `Value` where the target needs one. `element` takes a color;
 `remove` and `duplicate` take none and **refuse one if it is supplied** — a record carrying a
 value nothing reads is somebody expecting a mechanic the game does not have.
 
@@ -221,7 +221,7 @@ make the argument in MECHANICS.md again before adding one.
 **`amount` reaches every card with one essence**, because what the figure means depends on the verb.
 That is the card language paying off, and it is the shape to reach for before adding a target.
 
-### The three fields no catalogue's rules read
+### The three fields no catalog's rules read
 
 **`Family`, `Art` and `Draw` are authored, ignored, and read only by a review sheet.** They landed
 on `relics.json` first and were taken to `essences.json` and `runes.json` on 2026-09-12;
@@ -235,13 +235,14 @@ key is what those two already have.
   one buys is a name to read instead of a signature to decode. **It is not the `CostTier` mistake**,
   because nothing resolves anything differently because of it — but it **can go quietly out of date
   and no test fails**, so re-read the block when a record's rules change.
-- **`Art` is an `assets.LoadImageData` key**, and **empty means the catalogue's default face**.
-  Every catalogue that has one exposes an `ArtKey()` on its record — `DefaultRelicArt`,
+- **`Art` is an `assets.LoadImageData` key**, and **empty means the catalog's default face**.
+  Every catalog that has one exposes an `ArtKey()` on its record — `DefaultRelicArt`,
   `DefaultEssenceArt`, `DefaultRuneArt` — so the fallback is in `data/` and not in a screen: one
   that lives in `internal/screens` is one the review tools do not have.
 - **`Draw` is the subject paragraph an art generator is given**, one sentence saying what the thing
-  *is* and what it is doing. The *generic* prompt is `docs/art/card_art_prompt.MD` and is about no
-  record at all. **Empty means nobody has written one**, which — read against an empty `Art` — is
+  *is* and what it is doing. The *generic* prompt is the one for that card's style —
+  `docs/art/relic_art_prompt.MD` or `docs/art/essence_art_prompt.MD` — and is about no record at
+  all. **Empty means nobody has written one**, which — read against an empty `Art` — is
   the backlog each sheet marks in pink. **Every enemy and boss `Draw` reads `TO BE DETERMINED`**:
   those portraits are licensed art rather than generated pictures, so the field is a seat rather
   than a backlog.
@@ -253,7 +254,7 @@ key is what those two already have.
 
 `stones.json` is **the essences' shape pointed at the hand ladder instead of at a card**: a record
 names a rung by its `hands.json` key, and using one raises that rung's multiplier by a tenth of the
-catalogue figure for the rest of the run.
+catalog figure for the rest of the run.
 
 **Parsed and validated in `internal/session`, like the essences and for the same reason** — a stone is
 held by a *run*. `internal/combat` owns the arithmetic and the seat a count sits in
@@ -288,7 +289,7 @@ every file here answers.
 - **A turn trigger is patterns, and a pattern is clauses.** Any pattern matching earns it; every
   clause in a pattern must hold. A clause is `{Of, Axis, Mode, N}` — `Of` filters by category,
   `Mode` is `distinct` (at least N values), `same` or `count`. **The filter is on the clause rather
-  than on the pattern**, which is what lets Arsenal ask for three attack forms *and* a defence
+  than on the pattern**, which is what lets Arsenal ask for three attack forms *and* a defense
   beside them: two different selections of one turn.
 - **A record's `AchievementRecord` is the disk contract** and may never change once shipped. Its
   `Name`, `How` and `Said` can be reworded any afternoon.
@@ -341,8 +342,8 @@ Each carries a key, an ID, a name, a `match`, `groups` and a percent `multiplier
 `form` (stab/slash/crush/defend), `element`, or **`any`**.
 A missing or unknown one is refused at init rather than defaulted: an entry landing on the wrong
 axis by omission would be a balance change nobody made. `groups` counts distinct values **on that
-axis**, so `[3,2]` on `element` is three cards of one colour and two of another, and `[1,1,1]` is
-three cards of three different colours.
+axis**, so `[3,2]` on `element` is three cards of one color and two of another, and `[1,1,1]` is
+three cards of three different colors.
 
 **`"match": "any"` is a rung read on concept, form or element** *(owner's call, 2026-09-05)* —
 whichever the turn satisfies — and the **Pair is the only entry using it**. Three per-axis pairs
@@ -371,12 +372,12 @@ ladders into agreement.
 
 **Two of the three five-of-a-kind rungs could not be measured, and MECHANICS.md says so entry by
 entry.** An elemental five costs 7 AP against a 6 AP turn and a card five needs a fifth copy of a
-concept the deck does not ship, so their numbers are an extrapolation and a judgement rather than a
+concept the deck does not ship, so their numbers are an extrapolation and a judgment rather than a
 `ln(1/P)`. **Run `go run ./tools/handodds` before changing any of them**, and `-ap 8` for the rung
 the plain budget cannot reach.
 
 **A hand is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. There is no
-reward vocabulary to extend, no mix axis counting distinct colours, and no `scope` field — statuses
+reward vocabulary to extend, no mix axis counting distinct colors, and no `scope` field — statuses
 come from elements and relics, and the matcher counts every card in the turn because that is what it
 does, not because an entry asked it to — what a card is worth to a hand is decided by the axis it is
 counted on. **Adding a rung is one entry in the JSON**;
@@ -390,7 +391,7 @@ is refused too, being one a player would be punished for building. Below `100` i
 High Card alone and would be a penalty — deliberately allowed, because taking a lever out of the
 file is the opposite of what the narrowing was for.
 
-A malformed catalogue panics at init — including a missing `high-card` entry, since a hand the
+A malformed catalog panics at init — including a missing `high-card` entry, since a hand the
 engine cannot name is the one failure this model produces. Two shape checks sit beside it: a hand
 wanting more cards than a turn holds, and one wanting more groups than its axis has values, since
 only four forms and five elements ever reach a blow. The concept axis is left unchecked: it is
@@ -420,7 +421,7 @@ The data is about to grow three ways at once, which is why this was carved out o
   2026-08-21, so a new record needs a `Rarity` as well as its rules.
 - **More essences.** `essences.json` exists and spans seven targets. Growing it is one record each;
   growing the *target vocabulary* is not, and MECHANICS.md says why. `go run ./tools/essencesheet` is
-  what the catalogue is read on.
+  what the catalog is read on.
 - **Brands** — permanent for the run, altering the container where relics alter the contents. The
   mechanic is decided in `MECHANICS.md`; there is no `brands.json` and no acquisition.
 

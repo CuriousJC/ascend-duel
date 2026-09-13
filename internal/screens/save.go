@@ -42,7 +42,7 @@ func saveRun(gs *state.GlobalState) {
 }
 
 // Awarding an achievement used to live here as one function per key. **It moved to achieve.go on
-// 2026-09-06**, when the catalogue became data and the triggers became a grammar: an award is now a
+// 2026-09-06**, when the catalog became data and the triggers became a grammar: an award is now a
 // key handed back by internal/achieve rather than a call site that knew which achievement it was
 // standing in. What stayed is saveProfile below, which is still the only thing here that writes.
 

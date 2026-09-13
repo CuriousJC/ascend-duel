@@ -10,7 +10,7 @@ import "html/template"
 // it — even by the fraction a max-width rule can introduce — resamples that rim into a blur
 // and makes the sheet lie about the art.
 //
-// **The ground is the one the relics actually sit on**, not a page colour chosen to flatter
+// **The ground is the one the relics actually sit on**, not a page color chosen to flatter
 // them. A pink border on white is a different card from a pink border on the game's own blue.
 //
 // The layout is a card beside a block of text rather than a grid of cards, because what is
@@ -50,7 +50,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
     font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 10px;
   }
   /* The shelf is a list rather than three headings now that the page groups by family, so the
-     tier colour moves onto the row. Common is the ground itself; rare is the relic pink the
+     tier color moves onto the row. Common is the ground itself; rare is the relic pink the
      game already spends on "a relic did this". */
   ul.shelf { list-style: none; padding: 0; margin: 14px 0 0; }
   li.tier {
@@ -79,7 +79,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   /* The tier, on the relic rather than only on the shelf list and the family heading. A
      family is nearly always one rarity throughout, which is exactly what makes a mixed one
      worth reading card by card — and the price beside it is the tier's price, so the two
-     belong on one line. Same three colours the shelf list uses. */
+     belong on one line. Same three colors the shelf list uses. */
   .rarity {
     display: inline-block; margin-right: 7px; padding: 1px 7px 2px;
     border-radius: 9px; font-size: 11px; letter-spacing: .05em;
@@ -128,7 +128,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   The badge is drawn at <strong>Grown&nbsp;0</strong> &mdash; what a fresh copy wears, which is the
   card the shelf shows. It is also the narrowest the figure gets: a run late in a climb reads
   <code>10.5</code> or <code>+100</code>, so judge the size against those rather than against
-  <code>1.0</code>. A relic with no badge is one that does not grow, which is most of the catalogue.
+  <code>1.0</code>. A relic with no badge is one that does not grow, which is most of the catalog.
   <strong>A decimal point means a multiplier and a <code>+</code> means a flat figure</strong>;
   there is no <code>x</code> after the multiplier, because the point already says so, and a
   multiplier is <strong>always one decimal place</strong> — so four characters is the widest the
@@ -147,8 +147,9 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The
   quoted block under each relic is <code>Draw</code> in <code>data/relics.json</code>: what the
   object <em>is</em> and what the effect is doing to it, in one sentence. Nothing in the game
-  reads it. It is pasted under the shared prompt in <code>docs/art/card_art_prompt.MD</code>,
-  which is the only part of a brief that is not about one relic. <strong>A relic with no
+  reads it. It is pasted under the catalog's own prompt,
+  <code>docs/art/relic_art_prompt.MD</code>, which is the only part of a brief that is not
+  about one relic. <strong>A relic with no
   subject and no art is the backlog</strong> — both lines go pink, so the page can be scrolled
   for what still needs writing rather than a worklist being kept in step by hand.
 </p>
@@ -164,7 +165,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
 <p class="note">
   <strong>What a single shelf seat costs and how often it lands in each tier.</strong> Rarity is
   the only pricing dial there is — a relic is rebalanced by moving it between these three, never
-  by writing a number — and the share is the tier's tickets over the whole catalogue's.
+  by writing a number — and the share is the tier's tickets over the whole catalog's.
 </p>
 <ul class="shelf">
 {{range .Tiers}}
@@ -174,7 +175,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
 {{end}}
 </ul>
 
-<h2>The catalogue, by family</h2>
+<h2>The catalog, by family</h2>
 <p class="note">
   <strong>Grouped by the motif each relic was authored beside, in the file's own order.</strong>
   The pricing review survives the move because nearly every family is one tier throughout: a

@@ -29,7 +29,7 @@ func spend(t *testing.T, gs *state.GlobalState, s *CombatScene, key string) {
 	t.Helper()
 	p, ok := session.RuneByKey(key)
 	if !ok {
-		t.Skipf("no %s in the catalogue", key)
+		t.Skipf("no %s in the catalog", key)
 	}
 	was, seats := s.handFaces(gs)
 	if !gs.Run.ApplyRuneRolling(p, s.selectedCardIDs(), nil) {
@@ -42,19 +42,19 @@ func spend(t *testing.T, gs *state.GlobalState, s *CombatScene, key string) {
 	s.raiseHandMorphs(gs, was, seats)
 }
 
-// TestARecolouringRuneMorphsEveryCardItTook. **One beat for all of them** — the morphs are
+// TestARecoloringRuneMorphsEveryCardItTook. **One beat for all of them** — the morphs are
 // raised together, so a rune that named two cards puts two on stage at once rather than one
 // after the other.
-func TestARecolouringRuneMorphsEveryCardItTook(t *testing.T) {
+func TestARecoloringRuneMorphsEveryCardItTook(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
 	spend(t, gs, s, "hexmark")
 
-	if got := len(s.theatre.morphs); got != 2 {
+	if got := len(s.theater.morphs); got != 2 {
 		t.Fatalf("a two-card borer raised %d morphs, want 2", got)
 	}
-	for _, h := range s.theatre.morphs {
+	for _, h := range s.theater.morphs {
 		if !h.m.hasBefore || !h.m.hasAfter {
-			t.Errorf("card %d: a recoloured card should be one face turning into another", h.id)
+			t.Errorf("card %d: a recolored card should be one face turning into another", h.id)
 		}
 		if _, still := s.handMorphFor(h.id); !still {
 			t.Errorf("card %d: the morph cannot be found by the id the row will look it up with", h.id)
@@ -68,8 +68,8 @@ func TestTheMorphsRunTogether(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
 	spend(t, gs, s, "hexmark")
 
-	first := s.theatre.morphs[0].m.t
-	for _, h := range s.theatre.morphs[1:] {
+	first := s.theater.morphs[0].m.t
+	for _, h := range s.theater.morphs[1:] {
 		if h.m.t != first {
 			t.Errorf("one morph is on %+v and another on %+v; they should share a beat", first, h.m.t)
 		}
@@ -86,10 +86,10 @@ func TestAnEatenCardMorphsAwayAtTheSeatItHad(t *testing.T) {
 	if len(s.hand) != 0 {
 		t.Fatalf("unmake left %d cards in the hand, want none", len(s.hand))
 	}
-	if got := len(s.theatre.morphs); got != 2 {
+	if got := len(s.theater.morphs); got != 2 {
 		t.Fatalf("unmake raised %d morphs, want 2", got)
 	}
-	for _, h := range s.theatre.morphs {
+	for _, h := range s.theater.morphs {
 		if !h.m.hasBefore || h.m.hasAfter {
 			t.Errorf("card %d: an eaten card has a face to lose and none to gain", h.id)
 		}
@@ -106,10 +106,10 @@ func TestACopyMorphsInOutOfNothing(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash))
 	spend(t, gs, s, "mimic")
 
-	if got := len(s.theatre.morphs); got != 1 {
+	if got := len(s.theater.morphs); got != 1 {
 		t.Fatalf("a copy raised %d morphs, want 1", got)
 	}
-	m := s.theatre.morphs[0].m
+	m := s.theater.morphs[0].m
 	if m.hasBefore || !m.hasAfter {
 		t.Error("a copy arrives out of nothing; it has no face to lose")
 	}
@@ -123,7 +123,7 @@ func TestARuneThatChangedNothingRaisesNothing(t *testing.T) {
 	was, seats := s.handFaces(gs)
 	s.raiseHandMorphs(gs, was, seats)
 
-	if got := len(s.theatre.morphs); got != 0 {
+	if got := len(s.theater.morphs); got != 0 {
 		t.Errorf("an unchanged hand raised %d morphs, want none", got)
 	}
 }

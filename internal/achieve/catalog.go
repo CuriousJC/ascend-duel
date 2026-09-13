@@ -1,6 +1,6 @@
 package achieve
 
-// The catalogue: **the JSON records, parsed into something that can be asked a question.**
+// The catalog: **the JSON records, parsed into something that can be asked a question.**
 //
 // Loaded at package init, so a malformed record fails the launch rather than mid-climb — the same
 // exit `combat.RegisterConcept` and `session.loadStones` take, and for the same reason.
@@ -63,7 +63,7 @@ var momentsCarryingN = []string{MomentFloorReached, MomentShieldsRaised}
 // on disk and two axes cannot collide — `slash` is both a form and nothing like the concept
 // `Slash`, and a player who plays five hundred slashing cards has not played five hundred Slashes.
 //
-// **Per concept, never per concept-and-element** *(owner's call, 2026-09-06)*: five colours of
+// **Per concept, never per concept-and-element** *(owner's call, 2026-09-06)*: five colors of
 // twelve concepts is sixty tallies to say what twelve say, and no achievement has wanted the
 // distinction.
 const (
@@ -131,18 +131,18 @@ const (
 	defendOnly
 )
 
-// Catalogue is every achievement this build knows, in file order.
-type Catalogue struct {
+// Catalog is every achievement this build knows, in file order.
+type Catalog struct {
 	list []Achievement
 	by   map[string]int
 }
 
 // All is every achievement, in the order the file wrote them — which is the order the page lists
 // them in. See data.LoadAchievements for why that is not sorted.
-func (c *Catalogue) All() []Achievement { return c.list }
+func (c *Catalog) All() []Achievement { return c.list }
 
 // Find is one achievement by key.
-func (c *Catalogue) Find(key string) (Achievement, bool) {
+func (c *Catalog) Find(key string) (Achievement, bool) {
 	i, ok := c.by[key]
 	if !ok {
 		return Achievement{}, false
@@ -150,21 +150,21 @@ func (c *Catalogue) Find(key string) (Achievement, bool) {
 	return c.list[i], true
 }
 
-// catalogue is the one loaded at init. **Package state, like combat's concept registry**, and for
+// catalog is the one loaded at init. **Package state, like combat's concept registry**, and for
 // the same reason: it is read once from embedded data and never changes, so threading it through
 // every caller would describe a variable that does not vary.
-var catalogue = load()
+var catalog = load()
 
-// Loaded is the catalogue this build shipped.
-func Loaded() *Catalogue { return catalogue }
+// Loaded is the catalog this build shipped.
+func Loaded() *Catalog { return catalog }
 
-// load parses and validates the file. **It panics**, because a catalogue this build cannot read is
+// load parses and validates the file. **It panics**, because a catalog this build cannot read is
 // a page of achievements that quietly cannot be earned, and a game that will not start says so
 // where a game that starts does not.
-func load() *Catalogue {
+func load() *Catalog {
 	records := data.LoadAchievements()
 
-	out := &Catalogue{
+	out := &Catalog{
 		list: make([]Achievement, 0, len(records)),
 		by:   make(map[string]int, len(records)),
 	}
@@ -191,7 +191,7 @@ func load() *Catalogue {
 }
 
 // parseTrigger turns one record's trigger into something comparable, refusing everything it does
-// not recognise.
+// not recognize.
 //
 // **A field belonging to another kind is an error rather than something ignored.** A record that
 // wrote a `Counter` on a moment trigger meant something by it, and quietly dropping the field is

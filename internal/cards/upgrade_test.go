@@ -135,7 +135,7 @@ func TestAnUpgradeLeavesTheCornersAlone(t *testing.T) {
 
 // **Every upgrade draws a different card**, or two runes the player spent would look like one
 // they spent twice. It is the aggregate version of TestEveryUpgradeHasAnInk below: an ink can exist
-// and still be close enough to its neighbour to be indistinguishable on a card.
+// and still be close enough to its neighbor to be indistinguishable on a card.
 func TestNoTwoUpgradesDrawTheSameCard(t *testing.T) {
 	whole := image.Rect(0, 0, Hand.Width, Hand.Height)
 	seen := map[systems.Upgrade]*image.RGBA{}
@@ -163,7 +163,7 @@ func TestOnlyTheWildcardTakesTheHueOffTheFormMark(t *testing.T) {
 }
 
 // **An upgraded card still states.** A disabled one has to read as unavailable whatever has been
-// done to it, and a wash applied after the state colouring is exactly where that gets lost.
+// done to it, and a wash applied after the state coloring is exactly where that gets lost.
 func TestAnUpgradedCardStillStates(t *testing.T) {
 	rest := upgradeSpec(systems.UpgradeGolden)
 	dim := rest
@@ -200,7 +200,7 @@ func same(a, b *image.RGBA, box image.Rectangle) bool {
 // be invisible, which is the exact failure the whole idea exists to fix — so it fails here rather
 // than shipping a rune that appears to do nothing.
 //
-// **It no longer requires the ink to be more than one colour.** That check belonged to the left
+// **It no longer requires the ink to be more than one color.** That check belonged to the left
 // column, where a flat ink would have said something an element could already say; a whole-card
 // wash in one tint is what nine of the ten upgrades are, and the wildcard's bands are the exception.
 func TestEveryUpgradeHasAnInk(t *testing.T) {

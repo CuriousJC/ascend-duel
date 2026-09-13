@@ -35,7 +35,7 @@ func TestDefendHalvesTheBlowAndIsSpent(t *testing.T) {
 	b := duelist(10, 4, 500)
 
 	// B defends first. B acts second, so its testGuard is standing when A's next turn arrives.
-	// A Smash and a Thrust are different concepts and different forms, and both are colourless, so
+	// A Smash and a Thrust are different concepts and different forms, and both are colorless, so
 	// they agree on no axis and form no hand: the blow is the High Card — the Smash alone — and the
 	// arithmetic is about the testGuard rather than about a multiplier.
 	_, a, b = resolve(a, b, nil, PlainCards(testGuard), 1)
@@ -48,14 +48,14 @@ func TestDefendHalvesTheBlowAndIsSpent(t *testing.T) {
 		t.Errorf("life after a halved Smash = %d, want %d", bAfter.CurrentLife, want)
 	}
 	if bAfter.DefendCount != 0 {
-		t.Errorf("defends left = %d, want 0 — every defence is spent on the blow it answered", bAfter.DefendCount)
+		t.Errorf("defends left = %d, want 0 — every defense is spent on the blow it answered", bAfter.DefendCount)
 	}
 }
 
 // **No card reduces a blow to zero, and that is the design.** A turn lands one figure however many
 // cards went into it, so a card taking all of it would delete a whole opposing turn by itself.
 // Halving cannot: something always lands, so the opponent is always still playing.
-func TestNoDefenceStopsABlowOutright(t *testing.T) {
+func TestNoDefenseStopsABlowOutright(t *testing.T) {
 	dmg := 10
 	a := duelist(dmg, 0, 500)
 	b := duelist(dmg, 0, 500)
@@ -197,7 +197,7 @@ func TestNoPlayerConceptGivesTheOpponentShields(t *testing.T) {
 	}
 }
 
-func TestEveryRaisedDefenceMeetsTheBlow(t *testing.T) {
+func TestEveryRaisedDefenseMeetsTheBlow(t *testing.T) {
 	// **Every card fires, not just the front one.** A turn lands one blow, so the choice of which
 	// card meets which has nothing to choose between and the whole set answers it. Each card also
 	// emits its own event, which is what the Resolution feed narrates.
@@ -215,7 +215,7 @@ func TestEveryRaisedDefenceMeetsTheBlow(t *testing.T) {
 	events, _, _ := resolve(a, b, PlainCards(Smash, Bash), nil, 2)
 
 	if got := kindCount(events, KindNegated); got != 2 {
-		t.Errorf("%d defences fired, want both of them", got)
+		t.Errorf("%d defenses fired, want both of them", got)
 	}
 	full := firstDamage(t, open, SideA).Amount
 	if got, want := firstDamage(t, events, SideA).Amount, full*25/100; got != want {
@@ -223,13 +223,13 @@ func TestEveryRaisedDefenceMeetsTheBlow(t *testing.T) {
 	}
 }
 
-func TestDefencesAreSpentWhetherOrNotTheyWereNeeded(t *testing.T) {
-	// A defence answers the opponent's turn and then goes, spent or not. It cannot be banked
+func TestDefensesAreSpentWhetherOrNotTheyWereNeeded(t *testing.T) {
+	// A defense answers the opponent's turn and then goes, spent or not. It cannot be banked
 	// against a turn that queued no attack at all.
 	a := duelist(10, 4, 100)
 	b := duelist(10, 4, 100)
 
-	// A raises two defences into a turn with nothing to answer.
+	// A raises two defenses into a turn with nothing to answer.
 	_, a1, b1 := resolve(a, b, PlainCards(testGuard, testGuard), nil, 1)
 	if a1.DefendCount != 2 {
 		t.Fatalf("A ended round 1 holding %d defends, want 2 unspent", a1.DefendCount)
@@ -317,15 +317,15 @@ func TestTheAttackLadderIsThreeFormsByFiveTiers(t *testing.T) {
 	}
 }
 
-func TestDefencesDealNothingAndAttacksDoNot(t *testing.T) {
+func TestDefensesDealNothingAndAttacksDoNot(t *testing.T) {
 	// The two categories are what a card *is*, so each has to hold on its own side of the line. A
-	// defence that dealt damage would be an attack wearing the wrong verb in the feed.
+	// defense that dealt damage would be an attack wearing the wrong verb in the feed.
 	const dmg = 10
 	for _, a := range PlayerConcepts() {
 		switch Plain(a).Category() {
 		case CategoryDefend:
 			if d := Plain(a).Damage(dmg); d != 0 {
-				t.Errorf("%v is a defence and deals %d damage", a, d)
+				t.Errorf("%v is a defense and deals %d damage", a, d)
 			}
 		case CategoryAttack:
 			if d := Plain(a).Damage(dmg); d <= 0 {
@@ -420,7 +420,7 @@ func TestAEssencesBoundsHold(t *testing.T) {
 	// Nothing stops a blow outright, however many essences are stacked on a testGuard.
 	wall := Card{Concept: testGuard, AmountPct: 10000}
 	if got := wall.Amount(); got >= 100 {
-		t.Errorf("a defence scaled up reduces by %d%%, and nothing may reach 100", got)
+		t.Errorf("a defense scaled up reduces by %d%%, and nothing may reach 100", got)
 	}
 
 	// An amount cannot be scaled away to nothing: a reward that left a card doing zero would be
@@ -440,9 +440,9 @@ func TestAEssencesBoundsHold(t *testing.T) {
 
 // TestTheLadderWalksItsOwnForm. Promote and demote are derived from what duelist_cards.json
 // declares rather than from a table beside it, so this pins that the derivation finds the right
-// neighbour and stops at both ends.
+// neighbor and stops at both ends.
 func TestTheLadderWalksItsOwnForm(t *testing.T) {
-	up, ok := Neighbour(Jab, 1)
+	up, ok := Neighbor(Jab, 1)
 	if !ok {
 		t.Fatal("Jab cannot be promoted, and it is a middle rung of its ladder")
 	}
@@ -453,44 +453,44 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 		t.Errorf("promoting moved from tier %d to %d", ConceptOf(Jab).Tier(), ConceptOf(up).Tier())
 	}
 
-	if down, ok := Neighbour(up, -1); !ok || down != Jab {
+	if down, ok := Neighbor(up, -1); !ok || down != Jab {
 		t.Errorf("demoting the promotion gave %v, want Jab", down)
 	}
 
 	// A Jab now demotes, because the ladder grew an end below it. That is the whole point of the
 	// zero-copy rungs: the essence reaches a card it used to be refused on.
-	if down, ok := Neighbour(Jab, -1); !ok || down != Poke {
+	if down, ok := Neighbor(Jab, -1); !ok || down != Poke {
 		t.Errorf("demoting a Jab gave %v, want Poke", down)
 	}
 
 	// Both ends still stop, one rung further out than they used to. A card at the top of its form
 	// cannot be promoted, and the screen asks before it offers so the player is never shown an essence
 	// that would do nothing.
-	if _, ok := Neighbour(Poke, -1); ok {
+	if _, ok := Neighbor(Poke, -1); ok {
 		t.Error("the bottom of a ladder was demoted")
 	}
-	if _, ok := Neighbour(Impale, 1); ok {
+	if _, ok := Neighbor(Impale, 1); ok {
 		t.Error("the top of a ladder was promoted")
 	}
 
-	// The defences are a ladder too, and Grow and Shrink walk it exactly as they walk an attack
+	// The defenses are a ladder too, and Grow and Shrink walk it exactly as they walk an attack
 	// form. Block sits in the middle of Flinch / Brace / Block / Guard.
-	if up, ok := Neighbour(Block, 1); !ok || up != Guard {
+	if up, ok := Neighbor(Block, 1); !ok || up != Guard {
 		t.Errorf("promoting a Block gave %v, want Guard", up)
 	}
-	if down, ok := Neighbour(Brace, -1); !ok || down != Flinch {
+	if down, ok := Neighbor(Brace, -1); !ok || down != Flinch {
 		t.Errorf("demoting a Brace gave %v, want Flinch", down)
 	}
-	if _, ok := Neighbour(Flinch, -1); ok {
+	if _, ok := Neighbor(Flinch, -1); ok {
 		t.Error("the bottom of the defend ladder was demoted")
 	}
-	if _, ok := Neighbour(Guard, 1); ok {
+	if _, ok := Neighbor(Guard, 1); ok {
 		t.Error("the top of the defend ladder was promoted")
 	}
 
-	// The two ladders never meet: a defence promoted stays a defence, and an enemy card has no
+	// The two ladders never meet: a defense promoted stays a defense, and an enemy card has no
 	// form and therefore no ladder at all.
-	if up, _ := Neighbour(Block, 1); ConceptOf(up).Verb != VerbShield {
-		t.Error("promoting a defence produced an attack")
+	if up, _ := Neighbor(Block, 1); ConceptOf(up).Verb != VerbShield {
+		t.Error("promoting a defense produced an attack")
 	}
 }

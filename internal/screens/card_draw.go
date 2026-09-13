@@ -131,7 +131,7 @@ func drawGoodCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 //
 // **The seat has to match a focus rectangle, not merely overlap one.** The hand row overlaps when
 // it is full, so a card beside a lit one shares pixels with it; asking for containment would light
-// its neighbours. See tutorial.Anchor.NamesCards, which is what puts card seats in the list.
+// its neighbors. See tutorial.Anchor.NamesCards, which is what puts card seats in the list.
 func marksFor(gs *state.GlobalState, seat image.Rectangle) cards.Mark {
 	if !gs.InputGated {
 		return cards.MarkNone

@@ -23,7 +23,7 @@ import (
 //
 // **The purse figure is measured, not derived**, and that is this test's one weakness said out
 // loud: the taught run reaches the shop with 13, which is the fight's vitae plus the prize card,
-// and modelling that faithfully here would mean replaying the duel. If the payout changes this
+// and modeling that faithfully here would mean replaying the duel. If the payout changes this
 // test will not notice — but a price or a rarity moving is the far likelier break, and that it
 // does catch. **If it goes red, the fix is a cheaper shelf or a different seed, not a bigger
 // number here.**
@@ -78,7 +78,7 @@ func TestTheTutorialsShopCanAffordWhatTheLessonDemands(t *testing.T) {
 		}
 	}
 	if draught == 0 {
-		t.Fatal("no potion in the catalogue adds DMG, and the lesson tells the player to drink one")
+		t.Fatal("no potion in the catalog adds DMG, and the lesson tells the player to drink one")
 	}
 
 	t.Logf("shelf %v, cheapest %d relics cost %d, draught %d, purse %d",

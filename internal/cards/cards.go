@@ -41,7 +41,7 @@ const (
 )
 
 // Elements is every element a card can have, in a fixed order, for the contact sheet and
-// for anything else that iterates them. A slice rather than a map, because Go randomises
+// for anything else that iterates them. A slice rather than a map, because Go randomizes
 // map order and a sheet whose rows moved between runs would be useless as a diff.
 //
 // Relic is not in it. See the constant.
@@ -68,9 +68,9 @@ func (e Element) String() string {
 
 // borderColors is the element signal, now that the surface no longer carries it.
 //
-// These are the screen's existing element colours with one deliberate exception: Basic.
+// These are the screen's existing element colors with one deliberate exception: Basic.
 // As a surface, near-white meant "this card makes no claim" and worked. As a border on
-// an off-white card it would be invisible, so it becomes a mid grey — still the quietest
+// an off-white card it would be invisible, so it becomes a mid gray — still the quietest
 // of the set, still obviously the absence of an element, but actually a border.
 var borderColors = [...]color.RGBA{
 	Basic: {R: 150, G: 154, B: 163, A: 255},
@@ -93,7 +93,7 @@ var borderColors = [...]color.RGBA{
 
 	// Pink, and deliberately unlike any of the four above. It was the relic border until
 	// 2026-09-13, when rarity took that job — see rarityBorders. What it still carries is the
-	// relic's *voice*: internal/screens writes a figure a relic has moved in this colour, and a
+	// relic's *voice*: internal/screens writes a figure a relic has moved in this color, and a
 	// relic card whose rarity is not one of the three falls back to it, so an unclassified record
 	// reads as broken rather than as common.
 	Relic: {R: 232, G: 106, B: 168, A: 255},
@@ -106,13 +106,13 @@ var borderColors = [...]color.RGBA{
 // 2026-08-09 because pink was the "this is not something you can play" signal; rarity is the fact
 // a player actually wants off a shelf, and the format already says the rest — a relic is the only
 // card that is full-bleed art with no title, no cost ticks and no form mark, so it cannot be
-// mistaken for something in the hand whatever colour rings it.
+// mistaken for something in the hand whatever color rings it.
 //
-// **Relics are the only cards with a rarity at all.** data/relics.json is the one catalogue
+// **Relics are the only cards with a rarity at all.** data/relics.json is the one catalog
 // carrying the field, so a Spec with no Rarity is every other card in the game and takes the
-// neutral grey through borderBase.
+// neutral gray through borderBase.
 //
-// Three notes on the colours themselves:
+// Three notes on the colors themselves:
 //
 //   - **Common is bone, not white.** White is the trap borderColors[Basic] already documents: the
 //     bevel is derived by pushing the fill toward white, so a white fill has nowhere to climb and
@@ -130,7 +130,7 @@ var rarityBorders = map[data.Rarity]color.RGBA{
 	data.Rare:     {R: 196, G: 154, B: 56, A: 255},
 }
 
-// BorderOf is the colour this element's border is drawn in at full strength. States
+// BorderOf is the color this element's border is drawn in at full strength. States
 // scale it down; see Render.
 func BorderOf(e Element) color.RGBA {
 	if int(e) >= len(borderColors) {
@@ -213,13 +213,13 @@ func (f Form) Glyph() (systems.GlyphKind, bool) {
 // the screen, and so a pure-white glyph Specular still has somewhere to go.
 var Surface = color.RGBA{R: 240, G: 239, B: 234, A: 255}
 
-// The back of a card: a dark face with a pale mark centred on it, and nothing else. It
+// The back of a card: a dark face with a pale mark centered on it, and nothing else. It
 // says "a card, and you may not see which" — the draw pile is shuffled, so a back that
 // carried an element or a category would leak the very thing the shuffle protects.
 //
 // BackSurface is near-black rather than pure black for the same reason Surface is
 // off-white rather than white: a card has to read as an object on the screen and not as a
-// hole cut in it. BackInk is pure white, the one place on a card that colour is spent on
+// hole cut in it. BackInk is pure white, the one place on a card that color is spent on
 // nothing but contrast.
 // BackRim is a thin neutral edge around the back.
 //
@@ -227,9 +227,9 @@ var Surface = color.RGBA{R: 240, G: 239, B: 234, A: 255}
 // near-black shapes on a dark screen, and without an edge they merge into one card with a
 // lopsided corner — which is exactly how the first version drew, and the reason this exists.
 //
-// Neutral rather than the element colour, which keeps the rule the back is built on: the
+// Neutral rather than the element color, which keeps the rule the back is built on: the
 // border is where a card says which card it is, so a back may have an edge but never a
-// *coloured* one.
+// *colored* one.
 var (
 	BackSurface = color.RGBA{R: 14, G: 14, B: 18, A: 255}
 	BackInk     = color.RGBA{R: 255, G: 255, B: 255, A: 255}
@@ -238,8 +238,8 @@ var (
 
 // BackMark is which shape a card back carries: **whose deck this is**, not what the card is.
 //
-// **Named designs drawn in code rather than a recolour or a picture** *(2026-08-11)*. A
-// recolour would have been one data field and nearly invisible on a near-black card at the
+// **Named designs drawn in code rather than a recolor or a picture** *(2026-08-11)*. A
+// recolor would have been one data field and nearly invisible on a near-black card at the
 // draw pile's 44 pixels; a picture per duelist would put the provenance question back on the
 // one part of the game that had escaped it. A silhouette is what reads at that size and what
 // can be generated, which is the same argument the glyphs are built on.
@@ -273,7 +273,7 @@ func (m BackMark) String() string {
 }
 
 // BackMarks is every mark, in a fixed order, for the contact sheet. A slice rather than a
-// map: Go randomises map order and a sheet whose rows moved between runs is useless as a
+// map: Go randomizes map order and a sheet whose rows moved between runs is useless as a
 // diff.
 func BackMarks() []BackMark { return []BackMark{MarkTriangle, MarkDiamond, MarkChevron} }
 
@@ -292,24 +292,24 @@ func ParseBackMark(name string) (BackMark, bool) {
 	return MarkTriangle, false
 }
 
-// Ink colours. Hueless on purpose — the border is carrying the only colour on the face.
+// Ink colors. Hueless on purpose — the border is carrying the only color on the face.
 var (
 	// NameInk is the concept's name across the top, the thing read first.
 	NameInk = color.RGBA{R: 28, G: 30, B: 36, A: 255}
 
 	// NumberInk is a figure: a stat row's value, the health fraction. It used to be the glyph
-	// palette's Specular (pure white), which was legible on a coloured surface and is not on
+	// palette's Specular (pure white), which was legible on a colored surface and is not on
 	// this one.
 	NumberInk = color.RGBA{R: 40, G: 43, B: 52, A: 255}
 
 	// LabelInk is the word half of a stat row — "DMG", "AP", "Vitae". Quieter than the
 	// figure beside it, because the figure is what is read and the label is what says
-	// which figure it is. Colour is what carries that hierarchy here; the two halves share
+	// which figure it is. Color is what carries that hierarchy here; the two halves share
 	// a baseline, so they cannot differ in size without reading as a mistake.
 	LabelInk = color.RGBA{R: 108, G: 112, B: 124, A: 255}
 )
 
-// StatLine is one labelled figure on a card face: a word on the left, a number on the
+// StatLine is one labeled figure on a card face: a word on the left, a number on the
 // right, both on the same baseline.
 //
 // Both halves are strings, so this package never has to know that "12 / 40" is a fraction
@@ -319,33 +319,33 @@ type StatLine struct {
 	Label string
 	Value string
 
-	// ValueInk overrides the colour the figure is set in. **Zero alpha means the default**, the
+	// ValueInk overrides the color the figure is set in. **Zero alpha means the default**, the
 	// same convention TextInk follows, so a caller that never thinks about it gets NumberInk.
 	//
 	// **It exists because vitae is crimson everywhere it is written** *(2026-08-22)*: the purse on
 	// the duelist card is the figure the reward screen makes climb, and it is the same red the
-	// word is set in while that screen reads the payout out. The state colouring still applies on
+	// word is set in while that screen reads the payout out. The state coloring still applies on
 	// top, so a disabled card fades with everything else.
 	ValueInk color.RGBA
 }
 
-// MaxTextHighlights is how many separately coloured spans one card's text can carry.
+// MaxTextHighlights is how many separately colored spans one card's text can carry.
 //
-// **Four, because the wordiest relic in the catalogue names three things** — an element and two
+// **Four, because the wordiest relic in the catalog names three things** — an element and two
 // statuses — and a fixed array needs a number. `TestEveryTextFitsItsHighlights` in
-// internal/screens holds the authored catalogue against it, so an entry wanting a fifth fails a
-// test rather than losing its last colour to an array that silently ran out.
+// internal/screens holds the authored catalog against it, so an entry wanting a fifth fails a
+// test rather than losing its last color to an array that silently ran out.
 const MaxTextHighlights = 4
 
-// TextSpan is one span of a card's Text set in its own colour.
+// TextSpan is one span of a card's Text set in its own color.
 //
 // **Both halves are the caller's**, exactly as a StatLine's are: this package matches a string
-// and paints it, and never learns why that string is worth a colour.
+// and paints it, and never learns why that string is worth a color.
 type TextSpan struct {
-	// Span is the text to colour. Empty means the entry is unused.
+	// Span is the text to color. Empty means the entry is unused.
 	Span string
 
-	// Ink is what to colour it. Zero alpha means the entry is unused, whatever Span says.
+	// Ink is what to color it. Zero alpha means the entry is unused, whatever Span says.
 	Ink color.RGBA
 }
 
@@ -377,7 +377,7 @@ const MaxEffects = 5
 // Spec is everything about one card that changes what it looks like.
 //
 // It is plain data rather than a combat.ActionKind on purpose. The contact sheet renders
-// combinations that are not real cards — every border colour against every AP count —
+// combinations that are not real cards — every border color against every AP count —
 // and a Spec built from the rules could not express those. It also keeps this package
 // free of internal/combat, so the only thing it knows about the game is how to draw it.
 type Spec struct {
@@ -388,7 +388,7 @@ type Spec struct {
 
 	// Rarity is how scarce this relic is, and it is what a relic card's border is drawn from
 	// *(owner's call, 2026-09-13)*. **The zero value is every card that is not a relic**, which is
-	// almost all of them: data/relics.json is the only catalogue in the game carrying the field,
+	// almost all of them: data/relics.json is the only catalog in the game carrying the field,
 	// so nothing else has one to set.
 	//
 	// **It is data.Rarity rather than a type of this package's own**, which is the opposite of the
@@ -399,7 +399,7 @@ type Spec struct {
 	// string, so Spec stays comparable and the screen's face cache is untouched.
 	//
 	// **This package still does not know what a rarity means** — it does not price one, weight one
-	// or offer one. It is handed the word and owns the colour, exactly as it is handed Text and
+	// or offer one. It is handed the word and owns the color, exactly as it is handed Text and
 	// owns the wrapping. See rarityBorders.
 	Rarity data.Rarity
 
@@ -457,18 +457,18 @@ type Spec struct {
 	// names and costs.
 	Text string
 
-	// Highlights are the spans of Text that are set in their own colour. **A zero-alpha Ink
-	// means the entry is empty**, which is the convention every other optional colour in this
+	// Highlights are the spans of Text that are set in their own color. **A zero-alpha Ink
+	// means the entry is empty**, which is the convention every other optional color in this
 	// codebase follows — so a caller that never fills one in gets a line entirely in LabelInk.
 	//
-	// **It exists so the words that name a thing with a colour are drawn in it** *(owner's call,
+	// **It exists so the words that name a thing with a color are drawn in it** *(owner's call,
 	// 2026-09-08)*: an essence reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple, and a
-	// relic reading "Fire attacks BURN and CHILL the target." sets three words across two colours.
-	// The state colouring still applies on top, so a disabled card fades with everything else.
+	// relic reading "Fire attacks BURN and CHILL the target." sets three words across two colors.
+	// The state coloring still applies on top, so a disabled card fades with everything else.
 	//
-	// **A span is matched at word boundaries and every occurrence of it is coloured**, which is
+	// **A span is matched at word boundaries and every occurrence of it is colored**, which is
 	// what lets one entry carry a word a sentence says twice — "BURNING enemies" after "apply
-	// BURNING status" — without spending two seats. The boundary is not an optimisation: ICE is
+	// BURNING status" — without spending two seats. The boundary is not an optimization: ICE is
 	// inside SLICE and BURN is inside BURNING, and a substring match would paint half a word.
 	//
 	// **Longest first, so an entry cannot eat a longer one's word.** Ordering is the caller's,
@@ -477,22 +477,22 @@ type Spec struct {
 	// **A fixed array rather than a slice, and that is load-bearing.** `cards.Spec` is the render
 	// cache's key in internal/screens and is compared by value, so a slice here would not compile
 	// — the same constraint Stats is under, and the one combat.Card.Riders is under one package
-	// over. MaxTextHighlights is what the authored catalogue needs plus room; a text wanting more
-	// fails a test in internal/screens rather than quietly losing its last colour.
+	// over. MaxTextHighlights is what the authored catalog needs plus room; a text wanting more
+	// fails a test in internal/screens rather than quietly losing its last color.
 	//
-	// **This package still does not know what an element is.** It is handed strings and colours;
+	// **This package still does not know what an element is.** It is handed strings and colors;
 	// the decision that the two go together is internal/screens, which is where the wording lives.
 	Highlights [MaxTextHighlights]TextSpan
 
-	// Art is optional artwork drawn on the face, scaled to fit and centred. Relics use
+	// Art is optional artwork drawn on the face, scaled to fit and centered. Relics use
 	// it; action cards do not, and their art is the generated glyphs instead.
 	//
 	// **This is the one thing on a card that is not generated**, so it is the one thing
-	// with a provenance question. Anything put here needs a licence that survives a paid
+	// with a provenance question. Anything put here needs a license that survives a paid
 	// release — see CLAUDE.md on the Tyrian set.
 	Art image.Image
 
-	// Stats are the labelled figures the duelist card carries — DMG, AP, Vitae — drawn one
+	// Stats are the labeled figures the duelist card carries — DMG, AP, Vitae — drawn one
 	// per row by the styles that ask for them. An entry with neither a label nor a value
 	// leaves its row blank rather than closing the gap, so a row is always at the height
 	// the style says it is.
@@ -506,7 +506,7 @@ type Spec struct {
 
 	// Effects are the status badges drawn in a row along the bottom edge, on the styles that
 	// ask for them. Nil entries are skipped, so the row is as wide as the statuses actually
-	// standing on the combatant and stays centred as they come and go.
+	// standing on the combatant and stays centered as they come and go.
 	//
 	// **What they mean is none of this package's business.** A caller hands over pictures in
 	// the order it wants them read; `internal/screens` fills them from `Duelist.Statuses` in
@@ -583,14 +583,14 @@ type Spec struct {
 	FaceDown bool
 }
 
-// borderBase is the colour a card's border is actually drawn from, and it is deliberately
+// borderBase is the color a card's border is actually drawn from, and it is deliberately
 // *not* BorderOf.
 //
 // **The element moved off the border and onto the form mark on 2026-08-23** *(owner's call)*.
 // The border said the element from 2026-08-09, when the surface stopped carrying it; what that
 // left was a card whose loudest feature named the one thing about it that a player already knows
 // from the row it is sitting in, while the corner mark — the thing a hand is actually counted on
-// — was painted in one hueless palette. Swapping them spends the colour on the mark and gives the
+// — was painted in one hueless palette. Swapping them spends the color on the mark and gives the
 // border back to state, which is what borderRestToward and the rest were always about.
 //
 // **A relic borders by rarity** *(owner's call, 2026-09-13)*, which is the second time this

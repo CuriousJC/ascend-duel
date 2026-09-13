@@ -11,8 +11,8 @@ import (
 // TestAnElementRuneReachesTheCardInTheHand.
 //
 // **The whole point of a rune is that it lands mid-fight**, and until 2026-09-08 no element
-// rune did. `resyncHandFromRun` wrote the hand's old colour back over the run's new one, to
-// preserve a flip relic's recolour — so the run's card really did turn arcane and the card the player
+// rune did. `resyncHandFromRun` wrote the hand's old color back over the run's new one, to
+// preserve a flip relic's recolor — so the run's card really did turn arcane and the card the player
 // was holding did not. The round is played out of `s.hand`, so what a Hexmark bought was a change
 // that arrived next fight and a consumable that appeared to vanish for nothing.
 //
@@ -24,7 +24,7 @@ func TestAnElementRuneReachesTheCardInTheHand(t *testing.T) {
 	run := session.New(combat.PlainCards(combat.Bash, combat.Bash))
 	hexmark, ok := session.RuneByKey("hexmark")
 	if !ok {
-		t.Skip("no hexmark in the catalogue")
+		t.Skip("no hexmark in the catalog")
 	}
 
 	gs := &state.GlobalState{Run: run}

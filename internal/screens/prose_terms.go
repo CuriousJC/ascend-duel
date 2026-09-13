@@ -81,7 +81,7 @@ func termBase(e combat.Event, term int) int {
 	return e.HandAmounts[term]
 }
 
-// termCardName is what a landing is called on its own line: the card, and its colour when it has
+// termCardName is what a landing is called on its own line: the card, and its color when it has
 // one. **Not cardPhrase**, which writes a clause for a sentence — "attacks with a fire cut" — where
 // this is a label in a column of figures.
 func termCardName(c combat.Card) string {
@@ -132,7 +132,7 @@ func termNotes(e combat.Event, term int, relics []combat.WornRelic) []session.Le
 	return notes
 }
 
-// handMathSpans is the blow written out as the sum it is, in the colours the hand dialog uses:
+// handMathSpans is the blow written out as the sum it is, in the colors the hand dialog uses:
 // `10 + 10 + (10 x 2) x 2.5 = 100`.
 //
 // **A relic's figure stays with the term it priced**, in brackets, rather than being folded into the

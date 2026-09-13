@@ -11,14 +11,14 @@ package screens
 // # The band became a column *(owner's call, 2026-09-11)*
 //
 // There were three blocks of figures under the grid — by form, by form and AP, by element — and two
-// buttons centred beneath them. The figures answered a question and then stopped: "ten crush" does
+// buttons centered beneath them. The figures answered a question and then stopped: "ten crush" does
 // not say how much of it is cheap, and a player who wanted the follow-up had to find the cards by
 // eye in a grid of sixty. **Every figure is a button now**, pressing one marks the cards it counted,
 // and the whole set stands in one column with the two view toggles at the top of it — so everything
 // that changes what the panel is showing is in one place and reads as one kind of control.
 //
 // What it cost is the element name in the gutter beside each grid row. The column's element buttons
-// are in the rows' own order and carry the same word in the same colour, so the key moved rather
+// are in the rows' own order and carry the same word in the same color, so the key moved rather
 // than went; what the grid gave up is a label *level* with its row.
 //
 // **Nothing in here can change anything.** This is a reading preference over a picture of a deck —
@@ -68,7 +68,7 @@ const (
 	// deckColumnPad is the air inside a button, at both ends of its line.
 	deckColumnPad = 12
 
-	// The view toggles' own label size. **Smaller than the 36 the centred pair used**: those had
+	// The view toggles' own label size. **Smaller than the 36 the centered pair used**: those had
 	// the width of the panel to stand in and these have the column's, and ALTERATIONS is eleven
 	// characters.
 	deckToggleTextSize = 22
@@ -90,7 +90,7 @@ const (
 // have to re-choose it every look.
 type deckView struct {
 	// unaltered inverts the default. **Alterations are on unless this is set** — a deck with a flip
-	// relic in it is dealt in colours the owned list does not have, and a panel showing the list is
+	// relic in it is dealt in colors the owned list does not have, and a panel showing the list is
 	// showing a deck the player will never draw.
 	unaltered bool
 
@@ -145,8 +145,8 @@ func (v *deckView) update(gs *state.GlobalState, d deckContents) {
 // label was drawn in** — the rule every row of controls in this game follows.
 func (v *deckView) refresh(gs *state.GlobalState, d deckContents) {
 	v.build()
-	centreX, width, top := deckGridRegion(gs)
-	v.counts = countsOf(d.grid(*v, centreX, width, top).slots, d.holder, v.filter)
+	centerX, width, top := deckGridRegion(gs)
+	v.counts = countsOf(d.grid(*v, centerX, width, top).slots, d.holder, v.filter)
 	v.layout(gs, d)
 }
 
@@ -191,11 +191,11 @@ func (v *deckView) build() {
 	}
 }
 
-// columnButton is one button of the column: the shared size and colour, and no label of its own.
+// columnButton is one button of the column: the shared size and color, and no label of its own.
 //
 // **The filter buttons carry no `Text`**, because what they say is a mark, a word and a figure at
-// three different alignments and `models.Button` centres one string. They are drawn over instead —
-// see drawColumnRow. The three toggles at the top do use `Text`, since a centred word is exactly
+// three different alignments and `models.Button` centers one string. They are drawn over instead —
+// see drawColumnRow. The three toggles at the top do use `Text`, since a centered word is exactly
 // what they are.
 func (v *deckView) columnButton(onClick func()) *models.Button {
 	b := models.NewButton(deckColumnWidth, deckColumnButtonHeight, "", onClick)
@@ -218,11 +218,11 @@ func deckColumnRight(gs *state.GlobalState) int {
 // layout places every control and writes what the three toggles currently say.
 func (v *deckView) layout(gs *state.GlobalState, d deckContents) {
 	r := modalPanelRect(gs)
-	centreX := deckColumnLeft(gs) + deckColumnWidth/2
+	centerX := deckColumnLeft(gs) + deckColumnWidth/2
 	y := r.Min.Y + modalBareBodyTop + deckColumnButtonHeight/2
 
 	place := func(b *models.Button) {
-		b.ScreenX, b.ScreenY = centreX, y
+		b.ScreenX, b.ScreenY = centerX, y
 		y += deckColumnButtonPitch
 	}
 
@@ -234,7 +234,7 @@ func (v *deckView) layout(gs *state.GlobalState, d deckContents) {
 	place(v.alterations)
 
 	// **The FULL/PLAYED button is skipped rather than placed and hidden between fights.** The pair
-	// used to be centred and had to hold its partner's space so the alterations button did not move
+	// used to be centered and had to hold its partner's space so the alterations button did not move
 	// sideways between a fight and a shop; in a column the blocks below would move instead, and a
 	// block of filters that sat 38 pixels lower in a shop than in a duel is the same complaint one
 	// axis over. What is constant here is the *order*, not the offsets.
@@ -254,7 +254,7 @@ func (v *deckView) layout(gs *state.GlobalState, d deckContents) {
 	place(v.clear)
 
 	y += deckColumnBlockGap
-	y = v.layoutBlock(centreX, y, func(place func(*models.Button)) {
+	y = v.layoutBlock(centerX, y, func(place func(*models.Button)) {
 		for _, f := range deckFilterForms() {
 			b := v.forms[f]
 			b.Latched = v.filter.onForm(f)
@@ -263,7 +263,7 @@ func (v *deckView) layout(gs *state.GlobalState, d deckContents) {
 	})
 
 	y += deckColumnBlockGap
-	y = v.layoutBlock(centreX, y, func(place func(*models.Button)) {
+	y = v.layoutBlock(centerX, y, func(place func(*models.Button)) {
 		for _, cost := range v.counts.costs {
 			b := v.costs[cost]
 			b.Latched = v.filter.onCost(cost)
@@ -272,7 +272,7 @@ func (v *deckView) layout(gs *state.GlobalState, d deckContents) {
 	})
 
 	y += deckColumnBlockGap
-	v.layoutBlock(centreX, y, func(place func(*models.Button)) {
+	v.layoutBlock(centerX, y, func(place func(*models.Button)) {
 		for _, e := range deckRowElements() {
 			b := v.elements[e]
 			b.Latched = v.filter.onElement(e)
@@ -283,10 +283,10 @@ func (v *deckView) layout(gs *state.GlobalState, d deckContents) {
 
 // layoutBlock places one block's buttons under the space its heading takes, and reports where the
 // next block may start.
-func (v *deckView) layoutBlock(centreX, top int, rows func(place func(*models.Button))) int {
+func (v *deckView) layoutBlock(centerX, top int, rows func(place func(*models.Button))) int {
 	y := top + deckColumnHeadDrop + deckColumnButtonHeight/2
 	rows(func(b *models.Button) {
-		b.ScreenX, b.ScreenY = centreX, y
+		b.ScreenX, b.ScreenY = centerX, y
 		y += deckColumnButtonPitch
 	})
 	return y - deckColumnButtonHeight/2
@@ -392,7 +392,7 @@ func (v *deckView) drawColumnRow(gs *state.GlobalState, screen *ebiten.Image, b 
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckColumnTextSize}, fop)
 }
 
-// deckColumnInk is the column's own text colour: the panel is dark, so this is a near-white.
+// deckColumnInk is the column's own text color: the panel is dark, so this is a near-white.
 var deckColumnInk = color.RGBA{R: 236, G: 236, B: 240, A: 255}
 
 // deckColumnFadedInk is a heading, and a zero.
@@ -413,7 +413,7 @@ func deckFilterForms() []combat.Form {
 
 // drawFormMark puts a form's own drawing at the head of a button, **untinted**. The card's corner
 // tints the same art by the card's element, which is what makes an element legible on a card; this
-// row is about the form, and a coloured mark here would be claiming one.
+// row is about the form, and a colored mark here would be claiming one.
 func drawFormMark(screen *ebiten.Image, f combat.Form, left, top int) {
 	kind, ok := form(f).Glyph()
 	if !ok {

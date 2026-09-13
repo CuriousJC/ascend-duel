@@ -7,7 +7,7 @@ package session
 // `main` had to import `internal/screens` to start a run at all. The shop and the essences both edit
 // this list; none of them should have to know which screen built it.
 //
-// **It is data, not a Go expression** *(2026-08-08)*: nine attack concepts x five colours, plus
+// **It is data, not a Go expression** *(2026-08-08)*: nine attack concepts x five colors, plus
 // three plans in the same five = 60 cards, read out of data/duelist_cards.json. The deck's size is a
 // consequence of a file the designer can read and edit.
 //
@@ -21,11 +21,11 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// startingDeck is the deck the player opens a run with: **nine attack concepts x five colours,
+// startingDeck is the deck the player opens a run with: **nine attack concepts x five colors,
 // plus three plans in the same five = 60 cards**, built from `data/duelist_cards.json` rather than
 // written out here.
 //
-// **48 until arcane landed on 2026-08-25.** Adding a colour adds a card to every concept at once,
+// **48 until arcane landed on 2026-08-25.** Adding a color adds a card to every concept at once,
 // which is why one line in a JSON file moved the deck by a quarter — and why `tools/handodds` and
 // `tools/seeds` both have to be re-run after it. See MECHANICS.md for what it did to the ladder.
 //
@@ -79,7 +79,7 @@ func buildStartingDeck() []deckEntry {
 // what `main` hands to `session.New`.
 //
 // Exported because a *run* starts outside this package now. Nothing here owns the deck any more:
-// the piles are dealt from `GlobalState.Run` and an essence can thin or recolour it between fights,
+// the piles are dealt from `GlobalState.Run` and an essence can thin or recolor it between fights,
 // so this is the list a run begins from rather than the list it plays with.
 func StartingDeck() []combat.Card {
 	out := make([]combat.Card, 0, 48)

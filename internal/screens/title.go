@@ -9,7 +9,7 @@ package screens
 // `main` only rolls a seed and calls `BootRun`. See run.go.
 //
 // **Continue is dead when there is nothing to continue**, rather than absent. A menu whose entries
-// move about between launches is a menu that has to be re-read every time; a greyed row says both
+// move about between launches is a menu that has to be re-read every time; a grayed row says both
 // "this exists" and "not for you yet", which is the same rule the settings screen's music bar is
 // under.
 //

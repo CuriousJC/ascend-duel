@@ -36,7 +36,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-// ledgerPane is the panel the account is written on: **the fight log's own colours**, because
+// ledgerPane is the panel the account is written on: **the fight log's own colors**, because
 // these are the log's rows and an off-white ground is what makes three saturated verb inks
 // readable. See pane.go.
 var ledgerPane = panePlacement{
@@ -69,7 +69,7 @@ var ledgerPane = panePlacement{
 // **There are two of each and consecutive fights alternate between them** *(owner's call,
 // 2026-09-02)*. Both are dark blue, because the pair has to read as one device rather than as two
 // meanings — the second is a colder, lighter navy, far enough apart to tell where one fight's block
-// ends and the next begins without the run looking striped in two different colours.
+// ends and the next begins without the run looking striped in two different colors.
 var (
 	ledgerBandInk = color.RGBA{R: 236, G: 240, B: 248, A: 255}
 	ledgerBands   = [2]color.RGBA{{R: 28, G: 52, B: 92, A: 255}, {R: 44, G: 78, B: 118, A: 255}}
@@ -82,7 +82,7 @@ const (
 	// It is read at a distance and at length rather than glanced at during a round, and a column
 	// of figures at 16 on an off-white ground was hard work.
 	//
-	// **The two move together.** A bigger face at the old pitch overlaps its neighbours, and a
+	// **The two move together.** A bigger face at the old pitch overlaps its neighbors, and a
 	// bigger pitch alone just spreads small text out. The panel's capacity is derived from the
 	// pitch, so it falls out of this rather than being re-tuned by hand.
 	ledgerTextSize  = 20
@@ -382,7 +382,7 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 
 		// **The alternation is by position in the list, not by fight number**, so a run whose
 		// records do not start at 1 still reads as stripes rather than starting on whichever
-		// colour the arithmetic happened to land on.
+		// color the arithmetic happened to land on.
 		band, ground := ledgerBands[i%2], ledgerGrounds[i%2]
 
 		// The heading's own band, written in a light ink because it is text on a dark ground —

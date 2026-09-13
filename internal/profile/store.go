@@ -41,7 +41,7 @@ type Store struct {
 	dir string
 }
 
-// Open is the store for this machine, honouring DirEnv.
+// Open is the store for this machine, honoring DirEnv.
 //
 // **It does not create the directory and it does not fail.** A machine whose config root cannot be
 // determined gets an inert store, so a launch is never held up by a question about the filesystem;

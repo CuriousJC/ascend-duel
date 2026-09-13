@@ -296,7 +296,7 @@ func TestADeathEndsTheRun(t *testing.T) {
 }
 
 // TestTheSummaryIsTakenBeforeTheRunIsDestroyed is the ordering the whole splash depends on. The
-// numbers come off the ledger the run was carrying, so a clear-then-summarise would leave the page
+// numbers come off the ledger the run was carrying, so a clear-then-summarize would leave the page
 // with nothing — and nothing about drawing an empty page fails.
 func TestTheSummaryIsTakenBeforeTheRunIsDestroyed(t *testing.T) {
 	gs := saveState(t)

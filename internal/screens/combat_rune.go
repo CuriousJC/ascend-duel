@@ -3,7 +3,7 @@ package screens
 // Spending a rune: the run's half, with no dialog in front of it.
 //
 // **An essence is spent between rooms and a rune is spent between turns**, which is most of what
-// makes them different things. The catalogue and the rules are `internal/session/rune.go`; this
+// makes them different things. The catalog and the rules are `internal/session/rune.go`; this
 // file is what the screen does with them, and it decides nothing — it hands the run a rune and
 // the cards it names, and brings the hand back into line with what the run says afterwards.
 //
@@ -44,7 +44,7 @@ import (
 
 // heldRunes is what the run is carrying, as records, in acquisition order.
 //
-// **A rune the catalogue no longer holds is skipped rather than drawn blank.** `Session.Hold`
+// **A rune the catalog no longer holds is skipped rather than drawn blank.** `Session.Hold`
 // refuses one on the way in and `Resume` refuses a save carrying one, so this cannot fire today —
 // it is the belt to those braces, because a nil record reaching the card renderer is a crash where
 // a missing card is a gap.
@@ -68,8 +68,8 @@ func heldRunes(gs *state.GlobalState) []session.Rune {
 // resolved by the time a `session.Rune` exists. It borrowed the essence's placeholder through one
 // constant until then, and the note on that constant said the day runes got art it should be a
 // `data/runes.json` field appearing rather than a fallback being unpicked — so the fallback is
-// `assets/rune/default-rune.png` now, a seat of the catalogue's own.
-// chimeraBreak is the authored line break on a chimera's face — see cards.WrapText, which honours
+// `assets/rune/default-rune.png` now, a seat of the catalog's own.
+// chimeraBreak is the authored line break on a chimera's face — see cards.WrapText, which honors
 // one. It is a constant rather than a literal so the escape does not have to survive being read
 // back out of this file.
 const chimeraBreak = "\n"
@@ -102,7 +102,7 @@ func runeSpec(gs *state.GlobalState, p session.Rune, enabled, selected bool) car
 // takes, so a row of cards reads the same wherever it stands.
 const runeRowGap = 18
 
-// runeRowSlots is the left edges of n cards laid out in a centred row.
+// runeRowSlots is the left edges of n cards laid out in a centered row.
 //
 // **It tightens rather than overflowing**: the pitch closes up exactly as the hand's does rather
 // than the row running off both edges of the panel.
@@ -129,11 +129,11 @@ func runeRowSlots(r image.Rectangle, n int) []int {
 }
 
 // runeCardRects is where each card of a row stands.
-func runeCardRects(r image.Rectangle, n, centreY int) []image.Rectangle {
+func runeCardRects(r image.Rectangle, n, centerY int) []image.Rectangle {
 	slots := runeRowSlots(r, n)
 	out := make([]image.Rectangle, len(slots))
 	for i, x := range slots {
-		top := centreY - cards.Hand.Height/2
+		top := centerY - cards.Hand.Height/2
 		out[i] = image.Rect(x, top, x+cards.Hand.Width, top+cards.Hand.Height)
 	}
 	return out
@@ -299,7 +299,7 @@ const stoneShowerStride int64 = 0x3B9A_CA07
 // it: an altered card is redrawn as it now is, and a card the run no longer owns leaves the row.
 //
 // **It walks by identity**, which is the whole reason a card has one. A card in the hand is a copy —
-// and, with a flip relic worn, a copy in a colour the run's card never had — so the match cannot be
+// and, with a flip relic worn, a copy in a color the run's card never had — so the match cannot be
 // made by looking at the two cards.
 //
 // **A card the run has lost is dropped from the hand, the queue and the selection together.**
@@ -311,15 +311,15 @@ func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
 		if !ok {
 			continue
 		}
-		// **The card is re-dealt rather than re-coloured** *(2026-09-08)*. It used to take the
-		// element straight off the card in the hand, on the argument that a flip relic had recoloured
-		// it as it was drawn and that colour is a fact about the card in play. That argument is
+		// **The card is re-dealt rather than re-colored** *(2026-09-08)*. It used to take the
+		// element straight off the card in the hand, on the argument that a flip relic had recolored
+		// it as it was drawn and that color is a fact about the card in play. That argument is
 		// right about the flip and wrong about everything else, and it made every element rune
 		// do nothing at all: Hexmark turned the run's card arcane, this line wrote the hand's fire
 		// back over it, and what the player saw was a consumable vanishing.
 		//
 		// **`drawnAs` is the honest answer to both.** It is the same function the deal itself uses,
-		// so the card in the hand is the card the run would deal now — the rune's new colour
+		// so the card in the hand is the card the run would deal now — the rune's new color
 		// with the worn flips applied on top of it, exactly as the next fight will deal it.
 		kept = append(kept, paletteCard{actionCard: s.drawnAs(owned), selected: c.selected})
 	}

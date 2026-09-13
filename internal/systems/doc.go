@@ -1,21 +1,21 @@
-// Package systems is the behaviour for the structs in internal/models, plus the procedural art
+// Package systems is the behavior for the structs in internal/models, plus the procedural art
 // generator.
 //
 // The split is deliberate: a widget is a plain struct in models and a pair of Update* and Draw*
 // free functions here, taking (gs, ...). Nothing in models has a method that draws.
 //
-// # Colour
+// # Color
 //
-// ColorAtStrength and ColorToward are the two ways a colour is dimmed, and they are not
+// ColorAtStrength and ColorToward are the two ways a color is dimmed, and they are not
 // interchangeable. ColorAtStrength scales toward black, which reads as quieter only against a dark
-// ground; ColorToward moves a colour toward whatever it actually sits on. The combat screen's
+// ground; ColorToward moves a color toward whatever it actually sits on. The combat screen's
 // ground is cream, so on it ColorAtStrength is the exception rather than the default, and reaching
 // for it to dim something drawn straight onto the table is a bug waiting to be seen. It still
 // governs buttons, because a button paints its own dark face and its label is white.
 //
-// The rule both serve: a widget names the colour it wants at full strength and scales down from it
-// for its other states. Scale a colour, never add to it — adding a fixed step to every channel
-// walks a saturated colour toward white, and a channel already near 255 has nowhere to go.
+// The rule both serve: a widget names the color it wants at full strength and scales down from it
+// for its other states. Scale a color, never add to it — adding a fixed step to every channel
+// walks a saturated color toward white, and a channel already near 255 has nowhere to go.
 //
 // # Glyphs
 //
@@ -41,8 +41,8 @@
 //     is the way to retire one, because no ordinal outlives the process — nothing serializes a
 //     GlyphKind, and the contact sheet is regenerated from the enum rather than stored against it.
 //   - SizeOf is the authority on how big one is, never an assumed 64.
-//   - Glyphs carry a five-value palette and are the deliberate exception to the scale-one-colour
-//     rule, because a bevel cannot be made from one colour scaled down. They are drawn untinted; a
+//   - Glyphs carry a five-value palette and are the deliberate exception to the scale-one-color
+//     rule, because a bevel cannot be made from one color scaled down. They are drawn untinted; a
 //     disabled card dims them by alpha, so the shading survives and only the weight changes.
 //
 // RenderGlyph returns a plain Go image and is free of Ebitengine on purpose: creating an

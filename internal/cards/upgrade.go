@@ -10,7 +10,7 @@ package cards
 // # It took the left column until 2026-09-09
 //
 // The first upgrade was the wildcard, and it painted the form mark and the cost ticks from a
-// rainbow rather than from one element's colour. That mechanism — three tint modes, a sampled
+// rainbow rather than from one element's color. That mechanism — three tint modes, a sampled
 // glyph, a gradient projected across the cost stack — was deleted rather than kept beside this one,
 // on the rule that a removal is a deletion: nine of the ten upgrades have nothing to say about the
 // element, so a left column in gold would be the element slot saying something that is not about
@@ -24,8 +24,8 @@ package cards
 //
 // # It is washInside, and that is on purpose
 //
-// The mark file already had to pull a whole card toward a colour — the tutorial's red, the
-// shatter's dim — so the only thing new here is that the colour varies per pixel. Sharing the
+// The mark file already had to pull a whole card toward a color — the tutorial's red, the
+// shatter's dim — so the only thing new here is that the color varies per pixel. Sharing the
 // traversal is what keeps an upgraded card and a marked one agreeing about which pixels are inside
 // the rounded silhouette and which are the transparent corners.
 //
@@ -61,7 +61,7 @@ const (
 	// draws.
 	//
 	// **The border is the card's *state* and the upgrade is not.** Resting, selected, unaffordable
-	// and being dragged are all said by the relic, in a wash away from the neutral grey; an upgrade
+	// and being dragged are all said by the relic, in a wash away from the neutral gray; an upgrade
 	// painted over that is a second thing in the one place the card says the first. Keeping them
 	// apart is what lets a queued gold card read as queued *and* gold rather than as one or the
 	// other winning.
@@ -107,7 +107,7 @@ func UpgradeStyles() []UpgradeStyle {
 // **The ink is projected across the whole card in every style, not across the region being
 // painted.** A flat ink gives a flat tint either way; the wildcard's five bands give five bands
 // running down the *card*, so the border variant picks up the band each edge pixel sits in and the
-// two styles agree about which colour belongs where. Projecting across the border ring instead
+// two styles agree about which color belongs where. Projecting across the border ring instead
 // would put a whole rainbow on each of four edges.
 //
 // A card with no upgrade is left exactly as it was, which is almost every card.
@@ -153,7 +153,7 @@ func faceOf(st Style) func(x, y int) bool {
 	return func(x, y int) bool { return insideRounded(iw, ih, st.CornerRadius-bw, x-bw, y-bw) }
 }
 
-// sampleBox maps a point inside box onto the ink and returns the colour there, unpremultiplied —
+// sampleBox maps a point inside box onto the ink and returns the color there, unpremultiplied —
 // which is what a caller mixing toward it wants, since the ink's own alpha is not the card's.
 func sampleBox(ink *image.RGBA, at image.Point, box image.Rectangle) color.RGBA {
 	b := ink.Bounds()
@@ -162,8 +162,8 @@ func sampleBox(ink *image.RGBA, at image.Point, box image.Rectangle) color.RGBA 
 	return unpremultiply(ink.RGBAAt(b.Min.X+x, b.Min.Y+y))
 }
 
-// unpremultiply takes a stored pixel back to straight colour, which is what a wash wants: a hue to
-// mix toward rather than a colour already scaled by somebody else's alpha.
+// unpremultiply takes a stored pixel back to straight color, which is what a wash wants: a hue to
+// mix toward rather than a color already scaled by somebody else's alpha.
 func unpremultiply(c color.RGBA) color.RGBA {
 	if c.A == 0 || c.A == 255 {
 		return c
@@ -179,7 +179,7 @@ func unpremultiply(c color.RGBA) color.RGBA {
 }
 
 // scaleInto maps v in 0..span onto 0..into-1, clamped. Nearest rather than interpolated: the ink
-// is a small authored picture and averaging its bands would mud the colours it exists to state.
+// is a small authored picture and averaging its bands would mud the colors it exists to state.
 func scaleInto(v, span, into int) int {
 	if into <= 0 || span <= 0 {
 		return 0

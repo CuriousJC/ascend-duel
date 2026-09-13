@@ -11,10 +11,10 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
-// What a blow looks like landing: the figure travelling out of wherever it was worked out, into
+// What a blow looks like landing: the figure traveling out of wherever it was worked out, into
 // the card whose bar it empties, and the bar waiting for it to arrive.
 //
-// **It is the `KindDamage` row of the theatre table** — `anchorBlow` to `anchorTargetCard`,
+// **It is the `KindDamage` row of the theater table** — `anchorBlow` to `anchorTargetCard`,
 // `gestureFly` — and it is the second half of the sum box. The dialog answered "where did that
 // number come from"; this answers "and what did it do", which used to be a bar that dropped while
 // the total was still sitting in the middle of the screen with no connection drawn between them.
@@ -33,7 +33,7 @@ import (
 // **It can stop the playback cursor**, which the hand dialog was the first thing on this screen
 // to do. A figure crossing half the screen does not fit inside one event's dwell, and the
 // alternative is the bar dropping before the number reaches it — which is the picture this exists
-// to remove. `combatTheatre.running` is what `advancePlayback` waits on.
+// to remove. `combatTheater.running` is what `advancePlayback` waits on.
 
 // The figure's journey and the pause it takes on the card, **as fractions of the one playback
 // speed** *(2026-08-19)* — see `beat`. They reproduce the 26 and 18 they were tuned to at a speed
@@ -58,7 +58,7 @@ const (
 	// hitFigureSize is the type size of a landing figure, and it is **`mathTotalSize` on purpose,
 	// not a size of its own**. The figure is meant to *be* the sum's total continuing its journey:
 	// `advancePlayback` clears the box on the same frame this launches, at the same point, and
-	// `hitInk` is already the colour the total is drawn in — so matching the size is the last of
+	// `hitInk` is already the color the total is drawn in — so matching the size is the last of
 	// the four things that make one number appear to set off rather than two numbers to swap.
 	// A size of its own here is a figure that visibly is not the total.
 	hitFigureSize = mathTotalSize
@@ -73,10 +73,10 @@ const (
 	hitToScale   = 0.72
 )
 
-// hitInk is the colour a landing figure is written in.
+// hitInk is the color a landing figure is written in.
 //
 // **The attack red the log's verbs are marked in, asked for rather than restated.** `verbInkFor`
-// decides what an attack is coloured in this screen, and a figure that lands damage is the same
+// decides what an attack is colored in this screen, and a figure that lands damage is the same
 // meaning as the verb it marks — so it takes the same answer, and a change to one is a change
 // to both. It is deliberately not the screen's old attention yellow: that belonged to the hand,
 // and reusing it
@@ -113,7 +113,7 @@ type hitFlight struct {
 func (h hitFlight) arrived() bool { return h.t.age >= hitFlyTicks }
 
 // tick advances the figure by a frame. **A one-line method rather than the caller reaching for
-// `h.t`**, because it is what makes a hitFlight a mover in theatre.go's sense and therefore
+// `h.t`**, because it is what makes a hitFlight a mover in theater.go's sense and therefore
 // something `advance` can drive.
 func (h *hitFlight) tick() { h.t.tick() }
 
@@ -136,7 +136,7 @@ func (s *CombatScene) noteHit(e combat.Event, held int) {
 		return
 	}
 
-	s.theatre.hits = append(s.theatre.hits, hitFlight{
+	s.theater.hits = append(s.theater.hits, hitFlight{
 		amount: e.Amount,
 		side:   e.Side,
 		target: e.Target,
@@ -161,9 +161,9 @@ func (s *CombatScene) blowSeat(e combat.Event) int {
 	}
 	// The card that is lit is the card that is hitting, for a solo attacker — see noteResolved,
 	// which seats one card at a time for exactly this reason.
-	seats := s.theatre.enemyFiringSeats
+	seats := s.theater.enemyFiringSeats
 	if e.Side == combat.SideA {
-		seats = s.theatre.firingSeats
+		seats = s.theater.firingSeats
 	}
 	if len(seats) > 0 {
 		return seats[0]
@@ -191,8 +191,8 @@ func (s *CombatScene) blowSeat(e combat.Event) int {
 // until `endOfRound` — so it rides on top of both branches, and it is zero until the figure that
 // carries it has landed. See signalShown, which is this idea pointing the other way.
 func (s *CombatScene) shownLife(side combat.Side, actual int) int {
-	granted := s.theatre.shownFor(side).life
-	for _, h := range s.theatre.hits {
+	granted := s.theater.shownFor(side).life
+	for _, h := range s.theater.hits {
 		if h.target == side && !h.arrived() {
 			return h.held + granted
 		}
@@ -202,7 +202,7 @@ func (s *CombatScene) shownLife(side combat.Side, actual int) int {
 
 // drawHits writes every figure at wherever it has got to.
 func (s *CombatScene) drawHits(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, h := range s.theatre.hits {
+	for _, h := range s.theater.hits {
 		from, ok := s.hitOrigin(gs, h)
 		if !ok {
 			continue
@@ -229,7 +229,7 @@ func (s *CombatScene) drawHits(gs *state.GlobalState, screen *ebiten.Image) {
 //
 // **It does not fade *in*, and that is the handoff again.** A figure that faded up over its first
 // frames would blink where the sum's total had been fully opaque a frame earlier, which is exactly
-// the seam the matched size, colour and position exist to remove. What it fades out of is the card
+// the seam the matched size, color and position exist to remove. What it fades out of is the card
 // it landed on, after the bar has already dropped — so the last thing to go is the number, and the
 // emptier bar is what is left.
 func hitAlpha(h hitFlight) float32 {
@@ -252,15 +252,15 @@ func (s *CombatScene) hitOrigin(gs *state.GlobalState, h hitFlight) (image.Point
 	// screen keeps. `slotAt` and friends give a card's top-left, so the middle is half a card in.
 	var at image.Point
 	if h.side == combat.SideA {
-		if h.seat >= len(s.theatre.resolved) {
+		if h.seat >= len(s.theater.resolved) {
 			return image.Point{}, false
 		}
-		at = playedSeatAt(gs, h.seat, len(s.theatre.resolved), s.playedSplit())
+		at = playedSeatAt(gs, h.seat, len(s.theater.resolved), s.playedSplit())
 	} else {
-		if h.seat >= len(s.theatre.enemyDealt) {
+		if h.seat >= len(s.theater.enemyDealt) {
 			return image.Point{}, false
 		}
-		at = enemySeatAt(gs, h.seat, len(s.theatre.enemyDealt), s.enemySplit())
+		at = enemySeatAt(gs, h.seat, len(s.theater.enemyDealt), s.enemySplit())
 	}
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }
@@ -275,7 +275,7 @@ func (s *CombatScene) hitTarget(gs *state.GlobalState, h hitFlight) image.Point 
 }
 
 // clamp01 holds a progress figure inside its range. The flight's own clock runs past the flight so
-// the hold can be measured off it, so the travelled fraction has to be clamped rather than trusted.
+// the hold can be measured off it, so the traveled fraction has to be clamped rather than trusted.
 func clamp01(v float64) float64 {
 	if v < 0 {
 		return 0

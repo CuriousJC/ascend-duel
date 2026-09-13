@@ -110,8 +110,8 @@ func buildSheet(inspect int) image.Image {
 			glyph := systems.RenderGlyph(kind, name)
 			colLeft := pad + col*(colWidth+pad)
 
-			// Actual size, centred over the column it shares with the big one below. A
-			// small glyph is centred on its own width, so the row reads as glyphs of
+			// Actual size, centered over the column it shares with the big one below. A
+			// small glyph is centered on its own width, so the row reads as glyphs of
 			// different sizes rather than as glyphs mis-aligned.
 			size := systems.SizeOf(kind)
 			blit(sheet, glyph, colLeft+(colWidth-size*systems.CardGlyphScale)/2, bandTop, systems.CardGlyphScale)
@@ -124,7 +124,7 @@ func buildSheet(inspect int) image.Image {
 
 // blit copies a glyph onto the sheet, magnified by a whole number.
 //
-// Nearest-neighbour by hand: any smoothing would defeat the purpose, since the point is to
+// Nearest-neighbor by hand: any smoothing would defeat the purpose, since the point is to
 // see the pixels exactly as the game draws them.
 func blit(dst *image.RGBA, src *image.RGBA, originX, originY, scale int) {
 	b := src.Bounds()

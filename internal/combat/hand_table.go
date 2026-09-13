@@ -6,7 +6,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 )
 
-// The hand catalogue is data, and this file is the joint between the file and the rules.
+// The hand catalog is data, and this file is the joint between the file and the rules.
 //
 // **`data/hands.json` holds the shape; this holds the meaning.** That is the same division
 // `CheckCostTiers` already draws for the deck lists — the file can say `"groups": [3,2]`, and only
@@ -18,13 +18,13 @@ import (
 // `data` imports nothing but the standard library, so the edge costs this package neither its
 // testability nor its freedom from Ebitengine.
 //
-// **A malformed catalogue panics at package init**, exactly as a deck whose declared cost tiers
+// **A malformed catalog panics at package init**, exactly as a deck whose declared cost tiers
 // disagree with the rules does. A hand silently dropped is a balance change nobody made, and the
 // failure has to happen on launch rather than in the one round that would have formed it.
 
-// loadCatalogue reads the file. It panics rather than returning an error: it runs at package init,
+// loadCatalog reads the file. It panics rather than returning an error: it runs at package init,
 // and there is no sensible game to hand back if the rules could not be read.
-func loadCatalogue() []Hand {
+func loadCatalog() []Hand {
 	handRecs := data.LoadHands()
 
 	hands := make([]Hand, 0, len(handRecs))
@@ -58,8 +58,8 @@ func loadCatalogue() []Hand {
 	}
 
 	// **The fallback has to be in the file.** Any turn with an attack in it produces a hand, and
-	// the one it produces when nothing was built is the High Card — so a catalogue without it is a
-	// catalogue that cannot name the commonest result in the game, which is the one failure this
+	// the one it produces when nothing was built is the High Card — so a catalog without it is a
+	// catalog that cannot name the commonest result in the game, which is the one failure this
 	// model can have.
 	if !seenKey[highCardKey] {
 		panic(fmt.Sprintf("combat: hands.json has no %q hand, so a lone attack could not be named", highCardKey))

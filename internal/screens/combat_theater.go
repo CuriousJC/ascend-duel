@@ -4,7 +4,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// The theatre: what travels, out of what, into what.
+// The theater: what travels, out of what, into what.
 //
 // **This file is the map, not the machinery** *(2026-08-18)*. It says, for every kind of event the
 // engine can emit, where the thing it produced sets off from and where it lands. The drawings
@@ -40,7 +40,7 @@ import (
 type anchor int
 
 const (
-	// anchorNone is nothing travelling: the event changes no picture, or the picture it changes is
+	// anchorNone is nothing traveling: the event changes no picture, or the picture it changes is
 	// already drawn by something else.
 	anchorNone anchor = iota
 
@@ -125,7 +125,7 @@ func (a anchor) String() string {
 // gesture is how a thing gets from its source to its target.
 //
 // **A flown thing came off something; a popped thing is punctuation the game supplied.** That
-// distinction is the whole grammar of the sum box and it generalises: if the player is meant to be
+// distinction is the whole grammar of the sum box and it generalizes: if the player is meant to be
 // able to ask "where did that come from", it flies.
 type gesture int
 
@@ -136,7 +136,7 @@ const (
 	// gestureFly travels from the source to the target and grows into place.
 	gestureFly
 
-	// gesturePop is stamped at the target without travelling, for something the game is saying
+	// gesturePop is stamped at the target without traveling, for something the game is saying
 	// rather than something a card produced — an operator, a multiplier, a label.
 	gesturePop
 
@@ -176,13 +176,13 @@ type flightSpec struct {
 	// why is the reason this event is drawn the way it is, in a few words. It is a field rather
 	// than a comment beside the entry because a table read as a whole is how this screen's grammar
 	// gets checked for consistency, and a reason that has to be hunted for is a reason nobody
-	// compares against its neighbours.
+	// compares against its neighbors.
 	why string
 }
 
 // choreography is every event kind and what it does on screen.
 //
-// **It is the table, not the stage.** What is currently *moving* is `combatTheatre` below; this
+// **It is the table, not the stage.** What is currently *moving* is `combatTheater` below; this
 // says what each kind of event travels out of and into when it does.
 //
 // **Every kind has an entry, including the ones that draw nothing.** An absent entry and a
@@ -211,7 +211,7 @@ var choreography = map[combat.EventKind]flightSpec{
 	},
 	combat.KindNegated: {
 		anchorNone, anchorSumLine, gesturePop,
-		"a defence is the reverse of a hand and takes the hand's grammar: x50% on the same line",
+		"a defense is the reverse of a hand and takes the hand's grammar: x50% on the same line",
 	},
 	combat.KindDamage: {
 		anchorBlow, anchorTargetCard, gestureFly,
@@ -267,18 +267,18 @@ var choreography = map[combat.EventKind]flightSpec{
 	},
 }
 
-// combatTheatre is everything the combat screen has moving on it.
+// combatTheater is everything the combat screen has moving on it.
 //
-// **The screen uses a theatre rather than being one** *(2026-08-21)*: the rules that apply to all
-// of it are in theatre.go and are shared, and what is *in* it is this screen's own. A between-fight
+// **The screen uses a theater rather than being one** *(2026-08-21)*: the rules that apply to all
+// of it are in theater.go and are shared, and what is *in* it is this screen's own. A between-fight
 // screen with things to move declares its own and implements the same three methods.
 //
 // The fields kept their comments when they moved off `CombatScene`, because each one still says
 // something about that particular mover that nothing else does. What they no longer each say is
 // the part that was true of all of them — that it is presentation, that it runs on the game's one
-// speed, and that it is taken down together. That is theatre.go's now.
-type combatTheatre struct {
-	// Cards currently travelling to or from the draw pile. Purely something to look at:
+// speed, and that it is taken down together. That is theater.go's now.
+type combatTheater struct {
+	// Cards currently traveling to or from the draw pile. Purely something to look at:
 	// every one of them is a ghost of a card that has already moved. See combat_flight.go.
 	flights []cardFlight
 
@@ -325,7 +325,7 @@ type combatTheatre struct {
 	firingSeats      []int
 	enemyFiringSeats []int
 
-	// Riders firing: the burst on the card that fired and the figure travelling into the figure it
+	// Riders firing: the burst on the card that fired and the figure traveling into the figure it
 	// moved. **pending is the half that is not on stage yet** — a played card's signal waits for the
 	// beat that card scores, and a held card's waits for the sum to start — and shown is what the
 	// fighter cards draw on top of their model until the round is adopted. Both are view state
@@ -335,12 +335,12 @@ type combatTheatre struct {
 	pending []cardSignal
 	shown   [2]signalShown
 
-	// hits are the damage figures currently travelling into a fighter card, and the reason a
+	// hits are the damage figures currently traveling into a fighter card, and the reason a
 	// health bar can lag the life behind it. See combat_hits.go — the model is already correct
 	// while one of these is up; what waits is the drawing.
 	hits []hitFlight
 
-	// shields are the defend cards' pips currently travelling to a fighter card. **They set off on
+	// shields are the defend cards' pips currently traveling to a fighter card. **They set off on
 	// the beat their card is scored into the hand**, which is several beats before the defend phase
 	// raises them — see combat_shields.go, where the trade that buys is written down.
 	shields []shieldFlight
@@ -371,7 +371,7 @@ type combatTheatre struct {
 	shatteredSeats map[int]bool
 
 	// breaksStaged says this round's breaks have already been raised, so the boundary is only
-	// crossed once. Cleared with the rest of the theatre at the start of a fight, and by the round
+	// crossed once. Cleared with the rest of the theater at the start of a fight, and by the round
 	// that raises it — see startRound.
 	breaksStaged bool
 
@@ -385,17 +385,17 @@ type combatTheatre struct {
 	mathBox handMathBox
 }
 
-// combatTheatre answers the shared contract. **The assertion is the point of the interface**:
-// nothing takes a `theatre` as a parameter, and what this line buys is that a second scene's
-// theatre cannot quietly implement two of the three.
-var _ theatre = (*combatTheatre)(nil)
+// combatTheater answers the shared contract. **The assertion is the point of the interface**:
+// nothing takes a `theater` as a parameter, and what this line buys is that a second scene's
+// theater cannot quietly implement two of the three.
+var _ theater = (*combatTheater)(nil)
 
 // tick advances everything on stage by a frame and drops whatever has finished.
 //
 // **The hand dialog is deliberately not here.** It is the one mover that is a beat *of* playback
 // rather than something running alongside it — the cursor waits for it — so `advancePlayback`
 // drives it and this does not. See mathBox and combat_mathbox.go.
-func (t *combatTheatre) tick() {
+func (t *combatTheater) tick() {
 	t.flights = advance(t.flights)
 	t.slides = advance(t.slides)
 	t.morphs = advance(t.morphs)
@@ -434,7 +434,7 @@ func (t *combatTheatre) tick() {
 // **It is the figures, not the cards.** A card flying to its seat runs alongside playback and never
 // holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
 // the number reaches it. Adding a mover here is deciding that the round should wait for it.
-func (t *combatTheatre) running() bool {
+func (t *combatTheater) running() bool {
 	return running(t.hits) || running(t.shields) || running(t.breaks) || running(t.signals)
 }
 
@@ -445,4 +445,4 @@ func (t *combatTheatre) running() bool {
 // figure in the air belongs to the fight that raised it, and a settled duel freezes rather than
 // spending its hand, so anything tidied up only by the end-of-round spend was still there. Zeroing
 // the struct cannot miss one, and a mover added tomorrow is covered without anyone remembering.
-func (t *combatTheatre) clear() { *t = combatTheatre{} }
+func (t *combatTheater) clear() { *t = combatTheater{} }

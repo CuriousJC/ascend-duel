@@ -31,7 +31,7 @@ func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
 	s.WonFight(41, 41)
 	s.SetPhase(PhaseShop)
 	if !s.Wear(Relics()[0]) {
-		t.Fatal("the catalogue should have a relic to wear")
+		t.Fatal("the catalog should have a relic to wear")
 	}
 	s.SetElement(0, combat.Fire)
 
@@ -147,9 +147,9 @@ func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
 		{"a seed that is not a run code", func(s *profile.RunSnapshot) { s.Seed = "nope!" }},
 		{"a station of no loop", func(s *profile.RunSnapshot) { s.Phase = "interlude" }},
 		{"a card in no deck", func(s *profile.RunSnapshot) { s.Deck[0].Concept = "nonesuch" }},
-		{"a colour that is no element", func(s *profile.RunSnapshot) { s.Deck[0].Element = "beige" }},
-		{"a relic in no catalogue", func(s *profile.RunSnapshot) { s.Worn = []string{"nonesuch"} }},
-		{"a grown relic in no catalogue", func(s *profile.RunSnapshot) { s.Grown = map[string]int{"nonesuch": 1} }},
+		{"a color that is no element", func(s *profile.RunSnapshot) { s.Deck[0].Element = "beige" }},
+		{"a relic in no catalog", func(s *profile.RunSnapshot) { s.Worn = []string{"nonesuch"} }},
+		{"a grown relic in no catalog", func(s *profile.RunSnapshot) { s.Grown = map[string]int{"nonesuch": 1} }},
 		{"a counter below the deck", func(s *profile.RunSnapshot) { s.NextCardID = 0 }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -238,7 +238,7 @@ func TestTheRunsStonesSurviveBeingSavedAndResumed(t *testing.T) {
 }
 
 // A snapshot naming a rung this build has not got is refused rather than dropped, on the terms a
-// relic the catalogue no longer holds is: a run quietly paying less than it did is worse than a run
+// relic the catalog no longer holds is: a run quietly paying less than it did is worse than a run
 // that says it cannot be resumed.
 func TestASnapshotNamingARungThisBuildHasNotGotIsRefused(t *testing.T) {
 	s := New(nil)

@@ -36,7 +36,7 @@ type EnemyData struct {
 	//
 	// **The engine ignores it, exactly as it ignores Draw and a relic's Family.** Nothing picks an
 	// opponent by it and nothing resolves a round differently because of it; it is a heading on the
-	// roster sheet and a word for whoever is reading the catalogue.
+	// roster sheet and a word for whoever is reading the catalog.
 	//
 	// **It is deliberately not the floor band** *(owner's call, 2026-09-12)*. The sheet already
 	// groups by floor and prints the band on every heading, so a Family repeating that would be a
@@ -83,7 +83,7 @@ type EnemyData struct {
 	// [lowest, highest]. The tower is 8 floors (MECHANICS.md), so 1 is the entrance and 8 is
 	// the top.
 	//
-	// **It exists so the roster can be randomised without a Dragon on floor one.** Nothing
+	// **It exists so the roster can be randomized without a Dragon on floor one.** Nothing
 	// generates a floor yet — the combat screen walks every record in order — so today this
 	// only sorts the roster. When floor generation lands it is the filter it draws from.
 	//
@@ -151,7 +151,7 @@ func LoadEnemies() map[string]EnemyData {
 
 // EnemyOrder is every record, sorted shallowest floor first and by name inside a floor.
 //
-// **Sorted because LoadEnemies returns a map and Go randomises that order.** Anything walking
+// **Sorted because LoadEnemies returns a map and Go randomizes that order.** Anything walking
 // the roster — the combat screen's fight order, the balance table — has to agree on it, and
 // the determinism rules forbid a choice that depends on map iteration. Floor first means
 // walking the list is walking up the tower, which is what makes it a usable stand-in until

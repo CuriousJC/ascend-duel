@@ -27,8 +27,8 @@
 //
 // # Provenance
 //
-// This game is source-available and will be sold, so every asset needs a provable licence. The
-// enemy portraits are PVGames creature art from a Humble bundle whose licence permits shipping
+// This game is source-available and will be sold, so every asset needs a provable license. The
+// enemy portraits are PVGames creature art from a Humble bundle whose license permits shipping
 // inside a game; everything else here is first-party or generated at runtime. "Found it online" is
 // not sufficient. That constraint is the reason the glyphs and the score are generated rather than
 // loaded — see internal/systems and internal/music.

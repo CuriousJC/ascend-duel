@@ -822,7 +822,7 @@
   {
     "EnemyRecord": "ClearHumanoid1",
     "Name": "Clear Humanoid",
-    "Family": "Coloured humanoids",
+    "Family": "Colored humanoids",
     "Draw": "TO BE DETERMINED",
     "Portrait": "clearhumanoid1-portrait",
     "DMG": 8,
@@ -1581,7 +1581,7 @@
   {
     "EnemyRecord": "BlueHumanoid1",
     "Name": "Blue Humanoid",
-    "Family": "Coloured humanoids",
+    "Family": "Colored humanoids",
     "Draw": "TO BE DETERMINED",
     "Portrait": "bluehumanoid1-portrait",
     "DMG": 10,
@@ -2367,7 +2367,7 @@
   {
     "EnemyRecord": "GreenHumanoid1",
     "Name": "Green Humanoid",
-    "Family": "Coloured humanoids",
+    "Family": "Colored humanoids",
     "Draw": "TO BE DETERMINED",
     "Portrait": "greenhumanoid1-portrait",
     "DMG": 11,
@@ -2738,7 +2738,7 @@
   {
     "EnemyRecord": "AmberHumanoid1",
     "Name": "Amber Humanoid",
-    "Family": "Coloured humanoids",
+    "Family": "Colored humanoids",
     "Draw": "TO BE DETERMINED",
     "Portrait": "amberhumanoid1-portrait",
     "DMG": 13,
@@ -3879,7 +3879,7 @@
   {
     "EnemyRecord": "RedHumanoid1",
     "Name": "Red Humanoid",
-    "Family": "Coloured humanoids",
+    "Family": "Colored humanoids",
     "Draw": "TO BE DETERMINED",
     "Portrait": "redhumanoid1-portrait",
     "DMG": 15,
@@ -4156,7 +4156,7 @@
   {
     "EnemyRecord": "EntropicHumanoid1",
     "Name": "Entropic Humanoid",
-    "Family": "Coloured humanoids",
+    "Family": "Colored humanoids",
     "Draw": "TO BE DETERMINED",
     "Portrait": "entropichumanoid1-portrait",
     "DMG": 18,

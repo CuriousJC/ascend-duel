@@ -215,7 +215,7 @@ func vitaeLines(before, after int) []session.LedgerLine {
 //
 // **The verb is marked exactly as an action's is**, so the aftermath can be scanned for what kind
 // of thing happened before any of it is read — the rule the round lines are already under. The rest
-// goes through elementSpans, so a fire card is named in the fire colour here as it is everywhere
+// goes through elementSpans, so a fire card is named in the fire color here as it is everywhere
 // else.
 func afterLine(verb, clause string) session.LedgerLine {
 	spans := []session.LedgerSpan{{Text: verb, Mark: true}}

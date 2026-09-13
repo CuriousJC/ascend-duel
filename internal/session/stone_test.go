@@ -6,7 +6,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// The catalogue's own promises. **A stone for every hand** is the mechanic as asked for, and it is
+// The catalog's own promises. **A stone for every hand** is the mechanic as asked for, and it is
 // the one thing about the file that nothing else would notice: a rung with no stone is a rung that
 // can never be raised, and the bag simply never offers it.
 func TestEveryRungHasAStone(t *testing.T) {
@@ -120,7 +120,7 @@ func TestEquipCarriesTheRunsStonesOntoTheFighter(t *testing.T) {
 	}
 }
 
-func TestAStoneTheCatalogueDoesNotHoldIsRefused(t *testing.T) {
+func TestAStoneTheCatalogDoesNotHoldIsRefused(t *testing.T) {
 	s := New(nil)
 	if s.UseStone("not-a-stone") {
 		t.Error("a stone nobody wrote was accepted")

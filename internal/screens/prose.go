@@ -33,7 +33,7 @@ import (
 )
 
 // handSwatch marks a line that is not one side acting but something the round did — a hand
-// forming. **It is the yellow the enemy used to be**, freed when the opponent went grey on
+// forming. **It is the yellow the enemy used to be**, freed when the opponent went gray on
 // 2026-08-07: a hand is the loudest thing that can happen in a round and had been sharing a
 // hue with every enemy action on screen.
 //
@@ -41,12 +41,12 @@ import (
 // as amber on plum reads as washed-out pale on off-white.
 var handSwatch = color.RGBA{R: 198, G: 142, B: 16, A: 255}
 
-// The two sides' colours: **green is you, grey is them.**
+// The two sides' colors: **green is you, gray is them.**
 //
-// The opponent was yellow until 2026-08-07 and went grey to give the yellow to `handSwatch` —
+// The opponent was yellow until 2026-08-07 and went gray to give the yellow to `handSwatch` —
 // a hand is the loudest thing that can happen in a round and was sharing a hue with every
-// enemy action on screen. Grey is also the right *rank* for the opponent: their rows are
-// context for yours, and a saturated colour was claiming more attention than they earn.
+// enemy action on screen. Gray is also the right *rank* for the opponent: their rows are
+// context for yours, and a saturated color was claiming more attention than they earn.
 //
 // **It settles a collision recorded as open in `MECHANICS.md`**, where lightning's yellow card
 // surface ran into `enemySwatch`. The player's green still collides with earth, which went green
@@ -67,11 +67,11 @@ var (
 // own**, because they are not something a card did — folding a hand into the line of the card
 // that happened to start it would bury the one thing worth reading.
 //
-// **The attack phase is one line, and it is the hand's** *(2026-08-14)*. The defences write a
+// **The attack phase is one line, and it is the hand's** *(2026-08-14)*. The defenses write a
 // line each; the attack cards write none. A turn lands one blow, so five sentences
 // saying "Duelist attacks with an earth strike" described a round that does not happen, and the
 // line that mattered — what the five cards came to — was the sixth. **Every hand takes that line,
-// the High Card included** *(2026-08-19)* — a lone attack is the catalogue's one-card hand and is
+// the High Card included** *(2026-08-19)* — a lone attack is the catalog's one-card hand and is
 // announced like any other.
 //
 // **It takes the events rather than reading the round off the scene** *(2026-08-18)*. It was the
@@ -87,9 +87,9 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 }
 
 // paneRowsFor draws already-worded lines as pane rows: the voice becomes a swatch, and each span's
-// ink name becomes a colour.
+// ink name becomes a color.
 //
-// **The colours are decided here and never stored**, which is what lets a saved run be re-coloured
+// **The colors are decided here and never stored**, which is what lets a saved run be re-colored
 // by a change to this file rather than carrying a palette in its history. See session.LedgerLine.
 func paneRowsFor(lines []session.LedgerLine) []paneRow {
 	rows := make([]paneRow, 0, len(lines))
@@ -107,13 +107,13 @@ func paneRowsFor(lines []session.LedgerLine) []paneRow {
 	return rows
 }
 
-// inkNamed is the colour behind an ink's name. **Zero alpha is "the panel's own ink"**, which is
-// what an unnamed span and an unrecognised name both get — a ledger written by another build must
+// inkNamed is the color behind an ink's name. **Zero alpha is "the panel's own ink"**, which is
+// what an unnamed span and an unrecognized name both get — a ledger written by another build must
 // draw as words rather than refuse to draw.
 //
-// **Every colour here is the one the combat screen uses for the same thing**, which is the point:
+// **Every color here is the one the combat screen uses for the same thing**, which is the point:
 // the account should look like what it is an account of. The elements come through cards.BorderOf,
-// which is the live table, so recolouring an element recolours its figures in the ledger too.
+// which is the live table, so recoloring an element recolors its figures in the ledger too.
 func inkNamed(name string) color.RGBA {
 	switch name {
 	case "":
@@ -123,7 +123,7 @@ func inkNamed(name string) color.RGBA {
 	case session.InkDefend:
 		return verbInkFor(combat.CategoryDefend)
 	case session.InkHand:
-		// **No colour**: the panel's own ink, and the run's Mark is what says it is the hand. See
+		// **No color**: the panel's own ink, and the run's Mark is what says it is the hand. See
 		// session.InkHand, and handNameInk, which is the same decision on the combat screen.
 		return color.RGBA{}
 	case session.InkRelic:
@@ -138,11 +138,11 @@ func inkNamed(name string) color.RGBA {
 }
 
 // elementInk is an element's ink name, which is simply what the element is called. A card's figure
-// in a sum wears its own card's colour, exactly as the hand dialog's does.
+// in a sum wears its own card's color, exactly as the hand dialog's does.
 func elementInk(e combat.Element) string { return e.String() }
 
 // swatchForVoice is the square a line is drawn beside. **A zero-alpha swatch is a line with no
-// swatch**, which drawPane centres — so headings read as blocks rather than as more of the list.
+// swatch**, which drawPane centers — so headings read as blocks rather than as more of the list.
 func swatchForVoice(voice string) color.RGBA {
 	switch voice {
 	case session.VoiceYou:
@@ -157,7 +157,7 @@ func swatchForVoice(voice string) color.RGBA {
 }
 
 // indentForVoice is how far a line is set in. Only the arithmetic's own terms are, which is also
-// what keeps them left-aligned rather than centred — see paneRow.indent.
+// what keeps them left-aligned rather than centered — see paneRow.indent.
 func indentForVoice(voice string) int {
 	if voice == session.VoiceTerm {
 		return termIndent
@@ -180,7 +180,7 @@ func voiceFor(side combat.Side) string {
 // opponent's turn: a Giant Rat's gnaw and its maul are two sentences that read identically and land
 // wildly different figures, and the only account of why was the number at the end.
 //
-// **Attacks only, and never the identity.** A defence multiplies nothing, and `(1x)` on every
+// **Attacks only, and never the identity.** A defense multiplies nothing, and `(1x)` on every
 // ordinary swing is a bracket that says nothing on most lines in the game.
 func cardWeight(c combat.Card) string {
 	if c.Category() != combat.CategoryAttack || c.Amount() == 100 {
@@ -224,7 +224,7 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 	curSide := combat.SideA
 	outcomes := 0
 
-	// Outcomes are appended to the tail of the sentence, after the verb, so the coloured verb
+	// Outcomes are appended to the tail of the sentence, after the verb, so the colored verb
 	// never moves as a line grows.
 	attach := func(what string) {
 		if cur < 0 {
@@ -239,7 +239,7 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 	}
 
 	// act opens a line in the form "<who> <verb> <what>", with the verb carrying its
-	// category's colour. See cardPhrase.
+	// category's color. See cardPhrase.
 	act := func(side combat.Side, c combat.Card) {
 		rows = append(rows, session.LedgerLine{
 			Voice: voiceFor(side),
@@ -322,7 +322,7 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 			// victim's swatch because it is a thing happening *to* them, which is also the
 			// only side the event names.
 			//
-			// **The status names itself** *(2026-08-17)*: with statuses decoupled from the colours,
+			// **The status names itself** *(2026-08-17)*: with statuses decoupled from the colors,
 			// a second damage-over-time status would otherwise narrate identically to the first.
 			announce(fmt.Sprintf("%s %s %d",
 				s.sideName(e.Target), tickVerb(e.Status), e.Amount), voiceFor(e.Target))
@@ -332,7 +332,7 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 			// included** *(2026-08-19)*. There used to be a branch here writing an ordinary attack
 			// sentence when `e.Hand` was `HandNone`, on the argument that announcing "HAND!" over
 			// a single Bash empties the word. **It had been unreachable for some time**:
-			// `blowFor` falls back to the catalogue's `high-card` entry, so a turn with an attack
+			// `blowFor` falls back to the catalog's `high-card` entry, so a turn with an attack
 			// in it always names a hand and the branch could not fire. What the log actually
 			// printed was the hand line, correctly, while the code beside it said otherwise.
 			//
@@ -404,7 +404,7 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 	return rows
 }
 
-// swatchFor is a side's colour: green is you, yellow is them.
+// swatchFor is a side's color: green is you, yellow is them.
 func swatchFor(side combat.Side) color.RGBA {
 	if side == combat.SideB {
 		return enemySwatch
@@ -417,7 +417,7 @@ func swatchFor(side combat.Side) color.RGBA {
 // A line is `<who> <verb> <phrase>`: "Duelist attacks with a heavy strike". The verb comes
 // from the action's category and the phrase from the card, which is why the two are separate
 // tables rather than one string per card — the verb has to be its own span so it can be drawn
-// on a coloured background, and it would otherwise have to be sliced back out of a sentence.
+// on a colored background, and it would otherwise have to be sliced back out of a sentence.
 //
 // **The prose is here and not in `internal/combat`.** The rules package names actions; it does
 // not describe them. A card renamed changes `String()`; a card that reads badly in a sentence
@@ -482,7 +482,7 @@ func multiplierText(amount int) string {
 // `Card.Amount()`, which is where an essence's scaling is applied — so an altered Defend says the
 // percentage it actually cuts and an altered shield card says how many it actually raises. The wording was
 // already a template over the value; what changed is which value it reads. A card whose face
-// disagreed with its behaviour would be the worst thing an alteration mechanic could produce.
+// disagreed with its behavior would be the worst thing an alteration mechanic could produce.
 //
 // **And it reads the holder's relics** *(2026-08-21)*. A slash card in the hands of someone wearing
 // Keen said "Slashes for 2x DMG" and dealt four times its owner's DMG, because the multiplier is the
@@ -490,9 +490,9 @@ func multiplierText(amount int) string {
 // thing about the card and a false thing about the attack, which is the same failure the essence
 // scaling above was fixed for.
 //
-// **It hands back the span of text a relic changed, not a flag** *(2026-08-21)*. The caller colours
+// **It hands back the span of text a relic changed, not a flag** *(2026-08-21)*. The caller colors
 // that span and nothing else: painting the verb and the unit with it says a relic changed the card
-// rather than the number. An empty mark means nothing moved and the line is drawn in one colour.
+// rather than the number. An empty mark means nothing moved and the line is drawn in one color.
 func cardEffect(card combat.Card) string {
 	c := card.Spec()
 	amount := card.Amount()
@@ -508,7 +508,7 @@ func cardEffect(card combat.Card) string {
 	}
 
 	// **The form is read off the card, not off its concept** *(2026-09-12)*. An essence that turns a
-	// Crush into a Stab writes `FormOverride`, which `Card.Form` honours and `Concept.Form` knows
+	// Crush into a Stab writes `FormOverride`, which `Card.Form` honors and `Concept.Form` knows
 	// nothing about — so the corner mark became a spear while the line under it still read CRUSH.
 	// Same failure the figures above were fixed for, one field over.
 	return attackVerb(card.Form()) + "\nDMG " + multiplierText(amount)
@@ -529,7 +529,7 @@ func cardEffect(card combat.Card) string {
 // the face is total over `combat.RiderKinds()`, and the sheet prints the game's own strings rather
 // than a copy that can drift.
 //
-// **It is not written in the relic pink.** That colour means "a relic did this" everywhere else on
+// **It is not written in the relic pink.** That color means "a relic did this" everywhere else on
 // screen, and a rune is not a relic; borrowing it would say something untrue about where the
 // figure came from.
 func riderText(card combat.Card) string {
@@ -566,8 +566,8 @@ func actionPhrase(id combat.ConceptID) string {
 // where it matters most.
 //
 // A phrase with no article gets the element in brackets: "and raises two shields (fire)".
-// That is deliberately the plainer half of the rule. An elemental defence is a real card whose
-// colour does nothing mechanical, so a line that reads slightly like a note is honest about
+// That is deliberately the plainer half of the rule. An elemental defense is a real card whose
+// color does nothing mechanical, so a line that reads slightly like a note is honest about
 // what it is — and it is better than a sentence bent around a word that does not fit it.
 func cardPhrase(c combat.Card) string {
 	phrase := actionPhrase(c.Concept)
@@ -589,12 +589,12 @@ func cardPhrase(c combat.Card) string {
 }
 
 // elementSpans cuts a clause into spans so the word naming an element is written in that element's
-// colour — "attacks with a fire cut", with `fire` in the fire orange.
+// color — "attacks with a fire cut", with `fire` in the fire orange.
 //
 // **The ledger's ink vocabulary already had the elements in it**, because a term in the arithmetic
-// wears its own card's colour; see inkNamed, which resolves an element's name through the same
+// wears its own card's color; see inkNamed, which resolves an element's name through the same
 // `cards.BorderOf` a card's border comes from. So this is the third reader of one table rather than
-// a colour decided here.
+// a color decided here.
 //
 // **The cut is `cards.SplitSpans`**, the same one the card face uses, so where a word begins and ends
 // is answered once — see internal/cards/render.go on why a second implementation would be two sets
@@ -612,15 +612,15 @@ func elementSpans(clause string) []session.LedgerSpan {
 	return out
 }
 
-// elementInkNames is which of the ledger's ink names each coloured word takes.
+// elementInkNames is which of the ledger's ink names each colored word takes.
 //
-// **A span is named rather than coloured**, because a ledger line is written once and read back three
-// fights later — see session.LedgerSpan.Ink. A colour stored in a line would be the colour the build
+// **A span is named rather than colored**, because a ledger line is written once and read back three
+// fights later — see session.LedgerSpan.Ink. A color stored in a line would be the color the build
 // that wrote it happened to use, and the account would then disagree with the game it is an account
 // of the first time the palette moved.
 //
 // Built once, off the same `statuses.json` the vocabulary itself is built from, so a status arriving
-// later cannot be coloured on a card and plain in the account.
+// later cannot be colored on a card and plain in the account.
 var elementInkNames = buildElementInkNames()
 
 func buildElementInkNames() map[string]string {
@@ -641,8 +641,8 @@ func buildElementInkNames() map[string]string {
 // Each names the *effect* rather than the status, because "chills them" says what happens next and
 // "applies chilled" says only that a rule fired.
 //
-// **Keyed by record rather than by element** *(2026-08-17)*, since a status is no longer a colour:
-// two relics can put two different statuses on the same fire card, and one phrase per colour could
+// **Keyed by record rather than by element** *(2026-08-17)*, since a status is no longer a color:
+// two relics can put two different statuses on the same fire card, and one phrase per color could
 // not tell them apart. The fallback is what a status with no sentence of its own narrates as — its
 // own name, which is at least true — so authoring a status in the file does not need a Go change to
 // read properly.
@@ -676,7 +676,7 @@ func tickVerb(id combat.StatusID) string {
 //
 // **"defends" covers a guard and a shield alike**, which is a small stretch on the second and the
 // right one: the word is a *scanning* aid saying which half of the turn a line belongs to, not a
-// description of the card. A third verb would be a third colour on a pane that is read by colour
+// description of the card. A third verb would be a third color on a pane that is read by color
 // before it is read at all.
 func verbFor(c combat.Category) string {
 	if c == combat.CategoryDefend {
@@ -685,17 +685,17 @@ func verbFor(c combat.Category) string {
 	return "attacks"
 }
 
-// The colour the verb is *written* in. **Red for attack, blue for defend** — the category made loud
+// The color the verb is *written* in. **Red for attack, blue for defend** — the category made loud
 // enough to scan a round by, without reading it.
 //
-// **The verb was a filled chip until 2026-08-08 and is now the word itself**, coloured, bolded
+// **The verb was a filled chip until 2026-08-08 and is now the word itself**, colored, bolded
 // and underlined. The chip was a saturated block in a pane that already carries a swatch and a
 // sentence, and it drew the eye to a rectangle rather than to the word inside it. Marking the
 // word spends the same signal on the thing being read, which is the reasoning that already
 // retired the full-width highlight bar a day earlier — this is the same mistake one scale
 // smaller.
 //
-// **The defend phase keeps the blue** *(2026-08-15)*. With two categories the second colour is the
+// **The defend phase keeps the blue** *(2026-08-15)*. With two categories the second color is the
 // whole distinction, and a category rendered in the row's own ink would leave "attacks" as the
 // only marked verb — which is a highlight, not a scheme.
 func verbInkFor(c combat.Category) color.RGBA {
@@ -721,9 +721,9 @@ const duelistName = "DUELIST"
 const playerRecord = "Fighter1"
 
 // sideName is who a Resolution line belongs to, written out beside the swatch that already
-// says it in colour. **Saying it twice is deliberate**: the colours carry the pattern at a
+// says it in color. **Saying it twice is deliberate**: the colors carry the pattern at a
 // glance, but a line that begins "Bash" reads as an instruction rather than a report, and
-// with both sides' actions in one list the reader has to hold which colour is which. The name
+// with both sides' actions in one list the reader has to hold which color is which. The name
 // makes each line stand on its own.
 //
 // **It reads the combatant rather than the roster** *(2026-08-11)*. It used to index the
@@ -778,11 +778,11 @@ func (s *CombatScene) concealEnemy(gs *state.GlobalState) bool {
 //
 // **A hand carries its whole name** *(2026-08-17)*. The name used to be assembled here from two
 // parts — the element makeup in front of the hand, "Duo Bash Flurry" — and both of those axes
-// are gone: colour buys statuses rather than a multiplier, and a hand is named for its shape
+// are gone: color buys statuses rather than a multiplier, and a hand is named for its shape
 // rather than for the card that formed it. A blow that formed no hand at all is named only as an
 // attack; the pane does not announce those, but the trace does.
 //
-// The name comes from the catalogue rather than being written here, so a hand renamed in
+// The name comes from the catalog rather than being written here, so a hand renamed in
 // `data/hands.json` is renamed once.
 func handName(e combat.Event) string {
 	hand, ok := combat.HandByID(e.Hand)
@@ -829,7 +829,7 @@ func handMath(e combat.Event) string {
 // line of the round and reads as a hand called "Form Three" to anybody skimming. What the rung is
 // comes first; which axis counted it is the qualifier.
 //
-// **The bracket is the word the catalogue used**, stripped off the front rather than looked up, so
+// **The bracket is the word the catalog used**, stripped off the front rather than looked up, so
 // a hand renamed is renamed once — in the data. A name with no axis word in front of it is left
 // exactly as it is, which is what keeps "High Card" from becoming "High Card (Card)".
 func handTitle(e combat.Event) string { return axisToBack(handName(e)) }

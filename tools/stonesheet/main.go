@@ -5,20 +5,20 @@
 //
 // It exists for the reason tools/essencesheet does. A stone arrives four at a time inside a sealed
 // bag, one bag per shop visit and only if five vitae can be spared — so seeing the whole
-// catalogue in a launched game means buying a lot of rocks and being lucky about the draw. This
+// catalog in a launched game means buying a lot of rocks and being lucky about the draw. This
 // draws all of them at once.
 //
 // # It is a report, not a drawing-board
 //
 // Same split as relicsheet against cardsheet: this reads the real file, through internal/session,
-// which means the catalogue is *validated* before anything is drawn. A stone naming a rung the
+// which means the catalog is *validated* before anything is drawn. A stone naming a rung the
 // rules have not got panics at init exactly as it would in the game, so a stone this page refuses
 // to draw is a stone the game refuses to start with.
 //
 // # What to look at
 //
 // **The +N against the rung beside it.** A stone's whole content is one number, and that number
-// is computed rather than authored — `combat.StoneValue` is a tenth of the rung's catalogue
+// is computed rather than authored — `combat.StoneValue` is a tenth of the rung's catalog
 // multiplier — so this is the only place the ladder and what a rock does to it are visible
 // together. A rung retuned in `hands.json` moves its stone's face here without anything being
 // edited in `stones.json`, which is the point of the split and also the thing to sanity-check.
@@ -28,7 +28,7 @@
 // stone is worth a tenth of a far larger number. Whether that spread is the intended bargain is
 // a design question this page is for asking.
 //
-// **A rung with no stone.** Grouped by axis and walked in ladder order, so a hand the catalogue
+// **A rung with no stone.** Grouped by axis and walked in ladder order, so a hand the catalog
 // has not authored a stone for shows up as a gap rather than as an absence nobody notices.
 // `loadStones` allows it; the game just never offers one.
 //
@@ -102,7 +102,7 @@ func run(dir string) error {
 	}
 
 	// **Walked by rung rather than by stone**, which is the one decision in this file. The
-	// catalogue is one stone per rung and `StoneForHand` is a lookup rather than a choice, so
+	// catalog is one stone per rung and `StoneForHand` is a lookup rather than a choice, so
 	// walking the ladder puts every stone in the table's own order for free *and* makes a rung
 	// nobody authored a stone for visible as a gap. Walking `session.Stones()` would sort by
 	// record key and hide exactly that.
@@ -171,7 +171,7 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d stones over %d rungs, %d drawn from a %d-vitae bag, %s%% of the catalogue a seat\n",
+	fmt.Printf("wrote %s and %d PNGs — %d stones over %d rungs, %d drawn from a %d-vitae bag, %s%% of the catalog a seat\n",
 		out, page.Count+len(page.States), page.Count, page.Rungs,
 		page.BagSize, page.BagPrice, page.Share)
 	for _, g := range page.Groups {
@@ -185,8 +185,8 @@ func run(dir string) error {
 
 // specFor is a stone as the card the bag's dialog draws, and it fills the same fields
 // screens.stoneSpec does: a name, the authored line with the computed figure under it, and no
-// element. **Basic, not a colour** — a stone raises a rung of the ladder and a rung is not one of
-// the five, so its border is the mid grey `cards.BorderOf` gives `basic`.
+// element. **Basic, not a color** — a stone raises a rung of the ladder and a rung is not one of
+// the five, so its border is the mid gray `cards.BorderOf` gives `basic`.
 // stoneLine is what a stone card says: its authored sentence, and the figure it raises its rung
 // by, computed from `hands.json` rather than authored. Derived in one place so the face and its
 // highlights read the same string — screens.stoneLine is the same line on the other side.
@@ -221,7 +221,7 @@ func firstStone(plates []plate) (plate, bool) {
 
 // groupByAxis splits the ladder by what a rung counts on, in combat.AllAxes' order.
 //
-// **By axis rather than by multiplier across the whole catalogue**, which is the difference from
+// **By axis rather than by multiplier across the whole catalog**, which is the difference from
 // tools/handsheet. That sheet interleaves all three axes deliberately, because a player choosing a
 // hand is choosing among all of them at once. A stone is bought against one rung, so the question
 // here is "is this axis' ladder priced sensibly against itself", and the rows have to be

@@ -14,13 +14,13 @@ import (
 // reaching past the input layer to force the queue. A named seed replaces both with a number.
 //
 // **These are found, not chosen.** `go run ./tools/seeds` searches for hands matching each
-// description and prints what it finds, including the hand each catalogued seed currently
+// description and prints what it finds, including the hand each cataloged seed currently
 // deals. **Re-run it after touching `startingDeck` or `handSize`** — a seed is a fact about a
 // particular deck, and changing the deck silently invalidates every number below. The tool
-// reports a catalogue entry whose hand no longer matches its description rather than leaving
+// reports a catalog entry whose hand no longer matches its description rather than leaving
 // it to be discovered by a demo that quietly stopped testing what it claimed to.
 //
-// A slice rather than a map on purpose: `tools/seeds` prints these in order, and Go randomises
+// A slice rather than a map on purpose: `tools/seeds` prints these in order, and Go randomizes
 // map iteration. See the determinism rules in CLAUDE.md.
 type namedSeed struct {
 	name string
@@ -31,23 +31,23 @@ type namedSeed struct {
 // Every number here came out of `tools/seeds`.
 //
 // **Every entry has been replaced three times**: on 2026-08-08 when the deck went from 30 cards to
-// 60, on 2026-08-15 when it was rebuilt as three attack forms plus the defences, and again the same
+// 60, on 2026-08-15 when it was rebuilt as three attack forms plus the defenses, and again the same
 // day when the drab attacks were cut and the deck fell to 48. Every re-check failed at once each
 // time, which is exactly what the re-check exists for — a seed is a fact about one particular
-// deck, and changing the deck silently re-deals every catalogued hand.
+// deck, and changing the deck silently re-deals every cataloged hand.
 //
 // **Arcane took the deck back to 60 on 2026-08-25 and only two entries fell over**, which is worth
-// knowing rather than surprising: a fifth colour adds a card to every concept without changing what
+// knowing rather than surprising: a fifth color adds a card to every concept without changing what
 // a concept *is*, so the hands described in terms of concepts — three Bashes, four Bashes — were
 // re-dealt to the same shape by a different shuffle. What broke was the two that wanted a specific
 // combination of concepts. **A Card Five of a Kind is dealable for the first time**, at one hand in
-// about 22,000, because five copies of a concept now exist; there is no catalogued seed for it and
+// about 22,000, because five copies of a concept now exist; there is no cataloged seed for it and
 // the default 20,000-seed search is too short to expect one.
 
 var seedCatalog = []namedSeed{
 	// 1xJab 1xCut 1xSlice 1xCleave 1xThump 3xBash. Three Bashes is 6 AP, exactly the opening
 	// budget, so the Three of a Kind is clickable on round one with nothing set up first — and being
-	// three colours it lands three statuses with it, which is what the hand and its colours look
+	// three colors it lands three statuses with it, which is what the hand and its colors look
 	// like when they arrive together.
 	{"three-bashes", 51, "three or more Bashes: a Three of a Kind that can be clicked"},
 
@@ -55,7 +55,7 @@ var seedCatalog = []namedSeed{
 	// with Guard gone the deck is 55 cards and this seed deals all five Bashes, which is the top of
 	// the ladder outright rather than the Four of a Kind the entry was named for. Ten AP against a
 	// six-point budget, so a bare duelist sees it and pays for part of it and a discount is what
-	// buys the rest, and it draws all five colours — five copies of a concept are five elements.
+	// buys the rest, and it draws all five colors — five copies of a concept are five elements.
 	{"four-bashes", 238, "four Bashes: a Four of a Kind, the top of the ladder"},
 
 	// 2xJab 1xCleave 2xBash 3xSmash. The same shape one form over and at the top of
@@ -68,14 +68,14 @@ var seedCatalog = []namedSeed{
 	// red "attacks" appear in the same feed.
 	{"both-verbs", 1, "a defend card and an attack: both phases in one round"},
 
-	// 1xJab 2xThrust 1xSkewer 1xSlice 1xThump 1xBrace 1xBlock. It holds both defences, which is what
+	// 1xJab 2xThrust 1xSkewer 1xSlice 1xThump 1xBrace 1xBlock. It holds both defenses, which is what
 	// the demo wants: three shields in one turn and the pip row on the duelist card part-filled. **Brace and Block are the whole vocabulary now**
 	// *(2026-09-01)* — Guard was taken out of the deck, so the six-shield hand this seed was
 	// chosen for cannot be dealt by anything. Together they are 3 AP, half a round.
 	{"all-shields", 2, "a Brace and a Block: the whole defend vocabulary in hand"},
 }
 
-// seedFor looks a catalogued seed up by name. **It panics on an unknown name**, which is the
+// seedFor looks a cataloged seed up by name. **It panics on an unknown name**, which is the
 // right failure for a table compiled into the binary: every caller is a constant in this
 // repository, so a miss is a typo that should never reach a running game rather than a
 // condition to handle.
@@ -88,7 +88,7 @@ func seedFor(name string) int64 {
 	panic("screens: no seed named " + name)
 }
 
-// Seeds is the catalogue as (name, seed, description) triples, for tools/seeds to print and
+// Seeds is the catalog as (name, seed, description) triples, for tools/seeds to print and
 // re-check. Exported because that tool lives outside this package; nothing in the game reads
 // it.
 func Seeds() (names []string, values []int64, wants []string) {
@@ -112,7 +112,7 @@ func OpeningHand(seed int64) []combat.ConceptID {
 	return out
 }
 
-// OpeningCards is the same deal as whole cards, so a caller can see the colours as well as the
+// OpeningCards is the same deal as whole cards, so a caller can see the colors as well as the
 // concepts.
 //
 // **The tutorial's seed is chosen on the element axis**, which the concept list above cannot
@@ -121,7 +121,7 @@ func OpeningHand(seed int64) []combat.ConceptID {
 func OpeningCards(seed int64) []combat.Card {
 	var s CombatScene
 	s.rng = rand.New(rand.NewSource(seed))
-	// A nil run: a named seed is a fact about the *starting* deck, so the catalogue must not
+	// A nil run: a named seed is a fact about the *starting* deck, so the catalog must not
 	// read whatever a run has been altered into.
 	s.resetDeck(nil)
 

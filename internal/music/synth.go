@@ -2,14 +2,14 @@ package music
 
 import "math"
 
-// The synthesiser. It turns a parsed score into signed 16-bit stereo PCM, which is the
+// The synthesizer. It turns a parsed score into signed 16-bit stereo PCM, which is the
 // one audio format Ebitengine will take without a decoder.
 //
 // **There is no recorded audio and no SoundFont anywhere in this.** Every sample is
 // computed from the notes in the file, the same argument that makes the generated
 // glyphs in internal/systems worth their code: generated output has no provenance
 // question, and this is a game that has to be sellable. The cost is that it sounds
-// like a synthesiser rather than an orchestra, which for a score of two synth basses
+// like a synthesizer rather than an orchestra, which for a score of two synth basses
 // and a drum part is close to what was asked for anyway.
 //
 // This file may not import Ebitengine. Rendering is pure arithmetic over a byte slice
@@ -36,7 +36,7 @@ const (
 	// the loop start means it crossfades the material with itself and cannot smear.
 	blendSeconds = 0.1
 
-	// targetPeak leaves headroom below full scale. The whole mix is normalised to it,
+	// targetPeak leaves headroom below full scale. The whole mix is normalized to it,
 	// so adding a voice changes the balance rather than the loudness.
 	targetPeak = 0.82
 )
@@ -84,7 +84,7 @@ func render(sc *score) (pcm []byte, loopBytes int64) {
 	}
 	left, right = left[:loopFrames], right[:loopFrames]
 
-	normalise(left, right)
+	normalize(left, right)
 
 	blendFrames := int(blendSeconds * sampleRate)
 	if blendFrames > loopFrames {
@@ -138,7 +138,7 @@ func collectNotes(sc *score) []note {
 	}
 	var chans [16]channel
 	for i := range chans {
-		// MIDI's own power-on defaults: volume 100, expression 127, pan centred.
+		// MIDI's own power-on defaults: volume 100, expression 127, pan centered.
 		chans[i] = channel{volume: 100.0 / 127.0, expression: 1}
 	}
 
@@ -199,7 +199,7 @@ func collectNotes(sc *score) []note {
 
 // renderInto generates a note and adds it to the mix. It is additive rather than
 // assigning, which is the whole of the polyphony: overlapping notes are summed and the
-// normalise pass afterwards deals with the level.
+// normalize pass afterwards deals with the level.
 func (n note) renderInto(left, right []float64) {
 	var mono []float64
 	if n.ch == percussionChannel {
@@ -213,7 +213,7 @@ func (n note) renderInto(left, right []float64) {
 	v := float64(n.vel) / 127
 	amp := n.volume * v * v
 
-	// Equal-power panning: a sound panned centre keeps the same energy as one panned
+	// Equal-power panning: a sound panned center keeps the same energy as one panned
 	// hard over, where halving both channels would leave a hole in the middle.
 	angle := (n.pan + 1) * math.Pi / 4
 	gl, gr := math.Cos(angle), math.Sin(angle)
@@ -414,9 +414,9 @@ func (n *noise) next() float64 {
 	return -1
 }
 
-// normalise scales the mix so its loudest moment sits at targetPeak. Both channels are
+// normalize scales the mix so its loudest moment sits at targetPeak. Both channels are
 // scaled by the same factor, or the stereo image would move.
-func normalise(left, right []float64) {
+func normalize(left, right []float64) {
 	peak := 0.0
 	for i := range left {
 		if v := math.Abs(left[i]); v > peak {
@@ -437,7 +437,7 @@ func normalise(left, right []float64) {
 }
 
 // putSample writes one sample as signed 16-bit little endian, the format Ebitengine's
-// NewPlayer takes. Clamping is belt and braces after normalise, but a sample that
+// NewPlayer takes. Clamping is belt and braces after normalize, but a sample that
 // wrapped instead of clipping would be an audible crack rather than a soft edge.
 func putSample(b []byte, v float64) {
 	s := int(v * 32767)

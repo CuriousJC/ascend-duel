@@ -13,7 +13,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-// The draw pile made visible, and the cards travelling to and from it.
+// The draw pile made visible, and the cards traveling to and from it.
 //
 // Two things live here because they are one idea: a stack of card backs where the Deck
 // button used to be, and the cards that fly out of the hand and back in from that stack.
@@ -136,7 +136,7 @@ type cardFlight struct {
 // addFlight queues one. Kept as a method so the two call sites in spendSelected read as
 // what they are rather than as slice manipulation.
 func (s *CombatScene) addFlight(f cardFlight) {
-	s.theatre.flights = append(s.theatre.flights, f)
+	s.theater.flights = append(s.theater.flights, f)
 }
 
 // The hand's slides are cardSlide, and the mover is cardslide.go — shared with the essence screen's
@@ -145,16 +145,16 @@ func (s *CombatScene) addFlight(f cardFlight) {
 
 // addSlide queues one against the hand's row.
 func (s *CombatScene) addSlide(sl cardSlide) {
-	s.theatre.slides = addCardSlide(s.theatre.slides, sl)
+	s.theater.slides = addCardSlide(s.theater.slides, sl)
 }
 
 // slidingTo reports whether a card is currently sliding into hand slot i, so the row can leave
 // that slot empty until it lands.
-func (s *CombatScene) slidingTo(i int) bool { return slideInto(s.theatre.slides, i) }
+func (s *CombatScene) slidingTo(i int) bool { return slideInto(s.theater.slides, i) }
 
 // drawSlides draws the cards moving within the hand.
 func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
-	drawCardSlides(gs, screen, s.theatre.slides,
+	drawCardSlides(gs, screen, s.theater.slides,
 		func(gs *state.GlobalState, i, count int) image.Point { return slotAt(gs, i, count) },
 		func(sl cardSlide) cards.Spec {
 			return cardSpec(sl.card, heldBy(s.fighter.Duelist, sl.card), true, sl.lift > 0)
@@ -169,7 +169,7 @@ func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
 // is suppressed is the *drawing* of a card that is on screen somewhere else, which is a
 // view concern and lives here.
 func (s *CombatScene) inboundTo(i int) bool {
-	for _, f := range s.theatre.flights {
+	for _, f := range s.theater.flights {
 		if !f.outbound && f.index == i {
 			return true
 		}
@@ -294,7 +294,7 @@ func (s *CombatScene) drawCardBack(gs *state.GlobalState, screen *ebiten.Image, 
 
 // drawFlights draws every card in the air, over the row and the panes and under the overlay.
 func (s *CombatScene) drawFlights(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, f := range s.theatre.flights {
+	for _, f := range s.theater.flights {
 		if f.waiting() {
 			continue
 		}
@@ -417,7 +417,7 @@ type resolvedCard struct {
 // order regroups by category, so the third card to resolve is not the third card selected, and
 // a row in selection order would be a confident picture of a round that does not happen.
 func (s *CombatScene) seatPlayedCards() {
-	s.theatre.resolved = nil
+	s.theater.resolved = nil
 
 	for _, slot := range combat.ResolutionOrder(s.fighterActions, s.enemyActions) {
 		if slot.Side != combat.SideA {
@@ -438,8 +438,8 @@ func (s *CombatScene) seatPlayedCards() {
 			continue
 		}
 
-		s.theatre.resolved = append(s.theatre.resolved, resolvedCard{
-			travel:    newTravel(len(s.theatre.resolved)*flightStaggerPer, riseTicks),
+		s.theater.resolved = append(s.theater.resolved, resolvedCard{
+			travel:    newTravel(len(s.theater.resolved)*flightStaggerPer, riseTicks),
 			card:      s.hand[hand].actionCard,
 			handIndex: hand,
 			handCount: len(s.hand),
@@ -492,23 +492,23 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		}
 	}
 
-	// **A defence that already flew its pips does not rise again** *(owner's call, 2026-09-02)*.
-	// The engine resolves defences at the end of the turn, several beats after the hand they were
+	// **A defense that already flew its pips does not rise again** *(owner's call, 2026-09-02)*.
+	// The engine resolves defenses at the end of the turn, several beats after the hand they were
 	// scored into — so once the pips leave the card with its figure, the card climbing a second
 	// time on its own announcement reads as the card firing twice. The lift is what says "this
 	// card is acting now", and it already said it.
 	//
-	// **It is the flight that decides, not the card's kind.** A turn of nothing but defences
+	// **It is the flight that decides, not the card's kind.** A turn of nothing but defenses
 	// forms no hand, so nothing has flown when its announcement arrives — the seat is recorded by
 	// the raise that follows this beat — and that card does lift, which is the only thing on
-	// screen saying which defence is going up.
+	// screen saying which defense is going up.
 	if s.shieldsRaisedBy(side, seat) > 0 && s.row(side).flew(seat) {
 		return
 	}
 
-	mine, theirs := &s.theatre.firingSeats, &s.theatre.enemyFiringSeats
+	mine, theirs := &s.theater.firingSeats, &s.theater.enemyFiringSeats
 	if side == combat.SideB {
-		mine, theirs = &s.theatre.enemyFiringSeats, &s.theatre.firingSeats
+		mine, theirs = &s.theater.enemyFiringSeats, &s.theater.firingSeats
 	}
 
 	// **A solo attacker lifts one card at a time, and that is the whole point of it**
@@ -578,11 +578,11 @@ func (s *CombatScene) noteHand(e combat.Event) {
 	seats = append(seats, e.HandCards[:e.HandCardCount]...)
 
 	if e.Side == combat.SideB {
-		s.theatre.enemyFiringSeats = seats
+		s.theater.enemyFiringSeats = seats
 		return
 	}
 
-	s.theatre.firingSeats = seats
+	s.theater.firingSeats = seats
 }
 
 // handIndexForQueue maps a position in the player's queue to the hand slot holding it.
@@ -613,7 +613,7 @@ func (s *CombatScene) handIndexForQueue(n int) (int, bool) {
 // fighterActions while the round is still running. This hides a drawing, exactly like
 // inboundTo.
 func (s *CombatScene) resolvedInHand(i int) bool {
-	for _, r := range s.theatre.resolved {
+	for _, r := range s.theater.resolved {
 		if r.handIndex == i {
 			return true
 		}
@@ -624,7 +624,7 @@ func (s *CombatScene) resolvedInHand(i int) bool {
 // playedSeatOf finds the table seat of the card that came from hand slot i, so a card leaving
 // at the end of the round sets off from where it actually is.
 func (s *CombatScene) playedSeatOf(handIndex int) (int, bool) {
-	for i, r := range s.theatre.resolved {
+	for i, r := range s.theater.resolved {
 		if r.handIndex == handIndex {
 			return i, true
 		}
@@ -659,8 +659,8 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total, split int, firing b
 // already seated rather than sliding underneath them.
 func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Image) {
 	split := s.playedSplit()
-	for i, r := range s.theatre.resolved {
-		at := r.at(gs, i, len(s.theatre.resolved), split, lit(s.theatre.firingSeats, i))
+	for i, r := range s.theater.resolved {
+		at := r.at(gs, i, len(s.theater.resolved), split, lit(s.theater.firingSeats, i))
 
 		// **The card rattles as its own figure is written into the sum** *(owner's call,
 		// 2026-08-26)*. Sideways, where the lift above is vertical: the lift says this card built

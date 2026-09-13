@@ -22,7 +22,7 @@
   {
     "AchievementRecord": "flinch",
     "Name": "FLINCH",
-    "How": "Wear a defence all the way down to a Flinch.",
+    "How": "Wear a defense all the way down to a Flinch.",
     "Said": [
       "A guard worn down to a twitch, and it still costs nothing.",
       "Free is a kind of strong, if you are counting cards rather than shields."
@@ -34,7 +34,7 @@
     "Name": "SPECTRUM",
     "How": "Attack with four elements in one turn.",
     "Said": [
-      "Four colours in one breath.",
+      "Four colors in one breath.",
       "The hand ladder does not pay for this. Do it anyway."
     ],
     "Trigger": {
@@ -77,7 +77,7 @@
   {
     "AchievementRecord": "arsenal",
     "Name": "ARSENAL",
-    "How": "All three attack forms and a defence, in one turn.",
+    "How": "All three attack forms and a defense, in one turn.",
     "Said": [
       "Everything the deck can be, on the table at once.",
       "Four forms. There is no fifth."
@@ -99,7 +99,7 @@
     "Name": "PRISM",
     "How": "Five attacks of one form or one card, in all five elements.",
     "Said": [
-      "One shape, every colour.",
+      "One shape, every color.",
       "The narrowest hand in the game and the widest, at the same time."
     ],
     "Trigger": {
@@ -136,7 +136,7 @@
     "How": "Play 300 slashing cards.",
     "Said": [
       "Three hundred of them, and the edge has not dulled.",
-      "You have a favourite. That is fine. It is also readable."
+      "You have a favorite. That is fine. It is also readable."
     ],
     "Trigger": { "Kind": "count", "Counter": "form:slash", "N": 300 }
   },

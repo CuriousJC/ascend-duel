@@ -13,14 +13,14 @@ import (
 // chill is read when a turn is taken; a miss is rolled against the attack it interrupts.
 //
 // **A status is data, and it is no longer the same object as an element** *(2026-08-17)*. It was
-// four constants indexed by colour until then, which made two things inexpressible that the relic
-// grammar needs: a second fire status, and a status arriving from something that is not a colour at
-// all. `data/statuses.json` is the catalogue; this file registers it and holds the lifecycle.
+// four constants indexed by color until then, which made two things inexpressible that the relic
+// grammar needs: a second fire status, and a status arriving from something that is not a color at
+// all. `data/statuses.json` is the catalog; this file registers it and holds the lifecycle.
 //
 // **Nothing applies a status by itself.** A fire attack is a plain attack with a red border unless
 // something says otherwise, and the only thing that says otherwise today is a relic the attacker is
 // wearing — an `apply-status` effect at the `attack-lands` moment, naming the status by its record
-// key. See relic.go. The reason is unchanged from 2026-08-16: statuses given away with the colour
+// key. See relic.go. The reason is unchanged from 2026-08-16: statuses given away with the color
 // left the first relics with nothing to *be*.
 //
 // **One lifecycle for all of them, so it is learned once**:
@@ -155,7 +155,7 @@ type StatusSpec struct {
 }
 
 // The status registry, in file order. Package state for exactly the reason the concept registry is:
-// it is loaded once from embedded data, never rewritten, and threading a catalogue through every
+// it is loaded once from embedded data, never rewritten, and threading a catalog through every
 // method and every test would describe nothing that changes.
 var (
 	statusRegistry []StatusSpec
@@ -198,9 +198,9 @@ func registerStatus(s data.StatusData) error {
 		return fmt.Errorf("%s lasts %d rounds, so it is over before it is felt", s.StatusRecord, s.Rounds)
 	}
 
-	// Nothing in the game stops a blow outright and nothing misses every time: a defence that
+	// Nothing in the game stops a blow outright and nothing misses every time: a defense that
 	// always works deletes a whole opposing turn for the price of one card, which is what one blow
-	// per turn cannot afford. The same bound RegisterConcept holds against a 100% defence.
+	// per turn cannot afford. The same bound RegisterConcept holds against a 100% defense.
 	if effect == EffectMissChance && s.Amount >= 100 {
 		return fmt.Errorf("%s misses %d%% of attacks, and nothing may stop a blow outright", s.StatusRecord, s.Amount)
 	}
@@ -266,7 +266,7 @@ func AllStatuses() []StatusID {
 	return out
 }
 
-// StatusKeys is every record key, sorted, for a tool or a test that wants to walk the catalogue
+// StatusKeys is every record key, sorted, for a tool or a test that wants to walk the catalog
 // without depending on file order.
 func StatusKeys() []string {
 	out := make([]string, 0, len(statusRegistry))

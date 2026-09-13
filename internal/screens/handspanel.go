@@ -55,8 +55,8 @@ package screens
 //
 // **Both of a rung's counters are drawn on every rung, and they sit apart** *(owner's call,
 // 2026-09-07)*. The **level is a parenthetical on the title** — `PAIR (LVL 1)` — because it is
-// part of what this rung *is* on this run, the same fact the multiplier is already coloured for.
-// The **plays count is centred down the card band**, beside the last card — `PLAYED: 0` — because
+// part of what this rung *is* on this run, the same fact the multiplier is already colored for.
+// The **plays count is centered down the card band**, beside the last card — `PLAYED: 0` — because
 // it is a fact about the run rather than about the rung. Neither is omitted at zero: a blank says
 // the panel has no opinion, which is how a player comes to think a level is something only some
 // rungs have.
@@ -153,8 +153,8 @@ type handsRow struct {
 	level int
 
 	// raised is whether a stone has moved this rung, which is what the figure is written in the
-	// relic pink for. **A colour rather than a second number**: the panel says what a hand pays
-	// this run, and the pink is what stops that reading as the catalogue having changed.
+	// relic pink for. **A color rather than a second number**: the panel says what a hand pays
+	// this run, and the pink is what stops that reading as the catalog having changed.
 	raised bool
 }
 
@@ -163,9 +163,9 @@ type handsRow struct {
 // **Sorted by multiplier, then by axis, then by ID.** The axis tie-break is the matcher's own —
 // narrowest first, see combat.Axis — so two rungs paying the same read in the order the rules
 // would pick between them, and the ID is the last key so the order cannot depend on how the
-// catalogue happens to be filed.
+// catalog happens to be filed.
 func handsRows(c handsContents) []handsRow {
-	// **The holder's ladder, not the catalogue's** *(2026-08-27)*. A stone raises one rung for one
+	// **The holder's ladder, not the catalog's** *(2026-08-27)*. A stone raises one rung for one
 	// run, and a panel showing the shipped figure would be the one place in the game where what a
 	// hand pays is stated wrongly — the resolver, the preview and this all read
 	// `Duelist.HandTable` now, so they cannot come to three answers.
@@ -191,7 +191,7 @@ func handsRows(c handsContents) []handsRow {
 			sets:   sets,
 			plays:  c.plays[h.Key],
 			level:  c.holder.HandStoneCount(h.Key) + 1,
-			raised: h.Multiplier != catalogueMultiplier(base, h.Key),
+			raised: h.Multiplier != catalogMultiplier(base, h.Key),
 		})
 	}
 	return out
@@ -209,7 +209,7 @@ func handsRows(c handsContents) []handsRow {
 // words where the cards belong — see decks.Example, which repeats a card rather than coming back
 // empty. Whether a rung is reachable is a fact about today's deck; the rung is the ladder.
 // **A rung read on more than one axis is illustrated once per axis** *(owner's call, 2026-09-07)*,
-// in the catalogue's own axis order. `Hand.On` is what narrows the rung to one reading, and it is
+// in the catalog's own axis order. `Hand.On` is what narrows the rung to one reading, and it is
 // the matcher's own function — so each set really is a hand that rung would score, rather than
 // three examples this panel invented.
 func handsExamples(c handsContents, h combat.Hand) [][]combat.Card {
@@ -326,14 +326,14 @@ var handsCardPitch = cards.Token.Width + 2
 
 // The panel's ink. It is written on the modal's dark fill, so these run light.
 //
-// **The multiplier is the one coloured figure**, because it is the one thing on the row that is
+// **The multiplier is the one colored figure**, because it is the one thing on the row that is
 // not a description: the name says which rung, the cards say what builds it, and the multiplier
 // is what forming it pays.
 var (
 	handsNameInk = color.RGBA{R: 236, G: 232, B: 226, A: 255}
 
 	// The tally is written in the ground's quietest ink. **No hue of its own** - the wheel is full,
-	// and the two counters are told apart by their words rather than by a colour a player would
+	// and the two counters are told apart by their words rather than by a color a player would
 	// have to learn. See CLAUDE.md on hue belonging to the elements.
 	handsTallyInk = color.RGBA{R: 150, G: 146, B: 141, A: 255}
 	handsMultInk  = color.RGBA{R: 240, G: 198, B: 108, A: 255}
@@ -459,7 +459,7 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 		// than given a hue of its own: on a card it means "a relic moved this figure", and here it
 		// means "a stone did" — the shared reading is *something you bought moved this number*,
 		// which is the thing a player needs to see. A second pink-ish hue for the second source
-		// would be two colours a player has to tell apart to learn the same fact.
+		// would be two colors a player has to tell apart to learn the same fact.
 		multInk = boostInk
 	}
 
@@ -467,12 +467,12 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 
 	// **The cards are drawn as themselves**, through the same spec every other screen builds, so
 	// a token cannot say something the card in the hand does not. `enabled` is true and nothing is
-	// selected: this is a catalogue, and a dimmed card here would mean "unaffordable" against a
+	// selected: this is a catalog, and a dimmed card here would mean "unaffordable" against a
 	// budget no round has yet set.
 	x := left
 	for i, set := range row.sets {
 		if i > 0 {
-			// **"OR" in the air between two sets**, centred both ways in the gap. It replaced a
+			// **"OR" in the air between two sets**, centered both ways in the gap. It replaced a
 			// hairline: a rule says the sets are separate and leaves what separates them to be
 			// worked out, where the word says the rung takes whichever of them the turn makes.
 			write(x-handsSetGap/2-widthOf(handsOrWord, handsOrSize)/2,
@@ -486,7 +486,7 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 	}
 
 	// **The plays count takes the seat beside the last card and the multiplier is justified to the
-	// column's edge** *(owner's call, 2026-09-07)*. Both are centred down the token band, which is
+	// column's edge** *(owner's call, 2026-09-07)*. Both are centered down the token band, which is
 	// what stops either reading as a caption on whichever card it happens to sit next to; the
 	// multiplier gets the justified edge because eighteen of them in a line is a ladder that can be
 	// read down, which is the whole of what this panel is for.
@@ -509,7 +509,7 @@ const handsOrWord = "OR"
 // already written in the relic pink to say.
 //
 // **Shouted, and it is free.** kubasta is monospaced, so the capitals measure exactly what the
-// catalogue's own casing did; nothing about the layout depends on this and the whole of what it
+// catalog's own casing did; nothing about the layout depends on this and the whole of what it
 // buys is a panel with nothing lower case on it.
 func handsTitleText(row handsRow) string {
 	return fmt.Sprintf("%s (LVL %d)", strings.ToUpper(row.name), row.level)
@@ -538,8 +538,8 @@ const (
 	handsTallyDrop = handsNameSize - handsTallySize
 )
 
-// handsMultDrop centres a line of type down the token band. **Against the cards, not against the
-// row**: the name sits above the band, so a figure centred on the whole row would ride high of
+// handsMultDrop centers a line of type down the token band. **Against the cards, not against the
+// row**: the name sits above the band, so a figure centered on the whole row would ride high of
 // the thing it is pricing.
 func handsMultDrop(size float64) int {
 	return (cards.Token.Height - int(size)) / 2
@@ -593,10 +593,10 @@ func ownedHands(gs *state.GlobalState) handsContents {
 	return c
 }
 
-// catalogueMultiplier is what one rung pays as shipped, by key. It is the figure a raised rung is
+// catalogMultiplier is what one rung pays as shipped, by key. It is the figure a raised rung is
 // compared against, and it is looked up rather than remembered so that the comparison cannot drift
 // from what `hands.json` actually says.
-func catalogueMultiplier(base []combat.Hand, key string) int {
+func catalogMultiplier(base []combat.Hand, key string) int {
 	for _, h := range base {
 		if h.Key == key {
 			return h.Multiplier

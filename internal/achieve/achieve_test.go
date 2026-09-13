@@ -7,13 +7,13 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 
 	// **Imported for its side effect as much as for its cards.** Registering the enemy decks is
-	// what puts a genuinely formless, colourless card in the registry, and a formless card is the
+	// what puts a genuinely formless, colorless card in the registry, and a formless card is the
 	// case every absence rule here turns on. `combat.Card{}` is not one — concept zero is a real
 	// player card with a real form.
 	"github.com/curiousjc/ascend-duel/internal/decks"
 )
 
-// drabCard is an enemy's card: no form, no colour. The absence, rather than a card that happens to
+// drabCard is an enemy's card: no form, no color. The absence, rather than a card that happens to
 // be the zero value.
 func drabCard(t *testing.T) combat.Card {
 	t.Helper()
@@ -27,7 +27,7 @@ func drabCard(t *testing.T) combat.Card {
 	}
 	c := cards[0]
 	if c.Form() != combat.FormNone || c.Element != combat.Basic {
-		t.Fatalf("an enemy card is meant to carry neither a form nor a colour, got %v/%v",
+		t.Fatalf("an enemy card is meant to carry neither a form nor a color, got %v/%v",
 			c.Form(), c.Element)
 	}
 	return c
@@ -42,15 +42,15 @@ func card(label string, e combat.Element) combat.Card {
 	return combat.Of(id, e)
 }
 
-// TestTheCatalogueLoads is the whole validation pass, run as a test rather than only at launch.
+// TestTheCatalogLoads is the whole validation pass, run as a test rather than only at launch.
 //
 // **It is the one that matters most**, because every other check in this file is about a hand-built
 // fixture and this one is about the file that ships. `load` panics on a bad record, so a failure
-// here is the catalogue actually being wrong.
-func TestTheCatalogueLoads(t *testing.T) {
+// here is the catalog actually being wrong.
+func TestTheCatalogLoads(t *testing.T) {
 	all := Loaded().All()
 	if len(all) == 0 {
-		t.Fatal("the catalogue is empty")
+		t.Fatal("the catalog is empty")
 	}
 	for _, a := range all {
 		if a.Key == "" || a.Name == "" || a.How == "" {
@@ -80,7 +80,7 @@ func TestEveryShippedAchievementIsReachable(t *testing.T) {
 	// that looks identical to one nobody has earned yet.
 	//
 	// Four attack forms are not available at once — there are three — so this is three attack
-	// forms across five elements, plus a defence, which is deliberately the hardest single turn the
+	// forms across five elements, plus a defense, which is deliberately the hardest single turn the
 	// deck can build.
 	widest := []combat.Card{
 		card("Jab", combat.Fire),
@@ -175,10 +175,10 @@ func TestFourElementsIsNotFive(t *testing.T) {
 	}
 }
 
-// TestArsenalNeedsTheDefenceBesideTheThreeForms is the achievement the clause-level filter exists
+// TestArsenalNeedsTheDefenseBesideTheThreeForms is the achievement the clause-level filter exists
 // for: three attack forms is Weaponmaster, and Arsenal is that plus something the attack filter
 // cannot see.
-func TestArsenalNeedsTheDefenceBesideTheThreeForms(t *testing.T) {
+func TestArsenalNeedsTheDefenseBesideTheThreeForms(t *testing.T) {
 	threeForms := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Cut", combat.Fire),
@@ -192,23 +192,23 @@ func TestArsenalNeedsTheDefenceBesideTheThreeForms(t *testing.T) {
 		t.Error("stab, slash and crush together is the weaponmaster")
 	}
 	if got["arsenal"] {
-		t.Error("three attack forms with no defence is not the arsenal")
+		t.Error("three attack forms with no defense is not the arsenal")
 	}
 
-	withDefence := append(append([]combat.Card{}, threeForms...), card("Brace", combat.Fire))
+	withDefense := append(append([]combat.Card{}, threeForms...), card("Brace", combat.Fire))
 	got = map[string]bool{}
-	for _, k := range Loaded().ByTurn(withDefence) {
+	for _, k := range Loaded().ByTurn(withDefense) {
 		got[k] = true
 	}
 	if !got["arsenal"] {
-		t.Error("three attack forms and a defence is the arsenal")
+		t.Error("three attack forms and a defense is the arsenal")
 	}
 }
 
-// TestADefenceIsNotAnAttackForm is what stops Weaponmaster being earned by two attacks and a Brace.
+// TestADefenseIsNotAnAttackForm is what stops Weaponmaster being earned by two attacks and a Brace.
 // **Defend is a fourth form** and joins hands like anything else, so the only thing keeping it out
 // of an attack-form count is the clause's own category filter.
-func TestADefenceIsNotAnAttackForm(t *testing.T) {
+func TestADefenseIsNotAnAttackForm(t *testing.T) {
 	turn := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Cut", combat.Fire),
@@ -216,14 +216,14 @@ func TestADefenceIsNotAnAttackForm(t *testing.T) {
 	}
 	for _, k := range Loaded().ByTurn(turn) {
 		if k == "weaponmaster" {
-			t.Error("a defence is not a third attack form")
+			t.Error("a defense is not a third attack form")
 		}
 	}
 }
 
-// TestPrismWantsOneShapeInEveryColour, both ways round: a form five-of-a-kind and a card
+// TestPrismWantsOneShapeInEveryColor, both ways round: a form five-of-a-kind and a card
 // five-of-a-kind are one achievement, which is what the pattern alternation is for.
-func TestPrismWantsOneShapeInEveryColour(t *testing.T) {
+func TestPrismWantsOneShapeInEveryColor(t *testing.T) {
 	oneForm := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Thrust", combat.Ice),
@@ -254,7 +254,7 @@ func TestPrismWantsOneShapeInEveryColour(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Error("one form or one card in all five colours is the prism")
+			t.Error("one form or one card in all five colors is the prism")
 		}
 	}
 	for _, k := range Loaded().ByTurn(mixed) {

@@ -13,8 +13,8 @@ package screens
 // screen's does, on the same typewriter, and the hint keeps the line under it.
 //
 // **Nothing here pays.** `proseLine.pays` is what makes the reward screen's figures land in the
-// purse; these lines are flavour and leave it alone, which is why the typewriter is reused rather
-// than copied — the claims are a field, not a behaviour.
+// purse; these lines are flavor and leave it alone, which is why the typewriter is reused rather
+// than copied — the claims are a field, not a behavior.
 
 import (
 	"image"
@@ -26,7 +26,7 @@ import (
 
 // shopkeeperLines is the greeting *(owner's wording, 2026-08-22)*.
 //
-// **The rasp is one run in the relic pink**, the colour this game already spends on relics and on
+// **The rasp is one run in the relic pink**, the color this game already spends on relics and on
 // the chrome around them — so the sentence that is the creature talking is visibly not the
 // sentence that is the room being described.
 func shopkeeperLines() []proseLine {

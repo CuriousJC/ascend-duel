@@ -13,28 +13,28 @@ package session
 // two tiers above it are 5 and 7. What a relic *sells* for comes off the same tier: 1, 2 or 3,
 // written down rather than derived, because a quarter rounded up paid an uncommon and a rare alike.
 //
-// **Nothing prices these numbers but judgement.** Nothing in the repo measures what a relic does to a
+// **Nothing prices these numbers but judgment.** Nothing in the repo measures what a relic does to a
 // duel, so what a doubling of every slash card is worth in vitae is a guess that has never been
 // checked. Said out loud here because the alternative is a table of figures that looks derived.
 
-// RelicPrice is what the shop charges for a relic, and whether the catalogue holds one at all.
+// RelicPrice is what the shop charges for a relic, and whether the catalog holds one at all.
 func RelicPrice(key string) (int, bool) {
 	p, ok := relicPrices[key]
 	return p, ok
 }
 
 // RelicWeight is how many tickets a relic holds in the shelf draw, from its rarity. Zero for a relic
-// the catalogue does not hold, which is a relic nothing can offer.
+// the catalog does not hold, which is a relic nothing can offer.
 //
 // **The shelf asks rather than reading a record**, the same line RelicPrice draws: what a tier is
 // worth in tickets is the shop's arithmetic, not a screen's.
 func RelicWeight(key string) int { return relicWeights[key] }
 
 // SellValue is what taking a relic off pays back: the tier's own figure — 1, 2 or 3. Zero for a relic
-// the catalogue does not hold, which is a relic nothing can be wearing.
+// the catalog does not hold, which is a relic nothing can be wearing.
 func SellValue(key string) int { return relicSells[key] }
 
-// CanBuy reports whether this run could buy that relic right now: the catalogue holds it, it is not
+// CanBuy reports whether this run could buy that relic right now: the catalog holds it, it is not
 // already on, there is a finger free, and the purse covers it.
 //
 // **It exists so the shelf can dim a card rather than swallow a click.** Buy checks the same four
@@ -47,7 +47,7 @@ func (s *Session) CanBuy(key string) bool {
 	return s.canWear(key)
 }
 
-// canWear is the row's half of the question: the catalogue holds it, it is not already worn, and
+// canWear is the row's half of the question: the catalog holds it, it is not already worn, and
 // the fifth finger is not spoken for. Shared with Wear so the shelf and the purchase cannot come to
 // different conclusions.
 func (s *Session) canWear(key string) bool {
@@ -123,7 +123,7 @@ func (s *Session) Sell(key string) bool {
 // the whole design — the price buys the *choice*, and the three that are not chosen are gone.
 //
 // **Both cost the same and both offer four** *(owner's call, 2026-08-27)*. They are the same
-// bargain pointed at the two catalogues the run can alter — the ladder and the deck — and pricing
+// bargain pointed at the two catalogs the run can alter — the ladder and the deck — and pricing
 // or sizing them differently would be saying one of those is worth more without anything to say it
 // with.
 

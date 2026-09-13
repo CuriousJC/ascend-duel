@@ -23,7 +23,7 @@ const (
 	KindRoundStart EventKind = iota
 	KindAction
 
-	// KindNegated is the blow meeting a raised defence: Action is the card that answered it and
+	// KindNegated is the blow meeting a raised defense: Action is the card that answered it and
 	// Amount is what is left of the blow afterwards.
 	//
 	// **One kind, one card.** It was three kinds for three cards that differed only in percentage;
@@ -53,7 +53,7 @@ const (
 	//
 	// **It exists because a shield row has to empty when the shields do.** Every other change to
 	// that count is announced — raised, and eaten one attack at a time — so an expiry that said
-	// nothing would leave the readout showing a defence the engine had already taken away, for a
+	// nothing would leave the readout showing a defense the engine had already taken away, for a
 	// whole turn. This is the same argument that makes a chilled slot emit a beat.
 	//
 	// **Only shields raise it, and only when some were standing.** A percentage guard lapsing is
@@ -90,7 +90,7 @@ const (
 	// KindChilled — a slot that resolves into nothing.
 	//
 	// It is deliberately not a KindNegated: nothing of the defender's stopped it, and a log
-	// saying a blow was "stopped cold" by a defence that was never raised would send the player
+	// saying a blow was "stopped cold" by a defense that was never raised would send the player
 	// looking for a card that is not there.
 	KindMissed
 
@@ -139,7 +139,7 @@ const (
 	// **The rules have already moved the fighting duelist by the time this is emitted**, so the
 	// grant is worth something for the rest of the fight. What it cannot do is move the *run*, which
 	// is what owns a permanent bonus — so this is the announcement the layer above reads and acts
-	// on. See screens.settleGrants, and KindVitae, which is the same division of labour.
+	// on. See screens.settleGrants, and KindVitae, which is the same division of labor.
 	//
 	// **Its own kind rather than a flag on one grant event.** The two grants travel to different
 	// places on screen — a DMG figure to the stat, a life figure to the bar — and read as different
@@ -210,16 +210,16 @@ type Event struct {
 	Rider RiderKind
 
 	// Element is the card's element on KindAction, KindMissed and KindStatus. Basic everywhere
-	// else, which is also the zero value — an event with nothing to say about colour says `basic`,
+	// else, which is also the zero value — an event with nothing to say about color says `basic`,
 	// exactly as a plain card does.
 	Element Element
 
 	// Status is which status is meant, on KindStatus and KindBurned.
 	//
 	// **It replaced reading Element for it** *(2026-08-17)*, because a status is no longer the same
-	// object as a colour: two relics can put two different statuses on the same fire card, and an
-	// event naming the colour could not say which had landed. Element still carries the card's own
-	// colour on a KindStatus, which is what the feed's swatch and its sentence are drawn from.
+	// object as a color: two relics can put two different statuses on the same fire card, and an
+	// event naming the color could not say which had landed. Element still carries the card's own
+	// color on a KindStatus, which is what the feed's swatch and its sentence are drawn from.
 	//
 	// **The zero value is a real status**, the first one registered — the hazard Action carries for
 	// concepts. It is set on the two kinds that mean it and read on no others.
@@ -245,7 +245,7 @@ type Event struct {
 	// Hand is set on KindHand and names what the attack phase formed. The screen looks it up
 	// with HandByID rather than being told its name here, so a hand renamed is renamed once.
 	//
-	// **It always names a hand**, because `blowFor` falls back to the catalogue's High Card: a
+	// **It always names a hand**, because `blowFor` falls back to the catalog's High Card: a
 	// turn with an attack in it produces a blow, and a blow the engine could not name is the one
 	// failure this model can have. `HandNone` is the zero value and reaches a screen only on an
 	// event that is not a KindHand. The comment here claimed the opposite until 2026-08-19, and a
@@ -269,7 +269,7 @@ type Event struct {
 	//
 	// **Amount is the blow before the attacker's weight and before anything the defender raised**,
 	// so it is what the hand was worth rather than what landed. What landed is the KindDamage
-	// after it, and the gap between the two figures is exactly what the defence was worth.
+	// after it, and the gap between the two figures is exactly what the defense was worth.
 	Base int
 
 	// HandCards and HandCardCount are set on KindHand alongside Hand: **which cards of this
@@ -405,7 +405,7 @@ type Event struct {
 //
 // **It holds a whole Card rather than a bare concept** since 2026-08-12. A slot is what both
 // the engine and the screen walk, so anything that has to know a card's element while a round is
-// being ordered — a hand matching on colour, a row drawing a border — reads it here.
+// being ordered — a hand matching on color, a row drawing a border — reads it here.
 type Slot struct {
 	Side  Side
 	Index int

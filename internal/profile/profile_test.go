@@ -167,7 +167,7 @@ func TestAFieldThisBuildDoesNotKnowSurvivesASave(t *testing.T) {
 	var back map[string]any
 	readJSON(t, path, &back)
 	if back["somethingElse"] == nil {
-		t.Error("an unrecognised field must be written back, not dropped")
+		t.Error("an unrecognized field must be written back, not dropped")
 	}
 	if back["tutorialSeen"] != true {
 		t.Error("and this build's own change still lands")
@@ -195,9 +195,9 @@ func TestASaveLeavesNoTemporaryFile(t *testing.T) {
 	}
 }
 
-// TestOpenHonoursTheEnvironment keeps the one escape hatch working: without it, starting again as a
+// TestOpenHonorsTheEnvironment keeps the one escape hatch working: without it, starting again as a
 // new player means finding a file under AppData by hand.
-func TestOpenHonoursTheEnvironment(t *testing.T) {
+func TestOpenHonorsTheEnvironment(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv(DirEnv, dir)
 	if got := Open().Dir(); got != dir {

@@ -32,11 +32,11 @@ type Button struct {
 	State   ButtonState
 	OnClick func()
 
-	// BaseColor is the button at full strength — the colour it reaches when pressed.
+	// BaseColor is the button at full strength — the color it reaches when pressed.
 	// It rests dimmer than this and brightens toward it on hover, so a button only has
-	// to name the one colour it actually wants to be. The zero value means "use the
+	// to name the one color it actually wants to be. The zero value means "use the
 	// default", which is why buttons that never set it keep the original olive.
-	// Disabled ignores it — a disabled button should not still read as its own colour.
+	// Disabled ignores it — a disabled button should not still read as its own color.
 	BaseColor color.RGBA
 
 	// PressedInside records that the mouse went down while over this button, so
@@ -67,7 +67,7 @@ type Button struct {
 	// starts false, which is what forces the first paint — a zero-valued Button has an
 	// Image full of nothing and no state worth trusting.
 	//
-	// These are data about the cached render, not behaviour, so they belong on the struct
+	// These are data about the cached render, not behavior, so they belong on the struct
 	// like everything else here. Only DrawButton writes them.
 	Painted         bool
 	PaintedState    ButtonState

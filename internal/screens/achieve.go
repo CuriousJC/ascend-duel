@@ -4,9 +4,9 @@ package screens
 //
 // `internal/achieve` decides what a turn, a tally or a moment has earned and knows nothing about a
 // profile; `save.go` writes files and knows nothing about a card. This is the seam: four raisers
-// that ask the catalogue a question and hand whatever comes back to `award`.
+// that ask the catalog a question and hand whatever comes back to `award`.
 //
-// **Everything is idempotent and nothing is filtered upstream.** The catalogue reports every
+// **Everything is idempotent and nothing is filtered upstream.** The catalog reports every
 // achievement a moment satisfies, including ones the player got months ago; `profile.Award` reports
 // whether anything actually changed, and that boolean is what stops the toast firing twice. So a
 // raiser can be called on every win, every turn and every altered card without a caller having to

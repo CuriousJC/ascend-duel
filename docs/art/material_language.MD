@@ -16,7 +16,7 @@ is a picture that says the wrong thing.
 
 ## 1. What is already consistent
 
-### Colour is the element, everywhere, without exception
+### Color is the element, everywhere, without exception
 
 | Element | Gem | Raw matter |
 |---|---|---|
@@ -48,9 +48,9 @@ the split is defensible — but it should be stated rather than left to be redis
 `growth-crush` use the three stones and agree with each other. The form statuses and the
 form weapons use the three shapes.
 
-### The form statuses are the cleanest thing in the catalogue
+### The form statuses are the cleanest thing in the catalog
 
-`sundering`, `bruise` and `strike` say **shape for the form the relic triggers on, colour
+`sundering`, `bruise` and `strike` say **shape for the form the relic triggers on, color
 for the element of the status it applies** — an obsidian scimitar with a purple gem is
 "slash applies WEAKENED". Two facts, two channels, no collision. It is worth naming as the
 pattern every two-axis relic should follow.
@@ -144,7 +144,7 @@ off the picture** — the player sees what a relic is worth before reading its l
 ```
 
 Every weapon already carries one of these; what changes is which. **The argument against is
-that the art is already drawn** — this is the biggest family in the catalogue and six of
+that the art is already drawn** — this is the biggest family in the catalog and six of
 them would need redrawing, so it is the most expensive item here as well as the one with
 the most to gain.
 
@@ -181,10 +181,10 @@ Twenty-one records have no `Draw`. Under the language above, most of them write 
 
 | Record | What the language implies |
 |---|---|
-| `whetted` / `hefted` / `tapered` | robes, as the elemental discounts are — but in the form's stone rather than an element's colour: malachite green, moonstone grey, marble white |
-| `weight-of-the-earth` / `struck-by-lightning` / `sharp-as-ice` | the form-status pattern exactly: the form's weapon shape in the element's colour |
+| `whetted` / `hefted` / `tapered` | robes, as the elemental discounts are — but in the form's stone rather than an element's color: malachite green, moonstone gray, marble white |
+| `weight-of-the-earth` / `struck-by-lightning` / `sharp-as-ice` | the form-status pattern exactly: the form's weapon shape in the element's color |
 | `swarm` / `crown` | a rung is a material, so a swarm of the 1 AP material and a crown of the 3 AP one |
-| `demotion-one` / `-two` / `-three` | already rings with an eroding line; the line's colour should be the rung it erodes **to** |
+| `demotion-one` / `-two` / `-three` | already rings with an eroding line; the line's color should be the rung it erodes **to** |
 | `momentum` / `ebb-and-flow` | shields, and the game has no shield motif yet — the one genuinely new picture in the list |
 | `echo` | the twice-wrapped ring is taken; three of something, each fainter than the last |
 | `onslaught` / `braced` | a discount is a robe, and these are discounts on everything |
@@ -202,7 +202,7 @@ chosen rather than derived, and both come up more than once.
 
 If only one thing is taken from this:
 
-- **Colour is the element. Shape is the form.** Both already hold — write them down.
+- **Color is the element. Shape is the form.** Both already hold — write them down.
 - **One material per axis**, used by the ring band, the jar lid and the amulet chain alike.
   Jade, indigo and sandstone are the candidates.
 - **Materials are a ladder, and the ladder is the AP cost.** Wood, rust, steel, silver,

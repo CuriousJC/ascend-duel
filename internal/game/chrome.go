@@ -85,8 +85,8 @@ const (
 //
 // DUEL! is crimson and Discard is yellow because they are choices inside a duel. This is not a
 // move — it changes nothing about a run and never becomes unavailable for a game reason — so
-// it takes a colour that says "this is the program, not the fight". Same argument as the relic
-// row's backing being grey rather than pink, and the settings screen's sliders share it.
+// it takes a color that says "this is the program, not the fight". Same argument as the relic
+// row's backing being gray rather than pink, and the settings screen's sliders share it.
 var settingsButtonColor = color.RGBA{R: 92, G: 96, B: 108, A: 255}
 
 // openSettings goes to the settings screen, remembering where the player was.
@@ -229,7 +229,7 @@ func (g *Game) updateLedgerButton(gs *state.GlobalState) {
 }
 
 // setChromeEnabled is the frame's own enable, matching screens.setEnabled: a disabled button
-// ignores its colour and reads as unavailable first. **It only ever leaves a disabled button**,
+// ignores its color and reads as unavailable first. **It only ever leaves a disabled button**,
 // never a hovered one, so a control re-enabled under a cursor that has since moved does not come
 // back lit.
 func setChromeEnabled(b *models.Button, on bool) {
@@ -246,7 +246,7 @@ func setChromeEnabled(b *models.Button, on bool) {
 //
 // **The glyph is drawn by the frame, over the button, rather than being a field on the
 // widget** — the same split drawDiscardsLeft makes on the combat screen, and for the same
-// reason. models.Button is shared by every screen and holds one centred string; giving it a
+// reason. models.Button is shared by every screen and holds one centered string; giving it a
 // glyph slot would put this control's needs into all of them. It has to come after
 // DrawButton, which blits an opaque cached face.
 func (g *Game) drawChrome(gs *state.GlobalState, screen *ebiten.Image) {
@@ -255,7 +255,7 @@ func (g *Game) drawChrome(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 	systems.DrawButton(gs, screen, g.settingsButton)
 
-	// Centred on the face. Measured rather than assumed — the chrome glyphs are 32 where the
+	// Centered on the face. Measured rather than assumed — the chrome glyphs are 32 where the
 	// card's damage sword is 64, and SizeOf is the authority.
 	kind := systems.GlyphGear
 	size := systems.SizeOf(kind)

@@ -56,7 +56,7 @@ func record(t *testing.T, seen map[int64]string, seed int64, what string) {
 }
 
 // TestAFightIsAFunctionOfItsIndex pins the property that makes a retry a replay: the same fight
-// of the same run seeds identically however many times it is played, and neighbouring fights do
+// of the same run seeds identically however many times it is played, and neighboring fights do
 // not. Nothing re-rolls a run until Session exists, and a defeat must deal that fight again
 // rather than a different one.
 func TestAFightIsAFunctionOfItsIndex(t *testing.T) {

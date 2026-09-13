@@ -57,8 +57,8 @@ win to alter one card in your deck. **Creatures** sorted into floor bands, each 
 own deck, and **bosses** guarding every stairway. Every one of those is a file in
 [data/](data/), and they are still being authored.
 
-**Every catalogue is browsable without launching the game.** [docs/sheets/](docs/sheets/)
-holds a rendered page per catalogue — every card, relic, essence, hand, creature and boss, as
+**Every catalog is browsable without launching the game.** [docs/sheets/](docs/sheets/)
+holds a rendered page per catalog — every card, relic, essence, hand, creature and boss, as
 the game actually draws them, with the rules that fire beside the text a player reads.
 Open [docs/sheets/index.html](docs/sheets/index.html).
 
@@ -67,9 +67,9 @@ Open [docs/sheets/index.html](docs/sheets/index.html).
 - **[Ebitengine v2](https://ebitengine.org/)** for the window, input and drawing. No UI
   toolkit — the widgets are hand-rolled.
 - **Generated art and audio.** The glyphs on the cards are drawn by code at run time, and
-  the score is a Standard MIDI file synthesised to audio at startup rather than a shipped
+  the score is a Standard MIDI file synthesized to audio at startup rather than a shipped
   recording. Both choices are about provenance as much as size: generated output has no
-  licence question attached to it.
+  license question attached to it.
 - **No `math/rand` globals, no `time.Now()` in the rules.** A run is meant to be
   reproducible from its code, so every roll comes off an explicit stream salted from the
   run seed.
@@ -81,8 +81,8 @@ Open [docs/sheets/index.html](docs/sheets/index.html).
 | [MECHANICS.md](MECHANICS.md) | what the game *is* — elements, cards, hands, relics, the tower |
 | [TODO.md](TODO.md) | what to build next — open work only |
 | [ideas.md](ideas.md) | the unfiltered inbox |
-| [CLAUDE.md](CLAUDE.md) | how the code is organised and the conventions it follows |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | the contributor licence grant |
+| [CLAUDE.md](CLAUDE.md) | how the code is organized and the conventions it follows |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | the contributor license grant |
 
 ## License
 

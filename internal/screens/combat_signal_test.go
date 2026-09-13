@@ -12,7 +12,7 @@ import (
 // both halves of the deferral have somewhere to fire from.
 func signalScene() *CombatScene {
 	s := &CombatScene{}
-	s.theatre.resolved = []resolvedCard{
+	s.theater.resolved = []resolvedCard{
 		{card: combat.Plain(combat.Bash)},
 		{card: combat.Plain(combat.Bash)},
 	}
@@ -45,16 +45,16 @@ func TestARiderEventIsParkedRatherThanDrawn(t *testing.T) {
 	if !s.noteSignal(grantEvent(combat.KindGrantedDMG, combat.RiderGolden, 1, 1)) {
 		t.Fatal("a golden card's grant was not taken as a signal")
 	}
-	if len(s.theatre.pending) != 1 {
-		t.Fatalf("%d signals parked, want 1", len(s.theatre.pending))
+	if len(s.theater.pending) != 1 {
+		t.Fatalf("%d signals parked, want 1", len(s.theater.pending))
 	}
-	if len(s.theatre.signals) != 0 {
+	if len(s.theater.signals) != 0 {
 		t.Errorf("%d signals went straight to the stage; a played card fires when it scores",
-			len(s.theatre.signals))
+			len(s.theater.signals))
 	}
-	if s.theatre.pending[0].seat != 1 {
+	if s.theater.pending[0].seat != 1 {
 		t.Errorf("the signal parked against seat %d, want the event's own Slot of 1",
-			s.theatre.pending[0].seat)
+			s.theater.pending[0].seat)
 	}
 }
 
@@ -66,18 +66,18 @@ func TestAHeldPaymentFiresFromTheHandAndAPlayedOneFromTheTable(t *testing.T) {
 	s.noteSignal(grantEvent(combat.KindVitae, combat.RiderSilver, 0, 4))
 	s.noteSignal(grantEvent(combat.KindVitae, combat.RiderVitaeInHand, 0, 3))
 
-	if len(s.theatre.pending) != 2 {
-		t.Fatalf("%d signals parked, want 2", len(s.theatre.pending))
+	if len(s.theater.pending) != 2 {
+		t.Fatalf("%d signals parked, want 2", len(s.theater.pending))
 	}
-	if s.theatre.pending[0].held {
+	if s.theater.pending[0].held {
 		t.Error("a played silver card was parked as held")
 	}
-	if !s.theatre.pending[1].held {
+	if !s.theater.pending[1].held {
 		t.Error("a card kept back was parked as played")
 	}
 
 	// The held one takes a seat in the hand rather than the Slot it never had.
-	if got := s.theatre.pending[1].seat; got != 0 {
+	if got := s.theater.pending[1].seat; got != 0 {
 		t.Errorf("the held signal sits at hand seat %d, want 0", got)
 	}
 }
@@ -90,10 +90,10 @@ func TestTwoHeldCopiesTakeTwoSeats(t *testing.T) {
 	s.noteSignal(grantEvent(combat.KindVitae, combat.RiderVitaeInHand, 0, 3))
 	s.noteSignal(grantEvent(combat.KindVitae, combat.RiderVitaeInHand, 0, 3))
 
-	if len(s.theatre.pending) != 2 {
-		t.Fatalf("%d signals parked, want 2", len(s.theatre.pending))
+	if len(s.theater.pending) != 2 {
+		t.Fatalf("%d signals parked, want 2", len(s.theater.pending))
 	}
-	if a, b := s.theatre.pending[0].seat, s.theatre.pending[1].seat; a == b {
+	if a, b := s.theater.pending[0].seat, s.theater.pending[1].seat; a == b {
 		t.Errorf("both held signals took hand seat %d", a)
 	}
 }
@@ -111,7 +111,7 @@ func TestHeldSignalsGoTogetherAndPlayedOnesGoBySeat(t *testing.T) {
 	if got := s.releaseHeldSignals(); got != 2 {
 		t.Errorf("%d held signals went, want both", got)
 	}
-	if got := len(s.theatre.pending); got != 2 {
+	if got := len(s.theater.pending); got != 2 {
 		t.Errorf("%d signals still parked, want the two played ones", got)
 	}
 
@@ -124,12 +124,12 @@ func TestHeldSignalsGoTogetherAndPlayedOnesGoBySeat(t *testing.T) {
 	if got := s.releaseSeatSignals(combat.SideA, 1); got != 1 {
 		t.Errorf("seat 1 released %d signals, want 1", got)
 	}
-	if len(s.theatre.pending) != 0 {
-		t.Errorf("%d signals never fired", len(s.theatre.pending))
+	if len(s.theater.pending) != 0 {
+		t.Errorf("%d signals never fired", len(s.theater.pending))
 	}
 }
 
-// **A turn that never scores still fires.** A hand of nothing but defences forms no hand, so the
+// **A turn that never scores still fires.** A hand of nothing but defenses forms no hand, so the
 // sum never runs and there is no sequence to hang anything on — the boundary is the fallback, and
 // without it a golden card played into a defensive turn would be silent.
 func TestATurnThatNeverScoresFiresAtTheBoundary(t *testing.T) {
@@ -138,15 +138,15 @@ func TestATurnThatNeverScoresFiresAtTheBoundary(t *testing.T) {
 
 	// An event of the same side is not a boundary: the turn is still going.
 	s.flushSignalsAtBoundary(combat.Event{Kind: combat.KindAction, Side: combat.SideA})
-	if len(s.theatre.pending) != 1 {
+	if len(s.theater.pending) != 1 {
 		t.Fatal("a signal fired inside its own turn")
 	}
 
 	s.flushSignalsAtBoundary(combat.Event{Kind: combat.KindAction, Side: combat.SideB})
-	if len(s.theatre.pending) != 0 {
+	if len(s.theater.pending) != 0 {
 		t.Error("a signal survived the acting side changing")
 	}
-	if len(s.theatre.signals) != 1 {
+	if len(s.theater.signals) != 1 {
 		t.Error("the signal never reached the stage")
 	}
 
@@ -154,7 +154,7 @@ func TestATurnThatNeverScoresFiresAtTheBoundary(t *testing.T) {
 	s = signalScene()
 	s.noteSignal(grantEvent(combat.KindGrantedDMG, combat.RiderGolden, 0, 1))
 	s.flushSignalsAtBoundary(combat.Event{Kind: combat.KindRoundEnd, Side: combat.SideA})
-	if len(s.theatre.pending) != 0 {
+	if len(s.theater.pending) != 0 {
 		t.Error("a signal survived the end of the round")
 	}
 }
@@ -165,13 +165,13 @@ func TestASignalHoldsPlayback(t *testing.T) {
 	s.noteSignal(grantEvent(combat.KindGrantedDMG, combat.RiderGolden, 0, 1))
 	s.releaseSeatSignals(combat.SideA, 0)
 
-	if !s.theatre.running() {
+	if !s.theater.running() {
 		t.Fatal("a signal in the air does not hold the round")
 	}
 	for i := 0; i < signalFlyTicks+signalHoldTicks+2; i++ {
-		s.theatre.tick()
+		s.theater.tick()
 	}
-	if s.theatre.running() {
+	if s.theater.running() {
 		t.Error("a finished signal is still holding the round")
 	}
 }
@@ -191,7 +191,7 @@ func TestTheFigureMovesOnArrivalAndIsDroppedOnAdoption(t *testing.T) {
 	}
 
 	for i := 0; i < signalFlyTicks; i++ {
-		s.theatre.tick()
+		s.theater.tick()
 	}
 
 	if got := s.shownDMG(combat.SideA, 10); got != 13 {
@@ -208,7 +208,7 @@ func TestTheFigureMovesOnArrivalAndIsDroppedOnAdoption(t *testing.T) {
 		t.Errorf("max life shows %d, want 65", got)
 	}
 
-	s.theatre.adopted()
+	s.theater.adopted()
 	if got := s.shownDMG(combat.SideA, 13); got != 13 {
 		t.Errorf("DMG shows %d after adoption, want the model's own 13", got)
 	}
@@ -224,7 +224,7 @@ func TestAHealFillsTheBarWithoutRaisingIt(t *testing.T) {
 	s.noteSignal(grantEvent(combat.KindHealed, combat.RiderHealOnPlay, 0, 6))
 	s.releaseSeatSignals(combat.SideA, 0)
 	for i := 0; i < signalFlyTicks; i++ {
-		s.theatre.tick()
+		s.theater.tick()
 	}
 
 	if got := s.shownLife(combat.SideA, 30); got != 36 {
@@ -308,18 +308,18 @@ func TestEverySignalRiderIsAccountedFor(t *testing.T) {
 
 	for k := range riderDraws {
 		if _, ok := upgradeForRider[k]; !ok {
-			t.Errorf("riderDraws describes %v, which upgradeForRider has no colour for", k)
+			t.Errorf("riderDraws describes %v, which upgradeForRider has no color for", k)
 		}
 	}
 }
 
-// **A signal takes the colour of the rider that threw it**, out of the same table the card's own
+// **A signal takes the color of the rider that threw it**, out of the same table the card's own
 // face is washed with — so a gold card throws gold and a silver one silver, sparks and figure alike.
 //
 // **The vitae-in-hand rider is the exception, and it is the game's**: `vitaeInk` is the crimson
 // vitae is written in everywhere it is written. Silver is deliberately not swept up in it — what
 // that card is saying is that the metal came up.
-func TestASignalIsDrawnInItsRidersColour(t *testing.T) {
+func TestASignalIsDrawnInItsRidersColor(t *testing.T) {
 	for _, k := range []combat.RiderKind{combat.RiderGolden, combat.RiderSilver,
 		combat.RiderHealOnPlay} {
 
@@ -336,6 +336,6 @@ func TestASignalIsDrawnInItsRidersColour(t *testing.T) {
 	// The three that can share a screen have to be told apart, which is the whole ask.
 	gold, silver := signalInk(combat.RiderGolden), signalInk(combat.RiderSilver)
 	if gold == silver || gold == vitaeInk || silver == vitaeInk {
-		t.Errorf("gold %v, silver %v and vitae %v are not three colours", gold, silver, vitaeInk)
+		t.Errorf("gold %v, silver %v and vitae %v are not three colors", gold, silver, vitaeInk)
 	}
 }

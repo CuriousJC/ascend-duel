@@ -40,7 +40,7 @@ func TestTheRegistryRefusesACardTheRulesCannotResolve(t *testing.T) {
 		{"negative cost", data.CardData{Label: "Bad5", Verb: "attack", Amount: 100, Cost: -1}},
 
 		// Nothing reduces a blow to zero — a card that did would delete a whole opposing turn.
-		{"total defence", data.CardData{Label: "Bad6", Verb: "defend", Amount: 100, Cost: 3}},
+		{"total defense", data.CardData{Label: "Bad6", Verb: "defend", Amount: 100, Cost: 3}},
 	}
 
 	for _, c := range cases {
@@ -100,7 +100,7 @@ func TestTheDamageLadderIsTheCardsMultiplier(t *testing.T) {
 	}
 }
 
-func TestADefenceDealsNothing(t *testing.T) {
+func TestADefenseDealsNothing(t *testing.T) {
 	for _, id := range []ConceptID{Block, Brace, testGuard} {
 		if got := Plain(id).Damage(100); got != 0 {
 			t.Errorf("%v deals %d", ConceptOf(id).Label, got)

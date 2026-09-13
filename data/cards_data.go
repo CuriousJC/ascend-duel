@@ -19,7 +19,7 @@ package data
 // the source of that element on the card's owner — a relic for the player, an elemental affix for
 // an enemy — and a relic may later decide which of several fire statuses a fire card applies. A
 // card that named its own status would be deciding something that is not its to decide. So the
-// schema carries a colour and a target and stops there.
+// schema carries a color and a target and stops there.
 
 import (
 	_ "embed"
@@ -62,28 +62,28 @@ type CardData struct {
 	// crush would be saying something untrue about a deck the player cannot build hands against.
 	Form string `json:"Form"`
 
-	// Elements is which colours this concept ships in. Empty means `basic` alone.
+	// Elements is which colors this concept ships in. Empty means `basic` alone.
 	//
-	// **Every enemy card says basic today**, and the field exists anyway. An enemy's colour does
-	// nothing until an elemental affix attunes it, and affixes are not built — colouring an enemy
+	// **Every enemy card says basic today**, and the field exists anyway. An enemy's color does
+	// nothing until an elemental affix attunes it, and affixes are not built — coloring an enemy
 	// card now would hand it a free status, which is exactly what the source rule forbids.
 	Elements []string `json:"Elements"`
 
 	// Copies is how many of each element's card the deck holds.
 	//
-	// **It is the only axis an enemy deck has.** Enemy cards are all one colour, so `Elements`
+	// **It is the only axis an enemy deck has.** Enemy cards are all one color, so `Elements`
 	// cannot produce a count for them and this carries the whole deck size: a four-concept slime
 	// is a fourteen-card deck because its copies say 6, 4, 2, 2. Drop it and an enemy would draw
 	// its entire deck every round and never have a decision.
 	//
-	// For the player it is the other way round — the nine attacks ship one per colour and the
-	// three plans ship four of one colour, which is the same four cards reached along different
+	// For the player it is the other way round — the nine attacks ship one per color and the
+	// three plans ship four of one color, which is the same four cards reached along different
 	// axes. Both are needed and neither substitutes for the other.
 	Copies int `json:"Copies"`
 }
 
 // LoadDuelistCards parses the player's deck list, in file order. A slice rather than a map keyed
-// by label: the deck is built by walking this in order, and Go randomises map iteration — see the
+// by label: the deck is built by walking this in order, and Go randomizes map iteration — see the
 // determinism rules in CLAUDE.md. File order is also grid order, so the JSON reads as the table in
 // MECHANICS.md.
 func LoadDuelistCards() []CardData {

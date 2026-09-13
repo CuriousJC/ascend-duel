@@ -22,7 +22,7 @@ import (
 //
 // **It is an alias for `combat.Card` as of 2026-08-12, not a struct of its own.** The screen
 // used to own this *and* an unexported `element` type, on the honest grounds that neither meant
-// anything to the rules — a card's colour painted a border and `ResolveRound` never saw it.
+// anything to the rules — a card's color painted a border and `ResolveRound` never saw it.
 // Elements are mechanical now, so the rules own the type and the piles hold exactly what the
 // engine resolves.
 //
@@ -32,9 +32,9 @@ import (
 // better than `Card` does next to `paletteCard`, `pileEntry` and `cardFlight`.
 //
 // **What went with the old type: `elementColors` and `element.color()`.** They were the surface
-// colours from when a card *was* a coloured rectangle, and nothing had called either since the
+// colors from when a card *was* a colored rectangle, and nothing had called either since the
 // border took over the element on 2026-08-09 and `internal/cards` took over the drawing. The
-// live colour table is `cards.BorderOf`.
+// live color table is `cards.BorderOf`.
 type actionCard = combat.Card
 
 // The hand drawn from the deck each round.
@@ -62,7 +62,7 @@ func (s *CombatScene) deckSize() int {
 	return len(s.deck) + len(s.discard) + len(s.hand)
 }
 
-// deckSeedName pins every launch to one catalogued opening hand. **Empty means unpinned**,
+// deckSeedName pins every launch to one cataloged opening hand. **Empty means unpinned**,
 // which is the default: the shuffles are rolled from the run seed instead and each fight deals
 // a fresh deck. Set it to a name while working on something that needs a particular hand — the
 // names and what each deals are in seeds.go, and `go run ./tools/seeds` prints them.
@@ -81,14 +81,14 @@ const deckSeedName = ""
 // shuffleSeeds. Half a pinned duel is not reproducible, and the scripted demo sets only this
 // one.
 //
-// A var rather than a const so a build-tagged file can point it at a catalogue entry in
+// A var rather than a const so a build-tagged file can point it at a catalog entry in
 // `init` — which is how the scripted demo picks its hand without the game growing a flag it
 // would have to keep.
 var deckSeed = pinnedDeckSeed()
 
 // pinnedDeckSeed reads deckSeedName, treating the empty name as no pin. seedFor panics on a
 // name it does not know, which is right for a typo and wrong for "no name at all", so the
-// empty case is answered here rather than by adding a not-found path to the catalogue.
+// empty case is answered here rather than by adding a not-found path to the catalog.
 func pinnedDeckSeed() int64 {
 	if deckSeedName == "" {
 		return 0
@@ -155,7 +155,7 @@ func (s *CombatScene) spendSelected() {
 				index:    i, count: leaving,
 			}
 			if p, ok := s.playedSeatOf(i); ok {
-				flight.index, flight.count, flight.fromTable = p, len(s.theatre.resolved), true
+				flight.index, flight.count, flight.fromTable = p, len(s.theater.resolved), true
 				flight.split = s.playedSplit()
 			}
 			s.addFlight(flight)
@@ -169,7 +169,7 @@ func (s *CombatScene) spendSelected() {
 	// The round's history goes with the cards it was made of. Cleared here rather than at the
 	// start of the next round because this is the moment those cards actually leave, and a
 	// pile outliving them would be a picture of a round that is over.
-	s.theatre.resolved = nil
+	s.theater.resolved = nil
 
 	// Everything appended past this point was dealt, which is what makes the drawn cards
 	// identifiable without drawHand having to report them.
@@ -199,7 +199,7 @@ func (s *CombatScene) spendSelected() {
 		}
 
 		// A survivor. It has moved if its slot changed or if the row it is standing in did —
-		// eight cards centred is not the same place as six centred, so a card that kept its
+		// eight cards centered is not the same place as six centered, so a card that kept its
 		// index still has ground to cover.
 		was := keptFrom[from]
 		if was == to && leaving == len(s.hand) {
@@ -242,7 +242,7 @@ func (s *CombatScene) resetDeck(run *session.Session) {
 	if run != nil {
 		// **FightDeck rather than Deck**: this is the `deck-built` moment, so a demoting relic steps
 		// what is dealt without touching what the run owns. The element flips are *not* here — they
-		// fire per card in drawHand — so this pile holds cards in the colours the run owns. See
+		// fire per card in drawHand — so this pile holds cards in the colors the run owns. See
 		// session.FightDeck and combat.MomentCardDrawn.
 		s.deck = append(s.deck, run.FightDeck()...)
 	} else {
@@ -306,15 +306,15 @@ func (s *CombatScene) handTarget() int { return handSize }
 // when it runs dry. A hand can come up short only if every card the player owns is already
 // in it, which cannot happen with a deck larger than the hand.
 //
-// **This is the `card-drawn` moment** *(2026-08-24)*. A flip relic recolours a card here, one card
+// **This is the `card-drawn` moment** *(2026-08-24)*. A flip relic recolors a card here, one card
 // at a time on its way out of the pile, which is what its text has always said — "every earth card
-// is dealt as a fire card". It used to recolour the whole fight deck in one pass at `deck-built`;
+// is dealt as a fire card". It used to recolor the whole fight deck in one pass at `deck-built`;
 // the cards dealt are the same either way, since a flip is unconditional over an element.
 //
 // **The invariant that makes it safe: the draw pile holds cards as the run owns them.** A flip
-// reads a card's original colour, so a discarded ice-that-was-lightning card folded back into the
+// reads a card's original color, so a discarded ice-that-was-lightning card folded back into the
 // pile and drawn again would be read as ice — and a second flip keyed on ice would fire, chaining
-// two relics into a deck of one colour, which is exactly what firing at `deck-built` prevented for
+// two relics into a deck of one color, which is exactly what firing at `deck-built` prevented for
 // free. `restoreToDeck` is what pays for it now.
 func (s *CombatScene) drawHand() {
 	for len(s.hand) < s.handTarget() {
@@ -340,7 +340,7 @@ func (s *CombatScene) drawHand() {
 // when the scene has no run behind it.
 //
 // **The card it is handed is a draw-pile card**, which the invariant above says is a card in the
-// colour the run owns — so the flip reads the original, as combat.FlipElement requires.
+// color the run owns — so the flip reads the original, as combat.FlipElement requires.
 func (s *CombatScene) drawnAs(c actionCard) actionCard {
 	if s.run == nil {
 		return c
@@ -348,11 +348,11 @@ func (s *CombatScene) drawnAs(c actionCard) actionCard {
 	return s.run.DrawnAs(c)
 }
 
-// restoreToDeck undoes a draw: a card going back into the draw pile is put back in the colour the
+// restoreToDeck undoes a draw: a card going back into the draw pile is put back in the color the
 // run owns it in, so the next flip that reads it reads the original rather than the last flip's
 // answer.
 //
-// **It restores the colour and nothing else.** The concept is deliberately left as it is: a
+// **It restores the color and nothing else.** The concept is deliberately left as it is: a
 // demotion is a `deck-built` rule, applied once as this pile was built, and a card that came out of
 // this pile as a 2 AP Thrust is a 2 AP Thrust for the whole fight. Only the flip fires per draw, so
 // only the flip has anything to undo.
@@ -403,7 +403,7 @@ func (s *CombatScene) fightContents() deckContents {
 		spent: make([]combat.Card, 0, len(s.discard)+len(s.hand)),
 
 		// **The run, so the panel can find a card's original.** A card in the hand or the discard
-		// has been through a draw and holds only the colour a flip relic made it; the ID is the way
+		// has been through a draw and holds only the color a flip relic made it; the ID is the way
 		// back to what the run owns. See deckContents.run.
 		run:     s.run,
 		inFight: true,

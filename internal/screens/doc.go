@@ -31,7 +31,7 @@
 //
 // This package links Ebitengine, so most of it cannot be tested without a window. The tests that
 // exist are a deliberate narrow exception: they compare constants and walk switch statements,
-// create no images, and guard cross-package invariants a compiler cannot see. They are not licence
+// create no images, and guard cross-package invariants a compiler cannot see. They are not license
 // to test the rest of the screen, and nothing here should reach for a window to keep one alive.
 // What cannot be unit-tested gets a tool instead — see the demoplay build tag.
 //
@@ -50,7 +50,7 @@
 //   - ground.go — the table everything is painted on (screenGround, painted by fillGround as a
 //     subtle vertical gradient) and the ink for what is
 //     written straight onto it (groundInk). Anything drawn on a surface of its own takes that
-//     surface's colours instead.
+//     surface's colors instead.
 //   - travel.go — how anything gets from one place to another: travel, the delay-age-duration
 //     clock every mover shares, plus easeOut, easeIn, lerpPoint and flyingTo. Ease out, so a
 //     thing leaves quickly and lands gently. A flight is raised after the model has already
@@ -62,7 +62,7 @@
 //     everything here answers "what does a card of this kind look like", and the cache lives
 //     here because rendering a spec writes every pixel in Go and is far too slow per frame.
 //   - pane.go — a titled box with a list of rows in it, knowing nothing about combat. A row
-//     arrives as three strings and two colours.
+//     arrives as three strings and two colors.
 //   - prose.go — turning an event the engine has already decided into a sentence: logRows and the
 //     vocabulary it draws on. It lives here and not in internal/combat on purpose — the rules
 //     package names actions, it does not describe them. It computes nothing, which is what makes
@@ -73,8 +73,8 @@
 //     screens outside the setting the duel is paced by. clock_test.go parses this package and
 //     fails on a raw duration, because a new screen inventing its own is invisible otherwise.
 //   - flow.go — the phase-to-scene table and advanceRun.
-//   - theatre.go — everything a scene has moving on it, as a contract rather than a struct: the
-//     three rules that apply to all of it, the `theatre` interface a scene's own stage
+//   - theater.go — everything a scene has moving on it, as a contract rather than a struct: the
+//     three rules that apply to all of it, the `theater` interface a scene's own stage
 //     implements, and the advance/running helpers that were four near-identical loops. It is
 //     used by a scene rather than owned by one, which is what lets a between-fight screen move
 //     things without reinventing the vocabulary.
@@ -108,7 +108,7 @@
 //     the combat scene (2026-08-22, TODO.md). Three screens put it up: a fight through its draw
 //     pile, and the reward screen and the shop through `deckToggle` — a 44px `D` in the
 //     bottom-right corner, the Log button's shape and rules. The panel shows every card you own,
-//     in four colour rows plus a row of plans, at cards.Mini overlapped. **It never hides a card**
+//     in four color rows plus a row of plans, at cards.Mini overlapped. **It never hides a card**
 //     (owner's call, 2026-08-23): a row that has outgrown the comfortable pitch overlaps harder,
 //     per row, rather than dropping the extras under a "+N more not shown" line — see rowPitchFor.
 //     The rule that survives is that a card does not move when it is played, it only dims, so the
@@ -162,7 +162,7 @@
 //     which is what pays for full-size relic cards. Its width is what the two fighter cards leave —
 //     relicPaneRect reads duelistCardRect and enemyCardRect rather than a percentage, so the right
 //     edge cannot go stale when a card moves. Two things it does deliberately: a fill, never a
-//     frame — a plain grey backing one step lighter than the screen, no border, no title, no hue,
+//     frame — a plain gray backing one step lighter than the screen, no border, no title, no hue,
 //     because a framed row reads as cards trapped in a panel while a bare row leaves nothing
 //     saying where the middle begins; and the row drops 10px below the two cards so the three do
 //     not share a top line and read as one wide object. The backing must never reach either card.
@@ -182,7 +182,7 @@
 //     than on each screen that shows them cards; each scene keeps a working copy because a button's
 //     OnClick reaches no global state here. elementRank and categoryRank are written out rather than
 //     read off the enums, for the reason formRank is: combat.Basic leads its enum as the zero value
-//     and trails on screen, where the colours are what the statuses are counted on.
+//     and trails on screen, where the colors are what the statuses are counted on.
 //   - combat_sort.go — what the combat screen does with that: the queue is resynced and every card
 //     that moved is sent sliding. The sort re-applies on every refill, so a drawn card lands where
 //     it belongs rather than on the right-hand end and a drag survives only until the next deal;
@@ -196,11 +196,11 @@
 //     multiplier, then the answer, all of it at double the type it was drawn at before 2026-08-19,
 //     the landing damage figure included since hitFigureSize is mathTotalSize. It also owns the
 //     hand's name, which is one word with two homes (2026-08-19): handBanner sits it in the middle
-//     of the table, centred on the screen and over the opponent's cards, while the round is
+//     of the table, centered on the screen and over the opponent's cards, while the round is
 //     planned, and flies it down into the hand row at DUEL! — at one size, 80 points, mathNameSize
 //     — as the cards fly up to the table. It rests there until the sum takes its figure,
 //     breathing. A second line under it says what the hand is worth — 1.15x DMG, formatted through
-//     the sum's own handMultiplierText and travelling with the name as one object, so the
+//     the sum's own handMultiplierText and traveling with the name as one object, so the
 //     multiplier is known while the hand is being chosen rather than met when it flies out of the
 //     word. That line is the figure the sum then flies in: it is written at mathTermSize and does
 //     not grow with the name, and the whole banner is taken down on exactly the frame its copy
@@ -246,10 +246,10 @@
 //     figure crossing half the screen does not fit inside one event's dwell, and the alternative
 //     is the bar dropping before the number reaches it. Where the figure sets off from is
 //     anchorBlow — the sum line when the turn scored a hand, the acting card's own seat when it
-//     did not, because a solo attacker emits no KindHand and so has no sum. Its size and colour
+//     did not, because a solo attacker emits no KindHand and so has no sum. Its size and color
 //     are the sum's total's, on purpose: advancePlayback clears the box on the frame this
 //     launches, so one number appears to set off rather than two to swap.
-//   - combat_theatre.go — two things. combatTheatre is this screen's own stage: the cards in the
+//   - combat_theater.go — two things. combatTheater is this screen's own stage: the cards in the
 //     air, the two rows on the table, the damage figures, the banked points, the hand's name and
 //     the sum it flies into — eleven flat fields on CombatScene until 2026-08-21, and one field
 //     with one tick, one running and one clear since. choreography is the map of what travels,
@@ -311,5 +311,5 @@
 //     a round finishing, a duel settling.
 //   - prose_terms.go — a blow's working: one line per landing, what the card was worth, and which
 //     relic bought or priced it. Every figure comes off the event, exactly as the hand dialog's do.
-//   - seeds.go — the named opening-hand catalogue.
+//   - seeds.go — the named opening-hand catalog.
 package screens

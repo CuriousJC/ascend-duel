@@ -83,7 +83,7 @@ func (f *Faces) Measure(size float64, s string) (width, lineHeight int, err erro
 //
 // font.Drawer positions by *baseline*, not by the top of the line, so the ascent has to
 // be added. Ebitengine's text/v2 anchors at the top-left by default, and every layout
-// constant on a Style was written against that behaviour, so matching it here is what
+// constant on a Style was written against that behavior, so matching it here is what
 // keeps the numbers meaning what they say.
 func drawText(dst *image.RGBA, f *Faces, size float64, s string, x, y int, c color.RGBA) error {
 	face, err := f.at(size)
@@ -100,11 +100,11 @@ func drawText(dst *image.RGBA, f *Faces, size float64, s string, x, y int, c col
 	return nil
 }
 
-// drawTextHCentered draws a string centred horizontally on the card, top-aligned at y.
+// drawTextHCentered draws a string centered horizontally on the card, top-aligned at y.
 //
 // Relics use it. An action card's name lines up with the glyph column beneath it, so
 // left-aligned is right there; a relic has no column, and the same name then reads as
-// having slipped off centre rather than as being aligned to anything.
+// having slipped off center rather than as being aligned to anything.
 func drawTextHCentered(dst *image.RGBA, f *Faces, size float64, s string, width, y int, c color.RGBA) error {
 	face, err := f.at(size)
 	if err != nil {
@@ -114,10 +114,10 @@ func drawTextHCentered(dst *image.RGBA, f *Faces, size float64, s string, width,
 	return drawText(dst, f, size, s, (width-w)/2, y, c)
 }
 
-// drawTextCenteredIn draws a string centred inside a box that starts at left and is width
+// drawTextCenteredIn draws a string centered inside a box that starts at left and is width
 // wide, top-aligned at y.
 //
-// The effect text uses it. drawTextHCentered centres on the whole card, which is right for a
+// The effect text uses it. drawTextHCentered centers on the whole card, which is right for a
 // name spanning the card and wrong for a block that only owns the space beside the cost
 // column — every line would sit a little left of where it belongs.
 func drawTextCenteredIn(dst *image.RGBA, f *Faces, size float64, s string, left, width, y int, c color.RGBA) error {
@@ -166,7 +166,7 @@ func TextWidth(f *Faces, size float64, s string) (int, error) {
 // **It breaks at every space** *(owner's call, 2026-09-05)*, one word to a line — except that a
 // figure stays on its unit's line, `-1 AP` drawn as `AP -1`; see unitLines. Which is what a
 // relic's name already does. Width no longer decides where a line ends, so a *set* of cards breaks
-// in the same place for free: the elemental essences differ only in the colour they name, and FIRE
+// in the same place for free: the elemental essences differ only in the color they name, and FIRE
 // used to fit the line where LIGHTNING all but filled it, which made four layouts of one card.
 // That is what the authored newline was for, and it is why there is no longer one — a newline in
 // the source now reads as an ordinary space.

@@ -40,7 +40,7 @@ func handsTestBody() (left, top, right, bottom int) {
 func TestTheLadderReadsCheapestPayingFirst(t *testing.T) {
 	rows := handsRows(shippingHands())
 	if len(rows) != len(combat.Hands()) {
-		t.Fatalf("the panel draws %d rungs against a catalogue of %d",
+		t.Fatalf("the panel draws %d rungs against a catalog of %d",
 			len(rows), len(combat.Hands()))
 	}
 
@@ -54,7 +54,7 @@ func TestTheLadderReadsCheapestPayingFirst(t *testing.T) {
 	for _, row := range rows {
 		h, ok := byName[row.name]
 		if !ok {
-			t.Fatalf("the panel drew a rung named %q, which is in no catalogue", row.name)
+			t.Fatalf("the panel drew a rung named %q, which is in no catalog", row.name)
 		}
 		if h.Multiplier < last {
 			t.Errorf("%s pays %d, under the %d of the rung above it", row.name, h.Multiplier, last)
@@ -154,7 +154,7 @@ func TestAMergedRungIsDrawnOnEveryAxisItReads(t *testing.T) {
 		}
 	}
 	if merged == 0 {
-		t.Fatal("no rung in the catalogue is read on more than one axis, so nothing was checked")
+		t.Fatal("no rung in the catalog is read on more than one axis, so nothing was checked")
 	}
 }
 
@@ -162,9 +162,9 @@ func TestAMergedRungIsDrawnOnEveryAxisItReads(t *testing.T) {
 // `decks.Example` through `Hand.On`, so each set is a hand the matcher would score — this is what
 // fails if the panel ever starts inventing an illustration of its own.
 //
-// **The axes come off the catalogue rather than off the row** *(2026-09-12)*. The row carried them
+// **The axes come off the catalog rather than off the row** *(2026-09-12)*. The row carried them
 // so the drawing could caption each set; the captions are gone and the sets are still built in the
-// catalogue's own axis order, which is the thing this test is actually pinning.
+// catalog's own axis order, which is the thing this test is actually pinning.
 func TestEachOfAMergedRungsExamplesMatchesOnItsOwnAxis(t *testing.T) {
 	byName := map[string]combat.Hand{}
 	for _, h := range combat.Hands() {
@@ -199,8 +199,8 @@ func TestEachOfAMergedRungsExamplesMatchesOnItsOwnAxis(t *testing.T) {
 }
 
 // **Every rung is drawn, and none of them runs off the bottom.** The panel never hides a rung, for
-// the reason the deck panel never hides a card: a catalogue with entries missing is worse than no
-// catalogue, because nothing says which ones went.
+// the reason the deck panel never hides a card: a catalog with entries missing is worse than no
+// catalog, because nothing says which ones went.
 func TestTheColumnsHoldTheWholeLadder(t *testing.T) {
 	rows := handsRows(shippingHands())
 	columns := handsColumns(rows, handsColumnCount)

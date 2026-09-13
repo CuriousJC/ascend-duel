@@ -17,25 +17,25 @@
 // element** — the tinted form mark in the corner and the cost ticks under it *(owner's
 // call, 2026-08-23)*. The border carried it from
 // 2026-08-09 until then, which itself reversed the decision recorded in CLAUDE.md's
-// colour section on 2026-08-03, where the surface was the element. Three things follow
+// color section on 2026-08-03, where the surface was the element. Three things follow
 // from where it has landed:
 //
 //   - **The border is state and nothing else now.** Every card of every element draws the
-//     same neutral grey, and rest, selected, dragging and disabled are distances from it
+//     same neutral gray, and rest, selected, dragging and disabled are distances from it
 //     toward the surface. See borderBase for why the swap was made: the corner mark is the
-//     thing a hand is counted on, so it is what the one remaining colour channel buys the
-//     most on. BorderOf still holds the element colours and is still what the mark, the
+//     thing a hand is counted on, so it is what the one remaining color channel buys the
+//     most on. BorderOf still holds the element colors and is still what the mark, the
 //     row labels and the arithmetic panel read.
-//   - **The border and the ticks share one state switch.** Spec.atState carries a colour
+//   - **The border and the ticks share one state switch.** Spec.atState carries a color
 //     from full strength to whatever the card's state wants; the border hands it the
-//     neutral grey and the ticks hand it the element. They are different colours and the
+//     neutral gray and the ticks hand it the element. They are different colors and the
 //     same mark, so they must dim and light together.
 //   - **Relic keeps its pink.** Pink was never an element — it is the "you cannot play
-//     this" signal — so it survives a change that neutralises the four element borders.
+//     this" signal — so it survives a change that neutralizes the four element borders.
 //   - **The form marks are drawn art, tinted rather than repainted.** tintInk maps each
 //     pixel's own brightness onto a ramp between a dark and a light version of the
-//     element's colour, so the drawing keeps its outline and its bevel and only the hue
-//     moves. A flat silhouette in the element colour would throw away the interior detail
+//     element's color, so the drawing keeps its outline and its bevel and only the hue
+//     moves. A flat silhouette in the element color would throw away the interior detail
 //     that made drawn marks worth having over generated ones.
 //
 // # Three ways to say something on a card, and they are not interchangeable
@@ -58,10 +58,10 @@
 // **A mark has two halves and only one of them is here.** The settled picture is baked into the
 // card image and cached with it; the *arrival* — a break spreading — changes every frame and would
 // blow that cache, so this package exports the geometry (ShatterCracks, MarkSeed, CrackInk) and the
-// screen strokes the same lines on the GPU while they are moving. One geometry, two rasterisers, so
+// screen strokes the same lines on the GPU while they are moving. One geometry, two rasterizers, so
 // the animation cannot end on a picture different from the one it hands to.
 //
-// # Rounded corners are rasterised here, not masked
+// # Rounded corners are rasterized here, not masked
 //
 // **This is the only rounding approach in the tree** *(2026-08-24)*. The screen used to
 // round with `CreateRoundedRecMask` + `ebiten.BlendSourceIn`, and for a while the two
@@ -72,7 +72,7 @@
 //
 // The mask path went when both fighters became cards and their health bars came in here
 // with them, so nothing on screen needs it any more. **A new rounded shape belongs in
-// shape.go**, whatever is drawing it: a second GPU-side rasteriser would put two
+// shape.go**, whatever is drawing it: a second GPU-side rasterizer would put two
 // silhouettes of the same corner back in the tree, and the one that cannot be reached
 // without a window is the one that would spread.
 //
@@ -96,15 +96,15 @@
 // The screen's cache keys on the whole struct. That is why Stats is a fixed array and not a slice.
 //
 // Spec is plain data — a name, a category, a cost, an element, optional artwork, a state — rather
-// than a rules type, so the sheet can draw combinations the rules cannot produce: a border colour
+// than a rules type, so the sheet can draw combinations the rules cannot produce: a border color
 // nothing uses, a relic.
 //
 // # The border carries the element, not the surface
 //
-// A card is a constant off-white surface with a thick coloured border. Three things follow and
+// A card is a constant off-white surface with a thick colored border. Three things follow and
 // have each been re-broken once:
 //
-//   - A near-white border on an off-white card is invisible, which is why basic is a mid grey and
+//   - A near-white border on an off-white card is invisible, which is why basic is a mid gray and
 //     a test fails if it is set back to a near-white.
 //   - systems.ColorAtStrength is the wrong tool on a light card. It scales toward black, so a
 //     border scaled down comes out darker than the surface and therefore louder than the live card

@@ -22,7 +22,7 @@ func mustHex(s string) color.RGBA {
 		case c >= 'a' && c <= 'f':
 			v = v<<4 | uint32(c-'a'+10)
 		default:
-			panic("scenariosheet: ground is not a six-digit hex colour: " + s)
+			panic("scenariosheet: ground is not a six-digit hex color: " + s)
 		}
 	}
 	return color.RGBA{R: uint8(v >> 16), G: uint8(v >> 8), B: uint8(v), A: 255}

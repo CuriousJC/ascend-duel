@@ -9,7 +9,7 @@ package screens
 //
 // **It is what makes thirteen of the seventeen relics reachable.** The grammar has been built since
 // 2026-08-17 and a run opened wearing three of them with no way to get a fourth, so most of the
-// catalogue existed only in the file. What was missing was never the rules — `Session.Wear`, the
+// catalog existed only in the file. What was missing was never the rules — `Session.Wear`, the
 // purse and the `fight-won` accumulator were all already there — it was the screen.
 //
 // **Two rows, and they are the same object twice.** The shelf is what you can have and the row
@@ -46,7 +46,7 @@ import (
 //
 // **Three, matching the reward screen's row**, so the two between-fight screens read as one
 // language: a short row of cards, and you take what you can afford. A shelf of seventeen would be
-// a catalogue rather than an offer, and there would be no reason for the shop to come round again.
+// a catalog rather than an offer, and there would be no reason for the shop to come round again.
 const shelfSize = 3
 
 // Where the two rows sit. Percentages anchor the groups; offsets inside a group stay in pixels,
@@ -130,7 +130,7 @@ type ShopScene struct {
 
 	// sellButton is the tab itself — **one button moved under whichever relic is armed**, not one
 	// per finger. Only one can be armed, so a second button would be a second thing to keep in
-	// step with the row's own re-centring.
+	// step with the row's own re-centering.
 	sellButton *models.Button
 
 	// leaving is the button's request, consumed by Update. A button's OnClick reaches no global
@@ -140,7 +140,7 @@ type ShopScene struct {
 	// from is where each worn relic was sitting before the last change, keyed by record, and move
 	// is the one clock they all travel on.
 	//
-	// **Every relic in the row moves when one is bought or sold**, because the row is centred: the
+	// **Every relic in the row moves when one is bought or sold**, because the row is centered: the
 	// seats themselves shift. So this is a map rather than a single mover, and it is *seats* being
 	// remembered rather than journeys — the destination is recomputed from the layout every frame,
 	// which is what lets a flight survive the window being resized. See travel.go.
@@ -148,7 +148,7 @@ type ShopScene struct {
 	move travel
 
 	// prose is the shopkeeper. **Nothing it says has a `pays`**, unlike the reward screen's
-	// payout — this is flavour rather than arithmetic, and the typewriter is reused for the
+	// payout — this is flavor rather than arithmetic, and the typewriter is reused for the
 	// cadence rather than for the claims.
 	prose typewriter
 
@@ -186,7 +186,7 @@ type ShopScene struct {
 	rerolls map[shopPane]int
 
 	// drunk is which potions have been bought this visit, by record key. **Per visit, like a
-	// sealed good's flag**: the catalogue is the same three every shop, and a run that could buy
+	// sealed good's flag**: the catalog is the same three every shop, and a run that could buy
 	// three Salves in a row would be buying a life bar rather than a potion.
 	drunk map[string]bool
 
@@ -224,7 +224,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	if s.sellButton == nil {
 		s.sellButton = models.NewButton(sellTabWidth, sellTabHeight, "",
 			func() { s.selling = s.armed })
-		// **The colour a control that commits something wears**, and the same crimson DUEL!
+		// **The color a control that commits something wears**, and the same crimson DUEL!
 		// takes. A sale is the only thing on this screen that cannot be taken back.
 		s.sellButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255}
 		s.sellButton.TextSize = sellTabTextSize
@@ -256,7 +256,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	// the one place either is measured from.
 	s.deck.initAsPile()
 	s.hands.initInColumn(func(gs *state.GlobalState) image.Point {
-		return ControlColumnSlotCentre(gs, SlotHands)
+		return ControlColumnSlotCenter(gs, SlotHands)
 	})
 
 	trace.Logf("shop", "after fight %d: %v for sale, %d vitae in hand, wearing %d",
@@ -319,9 +319,9 @@ func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
 //
 // **Without replacement, which is why it is a draw per seat rather than one weighted shuffle.** A
 // shelf offering the same relic twice would be a seat spent saying nothing; the caller removes what
-// this returns and asks again, so the weights re-normalise over what is left.
+// this returns and asks again, so the weights re-normalize over what is left.
 //
-// **A key the catalogue does not weight holds one ticket rather than none.** The registry refuses a
+// **A key the catalog does not weight holds one ticket rather than none.** The registry refuses a
 // bad rarity at load, so reaching here with a zero is a relic the run knows about and the shop does
 // not — and dropping it from every shelf forever is a worse failure than offering it as a common.
 func drawWeighted(pool []string, rng *rand.Rand) int {
@@ -365,7 +365,7 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	//
 	// **It releases itself the moment it is complete**, which is where the two screens part
 	// *(2026-09-08)*. The payout is held for a second click because its figures are the thing the
-	// player came to read; a greeting is flavour in front of a shelf, so making it a gesture would
+	// player came to read; a greeting is flavor in front of a shelf, so making it a gesture would
 	// be charging a click for a sentence nobody is studying.
 	if !s.prose.finished() {
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
@@ -589,7 +589,7 @@ func (s *ShopScene) wornSeatOf(gs *state.GlobalState, key string) (image.Rectang
 	return image.Rectangle{}, false
 }
 
-// sellTabRect is where the confirm tab hangs: **the seat the sell figure is written in**, centred
+// sellTabRect is where the confirm tab hangs: **the seat the sell figure is written in**, centered
 // under the armed relic. One rectangle, drawn in and hit-tested against.
 func (s *ShopScene) sellTabRect(gs *state.GlobalState) image.Rectangle {
 	seat, ok := s.wornSeatOf(gs, s.armed)
@@ -633,8 +633,8 @@ func (s *ShopScene) buy(gs *state.GlobalState, i int) {
 // sell takes a relic off and pays its tier's sell-back figure.
 //
 // **The sold relic has nothing to fly**, which is the documented exception to cards always
-// travelling: what happened is an absence. What does travel is every relic to its right, sliding
-// into the seats the row's re-centring gives them.
+// traveling: what happened is an absence. What does travel is every relic to its right, sliding
+// into the seats the row's re-centering gives them.
 func (s *ShopScene) sell(gs *state.GlobalState, key string) {
 	seats := s.seats(gs)
 
@@ -697,7 +697,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	// **The duelist card, then the worn row drawn by this screen** — the band's two halves, split
-	// because a relic here carries a price and moves when the row re-centres. See buildband.go.
+	// because a relic here carries a price and moves when the row re-centers. See buildband.go.
 	drawBuildCard(gs, screen, gs.Run.Vitae())
 	// **The pane, without its fraction** *(2026-09-06)*. Every relic in this row carries a sell
 	// figure under it and the count hangs off the same corner on the same line, so with five worn
@@ -858,8 +858,8 @@ func (s *ShopScene) updateRelicRow(gs *state.GlobalState) {
 	s.relicDrag.update(gs, row)
 }
 
-// figure writes the number under a card, centred on it. Dimmed toward the ground rather than
-// scaled toward black, because it is written straight onto the table — see the colour rules in
+// figure writes the number under a card, centered on it. Dimmed toward the ground rather than
+// scaled toward black, because it is written straight onto the table — see the color rules in
 // CLAUDE.md, and `systems.ColorToward`, which exists for exactly this.
 func (s *ShopScene) figure(gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle,
 	msg string, lit bool) {
@@ -913,7 +913,7 @@ var _ = func(r data.RelicData) (string, data.Rarity) { return r.Name, r.Rarity }
 // **They are a row of their own under the relics** — see goodsRowPct, and shop_goods.go for the
 // dialog a purchase opens.
 
-// goodSlot is where one good is drawn, and the rectangle it is clicked in. **Two seats, centred**,
+// goodSlot is where one good is drawn, and the rectangle it is clicked in. **Two seats, centered**,
 // so the row reads as a pair rather than as two things that happen to be near each other.
 func (s *ShopScene) goodSlot(gs *state.GlobalState, kind goodKind) image.Rectangle {
 	for i, offered := range s.offered {
@@ -1072,10 +1072,10 @@ func goodPrice(kind goodKind) int {
 }
 
 // **Each sealed good draws the placeholder of whatever is inside it** — the bag the boulder every
-// stone card draws, the vial the essence catalogue's default face, the sack the rune
-// catalogue's. A third picture would be a third thing to recognise for no gain: what is in the
+// stone card draws, the vial the essence catalog's default face, the sack the rune
+// catalog's. A third picture would be a third thing to recognize for no gain: what is in the
 // good is exactly what the picture shows, and the two that used to share one face now split for
-// the reason the two placeholders split, which is that a shared picture hides which catalogue is
+// the reason the two placeholders split, which is that a shared picture hides which catalog is
 // still undrawn.
 func goodArt(gs *state.GlobalState, kind goodKind) image.Image {
 	switch kind {

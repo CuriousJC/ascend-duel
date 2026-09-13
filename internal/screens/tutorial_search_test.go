@@ -62,7 +62,7 @@ func TestFindATutorialSeed(t *testing.T) {
 		}
 	}
 	if draught == 0 {
-		t.Fatal("no potion in the catalogue adds DMG, and the lesson tells the player to drink one")
+		t.Fatal("no potion in the catalog adds DMG, and the lesson tells the player to drink one")
 	}
 
 	// **`exact` is the mode to reach for, and the plain search will not find one for you.**

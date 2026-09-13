@@ -13,7 +13,7 @@ import (
 // **The alphabet is Crockford base32** — the ten digits and the twenty-six letters, less `I`,
 // `L`, `O` and `U`. That is 32 characters, so the space is 32^6: 1,073,741,824 runs. Reducing
 // the seed to that range does not weaken the derivation, because each stream XORs a salt spread
-// across the full int64 — two adjacent codes do not produce neighbouring shuffles.
+// across the full int64 — two adjacent codes do not produce neighboring shuffles.
 //
 // **The four are dropped because a code is transcribed by eye** *(owner's call, 2026-08-25)*.
 // `0`/`O` and `1`/`I`/`L` are the pairs a person reads wrong off a screen, and the failure they
@@ -48,7 +48,7 @@ const (
 	foldedTo = "001111"
 
 	// CodeLen is how many characters a code is. Fixed rather than variable, so a code is
-	// recognisable as one and a field can size itself.
+	// recognizable as one and a field can size itself.
 	CodeLen = 6
 
 	// Base is the alphabet's size.

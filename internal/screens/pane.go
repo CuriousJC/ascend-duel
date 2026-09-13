@@ -4,10 +4,10 @@ package screens
 //
 // One screen draws one today — the fight log, which pours a whole fight's sentences into a
 // panel over a scrim. It is a widget rather than that dialog's own drawing because a pane is a
-// shape the game reuses: a row with a swatch, a coloured verb and an underline, laid out down
+// shape the game reuses: a row with a swatch, a colored verb and an underline, laid out down
 // a rectangle, is what any list of things-that-happened looks like.
 //
-// **It knows nothing about combat.** A row arrives as three strings and two colours; whoever
+// **It knows nothing about combat.** A row arrives as three strings and two colors; whoever
 // built it decided what the words are. That is what makes it structurally impossible for a
 // panel to disagree with the round it reports — see prose.go, which does the deciding.
 //
@@ -52,8 +52,8 @@ const (
 	paneBandRise  = 4
 )
 
-// panePlacement is one pane's horizontal slot, label and identifying colour. The
-// colours are loud on purpose — these are placeholders for finding the layout, not a
+// panePlacement is one pane's horizontal slot, label and identifying color. The
+// colors are loud on purpose — these are placeholders for finding the layout, not a
 // palette anyone has chosen yet.
 type panePlacement struct {
 	leftPct, rightPct int
@@ -61,17 +61,17 @@ type panePlacement struct {
 	color             color.RGBA
 
 	// **A pane carries its own surface and its own ink**, rather than deriving both from one
-	// colour. Resolution went off-white on 2026-08-07 because coloured verb chips on a dim
-	// plum ground were hard to read — three saturated colours competing with a fourth behind
+	// color. Resolution went off-white on 2026-08-07 because colored verb chips on a dim
+	// plum ground were hard to read — three saturated colors competing with a fourth behind
 	// them. A light ground makes the chips the only saturated thing in the pane.
 	//
-	// This is the same exception glyphs are documented under in `CLAUDE.md`: the one-colour
+	// This is the same exception glyphs are documented under in `CLAUDE.md`: the one-color
 	// rule governs how a widget responds to hover, press and disable, and it cannot describe
 	// a surface and the thing sitting on it at once. `color` still drives the border and is
 	// what the pane is "named", so the scale-don't-add rule keeps working for state.
 	fill   color.RGBA // the pane's ground
 	ink    color.RGBA // text drawn on that ground
-	nowInk color.RGBA // text of the row playback is on: coloured, bold and underlined
+	nowInk color.RGBA // text of the row playback is on: colored, bold and underlined
 
 	// rowHeight is the pitch this pane draws its rows at. Carried on the placement rather
 	// than being one constant because the two panes hold different things: card names, and
@@ -82,8 +82,8 @@ type panePlacement struct {
 	// that has no opinion gets the size every pane had before this existed.
 	//
 	// It travels with rowHeight rather than being derived from it: the two have to move together —
-	// a bigger face at the old pitch overlaps its neighbours — and which pitch a size wants is a
-	// judgement about air between lines, not arithmetic.
+	// a bigger face at the old pitch overlaps its neighbors — and which pitch a size wants is a
+	// judgment about air between lines, not arithmetic.
 	textSize float64
 
 	// bold draws every run bold, not just the marked one. **The ledger takes it and nothing else
@@ -102,7 +102,7 @@ type panePlacement struct {
 	//
 	// **It narrows the content and never the frame** *(owner's call, 2026-09-12)*. The ledger runs
 	// a scrollbar down that edge, and a heading's band is drawn edge to edge inside the border —
-	// so the band ran under the bar and a centred heading was centred on a width half of which was
+	// so the band ran under the bar and a centered heading was centered on a width half of which was
 	// behind it. The border still reaches the panel's own edge, because the pane is the thing the
 	// scrollbar sits *on*.
 	rightInset int
@@ -111,17 +111,17 @@ type panePlacement struct {
 // paneEdge is the pink a pane is bordered and named in. Still a placeholder palette.
 var paneEdge = color.RGBA{R: 235, G: 105, B: 170, A: 255}
 
-// paneSpan is one run of text inside a row, with the colour it is written in.
+// paneSpan is one run of text inside a row, with the color it is written in.
 //
 // **A row is spans rather than three fixed slots** *(2026-09-02)*. It was prefix / verb / suffix,
-// which was exactly enough for a sentence with one coloured verb in it and not enough for the
-// ledger's arithmetic — a figure in its card's colour, a relic's multiplier in the relic pink, the
+// which was exactly enough for a sentence with one colored verb in it and not enough for the
+// ledger's arithmetic — a figure in its card's color, a relic's multiplier in the relic pink, the
 // hand's own multiplier in the hand's. Storing spans is what lets the panel look like the screen it
 // is an account of.
 type paneSpan struct {
 	text string
 
-	// ink is the colour this run is written in. **Zero alpha means "the row's own ink"**, the same
+	// ink is the color this run is written in. **Zero alpha means "the row's own ink"**, the same
 	// convention Button.BaseColor uses.
 	ink color.RGBA
 
@@ -129,9 +129,9 @@ type paneSpan struct {
 	mark bool
 }
 
-// paneRow is one line in a pane: some spans of text, optionally preceded by a colour swatch saying
+// paneRow is one line in a pane: some spans of text, optionally preceded by a color swatch saying
 // whose action it is. A zero-alpha swatch means the row has none, in which case a single unmarked
-// run is centred instead of sitting in a column beside the squares.
+// run is centered instead of sitting in a column beside the squares.
 type paneRow struct {
 	spans []paneSpan
 
@@ -141,7 +141,7 @@ type paneRow struct {
 	// dim pane behind it.
 	highlighted bool
 
-	// band is a colour painted across the whole row before anything is drawn on it, and a
+	// band is a color painted across the whole row before anything is drawn on it, and a
 	// zero-alpha band is no band at all.
 	//
 	// **It is what groups rows into blocks.** The ledger folds a run into one line per fight and
@@ -150,14 +150,14 @@ type paneRow struct {
 	band color.RGBA
 
 	// indent sets a row in from the pane's left edge, in pixels, and **is what stops a row with
-	// no swatch being centred**. The arithmetic under a blow is a column of figures: centring it
+	// no swatch being centered**. The arithmetic under a blow is a column of figures: centering it
 	// would put every line at a different left edge, which is the one layout a column cannot
 	// survive. See prose_terms.go.
 	indent int
 }
 
 // plainRow is a whole row in the pane's own ink: a heading, a placeholder, a sentence nobody has
-// coloured. Most rows outside a duel are one of these.
+// colored. Most rows outside a duel are one of these.
 func plainRow(text string) paneRow {
 	return paneRow{spans: []paneSpan{{text: text}}}
 }
@@ -172,9 +172,9 @@ func (r paneRow) text() string {
 	return out
 }
 
-// centred reports whether the row is written down the middle of the pane rather than in the
+// centered reports whether the row is written down the middle of the pane rather than in the
 // column: a lone unmarked span, no swatch and no indent. Headings are the case this exists for.
-func (r paneRow) centred() bool {
+func (r paneRow) centered() bool {
 	return r.swatch.A == 0 && r.indent == 0 && len(r.spans) == 1 && !r.spans[0].mark
 }
 
@@ -193,7 +193,7 @@ func panePlacementRect(gs *state.GlobalState, p panePlacement) image.Rectangle {
 // rows.
 func drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r image.Rectangle) (x, y, w, h float32) {
 	// Not drawBox: a pane names its own ground and its own ink, where drawBox derives a dim
-	// fill from one colour. drawBox still serves the caption and the character strip, which
+	// fill from one color. drawBox still serves the caption and the character strip, which
 	// have no text on a light ground to worry about.
 	x, y = float32(r.Min.X), float32(r.Min.Y)
 	w, h = float32(r.Dx()), float32(r.Dy())
@@ -230,11 +230,11 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 	}
 	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}
 
-	// **The highlight is centred on the text, not offset from the row's top by a constant.**
+	// **The highlight is centered on the text, not offset from the row's top by a constant.**
 	// It used to be drawn at rowY-4 with height rowHeight-2, numbers picked by eye against a
 	// single 30px pitch. When the Resolution pane arrived at 22 the bar came out 20 tall
 	// against a ~19px line sitting 4px lower, so it clipped the text and the swatch along its
-	// bottom edge. Measuring the line and centring on it works at any pitch, which is the
+	// bottom edge. Measuring the line and centering on it works at any pitch, which is the
 	// point — the pane's pitch is now a property of the placement and free to change again.
 	_, lineHeight := text.Measure("Ag", face, 0)
 
@@ -253,7 +253,7 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 				contentW-2*paneBandInset, float32(p.rowHeight), row.band, false)
 		}
 
-		// **The row playback is on is set in the text itself — coloured, bold and underlined —
+		// **The row playback is on is set in the text itself — colored, bold and underlined —
 		// rather than sat on a lit bar** *(changed 2026-08-07)*. A full-width bar was a fourth
 		// saturated block in a pane that already carries a swatch, a verb and a sentence, and on a
 		// light ground it had to be pale enough to read through, which left it shouting and saying
@@ -267,9 +267,9 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 			ink = p.nowInk
 		}
 
-		// A lone unmarked run with nothing beside it is a heading, and headings are centred.
-		if row.centred() {
-			// **A centred run keeps its own ink.** It did not for one build, and the row that
+		// A lone unmarked run with nothing beside it is a heading, and headings are centered.
+		if row.centered() {
+			// **A centered run keeps its own ink.** It did not for one build, and the row that
 			// needs it most is the one that has a band behind it: a heading on a dark ground
 			// written in the panel's near-black ink is a heading nobody can read.
 			tint := ink
@@ -299,7 +299,7 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 			if !row.highlighted {
 				swatch = systems.ColorToward(swatch, p.fill, 45)
 			}
-			// Centred on the line for the same reason everything else is, so the squares sit level
+			// Centered on the line for the same reason everything else is, so the squares sit level
 			// with the text they belong to whatever pitch the pane draws at.
 			swatchTop := rowY + float32(lineHeight)/2 - swatchSize/2
 			vector.DrawFilledRect(screen, x+paneRowInset, swatchTop, swatchSize, swatchSize, swatch, false)
@@ -307,7 +307,7 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 		}
 
 		// The spans, measured one after the next. **A span with no ink of its own takes the row's**,
-		// so a plain sentence is written in one colour and a sum is written in five.
+		// so a plain sentence is written in one color and a sum is written in five.
 		cursorX := float64(textX)
 		for _, span := range row.spans {
 			if span.text == "" {
@@ -333,8 +333,8 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 			wSpan, _ := text.Measure(span.text, face, 0)
 
 			// **The mark is always bold *and* underlined.** That is what makes a verb read as the
-			// verb rather than as a word that happens to be coloured — one mark would be ambiguous
-			// against a pane that also uses colour for the side and for the live row.
+			// verb rather than as a word that happens to be colored — one mark would be ambiguous
+			// against a pane that also uses color for the side and for the live row.
 			//
 			// **Flush with the bottom of the measured line box**, not a constant above it:
 			// text.Measure reports the full line including descent, which is what keeps the rule

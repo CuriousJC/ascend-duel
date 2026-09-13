@@ -4,7 +4,7 @@ package data
 // costs.
 //
 // **Three tiers and nothing between them** *(owner's call, 2026-08-22)*. A per-ring price let the
-// catalogue drift into seventeen numbers that could only be judged one at a time; a tier can be
+// catalog drift into seventeen numbers that could only be judged one at a time; a tier can be
 // read against every other relic at a glance, and rebalancing a relic is moving it rather than
 // picking a new figure. The cost of that is real and worth saying: two relics in the same tier are
 // the same price even when one is plainly stronger, and the answer is the tier, not a fourth.
@@ -13,7 +13,7 @@ package data
 // likely to appear as a common one but only a bit over twice the price — scarcity is what makes it
 // feel rare, and a price that tracked the odds would make it unbuyable on the visit it finally
 // turns up. The ladder is 3 / 5 / 7 *(owner's call, 2026-08-22)*, which is the same span the
-// hand-written prices used to cover, now with the whole catalogue landing on three of its rungs.
+// hand-written prices used to cover, now with the whole catalog landing on three of its rungs.
 type Rarity string
 
 // The three tiers. **Strings rather than an enum**, because this one is written in a data file and
@@ -62,7 +62,7 @@ func (r Rarity) Sell() int { return rarityTiers[r].sell }
 
 // Weight is how many tickets a relic of this tier holds in the shelf draw. Relative, not a
 // percentage: a common relic is ten times as likely to be drawn as a rare one, whatever the
-// catalogue's mix happens to be.
+// catalog's mix happens to be.
 func (r Rarity) Weight() int { return rarityTiers[r].weight }
 
 // Rarities is the three tiers, cheapest first. For a tool or a test that wants to walk them

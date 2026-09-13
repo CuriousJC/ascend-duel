@@ -54,9 +54,9 @@ var (
 	vitaeFlightTicks = beat(3, 4)
 )
 
-// proseSpan is one coloured stretch of a sentence. A line is a few of them, so "the enemy's 4 vitae
+// proseSpan is one colored stretch of a sentence. A line is a few of them, so "the enemy's 4 vitae
 // flows to you" can put the figure and the word in crimson and leave the rest of the sentence alone
-// — the same distinction `Spec.TextInk` makes on a card, and for the same reason: colouring the
+// — the same distinction `Spec.TextInk` makes on a card, and for the same reason: coloring the
 // verb would say the money changed the sentence.
 type proseSpan struct {
 	text string
@@ -115,7 +115,7 @@ func (t *typewriter) setLines(lines []proseLine) {
 // **It is not the same question as finished**, and the split is the whole of the 2026-09-08 change:
 // a block can be complete and still be holding the screen. The reward screen holds it there until a
 // second click, because the figures are what the player came to read; the shop releases the moment
-// it is filled, because a greeting is flavour standing in front of a shelf.
+// it is filled, because a greeting is flavor standing in front of a shelf.
 func (t *typewriter) filled() bool {
 	return t.line >= len(t.lines) && !t.flying
 }
@@ -219,11 +219,11 @@ func (t *typewriter) visible(i int) ([]proseSpan, bool) {
 	return out, true
 }
 
-// drawProseLine writes one line's spans centred on x, and reports the rectangle the whole line
+// drawProseLine writes one line's spans centered on x, and reports the rectangle the whole line
 // occupies — which is what a payment flies out of.
 //
-// **Centred by measuring the finished line, not the typed part** *(2026-08-22)*, so a sentence
-// does not slide sideways as it types. A line that grew from its own centre would be a line the eye
+// **Centered by measuring the finished line, not the typed part** *(2026-08-22)*, so a sentence
+// does not slide sideways as it types. A line that grew from its own center would be a line the eye
 // has to keep re-finding.
 func drawProseLine(screen *ebiten.Image, face *text.GoTextFace, full string, spans []proseSpan,
 	centerX, y int) {

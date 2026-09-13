@@ -7,7 +7,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
-// Rounded-rectangle rasterising, in plain Go.
+// Rounded-rectangle rasterizing, in plain Go.
 //
 // **The whole game's rounded corners come from here**, for the reason set out in the
 // package comment: the screen's old mask-and-blend rounding needed a graphics context and
@@ -18,13 +18,13 @@ import (
 // **Hard-edged, no antialiasing.** The cards were already drawn that way and the glyphs
 // on them are 1:1 pixel art, so a soft card edge would put two different rendering
 // idioms on one face. It also makes the shape exactly testable — a pixel is either the
-// border colour or it is not, so the tests can assert colours rather than tolerances,
+// border color or it is not, so the tests can assert colors rather than tolerances,
 // which matters when nobody is looking at the output.
 
-// roundedRect fills a rounded rectangle of the given colour into dst.
+// roundedRect fills a rounded rectangle of the given color into dst.
 //
 // The corner test is the ordinary one: inside each corner's radius square, a pixel
-// belongs to the shape only if it falls within `radius` of that corner's centre. Every
+// belongs to the shape only if it falls within `radius` of that corner's center. Every
 // other pixel in the bounding box is inside. Comparing squared distances keeps it in
 // integers and avoids a square root per pixel.
 func roundedRect(dst *image.RGBA, x, y, w, h, radius int, c color.RGBA) {
@@ -53,7 +53,7 @@ func roundedRect(dst *image.RGBA, x, y, w, h, radius int, c color.RGBA) {
 // that was drawn.
 //
 // The test is the ordinary one: inside a corner's radius square, a pixel belongs to the shape
-// only if it falls within `radius` of that corner's centre. dx and dy are zero along the
+// only if it falls within `radius` of that corner's center. dx and dy are zero along the
 // straight edges, which passes the whole cross of the shape. Squared distances keep it in
 // integers and avoid a square root per pixel.
 func insideRounded(w, h, radius, px, py int) bool {
@@ -79,10 +79,10 @@ func insideRounded(w, h, radius, px, py int) bool {
 
 // BorderBevel is how much of the border is given over to its light and its shade.
 //
-// **Two pixels of a six-pixel border**, so four are still the border's own colour: the border is
+// **Two pixels of a six-pixel border**, so four are still the border's own color: the border is
 // what says the card's *state* — resting, selected, unaffordable — and a bevel eating the whole
 // ring would leave that signal being read off a lit edge and a shadowed one that are different
-// colours from each other. The depth goes on the outside, where the card meets the table.
+// colors from each other. The depth goes on the outside, where the card meets the table.
 const BorderBevel = 1
 
 // roundedBorder draws a rounded rectangle of `border` with a `fill` one inset inside it,
@@ -114,7 +114,7 @@ func roundedBorder(dst *image.RGBA, x, y, w, h, radius, width int, border, fill 
 }
 
 // bevelRelic lights the outer BorderBevel pixels of a shape already filled with `border`: the
-// top-left side of the card's diagonal takes the lit colour and the bottom-right side the shade.
+// top-left side of the card's diagonal takes the lit color and the bottom-right side the shade.
 //
 // **The split is the anti-diagonal, not the four edges.** Deciding by edge — top is light, right is
 // shade — has to answer for the corners, and every answer is a straight seam somewhere on the
@@ -133,7 +133,7 @@ func bevelRelic(dst *image.RGBA, x, y, w, h, radius int, border color.RGBA) {
 			if !insideRounded(w, h, clampRadius(w, h, radius), px, py) {
 				continue
 			}
-			// Anything further in than the bevel is the border proper and keeps its colour.
+			// Anything further in than the bevel is the border proper and keeps its color.
 			if insideRounded(w-2*BorderBevel, h-2*BorderBevel, inner, px-BorderBevel, py-BorderBevel) {
 				continue
 			}
@@ -160,14 +160,14 @@ func clampRadius(w, h, radius int) int {
 }
 
 // fillTriangleUp fills an upward-pointing isosceles triangle whose base runs from left to
-// left+w, apex centred over it.
+// left+w, apex centered over it.
 //
 // Scanline, hard-edged, integer-only — the same idiom as roundedRect and for the same
-// reason: a pixel is either the mark or it is not, so a test can assert a colour rather
+// reason: a pixel is either the mark or it is not, so a test can assert a color rather
 // than a tolerance. Each row's span grows linearly from the apex to the full base width.
 //
-// **The apex keeps the base's parity, which is what makes it centred rather than nearly
-// centred.** A row is drawn at `left + (w-span)/2`, so a span of the wrong parity puts the
+// **The apex keeps the base's parity, which is what makes it centered rather than nearly
+// centered.** A row is drawn at `left + (w-span)/2`, so a span of the wrong parity puts the
 // extra pixel on one side and the whole shape leans by half a pixel — visible on a 44-pixel
 // card back, where the apex is most of what is read. An even base therefore comes to a
 // two-pixel point and an odd one to a single pixel, rather than every apex being one pixel

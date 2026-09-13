@@ -7,7 +7,7 @@ package session
 // `internal/combat/stone.go`, which owns the arithmetic and the seat a count sits in.
 //
 // **This file is where a record becomes something usable, and where a bad record is refused**,
-// which is the same job `essence.go` does for the other catalogue. It lives here rather than in
+// which is the same job `essence.go` does for the other catalog. It lives here rather than in
 // `internal/combat` because a stone is *held by a run*: the rules have no idea a run exists, and
 // what they are handed is a fighter that already carries its counts.
 //
@@ -32,20 +32,20 @@ type Stone struct {
 	Name   string
 	Text   string
 
-	// Hand is the rung this stone raises, by catalogue key. **A key rather than a seat**, because
+	// Hand is the rung this stone raises, by catalog key. **A key rather than a seat**, because
 	// a seat is a position in the table this build loaded and a key is what a save file writes
 	// down. `combat.HandSlot` is what turns one into the other, and it is asked once, here.
 	Hand string
 }
 
-// stones is the validated catalogue, built once at package init.
+// stones is the validated catalog, built once at package init.
 //
 // **A bad record panics at init**, exactly as a bad essence does: a stone naming a rung the rules have
 // not got is a purchase that silently buys nothing, and the failure has to happen on launch rather
 // than in the one shop that offered it.
 var stones, stoneOrder = loadStones()
 
-// Stones is every stone in the catalogue, in a fixed sorted order.
+// Stones is every stone in the catalog, in a fixed sorted order.
 func Stones() []Stone {
 	out := make([]Stone, 0, len(stoneOrder))
 	for _, key := range stoneOrder {
@@ -105,7 +105,7 @@ func loadStones() (map[string]Stone, []string) {
 	}
 
 	if len(keys) < bagSize {
-		// The bag offers four, so a catalogue of three cannot fill it. Caught here rather than
+		// The bag offers four, so a catalog of three cannot fill it. Caught here rather than
 		// producing a shelf with a gap in it.
 		panic(fmt.Sprintf("stones.json: %d stones, and a bag of rocks needs %d", len(keys), bagSize))
 	}
@@ -127,7 +127,7 @@ func resolveStone(r data.StoneData) (Stone, error) {
 		return Stone{}, fmt.Errorf("%s has no text, so its card says nothing", r.StoneRecord)
 	}
 	if _, ok := combat.HandSlot(r.Hand); !ok {
-		return Stone{}, fmt.Errorf("%s raises hand %q, which the catalogue does not hold", r.StoneRecord, r.Hand)
+		return Stone{}, fmt.Errorf("%s raises hand %q, which the catalog does not hold", r.StoneRecord, r.Hand)
 	}
 	return Stone{Record: r.StoneRecord, Name: r.Name, Text: r.Text, Hand: r.Hand}, nil
 }
@@ -142,7 +142,7 @@ func resolveStone(r data.StoneData) (Stone, error) {
 // a vitae fountain.
 const StoneSalePrice = 5
 
-// UseStone puts a stone on its rung, for the rest of the run, and reports whether the catalogue
+// UseStone puts a stone on its rung, for the rest of the run, and reports whether the catalog
 // held it.
 //
 // **Using is no longer the same as owning** *(owner's call, 2026-09-02, reversing 2026-08-27)*. A
@@ -179,8 +179,8 @@ func (s *Session) StoneCounts() map[string]int {
 	return out
 }
 
-// HandMultiplier is what one rung pays this run: the catalogue's figure plus whatever stones are
-// on it. It reports false for a rung the catalogue does not hold.
+// HandMultiplier is what one rung pays this run: the catalog's figure plus whatever stones are
+// on it. It reports false for a rung the catalog does not hold.
 //
 // **It is the run asking the rules rather than doing the arithmetic**, so the hands panel and the
 // resolver read the same answer out of `combat.StoneValue`.
@@ -196,7 +196,7 @@ func (s *Session) HandMultiplier(hand string) (int, bool) {
 
 // StoneWorth is what the *next* stone on a rung would be worth, in multiplier points. It is what
 // a stone card writes on its face, and it does not depend on how many are already there — a tenth
-// of the catalogue figure, every time.
+// of the catalog figure, every time.
 func StoneWorth(hand string) int {
 	for _, h := range combat.Hands() {
 		if h.Key == hand {
@@ -211,9 +211,9 @@ func StoneWorth(hand string) int {
 func (s *Session) equipStones(d combat.Duelist) combat.Duelist {
 	for _, hand := range sortedHands(s.stones) {
 		for i := 0; i < s.stones[hand]; i++ {
-			// **A rung the catalogue has dropped is skipped rather than fatal.** A resumed run is
+			// **A rung the catalog has dropped is skipped rather than fatal.** A resumed run is
 			// refused outright for a name this build has not got — see save.go — so reaching here
-			// with one would mean the catalogue changed under a live session, and losing a stone
+			// with one would mean the catalog changed under a live session, and losing a stone
 			// is a better failure than losing the fight to a panic.
 			d, _ = d.WithHandStone(hand)
 		}
@@ -221,7 +221,7 @@ func (s *Session) equipStones(d combat.Duelist) combat.Duelist {
 	return d
 }
 
-// sortedHands is the map's keys in a fixed order. Go randomises map iteration and this decides a
+// sortedHands is the map's keys in a fixed order. Go randomizes map iteration and this decides a
 // duelist's contents, so it is sorted for the reason `EssenceOrder` is — see the `randomness` skill.
 func sortedHands(m map[string]int) []string {
 	out := make([]string, 0, len(m))
@@ -239,9 +239,9 @@ func sortedHands(m map[string]int) []string {
 // number; the pouch is a row of things to click, and two Agates in it are two cards to draw and two
 // separate decisions to make. It is the rune sack's shape exactly, and for the same argument.
 
-// Carry puts a stone in the pouch, and reports whether the catalogue held it.
+// Carry puts a stone in the pouch, and reports whether the catalog held it.
 //
-// **A stone the catalogue does not have is refused** rather than carried as a key nothing can
+// **A stone the catalog does not have is refused** rather than carried as a key nothing can
 // resolve — the posture `Hold` takes for a rune, and for the same reason: a pouch slot that
 // cannot be resolved is a slot the player cannot spend.
 func (s *Session) Carry(key string) bool {

@@ -23,11 +23,11 @@ import (
 // The rule is really about windowlessness, and these two assertions happen to be
 // windowless: they compare constants and walk a switch statement. Nothing here creates an
 // ebiten.Image, calls RunGame, or touches a GlobalState, so no graphics driver is ever
-// initialised and the test runs on a headless CI box.
+// initialized and the test runs on a headless CI box.
 //
 // They earn the exception because both guard a duplication that the compiler cannot see.
 // If either becomes awkward, delete it — do not start reaching for a window to keep it
-// alive, and do not read this as licence to test the rest of the screen.
+// alive, and do not read this as license to test the rest of the screen.
 
 func TestCardFootprintMatchesTheRenderer(t *testing.T) {
 	// cardWidth and cardHeight lay out the hand — the pitch, the band, the drop
@@ -50,15 +50,15 @@ func TestCardFootprintMatchesTheRenderer(t *testing.T) {
 
 func TestEveryElementHasItsOwnArt(t *testing.T) {
 	// combat.Element and cards.Element are separate enums on purpose: the rules say what an
-	// element *does* and the drawing package says what colour it is, and neither wants the
+	// element *does* and the drawing package says what color it is, and neither wants the
 	// other's vocabulary. The cost is a hand-written switch, which the compiler cannot check
 	// for completeness.
 	//
 	// A missing case falls through to Basic, so the failure mode is two elements sharing
-	// a border colour — a fire card that looks plain. Distinctness is what is asserted.
+	// a border color — a fire card that looks plain. Distinctness is what is asserted.
 	//
 	// It walks combat.AllElements rather than a list written out here, so an element
-	// appended to the rules fails this test until it has been given a colour.
+	// appended to the rules fails this test until it has been given a color.
 	seen := map[cards.Element]combat.Element{}
 	for _, e := range combat.AllElements {
 		got := artFor(e)
@@ -77,8 +77,8 @@ func TestEveryElementHasItsOwnArt(t *testing.T) {
 
 func TestElementNamesAgreeAcrossThePackages(t *testing.T) {
 	// The two enums also carry names, and the deck reads element names out of
-	// cards.json. If the drawing package spells one differently, a sheet labelled
-	// "lightning" could be showing the colour the game calls something else.
+	// cards.json. If the drawing package spells one differently, a sheet labeled
+	// "lightning" could be showing the color the game calls something else.
 	for _, e := range combat.AllElements {
 		if got, want := artFor(e).String(), e.String(); got != want {
 			t.Errorf("screen calls it %q, internal/cards calls it %q", want, got)
@@ -269,7 +269,7 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 		}
 	}
 
-	// And a plan sits in its colour's row like everything else *(2026-08-23)*. It used to be
+	// And a plan sits in its color's row like everything else *(2026-08-23)*. It used to be
 	// checked into a row of its own, which was right while every plan was basic; now a fire
 	// Prepare belongs under "fire", and the failure this guards against is a plan quietly routed
 	// somewhere on the strength of its category.
@@ -278,7 +278,7 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 			continue
 		}
 		if got, want := deckRowFor(c), deckRowFor(combat.Of(combat.Bash, c.Element)); got != want {
-			t.Errorf("%v sits in row %d and an attack of the same colour sits in row %d", c, got, want)
+			t.Errorf("%v sits in row %d and an attack of the same color sits in row %d", c, got, want)
 		}
 	}
 }
@@ -303,7 +303,7 @@ func TestTheCardHoldsAsManyEffectsAsThereAreStatuses(t *testing.T) {
 func TestEveryStatusHasABadge(t *testing.T) {
 	// A status with no artwork falls back to the default badge, which is a shape nobody has
 	// learned — fine as a backstop, wrong as the thing a shipped status draws. This walks the
-	// catalogue the rules can actually put on a duelist and asks each for a picture of its own.
+	// catalog the rules can actually put on a duelist and asks each for a picture of its own.
 	for _, id := range combat.AllStatuses() {
 		key, ok := statusBadges[combat.StatusOf(id).Key]
 		if !ok {
@@ -322,7 +322,7 @@ func TestEveryRelicDrawsSomething(t *testing.T) {
 	// an empty face, on a screen nobody reaches until they have played to a shop. `ArtKey` is
 	// what closes the empty case; this closes the misspelled one.
 	//
-	// **It does not fail a relic for having no art of its own.** Most of the catalogue has none
+	// **It does not fail a relic for having no art of its own.** Most of the catalog has none
 	// and is meant to draw the default until somebody paints one — see tools/relicsheet, which
 	// says how many that is.
 	records := data.LoadRelics()
@@ -389,7 +389,7 @@ func TestEveryEssenceTextFitsItsCard(t *testing.T) {
 
 func TestTheElementalEssencesAllBreakInTheSamePlace(t *testing.T) {
 	// **Why the authored break exists**, pinned so it cannot be quietly undone by deleting a `\n`
-	// from essences.json. The four recolouring essences differ only in the element they name, and the
+	// from essences.json. The four recoloring essences differ only in the element they name, and the
 	// names differ in width — FIRE sits comfortably on the line where LIGHTNING all but fills it —
 	// so left to the measurer the four read as four layouts of one card.
 	ttf := assets.LoadFontData()["kubasta"]
@@ -452,7 +452,7 @@ func TestTheDeckPanelHidesNothing(t *testing.T) {
 	room := deckGridRoom()
 
 	// Well past anything a run can produce: 48 cards is the whole starting deck, and a flip relic
-	// recolouring every one of them into a single element is the worst case the panel has.
+	// recoloring every one of them into a single element is the worst case the panel has.
 	for n := 1; n <= 64; n++ {
 		pitch := rowPitchFor(n, room)
 		if pitch < 1 {
@@ -475,7 +475,7 @@ func TestTheDeckPanelDrawsEveryCardItIsGiven(t *testing.T) {
 	deck := session.StartingDeck()
 	d := deckContents{draw: deck}
 
-	// Every card recoloured into one element, which is what a flip relic does and what used to
+	// Every card recolored into one element, which is what a flip relic does and what used to
 	// overflow the row cap by a factor of four.
 	oneRow := make([]combat.Card, 0, len(deck))
 	for _, c := range deck {
@@ -498,7 +498,7 @@ func TestTheDeckPanelDrawsEveryCardItIsGiven(t *testing.T) {
 }
 
 func TestEveryBossDrawsItsPortrait(t *testing.T) {
-	// The same failure as the relic above, one catalogue over, and worse: a boss has no default
+	// The same failure as the relic above, one catalog over, and worse: a boss has no default
 	// picture to fall back on, so a mistyped `Portrait` is a stairway fight against a card with a
 	// hole in it — and the earliest one of those is three fights into a run.
 	//
@@ -537,7 +537,7 @@ func TestNoBossPortraitIsAnEnemyPortrait(t *testing.T) {
 // TestEveryOpponentNameFitsItsCard holds both opponent pools against the width of the card they
 // are drawn on.
 //
-// **`EnemyStyle` sets a name as one centred line and never wraps it**, which means a name too
+// **`EnemyStyle` sets a name as one centered line and never wraps it**, which means a name too
 // wide is not a name that spills onto a second line, it is a name with a letter clipped off each
 // end. That is what
 // `Jerry the Toll-Taker` did to half the boss roster until the title moved into its own field on
@@ -637,7 +637,7 @@ func TestAMetalStillExplainsItselfInTheTooltip(t *testing.T) {
 	}
 }
 
-// **The name is written in the metal's own colour**, sampled out of the sheen the card is washed in
+// **The name is written in the metal's own color**, sampled out of the sheen the card is washed in
 // rather than written down anywhere — so a repaint of the ink moves the word with it. Lifted for the
 // dark panel; see cards.WashLight.
 func TestAMetalsNameIsLitInTheTooltip(t *testing.T) {
@@ -756,7 +756,7 @@ func TestNoUpgradeWordIsWiderThanItsColumn(t *testing.T) {
 
 // **The word carddesc writes and the word cards lights are the same word.** They are two packages
 // with no arrow between them — see cards.MetalWords — so nothing but this stops the tooltip writing
-// GOLD while the highlight looks for GOLDEN, which fails as a line that is simply never coloured.
+// GOLD while the highlight looks for GOLDEN, which fails as a line that is simply never colored.
 func TestTheMetalWordsAgree(t *testing.T) {
 	written := map[systems.Upgrade]string{
 		systems.UpgradeGolden: carddesc.Gold,
@@ -780,7 +780,7 @@ func TestEveryBleedingCardArtIsTheCardsOwnSize(t *testing.T) {
 	//
 	// **The weight is the other half of it, and it is the half that fails silently.** The
 	// generator hands back 1060x1484, which is about 1.1 MB a relic. Committing those would be
-	// roughly 155 MB across a 137-ring catalogue, against a repo whose CLAUDE.md already counts
+	// roughly 155 MB across a 137-ring catalog, against a repo whose CLAUDE.md already counts
 	// 4.9 MB of sheets as a cost worth managing. At the card's size it is about 57 KB each.
 	//
 	// So: keep the generator's output in `.scratch/relic-art`, and commit the 200x280 reduction.

@@ -57,7 +57,7 @@ func TestTheBadgeSaysWhatTheRelicIsDoing(t *testing.T) {
 	}
 }
 
-// **A relic that does not grow carries no badge**, which is most of the catalogue: an empty string is
+// **A relic that does not grow carries no badge**, which is most of the catalog: an empty string is
 // what drawRelicCard passes through to a card that then draws nothing.
 func TestARelicThatDoesNotGrowHasNoBadge(t *testing.T) {
 	id, ok := combat.RelicByKey("dmg-all-slash")
@@ -132,9 +132,9 @@ func TestDroppingARelicReordersTheRun(t *testing.T) {
 	}
 }
 
-// A cancelled drag passes the same index twice, and every row has to read that as putting the card
+// A canceled drag passes the same index twice, and every row has to read that as putting the card
 // back untouched.
-func TestACancelledRelicDragChangesNothing(t *testing.T) {
+func TestACanceledRelicDragChangesNothing(t *testing.T) {
 	gs := wornState(t, "dmg-all-slash", "hp-scale")
 	row := buildRelicRow(gs, nil)
 

@@ -590,7 +590,7 @@ func (s Script) Len() int { return len(s.Steps) }
 
 // Load parses and validates the script, and **panics on anything it cannot resolve**.
 //
-// A panic rather than an error for the reason every other catalogue in this game panics at load:
+// A panic rather than an error for the reason every other catalog in this game panics at load:
 // it fails when the binary starts rather than at the step nobody reached in testing. A tutorial
 // is the one feature whose whole audience is a player who does not yet know what the game is
 // supposed to look like, so a broken one is worse than none.

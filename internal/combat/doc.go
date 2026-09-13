@@ -35,13 +35,13 @@
 //     fourteen constants with cost, damage and category as switch statements over it, which held
 //     twelve player cards and could not hold the several hundred that per-enemy decks produce. IDs
 //     are registration-ordered and must never be serialized.
-//   - element.go — the five colours plus Basic, which is the absence of one rather than a sixth.
+//   - element.go — the five colors plus Basic, which is the absence of one rather than a sixth.
 //   - status.go — a status is a record in statuses.json rather than an element: a key, a name, a
 //     badge, one of four closed effect kinds, an amount and a duration. They share one lifecycle
 //     and nothing stacks; a second hit resets the clock. A status only happens if a worn relic says
 //     so, which is what left the elemental relics something to be.
 //   - duelist.go — who is fighting, and the two things spent during a round: action points and
-//     raised defences. A Duelist is a value; every rule takes one and returns a new one.
+//     raised defenses. A Duelist is a value; every rule takes one and returns a new one.
 //   - event.go — the vocabulary a resolved round hands back, and the play order both the resolver
 //     and the screen read. This is the whole contract between the rules and the pictures.
 //   - hand.go and hand_table.go — a hand is a damage multiplier and nothing else, matched on three
@@ -51,7 +51,7 @@
 //   - relic.go — the relic grammar: seven moments, three predicates, ten effect verbs, with
 //     registration refusing a verb used at the wrong moment or a status no file holds. Worn order
 //     is a rule, because effects compound left to right. An enemy wears no relics, so an enemy's
-//     colours are inert by construction.
+//     colors are inert by construction.
 //   - planner.go — what an enemy does with the hand it was dealt.
 //   - combat.go — ResolveRound and the phase resolvers.
 //

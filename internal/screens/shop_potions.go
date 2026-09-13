@@ -8,7 +8,7 @@ package screens
 // `internal/session/potion.go`, which owns what each one does and refuses a record the rules cannot
 // apply.
 //
-// **The whole catalogue is on the shelf every visit, and it does not reroll** *(owner's call)*.
+// **The whole catalog is on the shelf every visit, and it does not reroll** *(owner's call)*.
 // There is no draw here and so no stream: three vessels, always the same three, in the order
 // `data/potions.json` writes them. A reroll would be asking to be offered the thing that is already
 // being offered.
@@ -35,7 +35,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// shopPotions is the catalogue as the shelf stands it. **Asked of the run's package rather than
+// shopPotions is the catalog as the shelf stands it. **Asked of the run's package rather than
 // held on the scene**: every visit offers all three, so there is nothing to deal and nothing to
 // remember between visits.
 func shopPotions() []session.Potion { return session.Potions() }
@@ -47,7 +47,7 @@ const (
 	brandLine  = "WEAR SIX RELICS\nnever comes off"
 	brandPrice = 12
 
-	// brandArtKey is the placeholder picture: the relic catalogue's own fallback. **A relic's
+	// brandArtKey is the placeholder picture: the relic catalog's own fallback. **A relic's
 	// default rather than a drawing of its own**, on the argument the sack already borrowed the
 	// essence's: a placeholder something else already wears is better than a blank face, and it will
 	// be replaced by a key on a record the day brands become one.
@@ -93,7 +93,7 @@ func (s *ShopScene) drawBrand(gs *state.GlobalState, screen *ebiten.Image) {
 // potionSpec is a potion drawn as a card.
 //
 // **Basic, not an element.** A potion changes the duelist rather than a card, and the duelist is not
-// a colour — so its border is the mid grey `cards.BorderOf` gives `basic`, exactly as a stone's and
+// a color — so its border is the mid gray `cards.BorderOf` gives `basic`, exactly as a stone's and
 // a sealed good's are. The hue wheel is full and a fourth kind of shelf card cannot have one.
 func potionSpec(gs *state.GlobalState, p session.Potion, enabled bool) cards.Spec {
 	return cards.Spec{

@@ -13,13 +13,13 @@ package screens
 // player's card in the corner and their relics beside it, so an essence is chosen against the thing it
 // would be changing. See postbattle_prose.go and buildband.go.
 //
-// **Two stages after that, essence first** *(2026-08-17)*. Two essences are drawn from the catalogue and offered
+// **Two stages after that, essence first** *(2026-08-17)*. Two essences are drawn from the catalog and offered
 // as cards; choosing one deals a hand off the run deck to apply it to. It ran the other way round
 // first — pick a card, then say what to do to it — and the reason it turned is that the *essence* is
 // the reward. What you were given for winning has to be the thing on the screen when you arrive,
 // and a menu of verbs under a chosen card made the reward look like a property of the card.
 //
-// **An essence varies a card the game already defines.** It recolours it, removes it, or copies it;
+// **An essence varies a card the game already defines.** It recolors it, removes it, or copies it;
 // the concept is never touched, so nothing here can produce a card `internal/combat` cannot
 // resolve. See `internal/session/essence.go` for the target vocabulary and why it is short.
 //
@@ -62,7 +62,7 @@ const essencesOffered = 2
 
 // prize is one of the cards on the table. **Every one of them is an essence** since the vitae card went
 // — the struct survives because a prize is an essence *plus what this visit has done with it*, which
-// the catalogue record has no business carrying.
+// the catalog record has no business carrying.
 type prize struct {
 	// taken is set once this prize has been picked. **It stays in the row rather than being removed
 	// from it** — a card leaving would move the one beside it. Only a relic that adds a pick can
@@ -110,9 +110,9 @@ const (
 	offerButtonHeight = 76
 
 	// essenceRowGap is the air on each side of the skip button, which stands **in** the essence row
-	// rather than under it *(owner's call, 2026-09-06)*. It was centred at offerButtonsPct — 88%,
+	// rather than under it *(owner's call, 2026-09-06)*. It was centered at offerButtonsPct — 88%,
 	// the seat the shop's Leave button takes — and with both rows of cards on screen the offer row
-	// reached y=949 against a button centred at 950, so the cards were drawn straight over it.
+	// reached y=949 against a button centered at 950, so the cards were drawn straight over it.
 	//
 	// **Between the two essences rather than beside them**, which is what makes it read as one row:
 	// taking neither is the third answer to the question the two cards are asking, so it stands
@@ -153,7 +153,7 @@ const (
 //
 // They were raw tick counts — 26 and 100 — written before `beat` existed, which meant this screen
 // was outside the setting the duel is paced by: turning the game's speed down would have sped up a
-// round and left the reward screen exactly as slow as it was. See clock.go. The one behaviour
+// round and left the reward screen exactly as slow as it was. See clock.go. The one behavior
 // change is that the flight is 25 ticks rather than 26, which is a frame and a half.
 //
 // `var` rather than `const` because `beat` is a function, exactly like `victoryHoldTicks`.
@@ -339,7 +339,7 @@ func prizeNames(ps []prize) []string {
 	return out
 }
 
-// dealPrizes is the offer: two essences drawn from the catalogue.
+// dealPrizes is the offer: two essences drawn from the catalog.
 func dealPrizes(gs *state.GlobalState) []prize {
 	out := make([]prize, 0, essencesOffered)
 	for _, w := range dealEssences(gs) {
@@ -348,13 +348,13 @@ func dealPrizes(gs *state.GlobalState) []prize {
 	return out
 }
 
-// dealEssences picks which alterations are offered: a shuffle of the catalogue, cut to two.
+// dealEssences picks which alterations are offered: a shuffle of the catalog, cut to two.
 //
 // **Its own stream** (`seeds.EssenceOffer`), separate from the cards. They are drawn from different
-// lists and change on different schedules — adding an essence to the catalogue would otherwise reroll
+// lists and change on different schedules — adding an essence to the catalog would otherwise reroll
 // which *cards* every fight of every run offered.
 //
-// **Distinct by construction**, since it shuffles the catalogue rather than drawing twice: being
+// **Distinct by construction**, since it shuffles the catalog rather than drawing twice: being
 // offered the same essence as both options would be a choice that is not one.
 func dealEssences(gs *state.GlobalState) []session.Essence {
 	all := session.Essences()
@@ -749,7 +749,7 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 	}
 
 	// **What the essence did decides which shape the change takes**, and the three cases are the
-	// three things an essence can be: it recoloured the card, it ate it, or it made a second one. See
+	// three things an essence can be: it recolored the card, it ate it, or it made a second one. See
 	// cardmorph.go — the morph is handed two finished faces and works out the rest.
 	beforeSpec := cardSpec(before, heldByRun(gs, before), true, false)
 	switch {
@@ -780,7 +780,7 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 // **One function for both**, the same rule the hand follows: a card hit-tested against a
 // rectangle it is not drawn in is exactly the bug this shape prevents.
 //
-// In the second stage the chosen essence stays on screen, alone and centred, so what is about to
+// In the second stage the chosen essence stays on screen, alone and centered, so what is about to
 // happen is still stated while the card is picked.
 func (s *PostBattleScene) essenceSlot(gs *state.GlobalState, i int) image.Rectangle {
 	// **The row sits where the chosen essence used to** *(2026-09-06)*. Both rows are up at once now,
@@ -801,7 +801,7 @@ func (s *PostBattleScene) essenceSlot(gs *state.GlobalState, i int) image.Rectan
 // overlap, which is exactly what happened when the button was left at 88%.
 //
 // **The button takes the middle slot.** With the usual two prizes that is literally between them;
-// with an odd number it sits left of centre, which is arbitrary and harmless — nothing deals an odd
+// with an odd number it sits left of center, which is arbitrary and harmless — nothing deals an odd
 // number today, and a row that refused to lay one out would be worse than one that leans.
 func essenceRowSeats(gs *state.GlobalState, n int) (prizes []image.Rectangle, button image.Rectangle) {
 	top := gs.PctY(essenceChosenRowPct)
@@ -837,7 +837,7 @@ func (s *PostBattleScene) offerRow(gs *state.GlobalState) image.Rectangle {
 }
 
 // offerRowOf is that row **for a stated number of cards**, which is what a slide needs: a row of
-// eight is not centred where a row of seven is, so a card leaving one and landing in the other has
+// eight is not centered where a row of seven is, so a card leaving one and landing in the other has
 // to be able to ask about both. Same reason a cardSlide carries a count at each end.
 func offerRowOf(gs *state.GlobalState, n int) image.Rectangle {
 	width := (n-1)*handPitch(gs, n) + cardWidth
@@ -875,7 +875,7 @@ func (s *PostBattleScene) offerSeat(gs *state.GlobalState, i, count int) image.P
 // offer row's top edge.
 //
 // **It hangs off the cards, not off a column of its own**, which is the rule the combat screen's
-// block follows — see sortTabRect there. This screen has no control column, and the row is centred
+// block follows — see sortTabRect there. This screen has no control column, and the row is centered
 // rather than banded, so the anchor is the row's own right edge and sortColumnGap is the same air
 // the hand leaves.
 func (s *PostBattleScene) sortTabRect(gs *state.GlobalState, i int) image.Rectangle {
@@ -1062,7 +1062,7 @@ func settledSeat(gs *state.GlobalState) image.Rectangle {
 	return settledSeats(gs, 1)[0]
 }
 
-// settledSeats lays the settled row out for n cards, centred.
+// settledSeats lays the settled row out for n cards, centered.
 func settledSeats(gs *state.GlobalState, n int) []image.Rectangle {
 	if n < 1 {
 		n = 1
@@ -1141,7 +1141,7 @@ func drawPrizeCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 }
 
 // drawEssences puts the offer up as cards. **An essence is a card because it is a thing you are given**,
-// and the game already has one visual language for that — a name, a border colour and a line
+// and the game already has one visual language for that — a name, a border color and a line
 // saying what it does.
 //
 // It borrows `cards.Hand` rather than taking a style of its own: an essence has no cost and no form,

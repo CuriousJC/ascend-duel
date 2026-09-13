@@ -1,19 +1,18 @@
-# Essence art prompt
+# Relic art prompt
 
-**The essence card's own prompt.** It shares the style block below word for word with
-[relic_art_prompt.MD](relic_art_prompt.MD), because an essence and a relic have to look like two
-cards from one game. What it does not share is the ephemeral fading, and the sentence an essence
-card prints across the lower half of its picture.
+**The relic catalog's own prompt.** It shares the style block below word for word with
+[essence_art_prompt.MD](essence_art_prompt.MD), because a relic and an essence have to look like
+two cards from one game. What it does not share is the composition, and the ephemeral fading an
+essence has and a relic does not.
 
-**It is also the prompt for the other two `cards.EssenceStyle` goods** — runes and stones. They
-draw through the same style and carry the same sentence, so the composition here is theirs too. A
-rune additionally needs a body plan, which is [rune_art_prompt.MD](rune_art_prompt.MD), pasted
-between this prompt and the record.
-
-**The style block describes the shipped relic catalog rather than an ideal.** No essence has been
-drawn yet, so there is nothing of its own to measure; matching the relics is the point, and the
-fading below is the only thing asked for that they do not have. See the README for what was
+**The style block describes the shipped catalog rather than an ideal**, and that is what it is
+for: it was measured off the 138 pictures in `assets/relic/`, so a generator given this and a
+record should land somewhere the existing shelf would accept. See the README for what was
 measured and how.
+
+**A relic is an object and can be described from nothing**, which is why nothing is pasted
+between this prompt and the record the way a rune's body plan is. The record's `Draw` is the
+whole brief.
 
 ---
 
@@ -61,13 +60,6 @@ particles, sparks, smoke, motion lines, and clutter of any kind.
 Priority order: readable silhouette -> recognizable object -> material shading -> coherent color
 scheme -> subtle background texture.
 
-The object is also **ephemeral**: it is coming apart, fading, dissolving or being unmade, and a
-light haze hangs around it. The unmaking is what makes it an essence rather than a relic, so it
-must read as something happening to this object — an edge going to motes, a section thinning
-until the background shows through, a trailing wisp — and not as a filter laid over the whole
-picture. **The silhouette survives it.** Whatever the object is, it stays recognizable at a
-glance; the fading takes the edges and the margins, never the middle.
-
 ## Composition
 
 Composition: one object, centered and large. It spans roughly 80% of the width and roughly 70% of
@@ -85,18 +77,13 @@ any kind for text or a number. Do not leave a corner or an edge empty for one, a
 one. Whatever the card puts on top of this picture, it puts there itself at draw time, and the
 picture is meant to carry on underneath.
 
-The card prints its sentence across the lower half of the picture, on a dark scrim it draws
-itself. That is not a band to leave empty — draw the object through it exactly as above — but it
-does mean the half carrying the recognition should be the upper one.
-
 ## The subject — pasted as the record
 
-The block below is one record from `data/essences.json`, in JSON.
+The block below is one record from `data/relics.json`, in JSON.
 
-**Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Target`,
-`Value`, `Family` and the rest — is context for what the essence does and is never to be
-rendered: no title, no caption, no rules text, no numbers anywhere in the image. If `Draw` is
-empty, stop and say so rather than inventing a subject.
+**Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Rules`,
+`Rarity`, `Family` and the rest — is context for what the relic does and is never to be rendered:
+no title, no caption, no rules text, no numbers anywhere in the image. If `Draw` is empty, stop
+and say so rather than inventing a subject.
 
-All images should be named after the record's own key — `EssenceRecord`, or `RuneRecord` /
-`StoneRecord` for the other two goods — and a link provided so I can easily click to download
+All images should be named after the record's own key — `RelicRecord` — and a link provided so I can easily click to download

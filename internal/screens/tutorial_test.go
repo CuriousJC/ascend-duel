@@ -152,7 +152,7 @@ func TestTheBubbleAvoidsWhatItPointsAt(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	var t0 tutorialOverlay
 
-	// A target in the bottom-centre, which is where the bubble would rather be.
+	// A target in the bottom-center, which is where the bubble would rather be.
 	target := image.Rect(500, 700, 800, 900)
 	host := fixedHost{rect: target}
 
@@ -216,12 +216,12 @@ func TestTheLeaderDoesNotOvershootAnOverlap(t *testing.T) {
 	}
 }
 
-// A target dead-centre on the bubble has no direction to point in, and must not divide by zero or
+// A target dead-center on the bubble has no direction to point in, and must not divide by zero or
 // fly off to the origin.
-func TestTheLeaderSurvivesACoincidentCentre(t *testing.T) {
+func TestTheLeaderSurvivesACoincidentCenter(t *testing.T) {
 	r := image.Rect(100, 100, 300, 200)
 	if got := edgeToward(r, center(r)); got != center(r) {
-		t.Errorf("a ray at its own centre went to %v", got)
+		t.Errorf("a ray at its own center went to %v", got)
 	}
 }
 
@@ -340,7 +340,7 @@ func TestACoveredSceneDropsTheGate(t *testing.T) {
 //
 // **The hand is part of that, and the omission was the bug the test caught**: `first-card` is
 // measured off the leftmost card, so a scene with no hand reports it has no such anchor — which is
-// correct behaviour and looks exactly like an anchor nobody wrote a case for.
+// correct behavior and looks exactly like an anchor nobody wrote a case for.
 func stubCombat() *CombatScene {
 	s := &CombatScene{}
 	s.duelButton = stubButton()
@@ -358,8 +358,8 @@ func stubCombat() *CombatScene {
 	// unbroken round reports no rectangle for `shattered-cards`, which is honest and would read
 	// here as a missing case. The row has to hold the seat as well as the mark — the anchor is the
 	// card's own rectangle, and a mark on a seat the row does not have is nothing to point at.
-	s.theatre.enemyDealt = make([]dealtCard, 3)
-	s.theatre.shatteredSeats = map[int]bool{1: true}
+	s.theater.enemyDealt = make([]dealtCard, 3)
+	s.theater.shatteredSeats = map[int]bool{1: true}
 	return s
 }
 
@@ -503,7 +503,7 @@ func TestAHandWithNothingMatchingHasNoSet(t *testing.T) {
 }
 
 // **The axis decides what a set is, which is the whole reason it is authored.** The same hand holds
-// a concept pair and an elemental four of a kind, and a lesson about colours must not point at the
+// a concept pair and an elemental four of a kind, and a lesson about colors must not point at the
 // two cards that happen to share a name.
 func TestTheAxisDecidesWhichCardsAreTheSet(t *testing.T) {
 	var s CombatScene
@@ -534,7 +534,7 @@ func TestAnUntaughtRunHasNoMatchingSet(t *testing.T) {
 }
 
 // wearTwo puts two relics on the run, so that the worn row an anchor points at has something in it.
-// **Any two the catalogue holds**, because the anchor is the row and not a particular relic.
+// **Any two the catalog holds**, because the anchor is the row and not a particular relic.
 func wearTwo(t *testing.T, gs *state.GlobalState) {
 	t.Helper()
 	worn := 0
@@ -546,5 +546,5 @@ func wearTwo(t *testing.T, gs *state.GlobalState) {
 			worn++
 		}
 	}
-	t.Fatalf("could not put two relics on the run; the catalogue offered %d", worn)
+	t.Fatalf("could not put two relics on the run; the catalog offered %d", worn)
 }

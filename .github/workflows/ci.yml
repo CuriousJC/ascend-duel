@@ -34,7 +34,7 @@ concurrency:
 jobs:
   check:
     strategy:
-      # Let both platforms report. Cancelling the sibling on the first failure hides whether
+      # Let both platforms report. Canceling the sibling on the first failure hides whether
       # a break is platform-specific, which is the main thing having two runners tells you.
       fail-fast: false
       matrix:

@@ -56,7 +56,7 @@ is 32^6 — 1,073,741,824 runs.
   changed is its *range*: `main` folds the clock in with `seeds.Normalize` so every run is one
   that can be written down, and logs `seeds.Code` rather than the number.
 - **Shrinking the seed space does not weaken the derivation.** Each stream XORs a salt spread
-  across the full int64, so two adjacent codes do not produce neighbouring shuffles.
+  across the full int64, so two adjacent codes do not produce neighboring shuffles.
 - **Case is not information.** `Parse` accepts either and trims surrounding space; `Code` only
   ever emits upper case. Compare parsed numbers, never strings.
 - **`Code` panics outside the space rather than folding.** Quietly rendering a number that will
@@ -99,11 +99,11 @@ the salt table, so inserting one mid-list re-points every stream after it.
 |---|---|---|---|
 | `seeds.EnemySelect` | run | `roster` (`internal/screens/combat.go`) | the whole tower, on any change to loot or offers |
 | `seeds.CombatRoll` | run | `CombatScene.combatRNG`, injected into `ResolveRound` | every shock in the run, on any change to draw |
-| `seeds.PlayerDeck` | fight | `CombatScene.rng` | every catalogued hand in `internal/screens/seeds.go` |
+| `seeds.PlayerDeck` | fight | `CombatScene.rng` | every cataloged hand in `internal/screens/seeds.go` |
 | `seeds.EnemyDeck` | fight | `decks.EnemyPile` | the player's opening hand, per the entry below |
 | `seeds.RewardHand` | fight | `dealOffer` (`internal/screens/postbattle.go`) | which cards a win offers you to alter |
 | `seeds.EssenceOffer` | fight | `dealEssences` (`internal/screens/postbattle.go`) | which alterations are offered, on any change to the reward hand |
-| `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which relics are for sale, on any change to the essence catalogue |
+| `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which relics are for sale, on any change to the essence catalog |
 | `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which four stones a bag of rocks holds, on any change to the relic shelf |
 | `seeds.VialStock` | fight | `dealVialEssences` and `dealVialOffer` (`internal/screens/shop_goods.go`) | which four essences a vial holds, on any change to the free offer |
 | `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to the shock roll |
@@ -111,16 +111,16 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | Floor offers | — | **not built** | — |
 
 **`VialStock` is the sharpest case in the table** *(2026-08-27)*: it draws essences from the same
-catalogue `EssenceOffer` does, at the same station of the loop, and it still gets its own stream. Two
+catalog `EssenceOffer` does, at the same station of the loop, and it still gets its own stream. Two
 draws off one sequence would make the shop's four a *function* of the two the reward screen had
 already put up — so buying the vial could guarantee, or rule out, the pair the player had just turned
-down. A rule nobody designed, arriving out of an implementation detail. **Same catalogue is not the
+down. A rule nobody designed, arriving out of an implementation detail. **Same catalog is not the
 question; same decision is.**
 
 **The between-fight streams are the worked example of "one stream or two"**, and the question
 was asked each time rather than assumed. The reward hand is a fresh deal off the whole run deck, so
 sharing the player's shuffle would make the offer a function of how many cards were drawn in the
-fight just won. The essence menu is drawn from a *catalogue* rather than from the deck, so sharing the
+fight just won. The essence menu is drawn from a *catalog* rather than from the deck, so sharing the
 reward hand would make authoring an essence change which cards every fight offered. The shop's shelf is
 a third list on a third schedule, and the same argument separates it from both.
 
@@ -182,7 +182,7 @@ back to `seeds.EnemyDeckPin`, which lives in `internal/seeds/pins.go` — pins a
 stream table on purpose, because a pin sitting in it would read as a stream nobody salted.
 
 **A seed is an opening hand**, because the shuffle is deterministic — see
-`internal/screens/seeds.go` for the named catalogue (a different file from this package, and
+`internal/screens/seeds.go` for the named catalog (a different file from this package, and
 older than it) and `go run ./tools/seeds` for re-checking it. Re-run that tool after touching
 `data/duelist_cards.json`, `startingDeck` or `handSize`: a named hand is a fact about one
 particular deck, and changing the deck silently deals something else.
@@ -239,7 +239,7 @@ before it landed and both are now paid:
 - **Do not pre-roll randomness into fixed-size slices.** A seeded `*rand.Rand` already is an
   infinite deterministic list, and the planned endless tower gives no worst case to size an
   array against. A reroll simply advances the cursor.
-- **Never let map iteration order affect an outcome.** Go deliberately randomises it.
+- **Never let map iteration order affect an outcome.** Go deliberately randomizes it.
   `gs.Combatants` is a map, and so is the enemy roster — iterate a sorted key slice
   (`data.EnemyOrder`, `data.RelicOrder`) whenever a choice depends on order.
 - **No `time.Now()` in game rules.** Wall-clock decisions cannot be replayed. Tick counters are

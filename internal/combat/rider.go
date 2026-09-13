@@ -16,7 +16,7 @@ package combat
 //
 // **The amount rides on the card, not in a registry.** A rider is a kind plus a figure, and both
 // sit in the card's own array — so the rules need no lookup table, no init ordering, and nothing
-// to keep in step with a catalogue. It is the same trade `Card.CostDelta` already made.
+// to keep in step with a catalog. It is the same trade `Card.CostDelta` already made.
 
 // RiderKind is what a rider does when its card is played.
 //
@@ -41,7 +41,7 @@ const (
 
 	// RiderShieldOnPlay raises shields as the card is played. Amount is how many.
 	//
-	// **It is the one rider that gives an attack card a defence's job**, which is the point: a
+	// **It is the one rider that gives an attack card a defense's job**, which is the point: a
 	// Jab that also puts a shield up is a card doing two things, and the whole reason the owner
 	// wanted it is that the game otherwise makes the player choose. It goes through
 	// `Duelist.raiseShields`, so the five-shield cap holds exactly as it does for a Guard.
@@ -116,7 +116,7 @@ const (
 	// **What it grants is run-level and permanent, which is why it cannot be finished here.** The
 	// rules move the fighting duelist so the grant is worth something for the rest of the fight,
 	// and announce KindGrantedDMG or KindGrantedLife so the run can be moved by the layer that
-	// owns it — the same division of labour KindVitae is under, and for the same reason.
+	// owns it — the same division of labor KindVitae is under, and for the same reason.
 	//
 	// **The odds are the dial and the payouts are constants.** See LuckOutcomes.
 	RiderGolden
@@ -196,7 +196,7 @@ type Rider struct {
 
 // MaxCardRiders is how many riders one card may carry.
 //
-// **A fixed array rather than a slice, and that is not an optimisation.** `combat.Card` must stay
+// **A fixed array rather than a slice, and that is not an optimization.** `combat.Card` must stay
 // comparable: the combat screen caches a rendered face on a struct holding one, and
 // TestRoundIsDeterministic compares rounds by value. A slice field would end both. The same
 // constraint made `Duelist.Relics` a fixed array of WornRelic, and this follows it.
@@ -379,7 +379,7 @@ func vitaeHeld(held []Card) int {
 // **Almost every rider is a kind plus a figure**, and the one that is not is RiderWildElement:
 // what it does has no quantity, so a value of zero is correct rather than missing. It exists so
 // `internal/session` can refuse a rider rune with no figure *except* for the kinds that never
-// had one — the alternative was a magic number in the catalogue, which is a record that lies about
+// had one — the alternative was a magic number in the catalog, which is a record that lies about
 // itself so a check can pass.
 func (k RiderKind) CarriesAmount() bool {
 	return k != RiderWildElement && k != RiderNone

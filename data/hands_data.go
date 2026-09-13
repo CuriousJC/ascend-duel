@@ -1,6 +1,6 @@
 package data
 
-// The hand catalogue as data: which hands exist, and what each is worth. `internal/combat` reads
+// The hand catalog as data: which hands exist, and what each is worth. `internal/combat` reads
 // this and turns it into rules.
 //
 // **This file is the one place `data` is read by the rules rather than by a layer above them**,
@@ -15,7 +15,7 @@ package data
 //
 // **What is deliberately not here: any meaning.** The strings below are names, and joining them to
 // the rules is `internal/combat`'s job, exactly as it is for `CardData.Concept`. A malformed
-// catalogue is refused *there*, on the same principle CheckCostTiers already works on — data holds
+// catalog is refused *there*, on the same principle CheckCostTiers already works on — data holds
 // the shape, the rules hold the truth.
 
 import (
@@ -71,13 +71,13 @@ type HandData struct {
 	Multiplier int `json:"multiplier"`
 }
 
-// LoadHands parses the catalogue, in file order.
+// LoadHands parses the catalog, in file order.
 //
 // **File order is load-bearing rather than cosmetic** — a slice, never a map, per the
 // determinism rules in CLAUDE.md.
 //
 // It panics on a file it cannot read, like the other loaders here. The rules do the rest of the
-// checking: `internal/combat` refuses a catalogue describing a shape it cannot match.
+// checking: `internal/combat` refuses a catalog describing a shape it cannot match.
 func LoadHands() []HandData {
 	var file handFile
 	if err := json.Unmarshal(handsJSON, &file); err != nil {

@@ -6,7 +6,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )
 
-// TestEverySquareIsWholeAtBothEndsOfAMorph. The window is what softens the travelling edge, and it
+// TestEverySquareIsWholeAtBothEndsOfAMorph. The window is what softens the traveling edge, and it
 // is also what would leave the first squares gone before the clock started and the last ones still
 // going after it stopped — cellProgress stretches the clock by one window for exactly that reason.
 // This is the tripwire on the stretch, because on screen the failure is a card that pops on the

@@ -23,7 +23,7 @@ func wearing(t *testing.T, dmg int, keys ...string) held {
 	for _, key := range keys {
 		id, ok := session.RelicID(key)
 		if !ok {
-			t.Fatalf("%s is in no catalogue", key)
+			t.Fatalf("%s is in no catalog", key)
 		}
 		h.worn = append(h.worn, combat.WornRelic{Relic: id})
 	}
@@ -135,7 +135,7 @@ func TestTheTooltipShowsEveryTermOfTheDamage(t *testing.T) {
 	// **And it does not print the total twice.** The block already stated it; a second copy is a
 	// number that can disagree with the first, which is the bug nobody would be able to see.
 	if strings.Contains(joined, "= ") {
-		t.Errorf("the chain totalled a figure the block had already printed: %s", joined)
+		t.Errorf("the chain totaled a figure the block had already printed: %s", joined)
 	}
 }
 
@@ -213,7 +213,7 @@ func TestTheTooltipReadsTheWayItWasSpecified(t *testing.T) {
 }
 
 // cardNamed is the shipped card of this label, or a fatal failure. It reads the registry rather
-// than being built by hand, so a test writing a cost or an amount the catalogue does not have
+// than being built by hand, so a test writing a cost or an amount the catalog does not have
 // fails here instead of passing against a card the game does not deal.
 func cardNamed(t *testing.T, label string) combat.Card {
 	t.Helper()
@@ -348,17 +348,17 @@ func TestAWildcardsTitleIsChromatic(t *testing.T) {
 	}
 }
 
-// **The element word in a title is written in its element's colour.** It was the one place in the
+// **The element word in a title is written in its element's color.** It was the one place in the
 // game that rule did not reach, because `models.Tooltip.Title` was a plain string — and a card's
-// title is where an element word is most worth colouring.
-func TestTheElementInATitleIsColoured(t *testing.T) {
+// title is where an element word is most worth coloring.
+func TestTheElementInATitleIsColored(t *testing.T) {
 	title := tipLine(carddesc.Title(combat.Of(combat.Bash, combat.Fire)))
 
 	if title.Text() != "FIRE BASH" {
 		t.Fatalf("the title reads %q", title.Text())
 	}
 	if len(title) < 2 {
-		t.Fatalf("the title is one run, so nothing in it is coloured: %v", title)
+		t.Fatalf("the title is one run, so nothing in it is colored: %v", title)
 	}
 
 	want := cards.BorderOf(cards.Fire)
@@ -370,12 +370,12 @@ func TestTheElementInATitleIsColoured(t *testing.T) {
 	t.Errorf("FIRE is not written in the fire red: %v", title)
 }
 
-// **CHROMATIC takes no *single* element's colour, and that is still the rule** *(owner's call,
+// **CHROMATIC takes no *single* element's color, and that is still the rule** *(owner's call,
 // 2026-09-09)*. The wheel has no hue left for "all of them" and a word written in one of the five
 // would be claiming the one thing it exists to deny — so it is written in all five at once, sampled
 // out of the wildcard's own wash. What this holds is the half that did not change: no letter of it
-// is an element's ink, and the card's *element* is not what the title is coloured by.
-func TestChromaticTakesNoElementColour(t *testing.T) {
+// is an element's ink, and the card's *element* is not what the title is colored by.
+func TestChromaticTakesNoElementColor(t *testing.T) {
 	title := tipLine(carddesc.Title(
 		combat.Of(combat.Bash, combat.Arcane).SetRider(combat.Rider{Kind: combat.RiderWildElement})))
 

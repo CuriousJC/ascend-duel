@@ -6,7 +6,7 @@ package screens
 // It is the confirm dialog's shape with one answer instead of two, and that is deliberate rather
 // than a fourth shape *(owner's call, 2026-09-06)*. A confirm is a question, a modal panel is a
 // page, and this is neither — but it is the same *size* of thing as a question: a few words in a
-// small centred box, which is exactly what confirm.go argues a near-full-screen panel must not be
+// small centered box, which is exactly what confirm.go argues a near-full-screen panel must not be
 // used for. Same scrim, same bevelled panel, same pink stroke.
 //
 // **It is clicked out of rather than timed out.** A notice that fades has to be looked at while it
@@ -69,7 +69,7 @@ const (
 )
 
 // toastEyebrowInk is the quiet word over the name, and toastSaidInk the commentary under it. Both
-// are pulled toward the panel rather than given a hue: the colour wheel belongs to the elements,
+// are pulled toward the panel rather than given a hue: the color wheel belongs to the elements,
 // and this box has nothing elemental to say.
 var (
 	toastPanelFill  = color.RGBA{R: 30, G: 30, B: 38, A: 255}
@@ -156,10 +156,10 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	vector.StrokeRect(screen, float32(box.Min.X), float32(box.Min.Y),
 		float32(box.Dx()), float32(box.Dy()), 2, panelBlue, false)
 
-	centre := float64(box.Min.X + box.Dx()/2)
+	center := float64(box.Min.X + box.Dx()/2)
 
 	eyebrow := &text.DrawOptions{}
-	eyebrow.GeoM.Translate(centre, float64(box.Min.Y+toastEyebrowTop))
+	eyebrow.GeoM.Translate(center, float64(box.Min.Y+toastEyebrowTop))
 	eyebrow.PrimaryAlign = text.AlignCenter
 	eyebrow.SecondaryAlign = text.AlignCenter
 	eyebrow.ColorScale.ScaleWithColor(toastEyebrowInk)
@@ -167,7 +167,7 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: toastEyebrowSize}, eyebrow)
 
 	name := &text.DrawOptions{}
-	name.GeoM.Translate(centre, float64(box.Min.Y+toastNameTop))
+	name.GeoM.Translate(center, float64(box.Min.Y+toastNameTop))
 	name.PrimaryAlign = text.AlignCenter
 	name.SecondaryAlign = text.AlignCenter
 	text.Draw(screen, a.Name,
@@ -175,7 +175,7 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	for i, line := range a.Said {
 		said := &text.DrawOptions{}
-		said.GeoM.Translate(centre, float64(box.Min.Y+toastSaidTop+i*toastSaidStep))
+		said.GeoM.Translate(center, float64(box.Min.Y+toastSaidTop+i*toastSaidStep))
 		said.PrimaryAlign = text.AlignCenter
 		said.SecondaryAlign = text.AlignCenter
 		said.ColorScale.ScaleWithColor(toastSaidInk)
@@ -186,7 +186,7 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	systems.DrawButton(gs, screen, t.dismiss)
 }
 
-// toastRect is the box: centred, at a fixed size. Same reasoning as confirmRect.
+// toastRect is the box: centered, at a fixed size. Same reasoning as confirmRect.
 func toastRect(gs *state.GlobalState) image.Rectangle {
 	left := gs.PctX(50) - toastWidth/2
 	top := gs.PctY(50) - toastHeight/2

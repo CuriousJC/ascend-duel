@@ -76,7 +76,7 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: tipLineSize}
 	titleFace := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: tipTitleSize}
 	if face.Source == nil {
-		return // no font: a tooltip is the one thing that must not be a coloured box with no words
+		return // no font: a tooltip is the one thing that must not be a colored box with no words
 	}
 
 	w, h := tipSize(t, face, titleFace)
@@ -87,7 +87,7 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 
 	y := at.Y + tipPad
 	if len(t.Title) > 0 {
-		// **The title's runs are drawn by the same function the body's are**, so a coloured word in
+		// **The title's runs are drawn by the same function the body's are**, so a colored word in
 		// a title cannot end up placed differently from the same word one line down.
 		drawTipRuns(screen, t.Title, titleFace, at.X+tipPad, y, tipTitle)
 		y += int(tipTitleSize) + tipLineGap
@@ -101,10 +101,10 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 // drawTipRuns draws one line as its runs, each in its own ink, left to right.
 //
 // **Measured and placed rather than drawn twice**, exactly as `cards.drawMarkedLine` is on the card
-// face — overdrawing a coloured run on top of the whole line composites two sets of antialiased
-// edges and reads as a smudge. The two rasterisers are unrelated and the rule is the same.
+// face — overdrawing a colored run on top of the whole line composites two sets of antialiased
+// edges and reads as a smudge. The two rasterizers are unrelated and the rule is the same.
 //
-// **A run with no ink takes `plain`**, so a caller that never thinks about colour is drawn exactly
+// **A run with no ink takes `plain`**, so a caller that never thinks about color is drawn exactly
 // as it was before runs existed. It is a parameter rather than a constant because the title and the
 // body have different default inks and share this drawing.
 func drawTipRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFace, x, y int, plain color.RGBA) {

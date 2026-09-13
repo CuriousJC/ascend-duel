@@ -1,21 +1,21 @@
 package cards
 
-// The element vocabulary: which words in a piece of prose name something with a colour, and what
-// colour that is.
+// The element vocabulary: which words in a piece of prose name something with a color, and what
+// color that is.
 //
 // **One table, and it lives here because this is the only windowless package both readers share**
 // *(owner's call, 2026-09-08)*. A card face is set by this package and everything else on screen by
-// Ebitengine's `text/v2` in internal/screens — two rasterisers with nothing in common — and the
+// Ebitengine's `text/v2` in internal/screens — two rasterizers with nothing in common — and the
 // nine review sheets under `tools/` build their own `Spec` on purpose, so they are a third reader.
-// The only way none of the three can disagree about what colour arcane is, is for all of them to
+// The only way none of the three can disagree about what color arcane is, is for all of them to
 // ask one table; and a table anywhere above this package would be one the sheets cannot reach
 // without linking a window.
 //
 // **It is the one place this package reads `data/`.** The arrow points down like every other and
 // `statuses.json` was already carrying presentation the engine ignores — `Badge` is the precedent —
-// so a status's colour and the word for it sit beside its picture rather than in a second file.
+// so a status's color and the word for it sit beside its picture rather than in a second file.
 // What this package still does not learn is anything about how a round resolves: a status is a name
-// and a colour here, and nothing asks what it does.
+// and a color here, and nothing asks what it does.
 
 import (
 	"image/color"
@@ -33,12 +33,12 @@ import (
 //
 // **Three words per status and one per element**, all read off `statuses.json` rather than typed
 // here: the status's Name (BURNING), its Verb (BURN), and the element it belongs to. A status
-// shipping without an Element or a Verb fails a test rather than quietly going uncoloured — see
+// shipping without an Element or a Verb fails a test rather than quietly going uncolored — see
 // TestEveryStatusNamesAnElement.
 var elementWords = buildElementWords()
 
-// elementWord is one coloured term, held lower case. Case is not part of the match and a text keeps
-// its own spelling, so "Fire" on a relic and "FIRE" on an essence both colour and neither is rewritten.
+// elementWord is one colored term, held lower case. Case is not part of the match and a text keeps
+// its own spelling, so "Fire" on a relic and "FIRE" on an essence both color and neither is rewritten.
 type elementWord struct {
 	word string
 	ink  color.RGBA
@@ -53,8 +53,8 @@ func buildElementWords() []elementWord {
 		out = append(out, elementWord{word: strings.ToLower(word), ink: BorderOf(e)})
 	}
 
-	// **The five, not Elements().** Basic is the absence of an element and its grey is what an
-	// uncoloured word already looks like, so a vocabulary entry for it would spend a highlight seat
+	// **The five, not Elements().** Basic is the absence of an element and its gray is what an
+	// uncolored word already looks like, so a vocabulary entry for it would spend a highlight seat
 	// to change nothing. Relic is not an element at all.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		add(e.String(), e)
@@ -75,11 +75,11 @@ func buildElementWords() []elementWord {
 	return out
 }
 
-// ElementSpans is the spans of this text that name something with a colour, longest first — ready to
+// ElementSpans is the spans of this text that name something with a color, longest first — ready to
 // hand to a Spec.
 //
 // **The match is ContainsSpan, which is the same rule that paints them.** A span harvested by one
-// rule and declined by another would be a colour that silently does nothing, which is the hardest
+// rule and declined by another would be a color that silently does nothing, which is the hardest
 // kind of missing to notice.
 func ElementSpans(text string) []TextSpan {
 	var out []TextSpan
@@ -106,10 +106,10 @@ func ElementHighlights(text string) [MaxTextHighlights]TextSpan {
 
 // ParseElement resolves the names written in `data/`, reporting failure rather than falling back to
 // Basic — the same contract combat.ParseElement has, and for the same reason: a word quietly read as
-// the wrong element is a colour nobody chose.
+// the wrong element is a color nobody chose.
 //
 // **Relic is not parseable.** It is in elementNames because a relic card is drawn through this type,
-// but no data file names it and a text saying "relic" means the jewellery.
+// but no data file names it and a text saying "relic" means the jewelry.
 func ParseElement(name string) (Element, bool) {
 	for i, n := range elementNames {
 		if n == name && Element(i) != Relic {

@@ -9,7 +9,7 @@ package screens
 // off-by-ones on the one row where a mistake changes what a duel does.
 //
 // **What is shared is the lifecycle, not the list.** A press is a candidate click until the cursor
-// has travelled `dragThreshold`; past that the card leaves the row and rides the cursor; a release
+// has traveled `dragThreshold`; past that the card leaves the row and rides the cursor; a release
 // inside the row lands it at whatever index the cursor is over and a release outside puts it back.
 // Everything about *which* cards, *where* they sit and *what a click means* is the row's, through
 // dragRow.
@@ -49,18 +49,18 @@ type dragRow interface {
 	// rowLift takes the card at i out of the row, visually or actually.
 	rowLift(i int)
 
-	// rowReturn puts it down: the card that was at `from` now sits at `to`. A cancelled drag
+	// rowReturn puts it down: the card that was at `from` now sits at `to`. A canceled drag
 	// passes the same index twice, which every row has to treat as putting it back untouched.
 	rowReturn(from, to int)
 
-	// rowClick is a press that never travelled far enough to become a drag.
+	// rowClick is a press that never traveled far enough to become a drag.
 	rowClick(i int)
 }
 
 // cardDrag is the press currently in progress over one row. The zero value is no press, which is
 // what lets it be a plain field rather than a pointer that has to be nil-checked at every use.
 type cardDrag struct {
-	// held is a button down over a card; active is that press having travelled far enough to be a
+	// held is a button down over a card; active is that press having traveled far enough to be a
 	// drag. A press is a candidate click until it is active, and only an active one has lifted
 	// anything out of the row.
 	held   bool
@@ -151,7 +151,7 @@ func (d *cardDrag) promote(gs *state.GlobalState, row dragRow) {
 	row.rowLift(d.originIndex)
 }
 
-// end resolves the press: a drag lands the card, a press that never travelled is a click.
+// end resolves the press: a drag lands the card, a press that never traveled is a click.
 //
 // **Released outside the row, the card goes back where it came from.** There is no drag-to-discard
 // gesture anywhere in the game, so a drop into empty space has to mean "never mind" rather than

@@ -83,7 +83,7 @@
 <p class="facts">
   37 runes, 37 of them drawing the default face, 37 with no
   subject paragraph written. A sealed sack costs <code>5</code> vitae and draws
-  <code>4</code>, keep one — 10.8% of the catalogue gets a seat. One rune
+  <code>4</code>, keep one — 10.8% of the catalog gets a seat. One rune
   may name at most <code>2</code> cards.
   Card <code>200&times;280</code>,
   corner radius <code>15</code>,
@@ -108,7 +108,7 @@
 </p>
 <p class="note">
   <strong>They are spent between the turns of a fight, never inside one.</strong> That is the
-  thing about this catalogue no card can show: the sack is gated on planning, because
+  thing about this catalog no card can show: the sack is gated on planning, because
   <code>ResolveRound</code> decides a whole round before playback starts and a card altered
   mid-playback would show a face disagreeing with a blow already computed.
 </p>
@@ -116,21 +116,22 @@
   <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The quoted
   block under each rune is <code>Draw</code> in <code>data/runes.json</code>: what the
   thing <em>is</em> and what it is doing, in one sentence. Nothing in the game reads it. It is
-  pasted under the shared prompt in <code>docs/art/card_art_prompt.MD</code>, which is the only
-  part of a brief that is not about one record. <strong>A rune with no subject and no art is
+  pasted under <code>docs/art/essence_art_prompt.MD</code> — a rune draws on the essence card's
+  style — with its body plan from <code>docs/art/rune_art_prompt.MD</code> between the two. Those
+  are the only parts of a brief that are not about one record. <strong>A rune with no subject and no art is
   the backlog</strong> — both lines go pink, so the page can be scrolled for what still needs
   writing. <code>default-rune.png</code> is the seat art goes into; it was the essence's own
   placeholder until 2026-09-12, and the two split because one shared picture is a page where a
   drawn essence and an undrawn rune look identical.
 </p>
 
-<h2>What the catalogue does</h2>
+<h2>What the catalog does</h2>
 <p class="note">
   <strong>Every target, and how many runes sit at it.</strong> The vocabulary is closed — a new
   target is a Go change plus one place applying it, never something a file can assert into
   existence — so a target with nothing under it is a mechanic built and never reached for. This was
   the page's grouping until families landed, and it made a poor heading once a third of the
-  catalogue was a single <code>swap</code>: the motif is what tells one swap from another.
+  catalog was a single <code>swap</code>: the motif is what tells one swap from another.
 </p>
 <ul class="targets">
 
@@ -166,7 +167,7 @@
 
 </ul>
 
-<h2>The catalogue, by family</h2>
+<h2>The catalog, by family</h2>
 <p class="note">
   <strong>Grouped by the motif each rune was authored beside, in the file's own order.</strong>
   <code>Family</code> is authored and the engine ignores it, exactly as it ignores <code>Art</code>

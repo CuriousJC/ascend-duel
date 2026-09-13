@@ -5,7 +5,7 @@
 //
 // It exists because a relic is the hardest collected thing to look at in a launched game:
 // there are seventeen of them, a run wears at most five, and the shelf offers three the
-// run is not already wearing, so seeing the whole catalogue means playing to a shop
+// run is not already wearing, so seeing the whole catalog means playing to a shop
 // repeatedly and hoping. This draws all of them at once.
 //
 // # It is a report, and that is the difference from tools/cardsheet
@@ -13,10 +13,10 @@
 // The card sheet deliberately writes its own contents out rather than reading the data
 // files, because it is a drawing-board: it exists to show cards the rules cannot deal yet.
 // This tool is the opposite and reads the real file, because the question it answers is
-// "what does the catalogue actually hold" — a sheet of relics someone typed into a tool
+// "what does the catalog actually hold" — a sheet of relics someone typed into a tool
 // would answer nothing at all.
 //
-// It imports internal/session as well as data, which means the catalogue is *registered*
+// It imports internal/session as well as data, which means the catalog is *registered*
 // before anything is drawn: an unknown moment, a verb at the wrong moment or a price of
 // zero panics at init exactly as it would in the game. So the sheet cannot show a relic the
 // game would refuse to start with, and the prices and sell-backs on it come from the shop's
@@ -36,7 +36,7 @@
 // # Output
 //
 // Loose PNGs plus an index.html, written into `docs/sheets/relicsheet/` and **committed**
-// *(owner's call, 2026-08-23)*: the sheets are how the catalogues get reviewed, and requiring a
+// *(owner's call, 2026-08-23)*: the sheets are how the catalogs get reviewed, and requiring a
 // Go toolchain to see one meant only whoever just changed something ever looked. A clone opens
 // `docs/sheets/index.html`.
 //
@@ -96,10 +96,10 @@ func run(dir string) error {
 		Count:  len(records),
 	}
 
-	// **In the file's own order, not RelicOrder's sorted keys** *(2026-09-12)*. The catalogue is
+	// **In the file's own order, not RelicOrder's sorted keys** *(2026-09-12)*. The catalog is
 	// authored in motif order — the flips together, the three ring families walking their ladders,
 	// the weapons along the concept ladder — and sorting by key threw exactly that away, which is
-	// what made an alphabetical page the wrong picture of a catalogue with families in it. File
+	// what made an alphabetical page the wrong picture of a catalog with families in it. File
 	// order is as deterministic as sorted order and carries more.
 	for _, key := range data.RelicFileOrder() {
 		record := records[key]
@@ -195,7 +195,7 @@ func run(dir string) error {
 
 // stateSpecs is one relic in each of the three states a relic card is drawn in.
 //
-// **The relic it uses is whichever one has art**, picked off the catalogue rather than named
+// **The relic it uses is whichever one has art**, picked off the catalog rather than named
 // here: a state row drawn on the default face would be showing what dimming does to a blank
 // card, which is the one card where it is hardest to see.
 func stateSpecs(records map[string]data.RelicData) ([]struct {
@@ -330,7 +330,7 @@ func artwork(key string) (image.Image, error) {
 	return img, nil
 }
 
-// groupByRarity splits the catalogue into its three tiers, cheapest first.
+// groupByRarity splits the catalog into its three tiers, cheapest first.
 //
 // **In data.Rarities order rather than in whatever the file happens to hold**, so the page reads
 // common → uncommon → rare every time and an empty tier still gets a heading — a tier nobody has
@@ -338,8 +338,8 @@ func artwork(key string) (image.Image, error) {
 //
 // **Share is the chance a single shelf draw lands in this tier**, as a whole percent: the tier's
 // tickets over every relic's tickets. It is what turns "weight 10" into something reviewable — a
-// tier holding half the catalogue at ten tickets each is a shelf that shows little else.
-// groupByFamily splits the catalogue into the motifs its records are authored in.
+// tier holding half the catalog at ten tickets each is a shelf that shows little else.
+// groupByFamily splits the catalog into the motifs its records are authored in.
 //
 // **In first-appearance order, which is the file's order**, so the page reads as data/relics.json
 // does and a family lands where its siblings were written rather than where the alphabet puts it.
@@ -417,7 +417,7 @@ func groupByRarity(plates []plate) []tier {
 		t.Count = len(t.Relics)
 		if total > 0 {
 			// **To a tenth of a percent, because the rare tier rounds to nothing otherwise.** Two
-			// rare relics in a catalogue of forty-six is half a percent of a shelf seat, and a page
+			// rare relics in a catalog of forty-six is half a percent of a shelf seat, and a page
 			// printing "0%" would say the tier is unreachable when what it is is scarce.
 			t.Share = fmt.Sprintf("%.1f", float64(t.Count*r.Weight())*100/float64(total))
 		}
@@ -447,7 +447,7 @@ func styleFacts(st cards.Style) map[string]int {
 
 // counterFor is the accumulator badge a fresh copy of this relic would wear — `1.0` for a relic
 // that grows a multiplier, `+5` for one that grows a flat figure, and nothing at all for the rest
-// of the catalogue, which is most of it.
+// of the catalog, which is most of it.
 //
 // **It is `combat.CounterLabel` and not a second formatter**, which is the whole reason that
 // function is exported: a sheet the sizing is judged on has to draw the figure the game draws,
@@ -485,7 +485,7 @@ type plate struct {
 	Rules   []string
 }
 
-// tier is one rarity's worth of the catalogue: every relic at that price, with the tier's own
+// tier is one rarity's worth of the catalog: every relic at that price, with the tier's own
 // numbers beside them.
 //
 // **The page is grouped by rarity as of 2026-08-22**, because that is the axis a review is actually
@@ -502,7 +502,7 @@ type tier struct {
 	Relics []plate
 }
 
-// family is one motif's worth of the catalogue: every relic authored in that block, with the
+// family is one motif's worth of the catalog: every relic authored in that block, with the
 // rarity spread across them.
 type family struct {
 	Name   string

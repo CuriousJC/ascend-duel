@@ -20,7 +20,7 @@ func ids(s *Session) []int {
 	return out
 }
 
-// anyWithTarget is a rune from the shipped catalogue that does this, whichever one it is.
+// anyWithTarget is a rune from the shipped catalog that does this, whichever one it is.
 //
 // **A test's subject is the grammar, not the record.** Every assertion in this file already reads
 // off the resolved rune — `p.Number`, `p.Count`, `p.Concept` — so the record key was the one
@@ -36,7 +36,7 @@ func anyWithTarget(t *testing.T, target RuneTarget) Rune {
 			return p
 		}
 	}
-	t.Fatalf("the catalogue holds no %s rune, so nothing exercises it", target)
+	t.Fatalf("the catalog holds no %s rune, so nothing exercises it", target)
 	return Rune{}
 }
 
@@ -48,7 +48,7 @@ func otherThan(c combat.ConceptID) combat.ConceptID {
 	return combat.Jab
 }
 
-// anyWithRider is anyWithTarget for the one target whose behaviour is chosen by a second field.
+// anyWithRider is anyWithTarget for the one target whose behavior is chosen by a second field.
 func anyWithRider(t *testing.T, kind combat.RiderKind) Rune {
 	t.Helper()
 	for _, p := range Runes() {
@@ -56,14 +56,14 @@ func anyWithRider(t *testing.T, kind combat.RiderKind) Rune {
 			return p
 		}
 	}
-	t.Fatalf("the catalogue attaches no %s rider, so nothing exercises it", kind)
+	t.Fatalf("the catalog attaches no %s rider, so nothing exercises it", kind)
 	return Rune{}
 }
 
-// The catalogue's own promises. A bad record panics at init, so by the time a test runs the file
+// The catalog's own promises. A bad record panics at init, so by the time a test runs the file
 // has already been validated — what is left worth checking is that the shipped file actually
 // exercises the grammar rather than four records of one shape.
-func TestTheRuneCatalogueCoversEveryTarget(t *testing.T) {
+func TestTheRuneCatalogCoversEveryTarget(t *testing.T) {
 	seen := map[RuneTarget]bool{}
 	for _, p := range Runes() {
 		seen[p.Target] = true
@@ -117,13 +117,13 @@ func TestTheSackHoldsWhatIsPutInIt(t *testing.T) {
 	}
 	one := anyWithRider(t, combat.RiderHealOnPlay).Record
 	if !run.Hold(one) || !run.Hold(one) {
-		t.Fatal("the sack refused a rune the catalogue has")
+		t.Fatal("the sack refused a rune the catalog has")
 	}
 	if run.HoldCount() != 2 {
 		t.Errorf("two of the same rune counted as %d", run.HoldCount())
 	}
 	if run.Hold("no-such-rune") {
-		t.Error("the sack took a rune the catalogue has not got")
+		t.Error("the sack took a rune the catalog has not got")
 	}
 
 	if !run.Drop(0) || run.HoldCount() != 1 {
@@ -210,7 +210,7 @@ func TestASwapKeepsTheCardsIdentityAndItsRiders(t *testing.T) {
 func TestAGraftMakesTheLeftCardTheRightCardWhole(t *testing.T) {
 	// **"BECOMES" is not a partial verb** *(owner's call, 2026-09-08)*. It copied the concept alone,
 	// so grafting a fire Cut onto an ice Jab produced a card whose name said it had become the
-	// right-hand card and whose colour said it had not.
+	// right-hand card and whose color said it had not.
 	graft := anyWithTarget(t, RuneClone)
 	run := runWith(
 		combat.Card{Concept: combat.Jab, Element: combat.Ice},
@@ -260,16 +260,16 @@ func TestAGraftOntoAnIdenticalCardDoesNothing(t *testing.T) {
 	}
 }
 
-func TestAGraftBetweenTwoColoursOfOneCardIsOffered(t *testing.T) {
+func TestAGraftBetweenTwoColorsOfOneCardIsOffered(t *testing.T) {
 	// The pick a player reaching for this most obviously wants, and the one the concept-only check
-	// used to refuse: same name, different colour.
+	// used to refuse: same name, different color.
 	graft := anyWithTarget(t, RuneClone)
 	run := runWith(
 		combat.Card{Concept: combat.Jab, Element: combat.Ice},
 		combat.Card{Concept: combat.Jab, Element: combat.Fire},
 	)
 	if !run.CanApplyRune(graft, ids(run)) {
-		t.Error("a graft between two colours of one card was refused")
+		t.Error("a graft between two colors of one card was refused")
 	}
 }
 

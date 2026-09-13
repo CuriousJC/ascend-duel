@@ -1,17 +1,17 @@
 package screens
 
-// **Colouring the element words in screen text**, which is the `text/v2` half of what
+// **Coloring the element words in screen text**, which is the `text/v2` half of what
 // `cards.ElementHighlights` does on a card face.
 //
-// Two rasterisers draw this game's words: `internal/cards` sets a card's own text with
+// Two rasterizers draw this game's words: `internal/cards` sets a card's own text with
 // golang.org/x/image, and everything else on screen goes through Ebitengine's `text/v2`. They share
 // no code and cannot — see internal/cards/text.go for why that package must not make an
 // `*ebiten.Image`. So the *vocabulary* is shared instead: `cards.ElementSpans` is the one table, and
 // this file is the second reader of it.
 //
-// **The colouring happens here rather than in `internal/systems`** because that package cannot see
+// **The coloring happens here rather than in `internal/systems`** because that package cannot see
 // `internal/cards` — `cards` imports `systems`, so the arrow only goes one way. The widget draws
-// spans and never learns why one is coloured, exactly as it never learns why a line breaks where it
+// spans and never learns why one is colored, exactly as it never learns why a line breaks where it
 // does.
 
 import (
@@ -24,9 +24,9 @@ import (
 // tipLines is a set of authored lines with their element words picked out — what every caller hands
 // `models.Tooltip.Point`.
 //
-// **One door, so a tooltip cannot be built uncoloured.** Every scene that points a tooltip goes
+// **One door, so a tooltip cannot be built uncolored.** Every scene that points a tooltip goes
 // through this, which is what stops a new one shipping as the only panel in the game whose relic
-// text is grey.
+// text is gray.
 func tipLines(lines []string) []models.TipLine {
 	if len(lines) == 0 {
 		return nil
@@ -40,7 +40,7 @@ func tipLines(lines []string) []models.TipLine {
 
 // tipLine cuts one line into the spans it is drawn as.
 //
-// **A line with nothing to colour comes back as one span**, which is what most of them are and is
+// **A line with nothing to color comes back as one span**, which is what most of them are and is
 // drawn exactly as it was before spans existed.
 func tipLine(line string) models.TipLine {
 	var out models.TipLine
@@ -50,11 +50,11 @@ func tipLine(line string) models.TipLine {
 	return out
 }
 
-// chromatic is one line cut into its coloured segments — the element words first, then CHROMATIC
+// chromatic is one line cut into its colored segments — the element words first, then CHROMATIC
 // into the wildcard's own wash.
 //
 // **The two passes are in that order and cannot be swapped.** `SplitWash` only touches a segment
-// nothing has coloured, so running the element vocabulary first is what lets a word be an element
+// nothing has colored, so running the element vocabulary first is what lets a word be an element
 // or the wildcard and never both.
 //
 // **The wash cut is `internal/cards`' and not this file's**, because `tools/upgradesheet` prints

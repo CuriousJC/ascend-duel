@@ -26,7 +26,7 @@
 // **Where the directory is: `os.UserConfigDir()`, never beside the executable.** The game will be
 // sold on Steam, which installs under `C:\Program Files (x86)\...` — a tree a normal user process
 // cannot write to. A write there either fails, or is silently redirected by Windows' UAC
-// virtualisation into `%LOCALAPPDATA%\VirtualStore`, which is worse: it works in testing and
+// virtualization into `%LOCALAPPDATA%\VirtualStore`, which is worse: it works in testing and
 // diverges invisibly afterwards. The same applies to a tarball unpacked into `/opt` or a read-only
 // Flatpak mount. A per-executable directory is also per-install rather than per-user, so two
 // accounts on one machine would share one set of achievements.

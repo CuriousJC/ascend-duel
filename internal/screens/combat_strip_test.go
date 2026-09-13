@@ -24,7 +24,7 @@ func testState() *state.GlobalState {
 }
 
 // The pile stands at the bottom of the duelist card's column *(2026-09-04, owner's call)*, which
-// is a different set of neighbours from the corner it used to sit in: the hand and its bar are
+// is a different set of neighbors from the corner it used to sit in: the hand and its bar are
 // beside it rather than above it, and the frame's own corner controls are below it.
 func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 	gs := testState()
@@ -81,7 +81,7 @@ func TestTheBottomOfTheScreenIsOneLine(t *testing.T) {
 		t.Errorf("the deck count sits %dpx off the bottom edge and the cog %dpx", got, cogInset)
 	}
 
-	// The badge is a disc centred on the Discard button's bottom-right corner, so its lowest
+	// The badge is a disc centered on the Discard button's bottom-right corner, so its lowest
 	// point is a radius below that corner.
 	badgeBottom := buttonStripY(gs) + stripButtonHeight/2 + discardBadgeRadius
 	if d := gs.ScreenHeight - badgeBottom - cogInset; d < -6 || d > 6 {
@@ -170,25 +170,25 @@ func TestThePlayedRowFitsOnScreen(t *testing.T) {
 	}
 }
 
-// The two buttons are one pair centred under the dealt hand *(2026-09-04, owner's call)*, rather
+// The two buttons are one pair centered under the dealt hand *(2026-09-04, owner's call)*, rather
 // than spread across the strip or pinned to its right-hand end — both of which described the
 // buttons by what was beside them instead of by the cards they act on.
-func TestTheButtonsAreCentredUnderTheHand(t *testing.T) {
+func TestTheButtonsAreCenteredUnderTheHand(t *testing.T) {
 	gs := testState()
 
 	const discardWidth, duelWidth = stripButtonWidth, stripButtonWidth
 	discardX, duelX := buttonStripSlots(gs, discardWidth, duelWidth)
 
-	// Centred as a pair, so the air outside Discard's left edge and outside DUEL!'s right edge is
+	// Centered as a pair, so the air outside Discard's left edge and outside DUEL!'s right edge is
 	// the same. Integer halving costs a pixel.
 	left, right := discardX-discardWidth/2, duelX+duelWidth/2
-	if d := (left + right) - 2*handRowCentre(gs).X; d > 1 || d < -1 {
-		t.Errorf("the pair spans x=%d..%d, which is not centred on the hand at x=%d",
-			left, right, handRowCentre(gs).X)
+	if d := (left + right) - 2*handRowCenter(gs).X; d > 1 || d < -1 {
+		t.Errorf("the pair spans x=%d..%d, which is not centered on the hand at x=%d",
+			left, right, handRowCenter(gs).X)
 	}
 
-	// **On the row's fixed centre, not the band's**, which narrows as the hand is spent — a pair
-	// centred on that would slide sideways mid-round.
+	// **On the row's fixed center, not the band's**, which narrows as the hand is spent — a pair
+	// centered on that would slide sideways mid-round.
 	if got, want := right-left, discardWidth+stripButtonGap+duelWidth; got != want {
 		t.Errorf("the pair is %dpx wide, want %d", got, want)
 	}
@@ -208,7 +208,7 @@ func TestTheButtonsAreCentredUnderTheHand(t *testing.T) {
 // short of the sort buttons, which stand on the enemy card's left edge.
 //
 // It is checked at both ends rather than on the width alone: a band of the right size in the
-// wrong place would be the same mistake, and the cards are centred on it.
+// wrong place would be the same mistake, and the cards are centered on it.
 func TestTheHandIsLaidOutBetweenTheFighterCards(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
@@ -218,12 +218,12 @@ func TestTheHandIsLaidOutBetweenTheFighterCards(t *testing.T) {
 		t.Errorf("the band starts at x=%d, want the relic row's own left edge at %d", left, want)
 	}
 
-	// The cards stop a gap short of the control column, and are centred on what is left.
+	// The cards stop a gap short of the control column, and are centered on what is left.
 	if got, want := cardBandWidth(gs), ControlColumnLeft(gs)-sortColumnGap-left; got != want {
 		t.Errorf("the cards are laid out into %dpx, want %dpx", got, want)
 	}
-	if got, want := handRowCentre(gs).X, left+cardBandWidth(gs)/2; got != want {
-		t.Errorf("the hand is centred at x=%d, want %d", got, want)
+	if got, want := handRowCenter(gs).X, left+cardBandWidth(gs)/2; got != want {
+		t.Errorf("the hand is centered at x=%d, want %d", got, want)
 	}
 
 	// The sort block abuts the cards, and the panel buttons under it stand on the enemy card's

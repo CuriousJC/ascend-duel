@@ -10,7 +10,7 @@
 //
 // # It is a report, and it draws from the real deck
 //
-// Same posture as tools/relicsheet: every hand comes from `internal/combat`'s live catalogue and
+// Same posture as tools/relicsheet: every hand comes from `internal/combat`'s live catalog and
 // every example is built out of cards that are actually in `data/duelist_cards.json`. A rung the
 // shipping deck cannot form at all is therefore visible as a rung with no example, which is a
 // fact about the deck worth seeing rather than a gap to paper over with an invented card.
@@ -39,7 +39,7 @@
 // # Output
 //
 // Loose PNGs plus an index.html, written into `docs/sheets/handsheet/` and **committed**
-// *(owner's call, 2026-08-23)*: the sheets are how the catalogues get reviewed, and requiring a
+// *(owner's call, 2026-08-23)*: the sheets are how the catalogs get reviewed, and requiring a
 // Go toolchain to see one meant only whoever just changed something ever looked. A clone opens
 // `docs/sheets/index.html`.
 //

@@ -62,7 +62,7 @@ permissions:
   contents: read
 
 # One release at a time. Two runs cutting different versions would race in `publish`, and
-# cancelling a half-finished release is worse than making the second one wait.
+# canceling a half-finished release is worse than making the second one wait.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -191,7 +191,7 @@ jobs:
       # be in a binary that ships, and a game that closes itself on an idle player is a bug.
       #
       # -X stamps the tag into the binary, which is what lets a bug report name a build. The
-      # filename carries it too, but a filename stops travelling with the exe the moment it
+      # filename carries it too, but a filename stops traveling with the exe the moment it
       # is renamed or a screenshot is all you have.
       - name: build
         shell: bash

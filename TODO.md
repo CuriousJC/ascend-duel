@@ -24,7 +24,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       to be tracked, 2026-09-12)*. Thirty-seven records were renamed on `game-updates-118`, and the
       shop shelf is a weighted draw over `relics.json`'s *sorted* keys — so what seed `0009D4`
       lands on has moved. Nothing failed, because no test asserts which relics the taught shelf
-      offers; the shop step is the part of the lesson a catalogue edit can break silently.
+      offers; the shop step is the part of the lesson a catalog edit can break silently.
       `SEEDSEARCH=1 go test ./internal/screens -run TestFindATutorialSeed` is the search if the
       shelf now reads badly. See the tutorial section of `CLAUDE.md`, which notes the seed has
       already moved twice for this reason.
@@ -60,7 +60,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 ### Cards and piles — presentation
 
 - [ ] **The math band should wrap, not shrink** *(2026-08-22)*. `layOutMath` lays the sum out as one
-      centred line and, since Echo landed, **shrinks every item by a common factor when the line is
+      centered line and, since Echo landed, **shrinks every item by a common factor when the line is
       wider than the band** — floored at `minMathShrink`, 0.6. That is a stopgap: seven terms is
       reachable now (five cards in a legal turn plus the two extra landings an echo seats behind the
       first), and the answer to a line that will not fit is a second line, not smaller type.
@@ -105,7 +105,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       `*rand.Rand` seeded once *is* an infinite deterministic list; a pre-generated slice
       is just the first N entries of it, and N has to be guessed. The endless tower has
       no worst case to size against, so any N is eventually wrong.
-      - **Rerolls advance the cursor**, which is exactly the intended behaviour: reroll
+      - **Rerolls advance the cursor**, which is exactly the intended behavior: reroll
         and you get the next offer down the list. No separate reroll stream needed.
       - Replay stays exact because the *list* is fixed by the seed. Identical choices
         consume identical draws; different choices land at a different position in the
@@ -147,7 +147,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         walks past it.
       - **Floor 8 ends the run** for the first version — 7 floor choices, no offer at the
         top.
-      - Floor choices steer **enemy affixes and behaviour** — "this is a cold floor",
+      - Floor choices steer **enemy affixes and behavior** — "this is a cold floor",
         "this is a fire floor" — plus whatever other levers exist by then. The specific
         options are undecided; the mechanism is the part that matters.
       - Run progress lives in `session.Session`, which already carries the fight index, the
@@ -216,20 +216,20 @@ everything published before the relicense is irrevocable and accepted — no his
       agreement covers the two of them — but a copyright notice naming only a handle is
       weak if it ever has to be enforced.
 - [ ] **`THIRD-PARTY-NOTICES` file.** Apache-2.0 and BSD deps may sit inside a
-      restricted-licence product, but only if their notices and attributions travel with
+      restricted-license product, but only if their notices and attributions travel with
       the binary. Needed for a Steam build, not for the repo.
 - [ ] Contact address for licensing enquiries. Deferred deliberately; anonymous is fine
       for now, and `CONTRIBUTING.md` points people at issues instead. Use a purpose-made
       address rather than a personal one when it happens.
 - [ ] Get thirty minutes of actual legal review before relying on any of this. The
-      licence is standard and well drafted; the contributor grant in `CONTRIBUTING.md`
+      license is standard and well drafted; the contributor grant in `CONTRIBUTING.md`
       is a reasonable draft written by a non-lawyer.
 - [ ] Confirm FiraSans and RobotoFlex (expected OFL / Apache — low risk).
 
 **Cleared, and the register to check a new dependency against.** No GPL anywhere — it cannot
 go into a product licensed this way.
 
-| What | Licence |
+| What | License |
 |---|---|
 | Ebitengine | Apache 2.0 |
 | `github.com/ebitengine/oto/v3` | Apache 2.0, first-party to Ebitengine |

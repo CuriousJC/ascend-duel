@@ -45,7 +45,7 @@ import (
 // **Two methods rather than a registration call**, because a scene's rectangles are methods on
 // the scene and most of them are only meaningful while it is the one on screen. An anchor asked
 // of the wrong scene reports `false` and the bubble simply points at nothing, which is the right
-// behaviour for the frame or two either side of a scene change.
+// behavior for the frame or two either side of a scene change.
 type tutorialHost interface {
 	// tutorialFacts is what this scene can say about the run right now. See tutorial.Facts for
 	// why the traffic goes this way rather than as events.
@@ -59,7 +59,7 @@ type tutorialHost interface {
 	// name a set of cards that need not be adjacent, and the bounding box round them is not the
 	// set — it is the set plus whatever is sitting between two of them. That distinction is
 	// load-bearing here and nowhere else in the game: this rectangle is the *click gate* as well
-	// as the spotlight, so a box was a licence to click a card the step had not named. See
+	// as the spotlight, so a box was a license to click a card the step had not named. See
 	// state.GlobalState.InputFocus, where the bug it caused is written down.
 	tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]image.Rectangle, bool)
 
@@ -102,7 +102,7 @@ const (
 	tutorialMargin = 24
 )
 
-// tutorialInk is the bubble's colours. It is a dark panel over a light table, matching the fight
+// tutorialInk is the bubble's colors. It is a dark panel over a light table, matching the fight
 // log and the deck overlay rather than the cards — Bob is chrome, not something in play.
 var (
 	tutorialPanel = color.RGBA{R: 30, G: 30, B: 38, A: 255}
@@ -118,7 +118,7 @@ var (
 	// **It is the one place red is not a control**, and that is worth knowing rather than
 	// discovering: `modalCloseColor` is the dialog X and CLAUDE.md records red as belonging to it
 	// alone, so that a red thing on screen always means "this closes something". A highlight does
-	// not dilute the *click* meaning — there is nothing here to press — but the colour is no longer
+	// not dilute the *click* meaning — there is nothing here to press — but the color is no longer
 	// unique to the exit, and a future red control would now be the third thing wearing it.
 	//
 	// A shade off the X's own, so the two are not mistaken for the same object on a screen showing
@@ -144,7 +144,7 @@ type tutorialOverlay struct {
 	// finished latches the one frame the lesson ends on. **A latch rather than the `!run.Active()`
 	// test alone**, because that test stays true for the rest of the session: without it the
 	// tutorial-finished moment would be raised on every frame of every screen after the lesson, and
-	// while awarding is idempotent, walking the catalogue sixty times a second to be told nothing
+	// while awarding is idempotent, walking the catalog sixty times a second to be told nothing
 	// changed is not.
 	finished bool
 
@@ -293,7 +293,7 @@ func unionOf(rs []image.Rectangle) image.Rectangle {
 }
 
 // build makes the two buttons on first use. The Next button is crimson like DUEL! — it is the
-// same "and on with it" slot — and Skip is the quiet grey the sort column uses, because leaving
+// same "and on with it" slot — and Skip is the quiet gray the sort column uses, because leaving
 // the tutorial should be findable without being the loudest thing in the bubble.
 func (t *tutorialOverlay) build() {
 	if t.next == nil {
@@ -334,14 +334,14 @@ func (t *tutorialOverlay) placeButtons(step tutorial.Step) {
 // never to overlap anything worth pointing at, which on a 1280x960 screen with a card in each
 // corner is nowhere.
 //
-// The candidates are ordered so the common case is stable: bottom-centre first, because most of
+// The candidates are ordered so the common case is stable: bottom-center first, because most of
 // what a lesson points at is a card or a corner control, then the four corners.
 //
 // **A step whose anchor rules out every seat gets the one that covers least of it** *(owner's call,
 // 2026-09-06)*, rather than the last seat in the list. The reward screen is what wanted it: its
 // essence anchor covers the prizes *and* the row of cards they are aimed at — the whole middle of the
-// screen — so every seat overlaps, and falling through to dead centre put the bubble squarely over
-// the two essences the step was telling the player to choose between. Top-centre misses by 27 pixels.
+// screen — so every seat overlaps, and falling through to dead center put the bubble squarely over
+// the two essences the step was telling the player to choose between. Top-center misses by 27 pixels.
 // A bubble overlapping a spotlit anchor is legible where no bubble at all would be a lesson with no
 // words, so the fallback still places one; it just stops picking the worst available spot on
 // purpose.
@@ -353,13 +353,13 @@ func (t *tutorialOverlay) place(gs *state.GlobalState, host tutorialHost,
 	top, bottom := tutorialMargin, gs.ScreenHeight-tutorialMargin-h
 	middle := (gs.ScreenWidth - w) / 2
 
-	// **Top-centre is second, ahead of the corners** *(owner's call, 2026-08-25)*. Most of what a
+	// **Top-center is second, ahead of the corners** *(owner's call, 2026-08-25)*. Most of what a
 	// step points at during a duel spans the screen — the hand, the AP bar, the band the blow is
 	// added up in — so the first seat is out and the fallback used to be a top corner, which is
 	// where the two fighter cards and their life bars are. The middle of the top row is the relic
 	// pane, which is the least costly thing on this screen to cover.
 	//
-	// The dead centre stays last, because it is over the table: it is where a seat lands only when
+	// The dead center stays last, because it is over the table: it is where a seat lands only when
 	// everything else is ruled out.
 	seats := []image.Point{
 		{X: middle, Y: bottom},
@@ -457,7 +457,7 @@ func center(r image.Rectangle) image.Point {
 	return image.Pt((r.Min.X+r.Max.X)/2, (r.Min.Y+r.Max.Y)/2)
 }
 
-// edgeToward is where a ray from the centre of `r` aimed at `at` crosses `r`'s border.
+// edgeToward is where a ray from the center of `r` aimed at `at` crosses `r`'s border.
 //
 // **Scaled along the ray rather than picked per edge**, which is what keeps the line pointing at
 // the right place near a corner: choosing an edge first and then a point on it has to answer for
@@ -657,8 +657,8 @@ func waitingFor(c tutorial.Condition) string { return waitingWords[c] }
 // carry, and a health bar on the character explaining the game would be the single most confusing
 // thing on the screen — the player would spend the tutorial waiting to fight him.
 //
-// `cards.Basic` is the mid grey every non-elemental card borders in, which is what he should be:
-// the pink is a relic, and the four colours are things that can be played.
+// `cards.Basic` is the mid gray every non-elemental card borders in, which is what he should be:
+// the pink is a relic, and the four colors are things that can be played.
 func guideSpec(gs *state.GlobalState) cards.Spec {
 	return cards.Spec{
 		Name:    "Bob",
@@ -668,7 +668,7 @@ func guideSpec(gs *state.GlobalState) cards.Spec {
 	}
 }
 
-// wrapTutorialText breaks a paragraph to the column, honouring an authored `\n` the way the cards
+// wrapTutorialText breaks a paragraph to the column, honoring an authored `\n` the way the cards
 // do — see `cards.WrapText`, whose rule this follows: a break can only ever add a line, since an
 // authored line too wide for the column still wraps.
 func wrapTutorialText(face *text.GoTextFace, s string, width int) []string {
@@ -694,7 +694,7 @@ func wrapTutorialText(face *text.GoTextFace, s string, width int) []string {
 	return out
 }
 
-// buttonRect is a button's footprint, derived from its centre exactly as `systems.UpdateButton`
+// buttonRect is a button's footprint, derived from its center exactly as `systems.UpdateButton`
 // derives it for hit testing. **Shared rather than written out per anchor**, so a spotlight and
 // the click it invites cannot end up describing two different rectangles.
 //

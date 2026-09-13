@@ -15,7 +15,7 @@ func wild(id ConceptID, e Element) Card {
 func TestAWildcardCompletesAnElementalGroup(t *testing.T) {
 	want, ok := handByKey("element-four-of-a-kind")
 	if !ok {
-		t.Skip("the catalogue has no element four of a kind")
+		t.Skip("the catalog has no element four of a kind")
 	}
 
 	turn := []Card{Of(Jab, Fire), Of(Cut, Fire), Of(Thump, Fire), wild(Slice, Ice)}
@@ -63,7 +63,7 @@ func TestAWildcardIsElementOnly(t *testing.T) {
 func TestAWildcardJoinsTheBiggestGroup(t *testing.T) {
 	trips, ok := handByKey("element-three-of-a-kind")
 	if !ok {
-		t.Skip("the catalogue has no element three of a kind")
+		t.Skip("the catalog has no element three of a kind")
 	}
 
 	turn := []Card{Of(Jab, Fire), Of(Cut, Fire), Of(Thump, Ice), wild(Slice, Ice)}
@@ -82,7 +82,7 @@ func TestAWildcardJoinsTheBiggestGroup(t *testing.T) {
 func TestATurnOfOnlyWildcardsStillForms(t *testing.T) {
 	pair, ok := handByKey("pair")
 	if !ok {
-		t.Fatal("the catalogue has no pair")
+		t.Fatal("the catalog has no pair")
 	}
 
 	turn := []Card{wild(Jab, Fire), wild(Cut, Ice)}
@@ -103,7 +103,7 @@ func TestATurnOfOnlyWildcardsStillForms(t *testing.T) {
 func TestAWildcardIsSpentOnce(t *testing.T) {
 	full, ok := handByKey("element-full-house")
 	if !ok {
-		t.Skip("the catalogue has no element full house")
+		t.Skip("the catalog has no element full house")
 	}
 
 	// Two fire, one ice, one earth and one wildcard — five cards, so the count is not what stops

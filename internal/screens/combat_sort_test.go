@@ -105,7 +105,7 @@ func TestElementSortRunsFireIceLightningEarthThenDrab(t *testing.T) {
 }
 
 func TestEveryElementHasItsOwnRank(t *testing.T) {
-	// Element is append-only, so a fifth colour arrives with no rank and would silently join
+	// Element is append-only, so a fifth color arrives with no rank and would silently join
 	// the default arm — sorted level with basic and to the right of everything. Failing here
 	// is what stops that shipping as "the new cards are in a funny order".
 	seen := map[int]combat.Element{}
@@ -208,7 +208,7 @@ func TestAnInboundFlightPointsAtTheSlotItsCardEndedIn(t *testing.T) {
 	}
 	s.spendSelected()
 
-	for _, f := range s.theatre.flights {
+	for _, f := range s.theater.flights {
 		if f.outbound {
 			continue
 		}
@@ -263,10 +263,10 @@ func TestSortingSendsEveryMovedCardSliding(t *testing.T) {
 	}}
 	s.setSort(sortByCost)
 
-	if len(s.theatre.slides) != 2 {
-		t.Fatalf("%d cards slid, want both of them", len(s.theatre.slides))
+	if len(s.theater.slides) != 2 {
+		t.Fatalf("%d cards slid, want both of them", len(s.theater.slides))
 	}
-	for _, sl := range s.theatre.slides {
+	for _, sl := range s.theater.slides {
 		if sl.fromIndex == sl.toIndex {
 			t.Errorf("a card slid from slot %d to itself", sl.fromIndex)
 		}
@@ -284,15 +284,15 @@ func TestSortingSendsEveryMovedCardSliding(t *testing.T) {
 }
 
 func TestACardThatDoesNotMoveDoesNotSlide(t *testing.T) {
-	// A sort that changes nothing must not send the whole hand travelling on the spot.
+	// A sort that changes nothing must not send the whole hand traveling on the spot.
 	s := &CombatScene{hand: []paletteCard{
 		{actionCard: card(combat.Jab, combat.Fire)},
 		{actionCard: card(combat.Cleave, combat.Fire)},
 	}}
 	s.setSort(sortByCost)
 
-	if len(s.theatre.slides) != 0 {
-		t.Errorf("%d cards slid over an already-sorted hand", len(s.theatre.slides))
+	if len(s.theater.slides) != 0 {
+		t.Errorf("%d cards slid over an already-sorted hand", len(s.theater.slides))
 	}
 }
 
@@ -308,7 +308,7 @@ func TestASecondSortReplacesASlideForTheSameSlot(t *testing.T) {
 	s.setSort(sortByElement)
 
 	seen := map[int]bool{}
-	for _, sl := range s.theatre.slides {
+	for _, sl := range s.theater.slides {
 		if seen[sl.toIndex] {
 			t.Errorf("two cards are sliding into slot %d", sl.toIndex)
 		}
@@ -317,7 +317,7 @@ func TestASecondSortReplacesASlideForTheSameSlot(t *testing.T) {
 }
 
 func TestASurvivingCardSlidesAsTheRowClosesUp(t *testing.T) {
-	// A card nobody played still moves: the cards around it have gone and the row re-centres
+	// A card nobody played still moves: the cards around it have gone and the row re-centers
 	// under it. Both ends of the slide have to name their own row size, because the two differ.
 	s := flightScene(selectedHand(5, 2))
 	s.spendSelected()
@@ -325,10 +325,10 @@ func TestASurvivingCardSlidesAsTheRowClosesUp(t *testing.T) {
 	if len(s.hand) != handSize {
 		t.Fatalf("hand holds %d cards, want it dealt back to %d", len(s.hand), handSize)
 	}
-	if len(s.theatre.slides) == 0 {
+	if len(s.theater.slides) == 0 {
 		t.Fatal("no card slid, though the row went from five cards to eight under them")
 	}
-	for _, sl := range s.theatre.slides {
+	for _, sl := range s.theater.slides {
 		if sl.fromCount != 5 {
 			t.Errorf("a slide sets off from a row of %d, want the 5 that was there", sl.fromCount)
 		}
@@ -355,7 +355,7 @@ func TestASettledDuelFreezesTheScreenAsItStands(t *testing.T) {
 	// row, and the row is what half the lower screen is measured from — handBand is a function
 	// of how many cards are in it, the AP bar spans that band, and the Resolution feed's bottom
 	// edge comes off the same row. So a hand spent after the killing blow collapsed the cards
-	// into a narrow centred huddle and dragged the bar and the feed with it.
+	// into a narrow centered huddle and dragged the bar and the feed with it.
 	for _, tc := range []struct {
 		name                   string
 		fighterLife, enemyLife int
@@ -379,9 +379,9 @@ func TestASettledDuelFreezesTheScreenAsItStands(t *testing.T) {
 				t.Errorf("the queue went from %d cards to %d, want the round still on screen",
 					queue, len(s.fighterActions))
 			}
-			if len(s.theatre.flights)+len(s.theatre.slides) != 0 {
+			if len(s.theater.flights)+len(s.theater.slides) != 0 {
 				t.Errorf("%d cards are moving, want nothing to move once the duel is over",
-					len(s.theatre.flights)+len(s.theatre.slides))
+					len(s.theater.flights)+len(s.theater.slides))
 			}
 
 			// And it does adopt the end state, which is what duelSettled and the fighter cards
@@ -407,7 +407,7 @@ func TestTheSortColumnStandsClearOfTheCards(t *testing.T) {
 			col.Max.X, gs.ScreenWidth)
 	}
 
-	// **Checked at more than one hand size**, because the row is centred on the space the
+	// **Checked at more than one hand size**, because the row is centered on the space the
 	// column leaves: a bigger hand is a wider row, and the failure this guards is the last
 	// card sliding under the buttons.
 	//

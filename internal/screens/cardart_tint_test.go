@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// A tinted pip keeps its own brightness: white stays the ink, mid-grey comes out about half of it,
+// A tinted pip keeps its own brightness: white stays the ink, mid-gray comes out about half of it,
 // and transparent stays transparent. **The failure this catches is a whole row of black pips**,
 // which is what one shift too many produced.
 func TestTintedPipKeepsItsBrightness(t *testing.T) {
@@ -22,7 +22,7 @@ func TestTintedPipKeepsItsBrightness(t *testing.T) {
 		t.Errorf("a white pixel came out %v, want the ink %v", got, ink)
 	}
 	if got := out.RGBAAt(1, 0); got.R < 100 || got.R > 130 {
-		t.Errorf("a mid-grey pixel came out %v, want about half the ink", got)
+		t.Errorf("a mid-gray pixel came out %v, want about half the ink", got)
 	}
 	if got := out.RGBAAt(2, 0); got.A != 0 {
 		t.Errorf("a transparent pixel came out %v", got)

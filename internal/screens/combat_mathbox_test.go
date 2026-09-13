@@ -26,7 +26,7 @@ import (
 func handEvent(hand string, amounts []int, multiplier, total int) combat.Event {
 	id, ok := combat.HandIDForKey(hand)
 	if !ok {
-		panic("the catalogue has no hand keyed " + hand)
+		panic("the catalog has no hand keyed " + hand)
 	}
 
 	e := combat.Event{
@@ -116,12 +116,12 @@ func TestEveryNamedHandIsShouted(t *testing.T) {
 	}
 }
 
-// **Every hand in the catalogue can be shouted and none of them is empty.** A hand added to
+// **Every hand in the catalog can be shouted and none of them is empty.** A hand added to
 // `data/hands.json` with no name would put a bare `!` on the screen at 124 points.
 //
 // **The one-card hand is in the sweep now** rather than skipped: the High Card is shouted like any
 // other since 2026-08-19.
-func TestEveryHandInTheCatalogueHasAShout(t *testing.T) {
+func TestEveryHandInTheCatalogHasAShout(t *testing.T) {
 	for _, h := range combat.Hands() {
 		e := combat.Event{Kind: combat.KindHand, Hand: h.ID}
 		got := shoutFor(e)
@@ -239,7 +239,7 @@ func TestTheWidestSumFitsItsBand(t *testing.T) {
 	box := handMathBox{items: mathScript(e)}
 	scene.layOutMath(gs, &box)
 
-	// **Measured to the ink, not to the centres.** Checking the resting *points* passes a line
+	// **Measured to the ink, not to the centers.** Checking the resting *points* passes a line
 	// half of which is off the screen, which is most of what this test is for — and it matters more
 	// since the figures doubled on 2026-08-19.
 	first, last := box.items[0], box.items[len(box.items)-1]
@@ -274,20 +274,20 @@ func TestTheSumIsLaidOutLeftToRight(t *testing.T) {
 		}
 	}
 
-	// And every item shares the band's vertical centre: the sum is one line, not a staircase.
+	// And every item shares the band's vertical center: the sum is one line, not a staircase.
 	band := scene.handMathRect(gs)
 	cy := (band.Min.Y + band.Max.Y) / 2
 	for i, it := range box.items {
 		if it.at.Y != cy {
-			t.Errorf("item %d (%q) sits at y=%d, want the band's centre %d", i, it.text, it.at.Y, cy)
+			t.Errorf("item %d (%q) sits at y=%d, want the band's center %d", i, it.text, it.at.Y, cy)
 		}
 	}
 }
 
-// **The longest hand name in the catalogue fits the screen at the size it is shouted.** The shout
+// **The longest hand name in the catalog fits the screen at the size it is shouted.** The shout
 // doubled to 124 points on 2026-08-19, and a name is not a figure: `FOUR OF A KIND!` is fifteen
 // characters against `19980`'s five, so the shout reaches its limit long before the sum does. It is
-// centred on the hand row and does not wrap, so a name too wide runs off *both* edges at once.
+// centered on the hand row and does not wrap, so a name too wide runs off *both* edges at once.
 //
 // Measured against the whole screen rather than against a band, because that is what it is drawn
 // on — the row it stands over is narrower than the name is allowed to be.
@@ -334,7 +334,7 @@ func TestTheHandNameCarriesTheMultiplierTheSumWillShow(t *testing.T) {
 // **The multiplier sets off at its own size and a card's figure grows into place.** The two are
 // different gestures for a reason and the difference is checkable without a window: a card's
 // figure is appearing — it comes toward the reader out of the card that paid it — while the
-// multiplier has been sitting under the hand's name since DUEL! and is simply travelling. A
+// multiplier has been sitting under the hand's name since DUEL! and is simply traveling. A
 // multiplier that grew on the way would read as a second copy of a figure already on screen.
 func TestTheMultiplierLeavesTheBannerAtItsOwnSize(t *testing.T) {
 	items := mathScript(handEvent("pair", []int{20, 20}, 150, 60))

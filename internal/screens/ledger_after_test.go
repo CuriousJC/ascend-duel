@@ -10,7 +10,7 @@ import (
 )
 
 // texts is every line of a diff as plain strings, which is what these tests assert on: the
-// colouring is elementSpans' business and is tested where that lives.
+// coloring is elementSpans' business and is tested where that lives.
 func texts(lines []session.LedgerLine) []string {
 	out := make([]string, 0, len(lines))
 	for _, l := range lines {

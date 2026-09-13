@@ -13,11 +13,11 @@ import (
 // buttons or a slider and never a number typed in; a row of buttons says "one of these three"
 // and a bar says "anywhere along here", which is the honest shape for a volume.
 //
-// It follows Button's split exactly: a plain struct here, behaviour in internal/systems, owned
+// It follows Button's split exactly: a plain struct here, behavior in internal/systems, owned
 // by the scene that uses it. Nothing about it knows what it is setting.
 type Slider struct {
 	// Width and Height are the whole control, track and knob together. ScreenX and ScreenY are
-	// its **centre**, the same convention Button uses, so both hit testing and drawing re-derive
+	// its **center**, the same convention Button uses, so both hit testing and drawing re-derive
 	// the top-left from one point.
 	Width, Height    int
 	ScreenX, ScreenY int
@@ -38,17 +38,17 @@ type Slider struct {
 	Readout string
 
 	// BaseColor is the filled part of the track at full strength, following Button's rule that a
-	// widget names one colour and its other tones are scaled from it. The zero value means "use
+	// widget names one color and its other tones are scaled from it. The zero value means "use
 	// the default".
 	BaseColor color.RGBA
 
-	// Ink is the colour of the label and the readout. The zero value means "use the default",
+	// Ink is the color of the label and the readout. The zero value means "use the default",
 	// which is a near-white for a control on a dark ground.
 	//
 	// **It exists because the game has two grounds.** The combat screen and everything that
 	// followed it are painted on a light ground, where a near-white label is invisible; the title screen
 	// is not. A widget that assumed one of them would be unusable on the other, and the repo's
-	// colour rule is already that dimming means different things on the two — see
+	// color rule is already that dimming means different things on the two — see
 	// systems.ColorToward.
 	Ink color.RGBA
 
@@ -68,7 +68,7 @@ type Slider struct {
 	// button's does.
 	Hovered bool
 
-	// Disabled greys the control out and stops it responding, for a setting there is no hardware
+	// Disabled grays the control out and stops it responding, for a setting there is no hardware
 	// to apply — a volume bar on a machine whose audio device would not open.
 	Disabled bool
 

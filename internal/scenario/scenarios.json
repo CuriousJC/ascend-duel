@@ -1145,5 +1145,35 @@
     "Fight": 0,
     "Vitae": 0,
     "Life": 0
+  },
+  {
+    "ScenarioRecord": "one-punch",
+    "Note": "An easy button: five Pulverizes in one element, a budget that pays for all of them, and the weakest creature in the game. Press DUEL! once and the fight is over, so the reward screen's essence offer is one click away.",
+    "Relics": [],
+    "Hand": [
+      {
+        "Card": "Pulverize",
+        "Element": "fire"
+      },
+      {
+        "Card": "Pulverize",
+        "Element": "fire"
+      },
+      {
+        "Card": "Pulverize",
+        "Element": "fire"
+      },
+      {
+        "Card": "Pulverize",
+        "Element": "fire"
+      },
+      {
+        "Card": "Pulverize",
+        "Element": "fire"
+      }
+    ],
+    "Enemy": "GiantBat",
+    "Screen": "combat",
+    "Actions": 30
   }
 ]

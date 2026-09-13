@@ -626,8 +626,16 @@ var EssenceStyle = Style{
 	// should look like the same card.
 	TextColumnLeft: 15,
 	TextInset:      10,
-	TextBandTop:    140,
-	TextBandBottom: 265,
+
+	// **Four lines, tucked against the bottom edge** *(owner's call, 2026-09-13)*. The band was
+	// 125 tall and started halfway down the card, which put a one-line sentence — which is most
+	// of the catalog — floating in the middle of the picture on a scrim covering nearly half of
+	// it. It is now exactly four lines of TextLineHeight, sitting as low as the scrim's own
+	// padding allows: 264 plus scrimPad is 270, which leaves six pixels of picture under the
+	// band before the border. A shorter sentence still centers in the band, so a one-line essence
+	// and a four-line one are the same card.
+	TextBandTop:    164,
+	TextBandBottom: 264,
 	TextSize:       21.25,
 	TextLineHeight: 25,
 }

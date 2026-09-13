@@ -51,10 +51,12 @@ var (
 )
 
 const (
-	// scrimAlpha is how much of the picture a scrim keeps. High enough that a light figure
-	// clears the loudest thing the art is allowed to put under it, low enough that the picture
-	// is still visibly continuing behind the words rather than stopping at a bar.
-	scrimAlpha = 205
+	// scrimAlpha is how much of the picture a scrim keeps. **Mostly opaque** *(owner's call,
+	// 2026-09-13)*: the band is a box the sentence is written in rather than a tint over the art,
+	// because an essence's whole content is that sentence and the art under it was authored
+	// without knowing where the words would land. It is not fully opaque, so the picture is still
+	// faintly continuing behind the box rather than being cut off by it.
+	scrimAlpha = 238
 
 	// scrimPad is the breathing room a scrim leaves above and below the type it is under. A band
 	// stopping exactly on the ink reads as a highlighter rather than as a surface.

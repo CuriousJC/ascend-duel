@@ -8,8 +8,8 @@ package session
 // or the damage it hits for.
 //
 // **It is drunk on the spot.** There is no carrying and no cap, which is what keeps a potion out of
-// the consumables pane the parasites live in and out of `MaxHeld`: a click pays for it and applies
-// it in the same frame, so a purchase interrupted by a quit cannot leave a bottle in a bucket
+// the consumables pane the runes live in and out of `MaxHeld`: a click pays for it and applies
+// it in the same frame, so a purchase interrupted by a quit cannot leave a bottle in a sack
 // nobody can open.
 //
 // **Two of the three change the record and one changes the wound**, and that is the whole of the

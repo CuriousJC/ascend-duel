@@ -292,8 +292,8 @@
 //     planned. The opponent's cards are drawn face up and that is temporary — concealEnemy is the
 //     screen's concealment predicate and this row deliberately ignores it, on the owner's call,
 //     with cards.Spec.FaceDown already built as the lever for putting it back.
-//   - combat_parasite.go — the bucket: the board piece a parasite is spent from, behind the P
-//     button above the fight log. Two stages — pick a parasite, pick the cards out of the hand —
+//   - combat_rune.go — the sack: the board piece a rune is spent from, behind the P
+//     button above the fight log. Two stages — pick a rune, pick the cards out of the hand —
 //     and live only while planning(), because a round is resolved before it is drawn.
 //   - combat_pileslot.go — the square beside the draw pile, and modalUp. The fight log's button
 //     used to stand there; what is left is the geometry, which four other controls are placed

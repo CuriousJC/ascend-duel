@@ -23,16 +23,16 @@ func morphScene(t *testing.T, deck []combat.Card) (*state.GlobalState, *CombatSc
 	return gs, s
 }
 
-// spend applies a parasite by key the way the screen does, and hands back the faces from before it
+// spend applies a rune by key the way the screen does, and hands back the faces from before it
 // landed so a test can raise the morphs off them.
 func spend(t *testing.T, gs *state.GlobalState, s *CombatScene, key string) {
 	t.Helper()
-	p, ok := session.ParasiteByKey(key)
+	p, ok := session.RuneByKey(key)
 	if !ok {
 		t.Skipf("no %s in the catalogue", key)
 	}
 	was, seats := s.handFaces(gs)
-	if !gs.Run.ApplyParasiteRolling(p, s.selectedCardIDs(), nil) {
+	if !gs.Run.ApplyRuneRolling(p, s.selectedCardIDs(), nil) {
 		t.Fatalf("%s refused the selection", key)
 	}
 	s.resyncHandFromRun(gs)
@@ -42,12 +42,12 @@ func spend(t *testing.T, gs *state.GlobalState, s *CombatScene, key string) {
 	s.raiseHandMorphs(gs, was, seats)
 }
 
-// TestARecolouringParasiteMorphsEveryCardItTook. **One beat for all of them** — the morphs are
-// raised together, so a parasite that named two cards puts two on stage at once rather than one
+// TestARecolouringRuneMorphsEveryCardItTook. **One beat for all of them** — the morphs are
+// raised together, so a rune that named two cards puts two on stage at once rather than one
 // after the other.
-func TestARecolouringParasiteMorphsEveryCardItTook(t *testing.T) {
+func TestARecolouringRuneMorphsEveryCardItTook(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
-	spend(t, gs, s, "hexbore")
+	spend(t, gs, s, "hexmark")
 
 	if got := len(s.theatre.morphs); got != 2 {
 		t.Fatalf("a two-card borer raised %d morphs, want 2", got)
@@ -66,7 +66,7 @@ func TestARecolouringParasiteMorphsEveryCardItTook(t *testing.T) {
 // they have to be started on the same frame and be the same length.
 func TestTheMorphsRunTogether(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
-	spend(t, gs, s, "hexbore")
+	spend(t, gs, s, "hexmark")
 
 	first := s.theatre.morphs[0].m.t
 	for _, h := range s.theatre.morphs[1:] {
@@ -81,13 +81,13 @@ func TestTheMorphsRunTogether(t *testing.T) {
 // draw the card in the top-left corner of the screen.
 func TestAnEatenCardMorphsAwayAtTheSeatItHad(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
-	spend(t, gs, s, "gnaw")
+	spend(t, gs, s, "unmake")
 
 	if len(s.hand) != 0 {
-		t.Fatalf("gnaw left %d cards in the hand, want none", len(s.hand))
+		t.Fatalf("unmake left %d cards in the hand, want none", len(s.hand))
 	}
 	if got := len(s.theatre.morphs); got != 2 {
-		t.Fatalf("gnaw raised %d morphs, want 2", got)
+		t.Fatalf("unmake raised %d morphs, want 2", got)
 	}
 	for _, h := range s.theatre.morphs {
 		if !h.m.hasBefore || h.m.hasAfter {
@@ -101,7 +101,7 @@ func TestAnEatenCardMorphsAwayAtTheSeatItHad(t *testing.T) {
 
 // TestACopyMorphsInOutOfNothing. It has no earlier face, which is exactly what tells it apart from
 // a card that was changed — see raiseHandMorphs, which reads the difference rather than the
-// parasite.
+// rune.
 func TestACopyMorphsInOutOfNothing(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash))
 	spend(t, gs, s, "mimic")
@@ -115,10 +115,10 @@ func TestACopyMorphsInOutOfNothing(t *testing.T) {
 	}
 }
 
-// TestAParasiteThatChangedNothingRaisesNothing. The morphs come off a comparison, so a card whose
-// face is untouched must not flash — which is what would happen if the raise walked the parasite's
+// TestARuneThatChangedNothingRaisesNothing. The morphs come off a comparison, so a card whose
+// face is untouched must not flash — which is what would happen if the raise walked the rune's
 // targets rather than the difference.
-func TestAParasiteThatChangedNothingRaisesNothing(t *testing.T) {
+func TestARuneThatChangedNothingRaisesNothing(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
 	was, seats := s.handFaces(gs)
 	s.raiseHandMorphs(gs, was, seats)

@@ -1,24 +1,24 @@
 package screens
 
-// The consumables pane: the parasites a run is carrying, drawn beside the relics it is wearing.
+// The consumables pane: the runes a run is carrying, drawn beside the relics it is wearing.
 //
 // **The top row is two panes now** *(owner's call, 2026-09-06)*. It was one — the duelist card, a
 // row of worn relics, and the opponent's card at the far end — and the relics pane has said `worn/5`
 // on its corner since the count moved there. This puts a second pane on the same line saying
-// `held/2`, because a parasite is the other thing a run carries into a fight and the only place it
+// `held/2`, because a rune is the other thing a run carries into a fight and the only place it
 // was visible was behind the `P` button, two clicks into a dialog that only exists mid-duel.
 //
 // **A cap is what makes a pane possible.** A row drawn as `n/2` has to be a rule or it is a lie the
-// first time a third parasite arrives, so `session.MaxHeld` landed with this — see
-// internal/session/parasite.go, and the shop's bucket seat, which goes dim rather than selling a
-// parasite there is no room for.
+// first time a third rune arrives, so `session.MaxHeld` landed with this — see
+// internal/session/rune.go, and the shop's sack seat, which goes dim rather than selling a
+// rune there is no room for.
 //
 // **It is the relics pane's twin and shares everything it can**: the same backing colour, the same
 // eight pixels of padding, the same drop below the cards on either side, and the same count hung
 // off the bottom-right corner. Two panes that were nearly alike would read as an inconsistency; two
 // that are identical apart from their width read as one row divided.
 //
-// **The whole row packs at one pitch**, so a relic and a parasite sit the same distance apart and
+// **The whole row packs at one pitch**, so a relic and a rune sit the same distance apart and
 // close up together when the span is tight. See topRowPitch.
 
 import (
@@ -34,9 +34,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// maxHeld is how many parasites can be carried at once, and it reads the run's rule rather than
+// maxHeld is how many runes can be carried at once, and it reads the run's rule rather than
 // declaring a second two — exactly as maxRelics reads combat.MaxWornRelics. A pane saying `held/2`
-// while the bucket took a third is the drift that indirection prevents.
+// while the sack took a third is the drift that indirection prevents.
 const maxHeld = session.MaxHeld
 
 // topRowPaneGap is the bare ground between the two panes' backings.
@@ -52,7 +52,7 @@ const topRowPaneGap = 2 * relicPaneGap
 // **One rhythm across both panes** *(owner's call, 2026-09-06)*. The first split gave the
 // consumables a full pitch and let the relics close up to pay for it, which read as two rows at two
 // spacings rather than one row divided. This solves for the pitch that makes both panes full at the
-// same time, so a relic and a parasite sit the same distance apart on the same line.
+// same time, so a relic and a rune sit the same distance apart on the same line.
 //
 // **The arithmetic.** The span holds five relic seats and two consumable seats, which is five pitches
 // and two whole cards, plus the gutter between the panes:
@@ -101,14 +101,14 @@ func topRowPanes(left, right, top int) (relics, consumables image.Rectangle) {
 	return relics, consumables
 }
 
-// consumableSlotAt is where the i'th carried parasite's card sits.
+// consumableSlotAt is where the i'th carried rune's card sits.
 //
 // **The row's own pitch, over the seats it has rather than the cards in it** — relicSlotPitch, the
 // function the relics use, asked for maxHeld every time. That is what makes the two panes share a
 // rhythm: the pane was sized from the same pitch, so a full row lands exactly on its edges.
 //
 // **Left-aligned and never re-centred**, deliberately unlike the relic row. This row is two fixed
-// seats with the empty one drawn, so a card that shifted as the bucket filled would move the one
+// seats with the empty one drawn, so a card that shifted as the sack filled would move the one
 // thing the player is being shown. The relics centre because their seats appear and disappear.
 func consumableSlotAt(r image.Rectangle, i int) image.Point {
 	return image.Pt(r.Min.X+i*relicSlotPitch(r, maxHeld), r.Min.Y)
@@ -137,7 +137,7 @@ func consumablePaneBackRect(r image.Rectangle) image.Rectangle {
 // on the corner is what says how much room is left. Nothing anywhere outlines an absent card now —
 // the reward screen was the last place doing it, and gave it up on 2026-09-08.
 func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle,
-	spendable func(session.Parasite) bool) {
+	spendable func(session.Rune) bool) {
 
 	if gs.Run == nil {
 		return
@@ -148,17 +148,17 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
 		relicPaneBackColor, false)
 
-	held := heldParasites(gs)
+	held := heldRunes(gs)
 	for i := 0; i < maxHeld; i++ {
 		at := consumableSlotRect(r, i)
 		if i >= len(held) {
 			continue
 		}
-		// **A parasite is lit exactly when clicking it would do something** *(2026-09-06)*, which
+		// **A rune is lit exactly when clicking it would do something** *(2026-09-06)*, which
 		// is what makes select-then-apply readable: the player never has to be told whether the
-		// cards they have selected are the right ones, because the parasite that wants them is the
+		// cards they have selected are the right ones, because the rune that wants them is the
 		// one that is not dim. See consumableTarget.satisfiedBy.
-		drawSpecCard(gs, screen, at.Min, parasiteSpec(gs, held[i], canSpend(spendable, held[i]), false))
+		drawSpecCard(gs, screen, at.Min, runeSpec(gs, held[i], canSpend(spendable, held[i]), false))
 	}
 
 	drawConsumableCount(gs, screen, back, len(held))
@@ -168,7 +168,7 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 // figure, in the relic pane's seat, at the relic pane's size.
 //
 // **It is the bare fraction and names nothing** *(owner's call, 2026-09-11)*. It read
-// `0/2 parasites` until then, and the noun was the figure repeating what the cards standing on the
+// `0/2 runes` until then, and the noun was the figure repeating what the cards standing on the
 // pane already say. The relic pane's corner lost its word in the same call and the two have to stay
 // twins — see drawRelicCount.
 //
@@ -184,7 +184,7 @@ func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 
-// hoverConsumables explains whichever carried parasite the cursor is resting on, and reports whether
+// hoverConsumables explains whichever carried rune the cursor is resting on, and reports whether
 // it found one.
 //
 // **Every screen that draws the pane gets it for free**, which is the lesson hoverBuildRelics records:
@@ -193,12 +193,12 @@ func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image
 func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 	tip *models.Tooltip) bool {
 
-	for i, p := range heldParasites(gs) {
+	for i, p := range heldRunes(gs) {
 		seat := consumableSlotRect(r, i)
 		if !at.In(seat) {
 			continue
 		}
-		tip.Point(seat, tipLine(p.Name), tipLines(parasiteTipLines(p)))
+		tip.Point(seat, tipLine(p.Name), tipLines(runeTipLines(p)))
 		return true
 	}
 	return false
@@ -208,12 +208,12 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 //
 // **The predicate is a parameter rather than a package hook**, because the pane is drawn on four
 // screens and only one of them can spend anything. The shop and the reward screen draw the same two
-// seats with the same cards and no gesture at all — a parasite is carried there, not used — so they
+// seats with the same cards and no gesture at all — a rune is carried there, not used — so they
 // pass nil and every card draws dim.
 //
 // **Dim is the honest state on those screens.** A lit card that did nothing when clicked would be
 // worse than a dim one, and the tooltip still explains it wherever it is drawn.
-func canSpend(spendable func(session.Parasite) bool, p session.Parasite) bool {
+func canSpend(spendable func(session.Rune) bool, p session.Rune) bool {
 	return spendable != nil && spendable(p)
 }
 
@@ -222,7 +222,7 @@ func canSpend(spendable func(session.Parasite) bool, p session.Parasite) bool {
 // **It answers for a seat rather than for a card**, so a click on an empty seat is a click on
 // nothing rather than on whatever happens to be held at that index.
 func consumableClicked(gs *state.GlobalState, r image.Rectangle, at image.Point) int {
-	for i := range heldParasites(gs) {
+	for i := range heldRunes(gs) {
 		if at.In(consumableSlotRect(r, i)) {
 			return i
 		}

@@ -41,7 +41,7 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	// the screen is not reading their run.
 	if spoils.Propagated > 0 {
 		lines = append(lines, proseLine{
-			runs: []proseRun{
+			spans: []proseSpan{
 				{text: "Vitae", ink: vitaeInk},
 				{text: fmt.Sprintf(" proliferates for each %d -- ", session.PropagationPer)},
 				{text: fmt.Sprintf("+%d", spoils.Propagated), ink: vitaeInk},
@@ -51,7 +51,7 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	}
 
 	lines = append(lines, proseLine{
-		runs: []proseRun{
+		spans: []proseSpan{
 			{text: fmt.Sprintf("Health proliferates for each %d -- ", session.LifeSharePer)},
 			{text: fmt.Sprintf("+%d", spoils.FromLife), ink: vitaeInk},
 		},
@@ -59,7 +59,7 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	})
 
 	lines = append(lines, proseLine{
-		runs: []proseRun{
+		spans: []proseSpan{
 			{text: "Enemy "},
 			{text: "vitae", ink: vitaeInk},
 			{text: " -- "},
@@ -68,13 +68,13 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 		pays: func(gs *state.GlobalState) int { return gs.Run.ClaimFromRoom() },
 	})
 
-	lines = append(lines, proseLine{runs: []proseRun{
+	lines = append(lines, proseLine{spans: []proseSpan{
 		{text: "You have "},
 		{text: fmt.Sprintf("%d vitae", total), ink: vitaeInk},
 		{text: "."},
 	}})
 
-	lines = append(lines, proseLine{runs: []proseRun{
+	lines = append(lines, proseLine{spans: []proseSpan{
 		{text: "Essence bleeds from your enemy, you can only bottle one."},
 	}})
 

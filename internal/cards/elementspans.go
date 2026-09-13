@@ -27,7 +27,7 @@ import (
 
 // elementWords is every word that names an element or one of its statuses, longest first.
 //
-// **Longest first is load-bearing**, because splitRuns lets the first run to claim a position keep
+// **Longest first is load-bearing**, because SplitSpans lets the first span to claim a position keep
 // it: BURN offered before BURNING would take the front of the word and leave ING in the default
 // ink.
 //
@@ -75,32 +75,32 @@ func buildElementWords() []elementWord {
 	return out
 }
 
-// ElementRuns is the runs of this text that name something with a colour, longest first — ready to
+// ElementSpans is the spans of this text that name something with a colour, longest first — ready to
 // hand to a Spec.
 //
-// **The match is ContainsRun, which is the same rule that paints them.** A run harvested by one
+// **The match is ContainsSpan, which is the same rule that paints them.** A span harvested by one
 // rule and declined by another would be a colour that silently does nothing, which is the hardest
 // kind of missing to notice.
-func ElementRuns(text string) []TextRun {
-	var out []TextRun
+func ElementSpans(text string) []TextSpan {
+	var out []TextSpan
 	for _, w := range elementWords {
-		if ContainsRun(text, w.word) {
-			out = append(out, TextRun{Run: w.word, Ink: w.ink})
+		if ContainsSpan(text, w.word) {
+			out = append(out, TextSpan{Span: w.word, Ink: w.ink})
 		}
 	}
 	return out
 }
 
-// ElementHighlights is ElementRuns packed into the fixed array a Spec carries, and is what every
+// ElementHighlights is ElementSpans packed into the fixed array a Spec carries, and is what every
 // caller building a card should use.
 //
 // **A text naming more terms than the array holds loses the last of them**, and
 // TestEveryTextFitsItsHighlights is what catches that before a player sees a half-lit sentence.
 // Truncating rather than growing is the posture the card's text band already takes: the strings are
 // authored in this repo, so an overrun is an authoring mistake to fix and not a case to handle.
-func ElementHighlights(text string) [MaxTextHighlights]TextRun {
-	var out [MaxTextHighlights]TextRun
-	copy(out[:], ElementRuns(text))
+func ElementHighlights(text string) [MaxTextHighlights]TextSpan {
+	var out [MaxTextHighlights]TextSpan
+	copy(out[:], ElementSpans(text))
 	return out
 }
 

@@ -54,7 +54,7 @@ func TestOnlyTheWordChromaticIsLit(t *testing.T) {
 }
 
 // **A word that merely contains the letters is not lit**, which is what whole-word matching buys —
-// the same posture cards.ElementRuns takes.
+// the same posture cards.ElementSpans takes.
 func TestAWordContainingChromaticIsNotLit(t *testing.T) {
 	for _, line := range []string{"CHROMATICS", "ACHROMATIC"} {
 		for _, run := range tipLine(line) {

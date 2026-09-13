@@ -338,7 +338,7 @@ type CombatScene struct {
 	tip models.Tooltip
 
 	// closer is the red X on the deck overlay. It is a shared piece rather than the panel's own
-	// because the fight log used to share it; the hands panel and the bucket carry their own,
+	// because the fight log used to share it; the hands panel and the sack carry their own,
 	// inside their toggles.
 	closer modalCloser
 
@@ -347,11 +347,11 @@ type CombatScene struct {
 	// existed and there was no reason to give the screen a fourth pair of fields by hand.
 	hands handsToggle
 
-	// stones is a rock shower's stones on their way to the pouch. **There is no bucket dialog any
-	// more** *(owner's call, 2026-09-06)* — a parasite is clicked in the consumables pane on the
-	// top row and aimed with the hand's own selection, so what used to be a `parasiteToggle` is a
-	// pane, a predicate and this one animation. See combat_parasite.go, consumables.go and
-	// stoneflight.go, and MECHANICS.md for what a parasite is.
+	// stones is a rock shower's stones on their way to the pouch. **There is no sack dialog any
+	// more** *(owner's call, 2026-09-06)* — a rune is clicked in the consumables pane on the
+	// top row and aimed with the hand's own selection, so what used to be a `runeToggle` is a
+	// pane, a predicate and this one animation. See combat_rune.go, consumables.go and
+	// stoneflight.go, and MECHANICS.md for what a rune is.
 	stones []stoneFlight
 
 	// ledgerDealt is what the player's blows in the round being played back came to, and
@@ -799,8 +799,8 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 
 	// **The hands button is dead under the deck overlay**, for the reason each dialog is dead
 	// under the other: a dialog whose exit is not the brightest thing on screen is a trap, and two
-	// live exits is two. **The bucket used to be the fourth dialog** and is now a pane on the top
-	// row — see combat_parasite.go.
+	// live exits is two. **The sack used to be the fourth dialog** and is now a pane on the top
+	// row — see combat_rune.go.
 	s.hands.block(s.showDeck)
 	s.hands.update(gs)
 
@@ -1145,7 +1145,7 @@ func (s *CombatScene) startRound() {
 	// The opponent holds nothing — a creature plans a turn rather than keeping a hand — so nothing
 	// is passed for it.
 	// **The purse is handed to the rules before the round and taken back after it** *(owner's call,
-	// 2026-09-05)*. The run owns it *between* rounds — a parasite, a sale or a shop can move it
+	// 2026-09-05)*. The run owns it *between* rounds — a rune, a sale or a shop can move it
 	// while the player is planning — and the rules own it *inside* one, because a relic that reads
 	// the purse has to see what an earlier turn of the same round paid. Re-seeding here is what
 	// stops the duelist's copy going stale; `payHeldVitae` below is what brings the change back.
@@ -1624,7 +1624,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// and nothing equips, buys or reads one. Its width is what the two cards leave; see
 	// combat_relics.go.
 	s.drawRelicPane(gs, screen)
-	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.parasiteSpendable(gs))
+	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.runeSpendable(gs))
 
 	s.drawEnemyCard(gs, screen)
 	// **Nothing is drawn in the DUEL! slot on a won fight.** The screen is holding its last
@@ -1654,7 +1654,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// are drawn much later and neither of which is ever held open.
 	s.drawHandRow(gs, screen)
 
-	// The ghosts of cards a parasite ate: the row has already closed over them, so there is no seat
+	// The ghosts of cards a rune ate: the row has already closed over them, so there is no seat
 	// left to draw them from and they are drawn at the one they had. A card that is *changing*
 	// rather than gone is drawn by the row itself, at its own seat — see combat_handmorph.go.
 	s.drawHandMorphs(gs, screen)
@@ -1715,7 +1715,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// else. Its own draw puts its button back on top of its own panel.
 	s.hands.draw(gs, screen, s.fightHands())
 
-	// The bucket, beside the hands panel and under the other two, for the same reason: its own
+	// The sack, beside the hands panel and under the other two, for the same reason: its own
 	// draw puts its button back on top of its own panel.
 	s.drawStoneFlights(gs, screen)
 

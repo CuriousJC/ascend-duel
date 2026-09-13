@@ -11,7 +11,7 @@ and both are things the repo produced. These are things the repo consumes.
 - **One prompt for every card, not one per catalogue.** A prompt is the shared block plus a
   subject paragraph, and the shared block is the whole reason the file exists: it is what makes
   forty relics look like forty relics from one game rather than forty separate commissions. It is
-  shared across the catalogues too — a relic, a relic and a parasite are the same card with a
+  shared across the catalogues too — a relic, a relic and a rune are the same card with a
   different picture in it, and three copies of one paragraph is three paragraphs drifting apart.
 - **The shared block is pasted verbatim and is never edited for one record.** A record that
   needs it changed is a design decision that should move it for everything.
@@ -49,8 +49,8 @@ and both are things the repo produced. These are things the repo consumes.
 
 | File | Holds |
 |---|---|
-| `card_art_prompt.MD` | the prompt, for every card that carries a picture — relics on `cards.RelicStyle`, parasites and essences and stones on `cards.EssenceStyle`. Two composition blocks, one per style; pick one |
-| `parasite_art_prompt.MD` | the closed list of parasite body plans, pasted into that prompt. A creature needs a shape where an object does not |
+| `card_art_prompt.MD` | the prompt, for every card that carries a picture — relics on `cards.RelicStyle`, runes and essences and stones on `cards.EssenceStyle`. Two composition blocks, one per style; pick one |
+| `rune_art_prompt.MD` | the closed list of rune body plans, pasted into that prompt. A creature needs a shape where an object does not |
 
 **Neither bleeding card names itself** *(owner's call, 2026-09-11)*, so no prompt has to keep a
 title band clear: the picture is the card. What a relic card draws over its art is one counter

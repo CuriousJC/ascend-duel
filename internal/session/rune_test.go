@@ -20,24 +20,24 @@ func ids(s *Session) []int {
 	return out
 }
 
-// anyWithTarget is a parasite from the shipped catalogue that does this, whichever one it is.
+// anyWithTarget is a rune from the shipped catalogue that does this, whichever one it is.
 //
 // **A test's subject is the grammar, not the record.** Every assertion in this file already reads
-// off the resolved parasite — `p.Number`, `p.Count`, `p.Concept` — so the record key was the one
+// off the resolved rune — `p.Number`, `p.Count`, `p.Concept` — so the record key was the one
 // place a rename could break a test that was not about that record at all, and it broke seven of
-// them at once when `rockshower` became `rockbeetle`.
+// them at once when `rockshower` became `cairn`.
 //
-// **Deterministic, because `Parasites()` is sorted.** The first match is the same one every run,
+// **Deterministic, because `Runes()` is sorted.** The first match is the same one every run,
 // which is what stops this being a test that quietly changes what it exercises.
-func anyWithTarget(t *testing.T, target ParasiteTarget) Parasite {
+func anyWithTarget(t *testing.T, target RuneTarget) Rune {
 	t.Helper()
-	for _, p := range Parasites() {
+	for _, p := range Runes() {
 		if p.Target == target {
 			return p
 		}
 	}
-	t.Fatalf("the catalogue holds no %s parasite, so nothing exercises it", target)
-	return Parasite{}
+	t.Fatalf("the catalogue holds no %s rune, so nothing exercises it", target)
+	return Rune{}
 }
 
 // otherThan is any concept that is not this one, for a test that needs a card a swap would change.
@@ -49,97 +49,97 @@ func otherThan(c combat.ConceptID) combat.ConceptID {
 }
 
 // anyWithRider is anyWithTarget for the one target whose behaviour is chosen by a second field.
-func anyWithRider(t *testing.T, kind combat.RiderKind) Parasite {
+func anyWithRider(t *testing.T, kind combat.RiderKind) Rune {
 	t.Helper()
-	for _, p := range Parasites() {
-		if p.Target == ParasiteRider && p.Rider == kind {
+	for _, p := range Runes() {
+		if p.Target == RuneRider && p.Rider == kind {
 			return p
 		}
 	}
 	t.Fatalf("the catalogue attaches no %s rider, so nothing exercises it", kind)
-	return Parasite{}
+	return Rune{}
 }
 
 // The catalogue's own promises. A bad record panics at init, so by the time a test runs the file
 // has already been validated — what is left worth checking is that the shipped file actually
 // exercises the grammar rather than four records of one shape.
-func TestTheParasiteCatalogueCoversEveryTarget(t *testing.T) {
-	seen := map[ParasiteTarget]bool{}
-	for _, p := range Parasites() {
+func TestTheRuneCatalogueCoversEveryTarget(t *testing.T) {
+	seen := map[RuneTarget]bool{}
+	for _, p := range Runes() {
 		seen[p.Target] = true
 	}
-	for _, target := range ParasiteTargets() {
+	for _, target := range RuneTargets() {
 		if !seen[target] {
-			t.Errorf("no parasite targets %s, so nothing in the shipped file exercises it", target)
+			t.Errorf("no rune targets %s, so nothing in the shipped file exercises it", target)
 		}
 	}
 }
 
-func TestEveryParasiteTargetHasANameThatParsesBack(t *testing.T) {
-	for _, target := range ParasiteTargets() {
-		got, ok := ParseParasiteTarget(target.String())
+func TestEveryRuneTargetHasANameThatParsesBack(t *testing.T) {
+	for _, target := range RuneTargets() {
+		got, ok := ParseRuneTarget(target.String())
 		if !ok || got != target {
 			t.Errorf("target %d spells itself %q, which parses back as %d/%v",
 				target, target.String(), got, ok)
 		}
 	}
-	if _, ok := ParseParasiteTarget("no-such-target"); ok {
+	if _, ok := ParseRuneTarget("no-such-target"); ok {
 		t.Error("an unknown target name resolved to something")
 	}
 }
 
 func TestARecordNamingSomethingTheRulesLackIsRefused(t *testing.T) {
-	// **The refusal is the safety property.** A parasite that quietly attached nothing, or turned a
+	// **The refusal is the safety property.** A rune that quietly attached nothing, or turned a
 	// card into a concept the rules have not registered, is a mechanic nobody designed — and it
 	// would be discovered by a player rather than by a build.
-	cases := map[string]data.ParasiteData{
-		"an unknown target": {ParasiteRecord: "x", Name: "X", Text: "t", Target: "nibble", Count: 1},
-		"an unknown rider":  {ParasiteRecord: "x", Name: "X", Text: "t", Target: "rider", Rider: "grow-a-hat", Value: "1", Count: 1},
-		"an unknown card":   {ParasiteRecord: "x", Name: "X", Text: "t", Target: "swap", Value: "Kerfuffle", Count: 1},
-		"a rider on remove": {ParasiteRecord: "x", Name: "X", Text: "t", Target: "remove", Rider: "heal-on-play", Count: 1},
-		"vitae with a card": {ParasiteRecord: "x", Name: "X", Text: "t", Target: "vitae", Value: "5", Count: 1},
-		"remove with none":  {ParasiteRecord: "x", Name: "X", Text: "t", Target: "remove", Count: 0},
-		"too many targets":  {ParasiteRecord: "x", Name: "X", Text: "t", Target: "remove", Count: MaxParasiteTargets + 1},
-		"no text":           {ParasiteRecord: "x", Name: "X", Target: "remove", Count: 1},
+	cases := map[string]data.RuneData{
+		"an unknown target": {RuneRecord: "x", Name: "X", Text: "t", Target: "nibble", Count: 1},
+		"an unknown rider":  {RuneRecord: "x", Name: "X", Text: "t", Target: "rider", Rider: "grow-a-hat", Value: "1", Count: 1},
+		"an unknown card":   {RuneRecord: "x", Name: "X", Text: "t", Target: "swap", Value: "Kerfuffle", Count: 1},
+		"a rider on remove": {RuneRecord: "x", Name: "X", Text: "t", Target: "remove", Rider: "heal-on-play", Count: 1},
+		"vitae with a card": {RuneRecord: "x", Name: "X", Text: "t", Target: "vitae", Value: "5", Count: 1},
+		"remove with none":  {RuneRecord: "x", Name: "X", Text: "t", Target: "remove", Count: 0},
+		"too many targets":  {RuneRecord: "x", Name: "X", Text: "t", Target: "remove", Count: MaxRuneTargets + 1},
+		"no text":           {RuneRecord: "x", Name: "X", Target: "remove", Count: 1},
 	}
 	for name, rec := range cases {
-		if _, err := resolveParasite(rec); err == nil {
+		if _, err := resolveRune(rec); err == nil {
 			t.Errorf("%s was accepted", name)
 		}
 	}
 }
 
-func TestTheBucketHoldsWhatIsPutInIt(t *testing.T) {
+func TestTheSackHoldsWhatIsPutInIt(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 
 	if run.HoldCount() != 0 {
-		t.Fatalf("a fresh run started holding %d parasites", run.HoldCount())
+		t.Fatalf("a fresh run started holding %d runes", run.HoldCount())
 	}
 	one := anyWithRider(t, combat.RiderHealOnPlay).Record
 	if !run.Hold(one) || !run.Hold(one) {
-		t.Fatal("the bucket refused a parasite the catalogue has")
+		t.Fatal("the sack refused a rune the catalogue has")
 	}
 	if run.HoldCount() != 2 {
-		t.Errorf("two of the same parasite counted as %d", run.HoldCount())
+		t.Errorf("two of the same rune counted as %d", run.HoldCount())
 	}
-	if run.Hold("no-such-parasite") {
-		t.Error("the bucket took a parasite the catalogue has not got")
+	if run.Hold("no-such-rune") {
+		t.Error("the sack took a rune the catalogue has not got")
 	}
 
 	if !run.Drop(0) || run.HoldCount() != 1 {
 		t.Errorf("dropping one left %d", run.HoldCount())
 	}
 	if run.Drop(5) {
-		t.Error("dropping a position the bucket has not got reported success")
+		t.Error("dropping a position the sack has not got reported success")
 	}
 }
 
-func TestARiderParasiteAttachesToTheCardItNames(t *testing.T) {
+func TestARiderRuneAttachesToTheCardItNames(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
 	held := ids(run)
 
 	p := anyWithRider(t, combat.RiderHealOnPlay)
-	if !run.ApplyParasite(p, []int{held[0]}) {
+	if !run.ApplyRune(p, []int{held[0]}) {
 		t.Fatal("a legal rider was refused")
 	}
 
@@ -153,17 +153,17 @@ func TestARiderParasiteAttachesToTheCardItNames(t *testing.T) {
 	}
 }
 
-func TestARemoveParasiteEatsBothOfItsTargets(t *testing.T) {
+func TestARemoveRuneEatsBothOfItsTargets(t *testing.T) {
 	// **The two-card case is the one essences never had**, and it is where an index-based
 	// implementation goes wrong: removing the first shifts the second.
 	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab), combat.Plain(combat.Poke))
 	held := ids(run)
 
-	p := anyWithTarget(t, ParasiteRemove)
+	p := anyWithTarget(t, RuneRemove)
 	if p.Count != 2 {
 		t.Fatalf("%s eats %d cards, and this test is about the two-card case", p.Record, p.Count)
 	}
-	if !run.ApplyParasite(p, []int{held[0], held[2]}) {
+	if !run.ApplyRune(p, []int{held[0], held[2]}) {
 		t.Fatal("a legal two-card removal was refused")
 	}
 
@@ -176,21 +176,21 @@ func TestARemoveParasiteEatsBothOfItsTargets(t *testing.T) {
 }
 
 func TestASwapKeepsTheCardsIdentityAndItsRiders(t *testing.T) {
-	// **A card the player has already spent parasites on stays the card they invested in.** If a
+	// **A card the player has already spent runes on stays the card they invested in.** If a
 	// swap minted a new identity the riders would go with it, and a player would watch an
 	// investment vanish because they changed what the card was.
 	// **The card starts as something the swap is not**, since a swap onto the card it already is
-	// is refused — so the starting concept is derived from the parasite rather than named.
-	effigy := anyWithTarget(t, ParasiteSwap)
+	// is refused — so the starting concept is derived from the rune rather than named.
+	effigy := anyWithTarget(t, RuneSwap)
 	run := runWith(combat.Plain(otherThan(effigy.Concept)))
 	id := ids(run)[0]
 
-	leech := anyWithRider(t, combat.RiderHealOnPlay)
-	if !run.ApplyParasite(leech, []int{id}) {
+	siphon := anyWithRider(t, combat.RiderHealOnPlay)
+	if !run.ApplyRune(siphon, []int{id}) {
 		t.Fatal("the rider was refused")
 	}
 
-	if !run.ApplyParasite(effigy, []int{id}) {
+	if !run.ApplyRune(effigy, []int{id}) {
 		t.Fatal("the swap was refused")
 	}
 
@@ -202,7 +202,7 @@ func TestASwapKeepsTheCardsIdentityAndItsRiders(t *testing.T) {
 		t.Errorf("the card is %s, wanted %s",
 			combat.ConceptOf(card.Concept).Label, combat.ConceptOf(effigy.Concept).Label)
 	}
-	if card.HealOnPlay() != leech.Number {
+	if card.HealOnPlay() != siphon.Number {
 		t.Errorf("the swap lost the rider: heals %d", card.HealOnPlay())
 	}
 }
@@ -211,7 +211,7 @@ func TestAGraftMakesTheLeftCardTheRightCardWhole(t *testing.T) {
 	// **"BECOMES" is not a partial verb** *(owner's call, 2026-09-08)*. It copied the concept alone,
 	// so grafting a fire Cut onto an ice Jab produced a card whose name said it had become the
 	// right-hand card and whose colour said it had not.
-	graft := anyWithTarget(t, ParasiteClone)
+	graft := anyWithTarget(t, RuneClone)
 	run := runWith(
 		combat.Card{Concept: combat.Jab, Element: combat.Ice},
 		combat.Card{Concept: combat.Bash, Element: combat.Fire},
@@ -220,12 +220,12 @@ func TestAGraftMakesTheLeftCardTheRightCardWhole(t *testing.T) {
 
 	// A rider on the right-hand card, so the test says what "whole" means rather than checking one
 	// extra field: everything the right card is travels, not a list somebody has to keep current.
-	leech := anyWithRider(t, combat.RiderHealOnPlay)
-	if !run.ApplyParasite(leech, []int{right}) {
+	siphon := anyWithRider(t, combat.RiderHealOnPlay)
+	if !run.ApplyRune(siphon, []int{right}) {
 		t.Fatal("the rider was refused")
 	}
 
-	if !run.ApplyParasite(graft, []int{left, right}) {
+	if !run.ApplyRune(graft, []int{left, right}) {
 		t.Fatal("the graft was refused")
 	}
 
@@ -249,13 +249,13 @@ func TestAGraftMakesTheLeftCardTheRightCardWhole(t *testing.T) {
 func TestAGraftOntoAnIdenticalCardDoesNothing(t *testing.T) {
 	// The pair check compares everything the apply copies. Two cards alike in every way but their
 	// identity would leave the deck exactly as it was found, so the pick is refused rather than
-	// spending the parasite on nothing.
-	graft := anyWithTarget(t, ParasiteClone)
+	// spending the rune on nothing.
+	graft := anyWithTarget(t, RuneClone)
 	run := runWith(
 		combat.Card{Concept: combat.Jab, Element: combat.Ice},
 		combat.Card{Concept: combat.Jab, Element: combat.Ice},
 	)
-	if run.CanApplyParasite(graft, ids(run)) {
+	if run.CanApplyRune(graft, ids(run)) {
 		t.Error("a graft between two identical cards was offered")
 	}
 }
@@ -263,76 +263,76 @@ func TestAGraftOntoAnIdenticalCardDoesNothing(t *testing.T) {
 func TestAGraftBetweenTwoColoursOfOneCardIsOffered(t *testing.T) {
 	// The pick a player reaching for this most obviously wants, and the one the concept-only check
 	// used to refuse: same name, different colour.
-	graft := anyWithTarget(t, ParasiteClone)
+	graft := anyWithTarget(t, RuneClone)
 	run := runWith(
 		combat.Card{Concept: combat.Jab, Element: combat.Ice},
 		combat.Card{Concept: combat.Jab, Element: combat.Fire},
 	)
-	if !run.CanApplyParasite(graft, ids(run)) {
+	if !run.CanApplyRune(graft, ids(run)) {
 		t.Error("a graft between two colours of one card was refused")
 	}
 }
 
-func TestAVitaeParasiteTouchesNoCard(t *testing.T) {
+func TestAVitaeRuneTouchesNoCard(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 	before, size := run.Vitae(), run.Size()
 
-	p := anyWithTarget(t, ParasiteVitae)
-	if !run.ApplyParasite(p, nil) {
-		t.Fatal("a parasite that needs no target was refused")
+	p := anyWithTarget(t, RuneVitae)
+	if !run.ApplyRune(p, nil) {
+		t.Fatal("a rune that needs no target was refused")
 	}
 	if run.Vitae() != before+p.Number {
 		t.Errorf("the purse went %d to %d, wanted %d", before, run.Vitae(), before+p.Number)
 	}
 	if run.Size() != size {
-		t.Errorf("a purse parasite changed the deck size to %d", run.Size())
+		t.Errorf("a purse rune changed the deck size to %d", run.Size())
 	}
 }
 
-func TestAParasiteRefusesTheWrongNumberOfTargets(t *testing.T) {
+func TestARuneRefusesTheWrongNumberOfTargets(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
 	held := ids(run)
 
-	gnaw := anyWithTarget(t, ParasiteRemove)
-	if run.ApplyParasite(gnaw, []int{held[0]}) {
-		t.Error("a two-card parasite fired on one card")
+	unmake := anyWithTarget(t, RuneRemove)
+	if run.ApplyRune(unmake, []int{held[0]}) {
+		t.Error("a two-card rune fired on one card")
 	}
-	if run.ApplyParasite(gnaw, []int{held[0], held[0]}) {
-		t.Error("a two-card parasite fired on one card named twice")
+	if run.ApplyRune(unmake, []int{held[0], held[0]}) {
+		t.Error("a two-card rune fired on one card named twice")
 	}
-	if run.ApplyParasite(gnaw, []int{held[0], 9999}) {
-		t.Error("a parasite fired on an identity the run has not got")
+	if run.ApplyRune(unmake, []int{held[0], 9999}) {
+		t.Error("a rune fired on an identity the run has not got")
 	}
 	if run.Size() != 2 {
-		t.Errorf("a refused parasite still changed the deck: %d cards left", run.Size())
+		t.Errorf("a refused rune still changed the deck: %d cards left", run.Size())
 	}
 }
 
 // **The only illegal rider pick is the one that would change nothing** *(owner's call, 2026-09-09)*.
 // It used to be a card carrying its maximum, which stopped making sense the day the maximum became
-// one: a card already upgraded is the pick a player reaching for a second parasite most obviously
+// one: a card already upgraded is the pick a player reaching for a second rune most obviously
 // wants. What is refused is the same upgrade twice, which is the rule every other target is under.
 func TestARiderIsRefusedOnlyWhenItWouldChangeNothing(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 	id := ids(run)[0]
 
-	leech := anyWithRider(t, combat.RiderHealOnPlay)
-	if !run.ApplyParasite(leech, []int{id}) {
+	siphon := anyWithRider(t, combat.RiderHealOnPlay)
+	if !run.ApplyRune(siphon, []int{id}) {
 		t.Fatal("a plain card refused its first upgrade")
 	}
-	if run.CanApplyParasite(leech, []int{id}) {
+	if run.CanApplyRune(siphon, []int{id}) {
 		t.Error("the same upgrade twice was offered as a legal target")
 	}
-	if run.ApplyParasite(leech, []int{id}) {
+	if run.ApplyRune(siphon, []int{id}) {
 		t.Error("a card took the same upgrade twice")
 	}
 
 	// A *different* upgrade is legal and replaces the first outright.
 	motley := anyWithRider(t, combat.RiderWildElement)
-	if !run.CanApplyParasite(motley, []int{id}) {
+	if !run.CanApplyRune(motley, []int{id}) {
 		t.Fatal("an upgraded card refused a different upgrade")
 	}
-	if !run.ApplyParasite(motley, []int{id}) {
+	if !run.ApplyRune(motley, []int{id}) {
 		t.Fatal("a different upgrade did not take")
 	}
 
@@ -349,27 +349,27 @@ func TestARiderIsRefusedOnlyWhenItWouldChangeNothing(t *testing.T) {
 }
 
 // **A normal change leaves the card's upgrade exactly where it was.** That is the whole of what the
-// two classes are for — see ParasiteChange — and it is the half a test can catch, since the
-// difference between Bulwark and Golden is invisible until a *second* parasite is spent.
+// two classes are for — see RuneChange — and it is the half a test can catch, since the
+// difference between Bulwark and Golden is invisible until a *second* rune is spent.
 func TestANormalChangeLeavesTheUpgradeAlone(t *testing.T) {
-	// **Two cards, because the element and form parasites take two.** The gold goes on the first
+	// **Two cards, because the element and form runes take two.** The gold goes on the first
 	// and every assertion below is about that one; the second is only somebody for the pair
-	// parasites to name.
+	// runes to name.
 	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
 	held := ids(run)
 	id := held[0]
 
 	golden := anyWithRider(t, combat.RiderGolden)
-	if !run.ApplyParasite(golden, []int{id}) {
+	if !run.ApplyRune(golden, []int{id}) {
 		t.Fatal("a plain card refused gold")
 	}
 
-	for _, target := range []ParasiteTarget{ParasiteSwap, ParasiteElement, ParasiteForm} {
+	for _, target := range []RuneTarget{RuneSwap, RuneElement, RuneForm} {
 		p := anyWithTarget(t, target)
-		if p.Change != ParasiteNormal {
+		if p.Change != RuneNormal {
 			t.Fatalf("%s calls itself a %s change", p.Record, p.Change)
 		}
-		if !run.ApplyParasite(p, held[:p.Count]) {
+		if !run.ApplyRune(p, held[:p.Count]) {
 			t.Fatalf("%s was refused on a gold card", p.Record)
 		}
 		card, _ := run.CardByID(id)
@@ -381,12 +381,12 @@ func TestANormalChangeLeavesTheUpgradeAlone(t *testing.T) {
 
 // **Every record declares its class and the loader agrees with it.** The field is authored rather
 // than derived so it is a claim the record makes; this is the check that makes the claim worth
-// something — see data.ParasiteData.Change.
-func TestEveryParasiteDeclaresTheChangeItActuallyMakes(t *testing.T) {
-	for _, p := range Parasites() {
-		want := ParasiteNormal
-		if p.Target == ParasiteRider {
-			want = ParasiteUpgrade
+// something — see data.RuneData.Change.
+func TestEveryRuneDeclaresTheChangeItActuallyMakes(t *testing.T) {
+	for _, p := range Runes() {
+		want := RuneNormal
+		if p.Target == RuneRider {
+			want = RuneUpgrade
 		}
 		if p.Change != want {
 			t.Errorf("%s targets %s and resolved as a %s change, want %s",
@@ -400,22 +400,22 @@ func TestEveryParasiteDeclaresTheChangeItActuallyMakes(t *testing.T) {
 func TestAMisdeclaredChangeIsRefused(t *testing.T) {
 	for _, tc := range []struct {
 		what   string
-		record data.ParasiteData
+		record data.RuneData
 	}{
-		{"a swap calling itself an upgrade", data.ParasiteData{
-			ParasiteRecord: "liar", Name: "Liar", Text: "X", Change: "upgrade",
+		{"a swap calling itself an upgrade", data.RuneData{
+			RuneRecord: "liar", Name: "Liar", Text: "X", Change: "upgrade",
 			Target: "swap", Value: "Bash", Count: 1}},
-		{"a rider calling itself normal", data.ParasiteData{
-			ParasiteRecord: "liar", Name: "Liar", Text: "X", Change: "normal",
+		{"a rider calling itself normal", data.RuneData{
+			RuneRecord: "liar", Name: "Liar", Text: "X", Change: "normal",
 			Target: "rider", Rider: "heal-on-play", Value: "10", Count: 1}},
-		{"a record declaring nothing", data.ParasiteData{
-			ParasiteRecord: "mute", Name: "Mute", Text: "X",
+		{"a record declaring nothing", data.RuneData{
+			RuneRecord: "mute", Name: "Mute", Text: "X",
 			Target: "swap", Value: "Bash", Count: 1}},
-		{"a record declaring a word that is not one", data.ParasiteData{
-			ParasiteRecord: "odd", Name: "Odd", Text: "X", Change: "sideways",
+		{"a record declaring a word that is not one", data.RuneData{
+			RuneRecord: "odd", Name: "Odd", Text: "X", Change: "sideways",
 			Target: "swap", Value: "Bash", Count: 1}},
 	} {
-		if _, err := resolveParasite(tc.record); err == nil {
+		if _, err := resolveRune(tc.record); err == nil {
 			t.Errorf("%s was accepted", tc.what)
 		}
 	}
@@ -426,47 +426,47 @@ func TestAMisdeclaredChangeIsRefused(t *testing.T) {
 // number in a JSON file could make silently. See combat.LuckOutcomes.
 func TestAGambleThatAlwaysPaysIsRefused(t *testing.T) {
 	for _, rider := range []string{"golden", "silver"} {
-		bad := data.ParasiteData{
-			ParasiteRecord: "sure-thing", Name: "Sure Thing", Text: "X", Change: "upgrade",
+		bad := data.RuneData{
+			RuneRecord: "sure-thing", Name: "Sure Thing", Text: "X", Change: "upgrade",
 			Target: "rider", Rider: rider, Value: "2", Count: 1,
 		}
-		if _, err := resolveParasite(bad); err == nil {
+		if _, err := resolveRune(bad); err == nil {
 			t.Errorf("a %s card on a d2 was accepted", rider)
 		}
 	}
 }
 
 func TestASwapOntoTheCardItAlreadyIsDoesNothing(t *testing.T) {
-	effigy := anyWithTarget(t, ParasiteSwap)
+	effigy := anyWithTarget(t, RuneSwap)
 	run := runWith(combat.Plain(effigy.Concept))
 	id := ids(run)[0]
 
-	if run.CanApplyParasite(effigy, []int{id}) {
+	if run.CanApplyRune(effigy, []int{id}) {
 		t.Error("a swap onto the card it already is was offered as a legal target")
 	}
 }
 
-func TestTheBucketAndItsRidersSurviveASnapshot(t *testing.T) {
+func TestTheSackAndItsRidersSurviveASnapshot(t *testing.T) {
 	// **The one mistake that cannot be repaired afterwards.** A resumed run one consumable lighter,
 	// or holding a card whose rider stopped working, is a run the player would have to work out had
 	// changed.
 	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
 	id := ids(run)[0]
 
-	leech := anyWithRider(t, combat.RiderHealOnPlay)
-	if !run.ApplyParasite(leech, []int{id}) {
+	siphon := anyWithRider(t, combat.RiderHealOnPlay)
+	if !run.ApplyRune(siphon, []int{id}) {
 		t.Fatal("the rider was refused")
 	}
 	// **The two records are found by target rather than named**, so this goes on testing that the
-	// bucket round-trips in acquisition order rather than that two particular parasites exist.
-	first := anyWithTarget(t, ParasiteRemove).Record
-	second := anyWithTarget(t, ParasiteVitae).Record
+	// sack round-trips in acquisition order rather than that two particular runes exist.
+	first := anyWithTarget(t, RuneRemove).Record
+	second := anyWithTarget(t, RuneVitae).Record
 	run.Hold(first)
 	run.Hold(second)
 
 	snap := run.Snapshot(0)
 	if len(snap.Held) != 2 || snap.Held[0] != first || snap.Held[1] != second {
-		t.Errorf("the bucket was written as %v, wanted acquisition order", snap.Held)
+		t.Errorf("the sack was written as %v, wanted acquisition order", snap.Held)
 	}
 
 	back, _, err := Resume(nil, nil, snap)
@@ -474,14 +474,14 @@ func TestTheBucketAndItsRidersSurviveASnapshot(t *testing.T) {
 		t.Fatalf("the run would not resume: %v", err)
 	}
 	if back.HoldCount() != 2 {
-		t.Errorf("the resumed run holds %d parasites", back.HoldCount())
+		t.Errorf("the resumed run holds %d runes", back.HoldCount())
 	}
 	card, ok := back.CardByID(id)
 	if !ok {
 		t.Fatal("the ridden card did not come back")
 	}
-	if card.HealOnPlay() != leech.Number {
-		t.Errorf("the resumed card heals %d, wanted %d", card.HealOnPlay(), leech.Number)
+	if card.HealOnPlay() != siphon.Number {
+		t.Errorf("the resumed card heals %d, wanted %d", card.HealOnPlay(), siphon.Number)
 	}
 }
 
@@ -489,9 +489,9 @@ func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) 
 	// **They go into the pouch, not onto the ladder** *(owner's call, 2026-09-02)*. A shower hands
 	// over consumables to be spent or sold later; the run decides which rungs it raises.
 	run := runWith(combat.Plain(combat.Bash))
-	p := anyWithTarget(t, ParasiteStones)
+	p := anyWithTarget(t, RuneStones)
 
-	if !run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(1))) {
+	if !run.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(1))) {
 		t.Fatal("a rock shower was refused")
 	}
 
@@ -512,8 +512,8 @@ func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) 
 
 func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
-	p := anyWithTarget(t, ParasiteStones)
-	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(3)))
+	p := anyWithTarget(t, RuneStones)
+	run.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(3)))
 
 	first, _ := StoneByKey(run.Carried()[0])
 	before := run.StonesOn(first.Hand)
@@ -532,8 +532,8 @@ func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
 
 func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
-	p := anyWithTarget(t, ParasiteStones)
-	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(5)))
+	p := anyWithTarget(t, RuneStones)
+	run.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(5)))
 
 	sold, _ := StoneByKey(run.Carried()[0])
 	purse := run.Vitae()
@@ -551,10 +551,10 @@ func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
 
 func TestThePouchSurvivesASnapshot(t *testing.T) {
 	// **A run resumed one consumable lighter is a run the player would have to work out had
-	// changed** — the rule the bucket and the worn relics are both under.
+	// changed** — the rule the sack and the worn relics are both under.
 	run := runWith(combat.Plain(combat.Bash))
-	p := anyWithTarget(t, ParasiteStones)
-	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(9)))
+	p := anyWithTarget(t, RuneStones)
+	run.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(9)))
 	want := run.Carried()
 
 	back, _, err := Resume(nil, nil, run.Snapshot(0))
@@ -575,9 +575,9 @@ func TestThePouchSurvivesASnapshot(t *testing.T) {
 func TestARockShowerDrawsWithoutRepeats(t *testing.T) {
 	// A seat spent showing the same rock twice says nothing, which is the bag's own argument.
 	run := runWith(combat.Plain(combat.Bash))
-	p := anyWithTarget(t, ParasiteStones)
+	p := anyWithTarget(t, RuneStones)
 
-	if !run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(7))) {
+	if !run.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(7))) {
 		t.Fatal("a rock shower was refused")
 	}
 
@@ -593,11 +593,11 @@ func TestARockShowerDrawsWithoutRepeats(t *testing.T) {
 func TestARockShowerWithNoSourceIsRefusedRatherThanRolledTheSameWayTwice(t *testing.T) {
 	// **Refused outright rather than falling back to a default draw.** A consumable quietly
 	// handing out the same three rocks every time is a mechanic nobody designed, and it would be
-	// invisible — see ApplyParasiteRolling.
+	// invisible — see ApplyRuneRolling.
 	run := runWith(combat.Plain(combat.Bash))
-	p := anyWithTarget(t, ParasiteStones)
+	p := anyWithTarget(t, RuneStones)
 
-	if run.ApplyParasite(p, nil) {
+	if run.ApplyRune(p, nil) {
 		t.Error("a rock shower rolled with no source")
 	}
 }
@@ -607,10 +607,10 @@ func TestTwoShowersFromDifferentSourcesCanDifferAndOneSourceIsRepeatable(t *test
 	// of its own: the same seed twice is the same three stones.
 	first := runWith(combat.Plain(combat.Bash))
 	second := runWith(combat.Plain(combat.Bash))
-	p := anyWithTarget(t, ParasiteStones)
+	p := anyWithTarget(t, RuneStones)
 
-	first.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(42)))
-	second.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(42)))
+	first.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(42)))
+	second.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(42)))
 
 	a, b := first.Granted(), second.Granted()
 	if len(a) != len(b) {
@@ -624,35 +624,35 @@ func TestTwoShowersFromDifferentSourcesCanDifferAndOneSourceIsRepeatable(t *test
 }
 
 // The cap is a rule, not a label on a pane. **`MaxHeld` is what the top row draws as `held/2`** —
-// see internal/screens/consumables.go — and a bucket that took a third would make that fraction a
+// see internal/screens/consumables.go — and a sack that took a third would make that fraction a
 // lie on the one screen the player reads their build off.
-func TestTheBucketRefusesMoreThanItHolds(t *testing.T) {
+func TestTheSackRefusesMoreThanItHolds(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 
 	filler := anyWithRider(t, combat.RiderHealOnPlay).Record
-	spare := anyWithTarget(t, ParasiteRemove).Record
+	spare := anyWithTarget(t, RuneRemove).Record
 
 	for i := 0; i < MaxHeld; i++ {
 		if !run.Hold(filler) {
-			t.Fatalf("the bucket refused parasite %d of %d", i+1, MaxHeld)
+			t.Fatalf("the sack refused rune %d of %d", i+1, MaxHeld)
 		}
 	}
 	if !run.HoldFull() {
-		t.Errorf("a bucket holding %d of %d does not report itself full", run.HoldCount(), MaxHeld)
+		t.Errorf("a sack holding %d of %d does not report itself full", run.HoldCount(), MaxHeld)
 	}
 	if run.Hold(spare) {
-		t.Errorf("a full bucket took a %dth parasite", MaxHeld+1)
+		t.Errorf("a full sack took a %dth rune", MaxHeld+1)
 	}
 	if run.HoldCount() != MaxHeld {
-		t.Errorf("the bucket holds %d, past the cap of %d", run.HoldCount(), MaxHeld)
+		t.Errorf("the sack holds %d, past the cap of %d", run.HoldCount(), MaxHeld)
 	}
 
 	// **Dropping one makes room again**, which is what makes the cap a bound on carrying rather
 	// than on ever acquiring.
 	if !run.Drop(0) || run.HoldFull() {
-		t.Errorf("a bucket with one spent still reports itself full at %d", run.HoldCount())
+		t.Errorf("a sack with one spent still reports itself full at %d", run.HoldCount())
 	}
 	if !run.Hold(spare) || run.HoldCount() != MaxHeld {
-		t.Errorf("the freed seat did not take a parasite: %d held", run.HoldCount())
+		t.Errorf("the freed seat did not take a rune: %d held", run.HoldCount())
 	}
 }

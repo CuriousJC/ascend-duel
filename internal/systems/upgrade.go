@@ -2,7 +2,7 @@ package systems
 
 // Upgrades: **the whole card saying what the run has permanently made it.**
 //
-// A card has a form, an element and an action. Those three compose freely and a parasite may move
+// A card has a form, an element and an action. Those three compose freely and a rune may move
 // any of them — and none of them is an upgrade, because the card's own face already states all
 // three. An **upgrade** is the fourth thing, and a card carries exactly one: see
 // `combat.MaxCardRiders`, which came down to one on the same day this became a whole-card overlay.

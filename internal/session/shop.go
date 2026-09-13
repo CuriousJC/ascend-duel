@@ -133,9 +133,9 @@ func (s *Session) Sell(key string) bool {
 // five from the room plus a tenth of the life left, so a good is about a fight's takings — bought
 // instead of a relic rather than alongside one.
 const (
-	bagPrice    = 5
-	vialPrice   = 5
-	bucketPrice = 5
+	bagPrice  = 5
+	vialPrice = 5
+	sackPrice = 5
 )
 
 // bagSize and vialSize are how many are drawn from inside.
@@ -144,9 +144,9 @@ const (
 // between two; this is what five vitae buys over that, and it is why the vial is worth opening at
 // all when an essence arrives free every fight.
 const (
-	bagSize    = 4
-	vialSize   = 4
-	bucketSize = 4
+	bagSize  = 4
+	vialSize = 4
+	sackSize = 4
 )
 
 // BagPrice, VialPrice, BagSize and VialSize are the figures a screen writes on the cards. **Asked
@@ -157,16 +157,16 @@ func VialPrice() int { return vialPrice }
 func BagSize() int   { return bagSize }
 func VialSize() int  { return vialSize }
 
-// BucketPrice and BucketSize are the third good's, on the same terms.
-func BucketPrice() int { return bucketPrice }
-func BucketSize() int  { return bucketSize }
+// SackPrice and SackSize are the third good's, on the same terms.
+func SackPrice() int { return sackPrice }
+func SackSize() int  { return sackSize }
 
 // CanAffordBag and CanAffordVial report whether the purse covers one. **The question, not the
 // guard** — `BuyBag` and `BuyVial` check the purse themselves, exactly as `CanBuy` sits beside
 // `Buy`. They exist so a shelf can dim a card rather than swallow a click.
-func (s *Session) CanAffordBag() bool    { return s.vitae >= bagPrice }
-func (s *Session) CanAffordVial() bool   { return s.vitae >= vialPrice }
-func (s *Session) CanAffordBucket() bool { return s.vitae >= bucketPrice }
+func (s *Session) CanAffordBag() bool  { return s.vitae >= bagPrice }
+func (s *Session) CanAffordVial() bool { return s.vitae >= vialPrice }
+func (s *Session) CanAffordSack() bool { return s.vitae >= sackPrice }
 
 // BuyBag and BuyVial pay for a sealed good and report whether they could.
 //
@@ -178,8 +178,8 @@ func (s *Session) CanAffordBucket() bool { return s.vitae >= bucketPrice }
 func (s *Session) BuyBag() bool  { return s.SpendVitae(bagPrice) }
 func (s *Session) BuyVial() bool { return s.SpendVitae(vialPrice) }
 
-// BuyBucket is the third good, and the one whose contents go *into* the run rather than being
+// BuySack is the third good, and the one whose contents go *into* the run rather than being
 // applied on the spot. **It still only moves the purse**: what is drawn is the screen's, and
-// `Hold` is what puts the chosen parasite in the bucket — so a purchase interrupted by a quit
+// `Hold` is what puts the chosen rune in the sack — so a purchase interrupted by a quit
 // costs the vitae and hands back nothing, the same deal the other two make.
-func (s *Session) BuyBucket() bool { return s.SpendVitae(bucketPrice) }
+func (s *Session) BuySack() bool { return s.SpendVitae(sackPrice) }

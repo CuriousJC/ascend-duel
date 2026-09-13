@@ -1,24 +1,24 @@
 [
   {
     "EssenceRecord": "dissolve",
-    "Name": "DISSOLVE",
+    "Name": "Essence of Removal",
     "Family": "Dissolve and multiply",
     "Art": "",
-    "Draw": "",
+    "Draw": "a flaming sword that is fading away into a pixelation effect like tis' going to disappear",
     "Target": "remove",
     "Text": "DESTROY CARD"
   },
   {
     "EssenceRecord": "multiply",
-    "Name": "MULTIPLY",
+    "Name": "Essence of Mirror",
     "Family": "Dissolve and multiply",
     "Art": "",
-    "Draw": "",
+    "Draw": "an axe surrounded by lighting with another fading into existence next to it",
     "Target": "duplicate",
     "Text": "COPY CARD"
   },
   {
-    "EssenceRecord": "ember",
+    "EssenceRecord": "change-fire",
     "Name": "EMBER",
     "Family": "Elemental essences",
     "Art": "",
@@ -28,7 +28,7 @@
     "Text": "CARD BECOMES FIRE"
   },
   {
-    "EssenceRecord": "rime",
+    "EssenceRecord": "change-ice",
     "Name": "RIME",
     "Family": "Elemental essences",
     "Art": "",
@@ -38,7 +38,7 @@
     "Text": "CARD BECOMES ICE"
   },
   {
-    "EssenceRecord": "arc",
+    "EssenceRecord": "change-lightning",
     "Name": "ARC",
     "Family": "Elemental essences",
     "Art": "",
@@ -48,7 +48,7 @@
     "Text": "CARD BECOMES LIGHTNING"
   },
   {
-    "EssenceRecord": "loam",
+    "EssenceRecord": "change-earth",
     "Name": "LOAM",
     "Family": "Elemental essences",
     "Art": "",
@@ -58,7 +58,7 @@
     "Text": "CARD BECOMES EARTH"
   },
   {
-    "EssenceRecord": "hex",
+    "EssenceRecord": "change-arcane",
     "Name": "HEX",
     "Family": "Elemental essences",
     "Art": "",
@@ -68,7 +68,7 @@
     "Text": "CARD BECOMES ARCANE"
   },
   {
-    "EssenceRecord": "hone",
+    "EssenceRecord": "remove-ap",
     "Name": "HONE",
     "Family": "Card strength",
     "Art": "",
@@ -78,7 +78,7 @@
     "Text": "CARD BECOMES EASIER -1 AP"
   },
   {
-    "EssenceRecord": "swell",
+    "EssenceRecord": "add-dmg",
     "Name": "SWELL",
     "Family": "Card strength",
     "Art": "",
@@ -88,7 +88,7 @@
     "Text": "CARD GAINS DMG +50%"
   },
   {
-    "EssenceRecord": "exalt",
+    "EssenceRecord": "add-ap",
     "Name": "EXALT",
     "Family": "Card strength",
     "Art": "",
@@ -97,7 +97,7 @@
     "Text": "CARD GAINS STRENGTH +1 AP"
   },
   {
-    "EssenceRecord": "debase",
+    "EssenceRecord": "demote",
     "Name": "DEBASE",
     "Family": "Card strength",
     "Art": "",
@@ -106,7 +106,7 @@
     "Text": "CARD LOSES STRENGTH -1 AP"
   },
   {
-    "EssenceRecord": "blunt",
+    "EssenceRecord": "change-crush",
     "Name": "BLUNT",
     "Family": "Form essences",
     "Art": "",
@@ -116,7 +116,7 @@
     "Text": "CARD BECOMES CRUSH"
   },
   {
-    "EssenceRecord": "edge",
+    "EssenceRecord": "change-slash",
     "Name": "EDGE",
     "Family": "Form essences",
     "Art": "",
@@ -126,7 +126,7 @@
     "Text": "CARD BECOMES SLASH"
   },
   {
-    "EssenceRecord": "spike",
+    "EssenceRecord": "change-stab",
     "Name": "SPIKE",
     "Family": "Form essences",
     "Art": "",
@@ -136,7 +136,7 @@
     "Text": "CARD BECOMES STAB"
   },
   {
-    "EssenceRecord": "aegis",
+    "EssenceRecord": "change-defend",
     "Name": "AEGIS",
     "Family": "Form essences",
     "Art": "",

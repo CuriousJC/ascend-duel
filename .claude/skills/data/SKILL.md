@@ -19,7 +19,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies a blow by |
 | `essences.json` | `LoadEssences` | the deck alterations offered between fights |
-| `parasites.json` | `LoadParasites` | the deck alterations spent *during* a fight |
+| `runes.json` | `LoadRunes` | the deck alterations spent *during* a fight |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
@@ -224,7 +224,7 @@ That is the card language paying off, and it is the shape to reach for before ad
 ### The three fields no catalogue's rules read
 
 **`Family`, `Art` and `Draw` are authored, ignored, and read only by a review sheet.** They landed
-on `relics.json` first and were taken to `essences.json` and `parasites.json` on 2026-09-12;
+on `relics.json` first and were taken to `essences.json` and `runes.json` on 2026-09-12;
 `enemies.json` and `bosses.json` carry `Family` and `Draw` without an `Art`, because a portrait
 key is what those two already have.
 
@@ -237,7 +237,7 @@ key is what those two already have.
   and no test fails**, so re-read the block when a record's rules change.
 - **`Art` is an `assets.LoadImageData` key**, and **empty means the catalogue's default face**.
   Every catalogue that has one exposes an `ArtKey()` on its record — `DefaultRelicArt`,
-  `DefaultEssenceArt`, `DefaultParasiteArt` — so the fallback is in `data/` and not in a screen: one
+  `DefaultEssenceArt`, `DefaultRuneArt` — so the fallback is in `data/` and not in a screen: one
   that lives in `internal/screens` is one the review tools do not have.
 - **`Draw` is the subject paragraph an art generator is given**, one sentence saying what the thing
   *is* and what it is doing. The *generic* prompt is `docs/art/card_art_prompt.MD` and is about no
@@ -245,7 +245,7 @@ key is what those two already have.
   the backlog each sheet marks in pink. **Every enemy and boss `Draw` reads `TO BE DETERMINED`**:
   those portraits are licensed art rather than generated pictures, so the field is a seat rather
   than a backlog.
-- **`go run ./tools/relicart -kind relic|essence|parasite`** files a generated picture into any of the
+- **`go run ./tools/relicart -kind relic|essence|rune`** files a generated picture into any of the
   three: reduce to the card's size, commit under the family's asset directory, write `Art` on the
   record.
 

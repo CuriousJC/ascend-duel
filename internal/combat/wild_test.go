@@ -121,7 +121,7 @@ func TestAWildcardIsSpentOnce(t *testing.T) {
 }
 
 // **The rider carries no amount, and the vocabulary says so.** It is the one kind whose Amount is
-// meaningless, and internal/session refuses a value-less rider parasite for every other kind.
+// meaningless, and internal/session refuses a value-less rider rune for every other kind.
 func TestTheWildcardRiderCarriesNoAmount(t *testing.T) {
 	if RiderWildElement.CarriesAmount() {
 		t.Error("the wildcard rider claims to carry an amount")
@@ -137,7 +137,7 @@ func TestTheWildcardRiderCarriesNoAmount(t *testing.T) {
 	}
 }
 
-// **It is in the vocabulary both ways round**, so a parasite record can name it and a run
+// **It is in the vocabulary both ways round**, so a rune record can name it and a run
 // snapshot can write it down.
 func TestTheWildcardRiderRoundTripsItsName(t *testing.T) {
 	got, ok := ParseRiderKind(RiderWildElement.String())

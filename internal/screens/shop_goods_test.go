@@ -140,7 +140,7 @@ func TestTheGoodsStandInTheirPane(t *testing.T) {
 
 	// A pack this visit did not put up has no seat at all, which is what stops a click landing on
 	// one that is not drawn.
-	if got := s.goodSlot(gs, goodBucket); !got.Empty() {
+	if got := s.goodSlot(gs, goodSack); !got.Empty() {
 		t.Errorf("a pack that was not offered has a seat at %v", got)
 	}
 }
@@ -166,9 +166,9 @@ func TestADialogAlwaysHasSomethingToClick(t *testing.T) {
 	}
 	g.reset()
 
-	g.open(gs, goodBucket)
+	g.open(gs, goodSack)
 	if g.count() == 0 {
-		t.Error("a bucket opened with nothing in it")
+		t.Error("a sack opened with nothing in it")
 	}
 }
 

@@ -124,7 +124,7 @@ func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
 // cannot arise, because a card cannot carry two — see `combat.MaxCardRiders`.
 //
 // **The table is total on purpose, and TestEveryRiderKindIsDrawn is what holds it that way.** A
-// rider with no upgrade would be a parasite the player spent and cannot see they spent, which is
+// rider with no upgrade would be a rune the player spent and cannot see they spent, which is
 // the failure the whole mechanic is written to avoid.
 func upgradeOf(c combat.Card) systems.Upgrade {
 	return upgradeForRider[c.Rider().Kind]
@@ -638,7 +638,7 @@ func stoneLine(st session.Stone) string {
 // nothing about the four.
 //
 // **They borrow their own catalogue's picture**: the bag draws the boulder every stone card draws,
-// the vial the essence catalogue's default face, the bucket the parasite catalogue's. A picture of
+// the vial the essence catalogue's default face, the sack the rune catalogue's. A picture of
 // their own would be a third thing to recognise for no gain — what is in the good is exactly what
 // the picture shows. See goodArt, which is where the three are chosen.
 func goodSpec(gs *state.GlobalState, name, line string, art image.Image, enabled bool) cards.Spec {

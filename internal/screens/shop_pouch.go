@@ -45,7 +45,7 @@ const (
 	// centre**, because the two tabs hang below the cards and need the room under them.
 	pouchRowPct = 38
 
-	// The panel's own prompt, on the parasite dialog's numbers.
+	// The panel's own prompt, on the rune dialog's numbers.
 	pouchPromptDrop = 40
 	pouchPromptSize = 24
 
@@ -78,7 +78,7 @@ type pouchToggle struct {
 	//
 	// **A seat rather than a record key**, which is the one place this differs from the worn row's
 	// armed field: the pouch may hold two of the same stone and spending one must not be ambiguous
-	// about which. It is the argument the parasite pane's seat index is under.
+	// about which. It is the argument the rune pane's seat index is under.
 	armed int
 
 	// doing is the tabs' request, consumed on the next frame.
@@ -136,12 +136,12 @@ func (t *pouchToggle) init() {
 	t.sell.TextSize = sellTabTextSize
 }
 
-// cardRects is where the carried stones stand inside the panel. It reuses the parasite dialog's
+// cardRects is where the carried stones stand inside the panel. It reuses the rune dialog's
 // row, which is the one row in the game already written to lay an arbitrary number of cards out
 // inside a modal frame.
 func (t *pouchToggle) cardRects(gs *state.GlobalState) []image.Rectangle {
 	r := modalPanelRect(gs)
-	return parasiteCardRects(r, len(pouchRow(gs)), r.Min.Y+r.Dy()*pouchRowPct/100)
+	return runeCardRects(r, len(pouchRow(gs)), r.Min.Y+r.Dy()*pouchRowPct/100)
 }
 
 // tabRects is where the two tabs hang under the armed stone: Use on the left, Sell on the right.
@@ -170,7 +170,7 @@ func midOf(r image.Rectangle) (int, int) {
 // updatePouch runs the button, the panel and the tabs, and reports whether the panel is covering
 // the screen.
 func (s *ShopScene) updatePouch(gs *state.GlobalState) bool {
-	// **The button stands down when the pouch is empty**, which is the rule the parasite bucket's
+	// **The button stands down when the pouch is empty**, which is the rule the rune sack's
 	// own opener is under: a control lit for something the player cannot do is worse than none.
 	s.pouch.block(s.deck.open || s.hands.open || gs.Run == nil || gs.Run.CarryCount() == 0)
 	if !s.pouch.open {

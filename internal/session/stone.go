@@ -237,12 +237,12 @@ func sortedHands(m map[string]int) []string {
 // **A list of record keys rather than counts**, which is the opposite of `stones` and is right for
 // the opposite reason. `stones` is what the ladder reads and two Agates there are genuinely one
 // number; the pouch is a row of things to click, and two Agates in it are two cards to draw and two
-// separate decisions to make. It is the parasite bucket's shape exactly, and for the same argument.
+// separate decisions to make. It is the rune sack's shape exactly, and for the same argument.
 
 // Carry puts a stone in the pouch, and reports whether the catalogue held it.
 //
 // **A stone the catalogue does not have is refused** rather than carried as a key nothing can
-// resolve — the posture `Hold` takes for a parasite, and for the same reason: a pouch slot that
+// resolve — the posture `Hold` takes for a rune, and for the same reason: a pouch slot that
 // cannot be resolved is a slot the player cannot spend.
 func (s *Session) Carry(key string) bool {
 	if _, ok := stones[key]; !ok {
@@ -266,7 +266,7 @@ func (s *Session) CarryCount() int { return len(s.pouch) }
 //
 // **Out of the pouch first, then onto the rung**, and by position rather than by key because the
 // pouch may hold two of the same stone and spending one must not be ambiguous about which — the
-// argument a parasite's seat index in the consumables pane is under.
+// argument a rune's seat index in the consumables pane is under.
 func (s *Session) SpendCarried(i int) bool {
 	if i < 0 || i >= len(s.pouch) {
 		return false
@@ -292,8 +292,8 @@ func (s *Session) SellCarried(i int) bool {
 
 // StartingStones is what a run opens carrying in its pouch, by record key.
 //
-// **Empty as shipped, and it is a debug seat**, the counterpart of StartingParasites and for the
-// same reason: a stone reaches the pouch only from a rock-shower parasite, which is bought two
+// **Empty as shipped, and it is a debug seat**, the counterpart of StartingRunes and for the
+// same reason: a stone reaches the pouch only from a rock-shower rune, which is bought two
 // screens away and spent in the fight after that. `internal/scenario` is what fills it; nothing
 // else may.
 var StartingStones []string

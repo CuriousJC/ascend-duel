@@ -58,27 +58,27 @@ const (
 	goodBag
 	goodVial
 
-	// goodBucket is the third, and the one whose contents leave the shop with the player rather
+	// goodSack is the third, and the one whose contents leave the shop with the player rather
 	// than being applied in the dialog. A stone and an essence are both spent the moment they are
-	// chosen; a parasite goes into the bucket and is spent mid-fight. See combat_parasite.go.
-	goodBucket
+	// chosen; a rune goes into the sack and is spent mid-fight. See combat_rune.go.
+	goodSack
 )
 
 // goodKinds is the shelf's goods in the order they stand, for anything that walks them.
-func goodKinds() []goodKind { return []goodKind{goodBag, goodVial, goodBucket} }
+func goodKinds() []goodKind { return []goodKind{goodBag, goodVial, goodSack} }
 
 // The two goods as cards. **The name is what it is and the line is the shape of the offer**, never
 // what is inside: a bag that named its four rocks on the face would be a shelf item you could read
 // before paying for, which is the one thing these are not.
 const (
-	bagName    = "BAG OF ROCKS"
-	vialName   = "VIAL OF ESSENCE"
-	bucketName = "BUCKET OF PARASITES"
+	bagName  = "BAG OF ROCKS"
+	vialName = "VIAL OF ESSENCE"
+	sackName = "SACK OF RUNES"
 )
 
 // Where the goods row sits, and how the dialog lays its cards out.
 const (
-	// The dialog's four cards, centred in the panel — the bag's and the bucket's, which have one
+	// The dialog's four cards, centred in the panel — the bag's and the sack's, which have one
 	// row and nothing under it.
 	goodsChoiceRowPct = 42
 
@@ -104,7 +104,7 @@ const (
 	// *(owner's call, 2026-09-06)*: the vial used to move on to a row of cards once an essence was
 	// chosen, so the essences disappeared at the moment the player had to judge one against a card.
 	// Both rows are up together now and the gesture is the row's own — select the card, then click
-	// the essence. See targeting.go, which is the rule the parasite pane and the reward screen's own
+	// the essence. See targeting.go, which is the rule the rune pane and the reward screen's own
 	// essence row already follow.
 	goodsPick
 )
@@ -119,10 +119,10 @@ type goods struct {
 	kind  goodKind
 	stage goodsStage
 
-	// stones, essences and parasites are what was drawn, and only the one matching kind is filled.
-	stones    []session.Stone
-	essences  []session.Essence
-	parasites []session.Parasite
+	// stones, essences and runes are what was drawn, and only the one matching kind is filled.
+	stones   []session.Stone
+	essences []session.Essence
+	runes    []session.Rune
 
 	// offer is the cards an essence may be aimed at, by index into the run's deck. **Only the vial
 	// fills it**, and it is dealt when the vial is opened rather than when an essence is picked — the
@@ -146,7 +146,7 @@ type goods struct {
 // bag.
 func (g *goods) open(gs *state.GlobalState, kind goodKind) {
 	g.kind, g.stage, g.selected = kind, goodsPick, -1
-	g.stones, g.essences, g.parasites, g.offer = nil, nil, nil, nil
+	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
 	g.tip = models.Tooltip{DwellTicks: tipDwell}
 
 	switch kind {
@@ -155,8 +155,8 @@ func (g *goods) open(gs *state.GlobalState, kind goodKind) {
 	case goodVial:
 		g.essences = dealVialEssences(gs)
 		g.offer = dealVialOffer(gs)
-	case goodBucket:
-		g.parasites = dealBucketParasites(gs)
+	case goodSack:
+		g.runes = dealSackRunes(gs)
 	}
 }
 
@@ -166,18 +166,18 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 // close puts it away.
 func (g *goods) reset() {
 	g.kind, g.stage, g.selected = goodNone, goodsClosed, -1
-	g.stones, g.essences, g.parasites, g.offer = nil, nil, nil, nil
+	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
 	g.tip.Forget()
 }
 
-// count is how many cards are in the row that is taken from: the stones, the parasites, or the
+// count is how many cards are in the row that is taken from: the stones, the runes, or the
 // essences. **Not the offer**, which is a second row with its own slot function.
 func (g *goods) count() int {
 	switch {
 	case g.kind == goodBag:
 		return len(g.stones)
-	case g.kind == goodBucket:
-		return len(g.parasites)
+	case g.kind == goodSack:
+		return len(g.runes)
 	default:
 		return len(g.essences)
 	}
@@ -220,31 +220,31 @@ func dealVialEssences(gs *state.GlobalState) []session.Essence {
 	return all
 }
 
-// dealBucketParasites is what a bucket holds: four of the catalogue, without repeats.
+// dealSackRunes is what a sack holds: four of the catalogue, without repeats.
 //
-// **Its own stream** (`seeds.BucketStock`), separate from both other goods and from the reward
-// screen's essences — see internal/seeds. **Flat, not weighted**, on the bag's argument: a parasite
+// **Its own stream** (`seeds.SackStock`), separate from both other goods and from the reward
+// screen's essences — see internal/seeds. **Flat, not weighted**, on the bag's argument: a rune
 // has no rarity, and weighting them would be pricing the effect, which nothing has decided yet.
 //
-// **A catalogue shorter than the bucket is not an error.** Four parasites ship and the bucket holds
+// **A catalogue shorter than the sack is not an error.** Four runes ship and the sack holds
 // four, so it currently offers the whole file; the cut is what keeps that true as the list grows.
-func dealBucketParasites(gs *state.GlobalState) []session.Parasite {
-	all := session.Parasites()
-	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.BucketStock, gs.Run.Fight())))
+func dealSackRunes(gs *state.GlobalState) []session.Rune {
+	all := session.Runes()
+	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.SackStock, gs.Run.Fight())))
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
-	if len(all) > session.BucketSize() {
-		all = all[:session.BucketSize()]
+	if len(all) > session.SackSize() {
+		all = all[:session.SackSize()]
 	}
 	return all
 }
 
-// parasiteTipLines is what resting on a parasite says: what it does, and when it can be spent.
+// runeTipLines is what resting on a rune says: what it does, and when it can be spent.
 //
-// **The "when" is the half the card cannot say.** A parasite's face is a name and a clipped line,
+// **The "when" is the half the card cannot say.** A rune's face is a name and a clipped line,
 // and the thing that makes it a different object from an essence is not on it — so the tooltip is where
 // a player finds out that this one is carried into a fight rather than used now.
-func parasiteTipLines(p session.Parasite) []string {
+func runeTipLines(p session.Rune) []string {
 	// **The card's own text, unwrapped.** A `\n` on a face is an authored line break and a tooltip
 	// draws its own lines, so the two are the same sentence written for two widths — the same
 	// treatment essenceTip gives an essence.
@@ -402,9 +402,9 @@ func (g *goods) hover(gs *state.GlobalState) {
 		case g.kind == goodBag:
 			st := g.stones[i]
 			g.tip.Point(g.slot(gs, i), tipLine(st.Name), tipLines(stoneTipLines(gs, st)))
-		case g.kind == goodBucket:
-			p := g.parasites[i]
-			g.tip.Point(g.slot(gs, i), tipLine(p.Name), tipLines(parasiteTipLines(p)))
+		case g.kind == goodSack:
+			p := g.runes[i]
+			g.tip.Point(g.slot(gs, i), tipLine(p.Name), tipLines(runeTipLines(p)))
 		}
 		return
 	}
@@ -470,13 +470,13 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		}
 		g.reset()
 
-	case g.kind == goodBucket:
-		// **A parasite is not applied here — it goes into the bucket.** That is the whole
+	case g.kind == goodSack:
+		// **A rune is not applied here — it goes into the sack.** That is the whole
 		// difference between this good and the other two: a stone and an essence are spent on the
-		// spot, and a parasite is carried into the next fight and spent between its turns.
-		p := g.parasites[i]
+		// spot, and a rune is carried into the next fight and spent between its turns.
+		p := g.runes[i]
 		if gs.Run.Hold(p.Record) {
-			trace.Logf("shop", "bucket of parasites: %s held, %d in the bucket",
+			trace.Logf("shop", "sack of runes: %s held, %d in the sack",
 				p.Record, gs.Run.HoldCount())
 		}
 		g.reset()
@@ -518,12 +518,12 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 		switch {
 		case g.kind == goodBag:
 			drawStoneCard(gs, screen, at, g.stones[i], true)
-		case g.kind == goodBucket:
-			drawSpecCard(gs, screen, at, parasiteSpec(gs, g.parasites[i], true, false))
+		case g.kind == goodSack:
+			drawSpecCard(gs, screen, at, runeSpec(gs, g.runes[i], true, false))
 		default:
 			// **An essence is lit only for the card that is selected.** With nothing selected the
 			// whole row is dim, which is what says the gesture starts underneath — the reward
-			// screen's rule, and the parasite pane's.
+			// screen's rule, and the rune pane's.
 			drawEssenceCard(gs, screen, at, g.essences[i], g.essenceSpendable(gs, g.essences[i]))
 		}
 	}
@@ -553,8 +553,8 @@ func (g *goods) title() string {
 	switch g.kind {
 	case goodBag:
 		return bagName
-	case goodBucket:
-		return bucketName
+	case goodSack:
+		return sackName
 	default:
 		return "CHOOSE YOUR ESSENCE"
 	}
@@ -567,7 +567,7 @@ func (g *goods) hint() string {
 	case g.kind == goodBag:
 		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.stones))
 	default:
-		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.parasites))
+		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.runes))
 	}
 }
 

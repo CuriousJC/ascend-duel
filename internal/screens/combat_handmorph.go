@@ -1,17 +1,17 @@
 package screens
 
-// Cards changing **in the hand**, mid-fight: the parasite's half of the morph.
+// Cards changing **in the hand**, mid-fight: the rune's half of the morph.
 //
 // The post-battle screen's version is a single card flown to the middle of an empty table and
-// changed there, which is what a reward can afford. A parasite is spent between two turns of a live
+// changed there, which is what a reward can afford. A rune is spent between two turns of a live
 // round, on cards standing in the row the player is about to play — so the change has to happen
-// where the cards already are, on as many of them as the parasite named, and without taking the
+// where the cards already are, on as many of them as the rune named, and without taking the
 // screen.
 //
 // **One beat for all of them** *(owner's call, 2026-09-08, the same call the shield break was taken
-// under)*. Every card a parasite touched changes at once, on one clock. Three cards dissolving in
+// under)*. Every card a rune touched changes at once, on one clock. Three cards dissolving in
 // sequence would be three beats of pause over a hand the player is in the middle of building, and
-// what is being said — "these are the cards it took" — is one statement about the parasite rather
+// what is being said — "these are the cards it took" — is one statement about the rune rather
 // than one per card.
 //
 // # It draws at the seat, and the seat is a lookup
@@ -24,7 +24,7 @@ package screens
 //
 // # It may never change an outcome
 //
-// The deck and the hand are both altered by `spendParasite` before any of this is raised, so a morph
+// The deck and the hand are both altered by `spendRune` before any of this is raised, so a morph
 // is a picture of something that has already happened — the rule every flight on this screen is
 // under. Nothing waits for it: the card underneath a running morph is the new card and is selectable
 // while it changes, exactly as a card is clickable while it flies.
@@ -55,9 +55,9 @@ func (h handMorph) done() bool { return h.m.done() }
 
 // handFaces is every card in the hand as a finished face, by identity, plus where each one stands.
 //
-// **Taken before a parasite is applied and again after**, because what changed is the difference
+// **Taken before a rune is applied and again after**, because what changed is the difference
 // between the two — which is the only way to raise a morph without this file learning what each
-// parasite does. A borer recolours, a grub reforms, a graft overwrites, a rider takes the left
+// rune does. A borer recolours, a grub reforms, a graft overwrites, a rider takes the left
 // column: all of them are "this face is not the face that was here", and none of them needs a case.
 func (s *CombatScene) handFaces(gs *state.GlobalState) (map[int]cards.Spec, map[int]image.Rectangle) {
 	faces := make(map[int]cards.Spec, len(s.hand))
@@ -72,17 +72,17 @@ func (s *CombatScene) handFaces(gs *state.GlobalState) (map[int]cards.Spec, map[
 // handFace is one hand card's face, drawn as it would be if nothing else were going on.
 //
 // **Always enabled and never selected**, deliberately. Those two are the row's state rather than the
-// card's, and they move for reasons that have nothing to do with a parasite — a selection reaching
+// card's, and they move for reasons that have nothing to do with a rune — a selection reaching
 // the cap dims every other card, and a morph that captured that would be comparing the hand's mood
 // rather than the cards.
 func (s *CombatScene) handFace(c paletteCard) cards.Spec {
 	return cardSpec(c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), true, false)
 }
 
-// raiseHandMorphs works out what a parasite changed and puts a morph on each of it.
+// raiseHandMorphs works out what a rune changed and puts a morph on each of it.
 //
-// It is handed the faces and seats from *before* the parasite landed and reads the hand as it is
-// now, so the three shapes fall out of the comparison rather than out of a switch on the parasite:
+// It is handed the faces and seats from *before* the rune landed and reads the hand as it is
+// now, so the three shapes fall out of the comparison rather than out of a switch on the rune:
 // a face that changed is a replacement, a card that has appeared is a copy, and a card that has
 // gone is one that was eaten.
 func (s *CombatScene) raiseHandMorphs(gs *state.GlobalState, was map[int]cards.Spec, seats map[int]image.Rectangle) {

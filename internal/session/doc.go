@@ -26,7 +26,7 @@
 //   - relic.go — the relics being worn, in worn order, and the relic moments that fire between fights
 //     rather than during one.
 //   - essence.go — the deck alterations offered after a fight.
-//   - parasite.go — the consumables carried into a fight and spent between its turns. The essence's
+//   - rune.go — the consumables carried into a fight and spent between its turns. The essence's
 //     grammar plus a target *count*, aimed at card identities rather than deck positions, and the
 //     one alteration that can happen while a duel is going on.
 //

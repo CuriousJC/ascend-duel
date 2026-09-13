@@ -47,7 +47,7 @@ var stoneFlightTicks = beat(1, 1)
 //
 // **It carries its own two seats**, unlike the row movers in cardslide.go, which store none and
 // recompute both from a row size. There is no row here and no seat to recompute: the launch pad is
-// the parasite's seat in a pane whose contents change the moment the parasite is spent, so a flight
+// the rune's seat in a pane whose contents change the moment the rune is spent, so a flight
 // that recomputed its origin would be reading a seat that now holds something else.
 type stoneFlight struct {
 	travel
@@ -55,11 +55,11 @@ type stoneFlight struct {
 	from, to image.Point
 }
 
-// flyStonesToPouch sets a shower off from the parasite that produced it.
+// flyStonesToPouch sets a shower off from the rune that produced it.
 //
-// **From the seat the parasite was standing in**, which is the card the player just clicked — so
+// **From the seat the rune was standing in**, which is the card the player just clicked — so
 // the stones come out of the thing that made them. The seat is read before the pane redraws itself
-// without that parasite in it, which is why the index is passed in rather than looked up.
+// without that rune in it, which is why the index is passed in rather than looked up.
 func (s *CombatScene) flyStonesToPouch(gs *state.GlobalState, seat int, shown []session.Stone) {
 	from := consumableSlotRect(s.consumablePaneRect(gs), seat).Min
 	to := duelistCardRect(gs).Min

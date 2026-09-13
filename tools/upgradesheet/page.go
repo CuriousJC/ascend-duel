@@ -123,7 +123,7 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   it. The card is a fire Skewer and the duelist behind it hits for 10, so a figure that looks wrong
   can be checked by eye. There are no relics on, which is why the block is the whole panel: the game
   appends its damage chain only when a relic has moved something. <strong>The colouring is the game's
-  too</strong> — the same <code>cards.ElementRuns</code> table the screen reads — which is why FIRE
+  too</strong> — the same <code>cards.ElementSpans</code> table the screen reads — which is why FIRE
   is red and CHROMATIC is not: the wheel has no hue left for "all of them".
 </p>
 
@@ -145,7 +145,7 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
 <h3 class="group">{{.Upgrade}}</h3>
 <p class="grants">
   Rider: <code>{{.Riders}}</code>.
-  {{if .Grants}}Granted by {{.Grants}}.{{else}}<span class="alarm">Nothing in data/parasites.json grants it — this upgrade cannot be acquired.</span>{{end}}
+  {{if .Grants}}Granted by {{.Grants}}.{{else}}<span class="alarm">Nothing in data/runes.json grants it — this upgrade cannot be acquired.</span>{{end}}
 </p>
 <div class="tip">
   <b>{{range .Tip.Title}}<span{{if .Ink}} style="color:{{.Ink}}"{{end}}>{{.Text}}</span>{{end}}</b>

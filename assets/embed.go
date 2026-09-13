@@ -97,7 +97,7 @@ var formdefend_png []byte
 // UPGRADE ART
 //
 // The colour a *visible upgrade* paints a card's left column from. A card the run has altered
-// used to look exactly like one it had not — sixteen parasites attach seven kinds of rider and
+// used to look exactly like one it had not — sixteen runes attach seven kinds of rider and
 // the only place any of them was visible was the tooltip prose — and this is the first of them
 // that says so on the face.
 //
@@ -175,13 +175,13 @@ var relicArt embed.FS
 //go:embed essence/*.png
 var essenceArt embed.FS
 
-// The parasite faces, a family of their own as of 2026-09-12. **They wore the essence's placeholder
+// The rune faces, a family of their own as of 2026-09-12. **They wore the essence's placeholder
 // until then**, and the same argument that split the essence's off the relic's splits this off the
 // essence's: the day either catalogue gets art, one shared picture is a page where a drawn essence and
-// an undrawn parasite look identical, and a backlog you cannot see is a backlog nobody clears.
+// an undrawn rune look identical, and a backlog you cannot see is a backlog nobody clears.
 //
-//go:embed parasite/*.png
-var parasiteArt embed.FS
+//go:embed rune/*.png
+var runeArt embed.FS
 
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
@@ -284,7 +284,7 @@ func LoadImageData() map[string][]byte {
 	// embedFamily, and the //go:embed lines above for what each key ends up being.
 	embedFamily(images, relicArt, "relic")
 	embedFamily(images, essenceArt, "essence")
-	embedFamily(images, parasiteArt, "parasite")
+	embedFamily(images, runeArt, "rune")
 	embedFamily(images, portraits, "enemy")
 	embedFamily(images, bossPortraits, "boss")
 

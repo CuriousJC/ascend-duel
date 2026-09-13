@@ -123,10 +123,10 @@ var sheets = []sheet{
 			"fixtures, and none of it is reachable from a shipped binary.",
 	},
 	{
-		Dir:   "parasitesheet",
-		Tool:  "./tools/parasitesheet",
-		Title: "Parasite sheet",
-		Blurb: "Every parasite, grouped by what it does, with the sentence it prints against the " +
+		Dir:   "runesheet",
+		Tool:  "./tools/runesheet",
+		Title: "Rune sheet",
+		Blurb: "Every rune, grouped by what it does, with the sentence it prints against the " +
 			"rule that fires. The least readable record in data/ — which fields the rules read " +
 			"depends entirely on the target — so this page is the review from the first record.",
 	},

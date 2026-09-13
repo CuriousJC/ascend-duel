@@ -6,12 +6,12 @@ package screens
 // Two rasterisers draw this game's words: `internal/cards` sets a card's own text with
 // golang.org/x/image, and everything else on screen goes through Ebitengine's `text/v2`. They share
 // no code and cannot — see internal/cards/text.go for why that package must not make an
-// `*ebiten.Image`. So the *vocabulary* is shared instead: `cards.ElementRuns` is the one table, and
+// `*ebiten.Image`. So the *vocabulary* is shared instead: `cards.ElementSpans` is the one table, and
 // this file is the second reader of it.
 //
 // **The colouring happens here rather than in `internal/systems`** because that package cannot see
 // `internal/cards` — `cards` imports `systems`, so the arrow only goes one way. The widget draws
-// runs and never learns why one is coloured, exactly as it never learns why a line breaks where it
+// spans and never learns why one is coloured, exactly as it never learns why a line breaks where it
 // does.
 
 import (
@@ -38,14 +38,14 @@ func tipLines(lines []string) []models.TipLine {
 	return out
 }
 
-// tipLine cuts one line into the runs it is drawn as.
+// tipLine cuts one line into the spans it is drawn as.
 //
-// **A line with nothing to colour comes back as one run**, which is what most of them are and is
-// drawn exactly as it was before runs existed.
+// **A line with nothing to colour comes back as one span**, which is what most of them are and is
+// drawn exactly as it was before spans existed.
 func tipLine(line string) models.TipLine {
 	var out models.TipLine
 	for _, seg := range chromatic(line) {
-		out = append(out, models.TextRun{Text: seg.Text, Ink: seg.Ink})
+		out = append(out, models.TextSpan{Text: seg.Text, Ink: seg.Ink})
 	}
 	return out
 }
@@ -58,11 +58,11 @@ func tipLine(line string) models.TipLine {
 // or the wildcard and never both.
 //
 // **The wash cut is `internal/cards`' and not this file's**, because `tools/upgradesheet` prints
-// this same title and cannot import a package that links Ebitengine — the argument `ElementRuns`
+// this same title and cannot import a package that links Ebitengine — the argument `ElementSpans`
 // already exists for, and the one that put the tooltip's wording in `internal/carddesc`.
 func chromatic(line string) []cards.Segment {
 	var out []cards.Segment
-	for _, seg := range cards.SplitRuns(line, cards.ElementRuns(line)) {
+	for _, seg := range cards.SplitSpans(line, cards.ElementSpans(line)) {
 		out = append(out, cards.SplitWash(seg, carddesc.Chromatic, systems.UpgradeWild)...)
 	}
 	return cards.SplitMetals(out)

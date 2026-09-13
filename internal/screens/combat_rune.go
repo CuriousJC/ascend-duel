@@ -1,20 +1,20 @@
 package screens
 
-// Spending a parasite: the run's half, with no dialog in front of it.
+// Spending a rune: the run's half, with no dialog in front of it.
 //
-// **An essence is spent between rooms and a parasite is spent between turns**, which is most of what
-// makes them different things. The catalogue and the rules are `internal/session/parasite.go`; this
-// file is what the screen does with them, and it decides nothing — it hands the run a parasite and
+// **An essence is spent between rooms and a rune is spent between turns**, which is most of what
+// makes them different things. The catalogue and the rules are `internal/session/rune.go`; this
+// file is what the screen does with them, and it decides nothing — it hands the run a rune and
 // the cards it names, and brings the hand back into line with what the run says afterwards.
 //
-// **The `P` button and its dialog are gone** *(owner's call, 2026-09-06)*. A parasite is now a card
+// **The `P` button and its dialog are gone** *(owner's call, 2026-09-06)*. A rune is now a card
 // standing in the consumables pane on the top row, clicked directly: select the cards in the hand,
-// then click the parasite. See targeting.go for the rule that joins those two halves, and
+// then click the rune. See targeting.go for the rule that joins those two halves, and
 // consumables.go for the pane. What that removed is a modal, a button, a two-stage prompt and a
 // second drawing of the hand — the panel used to redraw the row of cards the player was already
 // looking at, one row lower, so that it could be clicked.
 //
-// **It is still only live while `planning()`.** A parasite alters the deck, and the deck a round was
+// **It is still only live while `planning()`.** A rune alters the deck, and the deck a round was
 // resolved against is the deck that round has to be replayed with — `ResolveRound` decides
 // everything before a frame of playback runs, so a card changed mid-playback would put a face on
 // screen that disagrees with the blow already computed. Losing the dialog did not loosen that; it
@@ -42,43 +42,43 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
-// heldParasites is what the run is carrying, as records, in acquisition order.
+// heldRunes is what the run is carrying, as records, in acquisition order.
 //
-// **A parasite the catalogue no longer holds is skipped rather than drawn blank.** `Session.Hold`
+// **A rune the catalogue no longer holds is skipped rather than drawn blank.** `Session.Hold`
 // refuses one on the way in and `Resume` refuses a save carrying one, so this cannot fire today —
 // it is the belt to those braces, because a nil record reaching the card renderer is a crash where
 // a missing card is a gap.
-func heldParasites(gs *state.GlobalState) []session.Parasite {
+func heldRunes(gs *state.GlobalState) []session.Rune {
 	if gs.Run == nil {
 		return nil
 	}
 	keys := gs.Run.Held()
-	out := make([]session.Parasite, 0, len(keys))
+	out := make([]session.Rune, 0, len(keys))
 	for _, key := range keys {
-		if p, ok := session.ParasiteByKey(key); ok {
+		if p, ok := session.RuneByKey(key); ok {
 			out = append(out, p)
 		}
 	}
 	return out
 }
 
-// parasiteSpec is a parasite drawn as a card.
+// runeSpec is a rune drawn as a card.
 //
-// **The picture comes off the record** *(2026-09-12)*, through `data.ParasiteData.ArtKey`, already
-// resolved by the time a `session.Parasite` exists. It borrowed the essence's placeholder through one
-// constant until then, and the note on that constant said the day parasites got art it should be a
-// `data/parasites.json` field appearing rather than a fallback being unpicked — so the fallback is
-// `assets/parasite/default-parasite.png` now, a seat of the catalogue's own.
+// **The picture comes off the record** *(2026-09-12)*, through `data.RuneData.ArtKey`, already
+// resolved by the time a `session.Rune` exists. It borrowed the essence's placeholder through one
+// constant until then, and the note on that constant said the day runes got art it should be a
+// `data/runes.json` field appearing rather than a fallback being unpicked — so the fallback is
+// `assets/rune/default-rune.png` now, a seat of the catalogue's own.
 // chimeraBreak is the authored line break on a chimera's face — see cards.WrapText, which honours
 // one. It is a constant rather than a literal so the escape does not have to survive being read
 // back out of this file.
 const chimeraBreak = "\n"
 
 // **A chimera says what it would fire**, because its authored line cannot: the card's whole subject
-// is a parasite named somewhere else, and "COPIES THE LAST" is a card the player has to remember
+// is a rune named somewhere else, and "COPIES THE LAST" is a card the player has to remember
 // the answer to. On a run that has spent nothing there is no answer, and it keeps its own line — a
 // card that is about to be drawn dim anyway.
-func parasiteSpec(gs *state.GlobalState, p session.Parasite, enabled, selected bool) cards.Spec {
+func runeSpec(gs *state.GlobalState, p session.Rune, enabled, selected bool) cards.Spec {
 	text := p.Text
 	if gs.Run != nil {
 		if echoed := gs.Run.EchoedName(p); echoed != "" {
@@ -98,29 +98,29 @@ func parasiteSpec(gs *state.GlobalState, p session.Parasite, enabled, selected b
 	}
 }
 
-// parasiteRowGap is the air between two cards in a row of them. The same gap the shop's shelf
+// runeRowGap is the air between two cards in a row of them. The same gap the shop's shelf
 // takes, so a row of cards reads the same wherever it stands.
-const parasiteRowGap = 18
+const runeRowGap = 18
 
-// parasiteRowSlots is the left edges of n cards laid out in a centred row.
+// runeRowSlots is the left edges of n cards laid out in a centred row.
 //
 // **It tightens rather than overflowing**: the pitch closes up exactly as the hand's does rather
 // than the row running off both edges of the panel.
 //
-// **Its one caller is the shop's pouch now** *(2026-09-06)*, the parasite dialog this was written
+// **Its one caller is the shop's pouch now** *(2026-09-06)*, the rune dialog this was written
 // for having gone. It stays here rather than moving because the pouch's row is the same row of
 // full-size cards in a modal, and a second copy is what would drift.
-func parasiteRowSlots(r image.Rectangle, n int) []int {
+func runeRowSlots(r image.Rectangle, n int) []int {
 	if n <= 0 {
 		return nil
 	}
 
-	pitch := cards.Hand.Width + parasiteRowGap
-	if width := r.Dx() - 2*parasiteRowGap; n*pitch > width {
+	pitch := cards.Hand.Width + runeRowGap
+	if width := r.Dx() - 2*runeRowGap; n*pitch > width {
 		pitch = width / n
 	}
 
-	left := r.Min.X + r.Dx()/2 - (n*pitch-parasiteRowGap)/2
+	left := r.Min.X + r.Dx()/2 - (n*pitch-runeRowGap)/2
 	out := make([]int, n)
 	for i := range out {
 		out[i] = left + i*pitch
@@ -128,9 +128,9 @@ func parasiteRowSlots(r image.Rectangle, n int) []int {
 	return out
 }
 
-// parasiteCardRects is where each card of a row stands.
-func parasiteCardRects(r image.Rectangle, n, centreY int) []image.Rectangle {
-	slots := parasiteRowSlots(r, n)
+// runeCardRects is where each card of a row stands.
+func runeCardRects(r image.Rectangle, n, centreY int) []image.Rectangle {
+	slots := runeRowSlots(r, n)
 	out := make([]image.Rectangle, len(slots))
 	for i, x := range slots {
 		top := centreY - cards.Hand.Height/2
@@ -139,20 +139,20 @@ func parasiteCardRects(r image.Rectangle, n, centreY int) []image.Rectangle {
 	return out
 }
 
-// canSpendParasites is the one predicate for "a parasite may be spent at all".
+// canSpendRunes is the one predicate for "a rune may be spent at all".
 //
-// **`planning()` is the whole of it now.** It used to also ask whether the bucket had anything in
+// **`planning()` is the whole of it now.** It used to also ask whether the sack had anything in
 // it, because an empty dialog was something to open; the pane draws its two seats empty or full and
 // there is nothing to open, so what is left is the rule that keeps an alteration out of a round that
 // has already been resolved.
-func (s *CombatScene) canSpendParasites(gs *state.GlobalState) bool {
+func (s *CombatScene) canSpendRunes(gs *state.GlobalState) bool {
 	return gs.Run != nil && s.planning() && !s.modalUp()
 }
 
 // selectedCardIDs is what the player has selected in the hand, by identity, in row order.
 //
 // **Row order, because that is the order the queue is read in** — see syncQueue, which walks the
-// same list. A parasite naming a first and a second target reads them left to right, and the player
+// same list. A rune naming a first and a second target reads them left to right, and the player
 // reorders by dragging, exactly as they reorder the round.
 func (s *CombatScene) selectedCardIDs() []int {
 	out := make([]int, 0, len(s.hand))
@@ -164,49 +164,49 @@ func (s *CombatScene) selectedCardIDs() []int {
 	return out
 }
 
-// parasiteTarget is what one held parasite needs from the selection.
+// runeTarget is what one held rune needs from the selection.
 //
 // **The legality question goes to the run**, which is the only thing that knows whether these
-// particular cards can take it — see `Session.CanApplyParasite`, which is also what the apply itself
-// checks, so a parasite that lit up cannot then be refused.
+// particular cards can take it — see `Session.CanApplyRune`, which is also what the apply itself
+// checks, so a rune that lit up cannot then be refused.
 // **A chimera is asked through the run as well.** Its own record names no cards; how many it wants
 // comes from whatever it is copying, so the count is read off `Session.Echoes` rather than off the
-// card in the pane. A chimera with nothing to copy resolves to a parasite that cannot be satisfied,
+// card in the pane. A chimera with nothing to copy resolves to a rune that cannot be satisfied,
 // which is what draws it dim.
-func (s *CombatScene) parasiteTarget(gs *state.GlobalState, p session.Parasite) consumableTarget {
+func (s *CombatScene) runeTarget(gs *state.GlobalState, p session.Rune) consumableTarget {
 	echoed, ok := gs.Run.Echoes(p)
 	if !ok {
 		return consumableTarget{needs: -1, legal: func([]int) bool { return false }}
 	}
 	return consumableTarget{
 		needs: echoed.Count,
-		legal: func(ids []int) bool { return gs.Run.CanApplyParasite(p, ids) },
+		legal: func(ids []int) bool { return gs.Run.CanApplyRune(p, ids) },
 	}
 }
 
-// spendParasite hands one to the run against the cards the player has selected.
+// spendRune hands one to the run against the cards the player has selected.
 //
-// **Apply, then drop, and only drop if the apply succeeded.** A parasite dropped from the bucket by
+// **Apply, then drop, and only drop if the apply succeeded.** A rune dropped from the sack by
 // an application that then refused would be a consumable the player paid for and did not get;
-// `ApplyParasite` is all-or-nothing, so asking it first is what makes the pair safe.
-func (s *CombatScene) spendParasite(gs *state.GlobalState, i int) {
-	held := heldParasites(gs)
+// `ApplyRune` is all-or-nothing, so asking it first is what makes the pair safe.
+func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
+	held := heldRunes(gs)
 	if i < 0 || i >= len(held) {
 		return
 	}
 	p := held[i]
 
 	ids := s.selectedCardIDs()
-	if !s.parasiteTarget(gs, p).satisfiedBy(ids) {
+	if !s.runeTarget(gs, p).satisfiedBy(ids) {
 		return
 	}
 
-	// **The hand as it stands, before any of this lands.** What the parasite changed is the
+	// **The hand as it stands, before any of this lands.** What the rune changed is the
 	// difference between this and the hand a few lines below, which is what lets the morphs be
-	// raised without this file knowing what any particular parasite does. See raiseHandMorphs.
+	// raised without this file knowing what any particular rune does. See raiseHandMorphs.
 	was, seats := s.handFaces(gs)
 
-	if !gs.Run.ApplyParasiteRolling(p, ids, s.parasiteRNG(gs, p)) {
+	if !gs.Run.ApplyRuneRolling(p, ids, s.runeRNG(gs, p)) {
 		return
 	}
 	gs.Run.Drop(i)
@@ -218,7 +218,7 @@ func (s *CombatScene) spendParasite(gs *state.GlobalState, i int) {
 	s.resyncHandFromRun(gs)
 
 	// **A copy joins the hand it was copied from** *(owner's call, 2026-09-02)*. The essence version
-	// of this only has to put a card in the deck, because it is spent between fights; a parasite is
+	// of this only has to put a card in the deck, because it is spent between fights; a rune is
 	// spent in the middle of one, and the fight's piles were dealt before it existed — so a copy
 	// that went only into the run would not be playable until the next fight and would read as a
 	// dud. `resyncHandFromRun` cannot do it, because it walks the hand and the copy is not in it.
@@ -247,19 +247,19 @@ func (s *CombatScene) spendParasite(gs *state.GlobalState, i int) {
 	saveRun(gs)
 }
 
-// parasiteRNG is the source the parasite about to be spent draws from, and nil for the ones that
+// runeRNG is the source the rune about to be spent draws from, and nil for the ones that
 // draw nothing.
 //
-// **It is picked off the *resolved* parasite**, so a chimera copying a rock shower gets the
+// **It is picked off the *resolved* rune**, so a chimera copying a rock shower gets the
 // shower's stream rather than none — which is the whole reason this is a switch rather than the
 // single `showerRNG` it replaced.
 //
 // **One stream today and it is still asked for by target rather than assumed.** The gamble used to
 // be the second caller and moved into the resolver on 2026-09-09, when it stopped being a
 // consumable and became something a card permanently carries — see combat.RiderGolden. What is left
-// is the shower, and the shape stays because the question "which stream does this parasite draw
+// is the shower, and the shape stays because the question "which stream does this rune draw
 // from" is the one a second rolling target has to answer again.
-func (s *CombatScene) parasiteRNG(gs *state.GlobalState, p session.Parasite) *rand.Rand {
+func (s *CombatScene) runeRNG(gs *state.GlobalState, p session.Rune) *rand.Rand {
 	if gs.Run == nil {
 		return nil
 	}
@@ -269,7 +269,7 @@ func (s *CombatScene) parasiteRNG(gs *state.GlobalState, p session.Parasite) *ra
 	}
 
 	switch echoed.Target {
-	case session.ParasiteStones:
+	case session.RuneStones:
 		return s.showerRNG(gs)
 	default:
 		return nil
@@ -295,7 +295,7 @@ func (s *CombatScene) showerRNG(gs *state.GlobalState) *rand.Rand {
 // argument `seeds.fightStride` is under: consecutive draws should not be consecutive seeds.
 const stoneShowerStride int64 = 0x3B9A_CA07
 
-// resyncHandFromRun brings the hand back in line with the run's deck after a parasite has altered
+// resyncHandFromRun brings the hand back in line with the run's deck after a rune has altered
 // it: an altered card is redrawn as it now is, and a card the run no longer owns leaves the row.
 //
 // **It walks by identity**, which is the whole reason a card has one. A card in the hand is a copy —
@@ -314,12 +314,12 @@ func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
 		// **The card is re-dealt rather than re-coloured** *(2026-09-08)*. It used to take the
 		// element straight off the card in the hand, on the argument that a flip relic had recoloured
 		// it as it was drawn and that colour is a fact about the card in play. That argument is
-		// right about the flip and wrong about everything else, and it made every element parasite
-		// do nothing at all: Hexbore turned the run's card arcane, this line wrote the hand's fire
+		// right about the flip and wrong about everything else, and it made every element rune
+		// do nothing at all: Hexmark turned the run's card arcane, this line wrote the hand's fire
 		// back over it, and what the player saw was a consumable vanishing.
 		//
 		// **`drawnAs` is the honest answer to both.** It is the same function the deal itself uses,
-		// so the card in the hand is the card the run would deal now — the parasite's new colour
+		// so the card in the hand is the card the run would deal now — the rune's new colour
 		// with the worn flips applied on top of it, exactly as the next fight will deal it.
 		kept = append(kept, paletteCard{actionCard: s.drawnAs(owned), selected: c.selected})
 	}
@@ -328,14 +328,14 @@ func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
 	s.syncQueue()
 }
 
-// parasiteRiderLine is what a rider is called in the fight log and anywhere else a sentence has to
-// name one. It is here rather than in prose.go because the vocabulary is the parasite's.
+// runeRiderLine is what a rider is called in the fight log and anywhere else a sentence has to
+// name one. It is here rather than in prose.go because the vocabulary is the rune's.
 //
 // **Total over combat.RiderKinds(), and TestEveryRiderKindHasALine holds it that way** *(2026-09-09)*.
 // It had one arm and a `default` of "does nothing", which was a lie about seven of the eight kinds
 // that existed and would have been a lie about ten of ten — the same failure the choreography
 // table's missing default exists to prevent.
-func parasiteRiderLine(k combat.RiderKind) string {
+func runeRiderLine(k combat.RiderKind) string {
 	switch k {
 	case combat.RiderHealOnPlay:
 		return "heals its owner"
@@ -362,17 +362,17 @@ func parasiteRiderLine(k combat.RiderKind) string {
 	}
 }
 
-// parasiteSpendable is the pane's "would clicking this do anything" predicate on this screen.
+// runeSpendable is the pane's "would clicking this do anything" predicate on this screen.
 //
 // **The card's lit state and the click read the same function**, which is what stops a control
 // looking available and doing nothing.
-func (s *CombatScene) parasiteSpendable(gs *state.GlobalState) func(session.Parasite) bool {
-	if !s.canSpendParasites(gs) {
+func (s *CombatScene) runeSpendable(gs *state.GlobalState) func(session.Rune) bool {
+	if !s.canSpendRunes(gs) {
 		return nil
 	}
 	ids := s.selectedCardIDs()
-	return func(p session.Parasite) bool {
-		return s.parasiteTarget(gs, p).satisfiedBy(ids)
+	return func(p session.Rune) bool {
+		return s.runeTarget(gs, p).satisfiedBy(ids)
 	}
 }
 
@@ -382,7 +382,7 @@ func (s *CombatScene) parasiteSpendable(gs *state.GlobalState) func(session.Para
 // cannot be clicked and a card that is lit always works. Two predicates here is how a control comes
 // to look available and do nothing.
 func (s *CombatScene) updateConsumables(gs *state.GlobalState) {
-	if !s.canSpendParasites(gs) || !gs.CursorAllowed() {
+	if !s.canSpendRunes(gs) || !gs.CursorAllowed() {
 		return
 	}
 	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
@@ -394,5 +394,5 @@ func (s *CombatScene) updateConsumables(gs *state.GlobalState) {
 	if i < 0 {
 		return
 	}
-	s.spendParasite(gs, i)
+	s.spendRune(gs, i)
 }

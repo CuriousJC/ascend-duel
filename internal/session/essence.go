@@ -72,13 +72,13 @@ const (
 	// TargetForm changes what one card counts as on the form axis — the element essences' trick on
 	// the other matching axis.
 	//
-	// **It writes `Card.FormOverride`, which a parasite already owns**, so this is the vocabulary
+	// **It writes `Card.FormOverride`, which a rune already owns**, so this is the vocabulary
 	// arriving at a mechanic rather than a new one: form is concept-wide and an essence swapping the
 	// concept's form would change every copy in the deck, which is the argument the target list
 	// was closed against. The override is per-card and only `Card.Form` reads it.
 	//
 	// **A Brace told to be a crush still defends**, and now matches on an attack axis — the legal
-	// weird thing the owner ruled in when parasites got the field.
+	// weird thing the owner ruled in when runes got the field.
 	TargetForm
 )
 

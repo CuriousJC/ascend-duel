@@ -52,7 +52,7 @@ const (
 	// the pile is measured against is the screen's own bottom edge, with its count under it.
 	deckStackBottomInset = 10
 
-	// deckCaptionGap is the air between the pile and the two things hung off it: the bucket button
+	// deckCaptionGap is the air between the pile and the two things hung off it: the sack button
 	// on the line above, the count on the line below. **Neither is beside it**, because what is to
 	// its right at that height is the action-point bar, which spans the whole hand.
 	deckCaptionGap = 6
@@ -203,7 +203,7 @@ func deckCountRect(gs *state.GlobalState) image.Rectangle {
 	return image.Rect(pile.Min.X, top, pile.Max.X, top+deckCountSize)
 }
 
-// deckCaptionRect is the line above the pile: the bucket button at its left end and the count at
+// deckCaptionRect is the line above the pile: the sack button at its left end and the count at
 // its right, both hung off the pile's own edges.
 //
 // **Above rather than beside**, which is the whole of what the move into the column cost. The pile

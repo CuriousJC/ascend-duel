@@ -4,14 +4,14 @@ package combat
 //
 // A relic waits on a finger and fires for every card that matches it. A rider is the same idea
 // aimed the other way: it belongs to one card of the run, travels with it through the shuffle,
-// the hand and the discard, and fires only when that card is played. It is what a parasite
-// leaves behind — see `internal/session/parasite.go`, which is the only thing that attaches one.
+// the hand and the discard, and fires only when that card is played. It is what a rune
+// leaves behind — see `internal/session/rune.go`, which is the only thing that attaches one.
 //
-// **Why the kind is a Go enum and not a data record.** Everything else a parasite does happens to
+// **Why the kind is a Go enum and not a data record.** Everything else a rune does happens to
 // the *run*: a card is removed, a concept is swapped, a purse is filled. A rider is the one thing
 // that has to be read while a round is resolving, and `internal/combat` is at the bottom of the
 // graph and reads no JSON. So the vocabulary is closed here, exactly as `Verb` and `Element` are,
-// and a parasite record naming a rider this build has not got is refused at init rather than
+// and a rune record naming a rider this build has not got is refused at init rather than
 // attaching something that does nothing.
 //
 // **The amount rides on the card, not in a registry.** A rider is a kind plus a figure, and both
@@ -101,14 +101,14 @@ const (
 	//
 	// **It is a balance lever and not a cosmetic one.** One of these turns any three-of-an-element
 	// into a four, and the elemental rungs are high on the ladder — so what a run pays for it is
-	// the number to watch, and that number is in `data/parasites.json` rather than here.
+	// the number to watch, and that number is in `data/runes.json` rather than here.
 	RiderWildElement
 
 	// RiderGolden gambles every time its card is played. Amount is the denominator: a golden card
 	// at 5 rolls a d5, and one face grants the run a point of DMG, one grants it five life, and
 	// the other three grant nothing.
 	//
-	// **It is the luck parasite moved onto a card** *(owner's call, 2026-09-09)*. It used to roll
+	// **It is the luck rune moved onto a card** *(owner's call, 2026-09-09)*. It used to roll
 	// once, in `internal/session`, at the moment it was spent — a consumable that touched no card
 	// at all. Now it is what a card permanently *becomes*: the gold rides through the shuffle and
 	// rolls again on every play, for the rest of the run.
@@ -175,7 +175,7 @@ func (k RiderKind) String() string {
 }
 
 // ParseRiderKind resolves a kind from its name, and reports failure rather than falling back to
-// one. A parasite quietly attaching the wrong rider because its name was misspelled is a mechanic
+// one. A rune quietly attaching the wrong rider because its name was misspelled is a mechanic
 // nobody designed — the same posture ParseVerb takes.
 func ParseRiderKind(name string) (RiderKind, bool) {
 	for _, k := range RiderKinds() {
@@ -202,7 +202,7 @@ type Rider struct {
 // constraint made `Duelist.Relics` a fixed array of WornRelic, and this follows it.
 //
 // **One, and it went from three on 2026-09-09** *(owner's call)*. The rule now is that a card has a
-// form, an element and an action — those compose freely and a parasite may change any of them —
+// form, an element and an action — those compose freely and a rune may change any of them —
 // and then **one upgrade**, which is what a rider is. A second upgrade replaces the first outright:
 // the card the run has just made is the card it is, and what was on it before is gone.
 //
@@ -246,10 +246,10 @@ func (c Card) RiderCount() int {
 // **Last one wins, and nothing stacks** *(owner's call, 2026-09-09)*. It replaced an AddRider that
 // filled the next free seat of three and refused a fourth, and the reason for the change is what an
 // upgrade now *is*: not a thing hung on a card but the card's own second identity, the one fact
-// beside its form, its element and its action. Two Leeches on one card were twenty life; one Leech
+// beside its form, its element and its action. Two Siphons on one card were twenty life; one Siphon
 // on a golden card now leaves a card that heals and has forgotten it was ever gold.
 //
-// **A RiderNone clears the seat**, which is what a "normal" parasite must never do and what nothing
+// **A RiderNone clears the seat**, which is what a "normal" rune must never do and what nothing
 // today asks for — it is here so the operation has an identity rather than a hole.
 func (c Card) SetRider(r Rider) Card {
 	c.Riders[0] = r
@@ -378,7 +378,7 @@ func vitaeHeld(held []Card) int {
 //
 // **Almost every rider is a kind plus a figure**, and the one that is not is RiderWildElement:
 // what it does has no quantity, so a value of zero is correct rather than missing. It exists so
-// `internal/session` can refuse a rider parasite with no figure *except* for the kinds that never
+// `internal/session` can refuse a rider rune with no figure *except* for the kinds that never
 // had one — the alternative was a magic number in the catalogue, which is a record that lies about
 // itself so a check can pass.
 func (k RiderKind) CarriesAmount() bool {

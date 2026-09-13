@@ -21,7 +21,7 @@ func ResolveRound(a, b Duelist, aCards, bCards []Card, round int, src Sources) (
 //
 // **It exists because four riders read the unplayed hand** — see rider.go, where the in-hand
 // riders are. A card kept back is not a card the resolver would otherwise ever see: the turn is
-// what was queued, and everything else was invisible to this package until a parasite made
+// what was queued, and everything else was invisible to this package until a rune made
 // holding a card worth something.
 //
 // **ResolveRound is kept and delegates**, rather than every caller and test growing two nil

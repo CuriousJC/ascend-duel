@@ -58,7 +58,7 @@ func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 		t.Errorf("the pile %v runs off the screen", relic)
 	}
 
-	// The bucket button is on the line above it, and that line must clear the played row.
+	// The sack button is on the line above it, and that line must clear the played row.
 	if top := deckCaptionRect(gs).Min.Y; top < tableRowTop(gs)+cardHeight {
 		t.Errorf("the pile's caption line starts at y=%d, inside the played row ending at y=%d",
 			top, tableRowTop(gs)+cardHeight)

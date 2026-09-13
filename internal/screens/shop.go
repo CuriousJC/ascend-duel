@@ -190,13 +190,13 @@ type ShopScene struct {
 	// three Salves in a row would be buying a life bar rather than a potion.
 	drunk map[string]bool
 
-	// bagBought, vialBought and bucketBought are whether this visit's three sealed goods have been
+	// bagBought, vialBought and sackBought are whether this visit's three sealed goods have been
 	// taken.
 	//
 	// **Once each per visit** *(owner's call, 2026-08-27)*, restocked on the next. It bounds what a
 	// rich run can do in one stop and keeps the shop a short offer rather than a vending machine —
 	// the same argument the three-ring shelf is under.
-	bagBought, vialBought, bucketBought bool
+	bagBought, vialBought, sackBought bool
 
 	// good is the dialog a purchase opens: the four that were inside, and which one is taken. See
 	// shop_goods.go.
@@ -237,7 +237,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.leaving = false
 	s.from, s.move = nil, travel{}
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
-	s.bagBought, s.vialBought, s.bucketBought = false, false, false
+	s.bagBought, s.vialBought, s.sackBought = false, false, false
 	s.good.reset()
 
 	// **Both stocks are dealt from an rng the visit keeps**, rather than from one built per call.
@@ -706,10 +706,10 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	drawRelicPaneBack(screen, buildRelicRect(gs))
 	s.drawWorn(gs, screen, small)
 
-	// **The parasites the run is carrying, in the pane the fight draws them in** *(2026-09-06)*.
+	// **The runes the run is carrying, in the pane the fight draws them in** *(2026-09-06)*.
 	// The shop draws the band's two halves itself, because a relic here carries a price — and the
-	// consumables pane went missing in the split, so a run walked into a shop and its bucket
-	// vanished. nil: a parasite is carried on this screen, not spent. See buildband.go.
+	// consumables pane went missing in the split, so a run walked into a shop and its sack
+	// vanished. nil: a rune is carried on this screen, not spent. See buildband.go.
 	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil)
 
 	s.drawProse(gs, screen, prose)
@@ -934,8 +934,8 @@ func (s *ShopScene) goodTaken(kind goodKind) bool {
 	switch kind {
 	case goodBag:
 		return s.bagBought
-	case goodBucket:
-		return s.bucketBought
+	case goodSack:
+		return s.sackBought
 	default:
 		return s.vialBought
 	}
@@ -951,8 +951,8 @@ func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
 	switch kind {
 	case goodBag:
 		return gs.Run.CanAffordBag()
-	case goodBucket:
-		return gs.Run.CanAffordBucket()
+	case goodSack:
+		return gs.Run.CanAffordSack()
 	default:
 		return gs.Run.CanAffordVial()
 	}
@@ -961,9 +961,9 @@ func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
 // goodAvailable is whether a seat can be clicked at all: the purse covers it, and there is somewhere
 // to put what comes out.
 //
-// **Only the bucket has the second question** *(2026-09-06)*. A stone is spent in the dialog that
+// **Only the sack has the second question** *(2026-09-06)*. A stone is spent in the dialog that
 // opened the bag and an essence is spent in the dialog that opened the vial, so neither can hand the run
-// something it has no room for; a parasite goes into a bucket that now holds two — see
+// something it has no room for; a rune goes into a sack that now holds two — see
 // session.MaxHeld — and a full one would take five vitae for a card that `Hold` refuses. The seat
 // goes dim rather than the purchase failing afterwards, which is the same courtesy an unaffordable
 // good already gets.
@@ -971,7 +971,7 @@ func goodAvailable(gs *state.GlobalState, kind goodKind) bool {
 	if !goodAffordable(gs, kind) {
 		return false
 	}
-	if kind == goodBucket && gs.Run.HoldFull() {
+	if kind == goodSack && gs.Run.HoldFull() {
 		return false
 	}
 	return true
@@ -992,8 +992,8 @@ func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
 	switch kind {
 	case goodBag:
 		paid = gs.Run.BuyBag()
-	case goodBucket:
-		paid = gs.Run.BuyBucket()
+	case goodSack:
+		paid = gs.Run.BuySack()
 	default:
 		paid = gs.Run.BuyVial()
 	}
@@ -1004,8 +1004,8 @@ func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
 	switch kind {
 	case goodBag:
 		s.bagBought = true
-	case goodBucket:
-		s.bucketBought = true
+	case goodSack:
+		s.sackBought = true
 	default:
 		s.vialBought = true
 	}
@@ -1042,33 +1042,37 @@ func goodName(kind goodKind) string {
 	switch kind {
 	case goodBag:
 		return bagName
-	case goodBucket:
-		return bucketName
+	case goodSack:
+		return sackName
 	default:
 		return vialName
 	}
 }
 
 func goodLine(kind goodKind) string {
-	if kind == goodBag {
+	switch kind {
+	case goodBag:
 		return fmt.Sprintf("%d stones\nkeep 1", session.BagSize())
+	case goodSack:
+		return fmt.Sprintf("%d runes\nkeep 1", session.SackSize())
+	default:
+		return fmt.Sprintf("%d essences\nkeep 1", session.VialSize())
 	}
-	return fmt.Sprintf("%d essences\nkeep 1", session.VialSize())
 }
 
 func goodPrice(kind goodKind) int {
 	switch kind {
 	case goodBag:
 		return session.BagPrice()
-	case goodBucket:
-		return session.BucketPrice()
+	case goodSack:
+		return session.SackPrice()
 	default:
 		return session.VialPrice()
 	}
 }
 
 // **Each sealed good draws the placeholder of whatever is inside it** — the bag the boulder every
-// stone card draws, the vial the essence catalogue's default face, the bucket the parasite
+// stone card draws, the vial the essence catalogue's default face, the sack the rune
 // catalogue's. A third picture would be a third thing to recognise for no gain: what is in the
 // good is exactly what the picture shows, and the two that used to share one face now split for
 // the reason the two placeholders split, which is that a shared picture hides which catalogue is
@@ -1077,8 +1081,8 @@ func goodArt(gs *state.GlobalState, kind goodKind) image.Image {
 	switch kind {
 	case goodBag:
 		return stoneArt()
-	case goodBucket:
-		return artwork(gs, data.DefaultParasiteArt)
+	case goodSack:
+		return artwork(gs, data.DefaultRuneArt)
 	default:
 		return artwork(gs, data.DefaultEssenceArt)
 	}

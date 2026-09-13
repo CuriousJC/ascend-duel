@@ -142,7 +142,7 @@ func relicTip(record data.RelicData, wornAt, wornOf int) (string, []string) {
 	// **The authored text, split on its own line breaks.** A newline in `relics.json` is an authored
 	// break for the *card face*, and a tooltip draws its own lines one at a time — handing the whole
 	// string to one line draws every line of it at the same y, which reads as garbled text rather
-	// than as a missing break. Same treatment `parasiteTipLines` gives a parasite.
+	// than as a missing break. Same treatment `runeTipLines` gives a rune.
 	lines := strings.Split(record.Text, "\n")
 
 	if wornAt >= 0 && wornOf > 1 {

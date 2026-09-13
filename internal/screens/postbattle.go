@@ -138,7 +138,7 @@ const (
 	// choosing: both rows are up — the essences, and the cards they may eat.
 	//
 	// **It was two stages until 2026-09-06** *(owner's call)*, essence first and then the card. The
-	// order reversed with the parasite's: **select the card, then click the essence**, so a consumable
+	// order reversed with the rune's: **select the card, then click the essence**, so a consumable
 	// is pointed at a card the same way everywhere in the game. One gesture in one order meant one
 	// stage — the two rows are on screen together, because the player is choosing between them
 	// rather than passing through them.
@@ -1149,7 +1149,7 @@ func drawPrizeCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 // dedicated style is what this wants once an essence has art.
 // **A prize is lit exactly when clicking it would take it** *(2026-09-06)*, which is what makes
 // select-then-click readable: with no card selected the whole row is dim, and selecting one lights
-// the essences that could eat it. It is the same rule the parasite pane is under — see
+// the essences that could eat it. It is the same rule the rune pane is under — see
 // consumableTarget — and the same rule the offer row itself already followed in the other
 // direction.
 func (s *PostBattleScene) drawEssences(gs *state.GlobalState, screen *ebiten.Image) {

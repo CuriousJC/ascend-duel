@@ -611,7 +611,7 @@ func drawEffectText(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.
 //
 // **The state's ink function is applied to every segment**, not only the plain one, so a card whose
 // text is half in element colours still fades as a whole when it is disabled.
-func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line string, runs []TextRun,
+func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line string, runs []TextSpan,
 	left, width, y int, ink func(color.RGBA) color.RGBA) error {
 
 	total, err := TextWidth(f, size, line)
@@ -620,7 +620,7 @@ func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line string, runs [
 	}
 	x := left + (width-total)/2
 
-	for _, seg := range SplitRuns(line, runs) {
+	for _, seg := range SplitSpans(line, runs) {
 		if seg.Text == "" {
 			continue
 		}
@@ -650,7 +650,7 @@ type Segment struct {
 	Ink  color.RGBA
 }
 
-// SplitRuns cuts a line into coloured segments, in order, covering the whole line.
+// SplitSpans cuts a line into coloured segments, in order, covering the whole line.
 //
 // **Exported because two rasterisers draw this game's words.** This package sets a card's own text
 // and everything else on screen goes through Ebitengine's text/v2 in internal/screens; they share
@@ -668,17 +668,17 @@ type Segment struct {
 //
 // **The first run to claim a position keeps it**, which is why the caller sorts by length —
 // otherwise BURN would take the front of BURNING and leave ING in the default ink.
-func SplitRuns(line string, runs []TextRun) []Segment {
+func SplitSpans(line string, runs []TextSpan) []Segment {
 	folded := strings.ToLower(line)
 
 	// paint[i] is the colour byte i is drawn in, or nil where the default ink applies.
 	paint := make([]*color.RGBA, len(line))
 	for i := range runs {
 		r := runs[i]
-		if r.Run == "" || r.Ink.A == 0 {
+		if r.Span == "" || r.Ink.A == 0 {
 			continue
 		}
-		want := strings.ToLower(r.Run)
+		want := strings.ToLower(r.Span)
 		for at := 0; at+len(want) <= len(folded); at++ {
 			if folded[at:at+len(want)] != want || !wholeWord(folded, at, len(want)) {
 				continue
@@ -720,21 +720,21 @@ func SplitRuns(line string, runs []TextRun) []Segment {
 	return out
 }
 
-// ContainsRun reports whether this text says this word — **the same rule splitRuns paints by**,
-// exported so a caller can decide which runs are worth handing over without writing a second copy
+// ContainsSpan reports whether this text says this word — **the same rule SplitSpans paints by**,
+// exported so a caller can decide which spans are worth handing over without writing a second copy
 // of it.
 //
 // **A second copy is the failure this exists to prevent.** internal/screens picks the coloured
-// words out of a piece of prose and this package paints them; a run harvested there by one rule and
+// words out of a piece of prose and this package paints them; a span harvested there by one rule and
 // declined here by another is a colour that silently does nothing, which is the hardest kind of
 // missing to notice.
 //
-// Case is ignored and the match is whole-word, for the reasons splitRuns gives.
-func ContainsRun(text, run string) bool {
-	if run == "" {
+// Case is ignored and the match is whole-word, for the reasons SplitSpans gives.
+func ContainsSpan(text, span string) bool {
+	if span == "" {
 		return false
 	}
-	folded, want := strings.ToLower(text), strings.ToLower(run)
+	folded, want := strings.ToLower(text), strings.ToLower(span)
 	for at := 0; at+len(want) <= len(folded); at++ {
 		if folded[at:at+len(want)] == want && wholeWord(folded, at, len(want)) {
 			return true
@@ -743,7 +743,7 @@ func ContainsRun(text, run string) bool {
 	return false
 }
 
-// wholeWord reports whether the run at [at, at+n) has something that is not a letter or a digit on
+// wholeWord reports whether the span at [at, at+n) has something that is not a letter or a digit on
 // both sides of it. A card's text is ASCII, so this is a byte test rather than a rune one.
 func wholeWord(s string, at, n int) bool {
 	wordish := func(b byte) bool {

@@ -10,7 +10,7 @@ func TestTheLedgerSurvivesASnapshot(t *testing.T) {
 	s := New(testDeck())
 	s.BeginFight(1, "Giant Bat")
 	s.RecordRound([]LedgerLine{
-		{Voice: VoiceYou, Runs: []LedgerRun{
+		{Voice: VoiceYou, Spans: []LedgerSpan{
 			{Text: "Duelist "},
 			{Text: "attacks", Ink: InkAttack, Mark: true},
 			{Text: " with a fire strike"},
@@ -39,10 +39,10 @@ func TestTheLedgerSurvivesASnapshot(t *testing.T) {
 		t.Fatalf("the fight came back with %d rounds", len(f.Rounds))
 	}
 	line := f.Rounds[0].Lines[0]
-	if line.Voice != VoiceYou || len(line.Runs) != 3 {
+	if line.Voice != VoiceYou || len(line.Spans) != 3 {
 		t.Fatalf("a line came back as %+v, which is not how it was written", line)
 	}
-	if verb := line.Runs[1]; verb.Text != "attacks" || verb.Ink != InkAttack || !verb.Mark {
+	if verb := line.Spans[1]; verb.Text != "attacks" || verb.Ink != InkAttack || !verb.Mark {
 		t.Errorf("the marked verb came back as %+v", verb)
 	}
 	if got, want := line.Text(), "Duelist attacks with a fire strike"; got != want {

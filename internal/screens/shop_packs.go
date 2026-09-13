@@ -2,7 +2,7 @@ package screens
 
 // Which sealed packs a visit puts up, and the two reroll buttons.
 //
-// **A visit offers two of the three** *(owner's call, 2026-09-06)*. The bag, the can and the bucket
+// **A visit offers two of the three** *(owner's call, 2026-09-06)*. The bag, the can and the sack
 // were all on the shelf every time, which meant the shop asked no question about them: three seats,
 // three goods, and the only decision was what the purse could cover. Two of three makes a visit
 // something to read — and it is what buys the room the potions pane needed on a row that was

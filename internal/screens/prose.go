@@ -86,7 +86,7 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 	return paneRowsFor(s.ledgerLines(events))
 }
 
-// paneRowsFor draws already-worded lines as pane rows: the voice becomes a swatch, and each run's
+// paneRowsFor draws already-worded lines as pane rows: the voice becomes a swatch, and each span's
 // ink name becomes a colour.
 //
 // **The colours are decided here and never stored**, which is what lets a saved run be re-coloured
@@ -94,12 +94,12 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 func paneRowsFor(lines []session.LedgerLine) []paneRow {
 	rows := make([]paneRow, 0, len(lines))
 	for _, l := range lines {
-		runs := make([]paneRun, 0, len(l.Runs))
-		for _, r := range l.Runs {
-			runs = append(runs, paneRun{text: r.Text, ink: inkNamed(r.Ink), mark: r.Mark})
+		spans := make([]paneSpan, 0, len(l.Spans))
+		for _, r := range l.Spans {
+			spans = append(spans, paneSpan{text: r.Text, ink: inkNamed(r.Ink), mark: r.Mark})
 		}
 		rows = append(rows, paneRow{
-			runs:   runs,
+			spans:  spans,
 			swatch: swatchForVoice(l.Voice),
 			indent: indentForVoice(l.Voice),
 		})
@@ -108,7 +108,7 @@ func paneRowsFor(lines []session.LedgerLine) []paneRow {
 }
 
 // inkNamed is the colour behind an ink's name. **Zero alpha is "the panel's own ink"**, which is
-// what an unnamed run and an unrecognised name both get — a ledger written by another build must
+// what an unnamed span and an unrecognised name both get — a ledger written by another build must
 // draw as words rather than refuse to draw.
 //
 // **Every colour here is the one the combat screen uses for the same thing**, which is the point:
@@ -234,7 +234,7 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 		if outcomes > 0 {
 			sep = ", "
 		}
-		rows[cur].Runs = append(rows[cur].Runs, session.LedgerRun{Text: sep + what})
+		rows[cur].Spans = append(rows[cur].Spans, session.LedgerSpan{Text: sep + what})
 		outcomes++
 	}
 
@@ -243,10 +243,10 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 	act := func(side combat.Side, c combat.Card) {
 		rows = append(rows, session.LedgerLine{
 			Voice: voiceFor(side),
-			Runs: append([]session.LedgerRun{
+			Spans: append([]session.LedgerSpan{
 				{Text: s.sideName(side) + " "},
 				{Text: verbFor(c.Category()), Ink: categoryInk(c.Category()), Mark: true},
-			}, elementRuns(" "+cardPhrase(c)+cardWeight(c))...),
+			}, elementSpans(" "+cardPhrase(c)+cardWeight(c))...),
 		})
 		cur, curSide = len(rows)-1, side
 		outcomes = 0
@@ -274,7 +274,7 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 			// **And it is not marked.** Bold is the whole panel and an underline under a name that
 			// is already alone on its line reads as a mistake rather than as emphasis — see the
 			// multiplier in the sum, which lost its underline for the same reason.
-			Runs: []session.LedgerRun{{Text: handTitle(e), Ink: session.InkHand}},
+			Spans: []session.LedgerSpan{{Text: handTitle(e), Ink: session.InkHand}},
 		})
 		cur, curSide = len(rows)-1, e.Side
 		outcomes = 0
@@ -416,7 +416,7 @@ func swatchFor(side combat.Side) color.RGBA {
 //
 // A line is `<who> <verb> <phrase>`: "Duelist attacks with a heavy strike". The verb comes
 // from the action's category and the phrase from the card, which is why the two are separate
-// tables rather than one string per card — the verb has to be its own run so it can be drawn
+// tables rather than one string per card — the verb has to be its own span so it can be drawn
 // on a coloured background, and it would otherwise have to be sliced back out of a sentence.
 //
 // **The prose is here and not in `internal/combat`.** The rules package names actions; it does
@@ -490,8 +490,8 @@ func multiplierText(amount int) string {
 // thing about the card and a false thing about the attack, which is the same failure the essence
 // scaling above was fixed for.
 //
-// **It hands back the run of text a relic changed, not a flag** *(2026-08-21)*. The caller colours
-// that run and nothing else: painting the verb and the unit with it says a relic changed the card
+// **It hands back the span of text a relic changed, not a flag** *(2026-08-21)*. The caller colours
+// that span and nothing else: painting the verb and the unit with it says a relic changed the card
 // rather than the number. An empty mark means nothing moved and the line is drawn in one colour.
 func cardEffect(card combat.Card) string {
 	c := card.Spec()
@@ -516,21 +516,21 @@ func cardEffect(card combat.Card) string {
 
 // riderText is the lines a card's upgrade adds under its own, one authored line each.
 //
-// **The face has to say what a parasite did to a card.** CLAUDE.md's rule about an altered card
+// **The face has to say what a rune did to a card.** CLAUDE.md's rule about an altered card
 // printing what it actually does is the whole reason effect text reads the card rather than the
 // concept, and a rider is the largest thing a card can carry that the concept knows nothing about.
 // An extra line is the cheapest honest answer: the band holds seven lines at this pitch, the card's
 // own verb takes two, and no rider writes more than three.
 //
 // **The wording is `carddesc.FaceLines` and not this function's** *(2026-09-09)*. It said four of
-// the ten riders and was silent about the other six — a card the player had spent a parasite on
+// the ten riders and was silent about the other six — a card the player had spent a rune on
 // that carried a wash and no words — and `tools/upgradesheet` kept a hand-written snapshot of it
 // because `internal/screens` links Ebitengine. Moving it down to the windowless package fixes both:
 // the face is total over `combat.RiderKinds()`, and the sheet prints the game's own strings rather
 // than a copy that can drift.
 //
 // **It is not written in the relic pink.** That colour means "a relic did this" everywhere else on
-// screen, and a parasite is not a relic; borrowing it would say something untrue about where the
+// screen, and a rune is not a relic; borrowing it would say something untrue about where the
 // figure came from.
 func riderText(card combat.Card) string {
 	out := ""
@@ -588,7 +588,7 @@ func cardPhrase(c combat.Card) string {
 	return phrase + " (" + name + ")"
 }
 
-// elementRuns cuts a clause into runs so the word naming an element is written in that element's
+// elementSpans cuts a clause into spans so the word naming an element is written in that element's
 // colour — "attacks with a fire cut", with `fire` in the fire orange.
 //
 // **The ledger's ink vocabulary already had the elements in it**, because a term in the arithmetic
@@ -596,26 +596,26 @@ func cardPhrase(c combat.Card) string {
 // `cards.BorderOf` a card's border comes from. So this is the third reader of one table rather than
 // a colour decided here.
 //
-// **The cut is `cards.SplitRuns`**, the same one the card face uses, so where a word begins and ends
+// **The cut is `cards.SplitSpans`**, the same one the card face uses, so where a word begins and ends
 // is answered once — see internal/cards/render.go on why a second implementation would be two sets
 // of answers to where BURN ends inside BURNING.
-func elementRuns(clause string) []session.LedgerRun {
-	found := cards.ElementRuns(clause)
+func elementSpans(clause string) []session.LedgerSpan {
+	found := cards.ElementSpans(clause)
 	if len(found) == 0 {
-		return []session.LedgerRun{{Text: clause}}
+		return []session.LedgerSpan{{Text: clause}}
 	}
 
-	var out []session.LedgerRun
-	for _, seg := range cards.SplitRuns(clause, found) {
-		out = append(out, session.LedgerRun{Text: seg.Text, Ink: elementInkNames[strings.ToLower(seg.Text)]})
+	var out []session.LedgerSpan
+	for _, seg := range cards.SplitSpans(clause, found) {
+		out = append(out, session.LedgerSpan{Text: seg.Text, Ink: elementInkNames[strings.ToLower(seg.Text)]})
 	}
 	return out
 }
 
 // elementInkNames is which of the ledger's ink names each coloured word takes.
 //
-// **A run is named rather than coloured**, because a ledger line is written once and read back three
-// fights later — see session.LedgerRun.Ink. A colour stored in a line would be the colour the build
+// **A span is named rather than coloured**, because a ledger line is written once and read back three
+// fights later — see session.LedgerSpan.Ink. A colour stored in a line would be the colour the build
 // that wrote it happened to use, and the account would then disagree with the game it is an account
 // of the first time the palette moved.
 //

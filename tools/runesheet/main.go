@@ -1,10 +1,10 @@
-// Command parasitesheet renders every parasite in data/parasites.json to a PNG and writes an HTML
+// Command runesheet renders every rune in data/runes.json to a PNG and writes an HTML
 // page that shows each one beside the rule it actually fires.
 //
-//	go run ./tools/parasitesheet
+//	go run ./tools/runesheet
 //
 // It exists for the reason tools/relicsheet does, and the catalogue being small today is not an
-// argument against it. A parasite is the least readable record in `data/` — a `Target`, a `Rider`,
+// argument against it. A rune is the least readable record in `data/` — a `Target`, a `Rider`,
 // a `Value` and a `Count`, where which of those the rules read depends entirely on the target, and
 // three of the four are refused outright on the targets that do not read them. The sentence the
 // card prints is authored separately and checked against none of it.
@@ -17,8 +17,8 @@
 //
 // This reads the real file, through internal/session, which means the catalogue is *validated*
 // before anything is drawn: an unknown target, a rider named on a target that reads none, a count
-// past `MaxParasiteTargets`, a swap naming a card this build has not registered — all panic at
-// init exactly as they would in the game. A parasite this page refuses to draw is a parasite the
+// past `MaxRuneTargets`, a swap naming a card this build has not registered — all panic at
+// init exactly as they would in the game. A rune this page refuses to draw is a rune the
 // game refuses to start with.
 //
 // # What to look at
@@ -28,8 +28,8 @@
 // this page exists to make visible.
 //
 // **How many cards each one asks for.** The board piece shows targets side by side and
-// `MaxParasiteTargets` is two, so the counts here are the whole of what the picker ever has to
-// lay out. A catalogue drifting towards two-target parasites is a layout decision being made by
+// `MaxRuneTargets` is two, so the counts here are the whole of what the picker ever has to
+// lay out. A catalogue drifting towards two-target runes is a layout decision being made by
 // accident.
 //
 // **Which targets nobody has authored into.** The vocabulary is closed and every target gets a
@@ -38,7 +38,7 @@
 //
 // # Output
 //
-// Loose PNGs plus an index.html, written into `docs/sheets/parasitesheet/` and **committed**
+// Loose PNGs plus an index.html, written into `docs/sheets/runesheet/` and **committed**
 // *(owner's call, 2026-08-23)*, on the same terms as every other sheet. A clone opens
 // `docs/sheets/index.html`.
 package main
@@ -61,11 +61,11 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
-// ground is screens.screenGround, the light slate blue a parasite is actually offered on.
+// ground is screens.screenGround, the light slate blue a rune is actually offered on.
 const ground = "#a8bcd4"
 
 func main() {
-	dir := flag.String("dir", filepath.Join("docs", "sheets", "parasitesheet"),
+	dir := flag.String("dir", filepath.Join("docs", "sheets", "runesheet"),
 		"directory to write the PNGs and index.html into")
 	flag.Parse()
 
@@ -84,30 +84,30 @@ func run(dir string) error {
 		return err
 	}
 
-	// **The page walks the file's own order and the bucket walks the sorted one.**
-	// data.ParasiteFileOrder is the motif order the catalogue is authored in — the five bores
+	// **The page walks the file's own order and the sack walks the sorted one.**
+	// data.RuneFileOrder is the motif order the catalogue is authored in — the five bores
 	// together, the four grubs, the metals beside each other — which is what makes the family
-	// headings read as blocks. session.Parasites stays the bucket's order, and nothing on this page
+	// headings read as blocks. session.Runes stays the sack's order, and nothing on this page
 	// decides an outcome, so the two never meet. Same split the relic sheet makes.
-	order := data.ParasiteFileOrder()
+	order := data.RuneFileOrder()
 
 	page := page{
-		Ground:      ground,
-		Style:       styleFacts(cards.EssenceStyle),
-		Count:       len(order),
-		BucketSize:  session.BucketSize(),
-		BucketPrice: session.BucketPrice(),
-		MaxTargets:  session.MaxParasiteTargets,
+		Ground:     ground,
+		Style:      styleFacts(cards.EssenceStyle),
+		Count:      len(order),
+		SackSize:   session.SackSize(),
+		SackPrice:  session.SackPrice(),
+		MaxTargets: session.MaxRuneTargets,
 	}
 	if page.Count > 0 {
-		page.Share = fmt.Sprintf("%.1f", float64(page.BucketSize)*100/float64(page.Count))
+		page.Share = fmt.Sprintf("%.1f", float64(page.SackSize)*100/float64(page.Count))
 	}
 
 	var plates []plate
 	for _, key := range order {
-		p, ok := session.ParasiteByKey(key)
+		p, ok := session.RuneByKey(key)
 		if !ok {
-			return fmt.Errorf("parasites.json writes %q and internal/session resolved no such parasite", key)
+			return fmt.Errorf("runes.json writes %q and internal/session resolved no such rune", key)
 		}
 
 		art, err := artwork(p.Art)
@@ -115,7 +115,7 @@ func run(dir string) error {
 			return err
 		}
 		cell, err := write(dir, faces, specFor(p, art, true, false),
-			"parasite-"+p.Record+".png", p.Name)
+			"rune-"+p.Record+".png", p.Name)
 		if err != nil {
 			return err
 		}
@@ -131,9 +131,9 @@ func run(dir string) error {
 			Family:  p.Family,
 			Draw:    p.Draw,
 			Art:     p.Art,
-			Default: p.Art == data.DefaultParasiteArt,
+			Default: p.Art == data.DefaultRuneArt,
 		})
-		if p.Art == data.DefaultParasiteArt {
+		if p.Art == data.DefaultRuneArt {
 			page.Undrawn++
 		}
 		if p.Draw == "" {
@@ -144,11 +144,11 @@ func run(dir string) error {
 	page.Targets = groupByTarget(plates)
 	page.Families = groupByFamily(plates)
 
-	// The three states a parasite card is drawn in, which is one more than an essence has. **Selected
-	// is a state here and is not one there**: a parasite is armed first and aimed second, so the
+	// The three states a rune card is drawn in, which is one more than an essence has. **Selected
+	// is a state here and is not one there**: a rune is armed first and aimed second, so the
 	// board piece has to say which one is in hand while the player picks what it eats.
 	if len(order) > 0 {
-		first, _ := session.ParasiteByKey(order[0])
+		first, _ := session.RuneByKey(order[0])
 		art, err := artwork(first.Art)
 		if err != nil {
 			return err
@@ -158,7 +158,7 @@ func run(dir string) error {
 			label           string
 			enabled, chosen bool
 		}{
-			{"rest", first.Name + " — in the bucket", true, false},
+			{"rest", first.Name + " — in the sack", true, false},
 			{"selected", first.Name + " — armed, picking its targets", true, true},
 			{"disabled", first.Name + " — unusable this turn", false, false},
 		} {
@@ -182,21 +182,21 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d parasites, %d with art of their own and %d with a subject; "+
-		"%d drawn from a %d-vitae bucket, %s%% of the catalogue a seat\n",
+	fmt.Printf("wrote %s and %d PNGs — %d runes, %d with art of their own and %d with a subject; "+
+		"%d drawn from a %d-vitae sack, %s%% of the catalogue a seat\n",
 		out, len(plates)+len(page.States), page.Count,
 		page.Count-page.Undrawn, page.Count-page.Unwritten,
-		page.BucketSize, page.BucketPrice, page.Share)
+		page.SackSize, page.SackPrice, page.Share)
 	for _, f := range page.Families {
 		fmt.Printf("  %-24s %2d %s\n", f.Name, f.Count, f.Noun)
 	}
 	return nil
 }
 
-// specFor is a parasite as the card the bucket draws, and it fills the same fields
-// screens.parasiteSpec does: a name, the line, no form and no cost. **Basic, not a colour** — a
-// parasite grants no element, so its border is the mid grey `cards.BorderOf` gives `basic`.
-func specFor(p session.Parasite, art image.Image, enabled, selected bool) cards.Spec {
+// specFor is a rune as the card the sack draws, and it fills the same fields
+// screens.runeSpec does: a name, the line, no form and no cost. **Basic, not a colour** — a
+// rune grants no element, so its border is the mid grey `cards.BorderOf` gives `basic`.
+func specFor(p session.Rune, art image.Image, enabled, selected bool) cards.Spec {
 	return cards.Spec{
 		Name:       p.Name,
 		Form:       cards.FormNone,
@@ -210,14 +210,14 @@ func specFor(p session.Parasite, art image.Image, enabled, selected bool) cards.
 	}
 }
 
-// ruleLine is what the parasite does, in the file's own vocabulary.
+// ruleLine is what the rune does, in the file's own vocabulary.
 //
 // **Deliberately not prose**, for relicsheet's reason: the sentence a player reads is Text, printed
 // beside this, and generating a second English sentence would give the page two descriptions and
 // no way to tell which one the game agrees with.
-func ruleLine(p session.Parasite) string {
+func ruleLine(p session.Rune) string {
 	switch p.Target {
-	case session.ParasiteRider:
+	case session.RuneRider:
 		// **The two metals read their figure as a denominator rather than as a payout**, so a bare
 		// "value 5" beside them would read as five of something. They are the only riders whose
 		// number is odds, which is why this is a case here and not a widening of the line below.
@@ -230,28 +230,28 @@ func ruleLine(p session.Parasite) string {
 				p.Number, combat.SilverVitae)
 		}
 		return fmt.Sprintf("upgrade: rider %s, value %d", p.Rider, p.Number)
-	case session.ParasiteRemove:
+	case session.RuneRemove:
 		return fmt.Sprintf("removes %d card(s) from the run", p.Count)
-	case session.ParasiteSwap:
+	case session.RuneSwap:
 		return "becomes " + combat.Of(p.Concept, combat.Basic).Label()
-	case session.ParasiteVitae:
+	case session.RuneVitae:
 		return fmt.Sprintf("+%d vitae, touching no card", p.Number)
-	case session.ParasiteChimera:
+	case session.RuneChimera:
 		// **The page cannot say what it copies**, because that is a fact about a run in progress
 		// and this sheet is drawn against no run at all. Saying so is better than saying nothing.
-		return "fires the run's last parasite again — count and effect are that one's"
+		return "fires the run's last rune again — count and effect are that one's"
 	default:
 		return p.Target.String()
 	}
 }
 
 // valueOf is the record's value as the page prints it, or empty for the target that takes none.
-// Read off the resolved parasite rather than the JSON, so it is what the rules hold.
-func valueOf(p session.Parasite) string {
+// Read off the resolved rune rather than the JSON, so it is what the rules hold.
+func valueOf(p session.Rune) string {
 	switch p.Target {
-	case session.ParasiteRider, session.ParasiteVitae:
+	case session.RuneRider, session.RuneVitae:
 		return strconv.Itoa(p.Number)
-	case session.ParasiteSwap:
+	case session.RuneSwap:
 		return combat.Of(p.Concept, combat.Basic).Label()
 	default:
 		return ""
@@ -259,11 +259,11 @@ func valueOf(p session.Parasite) string {
 }
 
 // cardsWanted is how many cards the picker will ask for, said in words for the one that asks for
-// none — a parasite that touches no card is a decision rather than an omission.
-func cardsWanted(p session.Parasite) string {
-	if p.Target == session.ParasiteChimera {
+// none — a rune that touches no card is a decision rather than an omission.
+func cardsWanted(p session.Rune) string {
+	if p.Target == session.RuneChimera {
 		// Its own record names none; what it asks for comes from whatever it is copying.
-		return "as many as the parasite it copies"
+		return "as many as the rune it copies"
 	}
 	if p.Count == 0 {
 		return "none — touches no card"
@@ -271,22 +271,22 @@ func cardsWanted(p session.Parasite) string {
 	return strconv.Itoa(p.Count)
 }
 
-// groupByTarget splits the catalogue by what a parasite does, in session.ParasiteTargets' order.
+// groupByTarget splits the catalogue by what a rune does, in session.RuneTargets' order.
 //
 // **An empty group still gets a heading**, exactly as the essence sheet's do: the vocabulary is
 // closed, so a target nobody has authored into is a mechanic built and never reached for. That is
 // worth seeing rather than a section to omit — and with four records against four targets it is
 // most of what this page currently has to say.
 func groupByTarget(plates []plate) []group {
-	out := make([]group, 0, len(session.ParasiteTargets()))
-	for _, t := range session.ParasiteTargets() {
+	out := make([]group, 0, len(session.RuneTargets()))
+	for _, t := range session.RuneTargets() {
 		g := group{Target: t.String()}
 		for _, p := range plates {
 			if p.Target == t.String() {
-				g.Parasites = append(g.Parasites, p)
+				g.Runes = append(g.Runes, p)
 			}
 		}
-		g.Count = len(g.Parasites)
+		g.Count = len(g.Runes)
 		out = append(out, g)
 	}
 	return out
@@ -295,7 +295,7 @@ func groupByTarget(plates []plate) []group {
 // groupByFamily splits the catalogue into the motifs its records are authored in.
 //
 // **In first-appearance order, which is the file's order**, so the page reads as
-// data/parasites.json does and a parasite lands where its siblings were written rather than where
+// data/runes.json does and a rune lands where its siblings were written rather than where
 // the alphabet puts it. It is the relic sheet's function over a different catalogue.
 //
 // **The target grouping did not go — it moved to the header**, as a list of counts. That grouping
@@ -320,10 +320,10 @@ func groupByFamily(plates []plate) []family {
 
 	out := make([]family, 0, len(order))
 	for _, name := range order {
-		f := family{Name: name, Parasites: byName[name], Count: len(byName[name])}
-		f.Noun = "parasites"
+		f := family{Name: name, Runes: byName[name], Count: len(byName[name])}
+		f.Noun = "runes"
 		if f.Count == 1 {
-			f.Noun = "parasite"
+			f.Noun = "rune"
 		}
 		out = append(out, f)
 	}
@@ -389,7 +389,7 @@ type cell struct {
 	Height int
 }
 
-// plate is one parasite: the card, and everything the file says about it.
+// plate is one rune: the card, and everything the file says about it.
 type plate struct {
 	Cell   cell
 	Record string
@@ -411,30 +411,30 @@ type plate struct {
 
 // group is one target's worth of the catalogue.
 type group struct {
-	Target    string
-	Count     int
-	Parasites []plate
+	Target string
+	Count  int
+	Runes  []plate
 }
 
-// family is one motif's worth of the catalogue: every parasite authored in that block.
+// family is one motif's worth of the catalogue: every rune authored in that block.
 type family struct {
-	Name      string
-	Count     int
-	Noun      string
-	Parasites []plate
+	Name  string
+	Count int
+	Noun  string
+	Runes []plate
 }
 
 type page struct {
-	Ground      string
-	Style       map[string]int
-	Count       int
-	BucketSize  int
-	BucketPrice int
-	MaxTargets  int
-	Undrawn     int
-	Unwritten   int
-	Share       string
-	Targets     []group
-	Families    []family
-	States      []cell
+	Ground     string
+	Style      map[string]int
+	Count      int
+	SackSize   int
+	SackPrice  int
+	MaxTargets int
+	Undrawn    int
+	Unwritten  int
+	Share      string
+	Targets    []group
+	Families   []family
+	States     []cell
 }

@@ -5,9 +5,9 @@ import (
 	"image/color"
 )
 
-// TipLine is one line of a tooltip, in the runs it is drawn as. A line with one run is a line in
+// TipLine is one line of a tooltip, in the spans it is drawn as. A line with one span is a line in
 // one colour, which is what most of them are.
-type TipLine []TextRun
+type TipLine []TextSpan
 
 // Text is the line's words with the colouring dropped — what a caller keying on a tooltip's
 // identity compares, and what a test asserts against.
@@ -19,12 +19,12 @@ func (l TipLine) Text() string {
 	return out
 }
 
-// TextRun is one stretch of a line drawn in its own colour.
+// TextSpan is one stretch of a line drawn in its own colour.
 //
 // **A zero-alpha Ink means the panel's own ink**, which is the convention every optional colour in
-// this codebase follows — so a caller that never thinks about colour builds a line of one run and
+// this codebase follows — so a caller that never thinks about colour builds a line of one span and
 // nothing changes.
-type TextRun struct {
+type TextSpan struct {
 	Text string
 	Ink  color.RGBA
 }
@@ -49,12 +49,12 @@ type Tooltip struct {
 	// That is deliberate, because every line in a tooltip here is an authored phrase or one term of
 	// an arithmetic, and both know their own shape better than a wrapper would.
 	//
-	// **A line is runs rather than a string** *(owner's call, 2026-09-08)*, so a word naming an
+	// **A line is spans rather than a string** *(owner's call, 2026-09-08)*, so a word naming an
 	// element can be drawn in that element's colour where the rest of the line is not. This package
-	// knows nothing about why a run has a colour — the caller decides that, exactly as it decides
+	// knows nothing about why a span has a colour — the caller decides that, exactly as it decides
 	// where a line breaks.
 	//
-	// **The title is runs too, as of 2026-09-09** *(owner's call)*. It was a plain string, which
+	// **The title is spans too, as of 2026-09-09** *(owner's call)*. It was a plain string, which
 	// made it the one place in the game an element word was not written in its element's colour —
 	// and a card's title is `FIRE JAB`, so it was the place that mattered most. The two now take
 	// the same type and go through the same drawing.
@@ -85,7 +85,7 @@ type Tooltip struct {
 // Point aims the tooltip at something, and is called every tick the cursor is still on it. It
 // restarts the dwell when the thing under the cursor changes.
 //
-// **The key is the title's *words*, not its runs.** Recolouring a title without changing what it
+// **The key is the title's *words*, not its spans.** Recolouring a title without changing what it
 // says is not a different thing under the cursor, and restarting the dwell on it would make a
 // tooltip flicker at whatever recoloured it.
 func (t *Tooltip) Point(at image.Rectangle, title TipLine, lines []TipLine) {

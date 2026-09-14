@@ -32,6 +32,12 @@ type Stone struct {
 	Name   string
 	Text   string
 
+	// Art is the assets key of the picture this stone draws, copied straight off the record.
+	// **It may be empty**, unlike an essence's — there is no default-stone face, so an undrawn
+	// stone falls back to the generated boulder in `screens.stoneArt` rather than to a painted
+	// placeholder.
+	Art string
+
 	// Hand is the rung this stone raises, by catalog key. **A key rather than a seat**, because
 	// a seat is a position in the table this build loaded and a key is what a save file writes
 	// down. `combat.HandSlot` is what turns one into the other, and it is asked once, here.
@@ -129,7 +135,7 @@ func resolveStone(r data.StoneData) (Stone, error) {
 	if _, ok := combat.HandSlot(r.Hand); !ok {
 		return Stone{}, fmt.Errorf("%s raises hand %q, which the catalog does not hold", r.StoneRecord, r.Hand)
 	}
-	return Stone{Record: r.StoneRecord, Name: r.Name, Text: r.Text, Hand: r.Hand}, nil
+	return Stone{Record: r.StoneRecord, Name: r.Name, Text: r.Text, Hand: r.Hand, Art: r.Art}, nil
 }
 
 // StoneSalePrice is what one carried stone fetches when it is sold.

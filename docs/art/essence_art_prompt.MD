@@ -1,7 +1,6 @@
 # Essence art prompt
 
-High-resolution digital illustration of a single object, in the style of 16-bit console RPG
-equipment art. No text anywhere in the image — no title, no label, no caption, no signature, no
+High-resolution digital illustration of a single object. No text anywhere in the image — no title, no label, no caption, no signature, no
 watermark. The object and its background, nothing else.
 
 Canvas: portrait, aspect ratio exactly 5:7 (five wide to seven tall). Render as large as you work
@@ -83,5 +82,5 @@ The block pasted below this prompt is one record from `data/essences.json`, in J
 title, no caption, no rules text, no numbers anywhere in the image. If `Draw` is empty, stop and
 say so rather than inventing a subject.
 
-Name the image after the record's own key — the `EssenceRecord` value, or `StoneRecord` for a
-stone — and give me a link I can click to download it.
+Name the image after the record's own key — the `EssenceRecord` value, or `RuneRecord` for a
+rune — and give me a link I can click to download it.

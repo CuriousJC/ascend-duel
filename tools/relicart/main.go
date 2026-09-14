@@ -13,13 +13,14 @@
 //	go run ./tools/relicart                    # file everything in the relic inbox
 //	go run ./tools/relicart -kind essence         # the essences instead
 //	go run ./tools/relicart -kind rune     # the runes instead
+//	go run ./tools/relicart -kind stone    # the stones instead
 //	go run ./tools/relicart -n                 # say what would happen and touch nothing
 //	go run ./tools/relicart -blocky            # quantize to the block grid on the way down
 //
-// # Three catalogs, one command
+// # Four catalogs, one command
 //
-// **Relics, essences and runes all carry Art and Draw and all draw a full-bleed card**, so filing
-// a picture is the identical four steps for each and a second command would be this file copied
+// **Relics, essences, runes and stones all carry Art and Draw and all draw a full-bleed card**, so
+// filing a picture is the identical four steps for each and a second command would be this file copied
 // with three strings changed. `-kind` is the parameter and `catalogs` is the whole difference:
 // an inbox, an asset directory, a JSON file, and the name of that file's record key. The name
 // stays `relicart` because the relics are what it is reached for; renaming it would break the
@@ -81,6 +82,12 @@ var catalogs = map[string]catalog{
 		out:   filepath.Join("assets", "rune"),
 		json:  "data/runes.json",
 		key:   "RuneRecord",
+	},
+	"stone": {
+		inbox: filepath.Join(".scratch", "to-process-stone-art"),
+		out:   filepath.Join("assets", "stone"),
+		json:  "data/stones.json",
+		key:   "StoneRecord",
 	},
 }
 

@@ -1,7 +1,6 @@
 # Relic art prompt
 
-High-resolution digital illustration of a single object, in the style of 16-bit console RPG
-equipment art. No text anywhere in the image — no title, no label, no caption, no signature, no
+High-resolution digital illustration of a single object. No text anywhere in the image — no title, no label, no caption, no signature, no
 watermark. The object and its background, nothing else.
 
 Canvas: portrait, aspect ratio exactly 5:7 (five wide to seven tall). Render as large as you work

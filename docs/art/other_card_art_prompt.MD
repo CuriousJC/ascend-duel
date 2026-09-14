@@ -1,4 +1,20 @@
-# Rune art prompt
+# Other-card art prompt
+
+**The catch-all for every `cards.EssenceStyle` good that has no prompt of its own** — the potions
+in `data/potions.json`, the placeholder brand, the shop's two sealed goods, and whatever is added
+next. Solid objects on the same shelf, in the same style.
+
+**Anything here earns its own file once it has something to say that is only true of it** — the
+stones did, in `stone_art_prompt.MD`, because their material is a rule rather than a record's own
+idea.
+
+**The style block below is the relic and essence one, word for word.** It is what makes the
+catalogs one game rather than several commissions, and it is pasted verbatim rather than
+paraphrased. A record that wants it changed is a design decision that moves it for every card in
+every style. The composition block is the essence one, also verbatim, because these cards print
+their sentence on the same scrim across the same lower half.
+
+---
 
 High-resolution digital illustration of a single object. No text anywhere in the image — no title, no label, no caption, no signature, no
 watermark. The object and its background, nothing else.
@@ -43,6 +59,16 @@ particles, sparks, smoke, motion lines, and clutter of any kind.
 Priority order: readable silhouette -> recognizable object -> material shading -> coherent color
 scheme -> subtle background texture.
 
+## The object is whole
+
+The object is **solid, finished and intact**. Nothing here is dissolving, fading, coming apart or
+being unmade. A potion is a stoppered vessel and a sealed good is sealed. Draw them as objects
+that would still be there tomorrow.
+
+Wear is allowed and unmaking is not: a chipped edge, a scuffed facet, a worn stopper or a
+weathered surface all read as an object with a history, where a thinning edge reads as an object
+on its way out.
+
 ## Composition
 
 Composition: one object, centered and large. It spans roughly 80% of the width and roughly 70% of
@@ -60,23 +86,27 @@ any kind for text or a number. Do not leave a corner or an edge empty for one, a
 one. Whatever the card puts on top of this picture, it puts there itself at draw time, and the
 picture is meant to carry on underneath.
 
-## The body plan
-
-A shape describes a body and never a style: materials, shading, outline, lighting, palette,
-background and composition are settled above and are not to be restated here.
-
-The body of the rune shoudl be a stylized drawing of what is being requested with thick pencil lines and simple approach to the subject matter with few details
+The card prints its sentence across the lower half of the picture, on a dark scrim it draws
+itself. That is not a band to leave empty — draw the object through it exactly as above — but it
+does mean the half carrying the recognition should be the upper one.
 
 ## The subject
 
-The block pasted below this prompt is one record from `data/runes.json`, in JSON.
+The block pasted below this prompt is one record, in JSON, from whichever of these catalogs it
+came from:
 
-**Read `Draw` and nothing else as the subject.** It says what makes this rune its shape and not
-its sibling — color, ornament, what the effect is doing to it — because the body plan above never
-distinguishes two of a kind. Every other field — `Name`, `Text`, `Change`, `Target`, `Count`,
-`Family` and the rest — is context for what the rune does and is never to be rendered: no title,
-no caption, no rules text, no numbers anywhere in the image. If `Draw` is empty, stop and say so
-rather than inventing a subject.
+| Catalog | Key field |
+|---|---|
+| `data/potions.json` | `PotionRecord` |
 
-Name the image after the record's own key — the `RuneRecord` value — and give me a link I can
-click to download it.
+A sealed good and the placeholder brand have no record of their own — they are built in
+`internal/screens/card_art.go` and `internal/screens/shop_potions.go` rather than authored — so
+the subject is written out by hand instead of pasted, and the name is the one the shop draws on
+the card.
+
+**Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Effect`,
+`Amount`, `Price`, `Family` and the rest — is context for what the card does and is
+never to be rendered: no title, no caption, no rules text, no numbers anywhere in the image. If
+`Draw` is empty, stop and say so rather than inventing a subject.
+
+Name the image after the record's own key and give me a link I can click to download it.

@@ -3,108 +3,144 @@
     "StoneRecord": "pebble",
     "Name": "Pebble",
     "Hand": "high-card",
-    "Text": "RAISE HIGH CARD HAND"
+    "Art": "pebble",
+    "Text": "RAISE HIGH CARD HAND",
+    "Draw": "a small water-rounded grey pebble, smooth and dull, one pale band running across it"
   },
   {
     "StoneRecord": "agate",
     "Name": "Agate",
     "Hand": "pair",
-    "Text": "RAISE PAIR HAND"
+    "Art": "agate",
+    "Text": "RAISE PAIR HAND",
+    "Draw": "a tumbled agate nodule, concentric grey and cream bands under a soft waxy sheen"
   },
   {
     "StoneRecord": "banded-agate",
     "Name": "Banded Agate",
     "Hand": "concept-two-pair",
-    "Text": "RAISE TWO PAIR HAND"
+    "Art": "banded-agate",
+    "Text": "RAISE TWO PAIR HAND",
+    "Draw": "a sliced banded agate, tight concentric rings of orange and white, one cut face polished flat"
   },
   {
     "StoneRecord": "jasper",
     "Name": "Jasper",
     "Hand": "concept-three-of-a-kind",
-    "Text": "RAISE THREE OF A KIND HAND"
+    "Art": "jasper",
+    "Text": "RAISE THREE OF A KIND HAND",
+    "Draw": "a broken lump of red jasper, opaque brick red mottled with ochre, fresh shell-shaped fracture"
   },
   {
     "StoneRecord": "bloodstone",
     "Name": "Bloodstone",
     "Hand": "concept-full-house",
-    "Text": "RAISE FULL HOUSE HAND"
+    "Art": "bloodstone",
+    "Text": "RAISE FULL HOUSE HAND",
+    "Draw": "a polished dome of dark green bloodstone, scattered blood-red flecks across its face"
   },
   {
     "StoneRecord": "onyx",
     "Name": "Onyx",
     "Hand": "concept-four-of-a-kind",
-    "Text": "RAISE FOUR OF A KIND HAND"
+    "Art": "onyx",
+    "Text": "RAISE FOUR OF A KIND HAND",
+    "Draw": "a squared block of black onyx with crisp white banding, mirror-polished"
   },
   {
     "StoneRecord": "obsidian",
     "Name": "Obsidian",
     "Hand": "concept-five-of-a-kind",
-    "Text": "RAISE FIVE OF A KIND HAND"
+    "Art": "obsidian",
+    "Text": "RAISE FIVE OF A KIND HAND",
+    "Draw": "a knapped obsidian core, glassy black with razor-sharp facets and a thin warm sheen"
   },
   {
     "StoneRecord": "chert",
     "Name": "Chert",
     "Hand": "form-two-pair",
-    "Text": "RAISE FORM TWO PAIR"
+    "Art": "chert",
+    "Text": "RAISE FORM TWO PAIR",
+    "Draw": "a rough grey chert nodule, chalky white rind broken open to a dull flint-grey core"
   },
   {
     "StoneRecord": "slate",
     "Name": "Slate",
     "Hand": "form-three-of-a-kind",
-    "Text": "RAISE FORM THREE OF A KIND"
+    "Art": "slate",
+    "Text": "RAISE FORM THREE OF A KIND",
+    "Draw": "a flat split slab of blue-grey slate, one clean cleavage face, square broken edges"
   },
   {
     "StoneRecord": "basalt",
     "Name": "Basalt",
     "Hand": "form-full-house",
-    "Text": "RAISE FORM FULL HOUSE"
+    "Art": "basalt",
+    "Text": "RAISE FORM FULL HOUSE",
+    "Draw": "a block of dark basalt, matte near-black, fine gas holes pocking the surface"
   },
   {
     "StoneRecord": "granite",
     "Name": "Granite",
     "Hand": "form-four-of-a-kind",
-    "Text": "RAISE FORM FOUR OF A KIND"
+    "Art": "granite",
+    "Text": "RAISE FORM FOUR OF A KIND",
+    "Draw": "a split granite block speckled pink, grey and black, one face sawn flat"
   },
   {
     "StoneRecord": "gabbro",
     "Name": "Gabbro",
     "Hand": "form-five-of-a-kind",
-    "Text": "RAISE FORM FIVE OF A KIND"
+    "Art": "gabbro",
+    "Text": "RAISE FORM FIVE OF A KIND",
+    "Draw": "a dense gabbro block of coarse black and dark green crystals, one face ground smooth"
   },
   {
     "StoneRecord": "moonstone",
     "Name": "Moonstone",
     "Hand": "element-two-pair",
-    "Text": "RAISE ELEMENT TWO PAIR"
+    "Art": "moonstone",
+    "Text": "RAISE ELEMENT TWO PAIR",
+    "Draw": "a milky white moonstone cabochon, a soft blue sheen floating under its surface"
   },
   {
     "StoneRecord": "amber",
     "Name": "Amber",
     "Hand": "element-three-of-a-kind",
-    "Text": "RAISE ELEMENT THREE OF A KIND"
+    "Art": "amber",
+    "Text": "RAISE ELEMENT THREE OF A KIND",
+    "Draw": "a rounded lump of golden amber, warm translucent orange lit from within"
   },
   {
     "StoneRecord": "garnet",
     "Name": "Garnet",
     "Hand": "element-full-house",
-    "Text": "RAISE ELEMENT FULL HOUSE"
+    "Art": "garnet",
+    "Text": "RAISE ELEMENT FULL HOUSE",
+    "Draw": "a deep red garnet crystal with natural many-sided faces, dark and glassy"
   },
   {
     "StoneRecord": "topaz",
     "Name": "Topaz",
     "Hand": "element-four-of-a-kind",
-    "Text": "RAISE ELEMENT FOUR OF A KIND"
+    "Art": "topaz",
+    "Text": "RAISE ELEMENT FOUR OF A KIND",
+    "Draw": "a pale gold topaz prism, clear and sharply faceted, long ridged crystal faces"
   },
   {
     "StoneRecord": "zircon",
     "Name": "Zircon",
     "Hand": "element-five-of-a-kind",
-    "Text": "RAISE ELEMENT FIVE OF A KIND"
+    "Art": "zircon",
+    "Text": "RAISE ELEMENT FIVE OF A KIND",
+    "Draw": "a brilliant-cut zircon, cold blue-white, hard bright facets throwing sharp highlights"
   },
   {
     "StoneRecord": "tourmaline",
     "Name": "Tourmaline",
     "Hand": "element-elementalist",
-    "Text": "RAISE ELEMENTALIST"
+    "Art": "tourmaline",
+    "Text": "RAISE ELEMENTALIST",
+    "Draw": "a long tourmaline crystal banded green, blue, yellow, red and violet along its length, deeply striated faces glowing from inside"
   }
 ]

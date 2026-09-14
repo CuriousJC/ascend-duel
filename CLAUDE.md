@@ -1109,8 +1109,22 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   `docs/art/essence_art_prompt.MD` share a style block word for word and differ in the
   composition, in the ephemeral fading an essence has and a relic does not, and in the sentence an
   essence card prints across the lower half of its picture. `docs/art/rune_art_prompt.MD` is not a
-  prompt but the closed list of rune body plans, pasted into the essence one. **Runes and stones
-  have no prompt of their own yet** and borrow the essence's.
+  prompt but the closed list of rune body plans, pasted into the essence one.
+  **`docs/art/stone_art_prompt.MD` and `docs/art/other_card_art_prompt.MD` cover the rest of
+  `EssenceStyle`** — the stones, and then the potions, the placeholder brand and the shop's two
+  sealed goods. Both share the style and composition blocks verbatim, and both say the object is
+  **whole** where the essence prompt says it is coming apart. **A stone's material is a rule
+  rather than a record's own idea**, which is what earns it a file: the concept axis is silica,
+  the form axis is plain rock, the element axis is gem, and each ladder ascends in finish. A new
+  `EssenceStyle` good starts in the catch-all and earns a file the same way.
+- **The relic catalog is pixel art and the other three are not** *(open, 2026-09-14)*. The 137
+  pictures in `assets/relic/` were generated from a prompt asking for chunky blocks and sixteen
+  flat colors; the essences, runes and stones came from the smooth block every prompt carries
+  today, so a relic card and a stone card do not look like one game.
+  **`docs/art/relic_art_prompt_pixel_archived.MD` is the pixel prompt, kept live-shaped and
+  clearly marked not-live**, so the direction can still be reversed by regenerating rather than by
+  reconstructing a prompt from git. Closing this means regenerating one side or the other — 137
+  relics, or 58 of everything else — and it is the owner's call which.
 - **A prompt reserves nothing.** No title band, no counter disc, no corner kept clear. The card
   draws its counter over the bottom-right and its sentence on a scrim across the lower half, and
   both go on top of a picture that carries on underneath — so a prompt describing either produces

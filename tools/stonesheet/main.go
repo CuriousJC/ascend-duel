@@ -44,6 +44,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"image"
@@ -84,10 +85,10 @@ func run(dir string) error {
 		return err
 	}
 
-	// The boulder every stone card draws, rendered once. It is a generated glyph rather than a
-	// file, which is the pattern this game reaches for first — see screens.stoneArt, which caches
-	// it for the same arithmetic reason and is the code this mirrors.
-	art := systems.RenderGlyph(systems.GlyphStone, systems.PaletteWhite)
+	// The boulder an undrawn stone falls back to, rendered once. **There is no default-stone.png**,
+	// so this generated glyph is the fallback where the other catalogs each have a painted default
+	// face — see screens.stoneFace, which this mirrors.
+	boulder := systems.RenderGlyph(systems.GlyphStone, systems.PaletteWhite)
 
 	page := page{
 		Ground:   ground,
@@ -130,6 +131,10 @@ func run(dir string) error {
 		p.Worth = session.StoneWorth(h.Key)
 		p.Raised = h.Multiplier + p.Worth
 
+		art, err := stoneFace(st, boulder)
+		if err != nil {
+			return err
+		}
 		cell, err := write(dir, faces, specFor(st, art, true), "stone-"+st.Record+".png", st.Name)
 		if err != nil {
 			return err
@@ -144,6 +149,10 @@ func run(dir string) error {
 	// that were not kept rather than lighting the one that was, exactly as the essence offer does.
 	if first, ok := firstStone(plates); ok {
 		st, _ := session.StoneByKey(first.Record)
+		art, err := stoneFace(st, boulder)
+		if err != nil {
+			return err
+		}
 		for _, s := range []struct {
 			name    string
 			label   string
@@ -187,6 +196,24 @@ func run(dir string) error {
 // screens.stoneSpec does: a name, the authored line with the computed figure under it, and no
 // element. **Basic, not a color** — a stone raises a rung of the ladder and a rung is not one of
 // the five, so its border is the mid gray `cards.BorderOf` gives `basic`.
+// stoneFace is the picture one stone draws: its own if it has been painted, the boulder otherwise.
+// **A key naming no embedded file is an error rather than a blank face**, exactly as the essence
+// sheet's artwork is — a review tool that quietly drew nothing would hide what it is for.
+func stoneFace(st session.Stone, boulder image.Image) (image.Image, error) {
+	if st.Art == "" {
+		return boulder, nil
+	}
+	raw := assets.LoadImageData()[st.Art]
+	if len(raw) == 0 {
+		return nil, fmt.Errorf("%s draws %q, which is in no embed", st.Record, st.Art)
+	}
+	img, _, err := image.Decode(bytes.NewReader(raw))
+	if err != nil {
+		return nil, fmt.Errorf("decoding %s: %w", st.Art, err)
+	}
+	return img, nil
+}
+
 // stoneLine is what a stone card says: its authored sentence, and the figure it raises its rung
 // by, computed from `hands.json` rather than authored. Derived in one place so the face and its
 // highlights read the same string — screens.stoneLine is the same line on the other side.

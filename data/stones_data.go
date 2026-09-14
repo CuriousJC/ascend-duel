@@ -52,6 +52,25 @@ type StoneData struct {
 	// writing `+11` here would be a number that goes stale the moment `hands.json` is tuned. The
 	// card face computes it; see `internal/screens/card_art.go`.
 	Text string `json:"Text"`
+
+	// Art is the assets key of this stone's picture — the filename stem under `assets/stone/`, so
+	// `stone/onyx.png` is "onyx". **Empty means nobody has drawn it**, and the card falls back to
+	// the generated boulder rather than to a painted default face; see `screens.stoneArt`.
+	//
+	// `go run ./tools/relicart -kind stone` is what writes this, off the filename of the picture it
+	// just reduced, so the key and the file cannot disagree.
+	Art string `json:"Art"`
+
+	// Draw is the subject paragraph the art generator is given for this stone, pasted under
+	// `docs/art/stone_art_prompt.MD` as this record's own JSON. **The engine ignores it**, exactly
+	// as it ignores a status's Badge.
+	//
+	// **The material is the prompt's rule, not this field's.** Which axis a stone raises decides
+	// its material class — silica on concept, plain rock on form, gem on element — and where it
+	// sits in that ladder decides how refined the specimen looks. So a brief says what this
+	// particular mineral is and leaves the family to the prompt; a brief that argued with the
+	// ladder would be a record overruling the catalog.
+	Draw string `json:"Draw"`
 }
 
 // LoadStones parses the catalog into a map keyed by StoneRecord.

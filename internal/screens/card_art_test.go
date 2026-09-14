@@ -334,6 +334,48 @@ func TestEveryRelicDrawsSomething(t *testing.T) {
 	}
 }
 
+func TestEveryDrawnStoneDrawsSomething(t *testing.T) {
+	// The stone half of TestEveryRelicDrawsSomething, and it differs in the empty case: there is no
+	// default-stone face, so an empty Art is a stone falling back to the generated boulder rather
+	// than to a picture. What this closes is the misspelled key — a stone naming a file that is in
+	// no embed draws a hole, on a card only reached by buying a bag of rocks.
+	records := data.LoadStones()
+	for _, key := range data.StoneOrder(records) {
+		art := records[key].Art
+		if art == "" {
+			continue
+		}
+		if _, ok := assets.LoadImageData()[art]; !ok {
+			t.Errorf("%s draws %q, which is not an embedded image", key, art)
+		}
+	}
+}
+
+func TestEveryStoneArtIsTheCardsOwnSize(t *testing.T) {
+	// A stone bleeds like a relic, so the same rule applies: the picture is committed at the card's
+	// own 200x280 and nothing resamples at draw time. TestEveryBleedingCardArtIsTheCardsOwnSize
+	// holds the three catalogs that had art when it was written; this holds the fourth.
+	for _, st := range session.Stones() {
+		if st.Art == "" {
+			continue
+		}
+		raw := assets.LoadImageData()[st.Art]
+		if len(raw) == 0 {
+			continue // the test above is what reports this
+		}
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))
+		if err != nil {
+			t.Errorf("%s: decoding %s: %v", st.Record, st.Art, err)
+			continue
+		}
+		if cfg.Width != cards.EssenceStyle.Width || cfg.Height != cards.EssenceStyle.Height {
+			t.Errorf("%s draws %s at %dx%d, want the card's %dx%d",
+				st.Record, st.Art, cfg.Width, cfg.Height,
+				cards.EssenceStyle.Width, cards.EssenceStyle.Height)
+		}
+	}
+}
+
 func TestEveryStatusTheRulesHoldFitsTheDuelistArray(t *testing.T) {
 	// The other half of the same join, one layer down: `Duelist.Statuses` is a fixed array because
 	// a duelist has to stay comparable, and registration refuses a record past the end of it. This

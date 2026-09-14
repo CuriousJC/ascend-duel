@@ -84,7 +84,10 @@ way down — and was never used. The committed catalog went through plain Catmul
 | File | Holds |
 |---|---|
 | `relic_art_prompt.MD` | the prompt for a relic — `cards.RelicStyle` |
-| `essence_art_prompt.MD` | the prompt for every `cards.EssenceStyle` good — essences, runes and stones, which print their sentence on a scrim across the lower half of the picture. Same style block, and the ephemeral fading an essence has and a relic does not |
+| `relic_art_prompt_pixel_archived.MD` | **not live.** The same relic prompt with the render language pixel rather than smooth, kept so switching direction is a regeneration rather than an archaeology dig. The 137 pictures in `assets/relic/` were drawn this way and the other three catalogs were not |
+| `essence_art_prompt.MD` | the prompt for an essence or a rune — `cards.EssenceStyle` goods that print their sentence on a scrim across the lower half of the picture. Same style block, and the ephemeral fading an essence has and a relic does not |
+| `stone_art_prompt.MD` | the prompt for a stone — same style block and the same whole-object instruction, plus the three material ladders: the concept axis is silica, the form axis is plain rock, the element axis is gem |
+| `other_card_art_prompt.MD` | the prompt for every *other* `cards.EssenceStyle` good — potions, the placeholder brand, the two sealed goods, and whatever is added next. Same style block and the same composition; the object is whole rather than coming apart |
 | `rune_art_prompt.MD` | the closed list of rune body plans, pasted into the essence prompt. A creature needs a shape where an object does not |
 
 **Neither bleeding card names itself** *(owner's call, 2026-09-11)*, so no prompt has to keep a

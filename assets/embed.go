@@ -183,6 +183,15 @@ var essenceArt embed.FS
 //go:embed rune/*.png
 var runeArt embed.FS
 
+// The stone faces, a family of their own as of 2026-09-14. **There is no default-stone.png**, which
+// is the one place this family departs from the three above it: a stone with no Art draws the
+// generated boulder in systems.GlyphStone, which every stone drew before the catalog was painted.
+// A generated fallback says "nobody has drawn this yet" better than a painted one can, and it
+// leaves nothing to license.
+//
+//go:embed stone/*.png
+var stoneArtFS embed.FS
+
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
 
@@ -285,6 +294,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, relicArt, "relic")
 	embedFamily(images, essenceArt, "essence")
 	embedFamily(images, runeArt, "rune")
+	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, portraits, "enemy")
 	embedFamily(images, bossPortraits, "boss")
 

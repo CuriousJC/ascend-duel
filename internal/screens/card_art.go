@@ -616,7 +616,7 @@ func stoneSpec(gs *state.GlobalState, st session.Stone, enabled bool) cards.Spec
 		Form:       cards.FormNone,
 		Cost:       0,
 		Element:    artFor(combat.Basic),
-		Art:        stoneArt(),
+		Art:        stoneFace(gs, st),
 		Text:       stoneLine(st),
 		Highlights: cards.ElementHighlights(stoneLine(st)),
 		Enabled:    enabled,
@@ -652,6 +652,21 @@ func goodSpec(gs *state.GlobalState, name, line string, art image.Image, enabled
 		Highlights: cards.ElementHighlights(line),
 		Enabled:    enabled,
 	}
+}
+
+// stoneFace is the picture one stone draws: its own if it has been painted, the generated boulder
+// otherwise.
+//
+// **The fallback is a glyph rather than a default face**, which is where the stones depart from the
+// relics, essences and runes. Those three each carry a painted `default-*.png`, because a bleeding
+// card with no picture reads as one that failed to load. A stone already had a drawing — the
+// boulder every stone drew before the catalog was painted — and a generated one says "not drawn
+// yet" more honestly than a painted one, while leaving nothing to license.
+func stoneFace(gs *state.GlobalState, st session.Stone) image.Image {
+	if st.Art == "" {
+		return stoneArt()
+	}
+	return artwork(gs, st.Art)
 }
 
 // stoneArt is the boulder, rendered once.

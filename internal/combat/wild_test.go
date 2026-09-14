@@ -19,7 +19,7 @@ func TestAWildcardCompletesAnElementalGroup(t *testing.T) {
 	}
 
 	turn := []Card{Of(Jab, Fire), Of(Cut, Fire), Of(Thump, Fire), wild(Slice, Ice)}
-	cards, got, _, formed := matchHand(slots(turn), handTable)
+	cards, got, _, _, formed := matchHand(slots(turn), handTable)
 	if !formed {
 		t.Fatal("three fire cards and a wildcard formed no hand at all")
 	}
@@ -67,7 +67,7 @@ func TestAWildcardJoinsTheBiggestGroup(t *testing.T) {
 	}
 
 	turn := []Card{Of(Jab, Fire), Of(Cut, Fire), Of(Thump, Ice), wild(Slice, Ice)}
-	_, got, _, formed := matchHand(slots(turn), handTable)
+	_, got, _, _, formed := matchHand(slots(turn), handTable)
 	if !formed {
 		t.Fatal("no hand formed")
 	}
@@ -86,7 +86,7 @@ func TestATurnOfOnlyWildcardsStillForms(t *testing.T) {
 	}
 
 	turn := []Card{wild(Jab, Fire), wild(Cut, Ice)}
-	cards, got, _, formed := matchHand(slots(turn), handTable)
+	cards, got, _, _, formed := matchHand(slots(turn), handTable)
 	if !formed {
 		t.Fatal("two wildcards formed no hand")
 	}

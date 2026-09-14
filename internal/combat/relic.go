@@ -460,18 +460,29 @@ type RelicCondition struct {
 	// refused at registration — see checkRule.
 	Lead bool
 
-	// Hand narrows a rule to blows that formed one named rung of the ladder, and it is the second
-	// predicate that is not a fact about a card *(2026-09-05)*.
+	// Hands narrows a rule to blows that **satisfied** one of the named rungs of the ladder, and it
+	// is the second predicate that is not a fact about a card *(2026-09-05)*.
+	//
+	// **Satisfied, not formed** *(owner's call, 2026-09-13)*. The ladder names a blow after the one
+	// rung that pays the most, so four identical cards are a Card Four of a Kind and nothing else —
+	// which switched off the Form Four of a Kind relic on a turn that plainly was one. A blow now
+	// carries every rung it satisfies (`Blow.Satisfied`) and a rule fires if any rung it names is in
+	// that set. The consequence taken deliberately with it: the ladder is cumulative downward too,
+	// so a Pair relic pays on every multi-card hand.
+	//
+	// **A list because one sentence can name several rungs.** "Every Four of a Kind" is three
+	// catalog entries; written as three rules it fired once per axis the turn satisfied, so a 4x
+	// relic paid 16x on a hand that was a four of a kind two ways. One rule naming the set fires
+	// once, whatever the blow satisfied.
 	//
 	// **It is asked of the blow, never of a card**, so `Matches` does not read it: a rung is a
 	// property of the whole set, and a per-card test would have to answer "is this card part of
-	// the hand", which is a different question with a different answer. `HandBonus` is the one
-	// caller and it asks directly.
+	// the hand", which is a different question with a different answer. `HandBonus` and `HandScale`
+	// are the callers and they ask directly.
 	//
 	// **Only `blow-formed` knows what formed**, so a rule setting this at any other moment is
 	// refused at registration, exactly as Lead is.
-	Hand    HandID
-	HasHand bool
+	Hands []HandID
 
 	// MinForms narrows a rule to blows whose **scoring cards cover at least this many distinct
 	// forms** — Dual Wield, which pays for a pair built out of two different weapons.
@@ -486,8 +497,28 @@ type RelicCondition struct {
 
 // Any reports whether this condition constrains anything at all.
 func (c RelicCondition) Any() bool {
-	return c.HasElement || c.HasForm || c.HasConcept || c.HasTier || c.Lead || c.HasHand ||
+	return c.HasElement || c.HasForm || c.HasConcept || c.HasTier || c.Lead || c.HasHand() ||
 		c.MinForms > 0
+}
+
+// HasHand reports whether this condition names any rung at all.
+func (c RelicCondition) HasHand() bool { return len(c.Hands) > 0 }
+
+// onHand reports whether a blow satisfying `satisfied` passes this condition's rung test. **A rule
+// naming no rung passes**, so this reads as a narrowing like every other predicate; a rule naming
+// several passes on any one of them, which is what makes "every Four of a Kind" one rule.
+func (c RelicCondition) onHand(satisfied []HandID) bool {
+	if !c.HasHand() {
+		return true
+	}
+	for _, want := range c.Hands {
+		for _, got := range satisfied {
+			if want == got {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // Matches reports whether a card satisfies every predicate that is set. **Every one, not any** — two
@@ -584,11 +615,11 @@ func RegisterRelic(key, name string, rules []RelicRule) (RelicID, error) {
 			return NoRelic, fmt.Errorf("%s narrows a %s rule to the lead card, and only blow-formed knows which card leads",
 				key, rule.When)
 		}
-		if rule.If.HasHand && rule.When != MomentBlowFormed {
+		if rule.If.HasHand() && rule.When != MomentBlowFormed {
 			return NoRelic, fmt.Errorf("%s narrows a %s rule to a hand, and only blow-formed knows what formed",
 				key, rule.When)
 		}
-		if rule.If.HasHand && (rule.If.HasElement || rule.If.HasForm || rule.If.HasConcept ||
+		if rule.If.HasHand() && (rule.If.HasElement || rule.If.HasForm || rule.If.HasConcept ||
 			rule.If.HasTier || rule.If.Lead) {
 			return NoRelic, fmt.Errorf("%s narrows a rule by both a hand and a card, and a hand is a fact about the whole blow",
 				key)
@@ -608,7 +639,7 @@ func RegisterRelic(key, name string, rules []RelicRule) (RelicID, error) {
 				return NoRelic, fmt.Errorf("%s counts the forms of a blow at %s, and only %s knows what formed",
 					key, rule.When, MomentBlowFormed)
 			}
-			if e.Do == DoAddDamagePerHeld && (rule.If.Lead || rule.If.HasHand || rule.If.MinForms > 0) {
+			if e.Do == DoAddDamagePerHeld && (rule.If.Lead || rule.If.HasHand() || rule.If.MinForms > 0) {
 				return NoRelic, fmt.Errorf("%s pays per held card and also narrows by the blow, and a held card is in neither", key)
 			}
 			// A per-card step with nothing to count by is grow-on-turn wearing a longer name,
@@ -1075,8 +1106,8 @@ func LandingSeats(worn []WornRelic, card Card, lead bool) [MaxWornRelics]bool {
 	return out
 }
 
-// HandBonus is the flat damage a worn set adds to a blow for the rung it formed, and which seats
-// are the reason.
+// HandBonus is the flat damage a worn set adds to a blow for the rungs it satisfied, and which
+// seats are the reason.
 //
 // **It is asked of the hand and not of a card**, which is what separates it from every other
 // blow-formed verb: `repeat-card` and `echo-attack` both answer "what does this relic do to this
@@ -1085,6 +1116,10 @@ func LandingSeats(worn []WornRelic, card Card, lead bool) [MaxWornRelics]bool {
 //
 // **Two relics naming one rung add.** They are flat terms in a sum, so there is nothing to compound
 // — unlike the multipliers, where worn order decides the result.
+//
+// **It is asked against every rung the blow satisfied**, not the one the ladder named it after, so
+// a turn that is a four of a kind two ways pays both rings. One relic still pays once per rule: a
+// sentence covering several rungs is one rule naming them all, never one rule each.
 //
 // The seats come back for the same reason `LandingSeats` reports them: the bonus is a term in the
 // bracket that no card produced, so without this the relic paying for it would sit still while its
@@ -1143,11 +1178,11 @@ func seatsDoing(worn []WornRelic, do RelicVerb) [MaxWornRelics]bool {
 //
 // **`cards` is the scoring set, not the turn** — it is what `MinForms` counts, so a card the turn
 // played that paid nothing into the hand is not a second form.
-func HandScale(worn []WornRelic, hand HandID, cards []Card) (int, [MaxWornRelics]bool) {
+func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, [MaxWornRelics]bool) {
 	var seats [MaxWornRelics]bool
 	pct := 100
 
-	if hand == HandNone {
+	if len(satisfied) == 0 {
 		return pct, seats
 	}
 	for seat, w := range worn {
@@ -1158,7 +1193,7 @@ func HandScale(worn []WornRelic, hand HandID, cards []Card) (int, [MaxWornRelics
 			if rule.When != MomentBlowFormed {
 				continue
 			}
-			if rule.If.HasHand && rule.If.Hand != hand {
+			if !rule.If.onHand(satisfied) {
 				continue
 			}
 			if rule.If.MinForms > 0 && distinctForms(cards) < rule.If.MinForms {
@@ -1195,11 +1230,11 @@ func distinctForms(cards []Card) int {
 	return n
 }
 
-func HandBonus(worn []WornRelic, hand HandID) (int, [MaxWornRelics]bool) {
+func HandBonus(worn []WornRelic, satisfied []HandID) (int, [MaxWornRelics]bool) {
 	var seats [MaxWornRelics]bool
 	total := 0
 
-	if hand == HandNone {
+	if len(satisfied) == 0 {
 		return 0, seats
 	}
 	for seat, w := range worn {
@@ -1207,7 +1242,7 @@ func HandBonus(worn []WornRelic, hand HandID) (int, [MaxWornRelics]bool) {
 			break
 		}
 		for _, rule := range RelicOf(w.Relic).Rules {
-			if rule.When != MomentBlowFormed || !rule.If.HasHand || rule.If.Hand != hand {
+			if rule.When != MomentBlowFormed || !rule.If.HasHand() || !rule.If.onHand(satisfied) {
 				continue
 			}
 			for _, e := range rule.Then {

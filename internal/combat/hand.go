@@ -329,6 +329,25 @@ type Blow struct {
 	// decides which statuses land, and it is the *only* thing color does to a blow — it buys no
 	// damage.
 	Elements []Element
+
+	// Satisfied is every rung of the ladder this turn could be read as, in catalog order, and it
+	// is what a relic's `Hand` predicate is asked against *(owner's call, 2026-09-13)*.
+	//
+	// **`Hand` is what the blow is paid as; this is what the blow *is*.** Four identical cards are
+	// a Card Four of a Kind by the biggest-multiplier rule, and they are also a Form Four of a
+	// Kind, two three-of-a-kinds and a Pair — so a Form Four of a Kind relic sat still on a turn
+	// that plainly was one. Only `Hand` moves damage through the multiplier; this list moves
+	// relics. The consequence taken with it: the ladder is cumulative downward, so a Pair relic
+	// pays on every multi-card hand.
+	//
+	// **The High Card is in here only when it is the blow.** It is the fallback for a turn that
+	// formed nothing, matched by which attack hits hardest rather than by counting — so it is not
+	// a rung a bigger hand also satisfies, and a High Card relic stays a relic about turns that
+	// built nothing.
+	//
+	// **Catalog order, so it is deterministic**: it is walked to decide damage, and a map would
+	// make what a relic pays depend on iteration order.
+	Satisfied []HandID
 }
 
 // BlowFor works out one side's attack phase from the cards it resolved.
@@ -346,12 +365,13 @@ func BlowFor(turn []Slot) Blow {
 }
 
 func blowFor(turn []Slot, hands []Hand) Blow {
-	cards, hand, lead, formed := matchHand(turn, hands)
+	cards, hand, lead, satisfied, formed := matchHand(turn, hands)
 	if !formed {
 		cards, hand = biggestAttack(turn), highCard(hands)
 		if len(cards) > 0 {
 			lead = cards[0]
 		}
+		satisfied = []HandID{hand.ID}
 	}
 	if len(cards) == 0 {
 		return Blow{}
@@ -363,6 +383,7 @@ func blowFor(turn []Slot, hands []Hand) Blow {
 		Hand:       hand,
 		Multiplier: hand.Multiplier,
 		Elements:   elementsOf(turn, cards),
+		Satisfied:  satisfied,
 	}
 }
 
@@ -395,10 +416,11 @@ func highCard(hands []Hand) Hand {
 // `matchCountOf` fills groups largest-count-first, so it would hand back whichever concept
 // appeared most rather than the card that hits hardest. Which card is the High Card is a question
 // about damage, and `biggestAttack` is what answers it.
-func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
+func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, []HandID, bool) {
 	var (
 		best      Hand
 		bestCards []int
+		satisfied []HandID
 		found     bool
 	)
 
@@ -407,6 +429,9 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 		if h.Cards() < 2 {
 			continue
 		}
+		// A rung satisfied on two of its axes is still one rung, so it joins the set once — which
+		// is what keeps a relic naming it from being paid twice by a merged entry.
+		listed := false
 		// **A merged rung is tried on each of its axes**, and each reading competes on the same
 		// two keys as everything else. The readings all carry one multiplier, so the tie-break is
 		// what picks between them - narrowest first, exactly as it picks between two rungs.
@@ -416,13 +441,16 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 			if !ok {
 				continue
 			}
+			if !listed {
+				satisfied, listed = append(satisfied, h.ID), true
+			}
 			if !found || on.Multiplier > best.Multiplier ||
 				(on.Multiplier == best.Multiplier && on.Match < best.Match) {
 				best, bestCards, bestLead, found = on, cards, lead, true
 			}
 		}
 	}
-	return bestCards, best, bestLead, found
+	return bestCards, best, bestLead, satisfied, found
 }
 
 // matchCountOf reads the turn as a set: how many cards carry each value on the hand's own axis,

@@ -1958,6 +1958,39 @@ relic's figure is drawn as its own term in the pane's pink, flying out of the re
 The flat pair, `add-hand-damage`, does the opposite and joins `Base` **before** the multiplier, so a
 rung relic can be written either as a term the hand contributed or as a multiplier laid over it.
 
+### A relic reads what the blow *satisfied*, not what the ladder named it *(owner's call, 2026-09-13)*
+
+**The ladder names a blow after one rung — the best-paying one — and a relic is no longer asked that
+question.** A blow now carries every rung its cards satisfy (`combat.Blow.Satisfied`) and a rule
+naming a rung fires if that rung is in the set.
+
+**The bug it fixes:** four Cuts are a Card Four of a Kind *and* a Form Four of a Kind. The ladder pays
+the better of the two — 479 against 226 — so the blow is named on the concept axis, and the Quad
+Ring on the player's finger sat still through a turn that plainly was a Form Four of a Kind. A
+player who does the harder thing should not switch off the easier thing's relic.
+
+**The ladder is therefore cumulative downward as well as sideways**, and that half was taken
+deliberately rather than as a side effect: four Cuts also satisfy both three-of-a-kinds and the
+Pair, so every one of those relics pays. The consequence to hold in view is that **the Pair family
+is now near-unconditional** — a Pair relic pays on essentially every multi-card hand — while still
+being priced as a conditional one. Nothing measures that, on the same terms as every other price in
+the shop section.
+
+**The High Card is not a rung a bigger hand satisfies.** It is the fallback for a turn that formed
+nothing, matched by which attack hits hardest rather than by counting, so it is in the set only when
+it *is* the blow. A High Card relic stays a relic about turns that built nothing.
+
+**Only `Hand` moves damage; the satisfied set moves relics.** `Event.Multiplier`, the banner and the
+hand row all still show the one rung the blow was paid as — a hand that quietly listed five rungs on
+screen would be a worse reading of the same turn.
+
+**A sentence covering several rungs is one rule, never one rule each.** `"Hands": [...]` in
+`relics.json` names a set and fires once. The four multiplier rings — Triplicate, Fulsome, Quartered,
+Perfected — were written as three rules apiece, one per axis, which under this change fired once per
+axis the blow satisfied: Quartered Rings paid 4x twice on four identical cards and dealt 16x, against
+its own printed "Every Four of a Kind deals 4x DMG." `Hand` and `Hands` are the same predicate and a
+record setting both is refused at load.
+
 ### The defensive half of the game has one relic, and no verb can reach it
 
 **Nothing in the vocabulary names a shield.** `CardDamage` returns zero immediately for a card that

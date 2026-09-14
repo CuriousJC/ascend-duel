@@ -814,7 +814,7 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 	// Every term above is a card; this one is the rung the turn built, so it lands after the cards
 	// are counted and before the multiplier — which is what makes it read as damage the *hand*
 	// contributed rather than as damage a relic moved on a card.
-	e.HandBonus, e.HandBonusSeats = HandBonus(actor.WornRelics(), blow.Hand.ID)
+	e.HandBonus, e.HandBonusSeats = HandBonus(actor.WornRelics(), blow.Satisfied)
 	e.Base += e.HandBonus
 
 	// **And the cards the turn kept back pay after the ones it spent.** Same seat, same reason: it
@@ -837,7 +837,7 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 	// all show the rung the player actually built. What a relic adds is another term in the
 	// arithmetic, applied after it. Folding the two into one number was the first version of this
 	// and it made a relic look like the hand having changed.
-	e.HandScale, e.HandScaleSeats = HandScale(actor.WornRelics(), blow.Hand.ID, scoringCards(blow, turn))
+	e.HandScale, e.HandScaleSeats = HandScale(actor.WornRelics(), blow.Satisfied, scoringCards(blow, turn))
 
 	// **The multiplier multiplies the cards** *(2026-08-18)*. There is no separate swing term: a
 	// hand is worth a proportion of what its own cards deal, so a Pair of Skewers is worth more

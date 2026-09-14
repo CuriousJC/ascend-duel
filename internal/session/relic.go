@@ -235,12 +235,21 @@ func relicCondition(key string, in *data.RelicIfData) (combat.RelicCondition, er
 		}
 		cond.Tier, cond.HasTier = in.Tier, true
 	}
+	// `Hand` and `Hands` are the same field for one rung and for several. A record setting both
+	// is refused rather than having one quietly win.
+	if in.Hand != "" && len(in.Hands) > 0 {
+		return cond, fmt.Errorf("%s names both Hand and Hands, and they are the same predicate", key)
+	}
+	keys := in.Hands
 	if in.Hand != "" {
-		id, ok := combat.HandIDForKey(in.Hand)
+		keys = []string{in.Hand}
+	}
+	for _, k := range keys {
+		id, ok := combat.HandIDForKey(k)
 		if !ok {
-			return cond, fmt.Errorf("%s matches hand %q, which is not a rung of the ladder", key, in.Hand)
+			return cond, fmt.Errorf("%s matches hand %q, which is not a rung of the ladder", key, k)
 		}
-		cond.Hand, cond.HasHand = id, true
+		cond.Hands = append(cond.Hands, id)
 	}
 
 	if in.MinForms > 0 {

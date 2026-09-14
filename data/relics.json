@@ -1553,17 +1553,13 @@
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-three-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-three-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-three-of-a-kind" },
+        "If": {
+          "Hands": [
+            "concept-three-of-a-kind",
+            "form-three-of-a-kind",
+            "element-three-of-a-kind"
+          ]
+        },
         "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
       }
     ]
@@ -1579,17 +1575,13 @@
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-full-house" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-full-house" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-full-house" },
+        "If": {
+          "Hands": [
+            "concept-full-house",
+            "form-full-house",
+            "element-full-house"
+          ]
+        },
         "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
       }
     ]
@@ -1605,17 +1597,13 @@
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-four-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-four-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-four-of-a-kind" },
+        "If": {
+          "Hands": [
+            "concept-four-of-a-kind",
+            "form-four-of-a-kind",
+            "element-four-of-a-kind"
+          ]
+        },
         "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
       }
     ]
@@ -1631,17 +1619,13 @@
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-five-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-five-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-five-of-a-kind" },
+        "If": {
+          "Hands": [
+            "concept-five-of-a-kind",
+            "form-five-of-a-kind",
+            "element-five-of-a-kind"
+          ]
+        },
         "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
       }
     ]

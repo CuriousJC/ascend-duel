@@ -12,7 +12,7 @@ what the 137 records add up to, where the weight sits, and which of the empty ce
 `classify.py`, and that is the decision the whole skill rests on *(owner's call, 2026-09-06)*: a
 relic with `scale-damage` **is** offense, so writing `"Tags": ["offense"]` into `relics.json` would
 state the same fact twice and let the second copy go stale silently. A relic retuned from
-`add-hand-damage` to `adjust-cost` would keep the tag it was born with and nothing would fail.
+`add-hand-dmg` to `adjust-cost` would keep the tag it was born with and nothing would fail.
 This is `CostTier` again — see the `data` skill.
 
 **`Family` in `relics.json` is not a counter-example to this** *(owner's call, 2026-09-12)*. It is
@@ -148,7 +148,8 @@ said that way — the same caveat the `relics` skill puts on a suggested rarity.
 with the date in the name and the commands that produced it in the file. Read
 [docs/analysis/README.md](../../../docs/analysis/README.md) for the convention: a snapshot is
 *output*, never a source of truth, and it is superseded by a new dated file rather than edited in
-place. The first one is `docs/analysis/relic-balance-2026-09-06.md`.
+place. **There are none on disk today** — the 2026-09-06 snapshot was deleted on 2026-09-14 for the
+reason the next paragraph gives.
 
 **Do not write one on every run.** The tool is cheap and the file is a standing cost; a snapshot
 earns its place when it is going to be read and argued with, not as a log.

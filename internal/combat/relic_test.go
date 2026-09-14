@@ -53,6 +53,24 @@ func cardOfTier(t *testing.T, f Form, tier int) Card {
 	return Card{}
 }
 
+// cardOfAmount is a registered player attack that multiplies DMG by exactly this percentage.
+//
+// **The rung relics are priced against the card they raise now**, so a test about them has to name
+// a card by what it multiplies rather than by its form — a 0.25x slash and a 1x bash gain different
+// figures from the same relic, which is the whole of the 2026-09-14 change.
+func cardOfAmount(t *testing.T, pct int) Card {
+	t.Helper()
+
+	for id := ConceptID(0); int(id) < ConceptCount(); id++ {
+		c := Of(id, Basic)
+		if c.Spec().Verb == VerbAttack && c.Amount() == pct {
+			return c
+		}
+	}
+	t.Fatalf("no attack card multiplies DMG by %d%%", pct)
+	return Card{}
+}
+
 func crushCard(t *testing.T) Card { t.Helper(); return cardOfForm(t, FormCrush) }
 func slashCard(t *testing.T) Card { t.Helper(); return cardOfForm(t, FormSlash) }
 
@@ -879,9 +897,9 @@ func TestAHandRuleIsRefusedAnywhereButBlowFormed(t *testing.T) {
 		If:   RelicCondition{Hands: []HandID{pair}},
 		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
-	refused(t, "add-hand-damage at card-damage", RelicRule{
+	refused(t, "add-hand-dmg at card-damage", RelicRule{
 		When: MomentCardDamage,
-		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 5}},
 	})
 }
 
@@ -894,7 +912,7 @@ func TestAHandRuleMayNotAlsoNameACard(t *testing.T) {
 	refused(t, "hand and element", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Hands: []HandID{pair}, Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 5}},
 	})
 }
 
@@ -911,7 +929,7 @@ func TestAHandRelicPaysOnlyItsOwnRung(t *testing.T) {
 	forged := relic(t, "forged", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Hands: []HandID{trips}},
-		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 3}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 3}},
 	})
 
 	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: forged})
@@ -936,20 +954,26 @@ func TestAHandRelicPaysOnlyItsOwnRung(t *testing.T) {
 	}
 }
 
-func TestTheHandBonusIsAddedBeforeTheMultiplier(t *testing.T) {
-	// **This is the whole design decision** *(owner's call, 2026-09-05)*: the bonus is a term of
-	// the base sum rather than something added to the answer, so a rung's bonus is worth more on
-	// the rung that pays more. A bonus applied after the multiplier would be the same relic at
-	// every rung, and nothing on screen would say which it was.
+func TestTheHandBonusIsBaseDamageAndNotATerm(t *testing.T) {
+	// **This is the whole design decision** *(owner's call, 2026-09-14)*: the bonus raises the DMG
+	// the hand is swung at, so it reaches every card of the blow and is worth more to a hand made
+	// of bigger cards. It was a flat term of Base from 2026-09-05 until then, which paid the same 2
+	// whether the Pair was two Jabs or two Skewers.
+	//
+	// **The old test passed this one by luck** and is worth knowing about: its card is a 0.25x
+	// slash and there are three of them, so a +3 on the duelist came to +3 on the sum as well. The
+	// assertions below are written on a 1x card, where the two readings differ.
 	trips, _ := HandIDForKey("concept-three-of-a-kind")
 	forged := relic(t, "forged-order", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Hands: []HandID{trips}},
-		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 3}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 3}},
 	})
 
-	slash := slashCard(t)
-	cards := []Card{slash, slash, slash}
+	// A 1x card, so the relic's 3 arrives as 3 in each of the three terms rather than as 3 in the
+	// sum.
+	full := cardOfAmount(t, 100)
+	cards := []Card{full, full, full}
 
 	bare, _, _ := resolve(duelist(10, 5, 100), duelist(10, 5, 100000), cards, nil, 1)
 	worn, _, _ := resolve(duelist(10, 5, 100).Wearing(WornRelic{Relic: forged}),
@@ -958,15 +982,66 @@ func TestTheHandBonusIsAddedBeforeTheMultiplier(t *testing.T) {
 	before := handEventOf(t, bare, SideA)
 	after := handEventOf(t, worn, SideA)
 
-	if after.Base != before.Base+3 {
-		t.Errorf("the bonus put %d into the base sum, want 3", after.Base-before.Base)
+	// **Every term, not one of them.** This is the assertion that fails if the bonus goes back to
+	// being a flat addition: three cards swung at 13 rather than 10 is nine more base, not three.
+	for i := 0; i < after.HandCardCount; i++ {
+		if after.HandAmounts[i] != before.HandAmounts[i]+3 {
+			t.Errorf("term %d came to %d, want %d — every card is swung at the raised DMG",
+				i, after.HandAmounts[i], before.HandAmounts[i]+3)
+		}
 	}
-	if want := scaleDamage(before.Base+3, after.Multiplier); after.Amount != want {
-		t.Errorf("the blow came to %d, want %d — the bonus is not being multiplied with the cards",
+	if after.Base != before.Base+9 {
+		t.Errorf("the bonus put %d into the base sum, want 9 — three cards at 3 more DMG each",
+			after.Base-before.Base)
+	}
+
+	// **And it is still inside the multiplier.** A bonus applied to the answer would be the same
+	// relic at every rung, which is what the 2026-09-05 call ruled out and is still ruled out.
+	if want := scaleDamage(before.Base+9, after.Multiplier); after.Amount != want {
+		t.Errorf("the blow came to %d, want %d — the raise is not being multiplied with the cards",
 			after.Amount, want)
 	}
-	if after.Amount == before.Amount+3 {
-		t.Error("the bonus landed after the multiplier, and it is meant to land before it")
+
+	// **It is not reported as a term of Base**, because every figure in the bracket already has it
+	// inside: a screen adding HandBonus to the terms would print a sum over its own total.
+	sum := 0
+	for i := 0; i < after.HandCardCount; i++ {
+		sum += after.HandAmounts[i]
+	}
+	if sum != after.Base {
+		t.Errorf("the bracket comes to %d against a base of %d, so the raise is being counted twice",
+			sum, after.Base)
+	}
+}
+
+// TestTheHandBonusScalesWithTheCardItRaises. The point of the change, stated the other way: a relic
+// worth 3 to a full-strength card is worth less to a half-strength one, because what it moved is
+// the DMG the card multiplies rather than the sum the card paid into.
+func TestTheHandBonusScalesWithTheCardItRaises(t *testing.T) {
+	pair, _ := HandIDForKey("pair")
+	ring := relic(t, "scaling-ring", RelicRule{
+		When: MomentBlowFormed,
+		If:   RelicCondition{Hands: []HandID{pair}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 4}},
+	})
+
+	full, half := cardOfAmount(t, 100), cardOfAmount(t, 50)
+	cards := []Card{full, half}
+
+	bare, _, _ := resolve(duelist(10, 5, 100), duelist(10, 5, 100000), cards, nil, 1)
+	worn, _, _ := resolve(duelist(10, 5, 100).Wearing(WornRelic{Relic: ring}),
+		duelist(10, 5, 100000), cards, nil, 1)
+
+	before, after := handEventOf(t, bare, SideA), handEventOf(t, worn, SideA)
+	if after.HandCardCount != 2 || before.HandCardCount != 2 {
+		t.Fatalf("the turn formed %d terms, want the two cards played", after.HandCardCount)
+	}
+
+	if gained := after.HandAmounts[0] - before.HandAmounts[0]; gained != 4 {
+		t.Errorf("the full card gained %d, want the relic's whole 4", gained)
+	}
+	if gained := after.HandAmounts[1] - before.HandAmounts[1]; gained != 2 {
+		t.Errorf("the half card gained %d, want half the relic's 4", gained)
 	}
 }
 
@@ -978,7 +1053,7 @@ func TestTwoHandRelicsOnOneRungAdd(t *testing.T) {
 	rule := RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Hands: []HandID{pair}},
-		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 4}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 4}},
 	}
 	one := relic(t, "pairbonus-one", rule)
 	two := relic(t, "pairbonus-two", rule)
@@ -1036,19 +1111,25 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: smolder})
 
 	for _, tc := range []struct {
-		name string
-		held []Card
-		want int
+		name  string
+		held  []Card
+		want  int
+		cards int
 	}{
-		{"nothing held", nil, 0},
-		{"one fire held", []Card{fire}, 5},
-		{"two fire held", []Card{fire, fire}, 10},
-		{"the wrong color held", []Card{ice, ice}, 0},
-		{"one of each", []Card{fire, ice}, 5},
+		{"nothing held", nil, 0, 0},
+		{"one fire held", []Card{fire}, 5, 1},
+		{"two fire held", []Card{fire, fire}, 10, 2},
+		{"the wrong color held", []Card{ice, ice}, 0, 0},
+		{"one of each", []Card{fire, ice}, 5, 1},
 	} {
-		got, seats := HeldBonus(wearer.WornRelics(), tc.held)
+		got, cards, seats := HeldBonus(wearer.WornRelics(), tc.held)
 		if got != tc.want {
 			t.Errorf("%s paid %d, want %d", tc.name, got, tc.want)
+		}
+		// **The count is what the account writes beside the figure**, so it is the cards that
+		// matched rather than the cards held: one of each is one card paying, not two.
+		if cards != tc.cards {
+			t.Errorf("%s counted %d cards, want %d", tc.name, cards, tc.cards)
 		}
 		if paid := seats[0]; paid != (tc.want > 0) {
 			t.Errorf("%s attributed the bonus to seat 0 = %v, want %v", tc.name, paid, tc.want > 0)
@@ -1418,7 +1499,7 @@ func TestARelicPaysOnARungTheLadderDidNotNameTheBlowAfter(t *testing.T) {
 	quad := relic(t, "satisfied-form", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Hands: []HandID{form}},
-		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 7}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 7}},
 	})
 
 	slash := slashCard(t)
@@ -1448,7 +1529,7 @@ func TestTheLadderIsCumulativeDownwards(t *testing.T) {
 	paired := relic(t, "satisfied-pair", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Hands: []HandID{pair}},
-		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 2}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 2}},
 	})
 
 	slash := slashCard(t)
@@ -1500,7 +1581,7 @@ func TestTheHighCardIsNotARungABiggerHandSatisfies(t *testing.T) {
 	lonely := relic(t, "satisfied-high", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Hands: []HandID{high}},
-		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 4}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 4}},
 	})
 
 	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: lonely})

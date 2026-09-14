@@ -744,8 +744,16 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 	// **It is put back before the actor is returned.** The caller adopts this duelist for the
 	// growth the loop below records; a DMG left raised would make the bonus permanent, which is
 	// the one way this could quietly become a different mechanic.
+	//
+	// **A rung relic joins them** *(owner's call, 2026-09-14)*. `add-hand-dmg` was a flat term
+	// added to Base after the cards were counted, so a Twinned Ring on a Pair of a 1x card and a
+	// 0.5x card paid a flat 2 whatever the Pair was made of. What the owner wants it to be is
+	// **base damage**: a duelist on 14 swings the whole hand at 16, so every card in it scales —
+	// the 1x card by 2, the 0.5x card by 1 — and the relic is worth more to a hand that is worth
+	// more. It is folded in before the percentages for blowDMG's own reason: flat first.
 	baseDMG := actor.DMG
-	actor.DMG = blowDMG(baseDMG, turn, held, blow)
+	e.HandBonus, e.HandBonusSeats = HandBonus(actor.WornRelics(), blow.Satisfied)
+	actor.DMG = blowDMG(baseDMG+e.HandBonus, turn, held, blow)
 
 	// **The blow is added up here and nowhere else.** The attack phase takes its damage figure off
 	// this event rather than recomputing it, so the sentence the feed prints and the damage that
@@ -810,16 +818,13 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 
 	lead := turn[blow.Cards[0]].Card
 
-	// **The hand's own term is added last, and it is inside Base** *(owner's call, 2026-09-05)*.
-	// Every term above is a card; this one is the rung the turn built, so it lands after the cards
-	// are counted and before the multiplier — which is what makes it read as damage the *hand*
-	// contributed rather than as damage a relic moved on a card.
-	e.HandBonus, e.HandBonusSeats = HandBonus(actor.WornRelics(), blow.Satisfied)
-	e.Base += e.HandBonus
+	// **The rung's own figure is not a term of Base and has not been since 2026-09-14** — it was
+	// read before the cards, into the DMG they were all swung at. See the fold above; it is still
+	// reported on the event so a screen can say which relic raised the figure.
 
-	// **And the cards the turn kept back pay after the ones it spent.** Same seat, same reason: it
+	// **The cards the turn kept back pay after the ones it spent.** Same seat, same reason: it
 	// is a term the hand contributed rather than a number a relic moved on a card.
-	e.HeldBonus, e.HeldBonusSeats = HeldBonus(actor.WornRelics(), held)
+	e.HeldBonus, e.HeldBonusCards, e.HeldBonusSeats = HeldBonus(actor.WornRelics(), held)
 	e.Base += e.HeldBonus
 
 	// **And the purse pays last of the three.** It is not a card, not the rung and not the cards

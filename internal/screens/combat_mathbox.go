@@ -502,6 +502,17 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 		if term < e.HandCardCount {
 			box.items[i].cardSeat = e.HandCards[term] + 1
 			box.items[i].shakeRelics = e.HandLanding[term]
+
+			// **A rung relic raised the DMG every one of these figures was worked out at**, so it
+			// has no figure of its own to fly and would otherwise be the one relic that pays into
+			// a blow and never moves. The first term shakes it: the raise is inside that figure
+			// exactly as it is inside all of them, and one shake on the first is what the row can
+			// say without claiming the relic produced a term. See combat.Event.HandBonus.
+			if term == 0 {
+				for seat, paid := range e.HandBonusSeats {
+					box.items[i].shakeRelics[seat] = box.items[i].shakeRelics[seat] || paid
+				}
+			}
 			// **A figure is drawn in the color of whatever produced it** *(2026-08-19, owner's
 			// call)*, and a card's figure is produced by the card — so it wears that card's
 			// element, which is the color of its border. It leaves the card in the card's own
@@ -586,26 +597,11 @@ func mathScript(e combat.Event) []mathItem {
 		}
 	}
 
-	// **The hand's own term, last of the additions and in the ground's own ink** *(owner's call,
-	// 2026-09-05)*. Every figure above it is a card's, wearing that card's element; this one is
-	// paid by the rung the turn built, so it takes the ink the table is written in — the same
-	// color a card's figure falls back to — and reads as one more thing adding into the sum
-	// rather than as a number a relic moved on something.
-	//
-	// **It is deliberately not in the relic pink.** `boostInk` means "a relic multiplied this", and
-	// this is not a multiplication of anything on the line: it is its own term. It still flies out
-	// of the relic that paid it, because every figure in this box comes from the thing that produced
-	// it — see relicNote, which draws the same conclusion the other way.
-	if e.HandBonus != 0 {
-		items = append(items, mathOperator("+"), mathItem{
-			text:      strconv.Itoa(e.HandBonus),
-			size:      mathTermSize,
-			tint:      groundInk,
-			fly:       true,
-			relicSeat: handBonusSeat(e),
-			t:         newTravel(0, mathTermTicks),
-		})
-	}
+	// **The rung's own figure is not in this sum and has not been since 2026-09-14** *(owner's
+	// call)*. It was a term here from 2026-09-05 — the last of the additions, in the ground's ink
+	// — and it is now a raise on the DMG the whole hand is swung at, so it is already inside every
+	// card's figure above. Writing it again would print a sum over its own total. What says the
+	// relic fired is the first term shaking it on its way past; see startHandMath.
 
 	// **And the cards kept back pay after the ones spent**, on the same terms as the rung's own
 	// term above: its own figure, the ground's ink, flying out of the relic that paid it. Two terms
@@ -678,16 +674,6 @@ func mathScript(e combat.Event) []mathItem {
 		t:    newTravel(0, mathTotalTicks),
 	})
 }
-
-// handBonusSeat is which worn seat the hand bonus flies out of: the first relic that paid into it,
-// counting from the left, or 0 for none.
-//
-// **The leftmost of several, rather than all of them.** Two relics naming one rung add into a single
-// term — there is nothing to split — so one figure leaves one card, and worn order is the only
-// ordering the player can see. The alternative is a term with two origins, which would have to be
-// drawn as two figures that then merge, and that is a second animation for a case the shelf makes
-// rare.
-func handBonusSeat(e combat.Event) int { return firstSeat(e.HandBonusSeats) }
 
 // firstSeat is the leftmost worn seat in a set of contributors, as a 1-based relicSeat, or 0.
 func firstSeat(paid [combat.MaxWornRelics]bool) int {

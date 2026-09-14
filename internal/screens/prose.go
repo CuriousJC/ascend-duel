@@ -813,13 +813,29 @@ func handMath(e combat.Event) string {
 	for i := 0; i < e.HandCardCount && i < len(e.HandAmounts); i++ {
 		terms = append(terms, strconv.Itoa(e.HandAmounts[i]))
 	}
+	// **The flat terms a relic paid into Base, after the cards** — the cards kept back, and the
+	// purse. They were left out until 2026-09-14, which is what made this line print a sum short of
+	// its own total whenever one of them fired. See prose_terms.go, which is the same list with the
+	// relics named beside it.
+	//
+	// **HandBonus is not one of them**: it is base damage, already inside every figure above.
+	for _, flat := range []int{e.HeldBonus, e.VitaeBonus} {
+		if flat != 0 {
+			terms = append(terms, strconv.Itoa(flat))
+		}
+	}
 	// A blow whose event carries no terms still has its two figures. Nothing produces one today;
 	// saying the sum it did is better than a line that reads `x 1.5 = 30` with nothing in front.
 	if len(terms) == 0 {
 		terms = append(terms, strconv.Itoa(e.Base))
 	}
-	return fmt.Sprintf("%s x %s = %d",
-		strings.Join(terms, " + "), handMultiplierText(e.Multiplier), e.Amount)
+	// **A rung relic is a second multiplier rather than a bigger hand**, so it is written as one.
+	scale := ""
+	if e.HandScale != 0 && e.HandScale != 100 {
+		scale = " x " + handMultiplierText(e.HandScale)
+	}
+	return fmt.Sprintf("%s x %s%s = %d",
+		strings.Join(terms, " + "), handMultiplierText(e.Multiplier), scale, e.Amount)
 }
 
 // handTitle is the hand as the ledger names it: `Three of a Kind (Form)`.

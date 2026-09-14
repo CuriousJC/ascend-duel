@@ -325,13 +325,13 @@
     "Family": "Jade rings",
     "Art": "dmg-high-hand",
     "Draw": "jade ring with a single diamond",
-    "Text": "A High Card deals 2 more DMG before the multiplier.",
+    "Text": "A High Card swings at\n2 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "high-card" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 2 }]
       }
     ]
   },
@@ -341,13 +341,13 @@
     "Family": "Jade rings",
     "Art": "dmg-pair-hand",
     "Draw": "jade ring with two diamonds",
-    "Text": "A Pair deals 2 more DMG before the multiplier.",
+    "Text": "A Pair swings at\n2 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 2 }]
       }
     ]
   },
@@ -357,13 +357,13 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-doubled-hand",
     "Draw": "jade ring with two diamonds and two black gems",
-    "Text": "A Card Two Pair deals 4 more DMG before the multiplier.",
+    "Text": "A Card Two Pair swings at\n4 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "concept-two-pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 4 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 4 }]
       }
     ]
   },
@@ -373,13 +373,13 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-tripled-hand",
     "Draw": "jade ring with three diamonds",
-    "Text": "A Card Three of a Kind deals 5 more DMG before the multiplier.",
+    "Text": "A Card Three of a Kind swings at\n5 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "concept-three-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 5 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 5 }]
       }
     ]
   },
@@ -389,13 +389,13 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-full-house-hand",
     "Draw": "jade ring with three diamonds and two black gems",
-    "Text": "A Card Full House deals 8 more DMG before the multiplier.",
+    "Text": "A Card Full House swings at\n8 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "concept-full-house" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 8 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 8 }]
       }
     ]
   },
@@ -405,13 +405,13 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-four-of-a-kind-hand",
     "Draw": "jade ring with four diamonds",
-    "Text": "A Card Four of a Kind deals 10 more DMG before the multiplier.",
+    "Text": "A Card Four of a Kind swings at\n10 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "concept-four-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 10 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 10 }]
       }
     ]
   },
@@ -421,13 +421,13 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-five-of-a-kind-hand",
     "Draw": "jade ring with five diamonds",
-    "Text": "A Card Five of a Kind deals 16 more DMG before the multiplier.",
+    "Text": "A Card Five of a Kind swings at\n16 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "concept-five-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 16 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 16 }]
       }
     ]
   },
@@ -437,13 +437,13 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-two-pair-hand",
     "Draw": "indigo ring with two golden gems and two silver gems",
-    "Text": "A Form Two Pair deals 3 more DMG before the multiplier.",
+    "Text": "A Form Two Pair swings at\n3 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "form-two-pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 3 }]
       }
     ]
   },
@@ -453,13 +453,13 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-three-of-a-kind-hand",
     "Draw": "indigo ring with three golden gems",
-    "Text": "A Form Three of a Kind deals 3 more DMG before the multiplier.",
+    "Text": "A Form Three of a Kind swings at\n3 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "form-three-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 3 }]
       }
     ]
   },
@@ -469,13 +469,13 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-full-house-hand",
     "Draw": "indigo ring with three golden gems and two silver gems",
-    "Text": "A Form Full House deals 6 more DMG before the multiplier.",
+    "Text": "A Form Full House swings at\n6 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "form-full-house" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 6 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 6 }]
       }
     ]
   },
@@ -485,13 +485,13 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-four-of-a-kind-hand",
     "Draw": "indigo ring with four golden gems",
-    "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
+    "Text": "A Form Four of a Kind swings at\n6 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "form-four-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 6 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 6 }]
       }
     ]
   },
@@ -501,13 +501,13 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-five-of-a-kind-hand",
     "Draw": "indigo ring with five golden gems",
-    "Text": "A Form Five of a Kind deals 12 more DMG before the multiplier.",
+    "Text": "A Form Five of a Kind swings at\n12 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "form-five-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 12 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 12 }]
       }
     ]
   },
@@ -517,13 +517,13 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-two-pair-hand",
     "Draw": "sandstone ring with two turquoise gems and two rubies",
-    "Text": "An Elemental Two Pair deals 3 more DMG before the multiplier.",
+    "Text": "An Elemental Two Pair swings at\n3 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "element-two-pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 3 }]
       }
     ]
   },
@@ -533,13 +533,13 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-three-of-a-kind-hand",
     "Draw": "sandstone ring with three turquoise gems",
-    "Text": "An Elemental Three of a Kind deals 3 more DMG before the multiplier.",
+    "Text": "An Elemental Three of a Kind swings at\n3 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "element-three-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 3 }]
       }
     ]
   },
@@ -549,13 +549,13 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-full-house-hand",
     "Draw": "sandstone ring with three turquoise gems and two rubies",
-    "Text": "An Elemental Full House deals 7 more DMG before the multiplier.",
+    "Text": "An Elemental Full House swings at\n7 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "element-full-house" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 7 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 7 }]
       }
     ]
   },
@@ -565,13 +565,13 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-four-of-a-kind-hand",
     "Draw": "sandstone ring with four turquoise gems",
-    "Text": "An Elemental Four of a Kind deals 7 more DMG before the multiplier.",
+    "Text": "An Elemental Four of a Kind swings at\n7 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "element-four-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 7 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 7 }]
       }
     ]
   },
@@ -581,13 +581,13 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-five-of-a-kind-hand",
     "Draw": "sandstone ring with five turquoise gems",
-    "Text": "An Elemental Five of a Kind deals 14 more DMG before the multiplier.",
+    "Text": "An Elemental Five of a Kind swings at\n14 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "element-five-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 14 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 14 }]
       }
     ]
   },

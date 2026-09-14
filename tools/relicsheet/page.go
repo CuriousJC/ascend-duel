@@ -10,6 +10,14 @@ import "html/template"
 // it — even by the fraction a max-width rule can introduce — resamples that rim into a blur
 // and makes the sheet lie about the art.
 //
+// **That reason is about the card, not about the picture on it, and the two now want opposite
+// things** *(2026-09-14)*. The rim, the counter disc and the type are rasterized at 1:1 by
+// internal/cards and want nearest-neighbour; the art inside is smooth-shaded and would go blocky
+// under it. Nothing has to choose, because the image is never scaled — which was an implied
+// property and is now an asserted one: `flex: none` stops the plate's flex row from shrinking a
+// card to make room for a long rules block, which is the one way a natural-size image on this
+// page could still be resampled.
+//
 // **The ground is the one the relics actually sit on**, not a page color chosen to flatter
 // them. A pink border on white is a different card from a pink border on the game's own blue.
 //
@@ -70,8 +78,9 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
     background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
     padding: 16px; width: 520px;
   }
-  /* Natural size, never scaled. See the comment above. */
-  img { display: block; image-rendering: pixelated; }
+  /* Natural size, never scaled — flex: none is what makes that true rather than likely.
+     See the comment above. */
+  img { display: block; image-rendering: pixelated; flex: none; }
   .about { min-width: 0; }
   .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
   .record { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }

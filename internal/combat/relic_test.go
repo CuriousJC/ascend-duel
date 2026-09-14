@@ -876,7 +876,7 @@ func TestAHandRuleIsRefusedAnywhereButBlowFormed(t *testing.T) {
 
 	refused(t, "hand at card-damage", RelicRule{
 		When: MomentCardDamage,
-		If:   RelicCondition{Hand: pair, HasHand: true},
+		If:   RelicCondition{Hands: []HandID{pair}},
 		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 	refused(t, "add-hand-damage at card-damage", RelicRule{
@@ -893,7 +893,7 @@ func TestAHandRuleMayNotAlsoNameACard(t *testing.T) {
 
 	refused(t, "hand and element", RelicRule{
 		When: MomentBlowFormed,
-		If:   RelicCondition{Hand: pair, HasHand: true, Element: Fire, HasElement: true},
+		If:   RelicCondition{Hands: []HandID{pair}, Element: Fire, HasElement: true},
 		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 5}},
 	})
 }
@@ -910,7 +910,7 @@ func TestAHandRelicPaysOnlyItsOwnRung(t *testing.T) {
 	}
 	forged := relic(t, "forged", RelicRule{
 		When: MomentBlowFormed,
-		If:   RelicCondition{Hand: trips, HasHand: true},
+		If:   RelicCondition{Hands: []HandID{trips}},
 		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 3}},
 	})
 
@@ -944,7 +944,7 @@ func TestTheHandBonusIsAddedBeforeTheMultiplier(t *testing.T) {
 	trips, _ := HandIDForKey("concept-three-of-a-kind")
 	forged := relic(t, "forged-order", RelicRule{
 		When: MomentBlowFormed,
-		If:   RelicCondition{Hand: trips, HasHand: true},
+		If:   RelicCondition{Hands: []HandID{trips}},
 		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 3}},
 	})
 
@@ -977,7 +977,7 @@ func TestTwoHandRelicsOnOneRungAdd(t *testing.T) {
 	pair, _ := HandIDForKey("pair")
 	rule := RelicRule{
 		When: MomentBlowFormed,
-		If:   RelicCondition{Hand: pair, HasHand: true},
+		If:   RelicCondition{Hands: []HandID{pair}},
 		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 4}},
 	}
 	one := relic(t, "pairbonus-one", rule)
@@ -1011,7 +1011,7 @@ func TestAHeldRuleIsRefusedAlongsideABlowPredicate(t *testing.T) {
 	})
 	refused(t, "held and hand", RelicRule{
 		When: MomentBlowFormed,
-		If:   RelicCondition{Hand: pair, HasHand: true},
+		If:   RelicCondition{Hands: []HandID{pair}},
 		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
 	})
 	refused(t, "held at card-damage", RelicRule{
@@ -1252,7 +1252,7 @@ func TestAHandScalerIsASecondMultiplierAndNotABiggerHand(t *testing.T) {
 	pair, _ := HandIDForKey("pair")
 	id := relic(t, "pairing", RelicRule{
 		When: MomentBlowFormed,
-		If:   RelicCondition{Hand: pair, HasHand: true},
+		If:   RelicCondition{Hands: []HandID{pair}},
 		Then: []RelicEffect{{Do: DoScaleHandDamage, Amount: 200}},
 	})
 
@@ -1288,7 +1288,7 @@ func TestAHandScalerPaysOnlyItsOwnRung(t *testing.T) {
 	trips, _ := HandIDForKey("concept-three-of-a-kind")
 	id := relic(t, "tripsonly", RelicRule{
 		When: MomentBlowFormed,
-		If:   RelicCondition{Hand: trips, HasHand: true},
+		If:   RelicCondition{Hands: []HandID{trips}},
 		Then: []RelicEffect{{Do: DoScaleHandDamage, Amount: 300}},
 	})
 
@@ -1307,7 +1307,7 @@ func TestMinFormsCountsTheScoringSet(t *testing.T) {
 	pair, _ := HandIDForKey("pair")
 	id := relic(t, "dualwield", RelicRule{
 		When: MomentBlowFormed,
-		If:   RelicCondition{Hand: pair, HasHand: true, MinForms: 2},
+		If:   RelicCondition{Hands: []HandID{pair}, MinForms: 2},
 		Then: []RelicEffect{{Do: DoScaleHandDamage, Amount: 300}},
 	})
 
@@ -1396,5 +1396,124 @@ func TestTheCounterLabelIsAlwaysOneDecimalPlace(t *testing.T) {
 		if got := CounterLabel(WornRelic{Relic: flat, Grown: grown}); strings.ContainsRune(got, '.') {
 			t.Errorf("a flat figure grown %d reads %q, which carries a decimal point", grown, got)
 		}
+	}
+}
+
+// --- the satisfied set ---------------------------------------------------------------------
+
+func TestARelicPaysOnARungTheLadderDidNotNameTheBlowAfter(t *testing.T) {
+	// **The bug this exists for** *(owner's call, 2026-09-13)*: four identical Cuts are a Card Four
+	// of a Kind *and* a Form Four of a Kind, the ladder pays the better of the two, and the Form
+	// Four of a Kind relic on the player's finger sat still through a turn that plainly was one.
+	// A blow now carries every rung it satisfies and a relic is asked against the set.
+	//
+	// Written at trips rather than quads so the turn fits a normal action budget; the mechanism is
+	// the same one identical cards trip on at every rung.
+	form, ok := HandIDForKey("form-three-of-a-kind")
+	if !ok {
+		t.Fatal("the ladder has no form-three-of-a-kind")
+	}
+	concept, _ := HandIDForKey("concept-three-of-a-kind")
+
+	quad := relic(t, "satisfied-form", RelicRule{
+		When: MomentBlowFormed,
+		If:   RelicCondition{Hands: []HandID{form}},
+		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 7}},
+	})
+
+	slash := slashCard(t)
+	events, _, _ := resolve(duelist(10, 5, 100).Wearing(WornRelic{Relic: quad}),
+		duelist(10, 5, 100000), []Card{slash, slash, slash}, nil, 1)
+
+	got := handEventOf(t, events, SideA)
+	if got.Hand != concept {
+		t.Fatalf("three identical cards formed %v, and this test is about a blow the ladder names "+
+			"on the concept axis while also satisfying the form one", got.Hand)
+	}
+	if got.HandBonus != 7 {
+		t.Errorf("a form three of a kind paid %d through a blow named on the concept axis, want 7",
+			got.HandBonus)
+	}
+}
+
+func TestTheLadderIsCumulativeDownwards(t *testing.T) {
+	// **Taken deliberately with the change above** *(owner's call, 2026-09-13)*: if a relic is
+	// asked against what the blow satisfied, then a Pair relic pays on every hand that holds a
+	// pair — which is every multi-card hand. It makes the Pair family near-unconditional, and that
+	// is the shape the owner chose rather than something to be caught here.
+	pair, ok := HandIDForKey("pair")
+	if !ok {
+		t.Fatal("the ladder has no pair")
+	}
+	paired := relic(t, "satisfied-pair", RelicRule{
+		When: MomentBlowFormed,
+		If:   RelicCondition{Hands: []HandID{pair}},
+		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 2}},
+	})
+
+	slash := slashCard(t)
+	events, _, _ := resolve(duelist(10, 5, 100).Wearing(WornRelic{Relic: paired}),
+		duelist(10, 5, 100000), []Card{slash, slash, slash}, nil, 1)
+
+	if got := handEventOf(t, events, SideA); got.HandBonus != 2 {
+		t.Errorf("a pair relic paid %d on a three of a kind, want 2", got.HandBonus)
+	}
+}
+
+func TestARuleNamingSeveralRungsFiresOnce(t *testing.T) {
+	// **This is why `Hands` exists.** "Every Three of a Kind deals 3x" is one sentence over three
+	// catalog entries; written as three rules it fired once per axis the blow satisfied, so three
+	// identical cards — a three of a kind on both the concept and the form axis — turned a 3x relic
+	// into 9x, against its own printed text. One rule naming the set fires once whatever the blow
+	// satisfied, and the printed sentence stays true.
+	concept, ok := HandIDForKey("concept-three-of-a-kind")
+	if !ok {
+		t.Fatal("the ladder has no concept-three-of-a-kind")
+	}
+	form, _ := HandIDForKey("form-three-of-a-kind")
+	element, _ := HandIDForKey("element-three-of-a-kind")
+
+	rings := relic(t, "satisfied-triplicate", RelicRule{
+		When: MomentBlowFormed,
+		If:   RelicCondition{Hands: []HandID{concept, form, element}},
+		Then: []RelicEffect{{Do: DoScaleHandDamage, Amount: 300}},
+	})
+
+	slash := slashCard(t)
+	events, _, _ := resolve(duelist(10, 5, 100).Wearing(WornRelic{Relic: rings}),
+		duelist(10, 5, 100000), []Card{slash, slash, slash}, nil, 1)
+
+	if got := handEventOf(t, events, SideA); got.HandScale != 300 {
+		t.Errorf("a 3x rule naming three rungs scaled a blow satisfying two of them by %d%%, "+
+			"want 300 — 900 is the bug this test exists for", got.HandScale)
+	}
+}
+
+func TestTheHighCardIsNotARungABiggerHandSatisfies(t *testing.T) {
+	// The High Card is the fallback for a turn that formed nothing, picked by which attack hits
+	// hardest rather than by counting — so it is not something a Three of a Kind also *is*, and a
+	// High Card relic stays a relic about turns that built nothing.
+	high, ok := HandIDForKey("high-card")
+	if !ok {
+		t.Fatal("the ladder has no high-card")
+	}
+	lonely := relic(t, "satisfied-high", RelicRule{
+		When: MomentBlowFormed,
+		If:   RelicCondition{Hands: []HandID{high}},
+		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 4}},
+	})
+
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: lonely})
+	slash := slashCard(t)
+
+	one, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash}, nil, 1)
+	if got := handEventOf(t, one, SideA); got.HandBonus != 4 {
+		t.Errorf("a lone attack paid %d, want 4 — the High Card is still a rung a relic can name",
+			got.HandBonus)
+	}
+
+	three, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash, slash}, nil, 1)
+	if got := handEventOf(t, three, SideA); got.HandBonus != 0 {
+		t.Errorf("a three of a kind paid the High Card relic %d, want 0", got.HandBonus)
 	}
 }

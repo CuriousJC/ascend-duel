@@ -154,12 +154,24 @@ type RelicIfData struct {
 	Concept string `json:"Concept,omitempty"`
 
 	// Hand names one rung of the ladder by its `hands.json` key — `concept-full-house`. It narrows
-	// the rule to blows that formed exactly that rung.
+	// the rule to blows that **satisfied** that rung, which is not the same as blows the ladder
+	// named after it: a turn of four identical cards satisfies both four-of-a-kinds, both
+	// three-of-a-kinds and the Pair, and every relic naming one of those pays.
 	//
 	// **A key rather than the id, for the reason a concept is a label**: `HandID` is a number in a
 	// file that outlives the build that wrote it. Meaningful at `blow-formed` and refused anywhere
 	// else, and refused alongside any card predicate — a hand is a fact about the whole blow.
 	Hand string `json:"Hand,omitempty"`
+
+	// Hands names several rungs at once, and the rule fires when the blow satisfied **any** of
+	// them *(2026-09-13)*. It exists because a relic reading "every Four of a Kind" is one
+	// sentence over three catalog entries, and writing it as three rules made it fire three times
+	// on a turn that satisfied more than one axis — 4x compounding to 16x against its own printed
+	// text. One rule naming the set fires once.
+	//
+	// **Exclusive with `Hand`**, which is the same field for one rung; a record setting both is
+	// refused at load rather than having one quietly win.
+	Hands []string `json:"Hands,omitempty"`
 
 	// MinForms is how many distinct forms the blow's scoring cards must cover.
 	MinForms int `json:"MinForms,omitempty"`

@@ -1921,7 +1921,7 @@ can be current, because a table of 139 rows in a file loaded every session is a 
 | **form cost relics** | 3 | rare | Whetted, Hefted, Tapered — the form counterparts of Warm's color family |
 | **form status / growth** | 3 + 3 | uncommon | Sundering / Bruising / Pinning, and Sharpening / Pounding / Quickening |
 | **tier relics** | 4 | rare / uncommon | Erode and Whittle demote; Swarm and Crown pay a tier |
-| **rung relics, flat** | 19 | common | one per rung, `add-hand-damage`, bonus = the rung's multiplier over 50 |
+| **rung relics, flat** | 19 | common | one per rung, `add-hand-dmg`, bonus = the rung's multiplier over 50 |
 | **rung relics, multiplying** | 5 | uncommon / rare | Pairing, Triplicate Form, House of Pain; **Oak and Pentacle are rare** — 4x on a Four of a Kind and 5x on a Five of a Kind are 20x and 39x blows, and a relic that turns the two rarest hands in the game into those is not a common shelf offer |
 | **double-status** | 9 | rare | one per unordered status pair, each triggered by an element holding one of the two |
 | **element repeats** | 5 | uncommon | Backdraft, Shatter, Forked, Landslide, Recursion — the color half of Flurry/Rend/Aftershock |
@@ -1955,8 +1955,34 @@ that is the reading to avoid: it says the *hand* changed, when what changed is t
 wearing a relic. The banner, the hand row and the sum all show the rung actually built, and the
 relic's figure is drawn as its own term in the pane's pink, flying out of the relic that paid.
 
-The flat pair, `add-hand-damage`, does the opposite and joins `Base` **before** the multiplier, so a
-rung relic can be written either as a term the hand contributed or as a multiplier laid over it.
+### A flat rung relic is base damage, not a term *(owner's call, 2026-09-14)*
+
+`add-hand-dmg` raises the **DMG the hand is swung at**, for the length of one blow. A duelist on
+14 wearing the Twinned Ring swings a Pair at 16, so every card in the hand grows by its own
+multiplier — a 1x card by 2, a 0.5x card by 1 — and the raise is inside every term before the ladder
+multiplies anything.
+
+**It was a flat term of `Base` from 2026-09-05 until then**, added after the cards were counted, and
+the reason for the change is that a flat term is worth the same 2 whether the Pair is two Jabs or
+two Skewers. A relic that raises DMG is worth more to a hand that is worth more, which is the
+relationship every other damage relic in the catalog has.
+
+**It is therefore not drawn as a term.** `Event.HandBonus` is still on the event, to be *said* rather
+than added: the ledger writes `Twinned Ring (Pair)  +2 DMG` above the terms it raised, and the hand
+dialog shakes the relic as the first figure flies past it. A screen that also wrote it as a term
+would print a sum over its own total — and a relic folded silently into figures the game already
+shows is a relic the player cannot tell apart from a better hand.
+
+So a rung relic can be written either as base damage the duelist gained or as a multiplier laid over
+the hand. The two are `add-hand-dmg` and `scale-hand-damage`, and neither one touches
+`Event.Multiplier`.
+
+**It is the one-blow counterpart of `add-dmg`, and the names are `dmg` on both for that reason.**
+`add-dmg` fires at `fight-start`, is unconditional, and is added to the duelist in
+`session.Equip` for the whole duel — Might's +10 is on every card of every turn. `add-hand-dmg`
+raises the same stat for one blow and only when the rung it names was satisfied. They stack
+additively, and the strictly stronger shape per point is the unconditional one: a rung relic has to
+be earned before it pays, which is what lets its figure be bigger at the same rarity.
 
 ### A relic reads what the blow *satisfied*, not what the ladder named it *(owner's call, 2026-09-13)*
 

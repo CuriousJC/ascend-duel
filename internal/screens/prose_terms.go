@@ -17,6 +17,7 @@ package screens
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -44,6 +45,11 @@ func (s *CombatScene) handTermLines(e combat.Event, played []combat.Card) []sess
 	relics := s.wornBy(e.Side)
 	out := make([]session.LedgerLine, 0, e.HandCardCount+1)
 
+	// **What raised the DMG comes before the cards it raised**, because that is the order the
+	// arithmetic happens in: the rung is read, the duelist swings bigger, and only then is there a
+	// term to write. See handDMGLines.
+	out = append(out, handDMGLines(e, relics)...)
+
 	for i := 0; i < e.HandCardCount && i < len(e.HandAmounts); i++ {
 		idx := e.HandCards[i]
 		if idx < 0 || idx >= len(played) {
@@ -61,11 +67,108 @@ func (s *CombatScene) handTermLines(e combat.Event, played []combat.Card) []sess
 		out = append(out, session.LedgerLine{Voice: session.VoiceTerm, Spans: spans})
 	}
 
+	// **Then the flat terms, in the order the sum adds them.** They are the same three the hand
+	// dialog draws after the cards, and leaving them out is what made this panel print a sum that
+	// did not come to its own total. See flatTermLines.
+	out = append(out, flatTermLines(e, relics)...)
+
 	// **The sum, under the terms it adds up, in the figures the hand dialog flew into place.** It
 	// is the last line rather than the first because that is the order the arithmetic happens in
 	// and the order the dialog acts it out in: the cards, then what they came to.
 	out = append(out, session.LedgerLine{Voice: session.VoiceTerm, Spans: handMathSpans(e, played)})
 	return out
+}
+
+// flatTermLines is the working under the three terms no card paid: the rung's own, the cards the
+// turn kept back, and the purse. Each is one line, named for the relic that put it there.
+//
+// **They were missing until 2026-09-14 and the panel was wrong because of it.** The card loop
+// above walks `HandCardCount`, so a blow whose Base includes a relic's flat term printed
+// `5 + 10 x 1 = 37` — a sum three short of its own answer, in the one panel whose job is to say
+// where a figure came from. The hand dialog has drawn all three since they existed; this is the
+// same list written as lines that keep. See combat_mathbox.go's mathScript, which is the other
+// drawing of it.
+//
+// **A count goes beside the figure wherever there is one to give** *(owner's call, 2026-09-14)*.
+// `Jar of Ice (4 cards)  20` can be checked against the hand that was being held; a bare 20 is a
+// number the player has to take on trust three fights later, when the hand is long gone.
+func flatTermLines(e combat.Event, relics []combat.WornRelic) []session.LedgerLine {
+	var out []session.LedgerLine
+
+	if e.HeldBonus != 0 {
+		out = append(out, flatTerm(relicNames(relics, e.HeldBonusSeats),
+			cardCount(e.HeldBonusCards)+" kept back", e.HeldBonus))
+	}
+	if e.VitaeBonus != 0 {
+		out = append(out, flatTerm(relicNames(relics, e.VitaeBonusSeats), "the purse", e.VitaeBonus))
+	}
+	return out
+}
+
+// handDMGLines is what a relic did to the DMG this blow was swung at, written above the terms it
+// moved.
+//
+// **It is not a term and must never be written as one** *(owner's call, 2026-09-14)*. A rung relic
+// used to add a flat figure to the sum; what it does now is raise the duelist's DMG for the length
+// of one blow, so a Twinned Ring on a duelist of 14 makes a Pair swing at 16 and every card in it
+// grows by its own multiplier. That figure is already inside each term below, which is why this
+// line carries no figure in the sum's column: it says where the bigger terms came from.
+//
+// **Without it the relic would be invisible.** The one thing a relic may never be is folded into a
+// number the game already shows — a player whose cards quietly got bigger has no way to tell a
+// relic from a better hand.
+func handDMGLines(e combat.Event, relics []combat.WornRelic) []session.LedgerLine {
+	if e.HandBonus == 0 {
+		return nil
+	}
+	return []session.LedgerLine{{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
+		{
+			Text: fmt.Sprintf("%-14s", relicNames(relics, e.HandBonusSeats)+" ("+handTitle(e)+")"),
+			Ink:  session.InkRelic,
+		},
+		{Text: fmt.Sprintf("+%d DMG", e.HandBonus), Ink: session.InkRelic},
+	}}}
+}
+
+// flatTerm is one of those lines: the relic, what it counted, and what it paid.
+//
+// **The name column is the card terms' column**, so a flat term lands its figure in the same place
+// a card's does and the working reads as one column of figures rather than as two lists.
+// **The relic's name takes the relic ink and the figure does not**, which is the split the dialog
+// makes for the same reason: a relic put the term in the sum, but the term is the hand paying
+// rather than a number a relic moved on a card. See mathScript, which draws it in the ground's ink.
+func flatTerm(name, note string, amount int) session.LedgerLine {
+	return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
+		{Text: fmt.Sprintf("%-14s", name+" ("+note+")"), Ink: session.InkRelic},
+		{Text: fmt.Sprintf("%4d", amount)},
+	}}
+}
+
+// cardCount is "1 card" or "4 cards" — the same pluralising shieldCount does for shields, and the
+// one place this noun is counted.
+func cardCount(n int) string {
+	if n == 1 {
+		return "1 card"
+	}
+	return strconv.Itoa(n) + " cards"
+}
+
+// relicNames is every relic that paid a term, in worn order — which is firing order.
+//
+// **All of them, not the leftmost.** The dialog flies one figure out of one card and has to pick,
+// which is what `handBonusSeat` is; a line has room to say that two jars paid, and a line naming
+// one of two would be wrong about the half it left out.
+func relicNames(relics []combat.WornRelic, seats [combat.MaxWornRelics]bool) string {
+	var named []string
+	for seat, paid := range seats {
+		if paid {
+			named = append(named, relicName(relics, seat))
+		}
+	}
+	if len(named) == 0 {
+		return "a relic"
+	}
+	return strings.Join(named, " + ")
 }
 
 // termBase is the figure a term's own card was worth **before its relics** — the number the relic's
@@ -170,6 +273,22 @@ func handMathSpans(e combat.Event, played []combat.Card) []session.LedgerSpan {
 		spans = append(spans, session.LedgerSpan{Text: ")", Ink: ink})
 	}
 
+	// **The flat terms, after the cards and before the multiplier**, which is where the resolver
+	// adds them into Base — see combat.Event.HeldBonus. Written in no ink at all, the dialog's
+	// ground: a relic put them in the sum and the term is still the hand paying.
+	//
+	// **HandBonus is not among them.** It is base damage rather than a term, so it is already
+	// inside every figure above — see handDMGLines.
+	for _, flat := range []int{e.HeldBonus, e.VitaeBonus} {
+		if flat == 0 {
+			continue
+		}
+		if len(spans) > 0 {
+			spans = append(spans, session.LedgerSpan{Text: " + "})
+		}
+		spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(flat)})
+	}
+
 	// A blow whose event carries no terms still has its two figures. Nothing produces one today;
 	// saying the sum it did is better than a line reading `x 1.5 = 30` with nothing in front.
 	if len(spans) == 0 {
@@ -181,6 +300,18 @@ func handMathSpans(e combat.Event, played []combat.Card) []session.LedgerSpan {
 		// typesetting accident; the whole panel is bold already, and the figure's place in the
 		// line is what says what it is.
 		session.LedgerSpan{Text: " x " + handMultiplierText(e.Multiplier), Ink: session.InkHand},
+	)
+
+	// **A rung relic is a second multiplier, after the hand's own** *(combat.Event.HandScale)*, so
+	// it is a second `x` on the line rather than a bigger figure in the first — the same rule the
+	// dialog draws it under, and the reason `Multiplier` still reads as the rung the player built.
+	if e.HandScale != 0 && e.HandScale != 100 {
+		spans = append(spans, session.LedgerSpan{
+			Text: " x " + handMultiplierText(e.HandScale), Ink: session.InkRelic,
+		})
+	}
+
+	spans = append(spans,
 		session.LedgerSpan{Text: " = "},
 		session.LedgerSpan{Text: strconv.Itoa(e.Amount), Ink: session.InkTotal},
 	)

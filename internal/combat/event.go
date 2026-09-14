@@ -365,14 +365,20 @@ type Event struct {
 	// whole block of fields exists to prevent.
 	HandGrown [maxHandTerms][MaxWornRelics]int
 
-	// HandBonus is flat damage a worn relic added to this blow **because of the rung it formed**,
+	// HandBonus is DMG a worn relic added to the duelist **because of the rung this blow formed**,
 	// and HandBonusSeats is which seats paid it.
 	//
-	// **It is a term of Base and it is the last one** *(owner's call, 2026-09-05)*: every other
-	// entry in the bracket is a card, so this is added after the cards are counted and before the
-	// multiplier is applied. The screen draws it as its own term at the end of the sum, in the
-	// ground's own ink rather than a relic's pink, because it is the hand paying rather than a
-	// number a relic moved.
+	// **It is base damage, not a term of Base** *(owner's call, 2026-09-14)*. It was the last term
+	// of the bracket from 2026-09-05 until then — a flat figure added after the cards were counted
+	// — and what it is now is a raise on the DMG every card of the hand is swung at: a duelist on
+	// 14 wearing a Twinned Ring swings a Pair at 16, so a 1x card in it gains 2 and a 0.5x card
+	// gains 1. That makes the relic worth more to a bigger hand, which a flat term was not, and it
+	// is the same fold the damage riders take — see combat.blowDMG.
+	//
+	// **So it is on the event to be *said*, never to be added.** Every figure in `HandAmounts`
+	// already has it inside; a screen that also wrote it as a term would print a sum that comes to
+	// more than its own total. What a screen does with it is name the relic that raised the figure
+	// — see screens.handDMGLines.
 	//
 	// Zero when nothing worn names this rung, which is the usual case.
 	HandBonus      int
@@ -385,7 +391,13 @@ type Event struct {
 	// the multiplier, drawn in the ground's own ink. The two are separate fields rather than one
 	// because they are different sentences — one is what the hand formed, the other is what the
 	// hand still holds — and a screen that merged them could not say which.
+	//
+	// **HeldBonusCards is how many held cards paid it**, across every seat that did. The run's
+	// account writes the term as `Jar of Ice (4 cards)  20`, and a count is the one thing a
+	// player reading the working back cannot re-derive: the hand it was counted over is three
+	// turns gone. See screens.handTermLines.
 	HeldBonus      int
+	HeldBonusCards int
 	HeldBonusSeats [MaxWornRelics]bool
 
 	// VitaeBonus is the duelist's Bounty as it joined this blow's Base, and VitaeBonusSeats is

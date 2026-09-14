@@ -264,19 +264,25 @@ const (
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoScaleHP
 
-	// DoAddHandDamage adds Amount flat to the blow's base sum when the hand named by the rule's
-	// `Hand` predicate is what formed.
+	// DoAddHandDMG adds Amount to the duelist's **DMG** for the length of one blow, when the blow
+	// satisfied the rung named by the rule's `Hand` predicate.
 	//
-	// **It is added last and multiplied with everything else** *(owner's call, 2026-09-05)*. Every
-	// other term of the sum is a card; this one is the hand itself, so it joins after the cards are
-	// counted and before the multiplier is applied — which is what makes a rung's bonus worth more
-	// on the rung that pays more, without the relic saying so twice.
+	// **It is base damage, not a term** *(owner's call, 2026-09-14)*. It was `add-hand-damage` and
+	// a flat addition to `Base` from 2026-09-05 until then, which paid the same 2 whether the Pair
+	// was two Jabs or two Skewers. What it does now is raise the figure every card of the hand
+	// multiplies: a duelist on 14 swings a Pair at 16, so a 1x card in it gains 2 and a 0.5x card
+	// gains 1, and the relic is worth more to a hand that is worth more. The name says `dmg` rather
+	// than `damage` for exactly that reason — DMG is the duelist's stat, damage is a figure in a
+	// sum. See combat.blowDMG, which is where it is folded in, and Event.HandBonus, which reports
+	// it so a screen can *say* it without adding it a second time.
 	//
-	// **A blow forms exactly one hand**, so at most one rule per relic can fire, and two relics
-	// naming the same rung add rather than compound.
+	// **It is still inside the multiplier**, since it moves the cards the multiplier multiplies.
+	//
+	// **Two relics naming one rung add rather than compound**, and a blow can satisfy several rungs
+	// at once — see Blow.Satisfied — so a Pair relic and a Three of a Kind relic both pay on trips.
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
-	DoAddHandDamage
+	DoAddHandDMG
 
 	// DoAddDamagePerHeld adds Amount to the blow for **every card still in the hand** that matches
 	// the rule's predicate — the cards kept back, not the cards played.
@@ -310,7 +316,7 @@ const (
 	DoAddDamagePerVitae
 
 	// DoScaleHandDamage scales **the blow** by Amount percent when it formed the rung the rule
-	// names — the rung relics that multiply, where add-hand-damage is the pair that adds a flat term.
+	// names — the rung relics that multiply, where add-hand-dmg is the pair that raises the duelist.
 	//
 	// **It is a second multiplier, never a bigger hand** *(owner's call, 2026-09-05)*. `Multiplier`
 	// is the ladder's own figure and stays it, because the banner, the hand row and the sum all
@@ -332,7 +338,7 @@ func RelicVerbs() []RelicVerb {
 	return []RelicVerb{DoAdjustCost, DoScaleDamage, DoApplyStatus, DoSetElement, DoAddDMG,
 		DoAddHP, DoGrowOnWin, DoScalePropagation, DoAdjustPicks, DoAdjustPrizeVitae, DoScaleHP,
 		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth,
-		DoAddHandDamage, DoAddDamagePerHeld, DoGrowPerCard, DoAddDamagePerVitae,
+		DoAddHandDMG, DoAddDamagePerHeld, DoGrowPerCard, DoAddDamagePerVitae,
 		DoScaleHandDamage, DoScaleDamagePerVitae}
 }
 
@@ -378,8 +384,8 @@ func (v RelicVerb) String() string {
 		return "repeat-card"
 	case DoDemoteCard:
 		return "demote-card"
-	case DoAddHandDamage:
-		return "add-hand-damage"
+	case DoAddHandDMG:
+		return "add-hand-dmg"
 	case DoAddDamagePerHeld:
 		return "add-damage-per-held"
 	default:
@@ -416,7 +422,7 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentDeckBuilt
 	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDamagePerVitae:
 		return MomentFightStart
-	case DoEchoAttack, DoRepeatCard, DoAddHandDamage, DoAddDamagePerHeld, DoScaleHandDamage:
+	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDamagePerHeld, DoScaleHandDamage:
 		return MomentBlowFormed
 	case DoGrowOnWin, DoScalePropagation:
 		return MomentFightWon
@@ -1246,7 +1252,7 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, [MaxWornRelics]bool) 
 				continue
 			}
 			for _, e := range rule.Then {
-				if e.Do != DoAddHandDamage {
+				if e.Do != DoAddHandDMG {
 					continue
 				}
 				total += e.Amount
@@ -1267,10 +1273,13 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, [MaxWornRelics]bool) 
 // **A card kept back is not spent**, so this pays again on every turn it is still being held — the
 // same property the rune riders have, and for the same reason: it is a fact about the hand at
 // the moment the blow is added up rather than an event.
-func HeldBonus(worn []WornRelic, held []Card) (int, [MaxWornRelics]bool) {
-	var seats [MaxWornRelics]bool
-	total := 0
-
+//
+// **It reports how many cards paid as well as what they paid** *(2026-09-14)*, because the run's
+// account writes the term as `Jar of Ice (4 cards)  20` — a figure with no count beside it is the
+// one term in the working the player cannot check against the hand they were holding. It is the
+// tally across every seat, which is the figure the merged term is: two jars paying for six cards
+// between them is one term of six.
+func HeldBonus(worn []WornRelic, held []Card) (total, cards int, seats [MaxWornRelics]bool) {
 	for seat, w := range worn {
 		if seat >= MaxWornRelics {
 			break
@@ -1286,13 +1295,14 @@ func HeldBonus(worn []WornRelic, held []Card) (int, [MaxWornRelics]bool) {
 				for _, c := range held {
 					if rule.If.Matches(c) {
 						total += e.Amount
+						cards++
 						seats[seat] = true
 					}
 				}
 			}
 		}
 	}
-	return total, seats
+	return total, cards, seats
 }
 
 // LandingsOf is how many times a card lands, and how, given what its wearer has on.

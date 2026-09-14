@@ -173,7 +173,7 @@ not ignored.
 | `adjust-picks` | `prizes-dealt` | `Amount` delta | more post-battle choices |
 | `adjust-prize-vitae` | `prizes-dealt` | `Amount` flat | the vitae card pays more |
 | `repeat-card` | `blow-formed` | `Amount` landings | every **matching** card lands Amount times, each at **full** damage — the form repeat relics |
-| `add-hand-damage` | `blow-formed` | `Amount` flat | adds flat damage to the blow **when the named rung formed** — added last, inside `Base`, so the multiplier multiplies it |
+| `add-hand-dmg` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one blow** when the blow satisfied the named rung, so every card of the hand grows by its own multiplier — *not* a term of `Base`, and already inside every figure the sum prints |
 | `add-damage-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to the blow **for every card still in hand** matching the rule's card predicate. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
 | `echo-attack` | `blow-formed` | `Amount` landings | the blow's lead card lands Amount times, at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
 

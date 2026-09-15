@@ -307,7 +307,18 @@ var (
 	// which figure it is. Color is what carries that hierarchy here; the two halves share
 	// a baseline, so they cannot differ in size without reading as a mistake.
 	LabelInk = color.RGBA{R: 108, G: 112, B: 124, A: 255}
+
+	// statRuleInk is the hairline between two groups of stat rows.
+	//
+	// **Quieter than LabelInk and thinner than a border.** What it has to do is separate two
+	// groups without becoming a thing on the card in its own right — at label strength it reads
+	// as the card being cut in two, and at two pixels it reads as a border. See
+	// Style.StatRuleAfter.
+	statRuleInk = color.RGBA{R: 180, G: 183, B: 192, A: 255}
 )
+
+// statRuleHeight is how thick that hairline is. One pixel, and the card is drawn at 1:1.
+const statRuleHeight = 1
 
 // StatLine is one labeled figure on a card face: a word on the left, a number on the
 // right, both on the same baseline.
@@ -351,12 +362,18 @@ type TextSpan struct {
 
 // MaxStatLines is how many stat rows a card can carry.
 //
-// **It is what the layout fits, not headroom over it.** DuelistStyle's three rows run from
-// y=56 to y=137 against a health bar at y=161, and a fourth at that pitch lands on the bar —
-// TestStatRowsClearTheHealthBar fails rather than drawing it. So a fourth figure is a layout
-// change and the cost of that is charged here on purpose, exactly as a fifth cost tier is by
+// **It is what the layout fits, not headroom over it.** DuelistStyle's five rows run from y=64 to
+// y=189 against a health bar at y=207, and a sixth at that pitch lands on the bar —
+// TestStatRowsClearTheHealthBar fails rather than drawing it. So another figure is a layout change
+// and the cost of that is charged here on purpose, exactly as a fifth cost tier is by
 // TestLeftColumnDoesNotCollide.
-const MaxStatLines = 3
+//
+// **It went from three to five on 2026-09-15** *(owner's call)*, when the floor and the room moved
+// off the ground under the card and onto the card itself. They are stat rows because that is what
+// they are — a label against a figure, saying something true about the duelist for the whole fight
+// — and the row the pitch had to give up to fit them was air the block was not using: three rows at
+// a pitch of 38 finished 36 pixels above the bar.
+const MaxStatLines = 5
 
 // MaxEffects is how many status badges a card can show at once.
 //

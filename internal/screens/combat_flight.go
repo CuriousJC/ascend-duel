@@ -314,6 +314,19 @@ func (s *CombatScene) drawOutbound(gs *state.GlobalState, screen *ebiten.Image, 
 	if f.fromTable {
 		from = playedSeatAt(gs, f.index, f.count, f.split)
 	}
+
+	drawFlyingCard(gs, screen,
+		cardSpec(f.card, heldBy(s.fighter.Duelist, f.card), true, false),
+		cards.Hand, outboundGeoM(from, t))
+}
+
+// outboundGeoM is the throw: accelerating away to the left, lifting, turning and shrinking.
+//
+// **Split out so the animation gallery can drive it from its own origin** *(2026-09-15)*, which is
+// the same reason drawDealtCard takes a point. A gallery reproducing the arithmetic would be a
+// second copy of the gesture, and the one thing a review page must not do is show a gesture the
+// game does not have.
+func outboundGeoM(from image.Point, t float64) ebiten.GeoM {
 	// Off the left edge by a whole card, so it is gone rather than clipped.
 	toX := -cardWidth
 	x := float64(from.X) + (float64(toX)-float64(from.X))*t
@@ -326,22 +339,35 @@ func (s *CombatScene) drawOutbound(gs *state.GlobalState, screen *ebiten.Image, 
 	geo.Scale(scale, scale)
 	geo.Rotate(outboundSpin * t)
 	geo.Translate(x+cardWidth/2, y+cardHeight/2)
-
-	drawFlyingCard(gs, screen, cardSpec(f.card, heldBy(s.fighter.Duelist, f.card), true, false), cards.Hand, geo)
+	return geo
 }
 
 // drawInbound deals a card from the stack into its slot, turning it face up on the way.
 //
-// **The turn is a horizontal squash, not a rotation in depth.** Ebitengine's GeoM is a 2D
-// affine transform, and affine transforms cannot do perspective — a card that genuinely
-// foreshortened would need a Kage shader or per-vertex work. Scaling x from 1 to 0 and back
-// while swapping the face for the back at the midpoint is the standard flat version of the
-// same gesture, it costs one multiplication, and at this speed it reads correctly.
+// **The journey is drawDealtCard's**, shared with the flip cascade's own deal; what is here is the
+// face, which for an ordinary refill is simply the card.
 func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f cardFlight) {
-	t := easeOut(f.progress())
-
-	stack := deckStackRect(gs)
 	to := slotAt(gs, f.index, f.count)
+	face := cardSpec(f.card, heldBy(s.fighter.Duelist, f.card), true, false)
+	drawDealtCard(gs, screen, deckStackRect(gs).Min, to, f.progress(), face, s.backSpec())
+}
+
+// drawDealtCard is the deal itself: a card out of the pile, growing to hand size, turning face up
+// on the way, landing in `to`.
+//
+// **It takes a face and two points rather than a card**, which is the whole of what it costs to be
+// shared. The
+// hand's own deal draws the card it is dealing; the flip cascade's deal draws the card *as the pile
+// holds it*, before any ring has touched it, and then morphs that face through the rings where it
+// stands. One journey, two callers, no second copy of the flip-and-scale arithmetic.
+//
+// **The turn is a horizontal squash, not a rotation in depth.** Ebitengine's GeoM is a 2D affine
+// transform, and affine transforms cannot do perspective — a card that genuinely foreshortened
+// would need a Kage shader or per-vertex work. Scaling x from 1 to 0 and back while swapping the
+// face for the back at the midpoint is the standard flat version of the same gesture, it costs one
+// multiplication, and at this speed it reads correctly.
+func drawDealtCard(gs *state.GlobalState, screen *ebiten.Image, from, to image.Point, raw float64, face, back cards.Spec) {
+	t := easeOut(raw)
 
 	// The stack is a small card and the hand is a full-size one, so the journey scales as
 	// well as travels. Landing is at exactly 1, which is what keeps a resting card the same
@@ -349,19 +375,18 @@ func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f
 	startScale := float64(cards.Stack.Width) / float64(cardWidth)
 	scale := startScale + (1-startScale)*t
 
-	x := float64(stack.Min.X) + (float64(to.X)-float64(stack.Min.X))*t
-	y := float64(stack.Min.Y) + (float64(to.Y)-float64(stack.Min.Y))*t
+	x := float64(from.X) + (float64(to.X)-float64(from.X))*t
+	y := float64(from.Y) - (float64(from.Y)-float64(to.Y))*t
 
 	// The flip runs across the whole journey: out of the pile as a back, edge-on halfway,
 	// face up as it lands. Unlinked from the easing on purpose, so the turn is even while
 	// the travel decelerates.
-	raw := f.progress()
 	faceDown := raw < 0.5
 	flip := math.Abs(1 - 2*raw)
 
-	style, spec := cards.Hand, cardSpec(f.card, heldBy(s.fighter.Duelist, f.card), true, false)
+	style, spec := cards.Hand, face
 	if faceDown {
-		spec = s.backSpec()
+		spec = back
 	}
 
 	var geo ebiten.GeoM
@@ -373,11 +398,11 @@ func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f
 	// authored at; the geometry above is written in Hand units, so it is scaled up to match
 	// before the flight's own transform applies.
 	if faceDown {
-		var back ebiten.GeoM
-		back.Scale(float64(cardWidth)/float64(cards.Stack.Width),
+		var b ebiten.GeoM
+		b.Scale(float64(cardWidth)/float64(cards.Stack.Width),
 			float64(cardHeight)/float64(cards.Stack.Height))
-		back.Concat(geo)
-		geo = back
+		b.Concat(geo)
+		geo = b
 		style = cards.Stack
 	}
 
@@ -490,19 +515,12 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		}
 	}
 
-	// **A defense that already flew its pips does not rise again** *(owner's call, 2026-09-02)*.
-	// The engine resolves defenses at the end of the turn, several beats after the hand they were
-	// scored into — so once the pips leave the card with its figure, the card climbing a second
-	// time on its own announcement reads as the card firing twice. The lift is what says "this
-	// card is acting now", and it already said it.
-	//
-	// **It is the flight that decides, not the card's kind.** A turn of nothing but defenses
-	// forms no hand, so nothing has flown when its announcement arrives — the seat is recorded by
-	// the raise that follows this beat — and that card does lift, which is the only thing on
-	// screen saying which defense is going up.
-	if s.shieldsRaisedBy(side, seat) > 0 && s.row(side).flew(seat) {
-		return
-	}
+	// **Every defense lifts on its own announcement** *(owner's call, 2026-09-15)*. There was a
+	// suppression here from 2026-09-02: a defense scored into a hand flew its pips on that beat,
+	// and the engine then raised the shields several beats later at the end of the turn, so the
+	// card climbed the table a second time and read as firing twice. The defend phase runs *first*
+	// now — see combat.Categories — so the announcement is the first thing that happens to the
+	// card and the pips leave on the raise a beat later. There is nothing left to suppress.
 
 	mine, theirs := &s.theater.firingSeats, &s.theater.enemyFiringSeats
 	if side == combat.SideB {

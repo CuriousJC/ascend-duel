@@ -94,7 +94,14 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 	case tutorial.AnchorDuelistCard:
 		return one(s.duelistCardRect(gs)), true
 	case tutorial.AnchorTowerPlace:
-		return one(s.towerPlaceRect(gs)), true
+		// **The duelist card, since 2026-09-15**: the floor and the room are two of its stat rows
+		// now rather than two lines on the ground under it. The anchor keeps its name because an
+		// anchor names what the step is *asking for* — "where you are" — and that has not changed;
+		// what moved is where the answer is written. It lights the same rectangle AnchorDuelistCard
+		// does, and the two stay separate entries for that reason: they are different questions
+		// that currently share an answer, and a script merging them would have to be re-authored
+		// the day the floor gets a seat of its own again.
+		return one(s.duelistCardRect(gs)), true
 	case tutorial.AnchorRoundTimer:
 		// **The whole bar rather than the cell about to light.** What the step is teaching is the
 		// count, and a square around one segment would say the opposite — that this round is the

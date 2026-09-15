@@ -591,6 +591,13 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 			continue
 		}
 
+		// A card the deal is still bringing in is drawn by the deal — flying out of the pile, or
+		// standing in the row wearing whichever face the flip cascade has reached. The card is the
+		// finished one in the hand; what the deal owns is the face. See combat_deal.go.
+		if s.dealtTo(i) {
+			continue
+		}
+
 		// Dimmed means "you cannot pick this", which now means the selection is full rather
 		// than that the card is unaffordable — an unaffordable card is pickable on purpose,
 		// and dimming something you can click would be a lie. What it costs you is reported

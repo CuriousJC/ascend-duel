@@ -371,8 +371,17 @@ func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
 // Every distinct set of figures is a cache entry, like the enemy's life. Bounded by how many
 // values a fight passes through, which is a handful.
 // `life` is passed in for the reason enemySpec's is — the bar lags a figure still on its way.
+// **`fight` is where the run has got to, and the last two rows are drawn from it**
+// *(owner's call, 2026-09-15)*. The floor and the room were two lines on the ground under the
+// card, which made them the one fact about the duelist not written on the duelist; they are stat
+// rows now, on the same terms as DMG and AP — a label against a figure, true for the whole fight.
+//
+// **They are derived here rather than passed in**, unlike every other figure in this signature.
+// The others are quantities a caller may want to draw differently from the model — a bar lagging a
+// figure in flight, a build band with no shields standing — and where the run *is* has no such
+// reading: `towerFloor` and `towerRoom` are the whole of it.
 func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
-	dmg, vitae, life, maxLife, ap, shields int, inks ...color.RGBA) cards.Spec {
+	dmg, vitae, life, maxLife, ap, fight, shields int, inks ...color.RGBA) cards.Spec {
 	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
@@ -383,6 +392,8 @@ func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(dmg)}
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(ap)}
 	spec.Stats[2] = cards.StatLine{Label: "VITAE", Value: strconv.Itoa(vitae), ValueInk: vitaeInk}
+	spec.Stats[3] = cards.StatLine{Label: "FLOOR", Value: strconv.Itoa(towerFloor(fight))}
+	spec.Stats[4] = cards.StatLine{Label: "ROOM", Value: towerRoom(fight)}
 
 	// **One pip per shield, in the seat the enemy's status badges sit in.** They are drawn with
 	// the defend form's own mark, so what the player raised and what is standing are the same

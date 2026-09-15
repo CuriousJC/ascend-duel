@@ -816,21 +816,55 @@ func TestStatRowsClearTheHealthBar(t *testing.T) {
 	m := face.Metrics()
 	rowHeight := m.Ascent.Ceil() + m.Descent.Ceil()
 
-	bottom := st.StatsTop + (MaxStatLines-1)*st.StatRowPitch + rowHeight
+	// **statRowTop rather than the pitch**, so the rule's extra gap is counted — the arithmetic
+	// here disagreeing with the renderer's is exactly how a guard comes to pass while the last row
+	// is drawn through the bar.
+	bottom := statRowTop(st, MaxStatLines-1) + rowHeight
 	if bottom > st.HealthBarTop {
 		t.Errorf("%d stat rows end at y=%d, %dpx into the health bar at y=%d",
 			MaxStatLines, bottom, bottom-st.HealthBarTop, st.HealthBarTop)
 	}
 
-	// And they start below the name rather than on it.
-	nameFace, err := f.at(st.NameSize)
+	// And they start inside the card rather than on its top border. **There is no name to clear
+	// any more** — the check that used to be here went with it; see
+	// TestTheEnemyNamesItselfAboveItsPortrait, which holds the absence.
+	if st.StatsTop < st.BorderWidth {
+		t.Errorf("the first stat row is at y=%d, on the %dpx border", st.StatsTop, st.BorderWidth)
+	}
+}
+
+// The rule is what stops five rows reading as one list, so where it lands is the whole of it: in
+// the air between the two groups, touching neither.
+func TestTheStatRuleSitsBetweenTheTwoGroups(t *testing.T) {
+	st := DuelistStyle
+	if st.StatRuleAfter <= 0 || st.StatRuleGap <= 0 {
+		t.Fatal("the duelist card has no rule between its stat groups")
+	}
+	if st.StatRuleAfter >= MaxStatLines {
+		t.Fatalf("the rule sits after row %d of %d, so it is under every row rather than between two",
+			st.StatRuleAfter, MaxStatLines)
+	}
+
+	f := faces(t)
+	face, err := f.at(st.StatSize)
 	if err != nil {
 		t.Fatal(err)
 	}
-	nm := nameFace.Metrics()
-	nameBottom := st.NameTop + nm.Ascent.Ceil() + nm.Descent.Ceil()
-	if nameBottom > st.StatsTop {
-		t.Errorf("the name ends at y=%d, below the first stat row at y=%d", nameBottom, st.StatsTop)
+	m := face.Metrics()
+	rowHeight := m.Ascent.Ceil() + m.Descent.Ceil()
+
+	above := statRowTop(st, st.StatRuleAfter-1) + rowHeight
+	below := statRowTop(st, st.StatRuleAfter)
+
+	if below-above < statRuleHeight+2 {
+		t.Errorf("the gap the rule sits in is %dpx, too tight for a %dpx rule and any air",
+			below-above, statRuleHeight)
+	}
+
+	// The rows either side of it are still at the plain pitch, so the gap is the rule's alone.
+	if plain := statRowTop(st, 1) - statRowTop(st, 0); below-statRowTop(st, st.StatRuleAfter-1) <= plain {
+		t.Errorf("the rule's row gap is %dpx against a plain pitch of %dpx; it opened no air",
+			below-statRowTop(st, st.StatRuleAfter-1), plain)
 	}
 }
 
@@ -918,9 +952,7 @@ func TestTheEnemyNamesItselfAboveItsPortrait(t *testing.T) {
 	// illustration covers the one thing worth looking at in order to repeat it. The two bleeding
 	// styles are checked for the absence, so turning a name back on is a decision rather than an
 	// accident.
-	for name, st := range map[string]Style{
-		"enemy": EnemyStyle, "duelist": DuelistStyle, "hand": Hand,
-	} {
+	for name, st := range map[string]Style{"enemy": EnemyStyle, "hand": Hand} {
 		if !st.ShowName || !st.NameCentered {
 			t.Errorf("%s does not center a name across its top", name)
 		}
@@ -932,6 +964,16 @@ func TestTheEnemyNamesItselfAboveItsPortrait(t *testing.T) {
 		if st.ShowName {
 			t.Errorf("%s writes a title across its own picture", name)
 		}
+	}
+
+	// **The duelist card is the third case and it is neither** *(owner's call, 2026-09-15)*: no
+	// name and no picture. It carried "Duelist" until then, which spent the best line on the card
+	// repeating what the corner it sits in already says. Its top line is the first stat row.
+	if DuelistStyle.ShowName {
+		t.Error("the duelist card names itself again; the corner it sits in already says who it is")
+	}
+	if DuelistStyle.ArtBleed {
+		t.Error("this test is checking the wrong style — the duelist card has no picture")
 	}
 	if EnemyStyle.NameTop >= EnemyStyle.ArtTop {
 		t.Errorf("the enemy's name is at y=%d, at or below its portrait at y=%d",
@@ -1336,5 +1378,56 @@ func TestAFigureStaysOnItsUnitsLine(t *testing.T) {
 				break
 			}
 		}
+	}
+}
+
+// TestTheBottomBlockFitsInsideTheCard is what the fighter cards' packed lower half is held by.
+//
+// **The empty space under the fraction is reserved, not spare** *(owner's call, 2026-09-15)*. The
+// pip row draws nothing until shields are standing, so a duel that has raised none looks like fifty
+// pixels of slack — and a bar nudged down into it would leave a row of pips with nowhere to land
+// the first time a Guard goes down. So the block is measured at its *reserved* extent: bar, then
+// fraction, then the full pip row, inside the bottom border.
+//
+// Both fighter cards are checked, because the two carry the bar at identical offsets on purpose —
+// they face each other across the table, and a bar at a different height on each would make
+// comparing them an act of measurement.
+func TestTheBottomBlockFitsInsideTheCard(t *testing.T) {
+	f := faces(t)
+
+	for _, c := range []struct {
+		name string
+		st   Style
+	}{{"duelist", DuelistStyle}, {"enemy", EnemyStyle}} {
+		face, err := f.at(c.st.HealthTextSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+		m := face.Metrics()
+		textBottom := c.st.HealthTextTop + m.Ascent.Ceil() + m.Descent.Ceil()
+
+		if bar := c.st.HealthBarTop + c.st.HealthBarHeight; bar > c.st.HealthTextTop {
+			t.Errorf("%s: the bar ends at y=%d, under the fraction at y=%d",
+				c.name, bar, c.st.HealthTextTop)
+		}
+		if textBottom > c.st.EffectTop {
+			t.Errorf("%s: the fraction ends at y=%d, %dpx into the pip row at y=%d",
+				c.name, textBottom, textBottom-c.st.EffectTop, c.st.EffectTop)
+		}
+
+		// The pip row is the floor, and it is drawn whether or not anything is in it today.
+		inside := c.st.Height - c.st.BorderWidth - 4
+		if pips := c.st.EffectTop + c.st.EffectSize; pips > inside {
+			t.Errorf("%s: the pip row ends at y=%d, %dpx past the inside of the border at y=%d",
+				c.name, pips, pips-inside, inside)
+		}
+	}
+
+	// And the two agree, which is the property that makes the cards comparable across the table.
+	if DuelistStyle.HealthBarTop != EnemyStyle.HealthBarTop ||
+		DuelistStyle.HealthTextTop != EnemyStyle.HealthTextTop {
+		t.Errorf("the fighter cards carry their bars at different heights: duelist %d/%d, enemy %d/%d",
+			DuelistStyle.HealthBarTop, DuelistStyle.HealthTextTop,
+			EnemyStyle.HealthBarTop, EnemyStyle.HealthTextTop)
 	}
 }

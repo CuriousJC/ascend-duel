@@ -107,6 +107,12 @@ func main() {
 	g.GlobalState.DebugPlacement = false
 	g.GlobalState.DebugGameplay = false
 
+	// The animation gallery's door. **On while the gallery is being built**, which is the one of
+	// the three that is not off today — it belongs off before this ships, on the same argument the
+	// other two are under. See screens.AnimationsScene, which is the shared vocabulary for talking
+	// about one of the game's gestures.
+	g.GlobalState.DebugAnimations = true
+
 	// Handed to the state rather than read from this package by the screens, so nothing
 	// below main has to import it — the dependency direction only ever points down.
 	g.GlobalState.Version = version

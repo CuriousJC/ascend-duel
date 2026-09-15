@@ -116,6 +116,7 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 			s.shownLife(combat.SideA, s.fighter.CurrentLife),
 			s.shownMaxLife(combat.SideA, s.fighter.MaxLife),
 			s.fighter.ActionPoints(),
+			s.fightIndex,
 			s.shownShields(combat.SideA, s.fighter.Shields),
 			s.shownShieldInks(combat.SideA)...),
 		cards.DuelistStyle)
@@ -149,16 +150,13 @@ const (
 	// the difficulty disagree about how deep a floor is.
 	fightsPerFloor = pyramid.FightsPerFloor
 
-	// **towerLineGap is the drop from the duelist card's bottom edge to the first line**
-	// *(2026-09-04, owner's call)*. The caption stood in a column beside the card for a day, which
-	// bought the top band height and cost the relic row 166 pixels of its width — and the hand row
-	// is laid out to that width now, so the column was being paid for twice. It is back under the
-	// card, where the whole left column is one thing: who you are, where you are, what is left to
-	// draw.
-	towerLineGap   = 10
-	towerLineSize  = 18
-	towerLinePitch = 22 // the same pitch a card sets its own text at
-	towerLines     = 2  // the floor, then the room
+	// **towerLineGap is the drop from the duelist card's bottom edge to whatever hangs off it**,
+	// which is the round timer and nothing else now. The floor and the room stood here — in a
+	// column beside the card for a day, then back under it — and moved **onto** the card on
+	// 2026-09-15 *(owner's call)*: they are facts about the duelist, and the one place on this
+	// screen a fact about the duelist was not written on the duelist was the two lines below it.
+	// See cards.DuelistStyle, where they are stat rows now.
+	towerLineGap = 10
 )
 
 // towerRoomNames is what each of a floor's three fights is called, in order. Indexed by the
@@ -176,38 +174,6 @@ func towerFloor(fight int) int { return fight/fightsPerFloor + 1 }
 
 // towerRoom names which of its floor's fights this is.
 func towerRoom(fight int) string { return towerRoomNames[fight%fightsPerFloor] }
-
-// towerPlaceRect is what the two lines occupy: the duelist card's column, starting below it.
-//
-// The width is the card's rather than the text's — the lines are short and left-aligned to the
-// card's left edge, and what the rectangle is for is holding the block against what is drawn
-// under it. See TestTheTowerLinesFitBetweenTheCardAndTheTable.
-func (s *CombatScene) towerPlaceRect(gs *state.GlobalState) image.Rectangle {
-	card := s.duelistCardRect(gs)
-	top := card.Max.Y + towerLineGap
-	return image.Rect(card.Min.X, top, card.Max.X, top+towerLines*towerLinePitch)
-}
-
-// drawTowerPlace writes the floor and the room beside the duelist card.
-//
-// Straight onto the ground rather than onto a surface of its own, so it takes `groundInk` — it
-// belongs to the card above it and a panel would make it a third object in a row that already
-// has three.
-func (s *CombatScene) drawTowerPlace(gs *state.GlobalState, screen *ebiten.Image) {
-	r := s.towerPlaceRect(gs)
-	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: towerLineSize}
-
-	lines := [towerLines]string{
-		fmt.Sprintf("Floor %d", towerFloor(s.fightIndex)),
-		towerRoom(s.fightIndex),
-	}
-	for i, line := range lines {
-		op := &text.DrawOptions{}
-		op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y+i*towerLinePitch))
-		op.ColorScale.ScaleWithColor(groundInk)
-		text.Draw(screen, line, face, op)
-	}
-}
 
 // The discards-left badge: a filled disc centered exactly on the Discard button's bottom-right
 // corner, with the count in it.
@@ -354,12 +320,15 @@ const (
 	roundTimerCellGap = 2
 )
 
-// roundTimerRect is the bar's whole footprint: the duelist card's column again, under the two
-// tower lines.
+// roundTimerRect is the bar's whole footprint: the duelist card's column, hung straight off the
+// bottom of the card.
+//
+// **It used to hang off the floor-and-room lines, which are on the card now** — so the bar moved up
+// into the space they left rather than a gap being kept where they were. See towerLineGap.
 func (s *CombatScene) roundTimerRect(gs *state.GlobalState) image.Rectangle {
-	place := s.towerPlaceRect(gs)
-	top := place.Max.Y + roundTimerGap
-	return image.Rect(place.Min.X, top, place.Max.X, top+roundTimerHeight)
+	card := s.duelistCardRect(gs)
+	top := card.Max.Y + towerLineGap
+	return image.Rect(card.Min.X, top, card.Max.X, top+roundTimerHeight)
 }
 
 // roundTimerLimit is how many rounds this fight gets, or zero for a fight on no clock at all.

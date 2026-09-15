@@ -1637,28 +1637,72 @@ func DemoteConcept(worn []WornRelic, card Card) (ConceptID, bool) {
 	return Neighbor(card.Concept, -deepest)
 }
 
+// FlipStep is one relic recoloring a card on its way out of the draw pile: which relic did it, and
+// what the card became.
+//
+// **It exists because the cascade is something to watch.** A card dealt under two flips changes
+// twice, once per ring, and a caller handed only the final color could draw one change out of two —
+// see screens/combat_deal.go, which plays a beat per step with the ring that caused it rattling.
+type FlipStep struct {
+	Relic RelicID
+	To    Element
+}
+
+// FlipSteps is every flip that touches a card as it is dealt, **in worn order, each one reading what
+// the flip before it left behind**.
+//
+// **They chain** *(owner's call, 2026-09-15)*. Lightning-to-ice worn beside ice-to-earth deals a
+// lightning card as earth, through ice, rather than leaving it at ice. Every flip used to match on
+// the card's *original* element on the argument that chaining lets a run funnel a whole deck into
+// one color — which it does, and which is now the intent rather than the hazard. The deck panel's
+// alterations view is what answers "so what am I actually holding"; see session.AlteredAs, which
+// reads the same walk.
+//
+// **A flip onto the color the card already wears is not a step.** Nothing happened, so there is
+// nothing to draw and nothing to report — which is also what stops a relic listing itself as a
+// contributor to a card it left alone.
+func FlipSteps(worn []WornRelic, card Card) []FlipStep {
+	var out []FlipStep
+
+	running := card
+	for _, w := range worn {
+		to, matched := Basic, false
+		for _, rule := range RelicOf(w.Relic).Rules {
+			if rule.When != MomentCardDrawn || !rule.If.Matches(running) {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do == DoSetElement {
+					to, matched = e.Element, true
+				}
+			}
+		}
+		if !matched || to == running.Element {
+			continue
+		}
+		running.Element = to
+		out = append(out, FlipStep{Relic: w.Relic, To: to})
+	}
+	return out
+}
+
 // FlipElement is what color a card is dealt as, given a worn set. It reports false when no relic
 // touches it, so a caller can leave the card alone rather than writing its own color back over it.
 //
-// **Every flip reads the card's original element**, which is what stops two of them chaining a deck
-// to one color: the later relic matches on what the card *is*, not on what the earlier relic made it.
-// The last matching flip wins, and worn order is what decides which that is.
+// **It is the last step of FlipSteps**, which is the walk — two walks would be two chances to
+// disagree about what a card is dealt as, and the screen draws every step of the one this answers
+// the end of.
 //
-// **"Original" is now a duty the caller carries** *(2026-08-24)*. While this fired at `deck-built`
-// it was true by construction — the fight deck was built out of the run's own cards, once, and
-// nothing had flipped anything yet. Firing per draw, the discard pile holds cards that have already
-// been through here, so a caller that folds the discard back into the draw pile and hands those
-// cards to this function is asking the second flip to read the first one's answer. The combat
-// screen restores a card to the face the run owns before it can be drawn again; see
-// screens/combat_deck.go.
+// **The card handed in must be the card the run owns.** A flip reads the running element now, so a
+// card that has already been through here and is handed back would take a second trip: the
+// discard folded into the draw pile is restored to the run's own color first, which is what
+// screens.restoreToDeck is for. That was true before the flips chained and it matters more now.
 func FlipElement(worn []WornRelic, card Card) (Element, bool) {
-	out, flipped := Basic, false
-	for _, e := range RelicEffectsAt(worn, MomentCardDrawn, card) {
-		if e.Do == DoSetElement {
-			out, flipped = e.Element, true
-		}
+	steps := FlipSteps(worn, card)
+	if len(steps) == 0 {
+		return Basic, false
 	}
-	return out, flipped
+	return steps[len(steps)-1].To, true
 }
 
 // Grows reports whether a relic holds an accumulator at all — a rule with any of the three growth

@@ -110,45 +110,6 @@ func TestTheRelicRowSitsBelowTheCardsBesideIt(t *testing.T) {
 	}
 }
 
-// The two tower lines sit under the duelist card, in its column, and the band they have to fit in
-// is bounded by the played row below them. Both edges move on their own — the card's off
-// topRowTopPct, the table's off handTop — so the fit is exactly the kind of thing that goes stale
-// silently.
-func TestTheTowerLinesFitBetweenTheCardAndTheTable(t *testing.T) {
-	gs := testState()
-	s := &CombatScene{}
-
-	card, place := s.duelistCardRect(gs), s.towerPlaceRect(gs)
-
-	// **The caption is back under the card** *(2026-09-04, owner's call)*. It stood in a column
-	// beside it for a day, which bought the top band height and cost the relic row — and therefore
-	// the hand, which is laid out to it — 166 pixels of width. See towerPlaceRect.
-	if place.Min.X != card.Min.X || place.Max.X != card.Max.X {
-		t.Errorf("the tower lines run x=%d..%d, want the duelist card's column %d..%d",
-			place.Min.X, place.Max.X, card.Min.X, card.Max.X)
-	}
-	if place.Min.Y != card.Max.Y+towerLineGap {
-		t.Errorf("the tower lines start at y=%d, want %dpx under the card at y=%d",
-			place.Min.Y, towerLineGap, card.Max.Y)
-	}
-
-	// And clear of the relic row, which now starts at the card's own right edge.
-	if pane := s.relicPaneRect(gs); place.Max.X > pane.Min.X {
-		t.Errorf("the tower lines reach x=%d, into the relic row at x=%d", place.Max.X, pane.Min.X)
-	}
-
-	// The whole top band has to finish above the table row — the caption included, since it is
-	// under the card now rather than beside it.
-	top := tableRowTop(gs)
-	if s.relicCountRect(gs).Max.Y > top {
-		t.Errorf("the relic count reaches y=%d, into the table row at y=%d",
-			s.relicCountRect(gs).Max.Y, top)
-	}
-	if place.Max.Y > top {
-		t.Errorf("the tower lines reach y=%d, into the table row at y=%d", place.Max.Y, top)
-	}
-}
-
 func TestEveryRoomOnAFloorIsNamed(t *testing.T) {
 	// Three fights to a floor and three names for them: towerRoom indexes one array by the
 	// other's modulus, so a fourth fight per floor would panic rather than draw a blank line.

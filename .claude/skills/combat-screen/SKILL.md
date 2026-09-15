@@ -386,6 +386,35 @@ does.
 - **`demoGiveUpAt` has a flat term as well as a multiple of the speed**, since the safety net has
   to outlast dialogs that no longer shrink in proportion to it.
 
+### A hand arrives: deal, cascade, sort
+
+*`combat_deal.go`, 2026-09-15.* **Every hand in a fight comes in the same way.** Cards fly out of
+the pile left to right in **pile order**, the flip cascade plays **one beat per worn ring** over
+them, and the row **sorts itself last**. The opening hand used to be filled and sorted with nothing
+on screen; a refill flew. Two ways of doing one thing, and the one the player meets first said
+nothing.
+
+- **The sort moved to the end, reversing `spendSelected`'s old rule.** It sorted before anything
+  was animated so a dealt card flew straight to its final slot. That is one journey per card and a
+  hand that never shows what the shuffle gave you.
+- **The hand holds the finished cards from the first frame**; the deal owns the **faces**. So a card
+  clicked while it is still wearing its pile face is the card the engine will score —
+  `shownLife`'s division, applied to a card rather than to a bar. The exception is the sort, which
+  really does reorder the row, on a hand with no round in flight.
+- **The flips chain now** *(owner's call)* — `combat.FlipSteps` is the walk, each ring reading what
+  the ring before it left. Two rings is two beats. See MECHANICS.md §The flip relics.
+- **A ring that touches nothing in this hand is not a beat**, and the ring that *is* firing
+  **toasts** — `relicToast`, which is the rattle, a tilt one way then the other, and the lit
+  border, all three off one `travel`. The sum's own toast, on a second clock, since one is playback
+  and the other is a hand arriving. **A resting relic is blitted and a toasting one is flown**,
+  because a turn puts the card off the pixel grid.
+- **`tickDeal` is driven by the scene, not by `combatTheater.tick`.** Its stages hand over to each
+  other and the handovers need the scene: the cascade reads the run's worn relics and the sort
+  rewrites the hand.
+- **`dealtTo` is the fourth suppression** on the hand row, beside `inboundTo`, `resolvedInHand` and
+  `slidingTo`, and it is checked after the first three for the same reason the morph is checked
+  last.
+
 ### Shields break the attacks they ate, and a card can be marked
 
 *`combat_shatter.go` and `internal/cards/mark.go`, 2026-09-08.* A shield eats the creature's

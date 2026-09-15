@@ -293,6 +293,12 @@ type combatTheater struct {
 	// not the card. See combat_handmorph.go.
 	morphs []handMorph
 
+	// deal is the hand arriving: cards out of the pile, the flip cascade a ring at a time over
+	// them, and the sort last. **It is a sequence rather than a list of movers** — the three stages
+	// hand over to each other, so one thing owns the order and nothing has to watch a slice empty
+	// to know a stage is finished. See combat_deal.go.
+	deal handDeal
+
 	// The player's side of the table: the cards played this round, in resolution order, flying
 	// out of the hand and into a row on the left facing the opponent's. Dealt in full the
 	// moment the round starts — see seatPlayedCards — and what a hand narrows to the cards it
@@ -399,6 +405,11 @@ func (t *combatTheater) tick() {
 	t.flights = advance(t.flights)
 	t.slides = advance(t.slides)
 	t.morphs = advance(t.morphs)
+
+	// **The deal is not advanced here.** It is a sequence with stages that hand over, and the
+	// handover needs the scene — the cascade reads the run's worn relics and the sort rewrites the
+	// hand. CombatScene.tickDeal drives it; see combat_deal.go.
+
 	t.hits = advance(t.hits)
 	t.shields = advance(t.shields)
 

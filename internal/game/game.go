@@ -51,6 +51,13 @@ type Game struct {
 	ledgerButton *models.Button
 	ledger       screens.LedgerPanel
 
+	// animButton opens the animation gallery, and it is **the one thing in the frame that is not
+	// chrome by the frame's own test**: it is not true of the whole session, it is instrumentation.
+	// It is here because it is the only place a debug page can be reached from every screen, and it
+	// is drawn only while state.DebugAnimations is on — so with the flag off the frame is exactly
+	// the two controls it was. See screens.AnimationsScene.
+	animButton *models.Button
+
 	// toast is the achievement notice, and it is chrome for the ledger's reasons *(2026-09-06)*:
 	// an achievement can land during a duel, on the post-battle screen or on the transition between
 	// them, and no scene owns any of that. Like the ledger it takes the frame while it is up.
@@ -87,6 +94,12 @@ func NewGame() *Game {
 			// **The end-of-run splash.** Not a station either: the run is already gone by the time
 			// it draws, which is why it reads a summary off the state rather than the run.
 			state.RunOver: &screens.RunOverScene{},
+
+			// **The animation gallery**, behind state.DebugAnimations. Registered unconditionally
+			// because the registry is the only place a screen exists at all and a conditional entry
+			// would be a scene the fallback quietly swaps for the title; what the flag gates is the
+			// button that reaches it. See screens.AnimationsScene.
+			state.Animations: &screens.AnimationsScene{},
 		},
 	}
 }

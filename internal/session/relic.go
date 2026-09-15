@@ -504,8 +504,9 @@ func (s *Session) FightDeck() []combat.Card {
 // ahead of time, so that a player can see the deck they are about to be dealt rather than the list
 // they happen to own.
 //
-// **The card handed in must be the run's own.** Both verbs read the original, so a card that has
-// already been through a draw would have the flip read the flip's own answer.
+// **The card handed in must be the run's own.** Both verbs read the card as the run owns it, so one
+// that has already been through a draw would be demoted twice and would take the flip cascade from
+// wherever its last trip through left it.
 func (s *Session) AlteredAs(c combat.Card) combat.Card {
 	worn := s.WornRelics()
 	if len(worn) == 0 {
@@ -526,14 +527,27 @@ func (s *Session) AlteredAs(c combat.Card) combat.Card {
 // when none of them match it.
 //
 // **It is the `card-drawn` moment, and the run is where it lives** because the fight's piles are a
-// screen's and the worn relics are the run's. The caller passes the card *as the run owns it* — see
-// combat.FlipElement, which reads the original element and would chain if handed a card it had
-// already recolored.
+// screen's and the worn relics are the run's.
+//
+// **The caller passes the card as the run owns it.** The flips chain within one call — see
+// combat.FlipSteps — so a card handed back after a trip through here would take a second cascade
+// from wherever the first one left it. screens.restoreToDeck is what keeps that from happening
+// when the discard is folded back into the draw pile.
 func (s *Session) DrawnAs(c combat.Card) combat.Card {
 	if e, flipped := combat.FlipElement(s.WornRelics(), c); flipped {
 		c.Element = e
 	}
 	return c
+}
+
+// FlipStepsFor is the cascade a card goes through on its way into the hand: one entry per worn ring
+// that recolors it, in worn order.
+//
+// **DrawnAs is the end of this walk and this is the whole of it**, which is what the combat screen's
+// deal needs — a card dealt under two rings changes twice, and a beat per ring is how the player
+// sees which relic did which. See screens/combat_deal.go.
+func (s *Session) FlipStepsFor(c combat.Card) []combat.FlipStep {
+	return combat.FlipSteps(s.WornRelics(), c)
 }
 
 // Picks is how many prizes the post-battle screen offers, at the `prizes-dealt` moment. One, plus

@@ -110,9 +110,14 @@ func playTurn(
 	events, actor = expireDefenses(events, side, actor, round)
 
 	// A chill comes off the front, which needs no tie-break and so is the only pick that is
-	// deterministic without inventing a rule. **The front of a turn is its attacks** — the phase
-	// order puts them before the defenses — so what a chill costs first is the blow, which is what
-	// makes it worth planning around rather than merely suffering.
+	// deterministic without inventing a rule.
+	//
+	// **The front of a turn is its defenses as of 2026-09-15**, because the phase order flipped —
+	// see Categories. So what a chill costs first is now the guard rather than the blow. **That is
+	// a real change to what ice does and it was taken rather than worked around**: the alternative
+	// is naming attacks explicitly here, which is exactly the invented rule this picks the front to
+	// avoid. If ice should go back to eating the blow first, this is the line, and it needs a
+	// tie-break rule of its own.
 	//
 	// **The action points are not refunded.** They were committed when the cards were queued,
 	// and letting them come back would make a chill pure tempo; keeping them spent makes it
@@ -149,26 +154,41 @@ func playTurn(
 	// survive. See rider.go.
 	events, actor = playRiders(events, side, actor, turn, held, round, src.Luck)
 
-	// **The attack phase is one blow, whatever it was made of.** Every attack card queued is
-	// announced, then the hand they form is announced, then a single figure of damage lands. Five
-	// Bashes are not five hits; they are one Four of a Kind.
-	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands, src.Roll)
-
-	// **The defend phase comes second, and that is what a defense needs** *(2026-08-15)*. A guard
-	// and a shield both answer the *opponent's* blow, and the opponent acts after this turn ends —
-	// so a defense raised at the end of a turn is the only one that is standing when anything is
-	// aimed at it.
+	// **The defend phase comes first as of 2026-09-15** *(owner's call)*, reversing the 2026-08-15
+	// order. The argument for putting it last was that a defense answers the *opponent's* blow and
+	// the opponent acts after this turn — which is true and does not depend on within-turn order:
+	// `expireDefenses` runs at the start of a side's *own* turn, so a shield raised anywhere in
+	// this turn is standing through the opponent's either way, and this side's attacks are aimed at
+	// the other duelist rather than at itself. See Categories, where the ordering lives.
+	//
+	// What it buys is what a turn reads as: raise the guard, then swing. A defend card used to pay
+	// a visible 0 into the hand's sum and then do the thing it was actually for several beats
+	// later, on a card the player had stopped watching.
 	//
 	// **It is skipped if either side fell**, since a corpse raising a shield is a line in the log
-	// nobody wants and a duel that is over does not need one.
-	if !actor.Alive() || !target.Alive() {
-		return events, actor, target
-	}
+	// nobody wants and a duel that is over does not need one. **That guard has moved with the
+	// phase and now only protects the phase below it** — nothing can have fallen this early in a
+	// turn, because the only thing in front of the defenses is the riders.
 	for _, slot := range turn {
 		if slot.Card.Category() != CategoryDefend {
 			continue
 		}
 		events, actor, target = resolveDefend(events, side, actor, target, slot.Card, round)
+	}
+
+	if !actor.Alive() || !target.Alive() {
+		return events, actor, target
+	}
+
+	// **The attack phase is one blow, whatever it was made of.** Every attack card queued is
+	// announced, then the hand they form is announced, then a single figure of damage lands. Five
+	// Bashes are not five hits; they are one Four of a Kind.
+	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands, src.Roll)
+
+	// **Nothing follows the blow**, so a duelist who fell to it closes no turn: the streak below is
+	// a fact about turns taken and a corpse takes none.
+	if !actor.Alive() || !target.Alive() {
+		return events, actor, target
 	}
 
 	// **The turn is closed after everything in it has resolved**, which is what makes "a turn with

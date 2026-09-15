@@ -443,9 +443,46 @@ type CombatScene struct {
 	tut tutorialOverlay
 }
 
-// Init prepares a fresh duel. Safe to re-enter: the combatants and the button are
-// built once, everything else resets every visit.
+// Init prepares the screen. **It is entered two ways and they are not the same thing**
+// *(2026-09-15)*.
+//
+// A **new fight** builds a whole duel: a fresh shuffle, a fresh hand, the opponent's plan for round
+// one, and the life the run walks in carrying. `nextFight` leans on that — Init is how the next
+// room starts, not only how the screen is entered.
+//
+// A **re-entry** is the player coming back from a screen they stepped out to: the settings cog is
+// live during a duel, and leaving through it and returning used to run the whole of the above. That
+// silently restarted the fight — new cards, a re-planned opponent, the round counter at zero and
+// full life restored — and it had been true since the screen existed. It was invisible because a
+// replacement hand simply appeared; the deal made it unmistakable, which is how it was found. See
+// combat_deal.go.
+//
+// **The key is the run and the room**, and deliberately nothing about whether the duel is finished:
+// a settled duel has to survive a re-entry too, or stepping out after a defeat would hand the
+// player a fresh fight and undo the death. What that costs is that a caller wanting a fresh duel at
+// the same room of the same run would not get one, and there is no such caller — `WonFight` steps
+// `Session.fight` and a defeat ends the run outright.
 func (s *CombatScene) Init(gs *state.GlobalState) {
+	if s.showingDuel(gs) {
+		s.placeWidgets(gs)
+		s.traceLayout(gs)
+		return
+	}
+	s.newDuel(gs)
+}
+
+// showingDuel reports that this scene is already drawing the duel the run is standing in, so Init
+// has been re-entered rather than asked for a new fight.
+//
+// **A run with no session behind it never matches**, which covers the callers that drive this scene
+// without one — `OpeningHand`, `tools/seeds` and the flight tests. Their fight index is 0 forever,
+// so a key that let them match would be a key that never rebuilt anything.
+func (s *CombatScene) showingDuel(gs *state.GlobalState) bool {
+	return gs.Run != nil && s.run == gs.Run && s.fightIndex == fightIndex(gs.Run)
+}
+
+// newDuel is the whole of a fresh fight.
+func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	// **The fighter is rebuilt from the record on every visit, and then re-equipped**
 	// *(2026-08-17)*. It used to be built once, which was fine while a relic was a flag that never
 	// changed — a growing relic's accumulator moves between fights, so equipping once would have
@@ -499,49 +536,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		s.fighter.Actions = scenario.Actions()
 	}
 
-	// The scene builds its own widgets and wires them to its own methods, so no other
-	// package needs to know this screen has buttons or what pressing them means.
-	if s.duelButton == nil {
-		s.duelButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DUEL!", s.startRound)
-		s.duelButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255} // crimson
-	}
-	if s.discardButton == nil {
-		s.discardButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DISCARD", s.discardSelected)
-		s.discardButton.BaseColor = color.RGBA{R: 225, G: 200, B: 60, A: 255} // yellow
-	}
-	// **The bottom strip is one row of four things, spaced rather than placed** *(2026-08-11)*:
-	// the AP figure at the hand's left edge, the two buttons, and the deck pile at the right.
-	// The buttons no longer sit at percentages of the screen — `buttonStripSlots` divides
-	// what is left between the figure and the pile into three equal gaps, so the strip stays
-	// evenly spread if any of the three fixed things moves.
-	//
-	// **They are deliberately not adjacent any more.** Discard and DUEL! were side by side
-	// because they are the same choice made two ways; they are separate choices now, and the
-	// spacing says so. Discard briefly sat on the hand's left edge, which is the AP figure's
-	// column — the figure came back on 2026-08-11 and wanted it.
-	//
-	// **There is no third button.** Deck was one until 2026-08-10 and is now the pile itself.
-	// See combat_flight.go.
-	// The sort column, beside the cards rather than on the strip below them: it arranges the
-	// hand and commits nothing, so it belongs against the thing it arranges. **The mode is
-	// loaded rather than reset** — it is `gs.HandSort`, a reading preference shared with every
-	// other screen that deals a hand, and this is where this screen picks it up.
-	s.sortMode = handSortOf(gs)
-	if s.sortTabs == nil {
-		s.buildSortButtons()
-	}
-	s.sortTabs.place(gs)
-
-	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
-	s.discardButton.ScreenX = discardX
-	s.discardButton.ScreenY = buttonStripY(gs)
-	s.duelButton.ScreenX = duelX
-	s.duelButton.ScreenY = buttonStripY(gs)
-
-	s.showDeck = false
-	s.hands.initInColumn(handsButtonPlace)
-	s.stones = nil
-	s.tip = models.Tooltip{DwellTicks: tipDwell()}
+	s.placeWidgets(gs)
 
 	// **The whole stage comes down, and that is one line on purpose** *(2026-08-21)*. It was eight
 	// statements, each added after something was found still on screen at the start of the next
@@ -616,6 +611,60 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		len(s.deck), len(s.hand), len(s.discard), playerSeed, enemySeed)
 	s.tracedHand = len(s.hand)
 	s.traceLayout(gs)
+}
+
+// placeWidgets is the half of Init that is about the *screen* rather than about the duel: the
+// buttons and the sort column built once and positioned every visit, the reading preference
+// reloaded, and the bits of screen state a player left behind when they walked out.
+//
+// **It is split out because Init is entered two ways** *(2026-09-15)*. One is a new fight, which
+// wants everything; the other is coming back from the settings screen mid-duel, which wants the
+// layout and nothing else. A window can be resized while the settings screen is up, so the
+// placement has to run on both paths — it is only the *duel* that must not be rebuilt.
+func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
+	// The scene builds its own widgets and wires them to its own methods, so no other
+	// package needs to know this screen has buttons or what pressing them means.
+	if s.duelButton == nil {
+		s.duelButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DUEL!", s.startRound)
+		s.duelButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255} // crimson
+	}
+	if s.discardButton == nil {
+		s.discardButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DISCARD", s.discardSelected)
+		s.discardButton.BaseColor = color.RGBA{R: 225, G: 200, B: 60, A: 255} // yellow
+	}
+	// **The bottom strip is one row of four things, spaced rather than placed** *(2026-08-11)*:
+	// the AP figure at the hand's left edge, the two buttons, and the deck pile at the right.
+	// The buttons no longer sit at percentages of the screen — `buttonStripSlots` divides
+	// what is left between the figure and the pile into three equal gaps, so the strip stays
+	// evenly spread if any of the three fixed things moves.
+	//
+	// **They are deliberately not adjacent any more.** Discard and DUEL! were side by side
+	// because they are the same choice made two ways; they are separate choices now, and the
+	// spacing says so. Discard briefly sat on the hand's left edge, which is the AP figure's
+	// column — the figure came back on 2026-08-11 and wanted it.
+	//
+	// **There is no third button.** Deck was one until 2026-08-10 and is now the pile itself.
+	// See combat_flight.go.
+	// The sort column, beside the cards rather than on the strip below them: it arranges the
+	// hand and commits nothing, so it belongs against the thing it arranges. **The mode is
+	// loaded rather than reset** — it is `gs.HandSort`, a reading preference shared with every
+	// other screen that deals a hand, and this is where this screen picks it up.
+	s.sortMode = handSortOf(gs)
+	if s.sortTabs == nil {
+		s.buildSortButtons()
+	}
+	s.sortTabs.place(gs)
+
+	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
+	s.discardButton.ScreenX = discardX
+	s.discardButton.ScreenY = buttonStripY(gs)
+	s.duelButton.ScreenX = duelX
+	s.duelButton.ScreenY = buttonStripY(gs)
+
+	s.showDeck = false
+	s.hands.initInColumn(handsButtonPlace)
+	s.stones = nil
+	s.tip = models.Tooltip{DwellTicks: tipDwell()}
 }
 
 // resetCombatState clears everything a duel accumulates, leaving the stats a combatant was
@@ -820,6 +869,12 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 
 	s.updateRelicRow(gs)
 	s.tickShakes(gs)
+
+	// The hand arriving: the deal, the flip cascade, the sort. **Driven from here rather than from
+	// the theater's own tick**, because its stages hand over to each other and the handover needs
+	// the scene — the cascade reads the run's worn relics and the sort rewrites the hand. It may
+	// not change an outcome; see combat_deal.go.
+	s.tickDeal()
 
 	// Above the branch below, because the column is live under exactly one condition and it is
 	// its own: the hand may be rearranged whenever it may be edited. It goes dead once the duel
@@ -1289,14 +1344,10 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 			s.releaseSeatSignals(s.theater.mathBox.side, seat)
 		}
 
-		// **A defend card's pips set off with its figure.** The box is the only thing that knows
-		// which card is being scored right now, and this is the frame it starts on. See
-		// combat_shields.go for why the shields lead the engine's own raise by a phase.
-		if n, ok := s.theater.mathBox.takeShields(); ok {
-			seat, _ := s.theater.mathBox.runningSeat()
-			s.noteShieldFlight(s.theater.mathBox.side, seat, n,
-				s.shownShields(s.theater.mathBox.side, s.modelShields(s.theater.mathBox.side)))
-		}
+		// **The pips are not the sum's any more** *(owner's call, 2026-09-15)*. A defend card raises
+		// its shields in the defend phase, which now runs *before* the attack phase — so the raise
+		// has a beat of its own, in front of the hand, and noteShieldRaise is the one place pips fly
+		// from. See combat.Categories.
 		s.landShields()
 		// **The banner goes when its own figure sets off** *(2026-08-19, owner's call)*. The
 		// multiplier flies out of the second line under the hand's name and into the sum, so from
@@ -1610,12 +1661,6 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// at 88%,34%; see drawDuelistCard and drawEnemyCard for why each moved.
 	s.drawDuelistCard(gs, screen)
 
-	// Where in the tower this fight is, in the band the card leaves above the table. See
-	// drawTowerPlace — it is under the duelist card because the floor is something about the
-	// run rather than about either fighter, and that corner is where the run's own figures
-	// already are.
-	s.drawTowerPlace(gs, screen)
-
 	// **And the clock under it**, which is the same kind of fact: how long this fight is allowed
 	// to last, in the column that already says where it is being fought. See drawRoundTimer.
 	s.drawRoundTimer(gs, screen)
@@ -1676,6 +1721,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// and a card being dealt into a slot arrives over a card still shuffling out of it.
 	s.drawSlides(gs, screen)
 	s.drawFlights(gs, screen)
+
+	// The hand arriving, with the same two cards above it: a card out of the pile lands on top of
+	// whatever is still shuffling under it, and a card changing colour mid-cascade is the thing on
+	// the screen worth looking at. See combat_deal.go.
+	s.drawDeal(gs, screen)
 
 	// **The hand dialog, over everything but the deck overlay.** It is the loudest thing on the
 	// screen for the few seconds it is up, and it is deliberately over both rows of cards: the

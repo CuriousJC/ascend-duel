@@ -63,7 +63,7 @@
 <div class="wrap">
   <h1>Scenario sheet</h1>
   <p class="note">
-    The 27 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
+    The 31 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
     that launches it. Compiled out of every build that is not <code>-tags scenario</code>, so none
     of this is reachable from a shipped binary.
   </p>
@@ -75,7 +75,115 @@
 
   
     <div class="plate first">
-      <div class="record">new-rings-fire-ice-lightning<span class="default">first in the file — the bare launch</span></div>
+      <div class="record">card-full-house<span class="default">first in the file — the bare launch</span></div>
+      <div class="facts">opens on combat · room 0 · against GiantBat · DUMMY -- nothing dies · 15 AP a turn</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=card-full-house go run -tags scenario .</code>
+      <p class="blurb">The Card Full House, dealt on purpose: three Cuts and two Braces out of a hand of eight, which is 5 AP and pays 3.42x. It is the hand that says most about how the ladder is counted, because both halves of it are things a player has to be told. The rung matches on CONCEPT - data/hands.json writes match concept, groups [3, 2] - so the three Cuts are a set because they are Cuts, and the colors they happen to wear are worth nothing to it; recolor every card in this hand and the multiplier does not move. And the two Braces are DEFEND cards that join the hand like anything else: they carry a form and an element, they count toward the rung, and they bring no damage with them - so the sum is three 0.5x slashes under a 3.42x multiplier, and the shields go up beside the blow rather than instead of it. The other three cards - a Flinch, a Jab and a Block - are there to be left behind, so the hand is a choice rather than the only five cards in the row. Giant Bat, 15 AP and a dummy, and it shares the shields fixture&#39;s deck so the refill behaves the same way. See ASCEND_DUEL_SCENARIO=shields for the defences on their own.</p>
+
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="card-full-house-hand.png" width="870" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="card-full-house-deck.png" width="3840" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Flinch</td><td>arcane</td><td>0</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>lightning</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td class="rider"></td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Deck — 55 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Flinch</td><td>fire</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>ice</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>lightning</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>earth</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>arcane</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>arcane</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Guard</td><td>fire</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>ice</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>lightning</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>earth</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>arcane</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>arcane</td><td>1</td><td>2</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">shields</div>
+      <div class="facts">opens on combat · room 0 · against GiantBat · DUMMY -- nothing dies · 15 AP a turn</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=shields go run -tags scenario .</code>
+      <p class="blurb">The shields, on their own: what a defend card raises, what one eats, and how the break is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is two thirds defend cards across all five colors - Flinch at 0 AP, Brace at 1, Block at 2, Guard at 3 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside a blow rather than instead of one. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature&#39;s HEAVIEST blow, not its first, and it decides that at the top of the creature&#39;s turn. Watch the beat between the two turns, where the blocked pips fly out of the duelist card into the card they kill and the crack opens across its face. The pip row along the bottom of the duelist card draws at most six - screens.maxShieldPips - so a turn that raises ten draws a full row and the true count is on the engine. Against a dummy, so it can be watched as many times as it takes rather than survived.</p>
+
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="shields-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="shields-deck.png" width="3840" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Brace</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Guard</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Deck — 55 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Flinch</td><td>fire</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>ice</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>lightning</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>earth</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>arcane</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>arcane</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Guard</td><td>fire</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>ice</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>lightning</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>earth</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>arcane</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>arcane</td><td>1</td><td>2</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">flip-cascade</div>
+      <div class="facts">opens on combat · room 0 · DUMMY -- nothing dies · 15 AP a turn</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=flip-cascade go run -tags scenario .</code>
+      <p class="blurb">The deal, the flip cascade and the sort, which is how every hand in a fight now arrives - see screens/combat_deal.go. Frozen Lightning, Glacier and Permafrost are worn in that order, so the cascade CHAINS and then doubles back: lightning goes to ice under ring one, ice goes to earth under ring two, and earth comes back to ice under ring three. Every lightning, ice and earth card in the deck therefore lands on ice, and a card can be watched going ice, earth, ice across three beats - which is the thing three rings are here to show, because a run wearing the middle relic alone would end on earth. The fire cards are the bystanders: no ring names them, so they sit still through all three beats and the row has something to be compared against. What to watch is the order - cards fly out of the pile left to right in the order the shuffle gave them, then each ring in turn rattles, rocks and lights while every card it touches rattles and morphs at once, and only then does the row sort itself. Press E for the element sort, which is where sorting LAST earns itself: under the default cost sort the element is only a tiebreak and the row barely moves, where on E it reorganises around what the cascade just did. Play a turn and the refill runs the whole sequence again over the cards it deals. Against a dummy, 15 AP, so it can be watched as many times as it takes rather than survived.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the sack, and in the pouch</div>
+          <div class="scroll"><img src="flip-cascade-worn.png" width="704" height="308" alt="worn, in the sack, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="flip-cascade-deck.png" width="3620" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
+            <tr><td class="key">flip-lightning-to-ice</td><td>Frozen Lightning</td><td class="said">Every lightning card is dealt as an ice card.</td></tr><tr><td class="key">flip-ice-to-earth</td><td>Glacier</td><td class="said">Every ice card is dealt as an earth card.</td></tr><tr><td class="key">flip-earth-to-ice</td><td>Permafrost</td><td class="said">Every earth card is dealt as an ice card.</td></tr>
+          </table>
+        
+        
+        
+        
+          <table>
+            <tr><th>Deck — 33 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Poke</td><td>lightning</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>ice</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>fire</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Skewer</td><td>lightning</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>ice</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>fire</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Impale</td><td>lightning</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Impale</td><td>ice</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Impale</td><td>fire</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Nick</td><td>lightning</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>ice</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>fire</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>ice</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>fire</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Sever</td><td>lightning</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>ice</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>fire</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Tap</td><td>lightning</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Tap</td><td>ice</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Tap</td><td>fire</td><td>1</td><td>0</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">new-rings-fire-ice-lightning</div>
       <div class="facts">opens on combat · room 0 · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">ASCEND_DUEL_SCENARIO=new-rings-fire-ice-lightning go run -tags scenario .</code>
       <p class="blurb">The five dual-status rings drawn on 2026-09-12 that carry a fire, ice or lightning rule, worn at once so the artwork can be read on the pane at the size a player actually sees it - Scald, Wildfire, Hoarfrost, Brittle and Palsy. It is a batch of art rather than an interaction, which is what RelicSlots exists for: the shipped cap is five, so looking at nine new rings used to mean buying one, selling it and buying the next. The art is the question, but the rules are worth watching too, because every one of these applies TWO statuses off one attack: the hand is a fire slash, an ice slash, a lightning crush and two more of the same colors, so a single turn puts BURNED, CHILLED, SHOCKED and WEAKENED on the badge row under the creature&#39;s fraction at once. Against a dummy, so the statuses can be stacked and read rather than killed off; 15 AP so the choice is which cards rather than which are affordable.</p>
@@ -168,7 +276,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">hp-plus</td><td>Bulwark</td><td class="said">&#43;25 HP for every fight.</td></tr><tr><td class="key">banker</td><td>Banker</td><td class="said">Vitae propagates twice as fast.</td></tr><tr><td class="key">jar-earth</td><td>Jar of Earth</td><td class="said">Deals 5 more DMG for each earth card kept in hand.</td></tr><tr><td class="key">old-dagger</td><td>The Old Dagger</td><td class="said">Every Jab deals 4x DMG.</td></tr><tr><td class="key">brass-knuckles</td><td>The Knuckles</td><td class="said">Every Thump deals 4x DMG.</td></tr><tr><td class="key">dmg-element-three-of-a-kind-hand</td><td>Trio Ring</td><td class="said">An Elemental Three of a Kind deals 3 more DMG before the multiplier.</td></tr>
+            <tr><td class="key">hp-plus</td><td>Bulwark</td><td class="said">&#43;25 HP for every fight.</td></tr><tr><td class="key">banker</td><td>Banker</td><td class="said">Vitae propagates twice as fast.</td></tr><tr><td class="key">jar-earth</td><td>Jar of Earth</td><td class="said">Deals 5 more DMG for each earth card kept in hand.</td></tr><tr><td class="key">old-dagger</td><td>The Old Dagger</td><td class="said">Every Jab deals 4x DMG.</td></tr><tr><td class="key">brass-knuckles</td><td>The Knuckles</td><td class="said">Every Thump deals 4x DMG.</td></tr><tr><td class="key">dmg-element-three-of-a-kind-hand</td><td>Trio Ring</td><td class="said">An Elemental Three of a Kind swings at 3 more DMG.</td></tr>
           </table>
         
         
@@ -209,7 +317,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">dmg-form-four-of-a-kind-hand</td><td>Quad Ring</td><td class="said">A Form Four of a Kind deals 6 more DMG before the multiplier.</td></tr>
+            <tr><td class="key">dmg-form-four-of-a-kind-hand</td><td>Quad Ring</td><td class="said">A Form Four of a Kind swings at 6 more DMG.</td></tr>
           </table>
         
         
@@ -255,7 +363,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">dmg-form-full-house-hand</td><td>Full Ring</td><td class="said">A Form Full House deals 6 more DMG before the multiplier.</td></tr><tr><td class="key">dmg-form-four-of-a-kind-hand</td><td>Quad Ring</td><td class="said">A Form Four of a Kind deals 6 more DMG before the multiplier.</td></tr>
+            <tr><td class="key">dmg-form-full-house-hand</td><td>Full Ring</td><td class="said">A Form Full House swings at 6 more DMG.</td></tr><tr><td class="key">dmg-form-four-of-a-kind-hand</td><td>Quad Ring</td><td class="said">A Form Four of a Kind swings at 6 more DMG.</td></tr>
           </table>
         
         
@@ -344,7 +452,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">motley</td><td>sack</td><td class="said">CARD IS EVERY ELEMENT</td></tr>
+            <tr><td class="key">motley</td><td>sack</td><td class="said"></td></tr>
           </table>
         
         
@@ -390,7 +498,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">golden</td><td>sack</td><td class="said">CARD IS GOLD 1 IN 5 ON PLAY: &#43;1 DMG OR &#43;5 LIFE</td></tr><tr><td class="key">silver</td><td>sack</td><td class="said">CARD IS SILVER 1 IN 5 ON PLAY: &#43;10 VITAE</td></tr>
+            <tr><td class="key">golden</td><td>sack</td><td class="said"></td></tr><tr><td class="key">silver</td><td>sack</td><td class="said"></td></tr>
           </table>
         
         
@@ -436,7 +544,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">motley</td><td>sack</td><td class="said">CARD IS EVERY ELEMENT</td></tr><tr><td class="key">silver</td><td>sack</td><td class="said">CARD IS SILVER 1 IN 5 ON PLAY: &#43;10 VITAE</td></tr>
+            <tr><td class="key">motley</td><td>sack</td><td class="said"></td></tr><tr><td class="key">silver</td><td>sack</td><td class="said"></td></tr>
           </table>
         
         
@@ -482,7 +590,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">motley</td><td>sack</td><td class="said">CARD IS EVERY ELEMENT</td></tr><tr><td class="key">siphon</td><td>sack</td><td class="said">&#43;10 HEAL ON PLAY</td></tr>
+            <tr><td class="key">motley</td><td>sack</td><td class="said"></td></tr><tr><td class="key">siphon</td><td>sack</td><td class="said"></td></tr>
           </table>
         
         
@@ -565,7 +673,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">graft</td><td>sack</td><td class="said">LEFT CARD BECOMES RIGHT CARD</td></tr>
+            <tr><td class="key">graft</td><td>sack</td><td class="said"></td></tr>
           </table>
         
         
@@ -761,7 +869,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">siphon</td><td>sack</td><td class="said">&#43;10 HEAL ON PLAY</td></tr><tr><td class="key">unmake</td><td>sack</td><td class="said">2 CARDS DESTROYED</td></tr><tr><td class="key">mimic</td><td>sack</td><td class="said">COPY CARD</td></tr><tr><td class="key">effigy</td><td>sack</td><td class="said">CARD BECOMES BASH</td></tr><tr><td class="key">graft</td><td>sack</td><td class="said">LEFT CARD BECOMES RIGHT CARD</td></tr><tr><td class="key">hoard</td><td>sack</td><td class="said">&#43;20 VITAE</td></tr>
+            <tr><td class="key">siphon</td><td>sack</td><td class="said"></td></tr><tr><td class="key">unmake</td><td>sack</td><td class="said"></td></tr><tr><td class="key">mimic</td><td>sack</td><td class="said"></td></tr><tr><td class="key">effigy</td><td>sack</td><td class="said"></td></tr><tr><td class="key">graft</td><td>sack</td><td class="said"></td></tr><tr><td class="key">hoard</td><td>sack</td><td class="said"></td></tr>
           </table>
         
         
@@ -787,7 +895,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">patience</td><td>sack</td><td class="said">2X DMG CARD IN HAND</td></tr><tr><td class="key">spite</td><td>sack</td><td class="said">&#43;10 DMG CARD IN HAND</td></tr><tr><td class="key">tithe</td><td>sack</td><td class="said">3 VITAE CARD IN HAND</td></tr><tr><td class="key">hunger</td><td>sack</td><td class="said">2X DMG ON PLAY</td></tr><tr><td class="key">aegis</td><td>sack</td><td class="said">1 SHIELD ON PLAY</td></tr><tr><td class="key">goad</td><td>sack</td><td class="said">&#43;10 DMG ON PLAY</td></tr>
+            <tr><td class="key">held-dmgx</td><td>sack</td><td class="said">2X DMG CARD IN HAND</td></tr><tr><td class="key">held-dmg</td><td>sack</td><td class="said">&#43;10 DMG CARD IN HAND</td></tr><tr><td class="key">tithe</td><td>sack</td><td class="said"></td></tr><tr><td class="key">hunger</td><td>sack</td><td class="said"></td></tr><tr><td class="key">aegis</td><td>sack</td><td class="said"></td></tr><tr><td class="key">goad</td><td>sack</td><td class="said"></td></tr>
           </table>
         
         
@@ -813,7 +921,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">embermark</td><td>sack</td><td class="said">2 CARDS BECOME FIRE</td></tr><tr><td class="key">arcmark</td><td>sack</td><td class="said">2 CARDS BECOME LIGHTNING</td></tr><tr><td class="key">maulstave</td><td>sack</td><td class="said">2 CARDS BECOME CRUSH</td></tr><tr><td class="key">thornstave</td><td>sack</td><td class="said">2 CARDS BECOME STAB</td></tr>
+            <tr><td class="key">embermark</td><td>sack</td><td class="said"></td></tr><tr><td class="key">arcmark</td><td>sack</td><td class="said"></td></tr><tr><td class="key">maulstave</td><td>sack</td><td class="said"></td></tr><tr><td class="key">thornstave</td><td>sack</td><td class="said"></td></tr>
           </table>
         
         
@@ -839,7 +947,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">cairn</td><td>sack</td><td class="said">&#43;2 STONES IN POUCH</td></tr><tr><td class="key">cairn</td><td>sack</td><td class="said">&#43;2 STONES IN POUCH</td></tr><tr><td class="key">cairn</td><td>sack</td><td class="said">&#43;2 STONES IN POUCH</td></tr>
+            <tr><td class="key">two-stones</td><td>sack</td><td class="said">&#43;2 STONES IN POUCH</td></tr><tr><td class="key">two-stones</td><td>sack</td><td class="said">&#43;2 STONES IN POUCH</td></tr><tr><td class="key">two-stones</td><td>sack</td><td class="said">&#43;2 STONES IN POUCH</td></tr>
           </table>
         
         
@@ -917,7 +1025,7 @@
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">luck</td><td>sack</td><td class="said"></td></tr><tr><td class="key">chimera</td><td>sack</td><td class="said">REPEAT LAST RUNE</td></tr>
+            <tr><td class="key">luck</td><td>sack</td><td class="said"></td></tr><tr><td class="key">chimera</td><td>sack</td><td class="said"></td></tr>
           </table>
         
         
@@ -957,6 +1065,32 @@
             <tr><th>Deck — 34 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
             <tr><td>Jab</td><td>fire</td><td>8</td><td>1</td><td class="rider">golden:5</td></tr><tr><td>Cut</td><td>ice</td><td>8</td><td>1</td><td class="rider">silver:5</td></tr><tr><td>Thrust</td><td>fire</td><td>6</td><td>2</td><td class="rider">heal-on-play:10</td></tr><tr><td>Slice</td><td>arcane</td><td>8</td><td>2</td><td class="rider">vitae-in-hand:5</td></tr><tr><td>Bash</td><td>lightning</td><td>4</td><td>2</td><td class="rider"></td></tr>
           </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">one-punch</div>
+      <div class="facts">opens on combat · room 0 · against GiantBat · 30 AP a turn</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=one-punch go run -tags scenario .</code>
+      <p class="blurb">An easy button: five Pulverizes in one element, a budget that pays for all of them, and the weakest creature in the game. Press DUEL! once and the fight is over, so the reward screen&#39;s essence offer is one click away.</p>
+
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="one-punch-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr>
+          </table>
+        
         
       </div>
     </div>

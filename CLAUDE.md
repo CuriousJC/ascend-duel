@@ -728,6 +728,32 @@ instead of having watched it happen.
 - **The exception is an absence**: a removed card has nothing to fly, so the seat it would have
   landed in is drawn empty.
 
+**A hand arrives in three stages, and every hand in a fight arrives the same way** *(owner's call,
+2026-09-15)*. `internal/screens/combat_deal.go` is the sequence: cards fly out of the pile left to
+right **in pile order**, then the flip cascade plays **one beat per worn ring** over them, then the
+row **sorts itself**. The opening hand used to be filled and sorted with nothing on screen while a
+refill flew, which made the first hand of a run the one hand in the game that simply appeared.
+Five things follow:
+
+- **The sort is last, and that reverses the old rule.** `spendSelected` sorted *before* anything was
+  animated so a dealt card flew straight to its final slot — one journey per card, and a hand that
+  never showed the player what the shuffle gave them. The cost of the reversal is a second movement
+  per card; what it buys is the deal having something to say.
+- **The hand holds the finished cards from the first frame**, exactly as it always did. What the
+  deal owns is the **faces** — the pile's, then one per ring — so a card selected while it is still
+  showing its lightning face is the earth card the engine will score. That is `shownLife`'s division
+  applied to a card: the model moves first and the drawing catches up.
+- **One beat for a whole ring, not one per card.** The shield break's rule and the rune's: eight
+  cards changing one after another is eight pauses over a hand the player is waiting to play, and
+  what the beat says is one thing about the relic rather than eight about cards.
+- **The ring toasts while its cards change** — it rattles, rocks left then right, and its border
+  lights, which is the same toast the sum already gives a relic that is firing. **Two clocks on
+  purpose**, since one is playback and the other is a hand arriving and they cannot both be
+  running. `screens.relicToast` is the gesture and it carries all three marks together, so a
+  fourth cannot reach the sum's toast and miss the cascade's.
+- **A ring that touches nothing in this hand is not a beat.** A rattle over a row where nothing
+  changes is the screen saying a relic fired when it did not.
+
 ### Cards change in front of you, too
 
 **A card that becomes a different card dissolves into it** *(owner's call, 2026-09-08)*. Same
@@ -1377,10 +1403,10 @@ reference case: the button rests at 65%, hovers at 82% and reaches the named col
 - Disabled deliberately ignores the widget's color. A disabled control should read as
   unavailable first and as itself second.
 
-### Two debug flags, and they are not interchangeable
+### Three debug flags, and they are not interchangeable
 
-`DebugPlacement` and `DebugGameplay` answer different questions and are wanted at different
-times. Keep them separate.
+`DebugPlacement`, `DebugGameplay` and `DebugAnimations` answer different questions and are wanted
+at different times. Keep them separate.
 
 - **`DebugPlacement`** — the grid, the rulers, the `Debug1`/`Debug2` scratch strings. About
   *where things are drawn*. Safe to leave on while playing, but off by default, so a change
@@ -1390,12 +1416,39 @@ times. Keep them separate.
   playing the game, you are inspecting it, and it is easy to tune balance against a view no
   player will ever have. What it currently reveals is the combat screen's, and lives in the
   `combat-screen` skill.
+- **`DebugAnimations`** *(2026-09-15)* — the door to the **animation gallery**, a square marked
+  `A` off the end of the frame's bottom strip that opens `screens.AnimationsScene`. About *what
+  movements the game has and what each one is called*. **A third flag rather than a lodger on
+  `DebugPlacement`**, which is the rule those two are already under: "where is this drawn" is not
+  "what gestures exist".
 
-Neither may ever change an outcome. Both are views, the same constraint that applies to
-playback speed — `ResolveRound` never sees either flag.
+**The gallery exists to give the gestures names.** There are a dozen distinct movements on the
+combat screen and each was reachable only by producing the situation it belongs to — a break needs a
+shield eating an attack, a toast needs a relic firing into a sum, the cascade needs two flip rings
+and a hand with the right colors in it. So "make the toast louder" was a sentence with no shared
+referent. The page lists every gesture by name, plays it on a loop, and prints the **symbol that
+implements it** beside it.
 
-Both are set once in `main.go`; there is no runtime toggle, because a hotkey would need the
-keyboard and the input vocabulary does not have one. **Both default to off.**
+- **Every entry calls the game's own drawing.** An entry that reproduced a gesture is the
+  stale-sheet failure — a picture of something the game does not do — so a shared one is split out
+  of its caller instead. `outboundGeoM` and `drawDealtCard` were split for exactly this.
+- **It is a screen rather than a tool**, unlike everything under `docs/sheets/`: those work because
+  `internal/cards` renders without a graphics context, and **motion needs a window and a clock**. A
+  still of a dissolve is a picture of a card with holes in it.
+- **It is not a station of a run** and has no phase — the shape Settings, Achievements and Credits
+  share. **Adding a gesture is one entry in `animGestures`.**
+- **The button is the one thing in the frame that is not chrome by the frame's own test.** It is
+  instrumentation rather than something true of the whole session, and it is there because the frame
+  is the only place a debug page is reachable from every screen. With the flag off the strip is
+  exactly the two controls it was.
+
+None of the three may ever change an outcome. All are views, the same constraint that applies to
+playback speed — `ResolveRound` never sees any of them.
+
+All three are set once in `main.go`; there is no runtime toggle, because a hotkey would need the
+keyboard and the input vocabulary does not have one. **`DebugPlacement` and `DebugGameplay` default
+to off, and `DebugAnimations` is on while the gallery is being built** — it belongs off before this
+ships, on the same argument the other two are under.
 
 ### `internal/trace` is a third thing, and it is compiled out
 

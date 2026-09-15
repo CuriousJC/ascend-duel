@@ -144,14 +144,15 @@ func TestTheTableSitsBetweenTheRelicRowAndTheFeed(t *testing.T) {
 
 func TestTheOpponentsRowIsInResolutionOrder(t *testing.T) {
 	// **The row must say what will happen, not what was planned.** ResolutionOrder regroups a
-	// turn into attacks then plans, so a queue planned plan-first comes out of the planner in one
-	// order and resolves in another.
+	// turn into plans then attacks, so a queue planned attack-first comes out of the planner in
+	// one order and resolves in another. (It regrouped the other way until 2026-09-15; see
+	// combat.Categories.)
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Brace, combat.Bash, combat.Jab),
+		enemyActions: combat.PlainCards(combat.Bash, combat.Jab, combat.Brace),
 	}
 
 	got := s.enemyQueueOrder()
-	want := combat.PlainCards(combat.Bash, combat.Jab, combat.Brace)
+	want := combat.PlainCards(combat.Brace, combat.Bash, combat.Jab)
 
 	if len(got) != len(want) {
 		t.Fatalf("the row holds %d cards, want %d", len(got), len(want))
@@ -197,14 +198,14 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 	}
 	s.seatPlayedCards()
 
-	// The two attacks first and the plan after — and each seat holds the card the player
+	// The plan first and the two attacks after — and each seat holds the card the player
 	// actually selected for it, not the one in the same position in the hand.
 	// The elements come along, so a seat holding the right concept in the wrong color fails
 	// too — which is the whole reason the hand and the queue are one type now.
 	want := []combat.Card{
+		combat.Of(combat.Brace, combat.Ice),
 		combat.Of(combat.Bash, combat.Fire),
 		combat.Of(combat.Jab, combat.Earth),
-		combat.Of(combat.Brace, combat.Ice),
 	}
 	if len(s.theater.resolved) != len(want) {
 		t.Fatalf("%d cards were seated, want %d", len(s.theater.resolved), len(want))
@@ -381,11 +382,11 @@ func TestTheOpponentsRowIsSeatedFromItsQueue(t *testing.T) {
 	// does not happen. It is the same walk, and this pins that seating uses it rather than
 	// taking the queue as planned.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Brace, combat.Bash, combat.Jab),
+		enemyActions: combat.PlainCards(combat.Bash, combat.Jab, combat.Brace),
 	}
 	s.seatEnemyCards()
 
-	want := combat.PlainCards(combat.Bash, combat.Jab, combat.Brace)
+	want := combat.PlainCards(combat.Brace, combat.Bash, combat.Jab)
 	if len(s.theater.enemyDealt) != len(want) {
 		t.Fatalf("%d cards were seated, want %d", len(s.theater.enemyDealt), len(want))
 	}
@@ -590,26 +591,30 @@ func TestAQueueOfPlansNamesAHandThatLandsNothing(t *testing.T) {
 	}
 }
 
-func TestAPlanQueuedFirstDoesNotHideTheHandBehindIt(t *testing.T) {
-	// **`Blow.Cards` indexes the turn, which is in resolution order**, not the hand — a Prepare
-	// picked first resolves *last*, so the pair sits at turn indices 0 and 1 while it sits in hand
-	// slots 1 and 2. The preview goes through `ResolutionOrder` for exactly that reason, and a
+func TestAPlanQueuedLastDoesNotHideTheHandInFrontOfIt(t *testing.T) {
+	// **`Blow.Cards` indexes the turn, which is in resolution order**, not the hand — a defense
+	// picked *last* resolves first, so the pair sits at turn indices 1 and 2 while it sits in hand
+	// slots 0 and 1. The preview goes through `ResolutionOrder` for exactly that reason, and a
 	// preview built off the hand as the player left it would miss this hand entirely.
+	//
+	// **It was queued the other way until 2026-09-15**, when the phase order flipped — see
+	// combat.Categories. The divergence this exists to pin is the same one, mirrored: whichever
+	// category leads, the card queued into the *other* one moves.
 	s := selecting(
-		combat.Of(combat.Brace, combat.Basic),
 		combat.Of(combat.Bash, combat.Fire),
 		combat.Of(combat.Bash, combat.Ice),
+		combat.Of(combat.Brace, combat.Basic),
 	)
 
 	blow, ok := s.previewAttack()
 	if !ok {
-		t.Fatal("a pair behind a Prepare previewed no hand")
+		t.Fatal("a pair in front of a Prepare previewed no hand")
 	}
 	if blow.Hand.Key != "pair" {
-		t.Errorf("a pair behind a Prepare previewed %q, want the pair", blow.Hand.Key)
+		t.Errorf("a pair in front of a Prepare previewed %q, want the pair", blow.Hand.Key)
 	}
-	if !sameSeats(blow.Cards, []int{0, 1}) {
-		t.Errorf("the previewed hand is turn slots %v, want the two Bashes at 0 and 1", blow.Cards)
+	if !sameSeats(blow.Cards, []int{1, 2}) {
+		t.Errorf("the previewed hand is turn slots %v, want the two Bashes at 1 and 2", blow.Cards)
 	}
 }
 

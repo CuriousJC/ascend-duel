@@ -270,14 +270,28 @@ const (
 
 // Categories is every phase in resolution order, and the order a turn is played in.
 //
-// **Attacks first, defenses second.** A defense has to go up at the *end* of your turn, because
-// the opponent acts afterwards and that is the blow it answers. Resolving them first would mean
-// every guard and every shield expired before anything could be aimed at it.
+// **Defenses first, attacks second** *(owner's call, 2026-09-15)*. It was the other way round from
+// the day phases replaced alternation, on the argument that a defense has to go up at the *end* of
+// your turn because the opponent acts afterwards — and **that argument was cruft from an older
+// shield mechanism**. Expiry is not at the round boundary: `expireDefenses` runs at the start of a
+// side's *own* turn, so a shield raised anywhere in your turn is standing through the opponent's
+// either way. Your attacks are aimed at them, not at you. Within-turn order therefore decides
+// nothing about what a defense protects.
+//
+// What it does decide is what the turn *looks like*, which is the reason for the change: a turn now
+// reads as raise the guard, then swing. The defend cards go up, the shields land, and only then
+// does the hand score — so a defend card is no longer paying a visible 0 into a sum several beats
+// before the thing it actually did shows up. See screens/combat_shields.go.
+//
+// **The one thing this genuinely moves is a growing relic**, which steps between the cards of one
+// blow: a `grow-per-card` accumulator has now counted the defends before the attacks score. That is
+// a balance change and it was taken as one — nothing simulates a duel, so it will not show up as a
+// failing test. See MECHANICS.md.
 //
 // It is also the order the combat screen lays a turn out in, which is not a coincidence: the row
 // on the table reads left to right in exactly this sequence.
 func Categories() []Category {
-	return []Category{CategoryAttack, CategoryDefend}
+	return []Category{CategoryDefend, CategoryAttack}
 }
 
 func (c Category) String() string {

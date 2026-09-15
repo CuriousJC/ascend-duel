@@ -78,6 +78,13 @@ const (
 	//
 	// The size and the width are the column's own, so the pair is set in one type.
 	ledgerButtonLabel = "LEDGER"
+
+	// **`A`, one letter** *(owner's call, 2026-09-15)*. There is no drawn mark for "every gesture
+	// the game makes" and a generated one at 32 pixels would be a silhouette nobody could name —
+	// the argument LEDGER is already under — so it is a letter. One rather than four because this
+	// is the only control in the frame a player is never meant to read: it is off in a shipped
+	// build, and the person it is for already knows what it does.
+	animButtonLabel = "A"
 )
 
 // settingsButtonColor is the face at full strength: a flat slate, deliberately unlike any control
@@ -206,6 +213,39 @@ func (g *Game) updateChrome(gs *state.GlobalState) {
 	}
 
 	g.updateLedgerButton(gs)
+	g.updateAnimButton(gs)
+}
+
+// openAnimations goes to the animation gallery, on openSettings' terms: the run's phase is not
+// touched, because the gallery is not a station of one.
+func (g *Game) openAnimations() {
+	gs := g.GlobalState
+	gs.ReturnScreen = gs.ActiveScreen
+	gs.ActiveScreen = state.Animations
+	gs.NewScreen = true
+}
+
+// updateAnimButton builds the gallery's door on first use and runs it.
+//
+// **It exists only while the flag is on**, rather than being built and disabled: a disabled control
+// says "this is unavailable to you", and a player with the flag off is not being denied anything —
+// the page is not part of the game. Same reason the placement grid draws nothing rather than
+// drawing a grayed-out one.
+func (g *Game) updateAnimButton(gs *state.GlobalState) {
+	if !gs.DebugAnimations {
+		return
+	}
+	if g.animButton == nil {
+		g.animButton = models.NewButton(
+			settingsButtonSize, settingsButtonSize, animButtonLabel, g.openAnimations)
+		g.animButton.BaseColor = settingsButtonColor
+		g.animButton.TextSize = screens.ControlButtonText
+	}
+
+	r := screens.ChromeCornerSlot(gs, screens.ChromeSlotAnimations)
+	g.animButton.ScreenX = r.Min.X + r.Dx()/2
+	g.animButton.ScreenY = r.Min.Y + r.Dy()/2
+	systems.UpdateButton(gs, g.animButton)
 }
 
 // updateLedgerButton builds the ledger's button on first use and runs it.
@@ -276,5 +316,12 @@ func (g *Game) drawChrome(gs *state.GlobalState, screen *ebiten.Image) {
 	// nobody could name. See CLAUDE.md on what a glyph can carry at that size.
 	if g.ledgerButton != nil && g.ledgerShowing(gs) {
 		systems.DrawButton(gs, screen, g.ledgerButton)
+	}
+
+	// The gallery's door, off the end of the strip. **Only with the flag on**, which is what keeps
+	// a debug page out of a played game without keeping it out of the binary — the same trade the
+	// placement grid and the perfect-information view are under.
+	if g.animButton != nil && gs.DebugAnimations {
+		systems.DrawButton(gs, screen, g.animButton)
 	}
 }

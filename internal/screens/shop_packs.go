@@ -70,7 +70,7 @@ func shopRNG(gs *state.GlobalState, stream seeds.Stream) *rand.Rand {
 	return rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, stream, gs.Run.Fight())))
 }
 
-// dealPacks picks which two of the three stand on the shelf.
+// dealPacks picks which two of the catalog stand on the shelf.
 //
 // **A shuffle of the catalog, cut to two** rather than two draws without replacement, because the
 // goods are equally weighted: there is no rarity here, so a weighted draw would be the relic shelf's
@@ -79,15 +79,56 @@ func shopRNG(gs *state.GlobalState, stream seeds.Stream) *rand.Rand {
 // **The catalog is data/goods.json** *(2026-09-14)*, so a fourth good joins the roll by being
 // authored. A catalog no longer than the shelf is not shuffled at all — every good stands, and
 // rolling an order for a row that can only be one row would spend the stream saying nothing.
+//
+// **One catalog per shelf** *(owner's call, 2026-09-15)*, since each catalog is now held at three
+// sizes. Without it a two-seat shelf can spend both seats on rocks — a small bag beside a large one
+// — which is one decision drawn twice and crowds the essences and the runes off the shelf
+// altogether on that visit. What the sizes are for is a choice *between shops*, not a menu within
+// one; the roll picks a catalog and the size it happens to land on, and rerolling is what a player
+// does to see a different size. The shuffle still decides which, so nothing here is a preference
+// for the middle bag.
 func dealPacks(rng *rand.Rand) []string {
 	keys := session.GoodKeys()
-	if len(keys) > packsOffered && rng != nil {
+	if rng != nil && len(keys) > 1 {
 		rng.Shuffle(len(keys), func(i, j int) { keys[i], keys[j] = keys[j], keys[i] })
 	}
-	if len(keys) > packsOffered {
-		keys = keys[:packsOffered]
+
+	out := make([]string, 0, packsOffered)
+	held := map[session.GoodContents]bool{}
+	for _, key := range keys {
+		g, ok := session.GoodByKey(key)
+		if !ok || held[g.Contains] {
+			continue
+		}
+		held[g.Contains] = true
+		out = append(out, key)
+		if len(out) == packsOffered {
+			break
+		}
 	}
-	return keys
+
+	// **A catalog with fewer distinct contents than the shelf has seats falls back to filling it**,
+	// rather than standing a shelf up with a hole in it. Three catalogs ship, so this is unreachable
+	// today and is here because a shelf short of a card is a bug nobody would attribute to this.
+	for _, key := range keys {
+		if len(out) == packsOffered {
+			break
+		}
+		if !contains(out, key) {
+			out = append(out, key)
+		}
+	}
+	return out
+}
+
+// contains is whether a key is already on the shelf.
+func contains(keys []string, key string) bool {
+	for _, k := range keys {
+		if k == key {
+			return true
+		}
+	}
+	return false
 }
 
 // rerollPacks redraws whichever pack seats have not been opened.

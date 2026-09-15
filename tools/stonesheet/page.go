@@ -84,8 +84,7 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
 <h1>Stone sheet</h1>
 <p class="facts">
   {{.Count}} stones over {{.Rungs}} rungs{{if .Unstoned}} — {{.Unstoned}} rung(s) have none{{end}}.
-  A sealed bag costs <code>{{.BagPrice}}</code> vitae and draws <code>{{.BagSize}}</code>, keep
-  one — {{.Share}}% of the catalog gets a seat.
+  A sealed bag draws <code>{{.Bags}}</code>, keep one — {{.Share}}% of the catalog gets a seat.
   Stone card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
   border <code>{{index .Style "borderWidth"}}</code>,

@@ -98,8 +98,8 @@ var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
 <h1>Rune sheet</h1>
 <p class="facts">
   {{.Count}} runes, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no
-  subject paragraph written. A sealed sack costs <code>{{.SackPrice}}</code> vitae and draws
-  <code>{{.SackSize}}</code>, keep one — {{.Share}}% of the catalog gets a seat. One rune
+  subject paragraph written. A sealed sack draws <code>{{.Sacks}}</code>, keep
+  one — {{.Share}}% of the catalog gets a seat. One rune
   may name at most <code>{{.MaxTargets}}</code> cards.
   Card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,

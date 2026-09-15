@@ -117,9 +117,9 @@ func drawStoneCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 
 // drawGoodCard draws one of the shop's two sealed goods.
 func drawGoodCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
-	name, line string, art image.Image, enabled bool) {
+	name string, art image.Image, enabled bool) {
 
-	blitCard(gs, screen, at, goodSpec(gs, name, line, art, enabled), cards.EssenceStyle)
+	blitCard(gs, screen, at, goodSpec(gs, name, art, enabled), cards.EssenceStyle)
 }
 
 // marksFor is what a card in this seat is wearing, given where it is drawn.

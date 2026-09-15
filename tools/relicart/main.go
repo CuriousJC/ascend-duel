@@ -58,36 +58,50 @@ import (
 // are done with the minimum that answers them. A full round-trip through encoding/json would
 // reflow a hand-formatted file; see setArt.
 type catalog struct {
-	inbox string
-	out   string
-	json  string
-	key   string
+	inbox   string
+	out     string
+	sources []source
+}
+
+// source is one JSON file a catalog files art into, and what that file calls its key.
+//
+// **It is a list because one inbox can span two catalogs**: the potions and the sealed goods share
+// docs/art/other_card_art_prompt.MD, so they are generated in one batch and filing them is one
+// command over two files. Every other kind has exactly one source, and a single-source catalog
+// behaves exactly as it did.
+type source struct {
+	json string
+	key  string
 }
 
 var catalogs = map[string]catalog{
 	"relic": {
-		inbox: filepath.Join(".scratch", "to-process-relic-art"),
-		out:   filepath.Join("assets", "relic"),
-		json:  "data/relics.json",
-		key:   "RelicRecord",
+		inbox:   filepath.Join(".scratch", "to-process-relic-art"),
+		out:     filepath.Join("assets", "relic"),
+		sources: []source{{json: "data/relics.json", key: "RelicRecord"}},
 	},
 	"essence": {
-		inbox: filepath.Join(".scratch", "to-process-essence-art"),
-		out:   filepath.Join("assets", "essence"),
-		json:  "data/essences.json",
-		key:   "EssenceRecord",
+		inbox:   filepath.Join(".scratch", "to-process-essence-art"),
+		out:     filepath.Join("assets", "essence"),
+		sources: []source{{json: "data/essences.json", key: "EssenceRecord"}},
 	},
 	"rune": {
-		inbox: filepath.Join(".scratch", "to-process-rune-art"),
-		out:   filepath.Join("assets", "rune"),
-		json:  "data/runes.json",
-		key:   "RuneRecord",
+		inbox:   filepath.Join(".scratch", "to-process-rune-art"),
+		out:     filepath.Join("assets", "rune"),
+		sources: []source{{json: "data/runes.json", key: "RuneRecord"}},
 	},
 	"stone": {
-		inbox: filepath.Join(".scratch", "to-process-stone-art"),
-		out:   filepath.Join("assets", "stone"),
-		json:  "data/stones.json",
-		key:   "StoneRecord",
+		inbox:   filepath.Join(".scratch", "to-process-stone-art"),
+		out:     filepath.Join("assets", "stone"),
+		sources: []source{{json: "data/stones.json", key: "StoneRecord"}},
+	},
+	"other": {
+		inbox: filepath.Join(".scratch", "to-process-other-art"),
+		out:   filepath.Join("assets", "other"),
+		sources: []source{
+			{json: "data/potions.json", key: "PotionRecord"},
+			{json: "data/goods.json", key: "GoodRecord"},
+		},
 	},
 }
 
@@ -149,8 +163,8 @@ func main() {
 			continue
 		}
 		key := strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))
-		if !records[key] {
-			log.Fatalf("%s names no record in %s — a key that matches nothing draws the fallback and nothing fails", e.Name(), cat.json)
+		if _, ok := records[key]; !ok {
+			log.Fatalf("%s names no record in %s — a key that matches nothing draws the fallback and nothing fails", e.Name(), cat.files())
 		}
 		keys = append(keys, key)
 	}
@@ -182,13 +196,13 @@ func main() {
 	}
 
 	if *dry {
-		fmt.Printf("\n%d %s(s) would be filed; %s untouched\n", len(keys), *kind, cat.json)
+		fmt.Printf("\n%d %s(s) would be filed; %s untouched\n", len(keys), *kind, cat.files())
 		return
 	}
-	if err := setArt(cat, keys); err != nil {
+	if err := setArt(records, keys); err != nil {
 		log.Fatal(err)
 	}
-	left, err := undrawn(cat.json)
+	left, err := undrawn(cat)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -251,33 +265,52 @@ func writePNG(path string, img image.Image) error {
 	return png.Encode(f, img)
 }
 
-// recordIDs is every key the catalog's file writes.
+// recordIDs is every key the catalog's files write, against the file that wrote it — so a picture
+// is filed on the right record without the caller knowing which of a catalog's files that is.
 //
 // **Decoded into a map rather than a struct**, because the key's field name differs per catalog
 // — RelicRecord, EssenceRecord, RuneRecord — and a struct per catalog would be three types
 // that exist to hold one string each. Everything else in the record is ignored here.
-func recordIDs(cat catalog) (map[string]bool, error) {
-	raw, err := os.ReadFile(cat.json)
-	if err != nil {
-		return nil, err
-	}
-	var file []map[string]json.RawMessage
-	if err := json.Unmarshal(raw, &file); err != nil {
-		return nil, fmt.Errorf("%s: %w", cat.json, err)
-	}
-	ids := make(map[string]bool, len(file))
-	for _, r := range file {
-		raw, ok := r[cat.key]
-		if !ok {
-			continue
+//
+// **One id may not appear in two of a catalog's files.** Both keys index one flat asset map, so a
+// collision is two records drawing one picture — which is exactly the silent failure this tool
+// exists to refuse.
+func recordIDs(cat catalog) (map[string]source, error) {
+	ids := make(map[string]source)
+	for _, src := range cat.sources {
+		raw, err := os.ReadFile(src.json)
+		if err != nil {
+			return nil, err
 		}
-		var id string
-		if err := json.Unmarshal(raw, &id); err != nil {
-			return nil, fmt.Errorf("%s: a %s is not a string: %w", cat.json, cat.key, err)
+		var file []map[string]json.RawMessage
+		if err := json.Unmarshal(raw, &file); err != nil {
+			return nil, fmt.Errorf("%s: %w", src.json, err)
 		}
-		ids[id] = true
+		for _, r := range file {
+			raw, ok := r[src.key]
+			if !ok {
+				continue
+			}
+			var id string
+			if err := json.Unmarshal(raw, &id); err != nil {
+				return nil, fmt.Errorf("%s: a %s is not a string: %w", src.json, src.key, err)
+			}
+			if was, dup := ids[id]; dup {
+				return nil, fmt.Errorf("%q is a record in both %s and %s — one id, one picture", id, was.json, src.json)
+			}
+			ids[id] = src
+		}
 	}
 	return ids, nil
+}
+
+// files is the catalog's JSON files, for an error message.
+func (c catalog) files() string {
+	names := make([]string, 0, len(c.sources))
+	for _, src := range c.sources {
+		names = append(names, src.json)
+	}
+	return strings.Join(names, " or ")
 }
 
 // setArt rewrites one line per record rather than re-encoding the file. data/relics.json is
@@ -285,45 +318,61 @@ func recordIDs(cat catalog) (map[string]bool, error) {
 // would reflow all of it, burying a six-line change in a twelve-hundred-line diff. The essence and
 // rune files are machine-formatted today and would survive a round-trip, but one path through
 // this function is worth more than the difference.
-func setArt(cat catalog, keys []string) error {
-	raw, err := os.ReadFile(cat.json)
-	if err != nil {
-		return err
-	}
-	s := string(raw)
+func setArt(records map[string]source, keys []string) error {
+	// Grouped by file so each one is read once and written once, however a batch was mixed.
+	byFile := map[source][]string{}
 	for _, key := range keys {
-		// **Bounded and lazy, so it cannot walk into the next record.** The header fields between
-		// RelicRecord and Art are authored and have grown once already — Family landed between Name
-		// and Art on 2026-09-12, and a pattern allowing exactly one intervening line then matched no
-		// record in the file. Four is headroom for the next one; an unbounded `*` would silently
-		// retarget a record whose own Art was missing.
-		re := regexp.MustCompile(`("` + cat.key + `": "` + regexp.QuoteMeta(key) + `",\n(?:[^\n]*\n){0,4}?[ \t]*"Art": )"[^"]*"`)
-		if !re.MatchString(s) {
-			return fmt.Errorf("%s: found no Art field on record %q", cat.json, key)
-		}
-		s = re.ReplaceAllString(s, "${1}\""+key+"\"")
+		src := records[key]
+		byFile[src] = append(byFile[src], key)
 	}
-	return os.WriteFile(cat.json, []byte(s), 0o644)
+	for src, keys := range byFile {
+		raw, err := os.ReadFile(src.json)
+		if err != nil {
+			return err
+		}
+		s := string(raw)
+		for _, key := range keys {
+			// **Bounded and lazy, so it cannot walk into the next record.** The header fields between
+			// RelicRecord and Art are authored and have grown once already — Family landed between Name
+			// and Art on 2026-09-12, and a pattern allowing exactly one intervening line then matched no
+			// record in the file. Four is headroom for the next one; an unbounded `*` would silently
+			// retarget a record whose own Art was missing.
+			re := regexp.MustCompile(`("` + src.key + `": "` + regexp.QuoteMeta(key) + `",
+(?:[^
+]*
+){0,4}?[ 	]*"Art": )"[^"]*"`)
+			if !re.MatchString(s) {
+				return fmt.Errorf("%s: found no Art field on record %q", src.json, key)
+			}
+			s = re.ReplaceAllString(s, "${1}\""+key+"\"")
+		}
+		if err := os.WriteFile(src.json, []byte(s), 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // undrawn counts the records still carrying no art, read back off the file rather than
 // subtracted from what was just filed — the file is the truth, and an arithmetic count can
 // only ever drift from it. It is the whole of what the worklist used to be.
-func undrawn(path string) (int, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return 0, err
-	}
-	var file []struct {
-		Art string `json:"Art"`
-	}
-	if err := json.Unmarshal(raw, &file); err != nil {
-		return 0, fmt.Errorf("%s: %w", path, err)
-	}
+func undrawn(cat catalog) (int, error) {
 	left := 0
-	for _, r := range file {
-		if r.Art == "" {
-			left++
+	for _, src := range cat.sources {
+		raw, err := os.ReadFile(src.json)
+		if err != nil {
+			return 0, err
+		}
+		var file []struct {
+			Art string `json:"Art"`
+		}
+		if err := json.Unmarshal(raw, &file); err != nil {
+			return 0, fmt.Errorf("%s: %w", src.json, err)
+		}
+		for _, r := range file {
+			if r.Art == "" {
+				left++
+			}
 		}
 	}
 	return left, nil

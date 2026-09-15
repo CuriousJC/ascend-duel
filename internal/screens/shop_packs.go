@@ -73,16 +73,21 @@ func shopRNG(gs *state.GlobalState, stream seeds.Stream) *rand.Rand {
 // dealPacks picks which two of the three stand on the shelf.
 //
 // **A shuffle of the catalog, cut to two** rather than two draws without replacement, because the
-// three are equally weighted: there is no rarity here, so a weighted draw would be the relic shelf's
+// goods are equally weighted: there is no rarity here, so a weighted draw would be the relic shelf's
 // machinery doing nothing. The order is the roll's, so the bag is not always on the left.
-func dealPacks(rng *rand.Rand) []goodKind {
-	kinds := goodKinds()
-	if rng == nil {
-		return kinds[:packsOffered]
+//
+// **The catalog is data/goods.json** *(2026-09-14)*, so a fourth good joins the roll by being
+// authored. A catalog no longer than the shelf is not shuffled at all — every good stands, and
+// rolling an order for a row that can only be one row would spend the stream saying nothing.
+func dealPacks(rng *rand.Rand) []string {
+	keys := session.GoodKeys()
+	if len(keys) > packsOffered && rng != nil {
+		rng.Shuffle(len(keys), func(i, j int) { keys[i], keys[j] = keys[j], keys[i] })
 	}
-
-	rng.Shuffle(len(kinds), func(i, j int) { kinds[i], kinds[j] = kinds[j], kinds[i] })
-	return kinds[:packsOffered]
+	if len(keys) > packsOffered {
+		keys = keys[:packsOffered]
+	}
+	return keys
 }
 
 // rerollPacks redraws whichever pack seats have not been opened.
@@ -95,18 +100,18 @@ func (s *ShopScene) rerollPacks(gs *state.GlobalState) {
 
 	// Keep the kinds already opened where they stand, and fill the rest from the fresh pair,
 	// skipping anything already on the shelf so the two seats are never the same pack twice.
-	out := make([]goodKind, len(s.offered))
-	taken := map[goodKind]bool{}
-	for i, kind := range s.offered {
-		if s.goodTaken(kind) {
-			out[i] = kind
-			taken[kind] = true
+	out := make([]string, len(s.offered))
+	taken := map[string]bool{}
+	for i, key := range s.offered {
+		if s.goodTaken(key) {
+			out[i] = key
+			taken[key] = true
 		}
 	}
 
 	next := 0
 	for i := range out {
-		if out[i] != goodNone {
+		if out[i] != "" {
 			continue
 		}
 		for next < len(fresh) && taken[fresh[next]] {
@@ -170,8 +175,8 @@ func (s *ShopScene) paneHasSomethingToReroll(gs *state.GlobalState, p shopPane) 
 	case shopPaneRelics:
 		return s.unwornRelicExists(gs)
 	case shopPanePacks:
-		for _, kind := range s.offered {
-			if !s.goodTaken(kind) {
+		for _, key := range s.offered {
+			if !s.goodTaken(key) {
 				return true
 			}
 		}

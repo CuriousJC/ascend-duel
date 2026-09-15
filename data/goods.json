@@ -1,0 +1,41 @@
+[
+  {
+    "GoodRecord": "bundle-rocks",
+    "Name": "BAG OF ROCKS",
+    "Family": "Sealed goods",
+    "Art": "bundle-rocks",
+    "Draw": "black silk bag with lumpy rocks inside with a jade drawstring",
+    "Contains": "stones",
+    "Size": 4,
+    "Price": 5,
+    "Title": "",
+    "Hint": "",
+    "Tip": ["a stone raises one hand's multiplier", "by a tenth of it"]
+  },
+  {
+    "GoodRecord": "bundle-essence",
+    "Name": "VIAL OF ESSENCE",
+    "Family": "Sealed goods",
+    "Art": "bundle-essence",
+    "Draw": "a stoppered glass vial with a faceted body filledwith ephemermal rainbow vapor",
+    "Contains": "essences",
+    "Size": 4,
+    "Price": 5,
+    "Title": "CHOOSE YOUR ESSENCE",
+    "Hint": "pick the card, then the essence that changes it",
+    "Tip": ["an essence changes one card of your deck"]
+  },
+  {
+    "GoodRecord": "bundle-runes",
+    "Name": "SACK OF RUNES",
+    "Family": "Sealed goods",
+    "Art": "bundle-runes",
+    "Draw": "red silk pouch with bulking flat shapes instead of rocks with an ivory drawstring",
+    "Contains": "runes",
+    "Size": 4,
+    "Price": 5,
+    "Title": "",
+    "Hint": "",
+    "Tip": ["a rune changes a card during a fight,", "spent between the turns"]
+  }
+]

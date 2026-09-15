@@ -164,7 +164,7 @@ type ShopScene struct {
 	// offered is which packs this visit put up: two of the three, dealt in Init and fixed for the
 	// visit unless the reroll button under them is pressed. **A slice rather than three flags**,
 	// because the pane's two seats are positions and which kind stands in each is the decision.
-	offered []goodKind
+	offered []string
 
 	// stockRNG and packRNG are the visit's two streams, kept so a reroll advances a cursor rather
 	// than starting a second sequence. See Init.
@@ -190,13 +190,13 @@ type ShopScene struct {
 	// three Salves in a row would be buying a life bar rather than a potion.
 	drunk map[string]bool
 
-	// bagBought, vialBought and sackBought are whether this visit's three sealed goods have been
-	// taken.
+	// opened is which of this visit's sealed goods have been taken, by record key.
 	//
 	// **Once each per visit** *(owner's call, 2026-08-27)*, restocked on the next. It bounds what a
 	// rich run can do in one stop and keeps the shop a short offer rather than a vending machine —
-	// the same argument the three-ring shelf is under.
-	bagBought, vialBought, sackBought bool
+	// the same argument the three-ring shelf is under. **A map rather than a flag each** since the
+	// catalog became data/goods.json: a fourth good is a record, not a field on this scene.
+	opened map[string]bool
 
 	// good is the dialog a purchase opens: the four that were inside, and which one is taken. See
 	// shop_goods.go.
@@ -237,7 +237,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.leaving = false
 	s.from, s.move = nil, travel{}
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
-	s.bagBought, s.vialBought, s.sackBought = false, false, false
+	s.opened = map[string]bool{}
 	s.good.reset()
 
 	// **Both stocks are dealt from an rng the visit keeps**, rather than from one built per call.
@@ -445,12 +445,13 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return
 	}
 
-	for _, kind := range s.offered {
-		seat := s.goodSlot(gs, kind)
-		if s.goodTaken(kind) || !at.In(seat) {
+	for _, key := range s.offered {
+		good, ok := session.GoodByKey(key)
+		seat := s.goodSlot(gs, key)
+		if !ok || s.goodTaken(key) || !at.In(seat) {
 			continue
 		}
-		title, lines := goodTip(kind)
+		title, lines := goodTip(good)
 		s.tip.Point(seat, tipLine(title), tipLines(lines))
 		return
 	}
@@ -506,10 +507,10 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		}
 	}
 
-	for _, kind := range s.offered {
-		if at.In(s.goodSlot(gs, kind)) {
+	for _, key := range s.offered {
+		if at.In(s.goodSlot(gs, key)) {
 			s.armed = ""
-			s.openGood(gs, kind)
+			s.openGood(gs, key)
 			return
 		}
 	}
@@ -915,9 +916,9 @@ var _ = func(r data.RelicData) (string, data.Rarity) { return r.Name, r.Rarity }
 
 // goodSlot is where one good is drawn, and the rectangle it is clicked in. **Two seats, centered**,
 // so the row reads as a pair rather than as two things that happen to be near each other.
-func (s *ShopScene) goodSlot(gs *state.GlobalState, kind goodKind) image.Rectangle {
+func (s *ShopScene) goodSlot(gs *state.GlobalState, key string) image.Rectangle {
 	for i, offered := range s.offered {
-		if offered == kind {
+		if offered == key {
 			return shopSeatRect(gs, shopPanePacks, i)
 		}
 	}
@@ -930,32 +931,16 @@ func (s *ShopScene) goodSlot(gs *state.GlobalState, kind goodKind) image.Rectang
 // nothing counts the shelf's seats any more, because each pane knows its own.
 
 // goodTaken is whether this visit's copy has already been opened.
-func (s *ShopScene) goodTaken(kind goodKind) bool {
-	switch kind {
-	case goodBag:
-		return s.bagBought
-	case goodSack:
-		return s.sackBought
-	default:
-		return s.vialBought
-	}
-}
+func (s *ShopScene) goodTaken(key string) bool { return s.opened[key] }
 
 // goodAffordable is whether the purse covers one. **Asked of the run rather than compared here**,
 // which is the line RelicPrice already draws: what a thing costs is the shop's arithmetic and this
 // file only decides where it is drawn.
-func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
+func goodAffordable(gs *state.GlobalState, key string) bool {
 	if gs.Run == nil {
 		return false
 	}
-	switch kind {
-	case goodBag:
-		return gs.Run.CanAffordBag()
-	case goodSack:
-		return gs.Run.CanAffordSack()
-	default:
-		return gs.Run.CanAffordVial()
-	}
+	return gs.Run.CanAffordGood(key)
 }
 
 // goodAvailable is whether a seat can be clicked at all: the purse covers it, and there is somewhere
@@ -967,11 +952,15 @@ func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
 // session.MaxHeld — and a full one would take five vitae for a card that `Hold` refuses. The seat
 // goes dim rather than the purchase failing afterwards, which is the same courtesy an unaffordable
 // good already gets.
-func goodAvailable(gs *state.GlobalState, kind goodKind) bool {
-	if !goodAffordable(gs, kind) {
+func goodAvailable(gs *state.GlobalState, key string) bool {
+	if !goodAffordable(gs, key) {
 		return false
 	}
-	if kind == goodSack && gs.Run.HoldFull() {
+	good, ok := session.GoodByKey(key)
+	if !ok {
+		return false
+	}
+	if good.Contains == session.ContentsRunes && gs.Run.HoldFull() {
 		return false
 	}
 	return true
@@ -983,36 +972,21 @@ func goodAvailable(gs *state.GlobalState, kind goodKind) bool {
 // spending: a refusal has to leave the run as it was, and `SpendVitae` is the one place that
 // refuses. A dialog opened before the payment would be four cards the player could take for free
 // if the purse turned out to be short.
-func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
-	if gs.Run == nil || s.goodTaken(kind) || !goodAvailable(gs, kind) {
+func (s *ShopScene) openGood(gs *state.GlobalState, key string) {
+	if gs.Run == nil || s.goodTaken(key) || !goodAvailable(gs, key) {
 		return
 	}
 
-	paid := false
-	switch kind {
-	case goodBag:
-		paid = gs.Run.BuyBag()
-	case goodSack:
-		paid = gs.Run.BuySack()
-	default:
-		paid = gs.Run.BuyVial()
-	}
-	if !paid {
+	good, ok := session.GoodByKey(key)
+	if !ok || !gs.Run.BuyGood(key) {
 		return
 	}
 
-	switch kind {
-	case goodBag:
-		s.bagBought = true
-	case goodSack:
-		s.sackBought = true
-	default:
-		s.vialBought = true
-	}
-	s.good.open(gs, kind)
+	s.opened[key] = true
+	s.good.open(gs, good)
 	s.tip.Forget()
 
-	trace.Logf("shop", "opened %s, %d vitae left", goodName(kind), gs.Run.Vitae())
+	trace.Logf("shop", "opened %s, %d vitae left", good.Name, gs.Run.Vitae())
 }
 
 // drawGoods draws the two sealed goods with their price under them, on the same terms as the
@@ -1021,87 +995,55 @@ func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
 func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image) {
 	drawShopPaneBack(gs, screen, shopPanePacks)
 
-	for _, kind := range s.offered {
-		at := s.goodSlot(gs, kind)
-		if s.goodTaken(kind) {
+	for _, key := range s.offered {
+		good, ok := session.GoodByKey(key)
+		if !ok || s.goodTaken(key) {
 			continue
 		}
+		at := s.goodSlot(gs, key)
 
-		lit := goodAvailable(gs, kind)
-		drawGoodCard(gs, screen, at.Min, goodName(kind), goodLine(kind), goodArt(gs, kind), lit)
-		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", goodPrice(kind)), lit)
+		lit := goodAvailable(gs, key)
+		drawGoodCard(gs, screen, at.Min, good.Name, goodArt(gs, good), lit)
+		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", good.Price), lit)
 	}
 }
 
-// goodName, goodLine, goodPrice and goodArt are what one of the two says on its face.
+// goodArt is the picture a sealed good draws.
 //
-// **The line states the shape of the offer and never its contents** — "4 stones, keep 1" — because
-// what is inside is drawn when the bag is opened. A face that could name the four would make these
-// shelf items rather than sealed ones, which is the whole mechanic.
-func goodName(kind goodKind) string {
-	switch kind {
-	case goodBag:
-		return bagName
-	case goodSack:
-		return sackName
-	default:
-		return vialName
+// **A record naming its own Art wins, and since 2026-09-15 all three do** — the bag, the vial and
+// the sack are painted as the vessels they are named after.
+//
+// **The borrow is what is left underneath**: a good with no Art draws the placeholder of whatever
+// is inside it — the boulder every stone card draws, the essence catalog's default face, the rune
+// catalog's. It is kept rather than deleted because it is what a *new* good draws on the day it is
+// authored and before it is drawn, and a picture of its contents says more than a fourth
+// placeholder would.
+func goodArt(gs *state.GlobalState, good session.Good) image.Image {
+	if good.Art != "" {
+		return artwork(gs, good.Art)
 	}
-}
-
-func goodLine(kind goodKind) string {
-	switch kind {
-	case goodBag:
-		return fmt.Sprintf("%d stones\nkeep 1", session.BagSize())
-	case goodSack:
-		return fmt.Sprintf("%d runes\nkeep 1", session.SackSize())
-	default:
-		return fmt.Sprintf("%d essences\nkeep 1", session.VialSize())
-	}
-}
-
-func goodPrice(kind goodKind) int {
-	switch kind {
-	case goodBag:
-		return session.BagPrice()
-	case goodSack:
-		return session.SackPrice()
-	default:
-		return session.VialPrice()
-	}
-}
-
-// **Each sealed good draws the placeholder of whatever is inside it** — the bag the boulder every
-// stone card draws, the vial the essence catalog's default face, the sack the rune
-// catalog's. A third picture would be a third thing to recognize for no gain: what is in the
-// good is exactly what the picture shows, and the two that used to share one face now split for
-// the reason the two placeholders split, which is that a shared picture hides which catalog is
-// still undrawn.
-func goodArt(gs *state.GlobalState, kind goodKind) image.Image {
-	switch kind {
-	case goodBag:
+	switch good.Contains {
+	case session.ContentsStones:
 		return stoneArt()
-	case goodSack:
+	case session.ContentsRunes:
 		return artwork(gs, data.DefaultRuneArt)
 	default:
 		return artwork(gs, data.DefaultEssenceArt)
 	}
 }
 
-// goodTip is what resting on one says. **It explains what a stone and an essence each are**, since the
-// face has room for neither and a player meeting the bag on floor one has never seen a stone.
-func goodTip(kind goodKind) (string, []string) {
-	if kind == goodBag {
-		return bagName, []string{
-			fmt.Sprintf("%d stones, and you keep one", session.BagSize()),
-			"a stone raises one hand's multiplier",
-			"by a tenth of it",
-			fmt.Sprintf("%d vitae", session.BagPrice()),
-		}
-	}
-	return vialName, []string{
-		fmt.Sprintf("%d essences, and you keep one", session.VialSize()),
-		"an essence changes one card of your deck",
-		fmt.Sprintf("%d vitae", session.VialPrice()),
-	}
+// goodTip is what resting on one says. **It is the whole of what the card says** *(owner's call,
+// 2026-09-15)* — the face is a picture and a price now, so the count, the noun and what that noun
+// even is are all read here, by a player who on floor one has never seen a stone.
+//
+// **The prose is the record's and the figures are not** *(2026-09-14)*. The Tip lines say what a
+// stone or an essence or a rune *is*; how many are in the good and what it costs are computed from
+// the same fields the face and the purse read, so a tooltip cannot quote a price the shop does not
+// charge. It also gave the sack a tooltip of its own — it fell through to the vial's until the
+// catalog landed.
+func goodTip(good session.Good) (string, []string) {
+	lines := make([]string, 0, len(good.Tip)+2)
+	lines = append(lines, fmt.Sprintf("%d %s, and you keep one", good.Size, good.Contains.Noun()))
+	lines = append(lines, good.Tip...)
+	return good.Name, append(lines, fmt.Sprintf("%d vitae", good.Price))
 }

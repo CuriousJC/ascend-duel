@@ -1,6 +1,8 @@
 package screens
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/seeds"
@@ -8,15 +10,31 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
-// The two sealed goods: what a bag holds, where the row puts them, and the one thing about the
+// The sealed goods: what a bag holds, where the row puts them, and the one thing about the
 // dialog that would be a lock-up rather than a bug — a stage with nothing clickable in it.
+//
+// **The three are looked up rather than named** *(2026-09-14)*, since the catalog is
+// data/goods.json: a test naming "bag" would fail on a renamed record instead of on a broken shop.
+
+// goodHolding is the record that holds one catalog, or a fatal — every test below wants one and
+// none of them can say anything useful without it.
+func goodHolding(t *testing.T, c session.GoodContents) session.Good {
+	t.Helper()
+	g, ok := session.GoodHolding(c)
+	if !ok {
+		t.Fatalf("no good in goods.json holds %s", c.Noun())
+	}
+	return g
+}
 
 func TestABagHoldsFourDifferentStones(t *testing.T) {
 	gs := testRun()
 
-	got := dealStones(gs)
-	if len(got) != session.BagSize() {
-		t.Fatalf("a bag holds %d stones, want %d", len(got), session.BagSize())
+	bag := goodHolding(t, session.ContentsStones)
+
+	got := dealStones(gs, bag.Size)
+	if len(got) != bag.Size {
+		t.Fatalf("a bag holds %d stones, want %d", len(got), bag.Size)
 	}
 
 	seen := map[string]bool{}
@@ -31,9 +49,11 @@ func TestABagHoldsFourDifferentStones(t *testing.T) {
 func TestACanHoldsFourDifferentEssences(t *testing.T) {
 	gs := testRun()
 
-	got := dealVialEssences(gs)
-	if len(got) != session.VialSize() {
-		t.Fatalf("a vial holds %d essences, want %d", len(got), session.VialSize())
+	vial := goodHolding(t, session.ContentsEssences)
+
+	got := dealVialEssences(gs, vial.Size)
+	if len(got) != vial.Size {
+		t.Fatalf("a vial holds %d essences, want %d", len(got), vial.Size)
 	}
 
 	seen := map[string]bool{}
@@ -50,7 +70,9 @@ func TestACanHoldsFourDifferentEssences(t *testing.T) {
 func TestTheSameFightOpensTheSameBag(t *testing.T) {
 	gs := testRun()
 
-	a, b := dealStones(gs), dealStones(gs)
+	size := goodHolding(t, session.ContentsStones).Size
+
+	a, b := dealStones(gs, size), dealStones(gs, size)
 	if len(a) != len(b) {
 		t.Fatalf("two draws of one fight's bag are %d and %d long", len(a), len(b))
 	}
@@ -70,9 +92,12 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	shelf := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
 	before := append([]string(nil), shelf...)
 
+	bag := goodHolding(t, session.ContentsStones)
+	vial := goodHolding(t, session.ContentsEssences)
+
 	// Drawing a bag and a vial must not have consumed anything the shelf reads.
-	dealStones(gs)
-	dealVialEssences(gs)
+	dealStones(gs, bag.Size)
+	dealVialEssences(gs, vial.Size)
 
 	after := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
 	for i := range before {
@@ -84,7 +109,7 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	// And the vial is not the reward screen's offer: two draws off one stream would be the same
 	// four essences in the same order.
 	reward := dealEssences(gs)
-	can := dealVialEssences(gs)
+	can := dealVialEssences(gs, vial.Size)
 	same := len(reward) > 0
 	for i := range reward {
 		if i >= len(can) || can[i].Record != reward[i].Record {
@@ -113,9 +138,9 @@ func TestAVisitOffersTwoDifferentPacks(t *testing.T) {
 		if offered[0] == offered[1] {
 			t.Errorf("fight %d put the same pack in both seats", fight)
 		}
-		for _, kind := range offered {
-			if kind == goodNone {
-				t.Errorf("fight %d put an empty seat on the shelf", fight)
+		for _, key := range offered {
+			if _, ok := session.GoodByKey(key); !ok {
+				t.Errorf("fight %d put %q on the shelf, which is no record", fight, key)
 			}
 		}
 	}
@@ -124,9 +149,12 @@ func TestAVisitOffersTwoDifferentPacks(t *testing.T) {
 // The pack seats are the pane's, so a good is drawn and clicked where the row solved for it.
 func TestTheGoodsStandInTheirPane(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
-	s := &ShopScene{shelf: make([]shelfItem, shelfSize), offered: []goodKind{goodBag, goodVial}}
+	bagKey := goodHolding(t, session.ContentsStones).Record
+	vialKey := goodHolding(t, session.ContentsEssences).Record
+	sackKey := goodHolding(t, session.ContentsRunes).Record
+	s := &ShopScene{shelf: make([]shelfItem, shelfSize), offered: []string{bagKey, vialKey}}
 
-	bag, can := s.goodSlot(gs, goodBag), s.goodSlot(gs, goodVial)
+	bag, can := s.goodSlot(gs, bagKey), s.goodSlot(gs, vialKey)
 	if bag.Empty() || can.Empty() {
 		t.Fatal("an offered pack has no seat")
 	}
@@ -140,7 +168,7 @@ func TestTheGoodsStandInTheirPane(t *testing.T) {
 
 	// A pack this visit did not put up has no seat at all, which is what stops a click landing on
 	// one that is not drawn.
-	if got := s.goodSlot(gs, goodSack); !got.Empty() {
+	if got := s.goodSlot(gs, sackKey); !got.Empty() {
 		t.Errorf("a pack that was not offered has a seat at %v", got)
 	}
 }
@@ -151,24 +179,42 @@ func TestADialogAlwaysHasSomethingToClick(t *testing.T) {
 	gs := testRun()
 
 	var g goods
-	g.open(gs, goodBag)
-	if g.count() == 0 {
-		t.Error("a bag opened with nothing in it")
+	for _, good := range session.Goods() {
+		g.open(gs, good)
+		if g.count() == 0 {
+			t.Errorf("%s opened with nothing in it", good.Record)
+		}
+		if good.Contains == session.ContentsEssences && len(g.offer) == 0 {
+			t.Errorf("%s opened with no cards to aim at", good.Record)
+		}
+		g.reset()
 	}
-	g.reset()
+}
 
-	g.open(gs, goodVial)
-	if g.count() == 0 {
-		t.Fatal("a vial opened with no essences in it")
-	}
-	if len(g.offer) == 0 {
-		t.Fatal("a vial opened with no cards to aim at")
-	}
-	g.reset()
+// Every good says the same thing in its dialog and in its tooltip, and every figure in both is the
+// record's own. **A price quoted in one place and charged in another is the failure this catches**,
+// and it is the reason none of those strings is authored.
+//
+// **The face is not one of the places any more** *(owner's call, 2026-09-15)*: a sealed good is a
+// picture and a price, and everything it used to write across its lower half is in the tooltip. So
+// the count and the noun are checked there, which is where a player now reads them.
+func TestAGoodSaysTheSameThingEverywhere(t *testing.T) {
+	for _, good := range session.Goods() {
+		if good.Title == "" || good.Hint == "" {
+			t.Errorf("%s opens a dialog with no title or no hint", good.Record)
+		}
 
-	g.open(gs, goodSack)
-	if g.count() == 0 {
-		t.Error("a sack opened with nothing in it")
+		title, lines := goodTip(good)
+		if title != good.Name {
+			t.Errorf("%s is headed %q on the shelf and %q in its tooltip", good.Record, good.Name, title)
+		}
+		got := strings.Join(lines, " ")
+		if want := fmt.Sprintf("%d %s", good.Size, good.Contains.Noun()); !strings.Contains(got, want) {
+			t.Errorf("%s holds %q and its tooltip says %q", good.Record, want, got)
+		}
+		if !strings.Contains(got, fmt.Sprintf("%d vitae", good.Price)) {
+			t.Errorf("%s costs %d and its tooltip says %q", good.Record, good.Price, got)
+		}
 	}
 }
 
@@ -179,7 +225,7 @@ func TestAEssenceIsDeadUntilACardIsSelected(t *testing.T) {
 	gs := testRun()
 
 	var g goods
-	g.open(gs, goodVial)
+	g.open(gs, goodHolding(t, session.ContentsEssences))
 
 	for _, w := range g.essences {
 		if g.essenceSpendable(gs, w) {
@@ -211,7 +257,7 @@ func TestTheCanAppliesTheEssenceToTheSelectedCard(t *testing.T) {
 	gs := testRun()
 
 	var g goods
-	g.open(gs, goodVial)
+	g.open(gs, goodHolding(t, session.ContentsEssences))
 	g.selectCard(0)
 
 	idx, ok := g.selectedDeckIndex()
@@ -248,7 +294,7 @@ func TestTakingAStoneRaisesTheRunsRung(t *testing.T) {
 	gs := testRun()
 
 	var g goods
-	g.open(gs, goodBag)
+	g.open(gs, goodHolding(t, session.ContentsStones))
 	stone := g.stones[0]
 
 	before, _ := gs.Run.HandMultiplier(stone.Hand)
@@ -272,7 +318,7 @@ func TestTheCansTwoRowsFitInsideThePanel(t *testing.T) {
 	gs.ScreenWidth, gs.ScreenHeight = state.ScreenWidth, state.ScreenHeight
 
 	var g goods
-	g.open(gs, goodVial)
+	g.open(gs, goodHolding(t, session.ContentsEssences))
 
 	panel := modalPanelRect(gs)
 	essences := g.slot(gs, 0)

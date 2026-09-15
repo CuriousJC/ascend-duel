@@ -192,6 +192,20 @@ var runeArt embed.FS
 //go:embed stone/*.png
 var stoneArtFS embed.FS
 
+// The shop's other cards, a family of their own as of 2026-09-15: the three potions in
+// data/potions.json and the three sealed goods in data/goods.json. **One directory for two
+// catalogs**, which is the one place a family is not one catalog — they share
+// docs/art/other_card_art_prompt.MD, they are generated in one batch and they are filed by one
+// command, so splitting them into assets/potion and assets/good would be two directories of three
+// files that nothing ever tells apart. The keys are record ids either way and the map is flat.
+//
+// **There is no default-other.png.** A potion with no Art draws the relic catalog's default face
+// and a sealed good borrows the picture of whatever is inside it — see data.PotionData.ArtKey and
+// screens.goodArt, both of which predate this family and both of which still decide the empty case.
+//
+//go:embed other/*.png
+var otherArt embed.FS
+
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
 
@@ -295,6 +309,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, essenceArt, "essence")
 	embedFamily(images, runeArt, "rune")
 	embedFamily(images, stoneArtFS, "stone")
+	embedFamily(images, otherArt, "other")
 	embedFamily(images, portraits, "enemy")
 	embedFamily(images, bossPortraits, "boss")
 

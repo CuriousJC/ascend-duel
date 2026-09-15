@@ -95,16 +95,25 @@ func (s *ShopScene) drawBrand(gs *state.GlobalState, screen *ebiten.Image) {
 // **Basic, not an element.** A potion changes the duelist rather than a card, and the duelist is not
 // a color — so its border is the mid gray `cards.BorderOf` gives `basic`, exactly as a stone's and
 // a sealed good's are. The hue wheel is full and a fourth kind of shelf card cannot have one.
+//
+// **The picture comes off the record** *(2026-09-14)*, through `data.PotionData.ArtKey` — the shape
+// the relics, essences and runes are already in. It was `brandArtKey` until then, which was not a
+// fallback so much as the *relic* catalog's default sitting on a bottle: three shelf cards drawing a
+// ring, and nothing saying they were undrawn rather than misfiled.
+//
+// **The picture is now the whole card** *(owner's call, 2026-09-15)*. It carried "HEAL 15 / LIFE"
+// on a scrim across the lower half until then, which is the one thing potionTip already says at
+// full length — so the band was covering a painted bottle to repeat, in two clipped words, what
+// resting on it explains. A shelf card the player can reach is a card whose tooltip can carry the
+// prose; what the face is for is being recognized.
 func potionSpec(gs *state.GlobalState, p session.Potion, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:       p.Name,
-		Form:       cards.FormNone,
-		Cost:       0,
-		Element:    artFor(combat.Basic),
-		Art:        artwork(gs, brandArtKey),
-		Text:       p.Text,
-		Highlights: cards.ElementHighlights(p.Text),
-		Enabled:    enabled,
+		Name:    p.Name,
+		Form:    cards.FormNone,
+		Cost:    0,
+		Element: artFor(combat.Basic),
+		Art:     artwork(gs, p.Art),
+		Enabled: enabled,
 	}
 }
 
@@ -143,8 +152,9 @@ func (s *ShopScene) drinkPotion(gs *state.GlobalState, key string) {
 	s.tip.Forget()
 }
 
-// potionTip is what resting on one says. **It explains what the figure does**, since a player
-// meeting the shelf on floor one has never seen a potion and the face has room for two short lines.
+// potionTip is what resting on one says. **It is the whole of what the card says** *(owner's call,
+// 2026-09-15)* — the face is a painted bottle and a price, so the figure, what it moves and when it
+// is drunk are all read here, by a player who on floor one has never seen a potion.
 func potionTip(p session.Potion) (string, []string) {
 	var what string
 	switch p.Effect {

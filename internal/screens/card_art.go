@@ -632,25 +632,27 @@ func stoneLine(st session.Stone) string {
 
 // goodSpec is one of the shop's two sealed goods as a card: the bag of rocks, or the vial of essence.
 //
-// **A sealed good is a card that says what is inside without saying which.** The name and the line
-// under it are the whole of what a player can know before paying, which is the mechanic rather
-// than a gap in the design — so the text states the *shape* of the offer ("4 stones, keep 1") and
-// nothing about the four.
+// **A sealed good is a card that says what is inside without saying which**, and since 2026-09-15
+// it says it in the tooltip rather than on its face *(owner's call)*. It carried "4 stones / keep
+// 1" across the lower half of its picture until then — the shape of the offer and never its
+// contents, which is still exactly what the tooltip says, in the room it takes to say it properly.
+// The mechanic is unchanged: what a player can know before paying is the vessel and the count, and
+// the four inside are drawn when it is opened.
 //
-// **They borrow their own catalog's picture**: the bag draws the boulder every stone card draws,
-// the vial the essence catalog's default face, the sack the rune catalog's. A picture of
-// their own would be a third thing to recognize for no gain — what is in the good is exactly what
-// the picture shows. See goodArt, which is where the three are chosen.
-func goodSpec(gs *state.GlobalState, name, line string, art image.Image, enabled bool) cards.Spec {
+// **All three are painted as of 2026-09-15**: a bag, a vial and a sack, each drawn as the vessel
+// its Name says it is. They borrowed the picture of whatever was inside them until then — the
+// boulder, the essence default, the rune default — on the argument that a third picture was a
+// third thing to recognize for no gain. What that missed is that a borrowed face makes the vial
+// and the essence card in it the same picture, so the shelf says "essences" twice and says nothing
+// about the *vessel* being what is bought. The borrow is still the empty case; see goodArt.
+func goodSpec(gs *state.GlobalState, name string, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:       name,
-		Form:       cards.FormNone,
-		Cost:       0,
-		Element:    artFor(combat.Basic),
-		Art:        art,
-		Text:       line,
-		Highlights: cards.ElementHighlights(line),
-		Enabled:    enabled,
+		Name:    name,
+		Form:    cards.FormNone,
+		Cost:    0,
+		Element: artFor(combat.Basic),
+		Art:     art,
+		Enabled: enabled,
 	}
 }
 

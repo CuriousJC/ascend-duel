@@ -50,31 +50,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-// goodKind is which of the two sealed goods a shelf seat is.
-type goodKind int
-
-const (
-	goodNone goodKind = iota
-	goodBag
-	goodVial
-
-	// goodSack is the third, and the one whose contents leave the shop with the player rather
-	// than being applied in the dialog. A stone and an essence are both spent the moment they are
-	// chosen; a rune goes into the sack and is spent mid-fight. See combat_rune.go.
-	goodSack
-)
-
-// goodKinds is the shelf's goods in the order they stand, for anything that walks them.
-func goodKinds() []goodKind { return []goodKind{goodBag, goodVial, goodSack} }
-
-// The two goods as cards. **The name is what it is and the line is the shape of the offer**, never
-// what is inside: a bag that named its four rocks on the face would be a shelf item you could read
-// before paying for, which is the one thing these are not.
-const (
-	bagName  = "BAG OF ROCKS"
-	vialName = "VIAL OF ESSENCE"
-	sackName = "SACK OF RUNES"
-)
+// **There is no goodKind enum any more** *(2026-09-14)*. A shelf seat names a good by its record
+// key, the catalog is data/goods.json, and what the dialog does with one is switched on
+// session.GoodContents — the closed vocabulary that says which catalog is inside. The three names
+// that used to be constants here are the records' own Name fields.
 
 // Where the goods row sits, and how the dialog lays its cards out.
 const (
@@ -116,7 +95,10 @@ const (
 // see `ShopScene.openGood` — so what is here is the offer and the choice, exactly as the shelf
 // holds a relic's key and not its price.
 type goods struct {
-	kind  goodKind
+	// good is the record that was opened: its name, its size, and what is inside it. **The whole
+	// record rather than a key**, because every question this dialog asks of it — how many were
+	// drawn, what to head the panel with, which catalog to deal — is a field on it.
+	good  session.Good
 	stage goodsStage
 
 	// stones, essences and runes are what was drawn, and only the one matching kind is filled.
@@ -144,19 +126,19 @@ type goods struct {
 // a purchase interrupted by a quit leaves nothing to snapshot. Buying the same bag twice in one
 // visit is not possible — see the shelf's `bought` flag — so a stream per fight is a stream per
 // bag.
-func (g *goods) open(gs *state.GlobalState, kind goodKind) {
-	g.kind, g.stage, g.selected = kind, goodsPick, -1
+func (g *goods) open(gs *state.GlobalState, good session.Good) {
+	g.good, g.stage, g.selected = good, goodsPick, -1
 	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
 	g.tip = models.Tooltip{DwellTicks: tipDwell}
 
-	switch kind {
-	case goodBag:
-		g.stones = dealStones(gs)
-	case goodVial:
-		g.essences = dealVialEssences(gs)
+	switch good.Contains {
+	case session.ContentsStones:
+		g.stones = dealStones(gs, good.Size)
+	case session.ContentsEssences:
+		g.essences = dealVialEssences(gs, good.Size)
 		g.offer = dealVialOffer(gs)
-	case goodSack:
-		g.runes = dealSackRunes(gs)
+	case session.ContentsRunes:
+		g.runes = dealSackRunes(gs, good.Size)
 	}
 }
 
@@ -165,7 +147,7 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 
 // close puts it away.
 func (g *goods) reset() {
-	g.kind, g.stage, g.selected = goodNone, goodsClosed, -1
+	g.good, g.stage, g.selected = session.Good{}, goodsClosed, -1
 	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
 	g.tip.Forget()
 }
@@ -173,10 +155,10 @@ func (g *goods) reset() {
 // count is how many cards are in the row that is taken from: the stones, the runes, or the
 // essences. **Not the offer**, which is a second row with its own slot function.
 func (g *goods) count() int {
-	switch {
-	case g.kind == goodBag:
+	switch g.good.Contains {
+	case session.ContentsStones:
 		return len(g.stones)
-	case g.kind == goodSack:
+	case session.ContentsRunes:
 		return len(g.runes)
 	default:
 		return len(g.essences)
@@ -192,13 +174,13 @@ func (g *goods) count() int {
 // **Flat, not weighted.** A stone has no rarity: every rung is worth a tenth of itself, so a
 // Card Five stone is not a better rock than a Card Pair stone — it is a rock for a rung you may
 // never build. Weighting them would be pricing the *hand*, which the ladder already does.
-func dealStones(gs *state.GlobalState) []session.Stone {
+func dealStones(gs *state.GlobalState, size int) []session.Stone {
 	all := session.Stones()
 	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.BagStock, gs.Run.Fight())))
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
-	if len(all) > session.BagSize() {
-		all = all[:session.BagSize()]
+	if len(all) > size {
+		all = all[:size]
 	}
 	return all
 }
@@ -209,13 +191,13 @@ func dealStones(gs *state.GlobalState) []session.Stone {
 // salts exist for: sharing would make the shop's four a function of which two had just been
 // offered free, so buying the vial could guarantee — or rule out — the pair the player had turned
 // down. See internal/seeds.
-func dealVialEssences(gs *state.GlobalState) []session.Essence {
+func dealVialEssences(gs *state.GlobalState, size int) []session.Essence {
 	all := session.Essences()
 	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.VialStock, gs.Run.Fight())))
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
-	if len(all) > session.VialSize() {
-		all = all[:session.VialSize()]
+	if len(all) > size {
+		all = all[:size]
 	}
 	return all
 }
@@ -228,13 +210,13 @@ func dealVialEssences(gs *state.GlobalState) []session.Essence {
 //
 // **A catalog shorter than the sack is not an error.** Four runes ship and the sack holds
 // four, so it currently offers the whole file; the cut is what keeps that true as the list grows.
-func dealSackRunes(gs *state.GlobalState) []session.Rune {
+func dealSackRunes(gs *state.GlobalState, size int) []session.Rune {
 	all := session.Runes()
 	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.SackStock, gs.Run.Fight())))
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
-	if len(all) > session.SackSize() {
-		all = all[:session.SackSize()]
+	if len(all) > size {
+		all = all[:size]
 	}
 	return all
 }
@@ -289,7 +271,7 @@ func (g *goods) slot(gs *state.GlobalState, i int) image.Rectangle {
 	}
 
 	top := gs.PctY(goodsChoiceRowPct)
-	if g.kind == goodVial {
+	if g.good.Contains == session.ContentsEssences {
 		top = gs.PctY(vialEssenceRowPct)
 	}
 	pitch := cardWidth + 40
@@ -392,17 +374,17 @@ func (g *goods) hover(gs *state.GlobalState) {
 		if !at.In(g.slot(gs, i)) {
 			continue
 		}
-		switch {
-		case g.kind == goodVial:
+		switch g.good.Contains {
+		case session.ContentsEssences:
 			// **The essences are deliberately not tooltipped**, which is the reward screen's own
 			// choice on the same row: an essence's whole rule is printed on its face, where a deck
 			// card's is not. What a dim essence means — "not for the card you have selected" — is
 			// left to the row rather than to a tooltip.
 			return
-		case g.kind == goodBag:
+		case session.ContentsStones:
 			st := g.stones[i]
 			g.tip.Point(g.slot(gs, i), tipLine(st.Name), tipLines(stoneTipLines(gs, st)))
-		case g.kind == goodSack:
+		case session.ContentsRunes:
 			p := g.runes[i]
 			g.tip.Point(g.slot(gs, i), tipLine(p.Name), tipLines(runeTipLines(p)))
 		}
@@ -437,8 +419,8 @@ func (g *goods) click(gs *state.GlobalState) {
 
 // take commits whichever card was clicked.
 func (g *goods) take(gs *state.GlobalState, i int) {
-	switch {
-	case g.kind == goodVial:
+	switch g.good.Contains {
+	case session.ContentsEssences:
 		// **An essence is refused rather than falling back**, on the predicate its lit state already
 		// read: a dim essence cannot be taken and a lit one always works. With no card selected every
 		// essence is dim, so the dialog waits rather than choosing a card for the player.
@@ -462,7 +444,7 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		}
 		g.reset()
 
-	case g.kind == goodBag:
+	case session.ContentsStones:
 		stone := g.stones[i]
 		if gs.Run.UseStone(stone.Record) {
 			trace.Logf("shop", "bag of rocks: %s, %s now at %d stones",
@@ -470,7 +452,7 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		}
 		g.reset()
 
-	case g.kind == goodSack:
+	case session.ContentsRunes:
 		// **A rune is not applied here — it goes into the sack.** That is the whole
 		// difference between this good and the other two: a stone and an essence are spent on the
 		// spot, and a rune is carried into the next fight and spent between its turns.
@@ -515,10 +497,10 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	for i := 0; i < g.count(); i++ {
 		at := g.slot(gs, i).Min
-		switch {
-		case g.kind == goodBag:
+		switch g.good.Contains {
+		case session.ContentsStones:
 			drawStoneCard(gs, screen, at, g.stones[i], true)
-		case g.kind == goodSack:
+		case session.ContentsRunes:
 			drawSpecCard(gs, screen, at, runeSpec(gs, g.runes[i], true, false))
 		default:
 			// **An essence is lit only for the card that is selected.** With nothing selected the
@@ -546,30 +528,15 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 // title names what is open, and hint says what to do with it. **Two short lines rather than a
 // paragraph**: the cards say what they are, and this says how many of them the player gets.
 //
-// **The vial is the exception and says one thing** *(owner's call, 2026-09-05)*: the essences on the
-// table are the whole of what the dialog is, so it is an instruction rather than a label with a
-// caption. hint returns nothing there and draw prints nothing rather than an empty line.
-func (g *goods) title() string {
-	switch g.kind {
-	case goodBag:
-		return bagName
-	case goodSack:
-		return sackName
-	default:
-		return "CHOOSE YOUR ESSENCE"
-	}
-}
+// **Both come off the record now** *(2026-09-14)*, resolved once at load — see session.Good, where a
+// blank Title becomes the good's Name and a blank Hint becomes "take one of the four, the rest are
+// gone", with the figure the record's own Size rather than a number authored twice. The vial is
+// still the exception and still says one thing *(owner's call, 2026-09-05)*: the essences on the
+// table are the whole of what the dialog is, so it heads itself with an instruction rather than a
+// label with a caption. It authors both fields to say so.
+func (g *goods) title() string { return g.good.Title }
 
-func (g *goods) hint() string {
-	switch {
-	case g.kind == goodVial:
-		return "pick the card, then the essence that changes it"
-	case g.kind == goodBag:
-		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.stones))
-	default:
-		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.runes))
-	}
-}
+func (g *goods) hint() string { return g.good.Hint }
 
 // stoneTipLines is what a stone's tooltip says: the rung it raises, what one is worth, and where
 // that rung stands for this run right now.

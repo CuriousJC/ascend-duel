@@ -34,10 +34,16 @@ and both are things the repo produced. These are things the repo consumes.
   size it is ~57 KB and nothing resamples at all.
   `TestEveryBleedingCardArtIsTheCardsOwnSize` is the tripwire.
 - **`go run ./tools/relicart` is what does the filing**, so the reduction and the `"Art"` field are
-  one command rather than three steps remembered in order. Drop the generator's PNG into
-  `.scratch/to-process-relic-art/` named after the record and run it. Only relics have one
-  today; a second catalog reaching this volume should get the same treatment rather than a
-  second set of manual steps.
+  one command rather than three steps remembered in order. Drop the generator's PNG into the
+  catalog's inbox named after the record, and run the command with that catalog's `-kind`:
+  `relic`, `essence`, `rune`, `stone` or `other`. **A stem naming no record is refused rather than
+  filed**, because a misspelled key is invisible in play — the card simply draws the fallback.
+- **`-kind other` is one inbox over two files** *(2026-09-15)*. The potions and the sealed goods
+  share one prompt, so they are generated in one batch and there is nothing to be gained by making
+  the person splitting a batch of six decide which three are which. `.scratch/to-process-other-art`
+  is the inbox, `assets/other` the directory, and the tool writes each `"Art"` back into whichever
+  of `data/potions.json` and `data/goods.json` holds the record. An id appearing in both is
+  refused: one flat asset map means one id is one picture.
 - **The generic prompt is what lives here; each relic's own description lives on its record**
   *(owner's call, 2026-09-12)*. A prompt is about no record at all. The subject paragraph is about exactly one, so it is `Draw` in
   `data/relics.json` — ignored by the engine, exactly as a status's `Badge` is, and pasted into
@@ -87,7 +93,7 @@ way down — and was never used. The committed catalog went through plain Catmul
 | `relic_art_prompt_pixel_archived.MD` | **not live.** The same relic prompt with the render language pixel rather than smooth, kept so switching direction is a regeneration rather than an archaeology dig. The 137 pictures in `assets/relic/` were drawn this way and the other three catalogs were not |
 | `essence_art_prompt.MD` | the prompt for an essence or a rune — `cards.EssenceStyle` goods that print their sentence on a scrim across the lower half of the picture. Same style block, and the ephemeral fading an essence has and a relic does not |
 | `stone_art_prompt.MD` | the prompt for a stone — same style block and the same whole-object instruction, plus the three material ladders: the concept axis is silica, the form axis is plain rock, the element axis is gem |
-| `other_card_art_prompt.MD` | the prompt for every *other* `cards.EssenceStyle` good — potions, the placeholder brand, the two sealed goods, and whatever is added next. Same style block and the same composition; the object is whole rather than coming apart |
+| `other_card_art_prompt.MD` | the prompt for every *other* `cards.EssenceStyle` good — the potions in `data/potions.json`, the sealed goods in `data/goods.json`, the placeholder brand, and whatever is added next. Same style block and the same composition; the object is whole rather than coming apart |
 | `rune_art_prompt.MD` | the closed list of rune body plans, pasted into the essence prompt. A creature needs a shape where an object does not |
 
 **Neither bleeding card names itself** *(owner's call, 2026-09-11)*, so no prompt has to keep a

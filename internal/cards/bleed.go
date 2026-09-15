@@ -138,8 +138,8 @@ func coverInto(dst *image.RGBA, src image.Image, box image.Rectangle) {
 //
 // Each band is computed from the offsets the type it covers is drawn at, so moving the text band
 // moves its scrim with it and there is no second number to keep in step.
-func drawScrims(dst *image.RGBA, st Style) {
-	for _, band := range st.scrimBands() {
+func drawScrims(dst *image.RGBA, s Spec, st Style) {
+	for _, band := range st.scrimBands(s) {
 		scrimBand(dst, st, band)
 	}
 }
@@ -148,16 +148,22 @@ func drawScrims(dst *image.RGBA, st Style) {
 //
 // **Empty on a style that does not bleed**, so the whole feature is one predicate rather than a
 // branch at each call site.
-func (st Style) scrimBands() []image.Rectangle {
+func (st Style) scrimBands(s Spec) []image.Rectangle {
 	if !st.ArtBleed {
 		return nil
 	}
 
 	// **One band, because a bleeding card carries one piece of type.** Neither bleeding style
 	// names itself — see ShowName on each — so the only thing needing a ground is the sentence,
-	// and a style with nothing to say gets no scrim and shows the whole picture.
+	// and a card with nothing to say gets no scrim and shows the whole picture.
+	//
+	// **It follows the card's own text, not just the style's band** *(owner's call, 2026-09-15)*.
+	// It was the style alone until the potions and the sealed goods gave up their faces to their
+	// tooltips: EssenceStyle still declares where a sentence goes, and a bottle with no sentence
+	// was drawing an empty band across the lower half of its picture — a scrim is a ground for
+	// type and a ground under nothing is a stain.
 	var bands []image.Rectangle
-	if st.TextBandBottom > st.TextBandTop {
+	if s.Text != "" && st.TextBandBottom > st.TextBandTop {
 		bands = append(bands, image.Rect(0, st.TextBandTop-scrimPad, st.Width, st.TextBandBottom+scrimPad))
 	}
 	return bands

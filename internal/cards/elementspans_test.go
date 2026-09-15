@@ -113,9 +113,6 @@ func TestEveryTextFitsItsHighlights(t *testing.T) {
 	for key, st := range data.LoadStones() {
 		check("stone "+key, st.Text)
 	}
-	for _, p := range data.LoadPotions() {
-		check("potion "+p.Name, p.Text)
-	}
 	for key, r := range data.LoadRelics() {
 		check("relic "+key, r.Text)
 	}

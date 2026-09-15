@@ -130,29 +130,47 @@ func TestAStoneTheCatalogDoesNotHoldIsRefused(t *testing.T) {
 	}
 }
 
-// The two sealed goods take the vitae they say they take, and refuse when the purse is short.
+// A sealed good takes the vitae it says it takes, and refuses when the purse is short.
 func TestASealedGoodCostsWhatItSays(t *testing.T) {
+	bag, ok := GoodHolding(ContentsStones)
+	if !ok {
+		t.Fatal("no good in goods.json holds stones, and the bag is the only way to a rock")
+	}
+	vial, ok := GoodHolding(ContentsEssences)
+	if !ok {
+		t.Fatal("no good in goods.json holds essences")
+	}
+
 	// **Spent down to nothing rather than topped up**, because a run opens with a purse of its own
 	// and a test that assumed an empty one would be pinning `startingVitae` by accident.
 	s := New(nil)
 	s.SpendVitae(s.Vitae())
-	s.AddVitae(BagPrice() + VialPrice())
+	s.AddVitae(bag.Price + vial.Price)
 	start := s.Vitae()
 
-	if !s.BuyBag() {
+	if !s.BuyGood(bag.Record) {
 		t.Fatal("the bag was refused with the purse full")
 	}
-	if got, want := s.Vitae(), start-BagPrice(); got != want {
+	if got, want := s.Vitae(), start-bag.Price; got != want {
 		t.Errorf("the purse is %d after a bag, want %d", got, want)
 	}
-	if !s.BuyVial() {
+	if !s.BuyGood(vial.Record) {
 		t.Fatal("the vial was refused with the purse still covering it")
 	}
 	if got := s.Vitae(); got != 0 {
 		t.Errorf("the purse is %d after both, want 0", got)
 	}
 
-	if s.BuyBag() || s.CanAffordBag() {
+	if s.BuyGood(bag.Record) || s.CanAffordGood(bag.Record) {
 		t.Error("an empty purse bought a bag")
+	}
+
+	// A key no record carries buys nothing and costs nothing, rather than spending a zero price.
+	s.AddVitae(100)
+	if s.BuyGood("no-such-good") {
+		t.Error("a key no record carries was bought")
+	}
+	if got := s.Vitae(); got != 100 {
+		t.Errorf("the purse is %d after buying nothing, want 100", got)
 	}
 }

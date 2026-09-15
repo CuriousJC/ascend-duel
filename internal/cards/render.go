@@ -91,7 +91,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	// something painted over half-drawn words. See bleed.go.
 	if st.ArtBleed {
 		drawArtBleed(img, s, st)
-		drawScrims(img, st)
+		drawScrims(img, s, st)
 		ink = onScrim(s)
 	}
 

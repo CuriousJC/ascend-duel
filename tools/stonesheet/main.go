@@ -95,8 +95,8 @@ func run(dir string) error {
 		Style:    styleFacts(cards.EssenceStyle),
 		Count:    len(session.Stones()),
 		Rungs:    len(combat.Hands()),
-		BagSize:  session.BagSize(),
-		BagPrice: session.BagPrice(),
+		BagSize:  goodSize(session.ContentsStones),
+		BagPrice: goodPrice(session.ContentsStones),
 	}
 	if page.Count > 0 {
 		page.Share = fmt.Sprintf("%.1f", float64(page.BagSize)*100/float64(page.Count))
@@ -376,4 +376,17 @@ type page struct {
 	Share    string
 	Groups   []group
 	States   []cell
+}
+
+// goodSize and goodPrice are the sealed good that holds this catalog, read off data/goods.json.
+// **Asked of the catalog rather than written down**, so a page quoting what a sack costs cannot
+// disagree with what the shop charges.
+func goodSize(c session.GoodContents) int {
+	g, _ := session.GoodHolding(c)
+	return g.Size
+}
+
+func goodPrice(c session.GoodContents) int {
+	g, _ := session.GoodHolding(c)
+	return g.Price
 }

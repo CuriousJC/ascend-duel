@@ -111,9 +111,9 @@ func TestFlightsLandAndStopBeingDrawn(t *testing.T) {
 	}
 
 	// The longest journey is the last card dealt, which waits out its whole stagger first.
-	longest := flightTicks
+	longest := flightTicks()
 	for _, f := range s.theater.flights {
-		if n := f.delay + flightTicks; n > longest {
+		if n := f.delay + flightTicks(); n > longest {
 			longest = n
 		}
 	}

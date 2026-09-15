@@ -84,7 +84,7 @@ func slidesFor(row []cardSlide, order []int, card func(i int) actionCard, lift f
 			continue
 		}
 		row = addCardSlide(row, cardSlide{
-			travel:    newTravel(0, slideTicks),
+			travel:    newTravel(0, slideTicks()),
 			card:      card(to),
 			lift:      lift(to),
 			fromIndex: from, fromCount: n,

@@ -192,8 +192,8 @@ var runeArt embed.FS
 //go:embed stone/*.png
 var stoneArtFS embed.FS
 
-// The shop's other cards, a family of their own as of 2026-09-15: the three potions in
-// data/potions.json and the three sealed goods in data/goods.json. **One directory for two
+// The shop's other cards, a family of their own as of 2026-09-15: the potions in
+// data/potions.json and the sealed goods in data/goods.json. **One directory for two
 // catalogs**, which is the one place a family is not one catalog — they share
 // docs/art/other_card_art_prompt.MD, they are generated in one batch and they are filed by one
 // command, so splitting them into assets/potion and assets/good would be two directories of three

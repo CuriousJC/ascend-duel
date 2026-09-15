@@ -86,7 +86,7 @@ var demo struct {
 	done      bool
 
 	// settledAt is the tick a round's playback finished, or 0 while one is running. It is what
-	// demoBetweenRounds is measured from — see the hold in demoUpdate.
+	// demoBetweenRounds() is measured from — see the hold in demoUpdate.
 	settledAt int
 }
 
@@ -130,7 +130,7 @@ const (
 // screen is on show long enough to be captured rather than passed straight through.
 //
 // **It was measured against an absolute tick and therefore did nothing** until 2026-08-12.
-// The condition was `demo.tick > demoDuelAt+demoBetweenRounds`, which round one's playback
+// The condition was `demo.tick > demoDuelAt+demoBetweenRounds()`, which round one's playback
 // clears by a mile — so from round two on, the next plan was sent on the very tick the
 // previous round settled, with no hold at all.
 //
@@ -140,10 +140,10 @@ const (
 // the air, and the sequence the table exists to show — their cards land, you choose, both
 // sides resolve — could not be seen in the one harness that shows it.
 //
-// It has to clear the arrival: riseTicks plus a full row's stagger is 16 + 4x4 = 32. **Written
+// It has to clear the arrival: riseTicks() plus a full row's stagger is 16 + 4x4 = 32. **Written
 // as a beat so it stays clear of it** — both of those are proportions of the game's speed, so a
 // raw 60 would stop clearing them the day the speed went up. See clock.go.
-var demoBetweenRounds = beat(12, 5)
+func demoBetweenRounds() int { return beat(12, 5) }
 
 func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 	if demo.done {
@@ -187,7 +187,7 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 		s.startRound()
 	}
 
-	// Playback finished. Hold for demoBetweenRounds from *that moment* — not from an absolute
+	// Playback finished. Hold for demoBetweenRounds() from *that moment* — not from an absolute
 	// tick, which is what this used to do and what made the hold a no-op — then either send the
 	// next scripted round or close the window, the same way the close button does.
 	//
@@ -198,7 +198,7 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 		demo.settledAt = demo.tick
 	}
 
-	if playedARound && demo.tick >= demo.settledAt+demoBetweenRounds {
+	if playedARound && demo.tick >= demo.settledAt+demoBetweenRounds() {
 		// s.round rather than demo.round: the first round is clicked rather than scripted, so
 		// the two do not line up and the scene's own count is the one that is true.
 		s.demoReport(gs, fmt.Sprintf("round %d resolution", s.round))

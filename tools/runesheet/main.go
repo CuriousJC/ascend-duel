@@ -52,7 +52,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
@@ -95,13 +97,10 @@ func run(dir string) error {
 		Ground:     ground,
 		Style:      styleFacts(cards.EssenceStyle),
 		Count:      len(order),
-		SackSize:   goodSize(session.ContentsRunes),
-		SackPrice:  goodPrice(session.ContentsRunes),
+		Sacks:      goodsPhrase(session.ContentsRunes),
 		MaxTargets: session.MaxRuneTargets,
 	}
-	if page.Count > 0 {
-		page.Share = fmt.Sprintf("%.1f", float64(page.SackSize)*100/float64(page.Count))
-	}
+	page.Share = goodsShare(session.ContentsRunes, page.Count)
 
 	var plates []plate
 	for _, key := range order {
@@ -183,10 +182,10 @@ func run(dir string) error {
 	}
 
 	fmt.Printf("wrote %s and %d PNGs — %d runes, %d with art of their own and %d with a subject; "+
-		"%d drawn from a %d-vitae sack, %s%% of the catalog a seat\n",
+		"sacks at %s, %s%% of the catalog a seat\n",
 		out, len(plates)+len(page.States), page.Count,
 		page.Count-page.Undrawn, page.Count-page.Unwritten,
-		page.SackSize, page.SackPrice, page.Share)
+		page.Sacks, page.Share)
 	for _, f := range page.Families {
 		fmt.Printf("  %-24s %2d %s\n", f.Name, f.Count, f.Noun)
 	}
@@ -424,8 +423,7 @@ type page struct {
 	Ground     string
 	Style      map[string]int
 	Count      int
-	SackSize   int
-	SackPrice  int
+	Sacks      string
 	MaxTargets int
 	Undrawn    int
 	Unwritten  int
@@ -435,15 +433,50 @@ type page struct {
 	States     []cell
 }
 
-// goodSize and goodPrice are the sealed good that holds this catalog, read off data/goods.json.
+// goodsPhrase is every sealed good holding this catalog, as one sentence: "3 for 3, 4 for 5 or 5
+// for 6 vitae". goodsShare is how much of the catalog gets a seat, as a figure or a range.
+//
 // **Asked of the catalog rather than written down**, so a page quoting what a sack costs cannot
-// disagree with what the shop charges.
-func goodSize(c session.GoodContents) int {
-	g, _ := session.GoodHolding(c)
-	return g.Size
+// disagree with what the shop charges. **A phrase rather than a size and a price** *(2026-09-15)*:
+// a catalog is held at three sizes now, and a page naming one of them would be quoting the shop
+// accurately about a third of what it sells.
+func goodsPhrase(c session.GoodContents) string {
+	held := goodsHolding(c)
+	parts := make([]string, 0, len(held))
+	for _, g := range held {
+		parts = append(parts, fmt.Sprintf("%d for %d", g.Size, g.Price))
+	}
+	switch len(parts) {
+	case 0:
+		return "nothing on the shelf holds them"
+	case 1:
+		return parts[0] + " vitae"
+	default:
+		return strings.Join(parts[:len(parts)-1], ", ") + " or " + parts[len(parts)-1] + " vitae"
+	}
 }
 
-func goodPrice(c session.GoodContents) int {
-	g, _ := session.GoodHolding(c)
-	return g.Price
+func goodsShare(c session.GoodContents, count int) string {
+	held := goodsHolding(c)
+	if count == 0 || len(held) == 0 {
+		return ""
+	}
+	lo := float64(held[0].Size) * 100 / float64(count)
+	hi := float64(held[len(held)-1].Size) * 100 / float64(count)
+	if lo == hi {
+		return fmt.Sprintf("%.1f", lo)
+	}
+	return fmt.Sprintf("%.1f-%.1f", lo, hi)
+}
+
+// goodsHolding is every good holding one catalog, smallest first.
+func goodsHolding(c session.GoodContents) []session.Good {
+	var out []session.Good
+	for _, key := range session.GoodKeys() {
+		if g, ok := session.GoodByKey(key); ok && g.Contains == c {
+			out = append(out, g)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Size < out[j].Size })
+	return out
 }

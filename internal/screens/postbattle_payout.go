@@ -109,16 +109,14 @@ func (s *PostBattleScene) drawProse(gs *state.GlobalState, screen *ebiten.Image,
 func (s *PostBattleScene) beginOffer(gs *state.GlobalState) {
 	s.stage = choosing
 	for i := range s.entry {
-		s.entry[i] = newTravel(i*essenceEntryStagger, essenceEntryTicks)
+		s.entry[i] = newTravel(i*essenceEntryStagger(), essenceEntryTicks())
 	}
 	s.place(gs)
 }
 
 // The essences' arrival: how long one takes to cross in, and how far apart the two set off.
-var (
-	essenceEntryTicks   = beat(1, 1)
-	essenceEntryStagger = beat(1, 4)
-)
+func essenceEntryTicks() int   { return beat(1, 1) }
+func essenceEntryStagger() int { return beat(1, 4) }
 
 // essenceArrivingAt is where one offered essence is *drawn* while it flies in — off the near side of the
 // screen at the start of its journey, and in its seat by the end.

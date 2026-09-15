@@ -272,7 +272,7 @@ func (s *CombatScene) seatEnemyCards() {
 	s.theater.enemyDealt = make([]dealtCard, 0, len(queue))
 	for i, c := range queue {
 		s.theater.enemyDealt = append(s.theater.enemyDealt, dealtCard{
-			travel: newTravel(i*flightStaggerPer, riseTicks),
+			travel: newTravel(i*flightStaggerPer(), riseTicks()),
 			card:   c,
 		})
 	}

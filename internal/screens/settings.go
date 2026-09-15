@@ -31,6 +31,7 @@ package screens
 
 import (
 	"fmt"
+	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/actions"
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -56,6 +57,18 @@ const (
 
 	// settingsRowGap is the space between one bar and the next, measured from center to center.
 	settingsRowGap = 100
+
+	// settingsStripGap is the air above and below the speed strip. It is the one row on this screen
+	// that is not a control, so it needs to read as belonging to the bar above it without looking
+	// like a third thing to click.
+	settingsStripGap = 30
+
+	// settingsTop is where the column starts. **It came up from 38% on 2026-09-15** to pay for the
+	// speed strip: the band is 125 pixels and everything under it moves down, and the screen had a
+	// large unused gap under the title and almost none between EXIT and BACK. The strip is the
+	// reason this is not simply a percentage picked by eye — the column below it is measured
+	// sequentially in settingsRows so one insertion cannot silently land a button on another.
+	settingsTopPct = 26
 
 	// settingsToggleHeight is the fullscreen button. **Shorter than a bar's row**, because a
 	// latched button has no label band above it — the word is on the face.
@@ -120,6 +133,10 @@ type SettingsScene struct {
 
 	// exit closes the game. Live whether or not a run is standing, unlike abandon.
 	exit *models.Button
+
+	// strip is the hand of relic cards under the speed bar: what the game-speed setting looks
+	// like, rather than what it reads as. See settings_speed.go.
+	strip speedStrip
 }
 
 // Init builds the controls on first entry and positions them every time.
@@ -175,11 +192,11 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	s.music.Disabled = !music.Available()
 
 	center := gs.PctX(50)
-	top := gs.PctY(38)
+	rows := settingsRows(gs)
 
-	s.music.ScreenX, s.music.ScreenY = center, top
-	s.speed.ScreenX, s.speed.ScreenY = center, top+settingsRowGap
-	s.full.ScreenX, s.full.ScreenY = center, top+2*settingsRowGap
+	s.music.ScreenX, s.music.ScreenY = center, rows.music
+	s.speed.ScreenX, s.speed.ScreenY = center, rows.speed
+	s.full.ScreenX, s.full.ScreenY = center, rows.full
 
 	// The abandon band, below the rule; Back stays last, at the bottom of the screen, because the
 	// way out of a screen is the last thing on it.
@@ -188,10 +205,44 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	s.back.ScreenX, s.back.ScreenY = center, gs.PctY(88)
 }
 
+// settingsLayout is where every row on this screen sits, in screen pixels.
+type settingsLayout struct {
+	music, speed int
+	strip        image.Rectangle
+	full         int
+	rule         int
+}
+
+// settingsRows measures the column **sequentially, each row off the one above it**.
+//
+// **It exists because the strip was inserted into the middle of it** *(2026-09-15)*. Every position
+// used to be `top + n*settingsRowGap` with the rule and the buttons carrying their own arithmetic
+// off the same `top`, which works exactly until something of a different height goes in between
+// them: then five expressions have to be updated together and the one that is missed puts a button
+// under another button, on a screen with no test that can see it. Measured in order, inserting a
+// row is one addition here and nothing else moves by accident.
+func settingsRows(gs *state.GlobalState) settingsLayout {
+	var l settingsLayout
+
+	l.music = gs.PctY(settingsTopPct)
+	l.speed = l.music + settingsRowGap
+
+	stripTop := l.speed + settingsSliderHeight/2 + settingsStripGap
+	half := settingsSliderWidth / 2
+	l.strip = image.Rect(
+		gs.PctX(50)-half, stripTop,
+		gs.PctX(50)+half, stripTop+speedStripHeight,
+	)
+
+	l.full = l.strip.Max.Y + settingsStripGap + settingsToggleHeight/2
+	l.rule = l.full + settingsToggleHeight/2 + settingsAbandonGap
+	return l
+}
+
 // abandonRuleY is where the rule between the settings and the abandon band is drawn. One function
 // so the rule and the button under it cannot drift apart.
 func (s *SettingsScene) abandonRuleY(gs *state.GlobalState) int {
-	return gs.PctY(38) + 2*settingsRowGap + settingsAbandonGap
+	return settingsRows(gs).rule
 }
 
 // toggleFullscreen flips the display and records it.
@@ -211,6 +262,11 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 		s.confirm.update(gs)
 		return nil
 	}
+
+	// **The strip runs whether or not anything is being dragged.** It is a loop rather than a
+	// response to a change: a player who has not touched the bar still gets to see what the speed
+	// they are already on looks like, which is what makes the bar comparable at all.
+	s.strip.update(gs)
 
 	systems.UpdateSlider(gs, s.music)
 	systems.UpdateSlider(gs, s.speed)
@@ -250,6 +306,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	systems.DrawSlider(gs, screen, s.music)
 	systems.DrawSlider(gs, screen, s.speed)
+	s.strip.draw(gs, screen, settingsRows(gs).strip)
 	systems.DrawButton(gs, screen, s.full)
 
 	// The rule, then the two things that are not settings: the way out of the run and the way out

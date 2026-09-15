@@ -129,16 +129,16 @@ type goods struct {
 func (g *goods) open(gs *state.GlobalState, good session.Good) {
 	g.good, g.stage, g.selected = good, goodsPick, -1
 	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
-	g.tip = models.Tooltip{DwellTicks: tipDwell}
+	g.tip = models.Tooltip{DwellTicks: tipDwell()}
 
 	switch good.Contains {
 	case session.ContentsStones:
-		g.stones = dealStones(gs, good.Size)
+		g.stones = dealStones(gs, good.Record, good.Size)
 	case session.ContentsEssences:
-		g.essences = dealVialEssences(gs, good.Size)
+		g.essences = dealVialEssences(gs, good.Record, good.Size)
 		g.offer = dealVialOffer(gs)
 	case session.ContentsRunes:
-		g.runes = dealSackRunes(gs, good.Size)
+		g.runes = dealSackRunes(gs, good.Record, good.Size)
 	}
 }
 
@@ -174,9 +174,10 @@ func (g *goods) count() int {
 // **Flat, not weighted.** A stone has no rarity: every rung is worth a tenth of itself, so a
 // Card Five stone is not a better rock than a Card Pair stone — it is a rock for a rung you may
 // never build. Weighting them would be pricing the *hand*, which the ladder already does.
-func dealStones(gs *state.GlobalState, size int) []session.Stone {
+func dealStones(gs *state.GlobalState, seat string, size int) []session.Stone {
 	all := session.Stones()
-	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.BagStock, gs.Run.Fight())))
+	rng := rand.New(rand.NewSource(
+		seeds.ForFightSeat(gs.RunSeed, seeds.BagStock, gs.Run.Fight(), seat)))
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
 	if len(all) > size {
@@ -191,9 +192,10 @@ func dealStones(gs *state.GlobalState, size int) []session.Stone {
 // salts exist for: sharing would make the shop's four a function of which two had just been
 // offered free, so buying the vial could guarantee — or rule out — the pair the player had turned
 // down. See internal/seeds.
-func dealVialEssences(gs *state.GlobalState, size int) []session.Essence {
+func dealVialEssences(gs *state.GlobalState, seat string, size int) []session.Essence {
 	all := session.Essences()
-	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.VialStock, gs.Run.Fight())))
+	rng := rand.New(rand.NewSource(
+		seeds.ForFightSeat(gs.RunSeed, seeds.VialStock, gs.Run.Fight(), seat)))
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
 	if len(all) > size {
@@ -210,9 +212,10 @@ func dealVialEssences(gs *state.GlobalState, size int) []session.Essence {
 //
 // **A catalog shorter than the sack is not an error.** Four runes ship and the sack holds
 // four, so it currently offers the whole file; the cut is what keeps that true as the list grows.
-func dealSackRunes(gs *state.GlobalState, size int) []session.Rune {
+func dealSackRunes(gs *state.GlobalState, seat string, size int) []session.Rune {
 	all := session.Runes()
-	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.SackStock, gs.Run.Fight())))
+	rng := rand.New(rand.NewSource(
+		seeds.ForFightSeat(gs.RunSeed, seeds.SackStock, gs.Run.Fight(), seat)))
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
 	if len(all) > size {

@@ -209,6 +209,45 @@ func ForFight(runSeed int64, s Stream, fightIndex int) int64 {
 	return runSeed ^ def.salt ^ (int64(fightIndex+1) * fightStride)
 }
 
+// ForFightSeat is ForFight split again, by a name: the seed for one *seat* of a per-fight stream,
+// where several things draw from the same catalog in the same fight and must not draw alike.
+//
+// **It is not a way to avoid adding a stream, and the distinction is the whole of when to use it.**
+// A `Stream` separates two *concerns* — the shop's essences from the reward screen's, so that
+// authoring one cannot move the other. This separates two *seats of one concern*: the sealed goods
+// are the case it was added for *(2026-09-15)*, when a catalog could be held by three bags of
+// different sizes. Those are the same decision at three prices, so they share a salt; what they
+// must not share is the shuffle, because `dealStones` takes the first N of one shuffled catalog and
+// two bags on one shelf would then hold nested contents — the small bag being literally the first
+// three rocks of the large one, at a lower price. That is the failure `loadGoods` used to refuse by
+// forbidding a second good per catalog outright.
+//
+// **`seat` must be stable across builds and across launches**, so pass a record key rather than an
+// index into a slice: a catalog reordered in its JSON would otherwise re-point every seat.
+func ForFightSeat(runSeed int64, s Stream, fightIndex int, seat string) int64 {
+	return ForFight(runSeed, s, fightIndex) ^ seatSalt(seat)
+}
+
+// seatSalt is FNV-1a over the seat's name, spread across the full int64.
+//
+// **Hand-rolled rather than `hash/fnv`** for the reason the salts are written out as literals: this
+// value has to be identical in every build of the game forever, and a hash from the standard
+// library is a dependency on that library's behavior rather than on arithmetic written down here.
+// It is never persisted, but it decides what a run's shop holds, so a change to it is a reroll.
+func seatSalt(seat string) int64 {
+	const (
+		offset = int64(-3750763034362895579) // 14695981039346656037 as a signed 64-bit value
+		prime  = int64(1099511628211)
+	)
+
+	h := offset
+	for i := 0; i < len(seat); i++ {
+		h ^= int64(seat[i])
+		h *= prime
+	}
+	return h
+}
+
 func lookup(s Stream) stream {
 	if s < 0 || int(s) >= len(streams) {
 		panic(fmt.Sprintf("seeds: no stream %d", int(s)))

@@ -77,11 +77,11 @@ const (
 	sellTabTextSize = 26
 )
 
-// shopMoveTicks is how long a relic takes to reach its new place — a bought one crossing to the
+// shopMoveTicks() is how long a relic takes to reach its new place — a bought one crossing to the
 // finger it lands on, and every relic that shifts along when one is sold.
 //
 // **A proportion of the game's one speed**, like everything else that moves. See clock.go.
-var shopMoveTicks = beat(1, 1)
+func shopMoveTicks() int { return beat(1, 1) }
 
 // shelfItem is one relic on the shelf.
 type shelfItem struct {
@@ -236,7 +236,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.armed, s.selling = "", ""
 	s.leaving = false
 	s.from, s.move = nil, travel{}
-	s.tip = models.Tooltip{DwellTicks: tipDwell}
+	s.tip = models.Tooltip{DwellTicks: tipDwell()}
 	s.opened = map[string]bool{}
 	s.good.reset()
 
@@ -662,7 +662,7 @@ func (s *ShopScene) seats(gs *state.GlobalState) map[string]image.Rectangle {
 
 // start runs the row from where it was to wherever the change has put it.
 func (s *ShopScene) start(from map[string]image.Rectangle) {
-	s.from, s.move = from, newTravel(0, shopMoveTicks)
+	s.from, s.move = from, newTravel(0, shopMoveTicks())
 }
 
 // shelfSlot is where one offered relic is drawn, and the rectangle it is clicked in. **One function

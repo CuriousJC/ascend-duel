@@ -24,6 +24,22 @@ package screens
 // against — and a setting that overwrote it would leave nothing to return to. None of it may
 // change an outcome: a whole round is resolved before playback begins, so pacing is something to
 // look at.
+//
+// **Every timing is a function, and that is not a style choice** *(owner's call, 2026-09-15)*.
+// They were package-level vars — `var flightTicks = beat(4, 5)` — for three weeks, which meant
+// every one of them was evaluated at package init, when `speedScale` is still 1: `ApplySettings`
+// runs later, in `main`. So the setting reached `eventDwell` and `dwellForCurrent`, which call
+// `speedTicks()` per event, and reached **nothing else**. Card flights, morphs, shatters, shields,
+// signals, the hand's whole arithmetic and the entire reward screen ran at the tuned speed
+// whatever the bar said, and nothing failed — a frozen clock looks exactly like a clock, which is
+// why this survived being written down as "everything is a fraction of the same speed" and being
+// wrong. A `var` recomputed by `SetSpeed` was the other way and was refused: that is a list of
+// thirty-six assignments to keep in step, which is the *same* failure one layer along, and the one
+// `beat` was introduced to end. A function cannot go stale.
+//
+// **`TestNoClockIsWrittenAsARawNumber` reads functions as well as declarations because of this.**
+// The guard inspected `ast.ValueSpec` alone, so the conversion would have disarmed it silently —
+// the shape it defends is the declaration, and the declarations all changed shape on one day.
 
 const (
 	// ticksPerSecond is the fixed simulation rate. Ebitengine's Update runs at 60 TPS and Layout

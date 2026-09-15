@@ -119,16 +119,26 @@ func GoodByKey(key string) (Good, bool) {
 	return Good{}, false
 }
 
-// GoodHolding finds the good that holds one catalog, and whether there is one. **At most one
-// can** — loadGoods refuses a second — so this is a lookup rather than a search, and it is what
-// lets the stone catalog ask how many rocks a bag has to be able to fill.
+// GoodHolding finds **the largest** good holding one catalog, and whether there is one.
+//
+// **It returned the first until 2026-09-15**, when that was the same thing: one good could hold a
+// catalog. Now that a catalog can be held at three sizes, "the first" is whichever the file happens
+// to list first, and every caller is really asking about the largest — the stone catalog asks how
+// many rocks it has to be able to fill, which is a question about the biggest bag, and the two
+// review sheets are showing a reader what a catalog is drawn into at its widest. A caller wanting a
+// *particular* good has its record key and should use GoodByKey.
 func GoodHolding(c GoodContents) (Good, bool) {
+	var best Good
+	found := false
 	for _, g := range goods {
-		if g.Contains == c {
-			return g, true
+		if g.Contains != c {
+			continue
+		}
+		if !found || g.Size > best.Size {
+			best, found = g, true
 		}
 	}
-	return Good{}, false
+	return best, found
 }
 
 // CanAffordGood reports whether the purse covers one. **The question, not the guard** — BuyGood
@@ -163,7 +173,7 @@ func loadGoods() []Good {
 	}
 
 	seen := map[string]bool{}
-	holds := map[GoodContents]string{}
+	holds := map[string]string{}
 	out := make([]Good, 0, len(recs))
 	for _, rec := range recs {
 		g, err := resolveGood(rec)
@@ -175,14 +185,22 @@ func loadGoods() []Good {
 		}
 		seen[g.Record] = true
 
-		// **One good per catalog.** The contents are dealt from a stream salted per catalog — see
-		// internal/seeds — so two goods holding stones would draw the identical four rocks, and the
-		// second seat would be the first one again at a different price.
-		if first, clash := holds[g.Contains]; clash {
-			panic(fmt.Sprintf("goods.json: %s and %s both hold %s",
-				first, g.Record, g.Contains.Noun()))
+		// **One good per catalog *per size*** *(owner's call, 2026-09-15)*. It was one per catalog
+		// outright, because the contents are dealt from a stream salted per catalog and two goods
+		// holding stones would have drawn the identical rocks — the second seat being the first one
+		// again at a different price. That is fixed at the source rather than forbidden here:
+		// `seeds.ForFightSeat` splits the catalog's stream by the good's own record, so three bags
+		// of three sizes deal three unrelated sets.
+		//
+		// What is still refused is two goods holding the same catalog at the same size, which is a
+		// genuine duplicate however it is priced: the same sealed object twice, and nothing in the
+		// shop or the dialog could tell a player which one they were looking at.
+		seat := fmt.Sprintf("%s/%d", g.Contains.Noun(), g.Size)
+		if first, clash := holds[seat]; clash {
+			panic(fmt.Sprintf("goods.json: %s and %s are both %d %s",
+				first, g.Record, g.Size, g.Contains.Noun()))
 		}
-		holds[g.Contains] = g.Record
+		holds[seat] = g.Record
 
 		out = append(out, g)
 	}

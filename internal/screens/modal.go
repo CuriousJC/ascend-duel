@@ -278,7 +278,7 @@ func (t *modalToggle) init(label string, w, h int, textSize float64,
 	}
 	t.place = place
 	t.open = false
-	t.tip = models.Tooltip{DwellTicks: tipDwell}
+	t.tip = models.Tooltip{DwellTicks: tipDwell()}
 }
 
 // **The corner rules that used to live here are gone** *(owner's call, 2026-09-06)*. `cornerSlot`

@@ -45,19 +45,17 @@ import (
 
 // The morph's clock, in the game's own beats so it slows down and speeds up with everything else —
 // see `beat` in clock.go.
-var (
-	// morphWaitTicks is the pause between a card arriving somewhere and starting to change.
-	//
-	// **The change needs a card to change *from*** *(owner's call, 2026-09-08)*. A dissolve that
-	// began on the frame a flight landed would put the one thing worth watching on top of a card
-	// the player had not finished reading, so the card lands, is still for a beat, and then goes.
-	morphWaitTicks = beat(1, 2)
+// morphWaitTicks() is the pause between a card arriving somewhere and starting to change.
+//
+// **The change needs a card to change *from*** *(owner's call, 2026-09-08)*. A dissolve that
+// began on the frame a flight landed would put the one thing worth watching on top of a card
+// the player had not finished reading, so the card lands, is still for a beat, and then goes.
+func morphWaitTicks() int { return beat(1, 2) }
 
-	// morphTicks is the dissolve itself. Long enough that the ragged edge is seen traveling across
-	// the face rather than flickering over it, short enough that it is one beat of a screen rather
-	// than a scene of its own.
-	morphTicks = beat(5, 4)
-)
+// morphTicks() is the dissolve itself. Long enough that the ragged edge is seen traveling across
+// the face rather than flickering over it, short enough that it is one beat of a screen rather
+// than a scene of its own.
+func morphTicks() int { return beat(5, 4) }
 
 // morphWindow is how much of the whole clock one square of the grid spends changing.
 //
@@ -99,7 +97,7 @@ func morphInto(before, after cards.Spec, st cards.Style) morph {
 		hasBefore: true, hasAfter: true,
 		st:   st,
 		seed: cards.MarkSeed(before.Name),
-		t:    newTravel(morphWaitTicks, morphTicks),
+		t:    newTravel(morphWaitTicks(), morphTicks()),
 	}
 }
 
@@ -109,7 +107,7 @@ func morphAway(before cards.Spec, st cards.Style) morph {
 		before: before, hasBefore: true,
 		st:   st,
 		seed: cards.MarkSeed(before.Name),
-		t:    newTravel(morphWaitTicks, morphTicks),
+		t:    newTravel(morphWaitTicks(), morphTicks()),
 	}
 }
 
@@ -119,7 +117,7 @@ func morphIn(after cards.Spec, st cards.Style) morph {
 		after: after, hasAfter: true,
 		st:   st,
 		seed: cards.MarkSeed(after.Name),
-		t:    newTravel(morphWaitTicks, morphTicks),
+		t:    newTravel(morphWaitTicks(), morphTicks()),
 	}
 }
 

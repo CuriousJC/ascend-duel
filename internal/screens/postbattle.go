@@ -156,20 +156,18 @@ const (
 // round and left the reward screen exactly as slow as it was. See clock.go. The one behavior
 // change is that the flight is 25 ticks rather than 26, which is a frame and a half.
 //
-// `var` rather than `const` because `beat` is a function, exactly like `victoryHoldTicks`.
-var (
-	// settleFlightTicks is how long the won card takes to cross to the middle.
-	//
-	// **Cards fly to where they are going, everywhere in this game.** A card that appears in the
-	// middle is a card that was never anywhere else, and the whole point of this screen is that a
-	// thing was *won* and has come to you.
-	settleFlightTicks = beat(1, 1)
+// `var` rather than `const` because `beat` is a function, exactly like `victoryHoldTicks()`.
+// settleFlightTicks() is how long the won card takes to cross to the middle.
+//
+// **Cards fly to where they are going, everywhere in this game.** A card that appears in the
+// middle is a card that was never anywhere else, and the whole point of this screen is that a
+// thing was *won* and has come to you.
+func settleFlightTicks() int { return beat(1, 1) }
 
-	// settledHoldTicks is how long the finished card is held before the screen leaves. **Long
-	// enough to read, short enough not to need a button** — the click that picked the card is the
-	// last input the player has to make.
-	settledHoldTicks = beat(4, 1)
-)
+// settledHoldTicks() is how long the finished card is held before the screen leaves. **Long
+// enough to read, short enough not to need a button** — the click that picked the card is the
+// last input the player has to make.
+func settledHoldTicks() int { return beat(4, 1) }
 
 // PostBattleScene offers one alteration to the run deck.
 type PostBattleScene struct {
@@ -315,7 +313,7 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	s.skipping = false
 	s.offer = dealOffer(gs)
 	s.picksLeft = gs.Run.Picks()
-	s.tip = models.Tooltip{DwellTicks: tipDwell}
+	s.tip = models.Tooltip{DwellTicks: tipDwell()}
 
 	s.sortMode = handSortOf(gs)
 	if s.sortTabs == nil {
@@ -703,8 +701,8 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 // the card lands, so a slower flight is a longer look rather than a card arriving late to a
 // countdown already running.
 func (s *PostBattleScene) settle(gs *state.GlobalState, from image.Rectangle) {
-	s.stage, s.held = settled, settledHoldTicks
-	s.arrival = newTravel(0, settleFlightTicks)
+	s.stage, s.held = settled, settledHoldTicks()
+	s.arrival = newTravel(0, settleFlightTicks())
 	s.arrivedFrom = from
 }
 

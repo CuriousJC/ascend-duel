@@ -85,21 +85,19 @@ import (
 
 // The signal's clock, in the game's own beats — see `beat` in clock.go, and the note there about
 // every clock on this screen being a fraction of the one speed.
-var (
-	// signalBurstTicks is how long the burst is out. **Most of a beat** *(owner's call,
-	// 2026-09-10)*: it was a fifth of one, on the argument that a firework is a bang — and a bang
-	// nobody catches is a bang nobody had. What a signal has to say is *that this card hit*, and it
-	// says it at the card while the figure is still setting off, so it has to outlast a glance.
-	signalBurstTicks = beat(4, 5)
+// signalBurstTicks() is how long the burst is out. **Most of a beat** *(owner's call,
+// 2026-09-10)*: it was a fifth of one, on the argument that a firework is a bang — and a bang
+// nobody catches is a bang nobody had. What a signal has to say is *that this card hit*, and it
+// says it at the card while the figure is still setting off, so it has to outlast a glance.
+func signalBurstTicks() int { return beat(4, 5) }
 
-	// signalFlyTicks is the figure's journey to the duelist card. The damage figure's own, since
-	// it crosses comparable screen and is read the same way — see hitFlyTicks.
-	signalFlyTicks = beat(1, 1)
+// signalFlyTicks() is the figure's journey to the duelist card. The damage figure's own, since
+// it crosses comparable screen and is read the same way — see hitFlyTicks().
+func signalFlyTicks() int { return beat(1, 1) }
 
-	// signalHoldTicks is the pause on the card after landing, with the figure it changed already
-	// showing the new value. The overlap is the causal link, exactly as hitHoldTicks is.
-	signalHoldTicks = beat(7, 10)
-)
+// signalHoldTicks() is the pause on the card after landing, with the figure it changed already
+// showing the new value. The overlap is the causal link, exactly as hitHoldTicks() is.
+func signalHoldTicks() int { return beat(7, 10) }
 
 const (
 	// signalFigureSize is the type size of a traveling figure, and it is the sum's total size for
@@ -184,7 +182,7 @@ func (c cardSignal) done() bool { return c.t.done() }
 
 // arrived reports whether the figure has reached the card, which is the frame the figure it
 // changed starts showing the new value.
-func (c cardSignal) arrived() bool { return c.t.age >= signalFlyTicks }
+func (c cardSignal) arrived() bool { return c.t.age >= signalFlyTicks() }
 
 // signalShown is what a fighter card draws **on top of** its model, because a signal has landed on
 // it and the model does not catch up until the round is adopted.
@@ -283,7 +281,7 @@ func (s *CombatScene) noteSignal(e combat.Event) bool {
 		side:   e.Side,
 		seat:   seat,
 		held:   held,
-		t:      newTravel(0, signalFlyTicks+signalHoldTicks),
+		t:      newTravel(0, signalFlyTicks()+signalHoldTicks()),
 	})
 	return true
 }
@@ -488,7 +486,7 @@ func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
 		drawBurst(screen, from, c, ink)
 
 		to := s.signalTarget(gs, c)
-		p := easeOut(clamp01(float64(c.t.age) / float64(signalFlyTicks)))
+		p := easeOut(clamp01(float64(c.t.age) / float64(signalFlyTicks())))
 		at := image.Pt(
 			from.X+int(float64(to.X-from.X)*p),
 			from.Y+int(float64(to.Y-from.Y)*p),
@@ -507,10 +505,10 @@ func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
 // different lengths read as a scatter — and the core is the one place they are all still touching,
 // which is what makes them one object instead of twenty-six.
 func drawBurst(screen *ebiten.Image, at image.Point, c cardSignal, ink color.RGBA) {
-	if c.t.age >= signalBurstTicks {
+	if c.t.age >= signalBurstTicks() {
 		return
 	}
-	p := easeOut(clamp01(float64(c.t.age) / float64(signalBurstTicks)))
+	p := easeOut(clamp01(float64(c.t.age) / float64(signalBurstTicks())))
 	fade := 1 - p*p
 
 	x, y := float32(at.X), float32(at.Y)
@@ -584,7 +582,7 @@ func signalAlpha(c cardSignal) float32 {
 	if !c.arrived() {
 		return 1
 	}
-	held := float64(c.t.age-signalFlyTicks) / float64(signalHoldTicks)
+	held := float64(c.t.age-signalFlyTicks()) / float64(signalHoldTicks())
 	return float32(clamp01(1 - held))
 }
 

@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 
@@ -32,7 +33,7 @@ func TestABagHoldsFourDifferentStones(t *testing.T) {
 
 	bag := goodHolding(t, session.ContentsStones)
 
-	got := dealStones(gs, bag.Size)
+	got := dealStones(gs, bag.Record, bag.Size)
 	if len(got) != bag.Size {
 		t.Fatalf("a bag holds %d stones, want %d", len(got), bag.Size)
 	}
@@ -51,7 +52,7 @@ func TestACanHoldsFourDifferentEssences(t *testing.T) {
 
 	vial := goodHolding(t, session.ContentsEssences)
 
-	got := dealVialEssences(gs, vial.Size)
+	got := dealVialEssences(gs, vial.Record, vial.Size)
 	if len(got) != vial.Size {
 		t.Fatalf("a vial holds %d essences, want %d", len(got), vial.Size)
 	}
@@ -70,9 +71,9 @@ func TestACanHoldsFourDifferentEssences(t *testing.T) {
 func TestTheSameFightOpensTheSameBag(t *testing.T) {
 	gs := testRun()
 
-	size := goodHolding(t, session.ContentsStones).Size
+	bag := goodHolding(t, session.ContentsStones)
 
-	a, b := dealStones(gs, size), dealStones(gs, size)
+	a, b := dealStones(gs, bag.Record, bag.Size), dealStones(gs, bag.Record, bag.Size)
 	if len(a) != len(b) {
 		t.Fatalf("two draws of one fight's bag are %d and %d long", len(a), len(b))
 	}
@@ -96,8 +97,8 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	vial := goodHolding(t, session.ContentsEssences)
 
 	// Drawing a bag and a vial must not have consumed anything the shelf reads.
-	dealStones(gs, bag.Size)
-	dealVialEssences(gs, vial.Size)
+	dealStones(gs, bag.Record, bag.Size)
+	dealVialEssences(gs, vial.Record, vial.Size)
 
 	after := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
 	for i := range before {
@@ -109,7 +110,7 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	// And the vial is not the reward screen's offer: two draws off one stream would be the same
 	// four essences in the same order.
 	reward := dealEssences(gs)
-	can := dealVialEssences(gs, vial.Size)
+	can := dealVialEssences(gs, vial.Record, vial.Size)
 	same := len(reward) > 0
 	for i := range reward {
 		if i >= len(can) || can[i].Record != reward[i].Record {
@@ -335,4 +336,72 @@ func TestTheCansTwoRowsFitInsideThePanel(t *testing.T) {
 	if offer.Max.Y > panel.Max.Y {
 		t.Errorf("the offer row ends at %d, past the panel's %d", offer.Max.Y, panel.Max.Y)
 	}
+}
+
+// **Two sizes of one catalog must not hold nested contents** *(2026-09-15)*.
+//
+// This is the whole reason `seeds.ForFightSeat` exists. Every deal is `shuffle(catalog)[:size]`, so
+// two goods sharing a stream would hand the small bag literally the first three rocks of the large
+// one — at a lower price, in the same shop, on the same fight. Nothing in play could show that: the
+// contents are sealed until bought, and a player who bought both would see an overlap and read it
+// as luck. `loadGoods` used to refuse a second good per catalog outright to prevent it; this is what
+// replaced that rule, so this test is what holds the replacement up.
+func TestTwoSizesOfOneCatalogDealDifferently(t *testing.T) {
+	gs := testRun()
+
+	var bags []session.Good
+	for _, key := range session.GoodKeys() {
+		if g, ok := session.GoodByKey(key); ok && g.Contains == session.ContentsStones {
+			bags = append(bags, g)
+		}
+	}
+	if len(bags) < 2 {
+		t.Skip("only one bag of rocks is authored; nothing to compare")
+	}
+
+	small, large := bags[0], bags[len(bags)-1]
+	a := dealStones(gs, small.Record, small.Size)
+	b := dealStones(gs, large.Record, large.Size)
+
+	nested := len(a) > 0 && len(a) <= len(b)
+	for i := range a {
+		if a[i].Record != b[i].Record {
+			nested = false
+			break
+		}
+	}
+	if nested {
+		t.Errorf("%s is the first %d stones of %s — the two seats share a shuffle",
+			small.Record, len(a), large.Record)
+	}
+}
+
+// **A shelf never spends both seats on one catalog** *(2026-09-15)*. Two seats and three catalogs
+// means a shelf showing a small bag beside a large one has drawn one decision twice and pushed the
+// essences and the runes off that visit entirely.
+func TestAShelfNeverHoldsTwoOfOneCatalog(t *testing.T) {
+	gs := testRun()
+
+	// Walk a good many rolls: the collision is a property of the shuffle, so one deal proves little.
+	for fight := 0; fight < 50; fight++ {
+		rng := rand.New(rand.NewSource(int64(fight) * 7919))
+		keys := dealPacks(rng)
+
+		held := map[session.GoodContents]string{}
+		for _, key := range keys {
+			g, ok := session.GoodByKey(key)
+			if !ok {
+				t.Fatalf("the shelf holds %q, which is in no catalog", key)
+			}
+			if first, clash := held[g.Contains]; clash {
+				t.Fatalf("roll %d stands %s beside %s — both %s",
+					fight, first, g.Record, g.Contains.Noun())
+			}
+			held[g.Contains] = g.Record
+		}
+		if len(keys) != packsOffered {
+			t.Errorf("roll %d filled %d of %d seats", fight, len(keys), packsOffered)
+		}
+	}
+	_ = gs
 }

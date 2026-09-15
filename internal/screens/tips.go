@@ -33,7 +33,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
-// tipDwell is how long the cursor has to rest before a panel appears.
+// tipDwell() is how long the cursor has to rest before a panel appears.
 //
 // **A proportion of the game's one speed**, like everything else timed in this game — see clock.go,
 // so the game-speed setting will move this with everything else when it exists.
@@ -42,7 +42,7 @@ import (
 // beat and fired the moment the cursor touched anything, which does not read as asking a question:
 // a panel that appears before you have decided to want it is a flicker following the mouse around.
 // The point of a dwell is that resting is deliberate where crossing is not.
-var tipDwell = beat(3, 2)
+func tipDwell() int { return beat(3, 2) }
 
 // cardTip explains one card: what it is, what it costs, what it is worth, and what its upgrade
 // adds — then, only when something has moved one of those figures, where that came from.

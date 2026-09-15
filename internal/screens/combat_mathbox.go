@@ -179,19 +179,17 @@ const (
 
 // The script's beats, as fractions of the one playback speed. See the const block above for what
 // each one is, and `beat` for why they are written this way.
-var (
-	mathShoutTicks  = beat(7, 5)  // the hand's name popping in
-	mathTermTicks   = beat(9, 10) // one card's figure flying down into the row
-	mathSymbolTicks = beat(2, 5)  // a +, an x or an = appearing in place
-	mathRelicTicks  = beat(7, 10) // one relic's multiplier flying out of its own card
-	mathTotalTicks  = beat(1, 1)  // the answer landing
-	mathHoldTicks   = beat(8, 5)  // the finished sum held before the box clears
+func mathShoutTicks() int  { return beat(7, 5) }  // the hand's name popping in
+func mathTermTicks() int   { return beat(9, 10) } // one card's figure flying down into the row
+func mathSymbolTicks() int { return beat(2, 5) }  // a +, an x or an = appearing in place
+func mathRelicTicks() int  { return beat(7, 10) } // one relic's multiplier flying out of its own card
+func mathTotalTicks() int  { return beat(1, 1) }  // the answer landing
+func mathHoldTicks() int   { return beat(8, 5) }  // the finished sum held before the box clears
 
-	// bannerFlyTicks is the hand's name traveling from the planning seat to the hand row when
-	// DUEL! is pressed — a shade longer than a card's own flight, because it crosses more screen
-	// and grows by half again while it does it.
-	bannerFlyTicks = beat(1, 1)
-)
+// bannerFlyTicks() is the hand's name traveling from the planning seat to the hand row when
+// DUEL! is pressed — a shade longer than a card's own flight, because it crosses more screen
+// and grows by half again while it does it.
+func bannerFlyTicks() int { return beat(1, 1) }
 
 // handNameInk is the color the hand's name is written in, planned and shouted alike, and the
 // color the multiplier that comes out of it is written in with it.
@@ -460,8 +458,8 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 	box := handMathBox{
 		active: true,
 		shout:  shoutFor(e),
-		shoutT: newTravel(0, mathShoutTicks),
-		hold:   newTravel(0, mathHoldTicks),
+		shoutT: newTravel(0, mathShoutTicks()),
+		hold:   newTravel(0, mathHoldTicks()),
 		items:  mathScript(e),
 		side:   e.Side,
 		grown:  append([][combat.MaxWornRelics]int{}, e.HandGrown[:e.HandCardCount]...),
@@ -586,7 +584,7 @@ func mathScript(e combat.Event) []mathItem {
 			// half of the box has no screen and must not grow one.
 			tint: groundInk,
 			fly:  true,
-			t:    newTravel(0, mathTermTicks),
+			t:    newTravel(0, mathTermTicks()),
 		})
 		// **One note per relic that fired, in worn order**, which is firing order. A product would
 		// say what the term came to and leave the player to work out which of five fingers did it.
@@ -614,7 +612,7 @@ func mathScript(e combat.Event) []mathItem {
 			tint:      groundInk,
 			fly:       true,
 			relicSeat: firstSeat(e.HeldBonusSeats),
-			t:         newTravel(0, mathTermTicks),
+			t:         newTravel(0, mathTermTicks()),
 		})
 	}
 
@@ -627,7 +625,7 @@ func mathScript(e combat.Event) []mathItem {
 			tint:      groundInk,
 			fly:       true,
 			relicSeat: firstSeat(e.VitaeBonusSeats),
-			t:         newTravel(0, mathTermTicks),
+			t:         newTravel(0, mathTermTicks()),
 		})
 	}
 
@@ -648,7 +646,7 @@ func mathScript(e combat.Event) []mathItem {
 		// the banner's second line, so growing into place would make it a new number appearing
 		// rather than the one the player has been reading since DUEL!.
 		fromScale: 1,
-		t:         newTravel(0, mathTermTicks),
+		t:         newTravel(0, mathTermTicks()),
 	})
 
 	// **A rung relic is its own multiplier in the sum, after the hand's** *(owner's call,
@@ -663,7 +661,7 @@ func mathScript(e combat.Event) []mathItem {
 			tint:      paneEdge,
 			fly:       true,
 			relicSeat: firstSeat(e.HandScaleSeats),
-			t:         newTravel(0, mathTermTicks),
+			t:         newTravel(0, mathTermTicks()),
 		})
 	}
 
@@ -671,7 +669,7 @@ func mathScript(e combat.Event) []mathItem {
 		text: strconv.Itoa(e.Amount),
 		size: mathTotalSize,
 		tint: verbInkFor(combat.CategoryAttack),
-		t:    newTravel(0, mathTotalTicks),
+		t:    newTravel(0, mathTotalTicks()),
 	})
 }
 
@@ -724,7 +722,7 @@ func relicNote(pct, seat int) *mathItem {
 		text: handMultiplierText(pct) + "x",
 		size: mathGrowthSize,
 		tint: boostInk,
-		t:    newTravel(0, mathRelicTicks),
+		t:    newTravel(0, mathRelicTicks()),
 	}
 }
 
@@ -734,7 +732,7 @@ func mathOperator(str string) mathItem {
 		text: str,
 		size: mathSymbolSize,
 		tint: mathOperatorInk(),
-		t:    newTravel(0, mathSymbolTicks),
+		t:    newTravel(0, mathSymbolTicks()),
 	}
 }
 

@@ -73,7 +73,7 @@ func TestAMorphWaitsBeforeItChanges(t *testing.T) {
 	if !m.waiting() {
 		t.Fatal("a fresh morph should be holding on the old card")
 	}
-	for i := 0; i < morphWaitTicks; i++ {
+	for i := 0; i < morphWaitTicks(); i++ {
 		m.tick()
 	}
 	if m.waiting() {
@@ -82,7 +82,7 @@ func TestAMorphWaitsBeforeItChanges(t *testing.T) {
 	if m.done() {
 		t.Fatal("finished before the dissolve had run")
 	}
-	for i := 0; i < morphTicks; i++ {
+	for i := 0; i < morphTicks(); i++ {
 		m.tick()
 	}
 	if !m.done() {

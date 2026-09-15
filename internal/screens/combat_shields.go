@@ -76,16 +76,14 @@ type shieldFlight struct {
 
 func (f *shieldFlight) tick()        { f.t.tick() }
 func (f shieldFlight) done() bool    { return f.t.done() }
-func (f shieldFlight) arrived() bool { return f.t.age >= shieldFlyTicks }
+func (f shieldFlight) arrived() bool { return f.t.age >= shieldFlyTicks() }
 
 // The flight's clock, in the game's own beats so it slows down and speeds up with the round.
 // **It is the hand dialog's term beat**, because it sets off on that beat and should land inside
 // it: a shield still crossing the screen while the next figure flies out of the next card would
 // read as belonging to that one.
-var (
-	shieldFlyTicks  = beat(22, 25)
-	shieldHoldTicks = beat(4, 25)
-)
+func shieldFlyTicks() int  { return beat(22, 25) }
+func shieldHoldTicks() int { return beat(4, 25) }
 
 // row is one side's shield row, and nil-safe for a side outside the two.
 func (s *CombatScene) row(side combat.Side) *shieldRow {
@@ -161,7 +159,7 @@ func (s *CombatScene) firingSeat(side combat.Side) (int, bool) {
 // flyShields raises one flight and records the seat it left, so nothing sends the same card's pips
 // twice.
 func (s *CombatScene) flyShields(f shieldFlight) {
-	f.t = newTravel(0, shieldFlyTicks+shieldHoldTicks)
+	f.t = newTravel(0, shieldFlyTicks()+shieldHoldTicks())
 	s.theater.shields = append(s.theater.shields, f)
 	s.row(f.side).noteFlight(f.seat)
 }
@@ -303,7 +301,7 @@ func (s *CombatScene) drawShields(gs *state.GlobalState, screen *ebiten.Image) {
 		}
 		to := s.shieldTarget(gs, f)
 
-		p := easeOut(clamp01(float64(f.t.age) / float64(shieldFlyTicks)))
+		p := easeOut(clamp01(float64(f.t.age) / float64(shieldFlyTicks())))
 		scale := shieldFromScale + (shieldToScale-shieldFromScale)*p
 		alpha := shieldAlpha(f)
 
@@ -326,7 +324,7 @@ func shieldAlpha(f shieldFlight) float32 {
 	if !f.arrived() {
 		return 1
 	}
-	held := float64(f.t.age-shieldFlyTicks) / float64(shieldHoldTicks)
+	held := float64(f.t.age-shieldFlyTicks()) / float64(shieldHoldTicks())
 	return float32(clamp01(1 - held))
 }
 

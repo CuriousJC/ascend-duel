@@ -149,7 +149,7 @@ func (s *CombatScene) spendSelected() {
 			// thrown. The count goes with it: a seat's x is a function of how many cards the
 			// row holds, and the row is cleared three lines below this.
 			flight := cardFlight{
-				travel:   newTravel(0, flightTicks),
+				travel:   newTravel(0, flightTicks()),
 				card:     c.actionCard,
 				outbound: true,
 				index:    i, count: leaving,
@@ -190,7 +190,7 @@ func (s *CombatScene) spendSelected() {
 	for to, from := range order {
 		if from >= dealt {
 			s.addFlight(cardFlight{
-				travel: newTravel(staggered*flightStaggerPer, flightTicks),
+				travel: newTravel(staggered*flightStaggerPer(), flightTicks()),
 				card:   s.hand[to].actionCard,
 				index:  to, count: len(s.hand),
 			})
@@ -206,7 +206,7 @@ func (s *CombatScene) spendSelected() {
 			continue
 		}
 		s.addSlide(cardSlide{
-			travel:    newTravel(0, slideTicks),
+			travel:    newTravel(0, slideTicks()),
 			card:      s.hand[to].actionCard,
 			lift:      selectedLift(s.hand[to].selected),
 			fromIndex: was, fromCount: leaving,

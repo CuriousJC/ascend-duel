@@ -27,11 +27,11 @@ import (
 // game's rather than this screen's, and what lives here is how a round *spends* it: one multiplier
 // per event kind.
 //
-// victoryHoldTicks is how long a won fight sits finished before the post-battle screen takes over
+// victoryHoldTicks() is how long a won fight sits finished before the post-battle screen takes over
 // by itself. A fraction of the one playback speed like every other clock here, and **the one
 // number to move if the pause reads as too long or too short** — the picture it holds up is the
 // last round of a won duel, cards on the table and an empty enemy bar. See holdVictory.
-var victoryHoldTicks = beat(4, 1)
+func victoryHoldTicks() int { return beat(4, 1) }
 
 // defeatButtonLabel is what the DUEL! slot says once the duelist has fallen.
 //
@@ -404,7 +404,7 @@ type CombatScene struct {
 	won bool
 
 	// victoryHeld counts the frames a won fight has been sitting finished, and it is what raises
-	// `won` without anybody pressing anything. See victoryHoldTicks.
+	// `won` without anybody pressing anything. See victoryHoldTicks().
 	victoryHeld int
 
 	// tracedHand is the hand size the last layout dump described. The whole bottom band is
@@ -541,7 +541,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.showDeck = false
 	s.hands.initInColumn(handsButtonPlace)
 	s.stones = nil
-	s.tip = models.Tooltip{DwellTicks: tipDwell}
+	s.tip = models.Tooltip{DwellTicks: tipDwell()}
 
 	// **The whole stage comes down, and that is one line on purpose** *(2026-08-21)*. It was eight
 	// statements, each added after something was found still on screen at the start of the next
@@ -668,7 +668,7 @@ func (s *CombatScene) victoryPending() bool {
 
 // holdVictory is what carries a won fight into the post-battle screen **without the player
 // pressing anything** *(2026-08-19, owner's call)*. It counts frames since the last event was
-// drawn and raises the same flag Next does once `victoryHoldTicks` have passed.
+// drawn and raises the same flag Next does once `victoryHoldTicks()` have passed.
 //
 // **The hold is the whole of the design, not a delay before one.** The screen freezes a settled
 // duel deliberately — the cards stay on the table, the hand keeps its gaps, and the picture the
@@ -689,7 +689,7 @@ func (s *CombatScene) holdVictory() {
 		return
 	}
 	s.victoryHeld++
-	if s.victoryHeld >= victoryHoldTicks {
+	if s.victoryHeld >= victoryHoldTicks() {
 		s.nextFight()
 	}
 }
@@ -1121,7 +1121,7 @@ func (s *CombatScene) startRound() {
 			// from the moment it was chosen rather than first met when the figure flies out of
 			// the word. See handBanner.
 			mult:   handMultiplierLine(blow.Multiplier),
-			flight: newTravel(0, bannerFlyTicks),
+			flight: newTravel(0, bannerFlyTicks()),
 			flying: true,
 		}
 	}

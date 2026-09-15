@@ -80,28 +80,26 @@ const (
 // clock too, and no round is playing while they happen. That is the trade for a single speed —
 // the alternative is a second constant for movement, which is two numbers to keep in step on a
 // screen where most movement *is* the round.
-var (
-	// How long a card takes to travel, and how far apart the drawn ones set off. Both in
-	// ticks at 60 TPS: about a third of a second each, overlapping.
-	flightTicks      = beat(4, 5)
-	flightStaggerPer = beat(1, 6)
+// How long a card takes to travel, and how far apart the drawn ones set off. Both in
+// ticks at 60 TPS: about a third of a second each, overlapping.
+func flightTicks() int      { return beat(4, 5) }
+func flightStaggerPer() int { return beat(1, 6) }
 
-	// riseTicks is how long a card takes to fly from the hand to its seat on the table.
-	//
-	// **The hold and fall beats went with the pile** *(2026-08-12)*. A card used to rise out of
-	// the hand, hold in the middle of the screen to be read, then drop into a corner — three
-	// beats, because the destination was not somewhere you could read a card. The table *is*
-	// the readable place, so there is one beat now: out of the hand and into its seat, where it
-	// stays for the rest of the round. What the hold used to say — "this is the one resolving"
-	// — is said by tableFireLift instead.
-	riseTicks = beat(3, 5)
+// riseTicks() is how long a card takes to fly from the hand to its seat on the table.
+//
+// **The hold and fall beats went with the pile** *(2026-08-12)*. A card used to rise out of
+// the hand, hold in the middle of the screen to be read, then drop into a corner — three
+// beats, because the destination was not somewhere you could read a card. The table *is*
+// the readable place, so there is one beat now: out of the hand and into its seat, where it
+// stays for the rest of the round. What the hold used to say — "this is the one resolving"
+// — is said by tableFireLift instead.
+func riseTicks() int { return beat(3, 5) }
 
-	// sort, or the row closing up after cards were spent. Shorter than the other three
-	// journeys because it is the shortest one: a few inches across the row rather than a
-	// trip across the screen, and a long ease over that distance reads as sluggish rather
-	// than as deliberate.
-	slideTicks = beat(1, 2)
-)
+// sort, or the row closing up after cards were spent. Shorter than the other three
+// journeys because it is the shortest one: a few inches across the row rather than a
+// trip across the screen, and a long ease over that distance reads as sluggish rather
+// than as deliberate.
+func slideTicks() int { return beat(1, 2) }
 
 // cardFlight is one card in the air between the hand and the draw pile. Purely something to
 // look at.
@@ -439,7 +437,7 @@ func (s *CombatScene) seatPlayedCards() {
 		}
 
 		s.theater.resolved = append(s.theater.resolved, resolvedCard{
-			travel:    newTravel(len(s.theater.resolved)*flightStaggerPer, riseTicks),
+			travel:    newTravel(len(s.theater.resolved)*flightStaggerPer(), riseTicks()),
 			card:      s.hand[hand].actionCard,
 			handIndex: hand,
 			handCount: len(s.hand),

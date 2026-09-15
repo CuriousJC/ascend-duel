@@ -39,9 +39,9 @@ const (
 	stoneFadeFrom = 0.6
 )
 
-// stoneFlightTicks is how long one stone is in the air: a beat, like every other mover on this
+// stoneFlightTicks() is how long one stone is in the air: a beat, like every other mover on this
 // screen. See clock.go — the game has one speed and everything is a fraction of it.
-var stoneFlightTicks = beat(1, 1)
+func stoneFlightTicks() int { return beat(1, 1) }
 
 // stoneFlight is one stone crossing the screen.
 //
@@ -66,7 +66,7 @@ func (s *CombatScene) flyStonesToPouch(gs *state.GlobalState, seat int, shown []
 
 	for i, st := range shown {
 		s.stones = append(s.stones, stoneFlight{
-			travel: newTravel(i*stoneFlightStagger, stoneFlightTicks),
+			travel: newTravel(i*stoneFlightStagger, stoneFlightTicks()),
 			stone:  st,
 			from:   from,
 			to:     to,

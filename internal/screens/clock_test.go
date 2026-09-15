@@ -41,6 +41,17 @@ func TestNoClockIsWrittenAsARawNumber(t *testing.T) {
 				continue
 			}
 			ast.Inspect(file, func(n ast.Node) bool {
+				// **A timing is a function now, so this has to read functions too** *(2026-09-15)*.
+				// Every clock became `func fooTicks() int { return beat(n, d) }` on the day the
+				// speed setting started reaching them — a package-level `var` is evaluated once at
+				// init, when the speed is still the tuned one, so the slider moved nothing but the
+				// event dwells. Without this arm the whole guard would have been silently disarmed
+				// by that change: a later `func fadeTicks() int { return 40 }` is exactly the
+				// second clock this test exists to refuse, and it is no longer a ValueSpec.
+				if fn, ok := n.(*ast.FuncDecl); ok {
+					checkClockFunc(t, fn, name)
+					return true
+				}
 				spec, ok := n.(*ast.ValueSpec)
 				if !ok {
 					return true
@@ -67,6 +78,36 @@ func TestNoClockIsWrittenAsARawNumber(t *testing.T) {
 	}
 }
 
+// checkClockFunc fails a timing function whose body is a bare number.
+//
+// It matches the shape every clock in the package now has — a name ending in Ticks, no parameters,
+// one `return` — and refuses a raw literal in it for the reason the ValueSpec arm refuses one: the
+// number is then a pace nobody can retune and the game-speed setting cannot reach. Anything more
+// elaborate than a single return is left alone; the shape being defended is the declaration, not
+// the arithmetic inside it.
+func checkClockFunc(t *testing.T, fn *ast.FuncDecl, file string) {
+	t.Helper()
+
+	if fn.Name == nil || !strings.HasSuffix(fn.Name.Name, "Ticks") {
+		return
+	}
+	if _, allowed := clockExceptions[fn.Name.Name]; allowed {
+		return
+	}
+	if fn.Body == nil || len(fn.Body.List) != 1 {
+		return
+	}
+	ret, ok := fn.Body.List[0].(*ast.ReturnStmt)
+	if !ok || len(ret.Results) != 1 {
+		return
+	}
+	if lit, ok := ret.Results[0].(*ast.BasicLit); ok {
+		t.Errorf("%s returns %s in %s is a raw duration — write it as beat(num, den), "+
+			"or add it to clockExceptions with a reason",
+			fn.Name.Name, lit.Value, file)
+	}
+}
+
 func TestABeatIsNeverLessThanATick(t *testing.T) {
 	// A small enough fraction of a slow enough speed rounds to zero, and a movement lasting no
 	// ticks is a movement that does not happen — the card appears at its destination, which is the
@@ -86,11 +127,11 @@ func TestTheBetweenFightScreensMoveOnTheSameSpeedAsTheDuel(t *testing.T) {
 		name  string
 		ticks int
 	}{
-		{"settleFlightTicks", settleFlightTicks},
-		{"settledHoldTicks", settledHoldTicks},
-		{"victoryHoldTicks", victoryHoldTicks},
-		{"flightTicks", flightTicks},
-		{"hitFlyTicks", hitFlyTicks},
+		{"settleFlightTicks", settleFlightTicks()},
+		{"settledHoldTicks", settledHoldTicks()},
+		{"victoryHoldTicks", victoryHoldTicks()},
+		{"flightTicks", flightTicks()},
+		{"hitFlyTicks", hitFlyTicks()},
 	}
 
 	for _, c := range cases {

@@ -79,7 +79,7 @@ func TestTheBarCatchesUpWhenTheFigureLands(t *testing.T) {
 	s.enemy.CurrentLife = 70
 	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
 
-	for i := 0; i < hitFlyTicks; i++ {
+	for i := 0; i < hitFlyTicks(); i++ {
 		if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 100 {
 			t.Fatalf("tick %d: the bar draws %d before the figure arrived, want 100", i, got)
 		}
@@ -114,7 +114,7 @@ func TestTheFigureFinishesAndIsDroppedSoPlaybackCanResume(t *testing.T) {
 	s := hitScene()
 	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
 
-	for i := 0; i < hitFlyTicks+hitHoldTicks+2; i++ {
+	for i := 0; i < hitFlyTicks()+hitHoldTicks()+2; i++ {
 		s.theater.tick()
 	}
 	if s.theater.running() {
@@ -243,7 +243,7 @@ func TestAKillingBlowHoldsTheLifeThatWasThereNotTheSizeOfTheBlow(t *testing.T) {
 
 	// And once the figure arrives it is the real life, which is zero — the drop still happens, it
 	// just happens on arrival like every other hit.
-	for i := 0; i < hitFlyTicks+1; i++ {
+	for i := 0; i < hitFlyTicks()+1; i++ {
 		s.theater.tick()
 	}
 	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 0 {

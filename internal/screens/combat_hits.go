@@ -40,19 +40,17 @@ import (
 // of 25, and they move with it from here: both stop the playback cursor, so a round watched at
 // half the speed would otherwise spend twice the share of itself waiting on a number crossing the
 // screen.
-var (
-	// hitFlyTicks is how long the figure takes to reach the card. Longer than a card's flight
-	// because it crosses more screen and because the bar is waiting on it — a hit that arrives
-	// before the eye has followed it lands the damage twice as far from its cause as no animation
-	// at all would.
-	hitFlyTicks = beat(1, 1)
+// hitFlyTicks() is how long the figure takes to reach the card. Longer than a card's flight
+// because it crosses more screen and because the bar is waiting on it — a hit that arrives
+// before the eye has followed it lands the damage twice as far from its cause as no animation
+// at all would.
+func hitFlyTicks() int { return beat(1, 1) }
 
-	// hitHoldTicks is how long the figure stays on the card after landing, before it fades. The
-	// bar drops at the *start* of this, so there is a beat where the number and the emptier bar
-	// are on screen together: that overlap is the causal link, and without it the two read as two
-	// separate events.
-	hitHoldTicks = beat(7, 10)
-)
+// hitHoldTicks() is how long the figure stays on the card after landing, before it fades. The
+// bar drops at the *start* of this, so there is a beat where the number and the emptier bar
+// are on screen together: that overlap is the causal link, and without it the two read as two
+// separate events.
+func hitHoldTicks() int { return beat(7, 10) }
 
 const (
 	// hitFigureSize is the type size of a landing figure, and it is **`mathTotalSize` on purpose,
@@ -110,7 +108,7 @@ type hitFlight struct {
 }
 
 // arrived reports whether the figure has reached the card, which is the moment the bar drops.
-func (h hitFlight) arrived() bool { return h.t.age >= hitFlyTicks }
+func (h hitFlight) arrived() bool { return h.t.age >= hitFlyTicks() }
 
 // tick advances the figure by a frame. **A one-line method rather than the caller reaching for
 // `h.t`**, because it is what makes a hitFlight a mover in theater.go's sense and therefore
@@ -118,7 +116,7 @@ func (h hitFlight) arrived() bool { return h.t.age >= hitFlyTicks }
 func (h *hitFlight) tick() { h.t.tick() }
 
 // done reports whether the whole gesture — flight and hold — is over.
-func (h hitFlight) done() bool { return h.t.age >= hitFlyTicks+hitHoldTicks }
+func (h hitFlight) done() bool { return h.t.age >= hitFlyTicks()+hitHoldTicks() }
 
 // noteHit raises the figure for one damage event, after `applyEvent` has already written the new
 // life. `held` is the life the target's bar was showing a moment earlier, which is what it goes on
@@ -142,7 +140,7 @@ func (s *CombatScene) noteHit(e combat.Event, held int) {
 		target: e.Target,
 		seat:   s.blowSeat(e),
 		held:   held,
-		t:      newTravel(0, hitFlyTicks+hitHoldTicks),
+		t:      newTravel(0, hitFlyTicks()+hitHoldTicks()),
 	})
 }
 
@@ -211,7 +209,7 @@ func (s *CombatScene) drawHits(gs *state.GlobalState, screen *ebiten.Image) {
 
 		// Past the flight the figure sits on the card and fades, rather than continuing to move —
 		// a number that drifts after landing reads as not having landed.
-		p := easeOut(clamp01(float64(h.t.age) / float64(hitFlyTicks)))
+		p := easeOut(clamp01(float64(h.t.age) / float64(hitFlyTicks())))
 		at := image.Pt(
 			from.X+int(float64(to.X-from.X)*p),
 			from.Y+int(float64(to.Y-from.Y)*p),
@@ -236,7 +234,7 @@ func hitAlpha(h hitFlight) float32 {
 	if !h.arrived() {
 		return 1
 	}
-	held := float64(h.t.age-hitFlyTicks) / float64(hitHoldTicks)
+	held := float64(h.t.age-hitFlyTicks()) / float64(hitHoldTicks())
 	return float32(clamp01(1 - held))
 }
 

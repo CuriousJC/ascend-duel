@@ -349,7 +349,7 @@ func sameSeats(got, want []int) bool {
 func TestAPlayedCardFliesFromItsHandSlotToItsSeat(t *testing.T) {
 	gs := testState()
 
-	r := resolvedCard{travel: newTravel(0, riseTicks), handIndex: 2, handCount: handSize}
+	r := resolvedCard{travel: newTravel(0, riseTicks()), handIndex: 2, handCount: handSize}
 	from := slotAt(gs, 2, handSize)
 	to := playedSeatAt(gs, 1, 3, 3)
 
@@ -357,7 +357,7 @@ func TestAPlayedCardFliesFromItsHandSlotToItsSeat(t *testing.T) {
 		t.Errorf("a card that has not set off is at %v, want its hand slot %v", got, from)
 	}
 
-	r.age = riseTicks
+	r.age = riseTicks()
 	if got := r.at(gs, 1, 3, 3, false); got != to {
 		t.Errorf("a landed card is at %v, want its seat %v", got, to)
 	}
@@ -403,7 +403,7 @@ func TestTheOpponentsCardsFlyInFromTheEnemyCard(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
-	d := dealtCard{travel: newTravel(0, riseTicks)}
+	d := dealtCard{travel: newTravel(0, riseTicks())}
 	from := s.enemyCardRect(gs).Min
 	to := enemySeatAt(gs, 1, 3, 3)
 
@@ -411,7 +411,7 @@ func TestTheOpponentsCardsFlyInFromTheEnemyCard(t *testing.T) {
 		t.Errorf("a card that has not set off is at %v, want the enemy card at %v", got, from)
 	}
 
-	d.age = riseTicks
+	d.age = riseTicks()
 	if got := s.enemyCardAt(gs, d, 1, 3, 3, false); got != to {
 		t.Errorf("a landed card is at %v, want its seat %v", got, to)
 	}
@@ -428,7 +428,7 @@ func TestTheOpponentsCardsFlyInFromTheEnemyCard(t *testing.T) {
 
 func TestBothRowsUseTheSameArrivalClock(t *testing.T) {
 	// The two sides deal at the same speed and stagger the same way, or the table reads as one
-	// row arriving and one row appearing. Both take riseTicks and flightStaggerPer from the
+	// row arriving and one row appearing. Both take riseTicks() and flightStaggerPer() from the
 	// same constants, and both count with the same travel — this is what stops a later change
 	// to one of them being made twice.
 	s := &CombatScene{

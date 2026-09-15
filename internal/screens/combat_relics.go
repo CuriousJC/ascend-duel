@@ -497,11 +497,6 @@ func withGrown(worn []combat.WornRelic, grown [combat.MaxWornRelics]int) []comba
 // means on the table — two vertical vocabularies already spoken for. Sideways is unused and reads as
 // a thing rattling as it fires.
 var (
-	// relicShakeTicks is how long one shake lasts. **Under a term's own flight**, because the figures
-	// arrive one after another and a shake still running when the next one starts would smear the
-	// beats together.
-	relicShakeTicks = beat(3, 5)
-
 	// relicShakeSwings is how many times the card crosses its own center. Three reads as a rattle;
 	// one reads as a nudge and five as a wobble.
 	relicShakeSwings = 3.0
@@ -510,6 +505,11 @@ var (
 	// the shake, so the card settles rather than stopping mid-swing.
 	relicShakeWidth = 7
 )
+
+// relicShakeTicks is how long one shake lasts. **Under a term's own flight**, because the figures
+// arrive one after another and a shake still running when the next one starts would smear the
+// beats together.
+func relicShakeTicks() int { return beat(3, 5) }
 
 // shakeOffset is how far sideways a card sits this frame: a decaying oscillation that ends where it
 // started.
@@ -553,7 +553,7 @@ func (s *CombatScene) tickShakes(gs *state.GlobalState) {
 	}
 	for seat, shaking := range relics {
 		if shaking && seat < len(s.relicShake) {
-			s.relicShake[seat] = newTravel(0, relicShakeTicks)
+			s.relicShake[seat] = newTravel(0, relicShakeTicks())
 		}
 	}
 	if card > 0 {
@@ -573,7 +573,7 @@ func (s *CombatScene) shakePlayedCard(seat int) {
 	for len(s.cardShake) <= seat {
 		s.cardShake = append(s.cardShake, travel{})
 	}
-	s.cardShake[seat] = newTravel(0, relicShakeTicks)
+	s.cardShake[seat] = newTravel(0, relicShakeTicks())
 }
 
 // playedCardShake is how far sideways the played card in one seat sits this frame.

@@ -73,7 +73,7 @@ func TestPipsArePaidInOnArrivalAndOnlyOnce(t *testing.T) {
 		t.Errorf("pips landed before they arrived: the row shows %d", got)
 	}
 
-	for i := 0; i < shieldFlyTicks; i++ {
+	for i := 0; i < shieldFlyTicks(); i++ {
 		s.theater.tick()
 	}
 	s.landShields()
@@ -110,7 +110,7 @@ func TestAnAnnouncedRaiseFliesItsOwnPips(t *testing.T) {
 		t.Errorf("the row shows %d before the pips arrived, want 0", got)
 	}
 
-	for i := 0; i < shieldFlyTicks; i++ {
+	for i := 0; i < shieldFlyTicks(); i++ {
 		s.theater.tick()
 	}
 	s.landShields()
@@ -141,7 +141,7 @@ func TestALandedPipKeepsItsColor(t *testing.T) {
 
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldFlight(combat.SideA, 0, 2, 0)
-	for i := 0; i < shieldFlyTicks; i++ {
+	for i := 0; i < shieldFlyTicks(); i++ {
 		s.theater.tick()
 	}
 	s.landShields()
@@ -177,7 +177,7 @@ func TestALandedPipKeepsItsColor(t *testing.T) {
 func TestARaiseNeverLeavesAPipColorless(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldFlight(combat.SideA, 0, 1, 0)
-	for i := 0; i < shieldFlyTicks; i++ {
+	for i := 0; i < shieldFlyTicks(); i++ {
 		s.theater.tick()
 	}
 	s.landShields()
@@ -202,7 +202,7 @@ func TestARaiseNeverLeavesAPipColorless(t *testing.T) {
 func TestARaiseNeverLowersTheRow(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldFlight(combat.SideA, 0, 2, 0)
-	for i := 0; i < shieldFlyTicks; i++ {
+	for i := 0; i < shieldFlyTicks(); i++ {
 		s.theater.tick()
 	}
 	s.landShields()

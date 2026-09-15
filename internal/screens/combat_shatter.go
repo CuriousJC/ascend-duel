@@ -49,31 +49,29 @@ import (
 // The break's clock, in the game's own beats so it slows down and speeds up with the round — see
 // `beat` in clock.go, and the note there about every other clock on this screen being a fraction of
 // the one speed.
-var (
-	// shatterFlyTicks is the pip crossing the table. Longer than a shield pip's own flight
-	// (shieldFlyTicks) because this one crosses the *whole* table rather than traveling from a
-	// card to the row beneath it, and a journey twice as far at the same speed reads as hurried.
-	shatterFlyTicks = beat(30, 25)
+// shatterFlyTicks() is the pip crossing the table. Longer than a shield pip's own flight
+// (shieldFlyTicks()) because this one crosses the *whole* table rather than traveling from a
+// card to the row beneath it, and a journey twice as far at the same speed reads as hurried.
+func shatterFlyTicks() int { return beat(30, 25) }
 
-	// shatterSpreadTicks is the break opening once the pip lands. Short: a window breaks, it does
-	// not dissolve.
-	shatterSpreadTicks = beat(14, 25)
+// shatterSpreadTicks() is the break opening once the pip lands. Short: a window breaks, it does
+// not dissolve.
+func shatterSpreadTicks() int { return beat(14, 25) }
 
-	// shatterHoldTicks is the pause on the finished break before playback moves on, so the player
-	// reads which cards died before the creature starts swinging with the ones that did not.
-	//
-	// **A whole beat and a half, which is long by this screen's standards and deliberately so**
-	// *(owner's call, 2026-09-08)*. It was a third of a beat and the round played straight through
-	// it: the break appeared and the creature was already swinging, so what the player saw was a
-	// flicker rather than an exchange. The round has three moves in it — the duelist swings, the
-	// shields break what they can reach, the creature swings with what is left — and the middle one
-	// is the only one that had no beat of its own.
-	//
-	// It is the longest single hold on this screen and it is spent on the one thing here that is
-	// *not* a card acting. Pacing, like every other clock in this file: it cannot change an
-	// outcome.
-	shatterHoldTicks = beat(38, 25)
-)
+// shatterHoldTicks() is the pause on the finished break before playback moves on, so the player
+// reads which cards died before the creature starts swinging with the ones that did not.
+//
+// **A whole beat and a half, which is long by this screen's standards and deliberately so**
+// *(owner's call, 2026-09-08)*. It was a third of a beat and the round played straight through
+// it: the break appeared and the creature was already swinging, so what the player saw was a
+// flicker rather than an exchange. The round has three moves in it — the duelist swings, the
+// shields break what they can reach, the creature swings with what is left — and the middle one
+// is the only one that had no beat of its own.
+//
+// It is the longest single hold on this screen and it is spent on the one thing here that is
+// *not* a card acting. Pacing, like every other clock in this file: it cannot change an
+// outcome.
+func shatterHoldTicks() int { return beat(38, 25) }
 
 // shieldBreak is one attack card being broken: a pip crossing to it, then the crack spreading over
 // its face.
@@ -97,14 +95,14 @@ func (b *shieldBreak) tick()     { b.t.tick() }
 func (b shieldBreak) done() bool { return b.t.done() }
 
 // landed reports that the pip has arrived and the break has started opening.
-func (b shieldBreak) landed() bool { return b.t.age >= shatterFlyTicks }
+func (b shieldBreak) landed() bool { return b.t.age >= shatterFlyTicks() }
 
 // spread is how far open the break is, 0 while the pip is still crossing and 1 once it is whole.
 func (b shieldBreak) spread() float64 {
 	if !b.landed() {
 		return 0
 	}
-	return clamp01(float64(b.t.age-shatterFlyTicks) / float64(shatterSpreadTicks))
+	return clamp01(float64(b.t.age-shatterFlyTicks()) / float64(shatterSpreadTicks()))
 }
 
 // stageShieldBreaks raises the whole exchange on the frame the creature's turn is about to start.
@@ -138,7 +136,7 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 		s.theater.breaks = append(s.theater.breaks, shieldBreak{
 			seat: seat,
 			ink:  ink,
-			t:    newTravel(0, shatterFlyTicks+shatterSpreadTicks+shatterHoldTicks),
+			t:    newTravel(0, shatterFlyTicks()+shatterSpreadTicks()+shatterHoldTicks()),
 		})
 	}
 	if len(s.theater.breaks) == 0 {
@@ -264,7 +262,7 @@ func (s *CombatScene) drawBreakPip(gs *state.GlobalState, screen *ebiten.Image,
 	from := s.shieldTarget(gs, shieldFlight{side: combat.SideA})
 	to := image.Pt((seat.Min.X+seat.Max.X)/2, (seat.Min.Y+seat.Max.Y)/2)
 
-	p := easeOut(clamp01(float64(b.t.age) / float64(shatterFlyTicks)))
+	p := easeOut(clamp01(float64(b.t.age) / float64(shatterFlyTicks())))
 	at := image.Pt(
 		from.X+int(float64(to.X-from.X)*p),
 		from.Y+int(float64(to.Y-from.Y)*p),

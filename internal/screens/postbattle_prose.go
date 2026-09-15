@@ -37,22 +37,20 @@ import (
 
 // The narration's two clocks, both **proportions of the game's one speed** — see clock.go, and
 // CLAUDE.md, which is why no screen may declare a raw tick count.
-var (
-	// proseCharTicks is how long one character takes. **Fast on purpose, and doubled again on
-	// 2026-09-08** *(owner's call)*: this is a sentence appearing, not a teletype, and a player who
-	// has read it should be waiting on the next line rather than on the rest of this one.
-	proseCharTicks = beat(1, 24)
+// proseCharTicks() is how long one character takes. **Fast on purpose, and doubled again on
+// 2026-09-08** *(owner's call)*: this is a sentence appearing, not a teletype, and a player who
+// has read it should be waiting on the next line rather than on the rest of this one.
+func proseCharTicks() int { return beat(1, 24) }
 
-	// proseLinePause is the beat held between one finished sentence and the next starting. It is
-	// what makes the payout read as three separate things, and it is **deliberately not scaled with
-	// the typing**: the pause is the separation, so shortening it alongside the characters would
-	// give back the run-together reading that typing every line at once produced.
-	proseLinePause = beat(1, 2)
+// proseLinePause() is the beat held between one finished sentence and the next starting. It is
+// what makes the payout read as three separate things, and it is **deliberately not scaled with
+// the typing**: the pause is the separation, so shortening it alongside the characters would
+// give back the run-together reading that typing every line at once produced.
+func proseLinePause() int { return beat(1, 2) }
 
-	// vitaeFlightTicks is how long a figure takes to reach the duelist card. The purse changes when
-	// it lands, never when it sets off — the flight *is* the payment arriving.
-	vitaeFlightTicks = beat(3, 4)
-)
+// vitaeFlightTicks() is how long a figure takes to reach the duelist card. The purse changes when
+// it lands, never when it sets off — the flight *is* the payment arriving.
+func vitaeFlightTicks() int { return beat(3, 4) }
 
 // proseSpan is one colored stretch of a sentence. A line is a few of them, so "the enemy's 4 vitae
 // flows to you" can put the figure and the word in crimson and leave the rest of the sentence alone
@@ -150,7 +148,7 @@ func (t *typewriter) tick(gs *state.GlobalState, at func(line int) image.Point) 
 
 	if t.shown < full {
 		t.ticks++
-		if t.ticks >= proseCharTicks {
+		if t.ticks >= proseCharTicks() {
 			t.ticks = 0
 			t.shown++
 		}
@@ -160,7 +158,7 @@ func (t *typewriter) tick(gs *state.GlobalState, at func(line int) image.Point) 
 	// The sentence is complete: pay what it named, then hold a beat before the next one.
 	if line.pays != nil {
 		if paid := line.pays(gs); paid > 0 {
-			t.flight = vitaeFlight{amount: paid, from: at(t.line), trip: newTravel(0, vitaeFlightTicks)}
+			t.flight = vitaeFlight{amount: paid, from: at(t.line), trip: newTravel(0, vitaeFlightTicks())}
 			t.flying = true
 		}
 		t.lines[t.line].pays = nil
@@ -168,7 +166,7 @@ func (t *typewriter) tick(gs *state.GlobalState, at func(line int) image.Point) 
 	}
 
 	t.wait++
-	if t.wait >= proseLinePause {
+	if t.wait >= proseLinePause() {
 		t.line, t.shown, t.wait = t.line+1, 0, 0
 	}
 }

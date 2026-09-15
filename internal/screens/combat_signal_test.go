@@ -168,7 +168,7 @@ func TestASignalHoldsPlayback(t *testing.T) {
 	if !s.theater.running() {
 		t.Fatal("a signal in the air does not hold the round")
 	}
-	for i := 0; i < signalFlyTicks+signalHoldTicks+2; i++ {
+	for i := 0; i < signalFlyTicks()+signalHoldTicks()+2; i++ {
 		s.theater.tick()
 	}
 	if s.theater.running() {
@@ -190,7 +190,7 @@ func TestTheFigureMovesOnArrivalAndIsDroppedOnAdoption(t *testing.T) {
 		t.Errorf("DMG shows %d while the figure is still in the air, want 10", got)
 	}
 
-	for i := 0; i < signalFlyTicks; i++ {
+	for i := 0; i < signalFlyTicks(); i++ {
 		s.theater.tick()
 	}
 
@@ -223,7 +223,7 @@ func TestAHealFillsTheBarWithoutRaisingIt(t *testing.T) {
 	s := signalScene()
 	s.noteSignal(grantEvent(combat.KindHealed, combat.RiderHealOnPlay, 0, 6))
 	s.releaseSeatSignals(combat.SideA, 0)
-	for i := 0; i < signalFlyTicks; i++ {
+	for i := 0; i < signalFlyTicks(); i++ {
 		s.theater.tick()
 	}
 

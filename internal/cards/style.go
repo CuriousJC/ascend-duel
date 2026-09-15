@@ -123,6 +123,20 @@ type Style struct {
 	StatRowPitch int
 	StatSize     float64
 
+	// A horizontal rule between two stat rows, and the extra air it takes.
+	//
+	// **It exists because five rows are two kinds of thing** *(owner's call, 2026-09-15)*. DMG, AP
+	// and VITAE are what the duelist *is*; FLOOR and ROOM are where the run has got to. Stacked at
+	// one pitch they read as one list of five figures, which is the reading a rule breaks without
+	// a second type size or a heading — both of which the card has no room for and neither of
+	// which would survive a sixth row.
+	//
+	// StatRuleAfter is how many rows sit above the rule, and zero means the style has none.
+	// StatRuleGap is the extra pitch that row gap takes; the rule is centered in it, so the
+	// renderer owns the geometry and nothing outside this package computes a y.
+	StatRuleAfter int
+	StatRuleGap   int
+
 	// The health bar and the fraction under it, drawn from Spec.Life and Spec.MaxLife.
 	// Zero HealthBarHeight means the style has no health and neither is drawn.
 	//
@@ -344,6 +358,10 @@ func (st Style) Scaled(num, den int) Style {
 
 	out.StatsTop, out.StatRowPitch, out.StatSize = i(st.StatsTop), i(st.StatRowPitch), f(st.StatSize)
 
+	// **StatRuleAfter is a count of rows and must not be scaled**, unlike every other figure in
+	// this block — it is an index into Spec.Stats, not a measurement. StatRuleGap is pixels and is.
+	out.StatRuleAfter, out.StatRuleGap = st.StatRuleAfter, i(st.StatRuleGap)
+
 	out.HealthBarInset, out.HealthBarTop = i(st.HealthBarInset), i(st.HealthBarTop)
 	out.HealthBarHeight, out.HealthTextTop = i(st.HealthBarHeight), i(st.HealthTextTop)
 	out.HealthTextSize = f(st.HealthTextSize)
@@ -507,14 +525,18 @@ var EnemyStyle = Style{
 	ArtInset: 15,
 	ArtMaxH:  140,
 
+	// **The bar sits where the duelist card's does, and it moved down with it on 2026-09-15.**
+	// See DuelistStyle, which is where the argument for the figures lives — the two cards face
+	// each other across the table and a bar at a different height on each would make comparing
+	// them an act of measurement.
 	HealthBarInset:  15,
-	HealthBarTop:    201,
+	HealthBarTop:    207,
 	HealthBarHeight: 18,
-	HealthTextTop:   225,
-	HealthTextSize:  22.5,
+	HealthTextTop:   229,
+	HealthTextSize:  20,
 
-	EffectSize: 25,
-	EffectTop:  246,
+	EffectSize: 24,
+	EffectTop:  247,
 	EffectGap:  8,
 }
 
@@ -527,16 +549,35 @@ var EnemyStyle = Style{
 // opposite corners in the same format, which is what makes them read as the two sides of one
 // fight rather than as a HUD and a monster.
 //
-// The face reads top to bottom: name, stat rows, bar, numbers.
+// The face reads top to bottom: stat rows, a rule, more stat rows, bar, numbers.
 //
-//	 18  name              centered   (18..48 at 25pt)
-//	 70  DMG               70..96     label left, figure right
-//	108  AP               108..134
-//	146  Vitae            146..172
-//	201  health bar        201..219
-//	225  hit points        "42/60", centered
-//	246  shield pips       246..271  (Spec.Effects, a centered row)
+//	 30  DMG               30..47    label left, figure right
+//	 57  AP                57..74
+//	 84  VITAE             84..101
+//	110  rule                        a hairline, centered in the gap
+//	129  FLOOR            129..146
+//	156  ROOM             156..173
+//	207  health bar       207..225
+//	229  hit points       229..247   "42/60", centered
+//	247  shield pips      247..271   (Spec.Effects, a centered row)
 //	272  inside of the bottom border
+//
+// **The floor and the room are stat rows as of 2026-09-15** *(owner's call)*. They were two lines
+// written on the ground *under* the card, which is the one place on the screen a fact about the
+// duelist was not on the duelist. Moving them up cost the row pitch — 38 to 27, and the figures
+// from 21.25 to 19 — and cost nothing else, because three rows at the old pitch finished 36 pixels
+// clear of the bar. The bar came down 6 with them, which is why every figure below it moved: see
+// MaxStatLines, and note the block below the bar is packed.
+//
+// **It names nobody** *(owner's call, 2026-09-15)*. It carried "Duelist" across the top from the
+// day it became a card, and the argument that retired it is the one the bleeding cards were
+// retired under: the player knows which corner is theirs, and a title saying so was spending the
+// best line on the card to repeat what the position already says. It is the one card in the game
+// that is neither named nor a picture, which is why `Spec.Name` is still set — the render cache
+// keys on the whole spec, and two duelists would otherwise share one face.
+//
+// **The rule is what stops five rows reading as one list.** DMG, AP and VITAE are what the duelist
+// *is*; FLOOR and ROOM are where the run has got to. See Style.StatRuleAfter.
 //
 // **The shield row is the enemy's badge row, seat for seat** *(2026-08-31)*. It holds five, which
 // is `combat`'s cap on a duelist's shields for the same reason — a turn is five cards, so a sixth
@@ -560,26 +601,34 @@ var DuelistStyle = Style{
 	CornerRadius: 15,
 	BorderWidth:  4,
 
-	ShowName: true,
+	ShowName: false,
 	ShowForm: false,
 
-	TextLeft:     15,
-	NameTop:      18,
-	NameSize:     25,
-	NameCentered: true,
+	TextLeft: 15,
 
-	StatsTop:     70,
-	StatRowPitch: 38,
-	StatSize:     21.25,
+	StatsTop:     30,
+	StatRowPitch: 27,
+	StatSize:     19,
 
+	StatRuleAfter: 3,
+	StatRuleGap:   18,
+
+	// **Everything from here down is packed, and the empty space under the fraction is *reserved*
+	// rather than spare** *(owner's call, 2026-09-15)*. The pip row draws nothing until shields are
+	// standing, so a duel that has raised none looks like fifty pixels of slack — and taking them
+	// would mean a row of pips with nowhere to land the first time a Guard goes down. Bar, gap,
+	// fraction and pips spend 207..271 of the 272 inside the bottom border, which is the same one
+	// pixel of slack the card carried before the bar moved. Nudging the bar again means taking the
+	// pixels off something below it; TestTheBottomBlockFitsInsideTheCard fails instead of drawing
+	// off the card.
 	HealthBarInset:  15,
-	HealthBarTop:    201,
+	HealthBarTop:    207,
 	HealthBarHeight: 18,
-	HealthTextTop:   225,
-	HealthTextSize:  22.5,
+	HealthTextTop:   229,
+	HealthTextSize:  20,
 
-	EffectSize: 25,
-	EffectTop:  246,
+	EffectSize: 24,
+	EffectTop:  247,
 	EffectGap:  8,
 }
 

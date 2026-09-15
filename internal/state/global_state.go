@@ -50,6 +50,14 @@ type GlobalState struct {
 	DebugPlacement bool
 	DebugGameplay  bool
 
+	// DebugAnimations opens the animation gallery's door: a square in the frame's bottom strip that
+	// is drawn only while this is on. **A third flag rather than a lodger on DebugPlacement**,
+	// which is the rule those two are already under — they answer different questions and are
+	// wanted at different times, and "where is this drawn" is not "what movements does the game
+	// have". Like both of them it is a *view*, set once in main.go, off by default, and it may
+	// never change an outcome. See screens.AnimationsScene.
+	DebugAnimations bool
+
 	// Version is what this build calls itself, set once by main from a linker-injected
 	// string. It is genuinely global — the window title and the title screen both want it
 	// and neither owns it — and it is a plain string, so state stays free of imports.
@@ -363,6 +371,12 @@ const (
 	// thing whether it is opened between climbs or halfway up one. Appended, because ActiveScreen
 	// is append-only.
 	Achievements
+
+	// Animations is the gallery: every gesture the game can make, by name, on a loop. **A debug
+	// page behind DebugAnimations**, reached from a square in the frame that is not drawn with the
+	// flag off — the placement grid's arrangement. Not a station of a run, like the four above it,
+	// and appended because ActiveScreen is append-only.
+	Animations
 )
 
 func (active ActiveScreen) String() string {
@@ -385,6 +399,8 @@ func (active ActiveScreen) String() string {
 		return "Achievements"
 	case RunOver:
 		return "RunOver"
+	case Animations:
+		return "Animations"
 	default:
 		return "Unknown"
 	}

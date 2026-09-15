@@ -1765,14 +1765,30 @@ read that ID**; it is a handle for the screens.
 - **A flip is what makes a color relic worth wearing**, which is the whole point of the pair: Fire
   Relic doubles fire cards and there are only so many, so Frostbite-and-friends is how a deck is bent
   toward the color a run has bought into. It is also how the *status* relics get fed.
-- **Flips do not compose**, and that is enforced rather than emergent — `combat.FlipElement` reads
-  each card's **original** element, so Frostbite (fire→ice) and Meltdown (ice→fire) worn together do
-  not cascade a deck to one color. See `TestFlipsDoNotCompose`.
-- **Two flips naming the same source is the new case the twelve introduce, and last-worn wins**
-  *(owner's call, 2026-08-22)*. Frostbite and Heat Lightning both claim fire; the later relic in the
-  row takes it, by the same rule that orders every other multiplicative effect. Decided rather than
-  merely observed — nothing warns the player and there is still no way to reorder the row, and both
-  of those are accepted.
+- **Flips compose, and the cascade is the point** *(owner's call, 2026-09-15)*. `combat.FlipSteps` is
+  the walk: each worn relic, in worn order, reads **what the flip before it left behind**. Frozen
+  Lightning (lightning→ice) and Glacier (ice→earth) worn in that order deal a lightning card as
+  earth, through ice, and a run wearing both holds no lightning and no ice at all.
+  **They did not compose until then** — every flip read the card's *original* element, on the
+  argument that a cascade lets two relics that each claim to touch one color walk a whole deck into
+  one. It does, and that is now the intent rather than the hazard: funnelling a deck is a build, and
+  a build that takes two uncommons and the right worn order is a build worth having.
+  **What a player reads to keep track of it is the deck panel's alterations view**, which is the
+  answer to "so what am I actually holding", and the deal on the combat screen, which plays a beat
+  per ring so the cascade is watched rather than deduced — see `screens/combat_deal.go`.
+  **Worn order is load-bearing now in a way it was not**, and the row still cannot be reordered.
+  See `TestFlipsCompose` and `TestFlipStepsNameEveryRingThatTouchedTheCard`.
+- **A card may not take the cascade twice.** It chains *within* one draw and must not chain across
+  two: a card that has been through the hand and the discard is wearing a color a relic made, so
+  the draw pile holds cards as the run owns them and the discard is restored on its way back in.
+  `screens.restoreToDeck` is what pays for that, and
+  `TestARedrawnCardDoesNotTakeTheCascadeTwice` is the tripwire.
+- **Two flips naming the same source is still last-worn-wins** *(owner's call, 2026-08-22)*.
+  Frostbite and Heat Lightning both claim fire; the later relic in the row takes it, by the same rule
+  that orders every other multiplicative effect. Under the cascade that is the *same* rule read one
+  step at a time — the first ring recolors the card and the second is then looking at a card of a
+  different color, so "last wins" and "each reads the one before" only differ when the two name the
+  same source. Nothing warns the player and there is no way to reorder the row; both accepted.
 - **They are twenty of fifty-eight records, and the dilution is accepted** *(owner's call,
   2026-08-22, unchanged by arcane)*. The catalog is now more than a third flips, so a common relic's ten tickets are ten
   out of a much bigger pot than they were at seventeen relics — and more relics are coming, which is

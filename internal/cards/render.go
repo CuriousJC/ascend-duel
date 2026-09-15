@@ -312,7 +312,7 @@ func drawStats(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA)
 		if line.Label == "" && line.Value == "" {
 			continue
 		}
-		y := st.StatsTop + i*st.StatRowPitch
+		y := statRowTop(st, i)
 
 		if err := drawText(dst, f, st.StatSize, line.Label, st.TextLeft, y, ink(LabelInk)); err != nil {
 			return err
@@ -325,6 +325,47 @@ func drawStats(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA)
 			return err
 		}
 	}
+
+	return drawStatRule(dst, st, f, ink)
+}
+
+// statRowTop is where stat row i is drawn, which is the pitch plus whatever the rule pushed it
+// down by.
+//
+// **One function rather than the arithmetic at each site**, because the rule's gap has to reach
+// the rows, the rule itself and every test that asks where a row is — see TestStatRowsClearTheHealthBar.
+func statRowTop(st Style, i int) int {
+	y := st.StatsTop + i*st.StatRowPitch
+	if st.StatRuleAfter > 0 && i >= st.StatRuleAfter {
+		y += st.StatRuleGap
+	}
+	return y
+}
+
+// drawStatRule draws the hairline between two groups of stat rows, centered in the air the gap
+// opened for it.
+//
+// **Centered on the space rather than placed at an offset**, so it stays put when the pitch, the
+// figure size or the gap move — the same rule the shatter's underline follows. It is measured off
+// the text's own metrics, which is why it is here and not a constant.
+//
+// It takes LabelInk lightened toward the surface: a rule is the quietest mark on the card, and at
+// full label strength it reads as a border cutting the card in two.
+func drawStatRule(dst *image.RGBA, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
+	if st.StatRuleAfter <= 0 || st.StatRuleGap <= 0 {
+		return nil
+	}
+	face, err := f.at(st.StatSize)
+	if err != nil {
+		return err
+	}
+	m := face.Metrics()
+
+	above := statRowTop(st, st.StatRuleAfter-1) + m.Ascent.Ceil() + m.Descent.Ceil()
+	below := statRowTop(st, st.StatRuleAfter)
+
+	y := above + (below-above)/2
+	fillRect(dst, st.TextLeft, y, st.Width-2*st.TextLeft, statRuleHeight, ink(statRuleInk))
 	return nil
 }
 

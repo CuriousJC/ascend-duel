@@ -48,28 +48,41 @@ func TestSpendingRaisesAFlightForEveryCardThatMoves(t *testing.T) {
 		t.Fatalf("hand holds %d cards, want it dealt back to %d", len(s.hand), handSize)
 	}
 
-	var out, in int
+	var out int
 	for _, f := range s.theater.flights {
-		if f.outbound {
-			out++
-			// The row it left had five cards in it, and that row is already gone.
-			if f.count != 5 {
-				t.Errorf("outbound flight remembers a row of %d, want the 5 it left", f.count)
-			}
+		if !f.outbound {
+			t.Error("a card flew in on a cardFlight; dealing belongs to the deal now")
 			continue
 		}
-		in++
-		if f.count != handSize {
-			t.Errorf("inbound flight targets a row of %d, want the %d it joins", f.count, handSize)
+		out++
+		// The row it left had five cards in it, and that row is already gone.
+		if f.count != 5 {
+			t.Errorf("outbound flight remembers a row of %d, want the 5 it left", f.count)
 		}
 	}
 
 	if out != 2 {
 		t.Errorf("%d cards flew out, want 2", out)
 	}
-	// Five dealt: three survived the discard, and the hand fills back to eight.
-	if in != handSize-3 {
-		t.Errorf("%d cards flew in, want %d", in, handSize-3)
+
+	// **The cards coming the other way are the deal's** *(2026-09-15)*, which is what makes the
+	// opening hand and a refill one gesture. Five dealt: three survived the discard, and the hand
+	// fills back to eight.
+	in := s.theater.deal.cards
+	if len(in) != handSize-3 {
+		t.Fatalf("%d cards were dealt, want %d", len(in), handSize-3)
+	}
+	for _, c := range in {
+		if c.count != handSize {
+			t.Errorf("a dealt card targets a row of %d, want the %d it joins", c.count, handSize)
+		}
+		// No run behind this scene, so no ring touches anything: one face, the pile's.
+		if len(c.faces) != 1 || c.faces[0].ring != -1 {
+			t.Errorf("a dealt card carries %d faces, want the pile's alone", len(c.faces))
+		}
+	}
+	if s.theater.deal.rings != nil {
+		t.Errorf("%d rings in a cascade with no run behind it", len(s.theater.deal.rings))
 	}
 }
 
@@ -88,16 +101,48 @@ func TestInboundSlotsAreSuppressedUntilTheyLand(t *testing.T) {
 	s := flightScene(selectedHand(5, 2))
 	s.spendSelected()
 
-	// The three cards that stayed keep being drawn; the five dealt are drawn by their
-	// flights instead, so the row leaves their slots empty.
+	// The three cards that stayed keep being drawn; the five dealt are drawn by the deal
+	// instead, so the row leaves their slots empty.
 	for i := 0; i < 3; i++ {
-		if s.inboundTo(i) {
+		if s.dealtTo(i) {
 			t.Errorf("slot %d is suppressed, but that card never left the hand", i)
 		}
 	}
 	for i := 3; i < handSize; i++ {
-		if !s.inboundTo(i) {
+		if !s.dealtTo(i) {
 			t.Errorf("slot %d holds a card still in the air but is being drawn anyway", i)
+		}
+	}
+}
+
+// The deal is the one mover the theater's own tick does not drive, so a scene that never called
+// tickDeal would sit on a suppressed row forever. This is that handover.
+func TestTheDealLandsAndTheRowComesBack(t *testing.T) {
+	s := flightScene(selectedHand(5, 2))
+	s.spendSelected()
+
+	if !s.theater.deal.running() {
+		t.Fatal("no deal to advance")
+	}
+
+	// The longest journey is the last card dealt, which waits out its whole stagger first. With no
+	// run behind the scene there is no cascade, so the sequence goes straight to the sort.
+	longest := flightTicks()
+	for _, c := range s.theater.deal.cards {
+		if n := c.flight.delay + flightTicks(); n > longest {
+			longest = n
+		}
+	}
+	for i := 0; i <= longest; i++ {
+		s.tickDeal()
+	}
+
+	if s.theater.deal.running() {
+		t.Errorf("the deal is still running after %d ticks", longest)
+	}
+	for i := 0; i < len(s.hand); i++ {
+		if s.dealtTo(i) {
+			t.Errorf("slot %d is still suppressed after the deal finished", i)
 		}
 	}
 }

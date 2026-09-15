@@ -1,5 +1,546 @@
 [
   {
+    "ScenarioRecord": "card-full-house",
+    "Note": "The Card Full House, dealt on purpose: three Cuts and two Braces out of a hand of eight, which is 5 AP and pays 3.42x. It is the hand that says most about how the ladder is counted, because both halves of it are things a player has to be told. The rung matches on CONCEPT - data/hands.json writes match concept, groups [3, 2] - so the three Cuts are a set because they are Cuts, and the colors they happen to wear are worth nothing to it; recolor every card in this hand and the multiplier does not move. And the two Braces are DEFEND cards that join the hand like anything else: they carry a form and an element, they count toward the rung, and they bring no damage with them - so the sum is three 0.5x slashes under a 3.42x multiplier, and the shields go up beside the blow rather than instead of it. The other three cards - a Flinch, a Jab and a Block - are there to be left behind, so the hand is a choice rather than the only five cards in the row. Giant Bat, 15 AP and a dummy, and it shares the shields fixture's deck so the refill behaves the same way. See ASCEND_DUEL_SCENARIO=shields for the defences on their own.",
+    "Relics": [],
+    "Enemy": "GiantBat",
+    "Hand": [
+      {
+        "Card": "Flinch",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Jab",
+        "Element": "earth"
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice"
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice"
+      },
+      {
+        "Card": "Cut",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Brace",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Brace",
+        "Element": "earth"
+      },
+      {
+        "Card": "Block",
+        "Element": "earth"
+      }
+    ],
+    "Deck": [
+      {
+        "Card": "Flinch",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Flinch",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Flinch",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Flinch",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Flinch",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "ice"
+      },
+      {
+        "Card": "Jab",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Jab",
+        "Element": "earth"
+      },
+      {
+        "Card": "Jab",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Cut",
+        "Element": "fire"
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice"
+      },
+      {
+        "Card": "Cut",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Cut",
+        "Element": "earth"
+      },
+      {
+        "Card": "Cut",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Bash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Bash",
+        "Element": "ice"
+      },
+      {
+        "Card": "Bash",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth"
+      },
+      {
+        "Card": "Bash",
+        "Element": "arcane"
+      }
+    ],
+    "Actions": 15,
+    "Dummy": true
+  },
+  {
+    "ScenarioRecord": "shields",
+    "Note": "The shields, on their own: what a defend card raises, what one eats, and how the break is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is two thirds defend cards across all five colors - Flinch at 0 AP, Brace at 1, Block at 2, Guard at 3 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside a blow rather than instead of one. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature's HEAVIEST blow, not its first, and it decides that at the top of the creature's turn. Watch the beat between the two turns, where the blocked pips fly out of the duelist card into the card they kill and the crack opens across its face. The pip row along the bottom of the duelist card draws at most six - screens.maxShieldPips - so a turn that raises ten draws a full row and the true count is on the engine. Against a dummy, so it can be watched as many times as it takes rather than survived.",
+    "Relics": [],
+    "Enemy": "GiantBat",
+    "Hand": [
+      {
+        "Card": "Brace",
+        "Element": "fire"
+      },
+      {
+        "Card": "Block",
+        "Element": "ice"
+      },
+      {
+        "Card": "Guard",
+        "Element": "earth"
+      },
+      {
+        "Card": "Bash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice"
+      }
+    ],
+    "Deck": [
+      {
+        "Card": "Flinch",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Flinch",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Flinch",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Flinch",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Flinch",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Brace",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Block",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Guard",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "ice"
+      },
+      {
+        "Card": "Jab",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Jab",
+        "Element": "earth"
+      },
+      {
+        "Card": "Jab",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Cut",
+        "Element": "fire"
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice"
+      },
+      {
+        "Card": "Cut",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Cut",
+        "Element": "earth"
+      },
+      {
+        "Card": "Cut",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Bash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Bash",
+        "Element": "ice"
+      },
+      {
+        "Card": "Bash",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth"
+      },
+      {
+        "Card": "Bash",
+        "Element": "arcane"
+      }
+    ],
+    "Actions": 15,
+    "Dummy": true
+  },
+  {
+    "ScenarioRecord": "flip-cascade",
+    "Note": "The deal, the flip cascade and the sort, which is how every hand in a fight now arrives - see screens/combat_deal.go. Frozen Lightning, Glacier and Permafrost are worn in that order, so the cascade CHAINS and then doubles back: lightning goes to ice under ring one, ice goes to earth under ring two, and earth comes back to ice under ring three. Every lightning, ice and earth card in the deck therefore lands on ice, and a card can be watched going ice, earth, ice across three beats - which is the thing three rings are here to show, because a run wearing the middle relic alone would end on earth. The fire cards are the bystanders: no ring names them, so they sit still through all three beats and the row has something to be compared against. What to watch is the order - cards fly out of the pile left to right in the order the shuffle gave them, then each ring in turn rattles, rocks and lights while every card it touches rattles and morphs at once, and only then does the row sort itself. Press E for the element sort, which is where sorting LAST earns itself: under the default cost sort the element is only a tiebreak and the row barely moves, where on E it reorganises around what the cascade just did. Play a turn and the refill runs the whole sequence again over the cards it deals. Against a dummy, 15 AP, so it can be watched as many times as it takes rather than survived.",
+    "Relics": [
+      "flip-lightning-to-ice",
+      "flip-ice-to-earth",
+      "flip-earth-to-ice"
+    ],
+    "Deck": [
+      {
+        "Card": "Poke",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Poke",
+        "Element": "ice"
+      },
+      {
+        "Card": "Poke",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Jab",
+        "Element": "ice"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Thrust",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Thrust",
+        "Element": "ice"
+      },
+      {
+        "Card": "Thrust",
+        "Element": "fire"
+      },
+      {
+        "Card": "Skewer",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Skewer",
+        "Element": "ice"
+      },
+      {
+        "Card": "Skewer",
+        "Element": "fire"
+      },
+      {
+        "Card": "Impale",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Impale",
+        "Element": "ice"
+      },
+      {
+        "Card": "Impale",
+        "Element": "fire"
+      },
+      {
+        "Card": "Nick",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Nick",
+        "Element": "ice"
+      },
+      {
+        "Card": "Nick",
+        "Element": "fire"
+      },
+      {
+        "Card": "Cut",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice"
+      },
+      {
+        "Card": "Cut",
+        "Element": "fire"
+      },
+      {
+        "Card": "Slice",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Slice",
+        "Element": "ice"
+      },
+      {
+        "Card": "Slice",
+        "Element": "fire"
+      },
+      {
+        "Card": "Cleave",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Cleave",
+        "Element": "ice"
+      },
+      {
+        "Card": "Cleave",
+        "Element": "fire"
+      },
+      {
+        "Card": "Sever",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Sever",
+        "Element": "ice"
+      },
+      {
+        "Card": "Sever",
+        "Element": "fire"
+      },
+      {
+        "Card": "Tap",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Tap",
+        "Element": "ice"
+      },
+      {
+        "Card": "Tap",
+        "Element": "fire"
+      }
+    ],
+    "Actions": 15,
+    "Dummy": true
+  },
+  {
     "ScenarioRecord": "new-rings-fire-ice-lightning",
     "Note": "The five dual-status rings drawn on 2026-09-12 that carry a fire, ice or lightning rule, worn at once so the artwork can be read on the pane at the size a player actually sees it - Scald, Wildfire, Hoarfrost, Brittle and Palsy. It is a batch of art rather than an interaction, which is what RelicSlots exists for: the shipped cap is five, so looking at nine new rings used to mean buying one, selling it and buying the next. The art is the question, but the rules are worth watching too, because every one of these applies TWO statuses off one attack: the hand is a fire slash, an ice slash, a lightning crush and two more of the same colors, so a single turn puts BURNED, CHILLED, SHOCKED and WEAKENED on the badge row under the creature's fraction at once. Against a dummy, so the statuses can be stacked and read rather than killed off; 15 AP so the choice is which cards rather than which are affordable.",
     "Relics": [
@@ -10,11 +551,26 @@
       "pair-status-shock-weak"
     ],
     "Hand": [
-      { "Card": "Cut", "Element": "fire" },
-      { "Card": "Slice", "Element": "ice" },
-      { "Card": "Thump", "Element": "lightning" },
-      { "Card": "Bash", "Element": "fire" },
-      { "Card": "Thrust", "Element": "ice" }
+      {
+        "Card": "Cut",
+        "Element": "fire"
+      },
+      {
+        "Card": "Slice",
+        "Element": "ice"
+      },
+      {
+        "Card": "Thump",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Bash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Thrust",
+        "Element": "ice"
+      }
     ],
     "Actions": 15,
     "Dummy": true
@@ -33,11 +589,26 @@
       "jar-crush"
     ],
     "Hand": [
-      { "Card": "Cut", "Element": "earth" },
-      { "Card": "Thump", "Element": "arcane" },
-      { "Card": "Bash", "Element": "earth" },
-      { "Card": "Smash", "Element": "arcane" },
-      { "Card": "Slice", "Element": "earth" }
+      {
+        "Card": "Cut",
+        "Element": "earth"
+      },
+      {
+        "Card": "Thump",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth"
+      },
+      {
+        "Card": "Smash",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Slice",
+        "Element": "earth"
+      }
     ],
     "Actions": 15,
     "Dummy": true
@@ -55,11 +626,26 @@
       "dmg-element-three-of-a-kind-hand"
     ],
     "Hand": [
-      { "Card": "Jab", "Element": "earth" },
-      { "Card": "Thump", "Element": "earth" },
-      { "Card": "Bash", "Element": "earth" },
-      { "Card": "Tap", "Element": "earth" },
-      { "Card": "Brace", "Element": "earth" }
+      {
+        "Card": "Jab",
+        "Element": "earth"
+      },
+      {
+        "Card": "Thump",
+        "Element": "earth"
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth"
+      },
+      {
+        "Card": "Tap",
+        "Element": "earth"
+      },
+      {
+        "Card": "Brace",
+        "Element": "earth"
+      }
     ],
     "Actions": 15,
     "Dummy": true
@@ -225,20 +811,62 @@
       "dmg-form-four-of-a-kind-hand"
     ],
     "Deck": [
-      { "Card": "Poke", "Element": "fire", "Copies": 6 },
-      { "Card": "Jab", "Element": "ice", "Copies": 6 },
-      { "Card": "Thrust", "Element": "lightning", "Copies": 4 },
-      { "Card": "Nick", "Element": "earth", "Copies": 6 },
-      { "Card": "Cut", "Element": "arcane", "Copies": 6 },
-      { "Card": "Slice", "Element": "fire", "Copies": 4 }
+      {
+        "Card": "Poke",
+        "Element": "fire",
+        "Copies": 6
+      },
+      {
+        "Card": "Jab",
+        "Element": "ice",
+        "Copies": 6
+      },
+      {
+        "Card": "Thrust",
+        "Element": "lightning",
+        "Copies": 4
+      },
+      {
+        "Card": "Nick",
+        "Element": "earth",
+        "Copies": 6
+      },
+      {
+        "Card": "Cut",
+        "Element": "arcane",
+        "Copies": 6
+      },
+      {
+        "Card": "Slice",
+        "Element": "fire",
+        "Copies": 4
+      }
     ],
     "Hand": [
-      { "Card": "Poke", "Element": "fire" },
-      { "Card": "Poke", "Element": "ice" },
-      { "Card": "Jab", "Element": "lightning" },
-      { "Card": "Jab", "Element": "earth" },
-      { "Card": "Nick", "Element": "arcane" },
-      { "Card": "Cut", "Element": "fire" }
+      {
+        "Card": "Poke",
+        "Element": "fire"
+      },
+      {
+        "Card": "Poke",
+        "Element": "ice"
+      },
+      {
+        "Card": "Jab",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Jab",
+        "Element": "earth"
+      },
+      {
+        "Card": "Nick",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Cut",
+        "Element": "fire"
+      }
     ],
     "Screen": "combat",
     "Fight": 0,

@@ -7,25 +7,38 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/entities"
 )
 
-// The bar has 23 pixels between the tower lines and the table row and spends 20 of them, so it is
-// one layout change away from overlapping something. This is the same guard
-// TestTheTowerLinesFitBetweenTheCardAndTheTable keeps on the two lines above it.
-func TestTheRoundTimerFitsUnderTheTowerLines(t *testing.T) {
+// The bar hangs off the bottom of the duelist card and has to finish above the table row. Both
+// edges move on their own — the card's off topRowTopPct, the table's off handTop — so the fit is
+// exactly the kind of thing that goes stale silently.
+//
+// **It used to sit under the floor-and-room lines**, which are stat rows on the card as of
+// 2026-09-15; the bar moved up into the space they left rather than a gap being kept where they
+// were.
+func TestTheRoundTimerFitsUnderTheDuelistCard(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
-	place, bar := s.towerPlaceRect(gs), s.roundTimerRect(gs)
+	card, bar := s.duelistCardRect(gs), s.roundTimerRect(gs)
 
-	if bar.Min.Y < place.Max.Y {
-		t.Errorf("the timer starts at y=%d, over the tower lines ending at y=%d",
-			bar.Min.Y, place.Max.Y)
+	if bar.Min.Y != card.Max.Y+towerLineGap {
+		t.Errorf("the timer starts at y=%d, want %dpx under the card at y=%d",
+			bar.Min.Y, towerLineGap, card.Max.Y)
 	}
-	if bar.Min.X != place.Min.X || bar.Max.X != place.Max.X {
-		t.Errorf("the timer runs x=%d..%d, want the tower lines' column %d..%d",
-			bar.Min.X, bar.Max.X, place.Min.X, place.Max.X)
+	if bar.Min.X != card.Min.X || bar.Max.X != card.Max.X {
+		t.Errorf("the timer runs x=%d..%d, want the duelist card's column %d..%d",
+			bar.Min.X, bar.Max.X, card.Min.X, card.Max.X)
 	}
-	if top := tableRowTop(gs); bar.Max.Y > top {
+	if pane := s.relicPaneRect(gs); bar.Max.X > pane.Min.X {
+		t.Errorf("the timer reaches x=%d, into the relic row at x=%d", bar.Max.X, pane.Min.X)
+	}
+	// The whole top band has to finish above the table row, the relic count included — that
+	// assertion came here when the tower lines' own test went with the lines.
+	top := tableRowTop(gs)
+	if bar.Max.Y > top {
 		t.Errorf("the timer reaches y=%d, into the table row at y=%d", bar.Max.Y, top)
+	}
+	if count := s.relicCountRect(gs); count.Max.Y > top {
+		t.Errorf("the relic count reaches y=%d, into the table row at y=%d", count.Max.Y, top)
 	}
 }
 

@@ -511,6 +511,68 @@ var (
 // beats together.
 func relicShakeTicks() int { return beat(3, 5) }
 
+// relicToastTilt is how far a toasting relic turns at the peak, in radians — about six degrees.
+//
+// **The tilt is the toast's, not the shake's** *(owner's call, 2026-09-15)*. A card paying into the
+// sum rattles and that is the whole gesture; a *relic* firing rattles, lights **and turns**, because
+// the two marks it had were not carrying far enough — the lit border is a change to a thin ring on a
+// card that is already pink, and a seven-pixel shift on a card in a row of five reads as the row
+// settling. A turn is the one thing in the row that nothing else does.
+//
+// **One swing each way, decaying.** It goes left, back through square, right, and settles — which
+// is why the sine runs at one cycle over the beat where the shake runs at three. A tilt at the
+// shake's own frequency is a wobble, and a wobble reads as broken rather than as firing.
+const relicToastTilt = 0.105
+
+// relicToastAngle is how far a relic is turned this frame.
+func relicToastAngle(t travel) float64 {
+	if t.done() || t.waiting() {
+		return 0
+	}
+	p := t.progress()
+	return math.Sin(p*math.Pi*2) * (1 - p) * relicToastTilt
+}
+
+// relicToast is what a relic in the row is doing this frame: how far it sits sideways, how far it is
+// turned, and whether its border is lit.
+//
+// **The three travel together because they are one gesture** *(2026-09-15)*. They were a shift and a
+// bool read off one `travel` at the call site, which was fine with two marks and is the shape that
+// lets a third quietly reach only one of the two callers — the sum's toast and the deal's cascade
+// both put a relic up, and a relic that turned in one and not the other would be two gestures with
+// one name. See the animation gallery, where `shake` and `toast` are told apart by exactly this.
+type relicToast struct {
+	shift int
+	angle float64
+	lit   bool
+}
+
+// sumToast is a relic firing into a blow's arithmetic, and dealToast one firing as a hand is dealt.
+// **The shift differs and nothing else does**: the deal's rattle is tighter and wider because a
+// whole row goes at once — see combat_deal.go — and the tilt and the light are the relic's own.
+func sumToast(t travel) relicToast {
+	return relicToast{shift: shakeOffset(t), angle: relicToastAngle(t), lit: !t.done()}
+}
+
+func dealToast(t travel) relicToast {
+	return relicToast{shift: dealShakeOffset(t), angle: relicToastAngle(t), lit: !t.done()}
+}
+
+// geoAt is the transform a toasting relic is drawn under: shifted sideways, turned about its own
+// center, at `at`.
+//
+// **About the center rather than the corner**, or a turn would swing the card out of its seat
+// instead of rocking it in place.
+func (r relicToast) geoAt(at image.Point) ebiten.GeoM {
+	w, h := float64(cards.RelicStyle.Width), float64(cards.RelicStyle.Height)
+
+	var geo ebiten.GeoM
+	geo.Translate(-w/2, -h/2)
+	geo.Rotate(r.angle)
+	geo.Translate(float64(at.X+r.shift)+w/2, float64(at.Y)+h/2)
+	return geo
+}
+
 // shakeOffset is how far sideways a card sits this frame: a decaying oscillation that ends where it
 // started.
 //
@@ -637,13 +699,30 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 			continue
 		}
 
-		// **The shake and the toast go together**: the card rattles and its border lights, which is
-		// what says the relic is working rather than merely moving.
+		// **The shake, the tilt and the light go together**: the card rattles, rocks and its border
+		// lights, which is what says the relic is working rather than merely moving. See relicToast.
 		at := relicSlotAt(r, i, len(worn))
-		shake := shakeOffset(s.relicShake[i])
-		at.X += shake
+		toast := sumToast(s.relicShake[i])
 
-		drawRelicCard(gs, screen, at, relic, counters[relic.RelicRecord], true, !s.relicShake[i].done())
+		// **The deal's cascade puts a relic up too, and it is a second clock on purpose.** The sum's
+		// toast fires on the beat a figure is written and this one on the beat a whole row of cards
+		// changes colour; they cannot both be running, since one is playback and the other is a
+		// hand arriving, and a shared clock would make that coincidence load-bearing. See
+		// combat_deal.go.
+		if t, firing := s.dealRingClock(relic.RelicRecord); firing {
+			toast = dealToast(t)
+		}
+
+		// **A resting relic is blitted and a toasting one is flown**, which is the same split every
+		// other card on this screen is under: a turn puts the card off the pixel grid, and that is
+		// the one time a card is filtered.
+		if !toast.lit {
+			drawRelicCard(gs, screen, at, relic, counters[relic.RelicRecord], true, false)
+			continue
+		}
+		drawFlyingCard(gs, screen,
+			relicSpec(gs, relic, counters[relic.RelicRecord], true, true),
+			cards.RelicStyle, toast.geoAt(at))
 	}
 
 	// **The count hangs off the pane's bottom-right corner** *(2026-09-04, owner's call)*, and the

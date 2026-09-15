@@ -380,10 +380,11 @@ func TestOneRuleCanApplyTwoStatuses(t *testing.T) {
 	}
 }
 
-func TestFlipsDoNotCompose(t *testing.T) {
-	// Every flip reads the card's *original* element, so lightning->ice and fire->ice both land on
-	// their own sources and cannot chain. Without it, two flips could cascade a deck to one color
-	// and the order they were bought in would change the result.
+func TestFlipsCompose(t *testing.T) {
+	// **A flip reads what the flip before it left behind** *(owner's call, 2026-09-15)*, so two
+	// rings cascade: lightning becomes ice becomes earth, and a run wearing both holds no
+	// lightning and no ice. The order they are worn in decides the result, which is the point —
+	// the deck panel's alterations view is where a player reads what they are actually holding.
 	toIce := relic(t, "lightning to ice", RelicRule{
 		When: MomentCardDrawn,
 		If:   RelicCondition{Element: Lightning, HasElement: true},
@@ -397,14 +398,54 @@ func TestFlipsDoNotCompose(t *testing.T) {
 
 	worn := []WornRelic{{Relic: toIce}, {Relic: toEarth}}
 
-	if e, ok := FlipElement(worn, Of(Bash, Lightning)); !ok || e != Ice {
-		t.Errorf("a lightning card became %v (flipped %v), want ice — the second flip chained", e, ok)
+	if e, ok := FlipElement(worn, Of(Bash, Lightning)); !ok || e != Earth {
+		t.Errorf("a lightning card became %v (flipped %v), want earth — the cascade stopped short", e, ok)
 	}
 	if e, ok := FlipElement(worn, Of(Bash, Ice)); !ok || e != Earth {
 		t.Errorf("an ice card became %v (flipped %v), want earth", e, ok)
 	}
 	if _, ok := FlipElement(worn, Of(Bash, Fire)); ok {
 		t.Error("a fire card was flipped by relics that do not name it")
+	}
+
+	// Worn the other way round the cascade has nothing to chain onto: the ice ring fires first
+	// and there is no ice yet, so a lightning card stops at ice.
+	back := []WornRelic{{Relic: toEarth}, {Relic: toIce}}
+	if e, ok := FlipElement(back, Of(Bash, Lightning)); !ok || e != Ice {
+		t.Errorf("worn the other way a lightning card became %v, want ice", e)
+	}
+}
+
+// The screen plays one beat per ring, so it needs the steps rather than the answer.
+func TestFlipStepsNameEveryRingThatTouchedTheCard(t *testing.T) {
+	toIce := relic(t, "steps lightning to ice", RelicRule{
+		When: MomentCardDrawn,
+		If:   RelicCondition{Element: Lightning, HasElement: true},
+		Then: []RelicEffect{{Do: DoSetElement, Element: Ice}},
+	})
+	toEarth := relic(t, "steps ice to earth", RelicRule{
+		When: MomentCardDrawn,
+		If:   RelicCondition{Element: Ice, HasElement: true},
+		Then: []RelicEffect{{Do: DoSetElement, Element: Earth}},
+	})
+
+	worn := []WornRelic{{Relic: toIce}, {Relic: toEarth}}
+
+	steps := FlipSteps(worn, Of(Bash, Lightning))
+	if len(steps) != 2 {
+		t.Fatalf("a lightning card took %d steps, want 2: %v", len(steps), steps)
+	}
+	if steps[0].Relic != toIce || steps[0].To != Ice {
+		t.Errorf("first step is %v to %v, want the ice ring", steps[0].Relic, steps[0].To)
+	}
+	if steps[1].Relic != toEarth || steps[1].To != Earth {
+		t.Errorf("second step is %v to %v, want the earth ring", steps[1].Relic, steps[1].To)
+	}
+
+	// A card the cascade never reaches takes no steps at all, which is what lets the deal leave
+	// it alone rather than morphing it into itself.
+	if steps := FlipSteps(worn, Of(Bash, Fire)); len(steps) != 0 {
+		t.Errorf("a fire card took %d steps, want none: %v", len(steps), steps)
 	}
 }
 

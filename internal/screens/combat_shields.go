@@ -93,41 +93,23 @@ func (s *CombatScene) row(side combat.Side) *shieldRow {
 	return &s.theater.shieldRows[side]
 }
 
-// noteShieldFlight raises the pips for one defend card being scored.
+// noteShieldRaise flies the pips for an announced raise, and it is **the only place pips fly from**
+// as of 2026-09-15 *(owner's call)*.
 //
-// **The count is what the card raises, held to the seats the row still has.** Predicting past the
-// row's width would draw a pip it has nowhere to put; predicting under it is the ordinary case and
-// needs nothing.
+// The defend phase used to run last, so a defense scored into a hand paid a visible 0 into the sum
+// and then did the thing it was for several beats later, on a card the player had stopped watching
+// — which is why the pips were made to leave with the figure instead, and why this function existed
+// only for the turn that formed no hand at all. The phases flipped (see combat.Categories), so the
+// raise now has a beat of its own in front of the sum: the card lifts, the pips fly, the next
+// defense goes up, and only then do the attacks score. The sum's copy of this is gone.
 //
-// **The bound is maxShieldPips, not combat.MaxShields** *(2026-09-09)*. It was the engine's number
-// while a duelist was clamped to it as well, and reading it here after the clamp came off would
-// have made the prediction stop one pip short of a row that has six seats.
-func (s *CombatScene) noteShieldFlight(side combat.Side, seat, count, standing int) {
-	if count <= 0 {
-		return
-	}
-	if room := maxShieldPips - standing; count > room {
-		count = room
-	}
-	if count <= 0 {
-		return
-	}
-	s.flyShields(shieldFlight{
-		side: side, seat: seat, count: count, standing: -1,
-		ink: s.handCardInk(side, seat),
-	})
-}
-
-// noteShieldRaise flies the pips for an announced raise, for the turn that never formed a hand.
+// The card that raised them is the one lit right now, which is the card the announcement is about.
+// It reports whether it flew them, so the log can tell a raise it drew from one it did not.
 //
-// **A turn of nothing but defenses emits no KindHand at all**, so there is no sum, no dialog and
-// no beat on which the pips could have left with a figure — and without this the row simply filled
-// itself. The card that raised them is the one lit right now, which is the card the announcement is
-// about.
-//
-// It reports whether it flew them. **A raise whose card has already sent its pips does not fly
-// again** — a defense in a hand flies on the beat it is scored, and the announcement that follows
-// is the same shields being spoken about a second time.
+// **The count is clamped to the row rather than to the rules.** A duelist holds as many shields as
+// the turn paid for and the row draws maxShieldPips of them, so a raise past the row's end flies
+// nothing rather than flying a pip with nowhere to land — see shownShields, and CLAUDE.md on the
+// row being a separate number from the engine's.
 func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
 	if e.Kind != combat.KindRaised || e.Amount <= 0 {
 		return false
@@ -136,8 +118,19 @@ func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
 	if !ok || s.row(e.Side).flew(seat) {
 		return false
 	}
+
+	// The raise names what is standing after its own card, so what this card put up is the
+	// difference — and the row can only show maxShieldPips of it.
+	count := e.Amount
+	if room := maxShieldPips - (e.Life - e.Amount); count > room {
+		count = room
+	}
+	if count <= 0 {
+		return false
+	}
+
 	s.flyShields(shieldFlight{
-		side: e.Side, seat: seat, count: e.Amount, standing: e.Life,
+		side: e.Side, seat: seat, count: count, standing: e.Life,
 		ink: s.handCardInk(e.Side, seat),
 	})
 	return true

@@ -174,34 +174,16 @@ func (s *CombatScene) spendSelected() {
 	// Everything appended past this point was dealt, which is what makes the drawn cards
 	// identifiable without drawHand having to report them.
 	dealt := len(s.hand)
-	s.drawHand()
+	pile := s.drawHand()
 
-	// **The sort runs before anything is animated, not after.** A dealt card lands in the slot
-	// the sort gives it rather than on the right-hand end, so it flies to where it will
-	// actually be sitting — and `inboundTo`, which blanks a slot that is still filling, is
-	// looking at that same index.
-	//
-	// The permutation is what survives the rearrangement. `order[to]` is where the card now at
-	// `to` came from: past `dealt` it came out of the draw pile and flies in, below it the card
-	// was already in the hand and slides across the row from wherever it was standing.
-	order := s.sortHand()
-
-	staggered := 0
-	for to, from := range order {
-		if from >= dealt {
-			s.addFlight(cardFlight{
-				travel: newTravel(staggered*flightStaggerPer(), flightTicks()),
-				card:   s.hand[to].actionCard,
-				index:  to, count: len(s.hand),
-			})
-			staggered++
-			continue
-		}
-
-		// A survivor. It has moved if its slot changed or if the row it is standing in did —
-		// eight cards centered is not the same place as six centered, so a card that kept its
-		// index still has ground to cover.
-		was := keptFrom[from]
+	// **The survivors close the row up first, and the sort comes after the deal**
+	// *(owner's call, 2026-09-15)*. This used to sort before anything was animated so a dealt card
+	// flew straight to the slot it would end up in — one journey per card, and a hand that never
+	// showed the player what it was dealt. The row now shuts up to the left, the new cards arrive
+	// on the right in pile order, the flip cascade plays over them, and the whole row sorts last.
+	// See combat_deal.go.
+	for to := 0; to < dealt; to++ {
+		was := keptFrom[to]
 		if was == to && leaving == len(s.hand) {
 			continue
 		}
@@ -214,7 +196,7 @@ func (s *CombatScene) spendSelected() {
 		})
 	}
 
-	s.syncQueue()
+	s.startDeal(dealt, pile)
 }
 
 // toggleDeck shows or hides the deck overlay.
@@ -253,18 +235,27 @@ func (s *CombatScene) resetDeck(run *session.Session) {
 	s.hand = s.hand[:0]
 
 	s.shuffleDeck()
-	s.drawHand()
+	pile := s.drawHand()
 
 	// **A scenario's hand is dealt over the shuffle, not through it** — the draw pile is left
 	// exactly as it was, so the second hand of the fight is a normal one and the fixture is only
 	// the opening. Compiled out of every normal build; see internal/scenario.
-	if scenario.Active() {
-		s.plugHand(scenario.Hand())
+	//
+	// **Only a fixture that actually plugs a hand loses the deal** *(2026-09-15)*. This dropped the
+	// pile for every scenario launch, `plugHand` being a no-op on an empty list — so a fixture with
+	// a `Deck` and no `Hand` opened with eight cards already standing there and the deal never ran
+	// at all. Which is most of them, and it is the one path a fixture is *for*.
+	if scenario.Active() && s.plugHand(scenario.Hand()) {
+		// The cards the fixture put in the hand are not the cards that came off the pile, so the
+		// deal has nothing to walk. It sorts them and stands down.
+		pile = nil
 	}
 
-	// An opening hand arrives sorted, exactly as a refilled one does. The default is cost, so
-	// this is true of a scene that has never had a sort button pressed on it.
-	s.sortHand()
+	// **An opening hand is dealt exactly as a refilled one is** *(owner's call, 2026-09-15)* — out
+	// of the pile, through the flip cascade, and sorted last. It used to be filled and sorted here
+	// with nothing on screen, which made the first hand of a run the one hand in the game that
+	// simply appeared. `startDeal` sorts at the end of the sequence, so this no longer sorts.
+	s.startDeal(0, pile)
 }
 
 // plugHand replaces the hand with an authored one. **A debug seat and nothing else** — it is
@@ -274,15 +265,19 @@ func (s *CombatScene) resetDeck(run *session.Session) {
 // **The replaced cards go nowhere.** They are not discarded and not put back: the draw pile is
 // untouched, so the round after this one refills from a deck that never knew. A fixture is meant
 // to be one hand, not a rewritten deck.
-func (s *CombatScene) plugHand(cards []combat.Card) {
+// **It reports whether it replaced anything**, which the caller needs: a hand the fixture wrote did
+// not come off the draw pile, so there is no deal to play over it — and a fixture that plugged
+// *nothing* must still get the ordinary one.
+func (s *CombatScene) plugHand(cards []combat.Card) bool {
 	if len(cards) == 0 {
-		return
+		return false
 	}
 
 	s.hand = s.hand[:0]
 	for _, c := range cards {
 		s.hand = append(s.hand, paletteCard{actionCard: c})
 	}
+	return true
 }
 
 // shuffleDeck shuffles the draw pile using the scene's own source. Never rand.Shuffle,
@@ -316,11 +311,17 @@ func (s *CombatScene) handTarget() int { return handSize }
 // pile and drawn again would be read as ice — and a second flip keyed on ice would fire, chaining
 // two relics into a deck of one color, which is exactly what firing at `deck-built` prevented for
 // free. `restoreToDeck` is what pays for it now.
-func (s *CombatScene) drawHand() {
+// **It reports the cards as the pile held them**, parallel to the cards it appended. The hand gets
+// the finished card, which is the one every rule reads; the deal gets the face the cascade starts
+// from, so a flip can be watched happening rather than having already happened. See
+// combat_deal.go.
+func (s *CombatScene) drawHand() []actionCard {
+	var pile []actionCard
+
 	for len(s.hand) < s.handTarget() {
 		if len(s.deck) == 0 {
 			if len(s.discard) == 0 {
-				return
+				return pile
 			}
 			// **Put back the way they were found.** See restoreToDeck.
 			for _, c := range s.discard {
@@ -331,9 +332,12 @@ func (s *CombatScene) drawHand() {
 		}
 
 		last := len(s.deck) - 1
-		s.hand = append(s.hand, paletteCard{actionCard: s.drawnAs(s.deck[last])})
+		raw := s.deck[last]
+		s.hand = append(s.hand, paletteCard{actionCard: s.drawnAs(raw)})
 		s.deck = s.deck[:last]
+		pile = append(pile, raw)
 	}
+	return pile
 }
 
 // drawnAs is the card as it is dealt into the hand: the worn flips applied, or the card untouched

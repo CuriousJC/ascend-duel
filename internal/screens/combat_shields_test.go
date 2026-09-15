@@ -12,8 +12,15 @@ import (
 func shieldScene(card combat.Card) *CombatScene {
 	s := &CombatScene{}
 	s.theater.resolved = []resolvedCard{{card: card}}
+	s.theater.firingSeats = []int{0}
 	s.fighter = &entities.Combatant{}
 	return s
+}
+
+// raised is the event the engine emits for a shield card going up: how many this card put up, and
+// what is standing after it.
+func raised(count, standing int) combat.Event {
+	return combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: count, Life: standing}
 }
 
 // A defend card's pips are what the card raises; anything else raises none. **The seat is read off
@@ -40,13 +47,15 @@ func TestOnlyAShieldCardRaisesPips(t *testing.T) {
 	}
 }
 
-// **A flight predicts, so it may never predict past the row.** The engine caps a duelist at
-// combat.MaxShields and the pip row draws exactly that many, so a prediction that ignored the
-// ceiling would draw a pip with no seat.
-func TestPipsNeverPredictPastTheCap(t *testing.T) {
+// **A duelist holds as many shields as the turn paid for and the row draws maxShieldPips of them**,
+// so a flight that ignored the row's end would send a pip with no seat to land in. The engine's
+// count is the authority and this is only the drawing — see CLAUDE.md, where the two being separate
+// numbers is the decision.
+func TestPipsNeverFlyPastTheRow(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash})
 
-	s.noteShieldFlight(combat.SideA, 0, 3, combat.MaxShields-1)
+	// One short of a full row, and a card that puts up three.
+	s.noteShieldRaise(raised(3, maxShieldPips-1+3))
 	if len(s.theater.shields) != 1 {
 		t.Fatalf("no flight was raised")
 	}
@@ -54,11 +63,13 @@ func TestPipsNeverPredictPastTheCap(t *testing.T) {
 		t.Errorf("the flight carries %d pips into a row with room for 1", got)
 	}
 
-	// A row already full raises nothing at all rather than a flight of zero pips.
-	s.theater.shields = nil
-	s.noteShieldFlight(combat.SideA, 0, 3, combat.MaxShields)
+	// A row already full flies nothing at all rather than a flight of zero pips.
+	s = shieldScene(combat.Card{Concept: combat.Bash})
+	if s.noteShieldRaise(raised(3, maxShieldPips+3)) {
+		t.Error("a full row still flew pips")
+	}
 	if len(s.theater.shields) != 0 {
-		t.Errorf("a full row still raised %d flights", len(s.theater.shields))
+		t.Errorf("a full row raised %d flights", len(s.theater.shields))
 	}
 }
 
@@ -66,7 +77,7 @@ func TestPipsNeverPredictPastTheCap(t *testing.T) {
 // events again — a KindRaised sets it outright, which is what corrects a wrong guess.
 func TestPipsArePaidInOnArrivalAndOnlyOnce(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash})
-	s.noteShieldFlight(combat.SideA, 0, 2, 0)
+	s.noteShieldRaise(raised(2, 2))
 
 	s.landShields()
 	if got := s.shownShields(combat.SideA, 0); got != 0 {
@@ -119,14 +130,16 @@ func TestAnAnnouncedRaiseFliesItsOwnPips(t *testing.T) {
 	}
 }
 
-// A card that already sent its pips with its figure does not send them again when the defend phase
-// announces the raise — that is the same shields being spoken about twice.
+// One card's pips fly once. **The seat is what remembers**, which is why the row records it — a
+// raise announced twice for one card, or a redraw reaching this twice in a frame, is the same
+// shields being spoken about again rather than a second set going up.
 func TestPipsAreNotFlownTwiceForOneCard(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash})
-	s.theater.firingSeats = []int{0}
 
-	s.noteShieldFlight(combat.SideA, 0, 2, 0)
-	if s.noteShieldRaise(combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 2, Life: 2}) {
+	if !s.noteShieldRaise(raised(2, 2)) {
+		t.Fatal("the first raise flew no pips")
+	}
+	if s.noteShieldRaise(raised(2, 4)) {
 		t.Error("the same card's pips flew twice")
 	}
 	if len(s.theater.shields) != 1 {
@@ -140,7 +153,7 @@ func TestALandedPipKeepsItsColor(t *testing.T) {
 	fire := cards.BorderOf(artFor(combat.Fire))
 
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
-	s.noteShieldFlight(combat.SideA, 0, 2, 0)
+	s.noteShieldRaise(raised(2, 2))
 	for i := 0; i < shieldFlyTicks(); i++ {
 		s.theater.tick()
 	}
@@ -176,13 +189,14 @@ func TestALandedPipKeepsItsColor(t *testing.T) {
 // attack and the next. A raise pads and never trims.
 func TestARaiseNeverLeavesAPipColorless(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
-	s.noteShieldFlight(combat.SideA, 0, 1, 0)
+	s.noteShieldRaise(raised(1, 1))
 	for i := 0; i < shieldFlyTicks(); i++ {
 		s.theater.tick()
 	}
 	s.landShields()
 
-	// The engine announces the second shield the same turn raised; nothing flew for it.
+	// The engine announces the second shield the same turn raised; nothing flew for it, because a
+	// seat's pips fly once and the second card's own raise is the next seat's.
 	s.noteShields(combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 1, Life: 2})
 	if got, want := len(s.shownShieldInks(combat.SideA)), 2; got != want {
 		t.Fatalf("%d colors for %d standing pips: the rest draw white", got, want)
@@ -201,7 +215,7 @@ func TestARaiseNeverLeavesAPipColorless(t *testing.T) {
 // the second card's pip and puts it back a beat later.
 func TestARaiseNeverLowersTheRow(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
-	s.noteShieldFlight(combat.SideA, 0, 2, 0)
+	s.noteShieldRaise(raised(2, 2))
 	for i := 0; i < shieldFlyTicks(); i++ {
 		s.theater.tick()
 	}
@@ -229,7 +243,7 @@ func TestFlownSeatsAreForgottenEachRound(t *testing.T) {
 	s.fighterAfter, s.enemyAfter = s.fighter.Duelist, s.enemy.Duelist
 	s.theater.firingSeats = []int{0}
 
-	s.noteShieldFlight(combat.SideA, 0, 1, 0)
+	s.noteShieldRaise(raised(1, 1))
 	if !s.row(combat.SideA).flew(0) {
 		t.Fatal("a flight did not record the seat it left")
 	}
@@ -238,7 +252,7 @@ func TestFlownSeatsAreForgottenEachRound(t *testing.T) {
 	if s.row(combat.SideA).flew(0) {
 		t.Fatal("last round's seat still counts as flown")
 	}
-	if !s.noteShieldRaise(combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 2, Life: 2}) {
+	if !s.noteShieldRaise(raised(2, 2)) {
 		t.Error("this round's defense in the same seat did not fly its pips")
 	}
 }

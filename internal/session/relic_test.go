@@ -230,28 +230,32 @@ func TestAFlipRecolorsTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
 	}
 }
 
-func TestTwoFlipsCannotChainThroughOneCard(t *testing.T) {
-	// **The failure this guards is a redraw.** Every flip reads the card's *original* color, which
-	// was true for free while the whole deck was recolored once — nothing had been flipped yet.
-	// Firing per draw, a card that has been through the hand and the discard is holding a color a
-	// relic made, so handing that card back to DrawnAs is asking the second flip to read the first
-	// one's answer: lightning to ice to fire, and a deck walked to one color by two relics that
-	// each claim to touch one.
+func TestARedrawnCardDoesNotTakeTheCascadeTwice(t *testing.T) {
+	// **The flips chain within one draw and must not chain across two** *(owner's call,
+	// 2026-09-15)*. Lightning-to-ice worn beside ice-to-fire deals a lightning card as fire, in one
+	// trip, and that is the intent. What would be wrong is a card that has *been* through the hand
+	// and the discard going round again from wherever it stopped — so the draw pile holds the run's
+	// own colors and the discard is restored on its way back in. See screens.restoreToDeck.
 	run := wearing(t, "flip-lightning-to-ice", "flip-ice-to-fire")
 	owned := combat.Card{Concept: combat.Bash, Element: combat.Lightning}
 
 	drawn := run.DrawnAs(owned)
-	if drawn.Element != combat.Ice {
-		t.Fatalf("a lightning card was drawn as %v, want ice", drawn.Element)
+	if drawn.Element != combat.Fire {
+		t.Fatalf("a lightning card was drawn as %v, want fire — the cascade stopped short",
+			drawn.Element)
 	}
-	if again := run.DrawnAs(owned); again.Element != combat.Ice {
-		t.Errorf("drawn a second time from the run's own card it came up %v, want ice",
+	if again := run.DrawnAs(owned); again.Element != combat.Fire {
+		t.Errorf("drawn a second time from the run's own card it came up %v, want fire",
 			again.Element)
 	}
-	if chained := run.DrawnAs(drawn); chained.Element != combat.Fire {
-		t.Errorf("feeding a drawn card back in came up %v; ice-to-fire is expected here, and it "+
-			"is why the draw pile has to hold the run's colors - see screens.restoreToDeck",
-			chained.Element)
+
+	// The cascade is the steps, and the screen plays a beat per step. Two rings, two beats.
+	steps := run.FlipStepsFor(owned)
+	if len(steps) != 2 {
+		t.Fatalf("a lightning card took %d steps, want 2: %v", len(steps), steps)
+	}
+	if steps[0].To != combat.Ice || steps[1].To != combat.Fire {
+		t.Errorf("the cascade ran %v then %v, want ice then fire", steps[0].To, steps[1].To)
 	}
 }
 

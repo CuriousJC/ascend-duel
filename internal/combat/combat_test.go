@@ -151,16 +151,18 @@ func TestSideATakesItsWholeTurnFirst(t *testing.T) {
 }
 
 func TestATurnResolvesInCategoryOrder(t *testing.T) {
-	// Attacks, then plans, whatever order the cards were queued in. The plans go last within a
-	// turn because the *opponent* moves next, so a defense raised at the end of a turn is up when
-	// the blow arrives.
+	// **Defenses, then attacks** *(owner's call, 2026-09-15)*, whatever order the cards were
+	// queued in — a turn reads as raise the guard, then swing. It ran the other way until then, on
+	// an argument that turned out not to depend on within-turn order at all: expireDefenses fires
+	// at the start of a side's *own* turn, so a shield raised anywhere in this one is standing
+	// through the opponent's either way. See Categories.
 	a := duelist(10, 5, 500)
 	b := duelist(10, 5, 500)
 
 	queued := PlainCards(Brace, Bash, Block, testGuard, Smash)
 	events, _, _ := resolve(a, b, queued, nil, 1)
 
-	want := PlainCards(Bash, Smash, Brace, Block, testGuard)
+	want := PlainCards(Brace, Block, testGuard, Bash, Smash)
 	if got := playedCards(events); !cardsEqual(got, want) {
 		t.Errorf("played %v, want %v", got, want)
 	}
@@ -226,16 +228,17 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 func TestSlotIndexIsThePositionInItsOwnQueue(t *testing.T) {
 	// Index is where the card sits in the player's queue, not where it lands in the round.
 	// Anything wanting "how far through the round are we" has to count slots instead.
-	order := ResolutionOrder(PlainCards(Brace, Jab), nil)
+	// Queued attack-first, resolved defend-first, so both slots move and neither Index does.
+	order := ResolutionOrder(PlainCards(Jab, Brace), nil)
 
 	if len(order) != 2 {
 		t.Fatalf("got %d slots, want 2", len(order))
 	}
-	if order[0].Card.Concept != Jab || order[0].Index != 1 {
-		t.Errorf("first slot = %v index %d, want Jab index 1", order[0].Card.Concept, order[0].Index)
+	if order[0].Card.Concept != Brace || order[0].Index != 1 {
+		t.Errorf("first slot = %v index %d, want Brace index 1", order[0].Card.Concept, order[0].Index)
 	}
-	if order[1].Card.Concept != Brace || order[1].Index != 0 {
-		t.Errorf("second slot = %v index %d, want Brace index 0", order[1].Card.Concept, order[1].Index)
+	if order[1].Card.Concept != Jab || order[1].Index != 0 {
+		t.Errorf("second slot = %v index %d, want Jab index 0", order[1].Card.Concept, order[1].Index)
 	}
 }
 

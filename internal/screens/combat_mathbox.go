@@ -254,17 +254,8 @@ type mathItem struct {
 	// convention. Filled by `startHandMath`, which is the half of the box that knows the table.
 	cardSeat int
 
-	// shields is how many pips this term's card raises, and 0 for a card that raises none. **It is
-	// on the item rather than worked out when the flight is raised** because this is where the
-	// script already knows which card paid which term — see startHandMath.
-	shields int
-
-	// shieldsFlown says the pips have already set off, so an item held on screen for its whole
-	// beat cannot launch them once a frame.
-	shieldsFlown bool
-
-	// signalsSent says this item's card has already thrown whatever its riders parked, on the same
-	// once-per-item terms shieldsFlown is on. **The signals themselves are not stored here** — the
+	// signalsSent says this item's card has already thrown whatever its riders parked, so an item
+	// held on screen for its whole beat cannot throw them once a frame. **The signals themselves are not stored here** — the
 	// scene parked them against a seat when the events went past, and this only says when the seat
 	// is up. See combat_signal.go, and takeSignalSeat below.
 	signalsSent bool
@@ -335,6 +326,35 @@ type handBanner struct {
 	// running or not. Without it a banner that had arrived would be indistinguishable from one
 	// that had never set off.
 	flying bool
+
+	// flash is the swell on the beat the hand actually scores *(owner's call, 2026-09-15)*.
+	//
+	// **The word travels at DUEL! and then has to wait**, because the defenses now resolve first —
+	// so between the journey and the sum there is a stretch of shields going up during which the
+	// name is sitting in the hand row saying something that has not happened yet. The flash is what
+	// gives it a second moment: it arrives as a promise and snaps once when it becomes the
+	// multiplier.
+	//
+	// **It is a scale and not an alpha or a color.** The banner is already at full alpha by the
+	// time it lands, and the hue wheel is full — see CLAUDE.md. Size is the axis the word has left,
+	// and it is the one the shout's own pop already uses, so the two read as the same gesture.
+	flash travel
+}
+
+// flashTicks() is how long that swell lasts, and bannerFlashScale how far it goes. **Under the
+// shout's own pop** (mathShoutPopScale is 2.1): that one is a word arriving out of nothing, where
+// this is a word already on screen asking to be looked at again.
+func bannerFlashTicks() int { return beat(3, 5) }
+
+const bannerFlashScale = 1.5
+
+// flashNow starts it. **Safe to call on a banner that is not flying** — a hand the banner never
+// carried has nothing to swell, and the box pops its own shout for that case.
+func (b *handBanner) flashNow() {
+	if !b.flying {
+		return
+	}
+	b.flash = newTravel(0, bannerFlashTicks())
 }
 
 // showing reports whether the banner is already saying this word, which is what stops the hand
@@ -347,9 +367,11 @@ func (b handBanner) showing(name string) bool {
 // the journey starts at DUEL! — before the first event is reached — and must not be held up by a
 // dialog that stops the cursor.
 func (b *handBanner) tick() {
-	if b.flying {
-		b.flight.tick()
+	if !b.flying {
+		return
 	}
+	b.flight.tick()
+	b.flash.tick()
 }
 
 // clear takes the banner down: the round is over and the hand it named has been spent.
@@ -465,6 +487,13 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 		grown:  append([][combat.MaxWornRelics]int{}, e.HandGrown[:e.HandCardCount]...),
 	}
 
+	// **The name snaps on this beat** *(owner's call, 2026-09-15)*. It flew to the hand row at
+	// DUEL! and has been resting there through the defend phase, which now runs first — so without
+	// this the word is on screen for the whole of the shields going up and then simply is there
+	// when the sum starts. The flash is what says *now it matters*: this is the beat the hand
+	// scores and the multiplier it has been advertising becomes the thing the sum uses.
+	s.theater.banner.flashNow()
+
 	// **The banner is already saying it, so the box does not say it again** *(2026-08-19)*. The
 	// player's hand was named at DUEL! and the word has been sitting in the hand row ever since;
 	// popping a second copy of it over the top would be the same announcement twice, and the
@@ -520,12 +549,6 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 			box.items[i].from = s.handCardCenter(gs, e.Side, seat)
 			box.items[i].tint = s.handCardInk(e.Side, seat)
 
-			// **A defend card's pips leave with its figure** *(owner's call, 2026-09-02)*. A
-			// defense in a hand pays a 0 into the sum, so without this the card appears to do
-			// nothing at the one moment it is the thing being read — and what it did turns up
-			// several beats later, in the defend phase, on a card the player has stopped watching.
-			// See combat_shields.go.
-			box.items[i].shields = s.shieldsRaisedBy(e.Side, seat)
 			term++
 			continue
 		}
@@ -977,29 +1000,20 @@ func (b *handMathBox) tick() {
 	b.hold.tick()
 }
 
-// takeShields hands back the pips owed by the item now running, once.
-//
-// **Asked on the beat the item starts rather than when it ends**, so the pips and the figure leave
-// the card together: they are two things one card did, and staggering them would make the shield
-// look like a consequence of the sum rather than of the card.
-func (b *handMathBox) takeShields() (int, bool) {
-	if !b.active || b.at >= len(b.items) {
-		return 0, false
-	}
-	it := &b.items[b.at]
-	if it.shields <= 0 || it.shieldsFlown {
-		return 0, false
-	}
-	it.shieldsFlown = true
-	return it.shields, true
-}
+// **The box carried a defend card's pips until 2026-09-15** *(owner's call)*, flying them on the
+// beat that card's figure was written into the sum. That existed because the defend phase came
+// *last*: a defense paid a visible 0 into the sum and then did the thing it was for several beats
+// later, on a card the player had stopped watching. The phases flipped — see combat.Categories —
+// so the raise now happens before the sum exists, with a beat of its own, and the box carrying a
+// second copy of it would fly every pip twice. What is left is noteShieldRaise.
 
 // takeSignalSeat hands back the played seat of the item now running, once, so whatever its riders
 // parked can be thrown on the beat that card's own figure sets off.
 //
-// **It is takeShields with a different payload**, and deliberately the same shape: a card's shields
-// and a card's signals are two things one card did, and staggering either against the figure would
-// make it read as a consequence of the sum rather than of the card.
+// **Asked on the beat the item starts rather than when it ends**, so a card's signals and its
+// figure leave together: they are two things one card did, and staggering them would make the
+// grant read as a consequence of the sum rather than of the card. The pips used to ride the same
+// mechanism and no longer do — see above.
 func (b *handMathBox) takeSignalSeat() (int, bool) {
 	if !b.active || b.at >= len(b.items) {
 		return 0, false
@@ -1074,8 +1088,14 @@ func (s *CombatScene) drawPlannedHand(gs *state.GlobalState, screen *ebiten.Imag
 		t := easeOut(s.theater.banner.flight.progress())
 		at := lerpPoint(tableCenter(gs), handRowCenter(gs), t)
 		alpha := mathPreviewAlpha + (1-mathPreviewAlpha)*t
+
+		// **The flash multiplies the breath rather than replacing it**, the same way the shout's
+		// pop does, so there is no step in the middle of the only thing moving. A banner that has
+		// not been flashed is at popScale(_, a finished travel) = 1 and nothing changes.
+		scale := mathBreath(gs) * popScale(bannerFlashScale, s.theater.banner.flash)
+
 		drawHandName(gs, screen, s.theater.banner.name, s.theater.banner.mult, mathNameSize, at,
-			mathBreath(gs), float32(alpha))
+			scale, float32(alpha))
 		return
 	}
 

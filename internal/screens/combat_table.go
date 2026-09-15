@@ -37,18 +37,21 @@ const (
 	tableInset = 24
 	tableGap   = 48
 
-	// tableGroupGap is the clear air a row leaves between its attacks and its plans.
+	// tableGroupGap is the clear air a row leaves between its two buckets.
 	//
 	// **The round has two phases and the row now says so** *(2026-08-15)*. Every card in a row
-	// resolves in `combat.ResolutionOrder`, which puts a turn's attacks first and its plans
-	// second — so the boundary is already there and was invisible, and a row of five cards read
-	// as one undifferentiated sequence when it is really "this is what I swing, and then this is
-	// what I do about theirs".
+	// resolves in `combat.ResolutionOrder`, which groups a turn by category — so the boundary is
+	// already there and was invisible, and a row of five cards read as one undifferentiated
+	// sequence when it is really "this is what I do about theirs, and then this is what I swing".
+	// (The order was attacks-then-plans until 2026-09-15; see `combat.Categories`.)
 	//
-	// It is deliberately smaller than `cardGap` doubled: enough to read as a break, not enough to
-	// read as two separate rows. And it is spent out of the same half-width the cards have, so a
-	// full row overlaps by a little more rather than running past the middle.
-	tableGroupGap = 26
+	// **It went 26 → 44 on 2026-09-15** *(owner's call)*, with the phases. The two groups now
+	// *happen* separately — the defenses go up, the shields land, and only then does the hand
+	// score — so the break has more to carry than it did when the whole row resolved as one run.
+	// It is still well under `cardWidth`: enough to read as a break, not enough to read as two
+	// separate rows. And it is spent out of the same half-width the cards have, so a full row
+	// overlaps by a little more rather than running past the middle.
+	tableGroupGap = 44
 
 	// tableFireLift is how far the card currently resolving rises out of its row.
 	//
@@ -174,38 +177,49 @@ func enemySeatAt(gs *state.GlobalState, n, total, split int) image.Point {
 	return image.Pt(left+n*pitch+groupShiftFor(total, split, n), tableRowTop(gs))
 }
 
-// splitOf is where a row laid out in resolution order stops being attacks and starts being plans.
+// splitOf is where a row laid out in resolution order changes category — the boundary between its
+// two buckets, which is where `groupGapFor` opens the air.
+//
+// **It is the first card unlike the first card, not the first defense** *(2026-09-15)*. It named
+// the category until then, and named the wrong one the moment `combat.Categories` flipped: with
+// defenses leading, "the first defend" is index 0 and the gap opened in front of the whole row.
+// Asking where the category *changes* is the same answer under either order and needs no edit the
+// next time one is argued about.
 //
 // **It is found by scanning rather than counted while the row is built**, because the row is
 // built from `combat.ResolutionOrder` and that is the authority on the boundary — a screen
-// keeping its own tally would be a second answer to the same question. It returns len(cards) for
-// a row with no plans in it, which `groupGapFor` reads as "no break".
+// keeping its own tally would be a second answer to the same question. It returns the row's length
+// for a row of one category, which `groupGapFor` reads as "no break".
 func splitOf(cards []combat.Card) int {
-	for i, c := range cards {
-		if c.Category() == combat.CategoryDefend {
-			return i
-		}
-	}
-	return len(cards)
+	return splitAt(len(cards), func(i int) combat.Category { return cards[i].Category() })
 }
 
-// playedSplit and enemySplit are splitOf over the two rows' own card lists.
-func (s *CombatScene) playedSplit() int {
-	for i, r := range s.theater.resolved {
-		if r.card.Category() == combat.CategoryDefend {
+// splitAt is splitOf over anything that can name the category in seat i, which is what lets the
+// two rows share the rule while holding different things.
+func splitAt(n int, categoryOf func(int) combat.Category) int {
+	if n == 0 {
+		return 0
+	}
+	lead := categoryOf(0)
+	for i := 1; i < n; i++ {
+		if categoryOf(i) != lead {
 			return i
 		}
 	}
-	return len(s.theater.resolved)
+	return n
+}
+
+// playedSplit and enemySplit are splitAt over the two rows' own lists.
+func (s *CombatScene) playedSplit() int {
+	return splitAt(len(s.theater.resolved), func(i int) combat.Category {
+		return s.theater.resolved[i].card.Category()
+	})
 }
 
 func (s *CombatScene) enemySplit() int {
-	for i, d := range s.theater.enemyDealt {
-		if d.card.Category() == combat.CategoryDefend {
-			return i
-		}
-	}
-	return len(s.theater.enemyDealt)
+	return splitAt(len(s.theater.enemyDealt), func(i int) combat.Category {
+		return s.theater.enemyDealt[i].card.Category()
+	})
 }
 
 // lift raises a seat by tableFireLift, which is how either row says "this is the card

@@ -136,6 +136,12 @@ const (
 	// two** and is drawn as a pile now — see shop_pile.go — so there is one square here rather
 	// than two.
 	ChromeSlotStones
+
+	// ChromeSlotAnimations is the animation gallery's door, and it is **the last slot on purpose**:
+	// it is drawn only while state.DebugAnimations is on, so with the flag off the strip ends where
+	// it always did and nothing moves. A debug square taking a seat between two real controls would
+	// shift them the moment the flag was turned on.
+	ChromeSlotAnimations
 )
 
 // ChromeCornerSlot is the n'th square along the bottom line, counting **leftward from the corner**.

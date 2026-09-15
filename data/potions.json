@@ -4,7 +4,7 @@
     "Name": "Salve",
     "Family": "Potions",
     "Art": "heal-life",
-    "Draw": "a squat stoppered apothecary jar of thick green salve, a disc of waxed cloth tied down over its mouth with twine",
+    "Draw": "a heavy glass flask of dark red draught, a broad cork driven into its short neck, the liquid glowing faintly at its heart",
     "Effect": "heal",
     "Amount": 15,
     "Price": 4
@@ -14,7 +14,7 @@
     "Name": "Draught",
     "Family": "Potions",
     "Art": "dmg-buff",
-    "Draw": "a heavy glass flask of dark red draught, a broad cork driven into its short neck, the liquid glowing faintly at its heart",
+    "Draw": "a squat stoppered apothecary jar of glowing black and purple salve, a disc of waxed cloth tied down over its mouth with twine",
     "Effect": "dmg",
     "Amount": 2,
     "Price": 6
@@ -24,7 +24,7 @@
     "Name": "Tonic",
     "Family": "Potions",
     "Art": "hp-buff",
-    "Draw": "a tall slender bottle of pale gold tonic, a faceted glass stopper seated in its mouth",
+    "Draw": "a tall slender bottle of pale pink thick tonic, a faceted glass stopper seated in its mouth",
     "Effect": "life",
     "Amount": 10,
     "Price": 6

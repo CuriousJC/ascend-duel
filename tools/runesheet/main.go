@@ -95,8 +95,8 @@ func run(dir string) error {
 		Ground:     ground,
 		Style:      styleFacts(cards.EssenceStyle),
 		Count:      len(order),
-		SackSize:   session.SackSize(),
-		SackPrice:  session.SackPrice(),
+		SackSize:   goodSize(session.ContentsRunes),
+		SackPrice:  goodPrice(session.ContentsRunes),
 		MaxTargets: session.MaxRuneTargets,
 	}
 	if page.Count > 0 {
@@ -433,4 +433,17 @@ type page struct {
 	Targets    []group
 	Families   []family
 	States     []cell
+}
+
+// goodSize and goodPrice are the sealed good that holds this catalog, read off data/goods.json.
+// **Asked of the catalog rather than written down**, so a page quoting what a sack costs cannot
+// disagree with what the shop charges.
+func goodSize(c session.GoodContents) int {
+	g, _ := session.GoodHolding(c)
+	return g.Size
+}
+
+func goodPrice(c session.GoodContents) int {
+	g, _ := session.GoodHolding(c)
+	return g.Price
 }

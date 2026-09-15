@@ -52,7 +52,14 @@ const (
 type Potion struct {
 	Record string
 	Name   string
-	Text   string
+
+	// Family is the motif the record was authored beside, and Art is the face the card draws —
+	// **already resolved through data.PotionData.ArtKey**, so a record with no picture of its own
+	// carries the catalog's default rather than an empty string a screen has to know what to do
+	// with. Neither is read by anything that resolves a fight.
+	Family string
+	Art    string
+
 	Effect PotionEffect
 	Amount int
 	Price  int
@@ -131,7 +138,8 @@ func resolvePotion(rec data.PotionData) (Potion, error) {
 	return Potion{
 		Record: rec.PotionRecord,
 		Name:   rec.Name,
-		Text:   rec.Text,
+		Family: rec.Family,
+		Art:    rec.ArtKey(),
 		Effect: effect,
 		Amount: rec.Amount,
 		Price:  rec.Price,

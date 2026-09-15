@@ -18,7 +18,7 @@ func TestASalveMovesTheWoundAndNotTheFightsLastFigure(t *testing.T) {
 		t.Fatalf("a win on %d leaves %d, wanted %d", maxLife-30, got, maxLife-30)
 	}
 
-	salve, ok := PotionByKey("salve")
+	salve, ok := PotionByKey("heal-life")
 	if !ok {
 		t.Fatal("no salve in the catalog")
 	}
@@ -43,7 +43,7 @@ func TestTheThreePotionsMoveWhatTheySay(t *testing.T) {
 	const maxLife = 100
 	s.WonFight(maxLife-2, maxLife)
 
-	salve, _ := PotionByKey("salve")
+	salve, _ := PotionByKey("heal-life")
 	if !s.Drink(salve.Record) {
 		t.Fatal("could not drink a salve")
 	}
@@ -51,8 +51,8 @@ func TestTheThreePotionsMoveWhatTheySay(t *testing.T) {
 		t.Errorf("a %d heal on a wound of 2 left %d; a heal cannot overshoot", salve.Amount, s.Hurt())
 	}
 
-	draught, _ := PotionByKey("draught")
-	tonic, _ := PotionByKey("tonic")
+	draught, _ := PotionByKey("dmg-buff")
+	tonic, _ := PotionByKey("hp-buff")
 	if !s.Drink(draught.Record) || !s.Drink(tonic.Record) {
 		t.Fatal("could not drink the two boosts")
 	}

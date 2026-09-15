@@ -1,21 +1,5 @@
 # Other-card art prompt
 
-**The catch-all for every `cards.EssenceStyle` good that has no prompt of its own** — the potions
-in `data/potions.json`, the placeholder brand, the shop's two sealed goods, and whatever is added
-next. Solid objects on the same shelf, in the same style.
-
-**Anything here earns its own file once it has something to say that is only true of it** — the
-stones did, in `stone_art_prompt.MD`, because their material is a rule rather than a record's own
-idea.
-
-**The style block below is the relic and essence one, word for word.** It is what makes the
-catalogs one game rather than several commissions, and it is pasted verbatim rather than
-paraphrased. A record that wants it changed is a design decision that moves it for every card in
-every style. The composition block is the essence one, also verbatim, because these cards print
-their sentence on the same scrim across the same lower half.
-
----
-
 High-resolution digital illustration of a single object. No text anywhere in the image — no title, no label, no caption, no signature, no
 watermark. The object and its background, nothing else.
 
@@ -95,18 +79,27 @@ does mean the half carrying the recognition should be the upper one.
 The block pasted below this prompt is one record, in JSON, from whichever of these catalogs it
 came from:
 
-| Catalog | Key field |
-|---|---|
+| Catalog             | Key field      |
+| ------------------- | -------------- |
 | `data/potions.json` | `PotionRecord` |
+| `data/goods.json`   | `GoodRecord`   |
 
-A sealed good and the placeholder brand have no record of their own — they are built in
-`internal/screens/card_art.go` and `internal/screens/shop_potions.go` rather than authored — so
-the subject is written out by hand instead of pasted, and the name is the one the shop draws on
-the card.
+**A sealed good is the vessel and never its contents.** The bag, the vial and the sack each hold
+four of a catalog the player cannot read before paying, so the picture is a closed container — a
+cinched sack, a stoppered vial, a tied pouch — with what is inside suggested by the shape pressing
+against it and never drawn loose beside it. A picture that showed the four would be saying the one
+thing the mechanic exists not to say.
+
+The placeholder brand still has no record of its own — it is built in
+`internal/screens/shop_potions.go` rather than authored — so its subject is written out by hand
+instead of pasted, and the name is the one the shop draws on the card.
 
 **Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Effect`,
-`Amount`, `Price`, `Family` and the rest — is context for what the card does and is
+`Amount`, `Price`, `Size`, `Contains`, `Family` and the rest — is context for what the card does and is
 never to be rendered: no title, no caption, no rules text, no numbers anywhere in the image. If
 `Draw` is empty, stop and say so rather than inventing a subject.
 
-Name the image after the record's own key and give me a link I can click to download it.
+Name the image after the record's own key and give me a link I can click to download it. A batch
+lands in `.scratch/to-process-other-art/` and is filed by `go run ./tools/relicart -kind other`,
+which reduces it to the card's own size and writes `Art` back onto the record — potions and sealed
+goods together, since the one thing they share is this prompt.

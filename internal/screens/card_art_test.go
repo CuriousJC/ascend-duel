@@ -334,6 +334,33 @@ func TestEveryRelicDrawsSomething(t *testing.T) {
 	}
 }
 
+func TestEveryPotionDrawsSomething(t *testing.T) {
+	// The potion half of TestEveryRelicDrawsSomething. `PotionData.ArtKey` closes the empty case —
+	// a bottle nobody has painted draws the catalog default — and this closes the misspelled one,
+	// which is otherwise a hole in a card only reached by playing to a shop.
+	for _, rec := range data.LoadPotions() {
+		art := rec.ArtKey()
+		if _, ok := assets.LoadImageData()[art]; !ok {
+			t.Errorf("%s draws %q, which is not an embedded image", rec.PotionRecord, art)
+		}
+	}
+}
+
+func TestEverySealedGoodDrawsSomething(t *testing.T) {
+	// The sealed goods differ from every other catalog in the empty case: a good with no Art of its
+	// own borrows the picture of whatever is inside it rather than falling back to a default of its
+	// own — see goodArt, which this walks. What is checked is that every good draws *something*,
+	// named or borrowed, so a misspelled key is a failure here rather than a hole on the shelf.
+	for _, good := range session.Goods() {
+		if good.Art == "" {
+			continue
+		}
+		if _, ok := assets.LoadImageData()[good.Art]; !ok {
+			t.Errorf("%s draws %q, which is not an embedded image", good.Record, good.Art)
+		}
+	}
+}
+
 func TestEveryDrawnStoneDrawsSomething(t *testing.T) {
 	// The stone half of TestEveryRelicDrawsSomething, and it differs in the empty case: there is no
 	// default-stone face, so an empty Art is a stone falling back to the generated boulder rather

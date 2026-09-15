@@ -110,10 +110,12 @@ func loadStones() (map[string]Stone, []string) {
 		}
 	}
 
-	if len(keys) < bagSize {
-		// The bag offers four, so a catalog of three cannot fill it. Caught here rather than
-		// producing a shelf with a gap in it.
-		panic(fmt.Sprintf("stones.json: %d stones, and a bag of rocks needs %d", len(keys), bagSize))
+	// The bag offers four, so a catalog of three cannot fill it. Caught here rather than producing
+	// a shelf with a gap in it. **The figure is the bag's own record** — see data/goods.json — so
+	// authoring a bigger bag moves what this catalog has to cover.
+	if bag, ok := GoodHolding(ContentsStones); ok && len(keys) < bag.Size {
+		panic(fmt.Sprintf("stones.json: %d stones, and %s needs %d",
+			len(keys), bag.Name, bag.Size))
 	}
 	return out, keys
 }

@@ -162,6 +162,8 @@ go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck bl
 go run ./tools/relicart      # files generated relic art: reduce, commit, set "Art" on the record
 go run ./tools/relicart -kind essence       # the same, for data/essences.json and assets/essence
 go run ./tools/relicart -kind rune   # the same, for data/runes.json and assets/rune
+go run ./tools/relicart -kind stone  # the same, for data/stones.json and assets/stone
+go run ./tools/relicart -kind other  # the potions and the sealed goods together, into assets/other
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
@@ -1111,8 +1113,8 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   essence card prints across the lower half of its picture. `docs/art/rune_art_prompt.MD` is not a
   prompt but the closed list of rune body plans, pasted into the essence one.
   **`docs/art/stone_art_prompt.MD` and `docs/art/other_card_art_prompt.MD` cover the rest of
-  `EssenceStyle`** — the stones, and then the potions, the placeholder brand and the shop's two
-  sealed goods. Both share the style and composition blocks verbatim, and both say the object is
+  `EssenceStyle`** — the stones, and then the potions, the three sealed goods and the placeholder
+  brand. Both share the style and composition blocks verbatim, and both say the object is
   **whole** where the essence prompt says it is coming apart. **A stone's material is a rule
   rather than a record's own idea**, which is what earns it a file: the concept axis is silica,
   the form axis is plain rock, the element axis is gem, and each ladder ascends in finish. A new
@@ -1140,9 +1142,9 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   plus a note that the half carrying the recognition should be the upper one since the sentence
   lands on the lower: a placement hint, not a band to leave empty.
 
-- **Four catalogs carry `Family` and `Draw`, and nothing that plays the game reads either**
-  *(owner's call, 2026-09-12)*. `relics.json`, `essences.json` and `runes.json` carry `Art`
-  beside them; `enemies.json` and `bosses.json` carry the two alone, with every `Draw` reading
+- **Six catalogs carry `Family` and `Draw`, and nothing that plays the game reads either**
+  *(owner's call, 2026-09-12, the potions and the goods 2026-09-14)*. `relics.json`,
+  `essences.json`, `runes.json`, `potions.json` and `goods.json` carry `Art` beside them; `enemies.json` and `bosses.json` carry the two alone, with every `Draw` reading
   `TO BE DETERMINED` — their portraits are licensed creature art rather than generated pictures,
   so the field is a seat for briefs to be written into a few at a time rather than a backlog
   anybody is working. **`Family` is the motif a record was authored beside** and is what its

@@ -21,6 +21,8 @@ is what lets every layer above read it, and it **must never import upward**.
 | `essences.json` | `LoadEssences` | the deck alterations offered between fights |
 | `runes.json` | `LoadRunes` | the deck alterations spent *during* a fight |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
+| `potions.json` | `LoadPotions` | the three bottles the shop sells: which of the duelist's figures each moves, by how much, and what it costs |
+| `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 
@@ -246,9 +248,11 @@ key is what those two already have.
   the backlog each sheet marks in pink. **Every enemy and boss `Draw` reads `TO BE DETERMINED`**:
   those portraits are licensed art rather than generated pictures, so the field is a seat rather
   than a backlog.
-- **`go run ./tools/relicart -kind relic|essence|rune`** files a generated picture into any of the
-  three: reduce to the card's size, commit under the family's asset directory, write `Art` on the
-  record.
+- **`go run ./tools/relicart -kind relic|essence|rune|stone|other`** files a generated picture into
+  any of them: reduce to the card's size, commit under the family's asset directory, write `Art` on
+  the record. **`other` is the one kind spanning two files** — the potions and the sealed goods
+  share a prompt and an inbox, and the tool writes each record's `Art` back into whichever of
+  `data/potions.json` and `data/goods.json` holds it.
 
 ### Stones
 
@@ -273,6 +277,35 @@ different amounts, and not before.
 so `+11` written into the file goes stale the first time `hands.json` is tuned — silently, since
 nothing reads a card's text. The record carries the sentence and `screens.stoneSpec` carries the
 arithmetic.
+
+### Potions and sealed goods
+
+**Two catalogs of shelf cards that are not relics**, both parsed and validated in
+`internal/session` for the reason the essences and the stones are: they are bought by a *run*, and
+the rules have never heard of a shop.
+
+- **`potions.json` is an `Effect`, an `Amount` and a `Price`.** The effect vocabulary — `heal`,
+  `dmg`, `life` — is closed and lives in Go. See `internal/session/potion.go`.
+- **`goods.json` is what the shop sells sight-unseen**: a `Contains` naming which catalog is
+  inside, a `Size` saying how many are drawn, and a `Price`. **`Contains` is the closed vocabulary**
+  — `stones`, `essences`, `runes` — and it is read twice over: it decides which stream the contents
+  are dealt from and what happens when one is chosen, *and* it is the noun the card's own face
+  writes, so a face and a dialog cannot name different catalogs.
+- **One good per catalog**, refused at load. The contents are dealt from a stream salted per
+  catalog, so a second good holding stones would draw the identical four rocks.
+- **`Title` and `Hint` are the dialog's two lines, and blank is meaningful**: a blank Title becomes
+  the good's Name and a blank Hint becomes "take one of the four, the rest are gone", with the
+  figure the record's own `Size`. The vial authors both, because its dialog heads itself with an
+  instruction. **The count and the price are never authored** — the face, the dialog and the
+  tooltip all compute them from `Size` and `Price`, so nothing can quote a price the shop does not
+  charge.
+- **They carry `Family`, `Art` and `Draw`** like the three catalogs above — see the shared section.
+  A good with no `Art` of its own is the one departure from every other catalog's fallback: it
+  borrows the picture of *whatever is inside it*, which is a design rather than a placeholder.
+  See `screens.goodArt`.
+- **The stone catalog reads the bag's `Size`**, so authoring a bigger bag is what makes
+  `stones.json` have to cover more rungs — `internal/session/stone.go` panics on a catalog too
+  short to fill it.
 
 ### Achievements
 

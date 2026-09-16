@@ -239,13 +239,19 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
   the middle changes what every existing value means, not just the ones after it. Three marks today:
   `MarkShattered`, `MarkHighlit` and `MarkPicked` — the last being the deck panel's filter column
   pointing at the cards its figures counted, in the relic pink rather than a sixth hue.
-- **The asymmetry is the mechanic.** Only the player raises shields and only creatures raise
-  percentage guards, because every creature is a solo attacker (`SoloAttacks`, one blow per card)
-  while the player forms hands and lands one figure a turn. A count facing a hand would delete a
-  whole turn, which is what `maxDefendPct` exists to forbid. `combat.blockedByShield` carries the
-  note; the rules do not enforce it.
-- **`VerbBank` and `VerbDraw` are both gone** *(owner's call)*. The verb vocabulary is
-  attack / defend / shield. The creature bank cards were **deleted** from `enemies.json` rather
+- **The asymmetry is the mechanic.** Only the player raises shields and creatures raise nothing at
+  all, because every creature is a solo attacker (`SoloAttacks`, one blow per card) while the
+  player forms hands and lands one figure a turn. A count facing a hand would delete a whole turn.
+  `combat.blockedByShield` carries the note; the rules do not enforce it.
+- **The percentage guard is gone** *(owner's call, 2026-09-16)*. `VerbDefend`, `maxDefendPct`,
+  `reductionFor`, `applyDefends`, `Duelist.Defends` and `KindNegated` were all deleted, along with
+  the **209 guard cards** in `enemies.json` and `bosses.json` — which were removed rather than
+  converted, exactly as the bank cards were. **Creature decks are smaller and pure attack**: the
+  roster averages 8.0 cards where it averaged 9.6 and the bosses 12.0 where they averaged 14.0, so
+  the same attacks come round more often. That is a balance change and nothing simulates a duel, so
+  it is the kind that has to be looked at rather than tested.
+- **`VerbBank` and `VerbDraw` are both gone** *(owner's call)*, and `VerbDefend` went on
+  2026-09-16. The verb vocabulary is **attack / shield**. The creature bank cards were **deleted** from `enemies.json` rather
   than converted, so those decks are pure attack now and are modestly stronger for it;
   `GatheredAP`, `BonusAP`, `KindGathered` and the whole AP-flight animation went with them, and
   **`Duelist.ActionPoints()` is the stat and nothing else**.

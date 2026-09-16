@@ -1862,5 +1862,41 @@
     "Actions": 15,
     "Screen": "combat",
     "Seed": "0000HX"
+  },
+  {
+    "ScenarioRecord": "twenty-five-in-hand",
+    "Note": "Twenty-five cards in the hand at once, which is three times what a fight ever deals and is here to answer one question: what does the row look like when handPitch runs out of room. There is no floor on the pitch - see combat_actionbox.go, where the deliberate choice is that a hand which has to be scrolled or truncated is worse than one which has to be hovered - so the row lands exactly on the band's width whatever is in it and the cards overlap until they are stripes of color. That is what makes the five elements the thing to look at: the border and the left column are what survive compression, and the effect text and the form mark are the first things to go. Five cards in each color and all four forms across them, with costs from 0 to 3, so the tick column varies down the row as well as across it. Note the hand refills to eight the moment a turn is played - handTarget reads handSize and nothing here widens it - so the twenty-five is the opening hand and one DUEL! ends it. Against a dummy at 15 AP so the row can be hovered, dragged and re-sorted for as long as it is interesting; press E and C to see the compressed row reorganise.",
+    "Relics": [],
+    "Hand": [
+      { "Card": "Poke", "Element": "fire" },
+      { "Card": "Nick", "Element": "fire" },
+      { "Card": "Tap", "Element": "fire" },
+      { "Card": "Brace", "Element": "fire" },
+      { "Card": "Thrust", "Element": "fire" },
+      { "Card": "Jab", "Element": "ice" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Thump", "Element": "ice" },
+      { "Card": "Flinch", "Element": "ice" },
+      { "Card": "Slice", "Element": "ice" },
+      { "Card": "Thrust", "Element": "lightning" },
+      { "Card": "Slice", "Element": "lightning" },
+      { "Card": "Bash", "Element": "lightning" },
+      { "Card": "Block", "Element": "lightning" },
+      { "Card": "Cleave", "Element": "lightning" },
+      { "Card": "Skewer", "Element": "earth" },
+      { "Card": "Cleave", "Element": "earth" },
+      { "Card": "Smash", "Element": "earth" },
+      { "Card": "Guard", "Element": "earth" },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Impale", "Element": "arcane" },
+      { "Card": "Sever", "Element": "arcane" },
+      { "Card": "Pulverize", "Element": "arcane" },
+      { "Card": "Brace", "Element": "arcane" },
+      { "Card": "Cut", "Element": "arcane" }
+    ],
+    "Enemy": "GiantBat",
+    "Dummy": true,
+    "Actions": 15,
+    "Screen": "combat"
   }
 ]

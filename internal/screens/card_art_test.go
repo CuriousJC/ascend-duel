@@ -114,23 +114,52 @@ func TestEveryFormHasItsOwnMark(t *testing.T) {
 	}
 }
 
-// plainText is a card's face text, which is now the only face text there is: **a face says what the
-// card does and no relic reaches it** *(owner's call, 2026-08-26)*. The pairing is still passed around
-// for the cost.
+// plainText is a card's face text. **Empty for almost every card as of 2026-09-16** — the form, the
+// element, the cost and the multiplier are all pictures now, and the only concepts still writing a
+// line are the creatures' percentage guards, which have no badge to draw. No relic reaches it
+// either *(owner's call, 2026-08-26)*; the pairing is still passed around for the cost.
 func plainText(a combat.ConceptID) string {
 	return cardEffect(combat.Plain(a))
 }
 
-func TestEveryConceptHasEffectText(t *testing.T) {
-	// A card with no text draws a name, a cost, a corner mark and nothing that says what it does.
+func TestEveryConceptSaysWhatItDoes(t *testing.T) {
+	// **A card has to say what it does somewhere on its face**, and as of 2026-09-16 that is
+	// usually a picture rather than a line of type: the multiplier is a drawn badge and a defense
+	// stacks one shield per shield it raises, so the sentence that used to restate both was
+	// dropped — see cardEffect.
 	//
-	// **It walks the whole registry, not the player's twelve** *(2026-08-16)*. Every enemy carries
-	// its own cards and the table lays an enemy's queue out as cards, so a verb the generator does
-	// not cover is four hundred blank faces rather than one.
+	// **This test replaced TestEveryConceptHasEffectText rather than being deleted with it.** The
+	// invariant it was protecting is still the one that matters — a face that says nothing is four
+	// hundred blank cards — and only the form the answer takes has changed. A concept that is
+	// neither an attack with a multiplier, nor a defense raising shields, nor a guard with a line
+	// of text is a card the player cannot read.
+	//
+	// **It walks the whole registry, not the player's nineteen** *(2026-08-16)*. Every enemy
+	// carries its own cards and the table lays an enemy's queue out as cards, so a verb the
+	// generator does not cover is four hundred blank faces rather than one.
 	for _, a := range combat.AllConcepts() {
-		if plainText(a) == "" {
-			t.Errorf("%v has no effect text — its card would say nothing about what it does",
+		card := combat.Plain(a)
+		switch {
+		case cardBadge(card) != "":
+		case cardShields(card) > 0:
+		case plainText(a) != "":
+		default:
+			t.Errorf("%v says nothing on its face — no damage badge, no shields and no text",
 				combat.ConceptOf(a).Key)
+		}
+	}
+}
+
+func TestAnAttacksMultiplierIsOnItsFace(t *testing.T) {
+	// The badge is the only place an attack's multiplier is written now, so a verb that stopped
+	// producing one would take the figure off the card silently.
+	for _, a := range combat.AllConcepts() {
+		card := combat.Plain(a)
+		if combat.ConceptOf(a).Verb != combat.VerbAttack {
+			continue
+		}
+		if cardBadge(card) == "" || cardBadgePct(card) == 0 {
+			t.Errorf("%v is an attack with no multiplier on its badge", combat.ConceptOf(a).Key)
 		}
 	}
 }

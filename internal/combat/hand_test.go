@@ -641,7 +641,7 @@ func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 	a, b := wearing(duelist(10, 4, 20000), Ice), duelist(10, 4, 20000)
 	aPlan := []Card{Of(Bash, Ice), Of(Bash, Ice), Of(Bash, Ice)}
-	bPlan := PlainCards(Block, Jab, Bash, testGuard)
+	bPlan := PlainCards(Block, Jab, Bash, Guard)
 
 	events, _, _ := resolve(a, b, aPlan, bPlan, 1)
 	order := ResolutionOrder(aPlan, bPlan)
@@ -668,13 +668,12 @@ func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 }
 
 // **A blow of nothing may not spend anything of the target's** *(owner's call, 2026-09-02)*. A
-// shield eats one attack whole and defenses are cleared by the turn they answer, so a turn of
-// shields that counted as an attack would strip an opponent's guard for free — which is the whole
-// reason the zero blow is counted and not thrown.
+// shield eats one attack whole and shields are cleared by the turn they answer, so a turn of
+// shields that counted as an attack would strip an opponent's shields for free — which is the
+// whole reason the zero blow is counted and not thrown.
 func TestAZeroBlowSpendsNothingOfTheTargets(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 	b.Shields = 2
-	b = b.raiseDefend(Plain(Guard))
 
 	events, _, after := resolve(a, b, PlainCards(Block, Block, Block), nil, 1)
 

@@ -66,16 +66,16 @@ haft or a trailing end, but it sits inside the canvas rather than bleeding off i
 **Nothing is reserved and nothing is kept clear.** There is no title, no name band, no caption
 strip, no counter, no disc, no badge, no coin, no gem socket, no plaque, no banner and no slot of
 any kind for text or a number. Do not leave a corner or an edge empty for one, and do not draw
-one. Whatever the card puts on top of this picture, it puts there itself at draw time, and the
-picture is meant to carry on underneath.
+one. Anything placed on top of this picture is placed there afterwards, and the picture is meant
+to carry on underneath.
 
-The card prints its sentence across the lower half of the picture, on a dark scrim it draws
-itself. That is not a band to leave empty — draw the object through it exactly as above — but it
-does mean the half carrying the recognition should be the upper one.
+A sentence is printed across the lower half of the picture afterwards, on a dark scrim. That is
+not a band to leave empty — draw the object through it exactly as above — but it does mean the
+half carrying the recognition should be the upper one.
 
 ## The subject
 
-The block pasted below this prompt is one record from `data/essences.json`, in JSON.
+The block pasted below this prompt is one record, in JSON.
 
 **Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Target`,
 `Family` and the rest — is context for what the essence does and is never to be rendered: no

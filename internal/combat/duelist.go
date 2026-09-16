@@ -64,27 +64,6 @@ type Duelist struct {
 	// The copy is rebuilt on the next Equip, so it can only ever drift inside one fight.
 	Vitae int
 
-	// Defends is the percentage guards this duelist has raised and not yet spent, and DefendCount
-	// is how many of the array is in use.
-	//
-	// **No player card reaches it any more** *(2026-08-31)* — the player's deck raises shields
-	// instead, and this is the ninety creature and boss cards that blunt a blow by half. It stands
-	// until the start of its owner's next turn — long enough to cover the opponent's whole turn
-	// once, whichever side raised it. See ClearDefenses. It is still a set rather than a flag
-	// because two Defends in a round is a legal turn and has to mean something.
-	//
-	// **Every raised card answers the opponent's one blow, and they compose multiplicatively**
-	// *(2026-08-14)*. A turn resolves a single attack, so "which card meets which blow" is a
-	// question with no content: a second Defend takes half of what is left after the first has
-	// taken half, and the order they were raised in changes nothing. `reductionFor` is what each is
-	// worth, and it reads the card's own declared Amount.
-	//
-	// **A fixed array, not a slice**, because TestRoundIsDeterministic compares two resolved
-	// duelists with == and nothing on this struct may stop being comparable. It is a set rather
-	// than a queue now; the array is simply how a comparable set of at most five things is held.
-	Defends     [maxPendingDefends]PendingDefend
-	DefendCount int
-
 	// Shields is how many incoming attacks this duelist can still eat outright, and it is what the
 	// player's defend cards buy — Brace for one and Block for two. Guard is a third rung the file
 	// still declares at zero copies, so the rules can resolve a 3-shield card that nothing deals.
@@ -103,8 +82,8 @@ type Duelist struct {
 	// question the card asks is how hard *this* turn hits and never how long you can stockpile.
 	//
 	// **Nothing in the game gives one to an enemy**, and the asymmetry is deliberate rather than
-	// unfinished — see VerbShield. A count meeting a hand-forming attacker deletes that duelist's
-	// whole turn, which is the outcome maxDefendPct exists to forbid.
+	// unfinished — see VerbShield. A count meeting a hand-forming attacker would delete that
+	// duelist's whole turn, since a hand lands one figure however many cards went into it.
 	Shields int
 
 	// Statuses is what has been done to this duelist, **indexed by status** — see status.go for
@@ -219,65 +198,18 @@ type Duelist struct {
 // Alive reports whether this duelist can still fight.
 func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 
-// PendingDefend is one raised guard card waiting for the opponent's blow.
+// ClearDefenses drops everything a turn put up, which is the shields.
 //
-// **It is just the card.** It carried a charge count until 2026-08-14, when a turn stopped
-// resolving more than one attack — counting incoming blows is meaningless when there is only
-// ever one.
-type PendingDefend struct {
-	// Card is the whole card rather than its concept, **because what a defense is worth is a
-	// property of the card** *(2026-08-17)*: an essence can scale one Defend without touching the
-	// others. Storing the ID lost that the moment it was raised.
-	Card Card
-}
-
-// maxPendingDefends bounds the defend set. A turn is capped at MaxActions cards and every one of
-// them could be a defense, so this is everything a legal turn can raise.
-const maxPendingDefends = baseMaxActions
-
-// reductionFor is what one raised card takes off the blow: its own declared Amount, as a
-// percentage.
-//
-// **Nothing reduces a blow to zero, and that is a rule rather than a number.** A turn lands one
-// figure however many cards went into it, so total negation would be a whole opposing turn deleted
-// by a single card — a dominant strategy rather than a decision. Something always lands, so the
-// opponent is always still playing. `RegisterConcept` refuses a card declaring 100 or more, and
-// `TestNoDefenseStopsABlowOutright` holds the resolver to it.
-func reductionFor(card Card) int {
-	if card.Spec().Verb != VerbDefend {
-		return 0
-	}
-	return card.Amount()
-}
-
-// raiseDefend adds a defend card to the set.
-//
-// **An overflow is dropped rather than growing the set or panicking.** MaxActions caps a legal
-// turn at five actions, so the array holds everything a legal turn can raise; ResolveRound
-// deliberately trusts what it is handed so a balance sim can probe outside the rules, and a sim
-// that queues six defends should get five of them rather than a crash.
-func (d Duelist) raiseDefend(card Card) Duelist {
-	if d.DefendCount >= len(d.Defends) {
-		return d
-	}
-	d.Defends[d.DefendCount] = PendingDefend{Card: card}
-	d.DefendCount++
-	return d
-}
-
-// ClearDefenses drops everything a turn put up: the percentage guards and the shields both.
-//
-// **Both, from one function, on purpose** *(2026-08-31)*. It is the answer to "this duelist is no
-// longer defending", and two mechanics answering it separately is how one of them survives a fight
-// it should not have. Exported because the combat screen resets a duelist between fights and has
-// to be able to clear this without knowing what is in it — a screen that listed the fields by hand
-// is how a raised defense once survived into the next duel.
+// **It stays a function and stays exported even though it now clears one field** *(2026-09-16)*.
+// It answers "this duelist is no longer defending", and that is a question the combat screen asks
+// between fights without wanting to know what defending consists of — a screen that cleared the
+// field by hand is how a raised defense once survived into the next duel. It cleared two mechanics
+// until the percentage guard was deleted, and the argument for one door over two outlives the
+// second mechanic.
 //
 // **An unspent shield is dropped rather than kept.** It expires with the turn it was raised
 // against; see Duelist.Shields.
 func ClearDefenses(d Duelist) Duelist {
-	d.Defends = [maxPendingDefends]PendingDefend{}
-	d.DefendCount = 0
 	d.Shields = 0
 	return d
 }

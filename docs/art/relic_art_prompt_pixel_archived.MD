@@ -1,21 +1,33 @@
 # Relic art prompt — archived pixel version
 
 **Not the live prompt. Do not paste this one unless the owner has said to.**
-`relic_art_prompt.MD` beside it is what a new relic is drawn from, and it asks for the same
-smooth render every other catalog now uses.
+`relic_art_prompt.MD` beside it is what a new relic is drawn from, and it asks for the same smooth
+render every other catalog now uses.
 
-**This is here so the choice stays open.** The 137 pictures in `assets/relic/` were generated
+**This is here so the choice stays open.** The relic pictures already committed were generated
 from a prompt that asked for chunky blocks and sixteen flat colors, and they still read that way
 against the essences, runes and stones, which were drawn smooth. Keeping a working pixel prompt
-means switching direction is a regeneration rather than an archaeology dig.
+means switching direction is a regeneration rather than an archaeology dig. It is today's relic
+prompt with the render language swapped, and it can be pasted as it stands.
 
-**It is today's relic prompt with the render language swapped, not the file that drew the 137.**
-That file was `card_art_prompt.MD` — generic across every card, and it reserved a margin on all
-four sides plus a box in the bottom-right corner. Reserving was reversed on 2026-09-13 because
-the card draws its counter on top of the picture and a prompt that describes the corner produces
-either a hole or a second drawn disc under the real one. So the composition and subject blocks
-below are the live ones, and this file could be pasted as it stands. The original is
-`git show c480557:docs/art/card_art_prompt.MD` if the reservations are ever wanted back.
+## What this actually produced
+
+Measured across the 137 pictures in `assets/relic/`, against the three catalogs drawn from the
+smooth prompt. **The generator did not obey the sixteen-color clause** — a committed relic holds
+thousands of colors, and the 1060x1484 source tens of thousands — but it obeyed the *direction*,
+which is what separates the catalogs by eye.
+
+| | committed colors, median | flat-pixel share | block-approximability at 5px |
+|---|---|---|---|
+| relic — this prompt | 9,225 | 45.3% | 5.75, the blockiest |
+| rune — smooth prompt | 8,672 | 43.4% | 6.50 |
+| essence — smooth prompt | 13,114 | 49.3% | 7.32 |
+| stone — smooth prompt | 17,940 | 38.8% | 6.75 |
+
+So a pixel prompt here buys a picture that reads blocky rather than one that is literally
+quantized. **`go run ./tools/relicart -blocky` is the other half** if a true grid is wanted: it
+quantizes to 40 blocks across on the way down to 200x280 and has never been run on a committed
+picture.
 
 ---
 
@@ -70,12 +82,12 @@ haft or a trailing end, but it sits inside the canvas rather than bleeding off i
 **Nothing is reserved and nothing is kept clear.** There is no title, no name band, no caption
 strip, no counter, no disc, no badge, no coin, no gem socket, no plaque, no banner and no slot of
 any kind for text or a number. Do not leave a corner or an edge empty for one, and do not draw
-one. Whatever the card puts on top of this picture, it puts there itself at draw time, and the
-picture is meant to carry on underneath.
+one. Anything placed on top of this picture is placed there afterwards, and the picture is meant
+to carry on underneath.
 
 ## The subject
 
-The block pasted below this prompt is one record from `data/relics.json`, in JSON.
+The block pasted below this prompt is one record, in JSON.
 
 **Read `Draw` and nothing else as the subject.** A relic is an object and can be described from
 nothing, so `Draw` is the whole brief. Every other field — `Name`, `Text`, `Rules`, `Rarity`,
@@ -85,22 +97,3 @@ rather than inventing a subject.
 
 Name the image after the record's own key — the `RelicRecord` value — and give me a link I can
 click to download it.
-
-## What this actually produced
-
-Measured across the 137 pictures in `assets/relic/`, against the three catalogs drawn from the
-smooth prompt. **The generator did not obey the sixteen-color clause** — a committed relic holds
-thousands of colors, and the 1060x1484 source tens of thousands — but it obeyed the *direction*,
-which is what separates the catalogs by eye.
-
-| | committed colors, median | flat-pixel share | block-approximability at 5px |
-|---|---|---|---|
-| relic — this prompt | 9,225 | 45.3% | 5.75, the blockiest |
-| rune — smooth prompt | 8,672 | 43.4% | 6.50 |
-| essence — smooth prompt | 13,114 | 49.3% | 7.32 |
-| stone — smooth prompt | 17,940 | 38.8% | 6.75 |
-
-So a pixel prompt here buys a picture that reads blocky rather than one that is literally
-quantized. **`go run ./tools/relicart -blocky` is the other half** if a true grid is wanted: it
-quantizes to 40 blocks across on the way down to 200x280 and has never been run on a committed
-picture.

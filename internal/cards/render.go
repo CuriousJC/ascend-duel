@@ -87,6 +87,11 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		drawArtBleed(img, s, st)
 		drawScrims(img, s, st)
 		ink = onScrim(s)
+	} else if st.ArtUnder && s.Art != nil {
+		// **The same cover-and-clip, and deliberately no scrim and no ink switch.** See
+		// Style.ArtUnder: a playing card carries five pieces of near-black type, so the art is
+		// what has to stay light rather than the type what has to be given a ground.
+		drawArtBleed(img, s, st)
 	}
 
 	if st.ShowName {
@@ -106,7 +111,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if err := drawStats(img, s, st, f, ink); err != nil {
 		return nil, err
 	}
-	if s.Art != nil && !st.ArtBleed {
+	if s.Art != nil && !st.ArtBleed && !st.ArtUnder {
 		drawArt(img, s, st)
 	}
 	if st.ShowForm {
@@ -136,6 +141,9 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if err := drawCounter(img, s, st, f, border); err != nil {
 		return nil, err
 	}
+	if err := drawBadge(img, s, st, f); err != nil {
+		return nil, err
+	}
 
 	// **Both go on last, over everything including the border, and the order is fixed.** An upgrade
 	// is what the card permanently is, so it belongs in the face; a mark is what has happened to it,
@@ -146,6 +154,200 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	drawUpgrade(img, s, st)
 	drawMark(img, s.Mark, s.Name, st.Width, st.Height, st.CornerRadius)
 	return img, nil
+}
+
+// drawBadge is the MOCKUP badge in the bottom-left corner: a damage figure on a drawn badge for
+// an attack, or a stack of shields for a defense.
+//
+// **It is a mockup and it reverses a decision taken twice.** The 64-pixel generated sword went on
+// 2026-08-14 because it said what the corner mark already says, and the bare figure that replaced
+// it went on 2026-08-26 because the effect text states what the card deals — "Deal 2x DMG" and a
+// "2" beside it are the same fact printed twice. What this is for is seeing whether a figure reads
+// faster than a sentence when the row is compressed, which is the one case the text argument does
+// not cover: at twenty-five cards in hand the text is not visible at all and the left column is.
+//
+// **The two halves say their number differently, on purpose** *(owner's call, 2026-09-16)*. An
+// attack's multiplier runs 1/4 to 4 and has a fraction in it, so it is printed; a defense raises
+// one, two or three shields, which is few enough to *see* rather than read, so it is stacked. The
+// stack is also what the pip row under the duelist card already does, so the card and the fighter
+// say one thing one way.
+//
+// **It stands in the text band, which is what it costs.** TextColumnLeft is 33 and the badge runs
+// to GlyphInset+BadgeSize — 45 on Hand — so it overlaps the text column by twelve pixels, and the
+// band runs to 268 where the badge starts at 238. A stack of three climbs further, finishing at
+// 194 against a text band whose lower line ends at 174. Keeping this means either pulling
+// TextBandBottom up or narrowing the column; both are layout decisions rather than a nudge, which
+// is why the mockup does neither.
+func drawBadge(dst *image.RGBA, s Spec, st Style, f *Faces) error {
+	if st.BadgeSize <= 0 {
+		return nil
+	}
+	if s.Shields > 0 {
+		drawShieldStack(dst, s, st)
+		return nil
+	}
+	if s.Badge == "" {
+		return nil
+	}
+
+	box := image.Rect(st.GlyphInset, st.BadgeTop,
+		st.GlyphInset+st.BadgeSize, st.BadgeTop+st.BadgeSize)
+
+	// **The numeral is part of the drawing for every value somebody drew**, in the card's own
+	// element and one shape across the whole catalog — see DefaultBadgeShape and BadgeValues. Type
+	// and art do not reduce the same way, and the badge is drawn at 32 and at 16.
+	if key := BadgeArtKey(DefaultBadgeShape, s.BadgePct, s.Element); key != "" {
+		if glyph := systems.ArtMark(key, st.BadgeSize, st.BadgeSize); glyph != nil {
+			placeInk(dst, glyph, box, st.GlyphScale, st)
+			return nil
+		}
+	}
+
+	// **A value nobody drew gets the blank badge and printed type**, which is what the whole
+	// mechanic looked like before the numerals arrived. It is reachable: a boss deck carries 60,
+	// 120 and 250, and the `add-dmg` essence scales a card to 150% of whatever it was.
+	if glyph := systems.ArtMark(badgeFallbackArtKey(DefaultBadgeShape, s.Element), st.BadgeSize, st.BadgeSize); glyph != nil {
+		placeInk(dst, glyph, box, st.GlyphScale, st)
+	}
+
+	width, err := TextWidth(f, st.BadgeTextSize, s.Badge)
+	if err != nil {
+		return err
+	}
+	_, lineHeight, err := f.Measure(st.BadgeTextSize, s.Badge)
+	if err != nil {
+		return err
+	}
+
+	cx, cy := box.Min.X+st.BadgeSize/2, box.Min.Y+st.BadgeSize/2
+
+	// **Derived from what the figure actually lands on, not named.** The badge is a painting with
+	// its own contour and shading, so a fixed near-black was black on black on half the colors.
+	// Sampling the center and inverting through counterInk is the relic badge's own rule, and it
+	// survives the art being redrawn — which a second named color would not.
+	ink := counterInk(sampleAt(dst, cx, cy))
+	return drawText(dst, f, st.BadgeTextSize, s.Badge, cx-width/2, cy-lineHeight/2, ink)
+}
+
+// drawShieldStack draws Spec.Shields shield marks in a column, climbing from the badge's own slot.
+//
+// **Bottom-up, so the first shield is always in the same place.** A stack that grew downward would
+// run off the card, and one centered on the slot would move every shield when the count changed —
+// which reads as a different badge rather than as one more shield.
+//
+// **It is the card's own defend mark**, in the card's own element, so the thing a defense stacks in
+// the corner is the thing it already shows in the corner above. There is no figure on it: the count
+// is what the stack is.
+func drawShieldStack(dst *image.RGBA, s Spec, st Style) {
+	size := st.BadgeStackSize
+	if size <= 0 {
+		size = st.BadgeSize
+	}
+
+	glyph := systems.ArtMark(MarkArtKey(FormDefend, s.Element), size, size)
+	if glyph == nil {
+		return
+	}
+
+	// The slot's own bottom edge, so a single shield sits where a damage badge would.
+	bottom := st.BadgeTop + st.BadgeSize
+	left := st.GlyphInset + (st.BadgeSize-size)/2
+
+	for i := 0; i < s.Shields; i++ {
+		top := bottom - (i+1)*size - i*st.BadgeStackGap
+		at := placeInk(dst, glyph, image.Rect(left, top, left+size, top+size), st.GlyphScale, st)
+		if !s.Enabled && !at.Empty() {
+			fadeRegion(dst, at, glyphDisabledToward)
+		}
+	}
+}
+
+// sampleAt is the color already standing at one pixel of the card, opaque.
+//
+// **Transparent reads as the surface**, which is what is actually behind the figure there: a
+// shield's ink does not fill its box, so a figure centered on the box can land beside the drawing
+// rather than on it, and treating alpha-zero as black would put a light figure on an off-white card.
+func sampleAt(dst *image.RGBA, x, y int) color.RGBA {
+	if !image.Pt(x, y).In(dst.Bounds()) {
+		return Surface
+	}
+	c := dst.RGBAAt(x, y)
+	if c.A == 0 {
+		return Surface
+	}
+	c.A = 255
+	return c
+}
+
+// BadgeShape is which outline the damage badge takes. Three were drawn so the choice could be made
+// by looking rather than by imagining; all three ship, and one is drawn.
+type BadgeShape string
+
+const (
+	BadgeCircle    BadgeShape = "circle"
+	BadgeStarburst BadgeShape = "starburst"
+	BadgeDiamond   BadgeShape = "diamond"
+)
+
+// DefaultBadgeShape is the one the game draws. **The single place the choice is made**, so trying
+// another is one edit rather than a rename across an asset directory.
+const DefaultBadgeShape = BadgeDiamond
+
+// BadgeValues is every multiplier the numbered badges are drawn for, in ladder order.
+//
+// **A closed set is what makes the figure drawable at all** *(owner's call, 2026-09-16)*. Type and
+// art do not reduce the same way: the badge is rasterized at 32 and at 16, and a drawn numeral
+// averages down with the contour around it because it was drawn knowing it would, where a printed
+// glyph is rasterized separately at final size and arrives at 16 as a few unsupported strokes. So
+// the numeral belongs in the picture — but only for values somebody drew.
+//
+// **It runs from a quarter to nine**, which covers the whole player deck (25, 50, 100, 300, 400)
+// and every creature (50, 100, 200) with room above for what a relic or an essence can push a card
+// to. It does **not** cover everything the rules can produce — the `add-dmg` essence scales a card
+// to 150%, so a Skewer reaches 4.5x and a Poke lands on 0.37x, and a boss deck carries 60, 120 and
+// 250 — and that is what badgeFallbackArtKey is for.
+var BadgeValues = []int{25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900}
+
+// badgeValueTokens is the filename token for each drawn value. **Words for the fractions**, because
+// `damage-diamond-1-4-fire` cannot be read back unambiguously and a filename is a key here.
+var badgeValueTokens = map[int]string{
+	25: "quarter", 50: "half", 100: "1", 200: "2", 300: "3", 400: "4",
+	500: "5", 600: "6", 700: "7", 800: "8", 900: "9",
+}
+
+// BadgeValueToken is the filename token for one multiplier, or "" for a value nobody drew.
+func BadgeValueToken(pct int) string { return badgeValueTokens[pct] }
+
+// BadgeArtKey is the badge for one multiplier in one element — the numeral included, because it is
+// part of the drawing.
+//
+// **Total over elements and partial over values**, and the difference is deliberate. Anything that
+// is not one of the five elements answers the neutral drawing, exactly as MarkArtKey does, so a
+// creature's card draws a hueless badge rather than none. A value nobody drew answers **""**, and
+// the caller falls back to the blank badge with the figure printed on it — see
+// badgeFallbackArtKey. A missing value has to be a visible difference rather than a missing badge.
+func BadgeArtKey(shape BadgeShape, pct int, e Element) string {
+	tok := badgeValueTokens[pct]
+	if tok == "" {
+		return ""
+	}
+	if !hasArt(e) {
+		return "damage-" + string(shape) + "-" + tok + "-neutral"
+	}
+	return "damage-" + string(shape) + "-" + tok + "-" + e.String()
+}
+
+// badgeFallbackArtKey is the blank badge, with no numeral drawn on it, for a multiplier outside
+// BadgeValues. The figure is printed on top of it in the card's own type.
+//
+// **It is the same eighteen files the unnumbered set shipped as**, kept rather than deleted: a
+// value nobody drew still has to show *something*, and a blank badge under printed type is the
+// picture that was on screen before the numerals arrived.
+func badgeFallbackArtKey(shape BadgeShape, e Element) string {
+	if !hasArt(e) {
+		return "damage-" + string(shape) + "-neutral"
+	}
+	return "damage-" + string(shape) + "-" + e.String()
 }
 
 // drawCounter puts Spec.Counter on a disc centered on the card’s bottom-right corner.

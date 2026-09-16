@@ -14,6 +14,7 @@
 //	go run ./tools/relicart -kind essence         # the essences instead
 //	go run ./tools/relicart -kind rune     # the runes instead
 //	go run ./tools/relicart -kind stone    # the stones instead
+//	go run ./tools/relicart -kind card     # the playing cards instead
 //	go run ./tools/relicart -n                 # say what would happen and touch nothing
 //	go run ./tools/relicart -blocky            # quantize to the block grid on the way down
 //
@@ -94,6 +95,11 @@ var catalogs = map[string]catalog{
 		inbox:   filepath.Join(".scratch", "to-process-stone-art"),
 		out:     filepath.Join("assets", "stone"),
 		sources: []source{{json: "data/stones.json", key: "StoneRecord"}},
+	},
+	"card": {
+		inbox:   filepath.Join(".scratch", "to-process-playing-card-art"),
+		out:     filepath.Join("assets", "card"),
+		sources: []source{{json: "data/card_art.json", key: "CardArtRecord"}},
 	},
 	"other": {
 		inbox: filepath.Join(".scratch", "to-process-other-art"),

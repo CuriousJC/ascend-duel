@@ -377,12 +377,6 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 			announce(fmt.Sprintf("%s is out of time - the duel takes %d",
 				s.sideName(e.Target), e.Amount), voiceFor(e.Target))
 
-		case combat.KindNegated:
-			// The card that answered the blow is named rather than assumed. A creature's guard is
-			// the only thing that can reach here today, and the sentence is written off the event
-			// anyway — a second card that reduced damage would read correctly without touching this.
-			attach(fmt.Sprintf("halved by a %v", lower(combat.ConceptOf(e.Action).Label)))
-
 		case combat.KindDamage:
 			// **Damage whose side does not match the line it is attaching to is damage running the
 			// other way**, which reads as something done back rather than as a hit of its own.
@@ -493,25 +487,20 @@ func multiplierText(amount int) string {
 // **It hands back the span of text a relic changed, not a flag** *(2026-08-21)*. The caller colors
 // that span and nothing else: painting the verb and the unit with it says a relic changed the card
 // rather than the number. An empty mark means nothing moved and the line is drawn in one color.
-func cardEffect(card combat.Card) string {
-	c := card.Spec()
-	amount := card.Amount()
-
-	switch c.Verb {
-	case combat.VerbDefend:
-		return "CUTS\n" + strconv.Itoa(amount) + "% DMG"
-	case combat.VerbShield:
-		// **The face says the count and nothing else.** What a shield *does* is one rule for every
-		// card that raises one, so it is the tooltip's line rather than three copies of a sentence
-		// competing for a 128px column — see shieldTipLines.
-		return "SHIELD\n" + strconv.Itoa(amount)
-	}
-
-	// **The form is read off the card, not off its concept** *(2026-09-12)*. An essence that turns a
-	// Crush into a Stab writes `FormOverride`, which `Card.Form` honors and `Concept.Form` knows
-	// nothing about — so the corner mark became a spear while the line under it still read CRUSH.
-	// Same failure the figures above were fixed for, one field over.
-	return attackVerb(card.Form()) + "\nDMG " + multiplierText(amount)
+func cardEffect(combat.Card) string {
+	// **A card says what it does in pictures now** *(owner's call, 2026-09-16)*. The form is the
+	// corner mark, the element is the mark's color and the cost ticks under it, the multiplier is
+	// the badge in the bottom-left corner, and a defense stacks one shield per shield it raises. The
+	// line this used to return — `STAB` over `DMG 3x` — restated all of it in words, which was the
+	// right answer while the left column was a silhouette and a figure and the wrong one the moment
+	// every part of it became a drawing.
+	//
+	// **What the card gives up is the wording, not the fact.** `carddesc` still writes the whole
+	// stat block into the tooltip, so hovering a card says its form, its cost and what it deals in
+	// words; the face says the same things in pictures. That split is the one the damage figure was
+	// already under — see cardSpec, where no relic reaches the printed damage and the arithmetic
+	// lives in the sum.
+	return ""
 }
 
 // riderText is the lines a card's upgrade adds under its own, one authored line each.
@@ -549,8 +538,6 @@ func actionPhrase(id combat.ConceptID) string {
 	c := combat.ConceptOf(id)
 	name := lower(c.Label)
 	switch c.Verb {
-	case combat.VerbDefend:
-		return "behind a " + name
 	case combat.VerbShield:
 		return "and raises a " + name
 	default:

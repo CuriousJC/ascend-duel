@@ -23,15 +23,6 @@ const (
 	KindRoundStart EventKind = iota
 	KindAction
 
-	// KindNegated is the blow meeting a raised defense: Action is the card that answered it and
-	// Amount is what is left of the blow afterwards.
-	//
-	// **One kind, one card.** It was three kinds for three cards that differed only in percentage;
-	// `Action` already names which card it was, which is the whole distinction the feed was drawing.
-	// Only creature guards reach it today, and the kind keeps its general name because what it
-	// describes is a blow being reduced rather than one particular card doing it.
-	KindNegated
-
 	// KindRaised is a defend card putting shields up. Action is the card, Amount is how many it
 	// raised, and Life carries the duelist's shield count afterwards, so a second Guard in the same
 	// turn reads as five rather than as three twice.
@@ -42,7 +33,7 @@ const (
 	// stopped, Target is the duelist that spent the shield, and Amount is how many shields are
 	// left afterwards.
 	//
-	// **It is not a KindNegated.** A guard leaves a figure and this leaves none, so a feed reading
+	// **It leaves no figure**, so a feed reading
 	// `Amount` off the two would be reading a remaining blow in one case and a remaining shield in
 	// the other. It is not a KindMissed either: a miss is the attacker's own failure and costs the
 	// defender nothing, where this is something the defender paid for.
@@ -89,7 +80,7 @@ const (
 	// attack that was lost and Side is whose it was, which makes it the lightning counterpart of
 	// KindChilled — a slot that resolves into nothing.
 	//
-	// It is deliberately not a KindNegated: nothing of the defender's stopped it, and a log
+	// Nothing of the defender's stopped it, and a log
 	// saying a blow was "stopped cold" by a defense that was never raised would send the player
 	// looking for a card that is not there.
 	KindMissed
@@ -167,7 +158,7 @@ const maxHandTerms = baseMaxActions * MaxEchoLandings
 type Event struct {
 	Kind   EventKind
 	Side   Side      // who acted
-	Action ConceptID // set on KindAction, on KindNegated for the defense that stopped it, on KindRaised for the card that raised the shields, on KindBlocked for the attack a shield ate, on KindChilled for the action lost, on KindMissed for the attack that never landed, and on KindHand for the card the blow led with
+	Action ConceptID // set on KindAction, on KindRaised for the card that raised the shields, on KindBlocked for the attack a shield ate, on KindChilled for the action lost, on KindMissed for the attack that never landed, and on KindHand for the card the blow led with
 	Amount int       // damage dealt, shields raised or left standing, status applied, or on KindHand what the hand adds up to
 	Target Side      // who took the damage
 	Life   int       // target's life after the event

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
+	"strconv"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/assets"
@@ -45,14 +46,27 @@ var formNotes = map[cards.Form]string{
 	cards.FormDefend: `a shield, tinted by the card's element`,
 }
 
-// concept is one of the eighteen, with the cost, form and effect text the rules give it.
+// concept is one of the nineteen, with the cost, form, effect text and amount the rules give it.
 //
-// **No damage figure**: a card does not carry one any more, and what it deals is in the text.
+// **The amount came back on 2026-09-16**, having been dropped when the damage badge was removed in
+// 2026-08-14. The badge returned, carrying the multiplier for an attack and a stack of shields for
+// a defense, so the sheet has to know the figure again — it is the same snapshot-of-the-rules this
+// table already is for costs and names, and it is written out here rather than read from
+// `data/duelist_cards.json` for the reason at the top of this file: the sheet is a drawing-board
+// and has to be able to draw a card the rules cannot deal.
 type concept struct {
 	name string
 	form cards.Form
 	cost int
 	text string
+
+	// amount is the card's own figure, as the rules write it: a percentage for an attack, where 25
+	// is a quarter of DMG and 400 is four times it, and a plain count for a defense.
+	amount int
+
+	// shield says which of the two amount is. A defense stacks that many shields in the corner; an
+	// attack draws one badge carrying its multiplier.
+	shield bool
 }
 
 // The nineteen concepts, in duelist_cards.json's order, which is grid order: three attack forms
@@ -76,28 +90,28 @@ type concept struct {
 // rules cannot deal. It is the longest strings here that matter — the sheet is where an
 // overlong line is *seen* rather than merely failing a test.
 var concepts = []concept{
-	{"Poke", cards.FormStab, 0, "STAB\nDMG 0.25x"},
-	{"Jab", cards.FormStab, 1, "STAB\nDMG 0.5x"},
-	{"Thrust", cards.FormStab, 2, "STAB\nDMG 1x"},
-	{"Skewer", cards.FormStab, 3, "STAB\nDMG 3x"},
-	{"Impale", cards.FormStab, 4, "STAB\nDMG 4x"},
+	{"Poke", cards.FormStab, 0, "", 25, false},
+	{"Jab", cards.FormStab, 1, "", 50, false},
+	{"Thrust", cards.FormStab, 2, "", 100, false},
+	{"Skewer", cards.FormStab, 3, "", 300, false},
+	{"Impale", cards.FormStab, 4, "", 400, false},
 
-	{"Nick", cards.FormSlash, 0, "SLASH\nDMG 0.25x"},
-	{"Cut", cards.FormSlash, 1, "SLASH\nDMG 0.5x"},
-	{"Slice", cards.FormSlash, 2, "SLASH\nDMG 1x"},
-	{"Cleave", cards.FormSlash, 3, "SLASH\nDMG 3x"},
-	{"Sever", cards.FormSlash, 4, "SLASH\nDMG 4x"},
+	{"Nick", cards.FormSlash, 0, "", 25, false},
+	{"Cut", cards.FormSlash, 1, "", 50, false},
+	{"Slice", cards.FormSlash, 2, "", 100, false},
+	{"Cleave", cards.FormSlash, 3, "", 300, false},
+	{"Sever", cards.FormSlash, 4, "", 400, false},
 
-	{"Tap", cards.FormCrush, 0, "CRUSH\nDMG 0.25x"},
-	{"Thump", cards.FormCrush, 1, "CRUSH\nDMG 0.5x"},
-	{"Bash", cards.FormCrush, 2, "CRUSH\nDMG 1x"},
-	{"Smash", cards.FormCrush, 3, "CRUSH\nDMG 3x"},
-	{"Pulverize", cards.FormCrush, 4, "CRUSH\nDMG 4x"},
+	{"Tap", cards.FormCrush, 0, "", 25, false},
+	{"Thump", cards.FormCrush, 1, "", 50, false},
+	{"Bash", cards.FormCrush, 2, "", 100, false},
+	{"Smash", cards.FormCrush, 3, "", 300, false},
+	{"Pulverize", cards.FormCrush, 4, "", 400, false},
 
-	{"Flinch", cards.FormDefend, 0, "SHIELD\n1"},
-	{"Brace", cards.FormDefend, 1, "SHIELD\n1"},
-	{"Block", cards.FormDefend, 2, "SHIELD\n2"},
-	{"Guard", cards.FormDefend, 3, "SHIELD\n3"},
+	{"Flinch", cards.FormDefend, 0, "", 1, true},
+	{"Brace", cards.FormDefend, 1, "", 1, true},
+	{"Block", cards.FormDefend, 2, "", 2, true},
+	{"Guard", cards.FormDefend, 3, "", 3, true},
 }
 
 // realCards is **all nineteen concepts at hand size**, one element after another so the row
@@ -125,11 +139,7 @@ func realCards() []cards.Spec {
 func realDeckRow(e cards.Element) []cards.Spec {
 	out := make([]cards.Spec, 0, len(concepts))
 	for _, c := range concepts {
-		out = append(out, cards.Spec{
-			Name: c.name, Form: c.form, Text: c.text,
-			Highlights: cards.ElementHighlights(c.text),
-			Cost:       c.cost, Element: e, Enabled: true,
-		})
+		out = append(out, specOf(c, e))
 	}
 	return out
 }
@@ -137,14 +147,91 @@ func realDeckRow(e cards.Element) []cards.Spec {
 func specFor(name string, e cards.Element) cards.Spec {
 	for _, c := range concepts {
 		if c.name == name {
-			return cards.Spec{
-				Name: c.name, Form: c.form, Text: c.text,
-				Highlights: cards.ElementHighlights(c.text),
-				Cost:       c.cost, Element: e, Enabled: true,
-			}
+			return specOf(c, e)
 		}
 	}
 	return cards.Spec{Name: name, Element: e, Enabled: true}
+}
+
+// specOf is the one place a concept and an element become a face, so every table on the page draws
+// the card the same way and the sheet cannot disagree with itself.
+//
+// **It reads the real catalog for the picture.** `data/card_art.json` is one record per card per
+// element, and the whole point of the sheet is to look at what the game will actually show — so a
+// pairing nobody has drawn yet comes back with no art and draws as the card always did, exactly as
+// it does in a duel. See data.DefaultCardArt, which is empty on purpose.
+func specOf(c concept, e cards.Element) cards.Spec {
+	spec := cards.Spec{
+		Name: c.name, Form: c.form, Text: c.text,
+		Highlights: cards.ElementHighlights(c.text),
+		Cost:       c.cost, Element: e, Enabled: true,
+		Art: cardArtwork(c.name, e),
+	}
+	if c.shield {
+		spec.Shields = c.amount
+	} else {
+		spec.Badge, spec.BadgePct = multiplier(c.amount), c.amount
+	}
+	return spec
+}
+
+// multiplier writes an attack's amount the way the card does: a fraction under one, a whole number
+// at or above it.
+//
+// **A snapshot of `screens.damageMultiplier`**, under the same rule the names, costs and effect
+// text are under — the sheet does not import the game, so that it can draw a card the rules cannot
+// deal. If the two ever disagree it makes the sheet a worse preview, never a wrong one, because
+// every pixel still comes from cards.Render.
+func multiplier(pct int) string {
+	switch pct {
+	case 25:
+		return "1/4"
+	case 50:
+		return "1/2"
+	case 75:
+		return "3/4"
+	}
+	if pct%100 == 0 {
+		return strconv.Itoa(pct / 100)
+	}
+	return strconv.FormatFloat(float64(pct)/100, 'g', -1, 64)
+}
+
+// cardArt and cardImages are the catalog and the picture bank, loaded once.
+var (
+	cardArt    = data.LoadCardArt()
+	cardImages = assets.LoadImageData()
+	artCache   = map[string]image.Image{}
+)
+
+// cardArtwork is the full-bleed picture for one card in one element, or nil for a pairing nobody
+// has drawn. **Through the catalog's own ArtKey**, so the fallback the sheet shows is the fallback
+// the game shows.
+func cardArtwork(name string, e cards.Element) image.Image {
+	rec, ok := cardArt[data.CardArtKey(name, e.String())]
+	if !ok {
+		return nil
+	}
+	key := rec.ArtKey()
+	if key == "" {
+		return nil
+	}
+	if img, seen := artCache[key]; seen {
+		return img
+	}
+	raw := cardImages[key]
+	if len(raw) == 0 {
+		fmt.Printf("cardsheet: %s names no file %q\n", rec.CardArtRecord, key)
+		artCache[key] = nil
+		return nil
+	}
+	img, _, err := image.Decode(bytes.NewReader(raw))
+	if err != nil {
+		fmt.Printf("cardsheet: decoding %q: %v\n", key, err)
+		img = nil
+	}
+	artCache[key] = img
+	return img
 }
 
 // selected and disabled are the two states the sheet draws a real card in. Written as

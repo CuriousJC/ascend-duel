@@ -28,54 +28,6 @@ func kindCount(events []Event, kind EventKind) int {
 	return n
 }
 
-// testGuard is the whole defensive vocabulary as of 2026-08-15. Under one blow per turn it takes half
-// of what arrives and is then spent.
-func TestDefendHalvesTheBlowAndIsSpent(t *testing.T) {
-	a := duelist(10, 4, 500)
-	b := duelist(10, 4, 500)
-
-	// B defends first. B acts second, so its testGuard is standing when A's next turn arrives.
-	// A Smash and a Thrust are different concepts and different forms, and both are colorless, so
-	// they agree on no axis and form no hand: the blow is the High Card — the Smash alone — and the
-	// arithmetic is about the testGuard rather than about a multiplier.
-	_, a, b = resolve(a, b, nil, PlainCards(testGuard), 1)
-	events, _, bAfter := resolve(a, b, PlainCards(Smash, Thrust), nil, 2)
-
-	if !hasKind(events, KindNegated) {
-		t.Fatal("no KindNegated event — the testGuard did not apply")
-	}
-	if want := 500 - Plain(Smash).Damage(10)*(100-ConceptOf(testGuard).Amount)/100; bAfter.CurrentLife != want {
-		t.Errorf("life after a halved Smash = %d, want %d", bAfter.CurrentLife, want)
-	}
-	if bAfter.DefendCount != 0 {
-		t.Errorf("defends left = %d, want 0 — every defense is spent on the blow it answered", bAfter.DefendCount)
-	}
-}
-
-// **No card reduces a blow to zero, and that is the design.** A turn lands one figure however many
-// cards went into it, so a card taking all of it would delete a whole opposing turn by itself.
-// Halving cannot: something always lands, so the opponent is always still playing.
-func TestNoDefenseStopsABlowOutright(t *testing.T) {
-	dmg := 10
-	a := duelist(dmg, 0, 500)
-	b := duelist(dmg, 0, 500)
-
-	// Four Jabs is a Barrage, which is the biggest thing a cheap hand can assemble, into every
-	// defensive card the game has.
-	_, a, b = resolve(a, b, nil, PlainCards(testGuard, testGuard), 1)
-	events, _, bAfter := resolve(a, b, PlainCards(Jab, Jab, Jab, Jab), nil, 2)
-
-	if got := firstDamage(t, events, SideA).Amount; got <= 0 {
-		t.Errorf("a Jab Barrage into two Defends dealt %d — nothing may reduce a blow to zero", got)
-	}
-	if bAfter.CurrentLife >= 500 {
-		t.Error("the defender took nothing at all")
-	}
-}
-
-// **The three defend cards raise their own number of shields, and the price is the count.** Brace
-// for one at 1 AP, Block for two at 2, Guard for three at 3 — the attacks' ladder with a count
-// where the damage multiplier sits.
 func TestEachDefendCardRaisesItsOwnNumberOfShields(t *testing.T) {
 	for _, tc := range []struct {
 		card ConceptID
@@ -187,39 +139,13 @@ func TestOneCardStillCannotRaisePastTheCap(t *testing.T) {
 }
 
 // **Nothing in the shipped game gives an enemy a shield**, and that asymmetry is the whole reason
-// a count is safe. The player forms hands and lands one figure a turn; a single shield facing that
-// would delete a whole turn, which is the outcome maxDefendPct exists to forbid.
+// a count is safe. The player forms hands and lands one figure a turn, so a single shield facing
+// that would delete the whole turn.
 func TestNoPlayerConceptGivesTheOpponentShields(t *testing.T) {
 	for _, id := range PlayerConcepts() {
 		if c := ConceptOf(id); c.Verb == VerbShield && c.Form != FormDefend {
 			t.Errorf("%s raises shields but is not a defend card", c.Label)
 		}
-	}
-}
-
-func TestEveryRaisedDefenseMeetsTheBlow(t *testing.T) {
-	// **Every card fires, not just the front one.** A turn lands one blow, so the choice of which
-	// card meets which has nothing to choose between and the whole set answers it. Each card also
-	// emits its own event, which is what the Resolution feed narrates.
-	//
-	// Composed multiplicatively, so two Defends take three quarters rather than the whole thing —
-	// which is the point of multiplying rather than adding: cards cannot reach past zero by accident.
-	dmg := 100
-	a := duelist(dmg, 0, 5000)
-	b := duelist(dmg, 0, 5000)
-
-	// The undefended figure comes off a fresh pair, so it is the same blow against nothing.
-	open, _, _ := resolve(a, b, PlainCards(Smash, Bash), nil, 2)
-
-	_, a, b = resolve(a, b, nil, PlainCards(testGuard, testGuard), 1)
-	events, _, _ := resolve(a, b, PlainCards(Smash, Bash), nil, 2)
-
-	if got := kindCount(events, KindNegated); got != 2 {
-		t.Errorf("%d defenses fired, want both of them", got)
-	}
-	full := firstDamage(t, open, SideA).Amount
-	if got, want := firstDamage(t, events, SideA).Amount, full*25/100; got != want {
-		t.Errorf("a blow into two Defends dealt %d, want a quarter of %d = %d", got, full, want)
 	}
 }
 
@@ -230,14 +156,17 @@ func TestDefensesAreSpentWhetherOrNotTheyWereNeeded(t *testing.T) {
 	b := duelist(10, 4, 100)
 
 	// A raises two defenses into a turn with nothing to answer.
-	_, a1, b1 := resolve(a, b, PlainCards(testGuard, testGuard), nil, 1)
-	if a1.DefendCount != 2 {
-		t.Fatalf("A ended round 1 holding %d defends, want 2 unspent", a1.DefendCount)
+	_, a1, b1 := resolve(a, b, PlainCards(Guard, Guard), nil, 1)
+	if a1.Shields != 6 {
+		t.Fatalf("A ended round 1 holding %d shields, want the 6 two Guards raise", a1.Shields)
 	}
 
 	// Round two: A queues nothing, so its own turn expires them before B swings.
 	events, _, _ := resolve(a1, b1, nil, PlainCards(Bash, Bash), 2)
 
+	if hasKind(events, KindBlocked) {
+		t.Error("a shield ate a blow in round 2 — A's own idle turn should have expired them")
+	}
 	open, _, _ := resolve(a, b, nil, PlainCards(Bash, Bash), 1)
 	if got, want := firstDamage(t, events, SideB).Amount, firstDamage(t, open, SideB).Amount; got != want {
 		t.Errorf("a blow into expired defends dealt %d, want the full %d", got, want)
@@ -248,14 +177,16 @@ func TestClearDefensesClearsEveryDefensiveField(t *testing.T) {
 	// ClearDefenses is the one place that has to know about every defensive field, and a new one
 	// left out of it would stand forever — the worst failure mode available here, and a silent
 	// one. Pin the whole set rather than only the fields this session added.
+	//
+	// **It cleared two mechanics until 2026-09-16 and clears one now.** The percentage guard was
+	// deleted; the shields are what is left, and the test stays because the failure it guards
+	// against is a *future* field being added and forgotten.
 	var d Duelist
-	for _, k := range []ConceptID{testGuard, testGuard} {
-		d = d.raiseDefend(Plain(k))
-	}
+	d = d.raiseShields(3)
 
 	got := ClearDefenses(d)
 
-	if got.DefendCount != 0 || got.Defends != ([maxPendingDefends]PendingDefend{}) {
+	if got.Shields != 0 {
 		t.Errorf("ClearDefenses left something standing: %+v", got)
 	}
 }
@@ -417,8 +348,8 @@ func TestAEssencesBoundsHold(t *testing.T) {
 		t.Errorf("a card cheapened past zero costs %d, want 0", got)
 	}
 
-	// Nothing stops a blow outright, however many essences are stacked on a testGuard.
-	wall := Card{Concept: testGuard, AmountPct: 10000}
+	// Nothing stops a blow outright, however many essences are stacked on a Guard.
+	wall := Card{Concept: Guard, AmountPct: 10000}
 	if got := wall.Amount(); got >= 100 {
 		t.Errorf("a defense scaled up reduces by %d%%, and nothing may reach 100", got)
 	}

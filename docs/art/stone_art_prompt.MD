@@ -1,13 +1,7 @@
 # Stone art prompt
 
-**The prompt for one stone** — `data/stones.json`, drawn in `cards.EssenceStyle` like every other
-sealed good. A stone's material is not free: it is a function of which axis the stone raises and
-how far up that axis it sits, which is what *The ladders* below sets out and what earns this
-catalog a file of its own.
-
-**The style block below is the relic, essence and other-card one, word for word**, and the
-composition block is the essence one. Both are pasted verbatim rather than paraphrased, so a
-stone, a rune and a relic on the same shelf read as one game.
+**The prompt for one stone.** A stone's material is not free: it is a function of which axis the
+stone raises and how far up that axis it sits, which is what *The ladders* below sets out.
 
 ---
 
@@ -96,9 +90,8 @@ and a high rung is not a bigger rock.
 
 **The material is the only thing that says the axis, and it must not be helped.** Do not draw a
 card, a suit mark, a form mark, a numeral, a tally, a rune, an engraved symbol, or any diagram of
-the hand the stone raises. The card prints what the stone does in words across its lower half, and
-a stone that also drew it would be saying it twice — the second time in a language the game does
-not read.
+the hand the stone raises. What the stone does is printed in words across the lower half of the
+card afterwards, and a stone that also drew it would be saying it twice.
 
 ## Composition
 
@@ -113,16 +106,16 @@ this catalog is a long object, so nothing runs corner to corner on the diagonal.
 **Nothing is reserved and nothing is kept clear.** There is no title, no name band, no caption
 strip, no counter, no disc, no badge, no coin, no gem socket, no plaque, no banner and no slot of
 any kind for text or a number. Do not leave a corner or an edge empty for one, and do not draw
-one. Whatever the card puts on top of this picture, it puts there itself at draw time, and the
-picture is meant to carry on underneath.
+one. Anything placed on top of this picture is placed there afterwards, and the picture is meant
+to carry on underneath.
 
-The card prints its sentence across the lower half of the picture, on a dark scrim it draws
-itself. That is not a band to leave empty — draw the stone through it exactly as above — but it
-does mean the half carrying the recognition should be the upper one.
+A sentence is printed across the lower half of the picture afterwards, on a dark scrim. That is
+not a band to leave empty — draw the stone through it exactly as above — but it does mean the
+half carrying the recognition should be the upper one.
 
 ## The subject
 
-The block pasted below this prompt is one record from `data/stones.json`, in JSON.
+The block pasted below this prompt is one record, in JSON.
 
 **Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Hand` and
 the rest — is context for what the stone does and is never to be rendered: no title, no caption,

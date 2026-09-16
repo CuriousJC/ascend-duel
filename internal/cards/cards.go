@@ -523,6 +523,42 @@ type Spec struct {
 	// draws a wounded enemy without the tool having to reimplement a bar.
 	Life, MaxLife int
 
+	// Badge is the MOCKUP figure in the bottom-left corner — an attack's damage multiplier, or the
+	// number of shields a defend card raises. **Empty draws none**, which is every card the mockup
+	// is not switched on for.
+	//
+	// **A string for Counter's reason**: the unit is not this package's to know. An attack at half
+	// DMG writes "1/2" and one at four times writes "4", and the decision that a 50 becomes a
+	// fraction belongs with the caller that knows what a 50 is.
+	//
+	// **It reverses a decision taken twice** — the 64-pixel sword went on 2026-08-14 and the bare
+	// figure that replaced it went on 2026-08-26, both because the effect text states what the card
+	// deals and a number beside it is the same fact said twice. This is here to be looked at.
+	Badge string
+
+	// BadgePct is the same multiplier as a percentage — 25 for a quarter, 400 for four times — and
+	// it is what picks the drawn badge. **Zero means fall back to Badge**, printed on a blank one.
+	//
+	// **Two fields for one number, because they are two different things.** BadgePct is what the
+	// card deals; Badge is how that reads to a player, and this package does not know that a 25 is
+	// written "1/4" — the same separation Counter draws, where the unit is the caller's. The one
+	// that reaches the art has to be the figure rather than the wording, so a value nobody drew
+	// falls through cleanly instead of being looked up by a string.
+	BadgePct int
+
+	// Shields is how many shields a defend card raises, drawn in the bottom-left corner as that
+	// many stacked shield marks. **Zero is every card that raises none**, which is every attack.
+	//
+	// **A count rather than a figure on a badge** *(owner's call, 2026-09-16)*. One shield with a
+	// "3" on it asks the player to read a number; three shields asks them to see three things, and
+	// the count is small enough — one, two or three — that seeing beats reading. It is also what
+	// the pip row under the duelist card already does, so the card and the fighter say the same
+	// thing the same way.
+	//
+	// **It takes precedence over Badge**, which is what makes the two mutually exclusive without a
+	// third field saying which: a card either deals damage or raises shields.
+	Shields int
+
 	// Counter is a short figure drawn as a badge in the bottom-right corner — the growing
 	// relics' accumulators, which is the only thing that has one today.
 	//

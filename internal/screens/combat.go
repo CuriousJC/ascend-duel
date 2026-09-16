@@ -59,7 +59,7 @@ const defeatButtonLabel = "END RUN"
 // **It is a table with an entry per kind and no default arm, and that shape is the whole point.**
 // This screen had three dwells selected by a `switch` with a `default` once, and the default was
 // the shortest of them — so every event kind added after that switch was written silently
-// inherited a quarter-second flash. `KindNegated` landed there and a Defend blunting a heavy blow
+// inherited a quarter-second flash. A blow being blunted landed there and a heavy hit
 // went past faster than the round-start beat. A map plus `TestEveryEventKindHasADwell` cannot do
 // that: a kind added without a line here fails the tests rather than quietly picking up whatever
 // the last arm said.
@@ -73,7 +73,6 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindRaised:     1,
 	combat.KindBlocked:    1,
 	combat.KindExpired:    1,
-	combat.KindNegated:    1,
 	combat.KindDamage:     1,
 	combat.KindDefeated:   1,
 	combat.KindHand:       1,
@@ -1286,8 +1285,6 @@ func eventLabel(e combat.Event) string {
 	case combat.KindHealed:
 		return fmt.Sprintf("healed      %v restores %d from %v, leaving %d",
 			e.Side, e.Amount, combat.ConceptOf(e.Action).Label, e.Life)
-	case combat.KindNegated:
-		return fmt.Sprintf("negated     %v's %v cuts it to %d", e.Side, e.Action, e.Amount)
 	case combat.KindRaised:
 		return fmt.Sprintf("raised      %v puts up %d from %v, standing at %d", e.Side, e.Amount, combat.ConceptOf(e.Action).Label, e.Life)
 	case combat.KindBlocked:

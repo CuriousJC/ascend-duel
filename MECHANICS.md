@@ -78,15 +78,20 @@ multipliers made every fight far shorter than the numbers read. **Nothing has me
 subtracted from it; nothing subtracts now, every term is non-negative, and the clamp was
 arithmetic that could not fire. A future subtraction brings its own floor.
 
-**Damage reduction is percentages all the way down, and no attribute is one of them.** Three
-things cut a blow and they are all the same shape: the **earth status** blunts what the attacker
-deals, the four **guard cards** each take a percentage off what arrives, and `guardDivisor`
-halves whatever is left. A durable combatant is one with high `HP` or earth on it. Anything
-that should reduce damage extends one of those three rather than arriving as a fourth system —
+**Damage reduction is percentages all the way down, and no attribute is one of them.** Two things
+cut a blow and they are the same shape: the **earth status** blunts what the attacker deals, and
+`guardDivisor` halves whatever is left. A durable combatant is one with high `HP` or earth on it.
+Anything that should reduce damage extends one of those rather than arriving as a third system —
 two mechanics quietly stacking is the failure to avoid.
 
+**The percentage guard was deleted on 2026-09-16** *(owner's call)*. Ninety creature and boss cards
+took 50% or 60% off what arrived, and they were the only cards in the game that did. A shield is the
+only defense now, and it works the other way — eating one blow whole rather than shaving every
+blow — so there is no fraction to compose. The 209 cards were removed from `enemies.json` and
+`bosses.json` rather than converted, which is what was done to the bank cards before them.
+
 **They compose multiplicatively and in a fixed order**: concept damage, the hand multiplier,
-the attacker's weight, then every raised defend, then the guard. Weight sits on the attacker's
+the attacker's weight, then the guard. Weight sits on the attacker's
 side of that line because it says how hard they can still swing; everything after it happens to
 a blow that has already been blunted.
 
@@ -211,7 +216,8 @@ is a third rung the file still holds at zero copies.
 
 **The point is that the player decides how many hits they take.** A creature turn is a known number
 of attacks, so shields turn "how much is this going to hurt" from an estimate into arithmetic —
-which is what a percentage guard could never do, since half of an unknown figure is still unknown.
+which is what the percentage guard could never do, since half of an unknown figure is still
+unknown. That is the argument that eventually deleted it.
 
 #### A shield eats their heaviest blow, not their first
 
@@ -267,14 +273,14 @@ redesign of the band rather than a bigger number.
 
 #### The asymmetry is the mechanic, not a gap in it
 
-**Only the player raises shields, and only creatures raise percentage guards.** The two answer
-different offenses and neither survives being pointed the other way:
+**Only the player raises shields, and creatures raise nothing at all** *(owner's call,
+2026-09-16)*. They answered with a percentage guard until then; the verb and all 209 cards were
+deleted, so a creature's deck is pure attack.
 
 - **A creature is a solo attacker.** Its turn resolves card by card with a figure each, so a count
   buys one blow out of several — a real decision about how much of a turn to absorb.
 - **The player forms hands and lands one figure a turn.** A single shield facing that would delete
-  the whole turn, which is exactly what `maxDefendPct` and "nothing may stop a blow outright" exist
-  to forbid. So the ninety guard cards in `enemies.json` and `bosses.json` stay percentages.
+  the whole turn, so a count pointed the other way is the one thing this mechanic must not become.
 
 The rules do not enforce this — `VerbShield` would work on either side — and it is written down
 rather than guarded against, because the day an enemy forms hands is the day this becomes a dominant

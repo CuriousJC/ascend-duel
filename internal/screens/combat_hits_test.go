@@ -29,7 +29,7 @@ func TestOnlyDamageRaisesALandingFigure(t *testing.T) {
 	// Raising a damage figure for it would draw the same gesture for two different causes.
 	s := hitScene()
 	for _, k := range []combat.EventKind{
-		combat.KindAction, combat.KindBurned, combat.KindNegated,
+		combat.KindAction, combat.KindBurned, combat.KindBlocked,
 		combat.KindHand, combat.KindStatus, combat.KindMissed,
 	} {
 		s.noteHit(combat.Event{Kind: k, Amount: 10, Target: combat.SideB, Life: 90}, 100)

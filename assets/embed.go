@@ -168,6 +168,32 @@ var essenceArt embed.FS
 //go:embed rune/*.png
 var runeArt embed.FS
 
+// The playing-card faces, one per card per element, globbed the same way — `card/jab-fire.png` is
+// the key `jab-fire`, which is what `data/card_art.json` writes in its Art field.
+//
+// **There is no default-card.png and there must not be.** Every other family has a fallback face
+// because a card with no picture would be a blank rectangle; a playing card already says what it
+// is through its mark, its ticks, its name and its text, so a record with no Art draws the card
+// exactly as it looked before this family existed. One shared placeholder across 95 records would
+// put 95 copies of one picture on the table at once. See data.DefaultCardArt.
+//
+// **The directory may legitimately hold nothing but a README**, which is what it holds today —
+// `embed.FS` over a pattern matching no file is empty rather than an error, so the glob is safe
+// to land before the art does.
+//
+//go:embed card
+var cardArt embed.FS
+
+// The damage badges, globbed the same way — `damage/damage-diamond-fire.png` is the key
+// `damage-diamond-fire`, which is what cards.BadgeArtKey builds.
+//
+// **Three shapes in six colors, and only one shape is drawn.** Which one is
+// `cards.DefaultBadgeShape`; the other twelve files are kept because the choice is still open and
+// regenerating a batch to change one's mind is the expensive way to look at an alternative.
+//
+//go:embed damage/*.png
+var damageArt embed.FS
+
 // The stone faces, a family of their own as of 2026-09-14. **There is no default-stone.png**, which
 // is the one place this family departs from the three above it: a stone with no Art draws the
 // relics' default face, which is what an unpainted stone draws — see data.DefaultStoneArt.
@@ -293,6 +319,8 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, relicArt, "relic")
 	embedFamily(images, essenceArt, "essence")
 	embedFamily(images, runeArt, "rune")
+	embedFamily(images, cardArt, "card")
+	embedFamily(images, damageArt, "damage")
 	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, otherArt, "other")
 	embedFamily(images, formArt, "form")

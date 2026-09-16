@@ -206,7 +206,7 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 	// **Decided 2026-08-12**: a plan card carries its element for hands and for the relic
 	// discount and applies nothing. Otherwise a 1-AP Brace would be as good a status delivery
 	// as a 1-AP Jab, and the plan phase would quietly become the status engine.
-	for _, a := range []ConceptID{Block, Brace, testGuard} {
+	for _, a := range []ConceptID{Block, Brace, Guard} {
 		attacker, target := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 		events, _, bAfter := resolve(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
@@ -215,29 +215,6 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 		}
 		if bAfter.Statuses[statusOf(Fire)].Active() {
 			t.Errorf("a fire %v left a burn on the opponent", a)
-		}
-	}
-}
-
-func TestABlockedBlowStillAppliesItsStatus(t *testing.T) {
-	// **The status lands because the hand formed, not because the blow hurt** *(2026-08-14)*.
-	// This reverses the rule that stood while defends *negated*: back then a stopped attack
-	// carried nothing in, because nothing arrived. A testGuard takes 50% off — so making the status
-	// conditional on the final figure would let a defensive card silently un-apply an element the
-	// attacker had already paid for, and under one blow per turn that would be every defensive
-	// card in the game.
-	for _, defense := range []ConceptID{testGuard} {
-		a, b := reliced(duelist(10, 5, 500)), duelist(10, 8, 500)
-
-		// B raises the defense in round one, A swings into it in round two.
-		_, a1, b1 := resolve(a, b, nil, []Card{Plain(defense)}, 1)
-		events, _, bAfter := resolve(a1, b1, []Card{Of(Bash, Fire)}, nil, 2)
-
-		if n := len(statusEvents(events, Fire)); n != 1 {
-			t.Errorf("a Bash met by a %v applied its burn %d times, want 1", defense, n)
-		}
-		if !bAfter.Statuses[statusOf(Fire)].Active() {
-			t.Errorf("a Bash met by a %v left no burn", defense)
 		}
 	}
 }
@@ -290,25 +267,6 @@ func TestACardOutsideTheHandCarriesNoColor(t *testing.T) {
 		t.Error("a card that earned nothing still left its element behind")
 	}
 }
-
-func TestAHalvedAttackStillAppliesItsStatus(t *testing.T) {
-	// **The status lands because the blow did, not because it hurt.** A testGuard halves the hit
-	// and the hit still connected, so making the status conditional on the final figure would
-	// let a defensive card silently un-apply an element the attacker had already paid for.
-	a, b := reliced(duelist(10, 5, 500)), duelist(10, 8, 500)
-
-	_, a1, b1 := resolve(a, b, nil, []Card{Plain(testGuard)}, 1)
-	events, _, bAfter := resolve(a1, b1, []Card{Of(Bash, Ice)}, nil, 2)
-
-	if n := len(statusEvents(events, Ice)); n != 1 {
-		t.Errorf("a halved Bash applied its chill %d times, want 1", n)
-	}
-	if !bAfter.Statuses[statusOf(Ice)].Active() {
-		t.Error("a halved ice Bash left no chill")
-	}
-}
-
-// --- the lifecycle ---------------------------------------------------------------------------
 
 func TestASecondHitResetsTheClockAndDoesNotStack(t *testing.T) {
 	// **Nothing stacks as of 2026-08-16.** Two fire hits burn for what one burns for; what the
@@ -539,12 +497,12 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
 
-	// B is shocked and swings a fire Bash; A is holding a testGuard for it.
+	// B is shocked and swings a fire Bash; A is holding a Guard for it.
 	events, _, bAfter := resolveWith(alwaysMisses(), a1, b1,
-		[]Card{Plain(testGuard)}, []Card{Of(Bash, Fire)}, 2)
+		[]Card{Plain(Guard)}, []Card{Of(Bash, Fire)}, 2)
 
-	if n := countKind(events, KindNegated); n != 0 {
-		t.Error("a missed attack still spent the defense that was waiting for it")
+	if n := countKind(events, KindBlocked); n != 0 {
+		t.Error("a missed attack still spent the shield that was waiting for it")
 	}
 	if n := len(statusEvents(events, Fire)); n != 0 {
 		t.Error("a missed attack still applied its burn")

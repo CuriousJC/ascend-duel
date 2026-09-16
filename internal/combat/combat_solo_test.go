@@ -77,30 +77,6 @@ func TestASoloAttackerLandsItsCardsInQueueOrder(t *testing.T) {
 	}
 }
 
-func TestADefendAnswersEverySwingOfASoloTurn(t *testing.T) {
-	// **The rule this exists to hold.** A defense covers one opposing *turn*; spending it on the
-	// first blow would make it nearly worthless against the only opponents that swing more than
-	// once, which is every enemy in the game.
-	b := soloist(10, 9, 500)
-	a := duelist(10, 5, 500)
-
-	open, _, _ := resolve(a, b, nil, PlainCards(Bash, Bash), 1)
-	shielded, after, _ := resolve(a, b, PlainCards(testGuard), PlainCards(Bash, Bash), 1)
-
-	cut := 100 - ConceptOf(testGuard).Amount
-	for i, e := range damages(shielded) {
-		want := damages(open)[i].Amount * cut / 100
-		if e.Amount != want {
-			t.Errorf("blow %d through a testGuard dealt %d, want %d", i, e.Amount, want)
-		}
-	}
-
-	// And it is gone once the turn it covered is over, exactly as one blow would have spent it.
-	if after.DefendCount != 0 {
-		t.Errorf("the testGuard survived the turn it answered, holding %d", after.DefendCount)
-	}
-}
-
 func TestASoloAttackerStopsAtTheKill(t *testing.T) {
 	// Three swings into a duelist that cannot take two: the third must not be swung at a corpse,
 	// which is the same rule the round-level defeat check follows.

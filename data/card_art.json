@@ -1,0 +1,762 @@
+[
+  {
+    "CardArtRecord": "poke-fire",
+    "Card": "Poke",
+    "Element": "fire",
+    "Family": "Stab in fire",
+    "Art": "poke-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a sharpened splinter barely longer than its hand, in a quick flicking jab from the wrist, elbow tucked in at its side, the body barely moving and the weight still on the back foot. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "poke-ice",
+    "Card": "Poke",
+    "Element": "ice",
+    "Family": "Stab in ice",
+    "Art": "poke-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a sharpened splinter barely longer than its hand, in a quick flicking jab from the wrist, elbow tucked in at its side, the body barely moving and the weight still on the back foot. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "poke-lightning",
+    "Card": "Poke",
+    "Element": "lightning",
+    "Family": "Stab in lightning",
+    "Art": "poke-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a sharpened splinter barely longer than its hand, in a quick flicking jab from the wrist, elbow tucked in at its side, the body barely moving and the weight still on the back foot. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "poke-earth",
+    "Card": "Poke",
+    "Element": "earth",
+    "Family": "Stab in earth",
+    "Art": "poke-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a sharpened splinter barely longer than its hand, in a quick flicking jab from the wrist, elbow tucked in at its side, the body barely moving and the weight still on the back foot. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "poke-arcane",
+    "Card": "Poke",
+    "Element": "arcane",
+    "Family": "Stab in arcane",
+    "Art": "poke-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a sharpened splinter barely longer than its hand, in a quick flicking jab from the wrist, elbow tucked in at its side, the body barely moving and the weight still on the back foot. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "jab-fire",
+    "Card": "Jab",
+    "Element": "fire",
+    "Family": "Stab in fire",
+    "Art": "jab-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short shiv with a crude taped grip, in a close, compact punch-thrust from the hip, shoulders square, one short step into it. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "jab-ice",
+    "Card": "Jab",
+    "Element": "ice",
+    "Family": "Stab in ice",
+    "Art": "jab-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short shiv with a crude taped grip, in a close, compact punch-thrust from the hip, shoulders square, one short step into it. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "jab-lightning",
+    "Card": "Jab",
+    "Element": "lightning",
+    "Family": "Stab in lightning",
+    "Art": "jab-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short shiv with a crude taped grip, in a close, compact punch-thrust from the hip, shoulders square, one short step into it. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "jab-earth",
+    "Card": "Jab",
+    "Element": "earth",
+    "Family": "Stab in earth",
+    "Art": "jab-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short shiv with a crude taped grip, in a close, compact punch-thrust from the hip, shoulders square, one short step into it. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "jab-arcane",
+    "Card": "Jab",
+    "Element": "arcane",
+    "Family": "Stab in arcane",
+    "Art": "jab-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short shiv with a crude taped grip, in a close, compact punch-thrust from the hip, shoulders square, one short step into it. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thrust-fire",
+    "Card": "Thrust",
+    "Element": "fire",
+    "Family": "Stab in fire",
+    "Art": "thrust-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain short sword, a hand and a half of blade, in a clean fencer's lunge, front knee bent, back leg straight, arm extended along the line of the blade. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thrust-ice",
+    "Card": "Thrust",
+    "Element": "ice",
+    "Family": "Stab in ice",
+    "Art": "thrust-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain short sword, a hand and a half of blade, in a clean fencer's lunge, front knee bent, back leg straight, arm extended along the line of the blade. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thrust-lightning",
+    "Card": "Thrust",
+    "Element": "lightning",
+    "Family": "Stab in lightning",
+    "Art": "thrust-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain short sword, a hand and a half of blade, in a clean fencer's lunge, front knee bent, back leg straight, arm extended along the line of the blade. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thrust-earth",
+    "Card": "Thrust",
+    "Element": "earth",
+    "Family": "Stab in earth",
+    "Art": "thrust-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain short sword, a hand and a half of blade, in a clean fencer's lunge, front knee bent, back leg straight, arm extended along the line of the blade. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thrust-arcane",
+    "Card": "Thrust",
+    "Element": "arcane",
+    "Family": "Stab in arcane",
+    "Art": "thrust-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain short sword, a hand and a half of blade, in a clean fencer's lunge, front knee bent, back leg straight, arm extended along the line of the blade. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "skewer-fire",
+    "Card": "Skewer",
+    "Element": "fire",
+    "Family": "Stab in fire",
+    "Art": "skewer-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a long two-handed spear with a broad leaf head, in a deep braced lunge behind it, both hands on the shaft, the whole body driving forward behind the point. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "skewer-ice",
+    "Card": "Skewer",
+    "Element": "ice",
+    "Family": "Stab in ice",
+    "Art": "skewer-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a long two-handed spear with a broad leaf head, in a deep braced lunge behind it, both hands on the shaft, the whole body driving forward behind the point. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "skewer-lightning",
+    "Card": "Skewer",
+    "Element": "lightning",
+    "Family": "Stab in lightning",
+    "Art": "skewer-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a long two-handed spear with a broad leaf head, in a deep braced lunge behind it, both hands on the shaft, the whole body driving forward behind the point. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "skewer-earth",
+    "Card": "Skewer",
+    "Element": "earth",
+    "Family": "Stab in earth",
+    "Art": "skewer-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a long two-handed spear with a broad leaf head, in a deep braced lunge behind it, both hands on the shaft, the whole body driving forward behind the point. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "skewer-arcane",
+    "Card": "Skewer",
+    "Element": "arcane",
+    "Family": "Stab in arcane",
+    "Art": "skewer-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a long two-handed spear with a broad leaf head, in a deep braced lunge behind it, both hands on the shaft, the whole body driving forward behind the point. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "impale-fire",
+    "Card": "Impale",
+    "Element": "fire",
+    "Family": "Stab in fire",
+    "Art": "impale-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds an enormous couched lance, thicker through than its own arm, in a full committed charge, the lance tucked under the arm and locked against the ribs, the body leaning far into the run. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "impale-ice",
+    "Card": "Impale",
+    "Element": "ice",
+    "Family": "Stab in ice",
+    "Art": "impale-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds an enormous couched lance, thicker through than its own arm, in a full committed charge, the lance tucked under the arm and locked against the ribs, the body leaning far into the run. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "impale-lightning",
+    "Card": "Impale",
+    "Element": "lightning",
+    "Family": "Stab in lightning",
+    "Art": "impale-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds an enormous couched lance, thicker through than its own arm, in a full committed charge, the lance tucked under the arm and locked against the ribs, the body leaning far into the run. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "impale-earth",
+    "Card": "Impale",
+    "Element": "earth",
+    "Family": "Stab in earth",
+    "Art": "impale-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds an enormous couched lance, thicker through than its own arm, in a full committed charge, the lance tucked under the arm and locked against the ribs, the body leaning far into the run. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "impale-arcane",
+    "Card": "Impale",
+    "Element": "arcane",
+    "Family": "Stab in arcane",
+    "Art": "impale-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds an enormous couched lance, thicker through than its own arm, in a full committed charge, the lance tucked under the arm and locked against the ribs, the body leaning far into the run. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "nick-fire",
+    "Card": "Nick",
+    "Element": "fire",
+    "Family": "Slash in fire",
+    "Art": "nick-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a tiny paring knife pinched between two fingers, in a flick of the wrist across the front of the body, barely a movement, the rest of it still. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "nick-ice",
+    "Card": "Nick",
+    "Element": "ice",
+    "Family": "Slash in ice",
+    "Art": "nick-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a tiny paring knife pinched between two fingers, in a flick of the wrist across the front of the body, barely a movement, the rest of it still. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "nick-lightning",
+    "Card": "Nick",
+    "Element": "lightning",
+    "Family": "Slash in lightning",
+    "Art": "nick-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a tiny paring knife pinched between two fingers, in a flick of the wrist across the front of the body, barely a movement, the rest of it still. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "nick-earth",
+    "Card": "Nick",
+    "Element": "earth",
+    "Family": "Slash in earth",
+    "Art": "nick-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a tiny paring knife pinched between two fingers, in a flick of the wrist across the front of the body, barely a movement, the rest of it still. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "nick-arcane",
+    "Card": "Nick",
+    "Element": "arcane",
+    "Family": "Slash in arcane",
+    "Art": "nick-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a tiny paring knife pinched between two fingers, in a flick of the wrist across the front of the body, barely a movement, the rest of it still. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cut-fire",
+    "Card": "Cut",
+    "Element": "fire",
+    "Family": "Slash in fire",
+    "Art": "cut-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a curved belt knife, in a short drawing slash across the waist, one shoulder turning into it. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cut-ice",
+    "Card": "Cut",
+    "Element": "ice",
+    "Family": "Slash in ice",
+    "Art": "cut-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a curved belt knife, in a short drawing slash across the waist, one shoulder turning into it. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cut-lightning",
+    "Card": "Cut",
+    "Element": "lightning",
+    "Family": "Slash in lightning",
+    "Art": "cut-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a curved belt knife, in a short drawing slash across the waist, one shoulder turning into it. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cut-earth",
+    "Card": "Cut",
+    "Element": "earth",
+    "Family": "Slash in earth",
+    "Art": "cut-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a curved belt knife, in a short drawing slash across the waist, one shoulder turning into it. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cut-arcane",
+    "Card": "Cut",
+    "Element": "arcane",
+    "Family": "Slash in arcane",
+    "Art": "cut-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a curved belt knife, in a short drawing slash across the waist, one shoulder turning into it. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "slice-fire",
+    "Card": "Slice",
+    "Element": "fire",
+    "Family": "Slash in fire",
+    "Art": "slice-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a light cavalry sabre, in a wide one-handed cut sweeping down and across, the free arm thrown back for balance. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "slice-ice",
+    "Card": "Slice",
+    "Element": "ice",
+    "Family": "Slash in ice",
+    "Art": "slice-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a light cavalry sabre, in a wide one-handed cut sweeping down and across, the free arm thrown back for balance. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "slice-lightning",
+    "Card": "Slice",
+    "Element": "lightning",
+    "Family": "Slash in lightning",
+    "Art": "slice-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a light cavalry sabre, in a wide one-handed cut sweeping down and across, the free arm thrown back for balance. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "slice-earth",
+    "Card": "Slice",
+    "Element": "earth",
+    "Family": "Slash in earth",
+    "Art": "slice-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a light cavalry sabre, in a wide one-handed cut sweeping down and across, the free arm thrown back for balance. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "slice-arcane",
+    "Card": "Slice",
+    "Element": "arcane",
+    "Family": "Slash in arcane",
+    "Art": "slice-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a light cavalry sabre, in a wide one-handed cut sweeping down and across, the free arm thrown back for balance. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cleave-fire",
+    "Card": "Cleave",
+    "Element": "fire",
+    "Family": "Slash in fire",
+    "Art": "cleave-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a heavy falchion with a thick curved spine, in a two-handed overhead chop coming down past the shoulder, the whole torso following the blade. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cleave-ice",
+    "Card": "Cleave",
+    "Element": "ice",
+    "Family": "Slash in ice",
+    "Art": "cleave-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a heavy falchion with a thick curved spine, in a two-handed overhead chop coming down past the shoulder, the whole torso following the blade. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cleave-lightning",
+    "Card": "Cleave",
+    "Element": "lightning",
+    "Family": "Slash in lightning",
+    "Art": "cleave-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a heavy falchion with a thick curved spine, in a two-handed overhead chop coming down past the shoulder, the whole torso following the blade. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cleave-earth",
+    "Card": "Cleave",
+    "Element": "earth",
+    "Family": "Slash in earth",
+    "Art": "cleave-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a heavy falchion with a thick curved spine, in a two-handed overhead chop coming down past the shoulder, the whole torso following the blade. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "cleave-arcane",
+    "Card": "Cleave",
+    "Element": "arcane",
+    "Family": "Slash in arcane",
+    "Art": "cleave-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a heavy falchion with a thick curved spine, in a two-handed overhead chop coming down past the shoulder, the whole torso following the blade. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "sever-fire",
+    "Card": "Sever",
+    "Element": "fire",
+    "Family": "Slash in fire",
+    "Art": "sever-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a huge executioner's greatsword, nearly its own height, in an enormous full-circle horizontal swing, the body wound round behind it, both feet planted wide. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "sever-ice",
+    "Card": "Sever",
+    "Element": "ice",
+    "Family": "Slash in ice",
+    "Art": "sever-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a huge executioner's greatsword, nearly its own height, in an enormous full-circle horizontal swing, the body wound round behind it, both feet planted wide. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "sever-lightning",
+    "Card": "Sever",
+    "Element": "lightning",
+    "Family": "Slash in lightning",
+    "Art": "sever-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a huge executioner's greatsword, nearly its own height, in an enormous full-circle horizontal swing, the body wound round behind it, both feet planted wide. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "sever-earth",
+    "Card": "Sever",
+    "Element": "earth",
+    "Family": "Slash in earth",
+    "Art": "sever-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a huge executioner's greatsword, nearly its own height, in an enormous full-circle horizontal swing, the body wound round behind it, both feet planted wide. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "sever-arcane",
+    "Card": "Sever",
+    "Element": "arcane",
+    "Family": "Slash in arcane",
+    "Art": "sever-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a huge executioner's greatsword, nearly its own height, in an enormous full-circle horizontal swing, the body wound round behind it, both feet planted wide. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "tap-fire",
+    "Card": "Tap",
+    "Element": "fire",
+    "Family": "Crush in fire",
+    "Art": "tap-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short baton, no longer than a forearm, in a small downward rap from the elbow, the rest of the body loose and upright. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "tap-ice",
+    "Card": "Tap",
+    "Element": "ice",
+    "Family": "Crush in ice",
+    "Art": "tap-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short baton, no longer than a forearm, in a small downward rap from the elbow, the rest of the body loose and upright. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "tap-lightning",
+    "Card": "Tap",
+    "Element": "lightning",
+    "Family": "Crush in lightning",
+    "Art": "tap-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short baton, no longer than a forearm, in a small downward rap from the elbow, the rest of the body loose and upright. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "tap-earth",
+    "Card": "Tap",
+    "Element": "earth",
+    "Family": "Crush in earth",
+    "Art": "tap-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short baton, no longer than a forearm, in a small downward rap from the elbow, the rest of the body loose and upright. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "tap-arcane",
+    "Card": "Tap",
+    "Element": "arcane",
+    "Family": "Crush in arcane",
+    "Art": "tap-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a short baton, no longer than a forearm, in a small downward rap from the elbow, the rest of the body loose and upright. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thump-fire",
+    "Card": "Thump",
+    "Element": "fire",
+    "Family": "Crush in fire",
+    "Art": "thump-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain wooden club, in a one-handed sideways swing from the shoulder, hips just beginning to turn. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thump-ice",
+    "Card": "Thump",
+    "Element": "ice",
+    "Family": "Crush in ice",
+    "Art": "thump-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain wooden club, in a one-handed sideways swing from the shoulder, hips just beginning to turn. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thump-lightning",
+    "Card": "Thump",
+    "Element": "lightning",
+    "Family": "Crush in lightning",
+    "Art": "thump-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain wooden club, in a one-handed sideways swing from the shoulder, hips just beginning to turn. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thump-earth",
+    "Card": "Thump",
+    "Element": "earth",
+    "Family": "Crush in earth",
+    "Art": "thump-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain wooden club, in a one-handed sideways swing from the shoulder, hips just beginning to turn. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "thump-arcane",
+    "Card": "Thump",
+    "Element": "arcane",
+    "Family": "Crush in arcane",
+    "Art": "thump-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a plain wooden club, in a one-handed sideways swing from the shoulder, hips just beginning to turn. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "bash-fire",
+    "Card": "Bash",
+    "Element": "fire",
+    "Family": "Crush in fire",
+    "Art": "bash-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a flanged iron mace, in a strong one-handed overhead strike, the free hand raised, the weight coming forward onto the front foot. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "bash-ice",
+    "Card": "Bash",
+    "Element": "ice",
+    "Family": "Crush in ice",
+    "Art": "bash-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a flanged iron mace, in a strong one-handed overhead strike, the free hand raised, the weight coming forward onto the front foot. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "bash-lightning",
+    "Card": "Bash",
+    "Element": "lightning",
+    "Family": "Crush in lightning",
+    "Art": "bash-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a flanged iron mace, in a strong one-handed overhead strike, the free hand raised, the weight coming forward onto the front foot. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "bash-earth",
+    "Card": "Bash",
+    "Element": "earth",
+    "Family": "Crush in earth",
+    "Art": "bash-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a flanged iron mace, in a strong one-handed overhead strike, the free hand raised, the weight coming forward onto the front foot. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "bash-arcane",
+    "Card": "Bash",
+    "Element": "arcane",
+    "Family": "Crush in arcane",
+    "Art": "bash-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a flanged iron mace, in a strong one-handed overhead strike, the free hand raised, the weight coming forward onto the front foot. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "smash-fire",
+    "Card": "Smash",
+    "Element": "fire",
+    "Family": "Crush in fire",
+    "Art": "smash-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a two-handed warhammer with a blunt squared head, in a two-handed swing brought down from over the shoulder, knees bent, the whole frame behind it. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "smash-ice",
+    "Card": "Smash",
+    "Element": "ice",
+    "Family": "Crush in ice",
+    "Art": "smash-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a two-handed warhammer with a blunt squared head, in a two-handed swing brought down from over the shoulder, knees bent, the whole frame behind it. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "smash-lightning",
+    "Card": "Smash",
+    "Element": "lightning",
+    "Family": "Crush in lightning",
+    "Art": "smash-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a two-handed warhammer with a blunt squared head, in a two-handed swing brought down from over the shoulder, knees bent, the whole frame behind it. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "smash-earth",
+    "Card": "Smash",
+    "Element": "earth",
+    "Family": "Crush in earth",
+    "Art": "smash-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a two-handed warhammer with a blunt squared head, in a two-handed swing brought down from over the shoulder, knees bent, the whole frame behind it. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "smash-arcane",
+    "Card": "Smash",
+    "Element": "arcane",
+    "Family": "Crush in arcane",
+    "Art": "smash-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a two-handed warhammer with a blunt squared head, in a two-handed swing brought down from over the shoulder, knees bent, the whole frame behind it. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "pulverize-fire",
+    "Card": "Pulverize",
+    "Element": "fire",
+    "Family": "Crush in fire",
+    "Art": "pulverize-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a colossal great maul with a head the size of its own chest, in a full overhead slam at the bottom of its arc, arms extended straight down, the body dropped into the blow. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "pulverize-ice",
+    "Card": "Pulverize",
+    "Element": "ice",
+    "Family": "Crush in ice",
+    "Art": "pulverize-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a colossal great maul with a head the size of its own chest, in a full overhead slam at the bottom of its arc, arms extended straight down, the body dropped into the blow. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "pulverize-lightning",
+    "Card": "Pulverize",
+    "Element": "lightning",
+    "Family": "Crush in lightning",
+    "Art": "pulverize-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a colossal great maul with a head the size of its own chest, in a full overhead slam at the bottom of its arc, arms extended straight down, the body dropped into the blow. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "pulverize-earth",
+    "Card": "Pulverize",
+    "Element": "earth",
+    "Family": "Crush in earth",
+    "Art": "pulverize-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a colossal great maul with a head the size of its own chest, in a full overhead slam at the bottom of its arc, arms extended straight down, the body dropped into the blow. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "pulverize-arcane",
+    "Card": "Pulverize",
+    "Element": "arcane",
+    "Family": "Crush in arcane",
+    "Art": "pulverize-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, wielding a real solid weapon. It holds a colossal great maul with a head the size of its own chest, in a full overhead slam at the bottom of its arc, arms extended straight down, the body dropped into the blow. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The weapon is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "flinch-fire",
+    "Card": "Flinch",
+    "Element": "fire",
+    "Family": "Defend in fire",
+    "Art": "flinch-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, empty-handed. It carries no weapon at all and nothing in the picture is solid: it is caught in a half-turn away with the forearm thrown up across the face, weight rocking onto the back foot. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. There is no solid object anywhere in this one, which is the whole of what makes it the cheapest defense on the ladder."
+  },
+  {
+    "CardArtRecord": "flinch-ice",
+    "Card": "Flinch",
+    "Element": "ice",
+    "Family": "Defend in ice",
+    "Art": "flinch-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, empty-handed. It carries no weapon at all and nothing in the picture is solid: it is caught in a half-turn away with the forearm thrown up across the face, weight rocking onto the back foot. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. There is no solid object anywhere in this one, which is the whole of what makes it the cheapest defense on the ladder."
+  },
+  {
+    "CardArtRecord": "flinch-lightning",
+    "Card": "Flinch",
+    "Element": "lightning",
+    "Family": "Defend in lightning",
+    "Art": "flinch-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, empty-handed. It carries no weapon at all and nothing in the picture is solid: it is caught in a half-turn away with the forearm thrown up across the face, weight rocking onto the back foot. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. There is no solid object anywhere in this one, which is the whole of what makes it the cheapest defense on the ladder."
+  },
+  {
+    "CardArtRecord": "flinch-earth",
+    "Card": "Flinch",
+    "Element": "earth",
+    "Family": "Defend in earth",
+    "Art": "flinch-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, empty-handed. It carries no weapon at all and nothing in the picture is solid: it is caught in a half-turn away with the forearm thrown up across the face, weight rocking onto the back foot. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. There is no solid object anywhere in this one, which is the whole of what makes it the cheapest defense on the ladder."
+  },
+  {
+    "CardArtRecord": "flinch-arcane",
+    "Card": "Flinch",
+    "Element": "arcane",
+    "Family": "Defend in arcane",
+    "Art": "flinch-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, empty-handed. It carries no weapon at all and nothing in the picture is solid: it is caught in a half-turn away with the forearm thrown up across the face, weight rocking onto the back foot. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. There is no solid object anywhere in this one, which is the whole of what makes it the cheapest defense on the ladder."
+  },
+  {
+    "CardArtRecord": "brace-fire",
+    "Card": "Brace",
+    "Element": "fire",
+    "Family": "Defend in fire",
+    "Art": "brace-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a small round buckler on the fist, in a compact crouch behind it, the buckler held out at arm's length, the body narrow and side-on. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "brace-ice",
+    "Card": "Brace",
+    "Element": "ice",
+    "Family": "Defend in ice",
+    "Art": "brace-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a small round buckler on the fist, in a compact crouch behind it, the buckler held out at arm's length, the body narrow and side-on. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "brace-lightning",
+    "Card": "Brace",
+    "Element": "lightning",
+    "Family": "Defend in lightning",
+    "Art": "brace-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a small round buckler on the fist, in a compact crouch behind it, the buckler held out at arm's length, the body narrow and side-on. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "brace-earth",
+    "Card": "Brace",
+    "Element": "earth",
+    "Family": "Defend in earth",
+    "Art": "brace-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a small round buckler on the fist, in a compact crouch behind it, the buckler held out at arm's length, the body narrow and side-on. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "brace-arcane",
+    "Card": "Brace",
+    "Element": "arcane",
+    "Family": "Defend in arcane",
+    "Art": "brace-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a small round buckler on the fist, in a compact crouch behind it, the buckler held out at arm's length, the body narrow and side-on. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "block-fire",
+    "Card": "Block",
+    "Element": "fire",
+    "Family": "Defend in fire",
+    "Art": "block-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a kite shield covering it from shoulder to knee, in a planted stance side-on behind the shield, shoulder driven into the back of it, both feet set. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "block-ice",
+    "Card": "Block",
+    "Element": "ice",
+    "Family": "Defend in ice",
+    "Art": "block-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a kite shield covering it from shoulder to knee, in a planted stance side-on behind the shield, shoulder driven into the back of it, both feet set. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "block-lightning",
+    "Card": "Block",
+    "Element": "lightning",
+    "Family": "Defend in lightning",
+    "Art": "block-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a kite shield covering it from shoulder to knee, in a planted stance side-on behind the shield, shoulder driven into the back of it, both feet set. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "block-earth",
+    "Card": "Block",
+    "Element": "earth",
+    "Family": "Defend in earth",
+    "Art": "block-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a kite shield covering it from shoulder to knee, in a planted stance side-on behind the shield, shoulder driven into the back of it, both feet set. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "block-arcane",
+    "Card": "Block",
+    "Element": "arcane",
+    "Family": "Defend in arcane",
+    "Art": "block-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds a kite shield covering it from shoulder to knee, in a planted stance side-on behind the shield, shoulder driven into the back of it, both feet set. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "guard-fire",
+    "Card": "Guard",
+    "Element": "fire",
+    "Family": "Defend in fire",
+    "Art": "guard-fire",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds an immense tower shield, taller than the figure itself, in a full kneeling set behind it, the shield grounded, almost nothing of the body showing past the rim. The figure is made of hot orange vapor — licking, upward-curling wisps that thin into smoke at the extremities, brightest at the core and trailing embers off the trailing edges. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "guard-ice",
+    "Card": "Guard",
+    "Element": "ice",
+    "Family": "Defend in ice",
+    "Art": "guard-ice",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds an immense tower shield, taller than the figure itself, in a full kneeling set behind it, the shield grounded, almost nothing of the body showing past the rim. The figure is made of cold blue vapor — slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going brittle and faceted rather than soft. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "guard-lightning",
+    "Card": "Guard",
+    "Element": "lightning",
+    "Family": "Defend in lightning",
+    "Art": "guard-lightning",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds an immense tower shield, taller than the figure itself, in a full kneeling set behind it, the shield grounded, almost nothing of the body showing past the rim. The figure is made of crackling amber-gold vapor — a charged, unsettled haze streaked with hairline arcs that fork across the body and jump between limbs. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "guard-earth",
+    "Card": "Guard",
+    "Element": "earth",
+    "Family": "Defend in earth",
+    "Art": "guard-earth",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds an immense tower shield, taller than the figure itself, in a full kneeling set behind it, the shield grounded, almost nothing of the body showing past the rim. The figure is made of green loam vapor — a slow, dense, granular cloud like turned soil hanging in the air, heavier at the feet and carrying flecks of grit through it. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  },
+  {
+    "CardArtRecord": "guard-arcane",
+    "Card": "Guard",
+    "Element": "arcane",
+    "Family": "Defend in arcane",
+    "Art": "guard-arcane",
+    "Draw": "A humanoid figure made entirely of swirling colored vapor, carrying a real solid shield. It holds an immense tower shield, taller than the figure itself, in a full kneeling set behind it, the shield grounded, almost nothing of the body showing past the rim. The figure is made of violet witch-light vapor — a smooth, self-lit shimmer that glows faintly from inside and frays into drifting motes rather than smoke. The shield is the one solid thing in the picture: ordinary physical material, sharply drawn, held in a hand of vapor that closes around the grip."
+  }
+]

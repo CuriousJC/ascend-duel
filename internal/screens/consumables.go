@@ -158,7 +158,7 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		// is what makes select-then-apply readable: the player never has to be told whether the
 		// cards they have selected are the right ones, because the rune that wants them is the
 		// one that is not dim. See consumableTarget.satisfiedBy.
-		drawSpecCard(gs, screen, at.Min, runeSpec(gs, held[i], canSpend(spendable, held[i]), false))
+		drawRuneCard(gs, screen, at.Min, held[i], canSpend(spendable, held[i]), false)
 	}
 
 	drawConsumableCount(gs, screen, back, len(held))
@@ -198,7 +198,7 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 		if !at.In(seat) {
 			continue
 		}
-		tip.Point(seat, tipLine(p.Name), tipLines(runeTipLines(p)))
+		tip.Point(seat, tipLine(p.Name), tipLines(runeTipLines(gs, p)))
 		return true
 	}
 	return false

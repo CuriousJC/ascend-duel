@@ -334,6 +334,39 @@ func PlayerConcepts() []ConceptID {
 // deliberate: an essence that cheapened a Bash must not thereby turn it into a Jab.
 func (c Concept) Tier() int { return c.Cost }
 
+// Counterpart is the concept standing on another form's ladder at the same rung as this one —
+// a Slice asked for crush answers Bash, because both are the third rung of their form.
+//
+// **It is Neighbor's scan sideways instead of up**, over the same registry and by the same two
+// keys: the tier is the declared cost, so a card cheapened by an essence does not slide down a
+// ladder, and the verb has to match. A form with no ladder, or a rung that form does not reach,
+// reports false rather than guessing.
+//
+// **The verb match is what makes a defense answer nothing, and that is the rule rather than a gap**
+// *(owner's call, 2026-09-16)*. A Brace told to be a crush is still a Brace: it raises shields, and
+// the crush ladder is four attacks — so the nearest thing to draw would be a figure swinging a club
+// on a card that hits nobody. A defense keeps its own picture, and what changed about it is said by
+// the corner mark alone.
+//
+// **Its one caller is the drawing** *(owner's call, 2026-09-16)*. A form override changes what a
+// card counts as and not what it is, so nothing about a round reads this; what it answers is which
+// picture a card told to be a crush should show, since the corner mark had gone over to the club
+// while the art still held a sabre.
+func Counterpart(id ConceptID, form Form) (ConceptID, bool) {
+	from := ConceptOf(id)
+	if form == FormNone || from.Form == FormNone || form == from.Form {
+		return NoConcept, false
+	}
+
+	for other := range registry {
+		c := registry[other]
+		if c.Form == form && c.Verb == from.Verb && c.Tier() == from.Tier() {
+			return ConceptID(other), true
+		}
+	}
+	return NoConcept, false
+}
+
 // Neighbor is the concept one rung up or down the same form's ladder, or false if there is
 // none — the top of a form cannot be promoted and the bottom cannot be demoted.
 //

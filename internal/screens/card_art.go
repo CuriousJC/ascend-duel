@@ -2,7 +2,6 @@ package screens
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	_ "image/png"
 	"log"
@@ -65,10 +64,20 @@ var (
 // before this catalog existed. See data.DefaultCardArt, which is empty for the same reason.
 var cardImages map[string][]byte
 
-func faces(gs *state.GlobalState) *cards.Faces {
+// useImages fills the stash from a screen's state.
+//
+// **Called at the door of a scene as well as from faces**, which is what fixes the deal: a hand's
+// faces are captured in Init, before a single frame has been drawn, so a stash filled lazily on the
+// first cardImage call was still nil when the opening hand's pictures were looked up. The cards
+// then flew out of the pile with no artwork and grew one the moment the row took over drawing them.
+func useImages(gs *state.GlobalState) {
 	if cardImages == nil {
 		cardImages = gs.ImageData
 	}
+}
+
+func faces(gs *state.GlobalState) *cards.Faces {
+	useImages(gs)
 	if facesTried {
 		return cardFaces
 	}
@@ -349,14 +358,41 @@ var cardArt = data.LoadCardArt()
 //
 // **The element is the card's own, not the one a relic flipped it to on the way to the table.**
 // `Card.Element` is what the card *is*, and it is what the rest of the face already reads: the
-// form mark, the cost ticks and the border are all drawn from it, so a picture keyed off anything
-// else would be the one thing on the card disagreeing with the other four.
+// cost ticks and the border are drawn from it, so a picture keyed off anything else would be the
+// one thing on the card disagreeing with them.
+//
+// **The form is the opposite, and that is the owner's call** *(2026-09-16)*. A form override moves
+// the corner mark — a Slice told to be a crush wears the club — so a picture keyed off the card's
+// own concept left the one figure on the card still swinging a sabre under a club. The art follows
+// the mark instead: `combat.Counterpart` answers the concept standing at the same rung of the
+// overridden form, and that concept's label is what the catalog is asked for. **The two axes
+// therefore disagree on purpose**, and the reason is which of them the rest of the face agrees
+// with: nothing on a card is drawn from a flipped element, and the mark is drawn from the
+// overridden form.
+//
+// **A defense keeps its own picture, and that is decided rather than left over** *(owner's call,
+// 2026-09-16)*. `combat.Counterpart` matches on the verb, so nothing on the attack ladders answers
+// a Brace told to be a crush — and it should not: the card still raises shields, so a club in its
+// hands would be the picture lying about what it does. Crossing the attack/defend line changes the
+// mark and nothing else; the repaint is for a card moving between the three attack forms, where
+// what it does is the same and only the weapon differs.
 func cardArtwork(c actionCard) image.Image {
-	rec, ok := cardArt[data.CardArtKey(c.Label(), c.Element.String())]
+	rec, ok := cardArt[cardArtRecord(c)]
 	if !ok {
 		return nil
 	}
 	return artworkFrom(rec.ArtKey())
+}
+
+// cardArtRecord is which record of the catalog a card draws from. Split out of cardArtwork so the
+// rule above can be tested without a picture: the catalog is mostly undrawn, so asserting on the
+// image would be asserting on which pairings happen to have been painted.
+func cardArtRecord(c actionCard) string {
+	label := c.Label()
+	if id, ok := combat.Counterpart(c.Concept, c.Form()); ok {
+		label = combat.ConceptOf(id).Label
+	}
+	return data.CardArtKey(label, c.Element.String())
 }
 
 // artworkFrom is artwork() without a GlobalState, reading the stash instead. See cardImages.
@@ -711,22 +747,13 @@ func essenceSpec(gs *state.GlobalState, w session.Essence, enabled bool) cards.S
 // gives `basic`, exactly as a Devour essence's is.
 func stoneSpec(gs *state.GlobalState, st session.Stone, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:       st.Name,
-		Form:       cards.FormNone,
-		Cost:       0,
-		Element:    artFor(combat.Basic),
-		Art:        stoneFace(gs, st),
-		Text:       stoneLine(st),
-		Highlights: cards.ElementHighlights(stoneLine(st)),
-		Enabled:    enabled,
+		Name:    st.Name,
+		Form:    cards.FormNone,
+		Cost:    0,
+		Element: artFor(combat.Basic),
+		Art:     stoneFace(gs, st),
+		Enabled: enabled,
 	}
-}
-
-// stoneLine is what a stone card says: its authored sentence, and the figure it raises its rung
-// by. **The figure is computed rather than authored** — see the data skill on why `stones.json`
-// does not carry it — so it is derived in one place and both the face and its highlights read it.
-func stoneLine(st session.Stone) string {
-	return fmt.Sprintf("%s\n+%d", st.Text, session.StoneWorth(st.Hand))
 }
 
 // goodSpec is one of the shop's two sealed goods as a card: the bag of rocks, or the vial of essence.

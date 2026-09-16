@@ -30,7 +30,6 @@ package screens
 import (
 	"image"
 	"math/rand"
-	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -69,32 +68,24 @@ func heldRunes(gs *state.GlobalState) []session.Rune {
 // constant until then, and the note on that constant said the day runes got art it should be a
 // `data/runes.json` field appearing rather than a fallback being unpicked — so the fallback is
 // `assets/rune/default-rune.png` now, a seat of the catalog's own.
-// chimeraBreak is the authored line break on a chimera's face — see cards.WrapText, which honors
-// one. It is a constant rather than a literal so the escape does not have to survive being read
-// back out of this file.
-const chimeraBreak = "\n"
-
-// **A chimera says what it would fire**, because its authored line cannot: the card's whole subject
-// is a rune named somewhere else, and "COPIES THE LAST" is a card the player has to remember
-// the answer to. On a run that has spent nothing there is no answer, and it keeps its own line — a
-// card that is about to be drawn dim anyway.
+//
+// **The card says nothing at all** *(owner's call, 2026-09-16)*. It carried its authored line
+// across the lower half of its picture, and what that cost is the picture: a rune is a full-bleed
+// card, so the sentence is a scrim over the one thing on the card worth looking at. The line has
+// not gone anywhere — it is in the tooltip, which is where a player who does not recognize a
+// picture yet already goes, and where there is room to say the half a face cannot fit. Same call
+// the sealed goods took on 2026-09-15 and the stones took with this one.
+//
+// **The chimera's answer went with it.** Its face printed `COPIES <name>` because its authored line
+// cannot say what it would fire; that is now the tooltip's first line — see runeTipLines.
 func runeSpec(gs *state.GlobalState, p session.Rune, enabled, selected bool) cards.Spec {
-	text := p.Text
-	if gs.Run != nil {
-		if echoed := gs.Run.EchoedName(p); echoed != "" {
-			text = "COPIES" + chimeraBreak + strings.ToUpper(echoed)
-		}
-	}
-
 	return cards.Spec{
-		Name:       p.Name,
-		Form:       cards.FormNone,
-		Element:    cards.Basic,
-		Art:        artwork(gs, p.Art),
-		Text:       text,
-		Highlights: cards.ElementHighlights(text),
-		Enabled:    enabled,
-		Selected:   selected,
+		Name:     p.Name,
+		Form:     cards.FormNone,
+		Element:  cards.Basic,
+		Art:      artwork(gs, p.Art),
+		Enabled:  enabled,
+		Selected: selected,
 	}
 }
 

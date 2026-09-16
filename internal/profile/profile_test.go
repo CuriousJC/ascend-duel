@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -241,4 +242,39 @@ func splitJSONKeys(t *testing.T, raw []byte) []string {
 		out = append(out, k)
 	}
 	return out
+}
+
+// **An export lands beside the profile and is handed back where it went**, because the player's
+// next move after pressing the button is to go and find the file.
+func TestAnExportIsWrittenBesideTheProfile(t *testing.T) {
+	dir := t.TempDir()
+	s := At(dir)
+
+	path, err := s.WriteExport("fightlog-0009D4-20260916-141233.json", map[string]string{"seed": "0009D4"})
+	if err != nil {
+		t.Fatalf("the export must write: %v", err)
+	}
+	if got := filepath.Dir(path); got != dir {
+		t.Errorf("the export went to %s, want %s", got, dir)
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("the export must be there: %v", err)
+	}
+	if !strings.Contains(string(raw), `"seed": "0009D4"`) {
+		t.Errorf("the export reads %s", raw)
+	}
+}
+
+// **A name that is not a file name is refused rather than sanitized.** This is the one door out of
+// the store that takes a name from further up the game, so a separator or a `..` in it would be a
+// way to write anywhere on the machine from a panel button; a quietly renamed export is a file
+// nobody can find again.
+func TestAnExportNameMayNotLeaveTheStore(t *testing.T) {
+	s := At(t.TempDir())
+	for _, name := range []string{"", ".", "..", "sub/log.json", `..\log.json`} {
+		if _, err := s.WriteExport(name, map[string]string{}); err == nil {
+			t.Errorf("%q was accepted as a file name", name)
+		}
+	}
 }

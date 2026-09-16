@@ -13,6 +13,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // DirEnv is the environment variable that moves the whole directory.
@@ -136,4 +137,30 @@ func (s Store) remove(name string) error {
 		return err
 	}
 	return nil
+}
+
+// WriteExport puts one export file in the store's directory and hands back where it went.
+//
+// **It writes beside the profile rather than beside the executable**, on the rule the whole package
+// is under: the install tree is somewhere a shipped game cannot write, and a per-executable
+// directory is per-install rather than per-player. So an export lands wherever `ASCEND_DUEL_PROFILE`
+// or the platform's config root put the two files the game already keeps.
+//
+// **The name is the caller's and is checked here.** This is the one door out of the store that takes
+// a name from further up, so a name carrying a separator or a `..` would be a way to write anywhere
+// on the machine from a panel button. It is refused rather than sanitized — a quietly renamed export
+// is a file nobody can find again. **Both separators are refused whatever the platform**, since
+// `filepath` on Linux reads a backslash as an ordinary character and would write a file literally
+// called `..\log.json` rather than refusing the name a Windows caller meant.
+//
+// It is atomic and indented like every other write, for the same two reasons.
+func (s Store) WriteExport(name string, v any) (string, error) {
+	if name == "" || name != filepath.Base(name) || name == "." || name == ".." ||
+		strings.ContainsAny(name, `/\`) {
+		return "", fmt.Errorf("profile: %q is not a file name", name)
+	}
+	if err := s.write(name, v); err != nil {
+		return "", err
+	}
+	return s.path(name), nil
 }

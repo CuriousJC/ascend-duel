@@ -3,6 +3,8 @@ package cards
 import (
 	"image"
 	"image/color"
+
+	"github.com/curiousjc/ascend-duel/data"
 	"testing"
 )
 
@@ -45,9 +47,9 @@ func TestARelicCounterStaysInItsCorner(t *testing.T) {
 	bare := render(t, relicWithCounter(""), st)
 
 	// **Every shape the label actually takes** — see combat.CounterLabel: a multiplier is always
-	// one decimal place, so the widest it reaches is `10.5`, and a flat figure carries a sign. The
-	// figure is allowed to outgrow its disc; what it may not do is leave the card.
-	for _, counter := range []string{"+5", "1.5", "10.5", "+100"} {
+	// one decimal place, so the widest it reaches is `10.5`, and a flat figure is a bare number.
+	// The figure is allowed to outgrow its disc; what it may not do is leave the card.
+	for _, counter := range []string{"5", "1.5", "10.5", "100"} {
 		got := differs(bare, render(t, relicWithCounter(counter), st))
 		if got.Empty() {
 			t.Errorf("counter %q drew nothing", counter)
@@ -85,13 +87,14 @@ func TestOnlyARelicCardDrawsACounter(t *testing.T) {
 	}
 }
 
-// **There is a disc behind the figure, and the figure is the card’s surface showing through it.**
-// That reverses the 2026-08-26 call that the counter should be bare ink; see drawCounter for why.
+// **There is a disc behind the figure, and the figure is whichever ink the disc can be read
+// against.** That reverses the 2026-08-26 call that the counter should be bare ink; see drawCounter
+// for why, and counterInk for why the figure is no longer always the surface.
 //
 // The check is the inversion, read *inside the circle*, where the badge is the only thing there is:
-// every pixel has to be either the card’s border color or the card’s own surface, and both have
-// to be present — all border would be a disc with no figure on it, all surface no disc at all.
-func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
+// every pixel has to be either the card’s border color or that ink, and both have to be present —
+// all border would be a disc with no figure on it, all ink no disc at all.
+func TestTheCounterIsADiscWithAFigureShowingThrough(t *testing.T) {
 	st := RelicStyle
 	img := render(t, relicWithCounter("1.5"), st)
 
@@ -108,6 +111,10 @@ func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
 		t.Errorf("the disc reads %v at its left edge, want the border %v", got, border)
 	}
 
+	// The figure’s color is a function of the disc it lands on, which is the whole of what
+	// counterInk decides.
+	figure := counterInk(border)
+
 	disc, surface := 0, 0
 	for dy := -r; dy <= r; dy++ {
 		for dx := -r; dx <= r; dx++ {
@@ -117,12 +124,12 @@ func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
 			switch got := img.RGBAAt(cx+dx, cy+dy); {
 			case near(got, border):
 				disc++
-			case near(got, Surface):
+			case near(got, figure):
 				surface++
-			case between(got, Surface, border):
+			case between(got, figure, border):
 			default:
-				t.Fatalf("the badge painted %v at (%d,%d), which is neither the surface %v nor the border %v",
-					got, cx+dx, cy+dy, Surface, border)
+				t.Fatalf("the badge painted %v at (%d,%d), which is neither the figure %v nor the border %v",
+					got, cx+dx, cy+dy, figure, border)
 			}
 		}
 	}
@@ -130,7 +137,7 @@ func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
 		t.Error("nothing inside the circle is the border color, so there is no disc")
 	}
 	if surface == 0 {
-		t.Error("nothing inside the circle is the card’s surface, so the figure is not showing through")
+		t.Error("nothing inside the circle is the figure’s ink, so the figure is not showing through")
 	}
 }
 
@@ -179,4 +186,36 @@ func near(got, want color.RGBA) bool {
 		return int(b) - int(a)
 	}
 	return d(got.R, want.R) <= 8 && d(got.G, want.G) <= 8 && d(got.B, want.B) <= 8
+}
+
+// **The figure is readable against its own disc, whatever color the disc is.** It was the card’s
+// surface whatever the border did, which was written when every relic bordered pink; a relic
+// borders by rarity now and common is bone, so that rule put an off-white figure on an off-white
+// disc across most of the catalog. The check is contrast rather than a named color per rarity —
+// naming one is what went out of date, and a new border color would go out of date the same way.
+func TestTheCounterFigureCanBeReadAgainstEveryRarity(t *testing.T) {
+	for name, rarity := range map[string]data.Rarity{
+		"common": data.Common, "uncommon": data.Uncommon, "rare": data.Rare,
+	} {
+		disc := borderBase(Relic, rarity)
+		got := lightness(counterInk(disc))
+		if delta := lightness(disc) - got; delta < 60 && delta > -60 {
+			t.Errorf("%s draws a %v figure on a %v disc, which is %d apart in lightness",
+				name, counterInk(disc), disc, delta)
+		}
+	}
+}
+
+// **Bone takes black and the uncommon green takes the surface**, which is the split the threshold
+// was placed for. It is the one test that pins the actual answers: the rule above says the figure
+// must be readable, and this says which of the two inks each rarity actually gets, so a threshold
+// nudged far enough to flip a rarity is a deliberate change rather than a silent one.
+func TestTheLightRaritiesTakeTheDarkFigure(t *testing.T) {
+	for name, want := range map[data.Rarity]color.RGBA{
+		data.Common: NameInk, data.Rare: NameInk, data.Uncommon: Surface,
+	} {
+		if got := counterInk(borderBase(Relic, name)); got != want {
+			t.Errorf("%v draws its counter in %v, want %v", name, got, want)
+		}
+	}
 }

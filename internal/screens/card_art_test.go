@@ -361,17 +361,41 @@ func TestEverySealedGoodDrawsSomething(t *testing.T) {
 	}
 }
 
-func TestEveryDrawnStoneDrawsSomething(t *testing.T) {
-	// The stone half of TestEveryRelicDrawsSomething, and it differs in the empty case: there is no
-	// default-stone face, so an empty Art is a stone falling back to the generated boulder rather
-	// than to a picture. What this closes is the misspelled key — a stone naming a file that is in
-	// no embed draws a hole, on a card only reached by buying a bag of rocks.
+func TestEveryStoneDrawsSomething(t *testing.T) {
+	// The stone half of TestEveryRelicDrawsSomething, and **it no longer has an empty case**
+	// *(2026-09-16)*. A stone with no Art fell back to a generated boulder until the silhouette
+	// generator was deleted; `StoneData.ArtKey` answers the relics' default face now, exactly as
+	// the potions' does, so every record resolves to a key and every key has to name a file.
+	//
+	// What this closes is the misspelled one — a stone naming a file that is in no embed draws a
+	// hole, on a card only reached by buying a bag of rocks.
 	records := data.LoadStones()
 	for _, key := range data.StoneOrder(records) {
-		art := records[key].Art
-		if art == "" {
-			continue
+		art := records[key].ArtKey()
+		if _, ok := assets.LoadImageData()[art]; !ok {
+			t.Errorf("%s draws %q, which is not an embedded image", key, art)
 		}
+	}
+}
+
+// TestEveryEssenceDrawsSomething and TestEveryRuneDrawsSomething are the two catalogs that had no
+// coverage at all until 2026-09-16 — found by auditing the families rather than by anything going
+// wrong, which is the point: an essence naming a misspelled key draws a blank card on the reward
+// screen and nothing fails.
+func TestEveryEssenceDrawsSomething(t *testing.T) {
+	records := data.LoadEssences()
+	for _, key := range data.EssenceOrder(records) {
+		art := records[key].ArtKey()
+		if _, ok := assets.LoadImageData()[art]; !ok {
+			t.Errorf("%s draws %q, which is not an embedded image", key, art)
+		}
+	}
+}
+
+func TestEveryRuneDrawsSomething(t *testing.T) {
+	records := data.LoadRunes()
+	for _, key := range data.RuneOrder(records) {
+		art := records[key].ArtKey()
 		if _, ok := assets.LoadImageData()[art]; !ok {
 			t.Errorf("%s draws %q, which is not an embedded image", key, art)
 		}

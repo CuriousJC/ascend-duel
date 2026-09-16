@@ -48,51 +48,36 @@ var titleEaster_png []byte
 //go:embed game/guide.png
 var guide_png []byte
 
-// GLYPH ART
+// THE GEAR
 //
-// The attack and defend category glyphs on an action card. These two are the exception to
-// "interface art is generated": everything else in internal/systems/glyphs.go is a
-// silhouette described in code, and these are hand-drawn pixel art.
+// The settings control in the game's chrome corner. **A named one-off rather than a member of the
+// form family**, because it is not a card mark: it says something about the program where every
+// mark in `form/` says something about a card.
 //
-// **The provenance question the generated glyphs exist to avoid does not apply here.**
-// Drawn by KingSherman1820, one of the two copyright holders, for this game — so there is
-// nothing to clear and nothing to attribute to a third party.
+// **Baked from the silhouette generator on 2026-09-16 and then the generator was deleted**
+// *(owner's call)*. It was the last kind `internal/systems` drew, so the picture was rendered once
+// at the size the chrome blits it and committed as an ordinary asset — no change to what is on
+// screen, and replacing it with drawn art is now a file swap. `docs/art/gear_art_prompt.MD` is the
+// brief for that replacement.
 //
-// Authored on a 64x64 canvas and drawn on the card at half that; see glyphArt in
-// internal/systems/glyphs.go for why the halving happens at render time rather than here.
-//
-//go:embed game/sherman-sword.png
-var shermansword_png []byte
+//go:embed game/gear.png
+var gear_png []byte
 
-//go:embed game/sherman-shield.png
-var shermanshield_png []byte
-
-// FORM MARKS
+// FORM MARKS AND COST TICKS
 //
-// The four form marks an action card carries in its corner — stab, slash, crush, defend.
-// Drawn as pixel art rather than described in code, for the reason the two Sherman glyphs
-// above are: a spear with a socket and a shoulder is a drawing, and the span language in
-// internal/systems/glyphs.go is a poor way to write one.
+// A *family* rather than four more named vars, on the terms `relic/` and `enemy/` are already
+// globbed: there is one mark per form per element and one tick per element, which is twenty-five
+// files today and a multiplication rather than a list. Keyed by filename stem, so
+// `form/formslash-fire.png` is `formslash-fire` and `form/tick-earth.png` is `tick-earth` —
+// which is what `internal/cards` builds from a card's own form and element.
 //
-// **Authored at 32 and drawn at 32.** Unlike the Sherman pair these are not halved, because
-// their outline is one pixel: averaging a 2x2 block that is half rim and half surface turns a
-// black edge into a gray one, and at this size that edge is the whole of what holds the shape
-// against an off-white card. See glyphArtwork.canvas in internal/systems/glyphs.go.
+// **There is no fallback.** A card with no element — a relic, a fighter, anything Basic — draws
+// the *neutral* mark and the neutral tick, which are files in this same family; see
+// cards.MarkArtKey and cards.TickArtKey, both of which are total. The four hueless PNGs that used
+// to serve that case were deleted on 2026-09-16 along with the whole drawn-glyph path.
 //
-// Provenance: cut down by the owner from a spritesheet authored for this game, so there is
-// nothing to clear and nothing to attribute to a third party.
-//
-//go:embed form/stab.png
-var formstab_png []byte
-
-//go:embed form/slash.png
-var formslash_png []byte
-
-//go:embed form/crush.png
-var formcrush_png []byte
-
-//go:embed form/defend.png
-var formdefend_png []byte
+//go:embed form/*.png
+var formArt embed.FS
 
 // UPGRADE ART
 //
@@ -185,7 +170,7 @@ var runeArt embed.FS
 
 // The stone faces, a family of their own as of 2026-09-14. **There is no default-stone.png**, which
 // is the one place this family departs from the three above it: a stone with no Art draws the
-// generated boulder in systems.GlyphStone, which every stone drew before the catalog was painted.
+// relics' default face, which is what an unpainted stone draws — see data.DefaultStoneArt.
 // A generated fallback says "nobody has drawn this yet" better than a painted one can, and it
 // leaves nothing to license.
 //
@@ -310,12 +295,14 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, runeArt, "rune")
 	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, otherArt, "other")
+	embedFamily(images, formArt, "form")
 	embedFamily(images, portraits, "enemy")
 	embedFamily(images, bossPortraits, "boss")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.
 	images["guide_png"] = guide_png
+	images["gear"] = gear_png
 
 	// The status badges, for the same reason as the relic art: they are drawn *into* the enemy
 	// card by internal/cards, which has no graphics context.
@@ -326,17 +313,11 @@ func LoadImageData() map[string][]byte {
 	images["defaulteffect_png"] = defaulteffect_png
 
 	// The glyph art. internal/systems takes the bytes rather than an *ebiten.Image for the
-	// same reason the relic art does: RenderGlyph draws into a plain Go image so the contact
+	// same reason the relic art does: internal/cards draws into a plain Go image so the contact
 	// sheets can be built with no window.
-	images["shermansword_png"] = shermansword_png
-	images["shermanshield_png"] = shermanshield_png
 
 	// The four form marks, for the same reason again: internal/cards draws them into a card
 	// and has no graphics context.
-	images["formstab_png"] = formstab_png
-	images["formslash_png"] = formslash_png
-	images["formcrush_png"] = formcrush_png
-	images["formdefend_png"] = formdefend_png
 
 	// The upgrade inks, for the same reason: internal/cards samples them into a card face and
 	// has no graphics context.

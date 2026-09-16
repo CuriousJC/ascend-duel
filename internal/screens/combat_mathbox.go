@@ -918,6 +918,26 @@ func (s *CombatScene) handCardInk(side combat.Side, seat int) color.RGBA {
 	return cards.BorderOf(artFor(s.theater.resolved[seat].card.Element))
 }
 
+// handCardElement is the element of the card in one seat — handCardInk's question, asked one step
+// earlier.
+//
+// **It exists because a drawing is picked by element and a figure is tinted by color**
+// *(2026-09-16)*. The shield pips were a near-white mark multiplied by handCardInk's answer; they
+// are five authored marks now, so what a flight has to carry is which one, and deriving that back
+// out of a color would be a reverse lookup over a palette.
+func (s *CombatScene) handCardElement(side combat.Side, seat int) cards.Element {
+	if side == combat.SideB {
+		if seat < 0 || seat >= len(s.theater.enemyDealt) {
+			return cards.Basic
+		}
+		return artFor(s.theater.enemyDealt[seat].card.Element)
+	}
+	if seat < 0 || seat >= len(s.theater.resolved) {
+		return cards.Basic
+	}
+	return artFor(s.theater.resolved[seat].card.Element)
+}
+
 // handShoutAt is where the hand's name is written when it fires: **across the hand row**, dead
 // center of it, whichever side formed the hand.
 //

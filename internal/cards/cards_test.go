@@ -191,22 +191,117 @@ func TestSurfaceIsConstantAcrossElements(t *testing.T) {
 	}
 }
 
+// tickInk is the average color of one cost tick, over the whole rectangle the style gives it.
+//
+// **A tick is a drawing rather than a filled rectangle as of 2026-09-16**, so no single pixel is
+// the element's color any more: there is a lit top edge, a body, a dark under edge and a
+// near-black contour. What survived the change is what the left column is *for* — the average
+// still carries the element's hue, and every state still moves it the same distance the border
+// moves. The four tests below therefore measure the average and the hue rather than one pixel.
+// See drawDashes.
+// tickCore is the pixel at the middle of one cost tick: opaque, well inside the drawing, and
+// away from every anti-aliased edge. It is what the state test measures, because a fade is
+// applied per pixel and only a pixel the surface has no share in can be checked exactly.
+func tickCore(img *image.RGBA, st Style, i int) color.RGBA {
+	y := st.DashTop + i*(st.DashHeight+st.DashGap) + st.DashHeight/2
+	return img.RGBAAt(st.DashLeft+st.DashWidth/2, y)
+}
+
+// tickHue is the most saturated pixel in one cost tick — the part of the drawing carrying the
+// element, as against its near-black contour and its near-white specular.
+//
+// **An average would not do.** A drawn bar is mostly edge at this size, so its mean is a pale
+// dull version of the element and two neighboring hues on the wheel — amber and orange, amber and
+// green — end up nearer to each other than to themselves. What the player reads as the element is
+// the loudest part of the bar, so that is what this asks about.
+func tickHue(img *image.RGBA, st Style, i int) color.RGBA {
+	y0 := st.DashTop + i*(st.DashHeight+st.DashGap)
+	best, bestSat := color.RGBA{}, -1
+	for y := y0; y < y0+st.DashHeight; y++ {
+		for x := st.DashLeft; x < st.DashLeft+st.DashWidth; x++ {
+			c := img.RGBAAt(x, y)
+			hi := max(int(c.R), max(int(c.G), int(c.B)))
+			lo := min(int(c.R), min(int(c.G), int(c.B)))
+			if sat := hi - lo; sat > bestSat {
+				best, bestSat = c, sat
+			}
+		}
+	}
+	return best
+}
+
+// tickDrawn says whether a tick was drawn at all: its rectangle holds something other than the
+// card's own surface. It is the count test's question, which used to be "is this pixel exactly
+// the element color" and cannot be any more.
+func tickDrawn(img *image.RGBA, st Style, i int) bool {
+	y0 := st.DashTop + i*(st.DashHeight+st.DashGap)
+	for y := y0; y < y0+st.DashHeight; y++ {
+		for x := st.DashLeft; x < st.DashLeft+st.DashWidth; x++ {
+			if c := img.RGBAAt(x, y); c != Surface && c != SurfaceDisabled {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// nearestElement names whichever element color a rendered color is closest to, which is how the
+// hue tests below stay true of a drawing: a fire tick averages to something that is not
+// BorderOf(Fire) exactly, but it had better be nearer to it than to the other four.
+func nearestElement(c color.RGBA) Element {
+	best, bestD := Basic, 1<<30
+	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
+		if d := chromaDistance(c, BorderOf(e)); d < bestD {
+			best, bestD = e, d
+		}
+	}
+	return best
+}
+
+// chromaDistance compares two colors by hue alone, each normalized to its own total brightness.
+//
+// **Brightness is not the question and comparing it is how this test lies.** A drawn tick carries
+// a near-white specular and a near-black contour, so its average is a lighter, duller version of
+// the element it was drawn in — and a raw RGB distance then puts a pale amber nearer to orange
+// than to amber. Dividing each channel by the sum throws the lightness away and leaves the mix,
+// which is the thing the player is actually reading.
+func chromaDistance(a, b color.RGBA) int {
+	norm := func(c color.RGBA) (int, int, int) {
+		sum := int(c.R) + int(c.G) + int(c.B)
+		if sum == 0 {
+			return 0, 0, 0
+		}
+		return int(c.R) * 1000 / sum, int(c.G) * 1000 / sum, int(c.B) * 1000 / sum
+	}
+	ar, ag, ab := norm(a)
+	br, bg, bb := norm(b)
+	return (ar-br)*(ar-br) + (ag-bg)*(ag-bg) + (ab-bb)*(ab-bb)
+}
+
+// nearColor allows a channel or two of rounding, which averaging a drawing and then fading it
+// produces and which fading it and then averaging it does not. The states are tens of levels
+// apart, so this cannot hide one landing on another's figure.
+func nearColor(a, b color.RGBA, tol int) bool {
+	d := func(x, y uint8) int {
+		if x > y {
+			return int(x) - int(y)
+		}
+		return int(y) - int(x)
+	}
+	return d(a.R, b.R) <= tol && d(a.G, b.G) <= tol && d(a.B, b.B) <= tol
+}
+
 func TestCostDrawsOneDashPerPoint(t *testing.T) {
 	st := Hand
-	x := st.DashLeft + st.DashWidth/2
 
 	for cost := 0; cost <= 4; cost++ {
 		s := strike(Fire)
 		s.Cost = cost
 		img := render(t, s, st)
 
-		// The element color, not the border's: the ticks carry the element and the border does
-		// not. See Spec.atState, which is what keeps the two in the same state.
-		tick := systems.ColorToward(BorderOf(Fire), Surface, borderRestToward)
 		count := 0
 		for i := 0; i < 6; i++ {
-			y := st.DashTop + i*(st.DashHeight+st.DashGap) + st.DashHeight/2
-			if img.RGBAAt(x, y) == tick {
+			if tickDrawn(img, st, i) {
 				count++
 			}
 		}
@@ -431,24 +526,56 @@ func TestFormMarkIsDrawnAndDiffers(t *testing.T) {
 	}
 }
 
-func TestEveryFormHasItsOwnGlyph(t *testing.T) {
-	// The pixel test above would also catch this, slowly and by a hash. This says the actual
-	// rule: every form has a mark, no two forms share one, and FormNone has none at all — a relic
-	// and both fighter cards belong to no form and the slot must stay empty for them.
-	seen := map[systems.GlyphKind]Form{}
-	for _, fam := range Forms() {
-		k, ok := fam.Glyph()
-		if !ok {
-			t.Errorf("%s has no glyph, so its corner would be blank", fam)
-			continue
+func TestEveryFormHasItsOwnMark(t *testing.T) {
+	// The pixel test above would also catch this, slowly and by a hash. This says the actual rule:
+	// every form has a mark in every element, no two forms share one, and FormNone has none at all
+	// — a relic and both fighter cards belong to no form and the slot must stay empty for them.
+	//
+	// **It asks about asset keys now** *(2026-09-16)*. A form used to name a generated glyph and the
+	// drawing was tinted; there is one authored drawing per form per element, so what a form has is
+	// a key per element plus a neutral one, and MarkArtKey is the thing that builds them.
+	for _, e := range append(Elements(), Basic) {
+		seen := map[string]Form{}
+		for _, fam := range Forms() {
+			k := MarkArtKey(fam, e)
+			if k == "" {
+				t.Errorf("%s in %s has no mark, so its corner would be blank", fam, e)
+				continue
+			}
+			if systems.ArtMark(k, Hand.FormSize, Hand.FormSize) == nil {
+				t.Errorf("%s in %s names %q, which is not in the assets", fam, e, k)
+			}
+			if prev, dup := seen[k]; dup {
+				t.Errorf("%s and %s in %s both mark themselves with %q", prev, fam, e, k)
+			}
+			seen[k] = fam
 		}
-		if prev, dup := seen[k]; dup {
-			t.Errorf("%s and %s both mark themselves with glyph %d", prev, fam, k)
-		}
-		seen[k] = fam
 	}
-	if _, ok := FormNone.Glyph(); ok {
-		t.Error("FormNone has a glyph; it must draw nothing")
+	for _, e := range append(Elements(), Basic) {
+		if k := MarkArtKey(FormNone, e); k != "" {
+			t.Errorf("FormNone in %s names %q; it must draw nothing", e, k)
+		}
+	}
+}
+
+// TestEveryElementHasItsOwnTick is the tick half of the rule above: every element resolves to a
+// drawing, no two elements share one, and there is no card anywhere that falls through to nothing.
+func TestEveryElementHasItsOwnTick(t *testing.T) {
+	seen := map[string]Element{}
+	for _, e := range Elements() {
+		k := TickArtKey(e)
+		if k == "" {
+			t.Fatalf("%s has no tick key at all", e)
+		}
+		if systems.ArtMark(k, Hand.DashWidth, Hand.DashHeight) == nil {
+			t.Errorf("%s names tick %q, which is not in the assets", e, k)
+		}
+		// Basic and Relic deliberately share the neutral bar: neither is an element a hand is
+		// counted on, and neither draws a cost the player is reading for color.
+		if prev, dup := seen[k]; dup && hasArt(e) && hasArt(prev) {
+			t.Errorf("%s and %s both draw tick %q", prev, e, k)
+		}
+		seen[k] = e
 	}
 }
 
@@ -511,15 +638,22 @@ func TestDashesDoNotOverprintTheName(t *testing.T) {
 	s := Spec{Name: "Prepare", Form: FormDefend, Cost: 4, Element: Lightning, Enabled: true}
 	img := render(t, s, st)
 
-	tick := systems.ColorToward(BorderOf(Lightning), Surface, borderRestToward)
+	// **Compared against the same card with no name at all**, rather than against a color. A tick
+	// is a drawing now, so "every pixel is the element" is no longer the question — the question
+	// is whether setting the name changed any pixel inside the cost column, and a nameless twin
+	// answers it without the test having to know what a tick looks like.
+	bare := s
+	bare.Name = ""
+	clean := render(t, bare, st)
 
-	// Every dash must be intact across its full width: no ink from the name in it.
 	for i := 0; i < s.Cost; i++ {
-		y := st.DashTop + i*(st.DashHeight+st.DashGap) + st.DashHeight/2
-		for x := st.DashLeft; x < st.DashLeft+st.DashWidth; x++ {
-			if got := img.RGBAAt(x, y); got != tick {
-				t.Fatalf("tick %d is broken at x=%d: %v, want the element color %v — the name is printing over it",
-					i, x, got, tick)
+		y0 := st.DashTop + i*(st.DashHeight+st.DashGap)
+		for y := y0; y < y0+st.DashHeight; y++ {
+			for x := st.DashLeft; x < st.DashLeft+st.DashWidth; x++ {
+				if got, want := img.RGBAAt(x, y), clean.RGBAAt(x, y); got != want {
+					t.Fatalf("tick %d is broken at (%d,%d): %v, want %v — the name is printing over it",
+						i, x, y, got, want)
+				}
 			}
 		}
 	}
@@ -639,18 +773,23 @@ func distance(a, b color.RGBA) int {
 
 func TestTheFormMarkStaysCornerSized(t *testing.T) {
 	// **The bound is the invariant, not the number.** How big the corner mark is stays a design
-	// choice, but one that grows past half of GlyphSize is a full-size shape in a corner slot,
-	// and it walks into both the dash stack under it and the text column beside it.
+	// choice, but one that grows past a fifth of the card's width is a full-size picture in a
+	// corner slot, and it walks into both the tick stack under it and the text column beside it.
 	//
 	// The floor matters as much as the ceiling: below about 16 pixels a drawn mark has nothing
 	// left to read.
+	//
+	// **It was measured against the generated glyphs' canvas until 2026-09-16** — a reasonable
+	// yardstick while the mark was one of them, and a dangling reference to a deleted constant once
+	// it was not. The card's own width is the honest measure: what the bound is about is how much of
+	// the face the corner may take.
 	for name, st := range map[string]Style{"hand": Hand, "mini": Mini} {
 		if !st.ShowForm {
 			continue
 		}
-		if st.FormSize < 16 || st.FormSize > systems.GlyphSize/2 {
-			t.Errorf("%s form box is %dpx, want between 16 and half of %d",
-				name, st.FormSize, systems.GlyphSize)
+		if st.FormSize < 16 || st.FormSize > st.Width/5 {
+			t.Errorf("%s form box is %dpx, want between 16 and a fifth of the card's %d",
+				name, st.FormSize, st.Width)
 		}
 	}
 }
@@ -1161,10 +1300,10 @@ func TestCommonIsNotWhite(t *testing.T) {
 // different mark, which is the property the swap was for — if two elements paint the same corner
 // then the border was neutralized and nothing took over from it.
 //
-// **It asks for difference rather than for a particular color**, because the mark's pixels come
-// off a ramp between a dark and a light version of the hue and the brightest of them is genuinely
-// not the color in borderColors. Which hue a ramp is built from is tintInk's question and
-// TestTintInkFollowsTheHue asks it directly; this one asks the card's.
+// **It asks for difference rather than for a particular color**, because the mark is authored art
+// rather than a fill: its pixels are a material shaded in the element's hue, and the brightest of
+// them is genuinely not the color in borderColors. What the card owes is that two elements never
+// draw the same corner, which is what the swap was for.
 func TestTheFormMarkCarriesTheElement(t *testing.T) {
 	st := Hand
 	box := image.Rect(st.GlyphInset, st.FormTop,
@@ -1201,37 +1340,6 @@ func TestTheFormMarkCarriesTheElement(t *testing.T) {
 	}
 }
 
-// TestTintInkFollowsTheHue is the direct question: hand the ramp a neutral gray and the color
-// that comes back must be nearer the hue it was built from than any other element's.
-//
-// A flat gray rather than the real artwork, because the art's own outline and specular are what
-// make the rendered mark hard to compare — see the test above. What is being pinned here is that
-// tintInk moves a color toward the hue it was given and not toward some average of the palette.
-func TestTintInkFollowsTheHue(t *testing.T) {
-	gray := image.NewRGBA(image.Rect(0, 0, 1, 1))
-	gray.SetRGBA(0, 0, color.RGBA{R: 128, G: 128, B: 128, A: 255})
-
-	for _, e := range Elements() {
-		if e == Basic {
-			// Basic is the neutral the border already draws in, so "nearer its own hue than any
-			// other" is not a question with an answer for it.
-			continue
-		}
-		got := tintInk(gray, BorderOf(e)).RGBAAt(0, 0)
-
-		mine := distance(atPeakOf(got, BorderOf(e)), BorderOf(e))
-		for _, other := range Elements() {
-			if other == e || other == Basic {
-				continue
-			}
-			if d := distance(atPeakOf(got, BorderOf(other)), BorderOf(other)); d < mine {
-				t.Errorf("a gray tinted %s came back %v, which is nearer %s (%d) than %s (%d)",
-					e, got, other, d, e, mine)
-			}
-		}
-	}
-}
-
 // atPeakOf rescales c so its brightest channel matches want's, which is what lets two colors of
 // different brightness be compared for hue alone. See TestTheFormMarkCarriesTheElement.
 func atPeakOf(c, want color.RGBA) color.RGBA {
@@ -1255,13 +1363,24 @@ func atPeakOf(c, want color.RGBA) color.RGBA {
 // where only the top of it is colored was the first cut and the owner sent it back.
 func TestTheCostTicksCarryTheElement(t *testing.T) {
 	st := Hand
-	at := image.Pt(st.DashLeft+st.DashWidth/2, st.DashTop+st.DashHeight/2)
 
-	for _, e := range Elements() {
+	// **The five, not Elements().** Basic and Relic are not elements a hand is counted on and were
+	// never in the art matrix; a Basic card still draws the flat gray bar, which has no hue to be
+	// nearest to. See MarkArtKey.
+	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		s := strike(e)
 		s.Cost = 2
-		if got, want := render(t, s, st).RGBAAt(at.X, at.Y), systems.ColorToward(BorderOf(e), Surface, borderRestToward); got != want {
-			t.Errorf("%s cost tick is %v, want the element at rest %v", e, got, want)
+
+		// **Measured at full strength, not at rest.** A resting tick is faded a fifth of the way
+		// to the off-white surface, which lifts every channel toward each other and costs the
+		// reading its margin — amber and orange are the closest pair on this wheel, and a faded
+		// amber lands nearer to orange than to itself. What this test is about is whether the
+		// *drawing* carries its element; the fade is the state test's subject one case down.
+		s.Selected = true
+
+		ink := tickHue(render(t, s, st), st, 0)
+		if got := nearestElement(ink); got != e {
+			t.Errorf("%s cost tick is %v, which reads as %s", e, ink, got)
 		}
 	}
 }
@@ -1272,8 +1391,14 @@ func TestTheCostTicksCarryTheElement(t *testing.T) {
 // than like a bug.
 func TestTheTicksAndTheBorderShareOneState(t *testing.T) {
 	st := Hand
-	tick := image.Pt(st.DashLeft+st.DashWidth/2, st.DashTop+st.DashHeight/2)
 	mid := st.Height / 2
+
+	// The tick at full strength: a selected card, which tickFade leaves alone. Every other state
+	// is measured as a distance from this.
+	full := strike(Fire)
+	full.Cost = 2
+	full.Selected = true
+	lit := tickCore(render(t, full, st), st, 0)
 
 	for _, tc := range []struct {
 		name  string
@@ -1290,13 +1415,22 @@ func TestTheTicksAndTheBorderShareOneState(t *testing.T) {
 		img := render(t, s, st)
 
 		gotBorder := img.RGBAAt(st.BorderWidth/2, mid)
-		gotTick := img.RGBAAt(tick.X, tick.Y)
 
 		if want := s.atState(borderBase(Fire, "")); gotBorder != want {
 			t.Errorf("%s border is %v, want %v", tc.name, gotBorder, want)
 		}
-		if want := s.atState(BorderOf(Fire)); gotTick != want {
-			t.Errorf("%s tick is %v, want %v", tc.name, gotTick, want)
+
+		// **The tick is measured as a distance, not as a color.** It is a drawing, so what has to
+		// match the border is how far the state moves it toward the surface — tickFade is the one
+		// number both halves of the column read, and a second copy of that switch is what this
+		// test has always existed to catch.
+		ink := tickCore(img, st, 0)
+		to := Surface
+		if !s.Enabled {
+			to = SurfaceDisabled
+		}
+		if want := systems.ColorToward(lit, to, tickFade(s)); !nearColor(ink, want, 1) {
+			t.Errorf("%s tick is %v, want %v — it is not at the border's state", tc.name, ink, want)
 		}
 	}
 }

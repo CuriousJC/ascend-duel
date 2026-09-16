@@ -1,5 +1,31 @@
 [
   {
+    "ScenarioRecord": "mid-run",
+    "Note": "A run already under way, which is the state nothing else here boots into. Every other fixture is a question about one mechanic on an otherwise empty run; this one asks what the screen looks like when the player has been climbing for a while - five fingers full, runes in the sack, stones in the pouch, a purse worth spending and a duelist carrying a wound. Floor 3, middle room. The relics are picked to be told apart rather than to combo: one of each rarity so the pane shows all three borders, and five different families so no two cards are the same picture. Nothing here is tuned for a win - it is a fixture for looking at a laid-out screen, and the deck, the enemy and the draw are all the game's own. The seed is pinned rather than the deck replaced, so the hand is whatever the real shuffle deals and is the same hand every launch.",
+    "Relics": [
+      "dmgx-fire",
+      "repeat-ice",
+      "discount-arcane",
+      "jar-earth",
+      "sundering"
+    ],
+    "Hand": [],
+    "Runes": [
+      "graft",
+      "motley",
+      "golden"
+    ],
+    "Stones": [
+      "pebble",
+      "jasper"
+    ],
+    "Screen": "combat",
+    "Seed": "CGPBSC",
+    "Fight": 7,
+    "Vitae": 45,
+    "Life": 38
+  },
+  {
     "ScenarioRecord": "card-full-house",
     "Note": "The Card Full House, dealt on purpose: three Cuts and two Braces out of a hand of eight, which is 5 AP and pays 3.42x. It is the hand that says most about how the ladder is counted, because both halves of it are things a player has to be told. The rung matches on CONCEPT - data/hands.json writes match concept, groups [3, 2] - so the three Cuts are a set because they are Cuts, and the colors they happen to wear are worth nothing to it; recolor every card in this hand and the multiplier does not move. And the two Braces are DEFEND cards that join the hand like anything else: they carry a form and an element, they count toward the rung, and they bring no damage with them - so the sum is three 0.5x slashes under a 3.42x multiplier, and the shields go up beside the blow rather than instead of it. The other three cards - a Flinch, a Jab and a Block - are there to be left behind, so the hand is a choice rather than the only five cards in the row. Giant Bat, 15 AP and a dummy, and it shares the shields fixture's deck so the refill behaves the same way. See ASCEND_DUEL_SCENARIO=shields for the defences on their own.",
     "Relics": [],

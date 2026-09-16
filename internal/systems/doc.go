@@ -17,39 +17,38 @@
 // for its other states. Scale a color, never add to it — adding a fixed step to every channel
 // walks a saturated color toward white, and a channel already near 255 has nowhere to go.
 //
-// # Glyphs
+// # Art
 //
-// glyphs.go generates the pixel-art glyphs in code rather than loading them from files, because
-// generated art has no provenance question at all — which is the whole reason to prefer this
-// pattern for interface art in a game that will be sold.
+// artmark.go fetches authored art by asset key and reduces it to whatever size a caller asks for.
+// It is the whole of how a picture reaches the drawing.
 //
-// It is a generator, not a bitmap. A glyph is a filled silhouette described by horizontal spans;
-// the rim is derived by asking which filled pixels touch empty space, and the interior shading is
-// computed from where a pixel sits across its row and down the sprite. Nothing is hand-placed, so
-// a shape can be nudged without repainting it.
+// **There was a generator here until 2026-09-16** (owner's call). glyphs.go described pixel-art
+// silhouettes in code — horizontal spans, a rim derived by asking which filled pixels touch empty
+// space, shading computed from where a pixel sat in its row — because generated art has no
+// provenance question, which is a real argument in a game that will be sold.
 //
-// Constraints that fall out of the technique and drive every span in the file:
+// What retired it was every one of its pictures becoming a drawing. The form marks went from four
+// tinted silhouettes to one authored picture per form per element plus a neutral set plus a tick
+// per element, which is a multiplication rather than a list; the rest had drawn nothing for a
+// month; and the settings cog, the last one standing, became assets/game/gear.png. The provenance
+// argument is answered differently now: the art comes from a prompt this repo owns, in docs/art/,
+// so there is still nothing to clear.
 //
-//   - Nothing in a silhouette may be thinner than about five pixels. The derived rim takes one
-//     pixel off each side, so a three-pixel crossguard renders as two rows of outline around one
-//     row of metal and reads as a scratch.
-//   - A glyph cannot be resized, so a smaller one is a different drawing. The rim is derived one
-//     pixel thick however big the shape is, so a third-size copy is a third-size copy of its
-//     outline with nothing inside.
-//   - GlyphKind is append-only in practice: the cache keys on the ordinal, so inserting a kind
-//     mid-enum silently re-points every existing entry. Removing a kind nothing draws is safe and
-//     is the way to retire one, because no ordinal outlives the process — nothing serializes a
-//     GlyphKind, and the contact sheet is regenerated from the enum rather than stored against it.
-//   - SizeOf is the authority on how big one is, never an assumed 64.
-//   - Glyphs carry a five-value palette and are the deliberate exception to the scale-one-color
-//     rule, because a bevel cannot be made from one color scaled down. They are drawn untinted; a
-//     disabled card dims them by alpha, so the shading survives and only the weight changes.
+// Two properties of the old technique are worth remembering, because they are why it could not
+// hold this set:
 //
-// RenderGlyph returns a plain Go image and is free of Ebitengine on purpose: creating an
-// *ebiten.Image needs a graphics context, and the review tool has no window. Glyph wraps and
-// caches it for the game.
+//   - A generated glyph could not be resized. The rim was derived one pixel thick however big the
+//     shape was, so a smaller one was a *different drawing*. A painting has interior detail to
+//     average and survives being reduced from 256 to 32 and to 16.
+//   - Its pictures were keyed by an append-only enum indexing a cache. Thirty-one marks would have
+//     been thirty-one ordinals naming pictures the rules know nothing about, where an asset key is
+//     a string the caller builds from a card's own form and element.
 //
-// Run `go run ./tools/glyphsheet` after changing any of it. The sheet is committed so a change to
-// a silhouette shows up in review as a picture, and a stale sheet is worse than none because it is
-// a picture that lies.
+// ArtMark returns a plain Go image and is free of Ebitengine on purpose: creating an *ebiten.Image
+// needs a graphics context, and the review tools have no window. ArtMarkImage wraps and caches it
+// for a screen.
+//
+// Run `go run ./tools/marksheet` after changing any art. The sheet is committed so a change shows
+// up in review as a picture, and a stale sheet is worse than none because it is a picture that
+// lies.
 package systems

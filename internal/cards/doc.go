@@ -1,7 +1,7 @@
 // Package cards draws an action card to a plain Go image.
 //
 // **It creates no Ebitengine images**, which is the whole reason it exists as its own
-// package. `systems.RenderGlyph` already established the pattern — art that returns an
+// package. `systems.ArtMark` already established the pattern — art that returns an
 // `image.Image` can be rendered by the game *and* by a command-line tool with no window,
 // so a card can be reviewed by opening a file instead of by launching the game and
 // dealing yourself the hand that shows it. `tools/cardsheet` is that tool.
@@ -28,15 +28,16 @@
 //     row labels and the arithmetic panel read.
 //   - **The border and the ticks share one state switch.** Spec.atState carries a color
 //     from full strength to whatever the card's state wants; the border hands it the
-//     neutral gray and the ticks hand it the element. They are different colors and the
-//     same mark, so they must dim and light together.
+//     neutral gray. **A tick is a drawing rather than a color as of 2026-09-16**, so what
+//     it shares is the distance rather than the switch — see tickFade. They are different
+//     things and the same state, so they must dim and light together.
 //   - **Relic keeps its pink.** Pink was never an element — it is the "you cannot play
 //     this" signal — so it survives a change that neutralizes the four element borders.
-//   - **The form marks are drawn art, tinted rather than repainted.** tintInk maps each
-//     pixel's own brightness onto a ramp between a dark and a light version of the
-//     element's color, so the drawing keeps its outline and its bevel and only the hue
-//     moves. A flat silhouette in the element color would throw away the interior detail
-//     that made drawn marks worth having over generated ones.
+//   - **The form marks are drawn art, authored in their element** *(2026-09-16)*. There
+//     is one picture per form per element plus a neutral set, so nothing is tinted: the
+//     hue is in the drawing. They were four pictures on a ramp until then, which kept the
+//     outline and the bevel but gave every element the same shading — what twenty
+//     drawings buy is a material that differs, not just a hue.
 //
 // # Three ways to say something on a card, and they are not interchangeable
 //
@@ -83,7 +84,7 @@
 //
 // # Why it creates no Ebitengine images
 //
-// Same pattern and same reason as systems.RenderGlyph: it is what lets tools/cardsheet render a
+// Same pattern and same reason as systems.ArtMark: it is what lets tools/cardsheet render a
 // card with no window, and it is why text is set through golang.org/x/image rather than
 // Ebitengine's text/v2, which can only draw into an *ebiten.Image. Both the game and the contact
 // sheet go through this package, so the sheet cannot drift from what is drawn.

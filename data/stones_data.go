@@ -54,11 +54,8 @@ type StoneData struct {
 	Text string `json:"Text"`
 
 	// Art is the assets key of this stone's picture — the filename stem under `assets/stone/`, so
-	// `stone/onyx.png` is "onyx". **Empty means nobody has drawn it**, and the card falls back to
-	// the generated boulder rather than to a painted default face; see `screens.stoneArt`.
-	//
-	// `go run ./tools/relicart -kind stone` is what writes this, off the filename of the picture it
-	// just reduced, so the key and the file cannot disagree.
+	// `stone/jasper.png` is `jasper`. **Empty means the default face**, which a stone borrows from
+	// the relics; see DefaultStoneArt.
 	Art string `json:"Art"`
 
 	// Draw is the subject paragraph the art generator is given for this stone, pasted under
@@ -85,6 +82,31 @@ func LoadStones() map[string]StoneData {
 		out[s.StoneRecord] = s
 	}
 	return out
+}
+
+// DefaultStoneArt is the face a stone with no Art of its own draws.
+//
+// **It borrows the relics' default**, exactly as DefaultPotionArt does and for the same reason:
+// what a default face says is "nobody has painted this yet", and that sentence does not need to be
+// said in a second picture per catalog.
+//
+// **It replaced a generated boulder on 2026-09-16** *(owner's call)*. Every stone drew
+// a generated boulder before the catalog was painted, and the fallback stayed one after — so a
+// silhouette nothing had drawn in months was among the last reasons `internal/systems` generated
+// anything at all. All eighteen stones carry their own art, so this fires only for a record
+// somebody has just authored, which is precisely the case a default face is for.
+const DefaultStoneArt = DefaultRelicArt
+
+// ArtKey is the picture this stone actually draws: its own if it has one, the default otherwise.
+//
+// **It is here rather than at the call sites** for RelicData.ArtKey's reason: a stone is drawn by
+// the shop and by tools/stonesheet, and a fallback living in internal/screens is one the review
+// tool does not have — which is exactly how a sheet comes to disagree with the game.
+func (st StoneData) ArtKey() string {
+	if st.Art == "" {
+		return DefaultStoneArt
+	}
+	return st.Art
 }
 
 // StoneOrder is every record, sorted by key.

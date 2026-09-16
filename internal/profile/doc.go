@@ -6,7 +6,7 @@
 // holds one rule above all others:
 //
 // **What gets written down is a name, never a number.** `combat.ConceptID`, `combat.Element`,
-// `combat.StatusID`, `systems.GlyphKind` and `session.Phase` are all append-only enums whose
+// `combat.StatusID` and `session.Phase` are all append-only enums whose
 // ordinals are indices into arrays and caches — inserting one mid-enum silently re-points every
 // value already stored. A saved file outlives the build that wrote it, so an ordinal in one is an
 // ordinal that will eventually mean something else. Every field here is a string key or a plain

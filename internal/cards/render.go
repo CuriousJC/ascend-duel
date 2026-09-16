@@ -34,12 +34,6 @@ const (
 	// border. Lower than the disabled figure on purpose: dragging is a lighter state and
 	// has to stay clearly apart from unavailable.
 	surfaceDraggingToward = 34
-
-	// The two ends of the form mark's color ramp: see tintInk. Named here beside the other
-	// state figures because they are the same kind of number — a distance, in percent, that
-	// decides how loud something is against the card's surface.
-	tintDarkPct     = 34
-	tintLightToward = 30
 )
 
 // SurfaceDisabled is the face of a card the fighter cannot afford. It is duller and a
@@ -128,7 +122,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	// and the ticks over while the wildcard was the only one there was; now that there are ten and
 	// nine of them say nothing about the element, an upgrade washes the whole card instead — see
 	// upgrade.go. The column goes back to stating one thing, which is the element.
-	drawDashes(img, s, st, s.atState(BorderOf(s.Element)))
+	drawDashes(img, s, st)
 
 	if err := drawEffectText(img, s, st, f, ink); err != nil {
 		return nil, err
@@ -437,26 +431,24 @@ func drawForm(dst *image.RGBA, s Spec, st Style) {
 	if st.FormSize <= 0 {
 		return
 	}
-	kind, ok := s.Form.Glyph()
-	if !ok {
+
+	// **The mark is authored per form per element, and the wildcard takes the neutral one**
+	// *(2026-09-16)*. There is no tint left anywhere in this path: the hue is in the drawing. An
+	// upgrade that leaves the mark hueless — the wildcard, which is about every element and so
+	// about none — draws the gray version of the same picture rather than an untinted copy of a
+	// colored one. See MarkArtKey, and docs/art/glyph_art_prompt.MD for the set.
+	e := s.Element
+	if s.Upgrade.HuelessForm() {
+		e = Basic
+	}
+	glyph := systems.ArtMark(MarkArtKey(s.Form, e), st.FormSize, st.FormSize)
+	if glyph == nil {
 		return
 	}
 
 	box := image.Rect(st.GlyphInset, st.FormTop,
 		st.GlyphInset+st.FormSize, st.FormTop+st.FormSize)
 
-	// **At the box's size, not the art's** *(2026-08-23)*. The mark used to come back at whatever
-	// size it was authored at and be centered in whatever box the style named, which is how the
-	// overlay's half-size card ended up carrying a full-size mark. Drawn art can be halved; see
-	// systems.RenderGlyphAt for why a generated silhouette still cannot.
-	// **The wildcard is the one upgrade that leaves the mark hueless** — see
-	// systems.Upgrade.HuelessForm, which is where that is argued. Everything else keeps the
-	// element's tint, because nothing else is about the element.
-	drawn := systems.RenderGlyphAt(kind, systems.PaletteWhite, st.FormSize)
-	glyph := drawn
-	if !s.Upgrade.HuelessForm() {
-		glyph = tintInk(drawn, BorderOf(s.Element))
-	}
 	at := placeInk(dst, glyph, box, st.GlyphScale, st)
 	if !s.Enabled && !at.Empty() {
 		// A mark carries its own colors rather than a state ink, so a disabled card fades one
@@ -535,16 +527,121 @@ func inkBounds(g *image.RGBA) image.Rectangle {
 //
 // They are drawn in the border color, so the two things the card says about itself in
 // color say it in the same color.
-func drawDashes(dst *image.RGBA, s Spec, st Style, c color.RGBA) {
+func drawDashes(dst *image.RGBA, s Spec, st Style) {
 	if s.Cost <= 0 || st.DashWidth <= 0 || st.DashHeight <= 0 {
 		return
 	}
+
+	// **One drawing, stacked** *(2026-09-16)*. A tick is authored per element and repeated down
+	// the column, so a card costing three is the same picture three times rather than a sheet of
+	// variants — see docs/art/glyph_art_prompt.MD. There is no flat-bar fallback: TickArtKey is
+	// total, answering the neutral bar for everything that is not one of the five elements.
+	bar := systems.ArtMark(TickArtKey(s.Element), st.DashWidth, st.DashHeight)
+	if bar == nil {
+		return
+	}
+
 	for i := 0; i < s.Cost; i++ {
 		y := st.DashTop + i*(st.DashHeight+st.DashGap)
 		if y+st.DashHeight > st.Height {
 			return
 		}
-		fillRect(dst, st.DashLeft, y, st.DashWidth, st.DashHeight, c)
+		at := image.Rect(st.DashLeft, y, st.DashLeft+st.DashWidth, y+st.DashHeight)
+		xdraw.Draw(dst, at, bar, bar.Bounds().Min, xdraw.Over)
+		// The ticks and the border share one state, and a drawing cannot be handed a color —
+		// so the same distance the border travels toward the surface is walked here as a fade.
+		// See Spec.atState, which is where that distance is decided for both.
+		if pct := tickFade(s); pct > 0 {
+			fadeToward(dst, at, tickFadeTarget(s), pct)
+		}
+	}
+}
+
+// MarkArtKey and TickArtKey are the asset keys the left column's two drawings are filed under —
+// `formslash-fire`, `tick-earth`. Built from the card's own form and element rather than stored,
+// on the terms every other globbed family is keyed: see assets/embed.go.
+//
+// **Exported for tools/marksheet** *(2026-09-16)*, which draws the whole matrix at the sizes the
+// card asks for. A second table over there would be a second place a key can be spelled wrong, and
+// the sheet exists precisely to catch a key naming no file.
+//
+// **An element with no art is an empty key**, which systems.ArtMark reports as no picture, so the
+// caller falls back rather than drawing a hole. Basic, Relic and FormNone are all that today.
+// MarkArtKey and TickArtKey are the asset keys the left column's two drawings are filed under —
+// `formslash-fire`, `tick-earth`. Built from the card's own form and element rather than stored,
+// on the terms every other globbed family is keyed: see assets/embed.go.
+//
+// **Exported for tools/marksheet** *(2026-09-16)*, which draws the whole matrix at the sizes the
+// card asks for. A second table over there would be a second place a key can be spelled wrong, and
+// the sheet exists precisely to catch a key naming no file.
+//
+// **Everything that is not one of the five elements draws the neutral version**, which is what
+// lets both paths be total: a creature's card belongs to no element, a relic's belongs to none
+// either, and the wildcard upgrade is about all five at once. There is no untinted-glyph fallback
+// under either of these any more — the generated form marks were deleted on 2026-09-16, and a
+// missing key would now be a missing file rather than a card with no element.
+func MarkArtKey(f Form, e Element) string {
+	if f == FormNone {
+		return ""
+	}
+	if !hasArt(e) {
+		return "form" + f.String() + "-neutral"
+	}
+	return "form" + f.String() + "-" + e.String()
+}
+
+func TickArtKey(e Element) string {
+	if !hasArt(e) {
+		return "tick-neutral"
+	}
+	return "tick-" + e.String()
+}
+
+// hasArt says whether the elemental drawings exist for an element. The five real ones do;
+// Basic and Relic are not elements a card is counted on and were never in the matrix.
+func hasArt(e Element) bool {
+	switch e {
+	case Fire, Ice, Lightning, Earth, Arcane:
+		return true
+	}
+	return false
+}
+
+// tickFade is how far a drawn tick is walked toward the card's surface for the card's state —
+// the distance Spec.atState hands the border as a color, applied to a picture instead.
+func tickFade(s Spec) int {
+	switch {
+	case !s.Enabled:
+		return borderDisabledToward
+	case s.Dragging, s.Selected:
+		return 0
+	default:
+		return borderRestToward
+	}
+}
+
+// tickFadeTarget is the surface a faded tick is walked toward — the same pair Spec.atState
+// chooses between, so the drawn column and the colored border cannot disagree about which ground
+// a state is measured against.
+func tickFadeTarget(s Spec) color.RGBA {
+	if !s.Enabled {
+		return SurfaceDisabled
+	}
+	return Surface
+}
+
+// fadeToward walks every inked pixel in r toward one color, leaving transparent ones alone —
+// fadeRegion's rule with the destination named rather than assumed. A disabled card fades toward
+// SurfaceDisabled and a resting one toward Surface, which is the whole reason it is a parameter.
+func fadeToward(dst *image.RGBA, r image.Rectangle, to color.RGBA, pct int) {
+	for y := r.Min.Y; y < r.Max.Y; y++ {
+		for x := r.Min.X; x < r.Max.X; x++ {
+			c := dst.RGBAAt(x, y)
+			if c.A == 0 {
+				continue
+			}
+			dst.SetRGBA(x, y, systems.ColorToward(c, to, pct))
+		}
 	}
 }
 
@@ -972,71 +1069,4 @@ func fadeRegion(dst *image.RGBA, r image.Rectangle, pct int) {
 			dst.SetRGBA(x, y, systems.ColorToward(c, SurfaceDisabled, pct))
 		}
 	}
-}
-
-// tintInk recolors a glyph to one hue, keeping its own light and shade.
-//
-// **This is where the element is said now** *(owner's call, 2026-08-23)*. It used to be the
-// border, and the swap is argued in `borderBase`: the corner mark is the thing a hand is counted
-// on, so it is the thing worth spending the only color channel left on.
-//
-// **A ramp between a dark and a light version of the hue, not a multiply.** Multiplying each
-// channel by the pixel's brightness is the obvious recolor and it fails on this art: the four
-// form marks are drawn with a near-black outline, so a multiply leaves the loudest part of every
-// mark near-black and the element shows only in the interior. Mapping brightness onto a ramp
-// instead keeps the *ordering* of the art's own shading — outline darkest, specular lightest —
-// while putting the hue in both ends, so the mark reads as colored at a glance rather than as a
-// gray drawing with a tinted middle.
-//
-// **Premultiplied throughout.** image.RGBA is alpha-premultiplied and the art arrives
-// downsampled, so its edge pixels are partly transparent; brightness is therefore taken from the
-// *unpremultiplied* value and the result is multiplied back by alpha, or every soft edge would
-// come out darker than the ink it belongs to.
-//
-// It returns a fresh image rather than writing through the one it was handed: `systems` caches
-// what RenderGlyphAt returns, so tinting in place would paint the first element drawn onto every
-// card that asked afterwards.
-func tintInk(src *image.RGBA, hue color.RGBA) *image.RGBA {
-	b := src.Bounds()
-	out := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
-
-	// The two ends of the ramp. The dark end is the hue at a third strength rather than black,
-	// which is what keeps an outline colored; the light end stops well short of white, because a
-	// mark that reached it would have a colorless highlight on a near-white card and lose its
-	// edge against the surface.
-	dark := systems.ColorAtStrength(hue, tintDarkPct)
-	light := systems.ColorToward(hue, color.RGBA{R: 255, G: 255, B: 255, A: 255}, tintLightToward)
-
-	for y := 0; y < b.Dy(); y++ {
-		for x := 0; x < b.Dx(); x++ {
-			c := src.RGBAAt(b.Min.X+x, b.Min.Y+y)
-			if c.A == 0 {
-				continue
-			}
-			a := int(c.A)
-
-			// Unpremultiply to 0..255 and take the brightest channel as the pixel's own light.
-			// The brightest rather than a luminance average: the art is nearly hueless already,
-			// and an average would take a near-white specular down to a mid gray.
-			lum := int(c.R)
-			if int(c.G) > lum {
-				lum = int(c.G)
-			}
-			if int(c.B) > lum {
-				lum = int(c.B)
-			}
-			if lum = lum * 255 / a; lum > 255 {
-				lum = 255
-			}
-
-			mix := func(d, l uint8) uint8 {
-				v := int(d) + (int(l)-int(d))*lum/255
-				return uint8(v * a / 255) // back into premultiplied space
-			}
-			out.SetRGBA(x, y, color.RGBA{
-				R: mix(dark.R, light.R), G: mix(dark.G, light.G), B: mix(dark.B, light.B), A: c.A,
-			})
-		}
-	}
-	return out
 }

@@ -21,7 +21,7 @@ import (
 //
 //	go run -tags demoplay .        # writes demo/*.png and exits
 //
-// It exists for the same reason `tools/glyphsheet` does. Glyph art was being reviewed by
+// It exists for the same reason `tools/marksheet` does. Interface art was being reviewed by
 // launching the game and hunting for a card that used it; the sheet replaced that with a file.
 // This is that idea applied to the one thing a sheet cannot capture — a screen mid-playback,
 // with a hand line on it and the highlight on the right row.

@@ -20,7 +20,7 @@ package combat
 // color, which is why it is the zero value: a card that names no element is a plain card, and
 // so is a zero `Card`.
 //
-// **Append-only, like GlyphKind.** `Duelist.Statuses` and `Duelist.Relics` are arrays indexed by
+// **Append-only, like ConceptID.** `Duelist.Statuses` and `Duelist.Relics` are arrays indexed by
 // this value, so inserting an element mid-enum silently re-points every status a duelist is
 // carrying. Add at the end.
 type Element int

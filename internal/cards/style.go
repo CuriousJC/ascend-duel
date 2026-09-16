@@ -7,8 +7,9 @@ package cards
 // stay a whole number and 1 is the floor.
 //
 // **Drawn art is the exception** *(2026-08-23)*, which is what lets Mini carry a form mark at all.
-// A painting has interior detail to average, so `systems.RenderGlyphAt` will halve one — and the
-// four form marks are drawings. See that function for the line between the two.
+// A painting has interior detail to average, so `systems.ArtMark` reduces one to whatever size is
+// asked for — and every mark on a card is a drawing. There is no generated art left; see
+// internal/systems/artmark.go.
 type Style struct {
 	Width, Height int
 
@@ -61,8 +62,8 @@ type Style struct {
 	// 64-pixel generated sword first, because it said what the corner mark already says
 	// while taking the room the effect text needed, and then the figure beside it — because
 	// the text says what the card does, and "Deal 2x DMG" is the same fact stated once instead
-	// of twice. `systems.GlyphDamage` still exists and is still on the glyph sheet; nothing on
-	// a card draws it.
+	// of twice. The generated sword that used to draw it was deleted with the rest of the
+	// silhouette generator on 2026-09-16.
 	//
 	// GlyphScale is the whole-number pixel repeat a mark is blitted at, applied by placeInk on
 	// top of whatever size the art came back at. It is 1 on every style: a form mark is already
@@ -279,11 +280,26 @@ var Hand = Style{
 	// **20 is the width the column has, not a round number.** DashLeft is 10 and TextColumnLeft
 	// is 33, so 23 is the wall; TestTheCostColumnStaysOutOfTheTextColumn is what fails on a wider
 	// one, and widening past it means moving the text column rather than nudging this.
+	//
+	// **The height is 8 rather than 5 so that it can carry a drawing** *(2026-09-16)*. A tick is
+	// a flat rectangle today and is to become a small forged bar — see
+	// `docs/art/glyph_art_prompt.MD` — and drawn art halves rather than resamples, exactly as a
+	// form mark does. 5 was the one figure in the left column that could not: `Scaled(1, 2)`
+	// rounds it to 3, and no canvas divides into both 5 and 3. 8 gives Mini 4 and both are a
+	// whole halving of a 16-pixel source. Three pixels taller is also three pixels more room for
+	// a lit top edge, a body and a dark under edge, which is the whole of what a bar that size
+	// can say.
 	DashLeft:   10,
 	DashTop:    60,
 	DashWidth:  20,
-	DashHeight: 5,
-	DashGap:    6,
+	DashHeight: 8,
+
+	// **Halved from 6 when the tick became a drawing** *(owner's call, 2026-09-16)*. The gap was
+	// holding four flat rectangles apart so they would not read as a hatched block; a drawn bar
+	// separates itself with its own dark under edge, so the gap was paying for a problem that no
+	// longer exists and the column was eating room for it. The comment above still holds — the
+	// stack must not read as a block — it is just no longer the gap doing the work.
+	DashGap: 3,
 
 	GlyphScale: 1,
 	GlyphInset: 13,

@@ -42,7 +42,7 @@ import (
 // card can be several things at once, and a bitmask is what says so without the caller having to
 // rank them.
 //
-// **Append-only, and never serialized.** It is the same shape as GlyphKind and ConceptID; a file
+// **Append-only, and never serialized.** It is the same shape as combat.ConceptID; a file
 // writing one down would be a file that means something else after the next bit is claimed. Being
 // a mask, an insertion is worse here than elsewhere — every existing value would change meaning
 // rather than only the ones after it — so new marks go on the end.

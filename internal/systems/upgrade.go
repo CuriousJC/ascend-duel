@@ -58,7 +58,7 @@ import (
 // Upgrade is a visible alteration to a card.
 //
 // **Append-only, and it may never be serialized as a number.** It is an ordinal indexing a
-// registry and a cache, exactly like GlyphKind, Element and ConceptID — and a run snapshot
+// registry and a cache, exactly like Element and ConceptID — and a run snapshot
 // outlives the build that wrote it. Nothing writes one down today: an upgrade is *derived* from
 // the one rider a card carries, which is itself stored by name.
 type Upgrade int
@@ -191,10 +191,12 @@ const UpgradeBorderPct = 80
 
 // UpgradeInkSize is the square every upgrade ink is authored or generated at.
 //
-// **It is the form marks' size on purpose.** The mark was the biggest thing an ink had to cover
-// when an upgrade took the left column, and the number is kept now that an ink is sampled across a
-// whole card: a band pattern needs enough squares to read as bands and not enough to alias.
-const UpgradeInkSize = formArtSize
+// **It was the form marks' size and is now its own number** *(2026-09-16)*. The mark was the
+// biggest thing an ink had to cover when an upgrade took the left column, so the two shared a
+// constant; an ink is sampled across a whole card now, and the form marks stopped being a glyph at
+// all. What the figure is for is unchanged: a band pattern needs enough squares to read as bands
+// and not enough to alias.
+const UpgradeInkSize = 32
 
 // upgradeArt is where an upgrade's ink comes from when it is a *picture*: an assets.LoadImageData
 // key, never a path, so a file can be refiled without touching this.

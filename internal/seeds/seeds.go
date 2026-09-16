@@ -3,7 +3,7 @@ package seeds
 import "fmt"
 
 // Stream is one concern that draws randomness. **Append-only, like `combat.Element` and
-// `systems.GlyphKind`** — the ordinal indexes the table below, so inserting one mid-list
+// `combat.ConceptID`** — the ordinal indexes the table below, so inserting one mid-list
 // re-points every stream after it at the wrong salt, which is a silent reroll of half the game.
 type Stream int
 

@@ -45,7 +45,7 @@ import (
 // cheap to compare and **meaningless outside the process that assigned it** — a save file writes
 // `StatusRecord`, never this.
 //
-// **Append-only, the hazard Element and GlyphKind carry**, and here it is the file that decides:
+// **Append-only, the hazard Element and ConceptID carry**, and here it is the file that decides:
 // inserting a record into the middle of `statuses.json` re-points every status a duelist is
 // carrying, because `Duelist.Statuses` is indexed by this value.
 type StatusID int

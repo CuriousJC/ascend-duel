@@ -37,7 +37,6 @@ package screens
 
 import (
 	"image"
-	"image/color"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -83,10 +82,10 @@ type shieldBreak struct {
 	// seat is the index into the opponent's table row.
 	seat int
 
-	// ink is the color the pip is drawn in: the element of a shield the player raised, so the
-	// thing crossing the table looks like what left the row. **Cosmetic**, exactly as the pips'
-	// own color is — a fire ward and an ice ward break the same attack.
-	ink color.RGBA
+	// element is which shield drawing the pip is: that of a shield the player raised, so the thing
+	// crossing the table looks like what left the row. **Cosmetic**, exactly as the pips' own
+	// element is — a fire ward and an ice ward break the same attack.
+	element cards.Element
 
 	t travel
 }
@@ -125,7 +124,7 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 		return false
 	}
 
-	ink := s.brokenPipInk()
+	el := s.brokenPipElement()
 	for _, seat := range blocks {
 		if seat < 0 || seat >= len(s.theater.enemyDealt) {
 			// A seat the row does not hold is dropped rather than flown to nowhere. It means the
@@ -134,9 +133,9 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 			continue
 		}
 		s.theater.breaks = append(s.theater.breaks, shieldBreak{
-			seat: seat,
-			ink:  ink,
-			t:    newTravel(0, shatterFlyTicks()+shatterSpreadTicks()+shatterHoldTicks()),
+			seat:    seat,
+			element: el,
+			t:       newTravel(0, shatterFlyTicks()+shatterSpreadTicks()+shatterHoldTicks()),
 		})
 	}
 	if len(s.theater.breaks) == 0 {
@@ -147,7 +146,7 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 	// `hold` clamps, so a prediction that disagrees with the engine costs a few beats of a wrong
 	// count rather than a broken row.
 	row := s.row(combat.SideA)
-	row.hold(row.count()-len(s.theater.breaks), color.RGBA{})
+	row.hold(row.count()-len(s.theater.breaks), cards.Basic)
 	return true
 }
 
@@ -184,10 +183,10 @@ func (s *CombatScene) blocksAhead() []int {
 //
 // **A row with no color recorded hands back a zero**, which `drawShieldPip` reads as "as drawn" —
 // the bare white mark. That is the same fallback the pips' own flight takes.
-func (s *CombatScene) brokenPipInk() color.RGBA {
+func (s *CombatScene) brokenPipElement() cards.Element {
 	pips := s.row(combat.SideA).pips
 	if len(pips) == 0 {
-		return color.RGBA{}
+		return cards.Basic
 	}
 	return pips[len(pips)-1]
 }
@@ -267,7 +266,7 @@ func (s *CombatScene) drawBreakPip(gs *state.GlobalState, screen *ebiten.Image,
 		from.X+int(float64(to.X-from.X)*p),
 		from.Y+int(float64(to.Y-from.Y)*p),
 	)
-	drawShieldPip(screen, at, breakPipScale(p), 1, b.ink)
+	drawShieldPip(screen, at, breakPipScale(p), 1, b.element)
 }
 
 // breakPipScale is the pip's size along its journey: full when it leaves the row, two thirds when

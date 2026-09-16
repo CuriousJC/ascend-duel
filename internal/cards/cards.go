@@ -182,28 +182,6 @@ func Forms() []Form {
 	return []Form{FormStab, FormSlash, FormCrush, FormDefend}
 }
 
-// formGlyphs is the picture each form carries in the card's corner: a spear, a sword, an axe and
-// a shield, which say the form without a legend.
-//
-// **FormNone is absent on purpose**, so the lookup below reports it as having no glyph — a relic
-// and both fighter cards belong to no form, and the slot has to stay empty for them.
-var formGlyphs = map[Form]systems.GlyphKind{
-	FormStab:   systems.GlyphFormStab,
-	FormSlash:  systems.GlyphFormSlash,
-	FormCrush:  systems.GlyphFormCrush,
-	FormDefend: systems.GlyphFormDefend,
-}
-
-// Glyph is the art for this form, and whether it has any.
-//
-// **Exported for the deck panel** *(2026-08-24)*, which counts a deck by form and marks each row
-// with the same drawing the card's own corner carries. A second table over there would be a second
-// place for a fifth form to have to be remembered.
-func (f Form) Glyph() (systems.GlyphKind, bool) {
-	k, ok := formGlyphs[f]
-	return k, ok
-}
-
 // Surface is every card's face, whatever its element. One constant, deliberately: the left
 // column — the tinted form mark and the cost ticks under it — is what says which element a card
 // is, and a surface that also shifted would be saying it twice and leaving nothing for the next
@@ -248,7 +226,7 @@ var (
 // one. `data/duelists.json` can only choose among what is drawn here.
 //
 // **Append, never insert.** The screen's card cache keys on the Spec, so these ordinals are
-// part of a cache key — the same hazard GlyphKind carries.
+// part of a cache key — the same hazard combat.ConceptID carries.
 type BackMark int
 
 const (

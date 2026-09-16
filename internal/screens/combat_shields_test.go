@@ -150,7 +150,6 @@ func TestPipsAreNotFlownTwiceForOneCard(t *testing.T) {
 // **A pip keeps the color it flew in.** The flight is drawn in its card's element and the row it
 // joins has to agree, or the pip changes color on landing and says the journey meant nothing.
 func TestALandedPipKeepsItsColor(t *testing.T) {
-	fire := cards.BorderOf(artFor(combat.Fire))
 
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldRaise(raised(2, 2))
@@ -159,26 +158,26 @@ func TestALandedPipKeepsItsColor(t *testing.T) {
 	}
 	s.landShields()
 
-	inks := s.shownShieldInks(combat.SideA)
-	if len(inks) != 2 {
-		t.Fatalf("%d pips have a color, want 2", len(inks))
+	els := s.shownShieldElements(combat.SideA)
+	if len(els) != 2 {
+		t.Fatalf("%d pips have an element, want 2", len(els))
 	}
-	for i, ink := range inks {
-		if ink != fire {
-			t.Errorf("pip %d is %v, want its card's fire %v", i, ink, fire)
+	for i, e := range els {
+		if e != cards.Fire {
+			t.Errorf("pip %d is %v, want its card's fire", i, e)
 		}
 	}
 
-	// A shield eaten takes the oldest color with it, so the row never draws a color for a pip
+	// A shield eaten takes the oldest pip with it, so the row never keeps an element for a pip
 	// that is not there.
 	s.noteShields(combat.Event{Kind: combat.KindBlocked, Target: combat.SideA, Amount: 1})
-	if got := len(s.shownShieldInks(combat.SideA)); got != 1 {
+	if got := len(s.shownShieldElements(combat.SideA)); got != 1 {
 		t.Errorf("%d colors are left for one standing pip", got)
 	}
 
 	// An expiry says how many lapsed, not how many are left, so the row it leaves is empty.
 	s.noteShields(combat.Event{Kind: combat.KindExpired, Target: combat.SideA, Amount: 1})
-	if got := len(s.shownShieldInks(combat.SideA)); got != 0 {
+	if got := len(s.shownShieldElements(combat.SideA)); got != 0 {
 		t.Errorf("%d colors are left for an empty row", got)
 	}
 }
@@ -198,14 +197,14 @@ func TestARaiseNeverLeavesAPipColorless(t *testing.T) {
 	// The engine announces the second shield the same turn raised; nothing flew for it, because a
 	// seat's pips fly once and the second card's own raise is the next seat's.
 	s.noteShields(combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 1, Life: 2})
-	if got, want := len(s.shownShieldInks(combat.SideA)), 2; got != want {
+	if got, want := len(s.shownShieldElements(combat.SideA)), 2; got != want {
 		t.Fatalf("%d colors for %d standing pips: the rest draw white", got, want)
 	}
 
 	// And a raise may not shrink the list: it says what is standing after its own, not instead of
 	// what is already there.
 	s.noteShields(combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 1, Life: 1})
-	if got := len(s.shownShieldInks(combat.SideA)); got != 2 {
+	if got := len(s.shownShieldElements(combat.SideA)); got != 2 {
 		t.Errorf("a raise trimmed the colors to %d", got)
 	}
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
 // panelRun is a run wearing the named relics, with a deck small enough to reason about by hand.
@@ -270,8 +271,13 @@ func TestEveryFormInTheColumnHasAMark(t *testing.T) {
 		if f == combat.FormNone {
 			continue
 		}
-		if _, ok := form(f).Glyph(); !ok {
-			t.Errorf("%v has no mark, so its button would be a bare number", f)
+		key := neutralMarkKey(f)
+		if key == "" {
+			t.Errorf("%v has no mark key, so its button would be a bare number", f)
+			continue
+		}
+		if systems.ArtMarkImage(key, deckColumnMarkSize, deckColumnMarkSize) == nil {
+			t.Errorf("%v names mark %q, which is not in the assets", f, key)
 		}
 	}
 

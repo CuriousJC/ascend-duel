@@ -3,14 +3,14 @@
 //
 //	go run ./tools/cardsheet
 //
-// It exists for the same reason tools/glyphsheet does: **the art can be reviewed by
+// It exists for the same reason tools/marksheet does: **the art can be reviewed by
 // opening a file instead of by launching the game**, and in the card's case launching
 // the game is worse than usual — seeing a lightning Cleave you cannot afford means dealing
 // yourself the hand that contains one. This renders that card directly.
 //
 // It needs no graphics context, because internal/cards draws into a plain Go image. That
 // is the whole reason the package was split out of internal/screens, and it is the same
-// trick systems.RenderGlyph already used.
+// trick systems.ArtMark already uses.
 //
 // **The sheet cannot lie about the game.** Both this tool and the combat screen call
 // cards.Render and blit the result, so there is no second drawing path to drift. An

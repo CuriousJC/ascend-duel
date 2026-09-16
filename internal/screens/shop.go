@@ -1013,9 +1013,8 @@ func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image) {
 // **A record naming its own Art wins, and since 2026-09-15 all three do** — the bag, the vial and
 // the sack are painted as the vessels they are named after.
 //
-// **The borrow is what is left underneath**: a good with no Art draws the placeholder of whatever
-// is inside it — the boulder every stone card draws, the essence catalog's default face, the rune
-// catalog's. It is kept rather than deleted because it is what a *new* good draws on the day it is
+// **The borrow is what is left underneath**: a good with no Art draws the default face of whatever
+// is inside it — the stone catalog's, the essence catalog's, the rune catalog's. It is kept rather than deleted because it is what a *new* good draws on the day it is
 // authored and before it is drawn, and a picture of its contents says more than a fourth
 // placeholder would.
 func goodArt(gs *state.GlobalState, good session.Good) image.Image {
@@ -1024,7 +1023,7 @@ func goodArt(gs *state.GlobalState, good session.Good) image.Image {
 	}
 	switch good.Contains {
 	case session.ContentsStones:
-		return stoneArt()
+		return artwork(gs, data.DefaultStoneArt)
 	case session.ContentsRunes:
 		return artwork(gs, data.DefaultRuneArt)
 	default:

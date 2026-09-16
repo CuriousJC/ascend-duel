@@ -1,8 +1,6 @@
 package screens
 
 import (
-	"image/color"
-
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )
 
@@ -38,10 +36,14 @@ const maxShieldPips = cards.MaxEffects
 // filled it. Nothing here may change an outcome — the round was decided before a frame of it was
 // drawn.
 type shieldRow struct {
-	// pips is one color per standing shield, oldest first, and its length is the count. The
-	// color is the element of the card that raised it — cosmetic, per the owner's call: a fire
-	// ward and an ice ward stop the same attack.
-	pips []color.RGBA
+	// pips is one element per standing shield, oldest first, and its length is the count. The
+	// element is that of the card that raised it — cosmetic, per the owner's call: a fire ward
+	// and an ice ward stop the same attack.
+	//
+	// **It was a color until 2026-09-16**, when the shield mark became five authored drawings
+	// rather than one drawing tinted five ways. What a pip *is* is now the element, and the color
+	// is a thing the drawing already has.
+	pips []cards.Element
 
 	// seen says an event this round has spoken about this side's shields. Until one has, the
 	// engine's own figure is the authority — see fitTo.
@@ -58,9 +60,9 @@ type shieldRow struct {
 func (r *shieldRow) count() int { return len(r.pips) }
 
 // add appends what one landing flight raised, held to what the row can draw.
-func (r *shieldRow) add(ink color.RGBA, n int) {
+func (r *shieldRow) add(e cards.Element, n int) {
 	for i := 0; i < n && len(r.pips) < maxShieldPips; i++ {
-		r.pips = append(r.pips, ink)
+		r.pips = append(r.pips, e)
 	}
 	r.seen = true
 }
@@ -72,7 +74,7 @@ func (r *shieldRow) add(ink color.RGBA, n int) {
 // standing shield and another, so the readout picks the reading that keeps the newest pip the one
 // just raised. **Filling repeats** because a pip with no color recorded draws as the bare white
 // mark, which reads as a different kind of shield rather than as one nobody watched being raised.
-func (r *shieldRow) hold(n int, fill color.RGBA) {
+func (r *shieldRow) hold(n int, fill cards.Element) {
 	r.seen = true
 	if n > maxShieldPips {
 		n = maxShieldPips
@@ -81,13 +83,13 @@ func (r *shieldRow) hold(n int, fill color.RGBA) {
 	case n <= 0:
 		r.pips = nil
 	case n < len(r.pips):
-		r.pips = append([]color.RGBA(nil), r.pips[len(r.pips)-n:]...)
+		r.pips = append([]cards.Element(nil), r.pips[len(r.pips)-n:]...)
 	case n > len(r.pips):
-		// **The caller's color first, the newest pip second.** An announcement knows the card it
+		// **The caller's element first, the newest pip second.** An announcement knows the card it
 		// is about and hands its element in; a count with no card behind it can only repeat what
-		// the row is already wearing. Either beats leaving a pip colorless, which draws as the
-		// bare white mark.
-		if fill.A == 0 && len(r.pips) > 0 {
+		// the row is already wearing. Either beats leaving a pip elementless, which draws as the
+		// neutral gray mark.
+		if fill == cards.Basic && len(r.pips) > 0 {
 			fill = r.pips[len(r.pips)-1]
 		}
 		for len(r.pips) < n {
@@ -103,7 +105,7 @@ func (r *shieldRow) hold(n int, fill color.RGBA) {
 // raises names a smaller number than the row is already showing. Taking it outright made the second
 // card's pip vanish and come back a beat later. Only a block or an expiry takes a shield away, so
 // only they may lower the row.
-func (r *shieldRow) raiseTo(n int, fill color.RGBA) {
+func (r *shieldRow) raiseTo(n int, fill cards.Element) {
 	if n > len(r.pips) {
 		r.hold(n, fill)
 		return
@@ -121,7 +123,7 @@ func (r *shieldRow) fitTo(model int) {
 		return
 	}
 	if model != len(r.pips) {
-		r.hold(model, color.RGBA{})
+		r.hold(model, cards.Basic)
 		r.seen = false
 	}
 }

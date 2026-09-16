@@ -92,7 +92,7 @@ is only ever advanced by its own concern" is a type rather than a convention. As
 wrong scope **panics**: seeding a per-fight stream as if it were per-run would hand every fight
 the same shuffle, which looks like it worked.
 
-`Stream` is **append-only**, like `combat.Element` and `systems.GlyphKind` — the ordinal indexes
+`Stream` is **append-only**, like `combat.Element` and `combat.ConceptID` — the ordinal indexes
 the salt table, so inserting one mid-list re-points every stream after it.
 
 | Stream | Scope | Used by | Sharing it would reroll |

@@ -51,6 +51,12 @@ type shieldFlight struct {
 	// count is how many pips arrive, already capped.
 	count int
 
+	// element is which shield drawing the pips are: their card's own, so the pip that crosses the
+	// screen is the mark that was sitting in that card's corner. **It is the element rather than a
+	// color** *(2026-09-16)*, since the marks are authored per element now and there is nothing
+	// left to tint.
+	element cards.Element
+
 	// ink is the color the pips are drawn in: their card's element, the same color that card
 	// wears round its border and on its own corner mark. **Cosmetic** *(owner's call,
 	// 2026-09-02)* — nothing about a shield depends on which element raised it, and a fire ward and
@@ -131,7 +137,8 @@ func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
 
 	s.flyShields(shieldFlight{
 		side: e.Side, seat: seat, count: count, standing: e.Life,
-		ink: s.handCardInk(e.Side, seat),
+		element: s.handCardElement(e.Side, seat),
+		ink:     s.handCardInk(e.Side, seat),
 	})
 	return true
 }
@@ -174,22 +181,22 @@ func (s *CombatScene) landShields() {
 		row := s.row(f.side)
 		row.fitTo(s.modelShields(f.side))
 		if f.standing < 0 {
-			row.add(f.ink, f.count)
+			row.add(f.element, f.count)
 			continue
 		}
 		// **The announcement brings a count; the flight brings the color.** Every pip this
 		// flight is responsible for wears its card's element — all `count` of them, not just the
 		// newest, or a brace announcing two would land one colored pip and one bare white mark.
-		row.raiseTo(f.standing, f.ink)
+		row.raiseTo(f.standing, f.element)
 		for i := 0; i < f.count && i < row.count(); i++ {
-			row.pips[row.count()-1-i] = f.ink
+			row.pips[row.count()-1-i] = f.element
 		}
 	}
 }
 
-// shownShieldInks is the color of each standing pip, for the card to draw them in — and its length
-// is the count, which is the whole point of the row being one list.
-func (s *CombatScene) shownShieldInks(side combat.Side) []color.RGBA {
+// shownShieldElements is the element of each standing pip, so the card can draw the right shield —
+// and its length is the count, which is the whole point of the row being one list.
+func (s *CombatScene) shownShieldElements(side combat.Side) []cards.Element {
 	return s.row(side).pips
 }
 
@@ -244,20 +251,20 @@ func (s *CombatScene) shieldsRaisedBy(side combat.Side, seat int) int {
 func (s *CombatScene) noteShields(e combat.Event) {
 	switch e.Kind {
 	case combat.KindRaised:
-		// The card being announced is the one lit right now, so its element is the color any pip
+		// The card being announced is the one lit right now, so its element is the shield any pip
 		// this raise adds should be wearing.
-		ink := color.RGBA{}
+		el := cards.Basic
 		if seat, ok := s.firingSeat(e.Side); ok {
-			ink = s.handCardInk(e.Side, seat)
+			el = s.handCardElement(e.Side, seat)
 		}
-		s.row(e.Side).raiseTo(e.Life, ink)
+		s.row(e.Side).raiseTo(e.Life, el)
 	case combat.KindBlocked:
-		s.row(e.Target).hold(e.Amount, color.RGBA{})
+		s.row(e.Target).hold(e.Amount, cards.Basic)
 	case combat.KindExpired:
 		// **An expiry empties the row whatever it says.** Its `Amount` is the count read *before*
 		// the shields were cleared — how many lapsed, not how many are left — so a row taking it
 		// the way it takes a block's would keep drawing every shield that had just gone.
-		s.row(e.Target).hold(0, color.RGBA{})
+		s.row(e.Target).hold(0, cards.Basic)
 	}
 }
 
@@ -271,8 +278,8 @@ func (s *CombatScene) shownShields(side combat.Side, model int) int {
 
 // The pips' journey, drawn.
 //
-// **They are the card's own mark, not a new picture.** `GlyphFormDefend` is the shield in the
-// corner of every defend card and the pip the row fills with, so what leaves the card, what crosses
+// **They are the card's own mark, not a new picture.** The pip is the same shield drawing the
+// corner of every defend card carries, in the same element, so what leaves the card, what crosses
 // the screen and what lands are one drawing seen three times.
 const (
 	// shieldFromScale and shieldToScale are how big a pip is at each end. It **shrinks into the
@@ -306,7 +313,7 @@ func (s *CombatScene) drawShields(gs *state.GlobalState, screen *ebiten.Image) {
 				from.X+int(float64(to.X-from.X)*p+offset),
 				from.Y+int(float64(to.Y-from.Y)*p),
 			)
-			drawShieldPip(screen, at, scale, alpha, f.ink)
+			drawShieldPip(screen, at, scale, alpha, f.element)
 		}
 	}
 }
@@ -321,13 +328,14 @@ func shieldAlpha(f shieldFlight) float32 {
 	return float32(clamp01(1 - held))
 }
 
-// drawShieldPip blits one mark, centered on a point and tinted by its card's element.
+// drawShieldPip blits one mark, centered on a point, in its card's own element.
 //
-// **Multiplied rather than repainted.** The mark is drawn art in a near-white palette, so scaling
-// it by a color keeps its outline and its bevel — the same reason `cards.tintInk` ramps a form
-// mark instead of filling a silhouette. A zero-alpha ink leaves it as drawn.
-func drawShieldPip(screen *ebiten.Image, at image.Point, scale float64, alpha float32, ink color.RGBA) {
-	img := systems.Glyph(systems.GlyphFormDefend, systems.PaletteWhite)
+// **Nothing is tinted any more** *(2026-09-16)*. The pip used to be a near-white drawing multiplied
+// by the card's element color, which was the only way to get five shields out of one picture; there
+// are now five shields, authored, and the pip draws the one the card is showing. An element with no
+// drawing takes the neutral shield rather than nothing, on cards.MarkArtKey's terms.
+func drawShieldPip(screen *ebiten.Image, at image.Point, scale float64, alpha float32, e cards.Element) {
+	img := systems.ArtMarkImage(shieldPipKey(e), shieldPipSize, shieldPipSize)
 	if img == nil {
 		return
 	}
@@ -337,11 +345,23 @@ func drawShieldPip(screen *ebiten.Image, at image.Point, scale float64, alpha fl
 	op.GeoM.Translate(-float64(w)/2, -float64(h)/2)
 	op.GeoM.Scale(scale, scale)
 	op.GeoM.Translate(float64(at.X), float64(at.Y))
-	if ink.A != 0 {
-		op.ColorScale.ScaleWithColor(ink)
-	}
 	op.ColorScale.ScaleAlpha(alpha)
 	screen.DrawImage(img, op)
+}
+
+// shieldPipSize is the pip's drawn size, which is the card's own form box — the pip is that mark
+// leaving that corner, so a second figure here would be the two drifting apart.
+const shieldPipSize = 32
+
+// shieldPipKey is the shield drawing for one element, neutral for anything that is not one of the
+// five. Spelled here rather than exported from internal/cards because the key is a fact about the
+// asset family and both packages build it the same way off a form and an element.
+func shieldPipKey(e cards.Element) string {
+	switch e {
+	case cards.Fire, cards.Ice, cards.Lightning, cards.Earth, cards.Arcane:
+		return "formdefend-" + e.String()
+	}
+	return "formdefend-neutral"
 }
 
 // shieldOrigin is the seat the pips leave: the card being scored, exactly where its own figure

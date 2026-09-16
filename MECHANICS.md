@@ -759,7 +759,7 @@ stacks; with stacking gone the ceiling is the number itself.
   not by element and not as named fields. That is what makes *"consume the status this card
   applies"* expressible and is the difference between a system and a handful of ad-hoc fields. The
   price: **`StatusID` is append-only and the file decides the order**, the hazard `Element` and
-  `GlyphKind` also carry. The raised-defense set stays where it is — those are card effects, and
+  ConceptID also carries. The raised-defense set stays where it is — those are card effects, and
   filing them in this table would say they were not.
 
 ## Resolution — phases

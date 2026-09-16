@@ -240,7 +240,7 @@ func buttonStripY(gs *state.GlobalState) int {
 // deckCardStyle here.
 //
 // **That split is what lets `go run ./tools/cardsheet` review the art without launching
-// the game**, the same reason systems.RenderGlyph is free of Ebitengine. Both this screen
+// the game**, the same reason systems.ArtMark is free of Ebitengine. Both this screen
 // and that tool call cards.Render and blit the result, so the sheet cannot show something
 // the game does not draw. See card_art.go for the caching this screen adds on top.
 

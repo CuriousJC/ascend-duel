@@ -1,20 +1,23 @@
 package screens
 
 import (
-	"image/color"
 	"testing"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
+// **A pip is an element rather than a color as of 2026-09-16**, the shield mark being five
+// authored drawings now rather than one drawing tinted five ways. Everything this file asserts is
+// unchanged; what a pip *is* moved one step earlier.
 var (
-	rowFire = color.RGBA{R: 200, G: 80, B: 40, A: 255}
-	rowIce  = color.RGBA{R: 80, G: 160, B: 220, A: 255}
+	rowFire = cards.Fire
+	rowIce  = cards.Ice
 )
 
 // **The count is the list**, which is the whole reason this type exists: there is no second place
-// for a count to live, so a pip without a color cannot be represented and cannot be drawn white.
-func TestEveryStandingPipHasAColor(t *testing.T) {
+// for a count to live, so a pip without an element cannot be represented and cannot be drawn bare.
+func TestEveryStandingPipHasAnElement(t *testing.T) {
 	var r shieldRow
 	r.add(rowFire, 1)
 	r.add(rowIce, 1)
@@ -22,11 +25,11 @@ func TestEveryStandingPipHasAColor(t *testing.T) {
 	r.hold(3, rowIce)
 
 	if r.count() != len(r.pips) {
-		t.Fatalf("the count is %d and the colors are %d", r.count(), len(r.pips))
+		t.Fatalf("the count is %d and the elements are %d", r.count(), len(r.pips))
 	}
 	for i, p := range r.pips {
-		if p.A == 0 {
-			t.Errorf("pip %d has no color, so it draws as the bare white mark", i)
+		if p == cards.Basic {
+			t.Errorf("pip %d has no element, so it draws as the neutral mark", i)
 		}
 	}
 }

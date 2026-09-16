@@ -59,7 +59,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
-	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
 // ground is screens.screenGround, the light slate blue a stone is actually offered on. Judging a card
@@ -86,11 +85,6 @@ func run(dir string) error {
 	if err != nil {
 		return err
 	}
-
-	// The boulder an undrawn stone falls back to, rendered once. **There is no default-stone.png**,
-	// so this generated glyph is the fallback where the other catalogs each have a painted default
-	// face — see screens.stoneFace, which this mirrors.
-	boulder := systems.RenderGlyph(systems.GlyphStone, systems.PaletteWhite)
 
 	page := page{
 		Ground: ground,
@@ -130,7 +124,7 @@ func run(dir string) error {
 		p.Worth = session.StoneWorth(h.Key)
 		p.Raised = h.Multiplier + p.Worth
 
-		art, err := stoneFace(st, boulder)
+		art, err := stoneFace(st)
 		if err != nil {
 			return err
 		}
@@ -148,7 +142,7 @@ func run(dir string) error {
 	// that were not kept rather than lighting the one that was, exactly as the essence offer does.
 	if first, ok := firstStone(plates); ok {
 		st, _ := session.StoneByKey(first.Record)
-		art, err := stoneFace(st, boulder)
+		art, err := stoneFace(st)
 		if err != nil {
 			return err
 		}
@@ -194,13 +188,16 @@ func run(dir string) error {
 // screens.stoneSpec does: a name, the authored line with the computed figure under it, and no
 // element. **Basic, not a color** — a stone raises a rung of the ladder and a rung is not one of
 // the five, so its border is the mid gray `cards.BorderOf` gives `basic`.
-// stoneFace is the picture one stone draws: its own if it has been painted, the boulder otherwise.
+// stoneFace is the picture one stone draws.
+//
+// **The fallback is resolved before this is called** *(2026-09-16)*: `session.Stone.Art` comes
+// through `data.StoneData.ArtKey`, which answers the catalog's default face for an unpainted
+// record — so this page and the game cannot disagree about what an undrawn stone looks like, which
+// is the whole reason that decision is in `data/`.
+//
 // **A key naming no embedded file is an error rather than a blank face**, exactly as the essence
 // sheet's artwork is — a review tool that quietly drew nothing would hide what it is for.
-func stoneFace(st session.Stone, boulder image.Image) (image.Image, error) {
-	if st.Art == "" {
-		return boulder, nil
-	}
+func stoneFace(st session.Stone) (image.Image, error) {
 	raw := assets.LoadImageData()[st.Art]
 	if len(raw) == 0 {
 		return nil, fmt.Errorf("%s draws %q, which is in no embed", st.Record, st.Art)

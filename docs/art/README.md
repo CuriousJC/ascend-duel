@@ -52,6 +52,12 @@ and both are things the repo produced. These are things the repo consumes.
 - **The worklist is a query now.** A relic with an empty `Art` has no picture, a relic with an
   empty `Draw` has no brief, and `go run ./tools/relicsheet` prints both counts and marks both in
   pink. A file listing the same thing is a second copy to keep in step.
+- **The glyph prompt is the exception to every rule above, and says so at the top.** It has no
+  record behind it — there is no `Draw` field for a form mark, because a form is a closed
+  vocabulary in Go rather than a catalog anybody authors into — so the subject lives in the prompt
+  itself, as a table of four objects. It is also the only prompt whose output is **not** filed by
+  `tools/relicart`: the marks go into `assets/form/` under their own names and `assets.embedFamily`
+  globs them, keyed by filename stem. `go run ./tools/marksheet` is the review page.
 - **Nothing here is loaded by the game**, which is why it is not in `data/`. Everything in
   `data/` is the game's own catalog, `//go:embed`ed and read at launch.
 
@@ -95,6 +101,7 @@ way down — and was never used. The committed catalog went through plain Catmul
 | `stone_art_prompt.MD` | the prompt for a stone — same style block and the same whole-object instruction, plus the three material ladders: the concept axis is silica, the form axis is plain rock, the element axis is gem |
 | `other_card_art_prompt.MD` | the prompt for every *other* `cards.EssenceStyle` good — the potions in `data/potions.json`, the sealed goods in `data/goods.json`, the placeholder brand, and whatever is added next. Same style block and the same composition; the object is whole rather than coming apart |
 | `rune_art_prompt.MD` | the closed list of rune body plans, pasted into the essence prompt. A creature needs a shape where an object does not |
+| `glyph_art_prompt.MD` | **the odd one out**: it produces the marks drawn *on top of* a card rather than a picture *on* one — the form mark in the corner and the cost ticks under it. Square and 5:2 rather than 5:7, transparent rather than near-black, one hue rather than a scene, and delivered at 256 because the game reduces to the two sizes it draws at |
 
 **Neither bleeding card names itself** *(owner's call, 2026-09-11)*, so no prompt has to keep a
 title band clear: the picture is the card. What a relic card draws over its art is one counter

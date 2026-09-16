@@ -219,7 +219,7 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 
 // drawTick is the earned mark: two strokes, drawn rather than glyphed.
 //
-// **Not a GlyphKind**, because the glyph enum is append-only and keyed by ordinal into a cache, and
+// **Not an enum**, because an append-only ordinal keyed into a cache would be, and
 // a shape this small and this specific to one page does not earn a permanent seat in it. See
 // CLAUDE.md on what a generated glyph costs.
 func (s *AchievementsScene) drawTick(screen *ebiten.Image, cx, cy int) {

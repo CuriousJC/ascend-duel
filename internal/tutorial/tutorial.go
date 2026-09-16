@@ -9,7 +9,7 @@ import (
 )
 
 // Anchor is what a step points at. **Append-only, and never serialized** — the same rule
-// `combat.ConceptID` and `systems.GlyphKind` carry, for the same reason: `internal/screens` keys
+// `combat.ConceptID` carries, for the same reason: `internal/screens` keys
 // its rectangle table by the ordinal, so inserting one mid-enum silently re-points every entry
 // after it. What a file writes down is the name.
 type Anchor int

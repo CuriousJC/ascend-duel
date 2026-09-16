@@ -289,27 +289,39 @@ func setChromeEnabled(b *models.Button, on bool) {
 // reason. models.Button is shared by every screen and holds one centered string; giving it a
 // glyph slot would put this control's needs into all of them. It has to come after
 // DrawButton, which blits an opaque cached face.
+// gearArtKey and gearArtSize are the settings cog: which asset, and how big it is drawn.
+//
+// **The size is named here rather than read off the picture** — the button is 44 and the cog is a
+// mark on it, so what decides the figure is the chrome's layout rather than whatever the file
+// happens to be. A replacement drawn at 256 lands at the same size on screen.
+const (
+	gearArtKey  = "gear"
+	gearArtSize = 32
+)
+
 func (g *Game) drawChrome(gs *state.GlobalState, screen *ebiten.Image) {
 	if g.settingsButton == nil || !chromeShowing(gs) {
 		return
 	}
 	systems.DrawButton(gs, screen, g.settingsButton)
 
-	// Centered on the face. Measured rather than assumed — the chrome glyphs are 32 where the
-	// card's damage sword is 64, and SizeOf is the authority.
-	kind := systems.GlyphGear
-	size := systems.SizeOf(kind)
-	r := settingsButtonRect(gs)
-
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(
-		float64(r.Min.X+(r.Dx()-size)/2),
-		float64(r.Min.Y+(r.Dy()-size)/2),
-	)
-
-	// Untinted, like every glyph. Scaling a five-value palette collapses the bevel into a
-	// flat silhouette, which is the whole thing the palette exists to avoid.
-	screen.DrawImage(systems.Glyph(kind, systems.PaletteWhite), op)
+	// Centered on the face, at the one size it is drawn: the 44px button has to hold it with room
+	// to spare, and a cog that filled the face would read as the button rather than as a mark on it.
+	//
+	// **It is an asset rather than a generated glyph** *(2026-09-16)*. `internal/systems` drew this
+	// shape until the day the last of the marks became authored art and the silhouette generator
+	// was deleted; the picture was baked to `assets/game/gear.png` unchanged on the way out. A
+	// missing file draws nothing rather than crashing, which is the same courtesy every other
+	// keyed asset gets.
+	if cog := systems.ArtMarkImage(gearArtKey, gearArtSize, gearArtSize); cog != nil {
+		r := settingsButtonRect(gs)
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(
+			float64(r.Min.X+(r.Dx()-gearArtSize)/2),
+			float64(r.Min.Y+(r.Dy()-gearArtSize)/2),
+		)
+		screen.DrawImage(cog, op)
+	}
 
 	// The ledger's button, beside it. **A letter rather than a glyph**, because there is no drawn
 	// mark for "the account of this run" and a generated one at 32 pixels would be a silhouette

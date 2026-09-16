@@ -1,0 +1,759 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Mark sheet</title>
+<style>
+  body { background: #a8bcd4; color: #12141a; font: 14px system-ui, sans-serif;
+         margin: 0; padding: 32px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 2px; }
+  p.note { margin: 0 0 16px; max-width: 70ch; opacity: .78; }
+  table { border-collapse: collapse; background: #f0efea; border-radius: 10px;
+          overflow: hidden; margin: 0 0 8px; }
+  th, td { padding: 8px 10px; text-align: center; vertical-align: bottom; }
+  th { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+       opacity: .6; }
+  th.form { text-align: right; }
+  td.cell { border-top: 1px solid rgba(0,0,0,.07); }
+  img { image-rendering: pixelated; display: block; margin: 0 auto 4px; }
+  .figures { font: 11px ui-monospace, monospace; opacity: .55; white-space: nowrap; }
+  .missing { color: #c02c4a; font-weight: 600; font-size: 12px; }
+  .zoomed img { transform-origin: bottom center; }
+</style>
+
+<h1>Mark sheet</h1>
+<p class="note">
+  Every form mark and every cost tick, at the sizes the game draws them and blown up
+  6x with nearest-neighbor. <strong>Read the actual-size table first</strong> — there is no
+  zoom anywhere in the game, and reviewing only the enlarged one is how a mark comes to look
+  acceptable in review and clunky in play. Under each cell: the ink's drawn size, how many pixels
+  of it are opaque, and what share of those are near-black. That last figure is the contour, and a
+  0% is a mark with nothing holding it against a pale card.
+</p>
+
+
+<h2>Form marks — 32px, a hand card</h2>
+<table>
+  <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th><th>neutral</th></tr>
+  
+  <tr>
+    <th class="form">stab</th>
+    
+    <td class="cell">
+      <img src="mark-stab-fire-32.png" width="32" height="32" alt="formstab-fire">
+      <span class="figures">32x32 · 205px · 75% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-ice-32.png" width="32" height="32" alt="formstab-ice">
+      <span class="figures">32x32 · 205px · 75% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-lightning-32.png" width="32" height="32" alt="formstab-lightning">
+      <span class="figures">32x32 · 205px · 75% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-earth-32.png" width="32" height="32" alt="formstab-earth">
+      <span class="figures">32x32 · 205px · 75% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-arcane-32.png" width="32" height="32" alt="formstab-arcane">
+      <span class="figures">32x32 · 205px · 75% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-neutral-32.png" width="32" height="32" alt="formstab-neutral">
+      <span class="figures">32x32 · 205px · 88% dark</span>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">slash</th>
+    
+    <td class="cell">
+      <img src="mark-slash-fire-32.png" width="32" height="32" alt="formslash-fire">
+      <span class="figures">32x32 · 275px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-ice-32.png" width="32" height="32" alt="formslash-ice">
+      <span class="figures">32x32 · 275px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-lightning-32.png" width="32" height="32" alt="formslash-lightning">
+      <span class="figures">32x32 · 275px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-earth-32.png" width="32" height="32" alt="formslash-earth">
+      <span class="figures">32x32 · 275px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-arcane-32.png" width="32" height="32" alt="formslash-arcane">
+      <span class="figures">32x32 · 275px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-neutral-32.png" width="32" height="32" alt="formslash-neutral">
+      <span class="figures">32x32 · 275px · 79% dark</span>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">crush</th>
+    
+    <td class="cell">
+      <img src="mark-crush-fire-32.png" width="32" height="32" alt="formcrush-fire">
+      <span class="figures">16x32 · 306px · 44% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-ice-32.png" width="32" height="32" alt="formcrush-ice">
+      <span class="figures">16x32 · 306px · 44% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-lightning-32.png" width="32" height="32" alt="formcrush-lightning">
+      <span class="figures">16x32 · 306px · 44% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-earth-32.png" width="32" height="32" alt="formcrush-earth">
+      <span class="figures">16x32 · 306px · 44% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-arcane-32.png" width="32" height="32" alt="formcrush-arcane">
+      <span class="figures">16x32 · 306px · 44% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-neutral-32.png" width="32" height="32" alt="formcrush-neutral">
+      <span class="figures">16x32 · 306px · 75% dark</span>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">defend</th>
+    
+    <td class="cell">
+      <img src="mark-defend-fire-32.png" width="32" height="32" alt="formdefend-fire">
+      <span class="figures">22x24 · 396px · 28% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-ice-32.png" width="32" height="32" alt="formdefend-ice">
+      <span class="figures">22x24 · 396px · 28% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-lightning-32.png" width="32" height="32" alt="formdefend-lightning">
+      <span class="figures">22x24 · 396px · 28% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-earth-32.png" width="32" height="32" alt="formdefend-earth">
+      <span class="figures">22x24 · 396px · 28% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-arcane-32.png" width="32" height="32" alt="formdefend-arcane">
+      <span class="figures">22x24 · 396px · 28% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-neutral-32.png" width="32" height="32" alt="formdefend-neutral">
+      <span class="figures">22x24 · 396px · 49% dark</span>
+    </td>
+    
+  </tr>
+  
+</table>
+
+<table class="zoomed">
+  <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th><th>neutral</th></tr>
+  
+  <tr>
+    <th class="form">stab</th>
+    
+    <td class="cell">
+      <img src="mark-stab-fire-32.png" width="192" height="192" alt="formstab-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-ice-32.png" width="192" height="192" alt="formstab-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-lightning-32.png" width="192" height="192" alt="formstab-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-earth-32.png" width="192" height="192" alt="formstab-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-arcane-32.png" width="192" height="192" alt="formstab-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-neutral-32.png" width="192" height="192" alt="formstab-neutral">
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">slash</th>
+    
+    <td class="cell">
+      <img src="mark-slash-fire-32.png" width="192" height="192" alt="formslash-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-ice-32.png" width="192" height="192" alt="formslash-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-lightning-32.png" width="192" height="192" alt="formslash-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-earth-32.png" width="192" height="192" alt="formslash-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-arcane-32.png" width="192" height="192" alt="formslash-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-neutral-32.png" width="192" height="192" alt="formslash-neutral">
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">crush</th>
+    
+    <td class="cell">
+      <img src="mark-crush-fire-32.png" width="192" height="192" alt="formcrush-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-ice-32.png" width="192" height="192" alt="formcrush-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-lightning-32.png" width="192" height="192" alt="formcrush-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-earth-32.png" width="192" height="192" alt="formcrush-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-arcane-32.png" width="192" height="192" alt="formcrush-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-neutral-32.png" width="192" height="192" alt="formcrush-neutral">
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">defend</th>
+    
+    <td class="cell">
+      <img src="mark-defend-fire-32.png" width="192" height="192" alt="formdefend-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-ice-32.png" width="192" height="192" alt="formdefend-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-lightning-32.png" width="192" height="192" alt="formdefend-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-earth-32.png" width="192" height="192" alt="formdefend-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-arcane-32.png" width="192" height="192" alt="formdefend-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-neutral-32.png" width="192" height="192" alt="formdefend-neutral">
+    </td>
+    
+  </tr>
+  
+</table>
+
+<h2>Form marks — 16px, the deck overlay</h2>
+<table>
+  <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th><th>neutral</th></tr>
+  
+  <tr>
+    <th class="form">stab</th>
+    
+    <td class="cell">
+      <img src="mark-stab-fire-16.png" width="16" height="16" alt="formstab-fire">
+      <span class="figures">16x16 · 65px · 81% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-ice-16.png" width="16" height="16" alt="formstab-ice">
+      <span class="figures">16x16 · 65px · 70% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-lightning-16.png" width="16" height="16" alt="formstab-lightning">
+      <span class="figures">16x16 · 65px · 81% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-earth-16.png" width="16" height="16" alt="formstab-earth">
+      <span class="figures">16x16 · 65px · 81% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-arcane-16.png" width="16" height="16" alt="formstab-arcane">
+      <span class="figures">16x16 · 65px · 70% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-neutral-16.png" width="16" height="16" alt="formstab-neutral">
+      <span class="figures">16x16 · 65px · 92% dark</span>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">slash</th>
+    
+    <td class="cell">
+      <img src="mark-slash-fire-16.png" width="16" height="16" alt="formslash-fire">
+      <span class="figures">16x16 · 79px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-ice-16.png" width="16" height="16" alt="formslash-ice">
+      <span class="figures">16x16 · 79px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-lightning-16.png" width="16" height="16" alt="formslash-lightning">
+      <span class="figures">16x16 · 79px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-earth-16.png" width="16" height="16" alt="formslash-earth">
+      <span class="figures">16x16 · 79px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-arcane-16.png" width="16" height="16" alt="formslash-arcane">
+      <span class="figures">16x16 · 79px · 60% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-neutral-16.png" width="16" height="16" alt="formslash-neutral">
+      <span class="figures">16x16 · 79px · 84% dark</span>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">crush</th>
+    
+    <td class="cell">
+      <img src="mark-crush-fire-16.png" width="16" height="16" alt="formcrush-fire">
+      <span class="figures">8x16 · 87px · 49% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-ice-16.png" width="16" height="16" alt="formcrush-ice">
+      <span class="figures">8x16 · 87px · 48% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-lightning-16.png" width="16" height="16" alt="formcrush-lightning">
+      <span class="figures">8x16 · 87px · 49% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-earth-16.png" width="16" height="16" alt="formcrush-earth">
+      <span class="figures">8x16 · 87px · 49% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-arcane-16.png" width="16" height="16" alt="formcrush-arcane">
+      <span class="figures">8x16 · 87px · 48% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-neutral-16.png" width="16" height="16" alt="formcrush-neutral">
+      <span class="figures">8x16 · 87px · 80% dark</span>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">defend</th>
+    
+    <td class="cell">
+      <img src="mark-defend-fire-16.png" width="16" height="16" alt="formdefend-fire">
+      <span class="figures">12x12 · 108px · 31% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-ice-16.png" width="16" height="16" alt="formdefend-ice">
+      <span class="figures">12x12 · 108px · 31% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-lightning-16.png" width="16" height="16" alt="formdefend-lightning">
+      <span class="figures">12x12 · 108px · 31% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-earth-16.png" width="16" height="16" alt="formdefend-earth">
+      <span class="figures">12x12 · 108px · 31% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-arcane-16.png" width="16" height="16" alt="formdefend-arcane">
+      <span class="figures">12x12 · 108px · 31% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-neutral-16.png" width="16" height="16" alt="formdefend-neutral">
+      <span class="figures">12x12 · 108px · 55% dark</span>
+    </td>
+    
+  </tr>
+  
+</table>
+
+<table class="zoomed">
+  <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th><th>neutral</th></tr>
+  
+  <tr>
+    <th class="form">stab</th>
+    
+    <td class="cell">
+      <img src="mark-stab-fire-16.png" width="96" height="96" alt="formstab-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-ice-16.png" width="96" height="96" alt="formstab-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-lightning-16.png" width="96" height="96" alt="formstab-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-earth-16.png" width="96" height="96" alt="formstab-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-arcane-16.png" width="96" height="96" alt="formstab-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-stab-neutral-16.png" width="96" height="96" alt="formstab-neutral">
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">slash</th>
+    
+    <td class="cell">
+      <img src="mark-slash-fire-16.png" width="96" height="96" alt="formslash-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-ice-16.png" width="96" height="96" alt="formslash-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-lightning-16.png" width="96" height="96" alt="formslash-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-earth-16.png" width="96" height="96" alt="formslash-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-arcane-16.png" width="96" height="96" alt="formslash-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-slash-neutral-16.png" width="96" height="96" alt="formslash-neutral">
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">crush</th>
+    
+    <td class="cell">
+      <img src="mark-crush-fire-16.png" width="96" height="96" alt="formcrush-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-ice-16.png" width="96" height="96" alt="formcrush-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-lightning-16.png" width="96" height="96" alt="formcrush-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-earth-16.png" width="96" height="96" alt="formcrush-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-arcane-16.png" width="96" height="96" alt="formcrush-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-crush-neutral-16.png" width="96" height="96" alt="formcrush-neutral">
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="form">defend</th>
+    
+    <td class="cell">
+      <img src="mark-defend-fire-16.png" width="96" height="96" alt="formdefend-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-ice-16.png" width="96" height="96" alt="formdefend-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-lightning-16.png" width="96" height="96" alt="formdefend-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-earth-16.png" width="96" height="96" alt="formdefend-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-arcane-16.png" width="96" height="96" alt="formdefend-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="mark-defend-neutral-16.png" width="96" height="96" alt="formdefend-neutral">
+    </td>
+    
+  </tr>
+  
+</table>
+
+
+
+<h2>Cost ticks — 20x8, a hand card</h2>
+<table>
+  <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th><th>neutral</th></tr>
+  <tr>
+    <th class="form">one</th>
+    
+    <td class="cell">
+      <img src="tick-fire-20-1.png" width="20" height="8" alt="tick-fire">
+      <span class="figures">18x8 · 144px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-ice-20-1.png" width="20" height="8" alt="tick-ice">
+      <span class="figures">18x8 · 144px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-lightning-20-1.png" width="20" height="8" alt="tick-lightning">
+      <span class="figures">18x8 · 144px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-earth-20-1.png" width="20" height="8" alt="tick-earth">
+      <span class="figures">18x8 · 144px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-arcane-20-1.png" width="20" height="8" alt="tick-arcane">
+      <span class="figures">18x8 · 144px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-neutral-20-1.png" width="20" height="8" alt="tick-neutral">
+      <span class="figures">18x8 · 144px · 40% dark</span>
+    </td>
+    
+  </tr>
+  <tr>
+    <th class="form">a cost of three</th>
+    
+    <td class="cell">
+      <img src="tick-fire-20-3.png" width="20" height="30" alt="tick-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-ice-20-3.png" width="20" height="30" alt="tick-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-lightning-20-3.png" width="20" height="30" alt="tick-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-earth-20-3.png" width="20" height="30" alt="tick-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-arcane-20-3.png" width="20" height="30" alt="tick-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-neutral-20-3.png" width="20" height="30" alt="tick-neutral">
+    </td>
+    
+  </tr>
+  <tr>
+    <th class="form">enlarged</th>
+    
+    <td class="cell">
+      <img src="tick-fire-20-3.png" width="120" height="180" alt="tick-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-ice-20-3.png" width="120" height="180" alt="tick-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-lightning-20-3.png" width="120" height="180" alt="tick-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-earth-20-3.png" width="120" height="180" alt="tick-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-arcane-20-3.png" width="120" height="180" alt="tick-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-neutral-20-3.png" width="120" height="180" alt="tick-neutral">
+    </td>
+    
+  </tr>
+</table>
+
+<h2>Cost ticks — 10x4, the deck overlay</h2>
+<table>
+  <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th><th>neutral</th></tr>
+  <tr>
+    <th class="form">one</th>
+    
+    <td class="cell">
+      <img src="tick-fire-10-1.png" width="10" height="4" alt="tick-fire">
+      <span class="figures">10x4 · 40px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-ice-10-1.png" width="10" height="4" alt="tick-ice">
+      <span class="figures">10x4 · 40px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-lightning-10-1.png" width="10" height="4" alt="tick-lightning">
+      <span class="figures">10x4 · 40px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-earth-10-1.png" width="10" height="4" alt="tick-earth">
+      <span class="figures">10x4 · 40px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-arcane-10-1.png" width="10" height="4" alt="tick-arcane">
+      <span class="figures">10x4 · 40px · 20% dark</span>
+    </td>
+    
+    <td class="cell">
+      <img src="tick-neutral-10-1.png" width="10" height="4" alt="tick-neutral">
+      <span class="figures">10x4 · 40px · 40% dark</span>
+    </td>
+    
+  </tr>
+  <tr>
+    <th class="form">a cost of three</th>
+    
+    <td class="cell">
+      <img src="tick-fire-10-3.png" width="10" height="16" alt="tick-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-ice-10-3.png" width="10" height="16" alt="tick-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-lightning-10-3.png" width="10" height="16" alt="tick-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-earth-10-3.png" width="10" height="16" alt="tick-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-arcane-10-3.png" width="10" height="16" alt="tick-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-neutral-10-3.png" width="10" height="16" alt="tick-neutral">
+    </td>
+    
+  </tr>
+  <tr>
+    <th class="form">enlarged</th>
+    
+    <td class="cell">
+      <img src="tick-fire-10-3.png" width="60" height="96" alt="tick-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-ice-10-3.png" width="60" height="96" alt="tick-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-lightning-10-3.png" width="60" height="96" alt="tick-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-earth-10-3.png" width="60" height="96" alt="tick-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-arcane-10-3.png" width="60" height="96" alt="tick-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="tick-neutral-10-3.png" width="60" height="96" alt="tick-neutral">
+    </td>
+    
+  </tr>
+</table>
+

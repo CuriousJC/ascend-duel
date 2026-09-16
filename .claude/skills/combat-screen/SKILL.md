@@ -20,11 +20,13 @@ top of, and they are not repeated below:
 
 - **The input vocabulary** — left click, drag and drop, long press. No right click, ever,
   and no keyboard outside the one seed field.
-- **Glyphs are generated and cannot be resized.** Authored at the size shown, integer
-  scales only, 1 is the floor. They are **not all one size** — the damage sword is 64, the
-  category glyphs are 32 — so ask `systems.SizeOf(kind)` and never assume `GlyphSize`. **A
-  glyph is placed by its inked bounds, not its canvas**, since none of them fills the square
-  it is drawn on.
+- **All interface art is authored** *(2026-09-16)*. The silhouette generator in
+  `internal/systems` is deleted; a picture is a PNG fetched by asset key through
+  `systems.ArtMark`, which reduces a 256px source to whatever size is asked for. The form marks
+  and the cost ticks are one drawing per form per element plus a neutral set — see
+  `cards.MarkArtKey`, which is total, so a blank corner is a missing file rather than a card with
+  no element. Nothing is tinted: the hue is in the drawing.
+
 - **The card is drawn by `internal/cards`, not by this screen.** `drawCard` builds a
   `cards.Spec`, pulls a cached image and blits it; it draws nothing itself. Change how a
   card looks there, then `go run ./tools/cardsheet` and refresh the tab — the tool and the

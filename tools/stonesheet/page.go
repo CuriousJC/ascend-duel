@@ -112,9 +112,10 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
   stone naming the wrong rung would be invisible everywhere but here.
 </p>
 <p class="note">
-  <strong>Every stone draws the same boulder.</strong> It is a generated glyph rather than a file
-  — <code>systems.GlyphStone</code> — so there is nothing to review about the picture and no
-  provenance question to answer. What is being reviewed is the wording and the numbers.
+  <strong>Every stone in the catalog is painted.</strong> One that is not draws the relics&rsquo;
+  default face — <code>data.DefaultStoneArt</code> — which is the same "nobody has painted this
+  yet" the other catalogs use, rather than a generated boulder nothing else in the game still
+  drew. A stone marked below as having no art of its own is a record to write a brief for.
 </p>
 
 <h2>The ladder, by axis</h2>
@@ -150,7 +151,7 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
             <b>{{.Multiplier}}</b> &rarr; <b>{{.Raised}}</b> with one stone
             (<b>+{{.Worth}}</b> each)
           </p>
-          <p class="art">no art of its own — drawing the generated boulder</p>
+          <p class="art">no art of its own — drawing the default face</p>
         {{else}}
           <p class="name">{{.Hand}}</p>
           <div class="record">{{.HandKey}}</div>

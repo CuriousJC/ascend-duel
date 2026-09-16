@@ -415,22 +415,23 @@ func deckFilterForms() []combat.Form {
 // tints the same art by the card's element, which is what makes an element legible on a card; this
 // row is about the form, and a colored mark here would be claiming one.
 func drawFormMark(screen *ebiten.Image, f combat.Form, left, top int) {
-	kind, ok := form(f).Glyph()
-	if !ok {
+	img := systems.ArtMarkImage(neutralMarkKey(f), deckColumnMarkSize, deckColumnMarkSize)
+	if img == nil {
 		return
 	}
-
-	img := systems.Glyph(kind, systems.PaletteWhite)
-	size := img.Bounds().Dx()
-	if size == 0 {
-		return
-	}
-
-	scale := float64(deckColumnMarkSize) / float64(size)
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(scale, scale)
 	op.GeoM.Translate(float64(left), float64(top))
 	screen.DrawImage(img, op)
+}
+
+// neutralMarkKey is the asset key of a form's hueless drawing — `formcrush-neutral`. Built the way
+// internal/cards builds the colored one, off the form's own name.
+func neutralMarkKey(f combat.Form) string {
+	name := form(f).String()
+	if name == "" {
+		return ""
+	}
+	return "form" + name + "-neutral"
 }
 
 // deckColumnBottom is where the column's last button ends, given how many toggles are standing and

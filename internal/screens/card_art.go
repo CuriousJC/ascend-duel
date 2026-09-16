@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"image"
-	"image/color"
 	_ "image/png"
 	"log"
 	"strconv"
@@ -381,7 +380,7 @@ func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
 // figure in flight, a build band with no shields standing — and where the run *is* has no such
 // reading: `towerFloor` and `towerRoom` are the whole of it.
 func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
-	dmg, vitae, life, maxLife, ap, fight, shields int, inks ...color.RGBA) cards.Spec {
+	dmg, vitae, life, maxLife, ap, fight, shields int, els ...cards.Element) cards.Spec {
 	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
@@ -402,18 +401,18 @@ func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 	//
 	// **`combat` caps a duelist at as many shields as this row holds**, so a count that would
 	// overflow cannot exist rather than being silently trimmed here — see Duelist.raiseShields.
-	// **Each pip keeps the color of the card that raised it** *(owner's call, 2026-09-02)*, which
-	// is the color it was drawn in while it flew. Cosmetic: nothing about a shield depends on the
-	// element behind it, and a pip that changed color on landing would say the opposite. A pip with
-	// no ink — a shield standing from a round nobody watched, or one drawn outside a duel — is the
-	// mark as drawn.
+	// **Each pip keeps the element of the card that raised it** *(owner's call, 2026-09-02)*, which
+	// is the shield it was drawn as while it flew. Cosmetic: nothing about a shield depends on the
+	// element behind it, and a pip that changed on landing would say the opposite. A pip with no
+	// element — a shield standing from a round nobody watched, or one drawn outside a duel — is the
+	// neutral mark.
 	if shields > 0 {
 		for i := 0; i < shields && i < len(spec.Effects); i++ {
-			var ink color.RGBA
-			if i < len(inks) {
-				ink = inks[i]
+			e := cards.Basic
+			if i < len(els) {
+				e = els[i]
 			}
-			if img := shieldPip(gs, ink); img != nil {
+			if img := shieldPip(gs, e); img != nil {
 				spec.Effects[i] = img
 			}
 		}
@@ -421,56 +420,19 @@ func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 	return spec
 }
 
-// shieldPip is the picture one standing shield is drawn as: the defend form's corner mark, the
-// same file a Brace, a Block and a Guard carry.
+// shieldPip is the picture one standing shield is drawn as: the defend form's corner mark in that
+// shield's own element, the same file a Brace, a Block and a Guard carry.
 //
-// **It goes through `artwork` rather than `systems.Glyph`** because a pip is scaled into a
-// twenty-pixel badge box like every other thing in that row, and `internal/cards` has no graphics
-// context to render a glyph with — the whole reason the badges are bytes.
-func shieldPip(gs *state.GlobalState, ink color.RGBA) image.Image {
-	img := artwork(gs, "formdefend_png")
-	if img == nil || ink.A == 0 {
-		return img
-	}
-	return tintedPip(img, ink)
-}
-
-// tintedPips is one tinted copy of the mark per color asked for.
+// **It goes through `artwork` rather than `systems.ArtMark`** because a pip is scaled into a
+// twenty-pixel badge box like every other thing in that row, and the badge row takes an
+// `image.Image` — `internal/cards` has no graphics context, which is the whole reason the badges
+// are bytes.
 //
-// **Cached, and that is load-bearing rather than an optimization.** `cardImage` keys its cache on
-// the whole Spec, and a Spec holds these as interface values — so a fresh image every frame would
-// be a fresh key every frame, and the card would be re-rendered sixty times a second.
-var tintedPips = map[color.RGBA]image.Image{}
-
-// tintedPip multiplies the mark by a color, keeping its outline and its shading.
-//
-// **Multiplied rather than filled**, the argument `cards.tintInk` makes for the form marks on a
-// card face: a flat silhouette in the element's color throws away the interior detail that is the
-// whole reason these are drawn art rather than generated glyphs.
-func tintedPip(src image.Image, ink color.RGBA) image.Image {
-	if img, ok := tintedPips[ink]; ok {
-		return img
-	}
-
-	b := src.Bounds()
-	out := image.NewRGBA(b)
-	for y := b.Min.Y; y < b.Max.Y; y++ {
-		for x := b.Min.X; x < b.Max.X; x++ {
-			r, g, bl, a := src.At(x, y).RGBA()
-			// **`RGBA()` hands back 16-bit values and `ink` is 8-bit**, so the division by 0xffff
-			// is the whole conversion: `65535 * 255 / 65535` is already 255. Shifting the result
-			// down another eight bits — which this did for one build — makes every pixel black.
-			out.SetRGBA(x, y, color.RGBA{
-				R: uint8(r * uint32(ink.R) / 0xffff),
-				G: uint8(g * uint32(ink.G) / 0xffff),
-				B: uint8(bl * uint32(ink.B) / 0xffff),
-				A: uint8(a >> 8),
-			})
-		}
-	}
-
-	tintedPips[ink] = out
-	return out
+// **Nothing is tinted** *(2026-09-16)*. There were four form marks and five elements, so a pip was
+// one near-white drawing multiplied by a color; there are now twenty marks plus a neutral set, so
+// the pip is simply the drawing the card is showing. The tinted-pip cache went with it.
+func shieldPip(gs *state.GlobalState, e cards.Element) image.Image {
+	return artwork(gs, shieldPipKey(e))
 }
 
 // relicSpec is an equipped relic as a card: its name and its artwork, and nothing else.
@@ -614,9 +576,9 @@ func essenceSpec(gs *state.GlobalState, w session.Essence, enabled bool) cards.S
 // The record carries the sentence and this carries the arithmetic, which is the same split a
 // card's face already makes between its label and its damage.
 //
-// **The picture is a generated glyph rather than a file**, which is the pattern this game reaches
-// for first: no provenance question, and no asset to license in a product that will be sold. See
-// `systems.GlyphStone`, authored at 96 so it lands in the art box at 1:1.
+// **The picture is the record's own, resolved through `data.StoneData.ArtKey`**, which answers the
+// catalog's default face for a stone nobody has painted — so this and tools/stonesheet cannot
+// disagree about what an undrawn one looks like.
 //
 // **Basic, not an element.** A stone raises a rung of the ladder, and a rung is not a color — the
 // axis a hand counts on is not one of the five. So its border is the mid gray `cards.BorderOf`
@@ -667,32 +629,13 @@ func goodSpec(gs *state.GlobalState, name string, art image.Image, enabled bool)
 	}
 }
 
-// stoneFace is the picture one stone draws: its own if it has been painted, the generated boulder
-// otherwise.
+// stoneFace is the picture one stone draws.
 //
-// **The fallback is a glyph rather than a default face**, which is where the stones depart from the
-// relics, essences and runes. Those three each carry a painted `default-*.png`, because a bleeding
-// card with no picture reads as one that failed to load. A stone already had a drawing — the
-// boulder every stone drew before the catalog was painted — and a generated one says "not drawn
-// yet" more honestly than a painted one, while leaving nothing to license.
+// **There is no fallback here any more** *(2026-09-16)*. `session.Stone.Art` is resolved through
+// `data.StoneData.ArtKey`, which answers the catalog's default face for a record nobody has
+// painted — so the decision lives in `data/` beside the relics' and the essences', rather than in
+// a screen the review tools cannot reach. What it replaced was the generated boulder, which was
+// the last thing keeping a silhouette in `internal/systems` that nothing else drew.
 func stoneFace(gs *state.GlobalState, st session.Stone) image.Image {
-	if st.Art == "" {
-		return stoneArt()
-	}
 	return artwork(gs, st.Art)
-}
-
-// stoneArt is the boulder, rendered once.
-//
-// **Cached because `cards.Spec` is the render cache's key.** A `Spec` is compared by value and an
-// `image.Image` in it compares by pointer, so calling `systems.RenderGlyph` per frame would hand
-// every card a key nothing had drawn before — a cache that grows without bound and never hits.
-// The same reason `artworkCache` exists one screen over.
-var stoneArtOnce image.Image
-
-func stoneArt() image.Image {
-	if stoneArtOnce == nil {
-		stoneArtOnce = systems.RenderGlyph(systems.GlyphStone, systems.PaletteWhite)
-	}
-	return stoneArtOnce
 }

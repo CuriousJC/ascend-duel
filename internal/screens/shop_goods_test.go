@@ -253,6 +253,11 @@ func TestAEssenceIsDeadUntilACardIsSelected(t *testing.T) {
 	}
 }
 
+// An essence taken from the vial shows what it did before it lands: the dialog stays up through the
+// flight, the change and the hold, and the deck is not touched until that is over.
+//
+// **This is the reward screen's rule, and it arrived here on 2026-09-16** — the vial used to apply
+// on the click and close, so the alteration happened between two frames.
 // An essence taken from the vial eats the card that was selected, and nothing else.
 func TestTheCanAppliesTheEssenceToTheSelectedCard(t *testing.T) {
 	gs := testRun()
@@ -281,9 +286,20 @@ func TestTheCanAppliesTheEssenceToTheSelectedCard(t *testing.T) {
 	size := gs.Run.Size()
 	g.take(gs, pick)
 
-	if g.openNow() {
-		t.Error("the dialog is still up after an essence was taken")
+	if g.stage != goodsShowing {
+		t.Fatal("the essence was taken and the dialog did not show what it did")
 	}
+	if now, ok := gs.Run.Card(idx); gs.Run.Size() != size || (ok && now != before) {
+		t.Error("the deck was altered while the result was still on screen")
+	}
+
+	for i := 0; g.openNow(); i++ {
+		if i > 10000 {
+			t.Fatal("the dialog never closed")
+		}
+		g.tickShowing(gs)
+	}
+
 	after, still := gs.Run.Card(idx)
 	if gs.Run.Size() == size && still && after == before {
 		t.Error("the essence was taken and the card it was aimed at is unchanged")

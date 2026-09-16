@@ -39,6 +39,7 @@ import (
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -86,6 +87,14 @@ const (
 	// the essence. See targeting.go, which is the rule the rune pane and the reward screen's own
 	// essence row already follow.
 	goodsPick
+
+	// goodsShowing: an essence has been spent and what it did is on screen — the card flies to the
+	// middle and changes there, exactly as it does on the reward screen *(owner's call,
+	// 2026-09-16)*. It was missing here: the vial applied the essence on the click and closed, so
+	// the one screen where a player pays five vitae for an alteration was the one that never showed
+	// them the alteration. **Only the vial reaches this stage** — a stone and a rune change no card,
+	// so there is nothing to watch.
+	goodsShowing
 )
 
 // goods is the dialog: which good was opened, what was drawn from it, and how far through the
@@ -118,6 +127,20 @@ type goods struct {
 
 	// tip explains whichever card the cursor is resting on.
 	tip models.Tooltip
+
+	// What the spent essence did, held on screen through goodsShowing. **The reward screen's own
+	// fields and the same rules** — see PostBattleScene, where each of these is written up: the card
+	// that flies is the card the player was looking at, the morph is the change happening in front
+	// of them, and the deck is not touched until the hold is over.
+	before      combat.Card
+	after       combat.Card
+	change      morph
+	removes     bool
+	copied      bool
+	held        int
+	arrival     travel
+	arrivedFrom image.Rectangle
+	applyNow    func(*session.Session)
 }
 
 // open puts a good up, drawing what is inside it.
@@ -149,6 +172,9 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 func (g *goods) reset() {
 	g.good, g.stage, g.selected = session.Good{}, goodsClosed, -1
 	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
+	g.before, g.after, g.change = combat.Card{}, combat.Card{}, morph{}
+	g.removes, g.copied, g.held = false, false, 0
+	g.arrival, g.arrivedFrom, g.applyNow = travel{}, image.Rectangle{}, nil
 	g.tip.Forget()
 }
 
@@ -224,16 +250,30 @@ func dealSackRunes(gs *state.GlobalState, seat string, size int) []session.Rune 
 	return all
 }
 
-// runeTipLines is what resting on a rune says: what it does, and when it can be spent.
+// runeTipLines is what resting on a rune says: what it does, what it would fire, and when it can be
+// spent.
 //
-// **The "when" is the half the card cannot say.** A rune's face is a name and a clipped line,
-// and the thing that makes it a different object from an essence is not on it — so the tooltip is where
-// a player finds out that this one is carried into a fight rather than used now.
-func runeTipLines(p session.Rune) []string {
-	// **The card's own text, unwrapped.** A `\n` on a face is an authored line break and a tooltip
-	// draws its own lines, so the two are the same sentence written for two widths — the same
-	// treatment essenceTip gives an essence.
+// **It is the whole of what a rune says now** *(owner's call, 2026-09-16)*. The card is a picture
+// and a name; the authored line moved here rather than sitting on a scrim over the art. See
+// runeSpec.
+//
+// **The "when" is the half the card never could say.** The thing that makes a rune a different
+// object from an essence is not on its face — so the tooltip is where a player finds out that this
+// one is carried into a fight rather than used now.
+//
+// **A chimera says what it would fire**, because its authored line cannot: its whole subject is a
+// rune named somewhere else, and "copies the last" is a line the player has to remember the answer
+// to. On a run that has spent nothing there is no answer and it keeps its own line.
+func runeTipLines(gs *state.GlobalState, p session.Rune) []string {
+	// **The card's own text, unwrapped.** An authored line break on a face is a tooltip's own line:
+	// the two are the same sentence written for two widths — the treatment essenceTip already gives
+	// an essence.
 	lines := strings.Split(p.Text, "\n")
+	if gs.Run != nil {
+		if echoed := gs.Run.EchoedName(p); echoed != "" {
+			lines = append(lines, "it would copy "+echoed)
+		}
+	}
 	return append(lines, "spent between the turns of a fight")
 }
 
@@ -344,6 +384,11 @@ func (g *goods) update(gs *state.GlobalState) bool {
 	}
 	gs.ModalOpen = true
 
+	if g.stage == goodsShowing {
+		g.tickShowing(gs)
+		return true
+	}
+
 	g.hover(gs)
 	systems.UpdateTooltip(gs, &g.tip)
 
@@ -389,7 +434,7 @@ func (g *goods) hover(gs *state.GlobalState) {
 			g.tip.Point(g.slot(gs, i), tipLine(st.Name), tipLines(stoneTipLines(gs, st)))
 		case session.ContentsRunes:
 			p := g.runes[i]
-			g.tip.Point(g.slot(gs, i), tipLine(p.Name), tipLines(runeTipLines(p)))
+			g.tip.Point(g.slot(gs, i), tipLine(p.Name), tipLines(runeTipLines(gs, p)))
 		}
 		return
 	}
@@ -433,19 +478,7 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 			return
 		}
 
-		if gs.Run.Apply(essence, idx) {
-			trace.Logf("shop", "vial of essence: %s applied to deck position %d", essence.Record, idx)
-
-			// **The same moment the post-battle screen raises**, because it is the same event: a
-			// card in the run's deck is now a different card. Read back out of the deck rather than
-			// predicted, and skipped for a removal, which leaves no card to name.
-			if essence.Target != session.TargetRemove {
-				if card, ok := gs.Run.Card(idx); ok {
-					earnMoment(gs, achieve.CardAltered(card.Label()))
-				}
-			}
-		}
-		g.reset()
+		g.show(gs, essence, idx, g.offerSlot(gs, g.selected))
 
 	case session.ContentsStones:
 		stone := g.stones[i]
@@ -466,6 +499,92 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		}
 		g.reset()
 	}
+}
+
+// show is the vial's last stage: the picked card flies to the middle, the essence changes it there,
+// and the dialog closes once the player has had time to read what it became.
+//
+// **The preview runs the real essence against a throwaway copy of the run**, and the deck is not
+// touched until the hold is over — both are the reward screen's rules, written up in
+// PostBattleScene.aimAt. A preview computed by its own arithmetic is a preview that can disagree
+// with the thing it is previewing, and a deck altered while the result is on screen would make the
+// after-card impossible to draw from anything but a deck that has already moved on.
+func (g *goods) show(gs *state.GlobalState, essence session.Essence, deckIndex int, from image.Rectangle) {
+	before, ok := gs.Run.Card(deckIndex)
+	if !ok {
+		return
+	}
+
+	trial := session.New(gs.Run.Deck())
+	if !trial.Apply(essence, deckIndex) {
+		return
+	}
+
+	g.before = before
+	g.removes = essence.Target == session.TargetRemove
+	g.copied = essence.Target == session.TargetDuplicate
+
+	switch {
+	case g.copied:
+		// The copy is appended, so the card that arrived is the last one.
+		g.after, _ = trial.Card(trial.Size() - 1)
+	case !g.removes:
+		g.after, _ = trial.Card(deckIndex)
+	}
+
+	// **What the essence did decides which shape the change takes** — recolored, eaten, or copied.
+	// See cardmorph.go; the morph is handed two finished faces and works out the rest.
+	beforeSpec := cardSpec(before, heldByRun(gs, before), true, false)
+	switch {
+	case g.removes:
+		g.change = morphAway(beforeSpec, cards.Hand)
+	case g.copied:
+		g.change = morphIn(cardSpec(g.after, heldByRun(gs, g.after), true, false), cards.Hand)
+	default:
+		g.change = morphInto(beforeSpec,
+			cardSpec(g.after, heldByRun(gs, g.after), true, false), cards.Hand)
+	}
+
+	g.stage, g.held = goodsShowing, settledHoldTicks()
+	g.arrival, g.arrivedFrom = newTravel(0, settleFlightTicks()), from
+	g.applyNow = func(run *session.Session) { run.Apply(essence, deckIndex) }
+	g.tip.Forget()
+
+	trace.Logf("shop", "vial of essence: %s aimed at deck position %d", essence.Record, deckIndex)
+}
+
+// tickShowing runs the held picture: the flight, then the change, then the hold, and the deck edit
+// at the end of it.
+//
+// **The change does not start until the card has landed**, and the hold does not start until the
+// change has finished — the reward screen's ordering, and for its reason: a dissolve running over a
+// moving card puts the one thing worth watching on a target the eye is still chasing.
+func (g *goods) tickShowing(gs *state.GlobalState) {
+	if !g.arrival.done() {
+		g.arrival.tick()
+		return
+	}
+	if !g.change.done() {
+		g.change.tick()
+		return
+	}
+
+	g.held--
+	if g.held > 0 {
+		return
+	}
+
+	if g.applyNow != nil {
+		g.applyNow(gs.Run)
+		trace.Logf("shop", "vial of essence applied, deck now %d", gs.Run.Size())
+
+		// **The same moment the post-battle screen raises**, because it is the same event: a card in
+		// the run's deck is now a different card. Skipped for a removal, which leaves nothing to name.
+		if !g.removes {
+			earnMoment(gs, achieve.CardAltered(g.after.Label()))
+		}
+	}
+	g.reset()
 }
 
 // selectCard picks a card out of the offer row, or puts it back. **Clicking the selected card
@@ -489,7 +608,7 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	panel := drawModalFrame(gs, screen, modalHead{title: g.title()})
 
-	if line := g.hint(); line != "" {
+	if line := g.hint(); line != "" && g.stage != goodsShowing {
 		hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}
 		op := &text.DrawOptions{}
 		op.GeoM.Translate(float64(panel.Min.X+panel.Dx()/2), float64(panel.Min.Y+goodsHintTop))
@@ -498,13 +617,18 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 		text.Draw(screen, line, hint, op)
 	}
 
+	if g.stage == goodsShowing {
+		g.drawShowing(gs, screen)
+		return
+	}
+
 	for i := 0; i < g.count(); i++ {
 		at := g.slot(gs, i).Min
 		switch g.good.Contains {
 		case session.ContentsStones:
 			drawStoneCard(gs, screen, at, g.stones[i], true)
 		case session.ContentsRunes:
-			drawSpecCard(gs, screen, at, runeSpec(gs, g.runes[i], true, false))
+			drawRuneCard(gs, screen, at, g.runes[i], true, false)
 		default:
 			// **An essence is lit only for the card that is selected.** With nothing selected the
 			// whole row is dim, which is what says the gesture starts underneath — the reward
@@ -537,7 +661,40 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 // still the exception and still says one thing *(owner's call, 2026-09-05)*: the essences on the
 // table are the whole of what the dialog is, so it heads itself with an instruction rather than a
 // label with a caption. It authors both fields to say so.
-func (g *goods) title() string { return g.good.Title }
+func (g *goods) title() string {
+	if g.stage == goodsShowing {
+		if g.removes {
+			return "EATEN"
+		}
+		return "CHANGED"
+	}
+	return g.good.Title
+}
+
+// drawShowing is the picked card flying to the middle, changing there, and held while it is read.
+//
+// **The flight carries the old face and the morph carries the new one**, which is why nothing here
+// asks what the essence did — `change` was handed the two faces in show and is the only thing that
+// knows which of the three shapes this is. A removal ends on an empty seat, a duplicate ends on two
+// cards, everything else ends on one.
+func (g *goods) drawShowing(gs *state.GlobalState, screen *ebiten.Image) {
+	seats := settledSeats(gs, 1)
+	if g.copied {
+		seats = settledSeats(gs, 2)
+	}
+
+	at := flyingTo(g.arrivedFrom, seats[0], g.arrival)
+
+	// While a copy is being made the card that flew is the original, untouched: the morph in the
+	// second seat is the whole of what is happening.
+	if g.copied {
+		drawCard(gs, screen, at, cards.Hand, g.before, heldByRun(gs, g.before), true, false)
+		drawMorph(gs, screen, seats[1].Min, g.change)
+		return
+	}
+
+	drawMorph(gs, screen, at, g.change)
+}
 
 func (g *goods) hint() string { return g.good.Hint }
 
@@ -549,7 +706,7 @@ func (g *goods) hint() string { return g.good.Hint }
 func stoneTipLines(gs *state.GlobalState, st session.Stone) []string {
 	worth := session.StoneWorth(st.Hand)
 
-	out := []string{fmt.Sprintf("raises this hand by %d", worth)}
+	out := []string{fmt.Sprintf("raises %s by %d", stoneHandName(st.Hand), worth)}
 	if gs.Run == nil {
 		return out
 	}
@@ -561,4 +718,19 @@ func stoneTipLines(gs *state.GlobalState, st session.Stone) []string {
 		out = append(out, fmt.Sprintf("%d already on this rung", n))
 	}
 	return out
+}
+
+// stoneHandName is the rung a stone raises, by the name the rest of the game calls it.
+//
+// **Read off the ladder rather than off the stone**, which is the same split stoneLine made when the
+// figure was computed: `data/stones.json` names a rung by key and `hands.json` owns what that rung
+// is called, so a renamed rung cannot leave a stone's tooltip saying the old one. The key itself is
+// the readable failure for a stone naming a rung that is not there.
+func stoneHandName(key string) string {
+	for _, h := range combat.Hands() {
+		if h.Key == key {
+			return h.Name
+		}
+	}
+	return key
 }

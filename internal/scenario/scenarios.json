@@ -1898,5 +1898,14 @@
     "Dummy": true,
     "Actions": 15,
     "Screen": "combat"
+  },
+  {
+    "ScenarioRecord": "vial-of-essence",
+    "Note": "The shop with a large vial of essence standing on the goods row, which is the only place in the game an essence is bought rather than given. The seed is pinned so the row is the same every launch: shop-shelf rolls its two goods off a fresh run code and stocks rocks and runes often enough that looking at the vial meant relaunching until one turned up. Buy the vial, pick a card in the lower row, then click a lit essence.",
+    "Screen": "shop",
+    "Seed": "000009",
+    "Fight": 3,
+    "Vitae": 40,
+    "Life": 30
   }
 ]

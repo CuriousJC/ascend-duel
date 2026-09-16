@@ -64,12 +64,6 @@ func drawMarkedCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	blitCard(gs, screen, at, spec, st)
 }
 
-// drawSpecCard draws a card that is not out of the deck — a prize, a relic, an essence — at hand
-// size. The caller has already said what it looks like.
-func drawSpecCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, spec cards.Spec) {
-	blitCard(gs, screen, at, spec, cards.Hand)
-}
-
 // drawRelicCard draws a relic in the card format: the pink border, artwork across the face, and
 // neither a cost nor a form. Every row that holds relics goes through it — the combat screen's worn
 // row, the build band and the shop's two — which is what keeps a relic one picture rather than four.
@@ -104,6 +98,20 @@ func drawFlyingCard(gs *state.GlobalState, screen *ebiten.Image, spec cards.Spec
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterLinear}
 	op.GeoM = geo
 	screen.DrawImage(img, op)
+}
+
+// drawRuneCard draws a rune as the card it is carried as.
+//
+// **`EssenceStyle`, not `Hand`** *(owner's call, 2026-09-16)*. It was blitted at hand size until
+// now — so a rune was the one consumable in the game wearing a title bar
+// and a fitted picture while the essences and the stones beside it were full-bleed art. It also put
+// the game out of step with `tools/runesheet`, which has always rendered the catalog at this style.
+// The two are the same measurements, so nothing moves: what changes is the title going and the
+// picture reaching the border.
+func drawRuneCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+	p session.Rune, enabled, selected bool) {
+
+	blitCard(gs, screen, at, runeSpec(gs, p, enabled, selected), cards.EssenceStyle)
 }
 
 // drawStoneCard draws a stone as the card it is offered as. Same style as an essence — a picture with

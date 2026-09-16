@@ -107,3 +107,40 @@ func TestADefenseDealsNothing(t *testing.T) {
 		}
 	}
 }
+
+// A card told to count as another form draws that form's card at its own rung: two attacks
+// declared at the same cost answer each other across the two ladders.
+//
+// **The verb is what keeps the ladders apart.** A defense has no counterpart on an attack form,
+// which is what stops a Brace told to be a crush answering a Bash.
+func TestACardTakesTheOtherFormsRung(t *testing.T) {
+	slash := mustTestConcept("TestCounterSlash", data.CardData{
+		Label: "TestCounterSlash", Verb: "attack", Amount: 100, Cost: 2, Form: "slash"})
+	shield := mustTestConcept("TestCounterGuard", data.CardData{
+		Label: "TestCounterGuard", Verb: "shield", Amount: 2, Cost: 2, Form: "defend"})
+
+	got, ok := Counterpart(slash, FormCrush)
+	if !ok {
+		t.Fatal("a slash card has no crush counterpart")
+	}
+
+	// **Asserted by its three keys rather than by identity.** The shipped catalog is registered in
+	// this binary too and any of its 2 AP crush attacks may answer first, which is the real ladder
+	// working rather than a fault. What has to hold is that whatever answers stands on the named
+	// form, at the same rung, doing the same thing.
+	if c := ConceptOf(got); c.Form != FormCrush || c.Verb != ConceptOf(slash).Verb ||
+		c.Tier() != ConceptOf(slash).Tier() {
+		t.Errorf("counterpart %q is a %v %v at rung %d, want a crush attack at rung %d",
+			c.Label, c.Form, c.Verb, c.Tier(), ConceptOf(slash).Tier())
+	}
+
+	if _, ok := Counterpart(slash, FormSlash); ok {
+		t.Error("a card's own form answered a counterpart, which would repaint nothing")
+	}
+	if _, ok := Counterpart(slash, FormNone); ok {
+		t.Error("no form at all answered a counterpart")
+	}
+	if _, ok := Counterpart(shield, FormCrush); ok {
+		t.Error("a defense took an attack form's rung")
+	}
+}

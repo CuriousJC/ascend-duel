@@ -462,6 +462,10 @@ type CombatScene struct {
 // the same room of the same run would not get one, and there is no such caller — `WonFight` steps
 // `Session.fight` and a defeat ends the run outright.
 func (s *CombatScene) Init(gs *state.GlobalState) {
+	// The deal captures its faces here, before anything has been drawn, so the picture bank has to
+	// be reachable before the first frame rather than on the first blit. See useImages.
+	useImages(gs)
+
 	if s.showingDuel(gs) {
 		s.placeWidgets(gs)
 		s.traceLayout(gs)

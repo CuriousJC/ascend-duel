@@ -928,3 +928,47 @@ func TestEveryBleedingCardArtIsTheCardsOwnSize(t *testing.T) {
 		}
 	}
 }
+
+// A card told to count as another form draws that form's card at its own rung — and a defense told
+// the same thing draws exactly what it always did.
+//
+// **The two halves are one decision** *(owner's call, 2026-09-16)*: what a form override changes
+// about a picture is the weapon, so it applies where the card does the same thing with a different
+// one and stops at the attack/defend line, where the card does something else entirely.
+func TestAFormOverrideRepaintsAnAttackAndLeavesADefenseAlone(t *testing.T) {
+	// **Found with a flag rather than a sentinel**: `combat.NoConcept` is -1 and a zero Card holds
+	// concept 0, which is a real card — so an unset check against it finds the first card in the
+	// registry and tests nothing.
+	var slash, shield combat.Card
+	var foundSlash, foundShield bool
+	for _, id := range combat.PlayerConcepts() {
+		c := combat.ConceptOf(id)
+		if !foundSlash && c.Form == combat.FormSlash {
+			slash, foundSlash = combat.Card{Concept: id, Element: combat.Fire}, true
+		}
+		if !foundShield && c.Verb == combat.VerbShield {
+			shield, foundShield = combat.Card{Concept: id, Element: combat.Fire}, true
+		}
+	}
+	if !foundSlash || !foundShield {
+		t.Skip("the catalog holds no slash attack or no defense")
+	}
+
+	crushed := slash
+	crushed.FormOverride = combat.FormCrush
+
+	id, ok := combat.Counterpart(slash.Concept, combat.FormCrush)
+	if !ok {
+		t.Fatalf("%s has no crush counterpart", slash.Label())
+	}
+	want := data.CardArtKey(combat.ConceptOf(id).Label, slash.Element.String())
+	if got := cardArtRecord(crushed); got != want {
+		t.Errorf("%s told to be a crush draws %q, want %q", slash.Label(), got, want)
+	}
+
+	blocked := shield
+	blocked.FormOverride = combat.FormCrush
+	if got, want := cardArtRecord(blocked), cardArtRecord(shield); got != want {
+		t.Errorf("%s told to be a crush draws %q, want its own %q", shield.Label(), got, want)
+	}
+}

@@ -388,8 +388,6 @@ func effectText(c data.CardData) string {
 	}
 
 	switch verb {
-	case combat.VerbDefend:
-		return "Cuts damage by " + strconv.Itoa(c.Amount) + "%"
 	case combat.VerbShield:
 		return shieldText(c.Amount)
 	default:

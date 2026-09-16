@@ -42,13 +42,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Braced",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -94,13 +87,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Set Feet",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -148,13 +134,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Slip Aside",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -200,13 +179,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Shutter",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -254,13 +226,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Hunker",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -306,13 +271,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Shield Wall",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -360,13 +318,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Barricade",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -412,13 +363,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Muffle",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -466,13 +410,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Staunch",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -518,13 +455,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Cell Door",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -572,13 +502,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Parry",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -624,13 +547,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Ward",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -678,13 +594,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Smother",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -730,13 +639,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Rimeguard",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -784,13 +686,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Stonehide",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -836,13 +731,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Lock Ranks",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -890,13 +778,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Earth Line",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -942,13 +823,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Packed Dirt",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -996,13 +870,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Thicket",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -1048,13 +915,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Turned Edge",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -1102,13 +962,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Recant",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -1154,13 +1007,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Ossify",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -1208,13 +1054,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "No Stance",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -1260,13 +1099,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Damping",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -1314,13 +1146,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Scale Guard",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -1366,13 +1191,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Windbreak",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -1420,13 +1238,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Fold Space",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -1472,13 +1283,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "Warded Circle",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]
@@ -1526,13 +1330,6 @@
         "Amount": 300,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Gorge",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
-        "Copies": 2
       }
     ]
   },
@@ -1578,13 +1375,6 @@
         "Verb": "attack",
         "Amount": 300,
         "Cost": 3,
-        "Copies": 2
-      },
-      {
-        "Label": "King's Guard",
-        "Verb": "defend",
-        "Amount": 60,
-        "Cost": 2,
         "Copies": 2
       }
     ]

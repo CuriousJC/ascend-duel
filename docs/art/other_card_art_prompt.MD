@@ -67,22 +67,17 @@ haft or a trailing end, but it sits inside the canvas rather than bleeding off i
 **Nothing is reserved and nothing is kept clear.** There is no title, no name band, no caption
 strip, no counter, no disc, no badge, no coin, no gem socket, no plaque, no banner and no slot of
 any kind for text or a number. Do not leave a corner or an edge empty for one, and do not draw
-one. Whatever the card puts on top of this picture, it puts there itself at draw time, and the
-picture is meant to carry on underneath.
+one. Anything placed on top of this picture is placed there afterwards, and the picture is meant
+to carry on underneath.
 
-The card prints its sentence across the lower half of the picture, on a dark scrim it draws
-itself. That is not a band to leave empty — draw the object through it exactly as above — but it
-does mean the half carrying the recognition should be the upper one.
+A sentence is printed across the lower half of the picture afterwards, on a dark scrim. That is
+not a band to leave empty — draw the object through it exactly as above — but it does mean the
+half carrying the recognition should be the upper one.
 
 ## The subject
 
-The block pasted below this prompt is one record, in JSON, from whichever of these catalogs it
-came from:
-
-| Catalog             | Key field      |
-| ------------------- | -------------- |
-| `data/potions.json` | `PotionRecord` |
-| `data/goods.json`   | `GoodRecord`   |
+The block pasted below this prompt is one record, in JSON. Its key field is `PotionRecord` for a
+potion and `GoodRecord` for a sealed good.
 
 **A sealed good is the vessel and never its contents.** The bag, the vial and the sack each hold
 four of a catalog the player cannot read before paying, so the picture is a closed container — a
@@ -90,16 +85,12 @@ cinched sack, a stoppered vial, a tied pouch — with what is inside suggested b
 against it and never drawn loose beside it. A picture that showed the four would be saying the one
 thing the mechanic exists not to say.
 
-The placeholder brand still has no record of its own — it is built in
-`internal/screens/shop_potions.go` rather than authored — so its subject is written out by hand
-instead of pasted, and the name is the one the shop draws on the card.
+The placeholder brand has no record of its own, so its subject is written out by hand instead of
+pasted.
 
 **Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Effect`,
 `Amount`, `Price`, `Size`, `Contains`, `Family` and the rest — is context for what the card does and is
 never to be rendered: no title, no caption, no rules text, no numbers anywhere in the image. If
 `Draw` is empty, stop and say so rather than inventing a subject.
 
-Name the image after the record's own key and give me a link I can click to download it. A batch
-lands in `.scratch/to-process-other-art/` and is filed by `go run ./tools/relicart -kind other`,
-which reduces it to the card's own size and writes `Art` back onto the record — potions and sealed
-goods together, since the one thing they share is this prompt.
+Name the image after the record's own key and give me a link I can click to download it.

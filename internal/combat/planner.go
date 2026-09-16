@@ -202,26 +202,25 @@ func spareCards(hand []Card, chosen []Card, budget, slots int) []Card {
 		}
 	}
 
+	// **One pass, since there is one kind of defense left** *(2026-09-16)*. This walked the hand
+	// twice, taking percentage guards before shields, because the two were different answers to
+	// different turns and the guard was the one an opponent could not plan around. The guard verb
+	// is gone, so the preference has nothing to express.
 	var out []Card
-	for _, wantDefend := range []bool{true, false} {
-		for i, c := range hand {
-			if used[i] || len(out) >= slots {
-				continue
-			}
-			s := c.Spec()
-			if s.Verb == VerbAttack {
-				continue // an attack the search already declined is an attack that did not help
-			}
-			if (s.Verb == VerbDefend) != wantDefend {
-				continue
-			}
-			if s.Cost > budget {
-				continue
-			}
-			used[i] = true
-			out = append(out, c)
-			budget -= s.Cost
+	for i, c := range hand {
+		if used[i] || len(out) >= slots {
+			continue
 		}
+		s := c.Spec()
+		if s.Verb == VerbAttack {
+			continue // an attack the search already declined is an attack that did not help
+		}
+		if s.Cost > budget {
+			continue
+		}
+		used[i] = true
+		out = append(out, c)
+		budget -= s.Cost
 	}
 	return out
 }

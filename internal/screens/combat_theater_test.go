@@ -127,7 +127,7 @@ func TestTheEngineIsTheAuthorityOnDamagesSource(t *testing.T) {
 //
 // Playback used to pick a dwell with a `switch` over the kind, with a `default` arm that was the
 // *shortest* of them — so a kind added after that switch was written inherited a quarter-second
-// flash chosen by nobody, and `KindNegated` did. The table came back on 2026-08-19 as multipliers
+// flash chosen by nobody, and a blunted blow did. The table came back on 2026-08-19 as multipliers
 // on one speed; what must not come back with it is a beat nobody chose. A table plus this test is
 // the difference.
 func TestEveryEventKindHasADwell(t *testing.T) {

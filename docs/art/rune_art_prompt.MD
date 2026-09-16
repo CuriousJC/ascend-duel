@@ -57,8 +57,8 @@ haft or a trailing end, but it sits inside the canvas rather than bleeding off i
 **Nothing is reserved and nothing is kept clear.** There is no title, no name band, no caption
 strip, no counter, no disc, no badge, no coin, no gem socket, no plaque, no banner and no slot of
 any kind for text or a number. Do not leave a corner or an edge empty for one, and do not draw
-one. Whatever the card puts on top of this picture, it puts there itself at draw time, and the
-picture is meant to carry on underneath.
+one. Anything placed on top of this picture is placed there afterwards, and the picture is meant
+to carry on underneath.
 
 ## The body plan
 
@@ -69,7 +69,7 @@ The body of the rune shoudl be a stylized drawing of what is being requested wit
 
 ## The subject
 
-The block pasted below this prompt is one record from `data/runes.json`, in JSON.
+The block pasted below this prompt is one record, in JSON.
 
 **Read `Draw` and nothing else as the subject.** It says what makes this rune its shape and not
 its sibling — color, ornament, what the effect is doing to it — because the body plan above never

@@ -54,22 +54,25 @@ func TestNoRelicReachesWhatTheFaceSays(t *testing.T) {
 	// is no longer one figure to tell the truth *with*: a growing relic steps between the cards of a
 	// single blow, so the same Bash is worth one thing queued first and another queued third. The
 	// face states the stable half and the sum states what it came to — see the hand dialog.
+	//
+	// **It reads the badge rather than the face text as of 2026-09-16.** The multiplier moved from a
+	// printed line to a drawn badge in the corner; the rule did not move at all, and checking the
+	// text after it stopped carrying a figure would have been a test that passed on an empty string.
 	card := aSlash(t)
 
-	bare := cardEffect(card)
-	keen := cardEffect(card)
+	bare := cardBadge(card)
+	keen := cardBadge(card)
 
 	if keen != bare {
-		t.Fatalf("the face reads %q in one pairing and %q in another", bare, keen)
+		t.Fatalf("the badge reads %q in one pairing and %q in another", bare, keen)
 	}
 
 	// The figure is the card's own multiplier, undoubled, even wearing the relic that doubles it.
-	want := multiplierText(card.Amount())
-	if !strings.Contains(bare, want) {
-		t.Errorf("%s reads %q, want the card's own %s in it", card.Label(), bare, want)
+	if want := damageMultiplier(card.Amount()); bare != want {
+		t.Errorf("%s badges %q, want the card's own %s", card.Label(), bare, want)
 	}
-	if doubled := multiplierText(card.Amount() * 2); strings.Contains(bare, doubled) {
-		t.Errorf("%s reads %q, which carries the relic's %s", card.Label(), bare, doubled)
+	if got, doubled := cardBadgePct(card), card.Amount()*2; got == doubled {
+		t.Errorf("%s badges %d, which carries the relic's doubling", card.Label(), got)
 	}
 }
 

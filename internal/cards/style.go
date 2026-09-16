@@ -112,6 +112,21 @@ type Style struct {
 	// the sides are cropped away. `docs/art/` holds the prompts that produce each.
 	ArtBleed bool
 
+	// ArtUnder is the third art path: the picture covers the card like ArtBleed, and the card
+	// keeps its own off-white ink set instead of switching to the light one.
+	//
+	// **It exists because a playing card is not a relic card** *(2026-09-16)*. A bleeding relic's
+	// whole content is a picture and one sentence, so a dark illustration with a scrim under the
+	// type is the right trade. A playing card carries a name, a form mark, a stack of cost ticks,
+	// a paragraph and a badge — five things in near-black — and scrimming all five would be a card
+	// that is mostly bands. So the picture goes underneath and the type is left alone, which puts
+	// the burden on the art: it has to stay light where type lands. `docs/art/card_art_prompt.MD`
+	// is where that is asked for, and it is a placement hint rather than a reserved band.
+	//
+	// **It does not compose with ArtBleed** — ArtBleed wins, and a style setting both is asking
+	// for two answers to one question.
+	ArtUnder bool
+
 	// The stat rows: Spec.Stats drawn one per row, label against the left margin and
 	// figure against the right. Zero StatRowPitch means the style has none, which is
 	// every style but DuelistStyle.
@@ -196,6 +211,29 @@ type Style struct {
 	// Height, so nothing about the layout moves; what changes is that there are pixels to the right
 	// of it and below it for a corner ornament to live in.
 	Bleed int
+
+	// BadgeTop, BadgeSize and BadgeTextSize are the MOCKUP badge in the bottom-left corner: a disc
+	// carrying an attack's multiplier, or the defend mark carrying the shields a card raises.
+	//
+	// **This is a mockup and it reverses a decision that was taken twice** *(2026-08-14, restated
+	// 2026-08-26)*: a card carried a damage badge, the badge went because the effect text says the
+	// same thing, and then the bare figure went too. It is here to be looked at rather than kept —
+	// see drawBadge, which holds what it costs the text band.
+	//
+	// A zero BadgeSize draws none, which is every style but Hand and the sizes derived from it.
+	BadgeTop      int
+	BadgeSize     int
+	BadgeTextSize float64
+
+	// BadgeStackSize and BadgeStackGap are one shield in the stacked count, and the air between
+	// two of them. **Smaller than BadgeSize**, because three of them have to climb out of the
+	// badge's own slot without reaching the effect text: at 24 on a 2 gap, three finish at y 194
+	// against a text band that ends at 174.
+	//
+	// **The size does not change with the count.** A shield that shrank as a card raised more of
+	// them would be saying the count twice, the second time backwards.
+	BadgeStackSize int
+	BadgeStackGap  int
 }
 
 // Hand is the card as the hand draws it, and the size every constant here is written
@@ -255,8 +293,14 @@ var Hand = Style{
 	ShowName: true,
 	ShowForm: true,
 
+	// **The name sits along the bottom as of 2026-09-16** *(owner's call)*, having been across the
+	// top since the card was built. What moved it is the art: a full-bleed picture wants its upper
+	// half, which is where the subject of every one of these is drawn, and a title across the top
+	// covered exactly that. The badge is in the bottom-left corner and the name is centred on the
+	// card, so the two share the bottom band without touching — 45 against a name that starts
+	// around 60.
 	TextLeft:     15,
-	NameTop:      18,
+	NameTop:      240,
 	NameSize:     25,
 	NameCentered: true,
 
@@ -304,12 +348,30 @@ var Hand = Style{
 	GlyphScale: 1,
 	GlyphInset: 13,
 
+	// **The band gave its bottom to the name and its top back from it.** It ran 55..268 while the
+	// name was across the top; the name is now at 240 and the badge starts at 238, so the block
+	// stops above both — and it may begin higher, since nothing is over it any more.
 	TextColumnLeft: 33,
 	TextInset:      10,
-	TextBandTop:    55,
-	TextBandBottom: 268,
+	TextBandTop:    46,
+	TextBandBottom: 236,
 	TextSize:       22.5,
 	TextLineHeight: 28,
+
+	// The badge sits under the cost column, the same 32 wide as the form mark above it and on the
+	// same left edge, with the same 10 pixels of air under it that FormTop leaves over the mark.
+	// 280 - 10 - 32 = 238.
+	BadgeTop:      238,
+	BadgeSize:     32,
+	BadgeTextSize: 19,
+
+	BadgeStackSize: 24,
+	BadgeStackGap:  2,
+
+	// **A playing card's picture covers the card and the type stays near-black on top of it** —
+	// see Style.ArtUnder. A card with no picture in data/card_art.json is unaffected, which is
+	// every card until one is authored.
+	ArtUnder: true,
 }
 
 // TextLines is how many lines of effect text the band holds at this style's line height.
@@ -394,6 +456,10 @@ func (st Style) Scaled(num, den int) Style {
 	out.CounterSize = f(st.CounterSize)
 
 	out.Bleed = i(st.Bleed)
+
+	out.BadgeTop, out.BadgeSize = i(st.BadgeTop), i(st.BadgeSize)
+	out.BadgeTextSize = f(st.BadgeTextSize)
+	out.BadgeStackSize, out.BadgeStackGap = i(st.BadgeStackSize), i(st.BadgeStackGap)
 
 	// GlyphScale is a whole-number pixel repeat, not a measurement. Scaling it would ask for a
 	// fractional repeat, which is the one thing a derived rim cannot survive.

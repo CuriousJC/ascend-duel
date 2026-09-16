@@ -209,10 +209,6 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorNone, anchorNone, gestureNone,
 		"the pip row emptying says it; a figure flying off a card nobody hit would say it twice",
 	},
-	combat.KindNegated: {
-		anchorNone, anchorSumLine, gesturePop,
-		"a defense is the reverse of a hand and takes the hand's grammar: x50% on the same line",
-	},
 	combat.KindDamage: {
 		anchorBlow, anchorTargetCard, gestureFly,
 		"the figure travels into the card whose bar it empties, and the bar drops on arrival",

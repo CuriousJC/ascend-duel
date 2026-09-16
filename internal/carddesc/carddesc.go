@@ -125,8 +125,6 @@ func EffectLine(c combat.Card, dmg, scale int) string {
 			return "1 SHIELD"
 		}
 		return strconv.Itoa(amount) + " SHIELDS"
-	case combat.VerbDefend:
-		return strconv.Itoa(amount) + "% OFF ONE BLOW"
 	}
 	return ""
 }

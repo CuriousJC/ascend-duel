@@ -37,31 +37,25 @@ const (
 	// VerbAttack deals damage, and it is every attack card in the game.
 	VerbAttack Verb = iota
 
-	// VerbDefend reduces the one blow it answers, by Amount percent.
-	VerbDefend
-
 	// VerbShield hands its duelist Amount shields, and one shield eats one incoming attack
 	// outright — see Duelist.Shields and blockedByShield.
 	//
-	// **It is a count, not a percentage, and that is what separates it from VerbDefend.** The two
-	// answer different offenses: an enemy is a solo attacker, so its turn is several discrete
-	// blows a player can decide how many of to take, while the player forms hands and lands one
-	// figure, which a count could only ever delete whole. See MECHANICS.md §Shields.
+	// **It is the only defense there is** *(owner's call, 2026-09-16)*. A third verb reduced a blow
+	// by a percentage and every creature in both rosters carried one; it was deleted along with the
+	// 209 cards that used it, on the argument that two ways of not being hit is one more than the
+	// game needs and the count is the one a player can reason about. A shield eats a blow whole, so
+	// what a defense is worth is a number of blows rather than a fraction of one.
 	VerbShield
 )
 
 // Verbs is every verb in a fixed order, for anything that walks them.
-func Verbs() []Verb { return []Verb{VerbAttack, VerbDefend, VerbShield} }
+func Verbs() []Verb { return []Verb{VerbAttack, VerbShield} }
 
 func (v Verb) String() string {
-	switch v {
-	case VerbDefend:
-		return "defend"
-	case VerbShield:
+	if v == VerbShield {
 		return "shield"
-	default:
-		return "attack"
 	}
+	return "attack"
 }
 
 // ParseVerb resolves a verb from its name. It reports failure rather than falling back: a card
@@ -164,12 +158,6 @@ func RegisterConcept(scope string, c data.CardData) (ConceptID, error) {
 		// More shields than an opponent can throw attacks is a figure that can never be spent, and
 		// a readout counting past the row it is drawn in. See maxShields.
 		return NoConcept, fmt.Errorf("%s raises %d shields, and nothing may raise more than %d", key, c.Amount, maxShields)
-	}
-	if verb == VerbDefend && c.Amount >= 100 {
-		// Nothing reduces a blow to zero — see defendReductionPct's successor in combat.go. A
-		// card that did would delete a whole opposing turn, which is a dominant strategy rather
-		// than a decision.
-		return NoConcept, fmt.Errorf("%s defends for %d%%, and nothing may stop a blow outright", key, c.Amount)
 	}
 
 	id := ConceptID(len(registry))

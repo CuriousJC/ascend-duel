@@ -1,0 +1,929 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Badge sheet</title>
+<style>
+  body { background: #a8bcd4; color: #12141a; font: 14px system-ui, sans-serif;
+         margin: 0; padding: 32px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 2px; }
+  p.note { margin: 0 0 16px; max-width: 74ch; opacity: .78; }
+  table { border-collapse: collapse; background: #f0efea; border-radius: 10px;
+          overflow: hidden; margin: 0 0 8px; }
+  th, td { padding: 8px 12px; text-align: center; vertical-align: bottom; }
+  th { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+       opacity: .6; }
+  th.value { text-align: right; font-size: 15px; text-transform: none; opacity: .85; }
+  td.cell { border-top: 1px solid rgba(0,0,0,.07); }
+  img { image-rendering: pixelated; display: block; margin: 0 auto 4px; }
+  .figures { font: 11px ui-monospace, monospace; opacity: .55; white-space: nowrap; }
+  .missing { color: #c02c4a; font-weight: 600; font-size: 12px; }
+  .zoomed img { transform-origin: bottom center; transform: scale(6); }
+  .zoomed td.cell { padding: 24px 40px 8px; }
+</style>
+
+<h1>Badge sheet</h1>
+<p class="note">
+  Every damage badge the game can draw: each multiplier on the ladder, in the five elements plus
+  the neutral one, in the <strong>diamond</strong> outline. <strong>Read the actual-size table
+  first</strong> — there is no zoom anywhere in the game.
+</p>
+<p class="note">
+  <strong>Across a row, these six are meant to be one drawing in six inks.</strong> A numeral that
+  sits lower, or reads heavier, in one color than in the other five is the defect this page exists
+  for, and it is a redraw of one file rather than of the batch. <strong>Down a column, can you read
+  every value at 16 pixels?</strong> The fractions are the hard ones. Under each cell: the ink's
+  drawn size, how many pixels of it are opaque, and what share of those are near-black — the
+  contour and the numeral together, and a 0% is a badge with nothing holding it against a pale
+  card. A gap is a file nobody drew, never a fallback.
+</p>
+
+
+<h2>32px — hand card</h2>
+<table>
+  <tr>
+    <th></th>
+    <th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th><th>neutral</th>
+  </tr>
+  
+  <tr>
+    <th class="value">1/4</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-fire-32.png" width="32" height="32" alt="damage-diamond-quarter-fire">
+      <div class="figures">32x32 · 610px · 29% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-ice-32.png" width="32" height="32" alt="damage-diamond-quarter-ice">
+      <div class="figures">32x32 · 610px · 29% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-lightning-32.png" width="32" height="32" alt="damage-diamond-quarter-lightning">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-earth-32.png" width="32" height="32" alt="damage-diamond-quarter-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-arcane-32.png" width="32" height="32" alt="damage-diamond-quarter-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-neutral-32.png" width="32" height="32" alt="damage-diamond-quarter-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">1/2</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-fire-32.png" width="32" height="32" alt="damage-diamond-half-fire">
+      <div class="figures">32x32 · 610px · 29% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-ice-32.png" width="32" height="32" alt="damage-diamond-half-ice">
+      <div class="figures">32x32 · 610px · 29% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-lightning-32.png" width="32" height="32" alt="damage-diamond-half-lightning">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-earth-32.png" width="32" height="32" alt="damage-diamond-half-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-arcane-32.png" width="32" height="32" alt="damage-diamond-half-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-neutral-32.png" width="32" height="32" alt="damage-diamond-half-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">1</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-fire-32.png" width="32" height="32" alt="damage-diamond-1-fire">
+      <div class="figures">32x32 · 610px · 29% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-ice-32.png" width="32" height="32" alt="damage-diamond-1-ice">
+      <div class="figures">32x32 · 610px · 29% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-lightning-32.png" width="32" height="32" alt="damage-diamond-1-lightning">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-earth-32.png" width="32" height="32" alt="damage-diamond-1-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-arcane-32.png" width="32" height="32" alt="damage-diamond-1-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-neutral-32.png" width="32" height="32" alt="damage-diamond-1-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">2</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-fire-32.png" width="32" height="32" alt="damage-diamond-2-fire">
+      <div class="figures">32x32 · 610px · 31% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-ice-32.png" width="32" height="32" alt="damage-diamond-2-ice">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-lightning-32.png" width="32" height="32" alt="damage-diamond-2-lightning">
+      <div class="figures">32x32 · 610px · 32% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-earth-32.png" width="32" height="32" alt="damage-diamond-2-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-arcane-32.png" width="32" height="32" alt="damage-diamond-2-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-neutral-32.png" width="32" height="32" alt="damage-diamond-2-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">3</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-fire-32.png" width="32" height="32" alt="damage-diamond-3-fire">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-ice-32.png" width="32" height="32" alt="damage-diamond-3-ice">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-lightning-32.png" width="32" height="32" alt="damage-diamond-3-lightning">
+      <div class="figures">32x32 · 610px · 31% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-earth-32.png" width="32" height="32" alt="damage-diamond-3-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-arcane-32.png" width="32" height="32" alt="damage-diamond-3-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-neutral-32.png" width="32" height="32" alt="damage-diamond-3-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">4</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-fire-32.png" width="32" height="32" alt="damage-diamond-4-fire">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-ice-32.png" width="32" height="32" alt="damage-diamond-4-ice">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-lightning-32.png" width="32" height="32" alt="damage-diamond-4-lightning">
+      <div class="figures">32x32 · 610px · 31% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-earth-32.png" width="32" height="32" alt="damage-diamond-4-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-arcane-32.png" width="32" height="32" alt="damage-diamond-4-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-neutral-32.png" width="32" height="32" alt="damage-diamond-4-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">5</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-fire-32.png" width="32" height="32" alt="damage-diamond-5-fire">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-ice-32.png" width="32" height="32" alt="damage-diamond-5-ice">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-lightning-32.png" width="32" height="32" alt="damage-diamond-5-lightning">
+      <div class="figures">32x32 · 610px · 30% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-earth-32.png" width="32" height="32" alt="damage-diamond-5-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-arcane-32.png" width="32" height="32" alt="damage-diamond-5-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-neutral-32.png" width="32" height="32" alt="damage-diamond-5-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">6</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-fire-32.png" width="32" height="32" alt="damage-diamond-6-fire">
+      <div class="figures">32x32 · 610px · 31% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-ice-32.png" width="32" height="32" alt="damage-diamond-6-ice">
+      <div class="figures">32x32 · 610px · 31% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-lightning-32.png" width="32" height="32" alt="damage-diamond-6-lightning">
+      <div class="figures">32x32 · 610px · 31% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-earth-32.png" width="32" height="32" alt="damage-diamond-6-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-arcane-32.png" width="32" height="32" alt="damage-diamond-6-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-neutral-32.png" width="32" height="32" alt="damage-diamond-6-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">7</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-fire-32.png" width="32" height="32" alt="damage-diamond-7-fire">
+      <div class="figures">32x32 · 610px · 28% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-ice-32.png" width="32" height="32" alt="damage-diamond-7-ice">
+      <div class="figures">32x32 · 610px · 28% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-lightning-32.png" width="32" height="32" alt="damage-diamond-7-lightning">
+      <div class="figures">32x32 · 610px · 29% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-earth-32.png" width="32" height="32" alt="damage-diamond-7-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-arcane-32.png" width="32" height="32" alt="damage-diamond-7-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-neutral-32.png" width="32" height="32" alt="damage-diamond-7-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">8</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-fire-32.png" width="32" height="32" alt="damage-diamond-8-fire">
+      <div class="figures">32x32 · 610px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-ice-32.png" width="32" height="32" alt="damage-diamond-8-ice">
+      <div class="figures">32x32 · 610px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-lightning-32.png" width="32" height="32" alt="damage-diamond-8-lightning">
+      <div class="figures">32x32 · 610px · 35% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-earth-32.png" width="32" height="32" alt="damage-diamond-8-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-arcane-32.png" width="32" height="32" alt="damage-diamond-8-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-neutral-32.png" width="32" height="32" alt="damage-diamond-8-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">9</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-fire-32.png" width="32" height="32" alt="damage-diamond-9-fire">
+      <div class="figures">32x32 · 610px · 31% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-ice-32.png" width="32" height="32" alt="damage-diamond-9-ice">
+      <div class="figures">32x32 · 610px · 31% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-lightning-32.png" width="32" height="32" alt="damage-diamond-9-lightning">
+      <div class="figures">32x32 · 610px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-earth-32.png" width="32" height="32" alt="damage-diamond-9-earth">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-arcane-32.png" width="32" height="32" alt="damage-diamond-9-arcane">
+      <div class="figures">32x32 · 610px · 24% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-neutral-32.png" width="32" height="32" alt="damage-diamond-9-neutral">
+      <div class="figures">32x32 · 610px · 25% dark</div>
+    </td>
+    
+  </tr>
+  
+</table>
+
+<h2>16px — deck overlay</h2>
+<table>
+  <tr>
+    <th></th>
+    <th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th><th>neutral</th>
+  </tr>
+  
+  <tr>
+    <th class="value">1/4</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-fire-16.png" width="16" height="16" alt="damage-diamond-quarter-fire">
+      <div class="figures">16x16 · 172px · 35% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-ice-16.png" width="16" height="16" alt="damage-diamond-quarter-ice">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-lightning-16.png" width="16" height="16" alt="damage-diamond-quarter-lightning">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-earth-16.png" width="16" height="16" alt="damage-diamond-quarter-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-arcane-16.png" width="16" height="16" alt="damage-diamond-quarter-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-quarter-neutral-16.png" width="16" height="16" alt="damage-diamond-quarter-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">1/2</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-fire-16.png" width="16" height="16" alt="damage-diamond-half-fire">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-ice-16.png" width="16" height="16" alt="damage-diamond-half-ice">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-lightning-16.png" width="16" height="16" alt="damage-diamond-half-lightning">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-earth-16.png" width="16" height="16" alt="damage-diamond-half-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-arcane-16.png" width="16" height="16" alt="damage-diamond-half-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-half-neutral-16.png" width="16" height="16" alt="damage-diamond-half-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">1</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-fire-16.png" width="16" height="16" alt="damage-diamond-1-fire">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-ice-16.png" width="16" height="16" alt="damage-diamond-1-ice">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-lightning-16.png" width="16" height="16" alt="damage-diamond-1-lightning">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-earth-16.png" width="16" height="16" alt="damage-diamond-1-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-arcane-16.png" width="16" height="16" alt="damage-diamond-1-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-1-neutral-16.png" width="16" height="16" alt="damage-diamond-1-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">2</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-fire-16.png" width="16" height="16" alt="damage-diamond-2-fire">
+      <div class="figures">16x16 · 172px · 37% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-ice-16.png" width="16" height="16" alt="damage-diamond-2-ice">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-lightning-16.png" width="16" height="16" alt="damage-diamond-2-lightning">
+      <div class="figures">16x16 · 172px · 37% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-earth-16.png" width="16" height="16" alt="damage-diamond-2-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-arcane-16.png" width="16" height="16" alt="damage-diamond-2-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-2-neutral-16.png" width="16" height="16" alt="damage-diamond-2-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">3</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-fire-16.png" width="16" height="16" alt="damage-diamond-3-fire">
+      <div class="figures">16x16 · 172px · 37% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-ice-16.png" width="16" height="16" alt="damage-diamond-3-ice">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-lightning-16.png" width="16" height="16" alt="damage-diamond-3-lightning">
+      <div class="figures">16x16 · 172px · 40% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-earth-16.png" width="16" height="16" alt="damage-diamond-3-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-arcane-16.png" width="16" height="16" alt="damage-diamond-3-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-3-neutral-16.png" width="16" height="16" alt="damage-diamond-3-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">4</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-fire-16.png" width="16" height="16" alt="damage-diamond-4-fire">
+      <div class="figures">16x16 · 172px · 38% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-ice-16.png" width="16" height="16" alt="damage-diamond-4-ice">
+      <div class="figures">16x16 · 172px · 37% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-lightning-16.png" width="16" height="16" alt="damage-diamond-4-lightning">
+      <div class="figures">16x16 · 172px · 38% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-earth-16.png" width="16" height="16" alt="damage-diamond-4-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-arcane-16.png" width="16" height="16" alt="damage-diamond-4-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-4-neutral-16.png" width="16" height="16" alt="damage-diamond-4-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">5</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-fire-16.png" width="16" height="16" alt="damage-diamond-5-fire">
+      <div class="figures">16x16 · 172px · 37% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-ice-16.png" width="16" height="16" alt="damage-diamond-5-ice">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-lightning-16.png" width="16" height="16" alt="damage-diamond-5-lightning">
+      <div class="figures">16x16 · 172px · 37% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-earth-16.png" width="16" height="16" alt="damage-diamond-5-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-arcane-16.png" width="16" height="16" alt="damage-diamond-5-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-5-neutral-16.png" width="16" height="16" alt="damage-diamond-5-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">6</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-fire-16.png" width="16" height="16" alt="damage-diamond-6-fire">
+      <div class="figures">16x16 · 172px · 37% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-ice-16.png" width="16" height="16" alt="damage-diamond-6-ice">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-lightning-16.png" width="16" height="16" alt="damage-diamond-6-lightning">
+      <div class="figures">16x16 · 172px · 39% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-earth-16.png" width="16" height="16" alt="damage-diamond-6-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-arcane-16.png" width="16" height="16" alt="damage-diamond-6-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-6-neutral-16.png" width="16" height="16" alt="damage-diamond-6-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">7</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-fire-16.png" width="16" height="16" alt="damage-diamond-7-fire">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-ice-16.png" width="16" height="16" alt="damage-diamond-7-ice">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-lightning-16.png" width="16" height="16" alt="damage-diamond-7-lightning">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-earth-16.png" width="16" height="16" alt="damage-diamond-7-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-arcane-16.png" width="16" height="16" alt="damage-diamond-7-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-7-neutral-16.png" width="16" height="16" alt="damage-diamond-7-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">8</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-fire-16.png" width="16" height="16" alt="damage-diamond-8-fire">
+      <div class="figures">16x16 · 172px · 38% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-ice-16.png" width="16" height="16" alt="damage-diamond-8-ice">
+      <div class="figures">16x16 · 172px · 37% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-lightning-16.png" width="16" height="16" alt="damage-diamond-8-lightning">
+      <div class="figures">16x16 · 172px · 38% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-earth-16.png" width="16" height="16" alt="damage-diamond-8-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-arcane-16.png" width="16" height="16" alt="damage-diamond-8-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-8-neutral-16.png" width="16" height="16" alt="damage-diamond-8-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">9</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-fire-16.png" width="16" height="16" alt="damage-diamond-9-fire">
+      <div class="figures">16x16 · 172px · 37% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-ice-16.png" width="16" height="16" alt="damage-diamond-9-ice">
+      <div class="figures">16x16 · 172px · 36% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-lightning-16.png" width="16" height="16" alt="damage-diamond-9-lightning">
+      <div class="figures">16x16 · 172px · 38% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-earth-16.png" width="16" height="16" alt="damage-diamond-9-earth">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-arcane-16.png" width="16" height="16" alt="damage-diamond-9-arcane">
+      <div class="figures">16x16 · 172px · 33% dark</div>
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-9-neutral-16.png" width="16" height="16" alt="damage-diamond-9-neutral">
+      <div class="figures">16x16 · 172px · 34% dark</div>
+    </td>
+    
+  </tr>
+  
+</table>
+
+
+<h2>The three outlines, unnumbered</h2>
+<p class="note">
+  The shape is still an open choice, so all three ship and one is drawn — see
+  <code>DefaultBadgeShape</code>. These are the blank badges, which are also what a multiplier
+  nobody drew falls back to, with its figure printed on top in the card's own type.
+</p>
+<table class="zoomed">
+  <tr>
+    <th></th>
+    <th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th><th>neutral</th>
+  </tr>
+  
+  <tr>
+    <th class="value">diamond</th>
+    
+    <td class="cell">
+      <img src="damage-diamond-fire-32.png" width="32" height="32" alt="damage-diamond-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-ice-32.png" width="32" height="32" alt="damage-diamond-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-lightning-32.png" width="32" height="32" alt="damage-diamond-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-earth-32.png" width="32" height="32" alt="damage-diamond-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-arcane-32.png" width="32" height="32" alt="damage-diamond-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-diamond-neutral-32.png" width="32" height="32" alt="damage-diamond-neutral">
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">circle</th>
+    
+    <td class="cell">
+      <img src="damage-circle-fire-32.png" width="32" height="32" alt="damage-circle-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-circle-ice-32.png" width="32" height="32" alt="damage-circle-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-circle-lightning-32.png" width="32" height="32" alt="damage-circle-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-circle-earth-32.png" width="32" height="32" alt="damage-circle-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-circle-arcane-32.png" width="32" height="32" alt="damage-circle-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-circle-neutral-32.png" width="32" height="32" alt="damage-circle-neutral">
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <th class="value">starburst</th>
+    
+    <td class="cell">
+      <img src="damage-starburst-fire-32.png" width="32" height="32" alt="damage-starburst-fire">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-starburst-ice-32.png" width="32" height="32" alt="damage-starburst-ice">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-starburst-lightning-32.png" width="32" height="32" alt="damage-starburst-lightning">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-starburst-earth-32.png" width="32" height="32" alt="damage-starburst-earth">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-starburst-arcane-32.png" width="32" height="32" alt="damage-starburst-arcane">
+    </td>
+    
+    <td class="cell">
+      <img src="damage-starburst-neutral-32.png" width="32" height="32" alt="damage-starburst-neutral">
+    </td>
+    
+  </tr>
+  
+</table>

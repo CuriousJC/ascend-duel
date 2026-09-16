@@ -51,7 +51,24 @@ var (
 	facesTried bool
 )
 
+// cardImages is the image bank a card's own picture is looked up in, stashed here rather than
+// threaded through cardSpec.
+//
+// **It is the shape cardFaces is already in, and for the same reason.** A card's face is built in
+// a dozen places — the hand, the deal, the flights, a morph, the post-battle table — and several
+// of them deliberately have no GlobalState at all: `resetDeck` takes a run, `OpeningHand` and the
+// flight tests take nothing, and threading a screen's state into them to fetch a picture would put
+// a graphics dependency inside the headless paths that exist precisely not to have one.
+//
+// **Nil is a working answer**, which is what makes the stash safe: a tool or a test that never
+// went through a drawing door gets no pictures and draws every card exactly as the game drew them
+// before this catalog existed. See data.DefaultCardArt, which is empty for the same reason.
+var cardImages map[string][]byte
+
 func faces(gs *state.GlobalState) *cards.Faces {
+	if cardImages == nil {
+		cardImages = gs.ImageData
+	}
 	if facesTried {
 		return cardFaces
 	}
@@ -106,7 +123,74 @@ func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
 		Upgrade:    upgradeOf(c),
 		Enabled:    enabled,
 		Selected:   selected,
+
+		Badge:    cardBadge(c),
+		BadgePct: cardBadgePct(c),
+		Shields:  cardShields(c),
+
+		Art: cardArtwork(c),
 	}
+}
+
+// cardBadge is the MOCKUP figure in the card's bottom-left corner: an attack's damage multiplier.
+// **Empty for everything else** — a defense says its number by stacking shields rather than by
+// printing one, so a figure there would be a second unit in one badge. See cardShields.
+//
+// **The multiplier is the card's own and no relic reaches it**, exactly as the effect text's is:
+// cardSpec's own note says why, and a badge disagreeing with the sentence beside it would be worse
+// than either alone.
+func cardBadge(c actionCard) string {
+	if c.Spec().Verb == combat.VerbAttack {
+		return damageMultiplier(c.Amount())
+	}
+	return ""
+}
+
+// cardBadgePct is the raw multiplier the badge art is keyed on — the same figure cardBadge words,
+// and zero for anything that is not an attack.
+func cardBadgePct(c actionCard) int {
+	if c.Spec().Verb == combat.VerbAttack {
+		return c.Amount()
+	}
+	return 0
+}
+
+// cardShields is how many shields this card raises, which the card draws as that many stacked
+// shields rather than as a figure. **Zero for anything that raises none**, which is every attack
+// and a creature's percentage guard.
+func cardShields(c actionCard) int {
+	if c.Spec().Verb == combat.VerbShield {
+		return c.Amount()
+	}
+	return 0
+}
+
+// damageMultiplier writes a card's Amount — a percentage, where 50 is half DMG and 400 is four
+// times it — as the multiplier a player reads.
+//
+// **A fraction for the rungs under one rather than a decimal**, because "1/4" is two glyphs where
+// "0.25" is four, and a 32-pixel disc has room for two. The shipped ladder is 25, 50, 100, 300 and
+// 400 — so the fractions are the bottom two rungs and there is no 2x rung at all.
+//
+// **Anything else falls back to the decimal**, which is the readable failure: a card at 150 says
+// 1.5 rather than rounding to something it is not.
+func damageMultiplier(pct int) string {
+	if f, ok := damageFractions[pct]; ok {
+		return f
+	}
+	if pct%100 == 0 {
+		return strconv.Itoa(pct / 100)
+	}
+	return strconv.FormatFloat(float64(pct)/100, 'g', -1, 64)
+}
+
+// damageFractions is how the rungs below 1x are written. **A table rather than arithmetic**: a
+// general fraction reducer would be three lines of Euclid to produce three strings, and these are
+// the only denominators a card can reach.
+var damageFractions = map[int]string{
+	25: "1/4",
+	50: "1/2",
+	75: "3/4",
 }
 
 // upgradeOf is the visible alteration a card's riders amount to — the one place a rules value
@@ -255,6 +339,48 @@ func cardImage(gs *state.GlobalState, spec cards.Spec, st cards.Style) *ebiten.I
 // A failure is cached as nil so a bad file logs once rather than sixty times a second, and
 // the card then draws with no picture rather than not at all.
 var artworkCache = map[string]image.Image{}
+
+// cardArt is the catalog of pictures, one per card per element. Loaded once; the engine reads
+// none of it — see data/card_art_data.go.
+var cardArt = data.LoadCardArt()
+
+// cardArtwork is the picture for one card in the element it is wearing, or nil for a pairing
+// nobody has drawn yet — which is almost all of them, and draws the card as it always looked.
+//
+// **The element is the card's own, not the one a relic flipped it to on the way to the table.**
+// `Card.Element` is what the card *is*, and it is what the rest of the face already reads: the
+// form mark, the cost ticks and the border are all drawn from it, so a picture keyed off anything
+// else would be the one thing on the card disagreeing with the other four.
+func cardArtwork(c actionCard) image.Image {
+	rec, ok := cardArt[data.CardArtKey(c.Label(), c.Element.String())]
+	if !ok {
+		return nil
+	}
+	return artworkFrom(rec.ArtKey())
+}
+
+// artworkFrom is artwork() without a GlobalState, reading the stash instead. See cardImages.
+func artworkFrom(key string) image.Image {
+	if key == "" || cardImages == nil {
+		return nil
+	}
+	if img, ok := artworkCache[key]; ok {
+		return img
+	}
+	data := cardImages[key]
+	if len(data) == 0 {
+		log.Printf("cards: no artwork named %q", key)
+		artworkCache[key] = nil
+		return nil
+	}
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		log.Printf("cards: decoding artwork %q: %v", key, err)
+		img = nil
+	}
+	artworkCache[key] = img
+	return img
+}
 
 func artwork(gs *state.GlobalState, key string) image.Image {
 	if key == "" {

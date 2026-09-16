@@ -205,6 +205,60 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - `AvailableAffixes` already anticipates this and is still unread.
       - Affixes must compose. Two on one enemy is the normal case, not an edge case.
       - Floor choices feed this directly: "a cold floor" biases which affixes appear.
+## Art still to generate
+
+*(owner asked for this to be tracked, 2026-09-16)*. **Two batches outstanding and nothing else.**
+Every other catalog is complete: `relics.json` 137/137, and the essences, runes, stones, potions
+and sealed goods all carry both an `Art` key and a `Draw` brief, with no key in any catalog naming
+a file that is not on disk.
+
+- [ ] **The playing cards — 95 pictures, `data/card_art.json`.** One per card per element, drawn
+      full bleed under the card's own type. **Every brief is written**; what is missing is the art,
+      so every record has a `Draw` and an empty `Art`. The scheme is three axes in one picture: a
+      vapor humanoid whose *weapon* says the form, whose *weapon scale and pose commitment* say the
+      rung, and whose *color* says the element. `docs/art/card_art_prompt.MD` is the prompt, and
+      files go into `assets/card/` keyed by filename stem — `jab-fire.png` is `jab-fire`.
+      - **Nothing breaks while this is empty.** `data.DefaultCardArt` is deliberately blank, so an
+        unauthored record draws the card exactly as it looked before the catalog existed. This is
+        the one catalog in `data/` with no fallback face, and that is the design.
+      - **The hard constraint is value, and nothing enforces it.** `cards.Hand` sets `ArtUnder`
+        rather than `ArtBleed`, so the card keeps its near-black ink and there is **no scrim** — a
+        dark picture makes a card unreadable and no test goes red. The prompt carries the measured
+        map of where type lands; check a delivered batch against it before filing.
+      - **It can be filed a few at a time.** 95 is a lot to commission at once and each record is
+        independent, so a form or an element can be done as a block.
+
+- [ ] **The numbered damage badges — 66 pictures, `assets/damage/`.** Eleven multipliers
+      (`quarter`, `half`, `1`..`9`) in five elements plus a neutral, in the diamond outline.
+      `docs/art/damage_art_prompt.MD` is the prompt; `go run ./tools/badgesheet` is the page they
+      are reviewed on, and it currently renders 66 gaps.
+      - **The numeral is drawn into the art**, which is the whole reason this is 66 files rather
+        than 6 — type and art do not reduce the same way, and the badge is drawn at 32 and at 16.
+      - **Nothing breaks while this is empty.** A value with no drawn badge falls back to the blank
+        badge with its figure printed on top, which is what shipped before — so a partial batch
+        degrades one value at a time rather than emptying the corner.
+      - **Review by value, not by color.** The failure this set has is a numeral drifting in weight
+        or position between the six colors of one value, and that is invisible one file at a time.
+        The badge sheet is laid out eleven rows of six for exactly that.
+      - **`quarter` is the one at risk.** It carries the most ink of any numeral into the smallest
+        space; if it cannot be read at 16 pixels the rung needs a different answer rather than a
+        smaller font.
+
+- [?] **The relic catalog is pixel art and nothing else is** *(open since 2026-09-14)*. The 137
+      pictures in `assets/relic/` came from a prompt asking for chunky blocks and sixteen flat
+      colors; the essences, runes, stones and goods came from the smooth block every prompt carries
+      today, so a relic card and a stone card do not look like one game. **Closing it means
+      regenerating one side or the other** — 137 relics, or 58 of everything else — and it is the
+      owner's call which. `docs/art/relic_art_prompt_pixel_archived.MD` is kept live-shaped and
+      clearly marked not-live so the direction can be reversed by regenerating rather than by
+      reconstructing a prompt from git.
+
+- [?] **Which outline the damage badge takes** *(open, 2026-09-16)*. All three shapes were drawn
+      unnumbered — circle, starburst, diamond — and `cards.DefaultBadgeShape` is the one line that
+      picks. **The numbered batch is diamond only**, so switching after it lands means commissioning
+      66 more rather than changing a constant. The three blanks are on the badge sheet to be
+      compared before that batch is ordered.
+
 ## Licensing (for an eventual Steam release)
 
 Model: source stays public under PolyForm Noncommercial 1.0.0, nobody else may commercialise

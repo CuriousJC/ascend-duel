@@ -154,18 +154,11 @@ func (c Card) Amount() int {
 	if amount < 1 {
 		amount = 1
 	}
-	if s.Verb == VerbDefend && amount > maxDefendPct {
-		amount = maxDefendPct
-	}
 	if s.Verb == VerbShield && amount > maxShields {
 		amount = maxShields
 	}
 	return amount
 }
-
-// maxDefendPct is the most a single card may take off a blow. **Nothing stops a blow outright** —
-// see reductionFor, which holds the same rule from the other side.
-const maxDefendPct = 99
 
 // maxShields is the most one card may raise, and it is baseMaxActions because that is the most
 // attacks an opposing turn can contain. A card raising a sixth could never see it spent by its own

@@ -243,19 +243,14 @@ func resolveDefend(
 			Life:   actor.Shields,
 			Round:  round,
 		})
-
-	case VerbDefend:
-		// Raised, not spent. What it is worth is `reductionFor`, and it is read when the opponent's
-		// blow arrives — see resolveAttackPhase.
-		actor = actor.raiseDefend(card)
 	}
 
 	return events, actor, target
 }
 
-// expireDefenses drops everything the previous turn put up — guards and shields alike. Called at
-// the start of a side's own turn, never at the round boundary — side B acts last, so a defense
-// cleared at the boundary would have protected B from nothing at all.
+// expireDefenses drops the shields the previous turn put up. Called at the start of a side's own
+// turn, never at the round boundary — side B acts last, so a defense cleared at the boundary would
+// have protected B from nothing at all.
 //
 // **This is the whole of "a shield lasts the turn after it was played".** Raised at the end of
 // your turn, standing through the opponent's, gone before you act again.
@@ -459,13 +454,13 @@ func resolveAttackPhase(
 	dmg := blunt(swung.Amount, actor.weight())
 
 	// **Then the target's own vulnerability**, which is the one modifier read off the duelist being
-	// hit rather than the one swinging — see EffectDamageAmplification. It sits after weight and
-	// before the defenses for the same reason weight sits before both: weight says how hard the
-	// attacker can still swing and vulnerability says how hard this body takes it, and a card
-	// raised in answer to the blow is spent on the figure the two of them produced.
+	// hit rather than the one swinging — see EffectDamageAmplification. Weight says how hard the
+	// attacker can still swing and vulnerability says how hard this body takes it.
+	//
+	// **Nothing reduces the figure after this point** *(2026-09-16)*. A percentage guard used to sit
+	// here, multiplying what was left; the verb is gone, and the only defense in the game now works
+	// earlier and differently — a shield eats a whole blow before it is ever totalled.
 	dmg = amplify(dmg, target.vulnerability())
-
-	events, dmg = applyDefends(events, side, target, dmg, round)
 
 	// Every defense is spent on the turn it answered.
 	target = ClearDefenses(target)
@@ -545,7 +540,7 @@ func resolveAttackPhase(
 // in the game reaches it — every creature is a solo attacker and no creature holds shields, so the
 // only shielded duelist is the player and the only thing swinging at them resolves card by card.
 // It is written down rather than guarded against because the day an enemy forms hands is the day
-// this becomes the dominant strategy maxDefendPct exists to forbid, and a silent branch would not
+// this becomes a dominant strategy rather than a decision, and a silent branch would not
 // say so.
 func blockedByShield(events []Event, side Side, target Duelist, card Card, slot, round int) ([]Event, Duelist, bool) {
 	target, spent := target.spendShield()
@@ -562,39 +557,6 @@ func blockedByShield(events []Event, side Side, target Duelist, card Card, slot,
 		Round:  round,
 	})
 	return events, target, true
-}
-
-// applyDefends runs every card the target has raised over one incoming blow and reports what is
-// left of it, announcing each as it bites.
-//
-// **It does not spend them, and the caller clears them once the turn is over.** A defense covers
-// exactly one opposing *turn* — see expireDefenses — which is one blow from a hand-forming duelist and
-// several from a solo one. Spending them on the first blow would make a Defend nearly worthless
-// against the very opponents that swing more than once.
-//
-// **They compose multiplicatively and the order is not read.** Multiplying what is left rather
-// than adding the percentages is what stops two cards reaching zero by accident while keeping each
-// one worth something: two Defends take three quarters rather than the whole thing, and a third
-// takes seven eighths, which is a curve that never arrives.
-func applyDefends(events []Event, side Side, target Duelist, dmg, round int) ([]Event, int) {
-	for i := 0; i < target.DefendCount; i++ {
-		card := target.Defends[i].Card
-		pct := reductionFor(card)
-		if pct <= 0 {
-			continue
-		}
-		dmg = dmg * (100 - pct) / 100
-
-		events = append(events, Event{
-			Kind:   KindNegated,
-			Side:   other(side),
-			Action: card.Concept,
-			Target: side,
-			Amount: dmg,
-			Round:  round,
-		})
-	}
-	return events, dmg
 }
 
 // resolveSoloAttacks is the attack phase of a duelist whose cards form no hands: **every attack
@@ -679,7 +641,6 @@ func resolveSoloAttacks(
 
 		dmg := blunt(actor.CardDamage(slot.Card), actor.weight())
 		dmg = amplify(dmg, target.vulnerability())
-		events, dmg = applyDefends(events, side, target, dmg, round)
 
 		target.CurrentLife = reduce(target.CurrentLife, dmg)
 		events = append(events, Event{

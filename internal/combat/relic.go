@@ -1782,10 +1782,14 @@ func CounterLabel(w WornRelic) string {
 	}
 	if Scaling(e.Do) {
 		// **No `x` after it** *(owner’s call, 2026-09-09)*. The decimal point is what says this is
-		// a multiplier, and the `+` on the other branch is what says the flat one is not — so the
-		// letter was a third of the badge’s width spent restating what the figure already reads
+		// a multiplier, and its absence on the other branch is what says the flat one is not — so
+		// the letter was a third of the badge’s width spent restating what the figure already reads
 		// as, on the one card whose number is meant to be caught at a glance.
 		return fmt.Sprintf("%.1f", float64(e.Amount)/100)
 	}
-	return fmt.Sprintf("%+d", e.Amount)
+	// **No `+` either** *(owner’s call, 2026-09-16)*, on the `x`’s own argument one branch over: a
+	// counter only ever counts upward, so the sign was a character of a two-character badge spent
+	// saying something no relic in the catalog contradicts. A drawback that took a figure *down*
+	// still prints its minus, which is `%d` and needs no case here.
+	return fmt.Sprintf("%d", e.Amount)
 }

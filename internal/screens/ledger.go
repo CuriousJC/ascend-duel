@@ -147,6 +147,10 @@ type LedgerPanel struct {
 	scroll *models.Scrollbar
 	closer modalCloser
 
+	// export is the button that writes the account out to a file, and what the last press of it
+	// came to. See ledger_export.go.
+	export ledgerExporter
+
 	// rows is the built list, rebuilt when the account or the folding changed rather than every
 	// frame — a run's ledger is thousands of lines and this is a panel, not an animation.
 	rows []ledgerRow
@@ -203,6 +207,8 @@ func (p *LedgerPanel) Update(gs *state.GlobalState) {
 
 	r := ledgerPanelRect(gs)
 	capacity := ledgerCapacity(r)
+
+	p.export.update(gs, r)
 
 	if p.scroll == nil {
 		p.scroll = models.NewScrollbar(ledgerScrollWidth, r.Dy()-ledgerPane.firstRow-ledgerBottomInset)
@@ -299,6 +305,7 @@ func (p *LedgerPanel) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	if p.scroll != nil {
 		systems.DrawScrollbar(gs, screen, p.scroll)
 	}
+	p.export.draw(gs, screen, r)
 	p.closer.draw(gs, screen)
 }
 

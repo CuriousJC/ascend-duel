@@ -41,8 +41,8 @@ func TestTheBadgeSaysWhatTheRelicIsDoing(t *testing.T) {
 		grown int
 		want  string
 	}{
-		{"hp-scale", 0, "+5"},
-		{"hp-scale", 45, "+50"},
+		{"hp-scale", 0, "5"},
+		{"hp-scale", 45, "50"},
 		{"growth-fire", 0, "1.0"},
 		{"growth-fire", 50, "1.5"},
 		{"dmg-no-shield", 60, "1.6"},

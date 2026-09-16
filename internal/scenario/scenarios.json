@@ -1829,5 +1829,38 @@
     "Enemy": "GiantBat",
     "Screen": "combat",
     "Actions": 30
+  },
+  {
+    "ScenarioRecord": "the-heart",
+    "Note": "What a growing relic's counter looks like as it grows. The Heart is worn alone - +5 HP now and 5 more for every fight won - so the disc in the corner of its card is the only figure on the pane that moves, and it starts at 5 rather than at nothing, which is the thing the badge is easiest to misread about. The deck is forty Pulverizes in one element and the budget pays for five of them, so a fight is one press of DUEL! and the counter can be watched across four or five wins in a couple of minutes: 5, 10, 15. Read it in three places - the relic pane during the fight, the shop's worn row between them, and the tooltip, which is where the figure is said in words. The Giant Bat is the opening room's own creature and the climb takes over from the second fight, so the opponents get real without the deck doing.",
+    "Relics": [
+      "hp-scale"
+    ],
+    "Hand": [],
+    "Deck": [
+      {
+        "Card": "Pulverize",
+        "Element": "fire",
+        "Copies": 40
+      }
+    ],
+    "Enemy": "GiantBat",
+    "Screen": "combat",
+    "Actions": 30
+  },
+  {
+    "ScenarioRecord": "momentum-and-the-counters",
+    "Note": "The counter badge on all three rarity borders at once, and Momentum's is the one the fixture is named for. Momentum is common, so its disc is the bone border and its figure is drawn in black; Enflamed is uncommon and its green disc takes the card's own surface; the Shieldbearer is rare and its gold disc takes black again - the ink is picked off how light the disc actually is rather than off the rarity, so these three are the whole of what there is to check. All three grow, so all three carry a figure from the first frame: 1.0, 1.0, 1.0. Momentum steps 0.2x on every turn that raises no shields and resets the moment a defend card is played, the Shieldbearer steps 0.2x for each shield card played, and Enflamed steps 0.1x every time a fire attack lands - so one Brace moves two of them in opposite directions and is the quickest way to see a figure change. It is a dummy fight on the real starting deck with a 15 AP budget, because what is being looked at is a badge rather than a duel: play turns for as long as the figures are interesting. See ASCEND_DUEL_SCENARIO=the-heart for the flat counter, which is the other shape the badge takes.",
+    "Relics": [
+      "dmg-no-shield",
+      "growth-fire",
+      "dmg-shield-use"
+    ],
+    "Hand": [],
+    "Enemy": "GiantBat",
+    "Dummy": true,
+    "Actions": 15,
+    "Screen": "combat",
+    "Seed": "0000HX"
   }
 ]

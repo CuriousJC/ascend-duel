@@ -168,10 +168,11 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 // the card on the right and the bottom, because a badge clipped to the card would be a quarter
 // disc filling the corner.
 //
-// **The disc is the border ink and the figure is the card’s surface**, an inversion of what was
-// there rather than a new color: the palette has no hue left to claim, so the badge is made
-// obvious by swapping the two colors the card already carries. Both are taken *after* state, like
-// the border, so a relic you cannot act on fades with the rest of its card.
+// **The disc is the border ink and the figure is whichever of the card’s two inks the disc can be
+// read against**, an inversion of what was there rather than a new color: the palette has no hue
+// left to claim, so the badge is made obvious by swapping the two colors the card already carries.
+// Both are taken *after* state, like the border, so a relic you cannot act on fades with the rest
+// of its card. See counterInk for why the figure is not simply the surface.
 //
 // **Centered on the disc, and allowed to outgrow it.** Two characters sit inside; `10.5` and `+100`
 // spill past the curve on both sides, which is the readable failure — the alternative is a figure
@@ -211,7 +212,32 @@ func drawCounter(dst *image.RGBA, s Spec, st Style, f *Faces, ink color.RGBA) er
 		x = b.Max.X - width
 	}
 
-	return drawText(dst, f, st.CounterSize, s.Counter, x, y, Surface)
+	return drawText(dst, f, st.CounterSize, s.Counter, x, y, counterInk(ink))
+}
+
+// counterInk is the figure’s color on a disc of the color given: near-black on a light disc, the
+// card’s surface on a dark one.
+//
+// **It is derived rather than named** *(owner’s call, 2026-09-16)*. The figure was the surface
+// whatever the disc was, which was written when a relic bordered pink and every disc was dark; a
+// relic borders by *rarity* now, and common is bone — so the badge on most of the catalog was an
+// off-white figure on an off-white disc and could not be read at all. A second named color would
+// be the same bug waiting for the next border to move, since nothing would fail when it did.
+//
+// **Luminance rather than a rarity case**, for that reason: this package does not know what a
+// rarity means and must not learn, and the question the figure is actually asking is about the
+// pixels under it. The weights are the usual perceptual ones and the threshold is the middle of
+// the range, which puts bone and gold on black and the uncommon green on the surface.
+func counterInk(disc color.RGBA) color.RGBA {
+	if lightness(disc) > 140 {
+		return NameInk
+	}
+	return Surface
+}
+
+// lightness is how bright a color reads, 0..255, weighted the way an eye sees the three channels.
+func lightness(c color.RGBA) int {
+	return int((299*int(c.R) + 587*int(c.G) + 114*int(c.B)) / 1000)
 }
 
 // drawEffects lays the status badges out in a centered row along the bottom of the card.

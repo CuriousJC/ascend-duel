@@ -34,6 +34,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
@@ -62,10 +63,10 @@ import (
 const (
 	// **Both figures are the screens package's now** *(2026-09-06)*, because the shop's own square
 	// controls stand on the same line and walk leftward from this button — see
-	// screens.ChromeCornerSlot. Two owners measuring one corner is what put the cog underneath the
+	// ui.ChromeCornerSlot. Two owners measuring one corner is what put the cog underneath the
 	// shop's HANDS button.
-	settingsButtonSize  = screens.ChromeButtonSize
-	settingsButtonInset = screens.ChromeButtonInset
+	settingsButtonSize  = ui.ChromeButtonSize
+	settingsButtonInset = ui.ChromeButtonInset
 
 	// **`LEDGER`, spelled out and in caps** *(2026-09-04, owner's call)*. It was `L` — what the
 	// fight log's button carried, and what a 44-pixel square can hold. It stands in the combat
@@ -143,7 +144,7 @@ func ledgerButtonRect(gs *state.GlobalState) image.Rectangle {
 // ScreenHeight constants, so a change to the internal resolution moves the button rather than
 // leaving it stranded in the middle.
 func settingsButtonRect(gs *state.GlobalState) image.Rectangle {
-	return screens.ChromeCornerSlot(gs, screens.ChromeSlotSettings)
+	return ui.ChromeCornerSlot(gs, ui.ChromeSlotSettings)
 }
 
 // chromeShowing reports whether the frame is drawn at all this frame.
@@ -239,10 +240,10 @@ func (g *Game) updateAnimButton(gs *state.GlobalState) {
 		g.animButton = models.NewButton(
 			settingsButtonSize, settingsButtonSize, animButtonLabel, g.openAnimations)
 		g.animButton.BaseColor = settingsButtonColor
-		g.animButton.TextSize = screens.ControlButtonText
+		g.animButton.TextSize = ui.ControlButtonText
 	}
 
-	r := screens.ChromeCornerSlot(gs, screens.ChromeSlotAnimations)
+	r := ui.ChromeCornerSlot(gs, ui.ChromeSlotAnimations)
 	g.animButton.ScreenX = r.Min.X + r.Dx()/2
 	g.animButton.ScreenY = r.Min.Y + r.Dy()/2
 	systems.UpdateButton(gs, g.animButton)
@@ -252,10 +253,10 @@ func (g *Game) updateAnimButton(gs *state.GlobalState) {
 func (g *Game) updateLedgerButton(gs *state.GlobalState) {
 	if g.ledgerButton == nil {
 		g.ledgerButton = models.NewButton(
-			screens.ControlButtonWidth, screens.ControlButtonHeight,
+			ui.ControlButtonWidth, ui.ControlButtonHeight,
 			ledgerButtonLabel, g.toggleLedger)
 		g.ledgerButton.BaseColor = settingsButtonColor
-		g.ledgerButton.TextSize = screens.ControlButtonText
+		g.ledgerButton.TextSize = ui.ControlButtonText
 	}
 
 	r := ledgerButtonRect(gs)

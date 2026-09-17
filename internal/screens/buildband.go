@@ -26,9 +26,9 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
-	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -40,7 +40,7 @@ const buildBandRightPct = 99
 // buildCardRect is where the duelist card sits: the same corner it occupies in a fight, so the
 // player's card does not move between the duel and the screen that follows it.
 func buildCardRect(gs *state.GlobalState) image.Rectangle {
-	left, top := gs.PctX(duelistCardLeftPct), gs.PctY(topRowTopPct)
+	left, top := gs.PctX(ui.DuelistCardLeftPct), gs.PctY(ui.TopRowTopPct)
 	return image.Rect(left, top, left+cards.DuelistStyle.Width, top+cards.DuelistStyle.Height)
 }
 
@@ -93,7 +93,7 @@ func buildBandBottom(gs *state.GlobalState) int {
 //
 // The AP figure is the duelist's own budget, which is now simply the stat — nothing adds to it any
 // more. No shields either: nothing is standing between fights.
-func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag *cardDrag, raise bool) {
+func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag *ui.CardDrag, raise bool) {
 	drawBuildCard(gs, screen, vitae)
 	drawBuildRelics(gs, screen, drag)
 	// **nil: a rune is carried on these screens, not spent.** The pane draws the same two seats
@@ -112,10 +112,10 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 		return
 	}
 
-	if fighter := buildFighter(gs); fighter != nil {
+	if fighter := ui.BuildFighter(gs); fighter != nil {
 		name := fighter.Name
 		if name == "" {
-			name = duelistName
+			name = ui.DuelistName
 		}
 		// **The life is the ceiling less the wound, not the figure the last fight ended on**
 		// *(2026-09-06)*. It was `LifeLeft`, and the two agree the moment a fight is won — WonFight
@@ -130,9 +130,9 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 
 		// No shields: this is the build band between fights, where nothing has been raised and
 		// nothing is standing.
-		spec := duelistSpec(gs, fighter, name, fighter.DMG, vitae, life, fighter.MaxLife,
+		spec := ui.DuelistSpec(gs, fighter, name, fighter.DMG, vitae, life, fighter.MaxLife,
 			fighter.ActionPoints(), fightIndex(gs.Run), 0)
-		if img := cardImage(gs, spec, cards.DuelistStyle); img != nil {
+		if img := ui.CardImage(gs, spec, cards.DuelistStyle); img != nil {
 			r := buildCardRect(gs)
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
@@ -146,7 +146,7 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 // **`drag` is the press in progress over it**, and it may be nil for a caller that does not let the
 // row be reordered. Nothing passes nil today; the parameter is there so that a screen putting the
 // band up to be *read* does not have to invent a controller nobody drives.
-func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag) {
+func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardDrag) {
 	if gs.Run == nil {
 		return
 	}
@@ -157,11 +157,11 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag
 	counters := runCounters(gs)
 	for i, record := range worn {
 		// The seat a dragged relic left stays empty; see the combat screen's row.
-		if drag != nil && drag.dragging() && i == drag.origin() {
+		if drag != nil && drag.Dragging() && i == drag.Origin() {
 			continue
 		}
 		at := relicSlotAt(row, i, len(worn))
-		drawRelicCard(gs, screen, at, record, counters[record.RelicRecord], true, false)
+		ui.DrawRelicCard(gs, screen, at, record, counters[record.RelicRecord], true, false)
 	}
 
 	if drag != nil {
@@ -230,8 +230,8 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 		if !ok {
 			return false
 		}
-		title, lines := relicTip(record, i, len(worn))
-		tip.Point(seat, tipLine(title), tipLines(lines))
+		title, lines := ui.RelicTip(record, i, len(worn))
+		tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		return true
 	}
 	return false
@@ -243,18 +243,4 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 func relicSlotRect(row image.Rectangle, i, worn int) image.Rectangle {
 	at := relicSlotAt(row, i, worn)
 	return image.Rect(at.X, at.Y, at.X+cards.RelicStyle.Width, at.Y+cards.RelicStyle.Height)
-}
-
-// buildFighter is the player as a combatant, equipped with what they are wearing.
-//
-// **It is rebuilt rather than kept.** The fighter that fought is the combat screen's and dies with
-// it; what survives is the run, and the run is enough to say what the player *is*. The one thing it
-// cannot say is mid-fight life, which is why `LifeLeft` is stored.
-func buildFighter(gs *state.GlobalState) *entities.Combatant {
-	c := duelistFromRecord(gs, playerRecord)
-	if c == nil {
-		return nil
-	}
-	c.Duelist = gs.Run.Equip(c.Duelist)
-	return c
 }

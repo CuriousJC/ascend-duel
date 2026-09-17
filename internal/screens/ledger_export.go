@@ -28,6 +28,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -67,13 +68,13 @@ type ledgerExporter struct {
 // update runs the button and writes the file if it was pressed.
 func (e *ledgerExporter) update(gs *state.GlobalState, r image.Rectangle) {
 	if e.button == nil {
-		e.button = models.NewButton(ledgerExportWidth, modalCloseSize, ledgerExportLabel,
+		e.button = models.NewButton(ledgerExportWidth, ui.ModalCloseSize, ledgerExportLabel,
 			func() { e.pressed = true })
-		e.button.BaseColor = ledgerPane.color
+		e.button.BaseColor = ledgerPane.Color
 		e.button.TextSize = ledgerExportText
 	}
-	e.button.ScreenX = r.Min.X + modalCloseInset + ledgerExportWidth/2
-	e.button.ScreenY = r.Min.Y + modalCloseInset + modalCloseSize/2
+	e.button.ScreenX = r.Min.X + ui.ModalCloseInset + ledgerExportWidth/2
+	e.button.ScreenY = r.Min.Y + ui.ModalCloseInset + ui.ModalCloseSize/2
 
 	// **A run with nothing in it is a dead control, not a file saying nothing.** The panel is
 	// already drawing its own "nothing has happened yet"; an export of it would be a file the
@@ -124,14 +125,14 @@ func (e *ledgerExporter) draw(gs *state.GlobalState, screen *ebiten.Image, r ima
 		return
 	}
 
-	ink := ledgerPane.ink
+	ink := ledgerPane.Ink
 	if e.failed {
-		ink = modalCloseColor
+		ink = ui.ModalCloseColor
 	}
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(
-		float64(r.Min.X+modalCloseInset+ledgerExportWidth+ledgerNoteGap),
-		float64(r.Min.Y+modalCloseInset+(modalCloseSize-ledgerNoteSize)/2),
+		float64(r.Min.X+ui.ModalCloseInset+ledgerExportWidth+ledgerNoteGap),
+		float64(r.Min.Y+ui.ModalCloseInset+(ui.ModalCloseSize-ledgerNoteSize)/2),
 	)
 	op.ColorScale.ScaleWithColor(ink)
 	text.Draw(screen, e.note, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ledgerNoteSize}, op)

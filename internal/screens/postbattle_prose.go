@@ -29,6 +29,7 @@ import (
 	"strconv"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 
@@ -40,17 +41,17 @@ import (
 // proseCharTicks() is how long one character takes. **Fast on purpose, and doubled again on
 // 2026-09-08** *(owner's call)*: this is a sentence appearing, not a teletype, and a player who
 // has read it should be waiting on the next line rather than on the rest of this one.
-func proseCharTicks() int { return beat(1, 24) }
+func proseCharTicks() int { return ui.Beat(1, 24) }
 
 // proseLinePause() is the beat held between one finished sentence and the next starting. It is
 // what makes the payout read as three separate things, and it is **deliberately not scaled with
 // the typing**: the pause is the separation, so shortening it alongside the characters would
 // give back the run-together reading that typing every line at once produced.
-func proseLinePause() int { return beat(1, 2) }
+func proseLinePause() int { return ui.Beat(1, 2) }
 
 // vitaeFlightTicks() is how long a figure takes to reach the duelist card. The purse changes when
 // it lands, never when it sets off — the flight *is* the payment arriving.
-func vitaeFlightTicks() int { return beat(3, 4) }
+func vitaeFlightTicks() int { return ui.Beat(3, 4) }
 
 // proseSpan is one colored stretch of a sentence. A line is a few of them, so "the enemy's 4 vitae
 // flows to you" can put the figure and the word in crimson and leave the rest of the sentence alone
@@ -100,7 +101,7 @@ type typewriter struct {
 type vitaeFlight struct {
 	amount int
 	from   image.Point
-	trip   travel
+	trip   ui.Travel
 }
 
 // setLines starts the block over.
@@ -133,8 +134,8 @@ func (t *typewriter) finished() bool { return t.filled() && t.released }
 // unrelated things moving at once.
 func (t *typewriter) tick(gs *state.GlobalState, at func(line int) image.Point) {
 	if t.flying {
-		t.flight.trip.tick()
-		if t.flight.trip.done() {
+		t.flight.trip.Tick()
+		if t.flight.trip.Done() {
 			t.flying = false
 		}
 		return
@@ -158,7 +159,7 @@ func (t *typewriter) tick(gs *state.GlobalState, at func(line int) image.Point) 
 	// The sentence is complete: pay what it named, then hold a beat before the next one.
 	if line.pays != nil {
 		if paid := line.pays(gs); paid > 0 {
-			t.flight = vitaeFlight{amount: paid, from: at(t.line), trip: newTravel(0, vitaeFlightTicks())}
+			t.flight = vitaeFlight{amount: paid, from: at(t.line), trip: ui.NewTravel(0, vitaeFlightTicks())}
 			t.flying = true
 		}
 		t.lines[t.line].pays = nil
@@ -234,7 +235,7 @@ func drawProseLine(screen *ebiten.Image, face *text.GoTextFace, full string, spa
 		op.GeoM.Translate(x, float64(y))
 		ink := r.ink
 		if ink.A == 0 {
-			ink = groundInk
+			ink = ui.GroundInk
 		}
 		op.ColorScale.ScaleWithColor(ink)
 		text.Draw(screen, r.text, face, op)
@@ -255,7 +256,7 @@ func (t *typewriter) drawVitaeFlight(gs *state.GlobalState, screen *ebiten.Image
 
 	card := buildCardRect(gs)
 	to := image.Pt((card.Min.X+card.Max.X)/2, (card.Min.Y+card.Max.Y)/2)
-	p := easeOut(t.flight.trip.progress())
+	p := ui.EaseOut(t.flight.trip.Progress())
 
 	x := float64(t.flight.from.X) + (float64(to.X-t.flight.from.X))*p
 	y := float64(t.flight.from.Y) + (float64(to.Y-t.flight.from.Y))*p
@@ -264,6 +265,6 @@ func (t *typewriter) drawVitaeFlight(gs *state.GlobalState, screen *ebiten.Image
 	op.GeoM.Translate(x, y)
 	op.PrimaryAlign = text.AlignCenter
 	op.SecondaryAlign = text.AlignCenter
-	op.ColorScale.ScaleWithColor(vitaeInk)
+	op.ColorScale.ScaleWithColor(ui.VitaeInk)
 	text.Draw(screen, "+"+strconv.Itoa(t.flight.amount), face, op)
 }

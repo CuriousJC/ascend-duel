@@ -122,8 +122,13 @@ func TestTheSackHoldsWhatIsPutInIt(t *testing.T) {
 		t.Fatalf("a fresh run started holding %d runes", run.HoldCount())
 	}
 	one := anyWithRider(t, combat.RiderHealOnPlay).Record
-	if !run.Hold(one) || !run.Hold(one) {
+	// Held twice on purpose — the sack stacks copies — and as two statements rather than one
+	// short-circuiting expression, which read as a tautology and depended on || evaluating both.
+	if !run.Hold(one) {
 		t.Fatal("the sack refused a rune the catalog has")
+	}
+	if !run.Hold(one) {
+		t.Fatal("the sack refused a second copy of a rune it already held")
 	}
 	if run.HoldCount() != 2 {
 		t.Errorf("two of the same rune counted as %d", run.HoldCount())

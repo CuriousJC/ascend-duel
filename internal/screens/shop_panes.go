@@ -184,7 +184,7 @@ func shopRerollRect(gs *state.GlobalState, p shopPane) image.Rectangle {
 // bevelled cards standing on it are what gets read.
 func drawShopPaneBack(gs *state.GlobalState, screen *ebiten.Image, p shopPane) {
 	back := shopPaneBackRect(gs, p)
-	vector.DrawFilledRect(screen,
+	vector.FillRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
 		relicPaneBackColor, false)
 }

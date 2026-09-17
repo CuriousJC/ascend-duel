@@ -5,9 +5,19 @@ description: The combat screen's layout, its card/action box widget, hidden info
 
 # The combat screen
 
-The screen under active construction, and the reason `NewGlobalState` boots straight into
-`Combat`. Everything here is a decision already made — read before proposing a change to
-one, and see `TODO.md` for what is still open.
+**The drawing layer split off on 2026-09-17.** Everything the combat screen draws *through* — the
+table, the clock, the movers, the card faces, the panels belonging to no screen, the prose — is
+`internal/ui` now, and the scene itself is still `internal/screens`. **A symbol named anywhere below
+may be in either**, and many are exported now where this file writes them in lower case; grep both
+packages rather than trusting the spelling here. The rule the boundary states is that nothing in
+`internal/ui` may reach into a scene.
+
+
+The screen under active construction. Everything here is a decision already made — read before
+proposing a change to one, and see `TODO.md` for what is still open.
+
+**The game boots to the title screen**, and has since 2026-09-03; this file used to say the opposite,
+from the months when booting straight into a duel was right because the duel was the only screen.
 
 **The rules live in `internal/combat` and the screen only replays them.** `ResolveRound`
 decides a whole round before a frame of playback runs. Never change those rules to make a
@@ -95,13 +105,15 @@ for a faster action to lead. `Spd` still buys action points and still never buys
 - **Dragging a card changes nothing the engine can see** *(2026-08-14)*. Cross-category
   reordering never did — the drag lands the card in a queue that is then regrouped — and the two
   things that read *within*-category order are both gone: hands are counted, so a turn is a set,
-  and every raised defend answers the one blow regardless of when it went up. **What order still
+  and shields are ranked by the blow they would eat rather than by when they went up. **What order still
   decides is the hand's tie-break** — `groupsOf` breaks a tie by whose first card was played first,
   so the lead card that names the hand and carries its element is chosen by where the player put it.
   Do not paper over the rest on the screen, and do not invent a rule to justify it.
-- **`Duelist.Defends` is a set, not a queue.** One card reaches it as of 2026-08-15 — Defend, at
-  50% — and several compose multiplicatively. Nothing about the order they were raised in reaches
-  the outcome, and **nothing reduces a blow to zero**: something always lands.
+- **`Duelist.Shields` is a count, not a queue.** Which blows they eat is decided at the top of the
+  creature's turn by `combat.shieldedSlots`, heaviest first, so the order the shields went up in
+  reaches no outcome. **Nothing reduces a blow to zero by arithmetic** — a shield eats a whole
+  attack or it does not, and there is no percentage in between since the guard was deleted on
+  2026-09-16.
 - **`Slot.Index` is not a position in the round.** It is where the card sits in its own
   side's queue, which regrouping breaks apart. Anything asking "how far through the round are
   we" counts slots — `CombatScene.currentSlot` does, and lighting the right Resolution row
@@ -137,15 +149,13 @@ in `MECHANICS.md`; these are what matter to the screen.
   the fallback picks the hardest-hitting card rather than the commonest.
 - **The event carries the arithmetic, and the engine takes its damage from the same field.**
   `Base` is what the hand's own cards deal added up, and `Amount` is `Base` under the multiplier —
-  the blow *before* the attacker's weight and before any defense. `resolveAttackPhase` blunts
-  `Amount` rather than re-adding the sum, so the figure printed and the figure landed cannot be two
-  different numbers. The gap between that and the `KindDamage` after it is exactly what the defense
-  was worth.
-- **The multiplier multiplies the cards** *(2026-08-18, owner's call)*. There is no third term: the
-  event carried a `Swing` — one 1x attack at the attacker's DMG, *added* to the cards — until then,
-  which made a hand's percent worth a fixed figure rather than a proportion. `Swing` is gone from
-  `Event` and `high-card` sits at `100` rather than `0`, since a multiplier applied to the cards
-  cannot be zero without deleting the blow. See MECHANICS.md.
+  the blow *before* the attacker's weight. `resolveAttackPhase` blunts `Amount` rather than
+  re-adding the sum, so the figure printed and the figure landed cannot be two different numbers.
+  A shield does not appear in that gap at all: it removes a whole attack up front, and
+  `KindBlocked` is what says so.
+- **The multiplier multiplies the cards, and there is no third term** *(2026-08-18, owner's call)*.
+  `high-card` therefore sits at `100` rather than `0`: a multiplier applied to the cards cannot be
+  zero without deleting the blow. See MECHANICS.md.
 - **`Event.HandAmounts` is what each of the hand's cards deals**, parallel to `HandCards` and to
   the same count, summing to `Base`. It exists so the hand dialog can show the sum term by term
   without the screen owning `CardDamage`, the strength scaling and every relic that touches a card's
@@ -333,9 +343,10 @@ number the game had decided rather than one they had built.
   whole grammar of the box — something that flies came off a card, something that pops is
   punctuation the game supplied.
 
-**Within a turn the order is: every attack card announced, the hand, the damage, then the defend
-cards one at a time.** The screen does nothing to arrange this; it replays the log in order,
-and the engine decides.
+**Within a turn the order is `combat.Categories()`: the defend cards first, then the attacks —
+announced, then the hand, then the damage.** The screen does nothing to arrange this; it replays
+the log in order, and the engine decides. Both the resolver and the table's two rows read
+`ResolutionOrder` rather than deriving an order of their own.
 
 Three consequences for playback. **The hand line lands after its cards are announced but before
 the damage**, so a boosted figure never arrives before the reason for it, and `noteHand` has
@@ -365,7 +376,7 @@ does.
   with it.
 - **Per-kind pacing is back, and the shape it comes back in is the point.** It was a `switch` with
   a `default` arm once, and the default was the shortest dwell — so every kind added after that
-  switch was written inherited a quarter-second flash nobody chose, `KindNegated` included. A map
+  switch was written inherited a quarter-second flash nobody chose. A map
   with an entry per kind, `TestEveryEventKindHasADwell` failing when a kind is added, and a missing
   entry falling back to the *plain* beat rather than to nothing.
 - **The dwell is keyed on the event behind the cursor**, not the one at it: the cursor names the

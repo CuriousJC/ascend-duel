@@ -5,6 +5,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // These pin the half of the landing figure that has no geometry in it: which events raise one,
@@ -34,13 +35,13 @@ func TestOnlyDamageRaisesALandingFigure(t *testing.T) {
 	} {
 		s.noteHit(combat.Event{Kind: k, Amount: 10, Target: combat.SideB, Life: 90}, 100)
 	}
-	if len(s.theater.hits) != 0 {
-		t.Errorf("%d figures were raised by events that are not damage", len(s.theater.hits))
+	if len(s.Theater.hits) != 0 {
+		t.Errorf("%d figures were raised by events that are not damage", len(s.Theater.hits))
 	}
 
 	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 10, Target: combat.SideB, Life: 90}, 100)
-	if len(s.theater.hits) != 1 {
-		t.Fatalf("damage raised %d figures, want 1", len(s.theater.hits))
+	if len(s.Theater.hits) != 1 {
+		t.Fatalf("damage raised %d figures, want 1", len(s.Theater.hits))
 	}
 }
 
@@ -50,8 +51,8 @@ func TestAZeroBlowRaisesNothing(t *testing.T) {
 	// all and a future effect might well land a nought.
 	s := hitScene()
 	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 0, Target: combat.SideB, Life: 100}, 100)
-	if len(s.theater.hits) != 0 {
-		t.Errorf("a blow of nothing raised %d figures", len(s.theater.hits))
+	if len(s.Theater.hits) != 0 {
+		t.Errorf("a blow of nothing raised %d figures", len(s.Theater.hits))
 	}
 }
 
@@ -83,7 +84,7 @@ func TestTheBarCatchesUpWhenTheFigureLands(t *testing.T) {
 		if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 100 {
 			t.Fatalf("tick %d: the bar draws %d before the figure arrived, want 100", i, got)
 		}
-		s.theater.tick()
+		s.Theater.Tick()
 	}
 
 	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 70 {
@@ -91,7 +92,7 @@ func TestTheBarCatchesUpWhenTheFigureLands(t *testing.T) {
 	}
 	// It is still on screen, being held on the card — the overlap between the figure and the
 	// emptier bar is what joins the two.
-	if !s.theater.running() {
+	if !s.Theater.Running() {
 		t.Error("the figure was dropped the instant it arrived, so nothing holds on the card")
 	}
 }
@@ -115,13 +116,13 @@ func TestTheFigureFinishesAndIsDroppedSoPlaybackCanResume(t *testing.T) {
 	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
 
 	for i := 0; i < hitFlyTicks()+hitHoldTicks()+2; i++ {
-		s.theater.tick()
+		s.Theater.Tick()
 	}
-	if s.theater.running() {
+	if s.Theater.Running() {
 		t.Error("the figure is still running after its whole clock, so playback can never resume")
 	}
-	if len(s.theater.hits) != 0 {
-		t.Errorf("%d finished figures are still on the scene", len(s.theater.hits))
+	if len(s.Theater.hits) != 0 {
+		t.Errorf("%d finished figures are still on the scene", len(s.Theater.hits))
 	}
 }
 
@@ -137,8 +138,8 @@ func TestAScoredHandsFigureLeavesTheSumAndASoloAttackersLeavesItsCard(t *testing
 	// both sides headlessly on the same flag.
 	s := hitScene()
 	s.enemy.SoloAttacks = true
-	s.theater.enemyFiringSeats = []int{2}
-	s.theater.firingSeats = []int{1}
+	s.Theater.enemyFiringSeats = []int{2}
+	s.Theater.firingSeats = []int{1}
 
 	if got := s.blowSeat(combat.Event{Side: combat.SideA}); got != -1 {
 		t.Errorf("the player's blow leaves seat %d, want -1 for the sum line", got)
@@ -161,7 +162,7 @@ func TestASoloAttackerWithNothingLitFallsBackToTheSum(t *testing.T) {
 	// point the figure at whichever card happens to sit at the left of the row.
 	s := hitScene()
 	s.enemy.SoloAttacks = true
-	s.theater.enemyFiringSeats = nil
+	s.Theater.enemyFiringSeats = nil
 
 	if got := s.blowSeat(combat.Event{Side: combat.SideB}); got != -1 {
 		t.Errorf("a solo attacker with nothing lit leaves seat %d, want the sum line", got)
@@ -181,7 +182,7 @@ func TestTheLandingFigureIsTheSumsTotalContinuing(t *testing.T) {
 		t.Errorf("the landing figure is %v and the sum's total is %v; matching them is what makes "+
 			"the flight read as the total traveling", hitFigureSize, mathTotalSize)
 	}
-	if hitInk() != verbInkFor(combat.CategoryAttack) {
+	if hitInk() != ui.VerbInkFor(combat.CategoryAttack) {
 		t.Error("the landing figure is not the color the sum's total is drawn in")
 	}
 	if hitFromScale != 1.0 {
@@ -196,7 +197,7 @@ func TestTheLandingFigureIsTheSumsTotalContinuing(t *testing.T) {
 	// And it is solid from the first frame: a fade-in would blink against the opaque total.
 	s := hitScene()
 	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
-	if got := hitAlpha(s.theater.hits[0]); got != 1 {
+	if got := hitAlpha(s.Theater.hits[0]); got != 1 {
 		t.Errorf("the figure sets off at alpha %v, want 1", got)
 	}
 }
@@ -207,9 +208,9 @@ func TestClearingTheSceneDropsFiguresInTheAir(t *testing.T) {
 	// when the next fight starts.
 	s := hitScene()
 	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
-	s.theater.clear()
+	s.Theater.Clear()
 
-	if s.theater.running() || len(s.theater.hits) != 0 {
+	if s.Theater.Running() || len(s.Theater.hits) != 0 {
 		t.Error("a figure survived the scene being cleared")
 	}
 	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != s.enemy.CurrentLife {
@@ -244,7 +245,7 @@ func TestAKillingBlowHoldsTheLifeThatWasThereNotTheSizeOfTheBlow(t *testing.T) {
 	// And once the figure arrives it is the real life, which is zero — the drop still happens, it
 	// just happens on arrival like every other hit.
 	for i := 0; i < hitFlyTicks()+1; i++ {
-		s.theater.tick()
+		s.Theater.Tick()
 	}
 	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 0 {
 		t.Errorf("the bar draws %d after the killing figure landed, want 0", got)

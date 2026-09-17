@@ -30,6 +30,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -98,7 +99,7 @@ func (s *RunOverScene) Update(gs *state.GlobalState) error {
 }
 
 func (s *RunOverScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	fillGround(screen)
+	ui.FillGround(screen)
 	if gs.Summary == nil {
 		return
 	}
@@ -116,7 +117,7 @@ func (s *RunOverScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	head.GeoM.Translate(center, float64(gs.PctY(13)))
 	head.PrimaryAlign = text.AlignCenter
 	head.SecondaryAlign = text.AlignCenter
-	head.ColorScale.ScaleWithColor(groundInk)
+	head.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, title,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverTitleSize}, head)
 
@@ -146,9 +147,9 @@ func (s *RunOverScene) drawTotals(gs *state.GlobalState, screen *ebiten.Image, s
 	y := gs.PctY(28)
 
 	for _, r := range rows {
-		ink := groundInk
+		ink := ui.GroundInk
 		if r.quiet {
-			ink = systems.ColorToward(groundInk, screenGround, 32)
+			ink = systems.ColorToward(ui.GroundInk, ui.ScreenGround, 32)
 		}
 
 		// The label ends at the gutter, the figure starts after it. One axis, so the eye reads the
@@ -157,7 +158,7 @@ func (s *RunOverScene) drawTotals(gs *state.GlobalState, screen *ebiten.Image, s
 		label.GeoM.Translate(float64(gutter-runOverGutter), float64(y))
 		label.PrimaryAlign = text.AlignEnd
 		label.SecondaryAlign = text.AlignCenter
-		label.ColorScale.ScaleWithColor(systems.ColorToward(ink, screenGround, 22))
+		label.ColorScale.ScaleWithColor(systems.ColorToward(ink, ui.ScreenGround, 22))
 		text.Draw(screen, r.label,
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverLabelSize}, label)
 

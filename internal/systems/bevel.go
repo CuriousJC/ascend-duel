@@ -79,7 +79,7 @@ func BevelRect(dst *ebiten.Image, x, y, w, h, width int, fill color.RGBA, sunken
 	}
 
 	fx, fy := float32(x), float32(y)
-	vector.DrawFilledRect(dst, fx, fy, float32(w), float32(h), fill, false)
+	vector.FillRect(dst, fx, fy, float32(w), float32(h), fill, false)
 	if width <= 0 || w <= 2*width || h <= 2*width {
 		return
 	}
@@ -88,12 +88,12 @@ func BevelRect(dst *ebiten.Image, x, y, w, h, width int, fill color.RGBA, sunken
 		f, n := float32(i), float32(1)
 		// Top and left take the light: each row and column is inset by one at both ends, which
 		// is what mitres the corner it shares with the edge below or beside it.
-		vector.DrawFilledRect(dst, fx+f, fy+f, float32(w-2*i), n, light, false)
-		vector.DrawFilledRect(dst, fx+f, fy+f, n, float32(h-2*i), light, false)
+		vector.FillRect(dst, fx+f, fy+f, float32(w-2*i), n, light, false)
+		vector.FillRect(dst, fx+f, fy+f, n, float32(h-2*i), light, false)
 
 		// Bottom and right take the shade, inset the same way from the other corner.
-		vector.DrawFilledRect(dst, fx+f, fy+float32(h-1-i), float32(w-2*i), n, shade, false)
-		vector.DrawFilledRect(dst, fx+float32(w-1-i), fy+f, n, float32(h-2*i), shade, false)
+		vector.FillRect(dst, fx+f, fy+float32(h-1-i), float32(w-2*i), n, shade, false)
+		vector.FillRect(dst, fx+float32(w-1-i), fy+f, n, float32(h-2*i), shade, false)
 	}
 }
 

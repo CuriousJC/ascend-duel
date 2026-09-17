@@ -26,6 +26,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -53,7 +54,7 @@ type TitleScene struct {
 
 	// confirm is the "are you sure" in front of New Run, and it is only ever raised when a run is
 	// actually in progress.
-	confirm confirmDialog
+	confirm ui.ConfirmDialog
 }
 
 // Init builds the buttons on first entry and positions them every time.
@@ -87,7 +88,7 @@ func (s *TitleScene) Init(gs *state.GlobalState) {
 
 	// **The dialog does not survive a visit.** A scene's Init runs again every time it is entered,
 	// and arriving at the title with a question already up would be a dialog nobody asked.
-	s.confirm.close()
+	s.confirm.Close()
 
 	// The percentage anchors the menu; the fixed steps space it. Giving each button its own
 	// percentage would let the spacing drift apart the next time the menu moves.
@@ -102,14 +103,14 @@ func (s *TitleScene) Init(gs *state.GlobalState) {
 func (s *TitleScene) Update(gs *state.GlobalState) error {
 	// **The question owns the screen while it is up.** The menu underneath is still where it was,
 	// and a click reaching New Run through the dialog asking about New Run would start two runs.
-	if s.confirm.isOpen() {
-		s.confirm.update(gs)
+	if s.confirm.IsOpen() {
+		s.confirm.Update(gs)
 		return nil
 	}
 
 	// **Dead with nothing to go back to.** A run only exists here if BootRun resumed one off disk
 	// or the player started one and came back to the title; either way the test is the same.
-	setEnabled(s.continueButton, gs.Run != nil && gs.Resumed)
+	ui.SetEnabled(s.continueButton, gs.Run != nil && gs.Resumed)
 
 	for _, b := range s.menu() {
 		systems.UpdateButton(gs, b)
@@ -139,7 +140,7 @@ func (s *TitleScene) startNewRun(gs *state.GlobalState) {
 		NewRun(gs)
 		return
 	}
-	s.confirm.ask(
+	s.confirm.Ask(
 		"START A NEW RUN?",
 		"The climb in progress will be lost. This cannot be undone.",
 		"NEW RUN",
@@ -148,7 +149,7 @@ func (s *TitleScene) startNewRun(gs *state.GlobalState) {
 }
 
 func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	fillGround(screen)
+	ui.FillGround(screen)
 
 	//TITLE
 	//
@@ -191,7 +192,7 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, versionOp)
 
 	// Over the menu it is asking about.
-	s.confirm.draw(gs, screen)
+	s.confirm.Draw(gs, screen)
 }
 
 // Where the build string sits on the title screen, and how loud it is.

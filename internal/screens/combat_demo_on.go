@@ -12,6 +12,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -98,9 +99,9 @@ const (
 
 	// **One capture per event, derived from the dwell rather than written down.** It was a
 	// flat 22 and went stale the moment playback slowed to a second and a quarter a beat —
-	// the same number then took three pictures of every event. Tying it to `beatTicks`
+	// the same number then took three pictures of every event. Tying it to `ui.BeatTicks`
 	// means a pacing change cannot leave the harness sampling at the wrong rate.
-	demoShotFor = beatTicks
+	demoShotFor = ui.BeatTicks
 
 	// How many of one card round one clicks. Named against the hand it is trying to form
 	// rather than written as a 3, so it stays honest if the flurry run length ever changes.
@@ -123,7 +124,7 @@ const (
 	// while the dialogs and the flights it has to survive did not move at all, being on their own
 	// clocks. Sixty events of playback plus half a minute of animation; reaching it still means
 	// something hung, which is the only thing this number is for.
-	demoGiveUpAt = 60*beatTicks + 30*ticksPerSecond
+	demoGiveUpAt = 60*ui.BeatTicks + 30*ui.TicksPerSecond
 )
 
 // How long to hold after a round settles before sending the next plan, so the settled
@@ -143,7 +144,7 @@ const (
 // It has to clear the arrival: riseTicks() plus a full row's stagger is 16 + 4x4 = 32. **Written
 // as a beat so it stays clear of it** — both of those are proportions of the game's speed, so a
 // raw 60 would stop clearing them the day the speed went up. See clock.go.
-func demoBetweenRounds() int { return beat(12, 5) }
+func demoBetweenRounds() int { return ui.Beat(12, 5) }
 
 func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 	if demo.done {
@@ -173,7 +174,7 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 			if picked >= flurryRunCards {
 				break
 			}
-			if s.hand[i].actionCard.Concept == demoClickRun {
+			if s.hand[i].Card.Concept == demoClickRun {
 				s.toggle(i)
 				picked++
 			}
@@ -350,7 +351,7 @@ func (s *CombatScene) demoReport(gs *state.GlobalState, label string) {
 	// events is the only version there can be. It is the same logRows walk the log draws.
 	rows := s.logRows(s.log)
 	for _, row := range rows {
-		line := row.text()
+		line := row.Text()
 		if line == "" {
 			continue
 		}

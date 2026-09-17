@@ -10,6 +10,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/tutorial"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // **An anchor nobody answers for is a spotlight around the empty rectangle at the origin**, which
@@ -228,8 +229,8 @@ func TestTheLeaderSurvivesACoincidentCenter(t *testing.T) {
 // onBorder reports whether p sits on r's frame, within the pixel the integer arithmetic can lose.
 func onBorder(r image.Rectangle, p image.Point) bool {
 	const slack = 1
-	nearX := abs(p.X-r.Min.X) <= slack || abs(p.X-r.Max.X) <= slack
-	nearY := abs(p.Y-r.Min.Y) <= slack || abs(p.Y-r.Max.Y) <= slack
+	nearX := ui.Abs(p.X-r.Min.X) <= slack || ui.Abs(p.X-r.Max.X) <= slack
+	nearY := ui.Abs(p.Y-r.Min.Y) <= slack || ui.Abs(p.Y-r.Max.Y) <= slack
 
 	inX := p.X >= r.Min.X-slack && p.X <= r.Max.X+slack
 	inY := p.Y >= r.Min.Y-slack && p.Y <= r.Max.Y+slack
@@ -300,11 +301,11 @@ func TestACoveredSceneIsNotPointedAt(t *testing.T) {
 
 	// Opening the hands ladder is exactly what the tutorial invites, and it covers the button the
 	// step is pointing at.
-	s.hands.open = true
+	s.hands.Toggle()
 	if !s.tutorialCovered(gs) {
 		t.Error("the hands panel is up and the scene does not report itself covered")
 	}
-	s.hands.open = false
+	s.hands.Toggle()
 
 	s.showDeck = true
 	if !s.tutorialCovered(gs) {
@@ -344,7 +345,7 @@ func TestACoveredSceneDropsTheGate(t *testing.T) {
 func stubCombat() *CombatScene {
 	s := &CombatScene{}
 	s.duelButton = stubButton()
-	s.hands.button = stubButton()
+	s.hands.Button = stubButton()
 	s.hand = make([]paletteCard, 5)
 
 	// **On a clock, because `round-timer` reports no rectangle without one** — the same reason the
@@ -358,8 +359,8 @@ func stubCombat() *CombatScene {
 	// unbroken round reports no rectangle for `shattered-cards`, which is honest and would read
 	// here as a missing case. The row has to hold the seat as well as the mark — the anchor is the
 	// card's own rectangle, and a mark on a seat the row does not have is nothing to point at.
-	s.theater.enemyDealt = make([]dealtCard, 3)
-	s.theater.shatteredSeats = map[int]bool{1: true}
+	s.Theater.enemyDealt = make([]dealtCard, 3)
+	s.Theater.shatteredSeats = map[int]bool{1: true}
 	return s
 }
 
@@ -439,7 +440,7 @@ func TestTheWaitingLineClearsTheSkipButton(t *testing.T) {
 func handOf(concepts ...combat.ConceptID) []paletteCard {
 	out := make([]paletteCard, 0, len(concepts))
 	for _, c := range concepts {
-		out = append(out, paletteCard{actionCard: combat.Card{Concept: c}})
+		out = append(out, paletteCard{Card: combat.Card{Concept: c}})
 	}
 	return out
 }
@@ -508,11 +509,11 @@ func TestAHandWithNothingMatchingHasNoSet(t *testing.T) {
 func TestTheAxisDecidesWhichCardsAreTheSet(t *testing.T) {
 	var s CombatScene
 	s.hand = []paletteCard{
-		{actionCard: combat.Card{Concept: combat.Jab, Element: combat.Fire}},
-		{actionCard: combat.Card{Concept: combat.Cleave, Element: combat.Fire}},
-		{actionCard: combat.Card{Concept: combat.Smash, Element: combat.Fire}},
-		{actionCard: combat.Card{Concept: combat.Bash, Element: combat.Fire}},
-		{actionCard: combat.Card{Concept: combat.Jab, Element: combat.Ice}},
+		{Card: combat.Card{Concept: combat.Jab, Element: combat.Fire}},
+		{Card: combat.Card{Concept: combat.Cleave, Element: combat.Fire}},
+		{Card: combat.Card{Concept: combat.Smash, Element: combat.Fire}},
+		{Card: combat.Card{Concept: combat.Bash, Element: combat.Fire}},
+		{Card: combat.Card{Concept: combat.Jab, Element: combat.Ice}},
 	}
 
 	if got := s.matchingCards(taughtOn("element")); len(got) != 4 {

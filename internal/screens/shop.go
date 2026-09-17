@@ -36,6 +36,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -80,7 +81,7 @@ const (
 // finger it lands on, and every relic that shifts along when one is sold.
 //
 // **A proportion of the game's one speed**, like everything else that moves. See clock.go.
-func shopMoveTicks() int { return beat(1, 1) }
+func shopMoveTicks() int { return ui.Beat(1, 1) }
 
 // shelfItem is one relic on the shelf.
 type shelfItem struct {
@@ -121,7 +122,7 @@ type ShopScene struct {
 	// sharing one button**: a click still arms the sell tab, and a press that travels reorders the
 	// row instead. The threshold in carddrag.go is what tells them apart, and it is the same
 	// threshold the hand has used since the action box was built.
-	relicDrag cardDrag
+	relicDrag ui.CardDrag
 
 	// selling is the tab's request, consumed by Update, for the reason `leaving` is: a button's
 	// OnClick reaches no global state and a sale needs the run.
@@ -144,7 +145,7 @@ type ShopScene struct {
 	// remembered rather than journeys — the destination is recomputed from the layout every frame,
 	// which is what lets a flight survive the window being resized. See travel.go.
 	from map[string]image.Rectangle
-	move travel
+	move ui.Travel
 
 	// prose is the shopkeeper. **Nothing it says has a `pays`**, unlike the reward screen's
 	// payout — this is flavor rather than arithmetic, and the typewriter is reused for the
@@ -153,12 +154,12 @@ type ShopScene struct {
 
 	// deck is the D button in the corner and the panel behind it. A relic is bought against a deck,
 	// and until 2026-08-22 the deck could not be looked at from here. See deckpanel.go.
-	deck deckToggle
+	deck ui.DeckToggle
 
 	// hands is the C button beside it: every hand the deck can build, and what each pays. A relic
 	// is bought against a deck for the hands that deck can make, which is the question this
 	// answers and the shelf does not. See handspanel.go.
-	hands handsToggle
+	hands ui.HandsToggle
 
 	// offered is which packs this visit put up: two of the three, dealt in Init and fixed for the
 	// visit unless the reroll button under them is pressed. **A slice rather than three flags**,
@@ -234,8 +235,8 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 
 	s.armed, s.selling = "", ""
 	s.leaving = false
-	s.from, s.move = nil, travel{}
-	s.tip = models.Tooltip{DwellTicks: tipDwell()}
+	s.from, s.move = nil, ui.Travel{}
+	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 	s.opened = map[string]bool{}
 	s.good.reset()
 
@@ -253,8 +254,8 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	// the control column and the two square panels stand on the bottom line beside the frame's cog,
 	// so the corner reads the same on every screen that has one — see controlcolumn.go, which is
 	// the one place either is measured from.
-	s.deck.initAsPile()
-	s.hands.initInColumn(func(gs *state.GlobalState) image.Point {
+	s.deck.InitAsPile()
+	s.hands.InitInColumn(func(gs *state.GlobalState) image.Point {
 		return ControlColumnSlotCenter(gs, SlotHands)
 	})
 
@@ -350,7 +351,7 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	// Before this screen's own input; see combat.go's Update.
 	s.tut.update(gs, s)
 
-	s.move.tick()
+	s.move.Tick()
 
 	if s.leaving {
 		s.leaving = false
@@ -386,12 +387,12 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 
 	// While the deck panel is up the two rows are dead. See deckToggle.update, which counts the
 	// frame the panel closes on as a covered one.
-	s.deck.block(s.hands.open || s.pouch.open)
-	s.hands.block(s.deck.open || s.pouch.open)
-	if s.deck.update(gs, ownedContents(gs)) {
+	s.deck.Block(s.hands.IsOpen() || s.pouch.IsOpen())
+	s.hands.Block(s.deck.IsOpen() || s.pouch.IsOpen())
+	if s.deck.Update(gs, ui.OwnedContents(gs)) {
 		return nil
 	}
-	if s.hands.update(gs) {
+	if s.hands.Update(gs) {
 		return nil
 	}
 	if s.updatePouch(gs) {
@@ -438,8 +439,8 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 			continue
 		}
 		if record, ok := gs.Relics[item.key]; ok {
-			title, lines := shopRelicTip(record)
-			s.tip.Point(seat, tipLine(title), tipLines(lines))
+			title, lines := ui.ShopRelicTip(record)
+			s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		}
 		return
 	}
@@ -451,7 +452,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 			continue
 		}
 		title, lines := goodTip(good)
-		s.tip.Point(seat, tipLine(title), tipLines(lines))
+		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 
@@ -461,7 +462,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 			continue
 		}
 		title, lines := potionTip(potion)
-		s.tip.Point(seat, tipLine(title), tipLines(lines))
+		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 
@@ -469,7 +470,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 	// has a tooltip: a dim card with no explanation is one the player keeps clicking.
 	if seat := brandSeat(gs); at.In(seat) {
 		title, lines := brandTip()
-		s.tip.Point(seat, tipLine(title), tipLines(lines))
+		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 
@@ -661,7 +662,7 @@ func (s *ShopScene) seats(gs *state.GlobalState) map[string]image.Rectangle {
 
 // start runs the row from where it was to wherever the change has put it.
 func (s *ShopScene) start(from map[string]image.Rectangle) {
-	s.from, s.move = from, newTravel(0, shopMoveTicks())
+	s.from, s.move = from, ui.NewTravel(0, shopMoveTicks())
 }
 
 // shelfSlot is where one offered relic is drawn, and the rectangle it is clicked in. **One function
@@ -683,7 +684,7 @@ func (s *ShopScene) wornSlot(gs *state.GlobalState, i, n int) image.Rectangle {
 }
 
 func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	fillGround(screen)
+	ui.FillGround(screen)
 
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}
 	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 26}
@@ -720,7 +721,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		return
 	}
 
-	line(shopHintTop, small, s.hint(gs), groundInk)
+	line(shopHintTop, small, s.hint(gs), ui.GroundInk)
 
 	// **The four panes, left to right.** Each paints its own surface first and its cards on top;
 	// see shop_panes.go, which owns where they stand.
@@ -736,8 +737,8 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// Last, and over everything: the panel covers the screen, so nothing of this one may be drawn
 	// on top of it.
-	s.deck.draw(gs, screen, ownedContents(gs))
-	s.hands.draw(gs, screen, ownedHands(gs))
+	s.deck.Draw(gs, screen, ui.OwnedContents(gs))
+	s.hands.Draw(gs, screen, ui.OwnedHands(gs))
 	s.drawPouch(gs, screen)
 
 	// The sealed good's dialog, over both panels: it is the one dialog on this screen that a
@@ -777,7 +778,7 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
 		// **No badge on the shelf**, whatever the relic is: an accumulator belongs to a worn relic,
 		// and a shelf relic is one nobody has ever put on. A relic the run once wore and sold has
 		// had its number reset, so there is nothing to show there either.
-		drawRelicCard(gs, screen, at.Min, record, "", affordable, false)
+		ui.DrawRelicCard(gs, screen, at.Min, record, "", affordable, false)
 		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", price), affordable)
 	}
 }
@@ -799,16 +800,16 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 			continue
 		}
 		// The seat a dragged relic left stays empty; see the combat screen's row.
-		if s.relicDrag.dragging() && i == s.relicDrag.origin() {
+		if s.relicDrag.Dragging() && i == s.relicDrag.Origin() {
 			continue
 		}
 		seat := s.wornSlot(gs, i, len(worn))
 		at := seat.Min
-		if was, moving := s.from[key]; moving && !s.move.done() {
-			at = flyingTo(was, seat, s.move)
+		if was, moving := s.from[key]; moving && !s.move.Done() {
+			at = ui.FlyingTo(was, seat, s.move)
 		}
 
-		drawRelicCard(gs, screen, at, record, counters[key], true, false)
+		ui.DrawRelicCard(gs, screen, at, record, counters[key], true, false)
 
 		// **The price is only offered once the shopkeeper has finished speaking**, like everything
 		// else on this screen — a sell figure under a relic during the greeting would be an offer
@@ -851,11 +852,11 @@ func (s *ShopScene) updateRelicRow(gs *state.GlobalState) {
 	})
 
 	if !gs.CursorAllowed() {
-		s.relicDrag.cancel(row)
+		s.relicDrag.Cancel(row)
 		return
 	}
 
-	s.relicDrag.update(gs, row)
+	s.relicDrag.Update(gs, row)
 }
 
 // figure writes the number under a card, centered on it. Dimmed toward the ground rather than
@@ -864,9 +865,9 @@ func (s *ShopScene) updateRelicRow(gs *state.GlobalState) {
 func (s *ShopScene) figure(gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle,
 	msg string, lit bool) {
 
-	ink := groundInk
+	ink := ui.GroundInk
 	if !lit {
-		ink = systems.ColorToward(groundInk, screenGround, 55)
+		ink = systems.ColorToward(ui.GroundInk, ui.ScreenGround, 55)
 	}
 
 	op := &text.DrawOptions{}
@@ -1006,7 +1007,7 @@ func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image) {
 		at := s.goodSlot(gs, key)
 
 		lit := goodAvailable(gs, key)
-		drawGoodCard(gs, screen, at.Min, good.Name, goodArt(gs, good), lit)
+		ui.DrawGoodCard(gs, screen, at.Min, good.Name, goodArt(gs, good), lit)
 		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", good.Price), lit)
 	}
 }
@@ -1022,15 +1023,15 @@ func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image) {
 // placeholder would.
 func goodArt(gs *state.GlobalState, good session.Good) image.Image {
 	if good.Art != "" {
-		return artwork(gs, good.Art)
+		return ui.Artwork(gs, good.Art)
 	}
 	switch good.Contains {
 	case session.ContentsStones:
-		return artwork(gs, data.DefaultStoneArt)
+		return ui.Artwork(gs, data.DefaultStoneArt)
 	case session.ContentsRunes:
-		return artwork(gs, data.DefaultRuneArt)
+		return ui.Artwork(gs, data.DefaultRuneArt)
 	default:
-		return artwork(gs, data.DefaultEssenceArt)
+		return ui.Artwork(gs, data.DefaultEssenceArt)
 	}
 }
 

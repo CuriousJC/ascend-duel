@@ -267,6 +267,6 @@ func parseGoodContents(word string) (GoodContents, error) {
 	case "":
 		return 0, fmt.Errorf("no Contains, and a good is what is inside it")
 	default:
-		return 0, fmt.Errorf("Contains %q, which is no catalog this build has", word)
+		return 0, fmt.Errorf("a Contains of %q, which is no catalog this build has", word)
 	}
 }

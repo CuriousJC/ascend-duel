@@ -22,6 +22,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -211,14 +212,14 @@ func splitAt(n int, categoryOf func(int) combat.Category) int {
 
 // playedSplit and enemySplit are splitAt over the two rows' own lists.
 func (s *CombatScene) playedSplit() int {
-	return splitAt(len(s.theater.resolved), func(i int) combat.Category {
-		return s.theater.resolved[i].card.Category()
+	return splitAt(len(s.Theater.resolved), func(i int) combat.Category {
+		return s.Theater.resolved[i].card.Category()
 	})
 }
 
 func (s *CombatScene) enemySplit() int {
-	return splitAt(len(s.theater.enemyDealt), func(i int) combat.Category {
-		return s.theater.enemyDealt[i].card.Category()
+	return splitAt(len(s.Theater.enemyDealt), func(i int) combat.Category {
+		return s.Theater.enemyDealt[i].card.Category()
 	})
 }
 
@@ -262,7 +263,7 @@ func (s *CombatScene) enemyQueueOrder() []combat.Card {
 // drawn straight from `enemyQueueOrder` every frame, which was enough while it only ever
 // appeared fully formed at DUEL!; a row that arrives has to remember how far along each card is.
 type dealtCard struct {
-	travel
+	ui.Travel
 
 	card combat.Card
 }
@@ -280,13 +281,13 @@ func (s *CombatScene) seatEnemyCards() {
 	// whichever card the planner has just put in that seat. It is cleared here rather than in
 	// startRound because this is the line that invalidates it: the row is replaced the moment the
 	// round ends, several seconds before the next DUEL! is pressed.
-	s.theater.breaks = nil
-	s.theater.shatteredSeats = nil
+	s.Theater.breaks = nil
+	s.Theater.shatteredSeats = nil
 
-	s.theater.enemyDealt = make([]dealtCard, 0, len(queue))
+	s.Theater.enemyDealt = make([]dealtCard, 0, len(queue))
 	for i, c := range queue {
-		s.theater.enemyDealt = append(s.theater.enemyDealt, dealtCard{
-			travel: newTravel(i*flightStaggerPer(), riseTicks()),
+		s.Theater.enemyDealt = append(s.Theater.enemyDealt, dealtCard{
+			Travel: ui.NewTravel(i*flightStaggerPer(), riseTicks()),
 			card:   c,
 		})
 	}
@@ -301,14 +302,14 @@ func (s *CombatScene) seatEnemyCards() {
 // already the thing on screen that *is* the opponent, so cards coming out of it read as theirs
 // without a caption.
 func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, total, split int, firing bool) image.Point {
-	from := s.enemyCardRect(gs).Min
+	from := ui.EnemyCardRect(gs).Min
 	to := enemySeatAt(gs, seat, total, split)
 
 	switch {
-	case d.waiting():
+	case d.Waiting():
 		return from
-	case !d.done():
-		return lerpPoint(from, to, easeOut(d.progress()))
+	case !d.Done():
+		return ui.LerpPoint(from, to, ui.EaseOut(d.Progress()))
 	}
 
 	// The lift only after landing, exactly as the player's row does it — a card still arriving
@@ -337,8 +338,8 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, tota
 // rather than a placeholder.
 func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
 	split := s.enemySplit()
-	for i, d := range s.theater.enemyDealt {
-		at := s.enemyCardAt(gs, d, i, len(s.theater.enemyDealt), split, lit(s.theater.enemyFiringSeats, i))
+	for i, d := range s.Theater.enemyDealt {
+		at := s.enemyCardAt(gs, d, i, len(s.Theater.enemyDealt), split, lit(s.Theater.enemyFiringSeats, i))
 		// **The opponent's own cost, not the player's** — a discount relic is the player's and a
 		// queued enemy card printing a discounted price would be the screen telling a lie about
 		// whose relic it is.
@@ -349,11 +350,11 @@ func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image
 		// puts it there.
 		// **The two marks compose.** A broken card the tutorial is pointing at is both, and
 		// cards.drawMark owns the order they are painted in so one pair of facts draws one way.
-		mark := marksFor(gs, image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight))
+		mark := ui.MarksFor(gs, image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight))
 		if s.shattered(i) {
 			mark |= cards.MarkShattered
 		}
-		drawMarkedCard(gs, screen, at, cards.Hand, d.card, heldBy(s.enemy.Duelist, d.card),
+		ui.DrawMarkedCard(gs, screen, at, cards.Hand, d.card, ui.HeldBy(s.enemy.Duelist, d.card),
 			true, false, mark)
 	}
 }

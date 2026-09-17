@@ -20,6 +20,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -32,7 +33,7 @@ import (
 func shopkeeperLines() []proseLine {
 	return []proseLine{
 		{spans: []proseSpan{{text: "A hooded creature appears from the shadow and you see the glint of gold in his hands."}}},
-		{spans: []proseSpan{{text: `"Vitae for jewelry, duelist?"`, ink: boostInk}, {text: " it rasps."}}},
+		{spans: []proseSpan{{text: `"Vitae for jewelry, duelist?"`, ink: ui.BoostInk}, {text: " it rasps."}}},
 	}
 }
 

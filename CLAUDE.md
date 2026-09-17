@@ -85,6 +85,7 @@ skill that does not exist.
 | [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
 | [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
 | [`bug-hunter`](.claude/skills/bug-hunter/SKILL.md) | any bug the owner found while playing — before diagnosing it, before fixing it, and before authoring a scenario record to reproduce it |
+| [`audit`](.claude/skills/audit/SKILL.md) | the milestone pass — the owner asking for an audit, a refactor sweep or a health check — and before any refactor that crosses more than one package |
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
 went wrong once and should not have to be rediscovered.
@@ -267,18 +268,13 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
   all, because every creature is a solo attacker (`SoloAttacks`, one blow per card) while the
   player forms hands and lands one figure a turn. A count facing a hand would delete a whole turn.
   `combat.blockedByShield` carries the note; the rules do not enforce it.
-- **The percentage guard is gone** *(owner's call, 2026-09-16)*. `VerbDefend`, `maxDefendPct`,
-  `reductionFor`, `applyDefends`, `Duelist.Defends` and `KindNegated` were all deleted, along with
-  the **209 guard cards** in `enemies.json` and `bosses.json` — which were removed rather than
-  converted, exactly as the bank cards were. **Creature decks are smaller and pure attack**: the
-  roster averages 8.0 cards where it averaged 9.6 and the bosses 12.0 where they averaged 14.0, so
-  the same attacks come round more often. That is a balance change and nothing simulates a duel, so
-  it is the kind that has to be looked at rather than tested.
-- **`VerbBank` and `VerbDraw` are both gone** *(owner's call)*, and `VerbDefend` went on
-  2026-09-16. The verb vocabulary is **attack / shield**. The creature bank cards were **deleted** from `enemies.json` rather
-  than converted, so those decks are pure attack now and are modestly stronger for it;
-  `GatheredAP`, `BonusAP`, `KindGathered` and the whole AP-flight animation went with them, and
-  **`Duelist.ActionPoints()` is the stat and nothing else**.
+- **The verb vocabulary is two words: attack and shield.** Banking, drawing and the percentage
+  guard were each tried and each cut, and what they left behind is the shape of everything else
+  here — **`Duelist.ActionPoints()` is the whole of a turn's budget** with nothing that adds to it
+  mid-round, and **every creature deck is pure attack**, which is why a creature's whole
+  personality is which blows come round how often. `go run ./tools/enemysheet` is where a deck's
+  size is read; no figure for it is written down here, because it moves whenever a creature is
+  retuned and nothing fails when it does.
 - **One card raises at most five shields; a duelist holds as many as the turn paid for**
   *(owner's call, 2026-09-09)*. The five is `combat.MaxShields` = `MaxActions`, refused at
   `RegisterConcept` and clamped in `Card.Amount`. **`Duelist.raiseShields` clamped the total to the
@@ -450,7 +446,10 @@ that way.
 
 ## Releasing — `.github/workflows`
 
-**CI** runs on every PR, on **Windows and Linux**, under all three build-tag configurations.
+**CI** runs on every PR, on **Windows and Linux**, and vets and builds under **every build tag** —
+untagged, `debugtrace`, `idleexit`, `demoplay` and `scenario`. The last two were added on
+2026-09-17: each selects a file the untagged build never compiles, so a break in either was green
+in CI and found by hand.
 **Release** has two entrances and both produce the same release. Pushing a `v*` tag still
 fires it, so *tagging is releasing*:
 
@@ -580,9 +579,10 @@ skill says what the first one cost.
 Its layout, its card and action-box widget, its hidden information, and the resolution-order
 rule the screen has to obey all live in
 [.claude/skills/combat-screen/SKILL.md](.claude/skills/combat-screen/SKILL.md). **Load it
-before touching any of the combat screen's files — `internal/screens/combat.go`,
-`combat_deck.go`, `combat_hud.go`, `combat_actionbox.go` — or
-`internal/combat`, or anything about how a round is drawn or played back.**
+before touching any of the combat screen's files — `internal/screens/combat*.go` — or
+`internal/ui`, or `internal/combat`, or anything about how a round is drawn or played back.**
+**A symbol the skill names may now be in `internal/ui`** rather than `internal/screens`: the
+drawing layer split off on 2026-09-17, and a grep over both is the way to find one.
 
 It is a skill because it is the screen under active construction: it grows every session
 while mattering only when that screen is the work. The general UI conventions below still
@@ -604,7 +604,7 @@ included. The entire input vocabulary is:
 - **Drag and drop** — the action box, and anything else that needs ordering or moving.
 - **Hover** — rest the cursor on something and a tooltip explains it *(2026-08-21)*. A card's
   damage arithmetic term by term, a relic's rule, a status badge's meaning. `models.Tooltip` and
-  `systems.DrawTooltip` are the widget; the wording is `internal/screens/tips.go`.
+  `systems.DrawTooltip` are the widget; the wording is `internal/ui/tips.go`.
 - **Long press** — the same reveal, for a touchscreen or a controller, where there is no cursor to
   rest. **Not built**, and it is the only reason hover did not simply replace it: see MECHANICS.md
   §Hover and long press, where the record of hover being *rejected* was reversed.
@@ -665,7 +665,8 @@ nothing fails on. `session.RunSummary` is plain ints and strings so the screen n
 
 **The run code is on that splash and in the settings screen's bottom-right corner.** It went to the
 log at launch and nowhere a player could see, which made a six-character code that exists to be
-transcribed unreachable. `drawRunCode` draws nothing with no run standing.
+transcribed unreachable. `screens.abandonLabel` is what puts it on the settings screen, and it
+names no code with no run standing.
 
 ### Four screens that are not stations of a run
 
@@ -693,7 +694,7 @@ that has ended and there is nowhere to put the player back to.
 
 ### The third dialog shape: a question, not a view
 
-`internal/screens/confirm.go`. The first two shapes are the near-full-screen `modalToggle` panel and
+`internal/ui/confirm.go`. The first two shapes are the near-full-screen `modalToggle` panel and
 the tutorial's bubble; this is a small centered box with two answers, and it is deliberate rather
 than a drift.
 
@@ -788,7 +789,7 @@ Five things follow:
 
 **A card that becomes a different card dissolves into it** *(owner's call, 2026-09-08)*. Same
 argument as the flight one axis over: a card that changes between two frames has to be *re-read* to
-find out what happened, instead of having been watched happening. `internal/screens/cardmorph.go` is
+find out what happened, instead of having been watched happening. `internal/ui/cardmorph.go` is
 the machinery and `internal/cards/dissolve.go` is the pattern the face comes apart in.
 
 - **A morph is two finished faces and a clock**, and it knows nothing about where it is on screen —
@@ -899,8 +900,8 @@ the page it is all reviewed on.
   detail loses it to the card's curve where a plain silhouette would survive the crop; under it
   the cost dashes
   make a **26px column**; and **the effect text takes everything right of that**, centered in it
-  both ways, at 18pt. `blitGlyph` still clips to the rounded shape, which is what a future glyph
-  will want back.
+  both ways, at 18pt. `blitGlyph` clips whatever it composites to the rounded shape, which is what
+  keeps a mark placed hard into a corner from squaring the card off.
 - **There is no damage badge at all.** The 64px generated sword went first — it said what the
   corner mark already says — and then the bare figure, because the text states what the card
   deals and a number beside it was the same fact multiplied out by the wielder's Strength.
@@ -1049,19 +1050,11 @@ control at all.
 - **Square and iconic because the corner is 52 pixels wide** on the combat screen — the hand
   band starts at x=52 and the action-point figure sits on its left edge, so a labeled
   button does not fit beside them.
-- **`GlyphSound`, `GlyphMuted` and `GlyphGear` are the only glyphs that are not about a card**,
-  at a third size, 32px. They are generated for the same reason everything else is — no
-  provenance question. **`GlyphGear` is what the corner draws now**; the two speakers are kept
-  because they are still on the contact sheet and are the obvious art for a volume readout, and
-  because an asset key costs nothing to leave in place.
-- **The cog has eight teeth: four on the axes, four on the diagonals** *(owner's call,
-  2026-08-27)*. Four was tried first and read as a compass rose — at this size a gear is
-  recognized by the *count* of the teeth before any one of them is legible. Each is six pixels,
-  which is the floor rather than a choice: the rim is derived one pixel thick, so anything under
-  about five renders as two rows of outline around one row of metal. The four diagonal teeth are
-  squares standing off the body's shoulders rather than wedges, because a wedge tapers and the
-  taper is the part that falls under the floor. The 8x8 hole is what makes it a cog rather than a
-  flower, and it leaves a seven-pixel rim.
+- **The cog is `assets/game/gear.png`, and it has eight teeth: four on the axes, four on the
+  diagonals** *(owner's call, 2026-08-27)*. Four was tried first and read as a compass rose — at
+  32 pixels a gear is recognized by the *count* of its teeth before any one of them is legible,
+  and the hole in the middle is what makes it a cog rather than a flower. That is a constraint on
+  any replacement drawing, not a description of how this one was made.
 
 ### Cards: the left column carries the element, the border carries state
 
@@ -1304,8 +1297,8 @@ catalog's, to a tenth of a percent, because a scarce tier rounds to `0%` and wou
 unreachable.
 
 **Every word naming an element is written in that element's color** *(owner's call, 2026-09-08)*.
-`cards.ElementRuns` is the one vocabulary — the five element names plus each status's `Name` and
-`Verb`, read off `statuses.json`, longest first — and `cards.SplitRuns` is the one cut, matching
+`cards.ElementSpans` is the one vocabulary — the five element names plus each status's `Name` and
+`Verb`, read off `statuses.json`, longest first — and `cards.SplitSpans` is the one cut, matching
 whole words only and ignoring case so a relic writing `Fire` and an essence writing `FIRE` share an
 entry. Four things to know before touching it:
 
@@ -1327,7 +1320,7 @@ entry. Four things to know before touching it:
   colored, because it cannot see `internal/cards` at all.
 - **The fight log colors through the ledger's *named* inks**, not through a stored color. A line is
   written once and read back three fights later, so a color baked into it would be the color the
-  build that wrote it happened to use — see `session.LedgerRun.Ink` and `screens.elementInkNames`.
+  build that wrote it happened to use — see `session.LedgerSpan.Ink` and `screens.elementInkNames`.
 
 **Hue belongs to the elements, and the wheel is full** *(owner's call, 2026-09-02)*. Fire, ice,
 lightning, earth and arcane take five hues; pink is a relic and a pane's chrome; red and blue are the
@@ -1352,9 +1345,9 @@ the lit top edge it has whatever state it is in is surface.
 
 **`systems.BevelEdges` derives both edges from the fill itself** — `ColorToward` toward white for
 the light, because a saturated color has nowhere to climb by scaling, and `ColorAtStrength` for
-the shade. So a widget still names one color. The six-value `systems.Palette` stays where it is
-genuinely needed: a *glyph's* light has to be drawn, because a silhouette has no fill to compute
-it from.
+the shade. So a widget still names one color, everywhere, with no palette anywhere: the one thing
+that ever needed a six-value one was a generated silhouette, whose light had to be drawn because
+it had no fill to compute light from, and there are no generated silhouettes left.
 
 - **`BevelFace` for a control, `BevelRect` for anything else**, and the depth differs on purpose:
   `BevelWidth` is 3 for a button, `PaneBevelWidth` is 2 for a panel, which is the largest surface
@@ -1850,9 +1843,10 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `systems` | assets, models, state |
 | `cards` | systems |
 | `actions` | state |
-| `screens` | all of the above, plus `scenario` |
-| `game` | screens, state, systems, models, music, idle, trace |
-| `main` | game, session, assets, data, music |
+| `ui` | data, achieve, carddesc, cards, combat, decks, entities, models, pyramid, session, state, systems |
+| `screens` | all of the above, plus `ui` and `scenario` |
+| `game` | screens, ui, state, systems, models, music, idle, trace |
+| `main` | game, session, assets, data, music, scenario |
 
 Six facts about it that are load-bearing:
 
@@ -1886,6 +1880,19 @@ Six facts about it that are load-bearing:
 - **`cards` importing `systems` is the edge that surprises people.** A card draws generated
   glyphs, so the renderer needs the generator. Neither creates an `*ebiten.Image`, which is the
   property that actually matters — it is what lets `tools/cardsheet` render with no window.
+- **`internal/ui` is the drawing layer and it knows about no screen at all** *(2026-09-17)*. It
+  came out of `internal/screens`, which was two thirds of the Go in the repo in one package: what
+  moved is everything a scene draws *through* — the table, the clock, the movers, the card faces,
+  the panels belonging to no screen, the prose — and what stayed is the scenes. **The arrow only
+  points one way, and that is checkable rather than a habit**: `.claude/skills/audit/tools/pkgsplit.go`
+  reports every unexported name that would have to cross a proposed line in either direction, and a
+  *back edge* — a shared file reaching into one screen — is the finding. There are none today.
+  - **Sizes are the frame's, placement is often the screen's.** A control's measurements live in
+    `ui/frame.go`; `ControlColumnSlot`, which counts up from the action-point bar, stayed on the
+    combat screen. That is the line to reason against when deciding where something new goes.
+  - **It still links Ebitengine**, so the split buys readability and a boundary, **not** a
+    display-free test run. The packages that can be tested without one are still `internal/combat`,
+    `internal/session` and the rest below them.
 - **Nothing above `screens` knows a scene exists except `game`**, which holds the registry. That
   is what makes adding a screen a local change.
 
@@ -1896,7 +1903,7 @@ to `ebiten.RunGame`. It does **not** wire up widgets — scenes build their own,
 belonging to no scene is built by `game` itself.
 
 `internal/game` then drives `Update` / `Draw` / `Layout` at a fixed 1920x1080 internal resolution,
-picking the active scene out of one registry. `internal/screens/scene.go` is the `Scene` contract;
+picking the active scene out of one registry. `internal/ui/scene.go` is the `Scene` contract;
 `Init` may run more than once, because a screen can be re-entered.
 
 ### The run loop, in play
@@ -2009,11 +2016,10 @@ cost tens of megabytes of resident memory for pictures most runs never show.
 
 **`assets/effect/` is the status badges**, drawn as a centered row along the bottom of the enemy
 card by `internal/cards` — so they go through `LoadImageData` as bytes, exactly like the relic art
-and for the same reason. `effectKeys` in `internal/screens/card_art.go` maps an element to its
-badge; `default-effect.png` is the fallback, and `TestEveryStatusElementHasABadge` fails rather
-than letting a shipped element quietly draw it. **The table is keyed by element and not read off
-a relic**, because a badge belongs to the status: a status arriving by an affix or a boss rule has
-to draw the same picture.
+and for the same reason. `screens.statusBadges` is the lookup and **it is read off each record's own
+`Badge` in `statuses.json`** rather than keyed by element — because a badge belongs to the
+*status*, so a status arriving by an affix or a boss rule draws the same picture whatever brought
+it. `default-effect.png` is the fallback.
 
 **Nothing in the game draws a loose sprite.** There are no creature sprites in `assets/`;
 `Combatant` has no `Sprite` field and `entities` imports no Ebitengine at all. **Both duelists

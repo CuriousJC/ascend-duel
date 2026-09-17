@@ -8,7 +8,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 	"sort"
 )
 
@@ -137,16 +136,7 @@ func (e EnemyData) AllowsFloor(floor int) bool {
 
 // LoadEnemies parses the embedded roster into a map keyed by EnemyRecord.
 func LoadEnemies() map[string]EnemyData {
-	var list []EnemyData
-	if err := json.Unmarshal(enemiesJSON, &list); err != nil {
-		panic("Failed to unmarshal our EnemyData: " + err.Error())
-	}
-
-	out := make(map[string]EnemyData, len(list))
-	for _, e := range list {
-		out[e.EnemyRecord] = e
-	}
-	return out
+	return keyed(enemiesJSON, "enemies.json", func(e EnemyData) string { return e.EnemyRecord })
 }
 
 // EnemyOrder is every record, sorted shallowest floor first and by name inside a floor.

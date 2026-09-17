@@ -12,7 +12,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 	"sort"
 )
 
@@ -125,16 +124,7 @@ func (b BossData) Enemy() EnemyData {
 
 // LoadBosses parses the embedded list into a map keyed by BossRecord.
 func LoadBosses() map[string]BossData {
-	var list []BossData
-	if err := json.Unmarshal(bossesJSON, &list); err != nil {
-		panic("Failed to unmarshal our BossData: " + err.Error())
-	}
-
-	out := make(map[string]BossData, len(list))
-	for _, b := range list {
-		out[b.BossRecord] = b
-	}
-	return out
+	return keyed(bossesJSON, "bosses.json", func(b BossData) string { return b.BossRecord })
 }
 
 // BossOrder is every record, sorted lowest floor first and by name inside a floor.

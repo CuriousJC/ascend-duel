@@ -174,7 +174,7 @@ off by default**, because a pinned game is not the game.
 | `fixedRunSeed` (`main.go`) | 0 — rolled from the clock | the whole run: enemies, shocks, both shuffles |
 | `deckSeedName` / `deckSeed` (`combat_deck.go`) | `""` — unpinned | the player's hand *and* the opponent's, together |
 | `seeds.EnemyDeckPin` | only while `deckSeed` pins the player's hand | the opponent's shuffle |
-| `oddsSeed` (`tools/handodds`) | always | which hands the rarity sample deals |
+| `hands.Seed` (`tools/hands`) | always | which hands the reachability sample deals, for both `handodds` and `handsheet` |
 
 **`deckSeed` pins both sides or neither.** Half a reproducible duel is worse than none: the
 hand looks right and the fight still differs. When it is non-zero the opponent's pile falls
@@ -240,7 +240,7 @@ before it landed and both are now paid:
   infinite deterministic list, and the planned endless tower gives no worst case to size an
   array against. A reroll simply advances the cursor.
 - **Never let map iteration order affect an outcome.** Go deliberately randomizes it.
-  `gs.Combatants` is a map, and so is the enemy roster — iterate a sorted key slice
+  the enemy roster is a map, and so is every catalog in `data/` — iterate a sorted key slice
   (`data.EnemyOrder`, `data.RelicOrder`) whenever a choice depends on order.
 - **No `time.Now()` in game rules.** Wall-clock decisions cannot be replayed. Tick counters are
   fine; they are part of the simulation. The one exception is choosing the run seed, above.

@@ -24,6 +24,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -106,7 +107,7 @@ const (
 // background" is a color that silently stops being that the moment the background moves — which
 // is exactly what the ground going blue would have done to it. Nine percent is what the tan
 // actually was, kept so the pane reads as it always did.
-var relicPaneBackColor = systems.ColorAtStrength(screenGround, 91)
+var relicPaneBackColor = systems.ColorAtStrength(ui.ScreenGround, 91)
 
 // relicPaneRect is the row's extent: the cards' own band, running between the two corner cards
 // and dropped relicPaneTopDrop below them.
@@ -144,7 +145,7 @@ func (s *CombatScene) consumablePaneRect(gs *state.GlobalState) image.Rectangle 
 // what let the card grow to its present height — see Hand in internal/cards/style.go.
 func (s *CombatScene) topRowPanes(gs *state.GlobalState) (relics, consumables image.Rectangle) {
 	left, right := relicRowSpan(gs)
-	return topRowPanes(left, right, duelistCardRect(gs).Min.Y+relicPaneTopDrop)
+	return topRowPanes(left, right, ui.DuelistCardRect(gs).Min.Y+relicPaneTopDrop)
 }
 
 // relicRowSpan is the horizontal extent of the relic row: where it starts after the duelist card
@@ -160,7 +161,7 @@ func (s *CombatScene) topRowPanes(gs *state.GlobalState) (relics, consumables im
 // and the room stood in a 166-pixel column here for a day; they are back under the card, and the
 // row — and therefore the hand — got the width back. See towerPlaceRect.
 func relicRowSpan(gs *state.GlobalState) (left, right int) {
-	return duelistCardRect(gs).Max.X + relicPaneGap, enemyCardRect(gs).Min.X - relicPaneGap
+	return ui.DuelistCardRect(gs).Max.X + relicPaneGap, ui.EnemyCardRect(gs).Min.X - relicPaneGap
 }
 
 // relicPaneBackRect is the surface drawn behind the row: the row padded on every side, and
@@ -189,7 +190,7 @@ func relicPaneBackOf(row image.Rectangle) image.Rectangle {
 // drawRelicPane, which is where the argument for all three is written down.
 func drawRelicPaneBack(screen *ebiten.Image, row image.Rectangle) {
 	back := relicPaneBackOf(row)
-	vector.DrawFilledRect(screen,
+	vector.FillRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
 		relicPaneBackColor, false)
 }
@@ -205,7 +206,7 @@ func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, row image.Rectan
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(back.Max.X), float64(top))
 	op.PrimaryAlign = text.AlignEnd
-	op.ColorScale.ScaleWithColor(groundInk)
+	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 
@@ -310,7 +311,7 @@ func wornRelics(gs *state.GlobalState) []data.RelicData {
 // Session.MoveRelic.
 //
 // **Nothing is lifted out of anything.** The run is the authority on what is worn and it is not
-// touched until the drop, so `rowLift` does nothing at all and the drawing skips the seat the drag
+// touched until the drop, so `RowLift` does nothing at all and the drawing skips the seat the drag
 // says is empty. The hand's row does remove its card, because there the list *is* the hand — see
 // handRow, and dragRow for why the two are allowed to differ.
 //
@@ -323,26 +324,26 @@ type relicRow struct {
 	move  func(from, to int)
 }
 
-func (r relicRow) rowLen() int { return r.worn }
+func (r relicRow) RowLen() int { return r.worn }
 
-func (r relicRow) rowSlot(gs *state.GlobalState, i int) image.Rectangle {
+func (r relicRow) RowSlot(gs *state.GlobalState, i int) image.Rectangle {
 	at := relicSlotAt(r.rect, i, r.worn)
 	return image.Rect(at.X, at.Y, at.X+cards.RelicStyle.Width, at.Y+cards.RelicStyle.Height)
 }
 
-// rowZone is the row's own rectangle. **Tighter than the hand's band**, deliberately: the hand
+// RowZone is the row's own rectangle. **Tighter than the hand's band**, deliberately: the hand
 // stands alone at the bottom of the screen with nothing beside it, where this row has a duelist
 // card at one end and an enemy card or a margin at the other. A zone spanning the width would make
 // a drop on the duelist card a reorder.
-func (r relicRow) rowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
+func (r relicRow) RowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
 
-// rowDropIndex is which seat the cursor is over, measured in pitches from the row's left edge and
+// RowDropIndex is which seat the cursor is over, measured in pitches from the row's left edge and
 // from the middle of a step rather than its edge — the hand's arithmetic, over the relic row's
 // pitch, because once five relics are worn these overlap too.
 //
 // **Clamped to a seat that exists**, unlike the hand's, which may land one past the end: nothing is
 // being inserted here. Five relics reordered are still five relics.
-func (r relicRow) rowDropIndex(gs *state.GlobalState) int {
+func (r relicRow) RowDropIndex(gs *state.GlobalState) int {
 	if r.worn < 2 {
 		return 0
 	}
@@ -358,16 +359,16 @@ func (r relicRow) rowDropIndex(gs *state.GlobalState) int {
 	return idx
 }
 
-// rowLift is deliberately empty. See the type comment.
-func (r relicRow) rowLift(int) {}
+// RowLift is deliberately empty. See the type comment.
+func (r relicRow) RowLift(int) {}
 
-func (r relicRow) rowReturn(from, to int) {
+func (r relicRow) RowReturn(from, to int) {
 	if r.move != nil {
 		r.move(from, to)
 	}
 }
 
-func (r relicRow) rowClick(i int) {
+func (r relicRow) RowClick(i int) {
 	if r.click != nil {
 		r.click(i)
 	}
@@ -385,21 +386,21 @@ func moveWornRelic(gs *state.GlobalState, from, to int) bool {
 // drawDraggedRelic draws the relic riding the cursor, over everything else on the row.
 //
 // **It is drawn from the run rather than from anything the drag is carrying**, which is what the
-// empty rowLift buys: there is only ever one copy of what is worn, so a card in flight cannot
+// empty RowLift buys: there is only ever one copy of what is worn, so a card in flight cannot
 // disagree with the row it came out of.
-func drawDraggedRelic(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag,
+func drawDraggedRelic(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardDrag,
 	counters map[string]string) {
 
-	if !drag.dragging() {
+	if !drag.Dragging() {
 		return
 	}
 	worn := wornRelics(gs)
-	if drag.origin() >= len(worn) {
+	if drag.Origin() >= len(worn) {
 		return
 	}
 
-	record := worn[drag.origin()]
-	drawRelicCard(gs, screen, drag.at(gs), record, counters[record.RelicRecord], true, true)
+	record := worn[drag.Origin()]
+	ui.DrawRelicCard(gs, screen, drag.At(gs), record, counters[record.RelicRecord], true, true)
 }
 
 // relicCounter is one worn relic's accumulator, formatted for the badge in the corner of its card.
@@ -456,7 +457,7 @@ func runCounters(gs *state.GlobalState) map[string]string {
 // dialog it falls back to the duelist, which is every frame outside a blow.
 func (s *CombatScene) countersNow() map[string]string {
 	worn := s.fighter.Duelist.WornRelics()
-	if grown, ok := s.theater.mathBox.growthNow(combat.SideA); ok {
+	if grown, ok := s.Theater.mathBox.growthNow(combat.SideA); ok {
 		worn = withGrown(worn, grown)
 	}
 	return relicCounters(worn)
@@ -500,7 +501,7 @@ var (
 // relicShakeTicks is how long one shake lasts. **Under a term's own flight**, because the figures
 // arrive one after another and a shake still running when the next one starts would smear the
 // beats together.
-func relicShakeTicks() int { return beat(3, 5) }
+func relicShakeTicks() int { return ui.Beat(3, 5) }
 
 // relicToastTilt is how far a toasting relic turns at the peak, in radians — about six degrees.
 //
@@ -516,11 +517,11 @@ func relicShakeTicks() int { return beat(3, 5) }
 const relicToastTilt = 0.105
 
 // relicToastAngle is how far a relic is turned this frame.
-func relicToastAngle(t travel) float64 {
-	if t.done() || t.waiting() {
+func relicToastAngle(t ui.Travel) float64 {
+	if t.Done() || t.Waiting() {
 		return 0
 	}
-	p := t.progress()
+	p := t.Progress()
 	return math.Sin(p*math.Pi*2) * (1 - p) * relicToastTilt
 }
 
@@ -541,12 +542,12 @@ type relicToast struct {
 // sumToast is a relic firing into a blow's arithmetic, and dealToast one firing as a hand is dealt.
 // **The shift differs and nothing else does**: the deal's rattle is tighter and wider because a
 // whole row goes at once — see combat_deal.go — and the tilt and the light are the relic's own.
-func sumToast(t travel) relicToast {
-	return relicToast{shift: shakeOffset(t), angle: relicToastAngle(t), lit: !t.done()}
+func sumToast(t ui.Travel) relicToast {
+	return relicToast{shift: shakeOffset(t), angle: relicToastAngle(t), lit: !t.Done()}
 }
 
-func dealToast(t travel) relicToast {
-	return relicToast{shift: dealShakeOffset(t), angle: relicToastAngle(t), lit: !t.done()}
+func dealToast(t ui.Travel) relicToast {
+	return relicToast{shift: dealShakeOffset(t), angle: relicToastAngle(t), lit: !t.Done()}
 }
 
 // geoAt is the transform a toasting relic is drawn under: shifted sideways, turned about its own
@@ -570,20 +571,20 @@ func (r relicToast) geoAt(at image.Point) ebiten.GeoM {
 // **A decaying sine rather than an ease**, because the card has to come back to where it was and be
 // still when it gets there. Every other movement in the game is a journey from one seat to another
 // and eases into its destination; this one has no destination.
-func shakeOffset(t travel) int {
-	if t.done() {
+func shakeOffset(t ui.Travel) int {
+	if t.Done() {
 		return 0
 	}
-	p := t.progress()
+	p := t.Progress()
 	return int(math.Sin(p*math.Pi*2*relicShakeSwings) * (1 - p) * float64(relicShakeWidth))
 }
 
 // shakeFor is seat i's rattle, and **zero for a seat no shake has reached** — the row is grown on
 // demand by shakeRelicAt, so a duelist wearing more relics than anything has shaken yet reads a
 // still card rather than indexing off the end. It is the accessor the drawing goes through.
-func (s *CombatScene) shakeFor(i int) travel {
+func (s *CombatScene) shakeFor(i int) ui.Travel {
 	if i < 0 || i >= len(s.relicShake) {
-		return travel{}
+		return ui.Travel{}
 	}
 	return s.relicShake[i]
 }
@@ -594,9 +595,9 @@ func (s *CombatScene) shakeRelicAt(i int) {
 		return
 	}
 	for len(s.relicShake) <= i {
-		s.relicShake = append(s.relicShake, travel{})
+		s.relicShake = append(s.relicShake, ui.Travel{})
 	}
-	s.relicShake[i] = newTravel(0, relicShakeTicks())
+	s.relicShake[i] = ui.NewTravel(0, relicShakeTicks())
 }
 
 // tickShakes starts a shake on whatever the sum has just reached, and advances the ones already
@@ -609,19 +610,19 @@ func (s *CombatScene) shakeRelicAt(i int) {
 // **It may not change an outcome**, like every other thing on this screen that moves.
 func (s *CombatScene) tickShakes(gs *state.GlobalState) {
 	for i := range s.relicShake {
-		s.relicShake[i].tick()
+		s.relicShake[i].Tick()
 	}
 	for i := range s.cardShake {
-		s.cardShake[i].tick()
+		s.cardShake[i].Tick()
 	}
 
-	at := s.theater.mathBox.at
+	at := s.Theater.mathBox.at
 	if at == s.shakeItem {
 		return
 	}
 	s.shakeItem = at
 
-	relics, card, ok := s.theater.mathBox.shaking(combat.SideA)
+	relics, card, ok := s.Theater.mathBox.shaking(combat.SideA)
 	if !ok {
 		return
 	}
@@ -650,9 +651,9 @@ func (s *CombatScene) shakePlayedCard(seat int) {
 		return
 	}
 	for len(s.cardShake) <= seat {
-		s.cardShake = append(s.cardShake, travel{})
+		s.cardShake = append(s.cardShake, ui.Travel{})
 	}
-	s.cardShake[seat] = newTravel(0, relicShakeTicks())
+	s.cardShake[seat] = ui.NewTravel(0, relicShakeTicks())
 }
 
 // playedCardShake is how far sideways the played card in one seat sits this frame.
@@ -702,7 +703,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 	// screen is three depths in one corner, and the cards are the thing meant to be read. The two
 	// panels that keep their bevel are overlays — they cover the game, so a lit edge is what says
 	// they are in front of it. This backing covers nothing.
-	vector.DrawFilledRect(screen,
+	vector.FillRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
 		relicPaneBackColor, false)
 
@@ -712,7 +713,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 	// **The card under the cursor is drawn last, so it is drawn whole** — see raisedSeat, which is
 	// the same reading the hand and the sack take. A full row of relics overlaps, and past a
 	// handful each is a sliver of the one in front of it.
-	raised := raisedSeat(gs, s.relicRow(gs), s.tip.Showing())
+	raised := ui.RaisedSeat(gs, s.relicRow(gs), s.tip.Showing())
 	for i, relic := range worn {
 		if i == raised {
 			continue
@@ -720,7 +721,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		// **The seat a dragged relic left is drawn empty rather than closed up**, which is the
 		// hand's rule too: the row keeps its width and its pitch while a card is up, so nothing
 		// slides sideways under the cursor mid-drag.
-		if s.relicDrag.dragging() && i == s.relicDrag.origin() {
+		if s.relicDrag.Dragging() && i == s.relicDrag.Origin() {
 			continue
 		}
 
@@ -742,11 +743,11 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		// other card on this screen is under: a turn puts the card off the pixel grid, and that is
 		// the one time a card is filtered.
 		if !toast.lit {
-			drawRelicCard(gs, screen, at, relic, counters[relic.RelicRecord], true, false)
+			ui.DrawRelicCard(gs, screen, at, relic, counters[relic.RelicRecord], true, false)
 			continue
 		}
-		drawFlyingCard(gs, screen,
-			relicSpec(gs, relic, counters[relic.RelicRecord], true, true),
+		ui.DrawFlyingCard(gs, screen,
+			ui.RelicSpec(gs, relic, counters[relic.RelicRecord], true, true),
 			cards.RelicStyle, toast.geoAt(at))
 	}
 
@@ -758,9 +759,9 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 
 	// **The raised card, over the row it stands in** — after the row and before the dragged card,
 	// which still outranks everything.
-	if raised >= 0 && raised < len(worn) && !(s.relicDrag.dragging() && raised == s.relicDrag.origin()) {
+	if raised >= 0 && raised < len(worn) && !(s.relicDrag.Dragging() && raised == s.relicDrag.Origin()) {
 		relic := worn[raised]
-		drawRelicCard(gs, screen, relicSlotAt(r, raised, len(worn)), relic,
+		ui.DrawRelicCard(gs, screen, relicSlotAt(r, raised, len(worn)), relic,
 			counters[relic.RelicRecord], true, false)
 	}
 
@@ -809,7 +810,7 @@ func (s *CombatScene) drawRelicCount(gs *state.GlobalState, screen *ebiten.Image
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(r.Max.X), float64(r.Min.Y))
 	op.PrimaryAlign = text.AlignEnd
-	op.ColorScale.ScaleWithColor(groundInk)
+	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, fmt.Sprintf("%d/%d", worn, relicSlots(gs)),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
@@ -829,11 +830,11 @@ func (s *CombatScene) updateRelicRow(gs *state.GlobalState) {
 	// A modal covering the screen, or a tutorial step holding input elsewhere, takes the row with
 	// it — canceling rather than returning, for the reason the action box cancels.
 	if s.modalUp() || !gs.CursorAllowed() {
-		s.relicDrag.cancel(row)
+		s.relicDrag.Cancel(row)
 		return
 	}
 
-	s.relicDrag.update(gs, row)
+	s.relicDrag.Update(gs, row)
 }
 
 // relicRow is this screen's worn row, addressed by the shared drag.

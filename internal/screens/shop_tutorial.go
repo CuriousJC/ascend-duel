@@ -98,5 +98,5 @@ func rowUnion(n int, slot func(i int) image.Rectangle) ([]image.Rectangle, bool)
 // tutorialCovered is whether the deck panel or the hands ladder is over the screen. See the
 // combat screen's, and tutorial.go for what it is for.
 func (s *ShopScene) tutorialCovered(*state.GlobalState) bool {
-	return s.deck.open || s.hands.open
+	return s.deck.IsOpen() || s.hands.IsOpen()
 }

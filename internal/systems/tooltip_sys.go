@@ -30,8 +30,6 @@ const (
 	// to the edge of the screen.
 	tipGap  = 14
 	tipEdge = 8
-
-	tipCorner = 6
 )
 
 // The panel is dark on a light table, which is the one contrast the game has left: every card, pane
@@ -82,7 +80,7 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 	w, h := tipSize(t, face, titleFace)
 	at := tipPlace(gs, t.Anchor, w, h)
 
-	vector.DrawFilledRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), tipSurface, false)
+	vector.FillRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), tipSurface, false)
 	vector.StrokeRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), 1, tipEdgeInk, false)
 
 	y := at.Y + tipPad

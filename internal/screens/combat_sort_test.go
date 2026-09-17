@@ -5,6 +5,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The hand's arrangement, which is checkable without a window for the same reason the deck
@@ -15,18 +16,18 @@ import (
 // that the column of buttons stands clear of the cards it arranges.
 
 // sortHandOf arranges a bare hand, which is all sortHand touches.
-func sortHandOf(mode handSort, cards ...actionCard) []paletteCard {
+func sortHandOf(mode ui.HandSort, cards ...combat.Card) []paletteCard {
 	hand := make([]paletteCard, 0, len(cards))
 	for _, c := range cards {
-		hand = append(hand, paletteCard{actionCard: c})
+		hand = append(hand, paletteCard{Card: c})
 	}
 	s := &CombatScene{hand: hand, sortMode: mode}
 	s.sortHand()
 	return s.hand
 }
 
-func card(a combat.ConceptID, e combat.Element) actionCard {
-	return actionCard{Concept: a, Element: e}
+func card(a combat.ConceptID, e combat.Element) combat.Card {
+	return combat.Card{Concept: a, Element: e}
 }
 
 func TestCostIsTheDefaultSort(t *testing.T) {
@@ -34,13 +35,13 @@ func TestCostIsTheDefaultSort(t *testing.T) {
 	// owner asked to be the default. A named constant that happened to be second in the enum
 	// would make an unsorted-looking hand the out-of-the-box state.
 	var s CombatScene
-	if s.sortMode != sortByCost {
-		t.Errorf("a fresh scene sorts by %v, want %v", s.sortMode, sortByCost)
+	if s.sortMode != ui.SortByCost {
+		t.Errorf("a fresh scene sorts by %v, want %v", s.sortMode, ui.SortByCost)
 	}
 }
 
 func TestCostSortRunsCheapestFirst(t *testing.T) {
-	hand := sortHandOf(sortByCost,
+	hand := sortHandOf(ui.SortByCost,
 		card(combat.Cleave, combat.Ice),  // 3
 		card(combat.Brace, combat.Basic), // 1
 		card(combat.Slice, combat.Fire),  // 2
@@ -58,7 +59,7 @@ func TestCostSortRunsCheapestFirst(t *testing.T) {
 }
 
 func TestTypeSortPutsEveryAttackBeforeEveryPlan(t *testing.T) {
-	hand := sortHandOf(sortByType,
+	hand := sortHandOf(ui.SortByType,
 		card(combat.Guard, combat.Basic), // plan, 3
 		card(combat.Cleave, combat.Ice),  // attack, 3
 		card(combat.Brace, combat.Basic), // plan, 1
@@ -86,10 +87,10 @@ func TestTypeSortPutsEveryAttackBeforeEveryPlan(t *testing.T) {
 
 func TestElementSortRunsFireIceLightningEarthThenDrab(t *testing.T) {
 	// Deliberately not the enum's order — combat.Basic is the zero value and leads there,
-	// and the whole reason elementRank is written out is that on screen it trails.
+	// and the whole reason ui.ElementRank is written out is that on screen it trails.
 	want := []combat.Element{combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Basic}
 
-	hand := sortHandOf(sortByElement,
+	hand := sortHandOf(ui.SortByElement,
 		card(combat.Brace, combat.Basic),
 		card(combat.Jab, combat.Earth),
 		card(combat.Jab, combat.Fire),
@@ -110,7 +111,7 @@ func TestEveryElementHasItsOwnRank(t *testing.T) {
 	// is what stops that shipping as "the new cards are in a funny order".
 	seen := map[int]combat.Element{}
 	for _, e := range combat.AllElements {
-		r := elementRank(e)
+		r := ui.ElementRank(e)
 		if r >= len(combat.AllElements) {
 			t.Errorf("%v has no rank of its own and fell through to %d", e, r)
 		}
@@ -127,7 +128,7 @@ func TestEverySortFallsThroughToTheSameChain(t *testing.T) {
 	// first key differs.
 	cheap, dear := card(combat.Jab, combat.Fire), card(combat.Skewer, combat.Fire)
 
-	for _, mode := range []handSort{sortByCost, sortByType, sortByElement} {
+	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByType, ui.SortByElement} {
 		hand := sortHandOf(mode, dear, cheap)
 		if hand[0].Concept != combat.Jab {
 			t.Errorf("sorting by %v ran %s, want the cost chain to break the tie",
@@ -141,8 +142,8 @@ func TestSortingKeepsIdenticalCardsInPlace(t *testing.T) {
 	// selected — and a selected card is lifted out of the row. An unstable sort would swap
 	// them and show a card moving for no reason the player can see.
 	hand := []paletteCard{
-		{actionCard: card(combat.Jab, combat.Fire), selected: false},
-		{actionCard: card(combat.Jab, combat.Fire), selected: true},
+		{Card: card(combat.Jab, combat.Fire), selected: false},
+		{Card: card(combat.Jab, combat.Fire), selected: true},
 	}
 	s := &CombatScene{hand: hand}
 	s.sortHand()
@@ -157,11 +158,11 @@ func TestSortingRebuildsTheQueueInTheNewOrder(t *testing.T) {
 	// handIndexForQueue is the inverse of that walk. Sorting without resyncing would leave the
 	// two disagreeing, and the visible symptom is a hand preview ringing the wrong cards.
 	s := &CombatScene{hand: []paletteCard{
-		{actionCard: card(combat.Cleave, combat.Fire), selected: true}, // 3 AP
-		{actionCard: card(combat.Jab, combat.Fire), selected: true},    // 1 AP
+		{Card: card(combat.Cleave, combat.Fire), selected: true}, // 3 AP
+		{Card: card(combat.Jab, combat.Fire), selected: true},    // 1 AP
 	}}
 	s.syncQueue()
-	s.setSort(sortByCost)
+	s.setSort(ui.SortByCost)
 
 	if len(s.fighterActions) != 2 || s.fighterActions[0].Concept != combat.Jab {
 		t.Fatalf("queue is %v, want it rebuilt cheapest first from the sorted hand",
@@ -169,7 +170,7 @@ func TestSortingRebuildsTheQueueInTheNewOrder(t *testing.T) {
 	}
 	for n := range s.fighterActions {
 		h, ok := s.handIndexForQueue(n)
-		if !ok || s.hand[h].actionCard != s.fighterActions[n] {
+		if !ok || s.hand[h].Card != s.fighterActions[n] {
 			t.Errorf("queue position %d maps to hand slot %d, which holds a different card", n, h)
 		}
 	}
@@ -208,7 +209,7 @@ func TestAnInboundFlightPointsAtTheSlotItsCardEndedIn(t *testing.T) {
 	}
 	s.spendSelected()
 
-	for _, f := range s.theater.flights {
+	for _, f := range s.Theater.flights {
 		if f.outbound {
 			continue
 		}
@@ -216,9 +217,9 @@ func TestAnInboundFlightPointsAtTheSlotItsCardEndedIn(t *testing.T) {
 			t.Fatalf("a dealt card flies to slot %d, which is not in a hand of %d",
 				f.index, len(s.hand))
 		}
-		if s.hand[f.index].actionCard != f.card {
+		if s.hand[f.index].Card != f.card {
 			t.Errorf("slot %d holds %s, but the card flying into it is %s",
-				f.index, cardLabel(s.hand[f.index].actionCard), cardLabel(f.card))
+				f.index, cardLabel(s.hand[f.index].Card), cardLabel(f.card))
 		}
 		if f.count != len(s.hand) {
 			t.Errorf("inbound flight targets a row of %d, want the %d it joins",
@@ -232,9 +233,9 @@ func TestTheSortReportsWhereEveryCardCameFrom(t *testing.T) {
 	// be told apart afterwards by looking at them — so it has to come out of the sort itself.
 	// A permutation is what this checks: every position accounted for, exactly once.
 	s := &CombatScene{hand: []paletteCard{
-		{actionCard: card(combat.Cleave, combat.Fire)}, // 3
-		{actionCard: card(combat.Jab, combat.Fire)},    // 1
-		{actionCard: card(combat.Slice, combat.Fire)},  // 2
+		{Card: card(combat.Cleave, combat.Fire)}, // 3
+		{Card: card(combat.Jab, combat.Fire)},    // 1
+		{Card: card(combat.Slice, combat.Fire)},  // 2
 	}}
 	before := append([]paletteCard(nil), s.hand...)
 
@@ -258,27 +259,27 @@ func TestTheSortReportsWhereEveryCardCameFrom(t *testing.T) {
 
 func TestSortingSendsEveryMovedCardSliding(t *testing.T) {
 	s := &CombatScene{hand: []paletteCard{
-		{actionCard: card(combat.Cleave, combat.Fire)}, // 3, moves to the right
-		{actionCard: card(combat.Jab, combat.Fire)},    // 1, moves to the left
+		{Card: card(combat.Cleave, combat.Fire)}, // 3, moves to the right
+		{Card: card(combat.Jab, combat.Fire)},    // 1, moves to the left
 	}}
-	s.setSort(sortByCost)
+	s.setSort(ui.SortByCost)
 
-	if len(s.theater.slides) != 2 {
-		t.Fatalf("%d cards slid, want both of them", len(s.theater.slides))
+	if len(s.Theater.slides) != 2 {
+		t.Fatalf("%d cards slid, want both of them", len(s.Theater.slides))
 	}
-	for _, sl := range s.theater.slides {
-		if sl.fromIndex == sl.toIndex {
-			t.Errorf("a card slid from slot %d to itself", sl.fromIndex)
+	for _, sl := range s.Theater.slides {
+		if sl.FromIndex == sl.ToIndex {
+			t.Errorf("a card slid from slot %d to itself", sl.FromIndex)
 		}
-		if s.hand[sl.toIndex].actionCard != sl.card {
+		if s.hand[sl.ToIndex].Card != sl.Card {
 			t.Errorf("slot %d holds %s, but the card sliding into it is %s",
-				sl.toIndex, cardLabel(s.hand[sl.toIndex].actionCard), cardLabel(sl.card))
+				sl.ToIndex, cardLabel(s.hand[sl.ToIndex].Card), cardLabel(sl.Card))
 		}
 		// Both ends are in the same row here, and neither may name a slot outside it —
 		// slotAt would otherwise place the card off the end of the band.
-		if sl.fromCount != len(s.hand) || sl.toCount != len(s.hand) {
+		if sl.FromCount != len(s.hand) || sl.ToCount != len(s.hand) {
 			t.Errorf("a slide runs between rows of %d and %d, want %d",
-				sl.fromCount, sl.toCount, len(s.hand))
+				sl.FromCount, sl.ToCount, len(s.hand))
 		}
 	}
 }
@@ -286,13 +287,13 @@ func TestSortingSendsEveryMovedCardSliding(t *testing.T) {
 func TestACardThatDoesNotMoveDoesNotSlide(t *testing.T) {
 	// A sort that changes nothing must not send the whole hand traveling on the spot.
 	s := &CombatScene{hand: []paletteCard{
-		{actionCard: card(combat.Jab, combat.Fire)},
-		{actionCard: card(combat.Cleave, combat.Fire)},
+		{Card: card(combat.Jab, combat.Fire)},
+		{Card: card(combat.Cleave, combat.Fire)},
 	}}
-	s.setSort(sortByCost)
+	s.setSort(ui.SortByCost)
 
-	if len(s.theater.slides) != 0 {
-		t.Errorf("%d cards slid over an already-sorted hand", len(s.theater.slides))
+	if len(s.Theater.slides) != 0 {
+		t.Errorf("%d cards slid over an already-sorted hand", len(s.Theater.slides))
 	}
 }
 
@@ -301,18 +302,18 @@ func TestASecondSortReplacesASlideForTheSameSlot(t *testing.T) {
 	// would draw the card twice and keep the row's own copy suppressed until the later of
 	// them finished.
 	s := &CombatScene{hand: []paletteCard{
-		{actionCard: card(combat.Cleave, combat.Fire)},
-		{actionCard: card(combat.Jab, combat.Basic)},
+		{Card: card(combat.Cleave, combat.Fire)},
+		{Card: card(combat.Jab, combat.Basic)},
 	}}
-	s.setSort(sortByCost)
-	s.setSort(sortByElement)
+	s.setSort(ui.SortByCost)
+	s.setSort(ui.SortByElement)
 
 	seen := map[int]bool{}
-	for _, sl := range s.theater.slides {
-		if seen[sl.toIndex] {
-			t.Errorf("two cards are sliding into slot %d", sl.toIndex)
+	for _, sl := range s.Theater.slides {
+		if seen[sl.ToIndex] {
+			t.Errorf("two cards are sliding into slot %d", sl.ToIndex)
 		}
-		seen[sl.toIndex] = true
+		seen[sl.ToIndex] = true
 	}
 }
 
@@ -325,15 +326,15 @@ func TestASurvivingCardSlidesAsTheRowClosesUp(t *testing.T) {
 	if len(s.hand) != handSize {
 		t.Fatalf("hand holds %d cards, want it dealt back to %d", len(s.hand), handSize)
 	}
-	if len(s.theater.slides) == 0 {
+	if len(s.Theater.slides) == 0 {
 		t.Fatal("no card slid, though the row went from five cards to eight under them")
 	}
-	for _, sl := range s.theater.slides {
-		if sl.fromCount != 5 {
-			t.Errorf("a slide sets off from a row of %d, want the 5 that was there", sl.fromCount)
+	for _, sl := range s.Theater.slides {
+		if sl.FromCount != 5 {
+			t.Errorf("a slide sets off from a row of %d, want the 5 that was there", sl.FromCount)
 		}
-		if sl.toCount != len(s.hand) {
-			t.Errorf("a slide lands in a row of %d, want the %d it joins", sl.toCount, len(s.hand))
+		if sl.ToCount != len(s.hand) {
+			t.Errorf("a slide lands in a row of %d, want the %d it joins", sl.ToCount, len(s.hand))
 		}
 	}
 }
@@ -379,9 +380,9 @@ func TestASettledDuelFreezesTheScreenAsItStands(t *testing.T) {
 				t.Errorf("the queue went from %d cards to %d, want the round still on screen",
 					queue, len(s.fighterActions))
 			}
-			if len(s.theater.flights)+len(s.theater.slides) != 0 {
+			if len(s.Theater.flights)+len(s.Theater.slides) != 0 {
 				t.Errorf("%d cards are moving, want nothing to move once the duel is over",
-					len(s.theater.flights)+len(s.theater.slides))
+					len(s.Theater.flights)+len(s.Theater.slides))
 			}
 
 			// And it does adopt the end state, which is what duelSettled and the fighter cards
@@ -441,7 +442,7 @@ func TestTheSortTabsAreOneBlockTiedToTheCards(t *testing.T) {
 	}
 
 	// Touching, which is what makes three buttons read as one control with three tabs.
-	for i := 1; i < len(sortButtonSpecs); i++ {
+	for i := 1; i < len(ui.SortButtonSpecs); i++ {
 		prev, this := sortTabRect(gs, i-1), sortTabRect(gs, i)
 		if this.Min.Y != prev.Max.Y {
 			t.Errorf("tab %d starts at y=%d and tab %d ends at y=%d — there is air in the block",
@@ -458,8 +459,6 @@ func TestTheSortTabsAreOneBlockTiedToTheCards(t *testing.T) {
 // line, and they are narrower than the column *(2026-09-04, owner's call)*.
 func TestThePanelButtonsStackUpFromTheAPBar(t *testing.T) {
 	gs := testState()
-	s := &CombatScene{}
-
 	// LEDGER's bottom is the bar's bottom, which is the whole of what ties the pair to the hand's
 	// own furniture rather than leaving them floating.
 	if got := ControlColumnSlot(gs, SlotLedger).Max.Y; got != apBarBottom(gs) {
@@ -481,13 +480,13 @@ func TestThePanelButtonsStackUpFromTheAPBar(t *testing.T) {
 	// On the enemy card's line, and **narrower than the column**: a control taking a card's width
 	// to carry one word reads as a pane rather than as a button.
 	slot := ControlColumnSlot(gs, SlotHands)
-	if card := s.enemyCardRect(gs); slot.Min.X != card.Min.X {
+	if card := ui.EnemyCardRect(gs); slot.Min.X != card.Min.X {
 		t.Errorf("the panel buttons start at x=%d, want the enemy card's left edge at %d",
 			slot.Min.X, card.Min.X)
 	}
-	if slot.Dx() >= ControlColumnWidth() {
+	if slot.Dx() >= ui.ControlColumnWidth() {
 		t.Errorf("the panel buttons are %dpx wide, which is the whole %dpx column",
-			slot.Dx(), ControlColumnWidth())
+			slot.Dx(), ui.ControlColumnWidth())
 	}
 
 	// And clear of the block above them, whose last tab must not reach into the pair.
@@ -500,18 +499,18 @@ func TestThereIsOneButtonPerSortMode(t *testing.T) {
 	// The column and the modes are two lists that have to stay the same length: updateSortButtons
 	// indexes one by the other to decide which button is latched, so a mode with no button
 	// would be unreachable and a button with no mode would panic.
-	seen := map[handSort]bool{}
-	for _, spec := range sortButtonSpecs {
-		if seen[spec.mode] {
-			t.Errorf("two buttons both select %v", spec.mode)
+	seen := map[ui.HandSort]bool{}
+	for _, spec := range ui.SortButtonSpecs {
+		if seen[spec.Mode] {
+			t.Errorf("two buttons both select %v", spec.Mode)
 		}
-		seen[spec.mode] = true
+		seen[spec.Mode] = true
 
-		if spec.label == "" {
-			t.Errorf("%v has no symbol on its button", spec.mode)
+		if spec.Label == "" {
+			t.Errorf("%v has no symbol on its button", spec.Mode)
 		}
 	}
-	for _, mode := range []handSort{sortByCost, sortByType, sortByElement} {
+	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByType, ui.SortByElement} {
 		if !seen[mode] {
 			t.Errorf("%v has no button to select it", mode)
 		}

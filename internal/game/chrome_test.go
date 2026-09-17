@@ -5,6 +5,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The settings button's placement, which is arithmetic and needs no window. Nothing here builds
@@ -24,7 +25,7 @@ func TestTheSettingsButtonSitsInTheBottomRightCorner(t *testing.T) {
 
 	// **The bottom-right corner, on the control column's right-hand line** *(2026-09-04, owner's
 	// call)*. It sat in the bottom-left corner until then; that corner is the draw pile's now.
-	if want := screens.ControlColumnLeft(gs) + screens.ControlColumnWidth(); r.Max.X != want {
+	if want := ui.ControlColumnLeft(gs) + ui.ControlColumnWidth(); r.Max.X != want {
 		t.Errorf("the settings button ends at x=%d, want the control column's edge at %d",
 			r.Max.X, want)
 	}

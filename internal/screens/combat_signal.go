@@ -81,6 +81,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The signal's clock, in the game's own beats — see `beat` in clock.go, and the note there about
@@ -89,15 +90,15 @@ import (
 // 2026-09-10)*: it was a fifth of one, on the argument that a firework is a bang — and a bang
 // nobody catches is a bang nobody had. What a signal has to say is *that this card hit*, and it
 // says it at the card while the figure is still setting off, so it has to outlast a glance.
-func signalBurstTicks() int { return beat(4, 5) }
+func signalBurstTicks() int { return ui.Beat(4, 5) }
 
 // signalFlyTicks() is the figure's journey to the duelist card. The damage figure's own, since
 // it crosses comparable screen and is read the same way — see hitFlyTicks().
-func signalFlyTicks() int { return beat(1, 1) }
+func signalFlyTicks() int { return ui.Beat(1, 1) }
 
 // signalHoldTicks() is the pause on the card after landing, with the figure it changed already
 // showing the new value. The overlap is the causal link, exactly as hitHoldTicks() is.
-func signalHoldTicks() int { return beat(7, 10) }
+func signalHoldTicks() int { return ui.Beat(7, 10) }
 
 const (
 	// signalFigureSize is the type size of a traveling figure, and it is the sum's total size for
@@ -174,15 +175,15 @@ type cardSignal struct {
 	seat int
 	held bool
 
-	t travel
+	t ui.Travel
 }
 
-func (c *cardSignal) tick()     { c.t.tick() }
-func (c cardSignal) done() bool { return c.t.done() }
+func (c *cardSignal) Tick()     { c.t.Tick() }
+func (c cardSignal) Done() bool { return c.t.Done() }
 
 // arrived reports whether the figure has reached the card, which is the frame the figure it
 // changed starts showing the new value.
-func (c cardSignal) arrived() bool { return c.t.age >= signalFlyTicks() }
+func (c cardSignal) arrived() bool { return c.t.Age >= signalFlyTicks() }
 
 // signalShown is what a fighter card draws **on top of** its model, because a signal has landed on
 // it and the model does not catch up until the round is adopted.
@@ -274,14 +275,14 @@ func (s *CombatScene) noteSignal(e combat.Event) bool {
 		seat = s.heldSeatOf(e)
 	}
 
-	s.theater.pending = append(s.theater.pending, cardSignal{
+	s.Theater.pending = append(s.Theater.pending, cardSignal{
 		rider:  e.Rider,
 		dest:   dest,
 		amount: e.Amount,
 		side:   e.Side,
 		seat:   seat,
 		held:   held,
-		t:      newTravel(0, signalFlyTicks()+signalHoldTicks()),
+		t:      ui.NewTravel(0, signalFlyTicks()+signalHoldTicks()),
 	})
 	return true
 }
@@ -298,13 +299,13 @@ func (s *CombatScene) noteSignal(e combat.Event) bool {
 // than from a seat. That is the honest picture for a payment whose card cannot be pointed at.
 func (s *CombatScene) heldSeatOf(e combat.Event) int {
 	taken := 0
-	for _, p := range s.theater.pending {
+	for _, p := range s.Theater.pending {
 		if p.held && p.rider == e.Rider {
 			taken++
 		}
 	}
 	for i, c := range s.hand {
-		if c.actionCard.Concept != e.Action || c.actionCard.Element != e.Element {
+		if c.Card.Concept != e.Action || c.Card.Element != e.Element {
 			continue
 		}
 		if taken > 0 {
@@ -340,7 +341,7 @@ func (s *CombatScene) releaseSeatSignals(side combat.Side, seat int) int {
 // against the parked signals' own side rather than against a remembered one, so a screen re-entered
 // mid-round cannot flush a turn it never watched.
 func (s *CombatScene) flushSignalsAtBoundary(e combat.Event) {
-	if len(s.theater.pending) == 0 {
+	if len(s.Theater.pending) == 0 {
 		return
 	}
 	if e.Kind == combat.KindRoundEnd {
@@ -357,19 +358,19 @@ func (s *CombatScene) flushSignals() int {
 
 // releaseSignals moves the parked signals matching a predicate onto the stage, keeping log order.
 func (s *CombatScene) releaseSignals(want func(cardSignal) bool) int {
-	if len(s.theater.pending) == 0 {
+	if len(s.Theater.pending) == 0 {
 		return 0
 	}
-	kept, sent := s.theater.pending[:0], 0
-	for _, c := range s.theater.pending {
+	kept, sent := s.Theater.pending[:0], 0
+	for _, c := range s.Theater.pending {
 		if !want(c) {
 			kept = append(kept, c)
 			continue
 		}
-		s.theater.signals = append(s.theater.signals, c)
+		s.Theater.signals = append(s.Theater.signals, c)
 		sent++
 	}
-	s.theater.pending = kept
+	s.Theater.pending = kept
 	return sent
 }
 
@@ -386,11 +387,11 @@ func (t *combatTheater) advanceSignals() []cardSignal {
 	live := t.signals[:0]
 	for i := range t.signals {
 		was := t.signals[i].arrived()
-		t.signals[i].tick()
+		t.signals[i].Tick()
 		if !was && t.signals[i].arrived() {
 			t.land(t.signals[i])
 		}
-		if !t.signals[i].done() {
+		if !t.signals[i].Done() {
 			live = append(live, t.signals[i])
 		}
 	}
@@ -428,15 +429,15 @@ func (t *combatTheater) adopted() { t.shown = [2]signalShown{} }
 // shownDMG, shownMaxLife and shownVitae are the figures a fighter card draws, which are not always
 // the figures the model holds. See signalShown, and shownLife, which is the same idea for the bar.
 func (s *CombatScene) shownDMG(side combat.Side, actual int) int {
-	return actual + s.theater.shownFor(side).dmg
+	return actual + s.Theater.shownFor(side).dmg
 }
 
 func (s *CombatScene) shownMaxLife(side combat.Side, actual int) int {
-	return actual + s.theater.shownFor(side).maxLife
+	return actual + s.Theater.shownFor(side).maxLife
 }
 
 func (s *CombatScene) shownVitae(actual int) int {
-	return actual + s.theater.shownFor(combat.SideA).vitae
+	return actual + s.Theater.shownFor(combat.SideA).vitae
 }
 
 func (t *combatTheater) shownFor(side combat.Side) signalShown {
@@ -467,17 +468,17 @@ func (t *combatTheater) shownFor(side combat.Side) signalShown {
 // be, which is exactly why it takes the currency's color instead.
 func signalInk(rider combat.RiderKind) color.RGBA {
 	if rider == combat.RiderVitaeInHand {
-		return vitaeInk
+		return ui.VitaeInk
 	}
-	if ink := systems.UpgradeTint(upgradeForRider[rider]); ink.A > 0 {
+	if ink := systems.UpgradeTint(ui.UpgradeForRider[rider]); ink.A > 0 {
 		return ink
 	}
-	return groundInk
+	return ui.GroundInk
 }
 
 // drawSignals draws every burst and every figure at wherever it has got to.
 func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, c := range s.theater.signals {
+	for _, c := range s.Theater.signals {
 		from, ok := s.signalOrigin(gs, c)
 		if !ok {
 			continue
@@ -486,7 +487,7 @@ func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
 		drawBurst(screen, from, c, ink)
 
 		to := s.signalTarget(gs, c)
-		p := easeOut(clamp01(float64(c.t.age) / float64(signalFlyTicks())))
+		p := ui.EaseOut(ui.Clamp01(float64(c.t.Age) / float64(signalFlyTicks())))
 		at := image.Pt(
 			from.X+int(float64(to.X-from.X)*p),
 			from.Y+int(float64(to.Y-from.Y)*p),
@@ -505,10 +506,10 @@ func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
 // different lengths read as a scatter — and the core is the one place they are all still touching,
 // which is what makes them one object instead of twenty-six.
 func drawBurst(screen *ebiten.Image, at image.Point, c cardSignal, ink color.RGBA) {
-	if c.t.age >= signalBurstTicks() {
+	if c.t.Age >= signalBurstTicks() {
 		return
 	}
-	p := easeOut(clamp01(float64(c.t.age) / float64(signalBurstTicks())))
+	p := ui.EaseOut(ui.Clamp01(float64(c.t.Age) / float64(signalBurstTicks())))
 	fade := 1 - p*p
 
 	x, y := float32(at.X), float32(at.Y)
@@ -532,7 +533,7 @@ func drawBurst(screen *ebiten.Image, at image.Point, c cardSignal, ink color.RGB
 	// being one — and the whole point of a card's signal is that it is that card's color.
 	core := systems.ColorToward(ink, color.RGBA{R: 255, G: 255, B: 255, A: 255}, 25)
 	core.A = uint8(255 * fade)
-	vector.DrawFilledCircle(screen, x, y,
+	vector.FillCircle(screen, x, y,
 		float32(float64(cardWidth)*signalCoreSize*(1-0.55*p)), core, true)
 }
 
@@ -582,8 +583,8 @@ func signalAlpha(c cardSignal) float32 {
 	if !c.arrived() {
 		return 1
 	}
-	held := float64(c.t.age-signalFlyTicks()) / float64(signalHoldTicks())
-	return float32(clamp01(1 - held))
+	held := float64(c.t.Age-signalFlyTicks()) / float64(signalHoldTicks())
+	return float32(ui.Clamp01(1 - held))
 }
 
 // signalOrigin is where a signal sets off from: the middle of the card that fired it.
@@ -603,15 +604,15 @@ func (s *CombatScene) signalOrigin(gs *state.GlobalState, c cardSignal) (image.P
 
 	var at image.Point
 	if c.side == combat.SideA {
-		if c.seat < 0 || c.seat >= len(s.theater.resolved) {
+		if c.seat < 0 || c.seat >= len(s.Theater.resolved) {
 			return image.Point{}, false
 		}
-		at = playedSeatAt(gs, c.seat, len(s.theater.resolved), s.playedSplit())
+		at = playedSeatAt(gs, c.seat, len(s.Theater.resolved), s.playedSplit())
 	} else {
-		if c.seat < 0 || c.seat >= len(s.theater.enemyDealt) {
+		if c.seat < 0 || c.seat >= len(s.Theater.enemyDealt) {
 			return image.Point{}, false
 		}
-		at = enemySeatAt(gs, c.seat, len(s.theater.enemyDealt), s.enemySplit())
+		at = enemySeatAt(gs, c.seat, len(s.Theater.enemyDealt), s.enemySplit())
 	}
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }
@@ -624,10 +625,10 @@ func (s *CombatScene) signalOrigin(gs *state.GlobalState, c cardSignal) (image.P
 // its rectangle, so the arithmetic is the rectangle's corner plus the style's own offset. A
 // constant typed in here would be a second opinion about a layout that has one.
 func (s *CombatScene) signalTarget(gs *state.GlobalState, c cardSignal) image.Point {
-	r := s.enemyCardRect(gs)
+	r := ui.EnemyCardRect(gs)
 	st := cards.EnemyStyle
 	if c.side == combat.SideA {
-		r = s.duelistCardRect(gs)
+		r = ui.DuelistCardRect(gs)
 		st = cards.DuelistStyle
 	}
 	x := (r.Min.X + r.Max.X) / 2

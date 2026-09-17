@@ -286,19 +286,15 @@ The rules do not enforce this — `VerbShield` would work on either side — and
 rather than guarded against, because the day an enemy forms hands is the day this becomes a dominant
 strategy, and a silent branch would not say so. `blockedByShield` carries the note.
 
-**Banking and drawing are both gone from the game** *(owner's call, 2026-08-31)*. `VerbDraw` had no
-user but the card shields replaced. `VerbBank` had thirty-six — one creature card apiece, all 2 AP
-for 1 — and every one of them was deleted from `enemies.json` rather than converted, because the
-owner wanted the concept gone rather than relocated. `GatheredAP`, `BonusAP` and `KindGathered` went
-with them, and `Duelist.ActionPoints()` is now the stat and nothing else.
+**A round's action points are the stat on the card and nothing else** *(owner's call, 2026-08-31)*.
+`Duelist.ActionPoints()` is the whole of a turn's budget: nothing banks points from a previous
+round, nothing grants extras mid-round, and no card draws another. **What that buys is a budget the
+player can plan a whole fight against**, where before it was a number that could silently be two
+higher than the figure printed on the opponent's card.
 
-**What that costs, stated:** those thirty-six creatures have pure-attack decks now, so they spend
-their whole budget swinging every turn where they used to occasionally bank — which is a weak play,
-so they are modestly stronger and more predictable. Their decks drop from ten or eleven cards to
-eight or nine, and none falls below eight cards or three distinct concepts.
-
-**What it buys is a budget the player can plan against for a whole fight.** A round's action points
-were a number that could silently be two higher than the stat on the card; they are the stat.
+**What it costs, stated:** a creature that used to spend a turn banking now spends it swinging, so
+the roster is modestly stronger and considerably more predictable. **Every creature deck is pure
+attack**, and none falls below three distinct concepts.
 
 #### The break on the card
 
@@ -501,7 +497,7 @@ cards; the cards were one line of JSON.
   one card per color and there are now five. The rung had no probability behind it since it was
   written; it has one now.
 - **The deck overlay ran out of room.** Five rows of cards plus the tally band did not fit the
-  modal, and the fix came out of three places at once — see `internal/screens/deckpanel.go`. The
+  modal, and the fix came out of three places at once — see `internal/ui/deckpanel.go`. The
   card itself could not shrink: the form mark is pixel art on a 32px canvas.
 - **Twelve relics, not one.** Each color carries four of its own — damage, status, discount, growth
   — and the flip relics are a full cross-product, which went from 12 to 20.
@@ -680,16 +676,23 @@ which is a different axis from the card and does not reopen this one.
 #### One lifecycle, learned once
 
 **Nothing stacks; a second hit resets the clock, and everything clears at the end of the round
-after the one that applied it.** `statusDuration` is 2 round-ends and it is one number for all
-four deliberately. It cannot be 1: side B acts second, so a status B applied would expire before
-it ever bit anything.
+after the one that applied it.** **How long is authored per record** — `Rounds` in
+`data/statuses.json`, read into `combat.Status.Rounds` — and every status in the file writes 2
+today. **It cannot be 1**, and that is a rule rather than a preference: side B acts second, so a
+status B applied would expire before it ever bit anything. `RegisterStatus` refuses a record that
+lasts no rounds at all; the floor of 2 is not enforced, so an author setting 1 gets a status that
+never fires.
 
 **Stacking went on 2026-08-16.** Amounts added until then, which made a status something to pile
 on rather than something to keep up — and with one blow a turn, four stacks was four cards spent
 saying one word louder. A relic that *does* stack is a relic someone can design; the base rule
-being "no" is what leaves it somewhere to go. The two caps went with it: `shockMissCapPct` and
-`weightCapPct` existed to stop four stacks reaching a certainty, and there is no longer a fourth
-stack to cap.
+being "no" is what leaves it somewhere to go.
+
+**The ceiling stayed, and it is `combat.maxStatusPct` — 99.** It was two per-effect caps holding
+four stacks short of a certainty; with nothing stacking it is one number holding *any* summed
+percentage short of one, so nothing misses every time and nothing stops a blow outright. Two
+registration checks hold the same line for a single record, which is what makes a catalog edit
+unable to reach it either.
 
 Per-element tuning is one constant each away, and **nothing measures what moving one does**.
 
@@ -1505,9 +1508,9 @@ registration refuses to grow past because a duelist has to stay comparable. `car
 still 4, but it is 4 *because the file holds four statuses* rather than because there are four
 elements, and `TestTheCardHoldsAsManyEffectsAsThereAreStatuses` is what turns authoring a fifth into
 a visible layout decision — the badge row fits six at the current pitch, so that is a number rather
-than a redesign. `effectKeys` in `card_art.go` was a table keyed by element and is now read straight
-off each status record's `Badge`. And `StatusID` is append-only, carrying the hazard `Element` and
-`GlyphKind` already carry — with the file, not the enum, deciding the order.
+than a redesign. The badge lookup is `screens.statusBadges`, read straight off each status record's
+`Badge`. And `StatusID` is append-only, carrying the same hazard `Element`
+does — with the file, not the enum, deciding the order.
 
 ### The relics that are designed
 
@@ -2873,8 +2876,8 @@ for the `data/` pattern: JSON beside a small Go loader.
 
 The currency. Earned from fights, spent in the shop. `Session` carries the purse; **winning a fight
 is the only thing that adds to it** and **the shop is what takes it out** *(2026-08-21)* —
-`Session.SpendVitae` is the one place a purse goes down. Its callers are `Session.Buy`, and since
-2026-08-27 `BuyBag` and `BuyVial`, the two sealed goods.
+`Session.SpendVitae` is the one place a purse goes down. Its callers are `Session.Buy` and
+`Session.BuyGood`, the sealed goods.
 
 **Vitae is crimson wherever it is written** *(owner's call, 2026-08-22)* — the purse on the duelist
 card and the word itself in the reward screen's prose. It is the run's only currency and now the
@@ -3226,7 +3229,7 @@ could prevent. A file written by a newer build is read but never written over, w
 mistake that cannot be repaired afterwards.
 
 **What is written down is a name, never a number.** Every ordinal in this game is append-only and
-index-shaped — `ConceptID`, `Element`, `StatusID`, `GlyphKind`, `Phase` — so an ordinal in a file
+index-shaped — `ConceptID`, `Element`, `StatusID`, `Phase` — so an ordinal in a file
 that outlives its build is an ordinal that will eventually mean something else. **The stones are the
 newest case** *(2026-08-27)*: a run's raised rungs are saved by hand *key*, never by the seat the
 count actually sits in, because a seat is a position in the catalog this build happened to load.

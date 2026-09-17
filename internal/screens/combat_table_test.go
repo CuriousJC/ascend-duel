@@ -7,6 +7,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The table's geometry, which is arithmetic and needs no window — the same narrow exception
@@ -186,9 +187,9 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 	// have — so this is what replaces that safety.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: actionCard{Concept: combat.Brace, Element: combat.Ice}, selected: true},
-			{actionCard: actionCard{Concept: combat.Bash, Element: combat.Fire}, selected: true},
-			{actionCard: actionCard{Concept: combat.Jab, Element: combat.Earth}, selected: true},
+			{Card: combat.Card{Concept: combat.Brace, Element: combat.Ice}, selected: true},
+			{Card: combat.Card{Concept: combat.Bash, Element: combat.Fire}, selected: true},
+			{Card: combat.Card{Concept: combat.Jab, Element: combat.Earth}, selected: true},
 		},
 		fighterActions: []combat.Card{
 			combat.Of(combat.Brace, combat.Ice),
@@ -207,18 +208,18 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 		combat.Of(combat.Bash, combat.Fire),
 		combat.Of(combat.Jab, combat.Earth),
 	}
-	if len(s.theater.resolved) != len(want) {
-		t.Fatalf("%d cards were seated, want %d", len(s.theater.resolved), len(want))
+	if len(s.Theater.resolved) != len(want) {
+		t.Fatalf("%d cards were seated, want %d", len(s.Theater.resolved), len(want))
 	}
 	for i, c := range want {
-		if got := s.theater.resolved[i].card; got != c {
+		if got := s.Theater.resolved[i].card; got != c {
 			t.Errorf("seat %d holds %v, want %v", i, got, c)
 		}
 	}
 
 	// And every seat knows which hand slot it came from, which is what the end-of-round throw
 	// and the hand row's own hiding both read.
-	for i, r := range s.theater.resolved {
+	for i, r := range s.Theater.resolved {
 		if r.handIndex < 0 || r.handIndex >= len(s.hand) {
 			t.Errorf("seat %d came from hand slot %d, which is not in a hand of %d",
 				i, r.handIndex, len(s.hand))
@@ -268,16 +269,16 @@ func TestOnlyOneSideOfTheTableIsLitAtATime(t *testing.T) {
 	// applyEvent before it increments. currentSlot counts inclusively for that reason.
 	s.cursor = 0
 	s.noteResolved(s.log[0])
-	if !sameSeats(s.theater.firingSeats, []int{0}) || len(s.theater.enemyFiringSeats) != 0 {
+	if !sameSeats(s.Theater.firingSeats, []int{0}) || len(s.Theater.enemyFiringSeats) != 0 {
 		t.Errorf("after the player's card: player %v, enemy %v — want [0] and none",
-			s.theater.firingSeats, s.theater.enemyFiringSeats)
+			s.Theater.firingSeats, s.Theater.enemyFiringSeats)
 	}
 
 	s.cursor = 1
 	s.noteResolved(s.log[1])
-	if len(s.theater.firingSeats) != 0 || !sameSeats(s.theater.enemyFiringSeats, []int{0}) {
+	if len(s.Theater.firingSeats) != 0 || !sameSeats(s.Theater.enemyFiringSeats, []int{0}) {
 		t.Errorf("after the opponent's card: player %v, enemy %v — want none and [0]",
-			s.theater.firingSeats, s.theater.enemyFiringSeats)
+			s.Theater.firingSeats, s.Theater.enemyFiringSeats)
 	}
 }
 
@@ -287,9 +288,9 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 	// nothing, so what is left standing is what the feed's single line is about.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: actionCard{Concept: combat.Bash, Element: combat.Fire}, selected: true},
-			{actionCard: actionCard{Concept: combat.Bash, Element: combat.Ice}, selected: true},
-			{actionCard: actionCard{Concept: combat.Jab, Element: combat.Basic}, selected: true},
+			{Card: combat.Card{Concept: combat.Bash, Element: combat.Fire}, selected: true},
+			{Card: combat.Card{Concept: combat.Bash, Element: combat.Ice}, selected: true},
+			{Card: combat.Card{Concept: combat.Jab, Element: combat.Basic}, selected: true},
 		},
 		fighterActions: []combat.Card{
 			combat.Of(combat.Bash, combat.Fire),
@@ -308,8 +309,8 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 	// not which card is acting — no single card is.
 	s.cursor = 0
 	s.noteResolved(s.log[0])
-	if !sameSeats(s.theater.firingSeats, []int{0, 1, 2}) {
-		t.Errorf("the first announcement raised %v, want all three cards up at once", s.theater.firingSeats)
+	if !sameSeats(s.Theater.firingSeats, []int{0, 1, 2}) {
+		t.Errorf("the first announcement raised %v, want all three cards up at once", s.Theater.firingSeats)
 	}
 
 	// And the rest of the phase names the same set rather than adding to it.
@@ -317,8 +318,8 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 		s.cursor = i
 		s.noteResolved(s.log[i])
 	}
-	if !sameSeats(s.theater.firingSeats, []int{0, 1, 2}) {
-		t.Errorf("the attack phase ended with %v raised, want all three cards up", s.theater.firingSeats)
+	if !sameSeats(s.Theater.firingSeats, []int{0, 1, 2}) {
+		t.Errorf("the attack phase ended with %v raised, want all three cards up", s.Theater.firingSeats)
 	}
 
 	// The Jab built no hand, so the hand takes it back down. **Raising is the whole of what says
@@ -328,8 +329,8 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 	hand.HandCards[0], hand.HandCards[1] = 0, 1
 	s.noteHand(hand)
 
-	if !sameSeats(s.theater.firingSeats, []int{0, 1}) {
-		t.Errorf("the hand left %v raised, want only the two cards that formed it", s.theater.firingSeats)
+	if !sameSeats(s.Theater.firingSeats, []int{0, 1}) {
+		t.Errorf("the hand left %v raised, want only the two cards that formed it", s.Theater.firingSeats)
 	}
 }
 
@@ -350,7 +351,7 @@ func sameSeats(got, want []int) bool {
 func TestAPlayedCardFliesFromItsHandSlotToItsSeat(t *testing.T) {
 	gs := testState()
 
-	r := resolvedCard{travel: newTravel(0, riseTicks()), handIndex: 2, handCount: handSize}
+	r := resolvedCard{Travel: ui.NewTravel(0, riseTicks()), handIndex: 2, handCount: handSize}
 	from := slotAt(gs, 2, handSize)
 	to := playedSeatAt(gs, 1, 3, 3)
 
@@ -358,7 +359,7 @@ func TestAPlayedCardFliesFromItsHandSlotToItsSeat(t *testing.T) {
 		t.Errorf("a card that has not set off is at %v, want its hand slot %v", got, from)
 	}
 
-	r.age = riseTicks()
+	r.Age = riseTicks()
 	if got := r.at(gs, 1, 3, 3, false); got != to {
 		t.Errorf("a landed card is at %v, want its seat %v", got, to)
 	}
@@ -368,7 +369,7 @@ func TestAPlayedCardFliesFromItsHandSlotToItsSeat(t *testing.T) {
 	if got := r.at(gs, 1, 3, 3, true); got.Y != to.Y-tableFireLift {
 		t.Errorf("a firing card sits at y=%d, want %d", got.Y, to.Y-tableFireLift)
 	}
-	r.age = 0
+	r.Age = 0
 	if got := r.at(gs, 1, 3, 3, true); got != from {
 		t.Errorf("a card that has not set off was lifted: %v, want %v", got, from)
 	}
@@ -387,11 +388,11 @@ func TestTheOpponentsRowIsSeatedFromItsQueue(t *testing.T) {
 	s.seatEnemyCards()
 
 	want := combat.PlainCards(combat.Brace, combat.Bash, combat.Jab)
-	if len(s.theater.enemyDealt) != len(want) {
-		t.Fatalf("%d cards were seated, want %d", len(s.theater.enemyDealt), len(want))
+	if len(s.Theater.enemyDealt) != len(want) {
+		t.Fatalf("%d cards were seated, want %d", len(s.Theater.enemyDealt), len(want))
 	}
 	for i, c := range want {
-		if got := s.theater.enemyDealt[i].card; got != c {
+		if got := s.Theater.enemyDealt[i].card; got != c {
 			t.Errorf("seat %d holds %v, want %v", i, got, c)
 		}
 	}
@@ -404,15 +405,15 @@ func TestTheOpponentsCardsFlyInFromTheEnemyCard(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
-	d := dealtCard{travel: newTravel(0, riseTicks())}
-	from := s.enemyCardRect(gs).Min
+	d := dealtCard{Travel: ui.NewTravel(0, riseTicks())}
+	from := ui.EnemyCardRect(gs).Min
 	to := enemySeatAt(gs, 1, 3, 3)
 
 	if got := s.enemyCardAt(gs, d, 1, 3, 3, false); got != from {
 		t.Errorf("a card that has not set off is at %v, want the enemy card at %v", got, from)
 	}
 
-	d.age = riseTicks()
+	d.Age = riseTicks()
 	if got := s.enemyCardAt(gs, d, 1, 3, 3, false); got != to {
 		t.Errorf("a landed card is at %v, want its seat %v", got, to)
 	}
@@ -421,7 +422,7 @@ func TestTheOpponentsCardsFlyInFromTheEnemyCard(t *testing.T) {
 	if got := s.enemyCardAt(gs, d, 1, 3, 3, true); got.Y != to.Y-tableFireLift {
 		t.Errorf("a firing card sits at y=%d, want %d", got.Y, to.Y-tableFireLift)
 	}
-	d.age = 0
+	d.Age = 0
 	if got := s.enemyCardAt(gs, d, 1, 3, 3, false); got != from {
 		t.Errorf("a card back on the pad is at %v, want %v", got, from)
 	}
@@ -434,8 +435,8 @@ func TestBothRowsUseTheSameArrivalClock(t *testing.T) {
 	// to one of them being made twice.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: combat.Plain(combat.Bash), selected: true},
-			{actionCard: combat.Plain(combat.Jab), selected: true},
+			{Card: combat.Plain(combat.Bash), selected: true},
+			{Card: combat.Plain(combat.Jab), selected: true},
 		},
 		fighterActions: combat.PlainCards(combat.Bash, combat.Jab),
 		enemyActions:   combat.PlainCards(combat.Bash, combat.Jab),
@@ -443,11 +444,11 @@ func TestBothRowsUseTheSameArrivalClock(t *testing.T) {
 	s.seatPlayedCards()
 	s.seatEnemyCards()
 
-	if len(s.theater.resolved) != len(s.theater.enemyDealt) {
-		t.Fatalf("%d player seats against %d enemy seats", len(s.theater.resolved), len(s.theater.enemyDealt))
+	if len(s.Theater.resolved) != len(s.Theater.enemyDealt) {
+		t.Fatalf("%d player seats against %d enemy seats", len(s.Theater.resolved), len(s.Theater.enemyDealt))
 	}
-	for i := range s.theater.resolved {
-		if got, want := s.theater.enemyDealt[i].travel, s.theater.resolved[i].travel; got != want {
+	for i := range s.Theater.resolved {
+		if got, want := s.Theater.enemyDealt[i].Travel, s.Theater.resolved[i].Travel; got != want {
 			t.Errorf("seat %d: enemy clock %+v, player clock %+v", i, got, want)
 		}
 	}
@@ -475,11 +476,11 @@ func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
 	}
 
 	// What is on the table is what was planned, in resolution order.
-	if len(s.theater.enemyDealt) != len(planned) {
-		t.Fatalf("%d cards on the table against a plan of %d", len(s.theater.enemyDealt), len(planned))
+	if len(s.Theater.enemyDealt) != len(planned) {
+		t.Fatalf("%d cards on the table against a plan of %d", len(s.Theater.enemyDealt), len(planned))
 	}
 	for i, c := range s.enemyQueueOrder() {
-		if got := s.theater.enemyDealt[i].card; got != c {
+		if got := s.Theater.enemyDealt[i].card; got != c {
 			t.Errorf("seat %d holds %v, want %v", i, got, c)
 		}
 	}
@@ -497,7 +498,7 @@ func selecting(cards ...combat.Card) *CombatScene {
 		},
 	}
 	for _, c := range cards {
-		s.hand = append(s.hand, paletteCard{actionCard: c, selected: true})
+		s.hand = append(s.hand, paletteCard{Card: c, selected: true})
 		s.fighterActions = append(s.fighterActions, c)
 	}
 	return s
@@ -647,14 +648,14 @@ func TestANewPlanArrivesWithNothingRaised(t *testing.T) {
 	}
 
 	// Where the last round's playback left them.
-	s.theater.firingSeats = []int{0, 1}
-	s.theater.enemyFiringSeats = []int{1}
+	s.Theater.firingSeats = []int{0, 1}
+	s.Theater.enemyFiringSeats = []int{1}
 
 	s.planEnemyRound()
 
-	if len(s.theater.firingSeats) != 0 || len(s.theater.enemyFiringSeats) != 0 {
+	if len(s.Theater.firingSeats) != 0 || len(s.Theater.enemyFiringSeats) != 0 {
 		t.Errorf("the new plan arrived with %v and %v raised, want nothing lit",
-			s.theater.firingSeats, s.theater.enemyFiringSeats)
+			s.Theater.firingSeats, s.Theater.enemyFiringSeats)
 	}
 }
 
@@ -671,15 +672,15 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 	}
 
 	// The killing blow is still raised, and stays raised.
-	s.theater.enemyFiringSeats = []int{0}
+	s.Theater.enemyFiringSeats = []int{0}
 
 	s.planEnemyRound()
 
-	if len(s.enemyActions) != 0 || len(s.theater.enemyDealt) != 0 {
-		t.Errorf("a dead opponent planned %v and seated %d cards", s.enemyActions, len(s.theater.enemyDealt))
+	if len(s.enemyActions) != 0 || len(s.Theater.enemyDealt) != 0 {
+		t.Errorf("a dead opponent planned %v and seated %d cards", s.enemyActions, len(s.Theater.enemyDealt))
 	}
-	if len(s.theater.enemyFiringSeats) != 1 {
-		t.Errorf("the finished round was cleared off the table: %v", s.theater.enemyFiringSeats)
+	if len(s.Theater.enemyFiringSeats) != 1 {
+		t.Errorf("the finished round was cleared off the table: %v", s.Theater.enemyFiringSeats)
 	}
 }
 
@@ -716,19 +717,19 @@ func TestADefenseThatAlreadyFlewDoesNotRiseAgain(t *testing.T) {
 	// The ward was scored into the hand and its pips left with its figure: the attack set stays up
 	// and the ward does not climb on its own beat.
 	s := newScene()
-	s.row(combat.SideA).noteFlight(1)
+	s.row(combat.SideA).NoteFlight(1)
 	s.cursor = 1
 	s.noteResolved(s.log[1])
-	if !sameSeats(s.theater.firingSeats, []int{0}) {
+	if !sameSeats(s.Theater.firingSeats, []int{0}) {
 		t.Errorf("a ward whose pips already flew raised %v, want the attack seat alone",
-			s.theater.firingSeats)
+			s.Theater.firingSeats)
 	}
 
 	// Nothing flew for this one — a turn of nothing but defenses forms no hand — so it lifts.
 	s = newScene()
 	s.cursor = 1
 	s.noteResolved(s.log[1])
-	if !sameSeats(s.theater.firingSeats, []int{1}) {
-		t.Errorf("a defense that flew nothing raised %v, want its own seat", s.theater.firingSeats)
+	if !sameSeats(s.Theater.firingSeats, []int{1}) {
+		t.Errorf("a defense that flew nothing raised %v, want its own seat", s.Theater.firingSeats)
 	}
 }

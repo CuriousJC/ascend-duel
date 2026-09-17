@@ -8,6 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // TestAbandoningARunLeavesNothingToResume is the whole point of the control: giving up has to mean
@@ -165,7 +166,7 @@ func TestNewRunOnlyAsksWhenThereIsSomethingToLose(t *testing.T) {
 
 	gs.Resumed = false
 	scene.startNewRun(gs)
-	if scene.confirm.isOpen() {
+	if scene.confirm.IsOpen() {
 		t.Error("a run nobody has entered is not worth a dialog")
 	}
 	if gs.ActiveScreen != state.Combat {
@@ -176,7 +177,7 @@ func TestNewRunOnlyAsksWhenThereIsSomethingToLose(t *testing.T) {
 	gs.ActiveScreen = state.Title
 	gs.Resumed = true
 	scene.startNewRun(gs)
-	if !scene.confirm.isOpen() {
+	if !scene.confirm.IsOpen() {
 		t.Error("New Run over a resumed climb must ask first")
 	}
 	if gs.ActiveScreen != state.Title {
@@ -191,20 +192,20 @@ func TestTheConfirmAnswersTheQuestionItWasLastAsked(t *testing.T) {
 	gs := saveState(t)
 
 	first, second := 0, 0
-	var d confirmDialog
+	var d ui.ConfirmDialog
 
-	d.ask("one", "", "One", func() { first++ })
-	d.update(gs)
-	d.close()
+	d.Ask("one", "", "One", func() { first++ })
+	d.Update(gs)
+	d.Close()
 
-	d.ask("two", "", "Two", func() { second++ })
-	d.update(gs)
-	d.yes.OnClick()
+	d.Ask("two", "", "Two", func() { second++ })
+	d.Update(gs)
+	d.Yes.OnClick()
 
 	if first != 0 || second != 1 {
 		t.Errorf("the dialog answered the wrong question: first=%d second=%d", first, second)
 	}
-	if d.isOpen() {
+	if d.IsOpen() {
 		t.Error("answering a question closes it")
 	}
 }
@@ -215,15 +216,15 @@ func TestAQuestionCancelsWithoutAnswering(t *testing.T) {
 	gs := saveState(t)
 
 	fired := 0
-	var d confirmDialog
-	d.ask("gone?", "", "Yes", func() { fired++ })
-	d.update(gs)
-	d.no.OnClick()
+	var d ui.ConfirmDialog
+	d.Ask("gone?", "", "Yes", func() { fired++ })
+	d.Update(gs)
+	d.No.OnClick()
 
 	if fired != 0 {
 		t.Error("Cancel must not run the destructive answer")
 	}
-	if d.isOpen() {
+	if d.IsOpen() {
 		t.Error("Cancel closes the question")
 	}
 }
@@ -245,7 +246,7 @@ func TestAbandonIsDeadWithNoRunToGiveUp(t *testing.T) {
 
 	// And it refuses to raise the question even if something reaches the callback anyway.
 	scene.askAbandon(gs)
-	if scene.confirm.isOpen() {
+	if scene.confirm.IsOpen() {
 		t.Error("there is nothing to ask about")
 	}
 }
@@ -258,7 +259,7 @@ func TestAbandonAsksBeforeItDestroys(t *testing.T) {
 
 	scene.askAbandon(gs)
 
-	if !scene.confirm.isOpen() {
+	if !scene.confirm.IsOpen() {
 		t.Fatal("Abandon Run must ask first")
 	}
 	if gs.Run == nil {

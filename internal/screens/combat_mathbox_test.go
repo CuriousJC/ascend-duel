@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // These are the narrow kind of screen test CLAUDE.md allows: they create no `ebiten.Image`, need
@@ -324,7 +325,7 @@ func TestTheHandNameCarriesTheMultiplierTheSumWillShow(t *testing.T) {
 
 	for _, hand := range combat.Hands() {
 		line := handMultiplierLine(hand.Multiplier)
-		term := handMultiplierText(hand.Multiplier)
+		term := ui.HandMultiplierText(hand.Multiplier)
 		if !strings.HasPrefix(line, term) {
 			t.Errorf("%s is planned as %q and fires as %q", hand.Name, line, term)
 		}

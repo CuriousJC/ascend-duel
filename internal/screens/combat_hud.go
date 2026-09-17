@@ -14,37 +14,15 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
-	"github.com/curiousjc/ascend-duel/internal/pyramid"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
 	"image/color"
 )
-
-// drawBox draws a framed panel: dim fill, full-strength border, and a title centered on the
-// top edge. Dim fill and a full-strength border means the box reads as green or pink at a
-// glance without drowning what is drawn on top of it.
-//
-// This takes a rectangle rather than a panePlacement because the boxes along the bottom
-// are sized by the hand rather than by a slice of the screen. An empty title draws none.
-func drawBox(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, c color.RGBA, title string) {
-	x, y := float32(r.Min.X), float32(r.Min.Y)
-	w, h := float32(r.Dx()), float32(r.Dy())
-
-	vector.DrawFilledRect(screen, x, y, w, h, systems.ColorAtStrength(c, 25), false)
-	vector.StrokeRect(screen, x, y, w, h, 2, c, false)
-
-	if title == "" {
-		return
-	}
-	titleOp := &text.DrawOptions{}
-	titleOp.GeoM.Translate(float64(x+w/2), float64(y+paneTitleInset))
-	titleOp.PrimaryAlign = text.AlignCenter
-	text.Draw(screen, title, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, titleOp)
-}
 
 // **The caption box stood here and is gone** *(2026-08-11)*. It was a hand-width box at 48%
 // holding the plan line and its action-point cost; the Resolution feed took the slot and has
@@ -68,39 +46,7 @@ func drawBox(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, c c
 //
 // The card's own layout lives in cards.DuelistStyle; what is here is where it sits and what
 // goes on it.
-const (
-	duelistCardLeftPct = 1
-
-	// **Both cards share this top**, and the relic row between them aligns to it as well —
-	// see relicPaneRect. One percentage rather than three, because what is wanted is that the
-	// whole band starts on one line, not that each thing happens to be near the top.
-	topRowTopPct = 2
-)
-
-// lifeColor is the red the life fraction used to be written in.
-//
-// **Nothing draws it since the character block became a card** — the card's own bar and
-// fraction come from cards.HealthFull and cards.NumberInk, which is the point of drawing the
-// player the same way as everything else. It is kept because the deck overlay and the flight
-// code still describe state in the screen's own colors and this is the one red among them;
-// delete it if a second thing has to be said about that.
-var lifeColor = color.RGBA{R: 225, G: 65, B: 65, A: 255}
-
-// duelistCardRect is where the player's card sits. **The relic row starts from its right
-// edge**, so this is the one place its geometry is written and both read it — see
-// relicPaneRect.
-func (s *CombatScene) duelistCardRect(gs *state.GlobalState) image.Rectangle {
-	return duelistCardRect(gs)
-}
-
-// duelistCardRect is the same rectangle without a scene, because the hand row's width is now
-// measured against the relic row between the two corner cards and nothing about that geometry is
-// a fact about a duel. See relicRowSpan.
-func duelistCardRect(gs *state.GlobalState) image.Rectangle {
-	left, top := gs.PctX(duelistCardLeftPct), gs.PctY(topRowTopPct)
-	return image.Rect(left, top,
-		left+cards.DuelistStyle.Width, top+cards.DuelistStyle.Height)
-}
+const ()
 
 // drawDuelistCard draws what the player is: name, DMG, AP, Vitae, and life as a bar over a
 // fraction.
@@ -109,8 +55,8 @@ func duelistCardRect(gs *state.GlobalState) image.Rectangle {
 // card the screen does. Nothing is drawn if it cannot be built — a missing font, most likely —
 // for the same reason drawCard does nothing.
 func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Image) {
-	img := cardImage(gs,
-		duelistSpec(gs, s.fighter, s.sideName(combat.SideA),
+	img := ui.CardImage(gs,
+		ui.DuelistSpec(gs, s.fighter, s.sideName(combat.SideA),
 			s.shownDMG(combat.SideA, s.fighter.DMG),
 			s.shownVitae(gs.Run.Vitae()),
 			s.shownLife(combat.SideA, s.fighter.CurrentLife),
@@ -124,7 +70,7 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 		return
 	}
 
-	r := s.duelistCardRect(gs)
+	r := ui.DuelistCardRect(gs)
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 	screen.DrawImage(img, op)
@@ -143,13 +89,6 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 // thing on this screen that says a floor is about to end — the doors and the stairwell are the
 // screen that does not exist yet.
 const (
-	// fightsPerFloor is how many fights a floor holds, and the third of them is its boss.
-	//
-	// **It is `pyramid.FightsPerFloor` rather than a 3 of this screen's own**, because the ascent
-	// curve that grows an enemy per room reads the same number. Two copies would let the label and
-	// the difficulty disagree about how deep a floor is.
-	fightsPerFloor = pyramid.FightsPerFloor
-
 	// **towerLineGap is the drop from the duelist card's bottom edge to whatever hangs off it**,
 	// which is the round timer and nothing else now. The floor and the room stood here — in a
 	// column beside the card for a day, then back under it — and moved **onto** the card on
@@ -158,22 +97,6 @@ const (
 	// See cards.DuelistStyle, where they are stat rows now.
 	towerLineGap = 10
 )
-
-// towerRoomNames is what each of a floor's three fights is called, in order. Indexed by the
-// fight's position within its floor, so it must stay fightsPerFloor long — the two are checked
-// against each other by TestEveryRoomOnAFloorIsNamed.
-var towerRoomNames = [fightsPerFloor]string{"Outer Room", "Inner Room", "Stairway"}
-
-// towerFloor is which floor a fight is on, counting from one.
-//
-// **It is not capped at the tower's eight.** The fight order is every record in the roster —
-// 96 of them, scaffolding for a generator that does not exist — so playing far enough reads
-// Floor 9 and beyond. A clamp would be a screen quietly disagreeing with the counter it is
-// drawing; the honest fix is the tower, not a maximum here.
-func towerFloor(fight int) int { return fight/fightsPerFloor + 1 }
-
-// towerRoom names which of its floor's fights this is.
-func towerRoom(fight int) string { return towerRoomNames[fight%fightsPerFloor] }
 
 // The discards-left badge: a filled disc centered exactly on the Discard button's bottom-right
 // corner, with the count in it.
@@ -232,7 +155,7 @@ func (s *CombatScene) drawDiscardsLeft(gs *state.GlobalState, screen *ebiten.Ima
 
 	// Antialiased: this is the only circle on the screen that is not a health-bar corner, and a
 	// stepped edge on a disc this size is the first thing the eye finds.
-	vector.DrawFilledCircle(screen, float32(cx), float32(cy), discardBadgeRadius, fill, true)
+	vector.FillCircle(screen, float32(cx), float32(cy), discardBadgeRadius, fill, true)
 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(cx, cy)
@@ -246,22 +169,6 @@ func (s *CombatScene) drawDiscardsLeft(gs *state.GlobalState, screen *ebiten.Ima
 // enemyCardRightPct is the opponent's right edge, and it mirrors duelistCardLeftPct rather
 // than being chosen: the two cards are the same object on opposite sides of the screen, so
 // equal margins are the whole of what "in the corners" means.
-const enemyCardRightPct = 99
-
-// enemyCardRect is where the opponent's card sits. **The relic row ends at its left edge**,
-// the same way it starts at the duelist card's right — see relicPaneRect. That replaced a
-// hardcoded 79%, which was a percentage picked to clear a card whose position it could not
-// see and would have gone stale the moment either moved.
-func (s *CombatScene) enemyCardRect(gs *state.GlobalState) image.Rectangle {
-	return enemyCardRect(gs)
-}
-
-// enemyCardRect is the scene-free form, for the same reason duelistCardRect has one.
-func enemyCardRect(gs *state.GlobalState) image.Rectangle {
-	right, top := gs.PctX(enemyCardRightPct), gs.PctY(topRowTopPct)
-	return image.Rect(right-cards.EnemyStyle.Width, top,
-		right, top+cards.EnemyStyle.Height)
-}
 
 // drawEnemyCard draws the opponent in the card format: name, portrait, health bar, and the
 // life left as a fraction.
@@ -279,13 +186,13 @@ func enemyCardRect(gs *state.GlobalState) image.Rectangle {
 // reason drawCard does nothing: a card-shaped hole gets reported, a card in a fallback font
 // does not.
 func (s *CombatScene) drawEnemyCard(gs *state.GlobalState, screen *ebiten.Image) {
-	img := cardImage(gs, enemySpec(gs, s.enemy, s.sideName(combat.SideB),
+	img := ui.CardImage(gs, ui.EnemySpec(gs, s.enemy, s.sideName(combat.SideB),
 		s.shownLife(combat.SideB, s.enemy.CurrentLife)), cards.EnemyStyle)
 	if img == nil {
 		return
 	}
 
-	r := s.enemyCardRect(gs)
+	r := ui.EnemyCardRect(gs)
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 	screen.DrawImage(img, op)
@@ -326,7 +233,7 @@ const (
 // **It used to hang off the floor-and-room lines, which are on the card now** — so the bar moved up
 // into the space they left rather than a gap being kept where they were. See towerLineGap.
 func (s *CombatScene) roundTimerRect(gs *state.GlobalState) image.Rectangle {
-	card := s.duelistCardRect(gs)
+	card := ui.DuelistCardRect(gs)
 	top := card.Max.Y + towerLineGap
 	return image.Rect(card.Min.X, top, card.Max.X, top+roundTimerHeight)
 }
@@ -390,11 +297,11 @@ func (s *CombatScene) drawRoundTimer(gs *state.GlobalState, screen *ebiten.Image
 		// An unspent round is the ground's ink at a quarter strength: present enough to be
 		// counted, quiet enough not to read as a round already gone. `ColorToward` rather than
 		// `ColorAtStrength`, because the table is light — see CLAUDE.md.
-		fill := systems.ColorToward(groundInk, screenGround, 75)
+		fill := systems.ColorToward(ui.GroundInk, ui.ScreenGround, 75)
 		if i < spent {
-			fill = groundInk
+			fill = ui.GroundInk
 			if i == limit-1 {
-				fill = modalCloseColor
+				fill = ui.ModalCloseColor
 			}
 		}
 

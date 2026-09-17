@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/profile"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The speed setting: the bar's arithmetic, and the one clock it moves.
@@ -16,9 +17,9 @@ import (
 // atSpeed runs f with the game speed set, and puts it back afterwards. The scale is package state,
 // so a test that left it moved would change the pace of every test after it.
 func atSpeed(scale float64, f func()) {
-	was := Speed()
-	SetSpeed(scale)
-	defer SetSpeed(was)
+	was := ui.Speed()
+	ui.SetSpeed(scale)
+	defer ui.SetSpeed(was)
 	f()
 }
 
@@ -57,29 +58,29 @@ func TestASpeedOfZeroIsIgnoredRatherThanApplied(t *testing.T) {
 	// **A game speed of zero is not a speed** — it stops every clock in the game. profile has
 	// already normalized anything off disk, so this is the last guard rather than the only one.
 	atSpeed(1, func() {
-		SetSpeed(0)
-		if Speed() != 1 {
-			t.Errorf("a speed of zero was applied: the game is at %v", Speed())
+		ui.SetSpeed(0)
+		if ui.Speed() != 1 {
+			t.Errorf("a speed of zero was applied: the game is at %v", ui.Speed())
 		}
-		SetSpeed(-2)
-		if Speed() != 1 {
-			t.Errorf("a negative speed was applied: the game is at %v", Speed())
+		ui.SetSpeed(-2)
+		if ui.Speed() != 1 {
+			t.Errorf("a negative speed was applied: the game is at %v", ui.Speed())
 		}
 	})
 }
 
 func TestFasterMeansFewerTicks(t *testing.T) {
 	var slow, tuned, fast int
-	atSpeed(profile.SpeedMin, func() { slow = speedTicks() })
-	atSpeed(1, func() { tuned = speedTicks() })
-	atSpeed(profile.SpeedMax, func() { fast = speedTicks() })
+	atSpeed(profile.SpeedMin, func() { slow = ui.SpeedTicks() })
+	atSpeed(1, func() { tuned = ui.SpeedTicks() })
+	atSpeed(profile.SpeedMax, func() { fast = ui.SpeedTicks() })
 
 	if !(slow > tuned && tuned > fast) {
 		t.Errorf("the beat runs %d slow, %d tuned, %d fast — want it strictly shortening", slow, tuned, fast)
 	}
-	if tuned != beatTicks {
+	if tuned != ui.BeatTicks {
 		t.Errorf("at the tuned speed the beat is %d, want the constant %d it was written against",
-			tuned, beatTicks)
+			tuned, ui.BeatTicks)
 	}
 }
 
@@ -89,8 +90,8 @@ func TestTheSpeedMovesEveryClockAndNotJustTheBeat(t *testing.T) {
 	// cannot reach. `beat` is how every clock that is not the speed itself is written, so it is
 	// what has to move.
 	var slow, fast int
-	atSpeed(profile.SpeedMin, func() { slow = beat(1, 1) })
-	atSpeed(profile.SpeedMax, func() { fast = beat(1, 1) })
+	atSpeed(profile.SpeedMin, func() { slow = ui.Beat(1, 1) })
+	atSpeed(profile.SpeedMax, func() { fast = ui.Beat(1, 1) })
 
 	if slow <= fast {
 		t.Errorf("a whole beat is %d slow and %d fast — the setting is not reaching beat()", slow, fast)
@@ -100,7 +101,7 @@ func TestTheSpeedMovesEveryClockAndNotJustTheBeat(t *testing.T) {
 func TestANeverShorterThanATick(t *testing.T) {
 	// A small enough fraction of a fast enough speed becomes a movement that does not happen.
 	atSpeed(profile.SpeedMax, func() {
-		if got := beat(1, 1000); got < 1 {
+		if got := ui.Beat(1, 1000); got < 1 {
 			t.Errorf("a thousandth of a beat is %d ticks, want at least 1", got)
 		}
 	})

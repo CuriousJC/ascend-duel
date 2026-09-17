@@ -21,8 +21,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
-	"sort"
 )
 
 //go:embed stones.json
@@ -72,16 +70,7 @@ type StoneData struct {
 
 // LoadStones parses the catalog into a map keyed by StoneRecord.
 func LoadStones() map[string]StoneData {
-	var list []StoneData
-	if err := json.Unmarshal(stonesJSON, &list); err != nil {
-		panic("Failed to unmarshal stones.json: " + err.Error())
-	}
-
-	out := make(map[string]StoneData, len(list))
-	for _, s := range list {
-		out[s.StoneRecord] = s
-	}
-	return out
+	return keyed(stonesJSON, "stones.json", func(s StoneData) string { return s.StoneRecord })
 }
 
 // DefaultStoneArt is the face a stone with no Art of its own draws.
@@ -116,10 +105,5 @@ func (st StoneData) ArtKey() string {
 // is offered depend on map iteration and take the run's reproducibility with it. See the
 // `randomness` skill.
 func StoneOrder(stones map[string]StoneData) []string {
-	names := make([]string, 0, len(stones))
-	for n := range stones {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-	return names
+	return sortedKeys(stones)
 }

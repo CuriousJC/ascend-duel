@@ -30,10 +30,12 @@ package screens
 
 import (
 	"fmt"
-	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"image"
 	"math/rand"
 	"sort"
+
+	"github.com/curiousjc/ascend-duel/internal/achieve"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -162,12 +164,12 @@ const (
 // **Cards fly to where they are going, everywhere in this game.** A card that appears in the
 // middle is a card that was never anywhere else, and the whole point of this screen is that a
 // thing was *won* and has come to you.
-func settleFlightTicks() int { return beat(1, 1) }
+func settleFlightTicks() int { return ui.Beat(1, 1) }
 
 // settledHoldTicks() is how long the finished card is held before the screen leaves. **Long
 // enough to read, short enough not to need a button** — the click that picked the card is the
 // last input the player has to make.
-func settledHoldTicks() int { return beat(4, 1) }
+func settledHoldTicks() int { return ui.Beat(4, 1) }
 
 // PostBattleScene offers one alteration to the run deck.
 type PostBattleScene struct {
@@ -190,12 +192,12 @@ type PostBattleScene struct {
 	// entry is each offered essence's flight in from the side of the screen — one per prize, indexed
 	// alike. **Cards fly; they never appear**, and an essence arriving from off-screen is the picture
 	// the prose has just described: two essences bleeding from the enemy you beat.
-	entry []travel
+	entry []ui.Travel
 
 	// relicDrag is the press in progress over the worn relic row in the build band. **The row is
 	// reorderable here like everywhere else** — worn order is a rule, and between fights is when a
 	// player is thinking about their build.
-	relicDrag cardDrag
+	relicDrag ui.CardDrag
 
 	// **Skipping is a button again** *(2026-08-22)*, after the vitae card that replaced it was
 	// removed. It takes neither essence and pays nothing extra — the win has already paid — so it is
@@ -232,7 +234,7 @@ type PostBattleScene struct {
 
 	// change is the alteration happening: the old face coming apart and the new one coming through
 	// it. Which of the three shapes it takes is decided in aimAt, by what the essence did.
-	change morph
+	change ui.Morph
 
 	// removes says the alteration has no "after" card, because the card is gone. What is left when
 	// the dissolve finishes is an empty seat.
@@ -251,7 +253,7 @@ type PostBattleScene struct {
 
 	// arrival is the won card's journey to the middle, and arrivedFrom is the seat it set off
 	// from — a prize's place in the row, or the morph's after-slot.
-	arrival     travel
+	arrival     ui.Travel
 	arrivedFrom image.Rectangle
 
 	// applyNow is the confirmed alteration, run against the real deck once the settled stage is
@@ -275,14 +277,14 @@ type PostBattleScene struct {
 	// **sortMode is the working copy of `gs.HandSort`**, exactly as CombatScene's is: the button
 	// callback moves this, and Update writes it back. So a player who arranges by element in a
 	// duel meets an offer already arranged by element.
-	sortMode handSort
-	sortTabs *sortTabs
+	sortMode ui.HandSort
+	sortTabs *ui.SortTabs
 
 	// slides is the offer row rearranging itself, on the shared mover — see cardslide.go. **The
 	// same widget behaves the same way on both screens** *(owner's call, 2026-09-05)*: a card that
 	// changes where it is on screen travels there, and a sort that re-laid this row out instantly
 	// while sliding the hand would be two controls wearing one set of labels.
-	slides []cardSlide
+	slides []ui.CardSlide
 
 	// picksLeft is how many prizes this visit still owes the player, from `session.Picks` — the
 	// `prizes-dealt` moment, which the Hungry relic is what moves off 1.
@@ -304,20 +306,20 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	s.chosen, s.aimed, s.selected = -1, -1, -1
 	s.stage = narrate
 	s.removes, s.copied, s.held = false, false, 0
-	s.change = morph{}
-	s.arrival, s.arrivedFrom = travel{}, image.Rectangle{}
+	s.change = ui.Morph{}
+	s.arrival, s.arrivedFrom = ui.Travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.prizes = dealPrizes(gs)
-	s.entry = make([]travel, len(s.prizes))
+	s.entry = make([]ui.Travel, len(s.prizes))
 	s.prose.setLines(payoutLines(gs))
 	s.skipping = false
 	s.offer = dealOffer(gs)
 	s.picksLeft = gs.Run.Picks()
-	s.tip = models.Tooltip{DwellTicks: tipDwell()}
+	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 
-	s.sortMode = handSortOf(gs)
+	s.sortMode = ui.HandSortOf(gs)
 	if s.sortTabs == nil {
-		s.sortTabs = newSortTabs(s.sortTabRect, s.setSort)
+		s.sortTabs = ui.NewSortTabs(s.sortTabRect, s.setSort)
 	}
 	s.slides = nil
 	s.sortOffer(gs)
@@ -461,15 +463,15 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	// The settled stage is a held picture rather than a choice: the card that was won is on
 	// screen, and when the hold runs out the screen leaves by itself.
 	if s.stage == settled {
-		if !s.arrival.done() {
-			s.arrival.tick()
+		if !s.arrival.Done() {
+			s.arrival.Tick()
 			return nil
 		}
 		// **The change is its own beat, and it does not start until the card has landed** — the
 		// same rule the hold below follows, and for the same reason: a dissolve running over a
 		// moving card would put the one thing worth watching on a target the eye is still chasing.
-		if !s.change.done() {
-			s.change.tick()
+		if !s.change.Done() {
+			s.change.Tick()
 			return nil
 		}
 		s.held--
@@ -506,7 +508,7 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	// function says it is, and the flight is a ghost over that seat, the same rule the combat
 	// screen's hand follows.
 	for i := range s.entry {
-		s.entry[i].tick()
+		s.entry[i].Tick()
 	}
 
 	s.click(gs)
@@ -520,11 +522,11 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		// block hangs off the offer row's right edge, and a second pick re-deals that row against a
 		// deck an essence may have shortened. A block placed once would then stand beside a row that
 		// had moved out from under it.
-		s.sortTabs.place(gs)
-		s.sortTabs.update(gs, true)
-		setHandSort(gs, s.sortMode)
+		s.sortTabs.Place(gs)
+		s.sortTabs.Update(gs, true)
+		ui.SetHandSort(gs, s.sortMode)
 		s.sortOffer(gs)
-		s.slides = advance(s.slides)
+		s.slides = ui.Advance(s.slides)
 	}
 
 	s.hover(gs)
@@ -565,8 +567,8 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 			if !ok || !at.In(seat) {
 				continue
 			}
-			title, lines := cardTip(card, heldByRun(gs, card))
-			s.tip.Point(seat, tipLine(title), tipLines(lines))
+			title, lines := ui.CardTip(card, ui.HeldByRun(gs, card))
+			s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 			return
 		}
 	}
@@ -684,8 +686,8 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 	s.chosen, s.aimed, s.selected = -1, -1, -1
 	s.stage = choosing
 	s.removes, s.copied, s.held = false, false, 0
-	s.change = morph{}
-	s.arrival, s.arrivedFrom = travel{}, image.Rectangle{}
+	s.change = ui.Morph{}
+	s.arrival, s.arrivedFrom = ui.Travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.offer = dealOffer(gs)
 	s.place(gs)
@@ -702,7 +704,7 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 // countdown already running.
 func (s *PostBattleScene) settle(gs *state.GlobalState, from image.Rectangle) {
 	s.stage, s.held = settled, settledHoldTicks()
-	s.arrival = newTravel(0, settleFlightTicks())
+	s.arrival = ui.NewTravel(0, settleFlightTicks())
 	s.arrivedFrom = from
 }
 
@@ -749,18 +751,18 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 	// **What the essence did decides which shape the change takes**, and the three cases are the
 	// three things an essence can be: it recolored the card, it ate it, or it made a second one. See
 	// cardmorph.go — the morph is handed two finished faces and works out the rest.
-	beforeSpec := cardSpec(before, heldByRun(gs, before), true, false)
+	beforeSpec := ui.CardSpec(before, ui.HeldByRun(gs, before), true, false)
 	switch {
 	case s.removes:
-		s.change = morphAway(beforeSpec, cards.Hand)
+		s.change = ui.MorphAway(beforeSpec, cards.Hand)
 	case s.copied:
 		// **The original is not changed, so it does not morph.** It stands where it landed and the
 		// copy arrives out of nothing beside it, which is the only honest picture of a duplicate:
 		// there is no old face to come apart.
-		s.change = morphIn(cardSpec(s.after, heldByRun(gs, s.after), true, false), cards.Hand)
+		s.change = ui.MorphIn(ui.CardSpec(s.after, ui.HeldByRun(gs, s.after), true, false), cards.Hand)
 	default:
-		s.change = morphInto(beforeSpec,
-			cardSpec(s.after, heldByRun(gs, s.after), true, false), cards.Hand)
+		s.change = ui.MorphInto(beforeSpec,
+			ui.CardSpec(s.after, ui.HeldByRun(gs, s.after), true, false), cards.Hand)
 	}
 
 	// **The click is the commitment** *(owner's call, 2026-09-05)*. It was a preview with Take and
@@ -878,15 +880,15 @@ func (s *PostBattleScene) offerSeat(gs *state.GlobalState, i, count int) image.P
 // the hand leaves.
 func (s *PostBattleScene) sortTabRect(gs *state.GlobalState, i int) image.Rectangle {
 	row := s.offerRow(gs)
-	left := row.Max.X + sortColumnGap
-	top := row.Min.Y + i*ControlButtonHeight
-	return image.Rect(left, top, left+ControlColumnWidth(), top+ControlButtonHeight)
+	left := row.Max.X + ui.SortColumnGap
+	top := row.Min.Y + i*ui.ControlButtonHeight
+	return image.Rect(left, top, left+ui.ControlColumnWidth(), top+ui.ControlButtonHeight)
 }
 
 // setSort is the press on a tab. **It records the mode and nothing else** — the row is rearranged
 // by sortOffer on the same tick, which is where the global state a sort needs is available; a
 // button's OnClick reaches none on any screen in this package.
-func (s *PostBattleScene) setSort(mode handSort) { s.sortMode = mode }
+func (s *PostBattleScene) setSort(mode ui.HandSort) { s.sortMode = mode }
 
 // sortOffer arranges the offer row and sends every card that moved sliding to its new place.
 //
@@ -925,7 +927,7 @@ func (s *PostBattleScene) sortOffer(gs *state.GlobalState) {
 			// the player can still read if one ever does.
 			return s.offer[order[i]] < s.offer[order[j]]
 		}
-		return handLess(s.sortMode, a, b)
+		return ui.HandLess(s.sortMode, a, b)
 	})
 
 	sorted := make([]int, len(s.offer))
@@ -936,7 +938,7 @@ func (s *PostBattleScene) sortOffer(gs *state.GlobalState) {
 
 	// Nothing in this row stands proud of it: there is no selection on this screen, so the lift
 	// every slide carries is zero.
-	s.slides = slidesFor(s.slides, order, func(i int) actionCard {
+	s.slides = ui.SlidesFor(s.slides, order, func(i int) combat.Card {
 		c, _ := card(s.offer[i])
 		return c
 	}, func(int) int { return 0 })
@@ -949,10 +951,10 @@ func (s *PostBattleScene) sortOffer(gs *state.GlobalState) {
 // in flight is not being offered yet, and re-deriving it mid-slide would make the row flicker as
 // cards crossed each other.
 func (s *PostBattleScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
-	drawCardSlides(gs, screen, s.slides,
+	ui.DrawCardSlides(gs, screen, s.slides,
 		func(gs *state.GlobalState, i, count int) image.Point { return s.offerSeat(gs, i, count) },
-		func(sl cardSlide) cards.Spec {
-			return cardSpec(sl.card, heldByRun(gs, sl.card), true, false)
+		func(sl ui.CardSlide) cards.Spec {
+			return ui.CardSpec(sl.Card, ui.HeldByRun(gs, sl.Card), true, false)
 		})
 }
 
@@ -973,7 +975,7 @@ func (s *PostBattleScene) chosenEssence() (session.Essence, bool) {
 }
 
 func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	fillGround(screen)
+	ui.FillGround(screen)
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}
@@ -996,7 +998,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		op := &text.DrawOptions{}
 		op.GeoM.Translate(float64(gs.PctX(50)), float64(y))
 		op.PrimaryAlign = text.AlignCenter
-		op.ColorScale.ScaleWithColor(groundInk)
+		op.ColorScale.ScaleWithColor(ui.GroundInk)
 		text.Draw(screen, msg, face, op)
 	}
 
@@ -1032,32 +1034,23 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 			// A seat a card is still sliding into is left empty until it lands — the same rule
 			// the hand follows, and for the same reason: the list is already in its new order,
 			// so what is suppressed is a second drawing of a card that is on screen elsewhere.
-			if slideInto(s.slides, i) {
+			if ui.SlideInto(s.slides, i) {
 				continue
 			}
 			// **Every card is selectable and the essences are what go dim** *(2026-09-06)*. The row
 			// used to dim a card the chosen essence could not change, which was the same rule read in
 			// the other direction — with the card picked first there is no essence yet to ask, so the
 			// legality lands on the prize row instead. See essenceSpendable.
-			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, heldByRun(gs, card),
+			ui.DrawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, ui.HeldByRun(gs, card),
 				true, i == s.selected)
 		}
 		s.drawSlides(gs, screen)
-		s.sortTabs.draw(gs, screen)
+		s.sortTabs.Draw(gs, screen)
 	}
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
 	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.
 	s.tut.draw(gs, screen, s)
-}
-
-// settledSeat is where the won card comes to rest.
-//
-// **A copy needs two seats and everything else needs one**, so the row is laid out for the number
-// of cards that will be standing in it at the end — which is what stops the original having to
-// slide aside when the copy turns up. See settledSeats.
-func settledSeat(gs *state.GlobalState) image.Rectangle {
-	return settledSeats(gs, 1)[0]
 }
 
 // settledSeats lays the settled row out for n cards, centered.
@@ -1095,13 +1088,13 @@ func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Imag
 		seats = settledSeats(gs, 2)
 	}
 
-	at := flyingTo(s.arrivedFrom, seats[0], s.arrival)
+	at := ui.FlyingTo(s.arrivedFrom, seats[0], s.arrival)
 
 	// The card that was picked. While a copy is being made it is the original, untouched, and it is
 	// drawn plainly — the morph in the second seat is the whole of what is happening.
 	if s.copied {
-		drawCard(gs, screen, at, cards.Hand, s.before, heldByRun(gs, s.before), true, false)
-		drawMorph(gs, screen, seats[1].Min, s.change)
+		ui.DrawCard(gs, screen, at, cards.Hand, s.before, ui.HeldByRun(gs, s.before), true, false)
+		ui.DrawMorph(gs, screen, seats[1].Min, s.change)
 		return
 	}
 
@@ -1114,7 +1107,7 @@ func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Imag
 	//
 	// The morph is what draws the absence, by having no second face to hand over to. Nothing here
 	// asks whether this was a removal.
-	drawMorph(gs, screen, at, s.change)
+	ui.DrawMorph(gs, screen, at, s.change)
 }
 
 func (s *PostBattleScene) title() string {
@@ -1135,7 +1128,7 @@ func (s *PostBattleScene) title() string {
 func drawPrizeCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	p prize, enabled bool) {
 
-	drawEssenceCard(gs, screen, at, p.essence, enabled)
+	ui.DrawEssenceCard(gs, screen, at, p.essence, enabled)
 }
 
 // drawEssences puts the offer up as cards. **An essence is a card because it is a thing you are given**,
@@ -1182,9 +1175,9 @@ func (s *PostBattleScene) updateRelicRow(gs *state.GlobalState) {
 	row := buildRelicRow(gs, nil)
 
 	if !gs.CursorAllowed() {
-		s.relicDrag.cancel(row)
+		s.relicDrag.Cancel(row)
 		return
 	}
 
-	s.relicDrag.update(gs, row)
+	s.relicDrag.Update(gs, row)
 }

@@ -1,5 +1,5 @@
-// Package systems is the behavior for the structs in internal/models, plus the procedural art
-// generator.
+// Package systems is the behavior for the structs in internal/models, plus the door authored art
+// reaches the drawing through.
 //
 // The split is deliberate: a widget is a plain struct in models and a pair of Update* and Draw*
 // free functions here, taking (gs, ...). Nothing in models has a method that draws.
@@ -8,10 +8,11 @@
 //
 // ColorAtStrength and ColorToward are the two ways a color is dimmed, and they are not
 // interchangeable. ColorAtStrength scales toward black, which reads as quieter only against a dark
-// ground; ColorToward moves a color toward whatever it actually sits on. The combat screen's
-// ground is cream, so on it ColorAtStrength is the exception rather than the default, and reaching
-// for it to dim something drawn straight onto the table is a bug waiting to be seen. It still
-// governs buttons, because a button paints its own dark face and its label is white.
+// ground; ColorToward moves a color toward whatever it actually sits on. **Every screen's ground is
+// light** — a light slate blue since 2026-09-07, cream before that — so ColorAtStrength is the
+// exception rather than the default, and reaching for it to dim something drawn straight onto the
+// table is a bug waiting to be seen. It still governs buttons, because a button paints its own dark
+// face and its label is white.
 //
 // The rule both serve: a widget names the color it wants at full strength and scales down from it
 // for its other states. Scale a color, never add to it — adding a fixed step to every channel

@@ -33,6 +33,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -318,7 +319,7 @@ func (s *ShopScene) updateRerollButtons(gs *state.GlobalState) {
 		at := shopRerollRect(gs, p)
 		b.ScreenX, b.ScreenY = (at.Min.X+at.Max.X)/2, (at.Min.Y+at.Max.Y)/2
 		b.Text = fmt.Sprintf("REROLL %d", s.rerollPrice(p))
-		setEnabled(b, s.canReroll(gs, p))
+		ui.SetEnabled(b, s.canReroll(gs, p))
 		systems.UpdateButton(gs, b)
 	}
 }

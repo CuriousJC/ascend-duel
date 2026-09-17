@@ -30,6 +30,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -85,17 +86,17 @@ const (
 )
 
 // speedInTicks is the deal: eight cards crossing in from the left.
-func speedInTicks() int { return beat(6, 5) }
+func speedInTicks() int { return ui.Beat(6, 5) }
 
 // speedHoldTicks is the beat the hand is held before and after the riffle. **Short**, because a
 // hand at rest is the one part of the cycle that says nothing about the speed.
-func speedHoldTicks() int { return beat(2, 5) }
+func speedHoldTicks() int { return ui.Beat(2, 5) }
 
 // speedRiffleTicks is the shuffle itself.
-func speedRiffleTicks() int { return beat(1, 1) }
+func speedRiffleTicks() int { return ui.Beat(1, 1) }
 
 // speedOutTicks is the throw off the right-hand side.
-func speedOutTicks() int { return beat(6, 5) }
+func speedOutTicks() int { return ui.Beat(6, 5) }
 
 // speedStripShuffles are the permutations the strip cycles through, one per pass: where each card
 // goes, by seat.
@@ -248,7 +249,7 @@ func (s *speedStrip) draw(gs *state.GlobalState, screen *ebiten.Image, band imag
 		var geo ebiten.GeoM
 		geo.Scale(speedStripScale, speedStripScale)
 		geo.Translate(x, y)
-		drawFlyingCard(gs, screen, relicSpec(gs, record, "", true, false), cards.RelicStyle, geo)
+		ui.DrawFlyingCard(gs, screen, ui.RelicSpec(gs, record, "", true, false), cards.RelicStyle, geo)
 	}
 }
 
@@ -303,7 +304,7 @@ func (s *speedStrip) seatOf(i int, left, top, w float64) (float64, float64) {
 	switch s.phase {
 	case speedDealing:
 		// In from off the left edge, the first card leading.
-		t := easeOut(s.staggered(i))
+		t := ui.EaseOut(s.staggered(i))
 		return lerp(left-w*2.5, rest, t), top
 
 	case speedRiffling:
@@ -312,11 +313,11 @@ func (s *speedStrip) seatOf(i int, left, top, w float64) (float64, float64) {
 		// **A card arcs in proportion to how far it is going.** One that shuffles along a single
 		// seat barely leaves the table; one crossing the whole hand lifts clear of it.
 		lift := float64(speedStripLift) * float64(s.moved(i)) / float64(len(s.keys)-1)
-		return lerp(rest, shuffled, easeOut(t)), top - math.Sin(t*math.Pi)*lift
+		return lerp(rest, shuffled, ui.EaseOut(t)), top - math.Sin(t*math.Pi)*lift
 
 	case speedClearing:
 		// Off the right, still in their shuffled seats.
-		t := easeOut(s.staggered(i))
+		t := ui.EaseOut(s.staggered(i))
 		return lerp(shuffled, offRight, t), top
 
 	case speedSettling:

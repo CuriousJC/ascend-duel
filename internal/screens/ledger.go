@@ -32,6 +32,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
@@ -39,20 +40,20 @@ import (
 // ledgerPane is the panel the account is written on: **the fight log's own colors**, because
 // these are the log's rows and an off-white ground is what makes three saturated verb inks
 // readable. See pane.go.
-var ledgerPane = panePlacement{
-	title:     "THE LEDGER",
-	color:     paneEdge,
-	fill:      color.RGBA{R: 234, G: 230, B: 224, A: 255},
-	ink:       color.RGBA{R: 34, G: 32, B: 38, A: 255},
-	nowInk:    color.RGBA{R: 178, G: 22, B: 106, A: 255},
-	rowHeight: ledgerRowHeight,
-	firstRow:  ledgerFirstRow,
-	textSize:  ledgerTextSize,
-	bold:      true,
+var ledgerPane = ui.PanePlacement{
+	Title:     "THE LEDGER",
+	Color:     ui.PaneEdge,
+	Fill:      color.RGBA{R: 234, G: 230, B: 224, A: 255},
+	Ink:       color.RGBA{R: 34, G: 32, B: 38, A: 255},
+	NowInk:    color.RGBA{R: 178, G: 22, B: 106, A: 255},
+	RowHeight: ledgerRowHeight,
+	FirstRow:  ledgerFirstRow,
+	TextSize:  ledgerTextSize,
+	Bold:      true,
 
 	// The bar's whole column, so a heading's band stops before it rather than running underneath
 	// it. Derived from the bar rather than written down, for ledgerScrollRect's reason.
-	rightInset: ledgerScrollInset + ledgerScrollWidth + ledgerScrollGap,
+	RightInset: ledgerScrollInset + ledgerScrollWidth + ledgerScrollGap,
 }
 
 // The two grounds a fight is drawn on.
@@ -102,7 +103,7 @@ const (
 	// clears its title and nothing else, and this panel carries the closing X in the same band —
 	// so the first heading's own dark band ran up to the bottom of the X. Derived from the shared
 	// figure rather than typed, so a pane that re-lays out its title moves this with it.
-	ledgerFirstRow = paneFirstRow + 10
+	ledgerFirstRow = ui.PaneFirstRow + 10
 
 	// ledgerScrollGap is the air between the rows and the bar's column, so a banded heading stops
 	// short of it rather than ending under it.
@@ -125,7 +126,7 @@ const (
 // carries a fight number rather than a callback: the panel has one action and a row either offers
 // it or does not.
 type ledgerRow struct {
-	row paneRow
+	row ui.PaneRow
 
 	// fight is the record a click on this row folds or unfolds, or 0 for a row that is not a
 	// heading.
@@ -145,7 +146,7 @@ type LedgerPanel struct {
 	expanded map[int]bool
 
 	scroll *models.Scrollbar
-	closer modalCloser
+	closer ui.ModalCloser
 
 	// export is the button that writes the account out to a file, and what the last press of it
 	// came to. See ledger_export.go.
@@ -200,7 +201,7 @@ func (p *LedgerPanel) Update(gs *state.GlobalState) {
 
 	p.build(gs)
 
-	if p.closer.update(gs) {
+	if p.closer.Update(gs) {
 		p.open = false
 		return
 	}
@@ -211,8 +212,8 @@ func (p *LedgerPanel) Update(gs *state.GlobalState) {
 	p.export.update(gs, r)
 
 	if p.scroll == nil {
-		p.scroll = models.NewScrollbar(ledgerScrollWidth, r.Dy()-ledgerPane.firstRow-ledgerBottomInset)
-		p.scroll.Ground = ledgerPane.fill
+		p.scroll = models.NewScrollbar(ledgerScrollWidth, r.Dy()-ledgerPane.FirstRow-ledgerBottomInset)
+		p.scroll.Ground = ledgerPane.Fill
 	}
 	track := ledgerScrollRect(r)
 	p.scroll.Width, p.scroll.Height = track.Dx(), track.Dy()
@@ -255,8 +256,8 @@ func (p *LedgerPanel) clickRow(gs *state.GlobalState, r image.Rectangle, capacit
 		if idx < 0 || idx >= len(p.rows) || p.rows[idx].fight == 0 {
 			continue
 		}
-		top := r.Min.Y + ledgerPane.firstRow + i*ledgerPane.rowHeight
-		if at.Y < top || at.Y >= top+ledgerPane.rowHeight {
+		top := r.Min.Y + ledgerPane.FirstRow + i*ledgerPane.RowHeight
+		if at.Y < top || at.Y >= top+ledgerPane.RowHeight {
 			continue
 		}
 		if p.expanded == nil {
@@ -279,7 +280,7 @@ func (p *LedgerPanel) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		return
 	}
 
-	modalScrim(screen)
+	ui.ModalScrim(screen)
 
 	r := ledgerPanelRect(gs)
 	capacity := ledgerCapacity(r)
@@ -295,28 +296,28 @@ func (p *LedgerPanel) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		offset = 0
 	}
 
-	rows := make([]paneRow, 0, capacity)
+	rows := make([]ui.PaneRow, 0, capacity)
 	for i := offset; i < len(p.rows) && len(rows) < capacity; i++ {
 		rows = append(rows, p.rows[i].row)
 	}
 
-	drawPane(gs, screen, ledgerPane, r, rows)
+	ui.DrawPane(gs, screen, ledgerPane, r, rows)
 
 	if p.scroll != nil {
 		systems.DrawScrollbar(gs, screen, p.scroll)
 	}
 	p.export.draw(gs, screen, r)
-	p.closer.draw(gs, screen)
+	p.closer.Draw(gs, screen)
 }
 
 // ledgerPanelRect is the panel's footprint: the modal one, so the player learns one shape.
-func ledgerPanelRect(gs *state.GlobalState) image.Rectangle { return modalPanelRect(gs) }
+func ledgerPanelRect(gs *state.GlobalState) image.Rectangle { return ui.ModalPanelRect(gs) }
 
 // ledgerScrollRect is the bar's column, down the panel's right edge and clear of the title.
 func ledgerScrollRect(r image.Rectangle) image.Rectangle {
 	right := r.Max.X - ledgerScrollInset
-	top := r.Min.Y + ledgerPane.firstRow
-	if under := r.Min.Y + modalCloseInset + modalCloseSize + ledgerScrollTopGap; under > top {
+	top := r.Min.Y + ledgerPane.FirstRow
+	if under := r.Min.Y + ui.ModalCloseInset + ui.ModalCloseSize + ledgerScrollTopGap; under > top {
 		top = under
 	}
 	return image.Rect(right-ledgerScrollWidth, top, right, r.Max.Y-ledgerBottomInset)
@@ -326,7 +327,7 @@ func ledgerScrollRect(r image.Rectangle) image.Rectangle {
 // than written down**, for the reason the log derived its own: a constant claiming a capacity the
 // panel does not have is a panel that silently drops lines.
 func ledgerCapacity(r image.Rectangle) int {
-	n := (r.Dy() - ledgerPane.firstRow - ledgerBottomInset) / ledgerPane.rowHeight
+	n := (r.Dy() - ledgerPane.FirstRow - ledgerBottomInset) / ledgerPane.RowHeight
 	if n < 1 {
 		return 1
 	}
@@ -373,12 +374,12 @@ func ledgerSignature(gs *state.GlobalState, expanded map[int]bool) ledgerKey {
 // most likely opened for.
 func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 	if gs.Run == nil {
-		return []ledgerRow{{row: plainRow("No run to account for")}}
+		return []ledgerRow{{row: ui.PlainRow("No run to account for")}}
 	}
 
 	fights := gs.Run.LedgerFights()
 	if len(fights) == 0 {
-		return []ledgerRow{{row: plainRow("Nothing has happened yet")}}
+		return []ledgerRow{{row: ui.PlainRow("Nothing has happened yet")}}
 	}
 
 	open, hasOpen := gs.Run.LedgerOpenFight()
@@ -394,9 +395,9 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 
 		// The heading's own band, written in a light ink because it is text on a dark ground —
 		// the one place on this panel where that is true.
-		head := plainRow(ledgerHeading(f, live || expanded[f.Number]))
-		head.band = band
-		head.spans[0].ink = ledgerBandInk
+		head := ui.PlainRow(ledgerHeading(f, live || expanded[f.Number]))
+		head.Band = band
+		head.Spans[0].Ink = ledgerBandInk
 		rows = append(rows, ledgerRow{row: head, fight: fightToggle(f, live)})
 
 		if !live && !expanded[f.Number] {
@@ -407,12 +408,12 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 		// next. It is the whole reason the band exists: the panel scrolls, and a heading that has
 		// scrolled off the top has to leave something behind saying which fight is being read.
 		for _, round := range f.Rounds {
-			head := plainRow(fmt.Sprintf("- Round %d -", round.Number))
-			head.band = ground
+			head := ui.PlainRow(fmt.Sprintf("- Round %d -", round.Number))
+			head.Band = ground
 			rows = append(rows, ledgerRow{row: head})
 
-			for _, l := range paneRowsFor(round.Lines) {
-				l.band = ground
+			for _, l := range ui.PaneRowsFor(round.Lines) {
+				l.Band = ground
 				rows = append(rows, ledgerRow{row: l})
 			}
 		}
@@ -421,12 +422,12 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 		// terms rather than as a fourth kind of thing to fold: what the player did with the spoils
 		// is read against the duel that paid for them, so it opens and closes with it.
 		if len(f.After) > 0 {
-			head := plainRow(ledgerAfterHeading)
-			head.band = ground
+			head := ui.PlainRow(ledgerAfterHeading)
+			head.Band = ground
 			rows = append(rows, ledgerRow{row: head})
 
-			for _, l := range paneRowsFor(f.After) {
-				l.band = ground
+			for _, l := range ui.PaneRowsFor(f.After) {
+				l.Band = ground
 				rows = append(rows, ledgerRow{row: l})
 			}
 		}

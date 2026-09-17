@@ -1,8 +1,9 @@
 package screens
 
 import (
-	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"testing"
+
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/profile"

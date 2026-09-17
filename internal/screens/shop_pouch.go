@@ -31,6 +31,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -72,7 +73,7 @@ const (
 // pouchToggle is the panel behind the S button: which carried stone is armed, and what its tabs
 // have been asked to do.
 type pouchToggle struct {
-	modalToggle
+	ui.ModalToggle
 
 	// armed is the seat in the pouch whose tabs are up, and -1 for none.
 	//
@@ -92,7 +93,7 @@ type pouchToggle struct {
 // pouchCornerPlace is where the S button stands: the bottom line's third square, one in from the
 // deck button and two from the frame's cog. **The frame's own strip** — see ChromeCornerSlot.
 func pouchCornerPlace(gs *state.GlobalState) image.Point {
-	return ChromeCornerCenter(gs, ChromeSlotStones)
+	return ui.ChromeCornerCenter(gs, ui.ChromeSlotStones)
 }
 
 // pouchRow is the run's carried stones, resolved, in the order they were acquired.
@@ -116,7 +117,7 @@ func pouchRow(gs *state.GlobalState) []session.Stone {
 
 // init wires the button and the two tabs.
 func (t *pouchToggle) init() {
-	t.modalToggle.init(pouchToggleLabel, ChromeButtonSize, ChromeButtonSize, pouchToggleText,
+	t.ModalToggle.Init(pouchToggleLabel, ui.ChromeButtonSize, ui.ChromeButtonSize, pouchToggleText,
 		pouchCornerPlace)
 	t.armed, t.doing = -1, pouchNone
 
@@ -140,7 +141,7 @@ func (t *pouchToggle) init() {
 // row, which is the one row in the game already written to lay an arbitrary number of cards out
 // inside a modal frame.
 func (t *pouchToggle) cardRects(gs *state.GlobalState) []image.Rectangle {
-	r := modalPanelRect(gs)
+	r := ui.ModalPanelRect(gs)
 	return runeCardRects(r, len(pouchRow(gs)), r.Min.Y+r.Dy()*pouchRowPct/100)
 }
 
@@ -172,8 +173,8 @@ func midOf(r image.Rectangle) (int, int) {
 func (s *ShopScene) updatePouch(gs *state.GlobalState) bool {
 	// **The button stands down when the pouch is empty**, which is the rule the rune sack's
 	// own opener is under: a control lit for something the player cannot do is worse than none.
-	s.pouch.block(s.deck.open || s.hands.open || gs.Run == nil || gs.Run.CarryCount() == 0)
-	if !s.pouch.open {
+	s.pouch.Block(s.deck.IsOpen() || s.hands.IsOpen() || gs.Run == nil || gs.Run.CarryCount() == 0)
+	if !s.pouch.IsOpen() {
 		s.pouch.armed, s.pouch.doing = -1, pouchNone
 	}
 
@@ -191,7 +192,7 @@ func (s *ShopScene) updatePouch(gs *state.GlobalState) bool {
 		s.pouch.armed = -1
 	}
 
-	if s.pouch.open && s.pouch.armed >= 0 {
+	if s.pouch.IsOpen() && s.pouch.armed >= 0 {
 		use, sell := s.pouch.tabRects(gs)
 		s.pouch.sell.Text = fmt.Sprintf("Sell %d", session.StoneSalePrice)
 		s.pouch.use.ScreenX, s.pouch.use.ScreenY = midOf(use)
@@ -200,7 +201,7 @@ func (s *ShopScene) updatePouch(gs *state.GlobalState) bool {
 		systems.UpdateButton(gs, s.pouch.sell)
 	}
 
-	return s.pouch.modalToggle.update(gs, func(at image.Point, tip *models.Tooltip) {
+	return s.pouch.ModalToggle.Update(gs, func(at image.Point, tip *models.Tooltip) {
 		s.pouchHover(gs, at, tip)
 	})
 }
@@ -218,7 +219,7 @@ func (s *ShopScene) pouchHover(gs *state.GlobalState, at image.Point, tip *model
 		if i >= len(row) || !at.In(seat) {
 			continue
 		}
-		tip.Point(seat, tipLine(row[i].Name), tipLines(stoneTipLines(gs, row[i])))
+		tip.Point(seat, ui.TipLine(row[i].Name), ui.TipLines(stoneTipLines(gs, row[i])))
 
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
 			// Clicking the armed stone disarms it, which is the worn row's own gesture.
@@ -258,7 +259,7 @@ func (s *ShopScene) takeStone(gs *state.GlobalState, what pouchAction, i int) {
 
 // drawPouch puts the button and, if it is open, the panel on screen.
 func (s *ShopScene) drawPouch(gs *state.GlobalState, screen *ebiten.Image) {
-	s.pouch.modalToggle.draw(gs, screen, func() { s.drawPouchPanel(gs, screen) })
+	s.pouch.ModalToggle.Draw(gs, screen, func() { s.drawPouchPanel(gs, screen) })
 }
 
 // drawPouchPanel is the panel: the carried stones, and the two tabs under whichever is armed.
@@ -267,7 +268,7 @@ func (s *ShopScene) drawPouch(gs *state.GlobalState, screen *ebiten.Image) {
 // there is no price to fail to afford and no rung that can refuse a raise — so a dimmed card here
 // would be saying something untrue.
 func (s *ShopScene) drawPouchPanel(gs *state.GlobalState, screen *ebiten.Image) {
-	r := drawModalFrame(gs, screen, modalHead{})
+	r := ui.DrawModalFrame(gs, screen, ui.ModalHead{})
 	row := pouchRow(gs)
 
 	prompt := "Your stones - use one, or sell it"
@@ -279,14 +280,14 @@ func (s *ShopScene) drawPouchPanel(gs *state.GlobalState, screen *ebiten.Image) 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+pouchPromptDrop))
 	op.PrimaryAlign = text.AlignCenter
-	op.ColorScale.ScaleWithColor(groundInk)
+	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, prompt, face, op)
 
 	for i, seat := range s.pouch.cardRects(gs) {
 		if i >= len(row) {
 			break
 		}
-		drawStoneCard(gs, screen, seat.Min, row[i], true)
+		ui.DrawStoneCard(gs, screen, seat.Min, row[i], true)
 	}
 
 	if s.pouch.armed < 0 || s.pouch.armed >= len(row) {

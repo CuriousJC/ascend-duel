@@ -8,6 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The shelf's arithmetic and the two rows' geometry, both of which need no window — the same narrow
@@ -267,8 +268,8 @@ func shopState(t *testing.T) *state.GlobalState {
 func TestTheCornerControlsDoNotOverlap(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
-	settings := ChromeCornerSlot(gs, ChromeSlotSettings)
-	stones := ChromeCornerSlot(gs, ChromeSlotStones)
+	settings := ui.ChromeCornerSlot(gs, ui.ChromeSlotSettings)
+	stones := ui.ChromeCornerSlot(gs, ui.ChromeSlotStones)
 
 	if !stones.Intersect(settings).Empty() {
 		t.Errorf("the bottom line overlaps: settings %v, stones %v", settings, stones)
@@ -307,7 +308,7 @@ func TestTheTabsUnderAnArmedStoneStayInsideThePanel(t *testing.T) {
 	s := &ShopScene{}
 	s.pouch.init()
 
-	panel := modalPanelRect(gs)
+	panel := ui.ModalPanelRect(gs)
 	for i := range run.Carried() {
 		s.pouch.armed = i
 		use, sell := s.pouch.tabRects(gs)
@@ -336,9 +337,9 @@ func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	pile := shopPileBounds(gs)
-	if pile.Max.X >= ControlColumnLeft(gs) {
+	if pile.Max.X >= ui.ControlColumnLeft(gs) {
 		t.Errorf("the pile ends at %d and the column starts at %d",
-			pile.Max.X, ControlColumnLeft(gs))
+			pile.Max.X, ui.ControlColumnLeft(gs))
 	}
 	if pile.Min.X < 0 || shopPileCountRect(gs).Max.Y > gs.ScreenHeight {
 		t.Errorf("the pile and its count run off the screen: %v", pile)

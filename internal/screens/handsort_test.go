@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The sort tabs where they are shared: one preference over every screen that deals a hand, and the
@@ -19,16 +20,16 @@ func TestTheSortPreferenceIsOneThingForTheWholeGame(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = 1920, 1080
 
-	setHandSort(gs, sortByElement)
+	ui.SetHandSort(gs, ui.SortByElement)
 
 	var post PostBattleScene
 	post.Init(gs)
-	if post.sortMode != sortByElement {
-		t.Errorf("the essence screen opened sorting by %v, want %v", post.sortMode, sortByElement)
+	if post.sortMode != ui.SortByElement {
+		t.Errorf("the essence screen opened sorting by %v, want %v", post.sortMode, ui.SortByElement)
 	}
 
-	if got := handSortOf(gs); got != sortByElement {
-		t.Errorf("the state reports %v, want %v", got, sortByElement)
+	if got := ui.HandSortOf(gs); got != ui.SortByElement {
+		t.Errorf("the state reports %v, want %v", got, ui.SortByElement)
 	}
 }
 
@@ -36,11 +37,11 @@ func TestTheSortPreferenceIsOneThingForTheWholeGame(t *testing.T) {
 // already arranged the way a fresh screen is — including the one OpeningCards builds with no
 // global state at all.
 func TestAFreshStateSortsByCost(t *testing.T) {
-	if got := handSortOf(&state.GlobalState{}); got != sortByCost {
-		t.Errorf("a fresh state sorts by %v, want %v", got, sortByCost)
+	if got := ui.HandSortOf(&state.GlobalState{}); got != ui.SortByCost {
+		t.Errorf("a fresh state sorts by %v, want %v", got, ui.SortByCost)
 	}
-	if got := handSortOf(nil); got != sortByCost {
-		t.Errorf("no state at all sorts by %v, want %v", got, sortByCost)
+	if got := ui.HandSortOf(nil); got != ui.SortByCost {
+		t.Errorf("no state at all sorts by %v, want %v", got, ui.SortByCost)
 	}
 }
 
@@ -50,8 +51,8 @@ func TestTheEssenceOfferIsArrangedByTheSortMode(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = 1920, 1080
 
-	for _, mode := range []handSort{sortByCost, sortByType, sortByElement} {
-		setHandSort(gs, mode)
+	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByType, ui.SortByElement} {
+		ui.SetHandSort(gs, mode)
 
 		var s PostBattleScene
 		s.Init(gs)
@@ -65,7 +66,7 @@ func TestTheEssenceOfferIsArrangedByTheSortMode(t *testing.T) {
 			if !aok || !bok {
 				t.Fatalf("offer holds an index the deck does not: %v", s.offer)
 			}
-			if handLess(mode, b, a) {
+			if ui.HandLess(mode, b, a) {
 				t.Errorf("sorted by %v, card %d comes before card %d in the row", mode, i, i-1)
 			}
 		}
@@ -83,7 +84,7 @@ func TestTheEssenceScreensSortBlockFitsBesideItsRow(t *testing.T) {
 	s.Init(gs)
 
 	row := s.offerRow(gs)
-	block := s.sortTabs.rect(gs)
+	block := s.sortTabs.Rect(gs)
 
 	if block.Min.X < row.Max.X {
 		t.Errorf("the block starts at %d, inside a row that ends at %d", block.Min.X, row.Max.X)
@@ -105,8 +106,8 @@ func TestTheTwoScreensLeaveTheSameAirBesideTheirCards(t *testing.T) {
 	var s PostBattleScene
 	s.Init(gs)
 
-	if got := s.sortTabs.rect(gs).Min.X - s.offerRow(gs).Max.X; got != sortColumnGap {
-		t.Errorf("the essence screen leaves %d beside its row, want %d", got, sortColumnGap)
+	if got := s.sortTabs.Rect(gs).Min.X - s.offerRow(gs).Max.X; got != ui.SortColumnGap {
+		t.Errorf("the essence screen leaves %d beside its row, want %d", got, ui.SortColumnGap)
 	}
 	if got := sortColumnRect(gs).Min.X - (handBandLeft(gs) + cardBandWidth(gs)); got != 0 {
 		t.Errorf("the combat screen's block is %d off the card band's right edge, want 0", got)

@@ -2,10 +2,12 @@ package screens
 
 import (
 	"fmt"
-	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"image"
 	"math"
 	"math/rand"
+
+	"github.com/curiousjc/ascend-duel/internal/achieve"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -31,7 +33,7 @@ import (
 // by itself. A fraction of the one playback speed like every other clock here, and **the one
 // number to move if the pause reads as too long or too short** — the picture it holds up is the
 // last round of a won duel, cards on the table and an empty enemy bar. See holdVictory.
-func victoryHoldTicks() int { return beat(4, 1) }
+func victoryHoldTicks() int { return ui.Beat(4, 1) }
 
 // defeatButtonLabel is what the DUEL! slot says once the duelist has fallen.
 //
@@ -103,7 +105,7 @@ func eventDwell(kind combat.EventKind) int {
 	if !ok {
 		mult = 1
 	}
-	if ticks := int(math.Round(float64(speedTicks()) * mult)); ticks > 1 {
+	if ticks := int(math.Round(float64(ui.SpeedTicks()) * mult)); ticks > 1 {
 		return ticks
 	}
 	return 1
@@ -114,7 +116,7 @@ func eventDwell(kind combat.EventKind) int {
 // on screen yet, so the lead-in takes the plain beat.
 func (s *CombatScene) dwellForCurrent() int {
 	if s.cursor <= 0 || s.cursor > len(s.log) {
-		return speedTicks()
+		return ui.SpeedTicks()
 	}
 	return eventDwell(s.log[s.cursor-1].Kind)
 }
@@ -175,12 +177,6 @@ func (s *CombatScene) shuffleSeeds(gs *state.GlobalState) (player, enemy int64) 
 // not a balanced one.
 const discardsPerRound = 4
 
-// panelBlue is the stroke around a dialog and the toast's dismiss button. It was the
-// action-point bar's own blue until 2026-09-10, when the bar's cells went red and the name
-// stopped describing what it does — every remaining caller is a panel edge, so it is named
-// for that rather than for the widget it used to belong to.
-var panelBlue = color.RGBA{R: 70, G: 130, B: 230, A: 255}
-
 // apSpentColor fills an action point already committed to the round *(owner's call,
 // 2026-09-10)*. The bar is the round timer's picture one row down — a cell per point, bevelled,
 // sunken while it is still yours and raised once it is gone — so what a spent cell needs is a
@@ -207,7 +203,7 @@ var apSpentColor = color.RGBA{R: 196, G: 124, B: 12, A: 255}
 // color the destructive answer on a confirm dialog takes. Over-allocation is a state you have
 // to leave before you can duel, so it reads as a warning rather than as more of the same bar,
 // and this is the existing meaning of that red rather than a new claim on a hue.
-var apOverColor = modalCloseColor
+var apOverColor = ui.ModalCloseColor
 
 // CombatScene runs one duel: the player plans a set of actions against an action
 // point budget, presses DUEL!, watches the round play out, and plans again.
@@ -226,9 +222,9 @@ type CombatScene struct {
 	// The player's deck, in three piles. hand is what the action box draws and the only
 	// one the player touches; deck is the draw pile and discard is what has been spent.
 	// A card played this round moves to discard when the round resolves.
-	deck    []actionCard
+	deck    []combat.Card
 	hand    []paletteCard
-	discard []actionCard
+	discard []combat.Card
 
 	// playedTurn is the last turn the player actually resolved, kept for one tick so the
 	// achievements can be asked about it.
@@ -306,18 +302,18 @@ type CombatScene struct {
 
 	// The press in progress over the hand, and the card it has lifted out of the row. See
 	// carddrag.go for the lifecycle and combat_actionbox.go for the row it runs on.
-	drag   cardDrag
+	drag   ui.CardDrag
 	lifted paletteCard
 
 	// The press in progress over the worn relic row. **Its own controller rather than the hand's**,
 	// because the two rows are live at once and under different conditions: the hand is dead while
 	// a round resolves and the relic row is not.
-	relicDrag cardDrag
+	relicDrag ui.CardDrag
 
 	// The press in progress over the sack. **A third controller for the third draggable row**, for
 	// the reason the relic row has its own: all three are live at once and under different
 	// conditions, and one controller would make a press on any of them cancel the others.
-	runeDrag cardDrag
+	runeDrag ui.CardDrag
 
 	// relicShake is each worn seat's shake and cardShake each played card's, with shakeItem the item
 	// of the hand dialog's script that was running when the last one was started — which is how one
@@ -325,15 +321,15 @@ type CombatScene struct {
 	// **A slice, grown to reach whatever seat rattles** — the relic row has no width any more, so
 	// neither has this. See combat.Duelist.Relics, shakeRelicAt which grows it, and shakeFor which
 	// is how the drawing reads it.
-	relicShake []travel
-	cardShake  []travel
+	relicShake []ui.Travel
+	cardShake  []ui.Travel
 	shakeItem  int
 
-	// deckView is how the deck overlay is being read — the alterations and FULL/PLAYED toggles
+	// DeckView is how the deck overlay is being read — the alterations and FULL/PLAYED toggles
 	// along its bottom edge. **Not reset by Init**, exactly like sortMode: a reading preference is
 	// not a fact about a duel, and snapping back every fight would make it something the player
 	// re-presses.
-	deckView deckView
+	DeckView ui.DeckView
 
 	// showDeck toggles the deck overlay. While it is up the cards underneath do not
 	// respond, so reading the deck cannot accidentally re-plan the round.
@@ -347,12 +343,12 @@ type CombatScene struct {
 	// closer is the red X on the deck overlay. It is a shared piece rather than the panel's own
 	// because the fight log used to share it; the hands panel and the sack carry their own,
 	// inside their toggles.
-	closer modalCloser
+	closer ui.ModalCloser
 
 	// hands is the third dialog: every rung of the hand ladder, written as a sum. It carries
 	// its own button and its own open flag, because it arrived after the shared modal chrome
 	// existed and there was no reason to give the screen a fourth pair of fields by hand.
-	hands handsToggle
+	hands ui.HandsToggle
 
 	// stones is a rock shower's stones on their way to the pouch. **There is no sack dialog any
 	// more** *(owner's call, 2026-09-06)* — a rune is clicked in the consumables pane on the
@@ -374,14 +370,14 @@ type CombatScene struct {
 	// fight ended once a frame.
 	ledgerClosed bool
 
-	// theater is everything this screen has moving on it: the cards in the air, the two rows on
+	// Theater is everything this screen has moving on it: the cards in the air, the two rows on
 	// the table, the damage figures, the shield pips, the hand's name and the sum it flies into.
 	//
 	// **Eleven flat fields until 2026-08-21**, with the rules that govern all of them repeated as
-	// comments across six files. See theater.go for those rules and why they are a type now. The
-	// one this grouping actually buys: a theater is taken down all at once, so `Init` clears it in
+	// comments across six files. See Theater.go for those rules and why they are a type now. The
+	// one this grouping actually buys: a Theater is taken down all at once, so `Init` clears it in
 	// a line rather than in six statements that each had to be remembered.
-	theater combatTheater
+	Theater combatTheater
 
 	// The fighter's own resources, drawn in the character block. discardsLeft refills
 	// every round. **Vitae is the run's, not the screen's** *(2026-08-17)* — see session.Session,
@@ -441,8 +437,8 @@ type CombatScene struct {
 	// preference itself: Init loads it and updateSortButtons writes it back, so the arrangement
 	// a player chose here is the one the essence screen's offer arrives in. It was the one field
 	// Init did not reset, which is now true of the global one instead.
-	sortMode handSort
-	sortTabs *sortTabs
+	sortMode ui.HandSort
+	SortTabs *ui.SortTabs
 
 	// tut is Bob, when a run is being taught. **A field on the scene rather than global state**,
 	// because the widget is this screen's — the two buttons and where the bubble last sat. What
@@ -472,7 +468,7 @@ type CombatScene struct {
 func (s *CombatScene) Init(gs *state.GlobalState) {
 	// The deal captures its faces here, before anything has been drawn, so the picture bank has to
 	// be reachable before the first frame rather than on the first blit. See useImages.
-	useImages(gs)
+	ui.UseImages(gs)
 
 	if s.showingDuel(gs) {
 		s.placeWidgets(gs)
@@ -502,7 +498,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	//
 	// Nothing is lost by rebuilding: a duel already restores full life below, and everything else
 	// on the combatant comes out of the record.
-	s.fighter = duelistFromRecord(gs, playerRecord)
+	s.fighter = ui.DuelistFromRecord(gs, ui.PlayerRecord)
 
 	// **What the player is wearing is part of hydrating them**, not part of resetting a duel:
 	// relics are run-level and a fight does not take them off. **The run puts them on**, which is
@@ -556,7 +552,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	// the hand slots they claimed. All of those are the same bug: a settled duel freezes rather
 	// than spending its hand, so anything tidied up only by the end-of-round spend is still there.
 	// A mover added tomorrow is covered without anybody remembering. See combatTheater.clear.
-	s.theater.clear()
+	s.Theater.Clear()
 
 	s.died = false
 	s.victoryHeld = 0
@@ -573,9 +569,9 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	// The queue starts empty every visit and is derived from what is selected in hand.
 	// DUEL! is disabled until something is in it.
 	s.fighterActions = nil
-	s.drag = cardDrag{}
-	s.relicDrag = cardDrag{}
-	s.runeDrag = cardDrag{}
+	s.drag = ui.CardDrag{}
+	s.relicDrag = ui.CardDrag{}
+	s.runeDrag = ui.CardDrag{}
 	s.relicShake, s.cardShake, s.shakeItem = nil, nil, 0
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
@@ -661,11 +657,11 @@ func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
 	// hand and commits nothing, so it belongs against the thing it arranges. **The mode is
 	// loaded rather than reset** — it is `gs.HandSort`, a reading preference shared with every
 	// other screen that deals a hand, and this is where this screen picks it up.
-	s.sortMode = handSortOf(gs)
-	if s.sortTabs == nil {
+	s.sortMode = ui.HandSortOf(gs)
+	if s.SortTabs == nil {
 		s.buildSortButtons()
 	}
-	s.sortTabs.place(gs)
+	s.SortTabs.Place(gs)
 
 	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
 	s.discardButton.ScreenX = discardX
@@ -674,9 +670,9 @@ func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
 	s.duelButton.ScreenY = buttonStripY(gs)
 
 	s.showDeck = false
-	s.hands.initInColumn(handsButtonPlace)
+	s.hands.InitInColumn(handsButtonPlace)
 	s.stones = nil
-	s.tip = models.Tooltip{DwellTicks: tipDwell()}
+	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 }
 
 // resetCombatState clears everything a duel accumulates, leaving the stats a combatant was
@@ -830,7 +826,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// those change screen and there is nothing to point at on the way out.
 	s.tut.update(gs, s)
 
-	s.theater.tick()
+	s.Theater.Tick()
 
 	// **Pips are paid in as they arrive, wherever the round is.** A flight raised inside the hand
 	// dialog can outlive it — the box stops holding the cursor the moment its script ends — so the
@@ -848,12 +844,12 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// The deck panel's own two toggles, live only while it is up. They are a view over a picture
 	// of the deck and can change nothing about the round underneath — see deckView.
 	if s.showDeck {
-		s.deckView.update(gs, s.fightContents())
+		s.DeckView.Update(gs, s.fightContents())
 	}
 
 	// The X, run while either of the two older dialogs is up. The hands panel closes itself.
 	if s.showDeck {
-		if s.closer.update(gs) {
+		if s.closer.Update(gs) {
 			s.showDeck = false
 		}
 	}
@@ -862,8 +858,8 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// under the other: a dialog whose exit is not the brightest thing on screen is a trap, and two
 	// live exits is two. **The sack used to be the fourth dialog** and is now a pane on the top
 	// row — see combat_rune.go.
-	s.hands.block(s.showDeck)
-	s.hands.update(gs)
+	s.hands.Block(s.showDeck)
+	s.hands.Update(gs)
 
 	s.updateConsumables(gs)
 	s.updateStoneFlights()
@@ -905,7 +901,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		// either.
 		if s.victoryPending() {
 			s.holdVictory()
-			setEnabled(s.discardButton, false)
+			ui.SetEnabled(s.discardButton, false)
 			systems.UpdateButton(gs, s.discardButton)
 			return nil
 		}
@@ -914,8 +910,8 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		// duelist falls; the press is the player deciding they have looked long enough, not a
 		// decision about whether to die. See nextFight.
 		s.duelButton.Text, s.duelButton.OnClick = defeatButtonLabel, s.nextFight
-		setEnabled(s.duelButton, !s.modalUp())
-		setEnabled(s.discardButton, false)
+		ui.SetEnabled(s.duelButton, !s.modalUp())
+		ui.SetEnabled(s.discardButton, false)
 
 		systems.UpdateButton(gs, s.duelButton)
 		systems.UpdateButton(gs, s.discardButton)
@@ -939,8 +935,8 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// This is what makes over-allocating safe to allow: the budget is enforced here, at the
 	// point of playing, rather than at the point of picking a card up.
 	live := s.planning() && len(s.fighterActions) > 0 && !s.modalUp()
-	setEnabled(s.duelButton, live && !s.overBudget())
-	setEnabled(s.discardButton, live && s.discardsLeft > 0)
+	ui.SetEnabled(s.duelButton, live && !s.overBudget())
+	ui.SetEnabled(s.discardButton, live && s.discardsLeft > 0)
 
 	systems.UpdateButton(gs, s.duelButton)
 	systems.UpdateButton(gs, s.discardButton)
@@ -977,18 +973,6 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	return nil
 }
 
-// setEnabled flips a button between disabled and normal without clobbering a hover or
-// press it is in the middle of.
-func setEnabled(b *models.Button, enabled bool) {
-	if !enabled {
-		b.State = models.ButtonStateDisabled
-		return
-	}
-	if b.State == models.ButtonStateDisabled {
-		b.State = models.ButtonStateNormal
-	}
-}
-
 // heldCards is the cards still in the hand that are not being played this round.
 //
 // **Taken at the press, before the queued cards leave the row.** `spendSelected` filters them out
@@ -1000,7 +984,7 @@ func (s *CombatScene) heldCards() []combat.Card {
 		if c.selected {
 			continue
 		}
-		out = append(out, c.actionCard)
+		out = append(out, c.Card)
 	}
 	return out
 }
@@ -1178,17 +1162,17 @@ func (s *CombatScene) startRound() {
 	// seatEnemyCards, which is the line that actually invalidates them — see there. A settled duel
 	// never reaches either and freezes with its breaks on screen, which is the picture the player
 	// is looking at when the fight ended.
-	s.theater.breaksStaged = false
+	s.Theater.breaksStaged = false
 
-	s.theater.banner.clear()
+	s.Theater.banner.Clear()
 	if blow, ok := s.previewAttack(); ok {
-		s.theater.banner = handBanner{
+		s.Theater.banner = handBanner{
 			name: handShout(blow.Hand.Name),
 			// The multiplier travels with the name, so what the hand is worth is written down
 			// from the moment it was chosen rather than first met when the figure flies out of
 			// the word. See handBanner.
 			mult:   handMultiplierLine(blow.Multiplier),
-			flight: newTravel(0, bannerFlyTicks()),
+			flight: ui.NewTravel(0, bannerFlyTicks()),
 			flying: true,
 		}
 	}
@@ -1255,8 +1239,8 @@ func (s *CombatScene) startRound() {
 	// full at this moment and is drawn from enemyActions directly; the player's is dealt out of
 	// the hand by the flights seatPlayedCards raises. Nothing here decides anything — the round
 	// above is already resolved. See combat_table.go.
-	s.theater.firingSeats, s.theater.enemyFiringSeats = nil, nil
-	s.theater.mathBox.clear()
+	s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
+	s.Theater.mathBox.Clear()
 	s.seatPlayedCards()
 
 	// The whole round, not a count of it. ResolveRound already decided every one of these
@@ -1308,7 +1292,7 @@ func eventLabel(e combat.Event) string {
 		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
 	case combat.KindHand:
 		return fmt.Sprintf("attack      %v forms %s (x%d.%02d)",
-			e.Side, handName(e), e.Multiplier/100, e.Multiplier%100)
+			e.Side, ui.HandName(e), e.Multiplier/100, e.Multiplier%100)
 	case combat.KindChilled:
 		return fmt.Sprintf("chilled     %v loses its %v", e.Side, e.Action)
 	case combat.KindDefeated:
@@ -1333,7 +1317,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	//
 	// **It still cannot change an outcome.** The round was decided before a frame of this was
 	// drawn; what waits is the drawing of it.
-	if s.theater.mathBox.running() {
+	if s.Theater.mathBox.Running() {
 		// **A card firing holds the sum where it is** *(owner's call, 2026-09-10)*. The signals are
 		// launched one card's at a time, so letting the script run on would put the next term on
 		// screen over a firework belonging to the last one — and the cards the hand kept back are
@@ -1341,17 +1325,17 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		// the sum beginning until their figures have landed. Only the signals: the shield pips
 		// below deliberately fly alongside the sum rather than stopping it, because a pip lands on
 		// a row two inches away and a signal crosses the screen.
-		if running(s.theater.signals) {
+		if ui.Running(s.Theater.signals) {
 			return
 		}
 
-		s.theater.mathBox.tick()
+		s.Theater.mathBox.Tick()
 
 		// **A played card's riders fire on the beat its own figure sets off**, which is the same
 		// beat and the same argument as the pips below. See combat_signal.go, where the deferral is
 		// argued: these events were reached several beats ago and are drawn here.
-		if seat, ok := s.theater.mathBox.takeSignalSeat(); ok {
-			s.releaseSeatSignals(s.theater.mathBox.side, seat)
+		if seat, ok := s.Theater.mathBox.takeSignalSeat(); ok {
+			s.releaseSeatSignals(s.Theater.mathBox.side, seat)
 		}
 
 		// **The pips are not the sum's any more** *(owner's call, 2026-09-15)*. A defend card raises
@@ -1365,8 +1349,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		// moved. The name goes with it rather than a beat later: it has been carried down, said,
 		// and spent, and leaving it lit over the hand while the sum finishes and the enemy swings
 		// back is a word breathing at the player long after it has anything left to tell them.
-		if s.theater.mathBox.at >= s.theater.mathBox.multAt {
-			s.theater.banner.clear()
+		if s.Theater.mathBox.at >= s.Theater.mathBox.multAt {
+			s.Theater.banner.Clear()
 		}
 		return
 	}
@@ -1378,8 +1362,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	//
 	// **It reads ahead in the resolved log**, which nothing else on this screen does — see
 	// stageShieldBreaks, where that is argued and confined.
-	if !s.theater.breaksStaged && s.cursor < len(s.log) && s.log[s.cursor].Side == combat.SideB {
-		s.theater.breaksStaged = true
+	if !s.Theater.breaksStaged && s.cursor < len(s.log) && s.log[s.cursor].Side == combat.SideB {
+		s.Theater.breaksStaged = true
 		if s.stageShieldBreaks(gs) {
 			return
 		}
@@ -1404,7 +1388,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	//
 	// **Which movers hold the round is the theater's answer, not this function's** — see
 	// combatTheater.running. It changes pacing and cannot change an outcome.
-	if s.theater.running() {
+	if s.Theater.Running() {
 		return
 	}
 
@@ -1427,8 +1411,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	//
 	// A turn that misses rather than landing clears it the same way, on its `KindMissed`. When the
 	// strike-through arrives that event will want this same handoff, so keep them together.
-	if s.theater.mathBox.active && !s.theater.mathBox.running() {
-		s.theater.mathBox.clear()
+	if s.Theater.mathBox.active && !s.Theater.mathBox.Running() {
+		s.Theater.mathBox.Clear()
 
 		// **Anything the sum never claimed fires now.** A card can be played and earn no term — a
 		// lone Brace beside a pair, a third element in a two-card hand — so it has no beat in the
@@ -1472,16 +1456,15 @@ func (s *CombatScene) endOfRound() {
 	// **The figures the cards were drawing on top of the model are now in the model.** Everything a
 	// rider granted this round arrives with the adoption above, so a tally kept a frame longer
 	// would be counted twice. See signalShown.
-	s.theater.adopted()
+	s.Theater.adopted()
 
-	// **The adoption above is where banked points become `BonusAP`**, so what the cards have been
-	// drawing on top of it since the figures landed is now in the model and has to stop being
-	// added. Before the early return below: a settled duel adopts its end state like any other.
+	// Before the early return below: a settled duel adopts its end state like any other.
+	//
 	// **The shield rows hand authority back to the model and forget this round's seats.** The pips
 	// themselves stay: the shields survive the round, and their colors are the only account of what
 	// raised them. See shield_row.go.
-	for i := range s.theater.shieldRows {
-		s.theater.shieldRows[i].endRound()
+	for i := range s.Theater.shieldRows {
+		s.Theater.shieldRows[i].EndRound()
 	}
 
 	if s.duelSettled() {
@@ -1491,7 +1474,7 @@ func (s *CombatScene) endOfRound() {
 	// **The banner is usually gone by now**, cleared on the frame its multiplier flew into the sum
 	// — see advancePlayback. This is the round that scored no hand at all: nothing took the name
 	// down because nothing ever asked for it.
-	s.theater.banner.clear()
+	s.Theater.banner.Clear()
 
 	// The hand is spent here rather than at resolve time, and the ordering matters:
 	// endRoundHand rebuilds fighterActions from what is left, and the Resolution pane draws
@@ -1535,7 +1518,7 @@ func (s *CombatScene) planEnemyRound() {
 	//
 	// **After the alive check, not before it.** A finished duel keeps its last round on the table
 	// with the killing blow still raised; that row is the result the player is looking at.
-	s.theater.firingSeats, s.theater.enemyFiringSeats = nil, nil
+	s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
 
 	s.enemyActions = s.enemyPile.Plan(s.enemy.Duelist)
 	s.seatEnemyCards()
@@ -1660,7 +1643,7 @@ func (s *CombatScene) applyStatusBadge(e combat.Event) {
 // somewhere else, not a box.
 
 func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	fillGround(screen)
+	ui.FillGround(screen)
 
 	// **The top of the screen is one row of three things** *(2026-08-12)*: the player's card
 	// in the left corner, the enemy's in the right, and the relics filling everything between
@@ -1680,7 +1663,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// combat_relics.go.
 	s.drawRelicPane(gs, screen)
 	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.runeSpendable(gs),
-		func(i int) bool { return s.runeDrag.dragging() && i == s.runeDrag.origin() },
+		func(i int) bool { return s.runeDrag.Dragging() && i == s.runeDrag.Origin() },
 		s.tip.Showing())
 	s.drawDraggedRune(gs, screen)
 
@@ -1776,7 +1759,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// The hands panel, under the other two: they are mutually exclusive, and this is drawn
 	// first so that opening either of the others covers this one's button along with everything
 	// else. Its own draw puts its button back on top of its own panel.
-	s.hands.draw(gs, screen, s.fightHands())
+	s.hands.Draw(gs, screen, s.fightHands())
 
 	// The sack, beside the hands panel and under the other two, for the same reason: its own
 	// draw puts its button back on top of its own panel.
@@ -1786,10 +1769,10 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// two are mutually exclusive rather than stacked — neither opener is live while the other's
 	// panel is up — so they share one closing button.
 	if s.showDeck {
-		drawDeckPanel(gs, screen, &s.deckView, s.fightContents())
+		ui.DrawDeckPanel(gs, screen, &s.DeckView, s.fightContents())
 	}
 	if s.showDeck {
-		s.closer.draw(gs, screen)
+		s.closer.Draw(gs, screen)
 	}
 
 	// **Over every overlay, because it explains what is on top.** The deck panel's cards are the
@@ -1864,8 +1847,8 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	trace.Rect("mathBand", image.Rect(
 		tableInset, handTop(gs)-mathBandGapAboveCards-mathBandHeight,
 		gs.ScreenWidth-tableInset, handTop(gs)-mathBandGapAboveCards))
-	trace.Rect("duelistCard", s.duelistCardRect(gs))
-	trace.Rect("enemyCard", s.enemyCardRect(gs))
+	trace.Rect("duelistCard", ui.DuelistCardRect(gs))
+	trace.Rect("enemyCard", ui.EnemyCardRect(gs))
 	trace.Rect("relicPane", s.relicPaneRect(gs))
 	trace.Rect("relicPane backing", s.relicPaneBackRect(gs))
 	// The slots as they currently stand, not as they would at the cap: the pitch is a function
@@ -1879,11 +1862,11 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 		band.Min.X, band.Max.Y+apBarBelow,
 		band.Max.X, band.Max.Y+apBarBelow+apBarHeight))
 	trace.Rect("deckPanel", image.Rect(
-		gs.PctX(modalPanelLeftPct), gs.PctY(modalPanelTopPct),
-		gs.PctX(modalPanelRightPct), gs.PctY(modalPanelBottomPct)))
+		gs.PctX(ui.ModalPanelLeftPct), gs.PctY(ui.ModalPanelTopPct),
+		gs.PctX(ui.ModalPanelRightPct), gs.PctY(ui.ModalPanelBottomPct)))
 
 	for i, c := range s.hand {
-		trace.Rect(fmt.Sprintf("card[%d] %s", i, cardLabel(c.actionCard)), s.cardSlot(gs, i))
+		trace.Rect(fmt.Sprintf("card[%d] %s", i, cardLabel(c.Card)), s.cardSlot(gs, i))
 	}
 
 	for _, b := range []struct {
@@ -1896,7 +1879,7 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 }
 
 // cardLabel names a card for a trace line: "Bash/fire", or just "Bash" when plain.
-func cardLabel(c actionCard) string {
+func cardLabel(c combat.Card) string {
 	if c.Element == combat.Basic {
 		return c.Label()
 	}
@@ -1911,10 +1894,10 @@ func handLabel(hand []paletteCard) string {
 			out += " "
 		}
 		if c.selected {
-			out += "[" + cardLabel(c.actionCard) + "]"
+			out += "[" + cardLabel(c.Card) + "]"
 			continue
 		}
-		out += cardLabel(c.actionCard)
+		out += cardLabel(c.Card)
 	}
 	return out
 }
@@ -1946,10 +1929,4 @@ func enemyFromRecord(gs *state.GlobalState, record string, fight int) *entities.
 		return entities.NewEnemyFrom(boss.Enemy(), fight)
 	}
 	return entities.NewEnemyFrom(gs.Enemies[record], fight)
-}
-
-// duelistFromRecord resolves a playable duelist. **No sheet to look up** — the character
-// block replaced the fighter's sprite, so a duelist record has no picture in it.
-func duelistFromRecord(gs *state.GlobalState, record string) *entities.Combatant {
-	return entities.NewDuelistFrom(gs.Duelists[record])
 }

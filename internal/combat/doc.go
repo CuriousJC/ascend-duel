@@ -17,10 +17,11 @@
 //   - **Initiative is gone.** With one contiguous turn per side there is no exchange for a
 //     faster action to lead, so the whole lever was reporting a distinction the resolver no
 //     longer made. See the TODO in TODO.md before bringing it back.
-//   - **Defenses cover the opponent's next turn, not the rest of the round.** Side B acts
-//     last, so a defense that expired at the round boundary would never protect B from
-//     anything. They expire at the start of their owner's own next turn instead, which is
-//     the one rule that is symmetric under a resolution order that is not.
+//   - **Shields cover the opponent's next turn, not the rest of the round.** Side B acts last, so
+//     a defense that expired at the round boundary would never protect B from anything. Shields
+//     last until the start of their owner's own next turn instead, which is the one rule that is
+//     symmetric under a resolution order that is not. The percentage guard this was first written
+//     about is gone — see VerbShield.
 //
 // # What lives in which file
 //
@@ -30,29 +31,53 @@
 //   - card.go — what a card is: a concept plus an element, two ints and comparable. Its Category
 //     says when it resolves, its Form says what kind of thing it is, and nothing else about it is
 //     stored here — a name, a cost and a picture are all the concept's.
+//
 //   - concept.go — a card's rules, as data. A Concept is a label, a verb, an amount, a cost, a
 //     target and a form, registered at load and named by a ConceptID. It replaced a closed enum of
 //     fourteen constants with cost, damage and category as switch statements over it, which held
 //     twelve player cards and could not hold the several hundred that per-enemy decks produce. IDs
 //     are registration-ordered and must never be serialized.
+//
 //   - element.go — the five colors plus Basic, which is the absence of one rather than a sixth.
+//
 //   - status.go — a status is a record in statuses.json rather than an element: a key, a name, a
 //     badge, one of four closed effect kinds, an amount and a duration. They share one lifecycle
 //     and nothing stacks; a second hit resets the clock. A status only happens if a worn relic says
 //     so, which is what left the elemental relics something to be.
-//   - duelist.go — who is fighting, and the two things spent during a round: action points and
-//     raised defenses. A Duelist is a value; every rule takes one and returns a new one.
+//
+//   - duelist.go — who is fighting, and what a round spends: action points, and the shields a
+//     defend card raised. A Duelist is a value; every rule takes one and returns a new one.
+//
+//   - rider.go — the one alteration a rune may write onto a card, and the vocabulary the rules
+//     have to read to honour it. A card carries at most one, so a second replaces the first.
+//
+//   - stone.go — the arithmetic of a bought rung, read *through* the hand table so the ladder
+//     every tool and test sees is still the shipped one.
+//
+//   - luck.go — the gamble a gold or silver card takes on every play, off its own stream.
+//
+//   - clock.go — the round limit: a duelist still standing at the end of the last round dies,
+//     through the same door a killing blow uses.
+//
 //   - event.go — the vocabulary a resolved round hands back, and the play order both the resolver
 //     and the screen read. This is the whole contract between the rules and the pictures.
+//
 //   - hand.go and hand_table.go — a hand is a damage multiplier and nothing else, matched on three
 //     axes: concept, form and element. Exactly one applies, winning on its multiplier, and a tie
 //     goes to the narrowest axis. The multiplier multiplies the cards; there is no third term.
 //     Adding a rung is one entry in data/hands.json.
-//   - relic.go — the relic grammar: seven moments, three predicates, ten effect verbs, with
-//     registration refusing a verb used at the wrong moment or a status no file holds. Worn order
-//     is a rule, because effects compound left to right. An enemy wears no relics, so an enemy's
-//     colors are inert by construction.
+//
+//   - relic.go — the relic grammar, with registration refusing a verb used at the wrong moment or
+//     a status no file holds. Worn order is a rule, because effects compound left to right. An
+//     enemy wears no relics, so an enemy's colors are inert by construction.
+//
+//     **The three vocabularies are deliberately not counted here.** They grow by authoring —
+//     Moments(), RelicVerbs() and RelicCondition's fields are the lists — and a figure written
+//     into a doc comment goes stale silently, which is exactly what happened to the three that
+//     used to be on this line.
+//
 //   - planner.go — what an enemy does with the hand it was dealt.
+//
 //   - combat.go — ResolveRound and the phase resolvers.
 //
 // # Rules that are easy to break without noticing

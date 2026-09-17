@@ -18,8 +18,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
-	"sort"
 )
 
 //go:embed essences.json
@@ -125,29 +123,12 @@ func (w EssenceData) ArtKey() string {
 // **Nothing that decides an outcome may walk this.** The offer is a shuffle of EssenceOrder, which is
 // sorted for the reason the randomness skill gives; this is a layout.
 func EssenceFileOrder() []string {
-	var list []EssenceData
-	if err := json.Unmarshal(essencesJSON, &list); err != nil {
-		panic("Failed to unmarshal essences.json: " + err.Error())
-	}
-	out := make([]string, 0, len(list))
-	for _, w := range list {
-		out = append(out, w.EssenceRecord)
-	}
-	return out
+	return fileOrder(essencesJSON, "essences.json", func(w EssenceData) string { return w.EssenceRecord })
 }
 
 // LoadEssences parses the catalog into a map keyed by EssenceRecord.
 func LoadEssences() map[string]EssenceData {
-	var list []EssenceData
-	if err := json.Unmarshal(essencesJSON, &list); err != nil {
-		panic("Failed to unmarshal essences.json: " + err.Error())
-	}
-
-	out := make(map[string]EssenceData, len(list))
-	for _, w := range list {
-		out[w.EssenceRecord] = w
-	}
-	return out
+	return keyed(essencesJSON, "essences.json", func(w EssenceData) string { return w.EssenceRecord })
 }
 
 // EssenceOrder is every record, sorted by key.
@@ -157,10 +138,5 @@ func LoadEssences() map[string]EssenceData {
 // make which essences you are offered depend on map iteration and take the run's reproducibility
 // with it. See the `randomness` skill.
 func EssenceOrder(essences map[string]EssenceData) []string {
-	names := make([]string, 0, len(essences))
-	for n := range essences {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-	return names
+	return sortedKeys(essences)
 }

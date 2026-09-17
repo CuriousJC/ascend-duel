@@ -24,6 +24,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -41,7 +42,7 @@ const (
 
 // stoneFlightTicks() is how long one stone is in the air: a beat, like every other mover on this
 // screen. See clock.go — the game has one speed and everything is a fraction of it.
-func stoneFlightTicks() int { return beat(1, 1) }
+func stoneFlightTicks() int { return ui.Beat(1, 1) }
 
 // stoneFlight is one stone crossing the screen.
 //
@@ -50,7 +51,7 @@ func stoneFlightTicks() int { return beat(1, 1) }
 // the rune's seat in a pane whose contents change the moment the rune is spent, so a flight
 // that recomputed its origin would be reading a seat that now holds something else.
 type stoneFlight struct {
-	travel
+	ui.Travel
 	stone    session.Stone
 	from, to image.Point
 }
@@ -62,11 +63,11 @@ type stoneFlight struct {
 // without that rune in it, which is why the index is passed in rather than looked up.
 func (s *CombatScene) flyStonesToPouch(gs *state.GlobalState, seat int, shown []session.Stone) {
 	from := consumableSlotRect(s.consumablePaneRect(gs), seat, consumableSeats(gs)).Min
-	to := duelistCardRect(gs).Min
+	to := ui.DuelistCardRect(gs).Min
 
 	for i, st := range shown {
 		s.stones = append(s.stones, stoneFlight{
-			travel: newTravel(i*stoneFlightStagger, stoneFlightTicks()),
+			Travel: ui.NewTravel(i*stoneFlightStagger, stoneFlightTicks()),
 			stone:  st,
 			from:   from,
 			to:     to,
@@ -78,8 +79,8 @@ func (s *CombatScene) flyStonesToPouch(gs *state.GlobalState, seat int, shown []
 func (s *CombatScene) updateStoneFlights() {
 	kept := s.stones[:0]
 	for i := range s.stones {
-		s.stones[i].tick()
-		if !s.stones[i].done() {
+		s.stones[i].Tick()
+		if !s.stones[i].Done() {
 			kept = append(kept, s.stones[i])
 		}
 	}
@@ -93,11 +94,11 @@ func (s *CombatScene) updateStoneFlights() {
 // having been dropped rather than carried.
 func (s *CombatScene) drawStoneFlights(gs *state.GlobalState, screen *ebiten.Image) {
 	for _, f := range s.stones {
-		if f.waiting() {
+		if f.Waiting() {
 			continue
 		}
-		at := lerpPoint(f.from, f.to, easeOut(f.progress()))
-		drawStoneCardFading(gs, screen, at, f.stone, fadeOnArrival(f.progress()))
+		at := ui.LerpPoint(f.from, f.to, ui.EaseOut(f.Progress()))
+		drawStoneCardFading(gs, screen, at, f.stone, fadeOnArrival(f.Progress()))
 	}
 }
 
@@ -116,7 +117,7 @@ func fadeOnArrival(p float64) float64 {
 func drawStoneCardFading(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	st session.Stone, alpha float64) {
 
-	img := cardImage(gs, stoneSpec(gs, st, true), cards.EssenceStyle)
+	img := ui.CardImage(gs, ui.StoneSpec(gs, st, true), cards.EssenceStyle)
 	if img == nil {
 		return
 	}

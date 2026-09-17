@@ -8,6 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -82,8 +83,8 @@ const (
 // screen where most movement *is* the round.
 // How long a card takes to travel, and how far apart the drawn ones set off. Both in
 // ticks at 60 TPS: about a third of a second each, overlapping.
-func flightTicks() int      { return beat(4, 5) }
-func flightStaggerPer() int { return beat(1, 6) }
+func flightTicks() int      { return ui.Beat(4, 5) }
+func flightStaggerPer() int { return ui.Beat(1, 6) }
 
 // riseTicks() is how long a card takes to fly from the hand to its seat on the table.
 //
@@ -93,13 +94,7 @@ func flightStaggerPer() int { return beat(1, 6) }
 // the readable place, so there is one beat now: out of the hand and into its seat, where it
 // stays for the rest of the round. What the hold used to say — "this is the one resolving"
 // — is said by tableFireLift instead.
-func riseTicks() int { return beat(3, 5) }
-
-// sort, or the row closing up after cards were spent. Shorter than the other three
-// journeys because it is the shortest one: a few inches across the row rather than a
-// trip across the screen, and a long ease over that distance reads as sluggish rather
-// than as deliberate.
-func slideTicks() int { return beat(1, 2) }
+func riseTicks() int { return ui.Beat(3, 5) }
 
 // cardFlight is one card in the air between the hand and the draw pile. Purely something to
 // look at.
@@ -109,9 +104,9 @@ func slideTicks() int { return beat(1, 2) }
 // slotAt takes the pair back and returns the rectangle that used to be there. It also means
 // a flight survives the window being resized, which a cached pixel position would not.
 type cardFlight struct {
-	travel
+	ui.Travel
 
-	card actionCard
+	card combat.Card
 
 	// outbound is a card leaving the hand for the discard; the other direction is a card
 	// dealt from the draw pile into the slot it now occupies.
@@ -134,7 +129,7 @@ type cardFlight struct {
 // addFlight queues one. Kept as a method so the two call sites in spendSelected read as
 // what they are rather than as slice manipulation.
 func (s *CombatScene) addFlight(f cardFlight) {
-	s.theater.flights = append(s.theater.flights, f)
+	s.Theater.flights = append(s.Theater.flights, f)
 }
 
 // The hand's slides are cardSlide, and the mover is cardslide.go — shared with the essence screen's
@@ -142,20 +137,20 @@ func (s *CombatScene) addFlight(f cardFlight) {
 // fact that a queued card is drawn standing proud of the row.
 
 // addSlide queues one against the hand's row.
-func (s *CombatScene) addSlide(sl cardSlide) {
-	s.theater.slides = addCardSlide(s.theater.slides, sl)
+func (s *CombatScene) addSlide(sl ui.CardSlide) {
+	s.Theater.slides = ui.AddCardSlide(s.Theater.slides, sl)
 }
 
 // slidingTo reports whether a card is currently sliding into hand slot i, so the row can leave
 // that slot empty until it lands.
-func (s *CombatScene) slidingTo(i int) bool { return slideInto(s.theater.slides, i) }
+func (s *CombatScene) slidingTo(i int) bool { return ui.SlideInto(s.Theater.slides, i) }
 
 // drawSlides draws the cards moving within the hand.
 func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
-	drawCardSlides(gs, screen, s.theater.slides,
+	ui.DrawCardSlides(gs, screen, s.Theater.slides,
 		func(gs *state.GlobalState, i, count int) image.Point { return slotAt(gs, i, count) },
-		func(sl cardSlide) cards.Spec {
-			return cardSpec(sl.card, heldBy(s.fighter.Duelist, sl.card), true, sl.lift > 0)
+		func(sl ui.CardSlide) cards.Spec {
+			return ui.CardSpec(sl.Card, ui.HeldBy(s.fighter.Duelist, sl.Card), true, sl.Lift > 0)
 		})
 }
 
@@ -167,7 +162,7 @@ func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
 // is suppressed is the *drawing* of a card that is on screen somewhere else, which is a
 // view concern and lives here.
 func (s *CombatScene) inboundTo(i int) bool {
-	for _, f := range s.theater.flights {
+	for _, f := range s.Theater.flights {
 		if !f.outbound && f.index == i {
 			return true
 		}
@@ -188,7 +183,7 @@ func deckStackRect(gs *state.GlobalState) image.Rectangle {
 	w, h := cards.Stack.Width, cards.Stack.Height
 
 	bottom := gs.ScreenHeight - deckStackBottomInset - deckCountSize - deckCaptionGap
-	left := gs.PctX(duelistCardLeftPct)
+	left := gs.PctX(ui.DuelistCardLeftPct)
 
 	return image.Rect(left, bottom-h, left+w, bottom)
 }
@@ -212,7 +207,7 @@ func deckCaptionRect(gs *state.GlobalState) image.Rectangle {
 	// front card's top edge is not the pile's.
 	pile := deckStackBounds(gs)
 	bottom := pile.Min.Y - deckCaptionGap
-	return image.Rect(pile.Min.X, bottom-pileSlotSize, pile.Max.X, bottom)
+	return image.Rect(pile.Min.X, bottom-ui.PileSlotSize, pile.Max.X, bottom)
 }
 
 // deckStackBounds is the whole pile including the backs behind the front one, which is what
@@ -269,19 +264,19 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 	count := deckCountRect(gs)
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(count.Min.X), float64(count.Min.Y))
-	op.ColorScale.ScaleWithColor(groundInk)
+	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, fmt.Sprintf("%d/%d", len(s.deck), s.deckSize()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)
 }
 
 // drawCardBack blits a face-down card at rest.
 //
-// Separate from drawCard because that one builds its Spec from an actionCard, and a back
+// Separate from drawCard because that one builds its Spec from an combat.Card, and a back
 // has no card behind it to build from — asking it for one would mean inventing a Bash
 // nobody holds just to throw every field away. Separate from drawFlyingCard because a
 // resting card must not be filtered.
 func (s *CombatScene) drawCardBack(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style) {
-	img := cardImage(gs, s.backSpec(), st)
+	img := ui.CardImage(gs, s.backSpec(), st)
 	if img == nil {
 		return
 	}
@@ -292,8 +287,8 @@ func (s *CombatScene) drawCardBack(gs *state.GlobalState, screen *ebiten.Image, 
 
 // drawFlights draws every card in the air, over the row and the panes and under the overlay.
 func (s *CombatScene) drawFlights(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, f := range s.theater.flights {
-		if f.waiting() {
+	for _, f := range s.Theater.flights {
+		if f.Waiting() {
 			continue
 		}
 		if f.outbound {
@@ -308,15 +303,15 @@ func (s *CombatScene) drawFlights(gs *state.GlobalState, screen *ebiten.Image) {
 // and shrinks. Face up the whole way — you know what you threw away, and a card that turned
 // over on its way out would be hiding information the player already has.
 func (s *CombatScene) drawOutbound(gs *state.GlobalState, screen *ebiten.Image, f cardFlight) {
-	t := easeIn(f.progress())
+	t := ui.EaseIn(f.Progress())
 
 	from := slotAt(gs, f.index, f.count)
 	if f.fromTable {
 		from = playedSeatAt(gs, f.index, f.count, f.split)
 	}
 
-	drawFlyingCard(gs, screen,
-		cardSpec(f.card, heldBy(s.fighter.Duelist, f.card), true, false),
+	ui.DrawFlyingCard(gs, screen,
+		ui.CardSpec(f.card, ui.HeldBy(s.fighter.Duelist, f.card), true, false),
 		cards.Hand, outboundGeoM(from, t))
 }
 
@@ -348,8 +343,8 @@ func outboundGeoM(from image.Point, t float64) ebiten.GeoM {
 // face, which for an ordinary refill is simply the card.
 func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f cardFlight) {
 	to := slotAt(gs, f.index, f.count)
-	face := cardSpec(f.card, heldBy(s.fighter.Duelist, f.card), true, false)
-	drawDealtCard(gs, screen, deckStackRect(gs).Min, to, f.progress(), face, s.backSpec())
+	face := ui.CardSpec(f.card, ui.HeldBy(s.fighter.Duelist, f.card), true, false)
+	drawDealtCard(gs, screen, deckStackRect(gs).Min, to, f.Progress(), face, s.backSpec())
 }
 
 // drawDealtCard is the deal itself: a card out of the pile, growing to hand size, turning face up
@@ -367,7 +362,7 @@ func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f
 // face for the back at the midpoint is the standard flat version of the same gesture, it costs one
 // multiplication, and at this speed it reads correctly.
 func drawDealtCard(gs *state.GlobalState, screen *ebiten.Image, from, to image.Point, raw float64, face, back cards.Spec) {
-	t := easeOut(raw)
+	t := ui.EaseOut(raw)
 
 	// The stack is a small card and the hand is a full-size one, so the journey scales as
 	// well as travels. Landing is at exactly 1, which is what keeps a resting card the same
@@ -406,7 +401,7 @@ func drawDealtCard(gs *state.GlobalState, screen *ebiten.Image, from, to image.P
 		style = cards.Stack
 	}
 
-	drawFlyingCard(gs, screen, spec, style, geo)
+	ui.DrawFlyingCard(gs, screen, spec, style, geo)
 }
 
 // resolvedCard is one of the player's cards for this round, on its way from the hand to its
@@ -418,9 +413,9 @@ func drawDealtCard(gs *state.GlobalState, screen *ebiten.Image, from, to image.P
 // does the rest. That is the whole reason this reads as the mechanic rather than as an
 // animation.
 type resolvedCard struct {
-	travel
+	ui.Travel
 
-	card actionCard
+	card combat.Card
 
 	// Where it came from: the hand slot it occupied and the row it belonged to, so the flight
 	// starts from the card's own place. Same reason cardFlight stores the pair — the hand is
@@ -440,7 +435,7 @@ type resolvedCard struct {
 // order regroups by category, so the third card to resolve is not the third card selected, and
 // a row in selection order would be a confident picture of a round that does not happen.
 func (s *CombatScene) seatPlayedCards() {
-	s.theater.resolved = nil
+	s.Theater.resolved = nil
 
 	for _, slot := range combat.ResolutionOrder(s.fighterActions, s.enemyActions) {
 		if slot.Side != combat.SideA {
@@ -461,9 +456,9 @@ func (s *CombatScene) seatPlayedCards() {
 			continue
 		}
 
-		s.theater.resolved = append(s.theater.resolved, resolvedCard{
-			travel:    newTravel(len(s.theater.resolved)*flightStaggerPer(), riseTicks()),
-			card:      s.hand[hand].actionCard,
+		s.Theater.resolved = append(s.Theater.resolved, resolvedCard{
+			Travel:    ui.NewTravel(len(s.Theater.resolved)*flightStaggerPer(), riseTicks()),
+			card:      s.hand[hand].Card,
 			handIndex: hand,
 			handCount: len(s.hand),
 		})
@@ -522,9 +517,9 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 	// now — see combat.Categories — so the announcement is the first thing that happens to the
 	// card and the pips leave on the raise a beat later. There is nothing left to suppress.
 
-	mine, theirs := &s.theater.firingSeats, &s.theater.enemyFiringSeats
+	mine, theirs := &s.Theater.firingSeats, &s.Theater.enemyFiringSeats
 	if side == combat.SideB {
-		mine, theirs = &s.theater.enemyFiringSeats, &s.theater.firingSeats
+		mine, theirs = &s.Theater.enemyFiringSeats, &s.Theater.firingSeats
 	}
 
 	// **A solo attacker lifts one card at a time, and that is the whole point of it**
@@ -594,11 +589,11 @@ func (s *CombatScene) noteHand(e combat.Event) {
 	seats = append(seats, e.HandCards[:e.HandCardCount]...)
 
 	if e.Side == combat.SideB {
-		s.theater.enemyFiringSeats = seats
+		s.Theater.enemyFiringSeats = seats
 		return
 	}
 
-	s.theater.firingSeats = seats
+	s.Theater.firingSeats = seats
 }
 
 // handIndexForQueue maps a position in the player's queue to the hand slot holding it.
@@ -629,7 +624,7 @@ func (s *CombatScene) handIndexForQueue(n int) (int, bool) {
 // fighterActions while the round is still running. This hides a drawing, exactly like
 // inboundTo.
 func (s *CombatScene) resolvedInHand(i int) bool {
-	for _, r := range s.theater.resolved {
+	for _, r := range s.Theater.resolved {
 		if r.handIndex == i {
 			return true
 		}
@@ -640,7 +635,7 @@ func (s *CombatScene) resolvedInHand(i int) bool {
 // playedSeatOf finds the table seat of the card that came from hand slot i, so a card leaving
 // at the end of the round sets off from where it actually is.
 func (s *CombatScene) playedSeatOf(handIndex int) (int, bool) {
-	for i, r := range s.theater.resolved {
+	for i, r := range s.Theater.resolved {
 		if r.handIndex == handIndex {
 			return i, true
 		}
@@ -655,10 +650,10 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total, split int, firing b
 	to := playedSeatAt(gs, seat, total, split)
 
 	switch {
-	case r.waiting():
+	case r.Waiting():
 		return from
-	case !r.done():
-		return lerpPoint(from, to, easeOut(r.progress()))
+	case !r.Done():
+		return ui.LerpPoint(from, to, ui.EaseOut(r.Progress()))
 	}
 
 	// **The lift is applied after the card has landed, never during the flight.** A card still
@@ -675,8 +670,8 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total, split int, firing b
 // already seated rather than sliding underneath them.
 func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Image) {
 	split := s.playedSplit()
-	for i, r := range s.theater.resolved {
-		at := r.at(gs, i, len(s.theater.resolved), split, lit(s.theater.firingSeats, i))
+	for i, r := range s.Theater.resolved {
+		at := r.at(gs, i, len(s.Theater.resolved), split, lit(s.Theater.firingSeats, i))
 
 		// **The card rattles as its own figure is written into the sum** *(owner's call,
 		// 2026-08-26)*. Sideways, where the lift above is vertical: the lift says this card built
@@ -684,6 +679,6 @@ func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Imag
 		// vocabularies on one card, which is why the shake could not also be a jump.
 		at.X += s.playedCardShake(i)
 
-		drawCard(gs, screen, at, cards.Hand, r.card, heldBy(s.fighter.Duelist, r.card), true, false)
+		ui.DrawCard(gs, screen, at, cards.Hand, r.card, ui.HeldBy(s.fighter.Duelist, r.card), true, false)
 	}
 }

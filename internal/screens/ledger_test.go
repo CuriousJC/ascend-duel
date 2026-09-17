@@ -8,6 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The slot stands on the pile's caption line, at its left end, with the deck count at the right
@@ -62,11 +63,11 @@ func TestPastFightsAreOneLineAndTheLiveOneIsOpen(t *testing.T) {
 
 	var headings, lines []string
 	for _, r := range rows {
-		if r.fight != 0 || strings.HasPrefix(r.row.text(), "-  Fight") || strings.HasPrefix(r.row.text(), "+  Fight") {
-			headings = append(headings, r.row.text())
+		if r.fight != 0 || strings.HasPrefix(r.row.Text(), "-  Fight") || strings.HasPrefix(r.row.Text(), "+  Fight") {
+			headings = append(headings, r.row.Text())
 			continue
 		}
-		lines = append(lines, r.row.text())
+		lines = append(lines, r.row.Text())
 	}
 
 	if len(headings) != 2 {
@@ -101,8 +102,8 @@ func TestOpeningAPastFightWritesItsRoundsAndTheLiveOneCannotBeFolded(t *testing.
 	var text []string
 	live := 0
 	for _, r := range rows {
-		text = append(text, r.row.text())
-		if r.fight == 0 && strings.Contains(r.row.text(), "Cave Troll -") {
+		text = append(text, r.row.Text())
+		if r.fight == 0 && strings.Contains(r.row.Text(), "Cave Troll -") {
 			live++
 		}
 	}
@@ -121,7 +122,7 @@ func TestTheLedgerSaysWhenThereIsNothingInIt(t *testing.T) {
 	gs.Run = session.New(panelDeck())
 
 	rows := ledgerRows(gs, nil)
-	if len(rows) != 1 || rows[0].row.text() == "" {
+	if len(rows) != 1 || rows[0].row.Text() == "" {
 		t.Errorf("an untouched ledger is %v, want one sentence", rows)
 	}
 
@@ -145,7 +146,7 @@ func TestTheLedgerPanelHoldsEnoughRowsToBeWorthOpening(t *testing.T) {
 	if n < 25 {
 		t.Errorf("the ledger holds only %d rows", n)
 	}
-	if used := ledgerPane.firstRow + n*ledgerPane.rowHeight + ledgerBottomInset; used > r.Dy() {
+	if used := ledgerPane.FirstRow + n*ledgerPane.RowHeight + ledgerBottomInset; used > r.Dy() {
 		t.Errorf("%d rows plus the heading and the inset need %dpx of a %dpx panel", n, used, r.Dy())
 	}
 }
@@ -161,9 +162,9 @@ func TestTheScrollbarStandsInsideThePanel(t *testing.T) {
 	if !bar.In(r) {
 		t.Errorf("the scrollbar %v is not inside the panel %v", bar, r)
 	}
-	if bar.Min.Y < r.Min.Y+ledgerPane.firstRow {
+	if bar.Min.Y < r.Min.Y+ledgerPane.FirstRow {
 		t.Errorf("the scrollbar starts at y=%d, above the first row at y=%d",
-			bar.Min.Y, r.Min.Y+ledgerPane.firstRow)
+			bar.Min.Y, r.Min.Y+ledgerPane.FirstRow)
 	}
 	if bar.Dy() < 100 {
 		t.Errorf("the scrollbar is only %dpx tall", bar.Dy())
@@ -231,32 +232,16 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 // layout centering cannot survive**, and drawPane centers any row with no swatch and no verb — so
 // the indent is what keeps the working readable, and it is easy to lose.
 func TestTheWorkingIsIndentedRatherThanCentered(t *testing.T) {
-	rows := paneRowsFor([]session.LedgerLine{
+	rows := ui.PaneRowsFor([]session.LedgerLine{
 		session.Line(session.VoiceTerm, "Bash 20"),
 		session.Line(session.VoicePlain, "- Round 1 -"),
 	})
 
-	if rows[0].indent == 0 {
+	if rows[0].Indent == 0 {
 		t.Error("a term row is not indented, so it will be drawn centered")
 	}
-	if rows[1].indent != 0 {
+	if rows[1].Indent != 0 {
 		t.Error("a heading is indented, so it will not be centered")
-	}
-}
-
-// The hand's name leads with the rung and carries its axis in brackets, because the loudest line
-// of the round should not open on the least interesting word in it. A name the catalog does not
-// write an axis in front of is left alone.
-func TestAHandIsNamedRungFirst(t *testing.T) {
-	for _, c := range []struct{ name, want string }{
-		{"Form Three of a Kind", "Three of a Kind (Form)"},
-		{"Card Pair", "Pair (Card)"},
-		{"Elemental Full House", "Full House (Elemental)"},
-		{"High Card", "High Card"},
-	} {
-		if got := axisToBack(c.name); got != c.want {
-			t.Errorf("%q reads as %q, want %q", c.name, got, c.want)
-		}
 	}
 }
 
@@ -271,17 +256,17 @@ func TestTheWorkingIsColoredLikeTheScreen(t *testing.T) {
 	e.HandRelicScale[0] = []int{200}
 
 	lines := s.handTermLines(e, []combat.Card{{Concept: combat.Bash, Element: combat.Fire}})
-	rows := paneRowsFor(lines)
+	rows := ui.PaneRowsFor(lines)
 
-	fire := cards.BorderOf(artFor(combat.Fire))
-	relic := boostInk
+	fire := cards.BorderOf(ui.ArtFor(combat.Fire))
+	relic := ui.BoostInk
 
 	term := rows[0]
-	if term.spans[0].ink != fire {
-		t.Errorf("the card's name is in %v, want its element's %v", term.spans[0].ink, fire)
+	if term.Spans[0].Ink != fire {
+		t.Errorf("the card's name is in %v, want its element's %v", term.Spans[0].Ink, fire)
 	}
-	if last := term.spans[len(term.spans)-1]; last.ink != relic {
-		t.Errorf("the relic's note is in %v, want the relic pink %v", last.ink, relic)
+	if last := term.Spans[len(term.Spans)-1]; last.Ink != relic {
+		t.Errorf("the relic's note is in %v, want the relic pink %v", last.Ink, relic)
 	}
 
 	// **Nothing in the sum wears a hue that means something else**, and nothing in it is
@@ -289,13 +274,13 @@ func TestTheWorkingIsColoredLikeTheScreen(t *testing.T) {
 	// reads as a typesetting accident. This is the check that catches either coming back.
 	sum := rows[len(rows)-1]
 	var sawRelic bool
-	for _, r := range sum.spans {
-		sawRelic = sawRelic || r.ink == relic
-		if r.mark {
-			t.Errorf("a run of the sum is underlined: %q", r.text)
+	for _, r := range sum.Spans {
+		sawRelic = sawRelic || r.Ink == relic
+		if r.Mark {
+			t.Errorf("a run of the sum is underlined: %q", r.Text)
 		}
-		if r.ink == cards.BorderOf(cards.Arcane) {
-			t.Errorf("a run of the sum is written in the arcane element's color: %q", r.text)
+		if r.Ink == cards.BorderOf(cards.Arcane) {
+			t.Errorf("a run of the sum is written in the arcane element's color: %q", r.Text)
 		}
 	}
 	if !sawRelic {
@@ -318,18 +303,18 @@ func TestAnOpenedFightIsBanded(t *testing.T) {
 	pair := -1
 	for _, r := range rows {
 		switch {
-		case r.fight != 0 || strings.Contains(r.row.text(), "fighting now"):
+		case r.fight != 0 || strings.Contains(r.row.Text(), "fighting now"):
 			heads++
 			pair++
-			if want := ledgerBands[pair%2]; r.row.band != want {
-				t.Errorf("fight %d's heading is on %v, want the band %v", heads, r.row.band, want)
+			if want := ledgerBands[pair%2]; r.row.Band != want {
+				t.Errorf("fight %d's heading is on %v, want the Band %v", heads, r.row.Band, want)
 			}
-			if r.row.spans[0].ink != ledgerBandInk {
-				t.Errorf("a heading on the dark band is written in %v", r.row.spans[0].ink)
+			if r.row.Spans[0].Ink != ledgerBandInk {
+				t.Errorf("a heading on the dark band is written in %v", r.row.Spans[0].Ink)
 			}
 		default:
-			if want := ledgerGrounds[pair%2]; r.row.band != want {
-				t.Errorf("a row of an opened fight is on %v, want the tint %v", r.row.band, want)
+			if want := ledgerGrounds[pair%2]; r.row.Band != want {
+				t.Errorf("a row of an opened fight is on %v, want the tint %v", r.row.Band, want)
 			}
 		}
 	}
@@ -348,7 +333,7 @@ func TestAnOpenedFightIsBanded(t *testing.T) {
 func TestAnAttackSaysWhatItWeighs(t *testing.T) {
 	for _, id := range []combat.ConceptID{combat.Jab, combat.Bash, combat.Cut} {
 		card := combat.Plain(id)
-		got, weight := cardWeight(card), card.Amount()
+		got, weight := ui.CardWeight(card), card.Amount()
 
 		switch {
 		case weight == 100 && got != "":
@@ -363,7 +348,17 @@ func TestAnAttackSaysWhatItWeighs(t *testing.T) {
 	if !ok {
 		return
 	}
-	if got := cardWeight(combat.Plain(ward)); got != "" {
+	if got := ui.CardWeight(combat.Plain(ward)); got != "" {
 		t.Errorf("a defense writes %q, and multiplies nothing", got)
+	}
+}
+
+// panelDeck is two lightning cards and a fire one — enough for a flip relic to have something to
+// take and something to leave alone.
+func panelDeck() []combat.Card {
+	return []combat.Card{
+		{Concept: combat.Bash, Element: combat.Lightning},
+		{Concept: combat.Bash, Element: combat.Lightning},
+		{Concept: combat.Bash, Element: combat.Fire},
 	}
 }

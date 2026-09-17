@@ -14,6 +14,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -42,9 +43,9 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	if spoils.Propagated > 0 {
 		lines = append(lines, proseLine{
 			spans: []proseSpan{
-				{text: "Vitae", ink: vitaeInk},
+				{text: "Vitae", ink: ui.VitaeInk},
 				{text: fmt.Sprintf(" proliferates for each %d -- ", session.PropagationPer)},
-				{text: fmt.Sprintf("+%d", spoils.Propagated), ink: vitaeInk},
+				{text: fmt.Sprintf("+%d", spoils.Propagated), ink: ui.VitaeInk},
 			},
 			pays: func(gs *state.GlobalState) int { return gs.Run.ClaimPropagation() },
 		})
@@ -53,7 +54,7 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	lines = append(lines, proseLine{
 		spans: []proseSpan{
 			{text: fmt.Sprintf("Health proliferates for each %d -- ", session.LifeSharePer)},
-			{text: fmt.Sprintf("+%d", spoils.FromLife), ink: vitaeInk},
+			{text: fmt.Sprintf("+%d", spoils.FromLife), ink: ui.VitaeInk},
 		},
 		pays: func(gs *state.GlobalState) int { return gs.Run.ClaimFromLife() },
 	})
@@ -61,16 +62,16 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	lines = append(lines, proseLine{
 		spans: []proseSpan{
 			{text: "Enemy "},
-			{text: "vitae", ink: vitaeInk},
+			{text: "vitae", ink: ui.VitaeInk},
 			{text: " -- "},
-			{text: fmt.Sprintf("+%d", spoils.FromRoom), ink: vitaeInk},
+			{text: fmt.Sprintf("+%d", spoils.FromRoom), ink: ui.VitaeInk},
 		},
 		pays: func(gs *state.GlobalState) int { return gs.Run.ClaimFromRoom() },
 	})
 
 	lines = append(lines, proseLine{spans: []proseSpan{
 		{text: "You have "},
-		{text: fmt.Sprintf("%d vitae", total), ink: vitaeInk},
+		{text: fmt.Sprintf("%d vitae", total), ink: ui.VitaeInk},
 		{text: "."},
 	}})
 
@@ -109,14 +110,14 @@ func (s *PostBattleScene) drawProse(gs *state.GlobalState, screen *ebiten.Image,
 func (s *PostBattleScene) beginOffer(gs *state.GlobalState) {
 	s.stage = choosing
 	for i := range s.entry {
-		s.entry[i] = newTravel(i*essenceEntryStagger(), essenceEntryTicks())
+		s.entry[i] = ui.NewTravel(i*essenceEntryStagger(), essenceEntryTicks())
 	}
 	s.place(gs)
 }
 
 // The essences' arrival: how long one takes to cross in, and how far apart the two set off.
-func essenceEntryTicks() int   { return beat(1, 1) }
-func essenceEntryStagger() int { return beat(1, 4) }
+func essenceEntryTicks() int   { return ui.Beat(1, 1) }
+func essenceEntryStagger() int { return ui.Beat(1, 4) }
 
 // essenceArrivingAt is where one offered essence is *drawn* while it flies in — off the near side of the
 // screen at the start of its journey, and in its seat by the end.
@@ -126,7 +127,7 @@ func essenceEntryStagger() int { return beat(1, 4) }
 // thing to look at. Presentation may never change what a click means.
 func (s *PostBattleScene) essenceArrivingAt(gs *state.GlobalState, i int) image.Point {
 	seat := s.essenceSlot(gs, i)
-	if i >= len(s.entry) || s.entry[i].done() {
+	if i >= len(s.entry) || s.entry[i].Done() {
 		return seat.Min
 	}
 
@@ -136,7 +137,7 @@ func (s *PostBattleScene) essenceArrivingAt(gs *state.GlobalState, i int) image.
 	if seat.Min.X >= gs.PctX(50) {
 		from = image.Rect(gs.ScreenWidth+40, seat.Min.Y, gs.ScreenWidth+cardWidth+40, seat.Max.Y)
 	}
-	return flyingTo(from, seat, s.entry[i])
+	return ui.FlyingTo(from, seat, s.entry[i])
 }
 
 // Where the three lines of type under the build band sit. **Measured from the band, never from the

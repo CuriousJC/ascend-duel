@@ -19,6 +19,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // hover points the tooltip at whatever is under the cursor, or at nothing.
@@ -37,11 +38,11 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 
 	// **The hands panel explains itself in words**, so there is nothing under it to point at —
 	// and a hand card's tooltip drawn through a dialog is the failure this branch exists to stop.
-	if s.hands.open {
+	if s.hands.IsOpen() {
 		return
 	}
 	if s.showDeck {
-		hoverDeckPanel(gs, at, s.deckView, s.fightContents(), &s.tip)
+		ui.HoverDeckPanel(gs, at, s.DeckView, s.fightContents(), &s.tip)
 		return
 	}
 	if s.hoverHand(gs, at) || s.hoverRelics(gs, at) {
@@ -66,15 +67,15 @@ func (s *CombatScene) hoverRoundTimer(gs *state.GlobalState, at image.Point) boo
 	if !at.In(r) {
 		return false
 	}
-	title, lines := roundTimerTip(s.roundTimerSpent(limit), limit)
-	s.tip.Point(r, tipLine(title), tipLines(lines))
+	title, lines := ui.RoundTimerTip(s.roundTimerSpent(limit), limit)
+	s.tip.Point(r, ui.TipLine(title), ui.TipLines(lines))
 	return true
 }
 
 // hoverHand walks the hand from the right, because the row overlaps and the card drawn last is the
 // one on top. Same order `beginPress` takes, and for the same reason.
 func (s *CombatScene) hoverHand(gs *state.GlobalState, at image.Point) bool {
-	if s.drag.dragging() {
+	if s.drag.Dragging() {
 		return false // a card in the air is being moved, not read
 	}
 
@@ -92,9 +93,9 @@ func (s *CombatScene) hoverHand(gs *state.GlobalState, at image.Point) bool {
 		if !at.In(slot) {
 			continue
 		}
-		card := s.hand[i].actionCard
-		title, lines := cardTip(card, heldBy(s.fighter.Duelist, card))
-		s.tip.Point(slot, tipLine(title), tipLines(lines))
+		card := s.hand[i].Card
+		title, lines := ui.CardTip(card, ui.HeldBy(s.fighter.Duelist, card))
+		s.tip.Point(slot, ui.TipLine(title), ui.TipLines(lines))
 		return true
 	}
 	return false
@@ -123,8 +124,8 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 		if !at.In(slot) {
 			continue
 		}
-		title, lines := relicTip(record, i, len(worn))
-		s.tip.Point(slot, tipLine(title), tipLines(lines))
+		title, lines := ui.RelicTip(record, i, len(worn))
+		s.tip.Point(slot, ui.TipLine(title), ui.TipLines(lines))
 		return true
 	}
 	return false
@@ -136,13 +137,13 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 // that something is running and nothing anywhere says what — the sentence has been in
 // `statuses.json` since the day statuses became data, with nowhere to print it.
 func (s *CombatScene) hoverFighters(gs *state.GlobalState, at image.Point) {
-	if seat := s.enemyCardRect(gs); at.In(seat) {
-		title, lines := duelistTip(s.enemy.Name, s.enemy.Duelist)
-		s.tip.Point(seat, tipLine(title), tipLines(lines))
+	if seat := ui.EnemyCardRect(gs); at.In(seat) {
+		title, lines := ui.DuelistTip(s.enemy.Name, s.enemy.Duelist)
+		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
-	if seat := s.duelistCardRect(gs); at.In(seat) {
-		title, lines := duelistTip(s.fighter.Name, s.fighter.Duelist)
-		s.tip.Point(seat, tipLine(title), tipLines(lines))
+	if seat := ui.DuelistCardRect(gs); at.In(seat) {
+		title, lines := ui.DuelistTip(s.fighter.Name, s.fighter.Duelist)
+		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 	}
 }

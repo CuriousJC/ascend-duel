@@ -32,7 +32,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 )
 
 //go:embed tutorial.json
@@ -110,9 +109,5 @@ type TutorialStepData struct {
 // not depend on it; a slice is already ordered, and this one's order is the whole meaning of the
 // file.
 func LoadTutorial() TutorialData {
-	var out TutorialData
-	if err := json.Unmarshal(tutorialJSON, &out); err != nil {
-		panic("Failed to unmarshal tutorial.json: " + err.Error())
-	}
-	return out
+	return parseOne[TutorialData](tutorialJSON, "tutorial.json")
 }

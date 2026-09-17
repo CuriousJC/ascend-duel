@@ -22,14 +22,21 @@
 //
 // # The frame
 //
-// chrome.go draws the mute button: a 44px square in the bottom-left corner of every screen. It is
-// deliberately outside the "scenes own their own widgets" rule rather than an exception to it —
-// the score is started once in main and loops for the whole session across every screen, so the
-// control that silences it belongs at the same level. The alternative was the same button on four
-// scenes, four placements to keep in step and four callbacks into one package.
+// chrome.go draws the two controls that belong to no screen — the settings cog and the ledger —
+// plus the achievement toast, which is not a control at all but the game telling the player they
+// earned something. All three are deliberately outside the "scenes own their own widgets" rule
+// rather than exceptions to it. The alternative was the same button on every scene: as many
+// placements to keep in step and as many callbacks into one package.
 //
 // The bar for joining the frame is high: something true for the whole session, on every screen,
-// owned by no scene. A frame is easy to grow by accident.
+// owned by no scene. A frame is easy to grow by accident, and two of the three pass a test the
+// settings button could not have passed alone — the ledger *could not* be a scene, because leaving
+// the combat screen and coming back re-runs Init and deals a fresh duel, and the toast can land
+// during a duel, on the post-battle screen, or on the transition between them.
+//
+// The gallery's button is the one thing in the strip that is not chrome by that test. It is
+// instrumentation, drawn only while state.DebugAnimations is on, and it is there because the frame
+// is the only place a debug page is reachable from every screen.
 //
 // state.ModalOpen is what it cost. A scene sets it while it has a dialog up and the chrome neither
 // updates nor draws, because a modal has to make its exit the brightest thing on screen or it is a

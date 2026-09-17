@@ -22,7 +22,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 )
 
 //go:embed achievements.json
@@ -182,20 +181,9 @@ type AchievementData struct {
 // question, exactly as an essence's target is internal/session's and a card's verb is
 // internal/combat's. This file may not import either.
 func LoadAchievements() []AchievementData {
-	var list []AchievementData
-	if err := json.Unmarshal(achievementsJSON, &list); err != nil {
-		panic("Failed to unmarshal achievements.json: " + err.Error())
-	}
-
-	seen := make(map[string]bool, len(list))
-	for _, a := range list {
-		if a.AchievementRecord == "" {
-			panic("achievements.json: a record has no AchievementRecord")
-		}
-		if seen[a.AchievementRecord] {
-			panic("achievements.json: two records keyed " + a.AchievementRecord)
-		}
-		seen[a.AchievementRecord] = true
-	}
-	return list
+	return mustBeUniquelyKeyed(
+		parse[AchievementData](achievementsJSON, "achievements.json"),
+		"achievements.json",
+		func(a AchievementData) string { return a.AchievementRecord },
+	)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The deck stack's placement, which is arithmetic and therefore checkable without a window
@@ -28,12 +29,11 @@ func testState() *state.GlobalState {
 // beside it rather than above it, and the frame's own corner controls are below it.
 func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 	gs := testState()
-	s := &CombatScene{}
 
 	// **The pile is the outermost thing drawn** *(2026-08-24)*, so the bounds are what has to fit
 	// rather than the front card: the backs are drawn up and to the left of it.
 	relic := deckStackBounds(gs)
-	card := s.duelistCardRect(gs)
+	card := ui.DuelistCardRect(gs)
 
 	if deckStackRect(gs).Min.X != card.Min.X {
 		t.Errorf("the pile starts at x=%d and the duelist card at x=%d",
@@ -211,15 +211,14 @@ func TestTheButtonsAreCenteredUnderTheHand(t *testing.T) {
 // wrong place would be the same mistake, and the cards are centered on it.
 func TestTheHandIsLaidOutBetweenTheFighterCards(t *testing.T) {
 	gs := testState()
-	s := &CombatScene{}
 	left := handBandLeft(gs)
 
-	if want := s.duelistCardRect(gs).Max.X + relicPaneGap; left != want {
+	if want := ui.DuelistCardRect(gs).Max.X + relicPaneGap; left != want {
 		t.Errorf("the band starts at x=%d, want the relic row's own left edge at %d", left, want)
 	}
 
 	// The cards stop a gap short of the control column, and are centered on what is left.
-	if got, want := cardBandWidth(gs), ControlColumnLeft(gs)-sortColumnGap-left; got != want {
+	if got, want := cardBandWidth(gs), ui.ControlColumnLeft(gs)-ui.SortColumnGap-left; got != want {
 		t.Errorf("the cards are laid out into %dpx, want %dpx", got, want)
 	}
 	if got, want := handRowCenter(gs).X, left+cardBandWidth(gs)/2; got != want {
@@ -232,7 +231,7 @@ func TestTheHandIsLaidOutBetweenTheFighterCards(t *testing.T) {
 	if got, want := sortColumnRect(gs).Min.X, left+cardBandWidth(gs); got != want {
 		t.Errorf("the sort block starts at x=%d, want the cards' right edge at %d", got, want)
 	}
-	if got, want := ControlColumnSlot(gs, SlotHands).Min.X, s.enemyCardRect(gs).Min.X; got != want {
+	if got, want := ControlColumnSlot(gs, SlotHands).Min.X, ui.EnemyCardRect(gs).Min.X; got != want {
 		t.Errorf("the panel buttons start at x=%d, want the enemy card's left edge at %d", got, want)
 	}
 }

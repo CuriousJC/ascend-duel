@@ -91,7 +91,8 @@ that was true for free, because the fight deck was built out of the run's own ca
 had recolored anything yet. Firing per draw, the discard pile is full of cards a flip has already
 been through, so **the draw pile has to hold cards in the colors the run owns**: `drawHand`
 restores a discarded card before folding it back in, and `session.DrawnAs` must never be handed a
-card that has already been drawn. `TestTwoFlipsCannotChainThroughOneCard` is what holds it.
+card that has already been drawn. `TestFlipsCompose` and `TestFlipStepsNameEveryRingThatTouchedTheCard`
+in `internal/combat` are what hold the composing half of it.
 
 **A drawn card does not remember what it was** *(owner's call, 2026-08-24)*. It carries the color it
 became and nothing else, so a later rule — a `card-damage` relic keyed on ice — matches the card in
@@ -137,8 +138,8 @@ one card and a rung is a fact about the whole blow, so the pair asks something n
 
 **The rung relics are what it was added for** — one per entry in `hands.json`. Their bonus lands *inside* `Base`, after every
 card term and before the multiplier — so a rung's bonus is worth more on the rung that pays more,
-which is the whole reason a flat number can follow the ladder's shape. See `combat.HandBonus` and
-`TestTheHandBonusIsAddedBeforeTheMultiplier`.
+which is the whole reason a flat number can follow the ladder's shape. See `combat.HandBonus`,
+`TestTheHandBonusIsBaseDamageAndNotATerm` and `TestTheHandBonusScalesWithTheCardItRaises`.
 
 **`Concept` names a card by its label**, resolved at load the way a deck list is. A concept *ID*
 is registration-ordered and must never be serialized — the label is what is stable.

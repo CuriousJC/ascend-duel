@@ -23,7 +23,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 )
 
 //go:embed duelist_cards.json
@@ -87,9 +86,5 @@ type CardData struct {
 // determinism rules in CLAUDE.md. File order is also grid order, so the JSON reads as the table in
 // MECHANICS.md.
 func LoadDuelistCards() []CardData {
-	var cards []CardData
-	if err := json.Unmarshal(duelistCardsJSON, &cards); err != nil {
-		panic("Failed to unmarshal duelist_cards.json: " + err.Error())
-	}
-	return cards
+	return parse[CardData](duelistCardsJSON, "duelist_cards.json")
 }

@@ -21,8 +21,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
-	"sort"
 	"strings"
 )
 
@@ -99,32 +97,12 @@ func CardArtKey(card, element string) string {
 // a picture never decides anything, so there is no outcome here to protect, and the rule is
 // restated so the next reader does not have to work that out.
 func CardArtFileOrder() []string {
-	var list []CardArtData
-	if err := json.Unmarshal(cardArtJSON, &list); err != nil {
-		panic("Failed to unmarshal card_art.json: " + err.Error())
-	}
-	out := make([]string, 0, len(list))
-	for _, c := range list {
-		out = append(out, c.CardArtRecord)
-	}
-	return out
+	return fileOrder(cardArtJSON, "card_art.json", func(c CardArtData) string { return c.CardArtRecord })
 }
 
 // LoadCardArt parses the catalog into a map keyed by CardArtRecord.
 func LoadCardArt() map[string]CardArtData {
-	var list []CardArtData
-	if err := json.Unmarshal(cardArtJSON, &list); err != nil {
-		panic("Failed to unmarshal card_art.json: " + err.Error())
-	}
-
-	out := make(map[string]CardArtData, len(list))
-	for _, c := range list {
-		if _, seen := out[c.CardArtRecord]; seen {
-			panic("card_art.json: two records share the key " + c.CardArtRecord)
-		}
-		out[c.CardArtRecord] = c
-	}
-	return out
+	return keyed(cardArtJSON, "card_art.json", func(c CardArtData) string { return c.CardArtRecord })
 }
 
 // CardArtOrder is every record, sorted by key.
@@ -133,10 +111,5 @@ func LoadCardArt() map[string]CardArtData {
 // an outcome, so this is weaker than RuneOrder's requirement — but a review sheet that listed its
 // rows in a different order every run would be a page nobody could diff against the last one.
 func CardArtOrder(art map[string]CardArtData) []string {
-	names := make([]string, 0, len(art))
-	for n := range art {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-	return names
+	return sortedKeys(art)
 }

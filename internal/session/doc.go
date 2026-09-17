@@ -16,19 +16,39 @@
 //
 // # What is in a run
 //
-//   - deck.go — the list a run opens with, read out of data/duelist_cards.json.
+// **This is a grouping rather than a list of every file** — each file's own header says what it
+// holds, and an enumeration here is a second list that goes quietly out of date. The last one
+// named seven files when there were twenty-four.
+//
+// The run itself:
+//
 //   - session.go — the deck, the purse, the room counter. The deck is unexported and every change
 //     goes through a method, so an index handed to a screen stays meaningful for as long as the
 //     caller holds it.
+//   - deck.go — the list a run opens with, read out of data/duelist_cards.json.
+//   - flow.go — where the run is in its loop, and the one place that moves it on.
 //   - climb.go — who stands in each room, over internal/pyramid. This is what the room choice will
 //     write to.
-//   - flow.go — where the run is in its loop, and the one place that moves it on.
-//   - relic.go — the relics being worn, in worn order, and the relic moments that fire between fights
-//     rather than during one.
+//   - clock.go, life.go — the round limit, and what the climb does to the body between fights.
+//
+// What a choice between two fights can change — holdings.go is the collective noun:
+//
+//   - relic.go — the relics being worn, in worn order, and the relic moments that fire between
+//     fights rather than during one.
 //   - essence.go — the deck alterations offered after a fight.
-//   - rune.go — the consumables carried into a fight and spent between its turns. The essence's
-//     grammar plus a target *count*, aimed at card identities rather than deck positions, and the
-//     one alteration that can happen while a duel is going on.
+//   - rune.go, echo.go — the consumables carried into a fight and spent between its turns. The
+//     essence's grammar plus a target *count*, aimed at card identities rather than deck
+//     positions, and the one alteration that can happen while a duel is going on.
+//   - stone.go, potion.go — the run's own opinion about what a hand is worth, and about the body.
+//   - good.go, shop.go, spoils.go — what is sold, what it costs, and what winning pays.
+//
+// What the run says about itself:
+//
+//   - ledger.go, export.go — the account, in already-worded lines, and writing it out to a file.
+//   - play.go, summary.go — how often each rung has actually been built, and what a run came to.
+//   - save.go — a run written down and read back, as plain data internal/profile can put on disk.
+//   - tutorial.go, jump.go — the teaching run parked on the run it teaches, and putting a run
+//     somewhere it did not play its way to.
 //
 // # Four of the ten relic moments are answered here
 //

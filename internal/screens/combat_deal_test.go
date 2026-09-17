@@ -33,7 +33,7 @@ func TestTheCascadeFiresTheRingsInWornOrder(t *testing.T) {
 	// **Earth first, deliberately.** It is the card that only the last-worn ring touches, and
 	// putting it at the front of the pile is exactly what made the old code file that ring as
 	// ring 0.
-	pile := []actionCard{
+	pile := []combat.Card{
 		{Concept: combat.Bash, Element: combat.Earth},
 		{Concept: combat.Jab, Element: combat.Fire},
 		{Concept: combat.Cut, Element: combat.Lightning},
@@ -41,11 +41,11 @@ func TestTheCascadeFiresTheRingsInWornOrder(t *testing.T) {
 
 	s := &CombatScene{run: gs.Run}
 	for _, c := range pile {
-		s.hand = append(s.hand, paletteCard{actionCard: c})
+		s.hand = append(s.hand, paletteCard{Card: c})
 	}
 	s.startDeal(0, pile)
 
-	d := s.theater.deal
+	d := s.Theater.deal
 	if len(d.rings) != len(worn) {
 		t.Fatalf("the cascade has %d rings, want %d: %v", len(d.rings), len(worn), d.rings)
 	}
@@ -68,11 +68,11 @@ func TestTheCascadeFiresTheRingsInWornOrder(t *testing.T) {
 
 	// And the beats land: run the whole sequence and every card ends on its final face, which is
 	// the element the hand behind it is holding.
-	for i := 0; i < 10000 && d.running(); i++ {
+	for i := 0; i < 10000 && d.Running(); i++ {
 		s.tickDeal()
-		d = s.theater.deal
+		d = s.Theater.deal
 	}
-	if d.running() {
+	if d.Running() {
 		t.Fatal("the cascade never finished")
 	}
 

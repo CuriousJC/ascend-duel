@@ -46,6 +46,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -69,7 +70,7 @@ const (
 //
 // On the game's own clock, like every other duration here, so the gallery slows down and speeds up
 // with the speed slider exactly as the thing it is showing does.
-func animHoldTicks() int { return beat(2, 3) }
+func animHoldTicks() int { return ui.Beat(2, 3) }
 
 // animListLeft and the rest are percentages, per the placement rule: a group is anchored by a
 // percentage and laid out in pixels from there.
@@ -112,12 +113,12 @@ type AnimationsScene struct {
 
 	// at is the selected gesture and t its clock: one run, then a still hold, then round again.
 	at int
-	t  travel
+	t  ui.Travel
 
 	// m is the morph the three morph entries drive. **Rebuilt when the loop restarts** rather than
 	// driven by a progress figure, because a morph owns its own clock — asking it to be a pure
 	// function of p would be a second implementation of the thing being reviewed.
-	m morph
+	m ui.Morph
 }
 
 // animGestures is the vocabulary, in the order a card meets them: arriving, changing, acting,
@@ -150,21 +151,21 @@ var animGestures = []animGesture{
 		name:  "sort slide",
 		where: "cardSlide, cardslide.go",
 		what:  "A card shuffling from one seat in the row to another. Flat, full size, no turn.",
-		ticks: slideTicks,
+		ticks: ui.SlideTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			from := image.Pt(at.Min.X-260, at.Min.Y)
-			blitCard(gs, screen, lerpPoint(from, at.Min, easeOut(p)), animFace(gs, animCardA), cards.Hand)
+			ui.BlitCard(gs, screen, ui.LerpPoint(from, at.Min, ui.EaseOut(p)), animFace(gs, animCardA), cards.Hand)
 		},
 	},
 	{
 		name:  "lift",
 		where: "selectedLift, tableFireLift",
 		what:  "Vertical, and it means picked: selected in the hand, or acting on the table.",
-		ticks: slideTicks,
+		ticks: ui.SlideTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			up := at
-			up.Min.Y -= int(float64(tableFireLift) * easeOut(animThereAndBack(p)))
-			blitCard(gs, screen, up.Min, animFace(gs, animCardA), cards.Hand)
+			up.Min.Y -= int(float64(tableFireLift) * ui.EaseOut(animThereAndBack(p)))
+			ui.BlitCard(gs, screen, up.Min, animFace(gs, animCardA), cards.Hand)
 		},
 	},
 	{
@@ -174,7 +175,7 @@ var animGestures = []animGesture{
 		ticks: relicShakeTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			at.Min.X += shakeOffset(animTravelAt(relicShakeTicks(), p))
-			blitCard(gs, screen, at.Min, animFace(gs, animCardA), cards.Hand)
+			ui.BlitCard(gs, screen, at.Min, animFace(gs, animCardA), cards.Hand)
 		},
 	},
 	{
@@ -194,10 +195,10 @@ var animGestures = []animGesture{
 			// it, where a permanently-lit card had nothing to be brighter *than*.
 			toast := sumToast(animTravelAt(relicShakeTicks(), p))
 			if !toast.lit {
-				drawRelicCard(gs, screen, at.Min, r, "", true, false)
+				ui.DrawRelicCard(gs, screen, at.Min, r, "", true, false)
 				return
 			}
-			drawFlyingCard(gs, screen, relicSpec(gs, r, "", true, true),
+			ui.DrawFlyingCard(gs, screen, ui.RelicSpec(gs, r, "", true, true),
 				cards.RelicStyle, toast.geoAt(at.Min))
 		},
 	},
@@ -208,7 +209,7 @@ var animGestures = []animGesture{
 		ticks: dealRingTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			at.Min.X += dealShakeOffset(animTravelAt(dealRingTicks(), p))
-			blitCard(gs, screen, at.Min, animFace(gs, animCardA), cards.Hand)
+			ui.BlitCard(gs, screen, at.Min, animFace(gs, animCardA), cards.Hand)
 		},
 	},
 	{
@@ -217,7 +218,7 @@ var animGestures = []animGesture{
 		what:  "A card becoming a different card. The face comes apart on a lattice, never at random.",
 		ticks: animMorphTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawMorph(gs, screen, at.Min, s.m)
+			ui.DrawMorph(gs, screen, at.Min, s.m)
 		},
 	},
 	{
@@ -226,7 +227,7 @@ var animGestures = []animGesture{
 		what:  "A card arriving out of nothing — a copy the run did not own a moment ago.",
 		ticks: animMorphTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawMorph(gs, screen, at.Min, s.m)
+			ui.DrawMorph(gs, screen, at.Min, s.m)
 		},
 	},
 	{
@@ -235,7 +236,7 @@ var animGestures = []animGesture{
 		what:  "A card eaten, with nothing behind it.",
 		ticks: animMorphTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawMorph(gs, screen, at.Min, s.m)
+			ui.DrawMorph(gs, screen, at.Min, s.m)
 		},
 	},
 	{
@@ -244,7 +245,7 @@ var animGestures = []animGesture{
 		what:  "A shield eating an attack whole. The cracks travel outward, then the mark settles.",
 		ticks: shatterSpreadTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			blitCard(gs, screen, at.Min, animFace(gs, animCardB), cards.Hand)
+			ui.BlitCard(gs, screen, at.Min, animFace(gs, animCardB), cards.Hand)
 			drawSpreadingCracks(screen, at, animCardB, p)
 		},
 	},
@@ -254,8 +255,8 @@ var animGestures = []animGesture{
 		what:  "A spent card thrown off the left of the table: it lifts, turns and shrinks as it goes.",
 		ticks: flightTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawFlyingCard(gs, screen, animFace(gs, animCardA), cards.Hand,
-				outboundGeoM(at.Min, easeIn(p)))
+			ui.DrawFlyingCard(gs, screen, animFace(gs, animCardA), cards.Hand,
+				outboundGeoM(at.Min, ui.EaseIn(p)))
 		},
 	},
 }
@@ -268,13 +269,13 @@ var (
 )
 
 // animMorphTicks is the whole of a morph including its wait, which is what the loop has to outlast.
-func animMorphTicks() int { return morphWaitTicks() + morphTicks() }
+func animMorphTicks() int { return ui.MorphWaitTicks() + ui.MorphTicks() }
 
 // animFace is one of the page's cards as a finished face. **heldByRun, so a page opened with no run
 // still draws** — it prices the card at its own cost with nothing worn, which is what this page
 // wants anyway: a gesture, not a build.
-func animFace(gs *state.GlobalState, c actionCard) cards.Spec {
-	return cardSpec(c, heldByRun(gs, c), true, false)
+func animFace(gs *state.GlobalState, c combat.Card) cards.Spec {
+	return ui.CardSpec(c, ui.HeldByRun(gs, c), true, false)
 }
 
 // animBack is the card back the deal turns over from.
@@ -296,9 +297,9 @@ func animRelic(gs *state.GlobalState) (data.RelicData, bool) {
 // animTravelAt is a travel wound forward to a fraction of its own length, which is how the two
 // shakes are shown: both are functions of a `travel` rather than of a figure, and the page drives
 // the real one rather than reproducing the decay.
-func animTravelAt(ticks int, p float64) travel {
-	t := newTravel(0, ticks)
-	t.age = int(p * float64(ticks))
+func animTravelAt(ticks int, p float64) ui.Travel {
+	t := ui.NewTravel(0, ticks)
+	t.Age = int(p * float64(ticks))
 	return t
 }
 
@@ -338,7 +339,7 @@ func (s *AnimationsScene) Init(gs *state.GlobalState) {
 // is what makes the list a way of comparing two gestures: both are watched from their first frame.
 func (s *AnimationsScene) pick(gs *state.GlobalState, i int) {
 	s.at = i
-	s.t = newTravel(0, animGestures[i].ticks()+animHoldTicks())
+	s.t = ui.NewTravel(0, animGestures[i].ticks()+animHoldTicks())
 	s.raiseMorph(gs)
 }
 
@@ -347,13 +348,13 @@ func (s *AnimationsScene) raiseMorph(gs *state.GlobalState) {
 	a, b := animFace(gs, animCardA), animFace(gs, animCardB)
 	switch animGestures[s.at].name {
 	case "morph into":
-		s.m = morphInto(a, b, cards.Hand)
+		s.m = ui.MorphInto(a, b, cards.Hand)
 	case "morph in":
-		s.m = morphIn(b, cards.Hand)
+		s.m = ui.MorphIn(b, cards.Hand)
 	case "morph away":
-		s.m = morphAway(a, cards.Hand)
+		s.m = ui.MorphAway(a, cards.Hand)
 	default:
-		s.m = morph{}
+		s.m = ui.Morph{}
 	}
 }
 
@@ -364,19 +365,19 @@ func (s *AnimationsScene) Update(gs *state.GlobalState) error {
 	}
 	systems.UpdateButton(gs, s.back)
 
-	s.t.tick()
-	s.m.tick()
-	if s.t.done() {
+	s.t.Tick()
+	s.m.Tick()
+	if s.t.Done() {
 		s.pick(gs, s.at)
 	}
 	return nil
 }
 
 func (s *AnimationsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	fillGround(screen)
+	ui.FillGround(screen)
 
 	animText(gs, screen, animTitle, gs.PctX(animListLeftPct), gs.PctY(11),
-		animTitleSize, groundInk)
+		animTitleSize, ui.GroundInk)
 
 	for _, b := range s.rows {
 		systems.DrawButton(gs, screen, b)
@@ -390,7 +391,7 @@ func (s *AnimationsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// The hold at the end of the loop is a still frame of the finished gesture, so `p` is clamped
 	// rather than allowed to run past 1.
-	p := float64(s.t.age) / float64(g.ticks())
+	p := float64(s.t.Age) / float64(g.ticks())
 	if p > 1 {
 		p = 1
 	}
@@ -399,7 +400,7 @@ func (s *AnimationsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	animText(gs, screen, g.where, gs.PctX(animStageLeftPct), gs.PctY(animNotesTopPct),
 		animNoteSize, animStageInk)
 	animText(gs, screen, g.what, gs.PctX(animStageLeftPct), gs.PctY(animNotesTopPct)+26,
-		animWhatSize, groundInk)
+		animWhatSize, ui.GroundInk)
 }
 
 // animText is one left-aligned line, which is every piece of type on this page.

@@ -8,6 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -77,26 +78,26 @@ type shieldFlight struct {
 	// during its hold cannot pay twice.
 	landed bool
 
-	t travel
+	t ui.Travel
 }
 
-func (f *shieldFlight) tick()        { f.t.tick() }
-func (f shieldFlight) done() bool    { return f.t.done() }
-func (f shieldFlight) arrived() bool { return f.t.age >= shieldFlyTicks() }
+func (f *shieldFlight) Tick()        { f.t.Tick() }
+func (f shieldFlight) Done() bool    { return f.t.Done() }
+func (f shieldFlight) arrived() bool { return f.t.Age >= shieldFlyTicks() }
 
 // The flight's clock, in the game's own beats so it slows down and speeds up with the round.
 // **It is the hand dialog's term beat**, because it sets off on that beat and should land inside
 // it: a shield still crossing the screen while the next figure flies out of the next card would
 // read as belonging to that one.
-func shieldFlyTicks() int  { return beat(22, 25) }
-func shieldHoldTicks() int { return beat(4, 25) }
+func shieldFlyTicks() int  { return ui.Beat(22, 25) }
+func shieldHoldTicks() int { return ui.Beat(4, 25) }
 
 // row is one side's shield row, and nil-safe for a side outside the two.
-func (s *CombatScene) row(side combat.Side) *shieldRow {
-	if side < 0 || int(side) >= len(s.theater.shieldRows) {
-		return &shieldRow{}
+func (s *CombatScene) row(side combat.Side) *ui.ShieldRow {
+	if side < 0 || int(side) >= len(s.Theater.shieldRows) {
+		return &ui.ShieldRow{}
 	}
-	return &s.theater.shieldRows[side]
+	return &s.Theater.shieldRows[side]
 }
 
 // noteShieldRaise flies the pips for an announced raise, and it is **the only place pips fly from**
@@ -121,14 +122,14 @@ func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
 		return false
 	}
 	seat, ok := s.firingSeat(e.Side)
-	if !ok || s.row(e.Side).flew(seat) {
+	if !ok || s.row(e.Side).Flew(seat) {
 		return false
 	}
 
 	// The raise names what is standing after its own card, so what this card put up is the
 	// difference — and the row can only show maxShieldPips of it.
 	count := e.Amount
-	if room := maxShieldPips - (e.Life - e.Amount); count > room {
+	if room := ui.MaxShieldPips - (e.Life - e.Amount); count > room {
 		count = room
 	}
 	if count <= 0 {
@@ -146,9 +147,9 @@ func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
 // firingSeat is the seat of the card lit on one side right now, and false for none. **The last of
 // them**, because a defense is lit alone and an attack phase lights a set the hand then narrows.
 func (s *CombatScene) firingSeat(side combat.Side) (int, bool) {
-	seats := s.theater.firingSeats
+	seats := s.Theater.firingSeats
 	if side == combat.SideB {
-		seats = s.theater.enemyFiringSeats
+		seats = s.Theater.enemyFiringSeats
 	}
 	if len(seats) == 0 {
 		return 0, false
@@ -159,9 +160,9 @@ func (s *CombatScene) firingSeat(side combat.Side) (int, bool) {
 // flyShields raises one flight and records the seat it left, so nothing sends the same card's pips
 // twice.
 func (s *CombatScene) flyShields(f shieldFlight) {
-	f.t = newTravel(0, shieldFlyTicks()+shieldHoldTicks())
-	s.theater.shields = append(s.theater.shields, f)
-	s.row(f.side).noteFlight(f.seat)
+	f.t = ui.NewTravel(0, shieldFlyTicks()+shieldHoldTicks())
+	s.Theater.shields = append(s.Theater.shields, f)
+	s.row(f.side).NoteFlight(f.seat)
 }
 
 // landShields pays every arrived flight into the row, once each.
@@ -171,25 +172,25 @@ func (s *CombatScene) flyShields(f shieldFlight) {
 // the count itself and the row takes it. A wrong guess is corrected by the next announcement rather
 // than compounded.
 func (s *CombatScene) landShields() {
-	for i := range s.theater.shields {
-		f := &s.theater.shields[i]
+	for i := range s.Theater.shields {
+		f := &s.Theater.shields[i]
 		if f.landed || !f.arrived() {
 			continue
 		}
 		f.landed = true
 
 		row := s.row(f.side)
-		row.fitTo(s.modelShields(f.side))
+		row.FitTo(s.modelShields(f.side))
 		if f.standing < 0 {
-			row.add(f.element, f.count)
+			row.Add(f.element, f.count)
 			continue
 		}
 		// **The announcement brings a count; the flight brings the color.** Every pip this
 		// flight is responsible for wears its card's element — all `count` of them, not just the
 		// newest, or a brace announcing two would land one colored pip and one bare white mark.
-		row.raiseTo(f.standing, f.element)
-		for i := 0; i < f.count && i < row.count(); i++ {
-			row.pips[row.count()-1-i] = f.element
+		row.RaiseTo(f.standing, f.element)
+		for i := 0; i < f.count && i < row.Count(); i++ {
+			row.Pips[row.Count()-1-i] = f.element
 		}
 	}
 }
@@ -197,7 +198,7 @@ func (s *CombatScene) landShields() {
 // shownShieldElements is the element of each standing pip, so the card can draw the right shield —
 // and its length is the count, which is the whole point of the row being one list.
 func (s *CombatScene) shownShieldElements(side combat.Side) []cards.Element {
-	return s.row(side).pips
+	return s.row(side).Pips
 }
 
 // modelShields is what the engine has standing for a side right now, which is what the row falls
@@ -223,15 +224,15 @@ func (s *CombatScene) shieldsRaisedBy(side combat.Side, seat int) int {
 	var card combat.Card
 	switch {
 	case side == combat.SideB:
-		if seat < 0 || seat >= len(s.theater.enemyDealt) {
+		if seat < 0 || seat >= len(s.Theater.enemyDealt) {
 			return 0
 		}
-		card = s.theater.enemyDealt[seat].card
+		card = s.Theater.enemyDealt[seat].card
 	default:
-		if seat < 0 || seat >= len(s.theater.resolved) {
+		if seat < 0 || seat >= len(s.Theater.resolved) {
 			return 0
 		}
-		card = s.theater.resolved[seat].card
+		card = s.Theater.resolved[seat].card
 	}
 	if combat.ConceptOf(card.Concept).Verb != combat.VerbShield {
 		return 0
@@ -257,14 +258,14 @@ func (s *CombatScene) noteShields(e combat.Event) {
 		if seat, ok := s.firingSeat(e.Side); ok {
 			el = s.handCardElement(e.Side, seat)
 		}
-		s.row(e.Side).raiseTo(e.Life, el)
+		s.row(e.Side).RaiseTo(e.Life, el)
 	case combat.KindBlocked:
-		s.row(e.Target).hold(e.Amount, cards.Basic)
+		s.row(e.Target).Hold(e.Amount, cards.Basic)
 	case combat.KindExpired:
 		// **An expiry empties the row whatever it says.** Its `Amount` is the count read *before*
 		// the shields were cleared — how many lapsed, not how many are left — so a row taking it
 		// the way it takes a block's would keep drawing every shield that had just gone.
-		s.row(e.Target).hold(0, cards.Basic)
+		s.row(e.Target).Hold(0, cards.Basic)
 	}
 }
 
@@ -272,8 +273,8 @@ func (s *CombatScene) noteShields(e combat.Event) {
 // this round has said so, and the adopted model otherwise.
 func (s *CombatScene) shownShields(side combat.Side, model int) int {
 	row := s.row(side)
-	row.fitTo(model)
-	return row.count()
+	row.FitTo(model)
+	return row.Count()
 }
 
 // The pips' journey, drawn.
@@ -294,14 +295,14 @@ const (
 
 // drawShields draws every pip in the air.
 func (s *CombatScene) drawShields(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, f := range s.theater.shields {
+	for _, f := range s.Theater.shields {
 		from, ok := s.shieldOrigin(gs, f)
 		if !ok {
 			continue
 		}
 		to := s.shieldTarget(gs, f)
 
-		p := easeOut(clamp01(float64(f.t.age) / float64(shieldFlyTicks())))
+		p := ui.EaseOut(ui.Clamp01(float64(f.t.Age) / float64(shieldFlyTicks())))
 		scale := shieldFromScale + (shieldToScale-shieldFromScale)*p
 		alpha := shieldAlpha(f)
 
@@ -324,8 +325,8 @@ func shieldAlpha(f shieldFlight) float32 {
 	if !f.arrived() {
 		return 1
 	}
-	held := float64(f.t.age-shieldFlyTicks()) / float64(shieldHoldTicks())
-	return float32(clamp01(1 - held))
+	held := float64(f.t.Age-shieldFlyTicks()) / float64(shieldHoldTicks())
+	return float32(ui.Clamp01(1 - held))
 }
 
 // drawShieldPip blits one mark, centered on a point, in its card's own element.
@@ -335,7 +336,7 @@ func shieldAlpha(f shieldFlight) float32 {
 // are now five shields, authored, and the pip draws the one the card is showing. An element with no
 // drawing takes the neutral shield rather than nothing, on cards.MarkArtKey's terms.
 func drawShieldPip(screen *ebiten.Image, at image.Point, scale float64, alpha float32, e cards.Element) {
-	img := systems.ArtMarkImage(shieldPipKey(e), shieldPipSize, shieldPipSize)
+	img := systems.ArtMarkImage(ui.ShieldPipKey(e), shieldPipSize, shieldPipSize)
 	if img == nil {
 		return
 	}
@@ -353,23 +354,12 @@ func drawShieldPip(screen *ebiten.Image, at image.Point, scale float64, alpha fl
 // leaving that corner, so a second figure here would be the two drifting apart.
 const shieldPipSize = 32
 
-// shieldPipKey is the shield drawing for one element, neutral for anything that is not one of the
-// five. Spelled here rather than exported from internal/cards because the key is a fact about the
-// asset family and both packages build it the same way off a form and an element.
-func shieldPipKey(e cards.Element) string {
-	switch e {
-	case cards.Fire, cards.Ice, cards.Lightning, cards.Earth, cards.Arcane:
-		return "formdefend-" + e.String()
-	}
-	return "formdefend-neutral"
-}
-
 // shieldOrigin is the seat the pips leave: the card being scored, exactly where its own figure
 // sets off from.
 func (s *CombatScene) shieldOrigin(gs *state.GlobalState, f shieldFlight) (image.Point, bool) {
-	seats := len(s.theater.resolved)
+	seats := len(s.Theater.resolved)
 	if f.side == combat.SideB {
-		seats = len(s.theater.enemyDealt)
+		seats = len(s.Theater.enemyDealt)
 	}
 	if seats == 0 {
 		return image.Point{}, false
@@ -397,9 +387,9 @@ func (s *CombatScene) shieldOrigin(gs *state.GlobalState, f shieldFlight) (image
 // The row's own offset comes from the card style — `EffectTop`, the band the enemy's status badges
 // use and the pips share — so a card re-laid out moves the target with it.
 func (s *CombatScene) shieldTarget(gs *state.GlobalState, f shieldFlight) image.Point {
-	r, style := s.duelistCardRect(gs), cards.DuelistStyle
+	r, style := ui.DuelistCardRect(gs), cards.DuelistStyle
 	if f.side == combat.SideB {
-		r, style = s.enemyCardRect(gs), cards.EnemyStyle
+		r, style = ui.EnemyCardRect(gs), cards.EnemyStyle
 	}
 	return image.Pt(
 		(r.Min.X+r.Max.X)/2,

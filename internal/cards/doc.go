@@ -14,7 +14,7 @@
 // # What a card looks like, and what changed
 //
 // The surface is a constant off-white for every card and **the left column carries the
-// element** — the tinted form mark in the corner and the cost ticks under it *(owner's
+// element** — the drawn form mark in the corner and the cost ticks under it *(owner's
 // call, 2026-08-23)*. The border carried it from
 // 2026-08-09 until then, which itself reversed the decision recorded in CLAUDE.md's
 // color section on 2026-08-03, where the surface was the element. Three things follow
@@ -64,23 +64,15 @@
 //
 // # Rounded corners are rasterized here, not masked
 //
-// **This is the only rounding approach in the tree** *(2026-08-24)*. The screen used to
-// round with `CreateRoundedRecMask` + `ebiten.BlendSourceIn`, and for a while the two
-// coexisted — that path could never be used here, since it takes an `*ebiten.Image`, its
-// body is `vector.DrawFilledCircle`, and `BlendSourceIn` is a GPU blend mode, none of
-// which exist without a graphics context. Being window-free is the requirement that makes
-// the review tool possible at all, so it wins.
+// **shape.go is the only rounding approach in the tree, and a new rounded shape belongs in it
+// whatever is drawing it** *(2026-08-24)*. A GPU-side rasterizer is the tempting alternative and
+// it cannot be reached from here at all: it would need an `*ebiten.Image` and a blend mode, and
+// this package has no graphics context. Being window-free is what makes the review tools possible,
+// so the one that works without a window is the one that survives — and a second silhouette of the
+// same corner would be the one a tool cannot draw.
 //
-// The mask path went when both fighters became cards and their health bars came in here
-// with them, so nothing on screen needs it any more. **A new rounded shape belongs in
-// shape.go**, whatever is drawing it: a second GPU-side rasterizer would put two
-// silhouettes of the same corner back in the tree, and the one that cannot be reached
-// without a window is the one that would spread.
-//
-// Corners are hard-edged — no antialiasing — because the cards were already drawn that
-// way (`vector.DrawFilledRect(..., false)`) and because the glyphs sitting on them are
-// 1:1 pixel art with a one-pixel rim. An antialiased card edge around pixel-art contents
-// reads as two different pictures.
+// Corners are hard-edged — no antialiasing — because an antialiased card edge around 1:1 pixel-art
+// contents with a one-pixel rim reads as two different pictures.
 //
 // # Why it creates no Ebitengine images
 //

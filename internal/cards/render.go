@@ -1232,7 +1232,7 @@ func drawBack(dst *image.RGBA, s Spec, st Style) {
 	}
 }
 
-// blitGlyph composites a generated glyph, untinted, clipped to the card's own silhouette.
+// blitGlyph composites an art mark, untinted, clipped to the card's own silhouette.
 //
 // Scaling its five-value palette toward anything collapses the bevel into a flat
 // silhouette, which is the whole thing the palette exists to avoid; a disabled card fades

@@ -151,10 +151,15 @@ func TestARiderDoesNotStopACardBeingComparable(t *testing.T) {
 	// The screen's face cache and TestRoundIsDeterministic both compare cards by value, which is
 	// why Riders is a fixed array. A slice here would not compile at all; this is what says so out
 	// loud, so the field is not "tidied up" into one later.
-	if ridden(Bash, 10) != ridden(Bash, 10) {
+	//
+	// **Through variables rather than as two literal calls**, so that the comparison is not a
+	// tautology a reader has to re-derive — and so staticcheck does not read it as one.
+	same, alsoSame := ridden(Bash, 10), ridden(Bash, 10)
+	other := ridden(Bash, 20)
+	if same != alsoSame {
 		t.Error("two identically ridden cards did not compare equal")
 	}
-	if ridden(Bash, 10) == ridden(Bash, 20) {
+	if same == other {
 		t.Error("two differently ridden cards compared equal")
 	}
 }

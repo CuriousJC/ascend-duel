@@ -33,6 +33,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -96,7 +97,7 @@ func (s *AchievementsScene) Init(gs *state.GlobalState) {
 		s.scroll = models.NewScrollbar(achievementScrollWidth, achievementsColumnHeight())
 		// The page is drawn on the light ground, so the track is dimmed toward that rather than
 		// toward black — the same reason models.Slider.Ink exists. See systems.ColorToward.
-		s.scroll.Ground = screenGround
+		s.scroll.Ground = ui.ScreenGround
 	}
 
 	// **Back to the top on every entry.** A page re-opened where it was left is a page whose first
@@ -118,13 +119,13 @@ func (s *AchievementsScene) Update(gs *state.GlobalState) error {
 }
 
 func (s *AchievementsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	fillGround(screen)
+	ui.FillGround(screen)
 
 	heading := &text.DrawOptions{}
 	heading.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(14)))
 	heading.PrimaryAlign = text.AlignCenter
 	heading.SecondaryAlign = text.AlignCenter
-	heading.ColorScale.ScaleWithColor(groundInk)
+	heading.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, achievementsTitle,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementsTitleSize}, heading)
 
@@ -134,7 +135,7 @@ func (s *AchievementsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	tally.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(20)))
 	tally.PrimaryAlign = text.AlignCenter
 	tally.SecondaryAlign = text.AlignCenter
-	tally.ColorScale.ScaleWithColor(systems.ColorToward(groundInk, screenGround, 35))
+	tally.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 35))
 	text.Draw(screen, achievementTally(gs),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementTallySize}, tally)
 
@@ -170,10 +171,10 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 
 	// How far the words are pulled toward the ground. An earned row is at full strength; a locked
 	// one is quiet but still readable, which is the whole point of listing it.
-	nameInk, lineInk := groundInk, systems.ColorToward(groundInk, fill, 30)
+	nameInk, lineInk := ui.GroundInk, systems.ColorToward(ui.GroundInk, fill, 30)
 	if !got {
-		nameInk = systems.ColorToward(groundInk, fill, 45)
-		lineInk = systems.ColorToward(groundInk, fill, 60)
+		nameInk = systems.ColorToward(ui.GroundInk, fill, 45)
+		lineInk = systems.ColorToward(ui.GroundInk, fill, 60)
 	}
 
 	name := &text.DrawOptions{}
@@ -225,8 +226,8 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 func (s *AchievementsScene) drawTick(screen *ebiten.Image, cx, cy int) {
 	const w = 3
 	x, y := float32(cx), float32(cy)
-	vector.StrokeLine(screen, x-11, y, x-3, y+9, w, groundInk, true)
-	vector.StrokeLine(screen, x-3, y+9, x+12, y-10, w, groundInk, true)
+	vector.StrokeLine(screen, x-11, y, x-3, y+9, w, ui.GroundInk, true)
+	vector.StrokeLine(screen, x-3, y+9, x+12, y-10, w, ui.GroundInk, true)
 }
 
 // achievementsTop is where the first row sits, and achievementsColumnHeight how deep the whole

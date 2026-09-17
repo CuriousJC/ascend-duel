@@ -202,7 +202,7 @@ func paintSlider(gs *state.GlobalState, s *models.Slider) {
 	// distance rather than as two things that nearly line up.
 	fill := sliderFill(s)
 	if width := knob.Min.X + knob.Dx()/2 - track.Min.X; width > 0 {
-		vector.DrawFilledRect(s.Image,
+		vector.FillRect(s.Image,
 			float32(track.Min.X), float32(track.Min.Y),
 			float32(width), float32(track.Dy()), fill, false)
 	}
@@ -210,7 +210,7 @@ func paintSlider(gs *state.GlobalState, s *models.Slider) {
 	if s.Disabled {
 		// Flat, with no light on it at all, exactly as a disabled button is drawn — unavailable
 		// first, itself second.
-		vector.DrawFilledRect(s.Image,
+		vector.FillRect(s.Image,
 			float32(knob.Min.X), float32(knob.Min.Y),
 			float32(knob.Dx()), float32(knob.Dy()), disabledButtonColor, false)
 	} else {

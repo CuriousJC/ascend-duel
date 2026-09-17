@@ -9,6 +9,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -49,30 +50,6 @@ const (
 	cardHeight = 280
 	cardGap    = 15
 
-	// The row sits low, with the budget bar and then the button strip beneath it. handTopPct
-	// is the top of an *unselected* card; a selected one rises above it by selectedNudge.
-	//
-	// **59% until 2026-08-11, 61% until 2026-08-12.** It came down the first time when the AP
-	// text line went, so the cards sit directly on top of the bar that fills as they are
-	// selected. It came down again when the deck pile was re-hung off the bottom of the screen:
-	// that freed the band the pile used to float in, and **66% is the value that puts the
-	// action-point figure's top exactly on the Discard button's top**, which is what the owner
-	// asked for and also the tightest the strip goes.
-	//
-	// The arithmetic, because it is a coincidence of five constants and not a round number:
-	// PctY(66) is 633, plus a 224px card, plus apBarBelow, apBarHeight and apFigureBelowBar
-	// is 887 — and the button strip's center at PctY(95) less half a 50px button is 887 too.
-	// **Nothing enforces that**, so TestTheAPFigureLinesUpWithTheButtonStrip does.
-	//
-	// The bar's own y is measured from this row and the band above the hand from it as well, so
-	// as well, so moving the row moves the whole lower half of the screen together — which is
-	// the point: what the drop buys is height between the top row and the cards.
-	// **It no longer places the hand** *(2026-09-04)*. See handTop, which measures up from the
-	// bottom edge instead. This is kept because it is what the row rested at for the whole time
-	// the screen was 1280x960, and because it is still the right sanity check on the derived
-	// figure: if handTop stops landing near two thirds down, something below it has grown.
-	handTopPct = 66
-
 	// selectedNudge is how far a selected card lifts out of the row. Selection is the only
 	// state a card carries, so it gets a whole axis to itself rather than a tint that would
 	// have to compete with the affordability dimming. Up rather than right, because the
@@ -94,16 +71,6 @@ const (
 	// measured from the bar.
 	apBarBelow  = 14
 	apBarHeight = 8
-
-	// The strip under the bar: the AP figure, the two buttons and the deck pile, all on one
-	// line. buttonStripPct is that line's center and every one of them is placed against it.
-	// **Kept as the resting value the strip had, and no longer what places it** *(2026-09-04)*.
-	// See buttonStripY: the strip's center is now derived from the action-point figure, because
-	// the alignment the owner asked for on 2026-08-12 was a coincidence of five constants that
-	// held at 960 tall and does not survive a change of resolution — at 1080 the nearest integer
-	// percentage lands two pixels off, and there is no percentage in between. This is here so the
-	// number the strip used to sit at is still written down.
-	buttonStripPct = 95
 
 	// Both buttons on that strip are the same size, and it is named here rather than written
 	// at the two NewButton calls because **three other things are placed against it**: the
@@ -171,11 +138,6 @@ const (
 	// footprint rather than of its contents. They are duplicated from cards.Hand rather
 	// than read from it because they are consts and it is a var, and
 	// TestCardFootprintMatchesTheRenderer fails the build if the two ever disagree.
-
-	// dragThreshold is how far the cursor has to travel with the button held before a
-	// press counts as a drag rather than a click. Without it every click would jitter
-	// into a one-pixel reorder and selecting a card would be a coin toss.
-	dragThreshold = 4
 )
 
 // apFigureTop is the top of the action-point figure: the hand row, the bar under it, and the gap
@@ -249,7 +211,7 @@ func buttonStripY(gs *state.GlobalState) int {
 // sitting in a pile, which is why the instance is embedded rather than copied out field by
 // field — c.Action still reads the same everywhere it did before.
 type paletteCard struct {
-	actionCard
+	combat.Card
 	selected bool
 }
 
@@ -262,29 +224,29 @@ type paletteCard struct {
 // whole time.
 type handRow struct{ s *CombatScene }
 
-func (r handRow) rowLen() int { return len(r.s.hand) }
+func (r handRow) RowLen() int { return len(r.s.hand) }
 
-func (r handRow) rowSlot(gs *state.GlobalState, i int) image.Rectangle { return r.s.cardSlot(gs, i) }
+func (r handRow) RowSlot(gs *state.GlobalState, i int) image.Rectangle { return r.s.cardSlot(gs, i) }
 
-func (r handRow) rowZone(gs *state.GlobalState) image.Rectangle { return handZone(gs) }
+func (r handRow) RowZone(gs *state.GlobalState) image.Rectangle { return handZone(gs) }
 
-func (r handRow) rowDropIndex(gs *state.GlobalState) int { return r.s.dropIndex(gs) }
+func (r handRow) RowDropIndex(gs *state.GlobalState) int { return r.s.dropIndex(gs) }
 
-func (r handRow) rowLift(i int) {
+func (r handRow) RowLift(i int) {
 	r.s.lifted = r.s.hand[i]
 	r.s.hand = append(append([]paletteCard{}, r.s.hand[:i]...), r.s.hand[i+1:]...)
 
-	trace.Logf("drag", "lifted card[%d] %s", i, cardLabel(r.s.lifted.actionCard))
+	trace.Logf("drag", "lifted card[%d] %s", i, cardLabel(r.s.lifted.Card))
 }
 
-func (r handRow) rowReturn(from, to int) {
+func (r handRow) RowReturn(from, to int) {
 	r.s.insertCard(to, r.s.lifted)
 
-	trace.Logf("drag", "dropped %s, index %d -> %d", cardLabel(r.s.lifted.actionCard), from, to)
+	trace.Logf("drag", "dropped %s, index %d -> %d", cardLabel(r.s.lifted.Card), from, to)
 	r.s.lifted = paletteCard{}
 }
 
-func (r handRow) rowClick(i int) { r.s.toggle(i) }
+func (r handRow) RowClick(i int) { r.s.toggle(i) }
 
 // planning reports whether the player may edit the queue: only between rounds, and only
 // while both duelists are standing.
@@ -316,7 +278,7 @@ func (s *CombatScene) syncQueue() {
 	s.fighterActions = s.fighterActions[:0]
 	for _, c := range s.hand {
 		if c.selected {
-			s.fighterActions = append(s.fighterActions, c.actionCard)
+			s.fighterActions = append(s.fighterActions, c.Card)
 		}
 	}
 }
@@ -328,7 +290,7 @@ func (s *CombatScene) updateActionBox(gs *state.GlobalState) {
 	// A round starting mid-press puts whatever is in hand back rather than letting it
 	// land on a list that is no longer editable.
 	if !s.planning() {
-		s.drag.cancel(row)
+		s.drag.Cancel(row)
 		return
 	}
 
@@ -336,14 +298,14 @@ func (s *CombatScene) updateActionBox(gs *state.GlobalState) {
 	// simply returning, for the reason the branch above cancels: a gate coming up mid-press would
 	// otherwise leave a card stuck to the cursor with no release that can put it down.
 	if !gs.CursorAllowed() {
-		s.drag.cancel(row)
+		s.drag.Cancel(row)
 		return
 	}
 
-	s.drag.update(gs, row)
+	s.drag.Update(gs, row)
 }
 
-// toggle selects or deselects the card at i. Deselecting always works; selecting is refused
+// Toggle selects or deselects the card at i. Deselecting always works; selecting is refused
 // only when maxSelected cards are already picked, which is the same rule the dimming on
 // screen is reporting.
 //
@@ -356,7 +318,7 @@ func (s *CombatScene) toggle(i int) {
 
 	if !s.hand[i].selected && s.selectedCount() >= s.fighter.MaxActions() {
 		trace.Logf("input", "select refused: %s, already %d of %d picked",
-			cardLabel(s.hand[i].actionCard), s.selectedCount(), s.fighter.MaxActions())
+			cardLabel(s.hand[i].Card), s.selectedCount(), s.fighter.MaxActions())
 		return
 	}
 
@@ -369,7 +331,7 @@ func (s *CombatScene) toggle(i int) {
 			verb = "selected"
 		}
 		trace.Logf("input", "%s card[%d] %s -> %d/%d AP%s  hand %s",
-			verb, i, cardLabel(s.hand[i].actionCard),
+			verb, i, cardLabel(s.hand[i].Card),
 			s.fighter.CostOf(s.fighterActions), s.fighter.ActionPoints(),
 			overSuffix(s), handLabel(s.hand))
 	}
@@ -404,7 +366,7 @@ func (s *CombatScene) insertCard(at int, card paletteCard) {
 // otherwise the whole hand would slide half a card sideways the moment one was lifted.
 func (s *CombatScene) laidOutCount() int {
 	n := len(s.hand)
-	if s.drag.dragging() {
+	if s.drag.Dragging() {
 		n++
 	}
 	return n
@@ -446,7 +408,7 @@ func handPitch(gs *state.GlobalState, n int) int {
 // **One function rather than the arithmetic written twice**, because the pitch and the row's
 // center both need it and the two disagreeing would put the row half a card off center.
 func cardBandWidth(gs *state.GlobalState) int {
-	return ControlColumnLeft(gs) - sortColumnGap - handBandLeft(gs)
+	return ui.ControlColumnLeft(gs) - ui.SortColumnGap - handBandLeft(gs)
 }
 
 // handBandLeft is where the bottom of the screen starts: the same line the relic row starts on,
@@ -571,7 +533,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 	// **The card under the cursor is drawn last, so it is drawn whole** — raisedSeat, the reading
 	// the relic row and the sack take too. The hand overlaps itself once it is full, and a hand of
 	// fifty is a stack of slivers.
-	raised := raisedSeat(gs, handRow{s}, s.tip.Showing())
+	raised := ui.RaisedSeat(gs, handRow{s}, s.tip.Showing())
 
 	for i, c := range s.hand {
 		// The raised card is drawn after the row rather than in it — a fifth suppression on the
@@ -626,17 +588,17 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// **It is last of the four on purpose.** A card that has started resolving is drawn by the
 		// resolved pile, so a morph still running when DUEL! is pressed gives way to the round
 		// rather than painting a second copy of the card on the table.
-		if h, ok := s.handMorphFor(c.actionCard.ID); ok {
-			drawMorph(gs, screen, seat.Min, h.m)
+		if h, ok := s.handMorphFor(c.Card.ID); ok {
+			ui.DrawMorph(gs, screen, seat.Min, h.m)
 			continue
 		}
 
 		// **A card the tutorial is pointing at wears the mark rather than a frame** — see
 		// marksFor, which reads the same focus list the spotlight is handed, so what is lit and
 		// what is clickable cannot come apart.
-		drawMarkedCard(gs, screen, seat.Min, cards.Hand,
-			c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), enabled, c.selected,
-			marksFor(gs, seat))
+		ui.DrawMarkedCard(gs, screen, seat.Min, cards.Hand,
+			c.Card, ui.HeldBy(s.fighter.Duelist, c.Card), enabled, c.selected,
+			ui.MarksFor(gs, seat))
 	}
 
 	// **The raised card, over the row.** It answers the same four suppressions the loop does, so a
@@ -647,17 +609,17 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 
 		c := s.hand[raised]
 		seat := s.cardSlot(gs, raised)
-		if h, ok := s.handMorphFor(c.actionCard.ID); ok {
-			drawMorph(gs, screen, seat.Min, h.m)
+		if h, ok := s.handMorphFor(c.Card.ID); ok {
+			ui.DrawMorph(gs, screen, seat.Min, h.m)
 		} else {
 			enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
-			drawMarkedCard(gs, screen, seat.Min, cards.Hand,
-				c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), enabled, c.selected,
-				marksFor(gs, seat))
+			ui.DrawMarkedCard(gs, screen, seat.Min, cards.Hand,
+				c.Card, ui.HeldBy(s.fighter.Duelist, c.Card), enabled, c.selected,
+				ui.MarksFor(gs, seat))
 		}
 	}
 
-	if !s.drag.dragging() || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
+	if !s.drag.Dragging() || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
 		return
 	}
 
@@ -665,10 +627,10 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 	// than as a tick. Straddling the slot's left edge rather than sitting a gap to its left,
 	// since once the cards overlap there is no gap to sit in.
 	slot := s.cardSlot(gs, s.dropIndex(gs))
-	vector.DrawFilledRect(screen,
+	vector.FillRect(screen,
 		float32(slot.Min.X)-dropIndicatorWidth/2, top,
 		dropIndicatorWidth, cardHeight,
-		playerSwatch, false)
+		ui.PlayerSwatch, false)
 }
 
 // previewAttack is the blow the current selection would land if DUEL! were pressed now.
@@ -840,7 +802,7 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 	// as a *partly* spent point. The ground's ink at a quarter strength is present enough to be
 	// counted and says nothing about the resource. `ColorToward` rather than `ColorAtStrength`,
 	// because the table is light — see CLAUDE.md.
-	empty := systems.ColorToward(groundInk, screenGround, 75)
+	empty := systems.ColorToward(ui.GroundInk, ui.ScreenGround, 75)
 	cellWidth := (width - float32(cells-1)*apBarGap) / float32(cells)
 
 	// A cell narrower than a couple of pixels is a smear rather than a count, which a big
@@ -878,20 +840,13 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 
 // drawDraggedCard draws the card in flight. Called last so it rides over everything.
 func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Image) {
-	if !s.drag.dragging() {
+	if !s.drag.Dragging() {
 		return
 	}
 
-	at := s.drag.at(gs)
-	drawCard(gs, screen, at, cards.Hand,
-		s.lifted.actionCard, heldBy(s.fighter.Duelist, s.lifted.actionCard), true, s.lifted.selected)
-}
-
-func abs(n int) int {
-	if n < 0 {
-		return -n
-	}
-	return n
+	At := s.drag.At(gs)
+	ui.DrawCard(gs, screen, At, cards.Hand,
+		s.lifted.Card, ui.HeldBy(s.fighter.Duelist, s.lifted.Card), true, s.lifted.selected)
 }
 
 // handsButtonPlace is where the hands button stands on the combat screen: **the second panel slot

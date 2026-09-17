@@ -22,6 +22,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -127,13 +128,13 @@ func (s *CreditsScene) Update(gs *state.GlobalState) error {
 }
 
 func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	fillGround(screen)
+	ui.FillGround(screen)
 
 	heading := &text.DrawOptions{}
 	heading.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(9)))
 	heading.PrimaryAlign = text.AlignCenter
 	heading.SecondaryAlign = text.AlignCenter
-	heading.ColorScale.ScaleWithColor(groundInk)
+	heading.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, creditsTitle,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: creditsTitleSize}, heading)
 
@@ -192,9 +193,9 @@ func creditsSize(k creditsKind) float64 {
 // quieter. See the color rule in CLAUDE.md.
 func creditsInk(k creditsKind) color.Color {
 	if k == creditsQuiet {
-		return systems.ColorToward(groundInk, screenGround, creditsQuietPct)
+		return systems.ColorToward(ui.GroundInk, ui.ScreenGround, creditsQuietPct)
 	}
-	return groundInk
+	return ui.GroundInk
 }
 
 // leave goes back to whichever screen opened this one, on the same terms the settings and

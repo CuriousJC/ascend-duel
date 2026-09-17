@@ -14,6 +14,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/tutorial"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // tutorialFacts is what this screen can honestly report about the run this frame.
@@ -55,7 +56,7 @@ func (s *CombatScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 		// is a card the player can see is broken; one still crossing the table is not yet
 		// anything. Reading the resolved log instead would let a step fire on a break that had not
 		// been drawn.
-		ShieldBreaks: len(s.theater.shatteredSeats),
+		ShieldBreaks: len(s.Theater.shatteredSeats),
 	}
 	match := s.matchingCards(gs)
 	f.Matching = len(match)
@@ -90,9 +91,9 @@ func (s *CombatScene) roundsFinished() int {
 func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]image.Rectangle, bool) {
 	switch a {
 	case tutorial.AnchorEnemyCard:
-		return one(s.enemyCardRect(gs)), true
+		return one(ui.EnemyCardRect(gs)), true
 	case tutorial.AnchorDuelistCard:
-		return one(s.duelistCardRect(gs)), true
+		return one(ui.DuelistCardRect(gs)), true
 	case tutorial.AnchorTowerPlace:
 		// **The duelist card, since 2026-09-15**: the floor and the room are two of its stat rows
 		// now rather than two lines on the ground under it. The anchor keeps its name because an
@@ -101,7 +102,7 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		// does, and the two stay separate entries for that reason: they are different questions
 		// that currently share an answer, and a script merging them would have to be re-authored
 		// the day the floor gets a seat of its own again.
-		return one(s.duelistCardRect(gs)), true
+		return one(ui.DuelistCardRect(gs)), true
 	case tutorial.AnchorRoundTimer:
 		// **The whole bar rather than the cell about to light.** What the step is teaching is the
 		// count, and a square around one segment would say the opposite — that this round is the
@@ -179,8 +180,8 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		// **It reads the same layout the row draws with**, through breakSeatRect, so a card still
 		// flying to its seat is lit where it actually is.
 		var broken []image.Rectangle
-		for seat := range s.theater.enemyDealt {
-			if !s.theater.shatteredSeats[seat] {
+		for seat := range s.Theater.enemyDealt {
+			if !s.Theater.shatteredSeats[seat] {
 				continue
 			}
 			at, ok := s.breakSeatRect(gs, seat)
@@ -222,7 +223,7 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 	case tutorial.AnchorDuelButton:
 		return one(buttonRect(s.duelButton)), true
 	case tutorial.AnchorHandsButton:
-		return one(buttonRect(s.hands.button)), true
+		return one(buttonRect(s.hands.Button)), true
 	}
 	return nil, false
 }
@@ -269,13 +270,13 @@ func (s *CombatScene) matchingCards(gs *state.GlobalState) []int {
 
 	counts := make(map[int]int, len(s.hand))
 	for _, c := range s.hand {
-		counts[key(c.actionCard)]++
+		counts[key(c.Card)]++
 	}
 
 	best, bestN := 0, 0
 	for _, c := range s.hand {
-		if n := counts[key(c.actionCard)]; n > bestN {
-			best, bestN = key(c.actionCard), n
+		if n := counts[key(c.Card)]; n > bestN {
+			best, bestN = key(c.Card), n
 		}
 	}
 	if bestN < 2 {
@@ -284,7 +285,7 @@ func (s *CombatScene) matchingCards(gs *state.GlobalState) []int {
 
 	var out []int
 	for i, c := range s.hand {
-		if key(c.actionCard) == best {
+		if key(c.Card) == best {
 			out = append(out, i)
 		}
 	}

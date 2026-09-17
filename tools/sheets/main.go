@@ -213,12 +213,6 @@ type sheet struct {
 // listing.
 func (s sheet) Href() string { return s.Dir + "/index.html" }
 
-type link struct {
-	Title string
-	Href  string
-	Blurb string
-}
-
 type index struct {
 	Sheets []sheet
 }

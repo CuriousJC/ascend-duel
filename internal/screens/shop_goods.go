@@ -32,11 +32,13 @@ package screens
 
 import (
 	"fmt"
-	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"image"
 	"image/color"
 	"math/rand"
 	"strings"
+
+	"github.com/curiousjc/ascend-duel/internal/achieve"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -134,11 +136,11 @@ type goods struct {
 	// of them, and the deck is not touched until the hold is over.
 	before      combat.Card
 	after       combat.Card
-	change      morph
+	change      ui.Morph
 	removes     bool
 	copied      bool
 	held        int
-	arrival     travel
+	arrival     ui.Travel
 	arrivedFrom image.Rectangle
 	applyNow    func(*session.Session)
 }
@@ -152,7 +154,7 @@ type goods struct {
 func (g *goods) open(gs *state.GlobalState, good session.Good) {
 	g.good, g.stage, g.selected = good, goodsPick, -1
 	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
-	g.tip = models.Tooltip{DwellTicks: tipDwell()}
+	g.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 
 	switch good.Contains {
 	case session.ContentsStones:
@@ -172,9 +174,9 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 func (g *goods) reset() {
 	g.good, g.stage, g.selected = session.Good{}, goodsClosed, -1
 	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
-	g.before, g.after, g.change = combat.Card{}, combat.Card{}, morph{}
+	g.before, g.after, g.change = combat.Card{}, combat.Card{}, ui.Morph{}
 	g.removes, g.copied, g.held = false, false, 0
-	g.arrival, g.arrivedFrom, g.applyNow = travel{}, image.Rectangle{}, nil
+	g.arrival, g.arrivedFrom, g.applyNow = ui.Travel{}, image.Rectangle{}, nil
 	g.tip.Forget()
 }
 
@@ -413,8 +415,8 @@ func (g *goods) hover(gs *state.GlobalState) {
 		if !ok {
 			return
 		}
-		title, lines := cardTip(card, heldByRun(gs, card))
-		g.tip.Point(seat, tipLine(title), tipLines(lines))
+		title, lines := ui.CardTip(card, ui.HeldByRun(gs, card))
+		g.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 
@@ -431,10 +433,10 @@ func (g *goods) hover(gs *state.GlobalState) {
 			return
 		case session.ContentsStones:
 			st := g.stones[i]
-			g.tip.Point(g.slot(gs, i), tipLine(st.Name), tipLines(stoneTipLines(gs, st)))
+			g.tip.Point(g.slot(gs, i), ui.TipLine(st.Name), ui.TipLines(stoneTipLines(gs, st)))
 		case session.ContentsRunes:
 			p := g.runes[i]
-			g.tip.Point(g.slot(gs, i), tipLine(p.Name), tipLines(runeTipLines(gs, p)))
+			g.tip.Point(g.slot(gs, i), ui.TipLine(p.Name), ui.TipLines(runeTipLines(gs, p)))
 		}
 		return
 	}
@@ -534,19 +536,19 @@ func (g *goods) show(gs *state.GlobalState, essence session.Essence, deckIndex i
 
 	// **What the essence did decides which shape the change takes** — recolored, eaten, or copied.
 	// See cardmorph.go; the morph is handed two finished faces and works out the rest.
-	beforeSpec := cardSpec(before, heldByRun(gs, before), true, false)
+	beforeSpec := ui.CardSpec(before, ui.HeldByRun(gs, before), true, false)
 	switch {
 	case g.removes:
-		g.change = morphAway(beforeSpec, cards.Hand)
+		g.change = ui.MorphAway(beforeSpec, cards.Hand)
 	case g.copied:
-		g.change = morphIn(cardSpec(g.after, heldByRun(gs, g.after), true, false), cards.Hand)
+		g.change = ui.MorphIn(ui.CardSpec(g.after, ui.HeldByRun(gs, g.after), true, false), cards.Hand)
 	default:
-		g.change = morphInto(beforeSpec,
-			cardSpec(g.after, heldByRun(gs, g.after), true, false), cards.Hand)
+		g.change = ui.MorphInto(beforeSpec,
+			ui.CardSpec(g.after, ui.HeldByRun(gs, g.after), true, false), cards.Hand)
 	}
 
 	g.stage, g.held = goodsShowing, settledHoldTicks()
-	g.arrival, g.arrivedFrom = newTravel(0, settleFlightTicks()), from
+	g.arrival, g.arrivedFrom = ui.NewTravel(0, settleFlightTicks()), from
 	g.applyNow = func(run *session.Session) { run.Apply(essence, deckIndex) }
 	g.tip.Forget()
 
@@ -560,12 +562,12 @@ func (g *goods) show(gs *state.GlobalState, essence session.Essence, deckIndex i
 // change has finished — the reward screen's ordering, and for its reason: a dissolve running over a
 // moving card puts the one thing worth watching on a target the eye is still chasing.
 func (g *goods) tickShowing(gs *state.GlobalState) {
-	if !g.arrival.done() {
-		g.arrival.tick()
+	if !g.arrival.Done() {
+		g.arrival.Tick()
 		return
 	}
-	if !g.change.done() {
-		g.change.tick()
+	if !g.change.Done() {
+		g.change.Tick()
 		return
 	}
 
@@ -606,7 +608,7 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 		return
 	}
 
-	panel := drawModalFrame(gs, screen, modalHead{title: g.title()})
+	panel := ui.DrawModalFrame(gs, screen, ui.ModalHead{Title: g.title()})
 
 	if line := g.hint(); line != "" && g.stage != goodsShowing {
 		hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}
@@ -626,14 +628,14 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 		at := g.slot(gs, i).Min
 		switch g.good.Contains {
 		case session.ContentsStones:
-			drawStoneCard(gs, screen, at, g.stones[i], true)
+			ui.DrawStoneCard(gs, screen, at, g.stones[i], true)
 		case session.ContentsRunes:
-			drawRuneCard(gs, screen, at, g.runes[i], true, false)
+			ui.DrawRuneCard(gs, screen, at, g.runes[i], true, false)
 		default:
 			// **An essence is lit only for the card that is selected.** With nothing selected the
 			// whole row is dim, which is what says the gesture starts underneath — the reward
 			// screen's rule, and the rune pane's.
-			drawEssenceCard(gs, screen, at, g.essences[i], g.essenceSpendable(gs, g.essences[i]))
+			ui.DrawEssenceCard(gs, screen, at, g.essences[i], g.essenceSpendable(gs, g.essences[i]))
 		}
 	}
 
@@ -645,7 +647,7 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 		if !ok {
 			continue
 		}
-		drawCard(gs, screen, g.offerSlot(gs, i).Min, cards.Hand, card, heldByRun(gs, card),
+		ui.DrawCard(gs, screen, g.offerSlot(gs, i).Min, cards.Hand, card, ui.HeldByRun(gs, card),
 			true, i == g.selected)
 	}
 
@@ -683,17 +685,17 @@ func (g *goods) drawShowing(gs *state.GlobalState, screen *ebiten.Image) {
 		seats = settledSeats(gs, 2)
 	}
 
-	at := flyingTo(g.arrivedFrom, seats[0], g.arrival)
+	at := ui.FlyingTo(g.arrivedFrom, seats[0], g.arrival)
 
 	// While a copy is being made the card that flew is the original, untouched: the morph in the
 	// second seat is the whole of what is happening.
 	if g.copied {
-		drawCard(gs, screen, at, cards.Hand, g.before, heldByRun(gs, g.before), true, false)
-		drawMorph(gs, screen, seats[1].Min, g.change)
+		ui.DrawCard(gs, screen, at, cards.Hand, g.before, ui.HeldByRun(gs, g.before), true, false)
+		ui.DrawMorph(gs, screen, seats[1].Min, g.change)
 		return
 	}
 
-	drawMorph(gs, screen, at, g.change)
+	ui.DrawMorph(gs, screen, at, g.change)
 }
 
 func (g *goods) hint() string { return g.good.Hint }

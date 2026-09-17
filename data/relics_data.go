@@ -24,8 +24,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
-	"sort"
 )
 
 //go:embed relics.json
@@ -223,16 +221,7 @@ func (r RelicData) ArtKey() string {
 
 // LoadRelics parses the embedded relic list into a map keyed by RelicRecord.
 func LoadRelics() map[string]RelicData {
-	var list []RelicData
-	if err := json.Unmarshal(relicsJSON, &list); err != nil {
-		panic("Failed to unmarshal our RelicData: " + err.Error())
-	}
-
-	out := make(map[string]RelicData, len(list))
-	for _, r := range list {
-		out[r.RelicRecord] = r
-	}
-	return out
+	return keyed(relicsJSON, "relics.json", func(r RelicData) string { return r.RelicRecord })
 }
 
 // RelicOrder is every record, sorted by key.
@@ -253,22 +242,9 @@ func LoadRelics() map[string]RelicData {
 // It is a second walk of the JSON rather than an ordering stored on the map, because a map has no
 // order to store one on and every other caller wants the sorted keys.
 func RelicFileOrder() []string {
-	var list []RelicData
-	if err := json.Unmarshal(relicsJSON, &list); err != nil {
-		panic("Failed to unmarshal our RelicData: " + err.Error())
-	}
-	out := make([]string, 0, len(list))
-	for _, r := range list {
-		out = append(out, r.RelicRecord)
-	}
-	return out
+	return fileOrder(relicsJSON, "relics.json", func(r RelicData) string { return r.RelicRecord })
 }
 
 func RelicOrder(relics map[string]RelicData) []string {
-	keys := make([]string, 0, len(relics))
-	for k := range relics {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
+	return sortedKeys(relics)
 }

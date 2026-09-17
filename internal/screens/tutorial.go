@@ -23,11 +23,13 @@ package screens
 // stays live.
 
 import (
-	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"image"
 	"image/color"
 	"sort"
 	"strings"
+
+	"github.com/curiousjc/ascend-duel/internal/achieve"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -305,7 +307,7 @@ func (t *tutorialOverlay) build() {
 	if t.skip == nil {
 		t.skip = models.NewButton(tutorialButtonW, tutorialButtonH, "SKIP",
 			func() { t.skipPressed = true })
-		t.skip.BaseColor = sortButtonColor
+		t.skip.BaseColor = ui.SortButtonColor
 		t.skip.TextSize = 36
 	}
 }
@@ -449,7 +451,7 @@ func (t *tutorialOverlay) drawLeader(screen *ebiten.Image, target image.Rectangl
 
 	vector.StrokeLine(screen, float32(from.X), float32(from.Y),
 		float32(to.X), float32(to.Y), 3, tutorialGlow, true)
-	vector.DrawFilledCircle(screen, float32(to.X), float32(to.Y), 6, tutorialGlow, true)
+	vector.FillCircle(screen, float32(to.X), float32(to.Y), 6, tutorialGlow, true)
 }
 
 // center is a rectangle's middle.
@@ -475,10 +477,10 @@ func edgeToward(r image.Rectangle, at image.Point) image.Point {
 	const scale = 1 << 12
 	tx, ty := scale, scale
 	if dx != 0 {
-		tx = r.Dx() * scale / (2 * abs(dx))
+		tx = r.Dx() * scale / (2 * ui.Abs(dx))
 	}
 	if dy != 0 {
-		ty = r.Dy() * scale / (2 * abs(dy))
+		ty = r.Dy() * scale / (2 * ui.Abs(dy))
 	}
 	tt := tx
 	if ty < tt {
@@ -543,10 +545,10 @@ func (t *tutorialOverlay) drawSpotlight(screen *ebiten.Image, gs *state.GlobalSt
 		top, bot := float32(span.Min.Y), float32(span.Max.Y)
 		l, r := float32(span.Min.X), float32(span.Max.X)
 
-		vector.DrawFilledRect(screen, 0, 0, w, top, tutorialShade, false)
-		vector.DrawFilledRect(screen, 0, bot, w, h-bot, tutorialShade, false)
-		vector.DrawFilledRect(screen, 0, top, l, bot-top, tutorialShade, false)
-		vector.DrawFilledRect(screen, r, top, w-r, bot-top, tutorialShade, false)
+		vector.FillRect(screen, 0, 0, w, top, tutorialShade, false)
+		vector.FillRect(screen, 0, bot, w, h-bot, tutorialShade, false)
+		vector.FillRect(screen, 0, top, l, bot-top, tutorialShade, false)
+		vector.FillRect(screen, r, top, w-r, bot-top, tutorialShade, false)
 
 		// The columns between one hole and the next, which is what stops the bounding box being
 		// the lit area. **Measured against the furthest right edge seen so far**, not against the
@@ -555,7 +557,7 @@ func (t *tutorialOverlay) drawSpotlight(screen *ebiten.Image, gs *state.GlobalSt
 		reach := holes[0].Max.X
 		for _, next := range holes[1:] {
 			if next.Min.X > reach {
-				vector.DrawFilledRect(screen, float32(reach), top,
+				vector.FillRect(screen, float32(reach), top,
 					float32(next.Min.X-reach), bot-top, tutorialShade, false)
 			}
 			if next.Max.X > reach {
@@ -584,7 +586,7 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 	vector.StrokeRect(screen, float32(r.Min.X), float32(r.Min.Y),
 		float32(r.Dx()), float32(r.Dy()), 2, tutorialGlow, false)
 
-	blitCard(gs, screen, image.Pt(r.Min.X+tutorialPad, r.Min.Y+tutorialPad),
+	ui.BlitCard(gs, screen, image.Pt(r.Min.X+tutorialPad, r.Min.Y+tutorialPad),
 		guideSpec(gs), cards.RelicStyle)
 
 	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: tutorialTextSize}
@@ -663,7 +665,7 @@ func guideSpec(gs *state.GlobalState) cards.Spec {
 	return cards.Spec{
 		Name:    "Bob",
 		Element: cards.Basic,
-		Art:     artwork(gs, "guide_png"),
+		Art:     ui.Artwork(gs, "guide_png"),
 		Enabled: true,
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // **The band above the hand, which the Resolution feed used to occupy** *(vacated 2026-08-18)*.
@@ -179,17 +180,17 @@ const (
 
 // The script's beats, as fractions of the one playback speed. See the const block above for what
 // each one is, and `beat` for why they are written this way.
-func mathShoutTicks() int  { return beat(7, 5) }  // the hand's name popping in
-func mathTermTicks() int   { return beat(9, 10) } // one card's figure flying down into the row
-func mathSymbolTicks() int { return beat(2, 5) }  // a +, an x or an = appearing in place
-func mathRelicTicks() int  { return beat(7, 10) } // one relic's multiplier flying out of its own card
-func mathTotalTicks() int  { return beat(1, 1) }  // the answer landing
-func mathHoldTicks() int   { return beat(8, 5) }  // the finished sum held before the box clears
+func mathShoutTicks() int  { return ui.Beat(7, 5) }  // the hand's name popping in
+func mathTermTicks() int   { return ui.Beat(9, 10) } // one card's figure flying down into the row
+func mathSymbolTicks() int { return ui.Beat(2, 5) }  // a +, an x or an = appearing in place
+func mathRelicTicks() int  { return ui.Beat(7, 10) } // one relic's multiplier flying out of its own card
+func mathTotalTicks() int  { return ui.Beat(1, 1) }  // the answer landing
+func mathHoldTicks() int   { return ui.Beat(8, 5) }  // the finished sum held before the box clears
 
 // bannerFlyTicks() is the hand's name traveling from the planning seat to the hand row when
 // DUEL! is pressed — a shade longer than a card's own flight, because it crosses more screen
 // and grows by half again while it does it.
-func bannerFlyTicks() int { return beat(1, 1) }
+func bannerFlyTicks() int { return ui.Beat(1, 1) }
 
 // handNameInk is the color the hand's name is written in, planned and shouted alike, and the
 // color the multiplier that comes out of it is written in with it.
@@ -218,7 +219,7 @@ func bannerFlyTicks() int { return beat(1, 1) }
 // else in a pane is heavy, the shout is eighty points, and two of the three axes a hand counts on
 // — concept and form — have nothing to do with elements in the first place. It takes the ground's
 // own ink: the color text on this screen is written in when nothing is claiming it.
-var handNameInk = groundInk
+var handNameInk = ui.GroundInk
 
 // mathItem is one thing written on the line: a card's figure, an operator, the multiplier, or
 // the answer.
@@ -269,7 +270,7 @@ type mathItem struct {
 	at image.Point
 
 	// t is this item's own clock, started when the script reaches it.
-	t travel
+	t ui.Travel
 }
 
 // handBanner is the name of the hand the player has built, and it is **one object with two homes
@@ -320,7 +321,7 @@ type handBanner struct {
 
 	// flight is the journey to the hand row. Started when the round starts; once it is done the
 	// banner rests in the hand row until the round is over.
-	flight travel
+	flight ui.Travel
 
 	// flying is set for the whole of the committed half of the banner's life, `flight` still
 	// running or not. Without it a banner that had arrived would be indistinguishable from one
@@ -338,13 +339,13 @@ type handBanner struct {
 	// **It is a scale and not an alpha or a color.** The banner is already at full alpha by the
 	// time it lands, and the hue wheel is full — see CLAUDE.md. Size is the axis the word has left,
 	// and it is the one the shout's own pop already uses, so the two read as the same gesture.
-	flash travel
+	flash ui.Travel
 }
 
 // flashTicks() is how long that swell lasts, and bannerFlashScale how far it goes. **Under the
 // shout's own pop** (mathShoutPopScale is 2.1): that one is a word arriving out of nothing, where
 // this is a word already on screen asking to be looked at again.
-func bannerFlashTicks() int { return beat(3, 5) }
+func bannerFlashTicks() int { return ui.Beat(3, 5) }
 
 const bannerFlashScale = 1.5
 
@@ -354,7 +355,7 @@ func (b *handBanner) flashNow() {
 	if !b.flying {
 		return
 	}
-	b.flash = newTravel(0, bannerFlashTicks())
+	b.flash = ui.NewTravel(0, bannerFlashTicks())
 }
 
 // showing reports whether the banner is already saying this word, which is what stops the hand
@@ -366,16 +367,16 @@ func (b handBanner) showing(name string) bool {
 // tick advances the flight. Called every frame from `Update` rather than from playback, because
 // the journey starts at DUEL! — before the first event is reached — and must not be held up by a
 // dialog that stops the cursor.
-func (b *handBanner) tick() {
+func (b *handBanner) Tick() {
 	if !b.flying {
 		return
 	}
-	b.flight.tick()
-	b.flash.tick()
+	b.flight.Tick()
+	b.flash.Tick()
 }
 
 // clear takes the banner down: the round is over and the hand it named has been spent.
-func (b *handBanner) clear() { *b = handBanner{} }
+func (b *handBanner) Clear() { *b = handBanner{} }
 
 // handMathBox is the whole dialog: a shout, a line of items, and a hold at the end.
 //
@@ -389,7 +390,7 @@ type handMathBox struct {
 	// word that keeps `HAND!` off a single Bash in the feed.
 	shout   string
 	shoutAt image.Point
-	shoutT  travel
+	shoutT  ui.Travel
 
 	items []mathItem
 
@@ -401,8 +402,8 @@ type handMathBox struct {
 	// that knows which flying item is which.
 	multAt int
 
-	// hold is the pause on the finished sum, before the box clears and playback resumes.
-	hold travel
+	// Hold is the pause on the finished sum, before the box clears and playback resumes.
+	Hold ui.Travel
 
 	// side is whose blow this is, and grown[t] is what that duelist's worn relics had accumulated
 	// after term t was counted — both copied straight off the event.
@@ -482,8 +483,8 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 	box := handMathBox{
 		active: true,
 		shout:  shoutFor(e),
-		shoutT: newTravel(0, mathShoutTicks()),
-		hold:   newTravel(0, mathHoldTicks()),
+		shoutT: ui.NewTravel(0, mathShoutTicks()),
+		Hold:   ui.NewTravel(0, mathHoldTicks()),
 		items:  mathScript(e),
 		side:   e.Side,
 		grown:  append([][]int{}, e.HandGrown[:e.HandCardCount]...),
@@ -494,7 +495,7 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 	// this the word is on screen for the whole of the shields going up and then simply is there
 	// when the sum starts. The flash is what says *now it matters*: this is the beat the hand
 	// scores and the multiplier it has been advertising becomes the thing the sum uses.
-	s.theater.banner.flashNow()
+	s.Theater.banner.flashNow()
 
 	// **The banner is already saying it, so the box does not say it again** *(2026-08-19)*. The
 	// player's hand was named at DUEL! and the word has been sitting in the hand row ever since;
@@ -502,15 +503,15 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 	// multiplier would fly out of whichever of the two happened to be drawn last. The box keeps
 	// its own shout for a hand it did not carry down — an opponent's, which nothing produces
 	// today but which the engine can still emit.
-	if s.theater.banner.showing(box.shout) {
+	if s.Theater.banner.showing(box.shout) {
 		box.shout = ""
-	} else if s.theater.banner.flying {
+	} else if s.Theater.banner.flying {
 		// **The announcement wins over the banner it disagrees with.** The two can only differ if
 		// the hand that fired is not the hand that was planned — which nothing produces today,
 		// since only a chill can take a queued card away and no enemy can put a status on the
 		// player — but if it ever does, the truth is the event, and two words at one point would
 		// be worse than either alone.
-		s.theater.banner.clear()
+		s.Theater.banner.Clear()
 	}
 
 	// **Where each figure sets off from is the screen's business, not the script's.** The script
@@ -573,7 +574,7 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 	s.layOutMath(gs, &box)
 	box.shoutAt = s.handShoutAt(gs)
 
-	s.theater.mathBox = box
+	s.Theater.mathBox = box
 
 	// **Everything the hand kept back fires now, before the box has run a frame** *(owner's call,
 	// 2026-09-10)*. The sum does not begin until those figures have finished their journey — the
@@ -607,9 +608,9 @@ func mathScript(e combat.Event) []mathItem {
 			// wears the color of what produced it, and a card's figure is its card's element —
 			// which is a question about a row on a screen, so `startHandMath` fills it in. This
 			// half of the box has no screen and must not grow one.
-			tint: groundInk,
+			tint: ui.GroundInk,
 			fly:  true,
-			t:    newTravel(0, mathTermTicks()),
+			t:    ui.NewTravel(0, mathTermTicks()),
 		})
 		// **One note per relic that fired, in worn order**, which is firing order. A product would
 		// say what the term came to and leave the player to work out which of five fingers did it.
@@ -634,10 +635,10 @@ func mathScript(e combat.Event) []mathItem {
 		items = append(items, mathOperator("+"), mathItem{
 			text:      strconv.Itoa(e.HeldBonus),
 			size:      mathTermSize,
-			tint:      groundInk,
+			tint:      ui.GroundInk,
 			fly:       true,
 			relicSeat: firstSeat(e.HeldBonusSeats),
-			t:         newTravel(0, mathTermTicks()),
+			t:         ui.NewTravel(0, mathTermTicks()),
 		})
 	}
 
@@ -647,10 +648,10 @@ func mathScript(e combat.Event) []mathItem {
 		items = append(items, mathOperator("+"), mathItem{
 			text:      strconv.Itoa(e.VitaeBonus),
 			size:      mathTermSize,
-			tint:      groundInk,
+			tint:      ui.GroundInk,
 			fly:       true,
 			relicSeat: firstSeat(e.VitaeBonusSeats),
-			t:         newTravel(0, mathTermTicks()),
+			t:         ui.NewTravel(0, mathTermTicks()),
 		})
 	}
 
@@ -661,7 +662,7 @@ func mathScript(e combat.Event) []mathItem {
 	// 1 would make an upgrade look like a new rule rather than a bigger figure. Every hand's sum
 	// reads the same shape, and the one the player sees most is the one teaching it.
 	items = append(items, mathOperator("x"), mathItem{
-		text: handMultiplierText(e.Multiplier),
+		text: ui.HandMultiplierText(e.Multiplier),
 		size: mathTermSize,
 		// The hand's own color, because the hand is what produced it — and the word it flies out
 		// of is written in it. See handNameInk.
@@ -671,7 +672,7 @@ func mathScript(e combat.Event) []mathItem {
 		// the banner's second line, so growing into place would make it a new number appearing
 		// rather than the one the player has been reading since DUEL!.
 		fromScale: 1,
-		t:         newTravel(0, mathTermTicks()),
+		t:         ui.NewTravel(0, mathTermTicks()),
 	})
 
 	// **A rung relic is its own multiplier in the sum, after the hand's** *(owner's call,
@@ -681,20 +682,20 @@ func mathScript(e combat.Event) []mathItem {
 	// paid, like every other figure a relic put in this box.
 	if e.HandScale != 0 && e.HandScale != 100 {
 		items = append(items, mathOperator("x"), mathItem{
-			text:      handMultiplierText(e.HandScale),
+			text:      ui.HandMultiplierText(e.HandScale),
 			size:      mathTermSize,
-			tint:      paneEdge,
+			tint:      ui.PaneEdge,
 			fly:       true,
 			relicSeat: firstSeat(e.HandScaleSeats),
-			t:         newTravel(0, mathTermTicks()),
+			t:         ui.NewTravel(0, mathTermTicks()),
 		})
 	}
 
 	return append(items, mathOperator("="), mathItem{
 		text: strconv.Itoa(e.Amount),
 		size: mathTotalSize,
-		tint: verbInkFor(combat.CategoryAttack),
-		t:    newTravel(0, mathTotalTicks()),
+		tint: ui.VerbInkFor(combat.CategoryAttack),
+		t:    ui.NewTravel(0, mathTotalTicks()),
 	})
 }
 
@@ -744,10 +745,10 @@ func relicNote(pct, seat int) *mathItem {
 		// **The `x` is on the number here**, where the sum's own multiplier has it as a separate
 		// operator. That is the difference being drawn: `x 1.5` is something the sum does to the
 		// figure beside it, and `1.1x` is a label saying what this figure was already counted at.
-		text: handMultiplierText(pct) + "x",
+		text: ui.HandMultiplierText(pct) + "x",
 		size: mathGrowthSize,
-		tint: boostInk,
-		t:    newTravel(0, mathRelicTicks()),
+		tint: ui.BoostInk,
+		t:    ui.NewTravel(0, mathRelicTicks()),
 	}
 }
 
@@ -757,7 +758,7 @@ func mathOperator(str string) mathItem {
 		text: str,
 		size: mathSymbolSize,
 		tint: mathOperatorInk(),
-		t:    newTravel(0, mathSymbolTicks()),
+		t:    ui.NewTravel(0, mathSymbolTicks()),
 	}
 }
 
@@ -794,7 +795,7 @@ func handShout(name string) string { return upper(name) + "!" }
 // **Faded toward the ground, not scaled toward black.** The combat screen's ground is cream, so
 // `ColorAtStrength` would make this *louder* than the figures rather than quieter — the trap
 // CLAUDE.md's color section describes, and one this screen has fallen into before.
-func mathOperatorInk() color.RGBA { return systems.ColorToward(groundInk, screenGround, 45) }
+func mathOperatorInk() color.RGBA { return systems.ColorToward(ui.GroundInk, ui.ScreenGround, 45) }
 
 // handMathRect is the band the sum is written in: the strip above the hand, at the table's
 // width.
@@ -892,9 +893,9 @@ func mathFace(gs *state.GlobalState, size float64) *text.GoTextFace {
 func (s *CombatScene) handCardCenter(gs *state.GlobalState, side combat.Side, seat int) image.Point {
 	var at image.Point
 	if side == combat.SideB {
-		at = enemySeatAt(gs, seat, len(s.theater.enemyDealt), s.enemySplit())
+		at = enemySeatAt(gs, seat, len(s.Theater.enemyDealt), s.enemySplit())
 	} else {
-		at = playedSeatAt(gs, seat, len(s.theater.resolved), s.playedSplit())
+		at = playedSeatAt(gs, seat, len(s.Theater.resolved), s.playedSplit())
 	}
 	at = lift(at, true)
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2)
@@ -909,15 +910,15 @@ func (s *CombatScene) handCardCenter(gs *state.GlobalState, side combat.Side, se
 // inventing a color.
 func (s *CombatScene) handCardInk(side combat.Side, seat int) color.RGBA {
 	if side == combat.SideB {
-		if seat < 0 || seat >= len(s.theater.enemyDealt) {
-			return groundInk
+		if seat < 0 || seat >= len(s.Theater.enemyDealt) {
+			return ui.GroundInk
 		}
-		return cards.BorderOf(artFor(s.theater.enemyDealt[seat].card.Element))
+		return cards.BorderOf(ui.ArtFor(s.Theater.enemyDealt[seat].card.Element))
 	}
-	if seat < 0 || seat >= len(s.theater.resolved) {
-		return groundInk
+	if seat < 0 || seat >= len(s.Theater.resolved) {
+		return ui.GroundInk
 	}
-	return cards.BorderOf(artFor(s.theater.resolved[seat].card.Element))
+	return cards.BorderOf(ui.ArtFor(s.Theater.resolved[seat].card.Element))
 }
 
 // handCardElement is the element of the card in one seat — handCardInk's question, asked one step
@@ -929,15 +930,15 @@ func (s *CombatScene) handCardInk(side combat.Side, seat int) color.RGBA {
 // out of a color would be a reverse lookup over a palette.
 func (s *CombatScene) handCardElement(side combat.Side, seat int) cards.Element {
 	if side == combat.SideB {
-		if seat < 0 || seat >= len(s.theater.enemyDealt) {
+		if seat < 0 || seat >= len(s.Theater.enemyDealt) {
 			return cards.Basic
 		}
-		return artFor(s.theater.enemyDealt[seat].card.Element)
+		return ui.ArtFor(s.Theater.enemyDealt[seat].card.Element)
 	}
-	if seat < 0 || seat >= len(s.theater.resolved) {
+	if seat < 0 || seat >= len(s.Theater.resolved) {
 		return cards.Basic
 	}
-	return artFor(s.theater.resolved[seat].card.Element)
+	return ui.ArtFor(s.Theater.resolved[seat].card.Element)
 }
 
 // handShoutAt is where the hand's name is written when it fires: **across the hand row**, dead
@@ -974,15 +975,15 @@ func (s *CombatScene) handShoutAt(gs *state.GlobalState) image.Point {
 // opponent's, which nothing produces today but which the engine can still emit. There is no second
 // line under that one, so the word is the only thing there to leave.
 func (s *CombatScene) handMultiplierOrigin(gs *state.GlobalState, e combat.Event) image.Point {
-	if s.theater.banner.mult == "" || !s.theater.banner.flying {
+	if s.Theater.banner.mult == "" || !s.Theater.banner.flying {
 		return s.handShoutAt(gs)
 	}
 
 	at := s.handShoutAt(gs)
-	at.Y += int(multLineDrop(gs, s.theater.banner.name, mathNameSize))
+	at.Y += int(multLineDrop(gs, s.Theater.banner.name, mathNameSize))
 
-	line, _ := text.Measure(s.theater.banner.mult, mathFace(gs, mathMultLineSize), 0)
-	figure, _ := text.Measure(handMultiplierText(e.Multiplier), mathFace(gs, mathMultLineSize), 0)
+	line, _ := text.Measure(s.Theater.banner.mult, mathFace(gs, mathMultLineSize), 0)
+	figure, _ := text.Measure(ui.HandMultiplierText(e.Multiplier), mathFace(gs, mathMultLineSize), 0)
 	at.X += int(figure/2 - line/2)
 	return at
 }
@@ -992,11 +993,11 @@ func (s *CombatScene) handMultiplierOrigin(gs *state.GlobalState, e combat.Event
 // running reports whether the box is holding the round. **Playback does not advance while this is
 // true**, which is what makes the dialog a beat of the round rather than something drawn over
 // one — and it is the only thing on this screen that can stop the cursor.
-func (b *handMathBox) running() bool {
+func (b *handMathBox) Running() bool {
 	if !b.active {
 		return false
 	}
-	return b.at < len(b.items) || !b.hold.done()
+	return b.at < len(b.items) || !b.Hold.Done()
 }
 
 // tick runs one frame of the script: the shout, then each item in turn, then the hold.
@@ -1004,22 +1005,22 @@ func (b *handMathBox) running() bool {
 // **One item at a time and never two at once.** The whole point of the box is that a figure
 // arrives, is read, and is then joined by an operator; overlapping the beats would put the sum on
 // screen at the speed the feed already manages.
-func (b *handMathBox) tick() {
+func (b *handMathBox) Tick() {
 	if !b.active {
 		return
 	}
-	if b.shout != "" && !b.shoutT.done() {
-		b.shoutT.tick()
+	if b.shout != "" && !b.shoutT.Done() {
+		b.shoutT.Tick()
 		return
 	}
 	if b.at < len(b.items) {
-		b.items[b.at].t.tick()
-		if b.items[b.at].t.done() {
+		b.items[b.at].t.Tick()
+		if b.items[b.at].t.Done() {
 			b.at++
 		}
 		return
 	}
-	b.hold.tick()
+	b.Hold.Tick()
 }
 
 // **The box carried a defend card's pips until 2026-09-15** *(owner's call)*, flying them on the
@@ -1051,21 +1052,9 @@ func (b *handMathBox) takeSignalSeat() (int, bool) {
 	return it.cardSeat - 1, true
 }
 
-// runningSeat is the played seat the item now running belongs to, and false for an item that
-// belongs to no card — an operator, the multiplier, the total.
-func (b *handMathBox) runningSeat() (int, bool) {
-	if !b.active || b.at >= len(b.items) {
-		return 0, false
-	}
-	if seat := b.items[b.at].cardSeat; seat > 0 {
-		return seat - 1, true
-	}
-	return 0, false
-}
-
 // clear takes the box down. Called when the script finishes and whenever a round or a fight
 // starts, so a box left up by a screen change cannot outlive the round it describes.
-func (b *handMathBox) clear() { *b = handMathBox{} }
+func (b *handMathBox) Clear() { *b = handMathBox{} }
 
 // --- drawing -----------------------------------------------------------------------------
 
@@ -1102,21 +1091,21 @@ func (b *handMathBox) clear() { *b = handMathBox{} }
 // and the real shout can never be on screen together.
 func (s *CombatScene) drawPlannedHand(gs *state.GlobalState, screen *ebiten.Image) {
 	// The committed half: the same word on its way to, or resting in, the hand row.
-	if s.theater.banner.flying {
+	if s.Theater.banner.flying {
 		// **The word travels and does not grow.** The journey is what says it has been committed,
 		// and the alpha coming up to solid says it with it; swelling as well made the size a
 		// second announcement, and the size is the one thing about the name that is the same in
 		// both of its homes. See mathNameSize.
-		t := easeOut(s.theater.banner.flight.progress())
-		at := lerpPoint(tableCenter(gs), handRowCenter(gs), t)
+		t := ui.EaseOut(s.Theater.banner.flight.Progress())
+		at := ui.LerpPoint(tableCenter(gs), handRowCenter(gs), t)
 		alpha := mathPreviewAlpha + (1-mathPreviewAlpha)*t
 
 		// **The flash multiplies the breath rather than replacing it**, the same way the shout's
 		// pop does, so there is no step in the middle of the only thing moving. A banner that has
 		// not been flashed is at popScale(_, a finished travel) = 1 and nothing changes.
-		scale := mathBreath(gs) * popScale(bannerFlashScale, s.theater.banner.flash)
+		scale := mathBreath(gs) * popScale(bannerFlashScale, s.Theater.banner.flash)
 
-		drawHandName(gs, screen, s.theater.banner.name, s.theater.banner.mult, mathNameSize, at,
+		drawHandName(gs, screen, s.Theater.banner.name, s.Theater.banner.mult, mathNameSize, at,
 			scale, float32(alpha))
 		return
 	}
@@ -1136,7 +1125,7 @@ func (s *CombatScene) drawPlannedHand(gs *state.GlobalState, screen *ebiten.Imag
 // term uses, so the number the player reads while planning is character-for-character the one that
 // flies into the line when the hand fires. `DMG` rather than `damage` for the reason the cards use
 // it — it is the word this game already writes for the stat.
-func handMultiplierLine(pct int) string { return handMultiplierText(pct) + "x DMG" }
+func handMultiplierLine(pct int) string { return ui.HandMultiplierText(pct) + "x DMG" }
 
 // drawHandName draws the hand's name and the multiplier under it as **one object**: two lines that
 // breathe, fade and travel together.
@@ -1192,7 +1181,7 @@ func mathBreath(gs *state.GlobalState) float64 {
 // from nothing over the eleven ticks before its turn would make the line look pre-written, which
 // is exactly the impression the box exists to break.
 func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) {
-	b := &s.theater.mathBox
+	b := &s.Theater.mathBox
 	if !b.active {
 		return
 	}
@@ -1233,24 +1222,24 @@ func drawArrivingMathItem(gs *state.GlobalState, screen *ebiten.Image, it *mathI
 		return
 	}
 
-	t := easeOut(it.t.progress())
+	t := ui.EaseOut(it.t.Progress())
 	from := it.fromScale
 	if from == 0 {
 		from = mathFlyFromScale
 	}
 	drawMathText(gs, screen, it.text, it.size, it.tint,
-		lerpPoint(it.from, it.at, t), from+(1-from)*t, 1, false)
+		ui.LerpPoint(it.from, it.at, t), from+(1-from)*t, 1, false)
 }
 
 // popScale eases a scale down to 1 from `from`. Used by everything that appears in place.
-func popScale(from float64, t travel) float64 {
-	return from + (1-from)*easeOut(t.progress())
+func popScale(from float64, t ui.Travel) float64 {
+	return from + (1-from)*ui.EaseOut(t.Progress())
 }
 
 // alphaOf fades an appearing item up over the first half of its beat, so a stamped item is not
 // simply absent on one frame and present on the next.
-func alphaOf(t travel) float32 {
-	p := t.progress() * 2
+func alphaOf(t ui.Travel) float32 {
+	p := t.Progress() * 2
 	if p > 1 {
 		p = 1
 	}

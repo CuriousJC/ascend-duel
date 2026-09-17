@@ -4,8 +4,10 @@ import (
 	"image"
 	"sort"
 
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/trace"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -43,7 +45,7 @@ import (
 // sortColumnRect is what the block occupies, for anything measuring against it.
 func sortColumnRect(gs *state.GlobalState) image.Rectangle {
 	first := sortTabRect(gs, 0)
-	last := sortTabRect(gs, len(sortButtonSpecs)-1)
+	last := sortTabRect(gs, len(ui.SortButtonSpecs)-1)
 	return image.Rect(first.Min.X, first.Min.Y, first.Max.X, last.Max.Y)
 }
 
@@ -57,11 +59,11 @@ func sortColumnRect(gs *state.GlobalState) image.Rectangle {
 // **The cards have already moved by the time the slides exist**, exactly as they have for a
 // discard or a deal — see spendSelected. The hand is in its new order the instant sortHand
 // returns and every slide is a ghost of a card that is already where it is going.
-func (s *CombatScene) setSort(mode handSort) {
+func (s *CombatScene) setSort(mode ui.HandSort) {
 	s.sortMode = mode
 
-	s.theater.slides = slidesFor(s.theater.slides, s.sortHand(),
-		func(i int) actionCard { return s.hand[i].actionCard },
+	s.Theater.slides = ui.SlidesFor(s.Theater.slides, s.sortHand(),
+		func(i int) combat.Card { return s.hand[i].Card },
 		func(i int) int { return selectedLift(s.hand[i].selected) })
 
 	trace.Logf("input", "hand sorted by %v -> %s", mode, handLabel(s.hand))
@@ -100,7 +102,7 @@ func (s *CombatScene) sortHand() []int {
 		order[i] = i
 	}
 	sort.SliceStable(order, func(i, j int) bool {
-		return handLess(mode, s.hand[order[i]].actionCard, s.hand[order[j]].actionCard)
+		return ui.HandLess(mode, s.hand[order[i]].Card, s.hand[order[j]].Card)
 	})
 
 	sorted := make([]paletteCard, len(s.hand))
@@ -120,23 +122,23 @@ func (s *CombatScene) sortHand() []int {
 // rearranging the hand mid-round would light the wrong card on the table. The deck overlay
 // takes them out for the reason it takes out everything else: it is a dialog.
 func (s *CombatScene) updateSortButtons(gs *state.GlobalState) {
-	s.sortTabs.update(gs, s.planning() && !s.modalUp())
+	s.SortTabs.Update(gs, s.planning() && !s.modalUp())
 
 	// **The write back is here rather than in the callback**, because a button's OnClick reaches
 	// no global state on any screen in this package — see PostBattleScene.skipping for the same
 	// shape. The scene's copy is what a press moves; this is where it becomes the preference every
 	// other screen reads.
-	setHandSort(gs, s.sortMode)
+	ui.SetHandSort(gs, s.sortMode)
 }
 
 // drawSortButtons draws the column.
 func (s *CombatScene) drawSortButtons(gs *state.GlobalState, screen *ebiten.Image) {
-	s.sortTabs.draw(gs, screen)
+	s.SortTabs.Draw(gs, screen)
 }
 
 // buildSortButtons builds the column. A method on the scene rather than a free function because
 // the callback has to reach the scene's own state, which is the same reason every other widget on
 // this screen is built here.
 func (s *CombatScene) buildSortButtons() {
-	s.sortTabs = newSortTabs(sortTabRect, s.setSort)
+	s.SortTabs = ui.NewSortTabs(sortTabRect, s.setSort)
 }

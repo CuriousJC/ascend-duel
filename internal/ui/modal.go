@@ -1,0 +1,356 @@
+package ui
+
+// **What every modal in this game has in common**, pulled out of the deck panel on 2026-08-24 so
+// that the third one did not start life as a copy of the first.
+//
+// There are four now — the deck, the hands ladder, the sack and the run's ledger — and the parts
+// they share
+// are not incidental: the footprint, the scrim, the raised panel, the heading block, the closing
+// hint, and the rule that the button which opened a dialog is the button that closes it. **The
+// player learns one shape.** Two dialogs at two sizes would read as two kinds of thing, and there
+// is no Escape key and no right click, so a modal has to make its exit the brightest thing on
+// screen or it is a trap.
+//
+// What is *not* here is any content. A modal is handed a body that draws inside the panel and a
+// heading block saying what it is; everything about which cards, which rows or which rungs belongs
+// to the panel itself.
+
+import (
+	"image"
+	"image/color"
+
+	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
+)
+
+// The modal footprint. Nearly the whole screen, stopping above the button band so the control
+// that closes a dialog stays outside the panel as well as drawn on top of it.
+//
+// 92 rather than 86 at the bottom: at 86 the panel stopped short of the hand, so the tops of the
+// cards and the whole AP line sat below it, dimmed by the scrim but still visibly outside the
+// dialog.
+//
+// **95 rather than 92 since 2026-08-25**, and this one was forced rather than chosen: arcane made
+// the deck overlay's grid five color rows where it was four, and the panel is what those rows,
+// the tally band and the toggles all have to fit inside. It moves the frame for every dialog
+// rather than the one that needed it, which is the price of one footprint — and it moves it the
+// way the previous change already argued for, so the panel covers more of the hand rather than
+// less. See deckpanel.go, where the rest of the fifth row was paid for.
+const (
+	ModalPanelLeftPct  = 4
+	ModalPanelRightPct = 96
+	// **3 and 96 since 2026-09-04**, from 4 and 95. The panel's contents are cards and the card
+	// grew by a quarter while the screen grew by an eighth, so the deck view's five rows of Mini
+	// plus its tally band no longer fitted between the margins — see
+	// TestTheFilterColumnFitsThePanel, which is the arithmetic that says they do.
+	ModalPanelTopPct    = 3
+	ModalPanelBottomPct = 96
+
+	// Offsets down from the panel's top edge, and the air kept clear at the bottom.
+	modalTitleTop   = 40
+	modalBodyBottom = 22
+
+	// modalTitleOnlyBodyTop is where a panel with a title and nothing else starts its body. The
+	// hands panel is the one: it says what it has to say in cards.
+	modalTitleOnlyBodyTop = 72
+
+	// modalBareBodyTop is where a panel with **no words at the top at all** starts its body
+	// *(owner's call, 2026-08-24)*. The deck panel is the one.
+	//
+	// **It clears the close button and nothing else**, because the X is the only thing left up
+	// there — see modalCloseInset and modalCloseSize. A long row of cards reaches almost the
+	// panel's right edge once it has had to tighten, so a body starting above the X's bottom edge
+	// would run a row under the one control that closes the dialog.
+	modalBareBodyTop = ModalCloseInset + ModalCloseSize + 10
+)
+
+// ModalPanelRect is the dialog's footprint. Every modal takes it.
+func ModalPanelRect(gs *state.GlobalState) image.Rectangle {
+	return image.Rect(
+		gs.PctX(ModalPanelLeftPct), gs.PctY(ModalPanelTopPct),
+		gs.PctX(ModalPanelRightPct), gs.PctY(ModalPanelBottomPct),
+	)
+}
+
+// ModalScrim darkens everything, so a panel reads as covering the screen rather than floating on
+// it, and so the game underneath looks as inert as it now is.
+func ModalScrim(screen *ebiten.Image) {
+	b := screen.Bounds()
+	vector.FillRect(screen, 0, 0, float32(b.Dx()), float32(b.Dy()),
+		color.RGBA{A: 190}, false)
+}
+
+// ModalHead is the words at the top of a panel, which is now **a title or nothing**.
+//
+// **It carried a counts line and a legend under it until 2026-08-24** *(owner's call)*, both the
+// caller's words, because what there was to count depended on the screen the panel stood on. The
+// deck panel was the only user of either and it stopped wanting them: the picture says what the
+// deck is, and three lines of prose over a grid of cards is a caption on something nobody needed
+// captioned.
+//
+// **There is no closing hint either.** Every panel carries a red X in its top-right corner, so the
+// exit is a control rather than a sentence naming a control somewhere off the panel — see
+// modalCloser.
+//
+// **An empty title draws nothing and starts the body higher** — modalBareBodyTop.
+type ModalHead struct {
+	Title string
+}
+
+// DrawModalFrame puts up the scrim, the panel and the heading block, and hands back the rectangle
+// the body is to be drawn inside.
+//
+// The returned rectangle is the whole panel; a caller starts its body at `modalTitleOnlyBodyTop`
+// or, with no title at all, at `modalBareBodyTop`, and stops short of `modalBodyBottom`.
+func DrawModalFrame(gs *state.GlobalState, screen *ebiten.Image, head ModalHead) image.Rectangle {
+	ModalScrim(screen)
+
+	r := ModalPanelRect(gs)
+
+	// Raised, for the reason the fight log's panel is: it is in front of the game, over a scrim.
+	systems.BevelRect(screen, r.Min.X, r.Min.Y, r.Dx(), r.Dy(),
+		systems.PaneBevelWidth, color.RGBA{R: 30, G: 30, B: 38, A: 255}, false)
+	vector.StrokeRect(screen, float32(r.Min.X), float32(r.Min.Y),
+		float32(r.Dx()), float32(r.Dy()), 2, panelBlue, false)
+
+	// **A panel with no title writes nothing at all up here**, rather than a blank line's worth of
+	// air. The body starts higher instead; see modalBareBodyTop.
+	if head.Title != "" {
+		heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 28}
+		title := &text.DrawOptions{}
+		title.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+modalTitleTop))
+		title.PrimaryAlign = text.AlignCenter
+		text.Draw(screen, head.Title, heading, title)
+	}
+	return r
+}
+
+// The close button: a white X on red, in the panel's top-right corner.
+//
+// **It replaced "press the button again to close" on 2026-08-24** *(owner's call)*. The old rule
+// was that the control which opened a dialog closed it, which worked while every opener was
+// visible — and stopped working the moment a panel covered its own button. The hands button sits
+// above the hand, under the panel, so the only instruction on screen named a control the player
+// could not see. An X on the panel itself cannot go missing, and it is the one shape every player
+// already knows means "close".
+//
+// **Red, and the only red control in the game.** Nothing else that closes something is red, so the
+// color is not overloaded, and a dialog's exit is exactly the thing that should be the brightest
+// object on a covered screen.
+const (
+	ModalCloseSize  = 34
+	ModalCloseInset = 12
+	modalCloseLabel = "X"
+	modalCloseText  = 34
+)
+
+// ModalCloseColor is the face at full strength. It rests at 65% of this, like every button; see
+// the color rule in CLAUDE.md.
+var ModalCloseColor = color.RGBA{R: 208, G: 52, B: 58, A: 255}
+
+// ModalCloser is the X, and it belongs to whichever panel is up.
+//
+// **One per dialog rather than one per screen**, except where a screen has dialogs that are not
+// modalToggles: the combat screen's deck overlay and fight log share one, because only one dialog
+// can ever be up and two would be two buttons in the same corner.
+type ModalCloser struct {
+	button  *models.Button
+	pressed bool
+}
+
+// Update runs the X and reports whether it was pressed this frame.
+func (c *ModalCloser) Update(gs *state.GlobalState) bool {
+	if c.button == nil {
+		c.button = models.NewButton(ModalCloseSize, ModalCloseSize, modalCloseLabel,
+			func() { c.pressed = true })
+		c.button.BaseColor = ModalCloseColor
+		c.button.TextSize = modalCloseText
+	}
+	r := ModalPanelRect(gs)
+	c.button.ScreenX = r.Max.X - ModalCloseInset - ModalCloseSize/2
+	c.button.ScreenY = r.Min.Y + ModalCloseInset + ModalCloseSize/2
+
+	c.pressed = false
+	systems.UpdateButton(gs, c.button)
+	return c.pressed
+}
+
+// Draw puts the X on top of the panel. It is drawn only while a panel is up, because it closes
+// that panel and there is nothing else for it to do.
+func (c *ModalCloser) Draw(gs *state.GlobalState, screen *ebiten.Image) {
+	if c.button != nil {
+		systems.DrawButton(gs, screen, c.button)
+	}
+}
+
+// The buttons that open a modal: a square carrying one character.
+//
+// **One character on a square**, exactly as the sort column is, because the button is too small
+// for a word. The letters may not collide with each other, with the combat screen's `$`, `T` and
+// `E`, or with the `L` the frame's ledger button carries.
+const (
+	// **D is a letter and HANDS is a word** *(owner's call, 2026-08-24)*. The corner buttons are
+	// squares because they stand beside the mute button and the sort column, where there is no
+	// room for a word; the hands button stands above the hand with the whole band to itself, and
+	// a single `H` there said nothing to anybody who had not already opened it once.
+	deckToggleLabel  = "D"
+	handsToggleLabel = "HANDS"
+
+	// handsButtonWidth is what the word needs. Height stays the square buttons' 44, so the two
+	// read as the same kind of control at different lengths.
+	//
+	// **88 rather than 100** *(owner's call, 2026-08-24)*, since the combat screen stands this
+	// button against the left edge of the sort column and the column is pinned 44 in from the
+	// band's right edge — so at 100 the word overhung the screen. The word had margin to give:
+	// five characters at 18pt do not fill 88 either.
+	handsButtonWidth = 170
+	handsButtonText  = 36
+)
+
+// ModalToggle is a button, whether its panel is up, and the tooltip that panel needs.
+//
+// **A struct rather than three fields on each scene**, because the three go together and the
+// failure of letting them drift apart is silent: a scene that forgets `gs.ModalOpen` leaves the
+// frame's mute button live on top of a dialog whose whole design is that one control is lit.
+//
+// **It knows nothing about what it opens.** The panel's contents reach it as two closures at the
+// call site — one to point the tooltip, one to draw — which is what let a second modal be added
+// without this growing a second content type.
+type ModalToggle struct {
+	open   bool
+	Button *models.Button
+	tip    models.Tooltip
+
+	// place is where the button's center goes, asked every frame. Nil means the bottom-right
+	// corner; a screen that has somewhere better says so.
+	place func(gs *state.GlobalState) image.Point
+
+	// blocked is set by the scene while some *other* dialog is up, and it takes this button out
+	// of the frame entirely — neither run nor drawn.
+	//
+	// **A screen may have exactly one live exit.** Two dialogs each carrying a live button means a
+	// player can open the second through the first, and a dialog whose exit is not the brightest
+	// thing on screen is a trap.
+	blocked bool
+
+	// hidden means the scene draws the opener itself and this toggle has no button on screen.
+	//
+	// **The shop's deck pile is why** *(owner's call, 2026-09-06)*. The panel is a widget and the
+	// thing that opens it need not be: the combat screen opens it by clicking the draw pile, and
+	// the shop now does the same rather than standing a lettered square beside it. The panel, the
+	// scrim and the X are unchanged — what is hidden is one button.
+	hidden bool
+
+	// closer is the X on this toggle's own panel — the only thing that closes it.
+	closer ModalCloser
+}
+
+// Toggle is the scene's way in when the opener is hidden: whatever it drew was clicked.
+func (t *ModalToggle) Toggle() { t.open = !t.open }
+
+// IsOpen reports whether the panel this toggle opens is up.
+//
+// **An accessor rather than an exported field**, because open is the toggle's own latch: a scene
+// reads it to decide whether the screen is covered, and nothing outside this package may set it
+// except through Toggle. It is the one thing about a toggle another package needs to know.
+func (t *ModalToggle) IsOpen() bool { return t != nil && t.open }
+
+// Block takes the button out of the frame while another dialog is up. Called every tick from the
+// scene, never latched, so a panel that closes cannot leave its neighbor dead.
+func (t *ModalToggle) Block(b bool) { t.blocked = b }
+
+// Init wires the button. **The button survives a re-entry and the state does not** — a scene's
+// Init runs again on every visit, and arriving at a shop with a panel already open would be a
+// dialog nobody asked for.
+func (t *ModalToggle) Init(label string, w, h int, textSize float64,
+	place func(gs *state.GlobalState) image.Point) {
+
+	t.hidden = false
+	if t.Button == nil {
+		t.Button = models.NewButton(w, h, label, func() { t.open = !t.open })
+		t.Button.BaseColor = SortButtonColor
+		t.Button.TextSize = textSize
+	}
+	t.place = place
+	t.open = false
+	t.tip = models.Tooltip{DwellTicks: TipDwell()}
+}
+
+// **The corner rules that used to live here are gone** *(owner's call, 2026-09-06)*. `cornerSlot`
+// and `handsCornerPlace` each measured the bottom-right corner from the screen's own edge, where
+// the frame measures it from the control column — so the shop's HANDS button and the frame's cog
+// ended up in the same pixels. There is one place now, in controlcolumn.go, and every corner
+// control reads it.
+
+// Update runs the button and, while the panel is up, whatever that panel puts under the cursor.
+//
+// **It returns whether the panel is covering the screen**, which is the caller's cue to stop
+// running everything else: the scene's own rows are still where they were, and a click reaching
+// one through a dialog would be a relic bought while reading a deck.
+func (t *ModalToggle) Update(gs *state.GlobalState,
+	hover func(at image.Point, tip *models.Tooltip)) bool {
+
+	// **The frame the panel is closed on is still a covered frame.** The press that closes it is
+	// the same press the scene's rows would see, so a scene told the panel is down on that frame
+	// takes a click the player spent on the exit.
+	was := t.open
+
+	if t.blocked {
+		return was || t.open
+	}
+
+	place := t.place
+	if place == nil {
+		place = func(gs *state.GlobalState) image.Point {
+			return ChromeCornerCenter(gs, ChromeSlotSettings)
+		}
+	}
+	c := place(gs)
+	t.Button.ScreenX, t.Button.ScreenY = c.X, c.Y
+	t.Button.Latched = t.open
+
+	// **While the panel is up the opener is inert and the X is the exit.** The opener stays on
+	// screen, latched, so the player can see which control the panel came out of — it simply is
+	// not a second way out.
+	if t.open {
+		if t.closer.Update(gs) {
+			t.open = false
+		}
+	} else if !t.hidden {
+		systems.UpdateButton(gs, t.Button)
+	}
+
+	// **The tooltip is pointed only while the panel is up.** UpdateTooltip releases it by itself
+	// on any frame nothing was pointed at, so a closed panel needs no clearing of its own.
+	if t.open {
+		gs.ModalOpen = true
+		if hover != nil {
+			hover(image.Pt(gs.MouseX, gs.MouseY), &t.tip)
+		}
+	}
+	systems.UpdateTooltip(gs, &t.tip)
+	return was || t.open
+}
+
+// Draw puts the panel up if it is open, and the button on top of it either way.
+// **The opener is drawn under the panel, never on top of it** *(owner's call, 2026-08-24)*. It was
+// drawn last, from when pressing it again was how a dialog closed; now that the X is the exit, a
+// button standing over the panel would be a control that looks live and is not.
+func (t *ModalToggle) Draw(gs *state.GlobalState, screen *ebiten.Image, body func()) {
+	if !t.blocked && !t.hidden {
+		systems.DrawButton(gs, screen, t.Button)
+	}
+	if !t.open {
+		return
+	}
+	body()
+	if t.blocked {
+		return
+	}
+	t.closer.Draw(gs, screen)
+	systems.DrawTooltip(gs, screen, &t.tip)
+}

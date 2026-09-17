@@ -18,26 +18,20 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/trace"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
-// actionCard is one instance in the piles: a concept and the element it is made of.
+// **The piles hold `combat.Card` itself, and every screen writes that name.**
 //
-// **It is an alias for `combat.Card` as of 2026-08-12, not a struct of its own.** The screen
-// used to own this *and* an unexported `element` type, on the honest grounds that neither meant
-// anything to the rules — a card's color painted a border and `ResolveRound` never saw it.
-// Elements are mechanical now, so the rules own the type and the piles hold exactly what the
-// engine resolves.
+// The screen used to own an `combat.Card` type *and* an unexported `element`, on the honest grounds
+// that neither meant anything to the rules — a card's color painted a border and `ResolveRound`
+// never saw it. Elements are mechanical now, so the rules own the type and the piles hold exactly
+// what the engine resolves. It was then an *alias* for a year, which made the two names one type
+// and made the rule invisible at the same time.
 //
-// That is what an alias is for here: the hand, the queue and the round are one type, so a card
-// cannot be converted wrongly on the way between them because it is never converted at all. The
-// name stays because the screen is full of it, and `actionCard` still says what a pile holds
-// better than `Card` does next to `paletteCard`, `pileEntry` and `cardFlight`.
-//
-// **What went with the old type: `elementColors` and `element.color()`.** They were the surface
-// colors from when a card *was* a colored rectangle, and nothing had called either since the
-// border took over the element on 2026-08-09 and `internal/cards` took over the drawing. The
-// live color table is `cards.BorderOf`.
-type actionCard = combat.Card
+// The rule is what matters: the hand, the queue and the round are one type, so a card cannot be
+// converted wrongly on the way between them because it is never converted at all. Written out at
+// every site, `combat.Card` says that; a local synonym said the opposite at a glance.
 
 // The hand drawn from the deck each round.
 //
@@ -143,7 +137,7 @@ func (s *CombatScene) spendSelected() {
 	var keptFrom []int
 	for i, c := range s.hand {
 		if c.selected {
-			s.discard = append(s.discard, c.actionCard)
+			s.discard = append(s.discard, c.Card)
 
 			// A card that was played is sitting in its seat on the table, not in its old hand
 			// slot, so that is where it has to set off from. Sending it out of a slot it
@@ -151,13 +145,13 @@ func (s *CombatScene) spendSelected() {
 			// thrown. The count goes with it: a seat's x is a function of how many cards the
 			// row holds, and the row is cleared three lines below this.
 			flight := cardFlight{
-				travel:   newTravel(0, flightTicks()),
-				card:     c.actionCard,
+				Travel:   ui.NewTravel(0, flightTicks()),
+				card:     c.Card,
 				outbound: true,
 				index:    i, count: leaving,
 			}
 			if p, ok := s.playedSeatOf(i); ok {
-				flight.index, flight.count, flight.fromTable = p, len(s.theater.resolved), true
+				flight.index, flight.count, flight.fromTable = p, len(s.Theater.resolved), true
 				flight.split = s.playedSplit()
 			}
 			s.addFlight(flight)
@@ -171,7 +165,7 @@ func (s *CombatScene) spendSelected() {
 	// The round's history goes with the cards it was made of. Cleared here rather than at the
 	// start of the next round because this is the moment those cards actually leave, and a
 	// pile outliving them would be a picture of a round that is over.
-	s.theater.resolved = nil
+	s.Theater.resolved = nil
 
 	// Everything appended past this point was dealt, which is what makes the drawn cards
 	// identifiable without drawHand having to report them.
@@ -189,12 +183,12 @@ func (s *CombatScene) spendSelected() {
 		if was == to && leaving == len(s.hand) {
 			continue
 		}
-		s.addSlide(cardSlide{
-			travel:    newTravel(0, slideTicks()),
-			card:      s.hand[to].actionCard,
-			lift:      selectedLift(s.hand[to].selected),
-			fromIndex: was, fromCount: leaving,
-			toIndex: to, toCount: len(s.hand),
+		s.addSlide(ui.CardSlide{
+			Travel:    ui.NewTravel(0, ui.SlideTicks()),
+			Card:      s.hand[to].Card,
+			Lift:      selectedLift(s.hand[to].selected),
+			FromIndex: was, FromCount: leaving,
+			ToIndex: to, ToCount: len(s.hand),
 		})
 	}
 
@@ -296,7 +290,7 @@ func (s *CombatScene) plugHand(run *session.Session, cards []combat.Card) bool {
 		// No run to own them — the windowless callers, which never plug a hand. Seated as they
 		// arrive rather than dropped, so this stays a hand rather than an empty row.
 		for _, c := range cards {
-			s.hand = append(s.hand, paletteCard{actionCard: c})
+			s.hand = append(s.hand, paletteCard{Card: c})
 		}
 		return true
 	}
@@ -327,7 +321,7 @@ func (s *CombatScene) plugHand(run *session.Session, cards []combat.Card) bool {
 				owned[seat], run.Size())
 		}
 		claimed[owned[seat].ID] = true
-		s.hand = append(s.hand, paletteCard{actionCard: owned[seat]})
+		s.hand = append(s.hand, paletteCard{Card: owned[seat]})
 	}
 	return true
 }
@@ -367,8 +361,8 @@ func (s *CombatScene) handTarget() int { return handSize }
 // the finished card, which is the one every rule reads; the deal gets the face the cascade starts
 // from, so a flip can be watched happening rather than having already happened. See
 // combat_deal.go.
-func (s *CombatScene) drawHand() []actionCard {
-	var pile []actionCard
+func (s *CombatScene) drawHand() []combat.Card {
+	var pile []combat.Card
 
 	for len(s.hand) < s.handTarget() {
 		if len(s.deck) == 0 {
@@ -385,7 +379,7 @@ func (s *CombatScene) drawHand() []actionCard {
 
 		last := len(s.deck) - 1
 		raw := s.deck[last]
-		s.hand = append(s.hand, paletteCard{actionCard: s.drawnAs(raw)})
+		s.hand = append(s.hand, paletteCard{Card: s.drawnAs(raw)})
 		s.deck = s.deck[:last]
 		pile = append(pile, raw)
 	}
@@ -397,7 +391,7 @@ func (s *CombatScene) drawHand() []actionCard {
 //
 // **The card it is handed is a draw-pile card**, which the invariant above says is a card in the
 // color the run owns — so the flip reads the original, as combat.FlipElement requires.
-func (s *CombatScene) drawnAs(c actionCard) actionCard {
+func (s *CombatScene) drawnAs(c combat.Card) combat.Card {
 	if s.run == nil {
 		return c
 	}
@@ -416,7 +410,7 @@ func (s *CombatScene) drawnAs(c actionCard) actionCard {
 // **A card the run has never heard of is left alone.** That covers a scene dealt with no run and a
 // card whose original an essence has since eaten; drawing what is actually in hand is the honest
 // answer to both.
-func (s *CombatScene) restoreToDeck(c actionCard) actionCard {
+func (s *CombatScene) restoreToDeck(c combat.Card) combat.Card {
 	if s.run == nil {
 		return c
 	}
@@ -453,22 +447,22 @@ func (s *CombatScene) endRoundHand() {
 // **The hand and the discard are one list here**, which is the panel's own split — see
 // deckpanel.go. Both are cards you cannot draw, and merging them is what lets a card stay where it
 // is and simply dim when it is played.
-func (s *CombatScene) fightContents() deckContents {
-	d := deckContents{
-		draw:  s.deck,
-		spent: make([]combat.Card, 0, len(s.discard)+len(s.hand)),
+func (s *CombatScene) fightContents() ui.DeckContents {
+	d := ui.DeckContents{
+		Draw:  s.deck,
+		Spent: make([]combat.Card, 0, len(s.discard)+len(s.hand)),
 
 		// **The run, so the panel can find a card's original.** A card in the hand or the discard
 		// has been through a draw and holds only the color a flip relic made it; the ID is the way
 		// back to what the run owns. See deckContents.run.
-		run:     s.run,
-		inFight: true,
+		Run:     s.run,
+		InFight: true,
 
-		holder: s.fighter.Duelist,
+		Holder: s.fighter.Duelist,
 	}
-	d.spent = append(d.spent, s.discard...)
+	d.Spent = append(d.Spent, s.discard...)
 	for _, c := range s.hand {
-		d.spent = append(d.spent, c.actionCard)
+		d.Spent = append(d.Spent, c.Card)
 	}
 	return d
 }
@@ -481,12 +475,12 @@ func (s *CombatScene) fightContents() deckContents {
 // what your cards can build, and a rung that has gone out of reach because three of its cards are
 // in the discard this round is not a fact about your deck. The piles are conserved, so their sum
 // is the run's deck for as long as the fight lasts.
-func (s *CombatScene) fightHands() handsContents {
+func (s *CombatScene) fightHands() ui.HandsContents {
 	deck := make([]combat.Card, 0, s.deckSize())
 	deck = append(deck, s.deck...)
 	deck = append(deck, s.discard...)
 	for _, c := range s.hand {
-		deck = append(deck, c.actionCard)
+		deck = append(deck, c.Card)
 	}
-	return handsContents{deck: deck, holder: s.fighter.Duelist, plays: runPlays(s.run)}
+	return ui.HandsContents{Deck: deck, Holder: s.fighter.Duelist, Plays: ui.RunPlays(s.run)}
 }

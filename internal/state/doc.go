@@ -24,10 +24,19 @@
 // inventing a field name per fraction. Percentages anchor a group; offsets within a group stay in
 // pixels, and sizes are never percentages.
 //
-// # The two debug flags
+// # The three debug flags
 //
-// DebugPlacement is about where things are drawn and is safe to leave on while playing.
-// DebugGameplay is about what the player is allowed to know — with it on you are inspecting the
-// game rather than playing it, which is how balance gets tuned against a view no player will ever
-// have. Both default to off, both are set once in main, and neither may ever change an outcome.
+// They answer different questions and are wanted at different times, which is why each is its own
+// flag rather than a lodger on another.
+//
+//   - DebugPlacement is about where things are drawn — the grid, the rulers, the scratch strings —
+//     and is safe to leave on while playing.
+//   - DebugGameplay is about what the player is allowed to know. With it on you are inspecting the
+//     game rather than playing it, which is how balance gets tuned against a view no player will
+//     ever have.
+//   - DebugAnimations opens the animation gallery's door, which is about what gestures the game
+//     has and what each one is called.
+//
+// All three are set once in main — a runtime toggle would need a hotkey, and the input vocabulary
+// has no keyboard — and none of them may ever change an outcome.
 package state

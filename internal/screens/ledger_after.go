@@ -32,6 +32,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // RunWatch remembers what the run was holding a frame ago.
@@ -144,7 +145,7 @@ func cardWords(c combat.Card) string {
 
 	var notes []string
 	if c.Form() != c.Spec().Form && c.Form() != combat.FormNone {
-		notes = append(notes, strings.ToLower(attackVerb(c.Form())))
+		notes = append(notes, strings.ToLower(ui.AttackVerb(c.Form())))
 	}
 	for _, line := range carddesc.RiderLines(c) {
 		notes = append(notes, strings.ToLower(line))
@@ -219,7 +220,7 @@ func vitaeLines(before, after int) []session.LedgerLine {
 // else.
 func afterLine(verb, clause string) session.LedgerLine {
 	spans := []session.LedgerSpan{{Text: verb, Mark: true}}
-	spans = append(spans, elementSpans(" "+clause)...)
+	spans = append(spans, ui.ElementSpans(" "+clause)...)
 	return session.LedgerLine{Voice: session.VoiceYou, Spans: spans}
 }
 

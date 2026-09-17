@@ -2,6 +2,7 @@ package screens
 
 import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The theater: what travels, out of what, into what.
@@ -282,7 +283,7 @@ type combatTheater struct {
 	// closing up after cards were spent. Separate from flights rather than a fourth flag on
 	// one, because a slide is the only mover whose journey begins and ends in the row, and it
 	// is the only one that needs a row size at each end.
-	slides []cardSlide
+	slides []ui.CardSlide
 
 	// Cards changing into other cards where they stand, because a rune altered them. Separate
 	// from the two above because it is the only mover that does not move: what travels is the face,
@@ -351,7 +352,7 @@ type combatTheater struct {
 	// per side, each pip carrying the element of the card that raised it, plus the two pieces of
 	// bookkeeping that belong to the same question. **One structure rather than four** — see
 	// shield_row.go, where the bugs that bought that are written down.
-	shieldRows [2]shieldRow
+	shieldRows [2]ui.ShieldRow
 
 	// banner is the name of the hand the player committed, on its way from the planning seat to
 	// the hand row or resting there. **It is raised at DUEL! and lives until the round is over**,
@@ -390,24 +391,24 @@ type combatTheater struct {
 // combatTheater answers the shared contract. **The assertion is the point of the interface**:
 // nothing takes a `theater` as a parameter, and what this line buys is that a second scene's
 // theater cannot quietly implement two of the three.
-var _ theater = (*combatTheater)(nil)
+var _ ui.Theater = (*combatTheater)(nil)
 
 // tick advances everything on stage by a frame and drops whatever has finished.
 //
 // **The hand dialog is deliberately not here.** It is the one mover that is a beat *of* playback
 // rather than something running alongside it — the cursor waits for it — so `advancePlayback`
 // drives it and this does not. See mathBox and combat_mathbox.go.
-func (t *combatTheater) tick() {
-	t.flights = advance(t.flights)
-	t.slides = advance(t.slides)
-	t.morphs = advance(t.morphs)
+func (t *combatTheater) Tick() {
+	t.flights = ui.Advance(t.flights)
+	t.slides = ui.Advance(t.slides)
+	t.morphs = ui.Advance(t.morphs)
 
 	// **The deal is not advanced here.** It is a sequence with stages that hand over, and the
 	// handover needs the scene — the cascade reads the run's worn relics and the sort rewrites the
 	// hand. CombatScene.tickDeal drives it; see combat_deal.go.
 
-	t.hits = advance(t.hits)
-	t.shields = advance(t.shields)
+	t.hits = ui.Advance(t.hits)
+	t.shields = ui.Advance(t.shields)
 
 	// **The breaks tick and settle in one pass, and it has to be one pass.** `advance` ticks a
 	// mover and drops it in the same loop, so a break that finishes on this frame is gone by the
@@ -424,16 +425,16 @@ func (t *combatTheater) tick() {
 	// The two rows on the table never expire: cards arrive and stay until the round is spent, so
 	// they are advanced in place rather than filtered.
 	for i := range t.resolved {
-		t.resolved[i].tick()
+		t.resolved[i].Tick()
 	}
 	for i := range t.enemyDealt {
-		t.enemyDealt[i].tick()
+		t.enemyDealt[i].Tick()
 	}
 
 	// The committed hand's name. It sets off at DUEL!, before the first event is reached, and must
 	// not be held up by the dialog that stops the cursor — which is why it ticks here with
 	// everything else rather than inside playback. See handBanner.
-	t.banner.tick()
+	t.banner.Tick()
 }
 
 // running reports whether anything the playback cursor waits on is still going.
@@ -441,8 +442,8 @@ func (t *combatTheater) tick() {
 // **It is the figures, not the cards.** A card flying to its seat runs alongside playback and never
 // holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
 // the number reaches it. Adding a mover here is deciding that the round should wait for it.
-func (t *combatTheater) running() bool {
-	return running(t.hits) || running(t.shields) || running(t.breaks) || running(t.signals)
+func (t *combatTheater) Running() bool {
+	return ui.Running(t.hits) || ui.Running(t.shields) || ui.Running(t.breaks) || ui.Running(t.signals)
 }
 
 // clear takes the whole stage down, view state included.
@@ -452,4 +453,4 @@ func (t *combatTheater) running() bool {
 // figure in the air belongs to the fight that raised it, and a settled duel freezes rather than
 // spending its hand, so anything tidied up only by the end-of-round spend was still there. Zeroing
 // the struct cannot miss one, and a mover added tomorrow is covered without anyone remembering.
-func (t *combatTheater) clear() { *t = combatTheater{} }
+func (t *combatTheater) Clear() { *t = combatTheater{} }

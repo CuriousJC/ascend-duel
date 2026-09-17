@@ -32,6 +32,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -75,7 +76,7 @@ func (s *ShopScene) drawPotions(gs *state.GlobalState, screen *ebiten.Image) {
 		}
 
 		lit := gs.Run != nil && gs.Run.CanDrink(p.Record)
-		blitCard(gs, screen, at.Min, potionSpec(gs, p, lit), cards.EssenceStyle)
+		ui.BlitCard(gs, screen, at.Min, potionSpec(gs, p, lit), cards.EssenceStyle)
 		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", p.Price), lit)
 	}
 }
@@ -86,7 +87,7 @@ func (s *ShopScene) drawBrand(gs *state.GlobalState, screen *ebiten.Image) {
 	drawShopPaneBack(gs, screen, shopPaneBrand)
 
 	at := brandSeat(gs)
-	blitCard(gs, screen, at.Min, brandSpec(gs), cards.EssenceStyle)
+	ui.BlitCard(gs, screen, at.Min, brandSpec(gs), cards.EssenceStyle)
 	s.figure(gs, screen, at, fmt.Sprintf("%d vitae", brandPrice), false)
 }
 
@@ -111,8 +112,8 @@ func potionSpec(gs *state.GlobalState, p session.Potion, enabled bool) cards.Spe
 		Name:    p.Name,
 		Form:    cards.FormNone,
 		Cost:    0,
-		Element: artFor(combat.Basic),
-		Art:     artwork(gs, p.Art),
+		Element: ui.ArtFor(combat.Basic),
+		Art:     ui.Artwork(gs, p.Art),
 		Enabled: enabled,
 	}
 }
@@ -125,8 +126,8 @@ func brandSpec(gs *state.GlobalState) cards.Spec {
 		Name:       brandName,
 		Form:       cards.FormNone,
 		Cost:       0,
-		Element:    artFor(combat.Basic),
-		Art:        artwork(gs, brandArtKey),
+		Element:    ui.ArtFor(combat.Basic),
+		Art:        ui.Artwork(gs, brandArtKey),
 		Text:       brandLine,
 		Highlights: cards.ElementHighlights(brandLine),
 		Enabled:    false,

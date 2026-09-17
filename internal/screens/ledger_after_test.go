@@ -7,6 +7,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // texts is every line of a diff as plain strings, which is what these tests assert on: the
@@ -130,7 +131,7 @@ func TestASoldRelicIsNotReportedAsAPurchase(t *testing.T) {
 func TestTheLedgersRowsStopBeforeItsScrollbar(t *testing.T) {
 	r := image.Rect(60, 55, 1600, 930)
 
-	contentRight := r.Max.X - ledgerPane.rightInset
+	contentRight := r.Max.X - ledgerPane.RightInset
 	if track := ledgerScrollRect(r); contentRight > track.Min.X {
 		t.Fatalf("rows reach %d, scrollbar starts at %d", contentRight, track.Min.X)
 	}
@@ -141,7 +142,7 @@ func TestTheLedgersRowsStopBeforeItsScrollbar(t *testing.T) {
 func TestTheLedgersScrollbarStartsBelowTheClosingX(t *testing.T) {
 	r := image.Rect(60, 55, 1600, 930)
 
-	closeBottom := r.Min.Y + modalCloseInset + modalCloseSize
+	closeBottom := r.Min.Y + ui.ModalCloseInset + ui.ModalCloseSize
 	if top := ledgerScrollRect(r).Min.Y; top < closeBottom {
 		t.Fatalf("track starts at %d, the X ends at %d", top, closeBottom)
 	}
@@ -150,8 +151,8 @@ func TestTheLedgersScrollbarStartsBelowTheClosingX(t *testing.T) {
 // The first row clears the closing X as well as the title. A heading is drawn on a dark band a
 // whole pitch tall, so a row that merely starts below the X still paints up behind it.
 func TestTheLedgersFirstRowClearsTheClosingX(t *testing.T) {
-	closeBottom := modalCloseInset + modalCloseSize
-	if ledgerPane.firstRow < closeBottom {
-		t.Fatalf("first row at %d, the X ends at %d", ledgerPane.firstRow, closeBottom)
+	closeBottom := ui.ModalCloseInset + ui.ModalCloseSize
+	if ledgerPane.FirstRow < closeBottom {
+		t.Fatalf("first row at %d, the X ends at %d", ledgerPane.FirstRow, closeBottom)
 	}
 }

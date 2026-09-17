@@ -19,7 +19,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 )
 
 //go:embed goods.json
@@ -83,9 +82,5 @@ type GoodData struct {
 // shuffled from when a visit picks which two stand on the shelf. Nothing here is a map, so there is
 // no sorted walk to protect.
 func LoadGoods() []GoodData {
-	var list []GoodData
-	if err := json.Unmarshal(goodsJSON, &list); err != nil {
-		panic("Failed to unmarshal goods.json: " + err.Error())
-	}
-	return list
+	return parse[GoodData](goodsJSON, "goods.json")
 }

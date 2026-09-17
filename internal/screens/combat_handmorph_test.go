@@ -18,7 +18,7 @@ func morphScene(t *testing.T, deck []combat.Card) (*state.GlobalState, *CombatSc
 	}
 	s := &CombatScene{run: run, fighter: &entities.Combatant{}}
 	for _, c := range run.Deck() {
-		s.hand = append(s.hand, paletteCard{actionCard: c, selected: true})
+		s.hand = append(s.hand, paletteCard{Card: c, selected: true})
 	}
 	return gs, s
 }
@@ -37,7 +37,7 @@ func spend(t *testing.T, gs *state.GlobalState, s *CombatScene, key string) {
 	}
 	s.resyncHandFromRun(gs)
 	for _, copied := range gs.Run.Duplicated() {
-		s.hand = append(s.hand, paletteCard{actionCard: copied})
+		s.hand = append(s.hand, paletteCard{Card: copied})
 	}
 	s.raiseHandMorphs(gs, was, seats)
 }
@@ -49,11 +49,11 @@ func TestARecoloringRuneMorphsEveryCardItTook(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
 	spend(t, gs, s, "hexmark")
 
-	if got := len(s.theater.morphs); got != 2 {
+	if got := len(s.Theater.morphs); got != 2 {
 		t.Fatalf("a two-card borer raised %d morphs, want 2", got)
 	}
-	for _, h := range s.theater.morphs {
-		if !h.m.hasBefore || !h.m.hasAfter {
+	for _, h := range s.Theater.morphs {
+		if !h.m.Replaces() {
 			t.Errorf("card %d: a recolored card should be one face turning into another", h.id)
 		}
 		if _, still := s.handMorphFor(h.id); !still {
@@ -68,10 +68,10 @@ func TestTheMorphsRunTogether(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash))
 	spend(t, gs, s, "hexmark")
 
-	first := s.theater.morphs[0].m.t
-	for _, h := range s.theater.morphs[1:] {
-		if h.m.t != first {
-			t.Errorf("one morph is on %+v and another on %+v; they should share a beat", first, h.m.t)
+	first := s.Theater.morphs[0].m.Clock()
+	for _, h := range s.Theater.morphs[1:] {
+		if h.m.Clock() != first {
+			t.Errorf("one morph is on %+v and another on %+v; they should share a beat", first, h.m.Clock())
 		}
 	}
 }
@@ -86,11 +86,11 @@ func TestAnEatenCardMorphsAwayAtTheSeatItHad(t *testing.T) {
 	if len(s.hand) != 0 {
 		t.Fatalf("unmake left %d cards in the hand, want none", len(s.hand))
 	}
-	if got := len(s.theater.morphs); got != 2 {
+	if got := len(s.Theater.morphs); got != 2 {
 		t.Fatalf("unmake raised %d morphs, want 2", got)
 	}
-	for _, h := range s.theater.morphs {
-		if !h.m.hasBefore || h.m.hasAfter {
+	for _, h := range s.Theater.morphs {
+		if !h.m.Eats() {
 			t.Errorf("card %d: an eaten card has a face to lose and none to gain", h.id)
 		}
 		if h.at.Empty() {
@@ -106,11 +106,11 @@ func TestACopyMorphsInOutOfNothing(t *testing.T) {
 	gs, s := morphScene(t, combat.PlainCards(combat.Bash))
 	spend(t, gs, s, "mimic")
 
-	if got := len(s.theater.morphs); got != 1 {
+	if got := len(s.Theater.morphs); got != 1 {
 		t.Fatalf("a copy raised %d morphs, want 1", got)
 	}
-	m := s.theater.morphs[0].m
-	if m.hasBefore || !m.hasAfter {
+	m := s.Theater.morphs[0].m
+	if !m.Arrives() {
 		t.Error("a copy arrives out of nothing; it has no face to lose")
 	}
 }
@@ -123,7 +123,7 @@ func TestARuneThatChangedNothingRaisesNothing(t *testing.T) {
 	was, seats := s.handFaces(gs)
 	s.raiseHandMorphs(gs, was, seats)
 
-	if got := len(s.theater.morphs); got != 0 {
+	if got := len(s.Theater.morphs); got != 0 {
 		t.Errorf("an unchanged hand raised %d morphs, want none", got)
 	}
 }

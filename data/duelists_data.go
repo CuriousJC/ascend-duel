@@ -15,7 +15,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 )
 
 //go:embed duelists.json
@@ -55,14 +54,5 @@ type DuelistData struct {
 
 // LoadDuelists parses the embedded duelist list into a map keyed by DuelistRecord.
 func LoadDuelists() map[string]DuelistData {
-	var list []DuelistData
-	if err := json.Unmarshal(duelistsJSON, &list); err != nil {
-		panic("Failed to unmarshal our DuelistData: " + err.Error())
-	}
-
-	out := make(map[string]DuelistData, len(list))
-	for _, d := range list {
-		out[d.DuelistRecord] = d
-	}
-	return out
+	return keyed(duelistsJSON, "duelists.json", func(d DuelistData) string { return d.DuelistRecord })
 }

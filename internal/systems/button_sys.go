@@ -204,7 +204,7 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// light on it at all is what makes it read as unavailable before it reads as a button.
 	fill := buttonStateColor(button)
 	if button.State == models.ButtonStateDisabled {
-		vector.DrawFilledRect(button.Image, 0, 0,
+		vector.FillRect(button.Image, 0, 0,
 			float32(button.Width), float32(button.Height), fill, false)
 	} else {
 		BevelFace(button.Image, button.Width, button.Height, fill, buttonSunken(button))

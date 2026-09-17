@@ -1340,24 +1340,6 @@ func TestTheFormMarkCarriesTheElement(t *testing.T) {
 	}
 }
 
-// atPeakOf rescales c so its brightest channel matches want's, which is what lets two colors of
-// different brightness be compared for hue alone. See TestTheFormMarkCarriesTheElement.
-func atPeakOf(c, want color.RGBA) color.RGBA {
-	peak := max(int(c.R), max(int(c.G), int(c.B)))
-	target := max(int(want.R), max(int(want.G), int(want.B)))
-	if peak == 0 {
-		return c
-	}
-	scale := func(v uint8) uint8 {
-		out := int(v) * target / peak
-		if out > 255 {
-			out = 255
-		}
-		return uint8(out)
-	}
-	return color.RGBA{R: scale(c.R), G: scale(c.G), B: scale(c.B), A: c.A}
-}
-
 // TestTheCostTicksCarryTheElement is the tick half of the 2026-08-23 swap. The mark in the corner
 // and the ticks under it are the whole of the left column, and both say the element — a column
 // where only the top of it is colored was the first cut and the owner sent it back.

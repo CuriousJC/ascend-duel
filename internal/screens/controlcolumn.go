@@ -29,15 +29,14 @@ package screens
 import (
 	"image"
 
-	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 const (
 	// ControlButtonHeight is one rung of either group. The height is the square buttons' 44 — the
 	// footprint the game's other secondary controls take — kept although the buttons are no longer
 	// square, so the rhythm did not change when the labels did.
-	ControlButtonHeight = 44
 
 	// ControlButtonGap is the air between the two panel buttons. **The sort tabs do not use it**:
 	// they are one block, and air between them would make them three buttons again.
@@ -46,7 +45,6 @@ const (
 	// ControlButtonText is the label size. **18 rather than the default 20**, because `Element` on
 	// a tab and `LEDGER` on a narrow button both have to fit without being abbreviated back, which
 	// is what spelling them out was for.
-	ControlButtonText = 36
 
 	// ControlButtonWidth is how wide HANDS and LEDGER are: **the wider word and a little more,
 	// not the column** *(2026-09-04, owner's call)*. `LEDGER` measures about 62 pixels of kubasta
@@ -57,19 +55,11 @@ const (
 	// **It was 200 and the column was 203**, which is three pixels of a distinction nobody could
 	// see and is not what the paragraph above asks for. TestThePanelButtonsStackUpFromTheAPBar only
 	// caught it when the card came down to 200 and the two became equal.
-	ControlButtonWidth = 120
 
 	// sortTabWidth is the block's width, and it is the enemy card's so the block, the cards it
 	// arranges and the corner above it are one measure.
 	sortTabGap = 0
 )
-
-// ControlColumnLeft is the line the panel buttons stand on: the enemy card's left edge.
-func ControlColumnLeft(gs *state.GlobalState) int { return enemyCardRect(gs).Min.X }
-
-// ControlColumnWidth is the column's full width, which is the enemy card's. **Only the sort block
-// is this wide**; the panel buttons take ControlButtonWidth.
-func ControlColumnWidth() int { return cards.EnemyStyle.Width }
 
 // The two panel buttons, counted **up from the bottom of the action-point bar**. They are written
 // down here rather than each caller knowing its own index: one is placed by this package and one
@@ -91,9 +81,9 @@ const (
 // stack upward from there, so adding a third would grow the group toward the cards rather than
 // off the bottom of the screen.
 func ControlColumnSlot(gs *state.GlobalState, i int) image.Rectangle {
-	left := ControlColumnLeft(gs)
-	bottom := apBarBottom(gs) - i*(ControlButtonHeight+ControlButtonGap)
-	return image.Rect(left, bottom-ControlButtonHeight, left+ControlButtonWidth, bottom)
+	left := ui.ControlColumnLeft(gs)
+	bottom := apBarBottom(gs) - i*(ui.ControlButtonHeight+ControlButtonGap)
+	return image.Rect(left, bottom-ui.ControlButtonHeight, left+ui.ControlButtonWidth, bottom)
 }
 
 // ControlColumnSlotCenter is that slot's center, which is what models.Button stores.
@@ -113,54 +103,13 @@ func ControlColumnSlotCenter(gs *state.GlobalState, i int) image.Point {
 // rule of their own, measured from the screen's right edge rather than from the frame's; the hands
 // button and the cog ended up in the same pixels, and the ledger stood in a column above a row that
 // knew nothing about it.
-const (
-	// ChromeButtonSize is the square every corner control takes, and ChromeButtonInset is the air
-	// under it. **The frame's figures**, moved here so a scene can read them without importing the
-	// package that draws the frame — the arrow points the other way.
-	ChromeButtonSize  = 44
-	ChromeButtonInset = 10
-
-	// ChromeButtonGap is the air between two of them.
-	ChromeButtonGap = 10
-)
+const ()
 
 // The bottom line's occupants, counted leftward from the corner. **Written down here rather than
 // each caller knowing its own index**, which is the rule the column above is already under: the cog
 // is placed by internal/game and the other two by the shop, and two owners counting one strip
 // independently is how a button ends up drawn over another.
-const (
-	// ChromeSlotSettings is the frame's cog, in the corner itself.
-	ChromeSlotSettings = iota
-
-	// ChromeSlotStones is the shop's pouch button, next to it. **The deck used to sit between the
-	// two** and is drawn as a pile now — see shop_pile.go — so there is one square here rather
-	// than two.
-	ChromeSlotStones
-
-	// ChromeSlotAnimations is the animation gallery's door, and it is **the last slot on purpose**:
-	// it is drawn only while state.DebugAnimations is on, so with the flag off the strip ends where
-	// it always did and nothing moves. A debug square taking a seat between two real controls would
-	// shift them the moment the flag was turned on.
-	ChromeSlotAnimations
-)
-
-// ChromeCornerSlot is the n'th square along the bottom line, counting **leftward from the corner**.
-// Slot 0 is the settings cog's seat; a scene's own square controls take 1, 2 and so on.
-//
-// **Its right edge is the control column's**, not the screen's, so the column above and the strip
-// below read as one corner rather than two things near each other.
-func ChromeCornerSlot(gs *state.GlobalState, n int) image.Rectangle {
-	right := ControlColumnLeft(gs) + ControlColumnWidth() -
-		n*(ChromeButtonSize+ChromeButtonGap)
-	top := gs.ScreenHeight - ChromeButtonInset - ChromeButtonSize
-	return image.Rect(right-ChromeButtonSize, top, right, top+ChromeButtonSize)
-}
-
-// ChromeCornerCenter is that slot's center, which is what models.Button stores.
-func ChromeCornerCenter(gs *state.GlobalState, n int) image.Point {
-	r := ChromeCornerSlot(gs, n)
-	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
-}
+const ()
 
 // sortTabRect is the i'th tab of the sort block: full column width, no gap above or below it, and
 // the block's top edge on the hand's top edge.
@@ -175,6 +124,6 @@ func ChromeCornerCenter(gs *state.GlobalState, n int) image.Point {
 // spent; a block tied to that would slide sideways mid-round.
 func sortTabRect(gs *state.GlobalState, i int) image.Rectangle {
 	left := handBandLeft(gs) + cardBandWidth(gs)
-	top := handTop(gs) + i*(ControlButtonHeight+sortTabGap)
-	return image.Rect(left, top, left+ControlColumnWidth(), top+ControlButtonHeight)
+	top := handTop(gs) + i*(ui.ControlButtonHeight+sortTabGap)
+	return image.Rect(left, top, left+ui.ControlColumnWidth(), top+ui.ControlButtonHeight)
 }

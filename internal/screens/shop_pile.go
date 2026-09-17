@@ -22,6 +22,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -43,7 +44,7 @@ func shopPileRect(gs *state.GlobalState) image.Rectangle {
 	// count is written on — so the count lands on the bottom line the cog and the stones button
 	// stand on. Only the left edge differs between the two screens, which is the point: this is the
 	// same object in a different corner, not a second thing that looks like it.
-	right := ControlColumnLeft(gs) - shopPileGap
+	right := ui.ControlColumnLeft(gs) - shopPileGap
 	bottom := gs.ScreenHeight - deckStackBottomInset - deckCountSize - deckCaptionGap
 
 	return image.Rect(right-w, bottom-h, right, bottom)
@@ -72,7 +73,7 @@ func (s *ShopScene) clickedPile(gs *state.GlobalState, at image.Point) bool {
 	if !at.In(shopPileBounds(gs)) {
 		return false
 	}
-	s.deck.toggle()
+	s.deck.Toggle()
 	s.armed = ""
 	s.tip.Forget()
 	return true
@@ -94,7 +95,7 @@ func (s *ShopScene) drawShopPile(gs *state.GlobalState, screen *ebiten.Image) {
 	for i := deckStackDepth - 1; i >= 0; i-- {
 		off := i * deckStackStep
 		at := image.Pt(front.Min.X-off, front.Min.Y-off)
-		if img := cardImage(gs, spec, cards.Stack); img != nil {
+		if img := ui.CardImage(gs, spec, cards.Stack); img != nil {
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(at.X), float64(at.Y))
 			screen.DrawImage(img, op)
@@ -104,7 +105,7 @@ func (s *ShopScene) drawShopPile(gs *state.GlobalState, screen *ebiten.Image) {
 	count := shopPileCountRect(gs)
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(count.Min.X), float64(count.Min.Y))
-	op.ColorScale.ScaleWithColor(groundInk)
+	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, fmt.Sprintf("%d", gs.Run.Size()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)
 }
@@ -113,7 +114,7 @@ func (s *ShopScene) drawShopPile(gs *state.GlobalState, screen *ebiten.Image) {
 // defaulted**, so the pile on this screen is the pile the fight will draw from — the same mark, not
 // a generic back that happens to look similar.
 func shopBackSpec(gs *state.GlobalState) cards.Spec {
-	fighter := buildFighter(gs)
+	fighter := ui.BuildFighter(gs)
 	if fighter == nil {
 		return cards.Spec{FaceDown: true}
 	}

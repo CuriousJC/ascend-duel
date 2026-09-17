@@ -5,6 +5,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The top row is three things sharing one line: the duelist card, the relic row, the enemy
@@ -23,7 +24,7 @@ func TestTheTopRowIsThreeThingsThatDoNotOverlap(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
-	duelist, relics, enemy := s.duelistCardRect(gs), s.relicPaneRect(gs), s.enemyCardRect(gs)
+	duelist, relics, enemy := ui.DuelistCardRect(gs), s.relicPaneRect(gs), ui.EnemyCardRect(gs)
 
 	if relics.Min.X <= duelist.Max.X {
 		t.Errorf("the relic row starts at x=%d, inside the duelist card ending at x=%d",
@@ -59,9 +60,8 @@ func TestTheTopRowIsThreeThingsThatDoNotOverlap(t *testing.T) {
 
 func TestBothCornerCardsAreOnScreenWithEqualMargins(t *testing.T) {
 	gs := testState()
-	s := &CombatScene{}
 
-	duelist, enemy := s.duelistCardRect(gs), s.enemyCardRect(gs)
+	duelist, enemy := ui.DuelistCardRect(gs), ui.EnemyCardRect(gs)
 
 	if duelist.Min.X < 0 || duelist.Min.Y < 0 {
 		t.Errorf("the duelist card starts at (%d,%d), off the top-left of the screen",
@@ -93,7 +93,7 @@ func TestTheRelicRowSitsBelowTheCardsBesideIt(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
-	duelist, relics := s.duelistCardRect(gs), s.relicPaneRect(gs)
+	duelist, relics := ui.DuelistCardRect(gs), s.relicPaneRect(gs)
 
 	// **The drop is deliberate and the amount is the point.** The row was flush with the two
 	// cards' tops until the backing panel arrived: three things on one line, with a surface
@@ -112,10 +112,10 @@ func TestTheRelicRowSitsBelowTheCardsBesideIt(t *testing.T) {
 }
 
 func TestEveryRoomOnAFloorIsNamed(t *testing.T) {
-	// Three fights to a floor and three names for them: towerRoom indexes one array by the
+	// Three fights to a floor and three names for them: ui.TowerRoom indexes one array by the
 	// other's modulus, so a fourth fight per floor would panic rather than draw a blank line.
-	if len(towerRoomNames) != fightsPerFloor {
-		t.Fatalf("%d room names for %d fights a floor", len(towerRoomNames), fightsPerFloor)
+	if len(ui.TowerRoomNames) != ui.FightsPerFloor {
+		t.Fatalf("%d room names for %d fights a floor", len(ui.TowerRoomNames), ui.FightsPerFloor)
 	}
 
 	// The floor turns over on the fight after the last room, and the first fight is the first
@@ -124,12 +124,12 @@ func TestEveryRoomOnAFloorIsNamed(t *testing.T) {
 		0: "Outer Room", 1: "Inner Room", 2: "Stairway",
 		3: "Outer Room", 5: "Stairway", 6: "Outer Room",
 	} {
-		if got := towerRoom(fight); got != want {
+		if got := ui.TowerRoom(fight); got != want {
 			t.Errorf("fight %d is the %s, want the %s", fight, got, want)
 		}
 	}
 	for fight, want := range map[int]int{0: 1, 2: 1, 3: 2, 5: 2, 6: 3, 23: 8} {
-		if got := towerFloor(fight); got != want {
+		if got := ui.TowerFloor(fight); got != want {
 			t.Errorf("fight %d is on floor %d, want %d", fight, got, want)
 		}
 	}
@@ -139,7 +139,7 @@ func TestTheRelicBackingHoldsTheWholeRowWithoutTouchingTheCards(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
-	duelist, enemy := s.duelistCardRect(gs), s.enemyCardRect(gs)
+	duelist, enemy := ui.DuelistCardRect(gs), ui.EnemyCardRect(gs)
 	relics, back := s.relicPaneRect(gs), s.relicPaneBackRect(gs)
 
 	// It has to reach past the row on every side, or the two end cards sit on its edge and it

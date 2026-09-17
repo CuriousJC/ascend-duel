@@ -114,21 +114,6 @@ func drawTextHCentered(dst *image.RGBA, f *Faces, size float64, s string, width,
 	return drawText(dst, f, size, s, (width-w)/2, y, c)
 }
 
-// drawTextCenteredIn draws a string centered inside a box that starts at left and is width
-// wide, top-aligned at y.
-//
-// The effect text uses it. drawTextHCentered centers on the whole card, which is right for a
-// name spanning the card and wrong for a block that only owns the space beside the cost
-// column — every line would sit a little left of where it belongs.
-func drawTextCenteredIn(dst *image.RGBA, f *Faces, size float64, s string, left, width, y int, c color.RGBA) error {
-	face, err := f.at(size)
-	if err != nil {
-		return err
-	}
-	w := font.MeasureString(face, s).Ceil()
-	return drawText(dst, f, size, s, left+(width-w)/2, y, c)
-}
-
 // drawTextRightAligned draws a string ending at x, top-aligned at y.
 //
 // The stat rows use it: a label against the left margin and a figure against the right, so

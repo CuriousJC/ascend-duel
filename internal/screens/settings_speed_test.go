@@ -1,6 +1,10 @@
 package screens
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/curiousjc/ascend-duel/internal/ui"
+)
 
 // The speed strip under the game-speed bar. These need no window and draw nothing — they are about
 // the table the movement is derived from, which is the half that can be wrong silently.
@@ -65,13 +69,13 @@ func TestTheStripRunsAtThePlayersSpeed(t *testing.T) {
 	// **The whole point of the widget**: its phases are fractions of the same beat every card
 	// flight in a duel is, so the bar moves the illustration and the thing it illustrates together.
 	// This is the clock test's argument applied to the one screen that shows the clock off.
-	was := Speed()
-	defer SetSpeed(was)
+	was := ui.Speed()
+	defer ui.SetSpeed(was)
 
-	SetSpeed(1)
+	ui.SetSpeed(1)
 	slow := speedInTicks()
 
-	SetSpeed(2)
+	ui.SetSpeed(2)
 	if fast := speedInTicks(); fast >= slow {
 		t.Errorf("the deal takes %d ticks at 1x and %d at 2x — the strip is not on the speed",
 			slow, fast)

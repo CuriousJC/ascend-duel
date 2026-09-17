@@ -32,7 +32,7 @@ func (s fixedSource) Int63() int64 { return int64(s) }
 func (s fixedSource) Seed(int64)   {}
 
 // The two rolls a test wants. rand.Intn(100) reduces to `int32(Int63()>>32) % 100`, so 0 is
-// below any chance the game can produce and 99 is above the shockMissCapPct ceiling — which is
+// below any chance the game can produce and 99 is above the maxStatusPct ceiling — which is
 // only expressible because the cap exists, and is one more reason it has to.
 func alwaysMisses() *rand.Rand { return rand.New(fixedSource(0)) }
 func neverMisses() *rand.Rand  { return rand.New(fixedSource(99 << 32)) }

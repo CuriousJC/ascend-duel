@@ -34,6 +34,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -47,11 +48,11 @@ type handMorph struct {
 	// no longer in the hand — the eaten case, which has no seat to look up.
 	at image.Rectangle
 
-	m morph
+	m ui.Morph
 }
 
-func (h *handMorph) tick()     { h.m.tick() }
-func (h handMorph) done() bool { return h.m.done() }
+func (h *handMorph) Tick()     { h.m.Tick() }
+func (h handMorph) Done() bool { return h.m.Done() }
 
 // handFaces is every card in the hand as a finished face, by identity, plus where each one stands.
 //
@@ -63,8 +64,8 @@ func (s *CombatScene) handFaces(gs *state.GlobalState) (map[int]cards.Spec, map[
 	faces := make(map[int]cards.Spec, len(s.hand))
 	seats := make(map[int]image.Rectangle, len(s.hand))
 	for i, c := range s.hand {
-		faces[c.actionCard.ID] = s.handFace(c)
-		seats[c.actionCard.ID] = s.cardSlot(gs, i)
+		faces[c.Card.ID] = s.handFace(c)
+		seats[c.Card.ID] = s.cardSlot(gs, i)
 	}
 	return faces, seats
 }
@@ -76,7 +77,7 @@ func (s *CombatScene) handFaces(gs *state.GlobalState) (map[int]cards.Spec, map[
 // the cap dims every other card, and a morph that captured that would be comparing the hand's mood
 // rather than the cards.
 func (s *CombatScene) handFace(c paletteCard) cards.Spec {
-	return cardSpec(c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), true, false)
+	return ui.CardSpec(c.Card, ui.HeldBy(s.fighter.Duelist, c.Card), true, false)
 }
 
 // raiseHandMorphs works out what a rune changed and puts a morph on each of it.
@@ -87,7 +88,7 @@ func (s *CombatScene) handFace(c paletteCard) cards.Spec {
 // gone is one that was eaten.
 func (s *CombatScene) raiseHandMorphs(gs *state.GlobalState, was map[int]cards.Spec, seats map[int]image.Rectangle) {
 	for i, c := range s.hand {
-		id := c.actionCard.ID
+		id := c.Card.ID
 		now := s.handFace(c)
 		at := s.cardSlot(gs, i)
 
@@ -95,12 +96,12 @@ func (s *CombatScene) raiseHandMorphs(gs *state.GlobalState, was map[int]cards.S
 		switch {
 		case !had:
 			// A card that was not in the hand a moment ago: a copy, arriving out of nothing.
-			s.theater.morphs = append(s.theater.morphs, handMorph{
-				id: id, at: at, m: morphIn(now, cards.Hand),
+			s.Theater.morphs = append(s.Theater.morphs, handMorph{
+				id: id, at: at, m: ui.MorphIn(now, cards.Hand),
 			})
 		case before != now:
-			s.theater.morphs = append(s.theater.morphs, handMorph{
-				id: id, at: at, m: morphInto(before, now, cards.Hand),
+			s.Theater.morphs = append(s.Theater.morphs, handMorph{
+				id: id, at: at, m: ui.MorphInto(before, now, cards.Hand),
 			})
 		}
 	}
@@ -110,21 +111,21 @@ func (s *CombatScene) raiseHandMorphs(gs *state.GlobalState, was map[int]cards.S
 	// same rule: the model moved first and this is a picture of it.
 	live := make(map[int]bool, len(s.hand))
 	for _, c := range s.hand {
-		live[c.actionCard.ID] = true
+		live[c.Card.ID] = true
 	}
 	for id, before := range was {
 		if live[id] {
 			continue
 		}
-		s.theater.morphs = append(s.theater.morphs, handMorph{
-			id: id, at: seats[id], m: morphAway(before, cards.Hand),
+		s.Theater.morphs = append(s.Theater.morphs, handMorph{
+			id: id, at: seats[id], m: ui.MorphAway(before, cards.Hand),
 		})
 	}
 }
 
 // handMorphFor is the morph running on one hand card, if there is one.
 func (s *CombatScene) handMorphFor(id int) (handMorph, bool) {
-	for _, h := range s.theater.morphs {
+	for _, h := range s.Theater.morphs {
 		if h.id == id {
 			return h, true
 		}
@@ -138,17 +139,17 @@ func (s *CombatScene) handMorphFor(id int) (handMorph, bool) {
 // keeps a changing card in the place the player last saw it. Only a card that has left has nowhere
 // to be drawn from, so only those are drawn here.
 func (s *CombatScene) drawHandMorphs(gs *state.GlobalState, screen *ebiten.Image) {
-	if len(s.theater.morphs) == 0 {
+	if len(s.Theater.morphs) == 0 {
 		return
 	}
 	live := make(map[int]bool, len(s.hand))
 	for _, c := range s.hand {
-		live[c.actionCard.ID] = true
+		live[c.Card.ID] = true
 	}
-	for _, h := range s.theater.morphs {
+	for _, h := range s.Theater.morphs {
 		if live[h.id] {
 			continue
 		}
-		drawMorph(gs, screen, h.at.Min, h.m)
+		ui.DrawMorph(gs, screen, h.at.Min, h.m)
 	}
 }

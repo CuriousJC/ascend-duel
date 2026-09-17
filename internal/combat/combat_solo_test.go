@@ -161,14 +161,3 @@ func TestASoloPlannerTakesTheMostDamageItCanAfford(t *testing.T) {
 		t.Errorf("the plan lands %d damage, want %d — %v", got, want, planKey(plan))
 	}
 }
-
-// damages is every damage event in a log, in order.
-func damages(events []Event) []Event {
-	var out []Event
-	for _, e := range events {
-		if e.Kind == KindDamage {
-			out = append(out, e)
-		}
-	}
-	return out
-}

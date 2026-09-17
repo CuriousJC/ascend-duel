@@ -21,7 +21,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 )
 
 //go:embed statuses.json
@@ -98,9 +97,5 @@ type StatusData struct {
 // `LoadDuelistCards` has. A map would hand the registry a different set of IDs every launch, which
 // is the determinism breach `RelicOrder` and `EnemyOrder` exist to prevent from the other side.
 func LoadStatuses() []StatusData {
-	var list []StatusData
-	if err := json.Unmarshal(statusesJSON, &list); err != nil {
-		panic("Failed to unmarshal our StatusData: " + err.Error())
-	}
-	return list
+	return parse[StatusData](statusesJSON, "statuses.json")
 }

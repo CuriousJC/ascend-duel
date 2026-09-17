@@ -33,7 +33,7 @@ func TestAnElementRuneReachesTheCardInTheHand(t *testing.T) {
 		if c.Element == combat.Arcane {
 			t.Fatalf("the fixture deck is already arcane, so this test would pass on a no-op")
 		}
-		s.hand = append(s.hand, paletteCard{actionCard: c, selected: true})
+		s.hand = append(s.hand, paletteCard{Card: c, selected: true})
 	}
 
 	ids := s.selectedCardIDs()
@@ -46,8 +46,8 @@ func TestAnElementRuneReachesTheCardInTheHand(t *testing.T) {
 		t.Fatalf("hand is %d cards, want %d", len(s.hand), len(ids))
 	}
 	for i, c := range s.hand {
-		if c.actionCard.Element != combat.Arcane {
-			t.Errorf("hand card %d is %v after a hexmark, want arcane", i, c.actionCard.Element)
+		if c.Card.Element != combat.Arcane {
+			t.Errorf("hand card %d is %v after a hexmark, want arcane", i, c.Card.Element)
 		}
 	}
 	for _, c := range run.Deck() {

@@ -6,13 +6,14 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // shieldScene is a screen with one card on the player's side of the table.
 func shieldScene(card combat.Card) *CombatScene {
 	s := &CombatScene{}
-	s.theater.resolved = []resolvedCard{{card: card}}
-	s.theater.firingSeats = []int{0}
+	s.Theater.resolved = []resolvedCard{{card: card}}
+	s.Theater.firingSeats = []int{0}
 	s.fighter = &entities.Combatant{}
 	return s
 }
@@ -55,21 +56,21 @@ func TestPipsNeverFlyPastTheRow(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash})
 
 	// One short of a full row, and a card that puts up three.
-	s.noteShieldRaise(raised(3, maxShieldPips-1+3))
-	if len(s.theater.shields) != 1 {
+	s.noteShieldRaise(raised(3, ui.MaxShieldPips-1+3))
+	if len(s.Theater.shields) != 1 {
 		t.Fatalf("no flight was raised")
 	}
-	if got := s.theater.shields[0].count; got != 1 {
+	if got := s.Theater.shields[0].count; got != 1 {
 		t.Errorf("the flight carries %d pips into a row with room for 1", got)
 	}
 
 	// A row already full flies nothing at all rather than a flight of zero pips.
 	s = shieldScene(combat.Card{Concept: combat.Bash})
-	if s.noteShieldRaise(raised(3, maxShieldPips+3)) {
+	if s.noteShieldRaise(raised(3, ui.MaxShieldPips+3)) {
 		t.Error("a full row still flew pips")
 	}
-	if len(s.theater.shields) != 0 {
-		t.Errorf("a full row raised %d flights", len(s.theater.shields))
+	if len(s.Theater.shields) != 0 {
+		t.Errorf("a full row raised %d flights", len(s.Theater.shields))
 	}
 }
 
@@ -85,7 +86,7 @@ func TestPipsArePaidInOnArrivalAndOnlyOnce(t *testing.T) {
 	}
 
 	for i := 0; i < shieldFlyTicks(); i++ {
-		s.theater.tick()
+		s.Theater.Tick()
 	}
 	s.landShields()
 	if got := s.shownShields(combat.SideA, 0); got != 2 {
@@ -111,7 +112,7 @@ func TestPipsArePaidInOnArrivalAndOnlyOnce(t *testing.T) {
 // they land rather than the moment it is spoken.
 func TestAnAnnouncedRaiseFliesItsOwnPips(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash})
-	s.theater.firingSeats = []int{0}
+	s.Theater.firingSeats = []int{0}
 
 	raise := combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 2, Life: 2}
 	if !s.noteShieldRaise(raise) {
@@ -122,7 +123,7 @@ func TestAnAnnouncedRaiseFliesItsOwnPips(t *testing.T) {
 	}
 
 	for i := 0; i < shieldFlyTicks(); i++ {
-		s.theater.tick()
+		s.Theater.Tick()
 	}
 	s.landShields()
 	if got := s.shownShields(combat.SideA, 0); got != 2 {
@@ -142,8 +143,8 @@ func TestPipsAreNotFlownTwiceForOneCard(t *testing.T) {
 	if s.noteShieldRaise(raised(2, 4)) {
 		t.Error("the same card's pips flew twice")
 	}
-	if len(s.theater.shields) != 1 {
-		t.Errorf("%d flights are in the air for one card", len(s.theater.shields))
+	if len(s.Theater.shields) != 1 {
+		t.Errorf("%d flights are in the air for one card", len(s.Theater.shields))
 	}
 }
 
@@ -154,7 +155,7 @@ func TestALandedPipKeepsItsColor(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldRaise(raised(2, 2))
 	for i := 0; i < shieldFlyTicks(); i++ {
-		s.theater.tick()
+		s.Theater.Tick()
 	}
 	s.landShields()
 
@@ -190,7 +191,7 @@ func TestARaiseNeverLeavesAPipColorless(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldRaise(raised(1, 1))
 	for i := 0; i < shieldFlyTicks(); i++ {
-		s.theater.tick()
+		s.Theater.Tick()
 	}
 	s.landShields()
 
@@ -216,7 +217,7 @@ func TestARaiseNeverLowersTheRow(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldRaise(raised(2, 2))
 	for i := 0; i < shieldFlyTicks(); i++ {
-		s.theater.tick()
+		s.Theater.Tick()
 	}
 	s.landShields()
 
@@ -240,15 +241,15 @@ func TestFlownSeatsAreForgottenEachRound(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.enemy = &entities.Combatant{}
 	s.fighterAfter, s.enemyAfter = s.fighter.Duelist, s.enemy.Duelist
-	s.theater.firingSeats = []int{0}
+	s.Theater.firingSeats = []int{0}
 
 	s.noteShieldRaise(raised(1, 1))
-	if !s.row(combat.SideA).flew(0) {
+	if !s.row(combat.SideA).Flew(0) {
 		t.Fatal("a flight did not record the seat it left")
 	}
 
 	s.endOfRound()
-	if s.row(combat.SideA).flew(0) {
+	if s.row(combat.SideA).Flew(0) {
 		t.Fatal("last round's seat still counts as flown")
 	}
 	if !s.noteShieldRaise(raised(2, 2)) {

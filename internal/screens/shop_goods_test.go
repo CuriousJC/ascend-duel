@@ -9,6 +9,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The sealed goods: what a bag holds, where the row puts them, and the one thing about the
@@ -337,7 +338,7 @@ func TestTheCansTwoRowsFitInsideThePanel(t *testing.T) {
 	var g goods
 	g.open(gs, goodHolding(t, session.ContentsEssences))
 
-	panel := modalPanelRect(gs)
+	panel := ui.ModalPanelRect(gs)
 	essences := g.slot(gs, 0)
 	if essences.Min.Y < panel.Min.Y+goodsHintTop {
 		t.Errorf("the essences start at %d, over the hint at %d",

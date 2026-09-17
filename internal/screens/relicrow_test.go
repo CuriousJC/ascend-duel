@@ -90,10 +90,10 @@ func TestARelicDropLandsOnTheSeatUnderTheCursor(t *testing.T) {
 	row := buildRelicRow(gs, nil)
 
 	for i := 0; i < row.worn; i++ {
-		seat := row.rowSlot(gs, i)
+		seat := row.RowSlot(gs, i)
 		gs.MouseX, gs.MouseY = (seat.Min.X+seat.Max.X)/2, (seat.Min.Y+seat.Max.Y)/2
 
-		if got := row.rowDropIndex(gs); got != i {
+		if got := row.RowDropIndex(gs); got != i {
 			t.Errorf("the middle of seat %d reads as seat %d", i, got)
 		}
 	}
@@ -104,12 +104,12 @@ func TestARelicDropIsClampedToTheRow(t *testing.T) {
 	row := buildRelicRow(gs, nil)
 
 	gs.MouseX, gs.MouseY = -400, row.rect.Min.Y
-	if got := row.rowDropIndex(gs); got != 0 {
+	if got := row.RowDropIndex(gs); got != 0 {
 		t.Errorf("far left reads as seat %d, want 0", got)
 	}
 
 	gs.MouseX = gs.ScreenWidth * 4
-	if got := row.rowDropIndex(gs); got != row.worn-1 {
+	if got := row.RowDropIndex(gs); got != row.worn-1 {
 		t.Errorf("far right reads as seat %d, want %d", got, row.worn-1)
 	}
 }
@@ -121,7 +121,7 @@ func TestDroppingARelicReordersTheRun(t *testing.T) {
 	gs := wornState(t, "dmg-all-slash", "hp-scale", "banker")
 	row := buildRelicRow(gs, nil)
 
-	row.rowReturn(2, 0)
+	row.RowReturn(2, 0)
 
 	want := []string{"banker", "dmg-all-slash", "hp-scale"}
 	got := gs.Run.Worn()
@@ -139,34 +139,13 @@ func TestACanceledRelicDragChangesNothing(t *testing.T) {
 	row := buildRelicRow(gs, nil)
 
 	before := gs.Run.Worn()
-	row.rowReturn(1, 1)
+	row.RowReturn(1, 1)
 
 	after := gs.Run.Worn()
 	for i := range before {
 		if before[i] != after[i] {
 			t.Fatalf("the row moved: %v -> %v", before, after)
 		}
-	}
-}
-
-// **The card tooltip explains a relic at its record, never at its accumulator** *(owner's call,
-// 2026-08-26)*. `ungrown` is the one place that is enforced. The face carries no relic at all — see
-// TestNoRelicReachesWhatTheFaceSays.
-func TestTheTooltipDropsTheAccumulator(t *testing.T) {
-	id, ok := combat.RelicByKey("growth-fire")
-	if !ok {
-		t.Fatal("growth-fire is in no registry")
-	}
-
-	worn := ungrown([]combat.WornRelic{{Relic: id, Grown: 50}})
-	if len(worn) != 1 {
-		t.Fatalf("ungrown returned %d relics, want 1", len(worn))
-	}
-	if worn[0].Grown != 0 {
-		t.Errorf("the tooltip still carries %d of growth", worn[0].Grown)
-	}
-	if worn[0].Relic != id {
-		t.Error("ungrown changed which relic is worn")
 	}
 }
 

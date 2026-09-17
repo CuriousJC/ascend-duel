@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // **The slot beside the draw pile, and what the screen's dialogs have in common.**
@@ -20,15 +21,6 @@ import (
 // square beside the pile is a shape this screen uses, and it outlived the one button that
 // happened to be the first thing in it.
 
-// The slot beside the draw pile: a square sharing the pile's bottom edge.
-const (
-	pileSlotSize = 44
-
-	// **One character on a square**, which is what a control this size can carry — the same
-	// reason the sort column is single letters. It is the size the toggles draw their labels at.
-	pileSlotTextSize = 30
-)
-
 // pileSlotRect is the slot: the left end of the pile's caption line, with the deck count on the
 // right end of the same line.
 //
@@ -42,7 +34,7 @@ const (
 func pileSlotRect(gs *state.GlobalState) image.Rectangle {
 	caption := deckCaptionRect(gs)
 	return image.Rect(caption.Min.X, caption.Min.Y,
-		caption.Min.X+pileSlotSize, caption.Max.Y)
+		caption.Min.X+ui.PileSlotSize, caption.Max.Y)
 }
 
 // modalUp reports whether any of this screen's dialogs is covering it.
@@ -51,5 +43,5 @@ func pileSlotRect(gs *state.GlobalState) image.Rectangle {
 // control on this screen has to go dead for all of them and the failure is silent: a button left
 // live under a dialog is a round edited through a panel the player is only reading.
 func (s *CombatScene) modalUp() bool {
-	return s.showDeck || s.hands.open
+	return s.showDeck || s.hands.IsOpen()
 }

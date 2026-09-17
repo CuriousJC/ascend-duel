@@ -38,6 +38,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // heldRunes is what the run is carrying, as records, in acquisition order.
@@ -58,34 +59,6 @@ func heldRunes(gs *state.GlobalState) []session.Rune {
 		}
 	}
 	return out
-}
-
-// runeSpec is a rune drawn as a card.
-//
-// **The picture comes off the record** *(2026-09-12)*, through `data.RuneData.ArtKey`, already
-// resolved by the time a `session.Rune` exists. It borrowed the essence's placeholder through one
-// constant until then, and the note on that constant said the day runes got art it should be a
-// `data/runes.json` field appearing rather than a fallback being unpicked — so the fallback is
-// `assets/rune/default-rune.png` now, a seat of the catalog's own.
-//
-// **The card says nothing at all** *(owner's call, 2026-09-16)*. It carried its authored line
-// across the lower half of its picture, and what that cost is the picture: a rune is a full-bleed
-// card, so the sentence is a scrim over the one thing on the card worth looking at. The line has
-// not gone anywhere — it is in the tooltip, which is where a player who does not recognize a
-// picture yet already goes, and where there is room to say the half a face cannot fit. Same call
-// the sealed goods took on 2026-09-15 and the stones took with this one.
-//
-// **The chimera's answer went with it.** Its face printed `COPIES <name>` because its authored line
-// cannot say what it would fire; that is now the tooltip's first line — see runeTipLines.
-func runeSpec(gs *state.GlobalState, p session.Rune, enabled, selected bool) cards.Spec {
-	return cards.Spec{
-		Name:     p.Name,
-		Form:     cards.FormNone,
-		Element:  cards.Basic,
-		Art:      artwork(gs, p.Art),
-		Enabled:  enabled,
-		Selected: selected,
-	}
 }
 
 // runeRowGap is the air between two cards in a row of them. The same gap the shop's shelf
@@ -148,7 +121,7 @@ func (s *CombatScene) selectedCardIDs() []int {
 	out := make([]int, 0, len(s.hand))
 	for _, c := range s.hand {
 		if c.selected {
-			out = append(out, c.actionCard.ID)
+			out = append(out, c.Card.ID)
 		}
 	}
 	return out
@@ -216,7 +189,7 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	// **It arrives unselected, whatever the card it came from was doing.** A copy that queued
 	// itself would spend action points the player had not committed.
 	for _, copied := range gs.Run.Duplicated() {
-		s.hand = append(s.hand, paletteCard{actionCard: copied})
+		s.hand = append(s.hand, paletteCard{Card: copied})
 	}
 	s.syncQueue()
 
@@ -297,7 +270,7 @@ const stoneShowerStride int64 = 0x3B9A_CA07
 func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
 	kept := make([]paletteCard, 0, len(s.hand))
 	for _, c := range s.hand {
-		owned, ok := gs.Run.CardByID(c.actionCard.ID)
+		owned, ok := gs.Run.CardByID(c.Card.ID)
 		if !ok {
 			continue
 		}
@@ -311,7 +284,7 @@ func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
 		// **`drawnAs` is the honest answer to both.** It is the same function the deal itself uses,
 		// so the card in the hand is the card the run would deal now — the rune's new color
 		// with the worn flips applied on top of it, exactly as the next fight will deal it.
-		kept = append(kept, paletteCard{actionCard: s.drawnAs(owned), selected: c.selected})
+		kept = append(kept, paletteCard{Card: s.drawnAs(owned), selected: c.selected})
 	}
 
 	s.hand = kept
@@ -377,11 +350,11 @@ func (s *CombatScene) updateConsumables(gs *state.GlobalState) {
 	// A modal covering the screen, or a tutorial step holding input elsewhere, takes the row with
 	// it — canceling rather than returning, exactly as the worn relic row does.
 	if s.modalUp() || !gs.CursorAllowed() {
-		s.runeDrag.cancel(row)
+		s.runeDrag.Cancel(row)
 		return
 	}
 
-	s.runeDrag.update(gs, row)
+	s.runeDrag.Update(gs, row)
 }
 
 // runeRow is the sack as a draggable row of cards, addressed by the shared drag — the same
@@ -410,23 +383,23 @@ type runeRow struct {
 	move  func(from, to int)
 }
 
-func (r runeRow) rowLen() int { return r.held }
+func (r runeRow) RowLen() int { return r.held }
 
-func (r runeRow) rowSlot(gs *state.GlobalState, i int) image.Rectangle {
+func (r runeRow) RowSlot(gs *state.GlobalState, i int) image.Rectangle {
 	return consumableSlotRect(r.rect, i, r.seats)
 }
 
-// rowZone is the pane's own rectangle, for the relic row's reason: a drop outside it is not a
+// RowZone is the pane's own rectangle, for the relic row's reason: a drop outside it is not a
 // reorder, and the panes stand beside things that must not become drop targets.
-func (r runeRow) rowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
+func (r runeRow) RowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
 
-// rowDropIndex is which seat the cursor is over, measured in pitches from the pane's left edge and
+// RowDropIndex is which seat the cursor is over, measured in pitches from the pane's left edge and
 // from the middle of a step — the relic row's arithmetic over this pane's pitch, since these
 // overlap for exactly the same reason.
 //
 // **Clamped to a seat that holds a rune**, never to the pane's empty seats: a sack of one drawn in a
 // pane of two has one place its card can go.
-func (r runeRow) rowDropIndex(gs *state.GlobalState) int {
+func (r runeRow) RowDropIndex(gs *state.GlobalState) int {
 	if r.held < 2 {
 		return 0
 	}
@@ -445,16 +418,16 @@ func (r runeRow) rowDropIndex(gs *state.GlobalState) int {
 	return idx
 }
 
-// rowLift is deliberately empty. See the type comment.
-func (r runeRow) rowLift(int) {}
+// RowLift is deliberately empty. See the type comment.
+func (r runeRow) RowLift(int) {}
 
-func (r runeRow) rowReturn(from, to int) {
+func (r runeRow) RowReturn(from, to int) {
 	if r.move != nil {
 		r.move(from, to)
 	}
 }
 
-func (r runeRow) rowClick(i int) {
+func (r runeRow) RowClick(i int) {
 	if r.click != nil {
 		r.click(i)
 	}
@@ -484,13 +457,13 @@ func (s *CombatScene) runeRow(gs *state.GlobalState) runeRow {
 // **Drawn from the run rather than from anything the drag is carrying**, which is what keeps the
 // card under the cursor and the card in the sack the same card. drawDraggedRelic's rule.
 func (s *CombatScene) drawDraggedRune(gs *state.GlobalState, screen *ebiten.Image) {
-	if !s.runeDrag.dragging() {
+	if !s.runeDrag.Dragging() {
 		return
 	}
 	held := heldRunes(gs)
-	if s.runeDrag.origin() >= len(held) {
+	if s.runeDrag.Origin() >= len(held) {
 		return
 	}
-	p := held[s.runeDrag.origin()]
-	drawRuneCard(gs, screen, s.runeDrag.at(gs), p, canSpend(s.runeSpendable(gs), p), true)
+	p := held[s.runeDrag.Origin()]
+	ui.DrawRuneCard(gs, screen, s.runeDrag.At(gs), p, canSpend(s.runeSpendable(gs), p), true)
 }

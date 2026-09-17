@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/trace"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -29,7 +30,7 @@ type Game struct {
 	// One registry, replacing the two parallel switches Update and Draw used to
 	// carry. Those could drift out of sync — a screen added to one and forgotten in
 	// the other silently did nothing — and now cannot.
-	scenes map[state.ActiveScreen]screens.Scene
+	scenes map[state.ActiveScreen]ui.Scene
 
 	// settingsButton is the game's chrome, and the only widget not owned by a scene.
 	//
@@ -64,7 +65,7 @@ type Game struct {
 	//
 	// **It holds no queue** — state.EarnedThisSession is the queue, written wherever an award
 	// happens in internal/screens. This is the thing that draws it.
-	toast screens.AchievementToast
+	toast ui.AchievementToast
 
 	// changes watches the run between fights and writes what the player did into the ledger's own
 	// account of itself. **Chrome for the ledger's reason** — it is true of the whole run rather
@@ -77,7 +78,7 @@ type Game struct {
 func NewGame() *Game {
 	return &Game{
 		GlobalState: state.NewGlobalState(),
-		scenes: map[state.ActiveScreen]screens.Scene{
+		scenes: map[state.ActiveScreen]ui.Scene{
 			state.Title:      &screens.TitleScene{},
 			state.Ascend:     &screens.AscendScene{},
 			state.Combat:     &screens.CombatScene{},
@@ -106,7 +107,7 @@ func NewGame() *Game {
 
 // scene returns the active scene, falling back to the title screen if ActiveScreen
 // somehow names one that was never registered.
-func (g *Game) scene() screens.Scene {
+func (g *Game) scene() ui.Scene {
 	if s, ok := g.scenes[g.GlobalState.ActiveScreen]; ok {
 		return s
 	}

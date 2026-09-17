@@ -40,6 +40,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -129,7 +130,7 @@ type SettingsScene struct {
 	full *models.Button
 
 	abandon *models.Button
-	confirm confirmDialog
+	confirm ui.ConfirmDialog
 
 	// exit closes the game. Live whether or not a run is standing, unlike abandon.
 	exit *models.Button
@@ -149,13 +150,13 @@ type SettingsScene struct {
 func (s *SettingsScene) Init(gs *state.GlobalState) {
 	if s.music == nil {
 		s.music = models.NewSlider(settingsSliderWidth, settingsSliderHeight, "MUSIC", 0)
-		s.music.Ink = groundInk
+		s.music.Ink = ui.GroundInk
 		s.music.OnChange = func(v float64) { music.SetLevel(v) }
 		s.music.OnCommit = func(v float64) { s.commit(gs) }
 
 		s.speed = models.NewSlider(settingsSliderWidth, settingsSliderHeight, "GAME SPEED", 0)
-		s.speed.Ink = groundInk
-		s.speed.OnChange = func(v float64) { SetSpeed(speedFor(v)) }
+		s.speed.Ink = ui.GroundInk
+		s.speed.OnChange = func(v float64) { ui.SetSpeed(speedFor(v)) }
 		s.speed.OnCommit = func(v float64) { s.commit(gs) }
 
 		s.full = models.NewButton(settingsSliderWidth, settingsToggleHeight,
@@ -169,7 +170,7 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 		// **The modal X's red, which is the only red in the game.** It is already the color of
 		// the one control that gets you out of somewhere, and this is the largest version of that
 		// there is. Nothing else on this screen is anything but slate.
-		s.abandon.BaseColor = modalCloseColor
+		s.abandon.BaseColor = ui.ModalCloseColor
 		s.abandon.TextSize = 40
 
 		s.exit = models.NewButton(760, 76, settingsExitLabel, func() { actions.QuitGame(gs) })
@@ -178,12 +179,12 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 
 	// **The question does not survive a visit**, for the reason the title screen's does not: Init
 	// runs again on every entry and arriving with a dialog up is a dialog nobody asked for.
-	s.confirm.close()
+	s.confirm.Close()
 
 	// Re-read every visit. The level can have moved since the last one — a fresh profile is
 	// silent and the game may have been played for an hour since — and Init runs on every entry.
 	s.music.Value = music.Level()
-	s.speed.Value = speedValue(Speed())
+	s.speed.Value = speedValue(ui.Speed())
 	s.full.Latched = Fullscreen()
 
 	// **The bar is only live if there is anything to hear.** Opening the audio device is allowed
@@ -258,8 +259,8 @@ func (s *SettingsScene) toggleFullscreen(gs *state.GlobalState) {
 func (s *SettingsScene) Update(gs *state.GlobalState) error {
 	// **The question owns the screen while it is up**, exactly as it does on the title. A drag
 	// reaching a bar through the dialog would be a volume changed while being asked about a climb.
-	if s.confirm.isOpen() {
-		s.confirm.update(gs)
+	if s.confirm.IsOpen() {
+		s.confirm.Update(gs)
 		return nil
 	}
 
@@ -281,7 +282,7 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 	// **Dead with no run to give up.** Settings is reachable from the title screen, where there may
 	// be no climb at all — and a control that works and does nothing is worse than one that says it
 	// has nothing to do.
-	setEnabled(s.abandon, gs.Run != nil)
+	ui.SetEnabled(s.abandon, gs.Run != nil)
 	s.abandon.Text = abandonLabel(gs)
 	systems.UpdateButton(gs, s.abandon)
 	systems.UpdateButton(gs, s.exit)
@@ -294,13 +295,13 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 }
 
 func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	fillGround(screen)
+	ui.FillGround(screen)
 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(20)))
 	op.PrimaryAlign = text.AlignCenter
 	op.SecondaryAlign = text.AlignCenter
-	op.ColorScale.ScaleWithColor(groundInk)
+	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, settingsTitle,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: settingsTitleSize}, op)
 
@@ -316,7 +317,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	vector.StrokeLine(screen,
 		float32(ruleLeft), float32(ruleY),
 		float32(ruleLeft+settingsAbandonRuleWidth), float32(ruleY),
-		1, systems.ColorToward(groundInk, screenGround, 60), false)
+		1, systems.ColorToward(ui.GroundInk, ui.ScreenGround, 60), false)
 
 	systems.DrawButton(gs, screen, s.abandon)
 
@@ -330,13 +331,13 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		r := systems.SliderRect(s.music)
 		note := &text.DrawOptions{}
 		note.GeoM.Translate(float64(r.Min.X), float64(r.Max.Y+8))
-		note.ColorScale.ScaleWithColor(systems.ColorToward(groundInk, screenGround, 40))
+		note.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 40))
 		text.Draw(screen, "no audio device on this machine",
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, note)
 	}
 
 	// Over the screen it is asking about.
-	s.confirm.draw(gs, screen)
+	s.confirm.Draw(gs, screen)
 }
 
 // abandonLabel is what the button says: the deed, and the run it would end. **With no run standing
@@ -356,7 +357,7 @@ func (s *SettingsScene) askAbandon(gs *state.GlobalState) {
 	if gs.Run == nil {
 		return
 	}
-	s.confirm.ask(
+	s.confirm.Ask(
 		"ABANDON THIS RUN?",
 		"The climb will be lost. You will see what it came to first.",
 		settingsAbandonLabel,
@@ -387,7 +388,7 @@ func (s *SettingsScene) commit(gs *state.GlobalState) {
 		return
 	}
 	gs.Profile.Settings.MusicVolume = music.Level()
-	gs.Profile.Settings.Speed = Speed()
+	gs.Profile.Settings.Speed = ui.Speed()
 	gs.Profile.Settings.Fullscreen = Fullscreen()
 	saveProfile(gs)
 }
@@ -426,7 +427,7 @@ func ApplySettings(s profile.Settings) {
 	// A zero speed is ignored by SetSpeed rather than applied, and profile.LoadProfile has
 	// already normalized one off disk — so an older profile with no settings block at all lands
 	// on the tuned speed rather than on a stopped clock.
-	SetSpeed(s.Speed)
+	ui.SetSpeed(s.Speed)
 
 	// **Fullscreen is applied here rather than in main** for the reason the other two are: one
 	// function puts a whole settings block into force, so a setting that is loaded and never

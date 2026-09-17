@@ -94,7 +94,7 @@ func newTaughtScene(t *testing.T, gs *state.GlobalState) *CombatScene {
 	s := stubCombat()
 	s.hand = nil
 	for _, c := range OpeningCards(seeds.ForFight(runSeed, seeds.PlayerDeck, 0)) {
-		s.hand = append(s.hand, paletteCard{actionCard: c})
+		s.hand = append(s.hand, paletteCard{Card: c})
 	}
 	s.sortHand()
 

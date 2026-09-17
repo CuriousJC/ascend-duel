@@ -5,10 +5,11 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The bar hangs off the bottom of the duelist card and has to finish above the table row. Both
-// edges move on their own — the card's off topRowTopPct, the table's off handTop — so the fit is
+// edges move on their own — the card's off ui.TopRowTopPct, the table's off handTop — so the fit is
 // exactly the kind of thing that goes stale silently.
 //
 // **It used to sit under the floor-and-room lines**, which are stat rows on the card as of
@@ -18,7 +19,7 @@ func TestTheRoundTimerFitsUnderTheDuelistCard(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
-	card, bar := s.duelistCardRect(gs), s.roundTimerRect(gs)
+	card, bar := ui.DuelistCardRect(gs), s.roundTimerRect(gs)
 
 	if bar.Min.Y != card.Max.Y+towerLineGap {
 		t.Errorf("the timer starts at y=%d, want %dpx under the card at y=%d",

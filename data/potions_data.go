@@ -17,7 +17,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 )
 
 //go:embed potions.json
@@ -67,11 +66,7 @@ type PotionData struct {
 // so there is no map to iterate and no sorted walk to protect, and the order the three vessels
 // stand in is a decision made by editing the file.
 func LoadPotions() []PotionData {
-	var list []PotionData
-	if err := json.Unmarshal(potionsJSON, &list); err != nil {
-		panic("Failed to unmarshal potions.json: " + err.Error())
-	}
-	return list
+	return parse[PotionData](potionsJSON, "potions.json")
 }
 
 // DefaultPotionArt is the face a record with no Art of its own draws.

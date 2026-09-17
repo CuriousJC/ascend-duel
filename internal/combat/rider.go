@@ -365,15 +365,6 @@ func blowDMG(base int, turn []Slot, held []Card, blow Blow) int {
 	return dmg
 }
 
-// vitaeHeld is the vitae the unplayed hand pays this turn, summed over every card still in it.
-func vitaeHeld(held []Card) int {
-	total := 0
-	for _, c := range held {
-		total += c.VitaeInHand()
-	}
-	return total
-}
-
 // CarriesAmount reports whether this kind's Amount means anything.
 //
 // **Almost every rider is a kind plus a figure**, and the one that is not is RiderWildElement:

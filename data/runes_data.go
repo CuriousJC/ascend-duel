@@ -18,8 +18,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
-	"sort"
 )
 
 //go:embed runes.json
@@ -136,29 +134,12 @@ func (p RuneData) ArtKey() string {
 // **Nothing that decides an outcome may walk this.** What a sack holds is a shuffle of
 // RuneOrder, which is sorted for the reason the randomness skill gives; this is a layout.
 func RuneFileOrder() []string {
-	var list []RuneData
-	if err := json.Unmarshal(runesJSON, &list); err != nil {
-		panic("Failed to unmarshal runes.json: " + err.Error())
-	}
-	out := make([]string, 0, len(list))
-	for _, p := range list {
-		out = append(out, p.RuneRecord)
-	}
-	return out
+	return fileOrder(runesJSON, "runes.json", func(p RuneData) string { return p.RuneRecord })
 }
 
 // LoadRunes parses the catalog into a map keyed by RuneRecord.
 func LoadRunes() map[string]RuneData {
-	var list []RuneData
-	if err := json.Unmarshal(runesJSON, &list); err != nil {
-		panic("Failed to unmarshal runes.json: " + err.Error())
-	}
-
-	out := make(map[string]RuneData, len(list))
-	for _, p := range list {
-		out[p.RuneRecord] = p
-	}
-	return out
+	return keyed(runesJSON, "runes.json", func(p RuneData) string { return p.RuneRecord })
 }
 
 // RuneOrder is every record, sorted by key.
@@ -168,10 +149,5 @@ func LoadRunes() map[string]RuneData {
 // unsorted walk would make a purchase depend on map iteration and take the run's reproducibility
 // with it. See the `randomness` skill.
 func RuneOrder(runes map[string]RuneData) []string {
-	names := make([]string, 0, len(runes))
-	for n := range runes {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-	return names
+	return sortedKeys(runes)
 }

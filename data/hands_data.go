@@ -20,7 +20,6 @@ package data
 
 import (
 	_ "embed"
-	"encoding/json"
 )
 
 //go:embed hands.json
@@ -79,10 +78,7 @@ type HandData struct {
 // It panics on a file it cannot read, like the other loaders here. The rules do the rest of the
 // checking: `internal/combat` refuses a catalog describing a shape it cannot match.
 func LoadHands() []HandData {
-	var file handFile
-	if err := json.Unmarshal(handsJSON, &file); err != nil {
-		panic("Failed to unmarshal hands.json: " + err.Error())
-	}
+	file := parseOne[handFile](handsJSON, "hands.json")
 	if len(file.Hands) == 0 {
 		panic("hands.json declares no hands")
 	}

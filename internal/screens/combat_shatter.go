@@ -41,6 +41,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -51,11 +52,11 @@ import (
 // shatterFlyTicks() is the pip crossing the table. Longer than a shield pip's own flight
 // (shieldFlyTicks()) because this one crosses the *whole* table rather than traveling from a
 // card to the row beneath it, and a journey twice as far at the same speed reads as hurried.
-func shatterFlyTicks() int { return beat(30, 25) }
+func shatterFlyTicks() int { return ui.Beat(30, 25) }
 
 // shatterSpreadTicks() is the break opening once the pip lands. Short: a window breaks, it does
 // not dissolve.
-func shatterSpreadTicks() int { return beat(14, 25) }
+func shatterSpreadTicks() int { return ui.Beat(14, 25) }
 
 // shatterHoldTicks() is the pause on the finished break before playback moves on, so the player
 // reads which cards died before the creature starts swinging with the ones that did not.
@@ -70,7 +71,7 @@ func shatterSpreadTicks() int { return beat(14, 25) }
 // It is the longest single hold on this screen and it is spent on the one thing here that is
 // *not* a card acting. Pacing, like every other clock in this file: it cannot change an
 // outcome.
-func shatterHoldTicks() int { return beat(38, 25) }
+func shatterHoldTicks() int { return ui.Beat(38, 25) }
 
 // shieldBreak is one attack card being broken: a pip crossing to it, then the crack spreading over
 // its face.
@@ -87,21 +88,21 @@ type shieldBreak struct {
 	// element is — a fire ward and an ice ward break the same attack.
 	element cards.Element
 
-	t travel
+	t ui.Travel
 }
 
-func (b *shieldBreak) tick()     { b.t.tick() }
-func (b shieldBreak) done() bool { return b.t.done() }
+func (b *shieldBreak) Tick()     { b.t.Tick() }
+func (b shieldBreak) Done() bool { return b.t.Done() }
 
 // landed reports that the pip has arrived and the break has started opening.
-func (b shieldBreak) landed() bool { return b.t.age >= shatterFlyTicks() }
+func (b shieldBreak) landed() bool { return b.t.Age >= shatterFlyTicks() }
 
 // spread is how far open the break is, 0 while the pip is still crossing and 1 once it is whole.
 func (b shieldBreak) spread() float64 {
 	if !b.landed() {
 		return 0
 	}
-	return clamp01(float64(b.t.age-shatterFlyTicks()) / float64(shatterSpreadTicks()))
+	return ui.Clamp01(float64(b.t.Age-shatterFlyTicks()) / float64(shatterSpreadTicks()))
 }
 
 // stageShieldBreaks raises the whole exchange on the frame the creature's turn is about to start.
@@ -126,19 +127,19 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 
 	el := s.brokenPipElement()
 	for _, seat := range blocks {
-		if seat < 0 || seat >= len(s.theater.enemyDealt) {
+		if seat < 0 || seat >= len(s.Theater.enemyDealt) {
 			// A seat the row does not hold is dropped rather than flown to nowhere. It means the
 			// engine's slot indices and this row have come apart — see blocksAhead, where the one
 			// way that can happen is written down.
 			continue
 		}
-		s.theater.breaks = append(s.theater.breaks, shieldBreak{
+		s.Theater.breaks = append(s.Theater.breaks, shieldBreak{
 			seat:    seat,
 			element: el,
-			t:       newTravel(0, shatterFlyTicks()+shatterSpreadTicks()+shatterHoldTicks()),
+			t:       ui.NewTravel(0, shatterFlyTicks()+shatterSpreadTicks()+shatterHoldTicks()),
 		})
 	}
-	if len(s.theater.breaks) == 0 {
+	if len(s.Theater.breaks) == 0 {
 		return false
 	}
 
@@ -146,7 +147,7 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 	// `hold` clamps, so a prediction that disagrees with the engine costs a few beats of a wrong
 	// count rather than a broken row.
 	row := s.row(combat.SideA)
-	row.hold(row.count()-len(s.theater.breaks), cards.Basic)
+	row.Hold(row.Count()-len(s.Theater.breaks), cards.Basic)
 	return true
 }
 
@@ -184,7 +185,7 @@ func (s *CombatScene) blocksAhead() []int {
 // **A row with no color recorded hands back a zero**, which `drawShieldPip` reads as "as drawn" —
 // the bare white mark. That is the same fallback the pips' own flight takes.
 func (s *CombatScene) brokenPipElement() cards.Element {
-	pips := s.row(combat.SideA).pips
+	pips := s.row(combat.SideA).Pips
 	if len(pips) == 0 {
 		return cards.Basic
 	}
@@ -197,7 +198,7 @@ func (s *CombatScene) brokenPipElement() cards.Element {
 // and the animation are two drawings of one thing, and both being up at once would double every
 // line.
 func (s *CombatScene) shattered(seat int) bool {
-	return s.theater.shatteredSeats[seat]
+	return s.Theater.shatteredSeats[seat]
 }
 
 // advanceBreaks ticks every break and settles the finished ones into the persistent mark.
@@ -214,8 +215,8 @@ func (t *combatTheater) advanceBreaks() []shieldBreak {
 	live := t.breaks[:0]
 	for i := range t.breaks {
 		b := &t.breaks[i]
-		b.tick()
-		if !b.done() {
+		b.Tick()
+		if !b.Done() {
 			live = append(live, *b)
 			continue
 		}
@@ -232,7 +233,7 @@ func (t *combatTheater) advanceBreaks() []shieldBreak {
 //
 // **It is drawn after the opponent's row**, so the break sits on the card rather than under it.
 func (s *CombatScene) drawShieldBreaks(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, b := range s.theater.breaks {
+	for _, b := range s.Theater.breaks {
 		at, ok := s.breakSeatRect(gs, b.seat)
 		if !ok {
 			continue
@@ -241,12 +242,12 @@ func (s *CombatScene) drawShieldBreaks(gs *state.GlobalState, screen *ebiten.Ima
 			s.drawBreakPip(gs, screen, b, at)
 			continue
 		}
-		if b.done() {
+		if b.Done() {
 			// Finished: the baked mark is drawing it now. Nothing here, or every line would be
 			// drawn twice on the frame the two overlap.
 			continue
 		}
-		drawSpreadingCracks(screen, at, s.theater.enemyDealt[b.seat].card, b.spread())
+		drawSpreadingCracks(screen, at, s.Theater.enemyDealt[b.seat].card, b.spread())
 	}
 }
 
@@ -261,7 +262,7 @@ func (s *CombatScene) drawBreakPip(gs *state.GlobalState, screen *ebiten.Image,
 	from := s.shieldTarget(gs, shieldFlight{side: combat.SideA})
 	to := image.Pt((seat.Min.X+seat.Max.X)/2, (seat.Min.Y+seat.Max.Y)/2)
 
-	p := easeOut(clamp01(float64(b.t.age) / float64(shatterFlyTicks())))
+	p := ui.EaseOut(ui.Clamp01(float64(b.t.Age) / float64(shatterFlyTicks())))
 	at := image.Pt(
 		from.X+int(float64(to.X-from.X)*p),
 		from.Y+int(float64(to.Y-from.Y)*p),
@@ -302,7 +303,7 @@ func crackProgress(delay, spread float64) float64 {
 	if spread <= delay {
 		return 0
 	}
-	return clamp01((spread - delay) / window)
+	return ui.Clamp01((spread - delay) / window)
 }
 
 // breakSeatRect is where one of the opponent's cards is drawn right now, as a rectangle.
@@ -311,11 +312,11 @@ func crackProgress(delay, spread float64) float64 {
 // reached its seat, and a break drawn at the seat while the card was elsewhere would be a crack
 // hanging in the air — so this reads the same `enemyCardAt` the row itself draws with.
 func (s *CombatScene) breakSeatRect(gs *state.GlobalState, seat int) (image.Rectangle, bool) {
-	if seat < 0 || seat >= len(s.theater.enemyDealt) {
+	if seat < 0 || seat >= len(s.Theater.enemyDealt) {
 		return image.Rectangle{}, false
 	}
-	d := s.theater.enemyDealt[seat]
-	at := s.enemyCardAt(gs, d, seat, len(s.theater.enemyDealt), s.enemySplit(),
-		lit(s.theater.enemyFiringSeats, seat))
+	d := s.Theater.enemyDealt[seat]
+	at := s.enemyCardAt(gs, d, seat, len(s.Theater.enemyDealt), s.enemySplit(),
+		lit(s.Theater.enemyFiringSeats, seat))
 	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight), true
 }

@@ -30,6 +30,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -161,13 +162,13 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 	}
 
 	back := consumablePaneBackRect(r)
-	vector.DrawFilledRect(screen,
+	vector.FillRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
 		relicPaneBackColor, false)
 
 	held := heldRunes(gs)
 	seats := consumableSeats(gs)
-	raised := raisedSeat(gs, runeRow{rect: r, held: len(held), seats: seats}, raise)
+	raised := ui.RaisedSeat(gs, runeRow{rect: r, held: len(held), seats: seats}, raise)
 	for i := 0; i < seats; i++ {
 		at := consumableSlotRect(r, i, seats)
 		if i >= len(held) || i == raised || skip(i) {
@@ -177,7 +178,7 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		// is what makes select-then-apply readable: the player never has to be told whether the
 		// cards they have selected are the right ones, because the rune that wants them is the
 		// one that is not dim. See consumableTarget.satisfiedBy.
-		drawRuneCard(gs, screen, at.Min, held[i], canSpend(spendable, held[i]), false)
+		ui.DrawRuneCard(gs, screen, at.Min, held[i], canSpend(spendable, held[i]), false)
 	}
 
 	// **The card under the cursor is drawn last, so it is drawn whole** *(owner's call,
@@ -194,7 +195,7 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 	// and raising halfway split one gesture into two answers a beat apart.
 	if raised >= 0 && !skip(raised) {
 		at := consumableSlotRect(r, raised, seats)
-		drawRuneCard(gs, screen, at.Min, held[raised], canSpend(spendable, held[raised]), false)
+		ui.DrawRuneCard(gs, screen, at.Min, held[raised], canSpend(spendable, held[raised]), false)
 	}
 
 	drawConsumableCount(gs, screen, back, len(held))
@@ -215,7 +216,7 @@ func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(back.Max.X), float64(back.Max.Y+relicCountTopGap))
 	op.PrimaryAlign = text.AlignEnd
-	op.ColorScale.ScaleWithColor(groundInk)
+	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	text.Draw(screen, fmt.Sprintf("%d/%d", held, heldSlots(gs)),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
@@ -235,7 +236,7 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 		if !at.In(seat) {
 			continue
 		}
-		tip.Point(seat, tipLine(p.Name), tipLines(runeTipLines(gs, p)))
+		tip.Point(seat, ui.TipLine(p.Name), ui.TipLines(runeTipLines(gs, p)))
 		return true
 	}
 	return false
@@ -252,18 +253,4 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 // worse than a dim one, and the tooltip still explains it wherever it is drawn.
 func canSpend(spendable func(session.Rune) bool, p session.Rune) bool {
 	return spendable != nil && spendable(p)
-}
-
-// consumableClicked reports which seat of the pane the cursor is over, or -1.
-//
-// **It answers for a seat rather than for a card**, so a click on an empty seat is a click on
-// nothing rather than on whatever happens to be held at that index.
-func consumableClicked(gs *state.GlobalState, r image.Rectangle, at image.Point) int {
-	seats := consumableSeats(gs)
-	for i := len(heldRunes(gs)) - 1; i >= 0; i-- {
-		if at.In(consumableSlotRect(r, i, seats)) {
-			return i
-		}
-	}
-	return -1
 }

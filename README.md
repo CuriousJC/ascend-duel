@@ -51,25 +51,32 @@ nothing.
 ## What is in it
 
 **Duelist cards** in four forms — stab, slash, crush and defend — across five elements.
-**Hands** on three axes, concept, form and element, wearing poker's names. **Relics**, bought
-and sold in the shop and priced by rarity. **Essences**, chosen after a
-win to alter one card in your deck. **Creatures** sorted into floor bands, each with its
-own deck, and **bosses** guarding every stairway. Every one of those is a file in
-[data/](data/), and they are still being authored.
+**Hands** on three axes, concept, form and element, wearing poker's names.
+
+Then everything a run picks up, each touching a different thing. A **relic** is worn, a **stone**
+raises a rung, an **essence** eats a card, a **potion** changes the duelist, and a **rune** is the
+only one spent during a fight, between the turns of a round. A **sealed good** is the shop's
+gamble: paid for and *then* read, four stones or four essences inside and you keep one.
+
+Against all that, **creatures** sorted into floor bands, each with a deck of its own, and
+**bosses** guarding every stairway.
+
+Every one of those is a file in [data/](data/), and they are still being authored.
 
 **Every catalog is browsable without launching the game.** [docs/sheets/](docs/sheets/)
-holds a rendered page per catalog — every card, relic, essence, hand, creature and boss, as
-the game actually draws them, with the rules that fire beside the text a player reads.
-Open [docs/sheets/index.html](docs/sheets/index.html).
+holds a rendered page per catalog — the cards, relics, essences, runes, stones, hands, upgrades,
+creatures and bosses, as the game actually draws them, with the rules that fire beside the text a
+player reads. Open [docs/sheets/index.html](docs/sheets/index.html).
 
 ## What it is built from
 
 - **[Ebitengine v2](https://ebitengine.org/)** for the window, input and drawing. No UI
   toolkit — the widgets are hand-rolled.
-- **Generated art and audio.** The glyphs on the cards are drawn by code at run time, and
-  the score is a Standard MIDI file synthesized to audio at startup rather than a shipped
-  recording. Both choices are about provenance as much as size: generated output has no
-  license question attached to it.
+- **Generated art and audio.** The pictures are generated from prompts this repository owns —
+  they live in [docs/art/](docs/art/) — and committed as ordinary PNGs. The score is a Standard
+  MIDI file synthesized to audio at startup rather than a shipped recording. Both choices are
+  about provenance as much as size: there is no third-party asset whose license has to be cleared
+  before the game can be sold.
 - **No `math/rand` globals, no `time.Now()` in the rules.** A run is meant to be
   reproducible from its code, so every roll comes off an explicit stream salted from the
   run seed.
@@ -113,7 +120,8 @@ Art by: CuriousJC and KingSherman1820
   as assets, so please do not lift them out of this repository for your own project.
 - **Fonts** — `Kubasta.ttf` (CC0, via FontStruct), Fira Sans, and Roboto Flex.
 
-Everything else under [assets/](assets/) is first-party or generated at run time.
+Everything else under [assets/](assets/) is first-party, or generated from the prompts in
+[docs/art/](docs/art/).
 
 ## References
 

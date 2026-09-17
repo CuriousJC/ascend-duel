@@ -168,12 +168,12 @@ type Event struct {
 	// it was played — the same sequence HandCards indexes and the same one this side's KindActions
 	// arrive in.
 	//
-	// **It is set on KindBlocked and nowhere else today** *(2026-09-08)*. A block names its attack
+	// **It is set on KindBlocked, on KindRaised, and on the rider events.** A block names its attack
 	// by ConceptID, which is a *kind* of card rather than one of them: a creature queuing two Nips
-	// and having one of them eaten gives a screen reading `Action` no way to say which. That did
-	// not matter while shields ate whichever attack came first, because the blocked card was the
-	// next one to act; it matters now that shields pick the heaviest, since the card a shield ate
-	// may be the third of five and the screen has to shatter that one.
+	// and having one of them eaten gives a screen reading `Action` no way to say which, and shields
+	// pick the heaviest blow, so the card a shield ate may be the third of five and the screen has
+	// to shatter that one. A raise carries it for the same reason one layer over: the defenses fire
+	// as a bundle with no card lit, so the pips have nothing but this to leave from.
 	//
 	// **The zero value is a real slot**, like Status's and Relic's, so it is read only on the kind
 	// that sets it.
@@ -236,7 +236,7 @@ type Event struct {
 	// Hand is set on KindHand and names what the attack phase formed. The screen looks it up
 	// with HandByID rather than being told its name here, so a hand renamed is renamed once.
 	//
-	// **It always names a hand**, because `blowFor` falls back to the catalog's High Card: a
+	// **It always names a hand**, because `blowFor` falls back to the catalog's No Hand: a
 	// turn with an attack in it produces a blow, and a blow the engine could not name is the one
 	// failure this model can have. `HandNone` is the zero value and reaches a screen only on an
 	// event that is not a KindHand. The comment here claimed the opposite until 2026-08-19, and a
@@ -252,7 +252,8 @@ type Event struct {
 	// reason Multiplier is: the Resolution feed prints the sum — `(20 + 20) x 1.5 = 60` — and a
 	// screen working a damage figure out for itself would be a second resolver.
 	//
-	// Base is what the hand's own cards carry, added up. `Amount` is that figure after the hand's
+	// Base is what the blow's cards carry, added up — every attack the turn played, plus any
+	// defense that made the rung. `Amount` is that figure after the hand's
 	// multiplier, and there is no third term: **the multiplier multiplies the cards** *(2026-08-18,
 	// owner's call)*. It used to be applied to a separate reference swing of one 1x attack at the
 	// attacker's DMG, added on top of the cards — which meant a hand's percent bought a fixed
@@ -264,7 +265,8 @@ type Event struct {
 	Base int
 
 	// HandCards and HandCardCount are set on KindHand alongside Hand: **which cards of this
-	// side's turn formed it**, as indices into the turn *as it was played*.
+	// side's turn paid into the blow**, as indices into the turn *as it was played* — every attack
+	// played, plus any defense that made the rung. See RungCards for the narrower set.
 	//
 	// **They are here so a screen never has to work out which cards earned a hand.** The
 	// matcher already knows, and re-deriving it from the hand's pattern would be a second
@@ -289,6 +291,22 @@ type Event struct {
 	// the whole turn at DUEL! rather than a card at a time, so the cards are there to bracket.
 	HandCards     [maxHandTerms]int
 	HandCardCount int
+
+	// RungCards and RungCardCount are **which cards actually made the hand** — `Blow.Rung`, a
+	// subset of HandCards in the same indices and the same order.
+	//
+	// **Two sets, because the blow is wider than the rung.** Every attack the turn played pays into
+	// the sum whether or not it agreed with anything, so a Pair formed on two shields is paid by the
+	// shields *and* the attack beside them. The screen raises these on the hand's announcement,
+	// raising being the whole of what says which cards made the rung; the sum walks HandCards,
+	// because that is what the figures add up to.
+	//
+	// **A landing is not a term here.** HandCards seats an echoed card once per landing; this is
+	// cards, so it holds each of the rung's cards once.
+	//
+	// A fixed array for HandCards' reason, and sized the same way.
+	RungCards     [maxHandTerms]int
+	RungCardCount int
 
 	// HandAmounts is what each of those cards deals, in the same order and to the same count.
 	//

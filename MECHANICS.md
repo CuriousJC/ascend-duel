@@ -248,6 +248,40 @@ applied identically to every attack in the turn, so none of them can reorder two
 identical small attacks is unaffected; a deck with one big card in it is now much easier to blunt.
 Nothing simulates a duel, so no test catches what that does to a floor.
 
+#### The turn reads: shields, then the hand, then the tally
+
+*(owner's call, 2026-09-17.)* The defend phase resolves first — see `combat.Categories` — and the
+screen plays it as **one gesture**: every shield in the turn goes up together, pips out of their own
+cards into the row along the bottom of the duelist card, with **no card lifting off the table**. Only
+then is the hand announced, with the cards that formed it raised, and only then does the sum run —
+where a defense that made the hand pays its visible `0` and every attack pays its figure into the
+multiplier.
+
+**A lift says "this card is acting now", so exactly one thing in the turn may use it.** The defend
+phase is one gesture for the whole set — the shield break's rule and the deal cascade's — because
+three pauses over one phase say three things about cards where the phase says one thing about the
+turn. Nothing lifts on a card's own announcement; the raise belongs to the hand's, and it ends
+there.
+
+**The rung is raised and the blow is counted, and they are different sets.** On a turn of two
+shields and one attack the Pair is the two shields, so they are what stands up; the attack is in the
+sum and in no part of the hand, so it stays down. `Blow.Rung` against `Blow.Cards` is the
+distinction in the rules and `Event.RungCards` against `Event.HandCards` is how it reaches the
+screen. **A row held up through the arithmetic is the announcement still being made while the thing
+it announced is being read out**, so the cards go back down when the tally starts.
+
+**The No Hand is announced and raises nothing.** It is a rung and the word says what happened, but
+it is the turn that made no hand — its `Blow.Rung` is a single card picked by damage rather than by
+counting, and standing that card up says it did something while every other attack in the turn
+lands beside it unraised. `Blow.BuiltAHand` is the predicate and it gates the lift alone.
+
+**The creature's turn is the exception to all of it.** It names no hand, so its card lifting one at
+a time is the only thing saying which blow is landing.
+
+**None of it reaches the rules.** The order the events resolve in is unchanged, `ResolveRound`
+decided the whole round before a frame was drawn, and the bundle is the screen reading forward in a
+log it already holds.
+
 **They last exactly the turn after they were played**: raised at the end of your turn, standing
 through the opponent's whole turn, gone before you act again. That is the schedule a raised guard is
 already on, and `expireDefenses` is the one function that says when. **An unspent shield lapses**,
@@ -800,8 +834,9 @@ its own duelist rather than contributing to a shared blow.
 a beat, and the screen raises the card that made it — but the *sentence* is the hand's: "HAND!
 Duelist lands a Pair (20 x 1.5 = 30), 30 damage". Five lines saying a Bash was
 swung describe five blows, which is exactly the reading this rule was written to end. **A blow that
-forms no hand still gets its own ordinary sentence**, because a High Card is not a hand and
-announcing one over every attack would empty the word.
+forms no rung still takes that same line**, and it reads `HAND! Duelist lands a No Hand
+(20 x 1 = 20)` — the rung is named because it *is* a rung, and naming it No Hand is the line saying
+the true thing rather than dressing a turn that agreed about nothing as an achievement.
 
 **The sentence is a record, and it is no longer the only thing that says what a blow was made of**
 *(2026-08-18)*. The hand dialog acts the sum out at the size of the screen on the beat the hand
@@ -896,8 +931,13 @@ disagree with the rules does. A hand silently dropped is a balance change nobody
 ### The pattern: four axes, and the of-a-kind rungs wear poker's names
 
 A hand counts **cards that agree** in the set that formed one attack — which is exactly what a
-poker hand counts, so it wears poker's names honestly: High Card, Pair, Two Pair, Three of a Kind,
-Full House, Four of a Kind.
+poker hand counts, so the rungs wear poker's names honestly: Pair, Two Pair, Three of a Kind, Full
+House, Four of a Kind.
+
+**The bottom of the ladder is `No Hand`**, and it is named for what it is: the turn whose cards
+agreed about nothing. It is a rung in every other respect — an entry in `hands.json`, a multiplier
+of its own, raisable by a stone, nameable by a relic — and it is announced like any other. What it
+does not get is the lift, since a rung no cards made has no cards to raise. See §Shields.
 
 **What they have to agree *on* is the hand's own axis** *(2026-08-19, owner's call)*, and there are
 four:
@@ -951,12 +991,12 @@ only share a form or a color, so a turn of two mismatched attacks that landed th
 lands the sum of both times a multiplier. Smash + Bash at DMG 10 goes from **20** — the Smash, by
 itself — to **33**, and none of that comes from the multiplier being generous: 1.1x of two cards
 beats 1.0x of one. Two attacks that agree on nothing at all are now the rare case rather than the
-common one, and the High Card is what names it.
+common one, and the No Hand is what names it.
 
-**Attack cards outside the hand contribute nothing.** `Bash, Jab, Bash` is a Pair; the Jab is
-announced, is not in the hand, adds no damage and carries no color. That is a stated rule rather
-than a consequence — it is what makes *choosing a shape* pay more than throwing everything you
-drew.
+**Every attack the turn paid for contributes.** `Bash, Jab, Bash` is a Pair and the Jab makes no
+part of it; the Jab lands its damage and carries its color anyway, at the Pair's multiplier, in one
+sum. What makes *choosing a shape* pay more is the multiplier over the whole blow rather than an
+attack being deleted for disagreeing. See §Damage: one blow, one multiplier.
 
 **Every card in the turn is counted, and that is the matcher's rule rather than the catalog's**
 *(2026-08-17, widened 2026-08-23)*. An entry used to name the categories it counted and could never
@@ -969,58 +1009,80 @@ and brings no damage into it.
 A turn deals damage **once**, in the attack phase, and the figure is:
 
 ```
-(damage of each card in the hand)  ×  (hand multiplier)
+(damage of every attack card played, plus any defense that made the hand)  ×  (hand multiplier)
 ```
 
 So a pair of Skewers at DMG 10 is `(20 + 20) × 1.5` = **60**.
 
+**Every attack the turn paid for is in that sum, whether or not it made the hand.** An action point
+spent on an attack buys a swing: `Bash, Jab, Bash` is a Pair the Jab makes no part of, and the Jab
+lands anyway.
+
+**One sum, one multiplier.** The rung scales the whole thing, so the Jab above rides at the Pair's
+rate and a fifth card beside a Four of a Kind rides at the Four of a Kind's. **There is no separate
+unmultiplied term for the cards that missed the rung** — that would make the blow two sums and the
+arithmetic on screen two kinds of figure.
+
+**A defense joins only by making the hand.** It deals nothing either way, so what the rule decides
+is membership: an attack is in because it was paid for, a shield is in because it agreed with
+something. That is what keeps a hand of nothing but shields a hand that lands nothing.
+
+**The floor of the ladder is every attack at the identity**, so dumping action points pays real
+damage and building a rung pays more again by exactly the multiplier. That gradient is shallower
+than one where off-rung cards are deleted, and it is the intended shape. **Nothing re-prices
+`hands.json` automatically**: `tools/handodds` measures how often a rung can be *built* rather than
+what a blow comes to, so a change to what a blow is worth will not show up there.
+
 | Hand | Cards | Multiplier |
 |---|---|---|
-| **High Card** | `[1]` | ×1 |
+| **No Hand** | `[1]` | ×1 |
 | **Pair** | `[2]` | ×1.5 |
 | **Two Pair** | `[2,2]` | ×1.75 |
 | **Three of a Kind** | `[3]` | ×2 |
 | **Full House** | `[3,2]` | ×3 |
 | **Four of a Kind** | `[4]` | ×5 |
 
-**The multiplier multiplies the cards, and it did not always** *(2026-08-18, owner's call)*. Until
-then the formula carried a third term — `Σ cards + DMG × multiplier` — where `DMG` was a reference
-swing of one 1× attack at the attacker's strength, *added on top of* what the cards dealt. The
-percent therefore bought a **fixed figure rather than a proportion**: at DMG 10 a Four of a Kind
-was worth +50 whether it was built from four Jabs dealing 5 each or four Skewers dealing 20 each —
-2.5× the base in the first case and 0.6× in the second. **The ladder paid least to the decks that
-had climbed furthest**, which is backwards, and the arithmetic could not be read off `hands.json`
-because the number the percent applied to was not in the file.
+**The multiplier multiplies the cards, and there is no third term.** A percent applied to a
+separate reference swing would buy a *fixed figure rather than a proportion* — at DMG 10 a Four of a
+Kind worth +50 whether built from four Jabs dealing 5 each or four Skewers dealing 20 each, which is
+2.5× the base in the first case and 0.6× in the second, so the ladder would pay least to the decks
+that had climbed furthest. Two things follow:
 
-Two things follow and both were the reason for the change:
-
-- **The ladder is tunable from `data/hands.json` alone.** The percent now applies to a figure the
-  file's reader can see, so an entry means what it says.
+- **The ladder is tunable from `data/hands.json` alone.** The percent applies to a figure the file's
+  reader can see, so an entry means what it says.
 - **A hand is worth more on bigger cards, in proportion.** A Pair of Skewers beats a Pair of Jabs by
   exactly the 4× the cards themselves are apart.
 
-**The High Card pays the identity** *(2026-08-18)*. When a turn builds no pair or better, the
-single hardest-hitting attack card is the blow and what lands is exactly its face damage — which
-is now `×1` rather than the `×0` it carried while the multiplier was a bonus term, since ×0 would
-be an attack phase that dealt nothing. It is in `hands.json` with a name and an ID so the log can
-say what happened on the turn that happens most often; **a blow the engine could not name is the
-one failure this model can have**, which is why the loader panics without it.
+**The No Hand pays the identity.** `×1` rather than `×0`, since ×0 would be an attack phase that
+dealt nothing; it means *no multiplier*, and every attack in the turn lands its own face damage. It
+is in `hands.json` with a name and an ID so the log can say what happened on the turn that happens
+most often — **a blow the engine could not name is the one failure this model can have**, which is
+why the loader panics without it. The hardest-hitting card is what the blow is **named** after, and
+is what the log, the shield break and a miss all point at.
 
 **It is fallen back to rather than matched.** Counting is the wrong way to pick it — `matchCountOf`
 fills groups largest-count-first and would hand back whichever concept appeared most, not the card
 that hits hardest — so `matchHand` skips every one-card hand and `biggestAttack` answers the
-question on damage. `Blow.Formed()` draws the same line for the screen's hand preview: the High
-Card is a hand, and it is not something anybody built.
+question on damage.
 
-**Color buys statuses and no damage** *(2026-08-17)*. The distinct non-basic elements in the
-formed hand each land their status, gated on the attacker wearing that element's relic; basic is
-not a color and never counts, so two basic Bashes and an ice Bash show one color. That list
-is all that survives of the second axis.
+**Color buys statuses and no damage.** The distinct non-basic elements **in the blow** each land
+their status, gated on the attacker wearing that element's relic; basic is not a color and never
+counts, so two basic Bashes and an ice Bash show one color. **The set is the blow's, not the rung's**
+— an attack that made no hand still swung, so it still burns, and a card the player watched land and
+leave nothing behind would read as a bug rather than as a rule.
+
+**The rung is kept separately.** `Blow.Cards` is the scoring set and `Blow.Rung` is the cards that
+made the hand. Two readers ask the narrower question: `RiderScaleInCombo` — the `DMG IF IT SCORES`
+upgrade, whose whole subject is membership, and which read off the scoring set would be
+damage-on-play under a second name — and the screen's lift, which says which cards made the rung.
 
 ### What the axis costs
 
 - **Counted matching only.** A hand reads the turn as a set, so a Jab between two Bashes does
   not break the pair, and no hand can ask for an *ordered* run of cards.
+- **The rung chooses what the swing is multiplied by, never what swings.** Deciding which four of
+  five attacks to build around is the turn's decision; deciding which of them are allowed to hit is
+  not.
 - **A hand cut short still pays out.** Nothing can interrupt it — a turn's attacks resolve as one
   event — so this is true by construction rather than by rule.
 - **The bottom rung fires constantly**, and as of 2026-08-19 it is priced as such: the form and
@@ -1041,7 +1103,7 @@ is all that survives of the second axis.
 ### The catalog's shape
 
 `data/hands.json` holds one list of **eighteen** entries: five of-a-kind rungs on each of three
-axes, the merged Pair, the Elementalist, plus the one High Card they all fall back to. **A hand
+axes, the merged Pair, the Elementalist, plus the one No Hand they all fall back to. **A hand
 carries a key, an ID, a name, a `match`, `groups` and a `multiplier` in percent** — nothing
 else. `groups` naming *distinct values on the hand's own axis* is why `[3,2]` is
 a full house and can never be satisfied by five cards sharing one value.
@@ -1053,13 +1115,13 @@ a full house and can never be satisfied by five cards sharing one value.
 three rungs, three stones and three relics describing the same two cards, and a player forming a pair
 does not care which axis let them.
 
-**It pays 1x.** That is the identity, and it is deliberately what the High Card pays: what a pair
-buys is not a multiplier at all, it is that **two cards are summed where a High Card lands one**. So
-the loader now allows a multi-card rung *at* 100 and refuses one below it — a rung under the
-identity would pay a player less for building more.
+**It pays 1x**, the identity, which is what the No Hand pays too: a pair is the floor of the ladder
+rather than a reward, so what it buys is a *name* for a turn that agreed about something and a peg
+for a stone and a relic to hang off. The loader allows a multi-card rung *at* 100 and refuses one
+below it — a rung under the identity would pay a player less for building more.
 
 **A pair is now certain rather than likely.** A hand of eight over four forms cannot avoid one, so
-`tools/handodds` scores it at 100% and the High Card is essentially unreachable in round one. That
+`tools/handodds` scores it at 100% and the No Hand is essentially unreachable in round one. That
 is the right shape for a floor: the ladder starts where every turn already is.
 
 `combat.Hand.Axes` is where the list lives and `combat.Hand.On` is how one reading is taken.
@@ -1250,7 +1312,7 @@ Three things fall out of it and are worth keeping:
 defenses joining hands made them disagree by everything, and the answer is to leave the matcher alone.
 
 The case that forced it: a turn of `Bash + two shields` forms a **Pair on zero damage**, because
-any two defenses share `FormDefend` and a formed hand beats the High Card fallback — so the Bash is
+any two defenses share `FormDefend` and a formed hand beats the No Hand fallback — so the Bash is
 announced and lands nothing, where the Bash alone would have landed its face damage. **The Pair
 dropping to 1x narrowed this rather than closing it** *(2026-09-05)*: the two are level on
 multiplier now, and what still costs the player the blow is that the pair's own cards are the two
@@ -1262,7 +1324,7 @@ be the base in `hands.json` plus the card's enum value, so inserting a card mid-
 ID above it — an open question against profile discovery. One entry now covers every concept in the
 game, so there is **one ID per catalog key** and it is written down rather than derived.
 Reordering the cards cannot renumber a hand a player has already found. **They are banded by axis**
-— 1 for the High Card, 10 for the merged Pair, 11–15 concept, 21–25 form, 31–38 element — renumbered
+— 1 for the No Hand, 10 for the merged Pair, 11–15 concept, 21–25 form, 31–38 element — renumbered
 on 2026-08-19 while no profile exists to record them. The banding has paid for itself every time it
 has been tested: the five-of-a-kind rungs landed as 15, 25 and 35 without moving anything, and when
 the three per-axis pairs merged on 2026-09-05 the survivor kept 10 and left every gap where it was.
@@ -2027,9 +2089,9 @@ is now near-unconditional** — a Pair relic pays on essentially every multi-car
 being priced as a conditional one. Nothing measures that, on the same terms as every other price in
 the shop section.
 
-**The High Card is not a rung a bigger hand satisfies.** It is the fallback for a turn that formed
+**The No Hand is not a rung a bigger hand satisfies.** It is the fallback for a turn that formed
 nothing, matched by which attack hits hardest rather than by counting, so it is in the set only when
-it *is* the blow. A High Card relic stays a relic about turns that built nothing.
+it *is* the blow. A No Hand relic stays a relic about turns that built nothing.
 
 **Only `Hand` moves damage; the satisfied set moves relics.** `Event.Multiplier`, the banner and the
 hand row all still show the one rung the blow was paid as — a hand that quietly listed five rungs on
@@ -2138,7 +2200,7 @@ many times the run has formed the rung, they are earned, and they move nothing a
   the instant `ResolveRound` hands it over, exactly as it takes the round's vitae — so a player who
   leaves the screen mid-animation cannot change the count. Presentation may never change an
   outcome, and a tally is an outcome.
-- **Every `KindHand` counts, the High Card included.** A turn with an attack in it always forms a
+- **Every `KindHand` counts, the No Hand included.** A turn with an attack in it always forms a
   hand, so the fallback is a rung the player built as much as any other, and a ladder whose
   commonest rung was the one stuck at zero would read as broken rather than as deliberate.
 - **The player's side only.** A creature has no run behind it.
@@ -3082,7 +3144,7 @@ would sit in a discard pile forever.
 1 AP card was a Four of a Kind at 5x; with no hand to form, four copies is four small blows and the dial
 is simply *how many cards a turn holds*. What sharpened instead is **variety**: an enemy with three
 different attacks used to land only the biggest of them, because distinct concepts formed no hand
-and fell through to the High Card. It now lands all three.
+and fell through to the No Hand. It now lands all three.
 
 ### The deep tower is meant to need a build *(2026-08-16, owner's call)*
 

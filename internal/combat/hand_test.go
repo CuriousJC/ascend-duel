@@ -13,7 +13,7 @@ func handsFormed(events []Event, by Side) []HandID {
 		if e.Kind != KindHand || e.Side != by || e.Hand == HandNone {
 			continue
 		}
-		// **The High Card is skipped here, because every assertion below is about what a turn's
+		// **The No Hand is skipped here, because every assertion below is about what a turn's
 		// cards amounted to *beyond* the best of them** — a helper for the matcher's tests, not a
 		// statement about what the game shows. **The screens draw no such line any more**
 		// *(2026-08-19)*: a lone attack is named, previewed and shouted like any other hand, and
@@ -115,24 +115,116 @@ func TestEveryAttackCardIsAnnouncedEvenOutsideTheHand(t *testing.T) {
 	}
 }
 
-// **A card that builds to no hand contributes nothing to the blow.** `Bash, Jab, Bash` is a
-// Bash Pair and the Jab is not in it.
-func TestACardOutsideTheHandAddsNothing(t *testing.T) {
+// **An attack that builds to no hand still pays into the blow.** `Bash, Jab, Bash` is a Pair the
+// Jab does not make, and the Jab's damage lands anyway, at the Pair's multiplier, because action
+// points were spent on it.
+func TestAnAttackOutsideTheHandStillPaysIntoTheBlow(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	withJab, _, _ := resolve(a, b, PlainCards(Bash, Jab, Bash), nil, 1)
 	without, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
 
-	if got, want := damageDealtBy(withJab, SideA), damageDealtBy(without, SideA); got != want {
-		t.Errorf("the Jab added %d damage; it is in no hand and should add nothing", got-want)
+	// The Pair is the identity, so what the Jab is worth here is its own face damage.
+	want := Plain(Jab).Damage(10)
+	if got := damageDealtBy(withJab, SideA) - damageDealtBy(without, SideA); got != want {
+		t.Errorf("the Jab added %d damage, want its own %d", got, want)
 	}
 
 	e, ok := handEventFor(withJab, SideA)
 	if !ok {
 		t.Fatal("no attack phase event")
 	}
-	if got := handCards(e); len(got) != 2 {
-		t.Errorf("the pair says it was formed from %v, want the two Bashes only", got)
+	if got := handCards(e); len(got) != 3 {
+		t.Errorf("the blow says it was paid by %v, want all three cards", got)
+	}
+}
+
+// **The rung is still the cards that made it**, which is the question `RiderScaleInCombo` asks and
+// the one the scoring set stopped answering. The two are different sets on the same turn.
+func TestTheRungIsNarrowerThanTheScoringSet(t *testing.T) {
+	turn := ResolutionOrder(PlainCards(Bash, Jab, Bash), nil)
+	blow := BlowFor(turn)
+
+	if len(blow.Cards) != 3 {
+		t.Errorf("the scoring set is %v, want all three cards", blow.Cards)
+	}
+	if len(blow.Rung) != 2 {
+		t.Errorf("the rung is %v, want the two Bashes only", blow.Rung)
+	}
+	for _, i := range blow.Rung {
+		if turn[i].Card.Concept != Bash {
+			t.Errorf("the rung holds %v, which is not one of the Bashes", turn[i].Card.Concept)
+		}
+	}
+}
+
+// **A defense is in the blow only by making the hand.** It deals nothing either way, so what this
+// pins is the membership: an attack joins because it was paid for, a shield does not.
+func TestADefenseOutsideTheHandIsNotInTheBlow(t *testing.T) {
+	// Resolution order puts the defenses first, so the turn is Brace, Block, Bash, Bash. The ice
+	// Brace joins the two ice Bashes for an Elemental Three of a Kind; the fire Block makes
+	// nothing and is left out of a scoring set that holds the cards either side of it.
+	turn := ResolutionOrder([]Card{
+		Of(Brace, Ice), Of(Block, Fire), Of(Bash, Ice), Of(Bash, Ice),
+	}, nil)
+	blow := BlowFor(turn)
+
+	got := blow.Cards
+	if len(got) != 3 || got[0] != 0 || got[1] != 2 || got[2] != 3 {
+		t.Fatalf("the blow was paid by %v, want [0 2 3] around the fire Block", got)
+	}
+}
+
+// **The event carries both sets, and they come apart on exactly this turn.** Two shields make the
+// Pair; the attack beside them pays into the sum and made no part of the rung. The screen raises
+// the rung on the announcement and counts the blow, so an event carrying only one of the two would
+// have to guess at the other.
+func TestTheEventNamesTheRungApartFromTheBlow(t *testing.T) {
+	a, b := duelist(10, 6, 5000), duelist(10, 6, 5000)
+
+	events, _, _ := resolve(a, b, PlainCards(Brace, Block, Bash), nil, 1)
+	e, ok := handEventFor(events, SideA)
+	if !ok {
+		t.Fatal("no attack phase event")
+	}
+
+	// Brace, Block, Bash once resolved: the two defenses are the Pair and the Bash is the blow.
+	if got := handCards(e); len(got) != 3 {
+		t.Errorf("the blow was paid by %v, want all three cards", got)
+	}
+	got := e.RungCards[:e.RungCardCount]
+	if len(got) != 2 || got[0] != 0 || got[1] != 1 {
+		t.Fatalf("the rung is %v, want the two defenses", got)
+	}
+	// And the rung is a subset of the blow rather than a second list of its own.
+	for _, i := range got {
+		held := false
+		for _, j := range handCards(e) {
+			if i == j {
+				held = true
+			}
+		}
+		if !held {
+			t.Errorf("the rung names card %d, which paid nothing into the blow", i)
+		}
+	}
+}
+
+// **A pair of shields beside one attack lands the attack.** The two defenses form the Pair on
+// themselves and deal nothing; the Bash made no part of it and swings anyway, because the action
+// points were spent on it. The trap is a blow summed from the rung alone, which is that pair's own
+// zero.
+func TestAnAttackBesideAPairOfShieldsStillLands(t *testing.T) {
+	a, b := duelist(10, 6, 5000), duelist(10, 6, 5000)
+
+	events, _, after := resolve(a, b, PlainCards(Brace, Block, Bash), nil, 1)
+
+	if got := damageDealtBy(events, SideA); got <= 0 {
+		t.Fatalf("the Bash dealt %d beside two shields, want its own damage", got)
+	}
+	if after.CurrentLife >= b.CurrentLife {
+		t.Errorf("the target is on %d life, want less than the %d it started with",
+			after.CurrentLife, b.CurrentLife)
 	}
 }
 
@@ -198,7 +290,7 @@ func TestEveryHandIsWorthItsCatalogMultiplier(t *testing.T) {
 		key  string
 		turn []Card
 	}{
-		{"high-card", PlainCards(Bash)},
+		{"no-hand", PlainCards(Bash)},
 		{"pair", PlainCards(Bash, Bash)},
 		{"concept-three-of-a-kind", PlainCards(Bash, Bash, Bash)},
 		{"concept-four-of-a-kind", PlainCards(Bash, Bash, Bash, Bash)},
@@ -235,8 +327,9 @@ func TestTheHandAmountsAddUpToTheBase(t *testing.T) {
 	if !ok {
 		t.Fatal("no KindHand event")
 	}
-	if e.HandCardCount != 3 {
-		t.Fatalf("the trips say they were formed from %d cards, want 3", e.HandCardCount)
+	// The Jab makes no trips and is paid into the blow anyway, so the bracket has four terms.
+	if e.HandCardCount != 4 {
+		t.Fatalf("the blow carries %d terms, want the four cards played", e.HandCardCount)
 	}
 
 	sum := 0
@@ -249,9 +342,9 @@ func TestTheHandAmountsAddUpToTheBase(t *testing.T) {
 	if sum != e.Base {
 		t.Errorf("the hand's cards carry %d between them, but the base is %d", sum, e.Base)
 	}
-	// The Jab is in no hand, so its figure is in neither.
-	if e.Base != Plain(Bash).Damage(10)*3 {
-		t.Errorf("the base is %d, want the three Bashes' own %d", e.Base, Plain(Bash).Damage(10)*3)
+	// The Jab makes no trips and pays into the blow anyway, so the base holds it.
+	if want := Plain(Bash).Damage(10)*3 + Plain(Jab).Damage(10); e.Base != want {
+		t.Errorf("the base is %d, want the four cards' own %d", e.Base, want)
 	}
 }
 
@@ -381,9 +474,10 @@ func TestATurnOfDefensesFormsAHandAndLandsNothing(t *testing.T) {
 	}
 }
 
-// **With no hand, the biggest single attack is the blow** — the High Card — and it earns no
-// multiplier at all, so what lands is exactly what the card's face says.
-func TestWithNoHandTheBiggestAttackIsTheBlow(t *testing.T) {
+// **With no hand, every attack still lands and none of them is multiplied.** The No Hand means *no
+// multiplier* rather than *the biggest attack alone*, so what lands is exactly what the three faces
+// say, added up.
+func TestWithNoHandEveryAttackLandsAtTheIdentity(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Jab, Cut, Smash), nil, 1)
@@ -391,14 +485,22 @@ func TestWithNoHandTheBiggestAttackIsTheBlow(t *testing.T) {
 	if got := handsFormed(events, SideA); len(got) != 0 {
 		t.Fatalf("three different attacks formed %v, want no built hand", got)
 	}
-	if got, want := damageDealtBy(events, SideA), Plain(Smash).Damage(10); got != want {
-		t.Errorf("dealt %d, want the Smash's %d and nothing else", got, want)
+	want := Plain(Jab).Damage(10) + Plain(Cut).Damage(10) + Plain(Smash).Damage(10)
+	if got := damageDealtBy(events, SideA); got != want {
+		t.Errorf("dealt %d, want the three faces' own %d", got, want)
+	}
+	e, ok := handEventFor(events, SideA)
+	if !ok {
+		t.Fatal("no attack phase event")
+	}
+	if e.Base != want {
+		t.Errorf("the base is %d, want the three cards' %d", e.Base, want)
 	}
 }
 
-// The High Card is still *named*, which is what lets the feed say what happened on the turn that
+// The No Hand is still *named*, which is what lets the feed say what happened on the turn that
 // happens most often. A blow the engine could not name is the one failure this model can have.
-func TestTheHighCardIsNamedAndPaysTheIdentityMultiplier(t *testing.T) {
+func TestTheNoHandIsNamedAndPaysTheIdentityMultiplier(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Jab, Cut, Smash), nil, 1)
@@ -407,22 +509,23 @@ func TestTheHighCardIsNamedAndPaysTheIdentityMultiplier(t *testing.T) {
 	if !ok {
 		t.Fatal("no KindHand event — the attack phase said nothing about what it formed")
 	}
-	high, ok := handByKey("high-card")
+	high, ok := handByKey("no-hand")
 	if !ok {
-		t.Fatal("the catalog holds no High Card")
+		t.Fatal("the catalog holds no No Hand")
 	}
 	if e.Hand != high.ID {
-		t.Errorf("three different attacks were named %v, want the High Card", e.Hand)
+		t.Errorf("three different attacks were named %v, want the No Hand", e.Hand)
 	}
-	// **The High Card sits at the identity** *(2026-08-18)*. It was 0 while the multiplier applied
+	// **The No Hand sits at the identity** *(2026-08-18)*. It was 0 while the multiplier applied
 	// to a swing added on top of the cards; now that it multiplies the cards, 0 would be an attack
 	// phase that dealt nothing, and 100 is what makes a lone attack land its own face damage.
 	if e.Multiplier != multiplierScale {
-		t.Errorf("the High Card paid a x%d.%02d multiplier, want the identity",
+		t.Errorf("the No Hand paid a x%d.%02d multiplier, want the identity",
 			e.Multiplier/100, e.Multiplier%100)
 	}
-	if e.Amount != Plain(Smash).Damage(10) {
-		t.Errorf("the High Card came to %d, want the Smash's own %d", e.Amount, Plain(Smash).Damage(10))
+	want := Plain(Jab).Damage(10) + Plain(Cut).Damage(10) + Plain(Smash).Damage(10)
+	if e.Amount != want {
+		t.Errorf("the No Hand came to %d, want the three cards' own %d", e.Amount, want)
 	}
 }
 
@@ -468,9 +571,10 @@ func TestTheHandsColorsDecideWhichStatusesLand(t *testing.T) {
 	}
 }
 
-// **Only the cards in the hand carry color.** An off-color card that contributed to no hand
-// cannot put its status on anybody.
-func TestACardOutsideTheHandDoesNotColorIt(t *testing.T) {
+// **Every card that pays into the blow carries its color.** The fire Jab makes no hand and swings
+// anyway, so it burns — a card that visibly hit and left nothing behind would read as a bug rather
+// than as a rule.
+func TestAnAttackOutsideTheHandStillColorsTheBlow(t *testing.T) {
 	a, b := reliced(duelist(10, 4, 5000)), duelist(10, 4, 5000)
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Bash, Ice), Of(Jab, Fire), Of(Bash, Ice)}, nil, 1)
@@ -478,8 +582,27 @@ func TestACardOutsideTheHandDoesNotColorIt(t *testing.T) {
 	if !bAfter.Statuses[statusOf(Ice)].Active() {
 		t.Error("the ice pair is the hand and should have chilled")
 	}
+	if !bAfter.Statuses[statusOf(Fire)].Active() {
+		t.Error("the fire Jab paid into the blow and should have burned")
+	}
+}
+
+// **A defense that made no hand still carries nothing**, which is the other side of the rule
+// above: the widening is about attacks, and a shield joins a blow only by making the rung.
+func TestADefenseOutsideTheHandCarriesNoColor(t *testing.T) {
+	a, b := reliced(duelist(10, 6, 5000)), duelist(10, 6, 5000)
+
+	// Brace, Block, Bash, Bash once resolved. The ice Brace makes the elemental trips with the two
+	// ice Bashes; the fire Block makes nothing.
+	_, _, bAfter := resolve(a, b, []Card{
+		Of(Brace, Ice), Of(Block, Fire), Of(Bash, Ice), Of(Bash, Ice),
+	}, nil, 1)
+
+	if !bAfter.Statuses[statusOf(Ice)].Active() {
+		t.Error("the ice trips are the hand and should have chilled")
+	}
 	if bAfter.Statuses[statusOf(Fire)].Active() {
-		t.Error("the fire Jab is in no hand, so it should have burned nobody")
+		t.Error("the fire Block made no hand and swung nothing, so it should have burned nobody")
 	}
 }
 
@@ -575,20 +698,26 @@ func TestIceLandedByBBitesInTheFollowingRound(t *testing.T) {
 
 // --- the event ----------------------------------------------------------------------------
 
-// **A counted hand is not contiguous**, which is the case a start-and-length bracket could not
-// describe: Two Pair is two cards, a card that earned nothing, and two more.
+// **A scored blow is not contiguous**, which is the case a start-and-length bracket could not
+// describe. Since 2026-09-17 every attack pays in, so the gap can only be a *defense* that made no
+// hand — and it still happens: resolution order puts the defenses first, so a shield sitting
+// between two that did make the hand is a hole in the middle of the set.
 func TestTheEventNamesScatteredCards(t *testing.T) {
-	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
+	a, b := duelist(10, 6, 20000), duelist(10, 6, 20000)
 
-	events, _, _ := resolve(a, b, PlainCards(Jab, Jab, Smash, Cut, Cut), nil, 1)
+	// Brace, Block, Bash, Bash once resolved: the ice Brace and the two ice Bashes are an
+	// Elemental Three of a Kind and the fire Block is in nothing.
+	events, _, _ := resolve(a, b, []Card{
+		Of(Brace, Ice), Of(Block, Fire), Of(Bash, Ice), Of(Bash, Ice),
+	}, nil, 1)
 
 	e, ok := handEventFor(events, SideA)
 	if !ok {
 		t.Fatal("no attack phase event")
 	}
 	got := handCards(e)
-	if len(got) != 4 || got[0] != 0 || got[1] != 1 || got[2] != 3 || got[3] != 4 {
-		t.Fatalf("two pair says it was formed from %v, want [0 1 3 4] around the Smash", got)
+	if len(got) != 3 || got[0] != 0 || got[1] != 2 || got[2] != 3 {
+		t.Fatalf("the blow says it was paid by %v, want [0 2 3] around the fire Block", got)
 	}
 }
 

@@ -155,9 +155,10 @@ func RiderLines(c combat.Card) []string {
 		case combat.RiderVitaeInHand:
 			out = append(out, plus(r.Amount)+" VITAE IN HAND")
 		case combat.RiderScaleInCombo:
-			// **"IF IT SCORES", not "ON PLAY".** `Blow.Cards` is the scoring set and a turn can play
-			// a card that pays nothing into it — a lone Brace beside a pair. The distinction is the
-			// whole of what separates this from damage-on-play, and it is one the player can lose.
+			// **"IF IT SCORES", not "ON PLAY".** It reads `Blow.Rung` — the cards that made the
+			// rung — so a card can be played, and even swing, without paying this: an attack that
+			// rode along on someone else's Pair did not make it. That distinction is the whole of
+			// what separates this from damage-on-play, and it is one the player can lose.
 			out = append(out, Multiplier(r.Amount)+" DMG IF IT SCORES")
 		case combat.RiderWildElement:
 			out = append(out, "COUNTS AS EVERY ELEMENT")

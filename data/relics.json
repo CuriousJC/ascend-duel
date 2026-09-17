@@ -325,12 +325,12 @@
     "Family": "Jade rings",
     "Art": "dmg-high-hand",
     "Draw": "jade ring with a single diamond",
-    "Text": "A High Card swings at\n2 more DMG.",
+    "Text": "No Hand swings at\n2 more DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "high-card" },
+        "If": { "Hand": "no-hand" },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 2 }]
       }
     ]

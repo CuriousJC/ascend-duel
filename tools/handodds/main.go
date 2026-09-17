@@ -87,5 +87,5 @@ func main() {
 		fmt.Printf("%-28s %6d %7.3f%% %8.3f%% %8.0f %11.2f%%\n",
 			o.Hand.Name, o.Hand.Multiplier, o.Dealt, o.Reachable, o.OneIn(), o.Best)
 	}
-	fmt.Printf("\nno built hand of any kind: %.3f%% - the turns the High Card names\n", table.Nothing)
+	fmt.Printf("\nno built hand of any kind: %.3f%% - the turns the No Hand names\n", table.Nothing)
 }

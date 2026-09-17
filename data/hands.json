@@ -1,9 +1,9 @@
 {
   "hands": [
     {
-      "key": "high-card",
+      "key": "no-hand",
       "id": 1,
-      "name": "High Card",
+      "name": "No Hand",
       "match": "concept",
       "groups": [1],
       "multiplier": 100

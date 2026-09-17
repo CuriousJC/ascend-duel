@@ -2,9 +2,9 @@
   {
     "StoneRecord": "pebble",
     "Name": "Pebble",
-    "Hand": "high-card",
+    "Hand": "no-hand",
     "Art": "pebble",
-    "Text": "RAISE HIGH CARD HAND",
+    "Text": "RAISE NO HAND",
     "Draw": "a small water-rounded grey pebble, smooth and dull, one pale band running across it"
   },
   {

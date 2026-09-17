@@ -122,7 +122,7 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
 <p class="note">
   Round one only: a later hand draws from a depleted pile and keeps what it did not spend, which
   the sample does not model. <code>{{.Nothing}}</code> of hands build no rung at all — the turns the
-  High Card names. The same table, with the axes kept apart and an <code>-ap</code> flag for a turn
+  No Hand names. The same table, with the axes kept apart and an <code>-ap</code> flag for a turn
   holding cost discounts, is <code>go run ./tools/handodds</code>: one pinned sample in
   <code>tools/hands</code>, printed by both, so the two cannot disagree.
 </p>

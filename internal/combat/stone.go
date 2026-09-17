@@ -63,7 +63,7 @@ func buildHandSlots() map[string]int {
 
 // HandSlot is the seat a hand's stone count sits in, and whether the catalog holds that hand at
 // all. **The bool is the validation**: a stone naming a rung this build has not got is refused by
-// its caller rather than landing on seat zero, which is the High Card.
+// its caller rather than landing on seat zero, which is the No Hand.
 func HandSlot(key string) (int, bool) {
 	i, ok := handSlots[key]
 	return i, ok
@@ -81,7 +81,7 @@ func HandKeys() []string {
 
 // stoneStep is what one stone adds to one rung: a tenth of the rung's catalog multiplier,
 // floored. Zero for a rung so cheap that a tenth of it rounds away — which the catalog has none
-// of, since the lowest multiplier in the game is the High Card's 100.
+// of, since the lowest multiplier in the game is the No Hand's 100.
 func stoneStep(base int) int { return base / 10 }
 
 // StoneValue is what `n` stones are worth on a rung whose catalog multiplier is `base`.

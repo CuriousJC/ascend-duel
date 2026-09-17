@@ -60,8 +60,10 @@ top of, and they are not repeated below:
 
 **Phases.** A round is **a whole turn each**: everything side A
 queued resolves before side B does anything, and within a turn the categories go in order —
-**attack, then everything else**. Defenses come last within a turn because the opponent moves
-next, so a shield or a guard raised at the end of your turn is up when their blow arrives.
+**the defenses, then the attacks**; `combat.Categories` is the order. A shield raised anywhere in
+your turn is standing through the opponent's whole turn either way, since `expireDefenses` runs at
+the start of your *own* next turn — so what the order buys is how the turn reads: raise the guard,
+then swing.
 
 **The attack phase is one blow** *(2026-08-14)*. Every attack card queued is announced with a
 `KindAction`, then one `KindHand` names the hand they formed, then a single `KindDamage`
@@ -74,9 +76,10 @@ lands a Pair (20 x 1.5 = 30)"* and the damage attaches to it. **Every hand takes
 every line carries its multiplier, the identity included** *(2026-08-19, owner's call)* — a High
 Card prints `(20 x 1 = 20)`, because hands are going to be upgradable and a term that appeared only
 once the multiplier stopped being 1 would make an upgrade read as a new rule. It is also the
-commonest turn in the game, so it is the line that teaches the shape. **Attack cards that build no hand contribute
-nothing**, and what says so is the table: every attack card is raised as it is announced, and the
-hand lowers the ones it did not name.
+commonest turn in the game, so it is the line that teaches the shape. **Every attack card the turn played pays into the
+blow** *(owner's call, 2026-09-17)*, whether or not it made the rung — so every attack raised at the
+announcement stays raised, and the only card the hand lowers is a *defense* that agreed with
+nothing. See MECHANICS.md §Damage: one blow, one multiplier.
 
 **None of the three paragraphs above describes an enemy's turn** *(2026-08-17)*. `Duelist.SoloAttacks`
 makes attack cards resolve one at a time in queue order, each landing its own blow, and **no
@@ -85,9 +88,11 @@ for it and two things read it:
 
 - **The log writes a sentence per attack card**, because there is no phase line coming to carry
   them. `logRows` suppresses an attack's `KindAction` only when a hand *is* coming.
-- **The table lights one card at a time**, so `noteResolved` seats `[]int{seat}` rather than
-  `attackSeats`. Raising the set says "these cards are one blow", which is exactly what an enemy's
-  turn is not: three cards swing three times, and the card that is up is the card that is hitting.
+- **The table lights one card at a time, and a creature is the only thing that lights one at all.**
+  `noteResolved` seats `[]int{seat}` for a solo attacker and nothing for anybody else — a duelist's
+  cards are raised by the hand's announcement, which a creature never gets. Raising a set says
+  "these cards are one blow", which is exactly what an enemy's turn is not: three cards swing three
+  times, and the card that is up is the card that is hitting.
 
 Everything else about playback is unchanged — one `KindAction` per slot, so `currentSlot` still
 counts beats the same way.
@@ -140,7 +145,7 @@ in `MECHANICS.md`; these are what matter to the screen.
   and a hand carries its whole name. **Exactly one fires per turn**, so there is no stacking to draw
   and no ranking to explain.
 - **`Event.Hand` always names a hand** *(corrected 2026-08-19)*. A turn with an attack in it falls
-  back to the catalog's `high-card`, so `HandNone` never reaches a `KindHand` — the log had a
+  back to the catalog's `no-hand`, so `HandNone` never reaches a `KindHand` — the log had a
   branch written against the opposite belief and it had been unreachable for some time. **The High
   Card takes the hand line like any other hand**, and carries its `x 1` in both the line and the
   dialog since 2026-08-19 — **the last place it was written differently from the rest**. What is
@@ -148,13 +153,14 @@ in `MECHANICS.md`; these are what matter to the screen.
   which is structural: counting would match the one-card hand against every turn in the game, and
   the fallback picks the hardest-hitting card rather than the commonest.
 - **The event carries the arithmetic, and the engine takes its damage from the same field.**
-  `Base` is what the hand's own cards deal added up, and `Amount` is `Base` under the multiplier —
+  `Base` is what the blow's cards deal added up — every attack played, plus any defense that made
+  the rung — and `Amount` is `Base` under the multiplier —
   the blow *before* the attacker's weight. `resolveAttackPhase` blunts `Amount` rather than
   re-adding the sum, so the figure printed and the figure landed cannot be two different numbers.
   A shield does not appear in that gap at all: it removes a whole attack up front, and
   `KindBlocked` is what says so.
 - **The multiplier multiplies the cards, and there is no third term** *(2026-08-18, owner's call)*.
-  `high-card` therefore sits at `100` rather than `0`: a multiplier applied to the cards cannot be
+  `no-hand` therefore sits at `100` rather than `0`: a multiplier applied to the cards cannot be
   zero without deleting the blow. See MECHANICS.md.
 - **`Event.HandAmounts` is what each of the hand's cards deals**, parallel to `HandCards` and to
   the same count, summing to `Base`. It exists so the hand dialog can show the sum term by term
@@ -174,13 +180,11 @@ in `MECHANICS.md`; these are what matter to the screen.
 - **`combat.BlowFor` previews the hand while the player plans** *(2026-08-15)*. It is the same
   function the resolver uses, so a previewed hand is the hand that fires by construction rather
   than by two pieces of code agreeing. `previewAttack` calls it on `ResolutionOrder(queue, nil)`
-  and **every attack previews, the High Card included** *(2026-08-19, owner's call)*. A single
-  attack card is a hand — the catalog's `high-card` at the identity multiplier — so the name is
-  on screen from the first attack picked; a queue of nothing but shields names nothing, `BlowFor`
-  returning a blow with no cards. **This reverses the old rule**, which was that only a hand of two
-  or more previewed, on the argument that HAND! over one Bash empties the word. What makes it
-  safe is that the label names the *hand* rather than shouting HAND!, and the log still writes a
-  lone attack as an ordinary attack sentence. **Two lines show it**: `drawPlannedHand` writes its
+  and **every attack previews, the No Hand included**. A single attack card is a rung — the
+  catalog's `no-hand` at the identity multiplier — so the name is on screen from the first attack
+  picked, and it names the turn honestly rather than dressing it as an achievement. A queue of
+  nothing but shields names nothing, `BlowFor` returning a blow with no cards.
+  **Two lines show it**: `drawPlannedHand` writes its
   name across the middle of the table, breathing, in `handNameInk`, with **what it is worth on a
   second line under it** — `1.15x DMG` — and that pair is what flies down to the hand row at DUEL!,
   so the preview and the announcement are one object. See `handBanner`.
@@ -234,12 +238,12 @@ number the game had decided rather than one they had built.
   a centered line that does not wrap and cannot shrink would have run off both ends in exactly the
   rounds a duel is decided in. `TestTheWidestSumFitsItsBand` found that and holds it. **The same
   trap is live anywhere else that borrows `handBand` for something that is not the hand.**
-- **Every hand the engine names is shouted, `HIGH CARD!` included** *(2026-08-19, owner's call)*.
-  It was silent until then, on the argument above. What changed is that the name is carried by the
-  banner from DUEL! onward, so silence at the hand beat would not withhold an announcement — it
-  would take a word off the screen at the moment the blow lands, and take the multiplier's origin
-  with it. The arithmetic plays either way, so every attack phase shows where its figure came from.
-  An event naming *no* hand is still silent; nothing emits one.
+- **Every rung the engine names is shouted, `NO HAND!` included.** The bottom of the ladder is a
+  rung like any other — a multiplier, a stone that raises it, a relic that names it — and the word
+  says what the turn was. **What the No Hand does not get is the lift**: the announcement raises the
+  cards that *made* the rung and that turn made none, so `builtARung` gates the raise and nothing
+  else. A card standing up for having done nothing is worse than a still table.
+  An event naming *no* hand is silent; nothing emits one.
 - **The hand's name is one word with two homes, and it travels between them** *(2026-08-19,
   owner's call)*. `handBanner` holds it: the planning seat is the middle of **the whole table**,
   and at DUEL! it flies *down* into the hand row while the cards fly *up* to the table, coming up
@@ -350,12 +354,22 @@ the log in order, and the engine decides. Both the resolver and the table's two 
 
 Three consequences for playback. **The hand line lands after its cards are announced but before
 the damage**, so a boosted figure never arrives before the reason for it, and `noteHand` has
-real rows to mark because the whole queue is seated at DUEL! rather than a card at a time. **The
-whole attack hand is raised by the *first* announcement** — `attackSeats` reads them off the turn,
-so `firingSeats` is a list rather than one seat and the beats after it name the same set — and
-`noteHand` narrows the list to what earned it. And **the hand is announced even if the blow then
-misses** — the shock roll happens after the hand event, because the hand is scored off the queue
-and the queue was committed at DUEL!.
+real rows to mark because the whole queue is seated at DUEL! rather than a card at a time.
+
+**The rung is raised by the hand's announcement and by nothing else.** `noteHand` lifts
+`Event.RungCards` — the cards that *made the hand* — rather than `HandCards`, which is every attack
+the turn played and would stand up a card that is in the sum and in no part of the rung.
+`firingSeats` is a list rather than one seat because a counted hand is not contiguous. Then
+`advancePlayback` puts them back down the moment the sum starts counting, and the sum walks
+`HandCards`: **the rung is raised, the blow is counted.**
+
+**A duelist's turn is three moments and each has exactly one gesture: the shields fire as a bundle
+with nothing lifted, the hand is announced with its cards up, and the tally runs with the table at
+rest.** Nothing else on that turn may lift a card — a second gesture ahead of the announcement
+reads as whichever card it lifted having gone first.
+
+And **the hand is announced even if the blow then misses** — the shock roll happens after the hand
+event, because the hand is scored off the queue and the queue was committed at DUEL!.
 
 ### Pacing: one speed, and a table of proportions
 
@@ -650,21 +664,26 @@ cards themselves carry, so what was raised and what is standing are the same pic
   a coincidence and not a clamp in the screen — see `Duelist.raiseShields`, which takes the cap for
   its own reason and this row inherits it. **`combat.MaxShields` exports it** for the one caller that
   has to predict against it, below.
-- **The pips fly, and they fly on the beat the card that raises them is *scored*** *(owner's call,
-  2026-09-02)*. A defense joins a hand like any other card and pays a `0` into the sum; that 0 was
-  the whole of what the card appeared to do, with the shield turning up several beats later in the
-  defend phase, on a card the player had stopped watching. **What a card creates shows while the
-  card is being scored.** They land in the pip row along the bottom of the fighter card rather than
-  its middle — a pip joins a row, where a damage figure hits a card.
-- **Two flights, and they differ in where the count comes from.** A defense scored into a hand flies
-  before the engine has raised anything, so it *predicts*: capped at `combat.MaxShields`, adding its
-  own count on arrival, and corrected by the `KindRaised` that follows, which sets the count
-  absolutely. **A turn of nothing but defenses forms no hand at all** — no sum, no dialog, no beat
-  to leave on — so there the announcement flies them itself and carries `KindRaised.Life`, which the
-  row takes outright when they land. The row records the seat, so one card's pips can never fly
-  twice — **and forgets it at the end of the round**, because a seat is a position in one round's
-  table: kept across the boundary it silently gagged the next round's defense in the same seat,
-  which then flew nothing and so landed with no color.
+- **The whole defend phase is one gesture** *(owner's call, 2026-09-17)*. Every shield in the turn
+  goes up together: the first `KindRaised` reached flies its own pips and every raise behind it in
+  the same phase, all on one frame, out of their own cards and into the pip row along the bottom of
+  the fighter card — a pip joins a row, where a damage figure hits a card. The raises behind it
+  arrive at their own beats with nothing to do. **It is the shield break's rule and the deal
+  cascade's**: what the defend phase says is one thing about the turn, not three things about cards.
+  `noteShieldRaise` is the bundle and `raisesInPhase` is the walk. **The pips are the phase's and
+  never the sum's** — a defense that made the rung still pays its visible `0` into the arithmetic,
+  and that `0` is all the sum has to say about it.
+- **A raise names its own card, in `Event.Slot`**, which is the only thing the pips have to leave
+  from: nothing is lit during the defend phase, so a seat read off the lit card would have no
+  answer. `noteShields` reads the same field for the element a pip lands wearing.
+- **The count comes from the announcement, and the row waits for the pips.** A raise carries what is
+  standing after its own card in `Life`, which the row takes when that flight lands; `noteShieldRaise`
+  swallows the event either way, including the bundled raises that flew beats ago, **because letting
+  one through to `noteShields` fills the row while the pips filling it are still crossing the
+  screen**. The row records the seat, so one card's pips can never fly twice — **and forgets it at
+  the end of the round**, because a seat is a position in one round's table — kept across the
+  boundary it gags the next round's defense in the same seat, which then flies nothing and lands
+  with no color.
 - **The row is one list, and the count is its length** *(2026-09-02)* — `shield_row.go`. It was
   four parallel structures for a day: a count, a color per pip, a "has anything spoken" flag and
   the set of seats. **Every shield bug in that day was two of them disagreeing** — a count ahead of
@@ -674,13 +693,11 @@ cards themselves carry, so what was raised and what is standing are the same pic
   places. **The rule the type carries**: a raise may only raise, and only a block or an expiry may
   lower — a raise is announced a phase after the pips it describes have landed and names what is
   standing after *its own* card, so the first of two raises is smaller than what is already drawn.
-- **A defense that already flew its pips does not lift on its own announcement** *(owner's call,
-  2026-09-02)*. The engine resolves defenses at the end of the turn, several beats after the hand
-  they were scored into, so the card climbed the table again just as the opponent started swinging
-  — which reads as the card firing a second time. The lift says "this card is acting now" and the
-  flight already said it. **The flight decides, not the card's kind**: a turn of nothing but
-  defenses forms no hand, nothing has flown when its announcement arrives, and that card does lift
-  — it is the only thing on screen saying which defense is going up. `noteResolved`.
+- **A defense lifts nothing at all.** `noteResolved` switches on the card's kind: a defense raises
+  no seats, a solo attacker's card raises its own, an attack raises nothing. A lift says "this card
+  is acting now" and the bundle says it for every shield at once, so lifting them one by one is
+  three beats of card movement in front of a hand that has not been named yet. **The argument to
+  answer before changing this is which single gesture says the defense happened.**
 - **A flight whose seat the row no longer holds still flies, from the row's first card.** It used to
   draw nothing while `landShields` paid the pips in anyway, which is a pip appearing without having
   crossed the screen — the one failure this whole gesture exists to prevent.

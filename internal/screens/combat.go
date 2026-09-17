@@ -1067,7 +1067,7 @@ func (s *CombatScene) settleGrants(log []combat.Event) {
 // **The player's side only.** A creature has no run behind it, and the ladder the panel draws is
 // the player's.
 //
-// **Every KindHand counts, the High Card included.** A turn with an attack in it always forms a
+// **Every KindHand counts, the No Hand included.** A turn with an attack in it always forms a
 // hand, so the fallback is a rung the player built as much as any other - and a ladder whose
 // commonest rung was the one place the count stayed at zero would read as broken rather than as
 // deliberate.
@@ -1330,6 +1330,16 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		}
 
 		s.Theater.mathBox.Tick()
+
+		// **The tally needs no card raised** *(owner's call, 2026-09-17)*. The blow's cards are lifted
+		// by noteHand on the `KindHand` beat, which is the announcement — what the hand is made of,
+		// said once — and they go back down the moment the sum starts counting. A row held up for the
+		// whole of the arithmetic is the announcement still being made while the thing it announced is
+		// being read out. Idempotent, so it needs no flag: nothing else writes these while the box
+		// holds the cursor.
+		if s.Theater.mathBox.counting() {
+			s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
+		}
 
 		// **A played card's riders fire on the beat its own figure sets off**, which is the same
 		// beat and the same argument as the pips below. See combat_signal.go, where the deferral is

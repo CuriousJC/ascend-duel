@@ -85,32 +85,34 @@ func TestAnEchoedCardReadsAsExtraTerms(t *testing.T) {
 }
 
 // **Every sum reads the same shape, the identity multiplier included** *(2026-08-19, owner's
-// call)*. The High Card's `x 1` was dropped until then, on the argument that a sum times one says
+// call)*. The No Hand's `x 1` was dropped until then, on the argument that a sum times one says
 // nothing — right about the arithmetic and wrong about the game: **hands are going to be
 // upgradable**, so that 1 is a number that will change, and a term appearing only once it stops
 // being 1 would make an upgrade read as a new rule rather than as a bigger figure. The log's line
 // says it the same way.
-func TestTheHighCardShowsItsMultiplier(t *testing.T) {
-	got := scriptText(mathScript(handEvent("high-card", []int{20}, 100, 20)))
+func TestTheNoHandShowsItsMultiplier(t *testing.T) {
+	got := scriptText(mathScript(handEvent("no-hand", []int{20}, 100, 20)))
 	if want := "20 x 1 = 20"; got != want {
-		t.Errorf("a High Card reads %q, want %q", got, want)
+		t.Errorf("a No Hand reads %q, want %q", got, want)
 	}
 }
 
-// **Every hand the engine names is shouted, the High Card included** *(2026-08-19, owner's call)*.
-// It was silent until then, on the argument that `HIGH CARD!` over a lone attack empties the word
-// the way `HAND!` over a single Bash does. What changed is that the name is now carried by the
-// banner from DUEL! onward — so silence here would not withhold an announcement, it would take a
-// word off the screen at the moment the blow lands.
+// **Every rung the engine names is shouted, the No Hand included.** The bottom of the ladder is a
+// rung like any other — it carries a multiplier, a stone raises it, a relic names it — so it is
+// announced like any other, and the word says what happened: `NO HAND!`.
+//
+// **What is withheld from it is the *lift*, not the word.** The announcement raises the cards that
+// made the rung and the No Hand is the turn that made none, so there is nothing to stand up. See
+// builtARung, and TestANoHandRaisesNothing, which is the other half of this.
 //
 // **An event naming no hand at all is still silent.** Nothing emits one, a turn with an attack in
 // it always producing a blow, and a bare `!` at 124 points is what the check is worth.
-func TestEveryNamedHandIsShouted(t *testing.T) {
+func TestEveryRungIsShoutedIncludingTheNoHand(t *testing.T) {
 	if got := shoutFor(handEvent("pair", []int{20, 20}, 150, 60)); got != "PAIR!" {
 		t.Errorf("a Pair shouts %q, want %q", got, "PAIR!")
 	}
-	if got := shoutFor(handEvent("high-card", []int{20}, 100, 20)); got != "HIGH CARD!" {
-		t.Errorf("a High Card shouts %q, want %q", got, "HIGH CARD!")
+	if got := shoutFor(handEvent("no-hand", []int{20}, 100, 20)); got != "NO HAND!" {
+		t.Errorf("a No Hand shouts %q, want %q", got, "NO HAND!")
 	}
 	if got := shoutFor(combat.Event{Kind: combat.KindHand, Hand: combat.HandNone}); got != "" {
 		t.Errorf("an event naming no hand shouts %q, want silence", got)
@@ -120,8 +122,8 @@ func TestEveryNamedHandIsShouted(t *testing.T) {
 // **Every hand in the catalog can be shouted and none of them is empty.** A hand added to
 // `data/hands.json` with no name would put a bare `!` on the screen at 124 points.
 //
-// **The one-card hand is in the sweep now** rather than skipped: the High Card is shouted like any
-// other since 2026-08-19.
+// **The one-card hand is in the sweep**, No Hand included: every rung in the catalog is announced,
+// so every rung in the catalog needs a name worth putting on screen.
 func TestEveryHandInTheCatalogHasAShout(t *testing.T) {
 	for _, h := range combat.Hands() {
 		e := combat.Event{Kind: combat.KindHand, Hand: h.ID}
@@ -145,7 +147,7 @@ func TestTheFlyingItemsAreTheCardsThenTheMultiplier(t *testing.T) {
 		flies int
 	}{
 		{"a Pair", handEvent("pair", []int{20, 20}, 150, 60), 3},
-		{"a High Card", handEvent("high-card", []int{20}, 100, 20), 2},
+		{"a No Hand", handEvent("no-hand", []int{20}, 100, 20), 2},
 		{"trips", handEvent("concept-three-of-a-kind", []int{10, 10, 10}, 200, 60), 4},
 	} {
 		items := mathScript(tc.e)

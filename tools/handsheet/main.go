@@ -395,7 +395,7 @@ type row struct {
 	Shares []string
 	Cells  []cell
 
-	// What the sample said about this rung. **Sampled is false for the High Card**, which is not
+	// What the sample said about this rung. **Sampled is false for the No Hand**, which is not
 	// in the sample at all: it is the fallback every turn with an attack in it lands on, so a
 	// reachability for it would be a number about nothing.
 	Sampled   bool

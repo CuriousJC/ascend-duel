@@ -8,11 +8,20 @@ import "sort"
 //
 // **A turn produces exactly one attack** *(2026-08-14)*. The attack phase reads every attack card
 // queued, forms the best hand it can, and resolves a single blow — so five Bashes are not five
-// hits, they are one Four of a Kind. Attack cards that do not contribute are ignored outright:
-// `Bash, Jab, Bash` is a Pair and the Jab is not in it.
+// hits, they are one Four of a Kind.
+//
+// **Every attack card the turn played pays into that blow, whether or not it made the hand.** An
+// action point spent on an attack buys a swing: `Bash, Jab, Bash` is a Pair the Jab makes no part
+// of, and the Jab lands anyway. **There is one sum and one multiplier** — the rung the turn built
+// scales every attack in it, so the Jab rides at the Pair's rate and a fifth card beside a Four of
+// a Kind rides at the Four of a Kind's.
+//
+// **Matching and scoring are separate questions and the sets differ.** What the rung decides is
+// what the blow is multiplied by, never what swings; the floor of the ladder is therefore every
+// attack at the identity, and building a rung pays more again by exactly the multiplier.
 //
 // **A hand counts cards that agree, and buys damage and nothing else** *(2026-08-17)*. The ladder
-// wears poker's names because it is poker's question — high card, pair, two pair, three of a kind,
+// wears poker's names because it is poker's question — no hand, pair, two pair, three of a kind,
 // full house, four of a kind — and the whole of what forming one does is multiply the blow.
 //
 // **A hand is what you played, not what you hit with** *(owner's call, 2026-08-23)*. Defend cards
@@ -36,13 +45,14 @@ import "sort"
 // Card Pair, Form Pair and Elemental Pair were three rungs describing the same two cards, and a
 // player forming a pair does not care which axis let them - so `hands.json` writes `"match": "any"`
 // and the matcher tries each in turn. See `Hand.Axes`. **It pays 1x**, which is the identity: what
-// a pair buys is that two cards are summed where a High Card lands one.
+// a pair buys is the multiplier on a turn that agreed about something, where the No Hand pays the
+// identity on a turn that agreed about nothing.
 //
 // **The multiplier multiplies the hand's own cards** *(2026-08-18, owner's call)*. A Pair of Skewers
 // is `(20 + 20) x 1.5`, so what a hand is worth is a proportion of what its cards deal. It used to
 // be applied to a separate reference swing of one 1x attack at the attacker's DMG, added on top of
 // the cards, which made a percent buy a *fixed* figure: 500% was worth 2.5x the base on Jabs and
-// 0.6x on Skewers, so the ladder paid least to the decks that had climbed furthest. The High Card
+// 0.6x on Skewers, so the ladder paid least to the decks that had climbed furthest. The No Hand
 // carries 100 for the same reason, and it is what makes a lone attack land its own face damage.
 //
 // **That is deliberately narrow.** Hands used to carry a second axis counting the distinct colors
@@ -303,26 +313,40 @@ func HandIDForKey(key string) (HandID, bool) {
 // **A turn has at most one of these.** It is the whole of the attack phase — there is no second
 // blow behind it, however many attack cards were queued.
 type Blow struct {
-	// Cards are indices into the side's own resolved turn, naming the cards that formed the
-	// hand. Attack cards that contributed nothing are not here.
+	// Cards are indices into the side's own resolved turn, naming every card that pays into the
+	// blow: the cards that formed the hand, **plus every attack card the turn played**.
+	//
+	// **It is the scoring set, not the hand's membership.** An attack is here because action points
+	// were spent on it; a defense is here only by making the hand, since it deals nothing either
+	// way. `Rung` is the narrower question, for the readers whose subject is membership.
 	//
 	// **A list rather than a start and a length**, because a counted hand is not contiguous: Two
 	// Pair can be two cards, a card that earned nothing, and two more.
 	Cards []int
 
+	// Rung is the cards that actually made the hand, a subset of Cards and in the same turn
+	// indices. Two things ask that narrower question: `RiderScaleInCombo`, whose entire meaning is
+	// "this card made the hand", and the screen's lift, which says which cards the announcement is
+	// about.
+	//
+	// **Nothing else reads it.** Damage, colors, statuses and every relic read `Cards`: what landed
+	// is what counts, and a fire card that visibly hit and did not burn would read as a bug rather
+	// than as a rule.
+	Rung []int
+
 	// Lead is the turn index of the card the hand is named after: the first card of its first
-	// group, or the High Card itself. It is what the hand event reports as the card the blow
+	// group, or the No Hand itself. It is what the hand event reports as the card the blow
 	// led with.
 	Lead int
 
 	// Hand is what formed, and **it is always a hand**: a turn that builds nothing bigger falls
-	// back to the catalog's High Card. A blow with no cards in it at all — a turn with no attack
+	// back to the catalog's No Hand. A blow with no cards in it at all — a turn with no attack
 	// — is the zero Blow, and `len(Cards) == 0` is how a caller asks that.
 	Hand Hand
 
 	// Multiplier is the hand's, in percent, and exists as its own field because the blow is what
 	// the resolver and the feed both read — neither should have to know the multiplier has only
-	// one source today. 100 is the identity: it is what the High Card carries.
+	// one source today. 100 is the identity: it is what the No Hand carries.
 	Multiplier int
 
 	// Elements is every distinct non-basic color in the hand, in element order. It is what
@@ -340,9 +364,9 @@ type Blow struct {
 	// relics. The consequence taken with it: the ladder is cumulative downward, so a Pair relic
 	// pays on every multi-card hand.
 	//
-	// **The High Card is in here only when it is the blow.** It is the fallback for a turn that
+	// **The No Hand is in here only when it is the blow.** It is the fallback for a turn that
 	// formed nothing, matched by which attack hits hardest rather than by counting — so it is not
-	// a rung a bigger hand also satisfies, and a High Card relic stays a relic about turns that
+	// a rung a bigger hand also satisfies, and a No Hand relic stays a relic about turns that
 	// built nothing.
 	//
 	// **Catalog order, so it is deterministic**: it is walked to decide damage, and a map would
@@ -350,13 +374,21 @@ type Blow struct {
 	Satisfied []HandID
 }
 
+// BuiltAHand reports whether the turn formed a rung of two or more cards, rather than falling back
+// to the No Hand.
+//
+// **The rules do not read it**: a No Hand is a catalog entry like any other, pays the identity, and
+// is what makes a lone attack land its own face damage. It is for the screen, which raises the cards
+// that made the rung on the announcement and so has to know when there are none.
+func (b Blow) BuiltAHand() bool { return b.Hand.Cards() >= 2 }
+
 // BlowFor works out one side's attack phase from the cards it resolved.
 //
 // **The best hand wins, and best means the biggest multiplier.** Four Bashes hold a pair and
 // trips as well as a four of a kind; the four of a kind is worth the most, so it is the hand, and
 // nothing else pays.
 //
-// **When no hand of two or more forms, the High Card is the blow**: the single attack that hits
+// **When no hand of two or more forms, the No Hand is the blow**: the single attack that hits
 // hardest, at the catalog's identity multiplier, so what lands is the card's own face damage.
 // Ties go to the card queued first, which needs no tie-break rule beyond the order the turn is
 // already in.
@@ -365,20 +397,25 @@ func BlowFor(turn []Slot) Blow {
 }
 
 func blowFor(turn []Slot, hands []Hand) Blow {
-	cards, hand, lead, satisfied, formed := matchHand(turn, hands)
+	made, hand, lead, satisfied, formed := matchHand(turn, hands)
 	if !formed {
-		cards, hand = biggestAttack(turn), highCard(hands)
-		if len(cards) > 0 {
-			lead = cards[0]
+		made, hand = biggestAttack(turn), noHand(hands)
+		if len(made) > 0 {
+			lead = made[0]
 		}
 		satisfied = []HandID{hand.ID}
 	}
+	// **The scoring set is the hand plus every attack the turn played.** See Blow.Cards. A turn of
+	// nothing but defenses widens by nothing, so it still forms a hand, still sums to zero and is
+	// still declined by resolveAttackPhase rather than by this function.
+	cards := withEveryAttack(made, turn)
 	if len(cards) == 0 {
 		return Blow{}
 	}
 
 	return Blow{
 		Cards:      cards,
+		Rung:       made,
 		Lead:       lead,
 		Hand:       hand,
 		Multiplier: hand.Multiplier,
@@ -387,17 +424,45 @@ func blowFor(turn []Slot, hands []Hand) Blow {
 	}
 }
 
-// highCardKey is the catalog entry naming the fallback. **It is in `hands.json` rather than
+// withEveryAttack adds to the hand's own cards every attack card the turn played and is not
+// already holding. The result is in turn order, which is what the sum, the bracket and the table's
+// raised row all read it as.
+//
+// **A linear scan rather than a set**, like everything else in this package that walks a turn: a
+// turn is at most MaxActions cards, and a map here would be the one place iteration order could
+// reach a blow.
+func withEveryAttack(cards []int, turn []Slot) []int {
+	out := append([]int(nil), cards...)
+	for i, s := range turn {
+		if !s.Card.formsBlow() {
+			continue
+		}
+		held := false
+		for _, j := range out {
+			if j == i {
+				held = true
+				break
+			}
+		}
+		if !held {
+			out = append(out, i)
+		}
+	}
+	sort.Ints(out)
+	return out
+}
+
+// noHandKey is the catalog entry naming the fallback. **It is in `hands.json` rather than
 // written out here** so the one thing every turn can produce is named and numbered where the rest
 // of the ladder is, and the feed can look it up like any other hand.
-const highCardKey = "high-card"
+const noHandKey = "no-hand"
 
 // highCard is the catalog's fallback entry. It is required to exist — loadCatalog panics
 // without it — because a turn with an attack in it always produces a hand, and one the engine
 // could not name is the single failure this model can have.
-func highCard(hands []Hand) Hand {
+func noHand(hands []Hand) Hand {
 	for _, h := range hands {
-		if h.Key == highCardKey {
+		if h.Key == noHandKey {
 			return h
 		}
 	}
@@ -411,10 +476,10 @@ func highCard(hands []Hand) Hand {
 // key or it would be decided by file order; `Axis` is written narrowest-first for exactly this. It
 // is also what picks between the readings of a merged rung, which all carry one multiplier.
 //
-// **The one-card hand is skipped rather than matched** *(2026-08-15)*. The High Card is in the
+// **The one-card hand is skipped rather than matched** *(2026-08-15)*. The No Hand is in the
 // catalog and would match against any attack at all, but counting is the wrong way to pick it:
 // `matchCountOf` fills groups largest-count-first, so it would hand back whichever concept
-// appeared most rather than the card that hits hardest. Which card is the High Card is a question
+// appeared most rather than the card that hits hardest. Which card is the No Hand is a question
 // about damage, and `biggestAttack` is what answers it.
 func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, []HandID, bool) {
 	var (
@@ -564,7 +629,7 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 	return out, lead, true
 }
 
-// biggestAttack is the High Card: the single attack that hits hardest, or — for a turn that queued
+// biggestAttack is the No Hand: the single attack that hits hardest, or — for a turn that queued
 // no damage at all — the first card in it.
 //
 // **A turn of nothing but defenses is a hand too** *(owner's call, 2026-09-02)*. Every card carries
@@ -603,7 +668,10 @@ func biggestAttack(turn []Slot) []int {
 //
 // **It is about damage, not about membership** *(2026-08-23)*. Every card a duelist can queue is
 // counted toward a hand — see `matchCountOf` — and this is the narrower question `biggestAttack`
-// asks: which of them can be the High Card. A defend card cannot, because it deals nothing.
+// asks: which of them can be the No Hand. A defend card cannot, because it deals nothing.
+//
+// **It is also what `withEveryAttack` widens the scoring set by**, which is the same question a
+// second time: a card that can pay into the blow at all.
 func (c Card) formsBlow() bool {
 	return c.Spec().Verb == VerbAttack
 }
@@ -644,7 +712,7 @@ func elementsOf(turn []Slot, cards []int) []Element {
 }
 
 // scaleDamage applies a turn's multiplier to a base figure — since 2026-08-18 that figure is the
-// sum of the hand's own cards, so this is the whole of the blow rather than a bonus term.
+// sum of the blow's cards, so this is the whole of the blow rather than a bonus term.
 //
 // Rounding is deliberately toward zero, matching guardDivisor and the defend reductions: the
 // package is integer arithmetic throughout, so a multiplier that rounded the other way would be

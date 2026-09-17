@@ -24,7 +24,7 @@
 // edited in `stones.json`, which is the point of the split and also the thing to sanity-check.
 //
 // **The gap between the cheap rungs and the dear ones.** Every stone costs the same five vitae
-// inside the same bag, and a High Card stone is worth a tenth of 100 where a Five of a Kind
+// inside the same bag, and a No Hand stone is worth a tenth of 100 where a Five of a Kind
 // stone is worth a tenth of a far larger number. Whether that spread is the intended bargain is
 // a design question this page is for asking.
 //
@@ -230,7 +230,7 @@ func specFor(st session.Stone, art image.Image, enabled bool) cards.Spec {
 }
 
 // firstStone is the first rung on the ladder that actually has a stone, for the states row. It is
-// a search rather than `plates[0]` because a High Card nobody authored a stone for would otherwise
+// a search rather than `plates[0]` because a No Hand nobody authored a stone for would otherwise
 // draw the states row blank.
 func firstStone(plates []plate) (plate, bool) {
 	for _, p := range plates {

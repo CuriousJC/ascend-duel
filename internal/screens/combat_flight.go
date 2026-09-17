@@ -510,50 +510,32 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		}
 	}
 
-	// **Every defense lifts on its own announcement** *(owner's call, 2026-09-15)*. There was a
-	// suppression here from 2026-09-02: a defense scored into a hand flew its pips on that beat,
-	// and the engine then raised the shields several beats later at the end of the turn, so the
-	// card climbed the table a second time and read as firing twice. The defend phase runs *first*
-	// now — see combat.Categories — so the announcement is the first thing that happens to the
-	// card and the pips leave on the raise a beat later. There is nothing left to suppress.
-
 	mine, theirs := &s.Theater.firingSeats, &s.Theater.enemyFiringSeats
 	if side == combat.SideB {
 		mine, theirs = &s.Theater.enemyFiringSeats, &s.Theater.firingSeats
 	}
 
-	// **A solo attacker lifts one card at a time, and that is the whole point of it**
-	// *(2026-08-17)*. Raising the set says "these cards are one blow", which is exactly what an
-	// enemy's turn is not any more: three cards swing three times, in order, and the card that is
-	// up is the card that is hitting.
-	if combat.Plain(e.Action).Category() != combat.CategoryAttack || s.soloAttacker(side) {
+	// **Nothing on a duelist's turn lifts on a card's own announcement.** A lift says "this card is
+	// acting now", and a duelist's turn has exactly one moment entitled to say that: the hand's
+	// announcement. See noteHand, which raises the cards that made the rung on the `KindHand` beat,
+	// and advancePlayback, which puts them back down before the tally. **The turn reads shields,
+	// then the announcement, then the sum**, and a second gesture ahead of the announcement reads
+	// as whichever card it lifted having gone first.
+	//
+	// The defend phase says what it has to say as one bundle of pips out of their own cards — see
+	// noteShieldRaise, and MECHANICS.md §Shields — so a defense has nothing left to add by moving.
+	//
+	// **A solo attacker is the exception and that is the whole point of it** *(2026-08-17)*.
+	// Raising a set says "these cards are one blow", which is exactly what an enemy's turn is not:
+	// three cards swing three times, in order, no hand is ever named, and the card that is up is
+	// the card that is hitting. It has no other beat to be lifted on.
+	switch {
+	case s.soloAttacker(side) && combat.Plain(e.Action).Category() == combat.CategoryAttack:
 		*mine = []int{seat}
-	} else {
-		*mine = attackSeats(order, side)
+	default:
+		*mine = nil
 	}
 	*theirs = nil
-}
-
-// attackSeats is every seat in one side's row holding an attack card.
-//
-// It counts along the same walk as noteResolved and seatPlayedCards — a seat is a position in
-// that side's own row, not in the round — so a turn that opens with a Brace still numbers its
-// Bash as seat 1.
-func attackSeats(order []combat.Slot, side combat.Side) []int {
-	var (
-		seats []int
-		seat  int
-	)
-	for _, slot := range order {
-		if slot.Side != side {
-			continue
-		}
-		if slot.Card.Category() == combat.CategoryAttack {
-			seats = append(seats, seat)
-		}
-		seat++
-	}
-	return seats
 }
 
 // lit reports whether a seat is one of the ones currently raised.
@@ -566,27 +548,40 @@ func lit(seats []int, seat int) bool {
 	return false
 }
 
-// noteHand narrows what is raised to the cards the hand was made of.
+// noteHand raises the cards the hand was made of, on the beat it is announced.
 //
-// The engine names them — see Event.HandCards — so this is a lookup, not a search. Nothing
+// The engine names them — see Event.RungCards — so this is a lookup, not a search. Nothing
 // here knows what a Flurry is or how many cards one takes, which is what stops the table
 // disagreeing with the hand that actually fired.
+//
+// **The rung, not the blow.** `HandCards` is every attack the turn played, so on a Pair formed by
+// two shields beside one attack it holds the attack too — and raising it would stand up a card that
+// made no part of the hand being announced. `RungCards` is the narrower list and is what the lift
+// means.
 //
 // **The cards need not be adjacent.** A counted hand like Two Pair is two cards, a card that
 // earned nothing, and two more, so this takes the seats it is given rather than a span between
 // the first and the last.
 //
-// **Raising is the whole of what says which cards earned it** *(2026-08-19)*. Every attack card
-// of the turn is lifted by the time this arrives; the ones that built no hand drop back into the
-// row here, and the yellow ring that used to be drawn round the survivors is gone — the shout
-// names the hand and the row shows which cards are standing.
+// **Raising is the whole of what says which cards earned it**: the shout names the hand and the row
+// shows which cards made it, with no ring or bracket drawn round them. **And it ends with the
+// announcement** — advancePlayback puts them down when the tally starts, because a row held up
+// through the arithmetic is the announcement still being made while it is read out.
 func (s *CombatScene) noteHand(e combat.Event) {
 	if e.Kind != combat.KindHand {
 		return
 	}
 
-	seats := make([]int, 0, e.HandCardCount)
-	seats = append(seats, e.HandCards[:e.HandCardCount]...)
+	// **The No Hand raises nothing.** That rung is announced like any other — it carries a
+	// multiplier, a stone raises it, a relic can name it — but it is the turn that built *no* hand,
+	// so there is no set of cards that made it. Its `Blow.Rung` is one card picked by damage rather
+	// than by counting, and raising that says the card did something while every other attack in
+	// the turn lands beside it unraised. See builtARung.
+	var seats []int
+	if builtARung(e) {
+		seats = make([]int, 0, e.RungCardCount)
+		seats = append(seats, e.RungCards[:e.RungCardCount]...)
+	}
 
 	if e.Side == combat.SideB {
 		s.Theater.enemyFiringSeats = seats

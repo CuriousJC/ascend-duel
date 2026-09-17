@@ -386,7 +386,7 @@ type handMathBox struct {
 	active bool
 
 	// shout is the hand's name — `PAIR!` — and shoutAt its center. Empty when no hand was built,
-	// which is the High Card: a lone attack shouting its own name is the same emptying of the
+	// which is the No Hand: a lone attack shouting its own name is the same emptying of the
 	// word that keeps `HAND!` off a single Bash in the feed.
 	shout   string
 	shoutAt image.Point
@@ -555,7 +555,7 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 			term++
 			continue
 		}
-		// The only flying item past the hand's own cards is the multiplier.
+		// The only flying item past the blow's own cards is the multiplier.
 		box.items[i].from = s.handMultiplierOrigin(gs, e)
 		box.multAt = i
 	}
@@ -658,7 +658,7 @@ func mathScript(e combat.Event) []mathItem {
 	// **The multiplier is always shown, the identity included** *(2026-08-19, owner's call)*. It
 	// was dropped at `x 1` on the argument that `20 x 1 = 20` is a sum with nothing in it — true
 	// of the arithmetic and wrong about the game: **hands are going to be upgradable**, so the
-	// High Card's 1 is a number that will change, and a term that appears only once it stops being
+	// No Hand's 1 is a number that will change, and a term that appears only once it stops being
 	// 1 would make an upgrade look like a new rule rather than a bigger figure. Every hand's sum
 	// reads the same shape, and the one the player sees most is the one teaching it.
 	items = append(items, mathOperator("x"), mathItem{
@@ -763,12 +763,12 @@ func mathOperator(str string) mathItem {
 }
 
 // shoutFor is the hand's name made into an exclamation: `PAIR!`, `FOUR OF A KIND!`, and
-// `HIGH CARD!` for the turn that built nothing bigger.
+// `NO HAND!` for the turn that built nothing bigger.
 //
-// **The High Card is shouted like any other hand** *(2026-08-19, owner's call)*, where it used to
-// be silent. It is a real entry in the catalog at the identity multiplier, it is the commonest
-// turn in the game, and it is the name the banner has been carrying since DUEL! — so falling
-// silent here would take the word off the screen at the exact moment the blow lands.
+// **The No Hand is shouted like any other hand.** It is a real entry in the catalog at the identity
+// multiplier, it is the commonest turn in the game, and it is the name the banner has been carrying
+// since DUEL! — so falling silent here would take the word off the screen at the exact moment the
+// blow lands. What it does not get is the lift; see builtARung.
 //
 // **The name comes from the catalog**, like every other place the screen names a hand, so a hand
 // renamed in `data/hands.json` is renamed once. An event naming no hand at all still shouts
@@ -781,6 +781,22 @@ func shoutFor(e combat.Event) string {
 		return ""
 	}
 	return handShout(hand.Name)
+}
+
+// builtARung reports whether this blow built a rung of two cards or more.
+//
+// **It gates the lift and nothing else** *(owner's call, 2026-09-17)*. Every rung announces —
+// `NO HAND!` as much as `PAIR!`, since the bottom of the ladder is a rung the player can price,
+// upgrade with a stone and name in a relic like any other. What it may not do is **raise a card**:
+// the announcement lifts the cards that *made* the rung, and the No Hand is the turn that made none
+// — its `Blow.Rung` is a single card picked by damage rather than by counting, so raising it stood
+// one card up as though it had done something while every other attack landed beside it unraised.
+// **A card jumping up for having done nothing is worse than no lift.**
+//
+// See noteHand, which is the one reader.
+func builtARung(e combat.Event) bool {
+	hand, ok := combat.HandByID(e.Hand)
+	return ok && hand.Cards() >= 2
 }
 
 // handShout is a hand's name made into the exclamation, and it is one function because the planned
@@ -885,8 +901,11 @@ func mathFace(gs *state.GlobalState, size float64) *text.GoTextFace {
 	return &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}
 }
 
-// handCardCenter is where a figure sets off from: the middle of the card that paid it, lifted,
-// because every card of the hand is raised by the time the hand event arrives.
+// handCardCenter is where a figure sets off from: the middle of the card that paid it, **at rest**.
+//
+// **Nothing is lifted while a figure is in the air.** The cards go back down when the tally starts
+// and the shield pips fly in a phase where nothing is raised at all, so a point measured from the
+// lifted position would sit a card's height above the card the figure comes out of.
 //
 // **It recomputes the seat rather than storing a point**, exactly as every card in flight on this
 // screen does — the row re-lays out under a moving thing, and a cached coordinate goes stale.
@@ -897,7 +916,7 @@ func (s *CombatScene) handCardCenter(gs *state.GlobalState, side combat.Side, se
 	} else {
 		at = playedSeatAt(gs, seat, len(s.Theater.resolved), s.playedSplit())
 	}
-	at = lift(at, true)
+	at = lift(at, false)
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2)
 }
 
@@ -1000,16 +1019,25 @@ func (b *handMathBox) Running() bool {
 	return b.at < len(b.items) || !b.Hold.Done()
 }
 
-// tick runs one frame of the script: the shout, then each item in turn, then the hold.
+// tick runs one frame of the script: the announcement, then each item in turn, then the hold.
 //
 // **One item at a time and never two at once.** The whole point of the box is that a figure
 // arrives, is read, and is then joined by an operator; overlapping the beats would put the sum on
 // screen at the speed the feed already manages.
+//
+// **The announcement beat runs whether or not the box owns the word** *(owner's call, 2026-09-17)*.
+// It was gated on `shout` — so an opponent's hand got a beat to be named in and the player's, whose
+// name the banner has been carrying since DUEL!, went straight into counting. That left the
+// announcement and the tally on one frame, and the hand's cards raised for the whole sum rather
+// than for the moment the hand was named. The beat is the same length either way: the box shouts
+// into it when it has a word, and the banner flashes into it when it has not. **Every rung gets
+// it, the No Hand included** — that rung is announced like any other and only the *lift* is withheld
+// from it, see builtARung. See counting below.
 func (b *handMathBox) Tick() {
 	if !b.active {
 		return
 	}
-	if b.shout != "" && !b.shoutT.Done() {
+	if !b.shoutT.Done() {
 		b.shoutT.Tick()
 		return
 	}
@@ -1029,6 +1057,12 @@ func (b *handMathBox) Tick() {
 // later, on a card the player had stopped watching. The phases flipped — see combat.Categories —
 // so the raise now happens before the sum exists, with a beat of its own, and the box carrying a
 // second copy of it would fly every pip twice. What is left is noteShieldRaise.
+
+// counting reports whether the box has moved past the announcement into the sum itself. **It is
+// what puts the hand's cards back down**: they are raised to say which cards the announcement is
+// about, and the tally that follows needs no card raised at all — the figures fly out of the cards
+// where they stand. See advancePlayback, which is the one reader.
+func (b *handMathBox) counting() bool { return b.active && b.shoutT.Done() }
 
 // takeSignalSeat hands back the played seat of the item now running, once, so whatever its riders
 // parked can be thrown on the beat that card's own figure sets off.
@@ -1079,10 +1113,10 @@ func (b *handMathBox) Clear() { *b = handMathBox{} }
 // here could be contradicted by the round a second later — worse than no figure. The name is the
 // part that is already true.
 //
-// **Every hand the engine can name is named here, the High Card included** *(corrected
-// 2026-08-19)*. The comment that stood here said the opposite — that `Blow.Formed` kept HIGH CARD
+// **Every hand the engine can name is named here, the No Hand included** *(corrected
+// 2026-08-19)*. The comment that stood here said the opposite — that `Blow.Formed` kept NO HAND
 // out of both the preview and the shout — and both halves of that had stopped being true: the
-// predicate is gone, a lone attack card falls back to the catalog's High Card, and
+// predicate is gone, a lone attack card falls back to the catalog's No Hand, and
 // `previewAttack` names whatever `BlowFor` returns. A single attack is a hand at the identity
 // multiplier, and the word is not emptied by it because the label names the hand rather than
 // shouting HAND! — the log still writes a lone attack as an ordinary attack sentence.

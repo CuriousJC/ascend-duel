@@ -19,9 +19,21 @@ func shieldScene(card combat.Card) *CombatScene {
 }
 
 // raised is the event the engine emits for a shield card going up: how many this card put up, and
-// what is standing after it.
-func raised(count, standing int) combat.Event {
-	return combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: count, Life: standing}
+// what is standing after it. **Seat 0**, which is the card shieldScene puts on the table; raisedAt
+// is the same event for a named seat.
+func raised(count, standing int) combat.Event { return raisedAt(0, count, standing) }
+
+func raisedAt(seat, count, standing int) combat.Event {
+	return combat.Event{
+		Kind: combat.KindRaised, Side: combat.SideA, Slot: seat,
+		Amount: count, Life: standing,
+	}
+}
+
+// defendAction is the announcement that sits between two raises in the defend phase, which is what
+// the bundle's walk has to step over to find the raise behind it.
+func defendAction(concept combat.ConceptID) combat.Event {
+	return combat.Event{Kind: combat.KindAction, Side: combat.SideA, Action: concept}
 }
 
 // A defend card's pips are what the card raises; anything else raises none. **The seat is read off
@@ -134,17 +146,96 @@ func TestAnAnnouncedRaiseFliesItsOwnPips(t *testing.T) {
 // One card's pips fly once. **The seat is what remembers**, which is why the row records it — a
 // raise announced twice for one card, or a redraw reaching this twice in a frame, is the same
 // shields being spoken about again rather than a second set going up.
+//
+// **It reports true the second time**, and that is the point rather than a wrinkle: what the answer
+// means is "the row is waiting for pips", not "pips left on this call". A false here would send the
+// raise on to noteShields, which sets the row to the absolute count — filling it while the pips that
+// fill it are still crossing the screen.
 func TestPipsAreNotFlownTwiceForOneCard(t *testing.T) {
 	s := shieldScene(combat.Card{Concept: combat.Bash})
 
 	if !s.noteShieldRaise(raised(2, 2)) {
 		t.Fatal("the first raise flew no pips")
 	}
-	if s.noteShieldRaise(raised(2, 4)) {
-		t.Error("the same card's pips flew twice")
+	if !s.noteShieldRaise(raised(2, 4)) {
+		t.Error("the second raise let the row fill behind its own pips")
 	}
 	if len(s.Theater.shields) != 1 {
 		t.Errorf("%d flights are in the air for one card", len(s.Theater.shields))
+	}
+}
+
+// **Every shield in the turn goes up as one gesture.** The first raise reached flies its own pips
+// and every raise behind it in the same defend phase, on one frame, so the cards can stay still
+// under it — see noteResolved, which lifts no defense.
+func TestTheDefendPhaseFliesItsPipsAsOneBundle(t *testing.T) {
+	s := shieldScene(combat.Card{Concept: combat.Brace})
+	s.Theater.resolved = append(s.Theater.resolved, resolvedCard{
+		card: combat.Card{Concept: combat.Block},
+	})
+
+	// Brace, Block once resolved: an announcement and a raise each, in that order.
+	s.log = []combat.Event{
+		defendAction(combat.Brace), raisedAt(0, 1, 1),
+		defendAction(combat.Block), raisedAt(1, 2, 3),
+	}
+	s.cursor = 1
+
+	if !s.noteShieldRaise(s.log[1]) {
+		t.Fatal("the first raise flew no pips")
+	}
+	if len(s.Theater.shields) != 2 {
+		t.Fatalf("%d flights are in the air, want one per defense", len(s.Theater.shields))
+	}
+
+	// And the raise behind it, when its own beat arrives, has nothing left to do and still keeps
+	// the row waiting.
+	s.cursor = 3
+	if !s.noteShieldRaise(s.log[3]) {
+		t.Error("the bundled raise let the row fill behind its own pips")
+	}
+	if len(s.Theater.shields) != 2 {
+		t.Errorf("%d flights are in the air after the second beat, want the same 2",
+			len(s.Theater.shields))
+	}
+}
+
+// **The walk stops at the phase's edge.** A raise is bundled with the raises behind it in the same
+// defend phase and with nothing else — not the attacks that follow, and not the opponent's turn.
+func TestTheBundleDoesNotReachPastTheDefendPhase(t *testing.T) {
+	s := shieldScene(combat.Card{Concept: combat.Brace})
+
+	s.log = []combat.Event{
+		defendAction(combat.Brace), raisedAt(0, 1, 1),
+		// The attack phase: an announcement of a card that is not a defense ends the walk.
+		{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Bash},
+		raisedAt(1, 2, 3),
+	}
+	s.cursor = 1
+
+	s.noteShieldRaise(s.log[1])
+	if len(s.Theater.shields) != 1 {
+		t.Errorf("%d flights are in the air, want only the defense's", len(s.Theater.shields))
+	}
+}
+
+// **Nothing on a duelist's turn lifts on its own announcement**, the shields least of all — so the
+// table is still while the bundle flies, and the one raise in the turn belongs to the hand being
+// named. See noteHand, and TestOnlyTheRungIsRaisedAndOnlyOnTheAnnouncement.
+func TestADefenseLiftsNothing(t *testing.T) {
+	s := shieldScene(combat.Card{Concept: combat.Brace})
+	s.fighterActions = []combat.Card{{Concept: combat.Brace}, {Concept: combat.Bash}}
+	s.log = []combat.Event{
+		defendAction(combat.Brace),
+		{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Bash},
+	}
+
+	for i, what := range []string{"a defense", "an attack"} {
+		s.cursor = i
+		s.noteResolved(s.log[i])
+		if got := s.Theater.firingSeats; len(got) != 0 {
+			t.Errorf("%s lifted %v, want nothing raised before the hand is named", what, got)
+		}
 	}
 }
 

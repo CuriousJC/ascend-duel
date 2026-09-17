@@ -368,7 +368,7 @@ first lesson wherever Go's hashing felt like it.
 ### Hands
 
 `hands.json` is **one list of eighteen**: five poker rungs, Two Pair through Five of a Kind, on
-each of three axes; the merged **Pair**; the Elementalist; plus the one High Card they fall back to.
+each of three axes; the merged **Pair**; the Elementalist; plus the one No Hand they fall back to.
 Each carries a key, an ID, a name, a `match`, `groups` and a percent `multiplier`. Exactly one applies, winning on its multiplier, ties going to the narrowest axis.
 
 **`match` is the axis, and it is required** *(2026-08-19)* — `concept` (copies of the same card),
@@ -391,7 +391,7 @@ axis; wanting one is a schema change, so argue it in MECHANICS.md first.
 
 **Keys carry the axis and the names are long**: `concept-two-pair` / `form-two-pair` /
 `element-two-pair`, drawn as *Card Two Pair*, *Form Two Pair*, *Elemental Two Pair*. **A merged rung
-names no axis** — the Pair is keyed `pair`. IDs are banded — 1 high card, 10 the Pair, 11–15
+names no axis** — the Pair is keyed `pair`. IDs are banded — 1 no hand, 10 the Pair, 11–15
 concept, 21–25 form, 31–38 element — so a new axis or rung lands without moving one, and the merge
 kept 10 and left every gap where it was.
 
@@ -417,14 +417,14 @@ counted on. **Adding a rung is one entry in the JSON**;
 adding anything a hand can *buy* is a design decision, not a field.
 
 **The multiplier multiplies the hand's own cards, and `100` is the identity** *(2026-08-18)*. A
-blow is `(sum of the hand's cards) x multiplier / 100`, so `high-card` carries `100` rather than the
+blow is `(sum of the hand's cards) x multiplier / 100`, so `no-hand` carries `100` rather than the
 `0` it held while the percent applied to a separate swing added on top of the cards. **`0` is now an
 attack phase that deals nothing** and is refused for every hand; a multi-card hand at or below `100`
 is refused too, being one a player would be punished for building. Below `100` is legal for the
-High Card alone and would be a penalty — deliberately allowed, because taking a lever out of the
+No Hand alone and would be a penalty — deliberately allowed, because taking a lever out of the
 file is the opposite of what the narrowing was for.
 
-A malformed catalog panics at init — including a missing `high-card` entry, since a hand the
+A malformed catalog panics at init — including a missing `no-hand` entry, since a hand the
 engine cannot name is the one failure this model produces. Two shape checks sit beside it: a hand
 wanting more cards than a turn holds, and one wanting more groups than its axis has values, since
 only four forms and five elements ever reach a blow. The concept axis is left unchecked: it is

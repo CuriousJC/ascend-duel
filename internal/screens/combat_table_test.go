@@ -252,28 +252,84 @@ func TestBothRowsRaiseTheCardThatIsResolving(t *testing.T) {
 	}
 }
 
+// pairID is a rung of two or more, which is what makes an event one whose cards the screen raises.
+// Every rung is announced, the No Hand included; the lift is the one thing it goes without. See
+// builtARung.
+func pairID(t *testing.T) combat.HandID {
+	t.Helper()
+	h, ok := combat.HandByName("Pair")
+	if !ok {
+		t.Fatal("the catalog holds no Pair")
+	}
+	return h.ID
+}
+
+// **A No Hand raises nothing.** It is announced — `NO HAND!`, and the sum plays — but the lift says
+// which cards *made* the rung, and that turn made none.
+// Its `Blow.Rung` is one card picked by damage rather than by counting, so raising it stood a single
+// card up as though it had done something while every other attack landed beside it unraised.
+func TestANoHandRaisesNothing(t *testing.T) {
+	none, ok := combat.HandByName("No Hand")
+	if !ok {
+		t.Fatal("the catalog holds no No Hand rung")
+	}
+
+	s := &CombatScene{}
+	e := combat.Event{
+		Kind: combat.KindHand, Side: combat.SideA,
+		Hand: none.ID, HandCardCount: 3, RungCardCount: 1,
+	}
+	e.HandCards[0], e.HandCards[1], e.HandCards[2] = 0, 1, 2
+	e.RungCards[0] = 2
+
+	s.noteHand(e)
+	if got := s.Theater.firingSeats; len(got) != 0 {
+		t.Errorf("a No Hand raised %v, want nothing", got)
+	}
+
+	// And a built rung on the same shape does raise, so the stillness is the No Hand's rather than
+	// the event being malformed.
+	e.Hand = pairID(t)
+	e.RungCardCount = 2
+	e.RungCards[0], e.RungCards[1] = 0, 1
+	s.noteHand(e)
+	if got := s.Theater.firingSeats; !sameSeats(got, []int{0, 1}) {
+		t.Errorf("a Pair raised %v, want the two cards that formed it", got)
+	}
+}
+
 func TestOnlyOneSideOfTheTableIsLitAtATime(t *testing.T) {
 	// A turn is contiguous per side, so the lit cards walk the left row and then the right
 	// one. The event that lights one side is the event that unlights the other, which is why
 	// neither row has to know the other exists.
+	//
+	// **The player's row is lit by the hand's announcement and the creature's by its own card.** A
+	// duelist's cards do not lift on their own announcements — the raise is the announcement's,
+	// once, for the rung — and a creature forms no hand, so its card is the only thing that can say
+	// which blow is landing.
 	s := &CombatScene{
 		fighterActions: combat.PlainCards(combat.Bash),
 		enemyActions:   combat.PlainCards(combat.Jab),
+		enemy:          &entities.Combatant{Duelist: combat.Duelist{SoloAttacks: true}},
 		log: []combat.Event{
 			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Bash},
 			{Kind: combat.KindAction, Side: combat.SideB, Action: combat.Jab},
 		},
 	}
 
-	// The cursor points at the event being applied, not past it — advancePlayback calls
-	// applyEvent before it increments. currentSlot counts inclusively for that reason.
-	s.cursor = 0
-	s.noteResolved(s.log[0])
+	hand := combat.Event{
+		Kind: combat.KindHand, Side: combat.SideA,
+		Hand: pairID(t), RungCardCount: 1,
+	}
+	s.noteHand(hand)
 	if !sameSeats(s.Theater.firingSeats, []int{0}) || len(s.Theater.enemyFiringSeats) != 0 {
-		t.Errorf("after the player's card: player %v, enemy %v — want [0] and none",
+		t.Errorf("after the player's hand: player %v, enemy %v — want [0] and none",
 			s.Theater.firingSeats, s.Theater.enemyFiringSeats)
 	}
 
+	// The cursor points at the event being applied, not past it — advancePlayback calls
+	// applyEvent before it increments. currentSlot counts inclusively for that reason, so the
+	// player's own announcement has to stay in the log for the creature's to be the second slot.
 	s.cursor = 1
 	s.noteResolved(s.log[1])
 	if len(s.Theater.firingSeats) != 0 || !sameSeats(s.Theater.enemyFiringSeats, []int{0}) {
@@ -282,10 +338,11 @@ func TestOnlyOneSideOfTheTableIsLitAtATime(t *testing.T) {
 	}
 }
 
-func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
-	// **A turn lands one blow, so the whole hand goes up on the first announcement** — not one
-	// card per beat, which read as one attack per card. The hand then drops the ones that earned
-	// nothing, so what is left standing is what the feed's single line is about.
+func TestOnlyTheRungIsRaisedAndOnlyOnTheAnnouncement(t *testing.T) {
+	// **A turn lands one blow, and the cards that made it go up on the hand's announcement and on
+	// nothing else.** A raise at an attack card's own beat lands one or two beats before the hand is
+	// named, which on a turn of two shields and one attack stands the attack up alone and lets the
+	// shields join it later — the attack visibly going first.
 	s := &CombatScene{
 		hand: []paletteCard{
 			{Card: combat.Card{Concept: combat.Bash, Element: combat.Fire}, selected: true},
@@ -305,28 +362,27 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 	}
 	s.seatPlayedCards()
 
-	// One announcement, the whole hand up. The beats that follow say how long the phase takes,
-	// not which card is acting — no single card is.
-	s.cursor = 0
-	s.noteResolved(s.log[0])
-	if !sameSeats(s.Theater.firingSeats, []int{0, 1, 2}) {
-		t.Errorf("the first announcement raised %v, want all three cards up at once", s.Theater.firingSeats)
-	}
-
-	// And the rest of the phase names the same set rather than adding to it.
-	for i := 1; i < len(s.log); i++ {
+	// The announcements say how long the phase takes and which card is being spoken about in the
+	// log. They lift nothing: no single card is acting, and the blow has not been named yet.
+	for i := range s.log {
 		s.cursor = i
 		s.noteResolved(s.log[i])
-	}
-	if !sameSeats(s.Theater.firingSeats, []int{0, 1, 2}) {
-		t.Errorf("the attack phase ended with %v raised, want all three cards up", s.Theater.firingSeats)
+		if got := s.Theater.firingSeats; len(got) != 0 {
+			t.Fatalf("announcement %d raised %v, want nothing up before the hand is named", i, got)
+		}
 	}
 
-	// The Jab built no hand, so the hand takes it back down. **Raising is the whole of what says
-	// which cards earned the hand** since the yellow relic went on 2026-08-19, which is why this is
-	// the only assertion left here.
-	hand := combat.Event{Kind: combat.KindHand, Side: combat.SideA, HandCardCount: 2}
-	hand.HandCards[0], hand.HandCards[1] = 0, 1
+	// The hand's announcement is what raises them, and it raises **the rung** — the cards that made
+	// the hand — rather than every card that paid into the blow. The Jab is in the sum and not in
+	// the Pair, so it stays down. **Raising is the whole of what says which cards earned the hand**,
+	// there being no ring or bracket drawn round them, which is why this is the only assertion here.
+	hand := combat.Event{
+		Kind: combat.KindHand, Side: combat.SideA,
+		Hand:          pairID(t),
+		HandCardCount: 3, RungCardCount: 2,
+	}
+	hand.HandCards[0], hand.HandCards[1], hand.HandCards[2] = 0, 1, 2
+	hand.RungCards[0], hand.RungCards[1] = 0, 1
 	s.noteHand(hand)
 
 	if !sameSeats(s.Theater.firingSeats, []int{0, 1}) {
@@ -538,7 +594,7 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 	}
 }
 
-func TestOneAttackIsTheHighCard(t *testing.T) {
+func TestOneAttackIsTheNoHand(t *testing.T) {
 	// **A single attack is a hand and is named as one** *(2026-08-19, owner's call)*, where it used
 	// to preview nothing at all. The label is on screen from the first attack card picked rather
 	// than appearing only if a pair happens to form.
@@ -548,13 +604,13 @@ func TestOneAttackIsTheHighCard(t *testing.T) {
 	if !ok {
 		t.Fatal("one Bash previewed no hand")
 	}
-	if blow.Hand.Key != "high-card" {
-		t.Errorf("one Bash previewed %q, want the high card", blow.Hand.Key)
+	if blow.Hand.Key != "no-hand" {
+		t.Errorf("one Bash previewed %q, want the no hand", blow.Hand.Key)
 	}
 
 	// **The planned name and the fired one are one spelling**, which is what lets the banner carry
 	// the word through DUEL! instead of the dialog announcing it a second time.
-	if got, want := handShout(blow.Hand.Name), "HIGH CARD!"; got != want {
+	if got, want := handShout(blow.Hand.Name), "NO HAND!"; got != want {
 		t.Errorf("one Bash is named %q, want %q", got, want)
 	}
 }

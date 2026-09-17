@@ -100,29 +100,51 @@ func (s *CombatScene) row(side combat.Side) *ui.ShieldRow {
 	return &s.Theater.shieldRows[side]
 }
 
-// noteShieldRaise flies the pips for an announced raise, and it is **the only place pips fly from**
-// as of 2026-09-15 *(owner's call)*.
+// noteShieldRaise flies the pips for the whole defend phase, and it is **the only place pips fly
+// from**.
 //
-// The defend phase used to run last, so a defense scored into a hand paid a visible 0 into the sum
-// and then did the thing it was for several beats later, on a card the player had stopped watching
-// — which is why the pips were made to leave with the figure instead, and why this function existed
-// only for the turn that formed no hand at all. The phases flipped (see combat.Categories), so the
-// raise now has a beat of its own in front of the sum: the card lifts, the pips fly, the next
-// defense goes up, and only then do the attacks score. The sum's copy of this is gone.
+// **Every shield in the turn goes up as one gesture.** The first raise reached flies its own pips
+// and every raise behind it in the same phase, all on one frame; the ones behind it then arrive at
+// their own beats and find their seats already flown. It is the shield break's rule and the deal
+// cascade's — what the defend phase says is one thing about the turn, not three things about cards
+// — and it is what lets the cards stay still under it, since a lift per card is three beats of
+// movement in front of a hand nobody has named yet. See noteResolved, which lifts no defense.
 //
-// The card that raised them is the one lit right now, which is the card the announcement is about.
-// It reports whether it flew them, so the log can tell a raise it drew from one it did not.
+// **The pips are the phase's and never the sum's.** A defense that made the rung pays a visible 0
+// into the arithmetic and that 0 is all the sum has to say about it; what the card actually did
+// happened a phase earlier, where the player was watching for it.
+//
+// **Each flight leaves its own card, named by `Event.Slot`** — nothing is lit during the defend
+// phase, so there is no lit card to read a seat off. It reports whether it flew anything, so the
+// log can tell a raise it drew from one it did not.
 //
 // **The count is clamped to the row rather than to the rules.** A duelist holds as many shields as
 // the turn paid for and the row draws maxShieldPips of them, so a raise past the row's end flies
 // nothing rather than flying a pip with nowhere to land — see shownShields, and CLAUDE.md on the
 // row being a separate number from the engine's.
 func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
-	if e.Kind != combat.KindRaised || e.Amount <= 0 {
+	if e.Kind != combat.KindRaised {
 		return false
 	}
-	seat, ok := s.firingSeat(e.Side)
-	if !ok || s.row(e.Side).Flew(seat) {
+	for _, r := range s.raisesInPhase(e) {
+		s.flyOneRaise(r)
+	}
+	// **The answer is whether this raise's pips are in the air, not whether they left just now.**
+	// Every raise but the first was flown by the bundle several beats ago and arrives here with
+	// nothing to do — and it must still be swallowed, or `noteShields` would set the row to the
+	// absolute count while the pips that fill it are still crossing the screen. That is the one
+	// failure this whole gesture exists to prevent.
+	return s.row(e.Side).Flew(e.Slot)
+}
+
+// flyOneRaise sends one card's pips, or reports false for a raise with nothing to draw — a seat
+// that has already flown, or a count the row has no room left for.
+func (s *CombatScene) flyOneRaise(e combat.Event) bool {
+	if e.Amount <= 0 {
+		return false
+	}
+	seat := e.Slot
+	if s.row(e.Side).Flew(seat) {
 		return false
 	}
 
@@ -144,17 +166,34 @@ func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
 	return true
 }
 
-// firingSeat is the seat of the card lit on one side right now, and false for none. **The last of
-// them**, because a defense is lit alone and an attack phase lights a set the hand then narrows.
-func (s *CombatScene) firingSeat(side combat.Side) (int, bool) {
-	seats := s.Theater.firingSeats
-	if side == combat.SideB {
-		seats = s.Theater.enemyFiringSeats
+// raisesInPhase is the raise handed in plus every raise still to come in the same side's defend
+// phase — which is what makes the bundle one gesture rather than one per card.
+//
+// **The walk stops at the first event that is neither a raise nor a defense being announced**, so
+// it cannot reach past the phase into the attacks, into the opponent's turn, or into next round.
+// A side change stops it for the same reason.
+//
+// It reads forward from the cursor, which is legitimate and is what `shieldedSlots` already does
+// one layer down: the round was decided before a frame of it was drawn, so looking ahead in the log
+// is reading a record rather than predicting one. It may never change an outcome.
+func (s *CombatScene) raisesInPhase(e combat.Event) []combat.Event {
+	out := []combat.Event{e}
+	for i := s.cursor + 1; i < len(s.log); i++ {
+		next := s.log[i]
+		if next.Side != e.Side {
+			break
+		}
+		switch {
+		case next.Kind == combat.KindRaised:
+			out = append(out, next)
+		case next.Kind == combat.KindAction &&
+			combat.Plain(next.Action).Category() == combat.CategoryDefend:
+			// The announcement of the next defense, which is what sits between two raises.
+		default:
+			return out
+		}
 	}
-	if len(seats) == 0 {
-		return 0, false
-	}
-	return seats[len(seats)-1], true
+	return out
 }
 
 // flyShields raises one flight and records the seat it left, so nothing sends the same card's pips
@@ -252,13 +291,9 @@ func (s *CombatScene) shieldsRaisedBy(side combat.Side, seat int) int {
 func (s *CombatScene) noteShields(e combat.Event) {
 	switch e.Kind {
 	case combat.KindRaised:
-		// The card being announced is the one lit right now, so its element is the shield any pip
-		// this raise adds should be wearing.
-		el := cards.Basic
-		if seat, ok := s.firingSeat(e.Side); ok {
-			el = s.handCardElement(e.Side, seat)
-		}
-		s.row(e.Side).RaiseTo(e.Life, el)
+		// **The raise names its own card**, so the shield any pip it adds should be wearing is that
+		// card's element. Nothing is lit during the defend phase, so the event is the only source.
+		s.row(e.Side).RaiseTo(e.Life, s.handCardElement(e.Side, e.Slot))
 	case combat.KindBlocked:
 		s.row(e.Target).Hold(e.Amount, cards.Basic)
 	case combat.KindExpired:

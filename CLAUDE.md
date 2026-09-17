@@ -59,13 +59,32 @@ Six streams, each with one job. Reach for the right one rather than searching al
   `data/` and `docs/sheets/`; it does not say how many of anything there is. Noticing that it has
   gone out of date is something to say in the reply, not something to fix.
 
-- **Cut means deleted, not tombstoned.** When something is taken out of the design, remove
-  every trace of it rather than leaving a note saying it was removed and why. These files are
-  loaded into context; a record of things that do not exist is a running cost paid on every
-  session, and it grows without bound because nothing ever retires a tombstone. Git history is
-  the record of what used to be true. **If a removal genuinely needs to stay visible — because
-  the code still has a shape only the dead mechanic explains, or the same idea keeps being
-  re-proposed — ask before writing it down**, rather than deciding alone that it earns a line.
+- **Write what is true now. Never write why it changed** *(owner's call, 2026-09-17)*. Not in
+  `MECHANICS.md`, not in `TODO.md`, not in a skill, not in a doc comment, not in a test's comment.
+  **The release notes are where change lives** — `.github/release-notes/<tag>.md` — and git history
+  is underneath them. If the owner wants to know what moved, that is where he will look.
+
+  The banned shapes, in rising order of how easy they are to write without noticing:
+
+  - **A tombstone** — "the percentage guard was deleted", "there is no mute latch any more". A
+    record of something that does not exist.
+  - **A reversal** — "this reverses the old rule", "it has been both ways", "it was X until
+    2026-09-15". A record of an argument that is over.
+  - **A justification by history** — "the argument then was ... what changed is ...", "it used to
+    be a fixed array because ...". The current reason stands on its own or it is not a reason.
+  - **A dated attribution on a rule that is simply the rule.** `*(owner's call, DATE)*` earns its
+    place on a decision someone might otherwise re-open; on an ordinary statement of fact it is
+    another sentence of history.
+
+  **What stays is the constraint, stated forward.** "A shield eats a whole attack; nothing reduces a
+  blow by arithmetic" is a rule. "The percentage guard was tried and cut, so nothing reduces a blow
+  by arithmetic" is the same rule carrying a corpse. **If a mistake is worth warning about, warn
+  about the mistake** — "do not price a rung below 100: it pays a player less for building more" —
+  rather than narrating the time somebody made it.
+
+  The cost this is paying is real and is accepted: these files are loaded into context every
+  session, they grow without bound because nothing ever retires a line of history, and a reader
+  looking for the current rule has to work out which half of the paragraph is still true.
 
 ### The skill index — every skill and what trips it
 

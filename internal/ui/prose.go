@@ -495,7 +495,7 @@ func HandName(e combat.Event) string {
 //
 // **The bracket is the word the catalog used**, stripped off the front rather than looked up, so
 // a hand renamed is renamed once — in the data. A name with no axis word in front of it is left
-// exactly as it is, which is what keeps "High Card" from becoming "High Card (Card)".
+// exactly as it is, which is what keeps "No Hand" from becoming "No Hand (Card)".
 func HandTitle(e combat.Event) string { return axisToBack(HandName(e)) }
 
 // axisToBack does the moving, split out so it can be tested without an event.

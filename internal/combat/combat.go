@@ -180,11 +180,11 @@ func playTurn(
 	// nobody wants and a duel that is over does not need one. **That guard has moved with the
 	// phase and now only protects the phase below it** — nothing can have fallen this early in a
 	// turn, because the only thing in front of the defenses is the riders.
-	for _, slot := range turn {
+	for at, slot := range turn {
 		if slot.Card.Category() != CategoryDefend {
 			continue
 		}
-		events, actor, target = resolveDefend(events, side, actor, target, slot.Card, round)
+		events, actor, target = resolveDefend(events, side, actor, target, slot.Card, at, round)
 	}
 
 	if !actor.Alive() || !target.Alive() {
@@ -227,6 +227,7 @@ func resolveDefend(
 	side Side,
 	actor, target Duelist,
 	card Card,
+	at int,
 	round int,
 ) ([]Event, Duelist, Duelist) {
 	events = append(events, Event{
@@ -246,10 +247,13 @@ func resolveDefend(
 		// Raised, not spent. Each one eats a whole incoming attack when the opponent swings — see
 		// blockedByShield, and Duelist.Shields for when they expire.
 		actor = actor.raiseShields(card.Amount())
+		// **`Slot` names the card that raised them.** The defenses fire as one bundle and nothing
+		// lifts, so the event is the only thing that can say which card the pips come out of.
 		events = append(events, Event{
 			Kind:   KindRaised,
 			Side:   side,
 			Action: card.Concept,
+			Slot:   at,
 			Amount: card.Amount(),
 			Life:   actor.Shields,
 			Round:  round,
@@ -345,7 +349,7 @@ func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist
 // contribute to no hand are announced and then ignored — `Bash, Jab, Bash` is a Pair and the
 // Jab is not in it, so it adds nothing to the figure.
 //
-// The order inside the blow is: shock roll, base damage from the hand's own cards, the hand
+// The order inside the blow is: shock roll, base damage from the blow's cards, the hand
 // multiplier, the attacker's earth weight, the defender's arcane vulnerability, then the
 // defender's raised cards. **Weight sits where it does because it is a property of the attacker** —
 // it says how hard they can still swing — and vulnerability follows it because it is a property of
@@ -407,7 +411,7 @@ func resolveAttackPhase(
 
 	// The hand is announced before the blow lands, so a boosted figure never arrives before the
 	// reason for it. **Every turn with an attack in it announces a hand** — a lone attack is the
-	// High Card, which is a catalog entry like any other rather than an absence.
+	// No Hand, which is a catalog entry like any other rather than an absence.
 	//
 	// **It also carries the sum**, which is what the damage below is taken from — see handEvent.
 	//
@@ -434,11 +438,12 @@ func resolveAttackPhase(
 	// **This is a roll**, and the only one in the package. See shockMissPct. Nothing is consumed
 	// by it: a shock rolls on every attack it outlives, so the duelist comes back unchanged.
 	if attackMisses(actor, rng) {
+		struck := turn[strikeSlot(blow, turn)].Card
 		events = append(events, Event{
 			Kind:    KindMissed,
 			Side:    side,
-			Action:  turn[blow.Cards[0]].Card.Concept,
-			Element: turn[blow.Cards[0]].Card.Element,
+			Action:  struck.Concept,
+			Element: struck.Element,
 			Target:  targetSide,
 			Round:   round,
 		})
@@ -449,8 +454,8 @@ func resolveAttackPhase(
 	// attack, so one shield is the whole turn — see blockedByShield, which says why that is safe
 	// today and what would stop it being so.
 	if blocked := false; target.Shields > 0 {
-		events, target, blocked = blockedByShield(events, side, target, turn[blow.Cards[0]].Card,
-			blow.Cards[0], round)
+		at := strikeSlot(blow, turn)
+		events, target, blocked = blockedByShield(events, side, target, turn[at].Card, at, round)
 		if blocked {
 			return events, actor, target
 		}
@@ -707,8 +712,27 @@ func resolveSoloAttacks(
 // line has to say. The individual attack cards are still announced — a slot that resolved has to
 // produce a beat — but the screen draws no sentence for them: five cards making one blow read as
 // five blows, which is the thing one-blow-per-turn was meant to stop saying.
-// scoringCards is the cards that formed the hand, in turn order. **The scoring set, not the turn**
-// — Blow.Cards already excludes an attack that paid nothing into the rung.
+// strikeSlot is the turn index of the attack the blow is narrated by: the earliest attack card in
+// the scoring set, or its first card for a blow that holds none.
+//
+// **Earliest rather than heaviest.** On the commonest turn those are the same card, and picking by
+// damage instead would move which card a shield is drawn breaking on every turn in the game.
+//
+// **A blow with no attack in it never reaches a caller of this**: it sums to zero and
+// resolveAttackPhase declines it. The fallback is here so the function is total rather than because
+// something depends on it.
+func strikeSlot(blow Blow, turn []Slot) int {
+	for _, i := range blow.Cards {
+		if i >= 0 && i < len(turn) && turn[i].Card.formsBlow() {
+			return i
+		}
+	}
+	return blow.Cards[0]
+}
+
+// scoringCards is every card that paid into the blow, in turn order — the hand's own cards plus
+// every attack the turn played. **The scoring set, not the turn**: a defense that made no hand is
+// not here, having neither swung nor been counted.
 func scoringCards(blow Blow, turn []Slot) []Card {
 	out := make([]Card, 0, len(blow.Cards))
 	for _, i := range blow.Cards {
@@ -823,7 +847,17 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 		}
 	}
 
-	lead := turn[blow.Cards[0]].Card
+	// **The rung travels beside the terms** — see Event.RungCards. It is the cards that made the
+	// hand rather than the cards that paid into it, and the screen is the only reader.
+	for _, i := range blow.Rung {
+		if e.RungCardCount >= len(e.RungCards) {
+			break
+		}
+		e.RungCards[e.RungCardCount] = i
+		e.RungCardCount++
+	}
+
+	lead := turn[strikeSlot(blow, turn)].Card
 
 	// **The rung's own figure is not a term of Base and has not been since 2026-09-14** — it was
 	// read before the cards, into the DMG they were all swung at. See the fold above; it is still

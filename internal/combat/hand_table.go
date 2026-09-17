@@ -58,11 +58,11 @@ func loadCatalog() []Hand {
 	}
 
 	// **The fallback has to be in the file.** Any turn with an attack in it produces a hand, and
-	// the one it produces when nothing was built is the High Card — so a catalog without it is a
+	// the one it produces when nothing was built is the No Hand — so a catalog without it is a
 	// catalog that cannot name the commonest result in the game, which is the one failure this
 	// model can have.
-	if !seenKey[highCardKey] {
-		panic(fmt.Sprintf("combat: hands.json has no %q hand, so a lone attack could not be named", highCardKey))
+	if !seenKey[noHandKey] {
+		panic(fmt.Sprintf("combat: hands.json has no %q hand, so a lone attack could not be named", noHandKey))
 	}
 
 	return hands
@@ -103,7 +103,7 @@ func validateHand(r data.HandData) ([]Axis, error) {
 	// **100 is the identity and 0 deletes the blow** *(2026-08-18)*. The multiplier multiplies the
 	// hand's own cards now rather than a separate swing added on top of them, so a hand at 0 is not
 	// "pays no bonus" — it is an attack phase that deals nothing. Every hand needs a real number,
-	// the High Card included, and its 100 is what makes a lone attack land its face damage.
+	// the No Hand included, and its 100 is what makes a lone attack land its face damage.
 	//
 	// Anything below 100 is a *penalty* and is deliberately still legal: refusing it would take a
 	// tuning lever away from the file, which is the one place the ladder is meant to be tuned.
@@ -121,10 +121,10 @@ func validateHand(r data.HandData) ([]Axis, error) {
 	// **A built hand may sit *at* the identity but never below it** *(owner's call, 2026-09-05)*.
 	// The Pair does, at 100: it adds no multiplier of its own and is still worth building, because
 	// the multiplier scales the hand's *own cards* - two cards summed at 1x beat the one card a
-	// High Card lands. What is refused is a rung below 100, which would pay a player less for
+	// No Hand lands. What is refused is a rung below 100, which would pay a player less for
 	// building more, and that is a typo rather than an ambition.
 	if total > 1 && r.Multiplier < multiplierScale {
-		return one, fmt.Errorf("wants %d cards for multiplier %d, which pays less than playing them as a High Card", total, r.Multiplier)
+		return one, fmt.Errorf("wants %d cards for multiplier %d, which pays less than playing them as a No Hand", total, r.Multiplier)
 	}
 	// **A hand cannot ask for more cards than a turn can hold.** MaxActions is five and frozen,
 	// so a six-card hand is one nobody could ever form and is a typo rather than an ambition.

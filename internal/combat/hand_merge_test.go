@@ -70,9 +70,9 @@ func TestTheMergedPairReportsTheAxisThatFormedIt(t *testing.T) {
 }
 
 // **The Pair sits at the identity and is still worth building** *(owner's call, 2026-09-05)*. The
-// multiplier scales the hand's *own cards*, so two cards summed at 1x beat the one card a High Card
+// multiplier scales the hand's *own cards*, so two cards summed at 1x beat the one card a No Hand
 // lands — which is why the loader allows a multi-card rung at 100 and refuses one below it.
-func TestAPairAtTheIdentityStillBeatsAHighCard(t *testing.T) {
+func TestAPairAtTheIdentityStillBeatsANoHand(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	one, _, _ := resolve(a, b, PlainCards(Bash), nil, 1)
@@ -87,7 +87,7 @@ func TestAPairAtTheIdentityStillBeatsAHighCard(t *testing.T) {
 		t.Fatal("no attack phase event for the two Bashes")
 	}
 	if paired.Amount <= single.Amount {
-		t.Errorf("a pair lands %d against a high card's %d, so nobody would build it",
+		t.Errorf("a pair lands %d against a no hand's %d, so nobody would build it",
 			paired.Amount, single.Amount)
 	}
 }

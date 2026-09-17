@@ -252,20 +252,20 @@ func TestEachColorInTheHandLandsItsOwnStatus(t *testing.T) {
 	}
 }
 
-func TestACardOutsideTheHandCarriesNoColor(t *testing.T) {
-	// Attack cards that build no hand are announced and contribute nothing — not damage and not
-	// an element. `Bash, Jab, Bash` is a Bash Pair and the Jab is not in it, so a fire Jab
-	// alongside two plain Bashes burns nobody.
+func TestAnAttackOutsideTheHandCarriesItsColor(t *testing.T) {
+	// **Every attack the turn paid for pays into the blow** *(owner's call, 2026-09-17)*, so it
+	// carries its element with it. `Bash, Jab, Bash` is a Bash Pair the Jab does not make, and the
+	// fire Jab burns anyway because it swung.
 	a, b := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 
 	events, _, bAfter := resolve(a, b,
 		[]Card{Plain(Bash), Of(Jab, Fire), Plain(Bash)}, nil, 1)
 
-	if n := len(statusEvents(events, Fire)); n != 0 {
-		t.Errorf("a fire Jab outside the hand applied %d burns, want 0", n)
+	if n := len(statusEvents(events, Fire)); n != 1 {
+		t.Errorf("a fire Jab in the blow applied %d burns, want 1", n)
 	}
-	if bAfter.Statuses[statusOf(Fire)].Active() {
-		t.Error("a card that earned nothing still left its element behind")
+	if !bAfter.Statuses[statusOf(Fire)].Active() {
+		t.Error("a card that swung left no element behind")
 	}
 }
 
@@ -747,7 +747,7 @@ func TestWeakenedAmplifiesABurnTick(t *testing.T) {
 	}
 
 	// The same fire card, plus an arcane one to weaken with. **Both have to be Bashes**: only the
-	// cards that formed the hand carry color, so a Jab beside a Bash is a High Card and the
+	// cards that formed the hand carry color, so a Jab beside a Bash is a No Hand and the
 	// arcane card would land nothing. A burn is a share of the attacker's DMG rather than of the
 	// blow, so the tick is lit from the same figure either way and only its *arrival* differs.
 	events, _, _ := resolve(a, b, []Card{Of(Bash, Fire), Of(Bash, Arcane)}, nil, 1)

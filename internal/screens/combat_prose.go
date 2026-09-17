@@ -171,15 +171,15 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 				s.sideName(e.Target), ui.TickVerb(e.Status), e.Amount), ui.VoiceFor(e.Target))
 
 		case combat.KindHand:
-			// **This is the attack phase's line, and every hand takes it — the High Card
+			// **This is the attack phase's line, and every hand takes it — the No Hand
 			// included** *(2026-08-19)*. There used to be a branch here writing an ordinary attack
 			// sentence when `e.Hand` was `HandNone`, on the argument that announcing "HAND!" over
 			// a single Bash empties the word. **It had been unreachable for some time**:
-			// `blowFor` falls back to the catalog's `high-card` entry, so a turn with an attack
+			// `blowFor` falls back to the catalog's `no-hand` entry, so a turn with an attack
 			// in it always names a hand and the branch could not fire. What the log actually
 			// printed was the hand line, correctly, while the code beside it said otherwise.
 			//
-			// The High Card is an equal citizen throughout now, on the owner's call, so this is
+			// The No Hand is an equal citizen throughout now, on the owner's call, so this is
 			// deliberate rather than merely true.
 			blow(e)
 			rows = append(rows, s.handTermLines(e, played[e.Side])...)
@@ -299,7 +299,7 @@ func (s *CombatScene) sideName(side combat.Side) string {
 // line each; the attack cards write none. A turn lands one blow, so five sentences
 // saying "Duelist attacks with an earth strike" described a round that does not happen, and the
 // line that mattered â€” what the five cards came to â€” was the sixth. **Every hand takes that line,
-// the High Card included** *(2026-08-19)* â€” a lone attack is the catalog's one-card hand and is
+// the No Hand included** *(2026-08-19)* â€” a lone attack is the catalog's one-card hand and is
 // announced like any other.
 //
 // **It takes the events rather than reading the round off the scene** *(2026-08-18)*. It was the

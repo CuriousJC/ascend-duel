@@ -14,7 +14,7 @@ func TestAHandIsNamedRungFirst(t *testing.T) {
 		{"Form Three of a Kind", "Three of a Kind (Form)"},
 		{"Card Pair", "Pair (Card)"},
 		{"Elemental Full House", "Full House (Elemental)"},
-		{"High Card", "High Card"},
+		{"No Hand", "No Hand"},
 	} {
 		if got := axisToBack(c.name); got != c.want {
 			t.Errorf("%q reads as %q, want %q", c.name, got, c.want)

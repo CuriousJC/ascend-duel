@@ -2227,5 +2227,22 @@
     "Fight": 3,
     "Vitae": 40,
     "Life": 30
+  },
+  {
+    "ScenarioRecord": "every-attack-counts",
+    "Note": "Every attack the turn paid for pays into the blow, whether or not it made the rung (owner's call, 2026-09-17). The hand is two ice shields and five attacks in four colours, so the two cases are one click apart. Take the two shields and one attack: they form the Pair on themselves, the attack is in no rung, and it lands anyway at the Pair's multiplier - which it did not before, because the blow was the shields' own zero and the attack never swung. Take the two earth Jabs and add the fire Bash: the Card Pair is the two Jabs, the Bash rides at its rate and burns as well, which is the same widening applied to colours. The budget is wide and nothing dies, so every combination can be tried against the same bat.",
+    "Enemy": "GiantBat",
+    "Hand": [
+      { "Card": "Brace", "Element": "ice" },
+      { "Card": "Block", "Element": "ice" },
+      { "Card": "Bash", "Element": "fire" },
+      { "Card": "Jab", "Element": "earth" },
+      { "Card": "Jab", "Element": "earth" },
+      { "Card": "Cut", "Element": "lightning" },
+      { "Card": "Smash", "Element": "arcane" },
+      { "Card": "Thrust", "Element": "fire" }
+    ],
+    "Dummy": true,
+    "Actions": 12
   }
 ]

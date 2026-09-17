@@ -82,9 +82,10 @@ const (
 	// RiderScaleInCombo scales the duelist's DMG for the blow when this card is one of the cards
 	// the hand was formed from. Amount is a percentage, so 200 is twice.
 	//
-	// **Formed from, not merely played.** `Blow.Cards` is the scoring set, and a turn can play a
-	// card that pays nothing into it — a lone Brace beside a pair, a third element in a two-card
-	// hand. So this asks a question the player can lose: the card has to make the hand.
+	// **Formed from, not merely played.** It reads `Blow.Rung` — the cards that made the rung —
+	// rather than `Blow.Cards`, which is every attack the turn played. So this asks a question the
+	// player can lose: the card has to make the hand, and an attack that only rode along on the
+	// multiplier does not.
 	RiderScaleInCombo
 
 	// RiderWildElement makes this card count as **every** element at once when a hand is formed.
@@ -352,7 +353,10 @@ func blowDMG(base int, turn []Slot, held []Card, blow Blow) int {
 	for _, c := range held {
 		pct = pct * c.ScaleInHand() / 100
 	}
-	for _, i := range blow.Cards {
+	// **`Rung`, not `Cards`.** The scoring set is every attack the turn played, and this rider's
+	// whole subject is having *made the hand* — read off `Cards` it would be damage-on-play wearing
+	// a second name.
+	for _, i := range blow.Rung {
 		pct = pct * turn[i].Card.ScaleInCombo() / 100
 	}
 	dmg = dmg * pct / 100

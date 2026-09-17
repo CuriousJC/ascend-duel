@@ -640,15 +640,15 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 // pieces of code agreeing about what three Bashes are worth. Nothing here knows what a Flurry
 // is.
 //
-// **Every attack previews, the High Card included** *(2026-08-19, owner's call)*. A single attack
-// card is a hand — the catalog's `high-card`, at the identity multiplier — and the name says so
+// **Every attack previews, the No Hand included** *(2026-08-19, owner's call)*. A single attack
+// card is a hand — the catalog's `no-hand`, at the identity multiplier — and the name says so
 // while it is being chosen, so the label is on screen from the first attack picked rather than
 // appearing only when a pair happens to form. A queue of nothing but plans still names nothing:
 // `BlowFor` returns a blow with no cards and there is no attack to be one.
 //
 // **This reverses a rule**, and the argument it reverses is worth keeping in view — announcing
 // HAND! over one Bash would empty the word. What makes it safe is that the label names the
-// *hand* rather than shouting HAND!: `HIGH CARD!` is an honest name for the commonest turn in the
+// *hand* rather than shouting HAND!: `NO HAND!` is an honest name for the commonest turn in the
 // game, and the log still writes a lone attack as an ordinary attack sentence.
 //
 // The turn is ordered with an empty opposing queue, because `ResolutionOrder` is the authority

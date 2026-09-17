@@ -20,7 +20,7 @@ func TestTheShippingCatalogLoads(t *testing.T) {
 		if h.Cards() == 0 {
 			t.Errorf("hand %q counts nothing", h.Name)
 		}
-		// **A one-card hand may be worth nothing and a built one may not.** The High Card pays
+		// **A one-card hand may be worth nothing and a built one may not.** The No Hand pays
 		// no multiplier on purpose — what lands is the card's own face damage — and it is the only
 		// hand nobody chooses to form. Anything asking for two cards and paying nothing is a typo.
 		if h.Cards() > 1 && h.Multiplier <= 0 {
@@ -38,7 +38,7 @@ func TestTheShippingCatalogLoads(t *testing.T) {
 // is said in the name rather than left to be inferred from the cards that lit up.
 func TestTheLadderIsThePokerHandsOnEveryAxis(t *testing.T) {
 	want := map[string]string{
-		"high-card": "High Card",
+		"no-hand": "No Hand",
 
 		// **One Pair, read on whichever axis the turn satisfies** *(owner's call, 2026-09-05)*.
 		// Card Pair, Form Pair and Elemental Pair were three rungs describing the same two cards.
@@ -69,7 +69,7 @@ func TestTheLadderIsThePokerHandsOnEveryAxis(t *testing.T) {
 	}
 
 	if got := len(Hands()); got != len(want) {
-		t.Errorf("the catalog holds %d hands, want %d - five rungs on each of three of-a-kind axes, the merged Pair, the Elementalist, plus the High Card", got, len(want))
+		t.Errorf("the catalog holds %d hands, want %d - five rungs on each of three of-a-kind axes, the merged Pair, the Elementalist, plus the No Hand", got, len(want))
 	}
 	for key, name := range want {
 		h, ok := handByKey(key)
@@ -146,11 +146,11 @@ func TestTheLadderClimbs(t *testing.T) {
 			if big.Key == small.Key || big.Match != small.Match {
 				continue
 			}
-			// **The High Card is outside containment** *(owner's call, 2026-09-05)*. Every rung
+			// **The No Hand is outside containment** *(owner's call, 2026-09-05)*. Every rung
 			// dominates `[1]`, and the fallback is not something the matcher ever picks over a
 			// built hand - so the Pair sitting at the identity beside it is the ladder as tuned
 			// rather than a rung nobody would build: two cards summed at 1x beat one card at 1x.
-			if big.Key == highCardKey || small.Key == highCardKey {
+			if big.Key == noHandKey || small.Key == noHandKey {
 				continue
 			}
 			if !dominates(big.Groups, small.Groups) {
@@ -234,7 +234,7 @@ func TestThePairIsReadOnEveryOfAKindAxis(t *testing.T) {
 // name that says another.
 func TestEveryHandsKeyNamesItsAxis(t *testing.T) {
 	for _, h := range Hands() {
-		if h.Key == highCardKey {
+		if h.Key == noHandKey {
 			// The fallback belongs to no axis: it is what a turn forms when it built nothing.
 			continue
 		}

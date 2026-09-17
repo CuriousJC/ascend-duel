@@ -90,7 +90,7 @@ func StartingDeck() []combat.Card {
 	return out
 }
 
-// Built is every rung of two cards or more, in catalog order. The High Card is left out: it is
+// Built is every rung of two cards or more, in catalog order. The No Hand is left out: it is
 // the fallback rather than something a player reaches for, and it is reachable from any turn with
 // an attack in it.
 func Built() []combat.Hand {
@@ -180,13 +180,13 @@ type Table struct {
 	HandSize int
 	DeckSize int
 
-	// Nothing is the percentage of hands that built no rung at all — the turns the High Card names.
+	// Nothing is the percentage of hands that built no rung at all — the turns the No Hand names.
 	Nothing float64
 
 	Rungs []Odds
 }
 
-// Find is one rung's odds by key, and whether the sample holds it. The High Card is not in a
+// Find is one rung's odds by key, and whether the sample holds it. The No Hand is not in a
 // sample, so a caller walking the whole catalog has to be able to ask and be told no.
 func (t Table) Find(key string) (Odds, bool) {
 	for _, o := range t.Rungs {

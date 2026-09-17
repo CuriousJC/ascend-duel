@@ -1613,13 +1613,13 @@ func TestARuleNamingSeveralRungsFiresOnce(t *testing.T) {
 	}
 }
 
-func TestTheHighCardIsNotARungABiggerHandSatisfies(t *testing.T) {
-	// The High Card is the fallback for a turn that formed nothing, picked by which attack hits
+func TestTheNoHandIsNotARungABiggerHandSatisfies(t *testing.T) {
+	// The No Hand is the fallback for a turn that formed nothing, picked by which attack hits
 	// hardest rather than by counting — so it is not something a Three of a Kind also *is*, and a
-	// High Card relic stays a relic about turns that built nothing.
-	high, ok := HandIDForKey("high-card")
+	// No Hand relic stays a relic about turns that built nothing.
+	high, ok := HandIDForKey("no-hand")
 	if !ok {
-		t.Fatal("the ladder has no high-card")
+		t.Fatal("the ladder has no no-hand")
 	}
 	lonely := relic(t, "satisfied-high", RelicRule{
 		When: MomentBlowFormed,
@@ -1632,13 +1632,13 @@ func TestTheHighCardIsNotARungABiggerHandSatisfies(t *testing.T) {
 
 	one, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash}, nil, 1)
 	if got := handEventOf(t, one, SideA); got.HandBonus != 4 {
-		t.Errorf("a lone attack paid %d, want 4 — the High Card is still a rung a relic can name",
+		t.Errorf("a lone attack paid %d, want 4 — the No Hand is still a rung a relic can name",
 			got.HandBonus)
 	}
 
 	three, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash, slash}, nil, 1)
 	if got := handEventOf(t, three, SideA); got.HandBonus != 0 {
-		t.Errorf("a three of a kind paid the High Card relic %d, want 0", got.HandBonus)
+		t.Errorf("a three of a kind paid the No Hand relic %d, want 0", got.HandBonus)
 	}
 }
 

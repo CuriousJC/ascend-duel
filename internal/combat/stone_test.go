@@ -72,7 +72,7 @@ func TestAStoneRaisesOnlyItsOwnRung(t *testing.T) {
 }
 
 // A stone naming a rung the catalog has not got is refused rather than landing on seat zero,
-// which is the High Card — the failure the bool on HandSlot exists to prevent.
+// which is the No Hand — the failure the bool on HandSlot exists to prevent.
 func TestAStoneOnANonexistentRungIsRefused(t *testing.T) {
 	if _, ok := HandSlot("no-such-hand"); ok {
 		t.Fatal("HandSlot found a rung that does not exist")

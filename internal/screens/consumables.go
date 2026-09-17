@@ -19,7 +19,8 @@ package screens
 // that are identical apart from their width read as one row divided.
 //
 // **The whole row packs at one pitch**, so a relic and a rune sit the same distance apart and
-// close up together when the span is tight. See topRowPitch.
+// close up together when the pane is tight. See relicSlotPitch, and consumablePaneWidth
+// for why each pane packs on its own.
 
 import (
 	"fmt"
@@ -35,9 +36,37 @@ import (
 )
 
 // maxHeld is how many runes can be carried at once, and it reads the run's rule rather than
-// declaring a second two — exactly as maxRelics reads combat.MaxWornRelics. A pane saying `held/2`
-// while the sack took a third is the drift that indirection prevents.
+// declaring a second two. A pane saying `held/2` while the sack took a third is the drift that
+// indirection prevents.
 const maxHeld = session.MaxHeld
+
+// heldSlots is the sack's capacity — what the fraction on the pane's corner counts against, and
+// the consumables counterpart of relicSlots.
+//
+// **A function rather than the constant at the call sites** *(2026-09-17)*, for the reason
+// relicSlots is one: the moment anything grows a sack, the seats the row draws and the seats the
+// run actually has must not be two numbers. It reads the constant today because nothing grows one
+// yet.
+func heldSlots(gs *state.GlobalState) int {
+	_ = gs
+	return maxHeld
+}
+
+// consumableSeats is how many seats the pane actually draws, which is the capacity **or whatever is
+// being carried, if that is more** *(owner's call, 2026-09-17)*.
+//
+// **The sack can be over-full and the pane has to be able to say so.** `Session.hold` goes past
+// MaxHeld on purpose so a fixture can plant a sack rather than buy one — see session.Start — and a
+// pane pinned to the capacity drew two cards while the run carried fifty, which is the screen
+// hiding the thing the fixture exists to show. The row tightens to fit them, exactly as the relic
+// row does; the fraction on the corner still counts against the capacity, so an over-full sack
+// reads as the `50/2` it is.
+func consumableSeats(gs *state.GlobalState) int {
+	if held := len(heldRunes(gs)); held > heldSlots(gs) {
+		return held
+	}
+	return heldSlots(gs)
+}
 
 // topRowPaneGap is the bare ground between the two panes' backings.
 //
@@ -47,36 +76,24 @@ const maxHeld = session.MaxHeld
 // what stops the split reading as one pane with a scratch down it.
 const topRowPaneGap = 2 * relicPaneGap
 
-// topRowPitch is the one pitch the whole top row packs at: the relics and the consumables alike.
+// consumablePaneWidth is how wide the consumables pane is, and it is **a fixed size nothing else in
+// the row can move** *(owner's call, 2026-09-17)*.
 //
-// **One rhythm across both panes** *(owner's call, 2026-09-06)*. The first split gave the
-// consumables a full pitch and let the relics close up to pay for it, which read as two rows at two
-// spacings rather than one row divided. This solves for the pitch that makes both panes full at the
-// same time, so a relic and a rune sit the same distance apart on the same line.
+// It is the sack's own seats at the comfortable pitch — two cards with relicSlotMaxGap between them
+// — so the pane is exactly as big as a full sack drawn properly, and never any bigger.
 //
-// **The arithmetic.** The span holds five relic seats and two consumable seats, which is five pitches
-// and two whole cards, plus the gutter between the panes:
+// **This replaced a pitch solved across both panes at once** *(reversing the 2026-09-06 call)*. That
+// version divided the whole span so both panes filled together, which gave the row one rhythm and
+// one fatal property: the number of seats in either pane set the spacing in *both*. Eight relics
+// squeezed the two runes; fifty runes squeezed the relics into a corner of slivers and handed most
+// of the table to a pane of things the player is carrying rather than wearing. Locking this pane and
+// giving the relics everything else is what makes each pane answerable for its own contents.
 //
-//	span = (maxRelics-1)*pitch + width + gap + (maxHeld-1)*pitch + width
-//
-// Solved for pitch, and then capped at the row's own maximum so a wide span spreads to a comfortable
-// gap rather than to a sparse one — the same cap relicSlotPitch is under, and for the same reason: a
-// row that spread to whatever it was given stopped reading as one build.
-//
-// **Overlap is the expected result on the combat screen and it is fine** *(owner's call)*. Between
-// the two fighter cards the span is 1443, which gives a pitch of 201 against a 200-pixel card — the
-// two-pixel overlap the row closes up by rather than shrinking a card that cannot be shrunk. On the
-// shop and the reward screen there is no opponent card, the span is 1662, and the cap bites first,
-// so nothing overlaps at all.
-func topRowPitch(span int) int {
-	w := cards.RelicStyle.Width
-	steps := (maxRelics - 1) + (maxHeld - 1)
-
-	pitch := (span - 2*w - topRowPaneGap) / steps
-	if max := w + relicSlotMaxGap; pitch > max {
-		return max
-	}
-	return pitch
+// **What is given up is the shared rhythm**, which was a real thing: a relic and a rune now sit at
+// whatever spacing their own pane works out, so the two can differ. That is the accepted cost of
+// each pane keeping its own size.
+func consumablePaneWidth() int {
+	return (maxHeld-1)*(cards.RelicStyle.Width+relicSlotMaxGap) + cards.RelicStyle.Width
 }
 
 // topRowPanes divides the band between the duelist card and whatever ends the row into the two panes
@@ -86,17 +103,13 @@ func topRowPitch(span int) int {
 // under: the combat screen and the build band ask the same question of different spans, and a second
 // copy of this arithmetic is how the two come to disagree about where a pane ends.
 //
-// **Both panes are sized from the shared pitch**, so neither is the one that absorbs the slack. The
-// consumables pane is two seats whether or not anything is in them — a promise the count on its
-// corner is making — and the relics pane is five, and what is left over after both sits outside the
-// row rather than inside either.
+// **The consumables pane is a fixed width and the relics take everything that is left.** Neither
+// pane's size depends on how much is in either — what a pane holds decides how tightly that pane
+// packs, and nothing else. See consumablePaneWidth.
 func topRowPanes(left, right, top int) (relics, consumables image.Rectangle) {
 	bottom := top + cards.RelicStyle.Height
 
-	pitch := topRowPitch(right - left)
-	held := (maxHeld-1)*pitch + cards.RelicStyle.Width
-
-	consumables = image.Rect(right-held, top, right, bottom)
+	consumables = image.Rect(right-consumablePaneWidth(), top, right, bottom)
 	relics = image.Rect(left, top, consumables.Min.X-topRowPaneGap, bottom)
 	return relics, consumables
 }
@@ -110,14 +123,14 @@ func topRowPanes(left, right, top int) (relics, consumables image.Rectangle) {
 // **Left-aligned and never re-centered**, deliberately unlike the relic row. This row is two fixed
 // seats with the empty one drawn, so a card that shifted as the sack filled would move the one
 // thing the player is being shown. The relics center because their seats appear and disappear.
-func consumableSlotAt(r image.Rectangle, i int) image.Point {
-	return image.Pt(r.Min.X+i*relicSlotPitch(r, maxHeld), r.Min.Y)
+func consumableSlotAt(r image.Rectangle, i, seats int) image.Point {
+	return image.Pt(r.Min.X+i*relicSlotPitch(r, seats), r.Min.Y)
 }
 
 // consumableSlotRect is one seat as a rectangle, for anything hit-testing the row. Same shape as
 // relicSlotRect, and for the same drawn-here-clicked-there reason.
-func consumableSlotRect(r image.Rectangle, i int) image.Rectangle {
-	at := consumableSlotAt(r, i)
+func consumableSlotRect(r image.Rectangle, i, seats int) image.Rectangle {
+	at := consumableSlotAt(r, i, seats)
 	return image.Rect(at.X, at.Y, at.X+cards.RelicStyle.Width, at.Y+cards.RelicStyle.Height)
 }
 
@@ -137,7 +150,11 @@ func consumablePaneBackRect(r image.Rectangle) image.Rectangle {
 // on the corner is what says how much room is left. Nothing anywhere outlines an absent card now —
 // the reward screen was the last place doing it, and gave it up on 2026-09-08.
 func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle,
-	spendable func(session.Rune) bool) {
+	spendable func(session.Rune) bool, skip func(int) bool, raise bool) {
+
+	if skip == nil {
+		skip = func(int) bool { return false }
+	}
 
 	if gs.Run == nil {
 		return
@@ -149,9 +166,11 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		relicPaneBackColor, false)
 
 	held := heldRunes(gs)
-	for i := 0; i < maxHeld; i++ {
-		at := consumableSlotRect(r, i)
-		if i >= len(held) {
+	seats := consumableSeats(gs)
+	raised := raisedSeat(gs, runeRow{rect: r, held: len(held), seats: seats}, raise)
+	for i := 0; i < seats; i++ {
+		at := consumableSlotRect(r, i, seats)
+		if i >= len(held) || i == raised || skip(i) {
 			continue
 		}
 		// **A rune is lit exactly when clicking it would do something** *(2026-09-06)*, which
@@ -159,6 +178,23 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		// cards they have selected are the right ones, because the rune that wants them is the
 		// one that is not dim. See consumableTarget.satisfiedBy.
 		drawRuneCard(gs, screen, at.Min, held[i], canSpend(spendable, held[i]), false)
+	}
+
+	// **The card under the cursor is drawn last, so it is drawn whole** *(owner's call,
+	// 2026-09-17)*. A sack packs its seats into whatever width it has, and past a handful the cards
+	// are slivers of each other — so the one being pointed at is unreadable exactly when the player
+	// is asking what it is. Raising it is the picture half of the tooltip: the type says what the
+	// rune does and this says which card that is.
+	//
+	// **Raised rather than moved.** It stays in its seat and simply stops being covered, so the row
+	// does not rearrange itself under a cursor that is about to click.
+	//
+	// **It lands on the tooltip's own tick** *(owner's call, 2026-09-17)*, which the caller asks for
+	// — see models.Tooltip.Showing. Raising on arrival made the row flinch at a cursor crossing it,
+	// and raising halfway split one gesture into two answers a beat apart.
+	if raised >= 0 && !skip(raised) {
+		at := consumableSlotRect(r, raised, seats)
+		drawRuneCard(gs, screen, at.Min, held[raised], canSpend(spendable, held[raised]), false)
 	}
 
 	drawConsumableCount(gs, screen, back, len(held))
@@ -180,7 +216,7 @@ func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image
 	op.GeoM.Translate(float64(back.Max.X), float64(back.Max.Y+relicCountTopGap))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(groundInk)
-	text.Draw(screen, fmt.Sprintf("%d/%d", held, maxHeld),
+	text.Draw(screen, fmt.Sprintf("%d/%d", held, heldSlots(gs)),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 
@@ -193,8 +229,9 @@ func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image
 func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 	tip *models.Tooltip) bool {
 
+	seats := consumableSeats(gs)
 	for i, p := range heldRunes(gs) {
-		seat := consumableSlotRect(r, i)
+		seat := consumableSlotRect(r, i, seats)
 		if !at.In(seat) {
 			continue
 		}
@@ -222,8 +259,9 @@ func canSpend(spendable func(session.Rune) bool, p session.Rune) bool {
 // **It answers for a seat rather than for a card**, so a click on an empty seat is a click on
 // nothing rather than on whatever happens to be held at that index.
 func consumableClicked(gs *state.GlobalState, r image.Rectangle, at image.Point) int {
-	for i := range heldRunes(gs) {
-		if at.In(consumableSlotRect(r, i)) {
+	seats := consumableSeats(gs)
+	for i := len(heldRunes(gs)) - 1; i >= 0; i-- {
+		if at.In(consumableSlotRect(r, i, seats)) {
 			return i
 		}
 	}

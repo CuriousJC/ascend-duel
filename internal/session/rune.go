@@ -569,6 +569,38 @@ func (s *Session) hold(key string) bool {
 	return true
 }
 
+// MoveRune slides the rune at `from` to sit at `to`, shuffling everything between them along. It
+// reports whether the sack actually changed.
+//
+// **It is an arrangement, not a rule** *(owner's call, 2026-09-17)*, and that is the difference from
+// MoveRelic one file over: worn order is the order relics *fire* in, so moving one changes what a
+// duel does, where the sack is a row of things waiting to be picked. What reordering buys is
+// finding them — a sack can hold far more runes than it has comfortable seats, and the pane packs
+// them into slivers, so being able to bring one to the front is the difference between carrying a
+// rune and being able to spend it.
+//
+// **Positions rather than keys**, exactly as Drop takes a position: a sack may hold two of the same
+// rune and a reorder must not be ambiguous about which one moved.
+//
+// An out-of-range index is a no-op rather than a panic — this is driven by a drag, and a drop
+// resolved against a sack that changed underneath it must not take the frame with it. The same
+// courtesy MoveRelic extends.
+func (s *Session) MoveRune(from, to int) bool {
+	n := len(s.held)
+	if from < 0 || from >= n || to < 0 || to >= n || from == to {
+		return false
+	}
+
+	key := s.held[from]
+	if from < to {
+		copy(s.held[from:to], s.held[from+1:to+1])
+	} else {
+		copy(s.held[to+1:from+1], s.held[to:from])
+	}
+	s.held[to] = key
+	return true
+}
+
 // Drop takes one out of the sack by position, and reports whether it was there.
 //
 // **Spending is Drop plus ApplyRune, and they are separate on purpose.** A rune naming two
@@ -626,6 +658,17 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 	// carrying its maximum — a case CanApplyRune has already refused.
 	s.rememberRune(p)
 
+	// **Both handovers are emptied here, by the rune that is firing, rather than by the branch
+	// that fills them** *(2026-09-17)*. They say what *this* rune did, and the combat screen reads
+	// both after every rune it spends — `Duplicated` to seat the copy in the dealt hand, `Granted`
+	// to fly the stones to the pouch. Cleared only by the next rune *of the same kind*, a copy went
+	// on being handed over to every rune spent after it and was seated again each time: one Mimic
+	// and three more runes is four cards in the hand, from one card minted in the deck. Clearing
+	// where the spending happens is what makes "what did the last rune do" answerable by a rune
+	// that did neither.
+	s.duplicated = s.duplicated[:0]
+	s.granted = s.granted[:0]
+
 	switch p.Target {
 	case RuneVitae:
 		s.AddVitae(p.Number)
@@ -657,7 +700,6 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 			all = all[:p.Number]
 		}
 
-		s.granted = s.granted[:0]
 		for _, st := range all {
 			if s.Carry(st.Record) {
 				s.granted = append(s.granted, st)
@@ -670,7 +712,6 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 		// still two cards — see `Card.ID` — so the copy can be altered later without the original
 		// changing under it. `Session.Duplicated` is where the screen reads what was minted, since
 		// the point of spending this mid-fight is that the copy joins the hand.
-		s.duplicated = s.duplicated[:0]
 		for _, i := range s.positionsOf(ids) {
 			card := s.deck[i]
 			s.Add(card)
@@ -812,13 +853,16 @@ func (s *Session) CanApplyRune(p Rune, ids []int) bool {
 // reads this straight after `ApplyRune` and seats what it finds — see
 // `CombatScene.takeRune`.
 //
-// **It is cleared by the next duplicate rather than by the reader**, so it is only ever the most
-// recent one and never a queue somebody has to remember to drain.
+// **It is cleared by the next rune rather than by the reader**, so it is only ever the most
+// recent one and never a queue somebody has to remember to drain. **By the next rune of any kind**
+// *(2026-09-17)*: it was cleared by the next *duplicate* until then, so a copy was still standing
+// when the screen read this after the graft spent after it, and got seated in the hand a second
+// time. See ApplyRuneRolling, where both handovers are emptied.
 // Granted is the stones the last rock shower handed over, in the order they were drawn.
 //
 // **It exists so the dialog can show them** *(owner's call, 2026-09-02)*: "show them all and put
 // them all in". A stone is applied the moment it is owned, so without this the player would watch
-// a rune disappear and be told nothing about what it did. Cleared by the next shower rather
+// a rune disappear and be told nothing about what it did. Cleared by the next rune rather
 // than by the reader, on the same terms Duplicated is.
 func (s *Session) Granted() []Stone {
 	out := make([]Stone, len(s.granted))

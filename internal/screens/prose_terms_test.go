@@ -26,10 +26,10 @@ func spanText(spans []session.LedgerSpan) string {
 // since 2026-09-14 — so the fixture spends it the way the resolver does.
 func blowWithEveryFlatTerm() (combat.Event, []combat.Card) {
 	e := handEvent("pair", []int{5, 10}, 100, 0)
-	e.HandBonus, e.HandBonusSeats = 2, [combat.MaxWornRelics]bool{true}
+	e.HandBonus, e.HandBonusSeats = 2, []bool{true}
 	e.HeldBonus, e.HeldBonusCards = 20, 4
-	e.HeldBonusSeats = [combat.MaxWornRelics]bool{false, true}
-	e.VitaeBonus, e.VitaeBonusSeats = 8, [combat.MaxWornRelics]bool{false, false, true}
+	e.HeldBonusSeats = []bool{false, true}
+	e.VitaeBonus, e.VitaeBonusSeats = 8, []bool{false, false, true}
 	e.Base += e.HeldBonus + e.VitaeBonus
 	e.Amount = e.Base
 
@@ -63,7 +63,7 @@ func TestTheLedgersSumAddsUpToItsOwnTotal(t *testing.T) {
 // second `x`, never a bigger figure in the first — see combat.Event.HandScale.
 func TestTheRungRelicsMultiplierIsOnTheLine(t *testing.T) {
 	e, played := blowWithEveryFlatTerm()
-	e.HandScale, e.HandScaleSeats = 200, [combat.MaxWornRelics]bool{true}
+	e.HandScale, e.HandScaleSeats = 200, []bool{true}
 	e.Amount = e.Base * 2
 
 	line := spanText(handMathSpans(e, played))

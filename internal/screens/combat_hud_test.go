@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
 // The top row is three things sharing one line: the duelist card, the relic row, the enemy
@@ -43,8 +44,8 @@ func TestTheTopRowIsThreeThingsThatDoNotOverlap(t *testing.T) {
 	//
 	// The floor kept here is a sanity bound and not a layout rule: a pitch that has collapsed to
 	// nothing means the span arithmetic is wrong rather than that the row is snug.
-	if pitch := relicSlotPitch(relics, maxRelics); pitch <= 0 {
-		t.Errorf("%d relics sit at a pitch of %dpx in a %dpx row", maxRelics, pitch, relics.Dx())
+	if pitch := relicSlotPitch(relics, combat.DefaultRelicSlots); pitch <= 0 {
+		t.Errorf("%d relics sit at a pitch of %dpx in a %dpx row", combat.DefaultRelicSlots, pitch, relics.Dx())
 	}
 
 	// The consumables pane is the other half of the row, and it must clear the enemy card and the

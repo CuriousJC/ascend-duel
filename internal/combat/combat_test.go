@@ -2,6 +2,7 @@ package combat
 
 import (
 	"math/rand"
+	"reflect"
 	"testing"
 )
 
@@ -481,12 +482,16 @@ func TestRoundIsDeterministic(t *testing.T) {
 	if len(first) != len(second) {
 		t.Fatalf("log lengths differ: %d vs %d", len(first), len(second))
 	}
+	// **DeepEqual rather than ==** *(2026-09-17)*. Event and Duelist stopped being comparable the
+	// day the relic row lost its fixed width and became a slice — see Duelist.Relics. What is being
+	// asserted has not changed: two runs of the same round produce the same log and the same
+	// duelists, down to every seat of every relic.
 	for i := range first {
-		if first[i] != second[i] {
+		if !reflect.DeepEqual(first[i], second[i]) {
 			t.Fatalf("event %d differs: %+v vs %+v", i, first[i], second[i])
 		}
 	}
-	if a1 != a2 || b1 != b2 {
+	if !reflect.DeepEqual(a1, a2) || !reflect.DeepEqual(b1, b2) {
 		t.Error("resulting duelists differ between identical runs")
 	}
 }

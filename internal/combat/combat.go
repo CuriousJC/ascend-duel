@@ -38,6 +38,17 @@ func ResolveRoundHolding(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, roun
 // resolveRound is ResolveRound with the catalog injected. It exists so a test can drive a
 // synthetic hand through the whole engine rather than only through the matcher.
 func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, hands []Hand, src Sources) (events []Event, aAfter, bAfter Duelist) {
+	// **Both duelists' relic rows are cloned before a single rule runs** *(2026-09-17)*. This
+	// package hands duelists around by value and the rules step `Relics[i].Grown` on their own copy
+	// — the caller settles that growth onto the run when the round is over, exactly as it settles
+	// the purse. `Relics` is a slice now, so without this the step writes straight through into the
+	// caller's duelist and a relic grows mid-round whether or not the round is ever settled.
+	//
+	// **It is here rather than at every call site**, because this is the one door: ResolveRound and
+	// ResolveRoundHolding both come through it. See Duelist.cloneRelics, which says what is being
+	// bought, and TestResolvingARoundDoesNotGrowTheCallersRelics, which is what goes red without it.
+	a.Relics, b.Relics = a.cloneRelics(), b.cloneRelics()
+
 	events = make([]Event, 0, 16)
 	events = append(events, Event{Kind: KindRoundStart, Round: round})
 
@@ -779,14 +790,29 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 					// **Only the extra landings are attributed to a relic.** The card's own first
 					// landing is the card being played, which needed no relic to seat it.
 					e.HandLanding[at] = LandingSeats(actor.WornRelics(), card, n == 0)
+				} else {
+					// **A row of falses rather than nothing** *(2026-09-17)*. The card's own
+					// landing is nobody's doing, and while this field was a fixed array that was
+					// the zero value and every reader could index it. A slice's zero value is nil,
+					// so leaving it unset made "no relic bought this term" indistinguishable from
+					// a panic at the first reader that asked.
+					e.HandLanding[at] = make([]bool, len(actor.WornRelics()))
 				}
 
 				// **After the step, not before**, so the row of badges reads as the number this
 				// term has just earned rather than as the number it was counted at.
 				actor = actor.GrowOnLanding(card)
-				for seat, w := range actor.WornRelics() {
-					e.HandGrown[at][seat] = w.Grown
+				// **Built rather than written into** *(2026-09-17)*. This indexed a fixed
+				// [MaxWornRelics]int; the seat row is a slice now and an Event's zero value holds a
+				// nil one, so a duelist wearing nothing indexed past the end of it. One slice per
+				// term, exactly as long as the row it describes — which is also what the two lines
+				// above already hand back.
+				worn := actor.WornRelics()
+				grown := make([]int, len(worn))
+				for seat, w := range worn {
+					grown[seat] = w.Grown
 				}
+				e.HandGrown[at] = grown
 				continue
 			}
 

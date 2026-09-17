@@ -1,6 +1,8 @@
 package session
 
 import (
+	"log"
+
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/pyramid"
 	"github.com/curiousjc/ascend-duel/internal/tutorial"
@@ -183,27 +185,50 @@ func New(deck []combat.Card) *Session {
 		s.SetRelicSlots(StartingRelicSlots)
 	}
 
-	for _, key := range StartingRelics {
-		s.Wear(key)
-	}
-	// **The sack is filled the same way the fingers are**, and a key the catalog has not got is
-	// dropped rather than held — `Hold` is what refuses it. See StartingRunes, which is empty
-	// as shipped.
+	// **All three fixture seats fail the launch on a key the catalog has not got** *(owner's call,
+	// 2026-09-17)*. They dropped it silently until then, which made a misspelling into a run that
+	// booted fine and quietly tested something else: `mid-run` named its runes `"graft"`,
+	// `"motley"` and `"golden"` — the records' Names rather than their keys — and had been opening
+	// with an empty sack ever since, with nothing anywhere saying so.
 	//
-	// **It goes past the cap on purpose** *(2026-09-06)*. `Hold` refuses a third rune because
+	// **This is the rule the rest of `internal/scenario` is already under**, one package up: a
+	// misspelled card, element or enemy fails at package init before a window opens, because a
+	// fixture that quietly looks at a different thing is worse than a game that will not start.
+	// These three could not be checked there — a relic, rune or stone key is this package's to
+	// resolve and `internal/scenario` sits below it — so the check lands where the lists are read.
+	//
+	// **Nothing a player can reach comes through here.** All three vars are empty as shipped and
+	// only `internal/scenario` writes them, which is compiled out of every normal build; `Wear`,
+	// `Hold` and `Carry` go on reporting a refusal to their real callers rather than ending the
+	// process. See StartingRelics, StartingRunes and StartingStones.
+	for _, key := range StartingRelics {
+		if _, ok := registeredRelics[key]; !ok {
+			log.Fatalf("StartingRelics names %q, which is in no relic record", key)
+		}
+		if !s.Wear(key) {
+			log.Fatalf("StartingRelics: %q went on no finger — %d relics on %d fingers, "+
+				"and a relic named twice goes on once", key, len(StartingRelics), s.RelicSlots())
+		}
+	}
+	// **The sack goes past the cap on purpose** *(2026-09-06)*. `Hold` refuses a third rune because
 	// `MaxHeld` is a rule about *acquiring* one, and this is a fixture planting a sack rather than
 	// a run buying one — the same exception `internal/scenario`'s check() already writes down for a
 	// hand longer than the game's own. Four fixtures exist to walk six runes through the dialog
 	// and trimming them to two would leave four Notes describing cards that are no longer there.
 	// The pane draws the first two seats and the count reads the honest number, so an over-full
-	// sack looks like what it is.
+	// sack looks like what it is. So `hold` is what this calls, and an unknown key is the only way
+	// it can fail.
 	for _, key := range StartingRunes {
-		s.hold(key)
+		if !s.hold(key) {
+			log.Fatalf("StartingRunes names %q, which is in no rune record", key)
+		}
 	}
-	// **And the pouch the same way**, with a key the catalog has not got dropped rather than
-	// carried — `Carry` is what refuses it. See StartingStones, which is empty as shipped.
+	// **And the pouch the same way**, where an unknown key is likewise the only refusal `Carry`
+	// has.
 	for _, key := range StartingStones {
-		s.Carry(key)
+		if !s.Carry(key) {
+			log.Fatalf("StartingStones names %q, which is in no stone record", key)
+		}
 	}
 	return s
 }

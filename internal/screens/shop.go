@@ -30,7 +30,6 @@ import (
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
-	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -711,7 +710,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// The shop draws the band's two halves itself, because a relic here carries a price — and the
 	// consumables pane went missing in the split, so a run walked into a shop and its sack
 	// vanished. nil: a rune is carried on this screen, not spent. See buildband.go.
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil)
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, nil, s.tip.Showing())
 
 	s.drawProse(gs, screen, prose)
 
@@ -887,7 +886,11 @@ func (s *ShopScene) figure(gs *state.GlobalState, screen *ebiten.Image, at image
 // crimson two hundred pixels above, so saying it again here would be the screen's only sentence
 // spent on a figure already on it.
 func (s *ShopScene) hint(gs *state.GlobalState) string {
-	if len(gs.Run.Worn()) >= combat.MaxWornRelics && s.anyLeft() {
+	// **Against the run's own cap, not a width** *(2026-09-17)*. It read combat.MaxWornRelics — the
+	// duelist array's width, eight — so the hint about every finger being spoken for waited for a
+	// sixth, seventh and eighth relic the shop had already refused to sell. The same mistake the
+	// pane's `0/8` fraction made, and the constant is gone now.
+	if len(gs.Run.Worn()) >= gs.Run.RelicSlots() && s.anyLeft() {
 		return fmt.Sprintf("%d vitae - every finger is spoken for, sell one to make room",
 			gs.Run.Vitae())
 	}

@@ -111,8 +111,8 @@ func TestAStatRelicIsAddedAtFightStartAndNowhereElse(t *testing.T) {
 	if d.CurrentLife != d.MaxLife {
 		t.Errorf("a full-health duelist equipped to %d/%d", d.CurrentLife, d.MaxLife)
 	}
-	if d.RelicCount != 2 {
-		t.Errorf("the duelist came out wearing %d relics, want 2", d.RelicCount)
+	if n := len(d.Relics); n != 2 {
+		t.Errorf("the duelist came out wearing %d relics, want 2", n)
 	}
 }
 

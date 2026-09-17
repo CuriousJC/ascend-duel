@@ -263,7 +263,7 @@ type mathItem struct {
 	// shakeRelics are worn seats that shake as this item runs without their figure being the one
 	// flying: the echo relic behind an extra landing, which buys a *term* rather than a multiplier
 	// and so has no number of its own in the line.
-	shakeRelics [combat.MaxWornRelics]bool
+	shakeRelics []bool
 
 	// at is the item's resting center, filled by layOutMath.
 	at image.Point
@@ -412,7 +412,7 @@ type handMathBox struct {
 	// each beat, and the alternative to carrying the figures here is the relic row re-deriving which
 	// relic grew — a resolver in a screen, which is the thing the whole event exists to prevent.
 	side  combat.Side
-	grown [][combat.MaxWornRelics]int
+	grown [][]int
 
 	// termOf[i] is how many card terms have been counted by the time item i is up. Punctuation and
 	// the annotations share the count of the term they follow, so the row holds still through them
@@ -441,13 +441,15 @@ func (b handMathBox) termsShown() int {
 // shakes the relic that bought the landing even though it has no figure of its own on the line. They
 // read off the box's item cursor rather than the term cursor, so they happen one at a time in the
 // order the engine applied them — which is the whole point of the sequence.
-func (b handMathBox) shaking(side combat.Side) (relics [combat.MaxWornRelics]bool, card int, ok bool) {
+func (b handMathBox) shaking(side combat.Side) (relics []bool, card int, ok bool) {
 	if !b.active || b.side != side || b.at >= len(b.items) {
 		return relics, 0, false
 	}
 
 	it := b.items[b.at]
-	relics = it.shakeRelics
+	// **A copy, because the caller may write the lead seat into it** and the item is the box's own
+	// record of what happened. A shared slice would make reading the box change it.
+	relics = append([]bool(nil), it.shakeRelics...)
 	if seat := it.relicSeat; seat > 0 && seat-1 < len(relics) {
 		relics[seat-1] = true
 	}
@@ -456,14 +458,14 @@ func (b handMathBox) shaking(side combat.Side) (relics [combat.MaxWornRelics]boo
 
 // growthNow is the accumulators one side's relics have reached at this point in the sum, and false
 // when the box is not running that side's blow or has not reached a term yet.
-func (b handMathBox) growthNow(side combat.Side) ([combat.MaxWornRelics]int, bool) {
+func (b handMathBox) growthNow(side combat.Side) ([]int, bool) {
 	if !b.active || b.side != side {
-		return [combat.MaxWornRelics]int{}, false
+		return nil, false
 	}
 
 	t := b.termsShown()
 	if t < 1 || t > len(b.grown) {
-		return [combat.MaxWornRelics]int{}, false
+		return nil, false
 	}
 	return b.grown[t-1], true
 }
@@ -484,7 +486,7 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 		hold:   newTravel(0, mathHoldTicks()),
 		items:  mathScript(e),
 		side:   e.Side,
-		grown:  append([][combat.MaxWornRelics]int{}, e.HandGrown[:e.HandCardCount]...),
+		grown:  append([][]int{}, e.HandGrown[:e.HandCardCount]...),
 	}
 
 	// **The name snaps on this beat** *(owner's call, 2026-09-15)*. It flew to the hand row at
@@ -697,7 +699,7 @@ func mathScript(e combat.Event) []mathItem {
 }
 
 // firstSeat is the leftmost worn seat in a set of contributors, as a 1-based relicSeat, or 0.
-func firstSeat(paid [combat.MaxWornRelics]bool) int {
+func firstSeat(paid []bool) int {
 	for seat, did := range paid {
 		if did {
 			return seat + 1

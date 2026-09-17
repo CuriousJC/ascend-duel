@@ -358,8 +358,8 @@ func TestTheMultiplierLeavesTheBannerAtItsOwnSize(t *testing.T) {
 // now, so the sum is the only place any of it can be seen.
 func TestTheScriptAnnotatesEveryRelicThatFired(t *testing.T) {
 	e := handEvent("pair", []int{40, 44}, 150, 126)
-	e.HandRelicScale[0] = [combat.MaxWornRelics]int{200, 100}
-	e.HandRelicScale[1] = [combat.MaxWornRelics]int{200, 110}
+	e.HandRelicScale[0] = []int{200, 100}
+	e.HandRelicScale[1] = []int{200, 110}
 
 	got := scriptText(mathScript(e))
 	if want := "40 2x 1x + 44 2x 1.1x x 1.5 = 126"; got != want {
@@ -371,8 +371,8 @@ func TestTheScriptAnnotatesEveryRelicThatFired(t *testing.T) {
 // a card its predicate does not match has no beat and no figure.
 func TestARelicThatDidNotFireIsNotInTheScript(t *testing.T) {
 	e := handEvent("pair", []int{20, 20}, 150, 60)
-	e.HandRelicScale[0] = [combat.MaxWornRelics]int{}
-	e.HandRelicScale[1] = [combat.MaxWornRelics]int{}
+	e.HandRelicScale[0] = []int{}
+	e.HandRelicScale[1] = []int{}
 
 	got := scriptText(mathScript(e))
 	if want := "20 + 20 x 1.5 = 60"; got != want {
@@ -385,8 +385,8 @@ func TestARelicThatDidNotFireIsNotInTheScript(t *testing.T) {
 // climb off 1x is the thing the player is meant to watch.
 func TestARelicFiringAtTheIdentityStillSaysSo(t *testing.T) {
 	e := handEvent("pair", []int{20, 20}, 150, 60)
-	e.HandRelicScale[0] = [combat.MaxWornRelics]int{100}
-	e.HandRelicScale[1] = [combat.MaxWornRelics]int{100}
+	e.HandRelicScale[0] = []int{100}
+	e.HandRelicScale[1] = []int{100}
 
 	got := scriptText(mathScript(e))
 	if want := "20 1x + 20 1x x 1.5 = 60"; got != want {
@@ -403,8 +403,8 @@ func TestARelicFiringAtTheIdentityStillSaysSo(t *testing.T) {
 // after the first relic sets off from the wrong card. `relicSeat` is that mark.
 func TestEveryRelicFigureFliesFromItsOwnRelic(t *testing.T) {
 	e := handEvent("pair", []int{20, 22}, 150, 63)
-	e.HandRelicScale[0] = [combat.MaxWornRelics]int{200, 110}
-	e.HandRelicScale[1] = [combat.MaxWornRelics]int{200, 120}
+	e.HandRelicScale[0] = []int{200, 110}
+	e.HandRelicScale[1] = []int{200, 120}
 
 	cards, relics := 0, 0
 	for _, it := range mathScript(e) {
@@ -432,7 +432,7 @@ func TestEveryRelicFigureFliesFromItsOwnRelic(t *testing.T) {
 // fired — a figure flying out of an empty finger is worse than one that simply appeared.
 func TestARelicFigureNamesTheSeatItFliesFrom(t *testing.T) {
 	e := handEvent("pair", []int{20, 20}, 150, 60)
-	e.HandRelicScale[0] = [combat.MaxWornRelics]int{0, 0, 250}
+	e.HandRelicScale[0] = []int{0, 0, 250}
 
 	var seats []int
 	for _, it := range mathScript(e) {
@@ -451,8 +451,8 @@ func TestARelicFigureNamesTheSeatItFliesFrom(t *testing.T) {
 // order the engine applied them.
 func TestTheRelicFiguresFollowTheirOwnTerm(t *testing.T) {
 	e := handEvent("pair", []int{20, 22}, 150, 63)
-	e.HandRelicScale[0] = [combat.MaxWornRelics]int{200}
-	e.HandRelicScale[1] = [combat.MaxWornRelics]int{210}
+	e.HandRelicScale[0] = []int{200}
+	e.HandRelicScale[1] = []int{210}
 
 	got := scriptText(mathScript(e))
 	if want := "20 2x + 22 2.1x x 1.5 = 63"; got != want {
@@ -469,8 +469,8 @@ func TestTheRelicFiguresFollowTheirOwnTerm(t *testing.T) {
 func TestEachItemNamesWhatShakesWithIt(t *testing.T) {
 	e := handEvent("pair", []int{20, 14}, 150, 51)
 	e.HandCards[0], e.HandCards[1] = 3, 3
-	e.HandRelicScale[1] = [combat.MaxWornRelics]int{0, 180}
-	e.HandLanding[1] = [combat.MaxWornRelics]bool{true}
+	e.HandRelicScale[1] = []int{0, 180}
+	e.HandLanding[1] = []bool{true}
 
 	var cards, relics []int
 	for _, it := range mathScript(e) {

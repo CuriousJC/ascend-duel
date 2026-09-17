@@ -32,7 +32,7 @@ package combat
 // MaxHandSlots is the ceiling on how many rungs a duelist can carry a stone count for.
 //
 // **It exists because `Duelist` has to stay comparable**, exactly as `MaxStatuses` and
-// `MaxWornRelics` do — `TestRoundIsDeterministic` compares two resolved duelists with `==`, and a
+// `MaxStatuses` does — `TestRoundIsDeterministic` compares two resolved duelists structurally, and a
 // map on the struct would end that. Thirty-two is well clear of the eighteen rungs the catalog
 // holds; a catalog that outgrew it panics at init rather than silently dropping the rungs past
 // the end.

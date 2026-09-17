@@ -94,10 +94,10 @@ func TestTheShelfIsCutToThreeAndNotPaddedToIt(t *testing.T) {
 	if got := len(dealShelfFor(testRun())); got != shelfSize {
 		t.Errorf("a fresh run was offered %d relics, want %d", got, shelfSize)
 	}
-	if len(session.Relics())-combat.MaxWornRelics < shelfSize {
+	if len(session.Relics())-combat.DefaultRelicSlots < shelfSize {
 		t.Errorf("the catalog holds %d relics, which is no longer enough to fill a shelf against a "+
 			"cap of %d — dealShelf's cut is now load-bearing and wants a test of its own",
-			len(session.Relics()), combat.MaxWornRelics)
+			len(session.Relics()), combat.DefaultRelicSlots)
 	}
 
 	if got := dealShelf(&state.GlobalState{}, nil); got != nil {
@@ -168,7 +168,7 @@ func TestTheSellFiguresClearTheNarration(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	var shop ShopScene
-	for n := 1; n <= combat.MaxWornRelics; n++ {
+	for n := 1; n <= combat.DefaultRelicSlots; n++ {
 		seat := shop.wornSlot(gs, n-1, n)
 		if seat.Max.X > gs.ScreenWidth {
 			t.Errorf("a worn row of %d runs to %d", n, seat.Max.X)

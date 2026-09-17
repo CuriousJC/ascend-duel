@@ -981,7 +981,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,
 	// and what an essence is about to change.
-	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.relicDrag)
+	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.relicDrag, s.tip.Showing())
 
 	// **The narration stays up while the offer is made**, and only clears once an essence is chosen.
 	if s.stage == narrate {

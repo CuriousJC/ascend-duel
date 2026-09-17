@@ -187,8 +187,11 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 	e.HandAmounts[0], e.HandAmounts[1] = 20, 40
 	// What each landing was worth before its relics: the second card is a 20 the relic doubled.
 	e.HandCardBase[0], e.HandCardBase[1] = 20, 20
-	e.HandRelicScale[1][0] = 200
-	e.HandLanding[1][1] = true
+	// **Built rather than indexed into**: a seat row is a slice as long as the worn row it
+	// describes, so a hand-made event has to say how many seats it is talking about. Seat 0
+	// doubled the second term; seat 1 is why that term exists.
+	e.HandRelicScale[1] = []int{200}
+	e.HandLanding[1] = []bool{false, true}
 
 	played := []combat.Card{
 		{Concept: combat.Bash, Element: combat.Fire},
@@ -265,7 +268,7 @@ func TestTheWorkingIsColoredLikeTheScreen(t *testing.T) {
 
 	e := combat.Event{Kind: combat.KindHand, HandCardCount: 1, Multiplier: 200, Amount: 40}
 	e.HandAmounts[0], e.HandCardBase[0] = 20, 20
-	e.HandRelicScale[0][0] = 200
+	e.HandRelicScale[0] = []int{200}
 
 	lines := s.handTermLines(e, []combat.Card{{Concept: combat.Bash, Element: combat.Fire}})
 	rows := paneRowsFor(lines)

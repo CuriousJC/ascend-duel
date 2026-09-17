@@ -498,40 +498,42 @@ func TestARelicIsOnlyWornOnceTheHandIsNotFull(t *testing.T) {
 	//
 	// **The array is no longer the cap**, which is the thing this test now has to say twice: a
 	// duelist carrying no number of its own wears DefaultRelicSlots, and one carrying a number wears
-	// that — up to MaxWornRelics, which is only how wide the array is.
+	// that, and there is no ceiling above it any more.
 	worn := relic(t, "filler", RelicRule{
 		When: MomentFightStart,
 		Then: []RelicEffect{{Do: DoAddDMG, Amount: 1}},
 	})
 
 	fill := func(d Duelist) Duelist {
-		for i := 0; i < MaxWornRelics+3; i++ {
+		for i := 0; i < 60; i++ {
 			d = d.Wearing(WornRelic{Relic: worn})
 		}
 		return d
 	}
 
 	d := fill(duelist(10, 5, 100))
-	if d.RelicCount != DefaultRelicSlots {
-		t.Errorf("a duelist ended up wearing %d relics, cap is %d", d.RelicCount, DefaultRelicSlots)
+	if n := len(d.Relics); n != DefaultRelicSlots {
+		t.Errorf("a duelist ended up wearing %d relics, cap is %d", n, DefaultRelicSlots)
 	}
 	if got := AddedDMG(d.WornRelics()); got != DefaultRelicSlots {
-		t.Errorf("%d relics added %d DMG, want %d", d.RelicCount, got, DefaultRelicSlots)
+		t.Errorf("%d relics added %d DMG, want %d", len(d.Relics), got, DefaultRelicSlots)
 	}
 
 	raised := duelist(10, 5, 100)
 	raised.RelicSlots = DefaultRelicSlots + 1
-	if raised = fill(raised); raised.RelicCount != DefaultRelicSlots+1 {
-		t.Errorf("a duelist with %d slots wore %d relics", DefaultRelicSlots+1, raised.RelicCount)
+	if raised = fill(raised); len(raised.Relics) != DefaultRelicSlots+1 {
+		t.Errorf("a duelist with %d slots wore %d relics",
+			DefaultRelicSlots+1, len(raised.Relics))
 	}
 
-	// A cap past the array's width is clamped to it rather than writing off the end. The run is
-	// free to be wrong about this; the struct is not.
-	past := duelist(10, 5, 100)
-	past.RelicSlots = MaxWornRelics + 5
-	if past = fill(past); past.RelicCount != MaxWornRelics {
-		t.Errorf("a duelist with %d slots wore %d relics, and the array holds %d",
-			MaxWornRelics+5, past.RelicCount, MaxWornRelics)
+	// **A cap is honored however big it is** *(owner's call, 2026-09-17)*. This asserted the
+	// opposite until then — that a cap past `MaxWornRelics` was clamped to the width of the relic
+	// array — and the constant is gone: the row is a slice and the only limit on relics is the one
+	// a run is carrying.
+	far := duelist(10, 5, 100)
+	far.RelicSlots = 50
+	if far = fill(far); len(far.Relics) != 50 {
+		t.Errorf("a duelist with 50 slots wore %d relics", len(far.Relics))
 	}
 }
 
@@ -1637,5 +1639,43 @@ func TestTheHighCardIsNotARungABiggerHandSatisfies(t *testing.T) {
 	three, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash, slash}, nil, 1)
 	if got := handEventOf(t, three, SideA); got.HandBonus != 0 {
 		t.Errorf("a three of a kind paid the High Card relic %d, want 0", got.HandBonus)
+	}
+}
+
+// **A round may not grow the caller's relics**, which is the one thing that broke when the worn row
+// stopped being a fixed array.
+//
+// This package hands duelists around by value, and the rules step `Relics[i].Grown` on their own
+// copy — the caller settles that growth onto the run once the round is over, exactly as it settles
+// the purse. A slice aliases, so without the clone in resolveRound the growth lands on the caller's
+// duelist *as the round resolves*: the run gets stronger whether or not the round is ever settled,
+// a re-resolve of the same round compounds, and **no other test in this package goes red**. See
+// Duelist.cloneRelics.
+func TestResolvingARoundDoesNotGrowTheCallersRelics(t *testing.T) {
+	growing := relic(t, "growing-on-landing", RelicRule{
+		When: MomentAttackLands,
+		If:   RelicCondition{Form: FormCrush, HasForm: true},
+		Then: []RelicEffect{{Do: DoGrowOnHit, Amount: 10}},
+	})
+
+	a := duelist(10, 5, 100).Wearing(WornRelic{Relic: growing})
+	b := duelist(10, 5, 100)
+
+	before := a.Relics[0].Grown
+	turn := PlainCards(Bash, Bash)
+
+	if _, after, _ := resolve(a, b, turn, nil, 1); after.Relics[0].Grown == before {
+		t.Fatal("the relic did not grow at all, so this test is not exercising growth")
+	}
+	if got := a.Relics[0].Grown; got != before {
+		t.Errorf("resolving a round grew the caller's own relic to %d, from %d", got, before)
+	}
+
+	// **And twice, because aliasing compounds.** A second resolve off the same duelist must see the
+	// same starting accumulator as the first.
+	if _, after, _ := resolve(a, b, turn, nil, 1); a.Relics[0].Grown != before {
+		t.Errorf("a second round left the caller's relic at %d, from %d", a.Relics[0].Grown, before)
+	} else if after.Relics[0].Grown == before {
+		t.Error("the second round grew nothing, so the first one wrote through after all")
 	}
 }

@@ -568,7 +568,19 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawAPBar(screen, left, below+apBarBelow, right-left)
 	s.drawAPFigure(gs, screen, band.Min.X, int(below)+apBarBelow+apBarHeight)
 
+	// **The card under the cursor is drawn last, so it is drawn whole** — raisedSeat, the reading
+	// the relic row and the sack take too. The hand overlaps itself once it is full, and a hand of
+	// fifty is a stack of slivers.
+	raised := raisedSeat(gs, handRow{s}, s.tip.Showing())
+
 	for i, c := range s.hand {
+		// The raised card is drawn after the row rather than in it — a fifth suppression on the
+		// four below, and it skips for the same reason they do: the card is in the hand and what
+		// is being moved is a drawing.
+		if i == raised {
+			continue
+		}
+
 		// A card being dealt is drawn by its flight, somewhere between the pile and here, so
 		// the slot it is heading for stays empty until it lands. The card is already *in* the
 		// hand — this hides a drawing, not a card, which is why nothing else has to know.
@@ -625,6 +637,24 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		drawMarkedCard(gs, screen, seat.Min, cards.Hand,
 			c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), enabled, c.selected,
 			marksFor(gs, seat))
+	}
+
+	// **The raised card, over the row.** It answers the same four suppressions the loop does, so a
+	// card being dealt, resolved, slid or morphed is still drawn by whatever owns it.
+	if raised >= 0 && raised < len(s.hand) &&
+		!s.inboundTo(raised) && !s.resolvedInHand(raised) &&
+		!s.slidingTo(raised) && !s.dealtTo(raised) {
+
+		c := s.hand[raised]
+		seat := s.cardSlot(gs, raised)
+		if h, ok := s.handMorphFor(c.actionCard.ID); ok {
+			drawMorph(gs, screen, seat.Min, h.m)
+		} else {
+			enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
+			drawMarkedCard(gs, screen, seat.Min, cards.Hand,
+				c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), enabled, c.selected,
+				marksFor(gs, seat))
+		}
 	}
 
 	if !s.drag.dragging() || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {

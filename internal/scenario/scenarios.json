@@ -1,5 +1,326 @@
 [
   {
+    "ScenarioRecord": "a-full-row",
+    "Note": "Fifty of everything: fifty relics worn, fifty runes in the sack, fifty cards in the hand. It is the stress test for the three rows that share one widget - the hand, the worn relics and the sack are the same draggable, overlapping row at three widths - and it is kept rather than deleted because how they behave when full is a question worth looking at again. Each row packs inside its own pane, so none of them can squeeze another; resting the cursor on any of them raises the card under it whole, on the same tick its tooltip appears; and any of the three can be dragged into a different order. Fifty relics is possible at all because there is no ceiling on how many a duelist may wear - combat.MaxWornRelics was deleted on 2026-09-17 and what a run wears is combat.DefaultRelicSlots or whatever the run is carrying, which this sets to fifty. Nothing here is tuned: fifty relics firing into one sum is a picture of a layout rather than a balance question.",
+    "Relics": [
+      "flip-lightning-to-ice",
+      "flip-earth-to-ice",
+      "flip-fire-to-ice",
+      "flip-ice-to-fire",
+      "flip-lightning-to-fire",
+      "flip-earth-to-fire",
+      "flip-ice-to-lightning",
+      "flip-fire-to-lightning",
+      "flip-earth-to-lightning",
+      "flip-ice-to-earth",
+      "flip-fire-to-earth",
+      "flip-lightning-to-earth",
+      "flip-fire-to-arcane",
+      "flip-ice-to-arcane",
+      "flip-lightning-to-arcane",
+      "flip-earth-to-arcane",
+      "flip-arcane-to-fire",
+      "flip-arcane-to-ice",
+      "flip-arcane-to-lightning",
+      "flip-arcane-to-earth",
+      "dmg-high-hand",
+      "dmg-pair-hand",
+      "dmg-concept-doubled-hand",
+      "dmg-concept-tripled-hand",
+      "dmg-concept-full-house-hand",
+      "dmg-concept-four-of-a-kind-hand",
+      "dmg-concept-five-of-a-kind-hand",
+      "dmg-form-two-pair-hand",
+      "dmg-form-three-of-a-kind-hand",
+      "dmg-form-full-house-hand",
+      "dmg-form-four-of-a-kind-hand",
+      "dmg-form-five-of-a-kind-hand",
+      "dmg-element-two-pair-hand",
+      "dmg-element-three-of-a-kind-hand",
+      "dmg-element-full-house-hand",
+      "dmg-element-four-of-a-kind-hand",
+      "dmg-element-five-of-a-kind-hand",
+      "status-burn",
+      "status-chill",
+      "status-shock",
+      "status-weight",
+      "status-weak",
+      "pair-status-shock-chill",
+      "pair-status-burn-chill",
+      "pair-status-burn-shock",
+      "pair-status-chill-weight",
+      "pair-status-chill-weak",
+      "pair-status-shock-weak",
+      "pair-status-weight-burn",
+      "pair-status-weight-shock"
+    ],
+    "RelicSlots": 50,
+    "Enemy": "GiantBat",
+    "Runes": [
+      "left-to-right",
+      "duplicate-card",
+      "two-into-light",
+      "two-into-fire",
+      "two-into-arcane",
+      "two-into-earth",
+      "two-into-ice",
+      "two-into-slash",
+      "two-into-crush",
+      "two-into-stab",
+      "two-into-defend",
+      "two-destroyed",
+      "held-vitae",
+      "change-wildcard",
+      "played-shield",
+      "play-dmg",
+      "play-dmgx",
+      "play-drain",
+      "held-dmgx",
+      "held-dmg",
+      "two-stones",
+      "add-vitae",
+      "switch-gold",
+      "switch-silver",
+      "repeat-card",
+      "left-to-right",
+      "duplicate-card",
+      "two-into-light",
+      "two-into-fire",
+      "two-into-arcane",
+      "two-into-earth",
+      "two-into-ice",
+      "two-into-slash",
+      "two-into-crush",
+      "two-into-stab",
+      "two-into-defend",
+      "two-destroyed",
+      "held-vitae",
+      "change-wildcard",
+      "played-shield",
+      "play-dmg",
+      "play-dmgx",
+      "play-drain",
+      "held-dmgx",
+      "held-dmg",
+      "two-stones",
+      "add-vitae",
+      "switch-gold",
+      "switch-silver",
+      "repeat-card"
+    ],
+    "Deck": [
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Copies": 50
+      }
+    ],
+    "Hand": [
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      }
+    ],
+    "Dummy": true,
+    "Actions": 12
+  },
+  {
     "ScenarioRecord": "mid-run",
     "Note": "A run already under way, which is the state nothing else here boots into. Every other fixture is a question about one mechanic on an otherwise empty run; this one asks what the screen looks like when the player has been climbing for a while - five fingers full, runes in the sack, stones in the pouch, a purse worth spending and a duelist carrying a wound. Floor 3, middle room. The relics are picked to be told apart rather than to combo: one of each rarity so the pane shows all three borders, and five different families so no two cards are the same picture. Nothing here is tuned for a win - it is a fixture for looking at a laid-out screen, and the deck, the enemy and the draw are all the game's own. The seed is pinned rather than the deck replaced, so the hand is whatever the real shuffle deals and is the same hand every launch.",
     "Relics": [
@@ -11,9 +332,9 @@
     ],
     "Hand": [],
     "Runes": [
-      "graft",
-      "motley",
-      "golden"
+      "left-to-right",
+      "change-wildcard",
+      "switch-gold"
     ],
     "Stones": [
       "pebble",
@@ -1123,7 +1444,7 @@
       }
     ],
     "Runes": [
-      "motley"
+      "change-wildcard"
     ],
     "Screen": "combat",
     "Fight": 0,
@@ -1187,8 +1508,8 @@
       }
     ],
     "Runes": [
-      "golden",
-      "silver"
+      "switch-gold",
+      "switch-silver"
     ]
   },
   {
@@ -1263,8 +1584,8 @@
       }
     ],
     "Runes": [
-      "motley",
-      "silver"
+      "change-wildcard",
+      "switch-silver"
     ]
   },
   {
@@ -1396,8 +1717,8 @@
       }
     ],
     "Runes": [
-      "motley",
-      "siphon"
+      "change-wildcard",
+      "play-drain"
     ]
   },
   {
@@ -1432,7 +1753,7 @@
     ],
     "Hand": [],
     "Runes": [
-      "graft"
+      "left-to-right"
     ],
     "Screen": "shop",
     "Fight": 3,
@@ -1475,7 +1796,7 @@
     "Note": "Does an echoed fire card grow Enflamed three times? Play the Skewer first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
     "Relics": [
       "lead-three-times",
-      "enflamed",
+      "growth-fire",
       "dmgx-fire"
     ],
     "Hand": [
@@ -1507,7 +1828,7 @@
     "Note": "The widest sum the math box can be asked to draw: five cards, the lead one echoed twice. Watch whether the line shrinks and whether it is still readable.",
     "Relics": [
       "lead-three-times",
-      "aftershock"
+      "repeat-crush"
     ],
     "Hand": [
       {
@@ -1576,16 +1897,15 @@
   },
   {
     "ScenarioRecord": "sack-of-runes",
-    "Note": "The board piece: a sack holding one of each shape a rune can take, clicked in the consumables pane on the top row - select the cards in the hand first, then click the rune. It is here because a rune is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Siphon is the rider (a card that heals you as it is played, for the rest of the run), Unmake eats two cards, Mimic copies one and the copy joins the hand you are holding, Effigy turns one into a Bash, Graft makes the first card you click into the second, and Hoard needs no target at all and so fires with nothing selected.",
+    "Note": "The board piece: a sack holding one of each shape a rune can take, clicked in the consumables pane on the top row - select the cards in the hand first, then click the rune. It is here because a rune is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Siphon is the rider (a card that heals you as it is played, for the rest of the run), Unmake eats two cards, Mimic copies one and the copy joins the hand you are holding, Graft makes the first card you click into the second, and Hoard needs no target at all and so fires with nothing selected.",
     "Relics": [],
     "Hand": [],
     "Runes": [
-      "siphon",
-      "unmake",
-      "mimic",
-      "effigy",
-      "graft",
-      "hoard"
+      "play-drain",
+      "two-destroyed",
+      "duplicate-card",
+      "left-to-right",
+      "add-vitae"
     ],
     "Screen": "combat",
     "Seed": "0000HX",
@@ -1601,10 +1921,10 @@
     "Runes": [
       "held-dmgx",
       "held-dmg",
-      "tithe",
-      "hunger",
-      "aegis",
-      "goad"
+      "held-vitae",
+      "play-dmgx",
+      "played-shield",
+      "play-dmg"
     ],
     "Screen": "combat",
     "Seed": "0000HX",
@@ -1618,10 +1938,10 @@
     "Relics": [],
     "Hand": [],
     "Runes": [
-      "embermark",
-      "arcmark",
-      "maulstave",
-      "thornstave"
+      "two-into-fire",
+      "two-into-light",
+      "two-into-crush",
+      "two-into-stab"
     ],
     "Screen": "combat",
     "Seed": "0000HX",
@@ -1655,7 +1975,7 @@
       "agate",
       "jasper",
       "onyx",
-      "flint",
+      "chert",
       "garnet"
     ],
     "Screen": "shop",
@@ -1702,7 +2022,7 @@
     "Hand": [],
     "Runes": [
       "luck",
-      "chimera"
+      "repeat-card"
     ],
     "Screen": "combat",
     "Seed": "0000HX",

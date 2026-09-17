@@ -331,7 +331,7 @@ type Event struct {
 	//
 	// **Per seat, so the screen knows which relic to bounce.** A product would say what the term came
 	// to and leave five fingers unaccounted for.
-	HandRelicScale [maxHandTerms][MaxWornRelics]int
+	HandRelicScale [maxHandTerms][]int
 
 	// HandLanding[i][seat] reports whether the relic on that seat is why term i exists at all: an
 	// extra landing bought by `repeat-card` or `echo-attack`. False on a card's own first landing,
@@ -341,7 +341,7 @@ type Event struct {
 	// relic buys a *term*, not a figure, so it has nothing to say beside the number — and without
 	// this it would be the one thing in the sum with no card accounting for it while the player
 	// watches three terms it alone is responsible for. See combat.LandingSeats.
-	HandLanding [maxHandTerms][MaxWornRelics]bool
+	HandLanding [maxHandTerms][]bool
 
 	// HandGrown[i][seat] is what the relic on that worn seat had accumulated **after** term i was
 	// counted. The relic row reads it to step each badge on the beat the term lands, so the player
@@ -354,7 +354,7 @@ type Event struct {
 	// five fingers. That is affordable because a KindHand event happens once per turn, and the
 	// alternative is a screen re-deriving which relic grew, which is the resolver-in-the-screen this
 	// whole block of fields exists to prevent.
-	HandGrown [maxHandTerms][MaxWornRelics]int
+	HandGrown [maxHandTerms][]int
 
 	// HandBonus is DMG a worn relic added to the duelist **because of the rung this blow formed**,
 	// and HandBonusSeats is which seats paid it.
@@ -373,7 +373,7 @@ type Event struct {
 	//
 	// Zero when nothing worn names this rung, which is the usual case.
 	HandBonus      int
-	HandBonusSeats [MaxWornRelics]bool
+	HandBonusSeats []bool
 
 	// HeldBonus is flat damage a worn relic added to this blow **for the cards the turn kept back**,
 	// and HeldBonusSeats is which seats paid it.
@@ -389,18 +389,18 @@ type Event struct {
 	// turns gone. See screens.handTermLines.
 	HeldBonus      int
 	HeldBonusCards int
-	HeldBonusSeats [MaxWornRelics]bool
+	HeldBonusSeats []bool
 
 	// VitaeBonus is the duelist's Bounty as it joined this blow's Base, and VitaeBonusSeats is
 	// which worn relics put it there.
 	VitaeBonus      int
-	VitaeBonusSeats [MaxWornRelics]bool
+	VitaeBonusSeats []bool
 
 	// HandScale is the percentage the worn relics moved this blow's Multiplier by — 100 when
 	// nothing did — and HandScaleSeats is which relics paid. **Multiplier already has it applied**;
 	// this is kept so a screen can say the hand was improved rather than only show a bigger figure.
 	HandScale      int
-	HandScaleSeats [MaxWornRelics]bool
+	HandScaleSeats []bool
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits
@@ -445,4 +445,22 @@ func appendTurn(slots []Slot, side Side, cards []Card) []Slot {
 		}
 	}
 	return slots
+}
+
+// GrownAt is what the relic on `seat` had accumulated after term `term`, and **zero for a seat this
+// event does not describe**.
+//
+// **A total reading rather than an index** *(2026-09-17)*. The seat rows became slices when the
+// duelist's relic row lost its fixed width, and they are built one per term — so they are all the
+// same length in an event the resolver wrote, and need not be in one a test or a tool assembled by
+// hand. A reader walking one row and indexing another is the shape that panics, and it panicked.
+func (e Event) GrownAt(term, seat int) int {
+	if term < 0 || term >= len(e.HandGrown) {
+		return 0
+	}
+	row := e.HandGrown[term]
+	if seat < 0 || seat >= len(row) {
+		return 0
+	}
+	return row[seat]
 }

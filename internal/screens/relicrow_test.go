@@ -180,7 +180,7 @@ func TestTheBadgeFollowsTheSumMidBlow(t *testing.T) {
 	}
 
 	worn := []combat.WornRelic{{Relic: id, Grown: 0}}
-	stepped := withGrown(worn, [combat.MaxWornRelics]int{20})
+	stepped := withGrown(worn, []int{20})
 
 	if worn[0].Grown != 0 {
 		t.Error("withGrown wrote back into the fight's own worn set")

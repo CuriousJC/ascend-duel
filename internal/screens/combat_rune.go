@@ -32,7 +32,6 @@ import (
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -373,17 +372,125 @@ func (s *CombatScene) runeSpendable(gs *state.GlobalState) func(session.Rune) bo
 // cannot be clicked and a card that is lit always works. Two predicates here is how a control comes
 // to look available and do nothing.
 func (s *CombatScene) updateConsumables(gs *state.GlobalState) {
-	if !s.canSpendRunes(gs) || !gs.CursorAllowed() {
-		return
-	}
-	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+	row := s.runeRow(gs)
+
+	// A modal covering the screen, or a tutorial step holding input elsewhere, takes the row with
+	// it — canceling rather than returning, exactly as the worn relic row does.
+	if s.modalUp() || !gs.CursorAllowed() {
+		s.runeDrag.cancel(row)
 		return
 	}
 
-	at := image.Pt(gs.MouseX, gs.MouseY)
-	i := consumableClicked(gs, s.consumablePaneRect(gs), at)
-	if i < 0 {
+	s.runeDrag.update(gs, row)
+}
+
+// runeRow is the sack as a draggable row of cards, addressed by the shared drag — the same
+// controller the worn relics and the dealt hand use *(owner's call, 2026-09-17)*.
+//
+// **What a drop means here is an arrangement, not a rule.** Worn order decides what a relic does;
+// sack order decides nothing at all, which is why this reorders the run and stops there where
+// CombatScene.moveRelic has a live duelist to keep in step as well. See Session.MoveRune.
+//
+// **It exists because a sack can hold more than it has seats.** `Session.hold` goes past MaxHeld on
+// purpose and the pane packs whatever it is given, so a run carrying fifty runes draws them as
+// slivers — and the only way to reach the one at the bottom of that stack was to spend everything
+// in front of it. Dragging brings it to the front.
+//
+// **A press that never travels is a spend**, which is what keeps one gesture doing both: rowClick
+// hands the seat to spendRune, which refuses on its own terms if the selection is not what the rune
+// wants. A rune that cannot be spent is still draggable.
+//
+// **Nothing is lifted.** The run owns the sack and is not touched until the drop, exactly as the
+// relic row leaves the worn list alone — the drawing skips the seat the drag says is empty.
+type runeRow struct {
+	rect  image.Rectangle
+	held  int
+	seats int
+	click func(i int)
+	move  func(from, to int)
+}
+
+func (r runeRow) rowLen() int { return r.held }
+
+func (r runeRow) rowSlot(gs *state.GlobalState, i int) image.Rectangle {
+	return consumableSlotRect(r.rect, i, r.seats)
+}
+
+// rowZone is the pane's own rectangle, for the relic row's reason: a drop outside it is not a
+// reorder, and the panes stand beside things that must not become drop targets.
+func (r runeRow) rowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
+
+// rowDropIndex is which seat the cursor is over, measured in pitches from the pane's left edge and
+// from the middle of a step — the relic row's arithmetic over this pane's pitch, since these
+// overlap for exactly the same reason.
+//
+// **Clamped to a seat that holds a rune**, never to the pane's empty seats: a sack of one drawn in a
+// pane of two has one place its card can go.
+func (r runeRow) rowDropIndex(gs *state.GlobalState) int {
+	if r.held < 2 {
+		return 0
+	}
+
+	pitch := relicSlotPitch(r.rect, r.seats)
+	if pitch < 1 {
+		return 0
+	}
+	idx := (gs.MouseX - consumableSlotAt(r.rect, 0, r.seats).X + pitch/2) / pitch
+	if idx < 0 {
+		idx = 0
+	}
+	if idx > r.held-1 {
+		idx = r.held - 1
+	}
+	return idx
+}
+
+// rowLift is deliberately empty. See the type comment.
+func (r runeRow) rowLift(int) {}
+
+func (r runeRow) rowReturn(from, to int) {
+	if r.move != nil {
+		r.move(from, to)
+	}
+}
+
+func (r runeRow) rowClick(i int) {
+	if r.click != nil {
+		r.click(i)
+	}
+}
+
+// runeRow builds this screen's sack row.
+func (s *CombatScene) runeRow(gs *state.GlobalState) runeRow {
+	return runeRow{
+		rect:  s.consumablePaneRect(gs),
+		held:  len(heldRunes(gs)),
+		seats: consumableSeats(gs),
+		click: func(i int) {
+			if s.canSpendRunes(gs) {
+				s.spendRune(gs, i)
+			}
+		},
+		move: func(from, to int) {
+			if gs.Run != nil && gs.Run.MoveRune(from, to) {
+				saveRun(gs)
+			}
+		},
+	}
+}
+
+// drawDraggedRune draws the rune riding the cursor, over everything else on the row.
+//
+// **Drawn from the run rather than from anything the drag is carrying**, which is what keeps the
+// card under the cursor and the card in the sack the same card. drawDraggedRelic's rule.
+func (s *CombatScene) drawDraggedRune(gs *state.GlobalState, screen *ebiten.Image) {
+	if !s.runeDrag.dragging() {
 		return
 	}
-	s.spendRune(gs, i)
+	held := heldRunes(gs)
+	if s.runeDrag.origin() >= len(held) {
+		return
+	}
+	p := held[s.runeDrag.origin()]
+	drawRuneCard(gs, screen, s.runeDrag.at(gs), p, canSpend(s.runeSpendable(gs), p), true)
 }

@@ -61,7 +61,7 @@ type stoneFlight struct {
 // the stones come out of the thing that made them. The seat is read before the pane redraws itself
 // without that rune in it, which is why the index is passed in rather than looked up.
 func (s *CombatScene) flyStonesToPouch(gs *state.GlobalState, seat int, shown []session.Stone) {
-	from := consumableSlotRect(s.consumablePaneRect(gs), seat).Min
+	from := consumableSlotRect(s.consumablePaneRect(gs), seat, consumableSeats(gs)).Min
 	to := duelistCardRect(gs).Min
 
 	for i, st := range shown {

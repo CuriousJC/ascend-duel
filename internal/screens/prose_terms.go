@@ -158,7 +158,7 @@ func cardCount(n int) string {
 // **All of them, not the leftmost.** The dialog flies one figure out of one card and has to pick,
 // which is what `handBonusSeat` is; a line has room to say that two jars paid, and a line naming
 // one of two would be wrong about the half it left out.
-func relicNames(relics []combat.WornRelic, seats [combat.MaxWornRelics]bool) string {
+func relicNames(relics []combat.WornRelic, seats []bool) string {
 	var named []string
 	for seat, paid := range seats {
 		if paid {
@@ -226,7 +226,7 @@ func termNotes(e combat.Event, term int, relics []combat.WornRelic) []session.Le
 		// **What the relic stood at after this term**, and only when it moved. A growing relic is
 		// the one case where the same relic prices two terms of one blow differently, and the
 		// player watching it climb during the blow has nothing to read it off afterwards.
-		if grown := e.HandGrown[term][seat]; term > 0 && grown != e.HandGrown[term-1][seat] {
+		if grown := e.GrownAt(term, seat); term > 0 && grown != e.GrownAt(term-1, seat) {
 			note += fmt.Sprintf(" (grown %d)", grown)
 		}
 		notes = append(notes, session.LedgerSpan{Text: note, Ink: session.InkRelic})

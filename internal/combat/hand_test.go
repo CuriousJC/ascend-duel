@@ -1,6 +1,9 @@
 package combat
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 // handsFormed returns the hands one side formed. A turn forms at most one, so this is a list only
 // so that "none" and "one" are the same shape.
@@ -622,14 +625,16 @@ func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 	e1, a1, b1 := resolve(a, b, turn, PlainCards(Jab, Bash), 1)
 	e2, a2, b2 := resolve(a, b, turn, PlainCards(Jab, Bash), 1)
 
-	if a1 != a2 || b1 != b2 {
+	// DeepEqual: a duelist holds a relic slice now, so it is no longer comparable. See
+	// TestRoundIsDeterministic, which says the same thing about the log.
+	if !reflect.DeepEqual(a1, a2) || !reflect.DeepEqual(b1, b2) {
 		t.Fatal("the same round resolved twice must end in the same state")
 	}
 	if len(e1) != len(e2) {
 		t.Fatalf("event logs differ in length: %d vs %d", len(e1), len(e2))
 	}
 	for i := range e1 {
-		if e1[i] != e2[i] {
+		if !reflect.DeepEqual(e1[i], e2[i]) {
 			t.Fatalf("event %d differs: %+v vs %+v", i, e1[i], e2[i])
 		}
 	}

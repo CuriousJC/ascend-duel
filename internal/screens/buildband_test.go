@@ -116,7 +116,7 @@ func TestTheRelicRowIsCenteredAndGrowsOutwards(t *testing.T) {
 func TestTwoRelicsSitBesideEachOtherRatherThanApart(t *testing.T) {
 	row := buildRelicRect(bandState(t))
 
-	for n := 2; n <= maxRelics; n++ {
+	for n := 2; n <= combat.DefaultRelicSlots; n++ {
 		if gap := relicSlotPitch(row, n) - cards.RelicStyle.Width; gap > relicSlotMaxGap {
 			t.Errorf("a row of %d leaves %dpx between relics, past the %dpx cap",
 				n, gap, relicSlotMaxGap)
@@ -149,7 +149,12 @@ func TestAFullRowStillFillsTheCombatPane(t *testing.T) {
 	if last > pane.Max.X {
 		t.Errorf("the last of five relics ends at x=%d, past the pane's x=%d", last, pane.Max.X)
 	}
-	if before, after := first-pane.Min.X, pane.Max.X-last; before != after {
+	// **Within a pixel, because the slack cannot always be halved** *(2026-09-17)*. The pane's
+	// width stopped being a function of the row's own arithmetic when the consumables pane was
+	// locked to a fixed size and the relics took the remainder, so the leftover can be odd and
+	// integer division puts the spare pixel on one side. Asserting exact equality here would be
+	// asserting that the pane's width must stay even, which is a fact about a neighbour.
+	if before, after := first-pane.Min.X, pane.Max.X-last; before-after > 1 || after-before > 1 {
 		t.Errorf("the row is not centered: %dpx before it and %dpx after", before, after)
 	}
 }
@@ -161,14 +166,14 @@ func TestAFullRowStillFillsTheCombatPane(t *testing.T) {
 // outward growth are properties of the row a player can actually reach — five — and they come apart
 // by a pixel further up, where `relicSlotPitch` divides the pane by one more seat and the remainder
 // has nowhere to go. What must hold at any width is that nothing is drawn off the end of the pane,
-// because `combat.MaxWornRelics` is how many relics a fixture may put on and a row drawn past the
+// because `combat.DefaultRelicSlots` is how many relics a fixture may put on and a row drawn past the
 // table would be the screen lying about what the duelist is wearing.
 func TestTheWidestPossibleRelicRowStaysInsideThePane(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 	pane := s.relicPaneRect(gs)
 
-	for n := combat.DefaultRelicSlots; n <= maxRelics; n++ {
+	for n := combat.DefaultRelicSlots; n <= combat.DefaultRelicSlots; n++ {
 		first := relicSlotAt(pane, 0, n).X
 		last := relicSlotRect(pane, n-1, n).Max.X
 
@@ -219,6 +224,52 @@ func TestNothingUnderTheBandIsDrawnInsideIt(t *testing.T) {
 	} {
 		if c.top <= bottom {
 			t.Errorf("%s starts at %d, inside a band that ends at %d", c.what, c.top, bottom)
+		}
+	}
+}
+
+// **Each pane is a fixed size and packs its own contents**, so neither the relic count nor the rune
+// count can move the other pane.
+//
+// The row used to solve one pitch across both panes from `combat.DefaultRelicSlots` — eight — while a
+// run wears five, which packed a 200-pixel card at a pitch of 126 and overlapped every card in the
+// row by 74. The relic pane hid it by centring a short row in its slack; the consumables pane, which
+// is two cards side by side, drew the second rune over a third of the first.
+func TestEachTopRowPaneKeepsItsOwnSize(t *testing.T) {
+	const span = 1443 // the combat screen's, between the two fighter cards
+
+	relics, consumables := topRowPanes(0, span, 0)
+
+	// The consumables pane holds a full sack at the comfortable pitch, and the relics take the rest.
+	if got, want := consumables.Dx(), consumablePaneWidth(); got != want {
+		t.Errorf("the consumables pane is %dpx, wanted its fixed %dpx", got, want)
+	}
+	if relics.Dx() <= consumables.Dx() {
+		t.Errorf("the relics got %dpx against the consumables' %dpx, which is the wrong way round",
+			relics.Dx(), consumables.Dx())
+	}
+	if relics.Max.X > consumables.Min.X {
+		t.Errorf("the two panes overlap: %v into %v", relics, consumables)
+	}
+
+	// **A full sack sits inside its pane without overlapping**, which is the case that was broken.
+	if pitch := relicSlotPitch(consumables, session.MaxHeld); pitch < cards.RelicStyle.Width {
+		t.Errorf("a full sack packs at %dpx for a %dpx card, so the runes overlap",
+			pitch, cards.RelicStyle.Width)
+	}
+
+	// **And neither pane moves when the other fills up.** An over-full sack packs tighter inside its
+	// own fixed width rather than taking the relics' room.
+	for _, seats := range []int{2, 8, 50} {
+		if last := relicSlotRect(consumables, seats-1, seats).Max.X; last > consumables.Max.X {
+			t.Errorf("a sack of %d ends at x=%d, past its pane's x=%d",
+				seats, last, consumables.Max.X)
+		}
+	}
+	for _, seats := range []int{1, 5, combat.DefaultRelicSlots} {
+		if last := relicSlotRect(relics, seats-1, seats).Max.X; last > relics.Max.X {
+			t.Errorf("a row of %d relics ends at x=%d, past its pane's x=%d",
+				seats, last, relics.Max.X)
 		}
 	}
 }

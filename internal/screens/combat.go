@@ -314,10 +314,18 @@ type CombatScene struct {
 	// a round resolves and the relic row is not.
 	relicDrag cardDrag
 
+	// The press in progress over the sack. **A third controller for the third draggable row**, for
+	// the reason the relic row has its own: all three are live at once and under different
+	// conditions, and one controller would make a press on any of them cancel the others.
+	runeDrag cardDrag
+
 	// relicShake is each worn seat's shake and cardShake each played card's, with shakeItem the item
 	// of the hand dialog's script that was running when the last one was started — which is how one
 	// beat starts one shake rather than a new one every frame the box sits on the same figure.
-	relicShake [combat.MaxWornRelics]travel
+	// **A slice, grown to reach whatever seat rattles** — the relic row has no width any more, so
+	// neither has this. See combat.Duelist.Relics, shakeRelicAt which grows it, and shakeFor which
+	// is how the drawing reads it.
+	relicShake []travel
 	cardShake  []travel
 	shakeItem  int
 
@@ -567,7 +575,8 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.fighterActions = nil
 	s.drag = cardDrag{}
 	s.relicDrag = cardDrag{}
-	s.relicShake, s.cardShake, s.shakeItem = [combat.MaxWornRelics]travel{}, nil, 0
+	s.runeDrag = cardDrag{}
+	s.relicShake, s.cardShake, s.shakeItem = nil, nil, 0
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
 	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, enemySeed, decks.EnemyHandSize)
@@ -1670,7 +1679,10 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// and nothing equips, buys or reads one. Its width is what the two cards leave; see
 	// combat_relics.go.
 	s.drawRelicPane(gs, screen)
-	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.runeSpendable(gs))
+	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.runeSpendable(gs),
+		func(i int) bool { return s.runeDrag.dragging() && i == s.runeDrag.origin() },
+		s.tip.Showing())
+	s.drawDraggedRune(gs, screen)
 
 	s.drawEnemyCard(gs, screen)
 	// **Nothing is drawn in the DUEL! slot on a won fight.** The screen is holding its last

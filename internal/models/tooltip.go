@@ -105,6 +105,12 @@ func (t *Tooltip) Pointed() bool { return t.pointed }
 func (t *Tooltip) Release() { t.pointed = false }
 
 // Showing reports whether the panel has waited long enough to be drawn.
+//
+// **It is also what raises a card under the cursor** *(owner's call, 2026-09-17)*, so the picture
+// and the type arrive on the same tick. The raise waited half this long for a day, on the argument
+// that the picture is the quicker of the two answers; two things appearing a beat apart on one
+// gesture read as the screen stuttering rather than as an answer in two parts. One dwell, one
+// moment. See screens.raisedSeat.
 func (t *Tooltip) Showing() bool {
 	return t.key != "" && t.Dwell >= t.DwellTicks && (len(t.Title) > 0 || len(t.Lines) > 0)
 }

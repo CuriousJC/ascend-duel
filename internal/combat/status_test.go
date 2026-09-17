@@ -1,6 +1,7 @@
 package combat
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -78,7 +79,7 @@ func wearing(d Duelist, es ...Element) Duelist {
 }
 
 // reliced is a duelist wearing all five, for tests about the lifecycle rather than about relics.
-// **Five is exactly MaxWornRelics**, so an element added past arcane cannot join this hand.
+// **Five is exactly DefaultRelicSlots**, so an element added past arcane cannot join this hand.
 func reliced(d Duelist) Duelist { return wearing(d, Fire, Ice, Lightning, Earth, Arcane) }
 
 // statusEvents returns the KindStatus events for the status one color's relic applies.
@@ -693,11 +694,11 @@ func TestStatusesLeaveARoundStillDeterministic(t *testing.T) {
 			t.Fatalf("run %d produced %d events, first run produced %d", i, len(got), len(first))
 		}
 		for j := range got {
-			if got[j] != first[j] {
+			if !reflect.DeepEqual(got[j], first[j]) {
 				t.Fatalf("run %d event %d = %+v, first run = %+v", i, j, got[j], first[j])
 			}
 		}
-		if a2 != a1 || b2 != b1 {
+		if !reflect.DeepEqual(a2, a1) || !reflect.DeepEqual(b2, b1) {
 			t.Fatalf("run %d ended in a different state", i)
 		}
 	}

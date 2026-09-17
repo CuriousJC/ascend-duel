@@ -12,6 +12,8 @@ package screens
 // one place that says how a fight's three piles map onto the two the panel draws.
 
 import (
+	"log"
+
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -245,7 +247,7 @@ func (s *CombatScene) resetDeck(run *session.Session) {
 	// pile for every scenario launch, `plugHand` being a no-op on an empty list — so a fixture with
 	// a `Deck` and no `Hand` opened with eight cards already standing there and the deal never ran
 	// at all. Which is most of them, and it is the one path a fixture is *for*.
-	if scenario.Active() && s.plugHand(scenario.Hand()) {
+	if scenario.Active() && s.plugHand(run, scenario.Hand()) {
 		// The cards the fixture put in the hand are not the cards that came off the pile, so the
 		// deal has nothing to walk. It sorts them and stands down.
 		pile = nil
@@ -268,14 +270,64 @@ func (s *CombatScene) resetDeck(run *session.Session) {
 // **It reports whether it replaced anything**, which the caller needs: a hand the fixture wrote did
 // not come off the draw pile, so there is no deal to play over it — and a fixture that plugged
 // *nothing* must still get the ordinary one.
-func (s *CombatScene) plugHand(cards []combat.Card) bool {
+//
+// **Every card it seats is one the run owns** *(owner's call, 2026-09-17)*. It seated the values
+// `internal/scenario` built with `combat.Of`, which leaves `Card.ID` at zero — so a plugged hand
+// was a row of cards the run had never heard of, and `Session.CardByID` could not find any of them.
+// Everything aimed by identity therefore refused it: **every rune in the sack drew dim**, and two
+// plugged cards both carrying the zero identity also tripped `CanApplyRune`'s named-twice guard.
+// Silently, because a rune that cannot be spent looks exactly like a rune whose selection is wrong.
+//
+// **Claimed from the deck first, minted only if the deck has not got it.** A fixture almost always
+// names cards its own `Deck` (or the authored one) already holds, and claiming keeps the run the
+// size its `Deck` line says — which is what the deck panel's total is read against when a copying
+// rune is the thing being looked at. A card the run does not hold is added to it, because the
+// alternative is seating an identity-less card again and the fixture asked for that card.
+//
+// **Matched on everything but the identity**, so a fixture naming a card with riders claims a run
+// card carrying the same riders rather than a bare one wearing the same name.
+func (s *CombatScene) plugHand(run *session.Session, cards []combat.Card) bool {
 	if len(cards) == 0 {
 		return false
 	}
 
 	s.hand = s.hand[:0]
-	for _, c := range cards {
-		s.hand = append(s.hand, paletteCard{actionCard: c})
+	if run == nil {
+		// No run to own them — the windowless callers, which never plug a hand. Seated as they
+		// arrive rather than dropped, so this stays a hand rather than an empty row.
+		for _, c := range cards {
+			s.hand = append(s.hand, paletteCard{actionCard: c})
+		}
+		return true
+	}
+
+	owned := run.Deck()
+	claimed := make(map[int]bool, len(cards))
+	for _, want := range cards {
+		seat := -1
+		for i, have := range owned {
+			if claimed[have.ID] {
+				continue
+			}
+			probe := have
+			probe.ID = want.ID
+			if probe == want {
+				seat = i
+				break
+			}
+		}
+		if seat < 0 {
+			// **Minted rather than refused**, and said out loud: a fixture naming a card outside
+			// its own deck has grown the run by one, which is worth knowing when the deck panel's
+			// total is the thing being read.
+			run.Add(want)
+			owned = run.Deck()
+			seat = len(owned) - 1
+			log.Printf("scenario hand: the run did not hold %s, so it does now — the deck is %d",
+				owned[seat], run.Size())
+		}
+		claimed[owned[seat].ID] = true
+		s.hand = append(s.hand, paletteCard{actionCard: owned[seat]})
 	}
 	return true
 }

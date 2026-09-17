@@ -737,18 +737,12 @@ func RelicKeys() []string {
 	return out
 }
 
-// MaxWornRelics is the width of a duelist's relic array, and **a width rather than a design cap**
-// — exactly like MaxEchoLandings and MaxStatuses. Duelist has to stay comparable, so the hand is a
-// fixed array; this is how long that array is and nothing about it is a rule.
+// DefaultRelicSlots is how many relics a duelist may wear. **The only limit there is**
+// *(owner's call, 2026-09-17)*: there was a `MaxWornRelics` beside it, the width of the duelist's
+// relic array, and it is gone — how many relics could *conceptually* be worn is unbounded now, and
+// how many actually are is this, or whatever the run is carrying. See Duelist.Relics.
 //
-// **What a duelist may actually wear is DefaultRelicSlots, and it is five.** The two were one number
-// until 2026-09-11, which meant the cap could not be moved for a fixture without moving the width
-// for the shipped game — so a scenario wanting to look at six relics at once had nowhere to write.
-// Splitting them costs three more seats in a handful of Event arrays and buys a cap that a run can
-// carry, which is the shape a brand will want anyway.
-const MaxWornRelics = 8
-
-// DefaultRelicSlots is how many relics a duelist may wear. **Five, until brands expand it** — see
+// **Five, until brands expand it** — see
 // MECHANICS.md, where the cap is deliberately never displayed and surfaces when a sixth is bought.
 //
 // It is what a run opens on, in the way DefaultRoundLimit is: `session.Session` carries the number
@@ -786,9 +780,6 @@ func (d Duelist) relicSlots() int {
 	if n <= 0 {
 		n = DefaultRelicSlots
 	}
-	if n > MaxWornRelics {
-		n = MaxWornRelics
-	}
 	return n
 }
 
@@ -798,10 +789,10 @@ func (d Duelist) relicSlots() int {
 // multiplicative effects are order-sensitive, so the order has to be one a rule can name, and worn
 // order is the only order the player can actually see. Two slash relics are x4 and that is a build.
 func (d Duelist) WornRelics() []WornRelic {
-	if d.RelicCount <= 0 {
+	n := len(d.Relics)
+	if n <= 0 {
 		return nil
 	}
-	n := d.RelicCount
 	if slots := d.relicSlots(); n > slots {
 		n = slots
 	}
@@ -811,11 +802,38 @@ func (d Duelist) WornRelics() []WornRelic {
 // Wearing returns this duelist with one more relic on, or unchanged if the hand is full. It returns a
 // copy like everything else in this package.
 func (d Duelist) Wearing(w WornRelic) Duelist {
-	if d.RelicCount >= d.relicSlots() {
+	if len(d.Relics) >= d.relicSlots() {
 		return d
 	}
-	d.Relics[d.RelicCount] = w
-	d.RelicCount++
+	// **Cloned rather than appended in place.** append may write into the backing array this
+	// duelist shares with whoever it was copied from, which would put a relic on *their* hand as
+	// well. See Duelist.Relics for the rule every copy here is under.
+	d.Relics = append(d.cloneRelics(), w)
+	return d
+}
+
+// cloneRelics is this duelist's worn row as a slice nobody else holds.
+//
+// **The one place the value semantics are bought** *(2026-09-17)*. Everything in this package
+// passes duelists around by value and expects a copy to be a copy — `ResolveRound` steps
+// `Relics[i].Grown` on its own and hands back a duelist whose growth the caller then settles. A
+// shared backing array turns that into a write on the run's own duelist, mid-round, and nothing
+// anywhere goes red. So every entry point that takes a Duelist it intends to modify calls this
+// first: resolveRound does, and Wearing does.
+func (d Duelist) cloneRelics() []WornRelic {
+	if len(d.Relics) == 0 {
+		return nil
+	}
+	out := make([]WornRelic, len(d.Relics))
+	copy(out, d.Relics)
+	return out
+}
+
+// Cloned is this duelist with a relic row nobody else can write to. **Exported because the
+// callers that matter are outside this package** — session.Equip hands a fighter its relics, and
+// a screen holding a duelist across a round must not be sharing that row with the resolver.
+func (d Duelist) Cloned() Duelist {
+	d.Relics = d.cloneRelics()
 	return d
 }
 
@@ -1084,13 +1102,10 @@ func (s LandingShape) Amount(j, damage int) int {
 //
 // **Every contributing seat, not one.** Extra landings add across relics, so two echo relics are both
 // the reason and both shake.
-func LandingSeats(worn []WornRelic, card Card, lead bool) [MaxWornRelics]bool {
-	var out [MaxWornRelics]bool
+func LandingSeats(worn []WornRelic, card Card, lead bool) []bool {
+	out := make([]bool, len(worn))
 
 	for seat, w := range worn {
-		if seat >= MaxWornRelics {
-			break
-		}
 		for _, rule := range RelicOf(w.Relic).Rules {
 			if rule.When != MomentBlowFormed || !rule.If.Matches(card) {
 				continue
@@ -1155,12 +1170,9 @@ func DamagePerVitae(worn []WornRelic) int {
 
 // seatsDoing is which worn seats carry a verb at all — the attribution a flat fight-start term
 // cannot recover from its own figure, since by the time a blow lands it is one number.
-func seatsDoing(worn []WornRelic, do RelicVerb) [MaxWornRelics]bool {
-	var seats [MaxWornRelics]bool
+func seatsDoing(worn []WornRelic, do RelicVerb) []bool {
+	seats := make([]bool, len(worn))
 	for seat, w := range worn {
-		if seat >= MaxWornRelics {
-			break
-		}
 		for _, rule := range RelicOf(w.Relic).Rules {
 			for _, e := range rule.Then {
 				if e.Do == do {
@@ -1184,17 +1196,14 @@ func seatsDoing(worn []WornRelic, do RelicVerb) [MaxWornRelics]bool {
 //
 // **`cards` is the scoring set, not the turn** — it is what `MinForms` counts, so a card the turn
 // played that paid nothing into the hand is not a second form.
-func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, [MaxWornRelics]bool) {
-	var seats [MaxWornRelics]bool
+func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, []bool) {
+	seats := make([]bool, len(worn))
 	pct := 100
 
 	if len(satisfied) == 0 {
 		return pct, seats
 	}
 	for seat, w := range worn {
-		if seat >= MaxWornRelics {
-			break
-		}
 		for _, rule := range RelicOf(w.Relic).Rules {
 			if rule.When != MomentBlowFormed {
 				continue
@@ -1236,17 +1245,14 @@ func distinctForms(cards []Card) int {
 	return n
 }
 
-func HandBonus(worn []WornRelic, satisfied []HandID) (int, [MaxWornRelics]bool) {
-	var seats [MaxWornRelics]bool
+func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
+	seats := make([]bool, len(worn))
 	total := 0
 
 	if len(satisfied) == 0 {
 		return 0, seats
 	}
 	for seat, w := range worn {
-		if seat >= MaxWornRelics {
-			break
-		}
 		for _, rule := range RelicOf(w.Relic).Rules {
 			if rule.When != MomentBlowFormed || !rule.If.HasHand() || !rule.If.onHand(satisfied) {
 				continue
@@ -1279,11 +1285,12 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, [MaxWornRelics]bool) 
 // one term in the working the player cannot check against the hand they were holding. It is the
 // tally across every seat, which is the figure the merged term is: two jars paying for six cards
 // between them is one term of six.
-func HeldBonus(worn []WornRelic, held []Card) (total, cards int, seats [MaxWornRelics]bool) {
+func HeldBonus(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
+	// A named return, so it needs building like every other seat row here: one entry per worn
+	// relic, all false until one of them pays.
+	seats = make([]bool, len(worn))
+
 	for seat, w := range worn {
-		if seat >= MaxWornRelics {
-			break
-		}
 		for _, rule := range RelicOf(w.Relic).Rules {
 			if rule.When != MomentBlowFormed {
 				continue
@@ -1423,7 +1430,7 @@ func Growth(w WornRelic) int {
 // **Growth first, then resets**, always. The other order would let a turn both bank and lose the
 // same step depending on which rule the file happened to list first.
 func (d Duelist) TurnTaken(cards []Card) Duelist {
-	for i := 0; i < d.RelicCount; i++ {
+	for i := range d.Relics {
 		step, reset := 0, false
 		for _, rule := range RelicOf(d.Relics[i].Relic).Rules {
 			if rule.When != MomentTurnTaken {
@@ -1513,7 +1520,7 @@ func KeepsGrowth(id RelicID) bool {
 // it back off the duelist when the fight is won — see Session.AbsorbGrowth — which is what makes the
 // growth survive the fight without combat knowing a run exists.
 func (d Duelist) GrowOnLanding(card Card) Duelist {
-	for i := 0; i < d.RelicCount; i++ {
+	for i := range d.Relics {
 		step := 0
 		for _, rule := range RelicOf(d.Relics[i].Relic).Rules {
 			if rule.When != MomentAttackLands || !rule.If.Matches(card) {
@@ -1546,13 +1553,10 @@ func (d Duelist) GrowOnLanding(card Card) Duelist {
 // **Zero is "did not fire", which is why the identity is not stored.** A relic whose rule does not
 // match the card contributes nothing and has no beat; a relic contributing exactly 100 has fired and
 // changed nothing, which no relic in the file does but which the grammar allows.
-func CardScaleBySeat(worn []WornRelic, card Card) [MaxWornRelics]int {
-	var out [MaxWornRelics]int
+func CardScaleBySeat(worn []WornRelic, card Card) []int {
+	out := make([]int, len(worn))
 
 	for seat, w := range worn {
-		if seat >= MaxWornRelics {
-			break
-		}
 		for _, rule := range RelicOf(w.Relic).Rules {
 			if rule.When != MomentCardDamage || !rule.If.Matches(card) {
 				continue

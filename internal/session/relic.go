@@ -70,15 +70,14 @@ func (s *Session) RelicSlots() int {
 // **A cap below one is clamped up rather than taken as "no relics"**, exactly as SetRoundLimit
 // refuses to stop the clock: a drawback that reached zero here would take the whole relic mechanic
 // off the run rather than making it harsher, which is the one direction a bug in this is invisible.
-// It is clamped down to `combat.MaxWornRelics` as well, because that is how wide the duelist's array
-// is and a run asking for more would silently get the width anyway — better to agree about the
-// number than to have the shop and the fighter disagree.
+//
+// **There is no clamp upward any more** *(owner's call, 2026-09-17)*. It used to stop at
+// `combat.MaxWornRelics`, the width of the duelist's relic array, so that the shop and the fighter
+// could not disagree about a number the array would silently refuse. The array is a slice now and
+// there is no width, so a cap is whatever the run says it is.
 func (s *Session) SetRelicSlots(n int) {
 	if n < 1 {
 		n = 1
-	}
-	if n > combat.MaxWornRelics {
-		n = combat.MaxWornRelics
 	}
 	s.relicSlots = n
 }
@@ -89,9 +88,6 @@ func (s *Session) SetRelicSlots(n int) {
 func resumeRelicSlots(saved int) int {
 	if saved < 1 {
 		return combat.DefaultRelicSlots
-	}
-	if saved > combat.MaxWornRelics {
-		return combat.MaxWornRelics
 	}
 	return saved
 }

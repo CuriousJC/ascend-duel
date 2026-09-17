@@ -116,16 +116,29 @@ type Duelist struct {
 	// **The relic is read off the attacker, never the victim.** Your fire relic makes *your* fire
 	// attacks burn; it does nothing when a fire attack is aimed at you.
 	//
-	// **A fixed array plus a count rather than a slice**, exactly like the defend set above and
-	// for the same reason: Duelist has to stay comparable. A WornRelic is an ID and a number, so
-	// the relic's own rules stay in the registry where they can be a slice.
+	// **A slice, and there is no width at all** *(owner's call, 2026-09-17)*. It was a fixed array
+	// plus a count until then, sized by a `MaxWornRelics` constant — a width rather than a rule,
+	// but a limit all the same, and one that put a ceiling on a thing the design has no ceiling
+	// for. **How many relics a duelist may wear is `relicSlots()` and nothing else**; how many they
+	// *could conceptually* wear is now unbounded.
+	//
+	// **What the array was buying was value semantics, and that is now bought explicitly.** This
+	// package hands duelists around by value — `ResolveRound` takes two and returns two, and the
+	// rules step `Relics[i].Grown` on their own copy so growth lands on the run only once the round
+	// is settled, exactly as the purse does. A slice aliases, so every place that takes a duelist
+	// it intends to modify clones this first: see `cloned`, which is called at the top of
+	// resolveRound and by Wearing. **Forgetting that is invisible** — the growth simply lands early,
+	// no test goes red — so a new entry point that copies a Duelist calls `cloned` or it is wrong.
+	//
+	// **It also cost Duelist and Event their comparability**, which only ever had two readers:
+	// TestRoundIsDeterministic, which compares with reflect.DeepEqual now, and the screen's face
+	// cache, which keys on cards.Spec and never held one of these.
 	//
 	// **Enemies never wear one.** The zero value is an empty hand and nothing sets it for them, so
 	// an enemy's elements are inert by construction rather than by a rule written down somewhere
 	// else. Statuses reaching the player by some other route later is expected; it will not be by
 	// an enemy putting on jewelry.
-	Relics     [MaxWornRelics]WornRelic
-	RelicCount int
+	Relics []WornRelic
 
 	// RelicSlots is how many of those seats this duelist may actually fill. **Zero means
 	// DefaultRelicSlots**, which is the five every duelist in the tower fights on — see
@@ -253,7 +266,7 @@ const baseMaxActions = 5
 
 // MaxEchoLandings is the most times one card can land inside a blow, echoes and repeats included.
 //
-// **A width rather than a design cap**, exactly like MaxWornRelics and MaxStatuses: Event's hand
+// **A width rather than a design cap**, exactly like MaxStatuses: Event's hand
 // arrays are fixed so an Event stays comparable, and every landing is a term in them. Five is
 // generous against the one echo relic that exists, which lands a card three times.
 const MaxEchoLandings = 5

@@ -1,6 +1,9 @@
 package combat
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 // A stone raises one rung of the ladder for one duelist. These are the four things that can break
 // silently: the arithmetic, whose ladder is read, whether a duelist with no stones still reads the
@@ -78,7 +81,7 @@ func TestAStoneOnANonexistentRungIsRefused(t *testing.T) {
 	if ok {
 		t.Error("a stone was accepted for a rung the catalog does not hold")
 	}
-	if d != (Duelist{}) {
+	if !reflect.DeepEqual(d, Duelist{}) {
 		t.Error("a refused stone still changed the duelist")
 	}
 }

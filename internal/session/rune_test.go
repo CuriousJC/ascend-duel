@@ -625,3 +625,53 @@ func TestTheSackRefusesMoreThanItHolds(t *testing.T) {
 		t.Errorf("the freed seat did not take a rune: %d held", run.HoldCount())
 	}
 }
+
+func TestTheMintedCopyIsHandedOverOnceAndOnlyOnce(t *testing.T) {
+	// **The handover is about the rune that just fired, not about the last one of its kind.**
+	// `Duplicated` is read by the combat screen after *every* rune it spends — see
+	// CombatScene.takeRune, which seats what it finds in the dealt hand — so a copy still sitting
+	// in the list when the next rune goes off is seated a second time, and a third, for every
+	// rune spent afterwards. The copy is minted once and the deck is the right size throughout;
+	// what duplicates is the card in the player's hand.
+	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
+	held := ids(run)
+
+	mimic := anyWithTarget(t, RuneDuplicate)
+	if !run.ApplyRune(mimic, []int{held[0]}) {
+		t.Fatal("a legal copy was refused")
+	}
+	if n := len(run.Duplicated()); n != 1 {
+		t.Fatalf("one card was copied and %d were handed over", n)
+	}
+
+	graft := anyWithTarget(t, RuneClone)
+	if !run.ApplyRune(graft, []int{held[0], held[1]}) {
+		t.Fatal("a legal graft was refused")
+	}
+	if n := len(run.Duplicated()); n != 0 {
+		t.Errorf("a graft minted nothing and handed over %d cards", n)
+	}
+}
+
+func TestARockShowersStonesAreHandedOverOnceAndOnlyOnce(t *testing.T) {
+	// The same handover, one field over: `Granted` is read after every rune the combat screen
+	// spends, so stones left standing fly to the pouch again on whatever is spent next.
+	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab))
+	held := ids(run)
+
+	shower := anyWithTarget(t, RuneStones)
+	if !run.ApplyRuneRolling(shower, nil, rand.New(rand.NewSource(1))) {
+		t.Fatal("a legal rock shower was refused")
+	}
+	if len(run.Granted()) == 0 {
+		t.Fatal("a rock shower handed over no stones")
+	}
+
+	graft := anyWithTarget(t, RuneClone)
+	if !run.ApplyRune(graft, []int{held[0], held[1]}) {
+		t.Fatal("a legal graft was refused")
+	}
+	if n := len(run.Granted()); n != 0 {
+		t.Errorf("a graft drew no stones and handed over %d", n)
+	}
+}

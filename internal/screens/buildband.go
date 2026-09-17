@@ -93,12 +93,12 @@ func buildBandBottom(gs *state.GlobalState) int {
 //
 // The AP figure is the duelist's own budget, which is now simply the stat — nothing adds to it any
 // more. No shields either: nothing is standing between fights.
-func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag *cardDrag) {
+func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag *cardDrag, raise bool) {
 	drawBuildCard(gs, screen, vitae)
 	drawBuildRelics(gs, screen, drag)
 	// **nil: a rune is carried on these screens, not spent.** The pane draws the same two seats
 	// and the same cards, dim, and the tooltip still explains them. See canSpend.
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil)
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, nil, raise)
 }
 
 // drawBuildCard is the duelist half of the band on its own.

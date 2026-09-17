@@ -33,18 +33,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// maxRelics is the widest relic row this screen can ever be asked to draw.
-//
-// **It is the array's width, not the cap** *(2026-09-11)*. The two were one number until the cap
-// became something a run carries — see combat.DefaultRelicSlots — and this is deliberately the
-// larger of them: the row is a layout, and a layout has to survive the most relics a duelist could
-// ever be holding rather than the most a shipped run is allowed to buy.
-//
-// **What the player is told is `relicSlots`**, which reads the run. The row saying `worn/5` while
-// the duelist held a sixth is the drift this file has always been guarding against, and a constant
-// can no longer say it.
-const maxRelics = combat.MaxWornRelics
-
 // relicSlots is how many relics this run may wear, which is what the fraction on the pane counts
 // against and what the row is willing to draw.
 //
@@ -132,8 +120,11 @@ var relicPaneBackColor = systems.ColorAtStrength(screenGround, 91)
 // relicPaneBackRect — so growing the padding cannot silently move a relic.
 //
 // **It is the left half of a two-pane row since 2026-09-06** *(owner's call)*. The consumables pane
-// takes a fixed two seats off the right-hand end and the relics take what is left — see topRowPanes,
-// and consumablePaneWidth for what that costs a full row of five.
+// takes its seats off the right-hand end and the relics take what is left — see topRowPanes.
+//
+// **Both halves are sized from the seats the *run* has** *(owner's call, 2026-09-17)*, never from a
+// compile-time maximum: a run wearing eight relics and carrying four runes is a legal row that packs
+// tighter, and one wearing three is a row with room to breathe. See topRowPitch.
 func (s *CombatScene) relicPaneRect(gs *state.GlobalState) image.Rectangle {
 	relics, _ := s.topRowPanes(gs)
 	return relics
@@ -475,7 +466,7 @@ func (s *CombatScene) countersNow() map[string]string {
 //
 // **A copy, because the duelist it came from is the fight's own** — this is a picture of a number
 // part way through a round, and writing it back would be presentation changing an outcome.
-func withGrown(worn []combat.WornRelic, grown [combat.MaxWornRelics]int) []combat.WornRelic {
+func withGrown(worn []combat.WornRelic, grown []int) []combat.WornRelic {
 	out := make([]combat.WornRelic, len(worn))
 	copy(out, worn)
 	for i := range out {
@@ -587,6 +578,27 @@ func shakeOffset(t travel) int {
 	return int(math.Sin(p*math.Pi*2*relicShakeSwings) * (1 - p) * float64(relicShakeWidth))
 }
 
+// shakeFor is seat i's rattle, and **zero for a seat no shake has reached** — the row is grown on
+// demand by shakeRelicAt, so a duelist wearing more relics than anything has shaken yet reads a
+// still card rather than indexing off the end. It is the accessor the drawing goes through.
+func (s *CombatScene) shakeFor(i int) travel {
+	if i < 0 || i >= len(s.relicShake) {
+		return travel{}
+	}
+	return s.relicShake[i]
+}
+
+// shakeRelicAt starts seat i rattling, growing the row to reach it.
+func (s *CombatScene) shakeRelicAt(i int) {
+	if i < 0 {
+		return
+	}
+	for len(s.relicShake) <= i {
+		s.relicShake = append(s.relicShake, travel{})
+	}
+	s.relicShake[i] = newTravel(0, relicShakeTicks())
+}
+
 // tickShakes starts a shake on whatever the sum has just reached, and advances the ones already
 // running. Called every tick from Update.
 //
@@ -614,9 +626,14 @@ func (s *CombatScene) tickShakes(gs *state.GlobalState) {
 		return
 	}
 	for seat, shaking := range relics {
-		if shaking && seat < len(s.relicShake) {
-			s.relicShake[seat] = newTravel(0, relicShakeTicks())
+		if !shaking {
+			continue
 		}
+		// **The row is grown to reach the seat rather than the seat being dropped** *(2026-09-17)*.
+		// This was a fixed array as wide as `combat.MaxWornRelics` and the bound below quietly
+		// skipped anything past it; there is no width now, so the clock is as long as the row it
+		// is about. A relic that fired and did not rattle is the screen disagreeing with the sum.
+		s.shakeRelicAt(seat)
 	}
 	if card > 0 {
 		s.shakePlayedCard(card - 1)
@@ -691,7 +708,15 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 
 	worn := wornRelics(gs)
 	counters := s.countersNow()
+
+	// **The card under the cursor is drawn last, so it is drawn whole** — see raisedSeat, which is
+	// the same reading the hand and the sack take. A full row of relics overlaps, and past a
+	// handful each is a sliver of the one in front of it.
+	raised := raisedSeat(gs, s.relicRow(gs), s.tip.Showing())
 	for i, relic := range worn {
+		if i == raised {
+			continue
+		}
 		// **The seat a dragged relic left is drawn empty rather than closed up**, which is the
 		// hand's rule too: the row keeps its width and its pitch while a card is up, so nothing
 		// slides sideways under the cursor mid-drag.
@@ -702,7 +727,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		// **The shake, the tilt and the light go together**: the card rattles, rocks and its border
 		// lights, which is what says the relic is working rather than merely moving. See relicToast.
 		at := relicSlotAt(r, i, len(worn))
-		toast := sumToast(s.relicShake[i])
+		toast := sumToast(s.shakeFor(i))
 
 		// **The deal's cascade puts a relic up too, and it is a second clock on purpose.** The sum's
 		// toast fires on the beat a figure is written and this one on the beat a whole row of cards
@@ -730,6 +755,14 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 	// backing has an edge of its own now, so a second line saying where the row ends was drawing
 	// the same fact twice. See relicCountRect.
 	s.drawRelicCount(gs, screen, len(worn))
+
+	// **The raised card, over the row it stands in** — after the row and before the dragged card,
+	// which still outranks everything.
+	if raised >= 0 && raised < len(worn) && !(s.relicDrag.dragging() && raised == s.relicDrag.origin()) {
+		relic := worn[raised]
+		drawRelicCard(gs, screen, relicSlotAt(r, raised, len(worn)), relic,
+			counters[relic.RelicRecord], true, false)
+	}
 
 	// Last, so the relic riding the cursor is over the rule and the fraction as well as the row.
 	drawDraggedRelic(gs, screen, &s.relicDrag, counters)

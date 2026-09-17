@@ -33,6 +33,37 @@ import (
 // run is the authority on what is worn, so the row only remembers which seat is empty and commits
 // the whole move at the drop. Both end up in the same place, which is what `rowReturn(from, to)`
 // says — the card that was at `from` is now at `to`.
+// raisedSeat is which card of an overlapping row the cursor is resting on, or -1.
+//
+// **One reading for every row in the game** *(owner's call, 2026-09-17)*. The hand, the worn relics
+// and the sack are the same widget at three widths holding three kinds of card, and all three
+// overlap once they are full — so "the card I am pointing at is a sliver of the one in front of it"
+// is one problem with one answer. The caller draws the seat this names *last*, so it comes out
+// whole; it is raised rather than moved, so the row does not rearrange itself under a cursor that is
+// about to click.
+//
+// **Counted from the top of the stack down**, because the last seat drawn is the one actually on
+// top. That makes the card that lifts the card a click would land on, by construction rather than by
+// two pieces of code agreeing.
+//
+// **`raise` is the caller's dwell, and every caller passes the tooltip's own** — see
+// models.Tooltip.Showing, so the card and the panel about it arrive on the same tick *(owner's call,
+// 2026-09-17)*. Lifting the instant the cursor arrives makes a row flinch at a cursor crossing it on
+// the way somewhere else, which is the strobe DwellTicks already exists to stop; lifting halfway was
+// tried and reads as a stutter, one gesture answered twice a beat apart. One dwell, one moment.
+func raisedSeat(gs *state.GlobalState, row dragRow, raise bool) int {
+	if !raise || !gs.CursorAllowed() {
+		return -1
+	}
+	at := image.Pt(gs.MouseX, gs.MouseY)
+	for i := row.rowLen() - 1; i >= 0; i-- {
+		if at.In(row.rowSlot(gs, i)) {
+			return i
+		}
+	}
+	return -1
+}
+
 type dragRow interface {
 	// rowLen is how many cards the row holds with nothing lifted.
 	rowLen() int

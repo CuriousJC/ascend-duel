@@ -157,8 +157,10 @@
 //     under them running the row's width, and the cap written as worn/5 on that rule's right end.
 //     It draws what the run is wearing and decides nothing (2026-08-17): session.Session holds the
 //     worn keys in worn order and session.Equip puts them on the duelist, so this file is a lookup
-//     from key to record for the art and the name. maxRelics reads combat.MaxWornRelics rather than
-//     declaring a second five. Nothing buys or unequips a relic yet. It holds the 12–46% band,
+//     from key to record for the art and the name. The row is laid out from relicSlots — the seats
+//     the run actually has — rather than from any maximum, so a run wearing more simply packs
+//     tighter; see topRowPitch, which divided by combat.MaxWornRelics until 2026-09-17 and squeezed
+//     the whole top row by 74 pixels a card. Nothing buys or unequips a relic yet. It holds the 12–46% band,
 //     which is what pays for full-size relic cards. Its width is what the two fighter cards leave —
 //     relicPaneRect reads duelistCardRect and enemyCardRect rather than a percentage, so the right
 //     edge cannot go stale when a card moves. Two things it does deliberately: a fill, never a

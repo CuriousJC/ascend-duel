@@ -160,10 +160,9 @@ type record struct {
 	// interaction is a batch: a sixth relic meant playing to a shop, selling one and buying
 	// another, per relic, forever.
 	//
-	// **It is bounded by `combat.MaxWornRelics`**, the width of the duelist's relic array — not by
-	// the design cap, which is the thing this overrides. `session.SetRelicSlots` clamps to the same
-	// figure, so a fixture asking for more gets the width rather than a disagreement between the
-	// shop and the fighter.
+	// **It is not bounded at all any more** *(owner's call, 2026-09-17)*. It stopped at
+	// `combat.MaxWornRelics`, the width of the duelist's relic array; the row is a slice now and
+	// there is no width, so a fixture may ask for fifty fingers and get fifty.
 	RelicSlots int `json:"RelicSlots"`
 
 	// Teach starts the tutorial on this run.
@@ -374,10 +373,6 @@ func check(r *record) error {
 	}
 	if r.RelicSlots < 0 {
 		return fmt.Errorf("%d relic slots is not a number of fingers", r.RelicSlots)
-	}
-	if r.RelicSlots > combat.MaxWornRelics {
-		return fmt.Errorf("%d relic slots, and a duelist's hand is %d wide — raise "+
-			"combat.MaxWornRelics if a fixture genuinely needs more", r.RelicSlots, combat.MaxWornRelics)
 	}
 	if n := len(r.Relics); n > 0 && n > r.effectiveRelicSlots() {
 		return fmt.Errorf("wears %d relics on %d fingers, so %d of them would never go on",

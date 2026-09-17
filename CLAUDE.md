@@ -82,6 +82,7 @@ skill that does not exist.
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
 | [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn relic |
+| [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
 | [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
@@ -164,6 +165,8 @@ go run ./tools/relicart -kind essence       # the same, for data/essences.json a
 go run ./tools/relicart -kind rune   # the same, for data/runes.json and assets/rune
 go run ./tools/relicart -kind stone  # the same, for data/stones.json and assets/stone
 go run ./tools/relicart -kind other  # the potions and the sealed goods together, into assets/other
+go run ./tools/artcompare   # one catalog's art, every candidate batch side by side, as real cards
+go run ./tools/artcompare -catalog relic    # the same for relics; card, essence, rune, stone, other
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
@@ -179,6 +182,26 @@ only ever seen by whoever just changed the thing it shows.
 the debug fixtures in `internal/scenario/scenarios.json`, none of which is reachable from a shipped
 binary. It is on the index anyway, because "what can I boot into" is the question asked most often
 and answered worst.
+
+**`tools/artcompare` is a sheet-shaped tool that is deliberately not a sheet** *(owner's call,
+2026-09-17)*. It draws one catalog's records once per **set** of pictures and puts them side by
+side, so a replacement batch is judged record by record rather than all at once — and it takes any
+number of sets, because a generator produces options rather than an answer. Every cell is
+`cards.Render` at the catalog's own style, so what is compared is the card as it will be dealt,
+type over picture; clicking the one to keep builds the copy list at the top of the page. Six
+catalogs: `card`, `relic`, `essence`, `rune`, `stone`, `other`. The creature and boss portraits are
+absent on purpose — licensed art arrives once and nobody generates three of it.
+
+**`artreview/` is gitignored and is the whole of its working directory.** A batch dropped in
+`artreview/<catalog>-<label>/` is found as the set `<label>`, the installed `assets/` directory is
+always the set `current`, and the page is written to `artreview/out-<catalog>/`. That is what lets
+the tool be committed with nothing committed under it: **the winners are installed into `assets/`
+and committed there, and the losers were never the game.** A page about a decision does not belong
+in `docs/sheets/`, which is a report on the catalog that shipped.
+
+**The procedure is the [`art-batch`](.claude/skills/art-batch/SKILL.md) skill** — back up before
+overwriting, skip the zero-byte files a generator ships, build the page, apply the picks it writes,
+regenerate the one sheet that changed. Load it before installing or replacing any art in `assets/`.
 
 **The cost is history weight, so regenerate deliberately.** A full run rewrites every binary under
 `docs/sheets/`, and a sheet rebuilt in a commit that changed nothing about it is pure weight. **Most

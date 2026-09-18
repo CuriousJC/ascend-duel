@@ -23,7 +23,7 @@ specific step. Staging hides changes from where the owner reads them.
 
 ## Branching
 
-**Work on `game-updates-N`.** One numbered branch, not a branch per feature. This is a
+**Work on `up-N`.** One numbered branch, not a branch per feature. This is a
 one-author project, so branch names buy no coordination, and **every PR is squash merged, so
 the branch name never reaches `main`'s history at all** — the PR title becomes the commit.
 
@@ -120,14 +120,14 @@ releases still stop and wait.
 ```powershell
 # 1. confirm the content actually landed - an EMPTY diff is the check,
 #    not whether -d succeeds
-git diff origin/main game-updates-33 --stat
+git diff origin/main up-33 --stat
 
 # 2. move to the next branch off the new main
-git checkout main; git pull; git checkout -b game-updates-34
+git checkout main; git pull; git checkout -b up-34
 
 # 3. sweep every branch that is not main or the new one, both copies
-git branch -D game-updates-33 combat-rework game-updates-28
-git push origin --delete game-updates-23 game-updates-24 game-updates-33
+git branch -D up-33 combat-rework up-28
+git push origin --delete up-23 up-24 up-33
 git fetch --prune
 ```
 

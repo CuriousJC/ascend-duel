@@ -195,18 +195,17 @@ func run(dir string) error {
 }
 
 // specFor is an essence as the card the reward screen draws, and it fills the same fields
-// screens.essenceSpec does: a name, the line, and the color of whatever it grants. No form and no
-// cost, which EssenceStyle draws as nothing.
+// ui.essenceSpec does: a name, a picture, and the color of whatever it grants. No form and no cost,
+// which EssenceStyle draws as nothing — and **no sentence**, which is the whole face now that the
+// authored line is the tooltip's. The page still prints Text beside the card.
 func specFor(w session.Essence, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:       w.Name,
-		Form:       cards.FormNone,
-		Cost:       0,
-		Element:    artFor(w.Element),
-		Art:        art,
-		Text:       w.Text,
-		Highlights: cards.ElementHighlights(w.Text),
-		Enabled:    enabled,
+		Name:    w.Name,
+		Form:    cards.FormNone,
+		Cost:    0,
+		Element: artFor(w.Element),
+		Art:     art,
+		Enabled: enabled,
 	}
 }
 

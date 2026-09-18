@@ -230,16 +230,20 @@ func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image
 func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 	tip *models.Tooltip) bool {
 
+	held := heldRunes(gs)
 	seats := consumableSeats(gs)
-	for i, p := range heldRunes(gs) {
-		seat := consumableSlotRect(r, i, seats)
-		if !at.In(seat) {
-			continue
-		}
-		tip.Point(seat, ui.TipLine(p.Name), ui.TipLines(runeTipLines(gs, p)))
-		return true
+	row := runeRow{rect: r, held: len(held), seats: seats}
+
+	// **The same seats and the same walk the raise uses** — see ui.HoveredSeat. A sack packs four
+	// cards into two seats, so the card on top is the last drawn and a forward walk explains the one
+	// behind it while the row lifts the one in front.
+	i := ui.HoveredSeat(at, len(held), func(i int) image.Rectangle { return row.RowSlot(gs, i) })
+	if i < 0 {
+		return false
 	}
-	return false
+	seat := row.RowSlot(gs, i)
+	tip.Point(seat, ui.TipLine(held[i].Name), ui.TipLines(runeTipLines(gs, held[i])))
+	return true
 }
 
 // canSpend asks the caller's predicate, treating a nil one as "nothing here can be spent".

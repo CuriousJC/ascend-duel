@@ -406,31 +406,33 @@ func (g *goods) hover(gs *state.GlobalState) {
 	}
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
-	for i := range g.offer {
+	// **ui.HoveredSeat** — the vial deals its offer at the hand's pitch, so the row overlaps for the
+	// same reason the hand does and the card on top is the last drawn.
+	if i := ui.HoveredSeat(at, len(g.offer), func(i int) image.Rectangle {
+		return g.offerSlot(gs, i)
+	}); i >= 0 {
 		seat := g.offerSlot(gs, i)
-		if !at.In(seat) {
-			continue
+		if card, ok := gs.Run.Card(g.offer[i]); ok {
+			title, lines := ui.CardTip(card, ui.HeldByRun(gs, card))
+			g.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		}
-		card, ok := gs.Run.Card(g.offer[i])
-		if !ok {
-			return
-		}
-		title, lines := ui.CardTip(card, ui.HeldByRun(gs, card))
-		g.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 
-	for i := 0; i < g.count(); i++ {
-		if !at.In(g.slot(gs, i)) {
-			continue
-		}
+	// **ui.HoveredSeat, like every row in the game.** This one is laid out at a pitch wider than a
+	// card and cannot overlap today, so the walk's direction decides nothing — it goes through the
+	// shared one so that a row nobody has to check stays a row nobody has to check.
+	if i := ui.HoveredSeat(at, g.count(), func(i int) image.Rectangle {
+		return g.slot(gs, i)
+	}); i >= 0 {
 		switch g.good.Contains {
 		case session.ContentsEssences:
-			// **The essences are deliberately not tooltipped**, which is the reward screen's own
-			// choice on the same row: an essence's whole rule is printed on its face, where a deck
-			// card's is not. What a dim essence means — "not for the card you have selected" — is
-			// left to the row rather than to a tooltip.
-			return
+			// **An essence is tooltipped like everything else in this pane** *(owner's call,
+			// 2026-09-18)*, now that its face is a picture rather than a sentence on a scrim. What
+			// a dim essence means — "not for the card you have selected" — is still left to the row.
+			w := g.essences[i]
+			title, lines := ui.EssenceTip(w)
+			g.tip.Point(g.slot(gs, i), ui.TipLine(title), ui.TipLines(lines))
 		case session.ContentsStones:
 			st := g.stones[i]
 			g.tip.Point(g.slot(gs, i), ui.TipLine(st.Name), ui.TipLines(stoneTipLines(gs, st)))
@@ -451,17 +453,16 @@ func (g *goods) click(gs *state.GlobalState) {
 	// **The offer row first**, because it is the row drawn in front: a selected card is lifted and
 	// a lifted card overlaps nothing above it, but reading the rows in drawing order is the rule
 	// every screen here follows.
-	for i := range g.offer {
-		if at.In(g.offerSlot(gs, i)) {
-			g.selectCard(i)
-			return
-		}
+	if i := ui.HoveredSeat(at, len(g.offer), func(i int) image.Rectangle {
+		return g.offerSlot(gs, i)
+	}); i >= 0 {
+		g.selectCard(i)
+		return
 	}
 
-	for i := 0; i < g.count(); i++ {
-		if !at.In(g.slot(gs, i)) {
-			continue
-		}
+	if i := ui.HoveredSeat(at, g.count(), func(i int) image.Rectangle {
+		return g.slot(gs, i)
+	}); i >= 0 {
 		g.take(gs, i)
 		return
 	}

@@ -1133,9 +1133,12 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   order to repeat it. The full name still titles every tooltip, which is where a player who does
   not recognize a picture yet goes. `TestTheEnemyNamesItselfAboveItsPortrait` holds both halves —
   a naming card centers its name across the top, a bleeding card has none.
-- **What survives on top of the art is one scrim each.** A relic draws its counter disc in the
-  bottom-right; an essence draws the sentence saying what it does, on a dark band from 140 to 265.
-  The band is derived from the offsets the type is drawn at, never authored twice.
+- **What survives on top of the art is one scrim, and only a card with something to say gets one.**
+  A relic draws its counter disc in the bottom-right. `EssenceStyle` declares a text band from 140
+  to 265, derived from the offsets the type is drawn at rather than authored twice — and **no card
+  in the game fills it**: the essences joined the runes, the stones, the potions and the sealed
+  goods in saying their rule in a tooltip *(owner's call, 2026-09-18)*, so every `EssenceStyle` face
+  is the whole picture. A scrim is a ground for type and a ground under nothing is a stain.
 - **The surface was carrying the text, so the ink set flips.** Every ink in `internal/cards` is
   near-black because it was written against the off-white `Surface`; `cards.onScrim` swaps the
   three named inks for light ones and lifts an authored element color toward white. **The one

@@ -56,8 +56,33 @@ func RaisedSeat(gs *state.GlobalState, row DragRow, raise bool) int {
 		return -1
 	}
 	at := image.Pt(gs.MouseX, gs.MouseY)
-	for i := row.RowLen() - 1; i >= 0; i-- {
-		if at.In(row.RowSlot(gs, i)) {
+	return HoveredSeat(at, row.RowLen(), func(i int) image.Rectangle { return row.RowSlot(gs, i) })
+}
+
+// HoveredSeat is which seat of an overlapping row a point lands on: **the last one drawn that
+// covers it**, or -1.
+//
+// **Every row in this game hit-tests through this, and that is the whole point of it** *(owner's
+// call, 2026-09-18)*. A row of cards is drawn front to back in index order, so once it is packed
+// tight enough to overlap, the card the player can see under the cursor is the *last* one covering
+// that point — and a walk that stops at the first one answers with the card behind it. That had
+// gone wrong in four places at once: the worn relics, the sack and the build band each grew their
+// own loop and each walked forwards, so a tooltip named one card while the row raised another and
+// a click took a third. The hand walked backwards and was right, which is what made the failure so
+// hard to see — one row of the four behaved.
+//
+// **It takes a count and a seat function rather than a DragRow**, because the rows that need it are
+// not all draggable: the reward screen's offer, the vial's, the pouch's shelf. An interface only
+// two of the callers could satisfy would have left the others writing the loop again, which is the
+// thing that went wrong in the first place.
+//
+// **A seat is a rectangle and a card is a rounded picture**, so the transparent corners of the card
+// on top still answer for the few pixels of the card behind them. That is a handful of pixels at
+// each end of a 280-tall card and is deliberately not solved here: clipping to the silhouette means
+// every caller knowing which style it drew, which is a bigger seam than the one it closes.
+func HoveredSeat(at image.Point, n int, slot func(i int) image.Rectangle) int {
+	for i := n - 1; i >= 0; i-- {
+		if at.In(slot(i)) {
 			return i
 		}
 	}
@@ -142,26 +167,23 @@ func (d *CardDrag) Update(gs *state.GlobalState, row DragRow) {
 
 // begin records a press over a card without yet committing to what it means.
 //
-// **Backwards through the row**, because overlapping cards are drawn front to back in index order:
-// the last card covering a point is the one visibly on top of it, and that is the one the press has
-// to mean. Both rows overlap once they are full.
+// **Through HoveredSeat**, so a press means the card the row raises and the tooltip describes. Every
+// row overlaps once it is full and the one on top is the last drawn; see HoveredSeat.
 func (d *CardDrag) begin(gs *state.GlobalState, row DragRow) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
-	for i := row.RowLen() - 1; i >= 0; i-- {
-		slot := row.RowSlot(gs, i)
-		if !at.In(slot) {
-			continue
-		}
-		*d = CardDrag{
-			held:        true,
-			originIndex: i,
-			pressX:      gs.MouseX,
-			pressY:      gs.MouseY,
-			grabDX:      gs.MouseX - slot.Min.X,
-			grabDY:      gs.MouseY - slot.Min.Y,
-		}
+	i := HoveredSeat(at, row.RowLen(), func(i int) image.Rectangle { return row.RowSlot(gs, i) })
+	if i < 0 {
 		return
+	}
+	slot := row.RowSlot(gs, i)
+	*d = CardDrag{
+		held:        true,
+		originIndex: i,
+		pressX:      gs.MouseX,
+		pressY:      gs.MouseY,
+		grabDX:      gs.MouseX - slot.Min.X,
+		grabDY:      gs.MouseY - slot.Min.Y,
 	}
 }
 

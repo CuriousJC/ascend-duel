@@ -84,6 +84,14 @@ var scrimWhite = color.RGBA{R: 244, G: 246, B: 250, A: 255}
 // **Clipped to the border's inner curve**, which is why the radius is reduced along with the
 // box: a picture clipped to the *outer* silhouette would be drawn underneath the border's own
 // bevel and show through the corners where the two curves disagree.
+//
+// **The picture is composited over the surface, never written in place of it** *(bug, 2026-09-18)*.
+// It used to copy the scaled pixel's alpha straight into the card, so art that carried any
+// transparency punched a hole clean through the face and the table — and whatever card was drawn
+// behind it — showed through. **A card is an opaque object whatever picture it is handed**, which is
+// a property of the card rather than a promise the art has to keep, so it is held here. What a thin
+// picture now shows is the card's own surface, which is the honest failure: the card still reads as
+// a card and the art visibly needs regenerating.
 func drawArtBleed(dst *image.RGBA, s Spec, st Style) {
 	if s.Art == nil {
 		return
@@ -104,7 +112,8 @@ func drawArtBleed(dst *image.RGBA, s Spec, st Style) {
 			if !insideRounded(iw, ih, radius, x, y) {
 				continue
 			}
-			dst.SetRGBA(x+inset, y+inset, tmp.RGBAAt(x+inset, y+inset))
+			dst.SetRGBA(x+inset, y+inset,
+				over(dst.RGBAAt(x+inset, y+inset), tmp.RGBAAt(x+inset, y+inset)))
 		}
 	}
 }
@@ -189,6 +198,22 @@ func scrimBand(dst *image.RGBA, st Style, band image.Rectangle) {
 			dst.SetRGBA(x, y, blend(dst.RGBAAt(x, y), ScrimSurface, scrimAlpha))
 		}
 	}
+}
+
+// over composites one premultiplied pixel onto an opaque one, and answers an opaque pixel.
+//
+// **Premultiplied, because that is what `image.RGBA` holds** — `xdraw`'s scaler writes into one, so
+// the color channels already carry the source's alpha and the only term left is how much of the
+// under-pixel survives. Multiplying by the alpha a second time would darken every soft edge in the
+// catalog.
+//
+// It is separate from `blend` because the two answer different questions: `blend` mixes a *named*
+// color in at a chosen strength, which is what a scrim does, and this one lets a picture put itself
+// down at whatever alpha it was authored with.
+func over(under, src color.RGBA) color.RGBA {
+	keep := 255 - int(src.A)
+	m := func(u, s uint8) uint8 { return s + uint8(int(u)*keep/255) }
+	return color.RGBA{R: m(under.R, src.R), G: m(under.G, src.G), B: m(under.B, src.B), A: 255}
 }
 
 // blend mixes over into under by alpha out of 255. Plain Go arithmetic, like everything else

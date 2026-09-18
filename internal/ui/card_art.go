@@ -729,13 +729,13 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 	return c.Label(), c.Category().String(), c.Form().String(), c.Damage(dmg), c.Cost()
 }
 
-// essenceSpec is an essence drawn as a card: a name, a line of what it does, and the color of whatever
-// it grants.
+// essenceSpec is an essence drawn as a card: a picture, and the color of whatever it grants.
 //
-// **It borrows `cards.Hand` at the call site rather than taking a style of its own**, because a
-// essence has no cost and no form and that style draws both as nothing — no dashes for a zero cost,
-// no mark for FormNone. What is left is exactly the name and the text, which is the whole of
-// what an essence has to say. A style of its own is what this wants the day an essence has art.
+// **The card carries no sentence** *(owner's call, 2026-09-18)*. The authored line is the tooltip's
+// now — see EssenceTip — which is the treatment the runes, the stones, the potions and the sealed
+// goods already take at this style: a scrim is a ground for type, and a card that says nothing
+// shows the whole picture. What a player reads at a glance is the art and the border; what the
+// essence actually does is the question they rest the cursor to ask.
 //
 // **The picture comes off the record** *(2026-09-12)*, through `data.EssenceData.ArtKey`, which is
 // already resolved by the time a `session.Essence` exists — so an essence nobody has drawn wears the
@@ -747,14 +747,12 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 // since removal is the absence of a color rather than one of its own.
 func essenceSpec(gs *state.GlobalState, w session.Essence, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:       w.Name,
-		Form:       cards.FormNone,
-		Cost:       0,
-		Element:    ArtFor(w.Element),
-		Art:        Artwork(gs, w.Art),
-		Text:       w.Text,
-		Highlights: cards.ElementHighlights(w.Text),
-		Enabled:    enabled,
+		Name:    w.Name,
+		Form:    cards.FormNone,
+		Cost:    0,
+		Element: ArtFor(w.Element),
+		Art:     Artwork(gs, w.Art),
+		Enabled: enabled,
 	}
 }
 

@@ -433,36 +433,48 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return
 	}
 
-	for i, item := range s.shelf {
-		seat := s.shelfSlot(gs, i)
-		if item.bought || !at.In(seat) {
-			continue
+	// **The three shelves hit-test through ui.HoveredSeat**, like every row in the game: the panes
+	// share one pitch across every seat the shop offers, so the cards overlap by a dozen pixels and
+	// the one on top is the last drawn.
+	//
+	// **A seat nothing is drawn in answers an empty rectangle**, which HoveredSeat then walks past.
+	// That is how a sold relic, an opened good and a drunk potion stay out of the way rather than
+	// swallowing the card behind them — they are skipped in the drawing too, and a seat that
+	// blocked a tooltip while showing nothing would be the worst version of this bug.
+	if i := ui.HoveredSeat(at, len(s.shelf), func(i int) image.Rectangle {
+		if s.shelf[i].bought {
+			return image.Rectangle{}
 		}
-		if record, ok := gs.Relics[item.key]; ok {
+		return s.shelfSlot(gs, i)
+	}); i >= 0 {
+		if record, ok := gs.Relics[s.shelf[i].key]; ok {
 			title, lines := ui.ShopRelicTip(record)
-			s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+			s.tip.Point(s.shelfSlot(gs, i), ui.TipLine(title), ui.TipLines(lines))
 		}
 		return
 	}
 
-	for _, key := range s.offered {
-		good, ok := session.GoodByKey(key)
-		seat := s.goodSlot(gs, key)
-		if !ok || s.goodTaken(key) || !at.In(seat) {
-			continue
+	if i := ui.HoveredSeat(at, len(s.offered), func(i int) image.Rectangle {
+		if _, ok := session.GoodByKey(s.offered[i]); !ok || s.goodTaken(s.offered[i]) {
+			return image.Rectangle{}
 		}
+		return s.goodSlot(gs, s.offered[i])
+	}); i >= 0 {
+		good, _ := session.GoodByKey(s.offered[i])
 		title, lines := goodTip(good)
-		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+		s.tip.Point(s.goodSlot(gs, s.offered[i]), ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 
-	for i, potion := range shopPotions() {
-		seat := potionSeat(gs, i)
-		if s.drunk[potion.Record] || !at.In(seat) {
-			continue
+	potions := shopPotions()
+	if i := ui.HoveredSeat(at, len(potions), func(i int) image.Rectangle {
+		if s.drunk[potions[i].Record] {
+			return image.Rectangle{}
 		}
-		title, lines := potionTip(potion)
-		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+		return potionSeat(gs, i)
+	}); i >= 0 {
+		title, lines := potionTip(potions[i])
+		s.tip.Point(potionSeat(gs, i), ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 
@@ -499,42 +511,56 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		return
 	}
 
-	for i := range s.shelf {
-		if !s.shelf[i].bought && at.In(s.shelfSlot(gs, i)) {
-			s.armed = ""
-			s.buy(gs, i)
-			return
+	// **The same walk the tooltips take**, so a click lands on the card the panel just described.
+	if i := ui.HoveredSeat(at, len(s.shelf), func(i int) image.Rectangle {
+		if s.shelf[i].bought {
+			return image.Rectangle{}
 		}
+		return s.shelfSlot(gs, i)
+	}); i >= 0 {
+		s.armed = ""
+		s.buy(gs, i)
+		return
 	}
 
-	for _, key := range s.offered {
-		if at.In(s.goodSlot(gs, key)) {
-			s.armed = ""
-			s.openGood(gs, key)
-			return
-		}
+	if i := ui.HoveredSeat(at, len(s.offered), func(i int) image.Rectangle {
+		return s.goodSlot(gs, s.offered[i])
+	}); i >= 0 {
+		s.armed = ""
+		s.openGood(gs, s.offered[i])
+		return
 	}
 
 	// **The potions are the shelf's rule, not the worn row's**: one click buys and drinks, because
 	// the price is on the card and a purse cannot go into debt. The brand is not in this list at
 	// all — it is a placeholder and a click on it does nothing. See shop_potions.go.
-	for i, potion := range shopPotions() {
-		if at.In(potionSeat(gs, i)) {
-			s.armed = ""
-			s.drinkPotion(gs, potion.Record)
-			return
+	clickable := shopPotions()
+	if i := ui.HoveredSeat(at, len(clickable), func(i int) image.Rectangle {
+		if s.drunk[clickable[i].Record] {
+			return image.Rectangle{}
 		}
+		return potionSeat(gs, i)
+	}); i >= 0 {
+		s.armed = ""
+		s.drinkPotion(gs, clickable[i].Record)
+		return
 	}
 
 	// **A press on a worn relic is not this function's** *(2026-08-26)*. It became two gestures when
 	// the row became reorderable — a click arms the sale, a drag moves the relic — and only the
 	// release knows which it was, so it is answered by the shared drag's rowClick. Leaving the
 	// press here as well would arm a relic on the way into a drag.
+	//
+	// **It asks ui.HoveredSeat although it wants no seat**, only whether the press landed on the
+	// row at all. Which relic answers cannot change what happens here — every seat returns — so
+	// this is the one row walk in the game that a forward loop would have got right. It goes
+	// through the shared one anyway: a hand-rolled walk beside eleven that are not is a walk the
+	// next reader has to check, and checking it is how the four that *were* wrong went unnoticed.
 	worn := gs.Run.Worn()
-	for i := range worn {
-		if at.In(s.wornSlot(gs, i, len(worn))) {
-			return
-		}
+	if ui.HoveredSeat(at, len(worn), func(i int) image.Rectangle {
+		return s.wornSlot(gs, i, len(worn))
+	}) >= 0 {
+		return
 	}
 
 	// A press anywhere else drops the question — except on the tab itself, which is not a click

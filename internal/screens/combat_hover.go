@@ -72,8 +72,9 @@ func (s *CombatScene) hoverRoundTimer(gs *state.GlobalState, at image.Point) boo
 	return true
 }
 
-// hoverHand walks the hand from the right, because the row overlaps and the card drawn last is the
-// one on top. Same order `beginPress` takes, and for the same reason.
+// hoverHand explains the card the cursor is resting on. **Through ui.HoveredSeat**, which is the one
+// walk every row in the game hit-tests with — the row overlaps and the card drawn last is the one on
+// top, so the press, the raise and the tooltip name one card by construction.
 func (s *CombatScene) hoverHand(gs *state.GlobalState, at image.Point) bool {
 	if s.drag.Dragging() {
 		return false // a card in the air is being moved, not read
@@ -88,17 +89,15 @@ func (s *CombatScene) hoverHand(gs *state.GlobalState, at image.Point) bool {
 		return false
 	}
 
-	for i := len(s.hand) - 1; i >= 0; i-- {
-		slot := s.cardSlot(gs, i)
-		if !at.In(slot) {
-			continue
-		}
-		card := s.hand[i].Card
-		title, lines := ui.CardTip(card, ui.HeldBy(s.fighter.Duelist, card))
-		s.tip.Point(slot, ui.TipLine(title), ui.TipLines(lines))
-		return true
+	i := ui.HoveredSeat(at, len(s.hand), func(i int) image.Rectangle { return s.cardSlot(gs, i) })
+	if i < 0 {
+		return false
 	}
-	return false
+	slot := s.cardSlot(gs, i)
+	card := s.hand[i].Card
+	title, lines := ui.CardTip(card, ui.HeldBy(s.fighter.Duelist, card))
+	s.tip.Point(slot, ui.TipLine(title), ui.TipLines(lines))
+	return true
 }
 
 // hoverRelics explains a worn relic, and says where it sits in the firing order. **The order is the
@@ -117,18 +116,18 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 		return false
 	}
 
-	r := s.relicPaneRect(gs)
-	for i, record := range worn {
-		corner := relicSlotAt(r, i, len(worn))
-		slot := image.Rect(corner.X, corner.Y, corner.X+cardWidth, corner.Y+cardHeight)
-		if !at.In(slot) {
-			continue
-		}
-		title, lines := ui.RelicTip(record, i, len(worn))
-		s.tip.Point(slot, ui.TipLine(title), ui.TipLines(lines))
-		return true
+	// **The row's own seats, through the row's own adapter** — relicRow is what the drag and the
+	// raise are already addressed through, so a seat measured a second time here is a seat that can
+	// disagree with the card the player sees lifted.
+	row := s.relicRow(gs)
+	i := ui.HoveredSeat(at, len(worn), func(i int) image.Rectangle { return row.RowSlot(gs, i) })
+	if i < 0 {
+		return false
 	}
-	return false
+	slot := row.RowSlot(gs, i)
+	title, lines := ui.RelicTip(worn[i], i, len(worn))
+	s.tip.Point(slot, ui.TipLine(title), ui.TipLines(lines))
+	return true
 }
 
 // hoverFighters explains either duelist card: their figures, and every status standing on them.

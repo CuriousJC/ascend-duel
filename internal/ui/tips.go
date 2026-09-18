@@ -138,25 +138,34 @@ func costTipLines(c combat.Card, h held) []string {
 // true and would read like a compiler — "card-damage, form slash, scale 200" — where the line in the
 // file is written for a player. The risk is drift, and it is a real one: the file is the only place
 // that says what a relic does in words, so a rule changed without its Text is a relic that lies.
-func RelicTip(record data.RelicData, wornAt, wornOf int) (string, []string) {
+func RelicTip(record data.RelicData) (string, []string) {
 	// **The authored text, split on its own line breaks.** A newline in `relics.json` is an authored
 	// break for the *card face*, and a tooltip draws its own lines one at a time — handing the whole
 	// string to one line draws every line of it at the same y, which reads as garbled text rather
 	// than as a missing break. Same treatment `runeTipLines` gives a rune.
-	lines := strings.Split(record.Text, "\n")
+	return relicTitle(record), strings.Split(record.Text, "\n")
+}
 
-	if wornAt >= 0 && wornOf > 1 {
-		// **Worn order is a rule** — relics fire left to right and compound — so where one sits is
-		// information about what it does, not about where it is drawn.
-		lines = append(lines, fmt.Sprintf("fires %s of %d, left to right",
-			ordinal(wornAt+1), wornOf))
+// relicTitle is the relic's name with its rarity after it — `Twisted Weights (UNCOMMON)`.
+//
+// **In the title rather than on a line of its own** *(owner's call, 2026-09-18)*. Rarity is not
+// something a relic *does*, so a line among the rules read as one more rule; it is what kind of
+// thing this is, which is what a title is for.
+//
+// **The word is written in the relic's own border color.** `cards.RarityInk` is the same palette
+// the card's ring is drawn from, so the panel and the card say one thing — and a player who has
+// learned the rings gets the word for free rather than a second scheme to learn. The coloring
+// itself happens in TipLine, which matches whole words, so nothing here hands over an ink.
+func relicTitle(record data.RelicData) string {
+	if !record.Rarity.Valid() {
+		return record.Name
 	}
-	return record.Name, lines
+	return record.Name + " (" + strings.ToUpper(string(record.Rarity)) + ")"
 }
 
 // ShopRelicTip is relicTip with the price under it, for a relic on the shelf.
 func ShopRelicTip(record data.RelicData) (string, []string) {
-	title, lines := RelicTip(record, -1, 0)
+	title, lines := RelicTip(record)
 
 	if price, ok := session.RelicPrice(record.RelicRecord); ok {
 		lines = append(lines, fmt.Sprintf("%d vitae, sells back for %d",
@@ -230,21 +239,6 @@ func statusTexts() map[string]string {
 
 // **An essence has no tooltip** *(owner's call, 2026-09-05)*. The card's own face says what it does,
 // one word to a line, and a hover repeating that sentence beside it was the same words twice.
-
-// ordinal is 1st, 2nd, 3rd — for the five positions a relic can be worn in, and nothing else. Written
-// out rather than generalized, because the row is capped at five and a general one would be a rule
-// about English nobody here needs.
-func ordinal(n int) string {
-	switch n {
-	case 1:
-		return "1st"
-	case 2:
-		return "2nd"
-	case 3:
-		return "3rd"
-	}
-	return strconv.Itoa(n) + "th"
-}
 
 // RoundTimerTip explains the bar under the tower place: what the cells are, and what happens when
 // the last one lights.

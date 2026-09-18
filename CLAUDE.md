@@ -547,7 +547,7 @@ The three decisions worth knowing without opening it:
 
 - **Squash merge every PR**, so `main` reads as a list of milestones. Commit freely on the
   branch; the squash collapses them.
-- **Work on `game-updates-N`**, incrementing every PR. Branch off `main`, never commit to it.
+- **Work on `up-N`**, incrementing every PR. Branch off `main`, never commit to it.
 - **Leave work unstaged.** The owner reviews diffs in VS Code. Do not commit, push or open a
   PR without being asked for that specific step.
 

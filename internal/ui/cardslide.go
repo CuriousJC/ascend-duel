@@ -34,10 +34,15 @@ type CardSlide struct {
 
 	Card combat.Card
 
-	// Lift raises both ends, so a card that is drawn standing proud of its row — the combat
-	// screen's queued cards — slides along the raised line it is already on rather than dropping
-	// into the row and jumping back out of it. Zero for a row with no such state.
-	Lift int
+	// FromLift and ToLift raise each end of the journey, so a card that is drawn standing proud of
+	// its row — the combat screen's queued cards — slides along the raised line it is already on.
+	// Zero for a row with no such state.
+	//
+	// **Two values rather than one, because a card can be put down** *(2026-09-18)*. A single lift
+	// could only describe a card that is raised for the whole journey or not at all, so a selection
+	// being cleared had nothing to animate and the cards snapped into the row. The commonest slide
+	// still has the two equal.
+	FromLift, ToLift int
 
 	FromIndex, FromCount int
 	ToIndex, ToCount     int
@@ -72,22 +77,30 @@ func SlideInto(row []CardSlide, i int) bool {
 }
 
 // SlidesFor is the permutation a sort applied, as slides: for each new position, where the card
-// standing there set off from. Cards that did not move do not slide.
+// standing there set off from. A card that neither moved seat nor changed height does not slide.
+//
+// **Both lifts are indexed by the card's *new* position**, because that is where the card is in the
+// list by the time this is called — the hand has already been rearranged and a card is found by
+// where it ended up. A caller whose lifts did not change passes the same function twice.
 //
 // **One function so the two screens cannot raise different gestures.** Everything that varies
 // between them — which list was sorted, what a card at a seat looks like, whether it stands proud
 // of the row — is a parameter; the clock, the easing and the rule that a stationary card stays put
 // are not.
-func SlidesFor(row []CardSlide, order []int, card func(i int) combat.Card, lift func(i int) int) []CardSlide {
+func SlidesFor(row []CardSlide, order []int, card func(i int) combat.Card,
+	fromLift, toLift func(i int) int) []CardSlide {
+
 	n := len(order)
 	for to, from := range order {
-		if from == to {
+		up, down := fromLift(to), toLift(to)
+		if from == to && up == down {
 			continue
 		}
 		row = AddCardSlide(row, CardSlide{
 			Travel:    NewTravel(0, SlideTicks()),
 			Card:      card(to),
-			Lift:      lift(to),
+			FromLift:  up,
+			ToLift:    down,
 			FromIndex: from, FromCount: n,
 			ToIndex: to, ToCount: n,
 		})
@@ -115,8 +128,8 @@ func DrawCardSlides(gs *state.GlobalState, screen *ebiten.Image, row []CardSlide
 		t := EaseOut(sl.Progress())
 
 		from, to := seat(gs, sl.FromIndex, sl.FromCount), seat(gs, sl.ToIndex, sl.ToCount)
-		from.Y -= sl.Lift
-		to.Y -= sl.Lift
+		from.Y -= sl.FromLift
+		to.Y -= sl.ToLift
 
 		var geo ebiten.GeoM
 		geo.Translate(

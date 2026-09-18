@@ -1001,7 +1001,7 @@ func (s *PostBattleScene) sortOffer(gs *state.GlobalState) {
 	s.slides = ui.SlidesFor(s.slides, order, func(i int) combat.Card {
 		c, _ := card(s.offer[i])
 		return c
-	}, func(int) int { return 0 })
+	}, func(int) int { return 0 }, func(int) int { return 0 })
 }
 
 // drawSlides draws the offered cards moving within their row, on the shared mover.

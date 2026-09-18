@@ -2380,5 +2380,27 @@
     "Seed": "R0W14S",
     "Dummy": true,
     "Actions": 12
+  },
+  {
+    "ScenarioRecord": "ten-runes",
+    "Note": "Ten runes, one for every shape a rune can take, in a sack that can be read rather than spent. All nine targets the rules have are here - Ashmark recolors two cards, Maulstave reforms two, Graft makes one card into another, Mimic copies one, Unmake eats two, Gildstone and the wildcard seal each write an upgrade onto one, Chimera repeats whatever was spent last, Rockfall fills the pouch and Hoard pays straight into the purse - so every branch of runeTipLines is on one row and can be compared side by side. That is the question it answers: which of Rider, Value and Count a rune's panel reads depends entirely on its target, which is what makes a rune the least readable record in data/ and its tooltip the only place the answer is spelled out. Two of the ten stress the panel hardest - the wildcard seal and Gildstone each carry an authored line break and a word the coloring has to claim. Against a dummy so nothing ends while the row is being read, and 15 AP so the hand is a choice rather than a budget.",
+    "Relics": [],
+    "Hand": [],
+    "Runes": [
+      "two-into-fire",
+      "two-into-crush",
+      "left-to-right",
+      "duplicate-card",
+      "two-destroyed",
+      "switch-gold",
+      "change-wildcard",
+      "repeat-card",
+      "two-stones",
+      "add-vitae"
+    ],
+    "Screen": "combat",
+    "Seed": "0000HX",
+    "Dummy": true,
+    "Actions": 15
   }
 ]

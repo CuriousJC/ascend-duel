@@ -21,10 +21,10 @@ import (
 // The panel's own measurements. Pixels rather than percentages: a tooltip is sized by its text, and
 // text is not a percentage of anything.
 const (
-	tipPad       = 12
-	tipTitleSize = 20
-	tipLineSize  = 17
-	tipLineGap   = 6
+	tipPad       = 24
+	tipTitleSize = 39
+	tipLineSize  = 32
+	tipLineGap   = 12
 
 	// tipGap is how far the panel sits from the thing it explains, and tipEdge how close it may come
 	// to the edge of the screen.
@@ -32,14 +32,28 @@ const (
 	tipEdge = 8
 )
 
-// The panel is dark on a light table, which is the one contrast the game has left: every card, pane
-// and log is an off-white surface, so an overlay that is another off-white would read as one more
-// card rather than as something on top of everything. Same face a button paints.
+// **The dark panel, and it is the game's only one.** Every card, pane and log is an off-white
+// surface, so an overlay that is another off-white would read as one more card rather than as
+// something on top of everything. Dark is the one contrast left.
+//
+// **Exported because the tutorial bubble is the same object** *(owner's call, 2026-09-18)*. Bob's
+// panel was a second hand-picked near-black with its own near-white ink, one degree cooler than
+// this one and different for no reason anybody chose — which is exactly the thing the color rule
+// asks to be derived rather than written down twice. Two dark panels of prose over a light table
+// are one surface, so there is one set of names for it.
+//
+// **The alpha belongs to the caller, not to the surface.** A tooltip is faintly transparent
+// because it covers the thing it is explaining; a bubble is opaque because it does not. That is
+// the one value a second panel is expected to set for itself.
 var (
-	tipSurface = color.RGBA{R: 38, G: 35, B: 30, A: 244}
-	tipTitle   = color.RGBA{R: 245, G: 242, B: 236, A: 255}
-	tipInk     = color.RGBA{R: 208, G: 202, B: 190, A: 255}
-	tipEdgeInk = color.RGBA{R: 92, G: 84, B: 72, A: 255}
+	PanelSurface = color.RGBA{R: 38, G: 35, B: 30, A: 244}
+
+	// PanelSpeech is what the panel is saying — a tooltip's title, Bob's prose. PanelInk is the
+	// quieter register underneath it: a stat line, a term of an arithmetic.
+	PanelSpeech = color.RGBA{R: 245, G: 242, B: 236, A: 255}
+	PanelInk    = color.RGBA{R: 208, G: 202, B: 190, A: 255}
+
+	PanelEdgeInk = color.RGBA{R: 92, G: 84, B: 72, A: 255}
 )
 
 // UpdateTooltip advances the dwell and forgets whatever the scene stopped pointing at.
@@ -77,26 +91,34 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 		return // no font: a tooltip is the one thing that must not be a colored box with no words
 	}
 
-	w, h := tipSize(t, face, titleFace)
+	// **Wrapped once and then both measured and drawn from the same lines.** The panel used to
+	// measure what the caller had broken; now that it breaks them itself, a second wrap for the
+	// drawing would be a second answer to the same question and the two would differ on the day a
+	// rounding changed.
+	title, body, w, h := tipLayout(t, face, titleFace)
 	at := tipPlace(gs, t.Anchor, w, h)
 
-	vector.FillRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), tipSurface, false)
-	vector.StrokeRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), 1, tipEdgeInk, false)
+	vector.FillRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), PanelSurface, false)
+	vector.StrokeRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), 1, PanelEdgeInk, false)
 
 	y := at.Y + tipPad
-	if len(t.Title) > 0 {
+	for _, line := range title {
 		// **The title's runs are drawn by the same function the body's are**, so a colored word in
 		// a title cannot end up placed differently from the same word one line down.
-		drawTipRuns(screen, t.Title, titleFace, at.X+tipPad, y, tipTitle)
+		DrawRuns(screen, line, titleFace, at.X+tipPad, y, PanelSpeech)
 		y += int(tipTitleSize) + tipLineGap
 	}
-	for _, line := range t.Lines {
-		drawTipRuns(screen, line, face, at.X+tipPad, y, tipInk)
+	for _, line := range body {
+		DrawRuns(screen, line, face, at.X+tipPad, y, PanelInk)
 		y += int(tipLineSize) + tipLineGap
 	}
 }
 
-// drawTipRuns draws one line as its runs, each in its own ink, left to right.
+// DrawRuns draws one line as its runs, each in its own ink, left to right.
+//
+// **Exported alongside WrapRuns**, because the tutorial bubble sets colored prose through the same
+// pair. A second drawing of a colored line is a second place a run's advance can be measured
+// differently from where it is placed.
 //
 // **Measured and placed rather than drawn twice**, exactly as `cards.drawMarkedLine` is on the card
 // face — overdrawing a colored run on top of the whole line composites two sets of antialiased
@@ -105,7 +127,7 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 // **A run with no ink takes `plain`**, so a caller that never thinks about color is drawn exactly
 // as it was before runs existed. It is a parameter rather than a constant because the title and the
 // body have different default inks and share this drawing.
-func drawTipRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFace, x, y int, plain color.RGBA) {
+func DrawRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFace, x, y int, plain color.RGBA) {
 	for _, run := range line {
 		if run.Text == "" {
 			continue
@@ -120,46 +142,82 @@ func drawTipRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFac
 	}
 }
 
+// PanelWeight is how far a second pass is offset to thicken the panel's type, in pixels at the
+// internal resolution. Zero is the font as drawn.
+//
+// **Synthesized rather than a second font file, because Kubasta has one weight.** It is a static
+// face with no variation axes — RobotoFlex is the only variable font embedded, and swapping the
+// panel's typeface to get a bolder one would make the tooltip the one place in the game set in a
+// different face. A second pass a fraction of a pixel to the side is the standard way to thicken
+// a single-weight face and it keeps the letterforms.
+//
+// **Horizontal only.** Offsetting vertically as well fills the counters of a and e at this size
+// and the type stops being legible before it stops looking bold.
+//
+// **One dial for the whole dark-panel family**, so Bob's bubble is set at the same weight as a
+// tooltip — the two are one surface and type that disagreed across them would say they are not.
+var PanelWeight = 0.9
+
+// drawTipLine draws one run, twice, a hair apart.
+//
+// **This is the deliberate exception to the rule two lines up.** Overdrawing a *colored* run on
+// top of a whole line composites two different sets of glyph edges and reads as a smudge; this is
+// the same string in the same ink, so what the second pass composites is the same shape a fraction
+// over — which is weight rather than blur.
 func drawTipLine(screen *ebiten.Image, s string, face *text.GoTextFace, x, y int, ink color.RGBA) {
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(x), float64(y))
-	op.ColorScale.ScaleWithColor(ink)
-	text.Draw(screen, s, face, op)
+	offsets := []float64{0}
+	if PanelWeight > 0 {
+		offsets = append(offsets, PanelWeight)
+	}
+	for _, dx := range offsets {
+		op := &text.DrawOptions{}
+		op.GeoM.Translate(float64(x)+dx, float64(y))
+		op.ColorScale.ScaleWithColor(ink)
+		text.Draw(screen, s, face, op)
+	}
 }
 
-// tipSize measures the panel against its longest line. **Measured rather than estimated**: the
-// alternative is a character count times a guessed width, which is wrong the first time a line
-// carries a wide glyph and shows up as text running out of a box.
-func tipSize(t *models.Tooltip, face, titleFace *text.GoTextFace) (w, h int) {
+// tipLayout wraps the panel's text and measures what came back.
+//
+// **One function, because the two cannot be allowed to disagree.** A panel measured against one
+// set of lines and drawn from another is a box with text hanging out of it, and it only shows up
+// on the strings long enough to wrap.
+//
+// **Measured rather than estimated**: the alternative is a character count times a guessed width,
+// which is wrong the first time a line carries a wide glyph.
+func tipLayout(t *models.Tooltip, face, titleFace *text.GoTextFace) (title, body []models.TipLine, w, h int) {
 	widest := 0.0
-	if len(t.Title) > 0 {
-		// Run by run and summed, for the reason the body's lines are: the title is drawn that way
-		// too now, and measuring the joined string would let kerning across a join make the panel a
-		// pixel narrower than what goes in it.
-		for _, run := range t.Title {
-			w, _ := text.Measure(run.Text, titleFace, 0)
-			widest += w
-		}
-		h += int(tipTitleSize) + tipLineGap
-	}
-	for _, line := range t.Lines {
+	measure := func(line models.TipLine, f *text.GoTextFace) {
 		// **Measured run by run and summed**, because that is how the line is drawn: measuring the
 		// joined string would let kerning across a join make the panel a pixel narrower than what
 		// goes in it.
 		lw := 0.0
 		for _, run := range line {
-			w, _ := text.Measure(run.Text, face, 0)
-			lw += w
+			lw += measureText(run.Text, f)
 		}
 		if lw > widest {
 			widest = lw
 		}
-		h += int(tipLineSize) + tipLineGap
+	}
+
+	if len(t.Title) > 0 {
+		title = WrapRuns(t.Title, titleFace, tipMaxW)
+		for _, line := range title {
+			measure(line, titleFace)
+			h += int(tipTitleSize) + tipLineGap
+		}
+	}
+	for _, line := range t.Lines {
+		for _, wrapped := range WrapRuns(line, face, tipMaxW) {
+			body = append(body, wrapped)
+			measure(wrapped, face)
+			h += int(tipLineSize) + tipLineGap
+		}
 	}
 	if h > 0 {
 		h -= tipLineGap // the gap after the last line is not part of the panel
 	}
-	return int(widest) + tipPad*2, h + tipPad*2
+	return title, body, int(widest) + tipPad*2, h + tipPad*2
 }
 
 // tipPlace is where the panel goes: to the right of the anchor, flipping and clamping rather than

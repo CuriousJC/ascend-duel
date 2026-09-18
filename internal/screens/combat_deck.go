@@ -186,13 +186,26 @@ func (s *CombatScene) spendSelected() {
 		s.addSlide(ui.CardSlide{
 			Travel:    ui.NewTravel(0, ui.SlideTicks()),
 			Card:      s.hand[to].Card,
-			Lift:      selectedLift(s.hand[to].selected),
+			FromLift:  selectedLift(s.hand[to].selected),
+			ToLift:    selectedLift(s.hand[to].selected),
 			FromIndex: was, FromCount: leaving,
 			ToIndex: to, ToCount: len(s.hand),
 		})
 	}
 
 	s.startDeal(dealt, pile)
+
+	// **The queue goes with the cards it named.** This is the moment the played or discarded cards
+	// leave the hand, and the queue is a list of exactly those cards — so one that outlived them
+	// was a round still being described by a hand that no longer exists.
+	//
+	// **It was `finishDeal`'s until now, and that was a whole deal too late** *(2026-09-18)*. The
+	// sort moved to the end of the deal on 2026-09-15 and took the queue's rebuild with it, so for
+	// the length of every deal `previewBlow` re-derived the hand that had just been played and
+	// `drawPlannedHand` painted it back into its planning seat — the name reappearing on the table
+	// after the creature had already answered it. The doc above has always said this function
+	// leaves the queue correct; this is what makes that true again.
+	s.syncQueue()
 }
 
 // toggleDeck shows or hides the deck overlay.

@@ -106,13 +106,22 @@ const (
 
 // tutorialInk is the bubble's colors. It is a dark panel over a light table, matching the fight
 // log and the deck overlay rather than the cards — Bob is chrome, not something in play.
+//
+// **The surface and the prose ink are the tooltip's** *(owner's call, 2026-09-18)*. This panel and
+// that one are the same object — a dark box of type over a light table — and they were two
+// hand-picked palettes a degree apart, which is the drift the color rule exists to stop. What is
+// still this file's is the *alpha*: a tooltip is faintly transparent because it covers the thing
+// it explains, and the bubble is opaque because the spotlight is what points at things here.
 var (
-	tutorialPanel = color.RGBA{R: 30, G: 30, B: 38, A: 255}
-	tutorialText  = color.RGBA{R: 236, G: 232, B: 226, A: 255}
+	tutorialPanel = opaque(systems.PanelSurface)
+	tutorialText  = systems.PanelSpeech
 
 	// tutorialWaiting is the line standing where a Next button would be. **Dimmer than the prose
 	// it sits under**, because it is a state and not something Bob is saying.
-	tutorialWaiting = color.RGBA{R: 150, G: 146, B: 140, A: 255}
+	//
+	// **Derived rather than picked**, so it stays one step off whatever the panel is: a hand-picked
+	// gray stops being a step off the surface the moment the surface moves.
+	tutorialWaiting = systems.ColorToward(systems.PanelInk, tutorialPanel, 40)
 
 	// tutorialGlow is the square drawn around whatever is being pointed at, and the leader line
 	// running to it from the bubble. **Red** *(owner's call, 2026-08-25)*.
@@ -593,12 +602,19 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 	x := r.Min.X + tutorialPad*2 + tutorialCardW
 	y := r.Min.Y + tutorialPad + 6
 
-	for _, line := range wrapTutorialText(face, step.Text, tutorialTextW) {
-		op := &text.DrawOptions{}
-		op.GeoM.Translate(float64(x), float64(y))
-		op.ColorScale.ScaleWithColor(tutorialText)
-		text.Draw(screen, line, face, op)
-		y += tutorialLinePitch
+	// **Bob's prose goes through the game's one coloring door and the game's one wrapper**
+	// *(owner's call, 2026-09-18)*. He was the only voice that named an element without writing it
+	// in that element's color, which is a gap rather than a style: the lesson teaching a new player
+	// what fire is was the one place the word was gray. `ui.TipLine` is the same cut every tooltip
+	// takes, so the elements, the metals and the forms all arrive coloured with nothing added here.
+	//
+	// **An authored break still forces a line and can only ever add one** — each is wrapped on its
+	// own — so `data/tutorial.json` can shape a paragraph without having to measure one.
+	for _, authored := range strings.Split(step.Text, "\n") {
+		for _, line := range systems.WrapRuns(ui.TipLine(authored), face, tutorialTextW) {
+			systems.DrawRuns(screen, line, face, x, y, tutorialText)
+			y += tutorialLinePitch
+		}
 	}
 
 	systems.DrawButton(gs, screen, t.skip)
@@ -670,31 +686,9 @@ func guideSpec(gs *state.GlobalState) cards.Spec {
 	}
 }
 
-// wrapTutorialText breaks a paragraph to the column, honoring an authored `\n` the way the cards
-// do — see `cards.WrapText`, whose rule this follows: a break can only ever add a line, since an
-// authored line too wide for the column still wraps.
-func wrapTutorialText(face *text.GoTextFace, s string, width int) []string {
-	var out []string
-	for _, authored := range strings.Split(s, "\n") {
-		words := strings.Fields(authored)
-		if len(words) == 0 {
-			out = append(out, "")
-			continue
-		}
-		line := words[0]
-		for _, w := range words[1:] {
-			try := line + " " + w
-			if adv, _ := text.Measure(try, face, 0); int(adv) > width {
-				out = append(out, line)
-				line = w
-				continue
-			}
-			line = try
-		}
-		out = append(out, line)
-	}
-	return out
-}
+// opaque is a color at full alpha. The shared panel surface carries the tooltip's transparency,
+// and a bubble that covers nothing has no reason to be see-through.
+func opaque(c color.RGBA) color.RGBA { c.A = 255; return c }
 
 // buttonRect is a button's footprint, derived from its center exactly as `systems.UpdateButton`
 // derives it for hit testing. **Shared rather than written out per anchor**, so a spotlight and

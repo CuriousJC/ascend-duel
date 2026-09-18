@@ -215,21 +215,26 @@ func (s *ShopScene) pouchHover(gs *state.GlobalState, at image.Point, tip *model
 	row := pouchRow(gs)
 	seats := s.pouch.cardRects(gs)
 
-	for i, seat := range seats {
-		if i >= len(row) || !at.In(seat) {
-			continue
-		}
-		tip.Point(seat, ui.TipLine(row[i].Name), ui.TipLines(stoneTipLines(gs, row[i])))
-
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
-			// Clicking the armed stone disarms it, which is the worn row's own gesture.
-			if s.pouch.armed == i {
-				s.pouch.armed = -1
-			} else {
-				s.pouch.armed = i
-			}
-		}
+	// **ui.HoveredSeat, like every row in the game** — the shelf packs its stones into whatever
+	// width the panel has, so the card on top is the last drawn. Counted over the stones rather
+	// than over the seats, since a shelf draws empty ones it has nothing to say about.
+	n := len(seats)
+	if len(row) < n {
+		n = len(row)
+	}
+	i := ui.HoveredSeat(at, n, func(i int) image.Rectangle { return seats[i] })
+	if i < 0 {
 		return
+	}
+	tip.Point(seats[i], ui.TipLine(row[i].Name), ui.TipLines(stoneTipLines(gs, row[i])))
+
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
+		// Clicking the armed stone disarms it, which is the worn row's own gesture.
+		if s.pouch.armed == i {
+			s.pouch.armed = -1
+		} else {
+			s.pouch.armed = i
+		}
 	}
 }
 

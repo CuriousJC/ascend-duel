@@ -183,14 +183,16 @@ func HoverDeckPanel(gs *state.GlobalState, at image.Point, v DeckView, d DeckCon
 	width := float32(gs.PctX(ModalPanelRightPct)) - left
 	top := float32(gs.PctY(ModalPanelTopPct))
 
-	for _, slot := range d.grid(v, left+width/2, width, top+modalBareBodyTop).slots {
-		if !at.In(slot.at) {
-			continue
-		}
-		title, lines := CardTip(slot.card, HeldBy(d.Holder, slot.card))
-		tip.Point(slot.at, TipLine(title), TipLines(lines))
+	// **HoveredSeat, like every row in the game.** A row here has no floor on its pitch — see
+	// rowPitchFor, which will pack cards a pixel apart rather than truncate the row — so this is the
+	// place overlap is hardest and the card the cursor is over is the *last* one drawn covering it.
+	slots := d.grid(v, left+width/2, width, top+modalBareBodyTop).slots
+	i := HoveredSeat(at, len(slots), func(i int) image.Rectangle { return slots[i].at })
+	if i < 0 {
 		return
 	}
+	title, lines := CardTip(slots[i].card, HeldBy(d.Holder, slots[i].card))
+	tip.Point(slots[i].at, TipLine(title), TipLines(lines))
 }
 
 // Deck overlay geometry. The panel's footprint is the shared modal one — see modal.go; what is

@@ -9,6 +9,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
 // The wording of a tooltip and the figure on a card's face. Both are arithmetic over the relic
@@ -391,5 +392,36 @@ func TestChromaticTakesNoElementColor(t *testing.T) {
 				t.Errorf("%q in a chromatic title is written in the %v ink: %v", run.Text, e, title)
 			}
 		}
+	}
+}
+
+// **An essence says its rule in a tooltip and its face is the picture** *(owner's call,
+// 2026-09-18)*. Both halves are pinned here because either alone is a silent failure: a face that
+// still prints the sentence draws a scrim over the art it was given, and a tooltip that does not
+// carry it leaves an authored line nothing in the game reads.
+func TestAnEssenceSaysItsRuleInItsTooltipRatherThanOnItsFace(t *testing.T) {
+	gs := &state.GlobalState{}
+
+	for _, w := range session.Essences() {
+		if spec := essenceSpec(gs, w, true); spec.Text != "" {
+			t.Errorf("%s prints %q across its own picture", w.Record, spec.Text)
+		}
+
+		title, lines := EssenceTip(w)
+		if title != w.Name {
+			t.Errorf("%s is titled %q, want %q", w.Record, title, w.Name)
+		}
+		if got := strings.Join(lines, "\n"); got != w.Text {
+			t.Errorf("%s explains itself as %q, want the authored %q", w.Record, got, w.Text)
+		}
+	}
+}
+
+// **An authored line break is a tooltip's own line**, which is the treatment a rune already takes:
+// the face and the panel are the same sentence written for two widths.
+func TestAnAuthoredBreakBecomesTwoTooltipLines(t *testing.T) {
+	_, lines := EssenceTip(session.Essence{Name: "Ember", Text: "makes a card\nFIRE"})
+	if len(lines) != 2 || lines[0] != "makes a card" || lines[1] != "FIRE" {
+		t.Errorf("split into %q, want two lines", lines)
 	}
 }

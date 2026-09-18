@@ -3,6 +3,8 @@ package screens
 import (
 	"testing"
 
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
+
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -180,23 +182,32 @@ func sameInts(a, b []int) bool {
 
 // The reward screen puts both rows on one screen, and the two ways that goes wrong are a control
 // under the cards and a selection nobody can see. Arithmetic, so it is checkable without a window.
-func TestTheSkipButtonStandsBetweenTheEssences(t *testing.T) {
+//
+// **The essences touch and the way out stands off the end of them** *(owner's call, 2026-09-18)*.
+// The pair is the question and is compared across, so a control cutting between them is a third
+// card that is not one.
+func TestTheSkipButtonStandsBesideTheEssences(t *testing.T) {
 	gs := testState()
 	prizes, button := essenceRowSeats(gs, 2)
 
 	if len(prizes) != 2 {
 		t.Fatalf("laid out %d prize seats, want 2", len(prizes))
 	}
-	if button.Min.X < prizes[0].Max.X || button.Max.X > prizes[1].Min.X {
-		t.Errorf("the button runs %d..%d, not between essences ending at %d and starting at %d",
-			button.Min.X, button.Max.X, prizes[0].Max.X, prizes[1].Min.X)
+	if button.Min.X < prizes[1].Max.X {
+		t.Errorf("the button starts at %d, inside a row whose last essence ends at %d",
+			button.Min.X, prizes[1].Max.X)
+	}
+	if gap := prizes[1].Min.X - prizes[0].Max.X; gap != essenceRowGap {
+		t.Errorf("the essences are %d apart, want the row's own gap of %d", gap, essenceRowGap)
 	}
 
-	// **Centered on the row it stands in**, or it reads as a control that happens to be near the
-	// cards rather than as the third answer beside them.
-	rowMid, buttonMid := (prizes[0].Min.Y+prizes[0].Max.Y)/2, (button.Min.Y+button.Max.Y)/2
-	if rowMid != buttonMid {
-		t.Errorf("the button is centered at y=%d against a card row centered at y=%d", buttonMid, rowMid)
+	// **Bottom-aligned to the cards**, or a control two fifths of a card tall floats in the row it
+	// is standing in.
+	if button.Max.Y != prizes[1].Max.Y {
+		t.Errorf("the button ends at y=%d and the essences at y=%d", button.Max.Y, prizes[1].Max.Y)
+	}
+	if button.Max.Y != essenceRowBottom(gs) {
+		t.Errorf("the row ends at y=%d and the band at y=%d", button.Max.Y, essenceRowBottom(gs))
 	}
 }
 
@@ -214,5 +225,93 @@ func TestASelectedOfferCardClearsTheEssenceRow(t *testing.T) {
 	}
 	if row.Max.Y > gs.ScreenHeight {
 		t.Errorf("the offer row reaches y=%d, past the %d-pixel screen", row.Max.Y, gs.ScreenHeight)
+	}
+}
+
+// **The payout and the offer share one screen and two columns** *(owner's call, 2026-09-18)*. The
+// failure this pins is the one the merge could produce silently: a row centered on the screen
+// standing half in the column the payout is being read in, so the two are read as one thing.
+func TestTheEssenceRowStaysOutOfThePayoutsColumn(t *testing.T) {
+	gs := testState()
+	prizes, button := essenceRowSeats(gs, 2)
+
+	split := gs.PctX(payoutColumnPct)
+	for i, seat := range prizes {
+		if seat.Min.X < split {
+			t.Errorf("essence %d starts at x=%d, inside a payout column ending at %d",
+				i, seat.Min.X, split)
+		}
+	}
+	if button.Min.X < split {
+		t.Errorf("the way out starts at x=%d, inside a payout column ending at %d",
+			button.Min.X, split)
+	}
+	if mid := proseColumnMid(gs); mid >= split {
+		t.Errorf("the payout is centered at x=%d, outside its own column ending at %d", mid, split)
+	}
+}
+
+// **The payout ends on the edge the essences end on** *(owner's call, 2026-09-18)*, whatever the
+// script's length — a fight paying no interest is one sentence shorter, and a block hung from the
+// top of its column would float by exactly that sentence.
+//
+// **And it still has to fit the band it is read in**, between the relics above and the cards below.
+// The wording is authored, so a longer script is a layout change and this is what says so.
+func TestThePayoutIsAlignedToTheBottomOfTheEssenceRow(t *testing.T) {
+	gs := testState()
+	gs.Run = session.New(session.StartingDeck())
+	gs.Run.WonFight(3, 40)
+
+	lines := payoutLines(gs)
+	if len(lines) < 2 {
+		t.Fatalf("a won fight narrated %d lines", len(lines))
+	}
+
+	for _, n := range []int{len(lines), len(lines) - 1, 1} {
+		bottom := proseTop(gs, n) + (n-1)*proseLineGap + proseLineHeight
+		if want := essenceRowBottom(gs); bottom != want {
+			t.Errorf("%d lines end at y=%d and the essence row at y=%d", n, bottom, want)
+		}
+	}
+
+	if top := proseTop(gs, len(lines)); top <= buildBandBottom(gs) {
+		t.Errorf("%d narrated lines start at y=%d, inside a build band ending at y=%d",
+			len(lines), top, buildBandBottom(gs))
+	}
+	if bottom := essenceRowBottom(gs); bottom > offerRowOf(gs, handSize).Min.Y-offerSelectedNudge {
+		t.Errorf("the payout's band ends at y=%d and a lifted offer card reaches y=%d",
+			bottom, offerRowOf(gs, handSize).Min.Y-offerSelectedNudge)
+	}
+}
+
+// **proseLineHeight has to be the font's own** *(2026-09-18)*, because the payout's block is laid
+// out from its last line's bottom edge and that edge is what the essences beside it are aligned to.
+// A pitch is the distance between two lines and says nothing about where the last one ends, so the
+// figure cannot be derived from proseLineGap — it is measured, and this is what stops it drifting
+// when the type size moves.
+//
+// **It also checks the widest line fits the column**, which is the other half of a payout that has
+// been given a third of the width: the wording is authored, so a longer sentence is a layout
+// change. It uses the mathbox's font state for the reason that one exists — parsing bytes creates
+// no `ebiten.Image` and the package already links Ebitengine.
+func TestThePayoutsTypeFitsItsColumn(t *testing.T) {
+	gs := mathTestState(t)
+	gs.Run = session.New(session.StartingDeck())
+	gs.Run.WonFight(3, 40)
+
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: proseTextSize}
+
+	_, h := text.Measure("Ay", face, 0)
+	if got := int(h); got != proseLineHeight {
+		t.Errorf("kubasta at %d sets a %d-pixel line and proseLineHeight is %d",
+			proseTextSize, got, proseLineHeight)
+	}
+
+	mid, split := proseColumnMid(gs), gs.PctX(payoutColumnPct)
+	for _, line := range payoutLines(gs) {
+		w, _ := text.Measure(line.plain(), face, 0)
+		if left, right := mid-int(w)/2, mid+int(w)/2; left < 0 || right > split {
+			t.Errorf("%q runs %d..%d, outside a column of 0..%d", line.plain(), left, right, split)
+		}
 	}
 }

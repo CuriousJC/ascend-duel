@@ -221,20 +221,23 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 
 	row := buildRelicRect(gs)
 	worn := gs.Run.Worn()
-	for i, key := range worn {
-		seat := relicSlotRect(row, i, len(worn))
-		if !at.In(seat) {
-			continue
-		}
-		record, ok := gs.Relics[key]
-		if !ok {
-			return false
-		}
-		title, lines := ui.RelicTip(record, i, len(worn))
-		tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
-		return true
+
+	// **ui.HoveredSeat, like every other row** — the band's fingers overlap once a run wears enough
+	// of them, and the relic on top is the last drawn.
+	i := ui.HoveredSeat(at, len(worn), func(i int) image.Rectangle {
+		return relicSlotRect(row, i, len(worn))
+	})
+	if i < 0 {
+		return false
 	}
-	return false
+	record, ok := gs.Relics[worn[i]]
+	if !ok {
+		return false
+	}
+	seat := relicSlotRect(row, i, len(worn))
+	title, lines := ui.RelicTip(record, i, len(worn))
+	tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+	return true
 }
 
 // relicSlotRect is one finger as a rectangle. `relicSlotAt` answers with the point a card is drawn

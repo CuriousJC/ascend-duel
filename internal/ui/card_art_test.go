@@ -994,3 +994,76 @@ func TestTheFaceCacheIsBounded(t *testing.T) {
 		t.Error("the last face filed was evicted, so eviction is not taking the oldest")
 	}
 }
+
+// **A full-bleed card's art must be opaque** *(bug, 2026-09-18)*.
+//
+// The picture *is* the face on these styles, so a pixel it leaves transparent is a hole in the
+// card. Three rune pictures shipped with alpha — Unmake at 99% of its pixels, Maulstave and
+// Loammark the same — and the cards were see-through: the table, and whatever card was drawn
+// behind them, showed straight through the face.
+//
+// **`drawArtBleed` composites rather than replaces now**, so the failure can no longer reach the
+// screen as a hole; what a thin picture shows instead is the card's own surface. This is the other
+// half of that fix and it is the half that says *which file* — a washed-out card looks like a
+// picture somebody drew that way, where a test naming the file does not.
+//
+// **It walks the catalogs rather than the asset directory**, so it also fails on a record pointing
+// at a picture that is not there — and it covers the runes, which the size test above misses
+// because its keys carry no suffix to match on.
+func TestEveryBleedingCardArtIsOpaque(t *testing.T) {
+	pictures := assets.LoadImageData()
+
+	keys := map[string]string{}
+	for key, rec := range data.LoadRelics() {
+		keys[rec.ArtKey()] = "relic " + key
+	}
+	for _, w := range session.Essences() {
+		keys[w.Art] = "essence " + w.Record
+	}
+	for _, p := range session.Runes() {
+		keys[p.Art] = "rune " + p.Record
+	}
+	for _, st := range session.Stones() {
+		keys[st.Art] = "stone " + st.Record
+	}
+	for _, g := range session.Goods() {
+		keys[g.Art] = "good " + g.Record
+	}
+	for _, p := range session.Potions() {
+		keys[p.Art] = "potion " + p.Record
+	}
+	if len(keys) < 100 {
+		t.Fatalf("the catalogs answered %d pictures, which is too few to be the whole set", len(keys))
+	}
+
+	for key, what := range keys {
+		if key == "" {
+			continue
+		}
+		raw := pictures[key]
+		if len(raw) == 0 {
+			t.Errorf("%s names %q, which no asset answers", what, key)
+			continue
+		}
+		img, _, err := image.Decode(bytes.NewReader(raw))
+		if err != nil {
+			t.Errorf("%s: decoding %s: %v", what, key, err)
+			continue
+		}
+
+		b := img.Bounds()
+		soft := 0
+		for y := b.Min.Y; y < b.Max.Y; y++ {
+			for x := b.Min.X; x < b.Max.X; x++ {
+				if _, _, _, a := img.At(x, y).RGBA(); a < 0xffff {
+					soft++
+				}
+			}
+		}
+		if soft > 0 {
+			t.Errorf("%s draws %s with %.1f%% of its pixels not opaque — a bleeding card's art is "+
+				"the whole face, so regenerate it against a ground rather than on transparency",
+				what, key, 100*float64(soft)/float64(b.Dx()*b.Dy()))
+		}
+	}
+}

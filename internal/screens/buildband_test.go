@@ -218,7 +218,7 @@ func TestNothingUnderTheBandIsDrawnInsideIt(t *testing.T) {
 		top  int
 	}{
 		{"the reward screen's title", offerTitleTop(gs)},
-		{"the reward screen's narration", proseTop(gs)},
+		{"the reward screen's narration", proseTop(gs, 5)},
 		{"the reward screen's hint", offerHintTop(gs)},
 		{"the shop's narration", shopProseTop},
 	} {
@@ -271,5 +271,52 @@ func TestEachTopRowPaneKeepsItsOwnSize(t *testing.T) {
 			t.Errorf("a row of %d relics ends at x=%d, past its pane's x=%d",
 				seats, last, relics.Max.X)
 		}
+	}
+}
+
+// **The row explains the relic the row raises** *(bug, 2026-09-18)*. A worn row packed past its
+// comfortable pitch overlaps, and the relic the player can see under the cursor is the *last* one
+// drawn there — so a forward walk names the one behind it. The sack and the combat screen's own row
+// had the same loop; ui.HoveredSeat is the one walk all of them take now.
+//
+// It is checked on the band because that is the row three screens draw and the one that can be
+// stood up without a duel.
+func TestTheBandExplainsTheRelicThatIsOnTop(t *testing.T) {
+	gs := bandState(t)
+
+	// Wear enough that the row has to pack: seats overlap once the comfortable pitch runs out.
+	// **The cap is lifted rather than the test skipped** — a run wears five and five do not
+	// overlap, so a fixture at the default would pass whichever way the walk went.
+	gs.Run.SetRelicSlots(12)
+	for _, key := range session.Relics() {
+		if len(gs.Run.Worn()) >= 12 {
+			break
+		}
+		if gs.Run.Wear(key) {
+			gs.Relics[key] = data.RelicData{Name: key, Text: "does a thing"}
+		}
+	}
+
+	worn := gs.Run.Worn()
+	row := buildRelicRect(gs)
+	first, second := relicSlotRect(row, 0, len(worn)), relicSlotRect(row, 1, len(worn))
+	if second.Min.X >= first.Max.X {
+		t.Fatalf("%d relics do not overlap: seat 0 ends at %d and seat 1 starts at %d",
+			len(worn), first.Max.X, second.Min.X)
+	}
+
+	// A point inside both seats belongs to the second, which is drawn over the first.
+	at := image.Pt((second.Min.X+first.Max.X)/2, (second.Min.Y+second.Max.Y)/2)
+
+	var tip models.Tooltip
+	if !hoverBuildRelics(gs, at, &tip) {
+		t.Fatalf("the cursor at %v found no relic, in a row of %d", at, len(worn))
+	}
+	got := ""
+	for _, run := range tip.Title {
+		got += run.Text
+	}
+	if got != worn[1] {
+		t.Errorf("the overlap explained %q, want the relic on top, %q", got, worn[1])
 	}
 }

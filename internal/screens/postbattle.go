@@ -7,17 +7,25 @@ package screens
 // what keeps `CombatScene` from growing a fourth phase, and it is why the chain is wired as
 // screen changes: win → post-battle → combat.
 //
-// **It opens by reading the win out** *(2026-08-22)*. Before anything is offered, the screen types
-// what the fight paid — interest, a tenth of the life you kept, what the room is worth — and each
-// figure flies to the duelist card as its sentence lands. The build is on screen the whole time: the
-// player's card in the corner and their relics beside it, so an essence is chosen against the thing it
-// would be changing. See postbattle_prose.go and buildband.go.
+// **The payout and the offer are one screen** *(owner's call, 2026-09-18)*. The win is read out in
+// the first third of the width — interest, a tenth of the life you kept, what the room is worth,
+// each figure flying to the duelist card as its sentence lands — and the essences and the way out
+// stand in the two thirds beside it. It was a narration the player clicked past before anything was
+// offered, so the two halves of "you won" were two screens with a click between them.
 //
-// **Two stages after that, essence first** *(2026-08-17)*. Two essences are drawn from the catalog and offered
-// as cards; choosing one deals a hand off the run deck to apply it to. It ran the other way round
-// first — pick a card, then say what to do to it — and the reason it turned is that the *essence* is
-// the reward. What you were given for winning has to be the thing on the screen when you arrive,
-// and a menu of verbs under a chosen card made the reward look like a property of the card.
+// **The columns are what makes that fit.** The payout is a block of short lines and the offer is a
+// row of cards; side by side they each have their own width, where stacked they were each other's
+// ceiling. See payoutColumnPct, essenceRowSeats and proseColumnMid.
+//
+// **The build is on screen the whole time**: the player's card in the corner and their relics
+// beside it, so an essence is chosen against the thing it would be changing. See
+// postbattle_prose.go and buildband.go.
+//
+// **The essences are the reward and they are up from the first frame** *(2026-08-17)*. Two are drawn
+// from the catalog and offered as cards; a hand off the run deck is dealt below them to apply one
+// to. It ran the other way round first — pick a card, then say what to do to it — and the reason it
+// turned is that the *essence* is the reward, and a menu of verbs under a chosen card made the
+// reward look like a property of the card.
 //
 // **An essence varies a card the game already defines.** It recolors it, removes it, or copies it;
 // the concept is never touched, so nothing here can produce a card `internal/combat` cannot
@@ -89,36 +97,53 @@ const (
 	// and was taken deliberately.
 	essenceChosenRowPct = 34
 
+	// payoutColumnPct is where the payout's column ends and the offer's begins.
+	//
+	// **A third of the width for the reading and two thirds for the choosing** *(owner's call,
+	// 2026-09-18)*. The payout is five short lines — the widest measures about 520 pixels at 26pt,
+	// which fits a 640-pixel column with room on both sides — and the essence row is two cards and a
+	// button, 880 wide, which fits the rest. Neither column is centered on the screen, so the two
+	// cannot drift into each other as either grows: the split is the one number they both read.
+	payoutColumnPct = 33
+
 	// **64 rather than 62 since 2026-09-06**, to buy the headroom a selected card lifts into. See
 	// offerSelectedNudge: the row is a card tall and rises by 26 when one is picked, and at 62 the
 	// lifted card's top edge landed inside the essence row above it.
 	offerRowPct = 64
 
-	// The title, the hint and the narration all hang off the bottom of the build band, each by its
-	// own drop. **They were absolute pixels until 2026-09-05** — 262, 300 and 296, written when the
-	// band ended around y=253 — and the band has moved twice since: the screen went to 1920x1080
-	// and the cards grew a quarter with it. The band now ends at 311, so all three were being drawn
-	// *inside* it, which is the worn relic struck through the first line of the payout. These are
-	// the same three gaps that arithmetic produced, measured from the band rather than from the top
-	// of the screen, so the next time either moves the text follows.
+	// The title and the hint hang off the bottom of the build band, each by its own drop.
+	// **Measured from the band rather than from the top of the screen**, so the next time the band
+	// moves the type follows — it ends at 311 today and both of these were absolute pixels written
+	// against a band that ended at 253, which drew the first line of the payout under a worn relic.
 	offerTitleDrop = 9
-	offerProseDrop = 43
 	offerHintDrop  = 47
 
-	proseLineGap = 42
+	// proseTextSize is the type the payout is set in, and proseLineGap is the pitch between its
+	// lines. **The size is here rather than at the one call site that draws it** because the block
+	// is laid out from its *last* line up — see proseTop — so its height is arithmetic over both
+	// figures and neither may be written down twice.
+	proseTextSize = 26
+	proseLineGap  = 42
+
+	// proseLineHeight is how tall one line of that type actually is, which is what the block's
+	// bottom edge is measured against: a pitch is the distance between two lines and says nothing
+	// about where the last one ends. `TestThePayoutsLineHeightIsTheFontsOwn` measures the real face
+	// and fails if this drifts — the block would come to sit a few pixels off the row it is aligned
+	// to, which is exactly the kind of wrong nobody sees and nobody can unsee.
+	proseLineHeight = 22
 
 	offerButtonsPct   = 88
 	offerButtonWidth  = 400
 	offerButtonHeight = 76
 
-	// essenceRowGap is the air on each side of the skip button, which stands **in** the essence row
-	// rather than under it *(owner's call, 2026-09-06)*. It was centered at offerButtonsPct — 88%,
-	// the seat the shop's Leave button takes — and with both rows of cards on screen the offer row
-	// reached y=949 against a button centered at 950, so the cards were drawn straight over it.
+	// essenceRowGap is the air between the two essences, and between the second of them and the way
+	// out.
 	//
-	// **Between the two essences rather than beside them**, which is what makes it read as one row:
-	// taking neither is the third answer to the question the two cards are asking, so it stands
-	// where a third card would.
+	// **The essences stand together and the button stands beside them** *(owner's call,
+	// 2026-09-18)*. The two cards are the question, so they are read against each other without a
+	// control cutting between them; taking neither is the answer that is not a card, so it sits off
+	// the end of the row rather than inside it. **It is bottom-aligned to the cards** — a button is
+	// half a card tall, and a control centered on a row of cards reads as floating between them.
 	essenceRowGap = 40
 
 	// offerSelectedNudge is how far a picked card lifts out of the offer row.
@@ -133,18 +158,17 @@ const (
 type stage int
 
 const (
-	// narrate: the win is being read out and nothing is offered yet. **Every visit starts here**,
-	// because the payout is the first thing that happened and the essences are what it leads to.
-	narrate stage = iota
-
-	// choosing: both rows are up — the essences, and the cards they may eat.
+	// choosing: everything is up — the payout reading itself out in its column, the essences, and
+	// the cards they may eat. **Every visit starts here** *(owner's call, 2026-09-18)*: the payout
+	// used to be a stage of its own that the offer waited behind, and a win is one thing rather
+	// than two.
 	//
 	// **It was two stages until 2026-09-06** *(owner's call)*, essence first and then the card. The
 	// order reversed with the rune's: **select the card, then click the essence**, so a consumable
 	// is pointed at a card the same way everywhere in the game. One gesture in one order meant one
 	// stage — the two rows are on screen together, because the player is choosing between them
 	// rather than passing through them.
-	choosing
+	choosing stage = iota
 
 	// settled: the alteration is taken and the new card is shown alone, so the thing that was won
 	// is looked at before it disappears into a deck of forty-eight.
@@ -304,13 +328,14 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	}
 
 	s.chosen, s.aimed, s.selected = -1, -1, -1
-	s.stage = narrate
+	s.stage = choosing
 	s.removes, s.copied, s.held = false, false, 0
 	s.change = ui.Morph{}
 	s.arrival, s.arrivedFrom = ui.Travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.prizes = dealPrizes(gs)
 	s.entry = make([]ui.Travel, len(s.prizes))
+	s.flyEssencesIn()
 	s.prose.setLines(payoutLines(gs))
 	s.skipping = false
 	s.offer = dealOffer(gs)
@@ -425,33 +450,13 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	// sets is what every widget below reads.
 	s.tut.update(gs, s)
 
-	// **The narration is the whole screen while it runs.** Nothing is clickable but the click that
-	// reads it, which is what keeps a payout from being half-read while an essence is already being
-	// chosen.
-	//
-	// **Two clicks, not one** *(owner's call, 2026-09-08)*: the first fills the block, the second
-	// hands the screen to the essences. One gesture doing both meant the only way to see the whole
-	// payout at once was also the way past it.
-	//
-	// **The click is not gated** — deliberately, and it is the one place on this screen that
-	// ignores `CursorAllowed`. The tutorial's step here anchors the duelist card, so a gated
-	// narration is one a taught player has no way to hurry, and hurrying it changes nothing: the
-	// claims are the same either way, per the rule at the top of postbattle_prose.go. **Bob's own
-	// bubble is the one exception**, since a press on NEXT landing on the screen underneath it
-	// would answer two questions with one click.
-	if s.stage == narrate {
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && !s.tut.coversCursor(gs) {
-			if s.prose.filled() {
-				s.prose.release()
-			} else {
-				s.prose.skip(gs)
-			}
-		}
-		s.prose.tick(gs, func(i int) image.Point { return proseLineAt(gs, i) })
-		if s.prose.finished() {
-			s.beginOffer(gs)
-		}
-		return nil
+	// **The narration runs beside the offer rather than in front of it** *(owner's call,
+	// 2026-09-18)*. It holds nothing up and gates nothing: it is a clock over figures
+	// `session.WonFight` already froze, so a player who reads every line and one who takes an
+	// essence on the first frame end the visit with the same purse. See claimThePayout, which is
+	// what makes that true when the screen is left early.
+	if s.stage == choosing {
+		s.prose.tick(gs, func(i int) image.Point { return proseLineAt(gs, len(s.prose.lines), i) })
 	}
 
 	// **The relic row is live from the moment the narration ends**, under the panels rather than
@@ -499,6 +504,7 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 
 	if s.skipping {
 		s.skipping = false
+		s.claimThePayout(gs)
 		trace.Logf("postbattle", "took neither essence")
 		advanceRun(gs)
 		return nil
@@ -557,26 +563,35 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 
 	switch s.stage {
 	case choosing:
-		// **The prizes are deliberately not tooltipped**, as they were not before the two stages
-		// merged: an essence's whole rule is printed on its face, where a deck card's is not. What a
-		// dim prize means — "not for the card you have selected" — is the one thing that is new
-		// here and is left to the row rather than to a tooltip.
-		for i, deckIndex := range s.offer {
-			seat := s.offerSlot(gs, i)
-			card, ok := gs.Run.Card(deckIndex)
-			if !ok || !at.In(seat) {
-				continue
-			}
-			title, lines := ui.CardTip(card, ui.HeldByRun(gs, card))
+		// **The prizes are tooltipped now that their faces are pictures** *(owner's call,
+		// 2026-09-18)*. An essence used to print its whole rule across a scrim over its art, so a
+		// panel repeating it would have been the card read twice; the sentence lives here instead.
+		// What a dim prize means — "not for the card you have selected" — is still left to the row.
+		if i := ui.HoveredSeat(at, len(s.prizes), func(i int) image.Rectangle {
+			return s.essenceSlot(gs, i)
+		}); i >= 0 {
+			seat := s.essenceSlot(gs, i)
+			title, lines := ui.EssenceTip(s.prizes[i].essence)
 			s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+			return
+		}
+
+		// **ui.HoveredSeat, like every row in the game** — the offer is dealt at the hand's own
+		// pitch, so it overlaps exactly when the hand does.
+		if i := ui.HoveredSeat(at, len(s.offer), func(i int) image.Rectangle {
+			return s.offerSlot(gs, i)
+		}); i >= 0 {
+			seat := s.offerSlot(gs, i)
+			if card, ok := gs.Run.Card(s.offer[i]); ok {
+				title, lines := ui.CardTip(card, ui.HeldByRun(gs, card))
+				s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+			}
 			return
 		}
 	}
 }
 
-// click is the press on whichever row is live. **Only one row is clickable at a time**, which is
-// what keeps the two stages honest: a card cannot be chosen before an essence names what would happen
-// to it.
+// click is the press on the two rows, and on the column beside them.
 func (s *PostBattleScene) click(gs *state.GlobalState) {
 	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) || !gs.CursorAllowed() {
 		return
@@ -589,18 +604,40 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 
 	// **The card row is asked first**, because it is the row a click is most often meant for and
 	// the two do not overlap. Selecting is free and reversible; clicking an essence spends the pick.
-	for i := range s.offer {
-		if at.In(s.offerSlot(gs, i)) {
-			s.selectOffered(i)
-			return
-		}
+	// **Both go through ui.HoveredSeat**, so a click lands on the card the tooltip just described.
+	if i := ui.HoveredSeat(at, len(s.offer), func(i int) image.Rectangle {
+		return s.offerSlot(gs, i)
+	}); i >= 0 {
+		s.selectOffered(i)
+		return
 	}
 
-	for i := range s.prizes {
-		if at.In(s.essenceSlot(gs, i)) {
-			s.takePrize(gs, i)
-			return
-		}
+	if i := ui.HoveredSeat(at, len(s.prizes), func(i int) image.Rectangle {
+		return s.essenceSlot(gs, i)
+	}); i >= 0 {
+		s.takePrize(gs, i)
+		return
+	}
+
+	// **A click on nothing fills the payout** *(owner's call, 2026-09-18)*, which is the whole of
+	// what the narration's own click became once it stopped owning the screen: a player who wants
+	// the figures now still has a gesture for it, and it is the one gesture that was already
+	// meaningless here. It cannot take the screen off them — nothing here releases anything.
+	if !s.prose.filled() {
+		s.prose.skip(gs)
+	}
+}
+
+// claimThePayout pays whatever the narration has not read out yet.
+//
+// **The payout may not depend on how long the player looked at it.** The figures were frozen by
+// `session.WonFight` before this screen existed, and the narration is a clock over them — so
+// leaving while a line is still typing has to hand over the same purse that watching it would.
+// `typewriter.skip` pays through the same claims rather than adding a total of its own, which is
+// what stops the fast path and the slow one disagreeing.
+func (s *PostBattleScene) claimThePayout(gs *state.GlobalState) {
+	if !s.prose.filled() {
+		s.prose.skip(gs)
 	}
 }
 
@@ -661,6 +698,11 @@ func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
 	if _, ok = s.selectedDeckIndex(); !ok {
 		return
 	}
+
+	// **The purse is settled before the essence is**, because the settled stage returns early and
+	// the narration stops ticking the moment the choosing stage ends. See claimThePayout.
+	s.claimThePayout(gs)
+
 	s.chosen = i
 	s.tip.Forget()
 	s.aimAt(gs, slot)
@@ -793,39 +835,57 @@ func (s *PostBattleScene) essenceSlot(gs *state.GlobalState, i int) image.Rectan
 	return seats[i]
 }
 
-// essenceRowSeats lays the whole essence row out: a seat per prize, and the skip button standing between
-// them.
+// essenceRowSeats lays the whole essence row out: the prizes side by side, and the way out standing
+// off the end of them.
 //
 // **One function for the cards and the button**, which is the rule every row in this game follows —
 // a control placed by its own arithmetic beside cards placed by theirs is how the two come to
 // overlap, which is exactly what happened when the button was left at 88%.
 //
-// **The button takes the middle slot.** With the usual two prizes that is literally between them;
-// with an odd number it sits left of center, which is arbitrary and harmless — nothing deals an odd
-// number today, and a row that refused to lay one out would be worse than one that leans.
+// **The prizes touch and the button comes last** *(owner's call, 2026-09-18)*. The essences are the
+// question and are compared against each other, so nothing stands between them; the answer that is
+// not a card stands where it cannot be mistaken for one. **Its bottom edge is the row's**, because
+// a control two fifths of a card tall, centered, floats.
+//
+// **The row is centered in the two thirds the payout leaves, not on the screen**. Both columns are
+// up at once, so a row centered on the screen would stand half in the payout's own column and be
+// read as one thing with it.
 func essenceRowSeats(gs *state.GlobalState, n int) (prizes []image.Rectangle, button image.Rectangle) {
-	top := gs.PctY(essenceChosenRowPct)
+	top, bottom := gs.PctY(essenceChosenRowPct), essenceRowBottom(gs)
 
 	// The row is n cards and one button, with a gap between every pair.
-	width := n*cardWidth + offerButtonWidth + (n)*essenceRowGap
-	x := gs.PctX(50) - width/2
+	width := n*cardWidth + offerButtonWidth + n*essenceRowGap
+	x := offerColumnMid(gs) - width/2
 
-	mid := n / 2
 	prizes = make([]image.Rectangle, 0, n)
 	for i := 0; i < n; i++ {
-		if i == mid {
-			button = image.Rect(x, top+(cardHeight-offerButtonHeight)/2,
-				x+offerButtonWidth, top+(cardHeight+offerButtonHeight)/2)
-			x += offerButtonWidth + essenceRowGap
-		}
 		prizes = append(prizes, image.Rect(x, top, x+cardWidth, top+cardHeight))
 		x += cardWidth + essenceRowGap
 	}
-	if mid >= n {
-		button = image.Rect(x, top+(cardHeight-offerButtonHeight)/2,
-			x+offerButtonWidth, top+(cardHeight+offerButtonHeight)/2)
-	}
+	button = image.Rect(x, bottom-offerButtonHeight, x+offerButtonWidth, bottom)
 	return prizes, button
+}
+
+// essenceRowBottom is the edge everything in this band is aligned to: the essences, the button
+// beside them and the last line of the payout in the column to their left.
+//
+// **One function, because three things share the edge.** A row, a control and a block of type each
+// deriving "where does this band end" would be three numbers that agree until one of them moves.
+func essenceRowBottom(gs *state.GlobalState) int {
+	return gs.PctY(essenceChosenRowPct) + cardHeight
+}
+
+// proseColumnMid is the middle of the payout's column, which every narrated line is centered on and
+// every figure sets off from.
+func proseColumnMid(gs *state.GlobalState) int { return gs.PctX(payoutColumnPct) / 2 }
+
+// offerColumnMid is the middle of what is left, which the essence row stands in.
+//
+// **Both are derived from the one split**, so widening the payout narrows the offer by exactly as
+// much and neither can be written down twice.
+func offerColumnMid(gs *state.GlobalState) int {
+	left := gs.PctX(payoutColumnPct)
+	return left + (gs.ScreenWidth-left)/2
 }
 
 // offerRow is the whole row of offered cards: what the seats are cut out of, and what the sort
@@ -979,20 +1039,15 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}
-	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 26}
+	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: proseTextSize}
 
 	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,
 	// and what an essence is about to change.
 	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.relicDrag, s.tip.Showing())
 
-	// **The narration stays up while the offer is made**, and only clears once an essence is chosen.
-	if s.stage == narrate {
-		s.drawProse(gs, screen, prose)
-	}
-
-	if s.stage == narrate {
-		return
-	}
+	// **The narration stays up for the whole visit, in its own column** — the payout is what the
+	// essence beside it is being chosen with, so it does not clear when the offer arrives.
+	s.drawProse(gs, screen, prose)
 
 	line := func(y int, face *text.GoTextFace, msg string) {
 		op := &text.DrawOptions{}
@@ -1117,8 +1172,6 @@ func (s *PostBattleScene) title() string {
 			return "EATEN"
 		}
 		return "CHANGED"
-	case narrate:
-		return ""
 	default:
 		return "ESSENCES FLEE"
 	}

@@ -2225,8 +2225,8 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
 | | |
 |---|---|
 | When | after a won fight, before the next room |
-| First | the win is **read out**: interest, a tenth of the life kept, what the room pays |
-| Offered | **two cards**: two essences from `data/essences.json` |
+| Beside it | the win **reading itself out** in the first third of the width: interest, a tenth of the life kept, what the room pays |
+| Offered | **two cards**: two essences from `data/essences.json`, in the two thirds beside the payout |
 | Then | a hand dealt fresh off the whole run deck, at the combat hand size |
 | Then | a **morph**: the card before and after, side by side, nothing committed |
 | Choice | one essence and one card, or **Let them escape** |
@@ -2254,12 +2254,24 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
   does not start until it lands, so a slower flight is a longer look rather than a card arriving
   late to a countdown already running. **A removal has nothing to fly**: what was won is an
   absence, so the empty seat is drawn and nothing crosses the screen.
-- **The screen opens by narrating the payout** *(owner's call, 2026-08-22)*. Four sentences type
-  themselves out at the game's speed, and the figure each one names then **flies to the duelist
-  card** and lands in the purse. A win used to change the purse silently while the fight was
-  ending, so what a win is worth was arithmetic nobody ever saw. **A click skips to the end**, and
-  the fast path pays through the same claims as the slow one — presentation may never change an
-  outcome.
+- **The payout narrates itself beside the offer** *(owner's call, 2026-09-18)*. The sentences type
+  out at the game's speed in the first third of the width, and the figure each one names then
+  **flies to the duelist card** and lands in the purse. It gates nothing: the essences are up from
+  the first frame and are clickable while it reads. **A click on neither row skips to the end**,
+  and taking an essence or walking away claims whatever is left unread — the fast path pays through
+  the same claims as the slow one, because presentation may never change an outcome.
+- **Two columns rather than two screens** *(owner's call, 2026-09-18)*. A win is one thing, and the
+  payout and what it is offering are read against each other: what an essence is worth is judged
+  with the purse it landed in on screen. The split is one number both columns derive from, so
+  neither can be centered into the other.
+- **One edge runs across the band** *(owner's call, 2026-09-18)*. The payout's last line, the two
+  essences and **Let them escape** all end on it, so the two columns read as one row rather than as
+  two things that happen to be side by side. The payout is therefore laid out from the bottom up: a
+  fight paying no interest is a sentence shorter, and a block hung from the top would float by
+  exactly that sentence.
+- **The essences touch, and the way out stands off the end of them** *(owner's call, 2026-09-18)*.
+  The pair is the question and is compared across, so nothing stands between them; the answer that
+  is not a card sits where it cannot be read as a third one.
 - **Your build is on screen throughout**: the duelist card in its usual corner and the worn relics
   beside it, so an essence is chosen against the thing it would be changing, and the purse the payout
   lands in is visible while it climbs.
@@ -2267,8 +2279,8 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
   2026-08-22)*. A third card paying +5 was charging for something the win now pays by itself, and
   the offer is the two creatures the prose says are fleeing. **The offer is free**, so walking away
   costs nothing and does not need to look like a card.
-- **The essences fly in from the sides** once the last sentence lands, because the sentence before
-  them says two creatures are fleeing — a card already sitting there would contradict it.
+- **The essences fly in from the sides** as the screen opens, because the payout beside them says
+  two creatures are fleeing — a card already sitting there would contradict it.
 - **Run-scoped, never persisted.** Two runs from the same seed may hold different decks, because
   an alteration is a *choice*: replay is a seed plus a choice log. See the `randomness` skill.
 
@@ -2476,9 +2488,6 @@ in the game.
   pick an essence, then pick the card it eats — and is now one: both rows on screen, select the card,
   click the essence. The legality moved with the order, so the *cards* are all selectable and the
   *essences* go dim, where it used to be the other way round.
-- **The narration clears a stage earlier than it did**, and that is the cost. The essences used to sit
-  under the payout at 58% so that what a win paid and what it is offering read as one picture;
-  two rows of full-size cards do not fit under it, so the prose now ends when the offer arrives.
 - **The tutorial's anchor had to grow to cover both rows.** The lit square is also the one legal
   click, so a step lighting only the essences would have been a lock-up the moment taking one required
   a selection first.

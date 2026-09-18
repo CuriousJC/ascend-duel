@@ -83,8 +83,11 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 }
 
 // proseLineAt is the middle of one narrated line — where a payment sets off from.
-func proseLineAt(gs *state.GlobalState, i int) image.Point {
-	return image.Pt(gs.PctX(50), proseTop(gs)+i*proseLineGap)
+//
+// **It is handed the whole script's length**, because the block is laid out from its bottom edge
+// up: where the third sentence sits is a fact about how many there are. See proseTop.
+func proseLineAt(gs *state.GlobalState, lines, i int) image.Point {
+	return image.Pt(proseColumnMid(gs), proseTop(gs, lines)+i*proseLineGap)
 }
 
 // drawProse puts the narration up: every line typed so far, and whatever figure is in the air.
@@ -96,23 +99,23 @@ func (s *PostBattleScene) drawProse(gs *state.GlobalState, screen *ebiten.Image,
 		if !on {
 			break
 		}
-		drawProseLine(screen, face, line.plain(), runs, gs.PctX(50), proseTop(gs)+i*proseLineGap)
+		drawProseLine(screen, face, line.plain(), runs, proseColumnMid(gs),
+			proseTop(gs, len(s.prose.lines))+i*proseLineGap)
 	}
 
 	s.prose.drawVitaeFlight(gs, screen, face)
 }
 
-// beginOffer is what the last sentence leads to: the essences come in from the sides.
+// flyEssencesIn starts the offer's arrival: the essences come in from the sides of the screen.
 //
 // **They fly rather than appear**, which is the rule everywhere in this game and is doing real work
-// here — the line just read says two essences are bleeding from the enemy, and a card that was already
-// on screen would contradict it.
-func (s *PostBattleScene) beginOffer(gs *state.GlobalState) {
-	s.stage = choosing
+// here — the payout beside them says two essences are bleeding from the enemy, and a card that was
+// already on screen would contradict it. **It runs at Init now that the visit has one stage**
+// *(2026-09-18)*, so the flight is the screen opening rather than the narration handing over.
+func (s *PostBattleScene) flyEssencesIn() {
 	for i := range s.entry {
 		s.entry[i] = ui.NewTravel(i*essenceEntryStagger(), essenceEntryTicks())
 	}
-	s.place(gs)
 }
 
 // The essences' arrival: how long one takes to cross in, and how far apart the two set off.
@@ -140,8 +143,24 @@ func (s *PostBattleScene) essenceArrivingAt(gs *state.GlobalState, i int) image.
 	return ui.FlyingTo(from, seat, s.entry[i])
 }
 
-// Where the three lines of type under the build band sit. **Measured from the band, never from the
+// Where the settled stage's two lines of type sit. **Measured from the build band, never from the
 // top of the screen** — see the drops in postbattle.go for what reading absolute pixels cost.
 func offerTitleTop(gs *state.GlobalState) int { return buildBandBottom(gs) + offerTitleDrop }
 func offerHintTop(gs *state.GlobalState) int  { return buildBandBottom(gs) + offerHintDrop }
-func proseTop(gs *state.GlobalState) int      { return buildBandBottom(gs) + offerProseDrop }
+
+// proseTop is where the payout's first line sits, for a script of n lines.
+//
+// **The block is laid out from the bottom up** *(owner's call, 2026-09-18)*, so its last line ends
+// on the same edge the essences beside it do: the payout and the offer are one band read across,
+// and a block hung from the top of the column ends wherever its own length happens to put it — a
+// fight paying no interest is one sentence shorter and would have floated.
+//
+// **The last line's *height* is what the edge is measured against, not the pitch.** proseLineGap is
+// the distance between two lines and says nothing about where the last one ends; see
+// proseLineHeight.
+func proseTop(gs *state.GlobalState, n int) int {
+	if n < 1 {
+		n = 1
+	}
+	return essenceRowBottom(gs) - (n-1)*proseLineGap - proseLineHeight
+}

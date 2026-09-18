@@ -165,6 +165,18 @@ func ShopRelicTip(record data.RelicData) (string, []string) {
 	return title, lines
 }
 
+// EssenceTip is what resting on an essence says: what it does to the card it is aimed at.
+//
+// **It is the whole of what an essence says now** *(owner's call, 2026-09-18)*. The card is a
+// picture and a name; the authored line moved here rather than sitting on a scrim over the art,
+// which is the treatment a rune, a stone and a potion already take.
+//
+// **An authored line break on a face is a tooltip's own line.** The two are the same sentence
+// written for two widths, which is why the split is here rather than in the catalog.
+func EssenceTip(w session.Essence) (string, []string) {
+	return w.Name, strings.Split(w.Text, "\n")
+}
+
 // DuelistTip explains one of the two fighters: what they hit for, what is left of them, and every
 // status standing on them.
 //

@@ -52,6 +52,36 @@ func Title(c combat.Card) string {
 	return name
 }
 
+// FormLine is the block's first line: what the card is, and what it costs.
+//
+// **The form is here because the face stopped saying it** *(2026-09-16)*. A card says its form with
+// the mark in its corner, which is the right answer on a card and leaves the player with no way to
+// learn what the mark means — the panel is where a picture gets its name. `carddesc` is where the
+// naming lives so the review sheets print the word the game does.
+//
+// **One line rather than two**, because the form and the cost are both one term and a panel of
+// one-word lines reads as a list rather than as a card. A formless card — a relic, a fighter —
+// says its cost alone rather than the word NONE.
+func FormLine(c combat.Card, cost int) string {
+	ap := strconv.Itoa(cost) + " AP"
+	if word := FormWord(c); word != "" {
+		return word + ", " + ap
+	}
+	return ap
+}
+
+// FormWord is the card's form in upper case, or empty for a card that has none.
+//
+// **Exported for the same reason ElementWord is**: a caller can ask which part of a line is the
+// form without re-deriving it. The coloring itself needs nobody to ask — every tooltip line goes
+// through `cards.SplitForms`, which matches whole words, so STAB comes out in marble for free.
+func FormWord(c combat.Card) string {
+	if f := c.Form(); f != combat.FormNone {
+		return upper(f.String())
+	}
+	return ""
+}
+
 // Chromatic is what a card counting as every element is called.
 //
 // **A word rather than a color, because the wheel has none left for "all of them"** — see
@@ -89,7 +119,7 @@ func ElementWord(c combat.Card) string {
 // fight and this package knows about cards; the caller walks `combat.RelicContributionsAt` and hands
 // over the product, so the figure printed here is the engine's rather than a second sum.
 func Lines(c combat.Card, cost, dmg, scale int) []string {
-	lines := []string{strconv.Itoa(cost) + " AP"}
+	lines := []string{FormLine(c, cost)}
 	if effect := EffectLine(c, dmg, scale); effect != "" {
 		lines = append(lines, effect)
 	}

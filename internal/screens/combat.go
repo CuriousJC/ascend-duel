@@ -884,6 +884,11 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// not change an outcome; see combat_deal.go.
 	s.tickDeal()
 
+	// The hand coming to rest after a rune: the change, then the fall, then the sort. Driven from
+	// here for tickDeal's reason, and it may not change an outcome either — the cards it moves are
+	// already the cards the engine holds. See combat_rune.go.
+	s.tickSettle()
+
 	// Above the branch below, because the column is live under exactly one condition and it is
 	// its own: the hand may be rearranged whenever it may be edited. It goes dead once the duel
 	// is settled for the same reason it goes dead during playback — see updateSortButtons.

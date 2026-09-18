@@ -296,6 +296,13 @@ type combatTheater struct {
 	// to know a stage is finished. See combat_deal.go.
 	deal handDeal
 
+	// settle is the hand coming to rest after a rune has landed: the change is watched while the
+	// targets are still standing proud of the row, then they come down, then the row sorts. **A
+	// sequence for the deal's reason** — three things that have to happen in that order, so one
+	// thing owns the order rather than each mover watching the one before it empty. See
+	// CombatScene.beginSettle.
+	settle handSettle
+
 	// The player's side of the table: the cards played this round, in resolution order, flying
 	// out of the hand and into a row on the left facing the opponent's. Dealt in full the
 	// moment the round starts — see seatPlayedCards — and what a hand narrows to the cards it
@@ -403,9 +410,9 @@ func (t *combatTheater) Tick() {
 	t.slides = ui.Advance(t.slides)
 	t.morphs = ui.Advance(t.morphs)
 
-	// **The deal is not advanced here.** It is a sequence with stages that hand over, and the
-	// handover needs the scene — the cascade reads the run's worn relics and the sort rewrites the
-	// hand. CombatScene.tickDeal drives it; see combat_deal.go.
+	// **Neither the deal nor the settle is advanced here.** Both are sequences with stages that
+	// hand over, and the handover needs the scene — the cascade reads the run's worn relics, and
+	// both of them rewrite the hand. CombatScene.tickDeal and tickSettle drive them.
 
 	t.hits = ui.Advance(t.hits)
 	t.shields = ui.Advance(t.shields)

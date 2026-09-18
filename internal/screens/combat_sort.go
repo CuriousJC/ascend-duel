@@ -62,9 +62,11 @@ func sortColumnRect(gs *state.GlobalState) image.Rectangle {
 func (s *CombatScene) setSort(mode ui.HandSort) {
 	s.sortMode = mode
 
+	// **The same lift at both ends.** A sort moves cards sideways; what is queued stays queued, so
+	// a card standing proud of the row slides along the line it is already on.
+	lift := func(i int) int { return selectedLift(s.hand[i].selected) }
 	s.Theater.slides = ui.SlidesFor(s.Theater.slides, s.sortHand(),
-		func(i int) combat.Card { return s.hand[i].Card },
-		func(i int) int { return selectedLift(s.hand[i].selected) })
+		func(i int) combat.Card { return s.hand[i].Card }, lift, lift)
 
 	trace.Logf("input", "hand sorted by %v -> %s", mode, handLabel(s.hand))
 }

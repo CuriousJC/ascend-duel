@@ -3,6 +3,7 @@ package cards
 import (
 	"image"
 	"image/color"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -128,6 +129,51 @@ var rarityBorders = map[data.Rarity]color.RGBA{
 	data.Common:   {R: 206, G: 201, B: 189, A: 255},
 	data.Uncommon: {R: 42, G: 145, B: 116, A: 255},
 	data.Rare:     {R: 196, G: 154, B: 56, A: 255},
+}
+
+// RarityInk is the color a rarity is written in, and it is the color the relic's own border is
+// drawn in — so the word in a panel and the ring on the card are one fact said twice.
+//
+// **Lifted for the dark panel**, exactly as the metals are. rarityBorders was mixed to hold
+// against the light slate table; uncommon's teal sits at about a tooltip's own surface in weight
+// and would read as dim rather than as colored. See WashLight.
+//
+// **A rarity with no entry comes back uncolored**, which draws in the panel's plain ink rather
+// than in black — the same contract every optional color in this codebase has.
+func RarityInk(r data.Rarity) color.RGBA {
+	c, ok := rarityBorders[r]
+	if !ok {
+		return color.RGBA{}
+	}
+	return systems.ColorToward(c, WashLight, WashLiftPct)
+}
+
+// RarityWords is the vocabulary a panel writes a rarity in, and is what SplitRarities colors.
+//
+// **Built off data.Rarities() rather than typed out**, so a fourth tier arriving in the catalog
+// is lit here without anybody remembering to add it — the failure this avoids is a word in a
+// title that is the one word on the panel with no color.
+var RarityWords = rarityWords()
+
+func rarityWords() []FormWord {
+	var out []FormWord
+	for _, r := range data.Rarities() {
+		out = append(out, FormWord{Word: strings.ToUpper(string(r)), Ink: RarityInk(r)})
+	}
+	return out
+}
+
+// SplitRarities colors every rarity word in a line that nothing has colored already. Same cut and
+// the same only-an-uncolored-segment rule the forms take.
+func SplitRarities(segs []Segment) []Segment {
+	for _, w := range RarityWords {
+		var next []Segment
+		for _, seg := range segs {
+			next = append(next, splitForm(seg, w)...)
+		}
+		segs = next
+	}
+	return segs
 }
 
 // BorderOf is the color this element's border is drawn in at full strength. States

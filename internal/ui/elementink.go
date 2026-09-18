@@ -65,5 +65,10 @@ func chromatic(line string) []cards.Segment {
 	for _, seg := range cards.SplitSpans(line, cards.ElementSpans(line)) {
 		out = append(out, cards.SplitWash(seg, carddesc.Chromatic, systems.UpgradeWild)...)
 	}
-	return cards.SplitMetals(out)
+	// **The forms are the last pass and that is not arbitrary.** Every pass before it claims words
+	// out of a vocabulary of its own, and each one only looks at a segment nothing has colored — so
+	// the order is what guarantees a word is one thing. The forms go last because theirs is the
+	// newest and least settled vocabulary: a collision with an element or a metal should resolve in
+	// favor of the older one rather than against it.
+	return cards.SplitRarities(cards.SplitForms(cards.SplitMetals(out)))
 }

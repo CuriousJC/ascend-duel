@@ -125,7 +125,7 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 		return false
 	}
 	slot := row.RowSlot(gs, i)
-	title, lines := ui.RelicTip(worn[i], i, len(worn))
+	title, lines := ui.RelicTip(worn[i])
 	s.tip.Point(slot, ui.TipLine(title), ui.TipLines(lines))
 	return true
 }

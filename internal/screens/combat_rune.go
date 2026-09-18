@@ -199,6 +199,12 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	// every mover on this screen is under. See combat_handmorph.go.
 	s.raiseHandMorphs(gs, was, seats)
 
+	// **Spending a rune ends the selection**, and the ending is watched rather than applied.
+	// Leaving the targets lifted said the gesture was still going, and leaving them *queued* spent
+	// action points on a card the rune may have just rewritten underneath the player. See
+	// beginSettle for why it is three beats and not one.
+	s.beginSettle()
+
 	// **A rock shower's stones fly to the duelist card rather than stopping the screen**
 	// *(owner's call, 2026-09-06)*. They are in the run's pouch by the time this runs — there is
 	// nothing to choose and nothing to confirm — so what is owed the player is a picture of where
@@ -208,6 +214,108 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	}
 
 	saveRun(gs)
+}
+
+// settleStage is how far a hand has got in coming to rest after a rune. **Ordered, forward only**,
+// exactly as dealStage is: a settle interrupted by a new round is dropped whole rather than rewound.
+type settleStage int
+
+const (
+	settleIdle settleStage = iota
+	settleChanging
+	settleFalling
+)
+
+// handSettle is one hand coming to rest. The zero value is a settle that is not running.
+type handSettle struct{ stage settleStage }
+
+// Running reports whether the sequence is still going.
+func (h handSettle) Running() bool { return h.stage != settleIdle }
+
+// beginSettle starts the hand's return to rest after a rune has landed.
+//
+// **Three beats, in this order, and the order is the whole of it** *(owner's call, 2026-09-18)*:
+//
+//  1. **Change.** The morphs play with the targets still standing proud of the row. The cards are
+//     still selected, so they are still raised — which is what makes the change read as something
+//     happening to the cards the player picked out, rather than to two cards in a row.
+//  2. **Fall.** The selection is cleared and the cards come down into the row, in place.
+//  3. **Sort.** The row rearranges into the player's key.
+//
+// **It is the deal's argument one mechanic over.** All three at once is what this did first, and it
+// is the same failure a pre-sorted deal has: everything is true at the end and nothing was legible
+// on the way there. Worse here, because `drawHandRow` checks `slidingTo` before it checks the
+// morph — so a card doing both at once was drawn by its slide and its dissolve never appeared at
+// all, which is the one thing worth watching. Separating the beats is what fixes that rather than
+// a suppression, because the two now cannot overlap.
+//
+// **Nothing about the round changes while it runs.** The hand holds the finished cards from the
+// first frame, exactly as it does through a deal; what these stages own is where the cards are
+// drawn and whether they are still queued.
+func (s *CombatScene) beginSettle() {
+	s.Theater.settle = handSettle{stage: settleChanging}
+}
+
+// tickSettle advances the sequence a frame. Called every tick from Update, whether or not one is
+// running, so there is one place the stages hand over.
+func (s *CombatScene) tickSettle() {
+	h := &s.Theater.settle
+
+	switch h.stage {
+	case settleChanging:
+		// **The morphs, not a clock.** A beat of a chosen length would be either short enough to
+		// cut a dissolve off or long enough to hold an unchanged hand still for no reason; the
+		// cards themselves know when they have finished changing, and a rune that changed nothing
+		// falls through on the same frame.
+		if ui.Running(s.Theater.morphs) {
+			return
+		}
+		s.dropSelection()
+		h.stage = settleFalling
+
+	case settleFalling:
+		if ui.Running(s.Theater.slides) {
+			return
+		}
+		s.sortSettledHand()
+		h.stage = settleIdle
+	}
+}
+
+// dropSelection is the second beat: nothing is selected any more, and every card that was standing
+// proud of the row comes down into it.
+//
+// **Clearing the flags is the whole of it.** On this screen a selected card is also a queued card —
+// see targeting.go, where that double meaning is the accepted cost of aiming on the row the player
+// is already looking at — and `syncQueue` rebuilds the queue off the flags, so one clear ends both
+// meanings together and they cannot come apart.
+//
+// **In place: no card changes seat here.** The sort is the next beat, and a card that fell and slid
+// sideways in one movement would make the two beats one.
+func (s *CombatScene) dropSelection() {
+	stood := make([]int, len(s.hand))
+	for i, c := range s.hand {
+		stood[i] = selectedLift(c.selected)
+		s.hand[i].selected = false
+	}
+	s.syncQueue()
+
+	order := make([]int, len(s.hand))
+	for i := range order {
+		order[i] = i
+	}
+	s.Theater.slides = ui.SlidesFor(s.Theater.slides, order,
+		func(i int) combat.Card { return s.hand[i].Card },
+		func(i int) int { return stood[i] },
+		func(i int) int { return selectedLift(s.hand[i].selected) })
+}
+
+// sortSettledHand is the third beat: the row rearranges into the player's key, on the slides the
+// sort buttons already use. Nothing is lifted by now, which is why both ends are the same height.
+func (s *CombatScene) sortSettledHand() {
+	lift := func(i int) int { return selectedLift(s.hand[i].selected) }
+	s.Theater.slides = ui.SlidesFor(s.Theater.slides, s.sortHand(),
+		func(i int) combat.Card { return s.hand[i].Card }, lift, lift)
 }
 
 // runeRNG is the source the rune about to be spent draws from, and nil for the ones that

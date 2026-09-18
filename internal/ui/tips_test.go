@@ -113,7 +113,7 @@ func TestTheTooltipOpensWithTheStatBlock(t *testing.T) {
 	for _, w := range h.worn {
 		d = d.Wearing(w)
 	}
-	if want := itoa(h.cost) + " AP"; lines[0] != want {
+	if want := carddesc.FormLine(card, h.cost); lines[0] != want {
 		t.Errorf("the first line is %q, want %q", lines[0], want)
 	}
 	if want := itoa(d.CardDamage(card)) + " DMG"; lines[1] != want {
@@ -200,7 +200,7 @@ func TestTheTooltipReadsTheWayItWasSpecified(t *testing.T) {
 	// and the figure a Jab prints is the holder's DMG times the card's own 50% — so the duelist
 	// that example describes hits for 10.
 	title, lines := CardTip(jab, held{cost: jab.Cost(), dmg: 10})
-	want := []string{"1 AP", "5 DMG", "+10 HEAL ON PLAY"}
+	want := []string{"STAB, 1 AP", "5 DMG", "+10 HEAL ON PLAY"}
 	if title != "FIRE JAB" || !equal(lines, want) {
 		t.Errorf("a fire Jab with a Leech reads %q %v, want %q %v", title, lines, "FIRE JAB", want)
 	}
@@ -210,7 +210,7 @@ func TestTheTooltipReadsTheWayItWasSpecified(t *testing.T) {
 	ward = ward.SetRider(combat.Rider{Kind: combat.RiderVitaeInHand, Amount: 3})
 
 	title, lines = CardTip(ward, held{cost: ward.Cost()})
-	want = []string{"1 AP", "1 SHIELD", "+3 VITAE IN HAND"}
+	want = []string{"DEFEND, 1 AP", "1 SHIELD", "+3 VITAE IN HAND"}
 	if title != "ICE BRACE" || !equal(lines, want) {
 		t.Errorf("an ice Brace with a Brood reads %q %v, want %q %v", title, lines, "ICE BRACE", want)
 	}
@@ -272,7 +272,7 @@ func TestEveryRelicHasSomethingToSay(t *testing.T) {
 	// whose panel is a name and a blank. `relics.json` has carried the field since the grammar
 	// landed, for a long press that never arrived; this is the first thing that reads it.
 	for key, record := range data.LoadRelics() {
-		title, lines := RelicTip(record, -1, 0)
+		title, lines := RelicTip(record)
 		if title == "" {
 			t.Errorf("%s has no name", key)
 		}
@@ -293,21 +293,51 @@ func TestEveryStatusHasSomethingToSay(t *testing.T) {
 	}
 }
 
-func TestAWornRelicSaysWhereItFires(t *testing.T) {
-	// Worn order is a rule — relics fire left to right and compound — so the position is information
-	// about the effect rather than about the layout.
-	records := data.LoadRelics()
-	record := records["dmg-all-slash"]
+// **A relic panel is its rule and nothing else** *(owner's call, 2026-09-18)*. The firing order
+// used to be printed under the text whenever more than one was worn; it is a rule about the row
+// rather than about this relic, and a panel opened to read what something does should not have to
+// be scanned past something it does not.
+func TestAWornRelicPanelSaysOnlyWhatTheRelicDoes(t *testing.T) {
+	record := data.LoadRelics()["dmg-all-slash"]
 
-	_, lines := RelicTip(record, 1, 3)
-	if joined := strings.Join(lines, " | "); !strings.Contains(joined, "2nd of 3") {
-		t.Errorf("a relic worn second of three says: %s", joined)
+	_, lines := RelicTip(record)
+	if joined := strings.Join(lines, " | "); strings.Contains(joined, "fires") {
+		t.Errorf("the panel explains the firing order: %s", joined)
 	}
+	if want := strings.Split(record.Text, "\n"); !equal(lines, want) {
+		t.Errorf("the panel reads %v, want the authored text %v", lines, want)
+	}
+}
 
-	// Alone on the hand there is no order to explain, and a line saying "1st of 1" is noise.
-	_, alone := RelicTip(record, 0, 1)
-	if joined := strings.Join(alone, " | "); strings.Contains(joined, "fires") {
-		t.Errorf("the only relic worn explained its position: %s", joined)
+// **The rarity is in the title, in parentheses, and every relic has one.** It is what kind of
+// thing the card is rather than something it does, so it belongs beside the name.
+func TestTheRelicTitleCarriesTheRarity(t *testing.T) {
+	for _, record := range data.LoadRelics() {
+		title, _ := RelicTip(record)
+		want := record.Name + " (" + strings.ToUpper(string(record.Rarity)) + ")"
+		if title != want {
+			t.Errorf("%s is titled %q, want %q", record.RelicRecord, title, want)
+		}
+	}
+}
+
+// **The rarity word is lit in the relic's own border color**, so the panel and the card's ring
+// say one thing. A word the vocabulary did not claim would be the one word in the title with no
+// color and would read as a mistake.
+func TestTheRarityWordIsLitInItsBorderColor(t *testing.T) {
+	for _, record := range data.LoadRelics() {
+		title, _ := RelicTip(record)
+		want := cards.RarityInk(record.Rarity)
+
+		var lit bool
+		for _, run := range TipLine(title) {
+			if strings.Contains(run.Text, strings.ToUpper(string(record.Rarity))) && run.Ink == want {
+				lit = true
+			}
+		}
+		if !lit {
+			t.Errorf("%s does not write its rarity in %v: %v", record.RelicRecord, want, TipLine(title))
+		}
 	}
 }
 
@@ -424,4 +454,15 @@ func TestAnAuthoredBreakBecomesTwoTooltipLines(t *testing.T) {
 	if len(lines) != 2 || lines[0] != "makes a card" || lines[1] != "FIRE" {
 		t.Errorf("split into %q, want two lines", lines)
 	}
+}
+
+func second(_ string, lines []string) []string { return lines }
+
+func has(lines []string, want string) bool {
+	for _, line := range lines {
+		if line == want {
+			return true
+		}
+	}
+	return false
 }

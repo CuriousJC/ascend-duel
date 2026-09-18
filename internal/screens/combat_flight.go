@@ -150,7 +150,7 @@ func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
 	ui.DrawCardSlides(gs, screen, s.Theater.slides,
 		func(gs *state.GlobalState, i, count int) image.Point { return slotAt(gs, i, count) },
 		func(sl ui.CardSlide) cards.Spec {
-			return ui.CardSpec(sl.Card, ui.HeldBy(s.fighter.Duelist, sl.Card), true, sl.Lift > 0)
+			return ui.CardSpec(sl.Card, ui.HeldBy(s.fighter.Duelist, sl.Card), true, sl.ToLift > 0)
 		})
 }
 

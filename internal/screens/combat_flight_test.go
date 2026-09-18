@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
@@ -217,5 +218,42 @@ func TestTravelRunsFromZeroToOneAndHoldsForItsDelay(t *testing.T) {
 	tr.Tick()
 	if tr.Age != age {
 		t.Errorf("a landed travel kept counting, %d to %d", age, tr.Age)
+	}
+}
+
+// TestTheQueueLeavesWithTheCardsItNamed.
+//
+// **The hand's name came back to its planning seat at the end of a round.** `spendSelected` takes
+// the played cards out of the hand and the queue is a list of exactly those cards, but the rebuild
+// had been left to `finishDeal` — so for the length of a deal the queue still named a hand whose
+// cards were gone. `previewBlow` re-derived it and `drawPlannedHand` painted the preview back onto
+// the table, after the creature had already answered it.
+//
+// It belongs with the flights because it is the same invariant they guard: the hand, the piles and
+// the queue are all correct the moment `spendSelected` returns, and only the drawing lags.
+func TestTheQueueLeavesWithTheCardsItNamed(t *testing.T) {
+	s := flightScene(selectedHand(5, 3))
+
+	// Alive on both sides, or planning() is false and the preview would be silent whatever the
+	// queue held — which would make this pass without proving anything.
+	alive := combat.Duelist{MaxLife: 50, CurrentLife: 50, DMG: 5}
+	s.fighter = &entities.Combatant{Duelist: alive}
+	s.enemy = &entities.Combatant{Duelist: alive}
+
+	s.syncQueue()
+	if len(s.fighterActions) != 3 {
+		t.Fatalf("the fixture queued %d cards, want the 3 that are selected", len(s.fighterActions))
+	}
+	if _, ok := s.previewAttack(); !ok {
+		t.Fatalf("the fixture names no hand, so this test could not tell the preview had gone")
+	}
+
+	s.spendSelected()
+
+	if got := len(s.fighterActions); got != 0 {
+		t.Errorf("%d cards are still queued the moment the hand was spent, want none", got)
+	}
+	if _, ok := s.previewAttack(); ok {
+		t.Errorf("the preview still names a hand whose cards have left the row")
 	}
 }

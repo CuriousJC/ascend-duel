@@ -235,7 +235,7 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 		return false
 	}
 	seat := relicSlotRect(row, i, len(worn))
-	title, lines := ui.RelicTip(record, i, len(worn))
+	title, lines := ui.RelicTip(record)
 	tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 	return true
 }

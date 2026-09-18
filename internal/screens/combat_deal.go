@@ -330,7 +330,8 @@ func (s *CombatScene) finishDeal() {
 		s.addSlide(ui.CardSlide{
 			Travel:    ui.NewTravel(0, ui.SlideTicks()),
 			Card:      s.hand[to].Card,
-			Lift:      selectedLift(s.hand[to].selected),
+			FromLift:  selectedLift(s.hand[to].selected),
+			ToLift:    selectedLift(s.hand[to].selected),
 			FromIndex: from, FromCount: was,
 			ToIndex: to, ToCount: len(s.hand),
 		})

@@ -24,6 +24,11 @@ const (
 	// ConsumableStone is a stone out of the pouch: spent on nothing at all, since the rung it
 	// raises is written on the record.
 	ConsumableStone
+
+	// ConsumableEssence is an essence out of the satchel: spent against one selected card, between
+	// turns. **The same record the reward screen offers**, carried into a duel rather than aimed at
+	// the deck the moment it is won.
+	ConsumableEssence
 )
 
 // Consumable is one carried thing, ready to be drawn in a seat and spent out of it.
@@ -35,32 +40,43 @@ type Consumable struct {
 	// merged row and is the caller's own loop variable.
 	At int
 
-	Rune  Rune
-	Stone Stone
+	Rune    Rune
+	Stone   Stone
+	Essence Essence
 }
 
 // Name is what the card says it is, whichever kind it is.
 func (c Consumable) Name() string {
-	if c.Kind == ConsumableStone {
+	switch c.Kind {
+	case ConsumableStone:
 		return c.Stone.Name
+	case ConsumableEssence:
+		return c.Essence.Name
+	default:
+		return c.Rune.Name
 	}
-	return c.Rune.Name
 }
 
-// Consumables is everything the run is carrying, in one row: the sack first, then the pouch.
+// Consumables is everything the run is carrying, in one row: the sack, then the satchel, then the
+// pouch.
 //
-// **The sack leads because a rune is the one that has to be aimed.** Spending a rune means
-// selecting cards first, so the runes sit where the hand's own selection is being read toward; a
-// stone needs nothing selected and reads the same wherever it stands.
+// **What is aimed leads.** Spending a rune or an essence means selecting cards first, so both sit
+// where the hand's own selection is being read toward; a stone needs nothing selected and reads the
+// same wherever it stands, so it goes last.
 //
 // A record key naming nothing in its catalog is dropped rather than drawn as a blank card, which is
 // the same silence `heldRunes` has always kept — the loaders refuse an unknown key at the door, so
 // one here means a save from a build that had a record this one does not.
 func (s *Session) Consumables() []Consumable {
-	out := make([]Consumable, 0, len(s.held)+len(s.pouch))
+	out := make([]Consumable, 0, len(s.held)+len(s.satchel)+len(s.pouch))
 	for i, key := range s.Held() {
 		if p, ok := RuneByKey(key); ok {
 			out = append(out, Consumable{Kind: ConsumableRune, At: i, Rune: p})
+		}
+	}
+	for i, key := range s.Stowed() {
+		if w, ok := essences[key]; ok {
+			out = append(out, Consumable{Kind: ConsumableEssence, At: i, Essence: w})
 		}
 	}
 	for i, key := range s.Carried() {

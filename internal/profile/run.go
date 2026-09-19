@@ -128,6 +128,12 @@ type RunSnapshot struct {
 	// one is a decision already made, and folding the two would lose the difference.
 	Pouch []string `json:"pouch,omitempty"`
 
+	// Satchel is the essences the run is carrying but has not spent, by record key, **in
+	// acquisition order**, which is the order the player sees them in. An essence taken at a reward
+	// or bought from a vial is spent on the spot and never reaches this; what is written here is
+	// one carried into a duel to be aimed at a card in the hand.
+	Satchel []string `json:"satchel,omitempty"`
+
 	// LastRune is the record key of the rune the run spent most recently, which is what a
 	// chimera copies. **A name, never an ordinal**, the rule every vocabulary in this file is
 	// under. Empty on a run that has spent none, which is what makes a chimera refuse.

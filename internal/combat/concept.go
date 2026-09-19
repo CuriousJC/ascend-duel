@@ -398,3 +398,59 @@ func Neighbor(id ConceptID, step int) (ConceptID, bool) {
 	}
 	return NoConcept, false
 }
+
+// Ladder is every concept standing on one concept's own ladder — same form, same verb — in rung
+// order, cheapest first.
+//
+// **A form with no name has no ladder**, exactly as Neighbor has none: every enemy card is
+// `FormNone` and they share this registry with the player's, so a ladder matched on the zero form
+// would be every enemy card in the game standing in one row.
+//
+// It scans the registry rather than reading a table, so the ladder stays a consequence of what
+// `data/duelist_cards.json` declares.
+func Ladder(id ConceptID) []ConceptID {
+	from := ConceptOf(id)
+	if from.Form == FormNone {
+		return nil
+	}
+
+	var out []ConceptID
+	for other := range registry {
+		c := registry[other]
+		if c.Form == from.Form && c.Verb == from.Verb {
+			out = append(out, ConceptID(other))
+		}
+	}
+	sort.SliceStable(out, func(a, b int) bool {
+		return ConceptOf(out[a]).Tier() < ConceptOf(out[b]).Tier()
+	})
+	return out
+}
+
+// NeighborWrapping is Neighbor with the two ends of the ladder joined: the top rung promoted lands
+// on the bottom, and the bottom demoted lands on the top.
+//
+// **It is a second door rather than a flag on Neighbor, because the two callers want opposite
+// things** *(owner's call, 2026-09-19)*. An essence is something the player aims, and a pick that
+// is refused is a card greyed out under the cursor — so the ladder is a ring and the choice stays
+// theirs. A relic demoting a card as it is dealt aimed at nothing, and a wrap there would turn a
+// relic that weakens a hand into one that hands it the top rung.
+//
+// **Only a single step wraps.** A longer step is Neighbor's answer unchanged, because "two rungs
+// past the top" is not a place the ring makes obvious.
+//
+// A ladder of one rung wraps to itself and reports true, which is the same posture: nothing is
+// refused, and what the player gets is the card they were already holding.
+func NeighborWrapping(id ConceptID, step int) (ConceptID, bool) {
+	if step != 1 && step != -1 {
+		return Neighbor(id, step)
+	}
+
+	rungs := Ladder(id)
+	for i, r := range rungs {
+		if r == id {
+			return rungs[((i+step)%len(rungs)+len(rungs))%len(rungs)], true
+		}
+	}
+	return NoConcept, false
+}

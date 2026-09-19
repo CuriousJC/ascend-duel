@@ -198,6 +198,7 @@ func main() {
 		// away from any launch; see internal/scenario.
 		session.StartingRunes = scenario.Runes()
 		session.StartingStones = scenario.Stones()
+		session.StartingEssences = scenario.Essences()
 	}
 
 	// **The profile is opened before the run, because it can decide what the run is.** A run in

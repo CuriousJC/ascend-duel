@@ -225,17 +225,20 @@ func TestAGraftMakesTheLeftCardTheRightCardWhole(t *testing.T) {
 	}
 }
 
-func TestAGraftOntoAnIdenticalCardDoesNothing(t *testing.T) {
-	// The pair check compares everything the apply copies. Two cards alike in every way but their
-	// identity would leave the deck exactly as it was found, so the pick is refused rather than
-	// spending the rune on nothing.
+func TestAGraftOntoAnIdenticalCardIsThePlayersToWaste(t *testing.T) {
+	// Two cards alike in every way but their identity leave the deck exactly as it was found. It is
+	// offered anyway: a pick that wastes a rune is a pick, and the alternative is two cards greyed
+	// out in the hand with the screen declining to say why.
 	graft := anyWithTarget(t, RuneClone)
 	run := runWith(
 		combat.Card{Concept: combat.Jab, Element: combat.Ice},
 		combat.Card{Concept: combat.Jab, Element: combat.Ice},
 	)
-	if run.CanApplyRune(graft, ids(run)) {
-		t.Error("a graft between two identical cards was offered")
+	if !run.CanApplyRune(graft, ids(run)) {
+		t.Error("a graft between two identical cards was refused")
+	}
+	if !run.ApplyRune(graft, ids(run)) {
+		t.Error("a graft between two identical cards did not spend")
 	}
 }
 
@@ -287,11 +290,11 @@ func TestARuneRefusesTheWrongNumberOfTargets(t *testing.T) {
 	}
 }
 
-// **The only illegal rider pick is the one that would change nothing** *(owner's call, 2026-09-09)*.
-// It used to be a card carrying its maximum, which stopped making sense the day the maximum became
-// one: a card already upgraded is the pick a player reaching for a second rune most obviously
-// wants. What is refused is the same upgrade twice, which is the rule every other target is under.
-func TestARiderIsRefusedOnlyWhenItWouldChangeNothing(t *testing.T) {
+// **No rider pick is illegal** *(owner's call, 2026-09-19)*. The same upgrade twice writes the
+// upgrade the card already carries, which is a rune spent on nothing — and it is spent by a player
+// who picked that card out of their own hand. A *different* upgrade replaces the first outright,
+// which is the rule this test is really holding.
+func TestARiderPickIsNeverRefused(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 	id := ids(run)[0]
 
@@ -299,11 +302,11 @@ func TestARiderIsRefusedOnlyWhenItWouldChangeNothing(t *testing.T) {
 	if !run.ApplyRune(siphon, []int{id}) {
 		t.Fatal("a plain card refused its first upgrade")
 	}
-	if run.CanApplyRune(siphon, []int{id}) {
-		t.Error("the same upgrade twice was offered as a legal target")
+	if !run.CanApplyRune(siphon, []int{id}) {
+		t.Error("the same upgrade twice was refused")
 	}
-	if run.ApplyRune(siphon, []int{id}) {
-		t.Error("a card took the same upgrade twice")
+	if !run.ApplyRune(siphon, []int{id}) {
+		t.Error("the same upgrade twice did not spend")
 	}
 
 	// A *different* upgrade is legal and replaces the first outright.

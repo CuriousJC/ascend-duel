@@ -1023,7 +1023,7 @@
   },
   {
     "RelicRecord": "spoon",
-    "Name": "Mom's Spoon",
+    "Name": "Grandma's Spoon",
     "Family": "Weapons",
     "Art": "spoon",
     "Draw": "a wooden spoon",
@@ -1590,19 +1590,15 @@
     "RelicRecord": "handmult-two-pair",
     "Name": "Mirrored Rings",
     "Family": "Hand multipliers",
-    "Art": "",
-    "Draw": "an amulet on a platinum chain with 2 pearl interlocked rings on top of 2 pearl interlocked rings in a square pattern",
+    "Art": "handmult-two-pair",
+    "Draw": "an amulet on a platinum chain with 2 pearl interlocked rings on top of 2 hematite interlocked rings in a square pattern",
     "Text": "Every Two Pair\ndeals 2x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
         "When": "blow-formed",
         "If": {
-          "Hands": [
-            "concept-two-pair",
-            "form-two-pair",
-            "element-two-pair"
-          ]
+          "Hands": ["concept-two-pair", "form-two-pair", "element-two-pair"]
         },
         "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
       }
@@ -2237,7 +2233,7 @@
     "Family": "Vitae power",
     "Art": "dmg-vitae-scale",
     "Draw": "an amulet of a tangled knot of malachite lines in an organic knot shape with a platinum chain",
-    "Text": "Every blow deals 1 more DMG\nfor each vitae you hold.",
+    "Text": "+1 DMG FOR EACH VITAE",
     "Rarity": "rare",
     "Rules": [
       {

@@ -51,6 +51,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		Held:       s.Held(),
 		LastRune:   s.lastRune,
 		Pouch:      s.Carried(),
+		Satchel:    s.Stowed(),
 		NextCardID: s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
 			Propagated: s.spoils.Propagated,
@@ -306,6 +307,15 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 	for _, key := range snap.Pouch {
 		if !s.Carry(key) {
 			return nil, 0, fmt.Errorf("stone %q is not one this build has", key)
+		}
+	}
+
+	// **A carried essence the catalog no longer holds is refused rather than dropped**, on the
+	// terms a rune and a stone are: a run resumed one consumable lighter is a run the player would
+	// have to work out had changed.
+	for _, key := range snap.Satchel {
+		if !s.Stow(key) {
+			return nil, 0, fmt.Errorf("essence %q is not one this build has", key)
 		}
 	}
 

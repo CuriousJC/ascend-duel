@@ -425,3 +425,53 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 		t.Error("promoting a defense produced an attack")
 	}
 }
+
+// TestTheWrappingLadderJoinsItsTwoEnds. An essence is something the player aims, so the ends of a
+// ladder are joined rather than refusing the pick — and the plain Neighbor, which a relic reads,
+// still stops.
+func TestTheWrappingLadderJoinsItsTwoEnds(t *testing.T) {
+	for _, id := range []ConceptID{Poke, Flinch} {
+		rungs := Ladder(id)
+		if len(rungs) < 2 {
+			t.Fatalf("%v stands on a ladder of %d", ConceptOf(id).Label, len(rungs))
+		}
+		bottom, top := rungs[0], rungs[len(rungs)-1]
+
+		if got, ok := NeighborWrapping(bottom, -1); !ok || got != top {
+			t.Errorf("demoting %v gave %v, want the top rung %v",
+				ConceptOf(bottom).Label, ConceptOf(got).Label, ConceptOf(top).Label)
+		}
+		if got, ok := NeighborWrapping(top, 1); !ok || got != bottom {
+			t.Errorf("promoting %v gave %v, want the bottom rung %v",
+				ConceptOf(top).Label, ConceptOf(got).Label, ConceptOf(bottom).Label)
+		}
+
+		// Every rung in between steps to the next one along, so the wrap is the two ends and
+		// nothing else. Read off the ladder rather than off Neighbor, because a test elsewhere in
+		// this package may have registered a concept sharing a rung.
+		for i := 0; i < len(rungs)-1; i++ {
+			if got, ok := NeighborWrapping(rungs[i], 1); !ok || got != rungs[i+1] {
+				t.Errorf("promoting %v gave %v, want the rung above it %v",
+					ConceptOf(rungs[i]).Label, ConceptOf(got).Label, ConceptOf(rungs[i+1]).Label)
+			}
+		}
+
+		// A ladder and its rungs never leave the form or the verb they belong to.
+		for _, r := range rungs {
+			if ConceptOf(r).Form != ConceptOf(id).Form || ConceptOf(r).Verb != ConceptOf(id).Verb {
+				t.Errorf("%v stands on %v's ladder", ConceptOf(r).Label, ConceptOf(id).Label)
+			}
+		}
+	}
+
+	// The relic's door is unchanged: a card with no rung below it is left where it is, so a relic
+	// that weakens a hand can never hand it the top rung instead.
+	if _, ok := Neighbor(Poke, -1); ok {
+		t.Error("the plain Neighbor demoted the bottom of a ladder")
+	}
+
+	// A card with no form has no ladder, so there is nothing to wrap it round.
+	if _, ok := NeighborWrapping(NoConcept, 1); ok {
+		t.Error("a card with no form was promoted")
+	}
+}

@@ -20,6 +20,6 @@ the same thing that makes it go stale.
 
 ## What is here
 
-| File | Skill | Answers |
-|---|---|---|
-| `relic-balance-2026-09-06.md` | `relic-balance` | what the 137-ring catalog adds up to — category, payload, breadth, scope and shelf share |
+**Nothing, at the moment.** The directory is empty and that is the resting state: a snapshot is
+written when a skill is run, read, acted on, and deleted. A file sitting here is a finding nobody
+has answered yet.

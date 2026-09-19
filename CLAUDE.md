@@ -1,10 +1,13 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this
+repository.
 
 ## Project
 
-Ascending Duel — a roguelike where you duel your way up a tower, collecting relics and brands of power. Written in Go with [Ebitengine v2](https://ebitengine.org/) (`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
+Ascending Duel — a roguelike where you duel your way up a tower, collecting relics and brands of
+power. Written in Go with [Ebitengine v2](https://ebitengine.org/)
+(`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
 
 ## Where things are written down
 
@@ -25,24 +28,23 @@ Six streams, each with one job. Reach for the right one rather than searching al
 - **`TODO.md` is open work only.** Completed entries are deleted rather than archived, so it
   says what is left, not what happened. Prefer `MECHANICS.md` for "what should this do".
 - **Never add an entry to `TODO.md` unless the owner asks for that specific thing to be tracked**
-  *(owner's call, 2026-08-23)*. Noticing something during a change is not a reason to file it.
+. Noticing something during a change is not a reason to file it.
   Say it in the reply and let the owner decide — the list is theirs to grow, and a list that
   accumulates every observation anybody had is one nobody reads. The same goes for `[?]` entries
   in `MECHANICS.md`: an open question is filed because the owner wants it open, not because the
   work turned one up.
 - When the two disagree, `MECHANICS.md` is newer and wins — say so rather than guessing.
-- **`data/` is the catalog, and this file never says what is in it** *(owner's call,
-  2026-09-11)*. How many relics there are, which essences exist, what a rune's line reads — all of
-  that is a `data/*.json` read or a `docs/sheets/` page away, and it is **pre-v1 and changing
-  constantly**, so a count written down here is wrong within the week and wrong *silently*: nothing
-  compiles it, nothing tests it, and it is loaded into context every session to mislead. Every
-  count this file used to carry had already rotted by the time it was found.
+- **`data/` is the catalog, and this file never says what is in it**. How many relics there are,
+  which essences exist, what a rune's line reads — all of that is a `data/*.json` read or a
+  `docs/sheets/` page away, and it is **pre-v1 and changing constantly**, so a count written
+  down here is wrong within the week and wrong *silently*: nothing compiles it, nothing tests
+  it, and it is loaded into context every session to mislead.
 
-  So the rule is a capability rather than a fact: **say which file answers the question and which
-  tool draws it, never the answer.** "The relic catalog is in `data/relics.json`, reviewed with
-  `go run ./tools/relicsheet`" survives any amount of authoring; "forty-six relics" did not survive a
-  fortnight. The same goes for anything else that grows by someone authoring a record — creatures,
-  bosses, achievements, stones, hand rungs, portraits.
+  So the rule is a capability rather than a fact: **say which file answers the question and
+  which tool draws it, never the answer.** "The relic catalog is in `data/relics.json`, reviewed
+  with `go run ./tools/relicsheet`" survives any amount of authoring; "forty-six relics" did not
+  survive a fortnight. The same goes for anything else that grows by someone authoring a record
+  — creatures, bosses, achievements, stones, hand rungs, portraits.
 
   **A closed vocabulary is the exception and is not a catalog.** The five elements, the four
   forms, the three verbs, the three axes are design invariants: a sixth element is a decision, not
@@ -50,7 +52,7 @@ Six streams, each with one job. Reach for the right one rather than searching al
   `data/`; if growing it is a design change, it belongs here.
 
 - **`README.md` is not one of the streams, and it is only touched when the owner asks for that
-  specific thing** *(owner's call, 2026-09-11)*. It is the front page a stranger reads, so it is
+  specific thing**. It is the front page a stranger reads, so it is
   the owner's voice rather than a working document, and a change to it is a change to how the
   project introduces itself — which is a decision, not a side effect of the work that happened to
   touch the same subject. **The same no-counts rule applies to it**, and for the harder version of
@@ -59,7 +61,7 @@ Six streams, each with one job. Reach for the right one rather than searching al
   `data/` and `docs/sheets/`; it does not say how many of anything there is. Noticing that it has
   gone out of date is something to say in the reply, not something to fix.
 
-- **Write what is true now. Never write why it changed** *(owner's call, 2026-09-17)*. Not in
+- **Write what is true now. Never write why it changed**. Not in
   `MECHANICS.md`, not in `TODO.md`, not in a skill, not in a doc comment, not in a test's comment.
   **The release notes are where change lives** — `.github/release-notes/<tag>.md` — and git history
   is underneath them. If the owner wants to know what moved, that is where he will look.
@@ -151,7 +153,8 @@ The project is **source-available, not open source**, and is intended to be sold
   it online" is not sufficient for a paid release. The enemy portraits are PVGames creature
   art from the Humble *Isometric Assets Galore* bundle, whose license permits shipping
   inside a game; the pack and its terms are in `.scratch/flat-creatures` (gitignored).
-  Everything else in `assets/` is either first-party or generated at runtime.
+  Everything else in `assets/` is first-party: art generated from the prompts in `docs/art/`,
+  and a score synthesized at startup from a MIDI file this repo owns.
 - **Do not propose rewriting git history over the relicense.** The Apache 2.0 grant on
   commits published before it is irrevocable, and the owners have accepted that.
 
@@ -179,6 +182,8 @@ go run ./tools/bosssheet    # the stairway protectors, the same way, by floor
 go run ./tools/stonesheet   # every stone against the rung it raises, grouped by axis
 go run ./tools/runesheet # every rune: the line it prints against the rule that fires
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
+go run ./tools/goodsheet     # every sealed good beside the offer it actually makes
+go run ./tools/badgesheet    # every damage badge: eleven values by six colors, in all three outlines
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
 go run ./tools/relicart      # files generated relic art: reduce, commit, set "Art" on the record
@@ -192,26 +197,26 @@ go run ./tools/seeds        # re-check the named deck seeds, and search for new 
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
 
-**The sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write there
+**The sheets are committed, under `docs/sheets/`**. They write there
 rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone opens to
-see every card, relic, essence, hand, stone, rune, upgrade, creature and boss in the game. That
-reverses the older rule that a regenerated artefact is not worth committing: the argument it left
-out is the audience, since a sheet needing a Go toolchain and a remembered command each is a sheet
-only ever seen by whoever just changed the thing it shows.
+see every card, relic, essence, hand, stone, rune, upgrade, creature and boss in the game. A
+regenerated artefact is worth committing here because of the audience: a sheet needing a Go
+toolchain and a remembered command is a sheet only ever seen by whoever just changed the thing it
+shows.
 
-**The scenario sheet is the one page that is not a catalog** *(2026-09-11)*: it is a picture of
+**The scenario sheet is the one page that is not a catalog**: it is a picture of
 the debug fixtures in `internal/scenario/scenarios.json`, none of which is reachable from a shipped
 binary. It is on the index anyway, because "what can I boot into" is the question asked most often
 and answered worst.
 
-**`tools/artcompare` is a sheet-shaped tool that is deliberately not a sheet** *(owner's call,
-2026-09-17)*. It draws one catalog's records once per **set** of pictures and puts them side by
-side, so a replacement batch is judged record by record rather than all at once — and it takes any
-number of sets, because a generator produces options rather than an answer. Every cell is
-`cards.Render` at the catalog's own style, so what is compared is the card as it will be dealt,
-type over picture; clicking the one to keep builds the copy list at the top of the page. Six
-catalogs: `card`, `relic`, `essence`, `rune`, `stone`, `other`. The creature and boss portraits are
-absent on purpose — licensed art arrives once and nobody generates three of it.
+**`tools/artcompare` is a sheet-shaped tool that is deliberately not a sheet**. It draws one
+catalog's records once per **set** of pictures and puts them side by side, so a replacement
+batch is judged record by record rather than all at once — and it takes any number of sets,
+because a generator produces options rather than an answer. Every cell is `cards.Render` at the
+catalog's own style, so what is compared is the card as it will be dealt, type over picture;
+clicking the one to keep builds the copy list at the top of the page. Six catalogs: `card`,
+`relic`, `essence`, `rune`, `stone`, `other`. The creature and boss portraits are absent on
+purpose — licensed art arrives once and nobody generates three of it.
 
 **`artreview/` is gitignored and is the whole of its working directory.** A batch dropped in
 `artreview/<catalog>-<label>/` is found as the set `<label>`, the installed `assets/` directory is
@@ -238,46 +243,45 @@ holds a catalog of named seeds, so a hand that demonstrates something can be ask
 instead of found by relaunching.
 `deckSeedName` picks which one a launch deals.
 
-**Stones raise a rung for one run and never touch the catalog** *(2026-08-27)*. `data/stones.json`
+**Stones raise a rung for one run and never touch the catalog**. `data/stones.json`
 holds one per hand, a run's counts ride on `combat.Duelist.HandStones`, and `handTable` is read
 *through* them — so the ladder every tool and test sees is the shipped one. See MECHANICS.md
 §Stones and `internal/combat/stone.go`, which owns the arithmetic. **The corollary for tuning:**
 `tools/handodds` and `tools/handsheet` describe the game as shipped and say nothing about a run
 that has been buying rocks.
 
-**A run keeps two counters against every rung, and only one of them is a stone** *(owner's call,
-2026-09-05)*. A stone is the rung's **level**: bought, saved by hand key, and read through
-`Duelist.HandTable` into what the hand pays. The **plays** are how often the run has actually formed
-the rung: earned, saved beside the stones in `run.json`, and read by nothing in `internal/combat` at
-all. `internal/session/play.go` owns the tally and `CombatScene.recordHandsPlayed` is the one place
-it grows — **off the resolved event log, never off the playback**, exactly as `payHeldVitae` takes
-the round's purse. The hands panel is where both are read. See MECHANICS.md §Play counts.
+**A run keeps two counters against every rung, and only one of them is a stone**. A stone is the
+rung's **level**: bought, saved by hand key, and read through `Duelist.HandTable` into what the
+hand pays. The **plays** are how often the run has actually formed the rung: earned, saved
+beside the stones in `run.json`, and read by nothing in `internal/combat` at all.
+`internal/session/play.go` owns the tally and `CombatScene.recordHandsPlayed` is the one place
+it grows — **off the resolved event log, never off the playback**, exactly as `payHeldVitae`
+takes the round's purse. The hands panel is where both are read. See MECHANICS.md §Play counts.
 
-**The three pair rungs merged on 2026-09-05** *(owner's call)*. Card Pair, Form Pair and Elemental
-Pair became **one entry, `pair`**, written `"match": "any"` in `data/hands.json` and read on
-whichever of concept / form / element the turn satisfies — `combat.Hand.Axes` is the list and
-`Hand.On(axis)` is one reading. **It pays 1x**, the identity, so the loader now allows a multi-card
-rung *at* 100 and refuses one below it: what a pair buys is that two cards are summed where a High
-Card lands one. **`combat.Axis` is three values** — concept, form, element — and a hand can only
-say what its cards must *agree* on.
+**There is one Pair rung, not one per axis.** `pair` is written `"match": "any"` in
+`data/hands.json` and read on whichever of concept / form / element the turn satisfies —
+`combat.Hand.Axes` is the list and `Hand.On(axis)` is one reading. **It pays 1x**, the identity,
+so the loader allows a multi-card rung *at* 100 and refuses one below it: what a pair buys is
+that two cards are summed where a No Hand lands one. **`combat.Axis` is three values** — concept,
+form, element — and a hand can only say what its cards must *agree* on.
 
-**Shields replaced the plan form on 2026-08-31** *(owner's call)*. The player's three defend cards —
-`Brace`, `Block`, `Guard` at 1/2/3 AP — raise that many shields, and **one shield eats one incoming
-attack whole**. See MECHANICS.md §Shields. Four things to know before touching any of it:
+**Shields are the whole of the defensive half.** The player's defend cards — `Flinch`, `Brace`,
+`Block` and `Guard` at 0/1/2/3 AP — raise that many shields, and **one shield eats one incoming
+attack whole**. See MECHANICS.md §Shields. Five things to know before touching any of it:
 
-- **A shield eats the creature's *heaviest* blow, not its first** *(owner's call, 2026-09-08)*.
-  `combat.shieldedSlots` is the whole rule, and it decides the mask at the top of the creature's turn
-  rather than as each card arrives — which is what lets the screen show the exchange before anything
-  swings. Ranked on `CardDamage` alone, deliberately: weight, vulnerability and every guard are one
-  multiplier over the whole turn and cannot reorder two cards, so projecting the pipeline per card
-  would be a second resolver agreeing with the first. **The screen draws it as a broken window** —
+- **A shield eats the creature's *heaviest* blow, not its first**. `combat.shieldedSlots` is the
+  whole rule, and it decides the mask at the top of the creature's turn rather than as each card
+  arrives — which is what lets the screen show the exchange before anything swings. Ranked on
+  `CardDamage` alone, deliberately: weight, vulnerability and every guard are one multiplier
+  over the whole turn and cannot reorder two cards, so projecting the pipeline per card would be
+  a second resolver agreeing with the first. **The screen draws it as a broken window** —
   `cards.MarkShattered` for the settled mark, `internal/screens/combat_shatter.go` for the pip
-  crossing the table and the crack opening. **A mark is not an upgrade, and since 2026-09-09 the
-  drawing no longer tells them apart** — both cover the whole face, so what separates them is
-  ownership: an upgrade is what a card permanently *is* and is painted into the face, a mark is the
-  card's situation and is painted over the top of it. `Render` fixes that order. See MECHANICS.md
-  §Shields and §An upgrade washes the whole card.
-- **`cards.Mark` is a bitmask and marks compose** *(2026-09-08)*. A card can be broken *and* pointed
+  crossing the table and the crack opening. **A mark is not an upgrade, and the drawing does not
+  tell them apart** — both cover the whole face, so what separates them is ownership: an upgrade
+  is what a card permanently *is* and is painted into the face, a mark is the card's situation
+  and is painted over the top of it. `Render` fixes that order. See MECHANICS.md §Shields and
+  §An upgrade washes the whole card.
+- **`cards.Mark` is a bitmask and marks compose**. A card can be broken *and* pointed
   at; `internal/cards/mark.go`'s `drawMark` owns the order they are painted in, so one pair of facts
   draws one way. **Append-only, and worse to insert into than an ordinal enum** — claiming a bit in
   the middle changes what every existing value means, not just the ones after it. Three marks today:
@@ -287,36 +291,34 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
   all, because every creature is a solo attacker (`SoloAttacks`, one blow per card) while the
   player forms hands and lands one figure a turn. A count facing a hand would delete a whole turn.
   `combat.blockedByShield` carries the note; the rules do not enforce it.
-- **The verb vocabulary is two words: attack and shield.** Banking, drawing and the percentage
-  guard were each tried and each cut, and what they left behind is the shape of everything else
-  here — **`Duelist.ActionPoints()` is the whole of a turn's budget** with nothing that adds to it
-  mid-round, and **every creature deck is pure attack**, which is why a creature's whole
+- **The verb vocabulary is two words: attack and shield.** Nothing banks, nothing draws, and
+  nothing shaves a fraction off a blow — **`Duelist.ActionPoints()` is the whole of a turn's
+  budget** with nothing that adds to it mid-round, and **every creature deck is pure attack**,
+  which is why a creature's whole
   personality is which blows come round how often. `go run ./tools/enemysheet` is where a deck's
   size is read; no figure for it is written down here, because it moves whenever a creature is
   retuned and nothing fails when it does.
-- **One card raises at most five shields; a duelist holds as many as the turn paid for**
-  *(owner's call, 2026-09-09)*. The five is `combat.MaxShields` = `MaxActions`, refused at
-  `RegisterConcept` and clamped in `Card.Amount`. **`Duelist.raiseShields` clamped the total to the
-  same figure until now and no longer does** — that contradicted `maxShields`' own doc comment
-  ("three Guards in a turn is nine shields and is meant to be"), and what bounds a turn is the
-  action budget. **The pip row is a separate number in a separate package**: `screens.maxShieldPips`
-  is `cards.MaxEffects`, six, being what the bottom band fits — so a duelist behind ten draws a full
-  row and the true count is on the engine. A row that can say a big number has not been designed.
-- **The deck shape moved on 2026-09-01** *(owner's call)*: Guard went to zero copies, so the
-  defenses are 2 concepts × 5 elements and the starting deck is 55 cards. That is a
-  balance change and was taken as one — `tools/handodds` and `tools/seeds` were both re-run, four
-  cataloged seeds were repointed and the tutorial's seed was replaced. **Re-run both after any
-  further edit here**, and read MECHANICS.md §The deck is a starting position before drawing a
-  conclusion from either: they describe fight one of a relicless run and nothing else.
+- **One card raises at most five shields; a duelist holds as many as the turn paid for.** The
+  five is `combat.MaxShields` = `MaxActions`, refused at `RegisterConcept` and clamped in
+  `Card.Amount`. **`Duelist.raiseShields` does not clamp the total** — three Guards in a turn is
+  nine shields and is meant to be, because what bounds a turn is the action budget. **The pip row
+  is a separate number in a separate package**: `screens.maxShieldPips` is `cards.MaxEffects`,
+  being what the bottom band fits — so a duelist behind ten draws a full row and the true count is
+  on the engine. A row that can say a big number has not been designed.
+- **The dealt defenses are Brace and Block; Flinch and Guard ship at zero copies**, so the deck
+  holds 2 defend concepts × 5 elements and 55 cards in total. Moving that is a balance change:
+  **re-run `tools/handodds` and `tools/seeds` after any edit here**, and read MECHANICS.md §The
+  deck is a starting position before drawing a conclusion from either: they describe fight one
+  of a relicless run and nothing else.
 
-**Every fight is five rounds long, and the clock is a rule rather than a countdown** *(owner's
-call, 2026-09-06)*. A duelist still standing at the end of the last round dies, through the same
-door a killing blow uses. `combat.Duelist.RoundLimit` is what the resolver checks and
-`combat.DefaultRoundLimit` is the five; **zero is no clock at all**, which is what every creature
-and every bare `Duelist{}` in a test carries — a default of five in the rules would have put the
-whole existing suite on a timer. The run owns the number (`session.Session.RoundLimit`, carried to
-the fighter by `Equip`, saved with the run) so a relic or a brand that buys a sixth round has one
-field to write. See MECHANICS.md §The round limit. Two things to know before touching it:
+**Every fight is five rounds long, and the clock is a rule rather than a countdown**. A duelist
+still standing at the end of the last round dies, through the same door a killing blow uses.
+`combat.Duelist.RoundLimit` is what the resolver checks and `combat.DefaultRoundLimit` is the
+five; **zero is no clock at all**, which is what every creature and every bare `Duelist{}` in a
+test carries — a default of five in the rules would have put the whole existing suite on a
+timer. The run owns the number (`session.Session.RoundLimit`, carried to the fighter by `Equip`,
+saved with the run) so a relic or a brand that buys a sixth round has one field to write. See
+MECHANICS.md §The round limit. Two things to know before touching it:
 
 - **It is read last, after every other way a round can end.** A win on round five is a win and a
   death to the final blow is a death to the blow — `combat.FightOver` is the guard, and the first
@@ -328,48 +330,46 @@ field to write. See MECHANICS.md §The round limit. Two things to know before to
   no test goes red.
 
 **Runes alter the deck *during* a fight, and they are the one mechanic allowed near a live
-round** *(owner's call, 2026-08-27)*. `data/runes.json` is the catalog,
-`internal/session/rune.go` validates and applies, `internal/combat/rider.go` holds the one
-vocabulary the rules have to read, and `internal/screens/combat_rune.go` is the run's half —
-there is no board piece any more. **The `P` button and its dialog went on 2026-09-06** *(owner's
-call)*: a rune is a card in the **consumables pane** on the top row (`consumables.go`), and it
-is aimed by **selecting the cards in the hand first and clicking the rune second** — the rule
-that joins the two is `targeting.go`. See MECHANICS.md §Runes. A handful of things to know
-before touching any of it:
+round**. `data/runes.json` is the catalog, `internal/session/rune.go` validates and applies,
+`internal/combat/rider.go` holds the one vocabulary the rules have to read, and
+`internal/screens/combat_rune.go` is the run's half — there is no board piece and no dialog. A
+rune is a card in the **consumables pane** on the top row (`consumables.go`), and it is aimed by
+**selecting the cards in the hand first and clicking the rune second** — the rule that joins the
+two is `targeting.go`. See MECHANICS.md §Runes. A handful of things to know before touching any
+of it:
 
 - **Between turns, never inside one.** Spending is gated on `planning()`, because `ResolveRound`
   decides a whole round before playback starts and a card altered mid-playback would show a face
   disagreeing with a blow already computed. This is the presentation-may-never-change-an-outcome
   rule meeting the one mechanic that wanted to break it.
-- **A card is a form, an element and an action — and then one upgrade** *(owner's call,
-  2026-09-09)*. The first three compose freely and a `normal` rune moves one of them; an
-  `upgrade` rune writes the fourth, and **whatever was there is gone**. `combat.MaxCardRiders`
-  is **1**, `Card.SetRider` replaces rather than stacks, and `data/runes.json` declares
-  `"Change": "normal"|"upgrade"` on every record — authored, and refused at load if it disagrees
-  with what its target actually does. Riders stacked three to a card until then; two Siphons were
-  twenty life and are now one card forgetting the other. See MECHANICS.md §Normal and upgrade.
-- **`combat.Card.Riders` is still a fixed array** because a card must stay comparable — the screen's
+- **A card is a form, an element and an action — and then one upgrade.** The first three
+  compose freely and a `normal` rune moves one of them; an `upgrade` rune writes the fourth, and
+  **whatever was there is gone**. `combat.MaxCardRiders` is **1**, `Card.SetRider` replaces
+  rather than stacks, and `data/runes.json` declares `"Change": "normal"|"upgrade"` on every
+  record — authored, and refused at load if it disagrees with what its target actually does. Two
+  Siphons on one card is one card forgetting the other, not twenty life. See MECHANICS.md
+  §Normal and upgrade.
+- **`combat.Card.Riders` is a fixed array** because a card must stay comparable — the screen's
   face cache and `TestRoundIsDeterministic` both depend on it, exactly as `Duelist.Relics` does. A
   seat is also what makes "no upgrade" the zero value rather than a case.
-- **The card goes gold and the border does not** *(owner's call, 2026-09-09)*. `cards.UpgradeStyle`
-  is `wash-face` / `border` / `wash` and `DefaultUpgradeStyle` is **`wash-face`** — everything inside
-  the border ring washed, the ring left alone. **The border is already saying the card's state**, so
-  an upgrade over it would be a second thing in the one place the card says the first; it also keeps the
-  card's outline against the table. `tools/upgradesheet` draws all three, same review-knob shape
-  `TintMode` had, because how loud an upgrade should be is still open.
-- **Every rider draws** *(owner's call, 2026-09-09)*.
-  `systems.Upgrade` is the presentation vocabulary — one entry per rider kind —
-  `internal/screens.upgradeForRider` is the total table where a rider becomes one, and neither
-  `internal/cards` nor `internal/systems` learns what a rider is. **It took the left column until
-  then and that mechanism was deleted**: almost every upgrade says nothing about the element, so a
-  left column in gold was the element slot saying something that is not about the element. **Most of
+- **The card goes gold and the border does not.** `cards.UpgradeStyle` is `wash-face` /
+  `border` / `wash` and `DefaultUpgradeStyle` is **`wash-face`** — everything inside the border
+  ring washed, the ring left alone. **The border is already saying the card's state**, so an
+  upgrade over it would be a second thing in the one place the card says the first; it also keeps
+  the card's outline against the table. `tools/upgradesheet` draws all three, as a review knob,
+  because how loud an upgrade should be is still open.
+- **Every rider draws, and none of them touches the left column.** `systems.Upgrade` is the
+  presentation vocabulary — one entry per rider kind — `internal/screens.upgradeForRider` is the
+  total table where a rider becomes one, and neither `internal/cards` nor `internal/systems`
+  learns what a rider is. The left column states the element and almost no upgrade is about the
+  element, so a left column in gold would be the element slot saying something else. **Most of
   the colors are placeholders on a full wheel** — see
   `systems.upgradeTint`, and `go run ./tools/upgradesheet` to retune them. The wildcard is the one
   that keeps a picture for its ink and the one that leaves the form mark hueless.
 - **The wildcard is read while the hand is *formed*, not while the turn resolves**, so it lives in
   `matchCountOf` rather than in `playRiders` — the one rider that does. `combat.RiderWildElement`.
-- **Gold and silver gamble on every play, and the roll is in the resolver** *(owner's call,
-  2026-09-09)*. `combat.RiderGolden` and `RiderSilver`; `combat.Sources` is the struct carrying
+- **Gold and silver gamble on every play, and the roll is in the resolver.**
+  `combat.RiderGolden` and `RiderSilver`; `combat.Sources` is the struct carrying
   **two** streams into `ResolveRound` — `Roll` for the shock, `Luck` for the gamble — and they are
   never interchanged. The grant moves the fighting duelist *and* announces `KindGrantedDMG` /
   `KindGrantedLife` for `screens.settleGrants` to make permanent on the run; silver goes through the
@@ -377,18 +377,17 @@ before touching any of it:
   played**, which on a cheap starting card is dozens of times a run — the dial is the denominator in
   `data/runes.json`. See MECHANICS.md §Gold and silver.
 - **Targets are card identities, not deck positions.** A rune may name two cards and is spent
-  while three piles hold copies of the same cards, so `combat.Card.ID` is what makes it possible.
-  The note in MECHANICS.md saying mid-fight alteration would need one is now satisfied rather than
-  outstanding.
+  while three piles hold copies of the same cards, so `combat.Card.ID` is what makes it
+  possible.
 
 **Re-run `tools/handodds` after touching the deck, and read the hand multipliers against what it
 prints.** The ladder is priced off how hard each rung is to land — the Pair scores 100% and pays
 100, a Card Four of a Kind scores 0.64% and pays 479 — and every one of those figures is a fact
-about `data/duelist_cards.json`, the hand size and the action budget. Change any of them and the ladder is
-tuned against a deck that no longer exists, silently, because nothing fails.
+about `data/duelist_cards.json`, the hand size and the action budget. Change any of them and the
+ladder is tuned against a deck that no longer exists, silently, because nothing fails.
 
-**It reports two columns and a score, and the difference matters** *(owner's call, 2026-09-05)*.
-**Dealt** is whether a hand of eight holds the cards for the rung at all; **playable** is whether it
+**It reports two columns and a score, and the difference matters.** **Dealt** is whether a hand
+of eight holds the cards for the rung at all; **playable** is whether it
 could also pay for them inside the round. They come apart hard on the five-card rungs — a Form Full
 House is dealt in 93% of hands and payable in 8% — and the **score** is the geometric mean of the
 two, which is what the multipliers are priced against. `go run ./tools/handodds -price` prints what
@@ -397,15 +396,16 @@ Pair is the one marked row and it is deliberate** — the curve would charge 110
 and the file charges the identity, because the Pair is the ladder's floor rather than a reward — so
 a second mark is a real signal. See MECHANICS.md for why neither column
 alone can price a ladder. **It counts every card,
-defenses included** *(2026-08-23)* — they carry an element and a form and join hands like anything
+defenses included** — they carry an element and a form and join hands like anything
 else, bringing no damage with them. MECHANICS.md holds the
 table and the rule that turned it into multipliers.
 
-**Re-run `tools/seeds` after touching `data/duelist_cards.json`, `startingDeck` or `handSize`.** A seed is
-a fact about one particular deck; change the deck and every cataloged number silently deals
-something else. The tool re-checks the catalog before it searches and says which entries no
-longer match — a change to the deck size has invalidated every entry at once before. A demo
-testing a Three of a Kind against a hand with two Bashes in it is worse than no demo, because it passes.
+**Re-run `tools/seeds` after touching `data/duelist_cards.json`, `startingDeck` or `handSize`.**
+A seed is a fact about one particular deck; change the deck and every cataloged number silently
+deals something else. The tool re-checks the catalog before it searches and says which entries
+no longer match — a change to the deck size has invalidated every entry at once before. A demo
+testing a Three of a Kind against a hand with two Bashes in it is worse than no demo, because it
+passes.
 
 **A rarer hand needs a bigger search, and the impossible ones are worth re-checking.** Whether a
 hand is dealable at all is arithmetic over the *current* deck — how many copies of a concept there
@@ -425,12 +425,13 @@ go vet -tags demoplay ./...; go vet -tags scenario ./...
 go run -tags "debugtrace idleexit" .    # traced and self-closing: the unattended run
 ```
 
-**`demoplay` is how the combat screen gets looked at without anybody sitting at it.** It plays
-a scripted round or two — selection, DUEL!, playback — and writes the screen to `demo/*.png`,
-then closes. It exists because the screen is the one thing `go test` cannot check: a hand line, a
+**`demoplay` is how the combat screen gets looked at without anybody sitting at it.** It plays a
+scripted round or two — selection, DUEL!, playback — and writes the screen to `demo/*.png`, then
+closes. It exists because the screen is the one thing `go test` cannot check: a hand line, a
 marked verb, a highlight on the right row are all things you have to *see*. It is the
-`tools/marksheet` idea applied to a live screen, and the same rule applies — a stale picture is worse than none, so regenerate rather than trust an old
-capture. `demo/` is gitignored; fifty near-identical PNGs are not a diff anyone wants.
+`tools/marksheet` idea applied to a live screen, and the same rule applies — a stale picture is
+worse than none, so regenerate rather than trust an old capture. `demo/` is gitignored; fifty
+near-identical PNGs are not a diff anyone wants.
 
 ```powershell
 go test ./...                                   # all tests
@@ -441,17 +442,17 @@ git commit -s                                   # sign-off, per CONTRIBUTING.md
 Tests live in `internal/combat` — the only package that can be tested without a
 window, by design. Keep it that way: rules go in `combat`, not in screens.
 
-**"Needs no window" is not the same as "needs no display server", and CI found the
-difference the hard way.** On Linux, `ebiten/internal/ui` calls `glfw.Init()` from a package
-`init()`, so *linking* Ebitengine into a test binary is enough to panic on a missing
-`DISPLAY` — before a single test function runs. Four of the tested packages link it:
-`internal/screens` and `internal/models` directly, and `internal/cards` and `internal/music`
-because their tests import `assets`, which hands back `*ebiten.Image`. `internal/combat`,
-`internal/session` and the rest are genuinely clean. Both workflows therefore run the Linux test step under `xvfb-run -a`, which supplies
-a throwaway X server nothing ever draws to. Windows is unaffected — Ebitengine is pure Go
-there. **If a package's tests start importing `assets`, they have joined that group**; the
-package's own no-Ebitengine rule still holds and is still worth holding, but it no longer
-buys a display-free test run.
+**"Needs no window" is not the same as "needs no display server", and CI found the difference
+the hard way.** On Linux, `ebiten/internal/ui` calls `glfw.Init()` from a package `init()`, so
+*linking* Ebitengine into a test binary is enough to panic on a missing `DISPLAY` — before a
+single test function runs. Four of the tested packages link it: `internal/screens` and
+`internal/models` directly, and `internal/cards` and `internal/music` because their tests import
+`assets`, which hands back `*ebiten.Image`. `internal/combat`, `internal/session` and the rest
+are genuinely clean. Both workflows therefore run the Linux test step under `xvfb-run -a`, which
+supplies a throwaway X server nothing ever draws to. Windows is unaffected — Ebitengine is pure
+Go there. **If a package's tests start importing `assets`, they have joined that group**; the
+package's own no-Ebitengine rule still holds and is still worth holding, but it no longer buys a
+display-free test run.
 
 **What cannot be unit-tested gets a tool instead.** `internal/screens` needs a window, so anything
 it decides is checked by launching the game, and the sheets under `docs/sheets/` are how the
@@ -466,9 +467,9 @@ that way.
 ## Releasing — `.github/workflows`
 
 **CI** runs on every PR, on **Windows and Linux**, and vets and builds under **every build tag** —
-untagged, `debugtrace`, `idleexit`, `demoplay` and `scenario`. The last two were added on
-2026-09-17: each selects a file the untagged build never compiles, so a break in either was green
-in CI and found by hand.
+untagged, `debugtrace`, `idleexit`, `demoplay` and `scenario`. **Every tag has to be in that
+list**: each selects a file the untagged build never compiles, so a tag left out is a break that
+stays green in CI and is found by hand.
 **Release** has two entrances and both produce the same release. Pushing a `v*` tag still
 fires it, so *tagging is releasing*:
 
@@ -553,9 +554,9 @@ The three decisions worth knowing without opening it:
 
 ## Determinism — see the `randomness` skill
 
-Runs will eventually be **replayable from a seed**. **Combat is stochastic as of 2026-08-14** —
-lightning rolls — so the rules that protect replayability are live rather than theoretical, and
-they are easy to break without noticing.
+Runs will eventually be **replayable from a seed**, and **combat is already stochastic** —
+lightning rolls, and the gold and silver upgrades — so the rules that protect replayability are
+live rather than theoretical, and they are easy to break without noticing.
 
 The procedure, the stream table and the argument a new roll has to make live in
 [.claude/skills/randomness/SKILL.md](.claude/skills/randomness/SKILL.md). **Load it before
@@ -565,7 +566,7 @@ deciding whether a mechanic should be random at all.**
 Four things stay here, because they are the tripwire — the failure is not knowing the skill
 exists:
 
-- **A run seed is a six-character code** *(owner's call, 2026-08-25)* — `internal/seeds/code.go`,
+- **A run seed is a six-character code** — `internal/seeds/code.go`,
   the only place the alphabet exists. `GlobalState.RunSeed` is still an `int64` because every
   stream derives from it by arithmetic, but it is always inside `seeds.Space` (32^6, about 1.07
   billion runs) so it can be written down. **The alphabet is Crockford base32** — no `I`, `L`,
@@ -575,13 +576,14 @@ exists:
   the digit; `U` does not fold. Case is not information: `Parse` takes either, `Code` emits
   upper. **`fixedRunSeed` and a scenario's `Seed` are both written as codes**, and one that is
   not a code fails the launch rather than quietly rolling a fresh run. **Zero is the run
-  `000000`, not "unset"** — anything that used to check `RunSeed == 0` is now wrong.
+  `000000`, not "unset"** — nothing may test `RunSeed == 0` to mean "no seed".
 - **Never call the `math/rand` package-level functions** (`rand.Intn`, `rand.Shuffle`, …).
   They draw from a global source shared with every other caller, which makes a run
   unreproducible. Randomness comes from an explicit `*rand.Rand` carried on state.
 - **Every consumer gets its own salted stream off `GlobalState.RunSeed`**, and a stream is
   only ever advanced by its own concern. Sharing one means a change to either silently rerolls
-  the other. Seven are live; the skill's table says which.
+  the other. The skill's table says which are live, and `seeds.All()` is the list the tests
+  walk.
 - **No `time.Now()` in game rules, and never let map iteration order decide anything.** Go
   randomizes map order deliberately; iterate a sorted key slice.
 - **Presentation may never change an outcome.** `ResolveRound` decides a whole round before
@@ -600,8 +602,8 @@ rule the screen has to obey all live in
 [.claude/skills/combat-screen/SKILL.md](.claude/skills/combat-screen/SKILL.md). **Load it
 before touching any of the combat screen's files — `internal/screens/combat*.go` — or
 `internal/ui`, or `internal/combat`, or anything about how a round is drawn or played back.**
-**A symbol the skill names may now be in `internal/ui`** rather than `internal/screens`: the
-drawing layer split off on 2026-09-17, and a grep over both is the way to find one.
+**A symbol the skill names may be in `internal/ui`** rather than `internal/screens` — the
+drawing layer is its own package, so a grep over both is the way to find one.
 
 It is a skill because it is the screen under active construction: it grows every session
 while mattering only when that screen is the work. The general UI conventions below still
@@ -621,18 +623,18 @@ included. The entire input vocabulary is:
 
 - **Left click** — buttons and selection.
 - **Drag and drop** — the action box, and anything else that needs ordering or moving.
-- **Hover** — rest the cursor on something and a tooltip explains it *(2026-08-21)*. A card's
+- **Hover** — rest the cursor on something and a tooltip explains it. A card's
   damage arithmetic term by term, a relic's rule, a status badge's meaning. `models.Tooltip` and
   `systems.DrawTooltip` are the widget; the wording is `internal/ui/tips.go`.
 - **Long press** — the same reveal, for a touchscreen or a controller, where there is no cursor to
   rest. **Not built**, and it is the only reason hover did not simply replace it: see MECHANICS.md
   §Hover and long press, where the record of hover being *rejected* was reversed.
-- **A key may be a shortcut for a button that is on the screen, and nothing else** *(owner's call,
-  2026-09-05)*. Escape presses the settings cog — `internal/game/chrome.go` — and it is live
-  exactly when that button is, gated on the same `chromeShowing` predicate and the same
-  `gs.InputGated` shield. **A key that does something no visible control does is forbidden**, and
-  so is anything that makes the keyboard *required*: a shortcut is a faster way to reach a control
-  a player could always have clicked. A player who never touches the keyboard misses nothing.
+- **A key may be a shortcut for a button that is on the screen, and nothing else**. Escape
+  presses the settings cog — `internal/game/chrome.go` — and it is live exactly when that button
+  is, gated on the same `chromeShowing` predicate and the same `gs.InputGated` shield. **A key
+  that does something no visible control does is forbidden**, and so is anything that makes the
+  keyboard *required*: a shortcut is a faster way to reach a control a player could always have
+  clicked. A player who never touches the keyboard misses nothing.
 - **One typed-text field in the whole game** — entering a seed to replay a run. Nothing
   else anywhere accepts typed input.
 
@@ -644,19 +646,17 @@ that feels like it wants one needs a different design.
 
 ### The game boots to the title screen, and the title screen owns the run
 
-**Changed back on 2026-09-03** *(owner's call)*, after months of booting straight into `Combat`
-because that screen was the work. The menu now *decides something* — **New Run** or **Continue** —
-which is a question nothing else in the game asks, and a run that started before the player was
-asked is a run they cannot decline.
+The menu *decides something* — **New Run** or **Continue** — which is a question nothing else in
+the game asks, and a run that started before the player was asked is a run they cannot decline.
 
 - **`internal/screens/run.go` is the run's whole lifecycle**: `BootRun` (resume off disk or build
-  fresh), `NewRun`, `ContinueRun`, `AbandonRun`. All four used to be one function in `main`. **They
-  moved because a screen cannot import `main`** — once starting a run is a button, building one is
-  something a screen does. `main` now rolls a seed and calls `BootRun`.
+  fresh), `NewRun`, `ContinueRun`, `AbandonRun`. **They live in `screens` because a screen cannot
+  import `main`** — once starting a run is a button, building one is something a screen does.
+  `main` rolls a seed and calls `BootRun`.
 - **`state.SeedPinned` says the seed was chosen rather than rolled**, so `NewRun` does not silently
   break `fixedRunSeed` or a scenario's `Seed` from a menu button. **The tutorial still outranks
   it** — a taught run is dealt the script's own code.
-- **`Continue` is gated on `gs.Resumed`**, which now has two readers rather than one.
+- **`Continue` is gated on `gs.Resumed`.**
 - **`demoplay` needed a door.** The scripted demo drives the combat scene rather than navigating to
   it, so a menu in front of the duel is a menu it sits on forever. `screens.DemoPlaysItself` is the
   predicate, in the usual two-file `_on`/`_off` shape, read by `BootRun`.
@@ -670,38 +670,37 @@ pretended away. It is the only thing on that screen that touches `gs.Run`, and i
 **A death is the same event, so it is the same function.** `EndRunInDefeat` is `AbandonRun` under a
 second name, because the only difference between dying and giving up is which screen the player was
 standing on — and two paths from "this climb is finished" to "the file is gone" is one path that can
-be got wrong. **Retry was removed on 2026-09-03** *(owner's call)*: a defeat used to re-enter the
-combat screen with the same opponent, and a roguelike where a death can be taken back is not one.
-`CombatScene.restart` is now `died`, and the button in the DUEL! slot reads `defeatButtonLabel`.
+be got wrong. **There is no retry**, because a roguelike where a death can be taken back is not
+one. `CombatScene.died` is the path and the button in the DUEL! slot reads `defeatButtonLabel`.
 
-**A run ends on a splash, not on the title screen** *(owner's call, 2026-09-03)*. `screens.endRun`
-is the one door: it takes `gs.Run.Summarize(gs.RunSeed, ended)` **before** deleting anything, puts it
-on `gs.Summary`, then nils the run and goes to `state.RunOver`. The ordering is the whole thing — the
-numbers come off the ledger the run was carrying, and a clear-then-summarize leaves a blank page that
-nothing fails on. `session.RunSummary` is plain ints and strings so the screen never learns what a
-`Session` is; **it is the one piece of state that deliberately outlives what it describes**, and
-`RunOverScene.leave` drops it.
+**A run ends on a splash, not on the title screen**. `screens.endRun` is the one door: it takes
+`gs.Run.Summarize(gs.RunSeed, ended)` **before** deleting anything, puts it on `gs.Summary`,
+then nils the run and goes to `state.RunOver`. The ordering is the whole thing — the numbers
+come off the ledger the run was carrying, and a clear-then-summarize leaves a blank page that
+nothing fails on. `session.RunSummary` is plain ints and strings so the screen never learns what
+a `Session` is; **it is the one piece of state that deliberately outlives what it describes**,
+and `RunOverScene.leave` drops it.
 
-**The run code is on that splash and in the settings screen's bottom-right corner.** It went to the
-log at launch and nowhere a player could see, which made a six-character code that exists to be
-transcribed unreachable. `screens.abandonLabel` is what puts it on the settings screen, and it
-names no code with no run standing.
+**The run code is on that splash and in the settings screen's bottom-right corner**, because a
+six-character code that exists to be transcribed has to be somewhere a player can read it.
+`screens.abandonLabel` is what puts it on the settings screen, and it names no code with no run
+standing.
 
 ### Five screens that are not stations of a run
 
-**Settings, Achievements, Credits, RunOver and Goods.** None appears in `screens/flow.go` — which is
-what "not a station" means mechanically — and the chrome stands down on all five. The first three are
-reached by an `actions.Open*` call and record `gs.ReturnScreen` so Back works from anywhere; **RunOver
-is the exception and goes to the title outright**, because the screen it came from was drawing a run
-that has ended and there is nowhere to put the player back to.
+**Settings, Achievements, Credits, RunOver and Goods.** None appears in `screens/flow.go` —
+which is what "not a station" means mechanically — and the chrome stands down on all five. The
+first three are reached by an `actions.Open*` call and record `gs.ReturnScreen` so Back works
+from anywhere; **RunOver is the exception and goes to the title outright**, because the screen
+it came from was drawing a run that has ended and there is nowhere to put the player back to.
 
-**Goods is the fifth and it is the one with a door of its own** *(owner's call, 2026-09-19)*. It is a
-sealed good, opened: the three to five things inside it, and the one of them the player takes. It is
-reached from exactly one place and returns to exactly one place — the shop's shelf — so
-`screens.openGoods` sits beside the screen rather than in `actions`, whose explicit list is about
-screens openable from anywhere. **There is no way out but taking a card**, because the good is
-already paid for; the good travels as `gs.PendingGood`, a record key, since a screen cannot be handed
-an argument. See `internal/screens/goods.go`.
+**Goods is the fifth and it is the one with a door of its own**. It is a sealed good, opened:
+the three to five things inside it, and the one of them the player takes. It is reached from
+exactly one place and returns to exactly one place — the shop's shelf — so `screens.openGoods`
+sits beside the screen rather than in `actions`, whose explicit list is about screens openable
+from anywhere. **There is no way out but taking a card**, because the good is already paid for;
+the good travels as `gs.PendingGood`, a record key, since a screen cannot be handed an argument.
+See `internal/screens/goods.go`.
 
 **What it cost the shop is a re-entry guard.** Leaving for a good and coming back runs
 `ShopScene.Init` again, and a second deal would restock the shelf, forget which goods had been
@@ -709,19 +708,18 @@ opened, un-drink the potions and replay the shopkeeper. `ShopScene.visit` is the
 the scene's state belongs to, and a matching one is picked up rather than dealt again — read it
 before adding anything to that Init.
 
-- **Adding one is two edits, not three**: an ordinal in `state.ActiveScreen` (append-only, and its
-  `String` case) and an entry in the registry in `internal/game`. There is no phase, because there is
-  no station. A screen the chrome should stand down on is a third: `chromeShowing` in
+- **Adding one is two edits, not three**: an ordinal in `state.ActiveScreen` (append-only, and
+  its `String` case) and an entry in the registry in `internal/game`. There is no phase, because
+  there is no station. A screen the chrome should stand down on is a third: `chromeShowing` in
   `internal/game/chrome.go`.
 - **`actions` has one function per screen rather than one taking a destination.** A shared
-  `openScreen(gs, dest)` would be shorter and would also be the seam through which a *run* screen
-  gets opened without its phase being set. The explicit list is what says which screens may work this
-  way.
-- **The achievements catalog moved to `data/achievements.json` on 2026-09-06**, which is exactly
-  what the old note here said would happen once there were enough to scroll, and the "a name and a
-  sentence does not earn a loader" argument stopped holding the
-  moment a record had to say *what earns it*. `internal/achieve` is the loader and the validator;
-  the screen draws what it hands over and decides nothing. See MECHANICS.md §Achievements.
+  `openScreen(gs, dest)` would be shorter and would also be the seam through which a *run*
+  screen gets opened without its phase being set. The explicit list is what says which screens
+  may work this way.
+- **The achievements catalog is `data/achievements.json`**, and it earns a loader because a
+  record has to say *what earns it* — a name and a sentence would not have. `internal/achieve`
+  is the loader and the validator; the screen draws what it hands over and decides nothing. See
+  MECHANICS.md §Achievements.
 - **`TitleScene.menu()` is the one list the title menu is built from.** Init, Update and Draw all
   read it, because three hand-written orders are three places a new entry gets forgotten — which is
   how a button ends up drawn and not clickable.
@@ -735,9 +733,10 @@ than a drift.
 - **A confirm is a question, not a page.** A modal takes the screen because what it holds *is* a
   page — a whole deck, a ladder, a run's account. A dialog that covers the screen to ask six
   words reads as something having gone wrong, and it hides the thing being asked about.
-- **It stays in the family**: same scrim, same bevelled panel, same pink stroke, and the destructive
-  answer takes `modalCloseColor` — the only red in the game. It does **not** borrow the X: an X means
-  "put this away", and a question with one has three answers where it should have two.
+- **It stays in the family**: same scrim, same bevelled panel, same pink stroke, and the
+  destructive answer takes `modalCloseColor` — the only red in the game. It does **not** borrow
+  the X: an X means "put this away", and a question with one has three answers where it should
+  have two.
 - **The callbacks are rebound every frame**, because one dialog serves two callers and a callback
   wired once at build time answers the previous caller's question.
 - **Cancel is the safe answer and it is on the left.**
@@ -771,7 +770,7 @@ a bevelled face, a cached image repainted only when something visible changed.
   number nothing reads is a control that lies about what it does.
 ### Cards fly; they never appear
 
-**A card that changes where it is on screen travels there** *(2026-08-17)*. Drawn, discarded,
+**A card that changes where it is on screen travels there**. Drawn, discarded,
 played to the table, re-sorted in the hand, won as a prize — every one of those is a journey with
 a start, a duration and an eased arrival, never a card in one place on one frame and another place
 on the next.
@@ -793,18 +792,17 @@ instead of having watched it happen.
 - **The exception is an absence**: a removed card has nothing to fly, so the seat it would have
   landed in is drawn empty.
 
-**A hand arrives in three stages, and every hand in a fight arrives the same way** *(owner's call,
-2026-09-15)*. `internal/screens/combat_deal.go` is the sequence: cards fly out of the pile left to
-right **in pile order**, then the flip cascade plays **one beat per worn ring** over them, then the
-row **sorts itself**. The opening hand used to be filled and sorted with nothing on screen while a
-refill flew, which made the first hand of a run the one hand in the game that simply appeared.
-Five things follow:
+**A hand arrives in three stages, and every hand in a fight arrives the same way.**
+`internal/screens/combat_deal.go` is the sequence: cards fly out of the pile left to right **in
+pile order**, then the flip cascade plays **one beat per worn ring** over them, then the row
+**sorts itself**. The opening hand goes through it like every other, so no hand in the game
+simply appears. Five things follow:
 
-- **The sort is last, and that reverses the old rule.** `spendSelected` sorted *before* anything was
-  animated so a dealt card flew straight to its final slot — one journey per card, and a hand that
-  never showed the player what the shuffle gave them. The cost of the reversal is a second movement
-  per card; what it buys is the deal having something to say.
-- **The hand holds the finished cards from the first frame**, exactly as it always did. What the
+- **The sort is last.** Sorting before anything is animated would fly each dealt card straight
+  to its final slot — one journey per card, and a hand that never shows the player what the
+  shuffle gave them. The cost is a second movement per card; what it buys is the deal having
+  something to say.
+- **The hand holds the finished cards from the first frame.** What the
   deal owns is the **faces** — the pile's, then one per ring — so a card selected while it is still
   showing its lightning face is the earth card the engine will score. That is `shownLife`'s division
   applied to a card: the model moves first and the drawing catches up.
@@ -821,17 +819,18 @@ Five things follow:
 
 ### Cards change in front of you, too
 
-**A card that becomes a different card dissolves into it** *(owner's call, 2026-09-08)*. Same
+**A card that becomes a different card dissolves into it**. Same
 argument as the flight one axis over: a card that changes between two frames has to be *re-read* to
 find out what happened, instead of having been watched happening. `internal/ui/cardmorph.go` is
 the machinery and `internal/cards/dissolve.go` is the pattern the face comes apart in.
 
-- **A morph is two finished faces and a clock**, and it knows nothing about where it is on screen —
-  the caller owns the rectangle, exactly as it does for a `travel`. That is what lets the post-battle
-  screen run one in the middle of the table and the combat screen run several in the hand.
+- **A morph is two finished faces and a clock**, and it knows nothing about where it is on
+  screen — the caller owns the rectangle, exactly as it does for a `travel`. That is what lets
+  the post-battle screen run one in the middle of the table and the combat screen run several in
+  the hand.
 - **Which of two faces it holds is what it does.** `morphInto` replaces, `morphAway` eats,
-  `morphIn` arrives out of nothing. **There is no style enum**, because an enum beside the faces is a
-  second way of saying the same thing and a way for the two to disagree.
+  `morphIn` arrives out of nothing. **There is no style enum**, because an enum beside the faces
+  is a second way of saying the same thing and a way for the two to disagree.
 - **It is not a `cards.Mark`.** A mark is the card's situation and the card is still itself
   afterwards, so it has a settled picture `internal/cards` can bake. A morph ends as a *different
   card*, so there is nothing to bake and no second rasterizer — what that package owns is the
@@ -858,7 +857,7 @@ changing cards where they stand, mid-fight.
   apply and again after, and the three shapes fall out of the comparison: a face that differs is a
   replacement, a card that has appeared is a copy, a card that has gone was eaten. **No rune has
   a case anywhere in the drawing**, which is what stops a new one arriving with no picture.
-- **One beat for all of them** *(owner's call, the shield break's rule again)*. Every card a
+- **One beat for all of them**. Every card a
   rune took changes at once; three dissolves in sequence would be three pauses over a hand the
   player is building.
 - **A morph carries the card's identity, never a seat index**, so a sort or a drag under a running
@@ -886,25 +885,19 @@ The action box is a *game* widget, not a UI widget: draggable action cards with 
 action-point validation. General-purpose toolkits are weakest at exactly that, so
 hand-rolling costs little and buys full control.
 
-### Interface art is authored, and there is no generator any more
+### Interface art is authored, and there is no glyph generator
 
-**`internal/systems/glyphs.go` was deleted on 2026-09-16** *(owner's call)*, and with it the
-`GlyphKind` enum, the `Palette`, the span language, the derived rim and the computed shading. It
-generated pixel-art silhouettes so that interface art would have **no provenance question** — a
-real argument in a game that will be sold, and the reason the pattern was reached for first.
+**Every mark the interface draws is a file, not code.** There is **one authored drawing per form
+per element, plus a neutral set, plus one cost tick per element** — a multiplication rather than
+a list, which is exactly why it is not an enum: thirty-odd append-only enum values would be
+thirty-odd cache slots naming pictures the rules know nothing about.
 
-**What retired it was every one of its pictures becoming a drawing.** The form marks went first:
-they were four silhouettes tinted to the element, and they are now **one authored drawing per form
-per element, plus a neutral set, plus one cost tick per element**. That is thirty-one pictures,
-which is a multiplication rather than a list — thirty-one append-only enum values would have been
-thirty-one cache slots naming pictures the rules know nothing about. The category glyphs and the
-damage sword and the runner had drawn nothing for a month; the boulder was a stone fallback every
-stone in the catalog had outgrown; and the gear, the last one standing, was baked to
-`assets/game/gear.png` and replaced with drawn art the same day.
-
-**The provenance argument is answered differently now**: the art is generated by an image model
-from a prompt this repo owns, `docs/art/`, rather than drawn by a third party — so there is still
-nothing to clear, and the pictures are files rather than code.
+**The provenance argument is what a generator was for, and it is answered differently**: the art
+is generated by an image model from a prompt this repo owns, `docs/art/`, rather than drawn by a
+third party — so there is still nothing to clear, and the pictures are files rather than code.
+**Do not reintroduce a silhouette generator.** A derived one-pixel rim means a smaller glyph is a
+*different drawing*, where a painting has interior detail to average and survives both
+reductions.
 
 **`systems.ArtMark` is the whole of how art reaches the drawing** — `internal/systems/artmark.go`,
 keyed by **asset name** rather than by an enum, cached, and free of Ebitengine so the review sheets
@@ -925,9 +918,6 @@ the page it is all reviewed on.
   it draws at — one averaging step from a rich source rather than two from a thin one, which is
   what keeps the near-black contour alive at card size. A batch delivered at 64 arrived with no
   contour left at all and it was invisible by eye.
-- **A drawing resizes and a silhouette did not**, and that is the technical half of why the
-  generator went. Its rim was derived one pixel thick, so a smaller glyph was a *different
-  drawing*; a painting has interior detail to average and survives both reductions.
 
 - **The card is 162x224, and it is a column and a paragraph.** The form mark sits in a 32px
   box at (10,8) — **inside the card, not hanging off the corner**, because a mark carrying
@@ -936,27 +926,28 @@ the page it is all reviewed on.
   make a **26px column**; and **the effect text takes everything right of that**, centered in it
   both ways, at 18pt. `blitGlyph` clips whatever it composites to the rounded shape, which is what
   keeps a mark placed hard into a corner from squaring the card off.
-- **There is no damage badge at all.** The 64px generated sword went first — it said what the
-  corner mark already says — and then the bare figure, because the text states what the card
-  deals and a number beside it was the same fact multiplied out by the wielder's Strength.
-  `cards.Spec` has no `Damage` field and `drawCard` takes no Strength. The generated sword
-  exists and is still on the glyph sheet; nothing draws it.
-- **A card's picture is a function of the card *and who is holding it*** *(2026-08-21)*. It was a
-  function of the card alone for a week, and that was the bug: a slash in the hands of someone
-  wearing Keen read "2x DMG" and dealt four times their DMG, because the card's multiplier and the
-  relic's scaling are applied in different places. `screens.held` is the pairing — cost, DMG and
-  worn relics, traveling together — and **the figure a relic has moved is written in the relic
-  pink**, via `Spec.TextInk` and `Spec.TextHighlight`, which colors that run of the line and not
-  the sentence around it: a pink verb would say the relic changed the card rather than the number. The
-  *damage* is still not printed: the face carries the multiplier and the tooltip carries the
-  arithmetic.
+- **The damage badge carries the card's multiplier, and the numeral is drawn into the art.**
+  `cards.BadgeArtKey` picks it by shape, value and element out of `assets/damage/`; a value with
+  no drawn badge falls back to the blank badge with its figure printed on top, which is the one
+  fallback in the interface art. **Which outline it takes is still open** —
+  `cards.DefaultBadgeShape` is the one line that picks, and `go run ./tools/badgesheet` is the
+  matrix it is chosen on. `cards.Spec` still has no `Damage` field: the badge says what the
+  *card* multiplies by, never what the wielder would deal with it.
+- **A card's picture is a function of the card *and who is holding it*.** A slash in the hands
+  of someone wearing Keen must not read "2x DMG" and deal four times their DMG — the card's
+  multiplier and the relic's scaling are applied in different places. `screens.held` is the
+  pairing — cost, DMG and worn relics, traveling together — and **the figure a relic has moved
+  is written in the relic pink**, via `Spec.TextInk` and `Spec.TextHighlight`, which colors that
+  run of the line and not the sentence around it: a pink verb would say the relic changed the
+  card rather than the number. The *damage* is still not printed: the face carries the
+  multiplier and the tooltip carries the arithmetic.
 - **The wording is the constraint now, not the space.** The text column is ~128px — a dozen or
   so characters a line — so effect text has to be short words, and `DMG` rather than `damage`.
   `TestNoEffectTextWordIsWiderThanItsColumn` fails on a word that will not fit and
   `TestEveryCardTextFitsItsBand` on a string that wraps past the band;
   `TestLeftColumnDoesNotCollide` and `TestTheCostColumnStaysOutOfTheTextColumn` hold the column
   against its neighbors.
-- **A `\n` in effect text is an authored line break** *(2026-08-23)*, honored by
+- **A `\n` in effect text is an authored line break**, honored by
   `cards.WrapText` before the width is measured, and split back into lines by the tooltip.
   It exists because width-wrapping cannot make a *set* of cards break in the same place: the
   five elemental essences differ only in the element they name, and `FIRE` sits comfortably on
@@ -970,11 +961,9 @@ the page it is all reviewed on.
   an `*ebiten.Image` needs a graphics context and the review tools have no window. `ArtMarkImage`
   wraps and caches it for a screen.
 
-**`go run ./tools/marksheet` is where every mark in the game is reviewed** — the twenty form
-marks and the neutral set, the six cost ticks, and the six generated glyphs, all on one page at the
-sizes the game draws them and enlarged. **It replaced `tools/glyphsheet` on 2026-09-16**, which was
-one committed PNG of every glyph by every palette: that sheet was built when the marks *were*
-glyphs, and once they were not it was a picture of six things nobody reviewed as a set.
+**`go run ./tools/marksheet` is where every mark in the game is reviewed** — the form marks by
+element, the neutral set and the cost ticks, all on one page at the sizes the game draws them
+and enlarged. The damage badges have their own matrix, `go run ./tools/badgesheet`.
 
 **The question the page exists for is the matrix.** A player counts a hand by comparing four
 silhouettes along a row and five hues down a column, so the two failures are a form that cannot be
@@ -1017,7 +1006,7 @@ is no build step.**
 - **Failing to open the audio device is logged, never fatal.** A machine with no sound
   card still plays the game — and `music.Available()` reports it, so the volume bar on the
   settings screen disables itself rather than silently doing nothing.
-- **There is no mute, only a level** *(owner's call, 2026-08-27)*. `SetLevel(0..1)` is the whole
+- **There is no mute, only a level**. `SetLevel(0..1)` is the whole
   control and zero is the only silence there is; the mute latch went because a latch and a bar
   are two controls over one number that then have to be kept from disagreeing. The bar is on the
   settings screen — a control, never a hotkey, since the input vocabulary has no keyboard.
@@ -1040,13 +1029,14 @@ square in the bottom-left corner of every screen, carrying a generated cog — a
 **ledger button**: the run's account of itself, on every screen. See MECHANICS.md §The ledger,
 `internal/screens/ledger.go` for the panel and `internal/session/ledger.go` for what it holds.
 
-**A third thing joined the frame on 2026-09-06: the achievement toast.** It is not a control — it is
-the game telling the player they did something, and waiting to be clicked out of. It qualifies on the
+**The third thing in the frame is the achievement toast.** It is not a control — it is the game
+telling the player they did something, and waiting to be clicked out of. It qualifies on the
 same three tests and could not be a scene's for the ledger's reason plus one of its own: an
-achievement can land during a duel, on the post-battle screen, or on the transition between them.
-Like the ledger it takes the frame while it is up and the active scene is not updated at all. **Its
-queue is `state.EarnedThisSession`**, written wherever an award happens in `internal/screens` and
-drained one box at a time — a five-element turn earns three achievements together.
+achievement can land during a duel, on the post-battle screen, or on the transition between
+them. Like the ledger it takes the frame while it is up and the active scene is not updated at
+all. **Its queue is `state.EarnedThisSession`**, written wherever an award happens in
+`internal/screens` and drained one box at a time — a five-element turn earns three achievements
+together.
 
 **The ledger is chrome for the usual three reasons and one it does not share**: it is true for the
 whole run, wanted on every screen and owned by no scene — and unlike the settings it *could not*
@@ -1055,11 +1045,11 @@ fresh duel. A ledger that navigated would destroy the fight it was opened to rea
 panel is up, `internal/game` does not update the active scene at all; that freezes pacing and, like
 every other dialog, cannot change an outcome.
 
-**It was the mute button until 2026-08-27** and is now the door to the settings screen. What the
-corner lost is one-click silence; what it gained is somewhere to put the game speed, which had no
-control at all.
+**The cog opens the settings screen and nothing else.** The corner does not mute — there is no
+mute anywhere, only a level — and what it buys instead is one place for the game speed and the
+volume to live together.
 
-- **A third widget arrived with it: `models.Scrollbar`** *(2026-09-02)*, built the way
+- **The third widget is `models.Scrollbar`**, built the way
   `models.Button` and `models.Slider` are — a plain struct in `models`, behavior in `systems`. It
   **counts rows, not pixels**, so a panel cannot land half a line off, and it is a drag because the
   input vocabulary has no wheel and adding one would be a fourth verb rather than a widget.
@@ -1085,7 +1075,7 @@ control at all.
   band starts at x=52 and the action-point figure sits on its left edge, so a labeled
   button does not fit beside them.
 - **The cog is `assets/game/gear.png`, and it has eight teeth: four on the axes, four on the
-  diagonals** *(owner's call, 2026-08-27)*. Four was tried first and read as a compass rose — at
+  diagonals**. Four was tried first and read as a compass rose — at
   32 pixels a gear is recognized by the *count* of its teeth before any one of them is legible,
   and the hole in the middle is what makes it a cog rather than a flower. That is a constraint on
   any replacement drawing, not a description of how this one was made.
@@ -1094,16 +1084,16 @@ control at all.
 
 A card is a **constant off-white surface** (`cards.Surface`) with a **neutral gray border**, and
 the element is said by **the left column — the form mark and the cost ticks under it**
-*(owner's call, 2026-08-23)*. Both are authored per element as of 2026-09-16; neither is tinted. The whole card is drawn by `internal/cards`. Five things follow and
-are easy to re-break:
+. Both are authored per element and neither is tinted. The whole card is drawn by
+`internal/cards`. Five things follow and are easy to re-break:
 
-- **The border was the element from 2026-08-09 until the swap, and must not drift back.**
+- **The border is not the element and must not drift back to being one.**
   `cards.borderBase` is what a border is actually drawn from and it returns the same gray for
   every element; `cards.BorderOf` still holds the element colors and is still what the mark, the
   deck panel's row labels and the arithmetic panel read. `TestTheBorderIsTheSameWhateverTheElement`
-  fails if an element gets its border back. The argument for the swap: a border is the loudest
-  thing on a card and it was naming the one fact the player already knows from the row the card is
-  in, while the corner mark — the thing a hand is counted on — was hueless.
+  fails if an element gets its border back. The argument: a border is the loudest thing on a
+  card, and spending it on the one fact the player already knows from the row the card is in
+  leaves the corner mark — the thing a hand is counted on — hueless.
 - **Relic keeps its pink border.** Pink was never an element; it is the "you cannot play this"
   signal, and `TestARelicStillBordersPink` holds it against a change that neutralizes the four.
 - **The ticks are the element too, and share the border's state.** A tick is a *drawing* and
@@ -1112,9 +1102,9 @@ are easy to re-break:
   toward the same one. A second copy of that switch is how a selected card ends up with a lit
   border and resting ticks, and how a disabled card fades its ticks toward the wrong surface;
   `TestTheTicksAndTheBorderShareOneState` fails on both and caught the second one.
-- **Nothing in the left column is tinted** *(2026-09-16)*. There are twenty form marks plus a
-  neutral set and six ticks, all authored in their element, so the hue is in the art. `tintInk` and
-  the tinted-pip cache are deleted; `MarkArtKey`/`TickArtKey` pick a drawing instead.
+- **Nothing in the left column is tinted.** Every form mark and every cost tick is authored in
+  its element, so the hue is in the art: `MarkArtKey` and `TickArtKey` pick a drawing rather
+  than a color.
 - **A near-white border on an off-white card is invisible.** `basic` is therefore a mid gray
   in `cards.BorderOf`, and a test fails if it is set to a near-white. It is also the color every
   card's border now draws in.
@@ -1124,39 +1114,36 @@ are easy to re-break:
   *louder* than the live card beside it, which is how a pane's idle rows end up in front of
   its lit one. Use `systems.ColorToward(c, ground, pct)`, which moves a color
   toward whatever it actually sits on. Card state is expressed as distance to the surface.
-- **Cost is tick marks and the form is a corner mark**, not text and not a numeral. **The ticks
-  are 16x4 as of 2026-08-23** *(owner's call)*, down from 13x8 — half the height and a quarter
-  longer, so four of them stack in 31 pixels rather than 47 and the cost column ends higher up the
-  face without its top edge moving. Every
+- **Cost is tick marks and the form is a corner mark**, not text and not a numeral. **A tick is
+  16x4**, so four of them stack in 31 pixels and the cost column ends well up the face. Every
   card in the game runs 1..3, the player's and every enemy's; a fourth tick grows the stack
   further down the card and is a layout change, not just a bigger number.
   `TestLeftColumnDoesNotCollide` fails rather than rendering it. **A card declares its own
-  cost now** *(2026-08-16)*, so nothing stops a data file writing 5 — which is a reason to
+  cost now**, so nothing stops a data file writing 5 — which is a reason to
   read this line before authoring one, not a reason for the renderer to clamp.
 
 **A card's picture is either a panel on it or the whole of it, and `Style.ArtBleed` is which**
-*(owner's call, 2026-09-11)*. `internal/cards/bleed.go` owns the second path: the art is scaled to
+. `internal/cards/bleed.go` owns the second path: the art is scaled to
 *cover* the card, clipped to the border's inner curve, and drawn first with everything else on
 top. `RelicStyle` and `EssenceStyle` bleed — so relics, runes, essences, stones and the two
 sealed goods are all one format — and `EnemyStyle` and `DuelistStyle` still fit a picture into
 `ArtTop`/`ArtInset`/`ArtMaxH`. The two do not compose, and the art is authored against the choice:
 a fitted box wants a square and a bleeding card wants the card's own 200x280. Five things follow:
 
-- **A bleeding card carries no title** *(owner's call, 2026-09-11)*. `ShowName` is false on both,
-  reversing the 2026-08-21 call that a relic names itself a word to a line: the picture is the
-  card, and a title bar across a full-bleed illustration covers the one thing worth looking at in
-  order to repeat it. The full name still titles every tooltip, which is where a player who does
-  not recognize a picture yet goes. `TestTheEnemyNamesItselfAboveItsPortrait` holds both halves —
-  a naming card centers its name across the top, a bleeding card has none.
+- **A bleeding card carries no title**. `ShowName` is false on both, because the picture is the
+  card, and a title bar across a full-bleed illustration covers the one thing worth looking at
+  in order to repeat it. The full name still titles every tooltip, which is where a player who
+  does not recognize a picture yet goes. `TestTheEnemyNamesItselfAboveItsPortrait` holds both
+  halves — a naming card centers its name across the top, a bleeding card has none.
 - **What survives on top of the art is one scrim, and only a card with something to say gets one.**
   A relic draws its counter disc in the bottom-right. `EssenceStyle` declares a text band from 140
   to 265, derived from the offsets the type is drawn at rather than authored twice — and **no card
   in the game fills it**: the essences joined the runes, the stones, the potions and the sealed
-  goods in saying their rule in a tooltip *(owner's call, 2026-09-18)*, so every `EssenceStyle` face
+  goods in saying their rule in a tooltip, so every `EssenceStyle` face
   is the whole picture. A scrim is a ground for type and a ground under nothing is a stain.
-- **The surface was carrying the text, so the ink set flips.** Every ink in `internal/cards` is
-  near-black because it was written against the off-white `Surface`; `cards.onScrim` swaps the
-  three named inks for light ones and lifts an authored element color toward white. **The one
+- **Type on a scrim needs the other ink set.** Every ink in `internal/cards` is near-black,
+  because it is written against the off-white `Surface`; `cards.onScrim` swaps the three named
+  inks for light ones and lifts an authored element color toward white. **The one
   place that table is not a straight translation is `LabelInk`**, which is a stat row's quiet word
   everywhere else and is an essence's whole sentence here.
 - **Art is committed at 200x280 and the generator's output stays in `.scratch`.** The batch came
@@ -1165,14 +1152,14 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   once, it is ~57 KB each and nothing resamples.
   `TestEveryBleedingCardArtIsTheCardsOwnSize` is the tripwire.
 - **The generator's generic prompt lives in `docs/art/`; each record's own description lives on
-  the record** *(owner's call, 2026-09-12)*. A prompt is about no record at all, which is why it
+  the record**. A prompt is about no record at all, which is why it
   is not in `data/`. What *is* about one record is the subject paragraph, and that is `Draw` —
   **ignored by the engine**, exactly as a status's `Badge` is, and pasted into the generator as
-  the record's own JSON. A brief kept apart from the record was deleted when the picture it
-  produced was filed, which is what moving it here fixes. **There is no worklist file** — a
+  the record's own JSON. A brief kept apart from the record is a brief that gets deleted when
+  the picture it produced is filed. **There is no worklist file** — a
   record with an empty `Art` is still to draw and one with an empty `Draw` has no brief, and the
   catalog's own sheet counts both and marks both in pink.
-- **One prompt per catalog** *(owner's call, 2026-09-13)*. `docs/art/relic_art_prompt.MD` and
+- **One prompt per catalog**. `docs/art/relic_art_prompt.MD` and
   `docs/art/essence_art_prompt.MD` share a style block word for word and differ in the
   composition, in the ephemeral fading an essence has and a relic does not, and in the sentence an
   essence card prints across the lower half of its picture. `docs/art/rune_art_prompt.MD` is not a
@@ -1184,7 +1171,7 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   rather than a record's own idea**, which is what earns it a file: the concept axis is silica,
   the form axis is plain rock, the element axis is gem, and each ladder ascends in finish. A new
   `EssenceStyle` good starts in the catch-all and earns a file the same way.
-- **The relic catalog is pixel art and the other three are not** *(open, 2026-09-14)*. The 137
+- **The relic catalog is pixel art and the other three are not**. The 137
   pictures in `assets/relic/` were generated from a prompt asking for chunky blocks and sixteen
   flat colors; the essences, runes and stones came from the smooth block every prompt carries
   today, so a relic card and a stone card do not look like one game.
@@ -1207,21 +1194,20 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   plus a note that the half carrying the recognition should be the upper one since the sentence
   lands on the lower: a placement hint, not a band to leave empty.
 
-- **Six catalogs carry `Family` and `Draw`, and nothing that plays the game reads either**
-  *(owner's call, 2026-09-12, the potions and the goods 2026-09-14)*. `relics.json`,
-  `essences.json`, `runes.json`, `potions.json` and `goods.json` carry `Art` beside them; `enemies.json` and `bosses.json` carry the two alone, with every `Draw` reading
-  `TO BE DETERMINED` — their portraits are licensed creature art rather than generated pictures,
-  so the field is a seat for briefs to be written into a few at a time rather than a backlog
-  anybody is working. **`Family` is the motif a record was authored beside** and is what its
-  review sheet groups by; it is authored rather than derived for the relic catalog's reason,
-  and it carries the same caveat — **it can go quietly out of date when a record is retuned and
-  no test fails**, so re-read the block when you change what something does. **An enemy's
-  `Family` is deliberately not its floor band**: the roster sheet still cuts by floor, because
-  the floor is the placement decision, and a field repeating the heading above it would say
-  nothing.
+- **Six catalogs carry `Family` and `Draw`, and nothing that plays the game reads either** .
+ `relics.json`, `essences.json`, `runes.json`, `potions.json` and `goods.json` carry `Art`
+ beside them; `enemies.json` and `bosses.json` carry the two alone, with every `Draw` reading
+ `TO BE DETERMINED` — their portraits are licensed creature art rather than generated pictures,
+ so the field is a seat for briefs to be written into a few at a time rather than a backlog
+ anybody is working. **`Family` is the motif a record was authored beside** and is what its
+ review sheet groups by; it is authored rather than derived for the relic catalog's reason, and
+ it carries the same caveat — **it can go quietly out of date when a record is retuned and no
+ test fails**, so re-read the block when you change what something does. **An enemy's `Family`
+ is deliberately not its floor band**: the roster sheet still cuts by floor, because the floor
+ is the placement decision, and a field repeating the heading above it would say nothing.
 
-**Relic, essence and rune art is a globbed family, keyed by filename stem** *(2026-09-11, the
-runes 2026-09-12)* — `relic/fire.png` is `fire`, which is what `data/relics.json` writes in
+**Relic, essence and rune art is a globbed family, keyed by filename stem** — `relic/fire.png`
+is `fire`, which is what `data/relics.json` writes in
 its `Art` field. **Each has its own default face** — `default-relic`, `default-essence`,
 `default-rune`, reached through the record's `ArtKey()` rather than through a constant in a
 screen: a fallback living in `internal/screens` is a fallback the review tool does not have, which
@@ -1242,26 +1228,24 @@ which is also the only place the sentence a player reads can be checked against 
 actually fire.
 
 **`tools/essencesheet` and `tools/handsheet` are the same idea on the other two catalogs**
-*(2026-08-23)*. An essence is offered two at a time after a won fight, so the whole catalog is five
+. An essence is offered two at a time after a won fight, so the whole catalog is five
 fights away; the sheet draws them all grouped by what each one changes about a card, with the
 authored `Text` against the rule that fires, exactly as the relic sheet does. The hand sheet draws
 every rung of the ladder as an *actual hand of real cards* — the set the shipping deck can form
 that best *illustrates* the rung — ordered by ascending multiplier across every axis at once,
 which is the comparison `hands.json`'s axis-by-axis layout hides. **The example varies everything
-the rung does not count** *(owner's call, 2026-08-24)*: a Pair is drawn as a 1 AP stab beside a 3 AP
+the rung does not count**: a Pair is drawn as a 1 AP stab beside a 3 AP
 one, because cheapest-set picked two identical cards and made every reading of a pair the same
 picture. `decks.Example` is the one answer, shared with the hands panel;
 cost is the tie-break among equally illustrative sets.
 
-**It carries the reachability now, and `tools/hands` is why that is safe** *(owner's call,
-2026-09-05)*. The sheet used to refuse to sample, on the argument that two tools reporting the same
-probability by different methods would be two numbers that can disagree — which was right, and is
-exactly why putting the odds on the sheet meant making the disagreement *impossible* rather than
-avoiding it. The deck, the round's bounds, `MinCost` and the sample all moved into `tools/hands`,
-where the seed and the trial count are pinned, so `handsheet` and `handodds` print the identical
-table to the last decimal. It is the second shared library under `tools/` and it earns the
-exception for `roster`'s reason: these are the same question read two ways. **The cost is about
-thirty seconds on every `tools/handsheet` run**, which a full `tools/sheets` pays too.
+**It carries the reachability, and `tools/hands` is what makes that safe.** Two tools reporting
+the same probability by different methods are two numbers that can disagree, so the deck, the
+round's bounds, `MinCost` and the sample all live in `tools/hands` with the seed and the trial
+count pinned — `handsheet` and `handodds` print the identical table to the last decimal. It is
+the second shared library under `tools/` and it earns the exception for `roster`'s reason: these
+are the same question read two ways. **The cost is about thirty seconds on every
+`tools/handsheet` run**, which a full `tools/sheets` pays too.
 
 **Two figures, and the page says which is which.** The AP beside a rung is what that example costs
 *once you hold the cards*; **reachable** is how often you hold them, and it is what the multipliers
@@ -1269,7 +1253,7 @@ are priced against. `handodds` stays the tuning view — the axes kept apart, an
 a turn holding cost discounts.
 
 **`tools/stonesheet` and `tools/runesheet` do it for the two consumable catalogs**
-*(2026-09-01)*. Both arrive four at a time inside a sealed good, so the whole of either is several
+. Both arrive four at a time inside a sealed good, so the whole of either is several
 shop visits and a lot of luck away in a launched game. The stone sheet is **walked by rung rather
 than by stone** — the catalog is one stone per rung, so walking the ladder orders the page for
 free *and* makes a rung nobody authored a stone for show as a gap rather than as an absence nobody
@@ -1283,7 +1267,7 @@ shaped — the authored line against the resolved rule — and earned a page bef
 records, because a rune is the least readable record in `data/`: which of `Rider`, `Value` and
 `Count` the rules read depends entirely on the target.
 
-**`tools/enemysheet` and `tools/bosssheet` do it for the two opponent pools** *(2026-08-23)*. A
+**`tools/enemysheet` and `tools/bosssheet` do it for the two opponent pools**. A
 creature is met one at a time, three rooms to a floor, and its whole personality is a deck the
 player only ever sees the played half of — so "is floor five dearer than floor four" was a
 question answered by reading JSON. Each page groups its pool by floor, prints the band's HP, DMG
@@ -1304,14 +1288,13 @@ in the table under it.
   importing that package registers every concept at init — so a card naming a verb the rules do
   not have fails the sheet exactly as it fails a launch.
 
-**It groups by family, in the file's own order** *(owner's call, 2026-09-12)*, having grouped by
-rarity from 2026-08-22 until then. `data/relics.json` is authored in motif order — the twenty flips
-together, the three ring families walking their ladders, the weapons along the concept ladder — and
-the page sorted all of it by key, which is the one ordering that throws that away. `Family` is the
-field, `data.RelicFileOrder` is the walk, and both are new.
+**It groups by family, in the file's own order.** `data/relics.json` is authored in motif
+order — the flips together, the ring families walking their ladders, the weapons along the
+concept ladder — and sorting the page by key is the one ordering that throws all of that away.
+`Family` is the field and `data.RelicFileOrder` is the walk.
 
 **`Family` restates the rules in words, and it is authored for the owner's own reading**
-*(owner's call, 2026-09-12)*. Nearly every value is implied by the record's `(When, Do, predicate)`
+. Nearly every value is implied by the record's `(When, Do, predicate)`
 — the flips are all `card-drawn`/`set-element`, the weapons all `card-damage`/`scale-damage` on a
 Concept — so a derived grouping would reproduce it almost exactly. It is authored anyway because a
 signature is something to decode and "Jade rings" is something to read, and the three ring families
@@ -1333,7 +1316,7 @@ are about the shelf rather than about a motif: the share is the tier's tickets o
 catalog's, to a tenth of a percent, because a scarce tier rounds to `0%` and would read as
 unreachable.
 
-**Every word naming an element is written in that element's color** *(owner's call, 2026-09-08)*.
+**Every word naming an element is written in that element's color**.
 `cards.ElementSpans` is the one vocabulary — the five element names plus each status's `Name` and
 `Verb`, read off `statuses.json`, longest first — and `cards.SplitSpans` is the one cut, matching
 whole words only and ignoring case so a relic writing `Fire` and an essence writing `FIRE` share an
@@ -1350,8 +1333,8 @@ entry. Four things to know before touching it:
   `combat.Card.Riders` is under one package over. `TestEveryTextFitsItsHighlights` holds the whole
   authored catalog against `MaxTextHighlights`, so an author who runs out of room fails a test
   rather than shipping a half-lit sentence.
-- **`models.Tooltip.Title` and `.Lines` are both runs rather than strings** *(owner's call,
-  2026-09-09 for the title)*, and `screens.tipLine`/`tipLines` are the one door every `Point` call
+- **`models.Tooltip.Title` and `.Lines` are both runs rather than strings**, and
+  `screens.tipLine`/`tipLines` are the one door every `Point` call
   goes through — which is what stops a new tooltip shipping as the only panel in
   the game whose relic text is gray. `internal/systems` draws the runs and never learns why one is
   colored, because it cannot see `internal/cards` at all.
@@ -1359,27 +1342,28 @@ entry. Four things to know before touching it:
   written once and read back three fights later, so a color baked into it would be the color the
   build that wrote it happened to use — see `session.LedgerSpan.Ink` and `screens.elementInkNames`.
 
-**Hue belongs to the elements, and the wheel is full** *(owner's call, 2026-09-02)*. Fire, ice,
-lightning, earth and arcane take five hues; pink is a relic and a pane's chrome; red and blue are the
-attack and defend verbs; green and gray are the two duelists. **There is no unclaimed hue left**, so
-a new thing wanting to stand out is marked by *weight, case, a swatch or an underline* rather than by
-a color. **The ground itself now takes blue** *(2026-09-07)*, which is a real collision with the
-defend verb and is accepted rather than solved: the table is a surface and a verb is a mark on it,
-so the two are never being compared, but it is why the AP bar's empty cells had to stop traveling
-80% of the way to the ground and settle at 50 — see `combat_actionbox.go`. A *new* thing wanting
-blue has nowhere left to stand. The hand is the case that established it: it was the screen's pink, which is also the
-color a relic's multiplier takes — the two things that multiply a blow, in one color, in the same
-sum — and moving it to deep purple immediately collided with arcane. It now takes the ground's own
-ink and is marked instead. See `screens.handNameInk` and `session.InkHand`, and note the second
-argument: three of the four axes a hand counts on are not elemental at all.
+**Hue belongs to the elements, and the wheel is full**. Fire, ice, lightning, earth and arcane
+take five hues; pink is a relic and a pane's chrome; red and blue are the attack and defend
+verbs; green and gray are the two duelists. **There is no unclaimed hue left**, so a new thing
+wanting to stand out is marked by *weight, case, a swatch or an underline* rather than by a
+color. **The ground itself takes blue**, which is a real collision with the defend verb and is
+accepted rather than solved: the table is a surface and a verb is a mark on it, so the two are
+never being compared, but it is why the AP bar's empty cells had to stop traveling 80% of the
+way to the ground and settle at 50 — see `combat_actionbox.go`. A *new* thing wanting blue has
+nowhere left to stand. **The hand's own name is the case that proves it**: the relic pink would
+put the two things that multiply a blow in one color in the same sum, and deep purple collides
+with arcane — so it takes the ground's own ink and is *marked* instead. See
+`screens.handNameInk` and `session.InkHand`, and note the second argument: three of the four
+axes a hand counts on are not elemental at all.
 
 ### The palette: eight ramps, and only the middle one is drawn
 
 **`docs/art/palette.json` is where the colors are written down** — five elements and three form
-materials, each as `dark`, `core` and `light`, with the plain-English `hue` beside them, the `axis`
-they belong to, and the `form` a material stands for. It is reference rather than a catalog: nothing loads
-it, and it is not in `data/` for that reason. What it is *for* is the generator, which is handed one
-ramp when a picture has to sit in one element's or one form's range.
+materials, each as `dark`, `core` and `light`, with the plain-English `hue` beside them, the
+`axis` they belong to, and the `form` a material stands for. It is reference rather than a
+catalog: nothing loads it, and it is not in `data/` for that reason. What it is *for* is the
+generator, which is handed one ramp when a picture has to sit in one element's or one form's
+range.
 
 **`core` is the only column the game draws in**, and it is a Go value in two places —
 `cards.borderColors` for the five elements and `cards.InkIvory` / `InkSteel` / `InkGranite` for the
@@ -1387,7 +1371,7 @@ three materials. So `core` is written twice, here and in the file, and nothing c
 agree: **re-read `palette.json` against `internal/cards` before trusting either**, and treat a
 disagreement as a value to fix rather than as a second opinion.
 
-**The three materials are the form axis** *(owner's call, 2026-09-18)* — **ivory is stab, steel is
+**The three materials are the form axis** — **ivory is stab, steel is
 slash, granite is crush** — and `cards.FormWords` is the one table that says so. **Defend has no
 material and is not in it**: blue already belongs to the verb and there is no fourth ramp, so a word
 there would be a color with nothing behind it.
@@ -1415,7 +1399,7 @@ are two different colors.
 
 ### Color: name one color and scale it — and the light comes off that color too
 
-**The rule governs widget *state*; the bevel is the surface's own light** *(2026-08-24)*. Those are
+**The rule governs widget *state*; the bevel is the surface's own light**. Those are
 different questions and separating them is what let bevelling land without every widget in the game
 being handed a palette: a button naming crimson and brightening toward it on press is state, and
 the lit top edge it has whatever state it is in is surface.
@@ -1429,11 +1413,11 @@ it had no fill to compute light from, and there are no generated silhouettes lef
 - **`BevelFace` for a control, `BevelRect` for anything else**, and the depth differs on purpose:
   `BevelWidth` is 3 for a button, `PaneBevelWidth` is 2 for a panel, which is the largest surface
   on screen and the one where a heavy bevel reads as chrome rather than as a surface.
-- **Sunken is a meaning, not a variant.** A pressed or latched button swaps its two edges, which is
-  how a face says "in" — brightness could not, since hover already owns the bright end of the ramp.
-  The deck panel and the fight log are raised because they cover the game; **the relic pane is flat**
-  *(owner's call)*, because it covers nothing and the bevelled cards standing on it are what should
-  be read.
+- **Sunken is a meaning, not a variant.** A pressed or latched button swaps its two edges, which
+  is how a face says "in" — brightness could not, since hover already owns the bright end of the
+  ramp. The deck panel and the fight log are raised because they cover the game; **the relic
+  pane is flat** , because it covers nothing and the bevelled cards standing on it are what
+  should be read.
 - **Disabled has no bevel at all.** Unavailable first, itself second — the same argument that makes
   it ignore `BaseColor`.
 - **`internal/cards` bevels the outer 2px of a card's 3px border**, rasterized in plain Go since
@@ -1446,15 +1430,14 @@ toward black, so on a light surface it makes things louder rather than quieter �
 section above. `systems.ColorToward` is the light-ground counterpart and the two are not
 interchangeable.
 
-**Every screen's ground is a light slate blue as of 2026-09-07** (`screens.screenGround`, cream
-from 2026-08-14 until then), so `ColorAtStrength` is the exception rather than the default, and
-reaching for it to dim something drawn straight onto the table is a bug waiting to be seen.
+**Every screen's ground is a light slate blue** (`screens.screenGround`), so `ColorAtStrength`
+is the exception rather than the default, and reaching for it to dim something drawn straight
+onto the table is a bug waiting to be seen.
 
 **Its lightness is what is load-bearing, not its hue**, and that is the sentence to read before
-changing it again. `groundInk` is near-black and every dim on the table is
-`ColorToward(x, screenGround, pct)`; both are only correct on a light ground. A darker blue is not
-a color change, it is a re-tune of every figure on the table — which is exactly what the
-2026-08-14 swap cost going the other way.
+changing it. `groundInk` is near-black and every dim on the table is
+`ColorToward(x, screenGround, pct)`; both are only correct on a light ground. **A darker ground
+is not a color change, it is a re-tune of every figure on the table.**
 
 **The screen is painted by `screens.fillGround`, not by `screen.Fill`** — a subtle vertical
 gradient, lighter at the top, lit from the same corner `systems.BevelEdges` lights every card and
@@ -1464,10 +1447,10 @@ dimming depend on where it happened to be drawn. The gradient's two ends are der
 
 **A color that is "one step off the ground" must be derived, never written down.**
 `relicPaneBackColor` was a hand-picked tan and would have silently stopped being one step off
-anything the moment the ground moved; it is `ColorAtStrength(screenGround, 91)` now. It still governs
-buttons, because a button paints its own dark face and its label is white — that face is the
-ground its states are scaled against, not the screen. Text written directly on the table takes
-`screens.groundInk`.
+anything the moment the ground moved; it is `ColorAtStrength(screenGround, 91)` now. It still
+governs buttons, because a button paints its own dark face and its label is white — that face is
+the ground its states are scaled against, not the screen. Text written directly on the table
+takes `screens.groundInk`.
 
 A widget names the color it wants at **full strength**, and its other states are
 scaled down from that with `systems.ColorAtStrength`. `models.Button.BaseColor` is the
@@ -1495,7 +1478,7 @@ at different times. Keep them separate.
   playing the game, you are inspecting it, and it is easy to tune balance against a view no
   player will ever have. What it currently reveals is the combat screen's, and lives in the
   `combat-screen` skill.
-- **`DebugAnimations`** *(2026-09-15)* — the door to the **animation gallery**, a square marked
+- **`DebugAnimations`** — the door to the **animation gallery**, a square marked
   `A` off the end of the frame's bottom strip that opens `screens.AnimationsScene`. About *what
   movements the game has and what each one is called*. **A third flag rather than a lodger on
   `DebugPlacement`**, which is the rule those two are already under: "where is this drawn" is not
@@ -1618,23 +1601,23 @@ combination looks like on screen. It is the relic-and-hand counterpart of `deckS
   the second hand of the fight is a normal one and the fixture is only the opening.
 - **A misspelled relic, card or enemy fails the launch**, at package init, before a window opens.
   A fixture that quietly tests something else is worse than a game that will not start.
-- **It also opens the game on a named screen** *(owner's call, 2026-08-22)*: `"Screen": "reward"`
+- **It also opens the game on a named screen**: `"Screen": "reward"`
   or `"shop"`, with `Fight`, `Vitae` and `Life` saying what state to arrive in. A between-fights
   screen was otherwise a twenty-minute question — the reward screen's narration and the shop's
   shelf both needed a duel played to reach them, every time. It sets the run's *phase* and lets
   `screens/flow.go` decide the scene, so the run never disagrees with what is on screen.
   `reward-payout` and `shop-shelf` are the two entries.
-- **`"Essences"` plants the satchel** *(2026-09-19)*, beside `Runes` and `Stones`. An essence is
+- **`"Essences"` plants the satchel**, beside `Runes` and `Stones`. An essence is
   normally spent the instant it is taken, so a run *carrying* one into a duel is the one state no
   amount of playing reaches — see MECHANICS.md §An essence can be carried into a fight, and the
   `ladder-wrap` fixture.
-- **It can also pin the seed and replace the whole deck** *(2026-08-25)*. `"Seed"` is a six-character
-  Crockford base32 run code and outranks `fixedRunSeed`, and `"Deck"` sets the run's deck outright rather than dealing over the shuffle
-  the way `"Hand"` does — through `session.StartingDeckList`, which is the deck counterpart of
-  `StartingRelics`. The tutorial is what wanted both: a first lesson has to be able to promise what
-  the player is holding, and "these five all match, play them all" stops being true the moment a
-  refill deals a sixth card nobody mentioned.
-- **A deck line and a hand card may carry `"Riders"`** *(2026-09-07)*, by the names
+- **It can also pin the seed and replace the whole deck**. `"Seed"` is a six-character Crockford
+  base32 run code and outranks `fixedRunSeed`, and `"Deck"` sets the run's deck outright rather
+  than dealing over the shuffle the way `"Hand"` does — through `session.StartingDeckList`,
+  which is the deck counterpart of `StartingRelics`. The tutorial is what wanted both: a first
+  lesson has to be able to promise what the player is holding, and "these five all match, play
+  them all" stops being true the moment a refill deals a sixth card nobody mentioned.
+- **A deck line and a hand card may carry `"Riders"`**, by the names
   `combat.RiderKind` writes, with a figure after a colon where the kind takes one —
   `"damage-on-play:10"`, or the bare `"wild-element"` for the one that does not. It exists because
   `Runes` is the right fixture for looking at the *dialog* and the wrong one for looking at what
@@ -1644,7 +1627,7 @@ combination looks like on screen. It is the relic-and-hand counterpart of `deckS
   the tutorial section below.
 - **Every entry carries a `Note` saying what question it answers**, printed at startup. A fixture
   whose purpose nobody remembers is a fixture that gets deleted.
-- **`"Dummy": true` is a fight that cannot end** *(owner's call, 2026-09-11)*. Both duelists get
+- **`"Dummy": true` is a fight that cannot end**. Both duelists get
   `scenario.DummyLife` and the clock goes to `scenario.DummyRounds`, so a scenario can be *played
   with* rather than survived — every blow, every shield break, every status and every signal, for
   as long as it is interesting. **It is not a creature in `data/enemies.json`, deliberately**: a
@@ -1658,7 +1641,7 @@ combination looks like on screen. It is the relic-and-hand counterpart of `deckS
   you want rather than the cards six points can pay for. **It does not lift `combat.MaxActions`**,
   the count bound: a turn is still five cards however cheap they are.
 - **`tools/scenariodeck` writes the `Deck` block, and that is deliberately a generator rather than
-  a filter vocabulary** *(owner's call, 2026-09-11)*. `-form slash -size 40`, `-elements fire,ice`,
+  a filter vocabulary**. `-form slash -size 40`, `-elements fire,ice`,
   `-cost 1-2`, `-riders golden:5`; it prints JSON to stdout and **never touches a file**. The
   obvious alternative was `"DeckOf": {"Form": "slash", "Share": 50}` read at launch, and that is a
   *second card-selection language* living in a debug fixture, which has to stay in step with
@@ -1678,9 +1661,9 @@ combination looks like on screen. It is the relic-and-hand counterpart of `deckS
 ### `internal/profile` is what survives a run, and it is the only thing that touches the disk
 
 [internal/profile](internal/profile) owns the two files the game writes: `profile.json` (the
-player — the tutorial watched, achievements, unlocks, and the settings) and `run.json` (the run in progress). See
-MECHANICS.md §The profile for what they mean; what matters here is where they go and what may never
-happen to them.
+player — the tutorial watched, achievements, unlocks, and the settings) and `run.json` (the run
+in progress). See MECHANICS.md §The profile for what they mean; what matters here is where they
+go and what may never happen to them.
 
 - **They live under `os.UserConfigDir()`, never beside the executable** — `%APPDATA%scend-duel` on
   Windows, `~/.config/ascend-duel` on Linux. Steam installs into a tree a normal process cannot
@@ -1721,14 +1704,14 @@ and what has to happen before it moves on. `data/tutorial.json` is the script an
 **It ships.** Unlike trace, idle, the demo and the scenario fixture, a tutorial is a feature the
 player is meant to meet — so there is no build tag and it is in every binary.
 
-**It fires on its own as of 2026-08-25**, off the profile: a player `profile.json` has not recorded
-as taught gets taught, on the first fight of a fresh run. `main.teachThisRun` is the whole trigger,
-and it declines for a resumed run and for a scenario — a lesson that opens by describing the hand you
-are holding cannot begin halfway up a tower. **A launch on a clean machine therefore opens into the
-tutorial**, which is a thing to know before wondering why Bob turned up. `"Teach": true` in a
-scenario still forces it whatever the profile says, and is the only way to see it a second time; the
-counterpart is `ASCEND_DUEL_PROFILE` pointed at an empty directory, which makes any launch a new
-player's.
+**It fires on its own**, off the profile: a player `profile.json` has not recorded as taught
+gets taught, on the first fight of a fresh run. `main.teachThisRun` is the whole trigger, and it
+declines for a resumed run and for a scenario — a lesson that opens by describing the hand you
+are holding cannot begin halfway up a tower. **A launch on a clean machine therefore opens into
+the tutorial**, which is a thing to know before wondering why Bob turned up. `"Teach": true` in
+a scenario still forces it whatever the profile says, and is the only way to see it a second
+time; the counterpart is `ASCEND_DUEL_PROFILE` pointed at an empty directory, which makes any
+launch a new player's.
 
 - **The state machine is free of Ebitengine**, like `internal/combat` and for the same payoff: the
   whole script is walked end to end in a test rather than by playing to the end of it.
@@ -1738,7 +1721,7 @@ player's.
   publish reports the zero value and stalls immediately.
 - **Three vocabularies, all closed and none defaulted**: anchors, conditions, and the lock derived
   from the condition. See the `data` skill.
-- **A step waiting for NEXT holds the round where it is** *(owner's call, 2026-09-08)*.
+- **A step waiting for NEXT holds the round where it is**.
   `tutorial.Run.HoldsRound` is the predicate and `advancePlayback` is the one reader. It exists for
   the shield step, which is the first in the lesson to land *inside* a playing round — a round has
   three acts (the duelist swings, the shields break what they can reach, the creature swings with
@@ -1751,15 +1734,15 @@ player's.
   round ends, so a mark left standing cracks whichever card the planner has just put in that seat.
   Anything wanting to point at a break has to do it during the round, which is why the step above
   holds one.
-- **An anchor names what the step is *asking for*, not what it is about** *(owner's call,
-  2026-09-08)*. `matching-cards` and `matching-cards-left` are the same set minus what is already
-  queued, and they exist as two because the two steps using them say different things: "take the
-  other three" asks, and "one of those four is a Brace" describes. Sharing one anchor lit four cards
-  under a sentence about three — and since the anchor is the click gate, the card already taken was
-  the one thing the step invited you to click, which undoes the step before it.
-  `TestTheStepAsksOnlyForTheCardsStillToTake` is the tripwire. **The red comes off each card as it
-  is taken**, so the row says how much is left without a counter.
-- **A card is tinted, a control is framed** *(owner's call, 2026-09-08)*. An anchor naming cards gets
+- **An anchor names what the step is *asking for*, not what it is about**. `matching-cards` and
+  `matching-cards-left` are the same set minus what is already queued, and they exist as two
+  because the two steps using them say different things: "take the other three" asks, and "one
+  of those four is a Brace" describes. Sharing one anchor lit four cards under a sentence about
+  three — and since the anchor is the click gate, the card already taken was the one thing the
+  step invited you to click, which undoes the step before it.
+  `TestTheStepAsksOnlyForTheCardsStillToTake` is the tripwire. **The red comes off each card as
+  it is taken**, so the row says how much is left without a counter.
+- **A card is tinted, a control is framed**. An anchor naming cards gets
   the scrim and no rectangle: the cards wear `cards.MarkHighlit`, which is the same red the frame
   was. A frame outside a card is a thing on the screen *near* the card where a tinted card is the
   card answering, and round a set of cards a frame is a lot of loose rectangles. `Anchor.NamesCards`
@@ -1767,7 +1750,7 @@ player's.
   spotlight is handed, so lit and clickable stay one set by construction rather than by agreement.
 - **The lit square and the one legal click are the same rectangle**, computed once. A lit hole the
   player cannot click, or a clickable region that is not lit, would each be worse than no tutorial.
-- **An anchor may name several rectangles, and for a *set* of cards it must** *(2026-09-08)*.
+- **An anchor may name several rectangles, and for a *set* of cards it must**.
   `tutorialRects` and `state.InputFocus` are both lists because the two anchors naming a set —
   `matching-cards` and `shattered-cards` — point at cards that need not be adjacent, and the
   bounding box round them is the set *plus whatever is between two of them*. That was a live bug:
@@ -1780,53 +1763,52 @@ player's.
   do not. `TestTheMatchingCardsGateLightsOnlyTheTaughtCards` walks every seat of the real dealt hand
   through `InputAllowed` and is the tripwire. The spotlight scrims the gaps between holes, so lit
   and clickable stay the same area.
-- **The tutorial runs on the real deck, and `matching-cards` is what pays for that**
-  *(2026-08-25)*. It was a fixture deck of exactly five Jabs, so the lesson's "take them all" step
-  could wait on `hand-emptied` — a condition only a hand with nothing else in it can ever reach,
-  since a real hand of eight against a five-card cap and a six-point budget leaves cards behind by
-  the rules of the game. The anchor is the largest matching set in the hand and `matching-queued` is
-  its condition; because the lock leaves only those cards clickable, the hand the player builds is
-  the hand Bob just described. **It is the one anchor computed from the cards rather than from a
-  layout** — `CombatScene.matchingCards` is the single answer both the square and the condition read.
-- **Which axis a set is counted on is authored, not assumed** *(owner's call, 2026-08-25)*.
+- **The tutorial runs on the real deck, and `matching-cards` is what pays for that** . It was a
+fixture deck of exactly five Jabs, so the lesson's "take them all" step could wait on
+`hand-emptied` — a condition only a hand with nothing else in it can ever reach, since a real
+hand of eight against a five-card cap and a six-point budget leaves cards behind by the rules of
+the game. The anchor is the largest matching set in the hand and `matching-queued` is its
+condition; because the lock leaves only those cards clickable, the hand the player builds is the
+hand Bob just described. **It is the one anchor computed from the cards rather than from a
+layout** — `CombatScene.matchingCards` is the single answer both the square and the condition
+read.
+- **Which axis a set is counted on is authored, not assumed**.
   `data/tutorial.json`'s `Match` is `concept`, `form` or `element`, and a script that points at a
   matching set without naming one is **refused at load** — an axis that defaulted would be a lesson
   pointing confidently at the wrong cards. The lesson matches on `element`.
-- **The script carries the run it needs: `Seed`, `Enemy` and `Match`** *(2026-08-25)*. They used to
-  be pinned by `internal/scenario`, which was fine while a fixture was the only way to start the
-  lesson and became a bug the moment the profile became a real trigger — the tutorial ran on
-  whatever the clock had rolled and described a hand it had not dealt. **A promise and the thing
-  that makes it true belong in one file.** The scenario entry keeps only `"Teach": true`.
-- **The taught fight is two rounds, and the shield is why** *(owner's call, 2026-09-06)*. Run code
-  `0009D4` deals `Jab Brace Thrust Bash`, all arcane, for exactly 6 AP — an Elemental Four of a
-  Kind dealing 69 into a GiantBat's 80. **One of the four is a Brace**, which teaches the thing a
+- **The script carries the run it needs: `Seed`, `Enemy` and `Match`.** **A promise and the
+  thing that makes it true belong in one file** — pinned from a scenario instead, the lesson
+  runs on whatever the clock rolled and describes a hand it has not dealt, because the profile
+  can start it with no fixture in sight. The scenario entry keeps only `"Teach": true`.
+- **The taught fight is two rounds, and the shield is why.** Run code `0009D4` deals `Jab Brace
+  Thrust Bash`, all arcane, for exactly 6 AP — an Elemental Four of a Kind dealing 69 into a
+  GiantBat's 80. **One of the four is a Brace**, which teaches the thing a
   hand of pure attacks cannot: a defense carries an element and joins a hand like anything else,
   bringing no damage with it. Because it brings none, the creature lives on 11, takes its turn —
   Swoop, Drain, Nip — and **the Brace's one shield eats the Drain whole while the other two land**,
   60 life down to 53. A creature that dies in one blow never swings, so a lesson about shields
   cannot be taught in a round that kills. The player then reads the ledger and finishes it.
-  **It ate the Swoop and left the player on 48 until 2026-09-08**, when shields started picking the
-  heaviest blow rather than the first one queued — see §Shields. The lesson is *better* for it: the
-  Drain is the creature's one big card, so the shield visibly saves ten rather than five, and the
-  step that explains it has a broken card on the table to point at.
+  **The Drain is the bat's one big card**, which is what the heaviest-blow rule makes visible:
+  the shield saves ten rather than five, and the step that explains it has a broken card on the
+  table to point at.
 - **The other four cards are an arcane, an earth, a fire and an ice**, so there is no competing set,
   and the first card dealt is one of the four — which the opening step needs, since it queues
   `first-card` and a stray would break both the budget and the hand.
-- **Finding a replacement seed is `TestFindATutorialSeed`** *(2026-09-12)*, skipped unless
-`SEEDSEARCH=1` is set. Every test below ends "the fix is a new seed, not a weaker check" and none
-of them said how to find one; the constraints live in four files and a candidate has to satisfy all
-of them at once. It is a test rather than a tool because the shop internals it has to deal from are
-unexported, and `tools/seeds` cannot answer this one — that tallies concepts and the tutorial
-matches on element. **It proposes and asserts nothing**: take a candidate, pin it, and let the four
-tests below confirm it. **Prefer a marked candidate**, which keeps the cards the steps name — a
-seed dealing a different four means re-authoring the lesson rather than changing one string. **Expect to re-run it whenever `relics.json` gains, loses or renames a record.** The shelf is a
-weighted draw over the catalog's sorted keys, so any of those three reshuffles what the taught
-seed lands on, and the shop step is the only part of the lesson a catalog edit can break. It
-broke twice on 2026-09-12 alone — once on a relic being deleted, once on five being renamed — and
-the seed went `0000GY` → `0001J4` → `0009D4`. **That is the cost of drawing the taught shop rather
-than pinning it**, and pinning it is the fix to argue for if this keeps happening. Each replacement
-deals the identical four cards against the identical creature, so no step text has ever had to
-change; the taught color has, and the lesson never names it.
+- **Finding a replacement seed is `TestFindATutorialSeed`**, skipped unless `SEEDSEARCH=1` is
+set. Every test below ends "the fix is a new seed, not a weaker check", and the constraints live
+in four files that a candidate has to satisfy all at once. It is a test rather than a tool
+because the shop internals it deals from are unexported, and `tools/seeds` cannot answer this
+one — that tallies concepts and the tutorial matches on element. **It proposes and asserts
+nothing**: take a candidate, pin it, and let the four tests below confirm it. **Prefer a marked
+candidate**, which keeps the cards the steps name — a seed dealing a different four means
+re-authoring the lesson rather than changing one string. **Expect to re-run it whenever
+`relics.json` gains, loses or renames a record.** The shelf is a weighted draw over the
+catalog's sorted keys, so any of those three reshuffles what the taught seed lands on, and the
+shop step is the only part of the lesson a catalog edit can break silently. **That is the cost
+of drawing the taught shop rather than pinning it**, and pinning it is the fix to argue for if
+it keeps happening. A replacement seed is chosen to deal the identical four cards against the
+identical creature, so no step text has to change; the taught color does, and the lesson never
+names it.
 
 **Both halves of the promise are tested, and they check each other.**
   `TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` proves the
@@ -1837,14 +1819,14 @@ change; the taught color has, and the lesson never names it.
   to it, that it is affordable, that it does *not* kill, and that its four cards are the four the
   combat test writes out by hand. **If either goes red the answer is a new seed, not a weaker
   check**; `go run ./tools/seeds` is the search.
-- **A third test holds the creature's half of it** *(2026-09-08)*.
+- **A third test holds the creature's half of it**.
   `TestTheTutorialsShieldEatsTheCreaturesHeaviestBlow` in `internal/screens` plans the bat's turn
   exactly as the screen does, resolves the whole round, and checks that one blow is blocked, that it
   is the heaviest, that the heaviest is the *only* card that size — a creature whose deck flattened
   out would make the lesson true and pointless — and that the step naming the card names the right
   one. The two above are about the player's blow; this is about what comes back at them, which is
   the half the shield steps describe.
-- **The ledger step is the one anchor naming a control the frame owns** *(2026-09-06)*. `state.LedgerOpens`
+- **The ledger step is the one anchor naming a control the frame owns**. `state.LedgerOpens`
   is a tally bumped by `internal/game` when the panel opens, published as a fact and read by
   `ledger-opened` against a baseline — the same trick `round-done` uses, because the account is
   reachable from every screen and an opening from three steps ago is not this step's. **It advances
@@ -1858,7 +1840,7 @@ change; the taught color has, and the lesson never names it.
   `state.ModalOpen` works, so a screen left mid-step cannot leave the session unclickable.
 - **It is deliberately not a `modalToggle`.** Every other dialog takes one footprint and scrims the
   whole screen; a thing whose job is to point at what is underneath cannot be the thing covering it.
-  That is a second dialog shape, decided on purpose *(owner's call, 2026-08-25)*.
+  That is a second dialog shape, decided on purpose.
 - **`TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` is the one
   to keep.** The lesson promises a blow that wounds and does *not* kill, and four files tuned for
   their own reasons can break that promise silently in either direction — the taught cards'
@@ -1900,7 +1882,7 @@ toolchain reached first. `doc.go` is the only file whose comment goes above the 
 
 ### The dependency graph
 
-**Generated from the real imports, not drawn from memory** *(2026-08-21)*. The picture that used
+**Generated from the real imports, not drawn from memory**. The picture that used
 to be here had two arrows the code contradicted. Regenerate it rather than patch it:
 
 ```powershell
@@ -1948,9 +1930,10 @@ Six facts about it that are load-bearing:
   injected `*rand.Rand` and stay ignorant of where it came from.
 - **`carddesc` is the words a card says about itself**, and it is here rather than in
   `internal/screens` for `decks`' reason: the review sheets have to print the *same* strings the
-  game shows, and a tool cannot import a package that links Ebitengine. It holds the tooltip's stat
-  block — the title, the AP, the effect figure, the upgrade's lines — and no color, no widths and
-  no arithmetic that needs a worn relic. `screens.cardTip` calls it and appends its own damage chain.
+  game shows, and a tool cannot import a package that links Ebitengine. It holds the tooltip's
+  stat block — the title, the AP, the effect figure, the upgrade's lines — and no color, no
+  widths and no arithmetic that needs a worn relic. `screens.cardTip` calls it and appends its
+  own damage chain.
 - **`decks` sits above `combat` and `data` and below `screens`**, which is the whole reason it is
   a package: it is the one place allowed to turn a JSON card list into rules types, reachable
   without importing a screen. `pyramid` exists for the same reason on the other axis — the climb is
@@ -1961,13 +1944,14 @@ Six facts about it that are load-bearing:
 - **`cards` importing `systems` is the edge that surprises people.** A card draws generated
   glyphs, so the renderer needs the generator. Neither creates an `*ebiten.Image`, which is the
   property that actually matters — it is what lets `tools/cardsheet` render with no window.
-- **`internal/ui` is the drawing layer and it knows about no screen at all** *(2026-09-17)*. It
-  came out of `internal/screens`, which was two thirds of the Go in the repo in one package: what
-  moved is everything a scene draws *through* — the table, the clock, the movers, the card faces,
-  the panels belonging to no screen, the prose — and what stayed is the scenes. **The arrow only
-  points one way, and that is checkable rather than a habit**: `.claude/skills/audit/tools/pkgsplit.go`
-  reports every unexported name that would have to cross a proposed line in either direction, and a
-  *back edge* — a shared file reaching into one screen — is the finding. There are none today.
+- **`internal/ui` is the drawing layer and it knows about no screen at all**. It came out of
+  `internal/screens`, which was two thirds of the Go in the repo in one package: what moved is
+  everything a scene draws *through* — the table, the clock, the movers, the card faces, the
+  panels belonging to no screen, the prose — and what stayed is the scenes. **The arrow only
+  points one way, and that is checkable rather than a habit**:
+  `.claude/skills/audit/tools/pkgsplit.go` reports every unexported name that would have to
+  cross a proposed line in either direction, and a *back edge* — a shared file reaching into one
+  screen — is the finding. There are none today.
   - **Sizes are the frame's, placement is often the screen's.** A control's measurements live in
     `ui/frame.go`; `ControlColumnSlot`, which counts up from the action-point bar, stayed on the
     combat screen. That is the line to reason against when deciding where something new goes.
@@ -1998,12 +1982,11 @@ fight  →  reward  →  shop  →  choice  →  fight ...
 
 - **`session.Phase` is the station** — see `internal/session/flow.go`, which holds the order.
 - **`screens.phaseScreens` is which scene draws it** — see `internal/screens/flow.go`. A phase with
-  no scene registered is walked past rather than drawn blank, which is why the loop could name the
-  shop and the room choice before either existed. The shop landed on 2026-08-21 and cost exactly
-  the three edits below; the room choice is still walked past.
+  no scene registered is walked past rather than drawn blank, which is what lets the loop name
+  a station before it has a screen. The room choice is the one being walked past today.
 - **Adding a screen is therefore three edits**: a phase in `session/flow.go`, an entry in
   `screens/flow.go`, and an entry in the registry in `internal/game`. No existing scene changes.
-- **`screens.enterRun` is the same table read at the door** *(2026-09-03)*. Continue puts the player
+- **`screens.enterRun` is the same table read at the door**. Continue puts the player
   on whichever scene draws the station the run was saved at, falling back to the combat screen for a
   phase with no scene — the same courtesy `advance` extends during play.
 
@@ -2013,8 +1996,8 @@ fight  →  reward  →  shop  →  choice  →  fight ...
   screen look right — say which of the two is wrong and let the owner decide. That is a
   game-design call and it ripples into the tests and the balance.
 - **Presentation may never change an outcome.** `ResolveRound` decides a whole round before
-  playback begins, so playback speed, **the player's game-speed setting** — live since
-  2026-08-27, `screens.SetSpeed` scaling `clock.go`'s one beat — a dialog that pauses the cursor,
+  playback begins, so playback speed, **the player's game-speed setting** — `screens.SetSpeed`
+  scaling `clock.go`'s one beat — a dialog that pauses the cursor,
   the debug flags, `internal/trace`, `internal/idle` and the scripted demo may all alter pacing and
   none of them may alter results.
 - **Working state belongs to the narrowest thing that needs it.** One screen reads it → the scene.
@@ -2031,31 +2014,34 @@ fight  →  reward  →  shop  →  choice  →  fight ...
   re-points everything already stored.
 - **Re-run `tools/handodds` and `tools/seeds` after touching the deck.** Both measure facts about
   one particular deck, and nothing fails when they go stale.
-- **`internal/combat` holds the purse while a round resolves, and `KindVitae` is not the payment**
-  *(owner's call, 2026-09-05)*. `Duelist.Vitae` is seeded from the run at the top of each round,
+- **`internal/combat` holds the purse while a round resolves, and `KindVitae` is not the
+  payment.** `Duelist.Vitae` is seeded from the run at the top of each round,
   stepped as the round pays, and the run is handed the **difference** — see `screens.payHeldVitae`.
   Summing `KindVitae` events to move a purse is the old way and now double-pays. The rules got a
   purse because a relic wanted to read one; the doc comments saying they have none are corrected.
 - **An achievement nobody can earn is invisible**, and that is what `internal/achieve` exists to
-  refuse. Every word `data/achievements.json` may write — a trigger kind, a clause mode, an axis, a
-  moment name, a counter name — is a closed vocabulary checked at package init, so a misspelling
-  fails the launch rather than producing a row that sits locked forever. **A new moment is a constant
-  in `internal/achieve/catalog.go` plus the one call site that raises it**, never something a file
-  can assert into existence. See MECHANICS.md §Achievements.
-- **`profile.Counters` is bumped in memory and written when a duel ends** *(owner's call,
-  2026-09-06)*. A card played is not a disk write; `screens.settleCounters` is the one place the
-  tallies land, on a win and on a defeat alike. A crash mid-duel loses that duel's counts, which was
-  taken deliberately rather than discovered.
-- **Re-run `tools/relicsheet` after touching `relics.json`, and delete the PNG of a relic you removed.**
-  The sheet writes a file per relic and never cleans up, so a deleted record leaves an orphan picture
-  in `docs/sheets/relicsheet/` that no page links and nothing fails on.
+  refuse. Every word `data/achievements.json` may write — a trigger kind, a clause mode, an
+  axis, a moment name, a counter name — is a closed vocabulary checked at package init, so a
+  misspelling fails the launch rather than producing a row that sits locked forever. **A new
+  moment is a constant in `internal/achieve/catalog.go` plus the one call site that raises it**,
+  never something a file can assert into existence. See MECHANICS.md §Achievements.
+- **`profile.Counters` is bumped in memory and written when a duel ends**. A card played is not
+  a disk write; `screens.settleCounters` is the one place the tallies land, on a win and on a
+  defeat alike. A crash mid-duel loses that duel's counts, which was taken deliberately rather
+  than discovered.
+- **Re-run `tools/relicsheet` after touching `relics.json`, and delete the PNG of a relic you
+  removed.** The sheet writes a file per relic and never cleans up, so a deleted record leaves
+  an orphan picture in `docs/sheets/relicsheet/` that no page links and nothing fails on.
 
 ### Drawing idioms
 
-- Sprites are drawn via `colorm.DrawImage` so a `colorm.ColorM` can tint/hue-shift them; buttons and shapes use `vector.DrawFilled*` into a scratch `ebiten.NewImage`.
-- Positioning convention: translate by `-w/2, -h/2` first to center the origin, then translate to the target coordinate. Buttons store `ScreenX`/`ScreenY` as their *center*, and both `UpdateButton` (hit testing) and `DrawButton` re-derive the top-left from it.
+- Sprites are drawn via `colorm.DrawImage` so a `colorm.ColorM` can tint/hue-shift them; buttons
+  and shapes use `vector.DrawFilled*` into a scratch `ebiten.NewImage`.
+- Positioning convention: translate by `-w/2, -h/2` first to center the origin, then translate
+  to the target coordinate. Buttons store `ScreenX`/`ScreenY` as their *center*, and both
+  `UpdateButton` (hit testing) and `DrawButton` re-derive the top-left from it.
 - **Rounded rectangles are done one way: `internal/cards/shape.go`, in plain Go**
-  *(2026-08-24)*. There were two for a while — health bars drew an opaque mask and composited
+. There were two for a while — health bars drew an opaque mask and composited
   it with `ebiten.BlendSourceIn`, which cards could never use, since that path takes an
   `*ebiten.Image`, its body is `vector.DrawFilledCircle`, and `BlendSourceIn` is a GPU blend
   mode, none of which exist without a graphics context. `internal/cards` must render without

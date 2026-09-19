@@ -15,19 +15,19 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 ## Now — quick wins, independent of any design decision
 
 - [?] **Three runes from the owner's list still need a design decision before they can be
-      written as data** *(owner asked for this to be tracked, 2026-08-27; trimmed 2026-09-02 as
-      the rest landed)*. **Lucky card**; **chance to increase a relic** (which relic, and increase
-      what?); **wild card** (matches any axis, or any one axis you name?). Two of them are random,
-      which needs its own stream and its own argument in `MECHANICS.md` per the `randomness` skill.
+      written as data** *(owner asked for this to be tracked)*. **Lucky card**; **chance to
+      increase a relic** (which relic, and increase what?); **wild card** (matches any axis, or
+      any one axis you name?). Two of them are random, which needs its own stream and its own
+      argument in `MECHANICS.md` per the `randomness` skill.
 
 - [ ] **Re-check the tutorial's taught shop after the relic key renames** *(owner asked for this
-      to be tracked, 2026-09-12)*. Thirty-seven records were renamed on `game-updates-118`, and the
-      shop shelf is a weighted draw over `relics.json`'s *sorted* keys — so what seed `0009D4`
-      lands on has moved. Nothing failed, because no test asserts which relics the taught shelf
-      offers; the shop step is the part of the lesson a catalog edit can break silently.
+      to be tracked)*. The shop shelf is a weighted draw over `relics.json`'s *sorted* keys, so
+      any record added, removed or renamed moves what seed `0009D4` lands on. Nothing fails,
+      because no test asserts which relics the taught shelf offers; the shop step is the part of
+      the lesson a catalog edit can break silently.
       `SEEDSEARCH=1 go test ./internal/screens -run TestFindATutorialSeed` is the search if the
-      shelf now reads badly. See the tutorial section of `CLAUDE.md`, which notes the seed has
-      already moved twice for this reason.
+      shelf now reads badly. See the tutorial section of `CLAUDE.md`, which carries the
+      constraints a replacement seed has to satisfy.
 
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
@@ -44,8 +44,9 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Next — where the game actually starts
 
-- [ ] **Procedurally generated enemies.** 96 hand-written records in `data/enemies.json` with
-      the combat screen walking a shuffled band per floor is scaffolding. An enemy should be
+- [ ] **Procedurally generated enemies.** A file of hand-written records in
+      `data/enemies.json`, with the combat screen walking a shuffled band per floor, is
+      scaffolding. An enemy should be
       **generated** from the floor, so the tower can be endless and a seed can reproduce it.
       - **Assembled from parts, not rolled from scratch.** The pieces that exist or are already
         decided: a **stat line** scaled by floor depth; a **deck** (`internal/decks` has the
@@ -59,25 +60,25 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ### Cards and piles — presentation
 
-- [ ] **The math band should wrap, not shrink** *(2026-08-22)*. `layOutMath` lays the sum out as one
-      centered line and, since Echo landed, **shrinks every item by a common factor when the line is
-      wider than the band** — floored at `minMathShrink`, 0.6. That is a stopgap: seven terms is
+- [ ] **The math band should wrap, not shrink.** `layOutMath` lays the sum out as one
+      centered line and **shrinks every item by a common factor when the line is wider than
+      the band** — floored at `minMathShrink`, 0.6. That is a stopgap: seven terms is
       reachable now (five cards in a legal turn plus the two extra landings an echo seats behind the
       first), and the answer to a line that will not fit is a second line, not smaller type.
       - **Why it is not done yet**: every figure *flies* from the card that paid it into its resting
         place, so a wrap is not a text-layout change — it is a second row of destinations, and the
         `x` and `=` have to land somewhere that still reads as one sum.
-      - **What would say it is needed**: a real game showing a shrunk line. `TestTheWidestSumFitsItsBand`
-        proves the deliberately-absurd case fits *after* shrinking; it says nothing about whether the
-        result is readable at 0.6.
+      - **What would say it is needed**: a real game showing a shrunk line.
+        `TestTheWidestSumFitsItsBand` proves the deliberately-absurd case fits *after*
+        shrinking; it says nothing about whether the result is readable at 0.6.
       - It is also the first thing to revisit if `MaxEchoLandings` ever rises above 5.
-      - **The arithmetic behind it is already wide enough** *(owner's call, 2026-08-22)*. The event's
+      - **The arithmetic behind it is already wide enough.** The event's
         term arrays hold 25 landings — every card of a legal turn, each landing up to
         `MaxEchoLandings` times — so a long repeat-and-echo chain is fully *resolved* today and only
         the drawing of it is short. Wrapping is what lets the screen show what the rules already
         compute.
 
-- [ ] **The tooltip does not reach every card on screen** *(2026-08-21)*. Hand cards, the deck
+- [ ] **The tooltip does not reach every card on screen.** Hand cards, the deck
       overlay, worn relics, the shop's two rows, both fighter cards, the reward screen's prizes and
       its offered cards all explain themselves. What does not:
       - **The table's two rows during playback** — the cards actually being resolved. They are the
@@ -170,18 +171,18 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - Recording action plans is what makes hand-editing a save interesting: loot picks
         only answer "what if I took the other relic", where plans answer "what if I had
         guarded on round 3".
-      - **Serialize card *keys*, not `ConceptID`s.** This got sharper on 2026-08-16: an ID is an
-        index into a registry built by walking `duelist_cards.json` and then every enemy's deck,
+      - **Serialize card *keys*, not `ConceptID`s.** An ID is an index into a registry built by
+        walking `duelist_cards.json` and then every enemy's deck,
         so it is stable for one build of one data set and for nothing else. Adding an enemy
         renumbers every concept after it. `Element` carries the same `iota` hazard it always did.
       - **`[?]` The combat roll has to be settled before this ships.** `MECHANICS.md` requires
         rolling on every attack phase and discarding the irrelevant result, precisely so a
         balance tweak does not shift every later roll in a run. `shockMisses` short-circuits when
         the attacker carries no shock, so the stream only advances when lightning is in play —
-        which is exactly the drift the rule forbids. **It got narrower on 2026-08-16**: a shock
-        now needs a thunder relic on the attacker to exist at all, so a bare duel advances
-        the stream never. Nothing depends on stored seeds yet, so it
-        is cheap to fix now and expensive to fix after a save format exists.
+        which is exactly the drift the rule forbids. It is narrow: a shock needs a lightning
+        relic on the attacker to exist at all, so a bare duel never advances the stream. Nothing
+        depends on stored seeds yet, so it is cheap to fix now and expensive to fix after a save
+        format exists.
       - Serializing live state instead means a migration every time state changes — the
         refactor this whole set of decisions exists to avoid.
       - Cost: loading replays the run to reach the current point. Trivial here, since
@@ -200,17 +201,18 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         outrunning yours, or a resource that runs down?
 - [ ] **Enemy model: one archetype, scaled and affixed.** Enemies as the same creature with
       main stats growing by depth, plus affixes that may stack. This contradicts how
-      `data/enemies.json` is shaped — 96 fully-specified records — so the data wants to become a
-      base statline, a scaling rule, and a pool of affixes to draw from.
+      `data/enemies.json` is shaped — fully-specified records, one per creature — so the data
+      wants to become a base statline, a scaling rule, and a pool of affixes to draw from.
       - `AvailableAffixes` already anticipates this and is still unread.
       - Affixes must compose. Two on one enemy is the normal case, not an edge case.
       - Floor choices feed this directly: "a cold floor" biases which affixes appear.
 ## Art still to generate
 
-*(owner asked for this to be tracked, 2026-09-16)*. **Two batches outstanding and nothing else.**
-Every other catalog is complete: `relics.json` 137/137, and the essences, runes, stones, potions
-and sealed goods all carry both an `Art` key and a `Draw` brief, with no key in any catalog naming
-a file that is not on disk.
+*(owner asked for this to be tracked)*. **Two batches outstanding.** Every other catalog is
+complete — relics, essences, runes, stones, potions and the sealed goods all carry an `Art` key
+and a `Draw` brief, with no key naming a file that is not on disk. Each catalog's own sheet
+counts the gaps and marks them in pink, so that claim is checkable rather than a figure written
+here.
 
 - [ ] **The playing cards — 95 pictures, `data/card_art.json`.** One per card per element, drawn
       full bleed under the card's own type. **Every brief is written**; what is missing is the art,
@@ -244,16 +246,16 @@ a file that is not on disk.
         space; if it cannot be read at 16 pixels the rung needs a different answer rather than a
         smaller font.
 
-- [?] **The relic catalog is pixel art and nothing else is** *(open since 2026-09-14)*. The 137
-      pictures in `assets/relic/` came from a prompt asking for chunky blocks and sixteen flat
-      colors; the essences, runes, stones and goods came from the smooth block every prompt carries
-      today, so a relic card and a stone card do not look like one game. **Closing it means
-      regenerating one side or the other** — 137 relics, or 58 of everything else — and it is the
-      owner's call which. `docs/art/relic_art_prompt_pixel_archived.MD` is kept live-shaped and
-      clearly marked not-live so the direction can be reversed by regenerating rather than by
+- [?] **The relic catalog is pixel art and nothing else is.** The pictures in `assets/relic/`
+      came from a prompt asking for chunky blocks and sixteen flat colors; the essences, runes,
+      stones and goods came from the smooth block every prompt carries today, so a relic card
+      and a stone card do not look like one game. **Closing it means regenerating one side or
+      the other** — the whole relic catalog, or everything else — and it is the owner's call
+      which. `docs/art/relic_art_prompt_pixel_archived.MD` is kept live-shaped and clearly
+      marked not-live so the direction can be reversed by regenerating rather than by
       reconstructing a prompt from git.
 
-- [?] **Which outline the damage badge takes** *(open, 2026-09-16)*. All three shapes were drawn
+- [?] **Which outline the damage badge takes.** All three shapes were drawn
       unnumbered — circle, starburst, diamond — and `cards.DefaultBadgeShape` is the one line that
       picks. **The numbered batch is diamond only**, so switching after it lands means commissioning
       66 more rather than changing a constant. The three blanks are on the badge sheet to be

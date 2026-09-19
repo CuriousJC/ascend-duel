@@ -1,10 +1,10 @@
 [
   {
     "RelicRecord": "flip-lightning-to-ice",
-    "Name": "Frozen Lightning",
+    "Name": "Frozen Charged Orb",
     "Family": "Elemental flips",
     "Art": "flip-lightning-to-ice",
-    "Draw": "ball lightning locked in a frozen ice shard",
+    "Draw": "ball lightning sphere that is encapsulated in ice",
     "Text": "Every lightning card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -17,10 +17,10 @@
   },
   {
     "RelicRecord": "flip-earth-to-ice",
-    "Name": "Permafrost",
+    "Name": "Frozen Rock Orb",
     "Family": "Elemental flips",
     "Art": "flip-earth-to-ice",
-    "Draw": "a rock surrounded by variegated blue and purple ice",
+    "Draw": "a rock sphere with ice covering it",
     "Text": "Every earth card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -33,10 +33,10 @@
   },
   {
     "RelicRecord": "flip-fire-to-ice",
-    "Name": "Frostbite",
+    "Name": "Frozen Fire Orb",
     "Family": "Elemental flips",
     "Art": "flip-fire-to-ice",
-    "Draw": "ice shaped into flickering fire",
+    "Draw": "ball of fire sphere that is encapsulated in ice",
     "Text": "Every fire card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -49,10 +49,10 @@
   },
   {
     "RelicRecord": "flip-ice-to-fire",
-    "Name": "Meltdown",
+    "Name": "Burning Frozen Orb",
     "Family": "Elemental flips",
     "Art": "flip-ice-to-fire",
-    "Draw": "shard of ice burning with fire",
+    "Draw": "ice sphere that is coveredin flames",
     "Text": "Every ice card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -65,10 +65,10 @@
   },
   {
     "RelicRecord": "flip-lightning-to-fire",
-    "Name": "Firestorm",
+    "Name": "Burning Charged Orb",
     "Family": "Elemental flips",
     "Art": "flip-lightning-to-fire",
-    "Draw": "ball lightning surrounded by flames",
+    "Draw": "ball lightning sphere that is covered in fire",
     "Text": "Every lightning card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -81,10 +81,10 @@
   },
   {
     "RelicRecord": "flip-earth-to-fire",
-    "Name": "Magma",
+    "Name": "Burning Stone Orb",
     "Family": "Elemental flips",
     "Art": "flip-earth-to-fire",
-    "Draw": "a glowing mass of molten rock",
+    "Draw": "a rock sphere with molten lava covering it",
     "Text": "Every earth card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -97,10 +97,10 @@
   },
   {
     "RelicRecord": "flip-ice-to-lightning",
-    "Name": "Thundersnow",
+    "Name": "Charged Frozen Orb",
     "Family": "Elemental flips",
     "Art": "flip-ice-to-lightning",
-    "Draw": "a snowflake crackling with electricity",
+    "Draw": "ice sphere that is encapsulated in yellow electrical sparks",
     "Text": "Every ice card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -113,10 +113,10 @@
   },
   {
     "RelicRecord": "flip-fire-to-lightning",
-    "Name": "Heat Lightning",
+    "Name": "Charged Fire Orb",
     "Family": "Elemental flips",
     "Art": "flip-fire-to-lightning",
-    "Draw": "ball of fire wrapped in yellow lightning",
+    "Draw": "ball of fire sphere that is encapsulated in yellow electrical sparks",
     "Text": "Every fire card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -129,10 +129,10 @@
   },
   {
     "RelicRecord": "flip-earth-to-lightning",
-    "Name": "Dust Storm",
+    "Name": "Charged Stone Orb",
     "Family": "Elemental flips",
     "Art": "flip-earth-to-lightning",
-    "Draw": "a rock surrounded with variegated yellow and purple lightning",
+    "Draw": "a rock sphere with lightning surrounding it",
     "Text": "Every earth card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -145,10 +145,10 @@
   },
   {
     "RelicRecord": "flip-ice-to-earth",
-    "Name": "Glacier",
+    "Name": "Muddy Frozen Orb",
     "Family": "Elemental flips",
     "Art": "flip-ice-to-earth",
-    "Draw": "a shard of ice dipped in muddy earth",
+    "Draw": "ice sphere that has been dipped in mud",
     "Text": "Every ice card is dealt as an earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -161,10 +161,10 @@
   },
   {
     "RelicRecord": "flip-fire-to-earth",
-    "Name": "Obsidian",
+    "Name": "Muddy Fire Orb",
     "Family": "Elemental flips",
     "Art": "flip-fire-to-earth",
-    "Draw": "a jagged piece of obsidian rock",
+    "Draw": "ball of fire sphere that has been dipped in mud",
     "Text": "Every fire card is dealt as an earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -177,10 +177,10 @@
   },
   {
     "RelicRecord": "flip-lightning-to-earth",
-    "Name": "Fulgurite",
+    "Name": "Muddy Charged Orb",
     "Family": "Elemental flips",
     "Art": "flip-lightning-to-earth",
-    "Draw": "a glowing piece of rock in the shape of a lightning bolt",
+    "Draw": "ball lightning sphere that has been dipped in mud",
     "Text": "Every lightning card is dealt as an earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -193,10 +193,10 @@
   },
   {
     "RelicRecord": "flip-fire-to-arcane",
-    "Name": "Burning Mana",
+    "Name": "Enchanted Fire Orb",
     "Family": "Elemental flips",
     "Art": "flip-fire-to-arcane",
-    "Draw": "a swirling mass of purple flames",
+    "Draw": "ball of fire sphere that is encapsulated in purple arcane sparks",
     "Text": "Every fire card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -209,10 +209,10 @@
   },
   {
     "RelicRecord": "flip-ice-to-arcane",
-    "Name": "Frozen Mana",
+    "Name": "Enchanted Frozen Orb",
     "Family": "Elemental flips",
     "Art": "flip-ice-to-arcane",
-    "Draw": "jagged piece of ice with purple energy surrounding it",
+    "Draw": "ice sphere that is encapsulated in purple arcane sparks",
     "Text": "Every ice card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -225,10 +225,10 @@
   },
   {
     "RelicRecord": "flip-lightning-to-arcane",
-    "Name": "Electrified Mana",
+    "Name": "Enchanted Charged Orb",
     "Family": "Elemental flips",
     "Art": "flip-lightning-to-arcane",
-    "Draw": "ball lightning that is encapsulated in a purple arcane sphere",
+    "Draw": "ball lightning sphere that is encapsulated in purple arcane sparks",
     "Text": "Every lightning card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -241,10 +241,10 @@
   },
   {
     "RelicRecord": "flip-earth-to-arcane",
-    "Name": "Enchanted Earth",
+    "Name": "Enchanted Stone Orb",
     "Family": "Elemental flips",
     "Art": "flip-earth-to-arcane",
-    "Draw": "a rock with a purple glowing vein inside of it",
+    "Draw": "a rock sphere with glowing purple ooze covering it",
     "Text": "Every earth card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -257,7 +257,7 @@
   },
   {
     "RelicRecord": "flip-arcane-to-fire",
-    "Name": "Burning Orb",
+    "Name": "Burning Arcane Orb",
     "Family": "Elemental flips",
     "Art": "flip-arcane-to-fire",
     "Draw": "a purple sphere that is burning with a red flame",
@@ -273,10 +273,10 @@
   },
   {
     "RelicRecord": "flip-arcane-to-ice",
-    "Name": "Frozen Orb",
+    "Name": "Frozen Arcane Orb",
     "Family": "Elemental flips",
     "Art": "flip-arcane-to-ice",
-    "Draw": "a shard of ice with purple energy surrounding it",
+    "Draw": "a purple sphere covered in ice",
     "Text": "Every arcane card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -289,7 +289,7 @@
   },
   {
     "RelicRecord": "flip-arcane-to-lightning",
-    "Name": "Charged Orb",
+    "Name": "Charged Arcane Orb",
     "Family": "Elemental flips",
     "Art": "flip-arcane-to-lightning",
     "Draw": "a purple sphere with yellow lightning crackling around it",
@@ -305,7 +305,7 @@
   },
   {
     "RelicRecord": "flip-arcane-to-earth",
-    "Name": "Stone Orb",
+    "Name": "Muddy Arcane Orb",
     "Family": "Elemental flips",
     "Art": "flip-arcane-to-earth",
     "Draw": "a purple sphere dipped into muddy earth",
@@ -320,12 +320,12 @@
     ]
   },
   {
-    "RelicRecord": "dmg-high-hand",
+    "RelicRecord": "dmg-no-hand",
     "Name": "Singular Ring",
     "Family": "Jade rings",
-    "Art": "dmg-high-hand",
+    "Art": "dmg-no-hand",
     "Draw": "jade ring with a single diamond",
-    "Text": "No Hand swings at\n2 more DMG.",
+    "Text": "Plus 2 duelist DMG\non No Hand played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -341,7 +341,7 @@
     "Family": "Jade rings",
     "Art": "dmg-pair-hand",
     "Draw": "jade ring with two diamonds",
-    "Text": "A Pair swings at\n2 more DMG.",
+    "Text": "Plus 2 duelist DMG\non Pair played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -357,7 +357,7 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-doubled-hand",
     "Draw": "jade ring with two diamonds and two black gems",
-    "Text": "A Card Two Pair swings at\n4 more DMG.",
+    "Text": "Plus 4 duelist DMG\non Card Two Pair played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -373,7 +373,7 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-tripled-hand",
     "Draw": "jade ring with three diamonds",
-    "Text": "A Card Three of a Kind swings at\n5 more DMG.",
+    "Text": "Plus 5 duelist DMG\non Card Three of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -389,7 +389,7 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-full-house-hand",
     "Draw": "jade ring with three diamonds and two black gems",
-    "Text": "A Card Full House swings at\n8 more DMG.",
+    "Text": "Plus 8 duelist DMG\non Card Full House played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -405,7 +405,7 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-four-of-a-kind-hand",
     "Draw": "jade ring with four diamonds",
-    "Text": "A Card Four of a Kind swings at\n10 more DMG.",
+    "Text": "Plus 10 duelist DMG\non Card Four of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -421,7 +421,7 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-five-of-a-kind-hand",
     "Draw": "jade ring with five diamonds",
-    "Text": "A Card Five of a Kind swings at\n16 more DMG.",
+    "Text": "Plus 16 duelist DMG\non Card Five of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -437,7 +437,7 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-two-pair-hand",
     "Draw": "indigo ring with two golden gems and two silver gems",
-    "Text": "A Form Two Pair swings at\n3 more DMG.",
+    "Text": "Plus 3 duelist DMG\non Form Two Pair played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -453,7 +453,7 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-three-of-a-kind-hand",
     "Draw": "indigo ring with three golden gems",
-    "Text": "A Form Three of a Kind swings at\n3 more DMG.",
+    "Text": "Plus 3 duelist DMG\non Form Three of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -469,7 +469,7 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-full-house-hand",
     "Draw": "indigo ring with three golden gems and two silver gems",
-    "Text": "A Form Full House swings at\n6 more DMG.",
+    "Text": "Plus 6 duelist DMG\non Form Full House played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -485,7 +485,7 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-four-of-a-kind-hand",
     "Draw": "indigo ring with four golden gems",
-    "Text": "A Form Four of a Kind swings at\n6 more DMG.",
+    "Text": "Plus 6 duelist DMG\non Form Four of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -501,7 +501,7 @@
     "Family": "Indigo rings",
     "Art": "dmg-form-five-of-a-kind-hand",
     "Draw": "indigo ring with five golden gems",
-    "Text": "A Form Five of a Kind swings at\n12 more DMG.",
+    "Text": "Plus 12 duelist DMG\non Form Five of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -517,7 +517,7 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-two-pair-hand",
     "Draw": "sandstone ring with two turquoise gems and two rubies",
-    "Text": "An Elemental Two Pair swings at\n3 more DMG.",
+    "Text": "Plus 3 duelist DMG\non Elemental Two Pair played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -533,7 +533,7 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-three-of-a-kind-hand",
     "Draw": "sandstone ring with three turquoise gems",
-    "Text": "An Elemental Three of a Kind swings at\n3 more DMG.",
+    "Text": "Plus 3 duelist DMG\non Elemental Three of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -549,7 +549,7 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-full-house-hand",
     "Draw": "sandstone ring with three turquoise gems and two rubies",
-    "Text": "An Elemental Full House swings at\n7 more DMG.",
+    "Text": "Plus 7 duelist DMG\non Elemental Full House played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -565,7 +565,7 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-four-of-a-kind-hand",
     "Draw": "sandstone ring with four turquoise gems",
-    "Text": "An Elemental Four of a Kind swings at\n7 more DMG.",
+    "Text": "Plus 7 duelist DMG\non Elemental Four of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
@@ -581,7 +581,7 @@
     "Family": "Sandstone rings",
     "Art": "dmg-element-five-of-a-kind-hand",
     "Draw": "sandstone ring with five turquoise gems",
-    "Text": "An Elemental Five of a Kind swings at\n14 more DMG.",
+    "Text": "Plus 14 duelist DMG\non Elemental Five of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {

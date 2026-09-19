@@ -164,18 +164,25 @@ and say so rather than inventing a subject.
 
 **The element is the color the picture is built in**, and the five are the game's own:
 
-| Element | Hex |
-|---|---|
-| `fire` | `#F06A24` orange |
-| `ice` | `#4E9ED6` blue |
-| `lightning` | `#F2D13D` yellow |
-| `earth` | `#4E9B57` green |
-| `arcane` | `#8A5BC7` violet |
+| Element | Word | dark | core | light |
+|---|---|---|---|---|
+| `fire` | orange | `#9E2F13` | `#F06A24` | `#FFB24A` |
+| `ice` | blue | `#245A86` | `#4E9ED6` | `#A8DDF4` |
+| `lightning` | yellow | `#A98200` | `#F2D13D` | `#FFF38A` |
+| `earth` | green | `#285E35` | `#4E9B57` | `#8BCB78` |
+| `arcane` | purple | `#4C2A78` | `#8A5BC7` | `#C8A4F2` |
 
-**Lightened, because of the value clause.** These are the hues the rest of the card is drawn in, so
-the picture has to agree with them — but a picture at full saturation in one of them would be too
-dark under type. Treat each as the hue the picture is *tinted toward*, at the pale end of its own
-range, with the saturated version reserved for the subject in the clear regions.
+The element name and the color word are the same instruction — `arcane` and "purple" both mean
+that row — and the three columns are the range that word covers. **The ramp directs the picture
+rather than fencing it**: these colors should be the dominant ones, and other colors are welcome
+where the subject wants them. What is wrong is drifting to a neighbouring hue.
+
+**This is the one prompt that lives at the light end, because of the value clause.** These are the
+hues the rest of the card is drawn in, so the picture has to agree with them — but a picture at
+full saturation would be too dark under type. **`light` is where the field sits**, the vapor and
+the large pale areas; **`core` is reserved for the subject in the clear regions**, where the
+saturated version can carry it; and `dark` is for the contour and the few deepest accents, never
+for an area type lands on.
 
 **The same card in two colors is the same picture in two hues, not two pictures.** A fire Jab and
 an ice Jab are one weapon, one pose, one composition, one framing — and two colors of vapor. Draw

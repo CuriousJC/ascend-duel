@@ -833,6 +833,11 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 	e.HandBonus, e.HandBonusSeats = HandBonus(actor.WornRelics(), blow.Satisfied)
 	actor.DMG = blowDMG(baseDMG+e.HandBonus, turn, held, blow)
 
+	// **Both figures, because the screen shows the climb rather than the raise.** A rung relic's
+	// raise goes through the riders with the rest of the DMG, so what it is worth to this blow is
+	// the distance between these two and not HandBonus. See Event.HandDMG.
+	e.HandDMG, e.HandDMGBare = actor.DMG, blowDMG(baseDMG, turn, held, blow)
+
 	// **The blow is added up here and nowhere else.** The attack phase takes its damage figure off
 	// this event rather than recomputing it, so the sentence the feed prints and the damage that
 	// lands cannot be two different sums — and the dialog flying the figures down reads the same
@@ -869,6 +874,11 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 				e.HandCards[at] = i
 				e.HandAmounts[at] = d
 				e.HandCardBase[at] = shape.Amount(t, card.Damage(actor.DMG))
+				// **The same shape applied to the percentage rather than to the damage**, which is
+				// what lets the sum be written `(12 x 3)` instead of `36`. It is a second reading
+				// of one landing and never a second arithmetic: the figure that lands is the line
+				// above. See Event.HandCardPct.
+				e.HandCardPct[at] = shape.Amount(t, card.Amount())
 				e.HandRelicScale[at] = CardScaleBySeat(actor.WornRelics(), card)
 				e.HandCardCount++
 				if t > 0 {

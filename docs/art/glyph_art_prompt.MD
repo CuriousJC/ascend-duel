@@ -130,8 +130,8 @@ tones.
 
 **Every lit surface is the object's own hue made lighter — never a warm color, and never gold.**
 This is the one thing that has come back wrong every time: a "bright edge" or a "highlight" gets
-drawn warm, and the mark ends up two-colored — a blue bar with an orange top, a violet bar with a
-gold rim. A blue object is lit in a paler blue. A violet object is lit in a paler violet. The only
+drawn warm, and the mark ends up two-colored — a blue bar with an orange top, a purple bar with a
+gold rim. A blue object is lit in a paler blue. A purple object is lit in a paler purple. The only
 thing allowed to be near-colorless is the small hot spot at the very brightest point, and it is
 white rather than yellow.
 
@@ -163,13 +163,19 @@ I need **twenty images**: four shapes, each in five colors.
 
 Five hues, and the hue is all that changes. **Match these exactly.**
 
-| Name | Hex |
-|---|---|
-| `fire` | `#F06A24` orange |
-| `ice` | `#4E9ED6` blue |
-| `lightning` | `#F2D13D` yellow |
-| `earth` | `#4E9B57` green |
-| `arcane` | `#8A5BC7` violet |
+| Name | Word | dark | core | light |
+|---|---|---|---|---|
+| `fire` | orange | `#9E2F13` | `#F06A24` | `#FFB24A` |
+| `ice` | blue | `#245A86` | `#4E9ED6` | `#A8DDF4` |
+| `lightning` | yellow | `#A98200` | `#F2D13D` | `#FFF38A` |
+| `earth` | green | `#285E35` | `#4E9B57` | `#8BCB78` |
+| `arcane` | purple | `#4C2A78` | `#8A5BC7` | `#C8A4F2` |
+
+**`core` is the hue to match**, and the element name and the color word are the same instruction —
+`arcane` and "purple" both mean that row. `light` is the faces turned toward the light and the top
+of the specular ramp; `dark` is the faces turned away and the color the shadow settles into, above
+the near-black contour. **Stay inside the ramp**: anything between `dark` and `light` is in range,
+anything outside it is a different color.
 
 **There is deliberately no material column.** Every object in this set is the same substance —
 one smooth faceted material, the same for all four shapes — and the color is **applied to it**,
@@ -244,7 +250,7 @@ near-black contour all the way round. Shade it with the same material response a
 reads as a small forged object rather than as a colored rectangle.
 
 **The bright top edge is the bar's own hue made lighter — not white, not yellow, not gold, not
-orange, not warm.** A blue bar is lightened to a paler blue; a violet one to a paler violet. A warm
+orange, not warm.** A blue bar is lightened to a paler blue; a purple one to a paler purple. A warm
 or golden top edge on a cool bar is the single most common thing that comes back wrong here, and it
 is wrong every time.
 

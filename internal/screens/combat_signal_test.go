@@ -252,11 +252,11 @@ func TestABurstIsTheSameBurstEveryTime(t *testing.T) {
 		return true
 	}
 
-	c := cardSignal{rider: combat.RiderGolden, seat: 2}
+	c := burstSeed(cardSignal{rider: combat.RiderGolden, seat: 2})
 	if !same(burstRays(c, 0), burstRays(c, 0)) {
 		t.Fatal("two readings of one signal's burst disagree")
 	}
-	if same(burstRays(c, 0), burstRays(cardSignal{rider: combat.RiderGolden, seat: 3}, 0)) {
+	if same(burstRays(c, 0), burstRays(burstSeed(cardSignal{rider: combat.RiderGolden, seat: 3}), 0)) {
 		t.Error("two seats throw the same burst; the pattern says nothing about the card")
 	}
 
@@ -325,17 +325,23 @@ func TestASignalIsDrawnInItsRidersColor(t *testing.T) {
 		combat.RiderHealOnPlay} {
 
 		want := systems.UpgradeTint(ui.UpgradeForRider[k])
-		if got := signalInk(k); got != want {
+		if got := signalInk(cardSignal{rider: k}); got != want {
 			t.Errorf("%v signals in %v, want its own upgrade tint %v", k, got, want)
 		}
 	}
 
-	if got := signalInk(combat.RiderVitaeInHand); got != ui.VitaeInk {
+	if got := signalInk(cardSignal{rider: combat.RiderVitaeInHand}); got != ui.VitaeInk {
 		t.Errorf("a card kept back pays in %v, want the crimson vitae is always written in", got)
 	}
 
+	// **A relic's own figure is pink rather than a rider's color**, because a relic is not a card
+	// and has no rider to take one from. See signalRaise.
+	if got := signalInk(cardSignal{relic: 1}); got != ui.BoostInk {
+		t.Errorf("a relic's raise flies in %v, want the relic pink %v", got, ui.BoostInk)
+	}
+
 	// The three that can share a screen have to be told apart, which is the whole ask.
-	gold, silver := signalInk(combat.RiderGolden), signalInk(combat.RiderSilver)
+	gold, silver := signalInk(cardSignal{rider: combat.RiderGolden}), signalInk(cardSignal{rider: combat.RiderSilver})
 	if gold == silver || gold == ui.VitaeInk || silver == ui.VitaeInk {
 		t.Errorf("gold %v, silver %v and vitae %v are not three colors", gold, silver, ui.VitaeInk)
 	}

@@ -1361,7 +1361,8 @@ argument: three of the four axes a hand counts on are not elemental at all.
 ### The palette: eight ramps, and only the middle one is drawn
 
 **`docs/art/palette.json` is where the colors are written down** — five elements and three form
-materials, each as `dark`, `core` and `light`. It is reference rather than a catalog: nothing loads
+materials, each as `dark`, `core` and `light`, with the plain-English `hue` beside them, the `axis`
+they belong to, and the `form` a material stands for. It is reference rather than a catalog: nothing loads
 it, and it is not in `data/` for that reason. What it is *for* is the generator, which is handed one
 ramp when a picture has to sit in one element's or one form's range.
 
@@ -1389,10 +1390,13 @@ is what keeps a seamless tile seamless, and the reduction is what puts the grain
 native resolution one crystal is most of a capital and the word reads as a blotch.
 
 **A change here moves the art out of step with the type, and nothing fails.** The form marks and
-cost ticks in `assets/form/` are authored in their element, and the three prompts that name element
-hex values — `docs/art/card_art_prompt.MD`, `damage_art_prompt.MD` and `glyph_art_prompt.MD` — are
-what a regeneration reads. **Move a `core` and all four have to follow**, or a card's corner mark
-and the word naming its element are two different colors.
+cost ticks in `assets/form/` are authored in their element, and **every prompt under `docs/art/`
+writes the ramps out in full** — the closed-set prompts (`card_art_prompt.MD`,
+`damage_art_prompt.MD`, `glyph_art_prompt.MD`) as their element table, and the subject prompts as a
+shared **The color words** block, which is what lets a brief say "a purple orb" and land in arcane.
+`gear_art_prompt.MD` is the one without a ramp, since the cog is neutral gray by rule. **Move a
+`core` and all of them have to follow**, or a card's corner mark and the word naming its element
+are two different colors.
 
 ### Color: name one color and scale it — and the light comes off that color too
 

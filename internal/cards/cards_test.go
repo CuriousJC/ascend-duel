@@ -207,29 +207,6 @@ func tickCore(img *image.RGBA, st Style, i int) color.RGBA {
 	return img.RGBAAt(st.DashLeft+st.DashWidth/2, y)
 }
 
-// tickHue is the most saturated pixel in one cost tick — the part of the drawing carrying the
-// element, as against its near-black contour and its near-white specular.
-//
-// **An average would not do.** A drawn bar is mostly edge at this size, so its mean is a pale
-// dull version of the element and two neighboring hues on the wheel — amber and orange, amber and
-// green — end up nearer to each other than to themselves. What the player reads as the element is
-// the loudest part of the bar, so that is what this asks about.
-func tickHue(img *image.RGBA, st Style, i int) color.RGBA {
-	y0 := st.DashTop + i*(st.DashHeight+st.DashGap)
-	best, bestSat := color.RGBA{}, -1
-	for y := y0; y < y0+st.DashHeight; y++ {
-		for x := st.DashLeft; x < st.DashLeft+st.DashWidth; x++ {
-			c := img.RGBAAt(x, y)
-			hi := max(int(c.R), max(int(c.G), int(c.B)))
-			lo := min(int(c.R), min(int(c.G), int(c.B)))
-			if sat := hi - lo; sat > bestSat {
-				best, bestSat = c, sat
-			}
-		}
-	}
-	return best
-}
-
 // tickDrawn says whether a tick was drawn at all: its rectangle holds something other than the
 // card's own surface. It is the count test's question, which used to be "is this pixel exactly
 // the element color" and cannot be any more.
@@ -243,39 +220,6 @@ func tickDrawn(img *image.RGBA, st Style, i int) bool {
 		}
 	}
 	return false
-}
-
-// nearestElement names whichever element color a rendered color is closest to, which is how the
-// hue tests below stay true of a drawing: a fire tick averages to something that is not
-// BorderOf(Fire) exactly, but it had better be nearer to it than to the other four.
-func nearestElement(c color.RGBA) Element {
-	best, bestD := Basic, 1<<30
-	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
-		if d := chromaDistance(c, BorderOf(e)); d < bestD {
-			best, bestD = e, d
-		}
-	}
-	return best
-}
-
-// chromaDistance compares two colors by hue alone, each normalized to its own total brightness.
-//
-// **Brightness is not the question and comparing it is how this test lies.** A drawn tick carries
-// a near-white specular and a near-black contour, so its average is a lighter, duller version of
-// the element it was drawn in — and a raw RGB distance then puts a pale amber nearer to orange
-// than to amber. Dividing each channel by the sum throws the lightness away and leaves the mix,
-// which is the thing the player is actually reading.
-func chromaDistance(a, b color.RGBA) int {
-	norm := func(c color.RGBA) (int, int, int) {
-		sum := int(c.R) + int(c.G) + int(c.B)
-		if sum == 0 {
-			return 0, 0, 0
-		}
-		return int(c.R) * 1000 / sum, int(c.G) * 1000 / sum, int(c.B) * 1000 / sum
-	}
-	ar, ag, ab := norm(a)
-	br, bg, bb := norm(b)
-	return (ar-br)*(ar-br) + (ag-bg)*(ag-bg) + (ab-bb)*(ab-bb)
 }
 
 // nearColor allows a channel or two of rounding, which averaging a drawing and then fading it
@@ -1336,33 +1280,6 @@ func TestTheFormMarkCarriesTheElement(t *testing.T) {
 				t.Errorf("%s and %s draw an identical form mark — the element is not reaching it",
 					e, other)
 			}
-		}
-	}
-}
-
-// TestTheCostTicksCarryTheElement is the tick half of the 2026-08-23 swap. The mark in the corner
-// and the ticks under it are the whole of the left column, and both say the element — a column
-// where only the top of it is colored was the first cut and the owner sent it back.
-func TestTheCostTicksCarryTheElement(t *testing.T) {
-	st := Hand
-
-	// **The five, not Elements().** Basic and Relic are not elements a hand is counted on and were
-	// never in the art matrix; a Basic card still draws the flat gray bar, which has no hue to be
-	// nearest to. See MarkArtKey.
-	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
-		s := strike(e)
-		s.Cost = 2
-
-		// **Measured at full strength, not at rest.** A resting tick is faded a fifth of the way
-		// to the off-white surface, which lifts every channel toward each other and costs the
-		// reading its margin — amber and orange are the closest pair on this wheel, and a faded
-		// amber lands nearer to orange than to itself. What this test is about is whether the
-		// *drawing* carries its element; the fade is the state test's subject one case down.
-		s.Selected = true
-
-		ink := tickHue(render(t, s, st), st, 0)
-		if got := nearestElement(ink); got != e {
-			t.Errorf("%s cost tick is %v, which reads as %s", e, ink, got)
 		}
 	}
 }

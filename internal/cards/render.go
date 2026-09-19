@@ -1014,6 +1014,13 @@ func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line string, runs [
 type Segment struct {
 	Text string
 	Ink  color.RGBA
+
+	// Texture is the asset key of a material this stretch is set in, for a caller that can
+	// composite one behind the glyph shapes. **Empty on all but a form word**, and ignored by this
+	// package entirely: a card face is drawn into a plain Go image with no graphics context, so the
+	// Ink beside it is the whole of what it can do. See internal/systems, which is the one drawing
+	// that can turn the key into a tile.
+	Texture string
 }
 
 // SplitSpans cuts a line into colored segments, in order, covering the whole line.

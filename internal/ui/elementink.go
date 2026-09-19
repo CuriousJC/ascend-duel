@@ -45,7 +45,7 @@ func TipLines(lines []string) []models.TipLine {
 func TipLine(line string) models.TipLine {
 	var out models.TipLine
 	for _, seg := range chromatic(line) {
-		out = append(out, models.TextSpan{Text: seg.Text, Ink: seg.Ink})
+		out = append(out, models.TextSpan{Text: seg.Text, Ink: seg.Ink, Texture: seg.Texture})
 	}
 	return out
 }

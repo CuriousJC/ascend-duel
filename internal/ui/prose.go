@@ -223,47 +223,6 @@ func multiplierText(amount int) string {
 	return fmt.Sprintf("%d.%02dx", whole, frac)
 }
 
-// cardEffect is what a card does, in words, printed on its face.
-//
-// **Verb first, on every card.** They are read in a row while the player is counting action
-// points — the first word saying what the card *does to the round* is what makes eight of them
-// scannable. **"DMG" rather than "damage"** because the column is about a dozen characters wide
-// and the duelist card already labels the figure that way.
-//
-// It is deliberately not the same wording as cardPhrase: that is prose for a *sentence about a
-// round* — "attacks with a heavy strike" — and this is a rules description read while deciding
-// whether to play the thing.
-// **It reads the card, not the concept** *(2026-08-17)*. Every figure printed here comes from
-// `Card.Amount()`, which is where an essence's scaling is applied — so an altered Defend says the
-// percentage it actually cuts and an altered shield card says how many it actually raises. The wording was
-// already a template over the value; what changed is which value it reads. A card whose face
-// disagreed with its behavior would be the worst thing an alteration mechanic could produce.
-//
-// **And it reads the holder's relics** *(2026-08-21)*. A slash card in the hands of someone wearing
-// Keen said "Slashes for 2x DMG" and dealt four times its owner's DMG, because the multiplier is the
-// card's and the doubling is the relic's, applied later in `Duelist.CardDamage`. The face said a true
-// thing about the card and a false thing about the attack, which is the same failure the essence
-// scaling above was fixed for.
-//
-// **It hands back the span of text a relic changed, not a flag** *(2026-08-21)*. The caller colors
-// that span and nothing else: painting the verb and the unit with it says a relic changed the card
-// rather than the number. An empty mark means nothing moved and the line is drawn in one color.
-func cardEffect(combat.Card) string {
-	// **A card says what it does in pictures now** *(owner's call, 2026-09-16)*. The form is the
-	// corner mark, the element is the mark's color and the cost ticks under it, the multiplier is
-	// the badge in the bottom-left corner, and a defense stacks one shield per shield it raises. The
-	// line this used to return — `STAB` over `DMG 3x` — restated all of it in words, which was the
-	// right answer while the left column was a silhouette and a figure and the wrong one the moment
-	// every part of it became a drawing.
-	//
-	// **What the card gives up is the wording, not the fact.** `carddesc` still writes the whole
-	// stat block into the tooltip, so hovering a card says its form, its cost and what it deals in
-	// words; the face says the same things in pictures. That split is the one the damage figure was
-	// already under — see cardSpec, where no relic reaches the printed damage and the arithmetic
-	// lives in the sum.
-	return ""
-}
-
 // riderText is the lines a card's upgrade adds under its own, one authored line each.
 //
 // **The face has to say what a rune did to a card.** CLAUDE.md's rule about an altered card

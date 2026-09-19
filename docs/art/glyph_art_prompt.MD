@@ -165,11 +165,11 @@ Five hues, and the hue is all that changes. **Match these exactly.**
 
 | Name | Hex |
 |---|---|
-| `fire` | `#EB782D` orange |
-| `ice` | `#509BE6` blue |
-| `lightning` | `#D6980C` amber gold |
-| `earth` | `#4C8C34` green |
-| `arcane` | `#8A54C8` violet |
+| `fire` | `#F06A24` orange |
+| `ice` | `#4E9ED6` blue |
+| `lightning` | `#F2D13D` yellow |
+| `earth` | `#4E9B57` green |
+| `arcane` | `#8A5BC7` violet |
 
 **There is deliberately no material column.** Every object in this set is the same substance —
 one smooth faceted material, the same for all four shapes — and the color is **applied to it**,

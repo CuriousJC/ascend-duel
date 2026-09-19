@@ -27,6 +27,13 @@ func (l TipLine) Text() string {
 type TextSpan struct {
 	Text string
 	Ink  color.RGBA
+
+	// Texture is the asset key of a material this span is set in — the grain shows through the glyph
+	// shapes and the Ink is what a drawing that cannot composite one falls back to.
+	//
+	// **This package does not know what a key names**, exactly as it does not know why a span has a
+	// color: the caller names the material and `internal/systems` resolves it.
+	Texture string
 }
 
 // Tooltip is the panel that explains whatever the cursor is resting on.

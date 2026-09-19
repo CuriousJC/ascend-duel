@@ -97,25 +97,22 @@ func TestEveryFormHasItsOwnMark(t *testing.T) {
 	}
 }
 
-// plainText is a card's face text. **Empty for almost every card as of 2026-09-16** — the form, the
-// element, the cost and the multiplier are all pictures now, and the only concepts still writing a
-// line are the creatures' percentage guards, which have no badge to draw. No relic reaches it
-// either *(owner's call, 2026-08-26)*; the pairing is still passed around for the cost.
+// plainText is the type on a plain card's face, which is nothing.
+//
+// **A face says what a card does in pictures**: the form is the corner mark, the element is its
+// color and the cost ticks under it, and the multiplier is the badge in the bottom-left. The only
+// words a face is ever set with are an upgrade's, and those are held to the band by
+// TestEveryUpgradedCardTextFitsItsBand. What the two tests below hold is the floor — that a card
+// carrying no upgrade asks the band for nothing.
 func plainText(a combat.ConceptID) string {
-	return cardEffect(combat.Plain(a))
+	return riderText(combat.Plain(a))
 }
 
 func TestEveryConceptSaysWhatItDoes(t *testing.T) {
-	// **A card has to say what it does somewhere on its face**, and as of 2026-09-16 that is
-	// usually a picture rather than a line of type: the multiplier is a drawn badge and a defense
-	// stacks one shield per shield it raises, so the sentence that used to restate both was
-	// dropped — see cardEffect.
-	//
-	// **This test replaced TestEveryConceptHasEffectText rather than being deleted with it.** The
-	// invariant it was protecting is still the one that matters — a face that says nothing is four
-	// hundred blank cards — and only the form the answer takes has changed. A concept that is
-	// neither an attack with a multiplier, nor a defense raising shields, nor a guard with a line
-	// of text is a card the player cannot read.
+	// **A card has to say what it does somewhere on its face**, and what it says it with is a
+	// picture: the multiplier is a drawn badge and a defense stacks one shield per shield it
+	// raises. A concept that is neither an attack with a multiplier nor a defense raising shields
+	// is a card the player cannot read.
 	//
 	// **It walks the whole registry, not the player's nineteen** *(2026-08-16)*. Every enemy
 	// carries its own cards and the table lays an enemy's queue out as cards, so a verb the
@@ -125,7 +122,6 @@ func TestEveryConceptSaysWhatItDoes(t *testing.T) {
 		switch {
 		case cardBadge(card) != "":
 		case cardShields(card) > 0:
-		case plainText(a) != "":
 		default:
 			t.Errorf("%v says nothing on its face — no damage badge, no shields and no text",
 				combat.ConceptOf(a).Key)
@@ -814,7 +810,7 @@ func TestEveryUpgradedCardTextFitsItsBand(t *testing.T) {
 			// **A two-digit amount, because the figure is part of the measure.** A rider drawn at 5
 			// and shipped at 25 is a card that passed this test and overruns in play.
 			c := combat.Plain(a).SetRider(combat.Rider{Kind: k, Amount: 25})
-			text := cardEffect(c) + riderText(c)
+			text := riderText(c)
 			lines, err := cards.WrapText(f, st.TextSize, text, width)
 			if err != nil {
 				t.Fatalf("%v + %v: %v", a, k, err)

@@ -71,7 +71,7 @@ func WrapRuns(line models.TipLine, face *text.GoTextFace, max float64) []models.
 				word = strings.TrimLeft(word, " ")
 				w = measureText(word, face)
 			}
-			cur = appendRun(cur, models.TextSpan{Text: word, Ink: run.Ink})
+			cur = appendRun(cur, models.TextSpan{Text: word, Ink: run.Ink, Texture: run.Texture})
 			width += w
 		}
 	}
@@ -86,8 +86,11 @@ func WrapRuns(line models.TipLine, face *text.GoTextFace, max float64) []models.
 // **Joined rather than one span per word**, because the panel measures and places run by run: a
 // line of twelve one-word spans is eleven joins where kerning is lost, and it reads as type set
 // slightly too loose. One span per stretch of one color is the same shape the coloring produced.
+//
+// **The material has to match as well as the ink**, because a textured run is rendered whole into
+// its own image: joining it to the plain run beside it would put the grain through both.
 func appendRun(line models.TipLine, run models.TextSpan) models.TipLine {
-	if n := len(line); n > 0 && line[n-1].Ink == run.Ink {
+	if n := len(line); n > 0 && line[n-1].Ink == run.Ink && line[n-1].Texture == run.Texture {
 		line[n-1].Text += run.Text
 		return line
 	}

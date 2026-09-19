@@ -415,6 +415,31 @@ const (
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoScaleRolls
+
+	// DoAdjustRoundLimit moves **this fight's clock** by Amount rounds: -2 takes two off, +1 buys one.
+	//
+	// **A delta, never a figure** *(owner's call, 2026-09-19)*. A relic naming three rounds outright
+	// could not be mixed with one that buys rounds — whichever was read last would simply win, and
+	// which that was would depend on nothing the player can see. Deltas sum, so a relic taking two
+	// and a relic giving one leave a fight one round shorter and both sentences stay true.
+	//
+	// **Summing is also what makes worn order irrelevant here**, which is the one place a relic verb
+	// steps outside left-to-right compounding. Addition commutes; a figure would not, and a drawback
+	// a second relic could cancel by sitting to its right is not a drawback.
+	//
+	// **Signed, so Amount may not be zero** — see checkEffect, where it joins DoAdjustCost. A relic
+	// moving the clock by nothing is a typo, not a relic.
+	//
+	// **The result is clamped to one round and never to none.** Zero is no clock at all in the
+	// rules, so a stack of drawbacks reaching it would take the mechanic off the fight rather than
+	// making it harsher — the one direction a bug in this is invisible. Same clamp, and the same
+	// reason, as session.SetRoundLimit.
+	//
+	// **A fight already on no clock stays on none.** Creatures and every bare Duelist in a test
+	// carry a zero, and a delta off an unlimited fight is still unlimited.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoAdjustRoundLimit
 )
 
 // RelicVerbs is every verb in a fixed order.
@@ -423,7 +448,8 @@ func RelicVerbs() []RelicVerb {
 		DoAddHP, DoGrowOnWin, DoScalePropagation, DoAdjustPicks, DoAdjustPrizeVitae, DoScaleHP,
 		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth,
 		DoAddHandDMG, DoAddDamagePerHeld, DoGrowPerCard, DoAddDamagePerVitae,
-		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls}
+		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls,
+		DoAdjustRoundLimit}
 }
 
 func (v RelicVerb) String() string {
@@ -478,6 +504,8 @@ func (v RelicVerb) String() string {
 		return "heal-share"
 	case DoScaleRolls:
 		return "scale-rolls"
+	case DoAdjustRoundLimit:
+		return "adjust-round-limit"
 	default:
 		return "adjust-cost"
 	}
@@ -512,7 +540,7 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentCardDrawn
 	case DoDemoteCard:
 		return MomentDeckBuilt
-	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDamagePerVitae, DoScaleRolls:
+	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDamagePerVitae, DoScaleRolls, DoAdjustRoundLimit:
 		return MomentFightStart
 	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDamagePerHeld, DoScaleHandDamage:
 		return MomentBlowFormed
@@ -778,7 +806,7 @@ func checkEffect(key string, e RelicEffect) error {
 		}
 	case DoResetGrowth:
 		// The one verb that names no quantity: it puts an accumulator to zero.
-	case DoAdjustCost, DoAdjustPicks, DoAdjustPrizeVitae:
+	case DoAdjustCost, DoAdjustPicks, DoAdjustPrizeVitae, DoAdjustRoundLimit:
 		// Signed on purpose: a discount is negative and a relic with a drawback is expressible.
 		if e.Amount == 0 {
 			return fmt.Errorf("%s does %s by 0", key, e.Do)
@@ -1597,6 +1625,32 @@ func EchoBonus(cardDamage, k, n int) int {
 
 // AddedHP is flat maximum life for the fight.
 func AddedHP(worn []WornRelic) int { return sumAmounts(worn, MomentFightStart, DoAddHP) }
+
+// RoundLimitFor is the clock a worn set puts this fight on, given the limit the run is carrying.
+//
+// **Every delta is summed**, so two relics each taking a round take two. Worn order decides
+// nothing, because addition commutes — see DoAdjustRoundLimit for why that is the point rather
+// than a shortcut.
+//
+// **Never below one.** Zero is no clock at all here, so a stack of drawbacks reaching it would
+// take the mechanic off the fight instead of tightening it.
+//
+// **A fight on no clock stays on none**, whatever is worn: there is nothing to move.
+func RoundLimitFor(worn []WornRelic, base int) int {
+	if base <= 0 {
+		return base
+	}
+	limit := base
+	for _, e := range RelicEffectsAt(worn, MomentFightStart, Card{}) {
+		if e.Do == DoAdjustRoundLimit {
+			limit += e.Amount
+		}
+	}
+	if limit < 1 {
+		limit = 1
+	}
+	return limit
+}
 
 // AddedPicks is how many extra post-battle choices a worn set offers.
 func AddedPicks(worn []WornRelic) int { return sumAmounts(worn, MomentPrizesDealt, DoAdjustPicks) }

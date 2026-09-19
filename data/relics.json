@@ -2159,6 +2159,40 @@
     ]
   },
   {
+    "RelicRecord": "clock-plus-two",
+    "Name": "The Turned Glass",
+    "Family": "The clock",
+    "Art": "",
+    "Draw": "a malachite hourglass amulet at a quarter turn on a platinum chain",
+    "Text": "Every fight is 2 rounds longer.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "adjust-round-limit", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "cost-three-rounds",
+    "Name": "Hermes",
+    "Family": "Cost bargains",
+    "Art": "",
+    "Draw": "a malachite winged foot amulet on a platinum chain",
+    "Text": "Every card costs 1 AP less. Every fight is 2 rounds shorter.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      },
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "adjust-round-limit", "Amount": -2 }]
+      }
+    ]
+  },
+  {
     "RelicRecord": "cost-defend-less",
     "Name": "Braced",
     "Family": "Cost bargains",

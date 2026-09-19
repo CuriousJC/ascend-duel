@@ -446,7 +446,13 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	// figures above and none of them touch it — a fight's length is not a stat — so its place in
 	// this function is not an ordering anybody has to remember. What matters is that it is *here*:
 	// a fighter equipped without it carries a zero, and zero is no clock at all. See clock.go.
-	d.RoundLimit = s.roundLimit
+	//
+	// **A relic may move it for the fight, and does so without writing to the run.** The run's own
+	// number is the base and the worn set's deltas are summed over the top of it each time a
+	// fighter is put together, so selling the relic gives the rounds straight back — where a relic
+	// that called SetRoundLimit would leave the clock moved for the rest of the climb. Same shape
+	// as AddedHP and HPScale above. See combat.DoAdjustRoundLimit.
+	d.RoundLimit = combat.RoundLimitFor(worn, s.roundLimit)
 
 	// **The finger count goes over with it, and for the same reason.** A fighter equipped without
 	// it carries a zero, which the rules read as the default — so this is not load-bearing today

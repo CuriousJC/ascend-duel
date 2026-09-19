@@ -168,11 +168,11 @@ Five hues, and the hue is the only thing that changes. **Match these exactly.**
 
 | Name | Hex |
 |---|---|
-| `fire` | `#EB782D` orange |
-| `ice` | `#509BE6` blue |
-| `lightning` | `#D6980C` amber gold |
-| `earth` | `#4C8C34` green |
-| `arcane` | `#8A54C8` violet |
+| `fire` | `#F06A24` orange |
+| `ice` | `#4E9ED6` blue |
+| `lightning` | `#F2D13D` yellow |
+| `earth` | `#4E9B57` green |
+| `arcane` | `#8A5BC7` violet |
 
 **And a sixth in neutral gray**: mid-gray body, lighter gray toward the upper-left edge, darker
 gray toward the lower-right, the same near-black contour. **No hue at all** — not a warm gray, not

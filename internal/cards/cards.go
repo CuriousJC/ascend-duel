@@ -69,34 +69,34 @@ func (e Element) String() string {
 
 // borderColors is the element signal, now that the surface no longer carries it.
 //
-// These are the screen's existing element colors with one deliberate exception: Basic.
-// As a surface, near-white meant "this card makes no claim" and worked. As a border on
-// an off-white card it would be invisible, so it becomes a mid gray — still the quietest
-// of the set, still obviously the absence of an element, but actually a border.
+// **The five elements are the `core` column of `docs/art/palette.json`**, which is the same ramp
+// the art generator is handed when a picture has to sit in one element's range. `dark` and `light`
+// are not here because nothing on screen draws in them; a second copy of two unused columns is two
+// values that can drift from the file a picture was made against.
+//
+// Basic is the exception and belongs to no ramp. As a surface, near-white meant "this card makes no
+// claim" and worked; as a border on an off-white card it would be invisible, so it is a mid gray —
+// still the quietest of the set, still obviously the absence of an element, and actually a border.
 var borderColors = [...]color.RGBA{
 	Basic: {R: 150, G: 154, B: 163, A: 255},
-	Fire:  {R: 235, G: 120, B: 45, A: 255},
-	Ice:   {R: 80, G: 155, B: 230, A: 255},
-	// **Darkened on 2026-08-19** from {240,205,55}, which is a fine yellow on a dark ground and
-	// nearly invisible on two of the three light ones this game draws on — the off-white card
-	// surface and the combat screen's ground. It first showed up as an unreadable damage figure in
-	// the hand sum, where the number is drawn straight onto the ground; the border had the same
-	// problem more quietly. The combat screen's attention yellow took the same correction on the
-	// same day, for the same reason, and to the same value; it has since been cut.
-	Lightning: {R: 214, G: 152, B: 12, A: 255},
-	Earth:     {R: 76, G: 140, B: 52, A: 255},
+	Fire:  {R: 240, G: 106, B: 36, A: 255},
+	Ice:   {R: 78, G: 158, B: 214, A: 255},
+
+	// **Lightning is the brightest of the five and the first one to check on a light ground.** The
+	// card surface is off-white and the table is a light slate, and a yellow figure drawn straight
+	// onto either — the hand sum's damage number is the case to look at — reads as a hole rather
+	// than as a number. A border carries the same problem more quietly.
+	Lightning: {R: 242, G: 209, B: 61, A: 255},
+	Earth:     {R: 78, G: 155, B: 87, A: 255},
 
 	// Purple, and deliberately deeper than the relic pink it sits next to in this table — the two
 	// are the only two magenta-ish entries and the one thing that must never happen is an arcane
-	// card reading as a relic. It is dark enough to hold its own against the off-white surface,
-	// which is the constraint that pushed lightning down in 2026-08-19.
-	Arcane: {R: 138, G: 84, B: 200, A: 255},
+	// card reading as a relic. It is dark enough to hold its own against the off-white surface.
+	Arcane: {R: 138, G: 91, B: 199, A: 255},
 
-	// Pink, and deliberately unlike any of the four above. It was the relic border until
-	// 2026-09-13, when rarity took that job — see rarityBorders. What it still carries is the
-	// relic's *voice*: internal/screens writes a figure a relic has moved in this color, and a
-	// relic card whose rarity is not one of the three falls back to it, so an unclassified record
-	// reads as broken rather than as common.
+	// Pink, and deliberately unlike any of the four above. What it carries is the relic's *voice*:
+	// a figure a relic has moved is written in this color, and a relic card whose rarity is not one
+	// of the three falls back to it, so an unclassified record reads as broken rather than common.
 	Relic: {R: 232, G: 106, B: 168, A: 255},
 }
 

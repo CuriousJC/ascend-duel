@@ -166,11 +166,11 @@ and say so rather than inventing a subject.
 
 | Element | Hex |
 |---|---|
-| `fire` | `#EB782D` orange |
-| `ice` | `#509BE6` blue |
-| `lightning` | `#D6980C` amber gold |
-| `earth` | `#4C8C34` green |
-| `arcane` | `#8A54C8` violet |
+| `fire` | `#F06A24` orange |
+| `ice` | `#4E9ED6` blue |
+| `lightning` | `#F2D13D` yellow |
+| `earth` | `#4E9B57` green |
+| `arcane` | `#8A5BC7` violet |
 
 **Lightened, because of the value clause.** These are the hues the rest of the card is drawn in, so
 the picture has to agree with them — but a picture at full saturation in one of them would be too

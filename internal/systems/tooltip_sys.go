@@ -127,6 +127,10 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 // **A run with no ink takes `plain`**, so a caller that never thinks about color is drawn exactly
 // as it was before runs existed. It is a parameter rather than a constant because the title and the
 // body have different default inks and share this drawing.
+//
+// **A run naming a material is set in it instead**, the grain showing through the letters — see
+// tooltip_texture.go. It is placed and measured exactly as a colored run is, so a form word sits
+// where the same word in one color would.
 func DrawRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFace, x, y int, plain color.RGBA) {
 	for _, run := range line {
 		if run.Text == "" {
@@ -136,7 +140,11 @@ func DrawRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFace, 
 		if ink.A == 0 {
 			ink = plain
 		}
-		drawTipLine(screen, run.Text, face, x, y, ink)
+		// **The material is tried first and the ink is what a missing one falls back to.** A run
+		// naming a texture nobody has filed draws as a colored word rather than as a gap.
+		if run.Texture == "" || !drawTexturedRun(screen, run.Text, run.Texture, face, x, y) {
+			drawTipLine(screen, run.Text, face, x, y, ink)
+		}
 		w, _ := text.Measure(run.Text, face, 0)
 		x += int(w)
 	}

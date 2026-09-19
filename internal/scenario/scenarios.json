@@ -2402,5 +2402,45 @@
     "Seed": "0000HX",
     "Dummy": true,
     "Actions": 15
+  },
+  {
+    "ScenarioRecord": "ten-rings-ten-runes",
+    "Note": "Ten rings on the fingers and ten runes in the sack, on a fight that can be won in one press. It is the fixture for what the worn row and the sack look like when both are full of things that do not match each other: ten different families, so no two rings are the same picture, and all three rarity borders on screen at once. The ten runes are one for every shape a rune can take, which is the set ASCEND_DUEL_SCENARIO=ten-runes reads on its own. The hand is five Pulverizes in one element against the weakest creature in the game with a budget that pays for all of them, so DUEL! ends the fight and the reward screen and then the shop are each one click away - and the purse is set well past the dearest thing on a shelf, so the shop is a row to be looked at rather than a sum to be counted. Nothing here is tuned: ten relics firing into one sum is a picture of a laid-out screen rather than a balance question.",
+    "Relics": [
+      "dmgx-fire",
+      "jar-ice",
+      "dmg-all-slash",
+      "hp-scale",
+      "sundering",
+      "growth-crush",
+      "handmult-pair",
+      "lead-three-times",
+      "discount-slash",
+      "pair-status-burn-chill"
+    ],
+    "RelicSlots": 10,
+    "Runes": [
+      "two-into-fire",
+      "two-into-crush",
+      "left-to-right",
+      "duplicate-card",
+      "two-destroyed",
+      "switch-gold",
+      "change-wildcard",
+      "repeat-card",
+      "two-stones",
+      "add-vitae"
+    ],
+    "Hand": [
+      { "Card": "Pulverize", "Element": "fire" },
+      { "Card": "Pulverize", "Element": "fire" },
+      { "Card": "Pulverize", "Element": "fire" },
+      { "Card": "Pulverize", "Element": "fire" },
+      { "Card": "Pulverize", "Element": "fire" }
+    ],
+    "Enemy": "GiantBat",
+    "Screen": "combat",
+    "Vitae": 400,
+    "Actions": 30
   }
 ]

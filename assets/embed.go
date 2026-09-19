@@ -94,6 +94,25 @@ var formArt embed.FS
 // **Its own group rather than `form/`**, because more visible upgrades are coming and the next
 // one will have nothing to do with the form mark.
 
+// MATERIAL TEXTURES
+//
+// The stone and metal a *word* is set in on a dark panel: steel for SLASH, ivory for STAB, granite
+// for CRUSH. **Not a picture anything blits whole** — `internal/systems` tiles one behind the glyph
+// shapes of a form word and keeps what lands inside them, so what matters is the grain rather than
+// the composition.
+//
+// **Seamless tiles at 114x114, box-reduced from a 1254 source by exactly eleven.** An exact integer
+// factor is what keeps a seamless tile seamless; a fractional one bleeds the far edge into the near
+// one and the join shows as a line down the middle of a letter. The reduction is what puts the
+// grain at word scale: at native resolution one crystal is most of a capital and the word reads as
+// a blotch.
+//
+// **Its own group rather than `form/`**, which is marks drawn *onto* a card — these are drawn
+// *into* type, and a file in that glob would be a mark `cards.MarkArtKey` never names.
+//
+//go:embed texture/*.png
+var textureArt embed.FS
+
 //go:embed upgrade/wildcard.png
 var wildcardupgrade_png []byte
 
@@ -324,6 +343,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, otherArt, "other")
 	embedFamily(images, formArt, "form")
+	embedFamily(images, textureArt, "texture")
 	embedFamily(images, portraits, "enemy")
 	embedFamily(images, bossPortraits, "boss")
 

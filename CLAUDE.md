@@ -1358,6 +1358,42 @@ sum — and moving it to deep purple immediately collided with arcane. It now ta
 ink and is marked instead. See `screens.handNameInk` and `session.InkHand`, and note the second
 argument: three of the four axes a hand counts on are not elemental at all.
 
+### The palette: eight ramps, and only the middle one is drawn
+
+**`docs/art/palette.json` is where the colors are written down** — five elements and three form
+materials, each as `dark`, `core` and `light`. It is reference rather than a catalog: nothing loads
+it, and it is not in `data/` for that reason. What it is *for* is the generator, which is handed one
+ramp when a picture has to sit in one element's or one form's range.
+
+**`core` is the only column the game draws in**, and it is a Go value in two places —
+`cards.borderColors` for the five elements and `cards.InkIvory` / `InkSteel` / `InkGranite` for the
+three materials. So `core` is written twice, here and in the file, and nothing checks that the two
+agree: **re-read `palette.json` against `internal/cards` before trusting either**, and treat a
+disagreement as a value to fix rather than as a second opinion.
+
+**The three materials are the form axis** *(owner's call, 2026-09-18)* — **ivory is stab, steel is
+slash, granite is crush** — and `cards.FormWords` is the one table that says so. **Defend has no
+material and is not in it**: blue already belongs to the verb and there is no fourth ramp, so a word
+there would be a color with nothing behind it.
+
+**A form word on a dark panel is set in its material rather than in its color.** `assets/texture/`
+holds one seamless tile per material and `internal/systems/tooltip_texture.go` keeps it inside the
+glyph shapes, so SLASH is a piece of brushed steel in the shape of the word. **A card face cannot
+do this** — `internal/cards` draws into a plain Go image with no graphics context and masking is a
+GPU blend — so a span carries the *name* of a material and the flat `core` beside it, and a drawing
+that cannot composite one falls back to the ink. Same split `systems.ArtMark` and `ArtMarkImage`
+already make.
+
+**The tiles are committed at 114x114, reduced from the source by exactly eleven.** An integer factor
+is what keeps a seamless tile seamless, and the reduction is what puts the grain at word scale: at
+native resolution one crystal is most of a capital and the word reads as a blotch.
+
+**A change here moves the art out of step with the type, and nothing fails.** The form marks and
+cost ticks in `assets/form/` are authored in their element, and the three prompts that name element
+hex values — `docs/art/card_art_prompt.MD`, `damage_art_prompt.MD` and `glyph_art_prompt.MD` — are
+what a regeneration reads. **Move a `core` and all four have to follow**, or a card's corner mark
+and the word naming its element are two different colors.
+
 ### Color: name one color and scale it — and the light comes off that color too
 
 **The rule governs widget *state*; the bevel is the surface's own light** *(2026-08-24)*. Those are

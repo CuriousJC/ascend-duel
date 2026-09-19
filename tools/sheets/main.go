@@ -144,6 +144,15 @@ var sheets = []sheet{
 			"fixtures, and none of it is reachable from a shipped binary.",
 	},
 	{
+		Dir:   "goodsheet",
+		Tool:  "./tools/goodsheet",
+		Title: "Sealed goods sheet",
+		Blurb: "Every sealed good, grouped by what is inside and walked smallest vessel first, " +
+			"with the tooltip that is now the whole of what the card says, what the extra " +
+			"options cost over the size below, and how much of its catalog each one shows at " +
+			"once. Two stand on a shelf at a time, one catalog each.",
+	},
+	{
 		Dir:   "runesheet",
 		Tool:  "./tools/runesheet",
 		Title: "Rune sheet",

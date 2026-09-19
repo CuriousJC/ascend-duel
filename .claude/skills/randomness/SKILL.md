@@ -30,7 +30,7 @@ argument is a struct rather than a `*rand.Rand`. The zero value rolls nothing.
   concern.** Sharing one between two concerns means a change to either silently rerolls the
   other.
 - **Presentation may never change an outcome.** `ResolveRound` decides a whole round before
-  playback begins, so animation speed, the planned game-speed setting and any skip button are
+  playback begins, so animation speed, the player's game-speed setting and any skip button are
   free to alter pacing and must not alter results. The same constraint binds `internal/trace`,
   `internal/idle`, the scripted demo, and both debug flags.
 
@@ -106,6 +106,9 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which relics are for sale, on any change to the essence catalog |
 | `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which four stones a bag of rocks holds, on any change to the relic shelf |
 | `seeds.VialStock` | fight | `dealVialEssences` and `dealVialOffer` (`internal/screens/shop_goods.go`) | which four essences a vial holds, on any change to the free offer |
+| `seeds.SackStock` | fight | `dealSackRunes` (`internal/screens/shop_goods.go`) | which four runes a sack holds, on any change to the other two packs |
+| `seeds.StoneShower` | fight | `applyRuneRolling` (`internal/screens/combat_rune.go`), mixed with the run's placed-stone count | which stones a rock shower drops, on any change to the shop |
+| `seeds.PackOffer` | fight | `ShopScene.packRNG` (`internal/screens/shop_packs.go`) | which two of the three packs a visit puts up, on any change to the relic shelf |
 | `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to the shock roll |
 | Loot offers | — | **not built** | — |
 | Floor offers | — | **not built** | — |

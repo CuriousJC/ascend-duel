@@ -645,7 +645,7 @@ round, filled for the rounds already spent.
 
 ### The shield row on the duelist card
 
-*`combat_shields.go` and `card_art.go`, 2026-08-31.* The player's three defend cards raise shields, and
+*`combat_shields.go` and `card_art.go`.* The player's defend cards raise shields, and
 **one pip per shield is drawn in the seat the enemy card's status badges occupy** — same offsets,
 same box, so the two fighter cards stay twins. The pip is `assets/form/defend.png`, the mark the
 cards themselves carry, so what was raised and what is standing are the same picture.

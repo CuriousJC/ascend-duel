@@ -1,4 +1,3 @@
-| `damage_art_prompt.MD` | **the second odd one out**: the damage badge in a card's bottom-left corner — a diamond carrying the multiplier an attack deals, **with the numeral drawn into the art** rather than printed on top, because type and art do not reduce the same way. Eleven values in six colors, 66 files, reviewed as a matrix by `go run ./tools/badgesheet`. Filed into `assets/damage/`, globbed by `assets.embedFamily` and keyed by filename stem, not through `tools/relicart`. The unnumbered badges in three shapes are kept beside them: they are what a multiplier nobody drew falls back to, with its figure printed |
 # Art prompts
 
 **The words that produce a picture, kept beside each other rather than beside the picture.**
@@ -9,19 +8,18 @@ and both are things the repo produced. These are things the repo consumes.
 
 ## The rules
 
-- **One prompt per catalog** *(owner's call, 2026-09-13)*. A prompt is the style block plus a
-  composition plus a subject paragraph, and the style block is the whole reason a file exists: it
-  is what makes forty relics look like forty relics from one game rather than forty separate
-  commissions. It is pasted verbatim into every prompt, so the catalogs stay one game while each
+- **One prompt per catalog.** A prompt is the style block plus a composition plus a subject
+  paragraph, and the style block is the whole reason a file exists: it is what makes a catalog
+  look like one game rather than a pile of separate commissions. It is pasted verbatim into every prompt, so the catalogs stay one game while each
   gets to say the things that are only true of it. A single file with a "pick one" section is a
   section somebody picks wrong.
 - **A record never gets its own prompt.** The style and composition blocks are pasted verbatim; a
   record that needs one changed is a design decision that should move it for every card in that
   style.
-- **The style block is measured off the shipped art, not written from taste** *(owner's call,
-  2026-09-13)*. It says what the 138 pictures in `assets/relic/` actually are, so that a generator
-  handed this prompt and a record lands somewhere the existing shelf would accept — which is the
-  only test a prompt can be held to. **A clause nothing in `assets/` satisfies is a clause to
+- **The style block is measured off the shipped art, not written from taste.** It says what the
+  pictures in `assets/relic/` actually are, so that a generator handed this prompt and a record
+  lands somewhere the existing shelf would accept — which is the only test a prompt can be held
+  to. **A clause nothing in `assets/` satisfies is a clause to
   delete, not a standard to keep.** The measurements are below.
 - **The canvas is a fact about a card style**, taken from `internal/cards/style.go`: 200x280 at
   5:7, and the art *covers* a bleeding card rather than being fitted into a box. A prompt whose
@@ -39,20 +37,20 @@ and both are things the repo produced. These are things the repo consumes.
   catalog's inbox named after the record, and run the command with that catalog's `-kind`:
   `relic`, `essence`, `rune`, `stone` or `other`. **A stem naming no record is refused rather than
   filed**, because a misspelled key is invisible in play — the card simply draws the fallback.
-- **`-kind other` is one inbox over two files** *(2026-09-15)*. The potions and the sealed goods
+- **`-kind other` is one inbox over two files.** The potions and the sealed goods
   share one prompt, so they are generated in one batch and there is nothing to be gained by making
   the person splitting a batch of six decide which three are which. `.scratch/to-process-other-art`
   is the inbox, `assets/other` the directory, and the tool writes each `"Art"` back into whichever
   of `data/potions.json` and `data/goods.json` holds the record. An id appearing in both is
   refused: one flat asset map means one id is one picture.
-- **The generic prompt is what lives here; each relic's own description lives on its record**
-  *(owner's call, 2026-09-12)*. A prompt is about no record at all. The subject paragraph is about exactly one, so it is `Draw` in
+- **The generic prompt is what lives here; each record's own description lives on the record.**
+  A prompt is about no record at all. The subject paragraph is about exactly one, so it is `Draw` in
   `data/relics.json` — ignored by the engine, exactly as a status's `Badge` is, and pasted into
   the generator as the record's own JSON. A brief kept apart from the record is a brief that
   gets deleted when the picture it produced is filed.
-- **The worklist is a query now.** A relic with an empty `Art` has no picture, a relic with an
-  empty `Draw` has no brief, and `go run ./tools/relicsheet` prints both counts and marks both in
-  pink. A file listing the same thing is a second copy to keep in step.
+- **The worklist is a query.** A record with an empty `Art` has no picture, a record with an
+  empty `Draw` has no brief, and each catalog's sheet prints both counts and marks both in pink.
+  A file listing the same thing is a second copy to keep in step.
 - **The glyph prompt is the exception to every rule above, and says so at the top.** It has no
   record behind it — there is no `Draw` field for a form mark, because a form is a closed
   vocabulary in Go rather than a catalog anybody authors into — so the subject lives in the prompt
@@ -64,11 +62,10 @@ and both are things the repo produced. These are things the repo consumes.
 
 ## What the art actually is
 
-**Measured across all 138 files in `assets/relic/`**, and the reason the style block reads the way
-it does. The prompt that produced them asked for none of this — it demanded at most 16 flat
-colors, chunky blocks on a 40x56 grid and hard edges with no anti-aliasing, and the generator
-ignored every word of it. What came back is what the catalog now is, so the prompt was rewritten
-to describe it.
+**Measured across `assets/relic/`**, and the reason the style block reads the way it does. It is
+not quantized pixel art and never was: a prompt demanding at most 16 flat colors, chunky blocks
+on a 40x56 grid and hard edges with no anti-aliasing produced none of those things, and what the
+catalog *is* is what the style block has to describe.
 
 | | |
 |---|---|
@@ -84,35 +81,36 @@ to describe it.
 | Background flatness | no vignette: outer ring 28.9 against inner band 30.7 |
 | Background texture | noise at ~1.6 luminance levels standard deviation — barely perceptible |
 
-**Redo this before changing the style block again.** Color counts are `PIL.Image.getcolors`; the
-grid is run lengths of identical adjacent pixels along sampled rows; the margins are the bounding
-box of pixels more than 90 (summed channel distance) from the modal background color.
+**Re-measure before changing the style block again.** Color counts are `PIL.Image.getcolors`;
+the grid is run lengths of identical adjacent pixels along sampled rows; the margins are the
+bounding box of pixels more than 90 (summed channel distance) from the modal background color.
 
-**`relicart -blocky` would have enforced the old spec** — it quantizes to the 40x56 grid on the
-way down — and was never used. The committed catalog went through plain CatmullRom, which is
-`reduce`'s default. That flag is now the odd one out rather than the road not taken.
+**`relicart -blocky` enforces the quantized spec** — it snaps to the 40x56 grid on the way down —
+and nothing in `assets/` was filed with it. The committed catalog went through plain CatmullRom,
+which is `reduce`'s default.
 
 ## What is here
 
 | File | Holds |
 |---|---|
 | `relic_art_prompt.MD` | the prompt for a relic — `cards.RelicStyle` |
-| `relic_art_prompt_pixel_archived.MD` | **not live.** The same relic prompt with the render language pixel rather than smooth, kept so switching direction is a regeneration rather than an archaeology dig. The 137 pictures in `assets/relic/` were drawn this way and the other three catalogs were not |
+| `relic_art_prompt_pixel_archived.MD` | **not live.** The same relic prompt with the render language pixel rather than smooth, kept so switching direction is a regeneration rather than an archaeology dig. The relic pictures were drawn this way and the other catalogs were not |
 | `essence_art_prompt.MD` | the prompt for an essence or a rune — `cards.EssenceStyle` goods that print their sentence on a scrim across the lower half of the picture. Same style block, and the ephemeral fading an essence has and a relic does not |
 | `stone_art_prompt.MD` | the prompt for a stone — same style block and the same whole-object instruction, plus the three material ladders: the concept axis is silica, the form axis is plain rock, the element axis is gem |
 | `other_card_art_prompt.MD` | the prompt for every *other* `cards.EssenceStyle` good — the potions in `data/potions.json`, the sealed goods in `data/goods.json`, the placeholder brand, and whatever is added next. Same style block and the same composition; the object is whole rather than coming apart |
 | `rune_art_prompt.MD` | the closed list of rune body plans, pasted into the essence prompt. A creature needs a shape where an object does not |
-| `card_art_prompt.MD` | **the third odd one out**: a full-bleed picture for a *playing* card, one per card per element out of `data/card_art.json` — 95 of them, the largest backlog in the repo. It is 5:7 and full-bleed like the relic prompt, and unlike every other bleeding card it has **no scrim**: `cards.Hand` sets `ArtUnder` rather than `ArtBleed`, so the card keeps its near-black ink set and the picture has to stay pale where the type lands. The prompt carries the measured map of where that is. Filed into `assets/card/`, globbed by `assets.embedFamily` and keyed by filename stem, not through `tools/relicart`. **There is no default face** — an unauthored record draws the card exactly as it looked before the catalog existed |
+| `card_art_prompt.MD` | **the third odd one out**: a full-bleed picture for a *playing* card, one per card per element out of `data/card_art.json`, which is the largest backlog in the repo. It is 5:7 and full-bleed like the relic prompt, and unlike every other bleeding card it has **no scrim**: `cards.Hand` sets `ArtUnder` rather than `ArtBleed`, so the card keeps its near-black ink set and the picture has to stay pale where the type lands. The prompt carries the measured map of where that is. Filed into `assets/card/`, globbed by `assets.embedFamily` and keyed by filename stem, not through `tools/relicart`. **There is no default face** — an unauthored record draws the card exactly as it looked before the catalog existed |
 | `damage_art_prompt.MD` | **the second odd one out**: the damage badge in a card's bottom-left corner — a badge carrying the multiplier an attack deals. Square and transparent like the glyph prompt, and the one prompt whose output has *type printed on it by the game*, which is why it asks for a flat unbroken centre and no hot spot. **It asks for three shapes on one diameter** — circle, starburst, diamond — in six colors each, because which outline the badge takes is still open. Filed like the form marks: into `assets/damage/` under its own names, globbed by `assets.embedFamily` and keyed by filename stem, not through `tools/relicart` |
 | `glyph_art_prompt.MD` | **the odd one out**: it produces the marks drawn *on top of* a card rather than a picture *on* one — the form mark in the corner and the cost ticks under it. Square and 5:2 rather than 5:7, transparent rather than near-black, one hue rather than a scene, and delivered at 256 because the game reduces to the two sizes it draws at |
 | `palette.json` | **not a prompt**: the eight color ramps this game draws in — the five elements and the three form materials — each as `dark`, `core` and `light`, beside the plain-English `hue` the ramp is (orange, yellow, green, blue, purple; cream, cool gray, dark gray), the `axis` it belongs to, and, for a material, the `form` it stands for (ivory is stab, steel is slash, granite is crush). `core` is the value the game uses; the other two are here for a generator being asked for a picture in one element's or one form's range. `internal/cards` holds the live copy of `core`, in `borderColors` and in `FormWords`, because a color the rules-adjacent drawing reads has to be a Go value and not a file read at launch. **Every prompt carries these values written out**, so a brief can say "a purple orb" or "an ivory haft" and the generator knows which range that is — the three closed-set prompts as their element table, the subject prompts as a shared **The color words** block. Move a value here and every prompt has to follow |
 
-**Neither bleeding card names itself** *(owner's call, 2026-09-11)*, so no prompt has to keep a
-title band clear: the picture is the card. What a relic card draws over its art is one counter
-disc in the bottom-right; what an `EssenceStyle` card draws over its art is the sentence saying
-what it does, on a dark scrim from y 140 to y 265 of 280.
+**Neither bleeding card names itself**, so no prompt has to keep a title band clear: the picture
+is the card. What a relic card draws over its art is one counter disc in the bottom-right.
+`EssenceStyle` declares a text band from y 140 to y 265 of 280 and **no card in the catalog fills
+it** — the essences, runes, stones, potions and goods all say their rule in a tooltip — so an
+`EssenceStyle` face is the whole picture.
 
-**Neither is a reservation** *(owner's call, 2026-09-13)*. Both go on top of a picture that
+**Neither is a reservation.** Both go on top of a picture that
 carries on underneath, so a prompt that described either would produce art with a hole in it —
 and a generator told that a corner is special decorates it, which is how you get a drawn disc
 sitting under the real one. **No prompt here asks for a title band, a disc, a badge or an empty

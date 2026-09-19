@@ -2558,7 +2558,7 @@
   },
   {
     "ScenarioRecord": "jar-of-earth-held",
-    "Note": "The Jar of Earth on a bench, so the term it adds can be watched moving. It reads the earth cards LEFT IN HAND rather than the ones played - 5 DMG a card - so it is the one relic here that pays for what a turn did not do, and the only way to read its arithmetic is to play a different number of cards and watch the sum. The whole hand is earth and so is the whole deck, which makes the held count simply eight minus what was played: take two and the jar is worth 30, take five and it is worth 15. That is the tension the fixture is for - playing more raises the hand's own multiplier and shrinks the jar's term at the same time, and the two move against each other inside one sum. The bonus lands in the base rather than on top, so the rung multiplies it like every other term: the same three cards held are worth more behind an Elemental Five of a Kind than behind a Pair. The Brace is in the hand on purpose - a defend card carries an element and brings no damage, so keeping it back pays the jar exactly as keeping an attack does. Against a dummy at 15 AP, so the choice is which cards rather than which are affordable, and the fight does not end while the combinations are being tried.",
+    "Note": "The Jar of Earth on a bench, so the term it adds can be watched moving. It reads the earth cards LEFT IN HAND rather than the ones played - 5 DMG a card - so it is the one relic here that pays for what a turn did not do, and the only way to read its arithmetic is to play a different number of cards and watch the sum. Six of the eight cards in hand are earth and the whole deck is, so the held count is the earth left behind: the fire Slice and the ice Bash pay the jar nothing whether they are played or kept, which is what makes the term readable against a hand that is not all one color. Hold all six earth and the jar is worth 30; play five of them and it is worth 5. That is the tension the fixture is for - playing more raises the hand's own multiplier and shrinks the jar's term at the same time, and the two move against each other inside one sum. The bonus lands in the base rather than on top, so the rung multiplies it like every other term: the same three cards held are worth more behind an Elemental Five of a Kind than behind a Pair. The Brace is in the hand on purpose - a defend card carries an element and brings no damage, so keeping it back pays the jar exactly as keeping an attack does. Against a dummy at 15 AP, so the choice is which cards rather than which are affordable, and the fight does not end while the combinations are being tried.",
     "Relics": [
       "jar-earth"
     ],
@@ -2581,11 +2581,11 @@
       },
       {
         "Card": "Slice",
-        "Element": "earth"
+        "Element": "fire"
       },
       {
         "Card": "Bash",
-        "Element": "earth"
+        "Element": "ice"
       },
       {
         "Card": "Skewer",
@@ -2637,6 +2637,33 @@
         "Element": "earth",
         "Copies": 5
       }
+    ],
+    "Enemy": "GiantRat",
+    "Dummy": true,
+    "Actions": 15
+  },
+  {
+    "ScenarioRecord": "three-rings-shaking",
+    "Note": "Four relics paying into one sum four different ways, so what each shake means can be told apart. The Twinned Ring adds 2 duelist DMG on a Pair and the Paired Ring adds 3 on a Form Two Pair - both are raises on the DMG every term is worked out at, so they fire together into one climb on the duelist card before the sum starts counting. The Paired Rings amulet is the third and it is the only one with a figure of its own on the line: it scales the whole hand by 2x on a Pair, so it lands as a second multiplier after the rung's, in the pane's pink, flying out of the amulet. The Jar of Earth is the fourth and it pays per card LEFT IN HAND, 5 apiece, as its own pink term flying out of each held card with the jar shaking behind it. The four cards to play are two stabs and two crushes in four different elements, which is a Form Two Pair and satisfies the Pair under it, so both rings fire and no elemental rung outranks either; they cost 6 AP together. The four kept back are earth, so the jar is worth 20 across four terms - drop one and the sum loses a term rather than shrinking a figure, which is the reading the per-card terms exist for. Two Agate sit in the consumables pane, each raising the Pair by a tenth of its 100: spend them in front of a two-card pair, since a hand is scored on the top rung it satisfies and a Form Two Pair is scored as that rather than as the Pair beneath it. The deck is the shipped one, so refills are ordinary cards. Against a dummy at 15 AP, so any four of the eight can be tried.",
+    "Relics": [
+      "dmg-pair-hand",
+      "dmg-form-two-pair-hand",
+      "handmult-pair",
+      "jar-earth"
+    ],
+    "Stones": [
+      "agate",
+      "agate"
+    ],
+    "Hand": [
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Thrust", "Element": "ice" },
+      { "Card": "Thump", "Element": "lightning" },
+      { "Card": "Bash", "Element": "arcane" },
+      { "Card": "Skewer", "Element": "earth" },
+      { "Card": "Cut", "Element": "earth" },
+      { "Card": "Slice", "Element": "earth" },
+      { "Card": "Brace", "Element": "earth" }
     ],
     "Enemy": "GiantRat",
     "Dummy": true,

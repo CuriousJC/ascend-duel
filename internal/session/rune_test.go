@@ -459,9 +459,9 @@ func TestTheSackAndItsRidersSurviveASnapshot(t *testing.T) {
 	}
 }
 
-func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) {
-	// **They go into the pouch, not onto the ladder** *(owner's call, 2026-09-02)*. A shower hands
-	// over consumables to be spent or sold later; the run decides which rungs it raises.
+func TestARockShowerPutsEveryStoneItDrawsOnTheLadder(t *testing.T) {
+	// **They go onto the ladder, not into the pouch.** There is nothing to choose about a stone the
+	// draw already picked, so a shower raises its rungs as it lands and the pouch stays empty.
 	run := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, RuneStones)
 
@@ -469,15 +469,15 @@ func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) 
 		t.Fatal("a rock shower was refused")
 	}
 
-	if got := run.CarryCount(); got != p.Number {
-		t.Errorf("a shower of %d put %d stones in the pouch", p.Number, got)
-	}
 	placed := 0
 	for _, n := range run.StoneCounts() {
 		placed += n
 	}
-	if placed != 0 {
-		t.Errorf("a shower placed %d stones on the ladder, and should have placed none", placed)
+	if placed != p.Number {
+		t.Errorf("a shower of %d placed %d stones on the ladder", p.Number, placed)
+	}
+	if got := run.CarryCount(); got != 0 {
+		t.Errorf("a shower left %d stones in the pouch, and should have left none", got)
 	}
 	if got := len(run.Granted()); got != p.Number {
 		t.Errorf("the receipt shows %d stones, wanted %d", got, p.Number)
@@ -487,7 +487,7 @@ func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) 
 func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, RuneStones)
-	run.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(3)))
+	carryTwo(t, run)
 
 	first, _ := StoneByKey(run.Carried()[0])
 	before := run.StonesOn(first.Hand)
@@ -499,15 +499,31 @@ func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
 		t.Errorf("%s went on rung %s and left it at %d, wanted %d",
 			first.Record, first.Hand, got, before+1)
 	}
-	if run.CarryCount() != p.Number-1 {
-		t.Errorf("the pouch holds %d after spending one of %d", run.CarryCount(), p.Number)
+	if run.CarryCount() != 1 {
+		t.Errorf("the pouch holds %d after spending one of two", run.CarryCount())
+	}
+	_ = p
+}
+
+// carryTwo puts two stones in a run's pouch directly, which is what a shop's shelf does — a
+// shower no longer fills it, so a test about the pouch fills it itself rather than through a rune
+// that has stopped being a way in.
+func carryTwo(t *testing.T, run *Session) {
+	t.Helper()
+	all := Stones()
+	if len(all) < 2 {
+		t.Fatalf("the catalog holds %d stones, and this needs two", len(all))
+	}
+	for _, st := range all[:2] {
+		if !run.Carry(st.Record) {
+			t.Fatalf("the pouch refused %q", st.Record)
+		}
 	}
 }
 
 func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
-	p := anyWithTarget(t, RuneStones)
-	run.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(5)))
+	carryTwo(t, run)
 
 	sold, _ := StoneByKey(run.Carried()[0])
 	purse := run.Vitae()

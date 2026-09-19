@@ -937,7 +937,7 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 
 	// **The cards the turn kept back pay after the ones it spent.** Same seat, same reason: it
 	// is a term the hand contributed rather than a number a relic moved on a card.
-	e.HeldBonus, e.HeldBonusCards, e.HeldBonusSeats = HeldBonus(actor.WornRelics(), held)
+	e.HeldBonus, e.HeldBonusCards, e.HeldBonusSeats, e.HeldBonusEach = HeldBonus(actor.WornRelics(), held)
 	e.Base += e.HeldBonus
 
 	// **And the purse pays last of the three.** It is not a card, not the rung and not the cards

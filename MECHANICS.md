@@ -2132,8 +2132,9 @@ of the figure `hands.json` writes down**, for the rest of the run.
   previous stone produced. The tenth stone is worth exactly what the first was. Integer arithmetic
   throughout, like the rest of the damage path. **The Pair's 100 makes its stone worth 10**, which
   is the cheapest step on the ladder and the only one starting from the identity.
-- **Using it is the whole of owning it.** There is no inventory: the click that picks a rock out of
-  the bag is the click that puts it on the ladder. A run holds counts per rung, not stones.
+- **A stone is spent from the consumables pane, mid-fight, beside the runes.** It needs nothing
+  selected, because the rung it raises is written on the record, and it takes effect on the duelist
+  standing there rather than at the next fight.
 - **It belongs to the run, not to the profile.** Stones are gone when the run is — the same lifetime
   as relics, essences and the deck — and they are written into `run.json` by hand *key*, so a rung this
   build has not got refuses the resume rather than being dropped.
@@ -2153,30 +2154,40 @@ of the figure `hands.json` writes down**, for the rest of the run.
 
 ### The pouch — carrying stones *(owner's call, 2026-09-02)*
 
-**Using a stone stopped being the same as owning one.** Until 2026-09-02 a stone was applied the
-instant it was chosen and there was no inventory at all: the bag of rocks offered four, one went on
-its rung, the other three were gone. The rock-shower rune is what changed it — it hands over
-*consumables*, and a consumable you cannot carry is a consumable you cannot decide about.
+**Using a stone is not the same as owning one.** A run carries stones and decides later which rungs
+it raises, which is what makes a stone a consumable rather than a prize.
 
 | | |
 |---|---|
 | Held | in the run's **pouch**, uncapped, across fights and across a save |
-| Spent | at the shop, from the `S` panel: **Use** puts it on its rung, **Sell** pays `StoneSalePrice` |
-| Arrives from | a rock-shower rune. **The bag of rocks still applies its pick on the spot** |
+| Spent | from the **consumables pane**, on the combat screen, beside the runes. The shop's `S` panel also uses one, and sells one for `StoneSalePrice` |
+| Arrives from | the shop's shelf. **A bag of rocks and a rock shower both apply what they draw on the spot** |
+
+**A stone that arrives already decided is applied where it lands** *(owner's call, 2026-09-19)*. The
+bag of rocks is a pick out of four and the shower is a flat draw of several, and in both the rung is
+settled by the time the player sees it — so a pouch filling with rocks nobody chose is an inventory
+chore in front of a decision that has already been made. What the pouch is for is a stone the run
+*bought*, which is a decision still to make.
 
 - **The pouch is a list of keys and `stones` is a map of counts**, which is the opposite shape for
   the opposite reason. The counts are what the ladder reads and two Agates there are genuinely one
   number; the pouch is a row of cards to click, and two Agates in it are two separate decisions.
-- **The bag of rocks is unchanged.** It is a pick out of four, taken on the spot; the pouch is for
-  stones that arrive already yours. Making the bag fill the pouch too would turn a choice among four
-  into four things to decide about later, which is not what it is for.
+- **The consumables pane holds every kind of carried thing**, and `session.Consumable` is the one
+  vocabulary it reads — a kind, the record, and where in its own list it came from. Runes lead the
+  row because a rune has to be *aimed* and the hand's selection is read toward it; a stone stands
+  wherever it stands. **A new consumable is a kind, a picture and a sentence**: see
+  `screens.drawConsumableCard` and `screens.consumableTipLines`, which are the whole of what the
+  screen learns about one.
+- **Only the runes reorder.** The row is the sack then the pouch, so a seat past the last rune is
+  not a sack position; a drag across the join would reorder by a number meaning something else. A
+  stone has nothing to be before or after.
 - **Selling pays 5, which is what a whole bag costs.** Deliberately generous rather than tuned:
   selling exists so a rung you will never build is worth something, and a price that made selling
   pointless would leave the pouch full of rocks nobody wants. One number, `StoneSalePrice`, and the
   obvious thing to move first if the pouch turns out to be a vitae fountain.
-- **It is the shop and not the combat screen**, because selling is a trade and the shop is the only
-  screen that trades. Splitting *use* onto another screen would make one row of cards into two board
-  pieces answering the same question.
+- **Selling is the shop's and nowhere else's**, because selling is a trade and the shop is the only
+  screen that trades. Using is on both, since a rung is worth raising in front of the hand that
+  wants it and also worth raising while shopping for the next one.
 - **A panel, not a row.** The shelf ends at y=684 and Leave is centered at 845; a card row wants 224
   of the 160 between them. So the pouch is the shop's third corner toggle beside `D` and `C`.
 - **Spending asks twice**, on the worn row's own argument: a stone armed by a click puts two tabs

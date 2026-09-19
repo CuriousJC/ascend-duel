@@ -305,6 +305,13 @@ type mathItem struct {
 	// convention. Filled by `startHandMath`, which is the half of the box that knows the table.
 	cardSeat int
 
+	// heldPay is which of the blow's held payments this item is, plus one, and 0 for everything
+	// else. **The figure flies out of the card still in the hand**, not out of the relic that
+	// priced it — a jar pays *for* a card the player is looking at, so the number leaves that card
+	// and the relic shakes behind it. `startHandMath` turns the index into a seat in the row, which
+	// is the half of the box that knows where the hand is.
+	heldPay int
+
 	// signalsSent says this item's card has already thrown whatever its riders parked, so an item
 	// held on screen for its whole beat cannot throw them once a frame. **The signals themselves are not stored here** — the
 	// scene parked them against a seat when the events went past, and this only says when the seat
@@ -583,6 +590,13 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 		// watched a rung relic raise it. It is skipped by the term counter for the relics' reason:
 		// one of these leads every term, and counting them would pair every card's multiplier with
 		// the card after it.
+		// **A held card's figure sets off from the card that is still in the hand**, and is skipped
+		// by the term counter with the relics and the DMG: these sit after the played cards' own
+		// figures, and counting them would hand the last of them the multiplier's origin.
+		if pay := box.items[i].heldPay; pay > 0 {
+			box.items[i].from = s.heldPayOrigin(gs, e, pay-1)
+			continue
+		}
 		if box.items[i].fromDuelist {
 			box.items[i].from = s.fighterCardMid(gs, e.Side)
 
@@ -627,7 +641,7 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 		// has exactly one of: the DMG leading it belongs to the duelist and a relic's factor
 		// belongs to the relic, so counting either would step the row mid-bracket.
 		it := box.items[i]
-		if it.fly && i != box.multAt && !it.fromDuelist && it.relicSeat == 0 {
+		if it.fly && i != box.multAt && !it.fromDuelist && it.relicSeat == 0 && it.heldPay == 0 {
 			counted++
 		}
 		box.termOf[i] = counted
@@ -706,14 +720,31 @@ func mathScript(e combat.Event) []mathItem {
 	// term above: its own figure, the ground's ink, flying out of the relic that paid it. Two terms
 	// rather than one merged figure, because they answer different questions — what the hand
 	// formed, and what it is still holding.
-	if e.HeldBonus != 0 {
+	//
+	// **And it is a term per card kept back, not one merged figure** *(owner's call, 2026-09-19)*.
+	// Six earth cards held are `+5 +5 +5 +5 +5 +5`, so the term can be counted against the hand it
+	// was counted over — which is the one thing a player reading a single `+30` has to take on
+	// trust. Each flies out of the seat that paid it, so two jars in one row stay told apart.
+	//
+	// **In the pane's pink, flying out of the card in the hand** *(owner's call, 2026-09-19)*.
+	// Pink because a relic put the figure there, and out of the card because that is what the
+	// figure is *about*: the jar prices a card the player is still holding, so the number leaves
+	// that card and the relic shakes behind it. The relic's own pink signal is the shake — see the
+	// `shakeRelics` set here, which is the echo relic's arrangement: a relic that bought a term
+	// rather than a multiplier moves without a figure of its own on the line.
+	for i, pay := range e.HeldBonusEach {
+		shake := make([]bool, len(e.HeldBonusSeats))
+		if pay.Seat < len(shake) {
+			shake[pay.Seat] = true
+		}
 		items = append(items, mathOperator("+"), mathItem{
-			text:      strconv.Itoa(e.HeldBonus),
-			size:      mathTermSize,
-			tint:      ui.GroundInk,
-			fly:       true,
-			relicSeat: firstSeat(e.HeldBonusSeats),
-			t:         ui.NewTravel(0, mathTermTicks()),
+			text:        strconv.Itoa(pay.Amount),
+			size:        mathTermSize,
+			tint:        ui.PaneEdge,
+			fly:         true,
+			heldPay:     i + 1,
+			shakeRelics: shake,
+			t:           ui.NewTravel(0, mathTermTicks()),
 		})
 	}
 
@@ -1567,4 +1598,57 @@ func upper(s string) string {
 		out = append(out, r)
 	}
 	return string(out)
+}
+
+// heldPayOrigin is where one held card's figure sets off from: the middle of that card, still in
+// the hand row.
+//
+// **The card is matched by identity where it has one and by kind where it does not.** A run's cards
+// carry `combat.Card.ID`, which is exactly the card the jar was paid for; a card written by a test
+// or built by `Of` has ID 0, so the fall back is the concept and the element — the same reading
+// `heldSeatOf` takes for a held rider, and it counts the copies already claimed so two of the same
+// card do not both point at one seat.
+//
+// **Two relics paying for one card land on that one card**, which is why the tally is kept per worn
+// seat: within a seat the payments walk the hand once, so the k-th payment for a kind is the k-th
+// card of it.
+//
+// A card the row no longer holds answers the hand band's own middle, the same honest fallback a
+// held rider's signal takes.
+func (s *CombatScene) heldPayOrigin(gs *state.GlobalState, e combat.Event, idx int) image.Point {
+	band := handBand(gs, s.laidOutCount())
+	middle := image.Pt((band.Min.X+band.Max.X)/2, (band.Min.Y+band.Max.Y)/2)
+	if idx < 0 || idx >= len(e.HeldBonusEach) {
+		return middle
+	}
+	pay := e.HeldBonusEach[idx]
+
+	taken := 0
+	for _, before := range e.HeldBonusEach[:idx] {
+		if before.Seat == pay.Seat && sameHeldCard(before.Card, pay.Card) {
+			taken++
+		}
+	}
+
+	for i, c := range s.hand {
+		if !sameHeldCard(c.Card, pay.Card) {
+			continue
+		}
+		if taken > 0 {
+			taken--
+			continue
+		}
+		r := s.cardSlot(gs, i)
+		return image.Pt((r.Min.X+r.Max.X)/2, (r.Min.Y+r.Max.Y)/2)
+	}
+	return middle
+}
+
+// sameHeldCard is whether two cards are the one card: their run identity when they have one, and
+// their kind otherwise.
+func sameHeldCard(a, b combat.Card) bool {
+	if a.ID != 0 || b.ID != 0 {
+		return a.ID == b.ID
+	}
+	return a.Concept == b.Concept && a.Element == b.Element
 }

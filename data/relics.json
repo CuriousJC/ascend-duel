@@ -1058,7 +1058,7 @@
     "Name": "The Basher",
     "Family": "Weapons",
     "Art": "basher",
-    "Draw": "a mechanics hammer with a copper handle and a silver head",
+    "Draw": "a mechanic hammer with a copper handle and a silver head",
     "Text": "Every Bash deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1451,7 +1451,7 @@
     "Name": "Warm Robe",
     "Family": "Elemental discounts",
     "Art": "discount-fire",
-    "Draw": "a red robe",
+    "Draw": "top of a red robe from the chest up with a hood",
     "Text": "Fire cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1467,7 +1467,7 @@
     "Name": "Cold Robe",
     "Family": "Elemental discounts",
     "Art": "discount-ice",
-    "Draw": "a blue robe",
+    "Draw": "top of a blue robe from the chest up with a hood",
     "Text": "Ice cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1483,7 +1483,7 @@
     "Name": "Static Robe",
     "Family": "Elemental discounts",
     "Art": "discount-lightning",
-    "Draw": "a yellow robe",
+    "Draw": "top of a yellow robe from the chest up with a hood",
     "Text": "Lightning cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1499,7 +1499,7 @@
     "Name": "Dirty Robe",
     "Family": "Elemental discounts",
     "Art": "discount-earth",
-    "Draw": "a brown robe",
+    "Draw": "top of a green robe from the chest up with a hood",
     "Text": "Earth cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1515,7 +1515,7 @@
     "Name": "Eerie Robe",
     "Family": "Elemental discounts",
     "Art": "discount-arcane",
-    "Draw": "a purple robe",
+    "Draw": "top of a purple robe from the chest up with a hood",
     "Text": "Arcane cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1531,7 +1531,7 @@
     "Name": "Paired Rings",
     "Family": "Hand multipliers",
     "Art": "handmult-pair",
-    "Draw": "an amulet with with 2 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
+    "Draw": "an amulet with with 2 pearl interlocked rings on a platinum chain",
     "Text": "Every pair deals 2x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1547,7 +1547,7 @@
     "Name": "Triplicate Rings",
     "Family": "Hand multipliers",
     "Art": "handmult-triplicate",
-    "Draw": "an amulet with with 3 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
+    "Draw": "an amulet with with 3 pearl interlocked rings in a triangle pattern on a platinum chain",
     "Text": "Every Three of a Kind\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1569,7 +1569,7 @@
     "Name": "Fulsome Rings",
     "Family": "Hand multipliers",
     "Art": "handmult-full",
-    "Draw": "an amulet with with 3 rings made of bronze snakes eating their own tails and 2 rings made of silver snakes either their own tails, the rings are intertwined and the snakes heads are facing each other",
+    "Draw": "an amulet on a platinum chain with 3 pearl interlocked rings in a row and 2 interlocked hematite rings under 3",
     "Text": "Every Full House\ndeals 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1587,11 +1587,33 @@
     ]
   },
   {
+    "RelicRecord": "handmult-two-pair",
+    "Name": "Mirrored Rings",
+    "Family": "Hand multipliers",
+    "Art": "",
+    "Draw": "an amulet on a platinum chain with 2 pearl interlocked rings on top of 2 pearl interlocked rings in a square pattern",
+    "Text": "Every Two Pair\ndeals 2x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": {
+          "Hands": [
+            "concept-two-pair",
+            "form-two-pair",
+            "element-two-pair"
+          ]
+        },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
     "RelicRecord": "handmult-four",
     "Name": "Quartered Rings",
     "Family": "Hand multipliers",
     "Art": "handmult-four",
-    "Draw": "an amulet with with 4 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
+    "Draw": "an amulet on a platinum chain with 4 pearl interlocked rings in a square pattern",
     "Text": "Every Four of a Kind\ndeals 4x DMG.",
     "Rarity": "rare",
     "Rules": [
@@ -1613,7 +1635,7 @@
     "Name": "Perfected Rings",
     "Family": "Hand multipliers",
     "Art": "handmult-five",
-    "Draw": "an amulet with with 5 rings made of bronze snakes eating their own tails, the rings are intertwined and the snakes heads are facing each other",
+    "Draw": "an amulet on a platinum chain with 3 pearl interlocked rings in a row and 2 interlocked pearl rings under 3",
     "Text": "Every Five of a Kind\ndeals 5x DMG.",
     "Rarity": "rare",
     "Rules": [
@@ -1635,7 +1657,7 @@
     "Name": "Jar of Needles",
     "Family": "Forms held",
     "Art": "jar-stab",
-    "Draw": "a jar with needles, the jar is made of clear glass with an indigo lid",
+    "Draw": "a jar with ivory needles, the jar is made of clear glass with an indigo lid",
     "Text": "Deals 5 more DMG for each stab card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1651,7 +1673,7 @@
     "Name": "Jar of Razors",
     "Family": "Forms held",
     "Art": "jar-slash",
-    "Draw": "a jar with razor blades inside, the jar is made of clear glass with an indigo lid",
+    "Draw": "a jar with steel razor blades inside, the jar is made of clear glass with an indigo lid",
     "Text": "Deals 5 more DMG for each slash card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1664,10 +1686,10 @@
   },
   {
     "RelicRecord": "jar-crush",
-    "Name": "Jar of Metal",
+    "Name": "Jar of Granite",
     "Family": "Forms held",
     "Art": "jar-crush",
-    "Draw": "a jar with blobs of metal inside, the jar is made of clear glass with an indigo lid",
+    "Draw": "a jar with chunks of granite, the jar is made of clear glass with an indigo lid",
     "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1731,7 +1753,7 @@
     "Name": "The Sickle",
     "Family": "Form weapons",
     "Art": "dmg-all-slash",
-    "Draw": "a sickle with a leather hilt",
+    "Draw": "a steel sickle with a leather hilt and a jade pommell",
     "Text": "Every slash card deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1747,7 +1769,7 @@
     "Name": "The Club",
     "Family": "Form weapons",
     "Art": "dmg-all-crush",
-    "Draw": "a heavy club with a leather strap",
+    "Draw": "a heavy granite club with a leather strap and a jade pommell",
     "Text": "Every crush card deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1763,7 +1785,7 @@
     "Name": "The Needle",
     "Family": "Form weapons",
     "Art": "dmg-all-stab",
-    "Draw": "fencing foil with a sharp tip and a leather hilt",
+    "Draw": "an ivory fencing foil with a sharp tip, leather hilt, and jade pommell",
     "Text": "Every stab card deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -1779,7 +1801,7 @@
     "Name": "Twisted Points",
     "Family": "Form repeats",
     "Art": "repeat-stab",
-    "Draw": "a dual marble ring that's wrapped into a circle twice.",
+    "Draw": "a dual ivory ring that's wrapped into a circle twice.",
     "Text": "Every stab card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1795,7 +1817,7 @@
     "Name": "Twisted Edges",
     "Family": "Form repeats",
     "Art": "repeat-slash",
-    "Draw": "a dual malachite ring that's wrapped into a circle twice.",
+    "Draw": "a dual steel ring with sharp edges that's wrapped into a circle twice.",
     "Text": "Every slash card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1811,7 +1833,7 @@
     "Name": "Twisted Weights",
     "Family": "Form repeats",
     "Art": "repeat-crush",
-    "Draw": "a dual moonstone ring that's wrapped into a circle twice.",
+    "Draw": "a dual granite ring that's wrapped into a circle twice.",
     "Text": "Every crush card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1827,7 +1849,7 @@
     "Name": "Weight of the Edge",
     "Family": "Form growth",
     "Art": "growth-slash",
-    "Draw": "golden amulet of a scale witha malachite gem weighing down one side and a golden chain from the top",
+    "Draw": "golden amulet with of a scale with a steel gem weighing down one side and a golden chain from the top",
     "Text": "Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1848,7 +1870,7 @@
     "Name": "Weight of the Metal",
     "Family": "Form growth",
     "Art": "growth-crush",
-    "Draw": "golden amulet of a scale witha moonstone gem weighing down one side and a golden chain from the top",
+    "Draw": "golden amulet with of a scale with a granite gem weighing down one side and a golden chain from the top",
     "Text": "Crush cards gain 0.1x DMG every time a crush attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1869,7 +1891,7 @@
     "Name": "Weight of the Needle",
     "Family": "Form growth",
     "Art": "growth-stab",
-    "Draw": "golden amulet of a scale witha marble gem weighing down one side and a golden chain from the top",
+    "Draw": "golden amulet with of a scale with an ivory gem weighing down one side and a golden chain from the top",
     "Text": "Stab cards gain 0.1x DMG every time a stab attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1938,7 +1960,7 @@
     "Name": "Whetted",
     "Family": "Form discounts",
     "Art": "discount-slash",
-    "Draw": "malachite robe",
+    "Draw": "top of a steel robe from the chest up with a hood",
     "Text": "Slash cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1954,7 +1976,7 @@
     "Name": "Hefted",
     "Family": "Form discounts",
     "Art": "discount-crush",
-    "Draw": "moonstone robe",
+    "Draw": "top of a granite robe from the chest up with a hood",
     "Text": "Crush cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -1970,7 +1992,7 @@
     "Name": "Tapered",
     "Family": "Form discounts",
     "Art": "discount-stab",
-    "Draw": "marble robe",
+    "Draw": "top of an ivory robe from the chest up with a hood",
     "Text": "Stab cards cost 1 AP less.",
     "Rarity": "rare",
     "Rules": [
@@ -2214,7 +2236,7 @@
     "Name": "The Rampant",
     "Family": "Vitae power",
     "Art": "dmg-vitae-scale",
-    "Draw": "a tangled knot of malachite lines in an organic knot shape",
+    "Draw": "an amulet of a tangled knot of malachite lines in an organic knot shape with a platinum chain",
     "Text": "Every blow deals 1 more DMG\nfor each vitae you hold.",
     "Rarity": "rare",
     "Rules": [
@@ -2291,7 +2313,7 @@
     "Name": "Hungry",
     "Family": "Spoils",
     "Art": "prizes-add",
-    "Draw": "bonewhite amulet of a grasping hand on a bronze chain",
+    "Draw": "bonewhite amulet of a grasping flesh hand on a platinum chain",
     "Text": "Two prizes after a fight instead of one.",
     "Rarity": "common",
     "Rules": [
@@ -2305,7 +2327,7 @@
     "RelicRecord": "drain-blow",
     "Name": "Vampiric Fang",
     "Family": "Lifedrain",
-    "Art": "",
+    "Art": "drain-blow",
     "Draw": "an ivory curved fang capped at the root with gold, hanging on a jade chain",
     "Text": "Every blow gives back 3/10 of its DMG as life.",
     "Rarity": "rare",
@@ -2320,7 +2342,7 @@
     "RelicRecord": "heal-turn-start",
     "Name": "The Tear",
     "Family": "Lifedrain",
-    "Art": "",
+    "Art": "heal-turn-start",
     "Draw": "a jade amulet set with a ruby cut in the shape of a teardrop, on a platinum chain",
     "Text": "Restores 1/4 of max life at the start of your turn.",
     "Rarity": "rare",
@@ -2335,7 +2357,7 @@
     "RelicRecord": "scale-rolls",
     "Name": "The Rabbit's Foot",
     "Family": "Luck",
-    "Art": "",
+    "Art": "scale-rolls",
     "Draw": "a snow-white rabbit's foot capped at the root with bronze, on a bronze necklace",
     "Text": "Doubles the numerator of every roll. Gold and silver pay twice as often. You miss twice as often while SHOCKED.",
     "Rarity": "rare",

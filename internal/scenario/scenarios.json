@@ -2555,5 +2555,91 @@
     "Enemy": "GiantRat",
     "Dummy": true,
     "Actions": 12
+  },
+  {
+    "ScenarioRecord": "jar-of-earth-held",
+    "Note": "The Jar of Earth on a bench, so the term it adds can be watched moving. It reads the earth cards LEFT IN HAND rather than the ones played - 5 DMG a card - so it is the one relic here that pays for what a turn did not do, and the only way to read its arithmetic is to play a different number of cards and watch the sum. The whole hand is earth and so is the whole deck, which makes the held count simply eight minus what was played: take two and the jar is worth 30, take five and it is worth 15. That is the tension the fixture is for - playing more raises the hand's own multiplier and shrinks the jar's term at the same time, and the two move against each other inside one sum. The bonus lands in the base rather than on top, so the rung multiplies it like every other term: the same three cards held are worth more behind an Elemental Five of a Kind than behind a Pair. The Brace is in the hand on purpose - a defend card carries an element and brings no damage, so keeping it back pays the jar exactly as keeping an attack does. Against a dummy at 15 AP, so the choice is which cards rather than which are affordable, and the fight does not end while the combinations are being tried.",
+    "Relics": [
+      "jar-earth"
+    ],
+    "Hand": [
+      {
+        "Card": "Jab",
+        "Element": "earth"
+      },
+      {
+        "Card": "Cut",
+        "Element": "earth"
+      },
+      {
+        "Card": "Thump",
+        "Element": "earth"
+      },
+      {
+        "Card": "Thrust",
+        "Element": "earth"
+      },
+      {
+        "Card": "Slice",
+        "Element": "earth"
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth"
+      },
+      {
+        "Card": "Skewer",
+        "Element": "earth"
+      },
+      {
+        "Card": "Brace",
+        "Element": "earth"
+      }
+    ],
+    "Deck": [
+      {
+        "Card": "Jab",
+        "Element": "earth",
+        "Copies": 5
+      },
+      {
+        "Card": "Cut",
+        "Element": "earth",
+        "Copies": 5
+      },
+      {
+        "Card": "Thump",
+        "Element": "earth",
+        "Copies": 5
+      },
+      {
+        "Card": "Thrust",
+        "Element": "earth",
+        "Copies": 5
+      },
+      {
+        "Card": "Slice",
+        "Element": "earth",
+        "Copies": 5
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth",
+        "Copies": 5
+      },
+      {
+        "Card": "Skewer",
+        "Element": "earth",
+        "Copies": 5
+      },
+      {
+        "Card": "Brace",
+        "Element": "earth",
+        "Copies": 5
+      }
+    ],
+    "Enemy": "GiantRat",
+    "Dummy": true,
+    "Actions": 15
   }
 ]

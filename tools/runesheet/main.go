@@ -23,9 +23,13 @@
 //
 // # What to look at
 //
-// **The line against the rule.** `Text` is printed verbatim on the face and nothing checks it
-// against the target beside it. "eat two cards" over a record carrying `Count: 1` is the failure
-// this page exists to make visible.
+// **The line against the rule.** `Text` is what a player reads when they rest on a rune, and
+// nothing checks it against the target beside it. "eat two cards" over a record carrying
+// `Count: 1` is the failure this page exists to make visible.
+//
+// **It is printed beside the card rather than on it.** A rune card is a picture and a name — the
+// face carries no sentence, so drawing one here would make this a picture of a card the game does
+// not deal. The line is read off the record and shown in the panel, the way the tooltip shows it.
 //
 // **How many cards each one asks for.** The board piece shows targets side by side and
 // `MaxRuneTargets` is two, so the counts here are the whole of what the picker ever has to
@@ -192,28 +196,32 @@ func run(dir string) error {
 	return nil
 }
 
-// specFor is a rune as the card the sack draws, and it fills the same fields
-// screens.runeSpec does: a name, the line, no form and no cost. **Basic, not a color** — a
-// rune grants no element, so its border is the mid gray `cards.BorderOf` gives `basic`.
+// specFor is a rune as the card the sack draws, and it fills the same fields ui.runeSpec does: a
+// name and a picture, no form and no cost.
+//
+// **No Text, deliberately.** A rune says its rule in the tooltip, so a face carrying the sentence
+// would be a card this sheet draws and the game does not — the stale-sheet failure with the
+// staleness built in. The line is printed in the panel beside each card instead.
+//
+// **Basic, not a color** — a rune grants no element, so its border is the mid gray
+// `cards.BorderOf` gives `basic`.
 func specFor(p session.Rune, art image.Image, enabled, selected bool) cards.Spec {
 	return cards.Spec{
-		Name:       p.Name,
-		Form:       cards.FormNone,
-		Cost:       0,
-		Element:    cards.Basic,
-		Art:        art,
-		Text:       p.Text,
-		Highlights: cards.ElementHighlights(p.Text),
-		Enabled:    enabled,
-		Selected:   selected,
+		Name:     p.Name,
+		Form:     cards.FormNone,
+		Cost:     0,
+		Element:  cards.Basic,
+		Art:      art,
+		Enabled:  enabled,
+		Selected: selected,
 	}
 }
 
 // ruleLine is what the rune does, in the file's own vocabulary.
 //
 // **Deliberately not prose**, for relicsheet's reason: the sentence a player reads is Text, printed
-// beside this, and generating a second English sentence would give the page two descriptions and
-// no way to tell which one the game agrees with.
+// beside this, and generating a second English sentence would give the page two descriptions and no
+// way to tell which one the game agrees with.
 func ruleLine(p session.Rune) string {
 	switch p.Target {
 	case session.RuneRider:

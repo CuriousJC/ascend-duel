@@ -455,9 +455,16 @@ type Event struct {
 	// account writes the term as `Jar of Ice (4 cards)  20`, and a count is the one thing a
 	// player reading the working back cannot re-derive: the hand it was counted over is three
 	// turns gone. See screens.handTermLines.
+	//
+	// **HeldBonusEach is the same tally one card at a time** *(owner's call, 2026-09-19)*, so the
+	// sum on the combat screen writes six `+5` terms where six earth cards were kept back rather
+	// than one `+30`. The player counts a per-card term against the hand still in front of them;
+	// a merged figure is one they have to take on trust. Every entry names the seat that paid, so
+	// each term flies out of its own relic. See screens.mathScript.
 	HeldBonus      int
 	HeldBonusCards int
 	HeldBonusSeats []bool
+	HeldBonusEach  []HeldPay
 
 	// VitaeBonus is the duelist's Bounty as it joined this blow's Base, and VitaeBonusSeats is
 	// which worn relics put it there.

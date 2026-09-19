@@ -1479,7 +1479,7 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
 // one term in the working the player cannot check against the hand they were holding. It is the
 // tally across every seat, which is the figure the merged term is: two jars paying for six cards
 // between them is one term of six.
-func HeldBonus(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
+func HeldBonus(worn []WornRelic, held []Card) (total, cards int, seats []bool, pays []HeldPay) {
 	// A named return, so it needs building like every other seat row here: one entry per worn
 	// relic, all false until one of them pays.
 	seats = make([]bool, len(worn))
@@ -1498,12 +1498,33 @@ func HeldBonus(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
 						total += e.Amount
 						cards++
 						seats[seat] = true
+						pays = append(pays, HeldPay{Amount: e.Amount, Seat: seat, Card: c})
 					}
 				}
 			}
 		}
 	}
-	return total, cards, seats
+	return total, cards, seats, pays
+}
+
+// HeldPay is one held card paying one worn relic's figure into the blow: what it paid, which worn
+// seat paid it, and which card it was paid for.
+//
+// **It is the per-card reading of the same tally `HeldBonus` totals**, and it exists because the
+// sum shows its working a card at a time: six earth cards kept back are six `+5` terms rather than
+// one `+30`, so the player can count the jar's term against the hand still in front of them. The
+// total stays on the event beside it, because the run's account writes the merged figure.
+//
+// Two jars paying for the same card are two entries, one per seat — which is what lets each term
+// fly out of the relic that paid it.
+// **The card is on it so a screen can point at it.** The figure flies out of the card that is
+// still in the hand rather than out of the relic, and the only other way to find that card is to
+// match a concept and an element back against the row — which is what the held riders have to do
+// and is a second reading of a thing the rules already knew. See screens.mathScript.
+type HeldPay struct {
+	Amount int
+	Seat   int
+	Card   Card
 }
 
 // LandingsOf is how many times a card lands, and how, given what its wearer has on.

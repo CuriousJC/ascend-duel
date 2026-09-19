@@ -63,7 +63,7 @@ func heldSlots(gs *state.GlobalState) int {
 // row does; the fraction on the corner still counts against the capacity, so an over-full sack
 // reads as the `50/2` it is.
 func consumableSeats(gs *state.GlobalState) int {
-	if held := len(heldRunes(gs)); held > heldSlots(gs) {
+	if held := len(heldConsumables(gs)); held > heldSlots(gs) {
 		return held
 	}
 	return heldSlots(gs)
@@ -151,7 +151,7 @@ func consumablePaneBackRect(r image.Rectangle) image.Rectangle {
 // on the corner is what says how much room is left. Nothing anywhere outlines an absent card now —
 // the reward screen was the last place doing it, and gave it up on 2026-09-08.
 func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle,
-	spendable func(session.Rune) bool, skip func(int) bool, raise bool) {
+	spendable func(session.Consumable) bool, skip func(int) bool, raise bool) {
 
 	if skip == nil {
 		skip = func(int) bool { return false }
@@ -166,9 +166,9 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
 		relicPaneBackColor, false)
 
-	held := heldRunes(gs)
+	held := heldConsumables(gs)
 	seats := consumableSeats(gs)
-	raised := ui.RaisedSeat(gs, runeRow{rect: r, held: len(held), seats: seats}, raise)
+	raised := ui.RaisedSeat(gs, consumableRow{rect: r, held: len(held), seats: seats}, raise)
 	for i := 0; i < seats; i++ {
 		at := consumableSlotRect(r, i, seats)
 		if i >= len(held) || i == raised || skip(i) {
@@ -178,7 +178,7 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		// is what makes select-then-apply readable: the player never has to be told whether the
 		// cards they have selected are the right ones, because the rune that wants them is the
 		// one that is not dim. See consumableTarget.satisfiedBy.
-		ui.DrawRuneCard(gs, screen, at.Min, held[i], canSpend(spendable, held[i]), false)
+		drawConsumableCard(gs, screen, at.Min, held[i], canSpend(spendable, held[i]), false)
 	}
 
 	// **The card under the cursor is drawn last, so it is drawn whole** *(owner's call,
@@ -195,7 +195,7 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 	// and raising halfway split one gesture into two answers a beat apart.
 	if raised >= 0 && !skip(raised) {
 		at := consumableSlotRect(r, raised, seats)
-		ui.DrawRuneCard(gs, screen, at.Min, held[raised], canSpend(spendable, held[raised]), false)
+		drawConsumableCard(gs, screen, at.Min, held[raised], canSpend(spendable, held[raised]), false)
 	}
 
 	drawConsumableCount(gs, screen, back, len(held))
@@ -230,9 +230,9 @@ func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image
 func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 	tip *models.Tooltip) bool {
 
-	held := heldRunes(gs)
+	held := heldConsumables(gs)
 	seats := consumableSeats(gs)
-	row := runeRow{rect: r, held: len(held), seats: seats}
+	row := consumableRow{rect: r, held: len(held), seats: seats}
 
 	// **The same seats and the same walk the raise uses** — see ui.HoveredSeat. A sack packs four
 	// cards into two seats, so the card on top is the last drawn and a forward walk explains the one
@@ -242,7 +242,7 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 		return false
 	}
 	seat := row.RowSlot(gs, i)
-	tip.Point(seat, ui.TipLine(held[i].Name), ui.TipLines(runeTipLines(gs, held[i])))
+	tip.Point(seat, ui.TipLine(held[i].Name()), ui.TipLines(consumableTipLines(gs, held[i])))
 	return true
 }
 
@@ -255,6 +255,44 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 //
 // **Dim is the honest state on those screens.** A lit card that did nothing when clicked would be
 // worse than a dim one, and the tooltip still explains it wherever it is drawn.
-func canSpend(spendable func(session.Rune) bool, p session.Rune) bool {
-	return spendable != nil && spendable(p)
+func canSpend(spendable func(session.Consumable) bool, c session.Consumable) bool {
+	return spendable != nil && spendable(c)
+}
+
+// heldConsumables is everything the run is carrying, as the pane's row reads it.
+func heldConsumables(gs *state.GlobalState) []session.Consumable {
+	if gs.Run == nil {
+		return nil
+	}
+	return gs.Run.Consumables()
+}
+
+// drawConsumableCard puts one carried thing in a seat, whichever kind it is.
+//
+// **This table and consumableTipLines are the whole of what a new consumable costs the screen** —
+// a picture and a sentence. Everything else in the pane counts seats and knows nothing about what
+// stands in them. A kind with no case draws nothing, which is the honest failure: a blank seat is
+// a consumable nobody drew rather than a card lying about what it is.
+func drawConsumableCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+	c session.Consumable, enabled, selected bool) {
+
+	switch c.Kind {
+	case session.ConsumableRune:
+		ui.DrawRuneCard(gs, screen, at, c.Rune, enabled, selected)
+	case session.ConsumableStone:
+		// **A stone is never drawn selected**, because there is nothing to select it *for*: a rune
+		// is aimed at cards and a stone names its own rung. The flag is taken anyway so both kinds
+		// answer one signature.
+		ui.DrawStoneCard(gs, screen, at, c.Stone, enabled)
+	}
+}
+
+// consumableTipLines is what the pane says about one carried thing.
+func consumableTipLines(gs *state.GlobalState, c session.Consumable) []string {
+	switch c.Kind {
+	case session.ConsumableStone:
+		return stoneTipLines(gs, c.Stone)
+	default:
+		return runeTipLines(gs, c.Rune)
+	}
 }

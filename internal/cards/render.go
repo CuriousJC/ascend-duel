@@ -198,7 +198,7 @@ func drawBadge(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 	// and art do not reduce the same way, and the badge is drawn at 32 and at 16.
 	if key := BadgeArtKey(DefaultBadgeShape, s.BadgePct, s.Element); key != "" {
 		if glyph := systems.ArtMark(key, st.BadgeSize, st.BadgeSize); glyph != nil {
-			placeInk(dst, glyph, box, st.GlyphScale, st)
+			placeInk(dst, glyph, box, st.GlyphScale, glyphFade(s), st)
 			return nil
 		}
 	}
@@ -207,7 +207,7 @@ func drawBadge(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 	// mechanic looked like before the numerals arrived. It is reachable: a boss deck carries 60,
 	// 120 and 250, and the `add-dmg` essence scales a card to 150% of whatever it was.
 	if glyph := systems.ArtMark(badgeFallbackArtKey(DefaultBadgeShape, s.Element), st.BadgeSize, st.BadgeSize); glyph != nil {
-		placeInk(dst, glyph, box, st.GlyphScale, st)
+		placeInk(dst, glyph, box, st.GlyphScale, glyphFade(s), st)
 	}
 
 	width, err := TextWidth(f, st.BadgeTextSize, s.Badge)
@@ -255,10 +255,8 @@ func drawShieldStack(dst *image.RGBA, s Spec, st Style) {
 
 	for i := 0; i < s.Shields; i++ {
 		top := bottom - (i+1)*size - i*st.BadgeStackGap
-		at := placeInk(dst, glyph, image.Rect(left, top, left+size, top+size), st.GlyphScale, st)
-		if !s.Enabled && !at.Empty() {
-			fadeRegion(dst, at, glyphDisabledToward)
-		}
+		placeInk(dst, glyph, image.Rect(left, top, left+size, top+size),
+			st.GlyphScale, glyphFade(s), st)
 	}
 }
 
@@ -677,19 +675,25 @@ func drawForm(dst *image.RGBA, s Spec, st Style) {
 	box := image.Rect(st.GlyphInset, st.FormTop,
 		st.GlyphInset+st.FormSize, st.FormTop+st.FormSize)
 
-	at := placeInk(dst, glyph, box, st.GlyphScale, st)
-	if !s.Enabled && !at.Empty() {
-		// A mark carries its own colors rather than a state ink, so a disabled card fades one
-		// in place instead of choosing a duller one to draw it with.
-		fadeRegion(dst, at, glyphDisabledToward)
+	// A mark carries its own colors rather than a state ink, so a disabled card fades one in
+	// place instead of choosing a duller one to draw it with.
+	placeInk(dst, glyph, box, st.GlyphScale, glyphFade(s), st)
+}
+
+// glyphFade is how far a card's marks are moved toward the disabled surface: all the way to
+// glyphDisabledToward on a card that cannot be played, and not at all on one that can.
+func glyphFade(s Spec) int {
+	if s.Enabled {
+		return 0
 	}
+	return glyphDisabledToward
 }
 
 // placeInk composites src so its *inked* bounds come out centered in box, clipped to the card's
 // own rounded silhouette. It returns the rectangle the ink landed in, which is what a fade pass
 // has to walk — the canvas around it is transparent and fading it would fill in the corner
 // blitGlyph just protected.
-func placeInk(dst *image.RGBA, src *image.RGBA, box image.Rectangle, scale int, st Style) image.Rectangle {
+func placeInk(dst *image.RGBA, src *image.RGBA, box image.Rectangle, scale, fade int, st Style) image.Rectangle {
 	ink := inkBounds(src)
 	if ink.Empty() {
 		return image.Rectangle{}
@@ -704,7 +708,7 @@ func placeInk(dst *image.RGBA, src *image.RGBA, box image.Rectangle, scale int, 
 
 	b := src.Bounds()
 	blitGlyph(dst, image.Rectangle{Min: at, Max: at.Add(image.Pt(b.Dx()*scale, b.Dy()*scale))},
-		src, scale, st)
+		src, scale, fade, st)
 
 	return image.Rectangle{Min: at.Add(ink.Min), Max: at.Add(ink.Max)}
 }
@@ -1253,7 +1257,16 @@ func drawBack(dst *image.RGBA, s Spec, st Style) {
 //
 // One loop rather than a draw.Draw fast path at scale 1: the clip has to be tested per pixel,
 // and a 32x32 glyph once per distinct card is not worth two code paths.
-func blitGlyph(dst *image.RGBA, at image.Rectangle, glyph *image.RGBA, scale int, st Style) {
+//
+// **A mark is composited onto the face rather than written into it** *(2026-09-19)*. Its edges are
+// anti-aliased and the face under them is opaque, so writing one straight in punched the drawing's
+// own soft edge through the card as transparency — which the table then showed through, reading as
+// a pale square round the corner. The card is the ground; a mark is paint on it.
+//
+// **A disabled card fades the ink as it lands, never the box it landed in.** Fading here touches
+// exactly the pixels the drawing covers and keeps the shading's relative steps — see
+// glyphDisabledToward.
+func blitGlyph(dst *image.RGBA, at image.Rectangle, glyph *image.RGBA, scale, fade int, st Style) {
 	b := glyph.Bounds()
 	radius := clampRadius(st.Width, st.Height, st.CornerRadius)
 
@@ -1267,9 +1280,27 @@ func blitGlyph(dst *image.RGBA, at image.Rectangle, glyph *image.RGBA, scale int
 			if !insideRounded(st.Width, st.Height, radius, px, py) {
 				continue
 			}
-			dst.SetRGBA(px, py, c)
+			if fade > 0 {
+				// **The channels are premultiplied**, so the fade target is scaled by the
+				// pixel's own alpha before the walk — moving a soft edge toward a full-strength
+				// surface would brighten it past the drawing it belongs to.
+				toward := SurfaceDisabled
+				if c.A < 255 {
+					toward = premul(toward, c.A)
+				}
+				faded := systems.ColorToward(c, toward, fade)
+				faded.A = c.A
+				c = faded
+			}
+			dst.SetRGBA(px, py, over(dst.RGBAAt(px, py), c))
 		}
 	}
+}
+
+// premul scales an opaque color by an alpha, which is the form `image.RGBA` holds a pixel in.
+func premul(c color.RGBA, a uint8) color.RGBA {
+	m := func(v uint8) uint8 { return uint8(int(v) * int(a) / 255) }
+	return color.RGBA{R: m(c.R), G: m(c.G), B: m(c.B), A: a}
 }
 
 // drawArt scales Spec.Art to fit the style's art box and centers it there.
@@ -1283,25 +1314,4 @@ func drawArt(dst *image.RGBA, s Spec, st Style) {
 	fitInto(dst, s.Art, image.Rect(
 		st.ArtInset, st.ArtTop,
 		st.Width-st.ArtInset, st.ArtTop+st.ArtMaxH))
-}
-
-// fadeRegion moves every pixel of a rectangle pct of the way to the disabled surface.
-//
-// Used on the glyphs, which are drawn from their own five-value palette and so cannot be
-// dimmed by choosing a duller ink the way the text can. Fading in place preserves the
-// relative steps of the bevel and only reduces its weight.
-//
-// **Transparent pixels are left alone**, which matters now that a glyph's rectangle can hang
-// off the corner of the card: fading a transparent pixel would give it an alpha and fill in
-// the rounded corner the clip in blitGlyph just protected.
-func fadeRegion(dst *image.RGBA, r image.Rectangle, pct int) {
-	for y := r.Min.Y; y < r.Max.Y; y++ {
-		for x := r.Min.X; x < r.Max.X; x++ {
-			c := dst.RGBAAt(x, y)
-			if c.A == 0 {
-				continue
-			}
-			dst.SetRGBA(x, y, systems.ColorToward(c, SurfaceDisabled, pct))
-		}
-	}
 }

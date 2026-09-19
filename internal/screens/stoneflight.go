@@ -56,12 +56,13 @@ type stoneFlight struct {
 	from, to image.Point
 }
 
-// flyStonesToPouch sets a shower off from the rune that produced it.
+// flyStonesToDuelist sets a shower off from the rune that produced it, toward the fighter whose
+// ladder the stones have just been put on.
 //
 // **From the seat the rune was standing in**, which is the card the player just clicked — so
 // the stones come out of the thing that made them. The seat is read before the pane redraws itself
 // without that rune in it, which is why the index is passed in rather than looked up.
-func (s *CombatScene) flyStonesToPouch(gs *state.GlobalState, seat int, shown []session.Stone) {
+func (s *CombatScene) flyStonesToDuelist(gs *state.GlobalState, seat int, shown []session.Stone) {
 	from := consumableSlotRect(s.consumablePaneRect(gs), seat, consumableSeats(gs)).Min
 	to := ui.DuelistCardRect(gs).Min
 

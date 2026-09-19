@@ -690,10 +690,11 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 		// stone has no rarity, so weighting them would be pricing the *hand*, which the ladder
 		// already does.
 		//
-		// **They go into the pouch, not onto the ladder** *(owner's call, 2026-09-02)*. A shower
-		// hands over consumables to be spent or sold later; it does not decide which rungs the run
-		// is raising. See `Session.Carry`, and `StoneSalePrice` for the other thing that can happen
-		// to one.
+		// **They go straight onto the ladder** *(owner's call, 2026-09-19)*. A shower is a handful
+		// of rocks arriving at once, and a pouch filling with four stones the player then has to
+		// spend one at a time is an inventory chore in front of a rung that was already decided by
+		// the draw — there is nothing to choose, so there is nothing to hold. `Granted` still says
+		// which ones came, which is what the flight to the duelist card is drawn from.
 		all := Stones()
 		rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 		if p.Number < len(all) {
@@ -701,7 +702,7 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 		}
 
 		for _, st := range all {
-			if s.Carry(st.Record) {
+			if s.UseStone(st.Record) {
 				s.granted = append(s.granted, st)
 			}
 		}

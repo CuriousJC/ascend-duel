@@ -1464,3 +1464,29 @@ func TestTheBottomBlockFitsInsideTheCard(t *testing.T) {
 			EnemyStyle.HealthBarTop, EnemyStyle.HealthTextTop)
 	}
 }
+
+// TestNoMarkPunchesAHoleInTheFace holds the card's face opaque under every drawing on it.
+//
+// A mark's edges are anti-aliased, so writing one straight into the face carried the drawing's own
+// transparency into the card — and the table showed through it as a pale square round the corner.
+// A pixel of a card is either outside its rounded silhouette and clear, or on the face and opaque;
+// nothing in between. See blitGlyph, which composites rather than writes.
+func TestNoMarkPunchesAHoleInTheFace(t *testing.T) {
+	for _, enabled := range []bool{true, false} {
+		for _, form := range []Form{FormStab, FormSlash, FormCrush, FormDefend} {
+			s := strike(Fire)
+			s.Form, s.Enabled = form, enabled
+			img := render(t, s, Hand)
+
+			for y := 0; y < Hand.Height; y++ {
+				for x := 0; x < Hand.Width; x++ {
+					if a := img.RGBAAt(x, y).A; a != 0 && a != 255 {
+						t.Fatalf("%v enabled=%v is %d%% opaque at (%d,%d): a mark's soft edge "+
+							"went into the face instead of onto it",
+							form, enabled, int(a)*100/255, x, y)
+					}
+				}
+			}
+		}
+	}
+}

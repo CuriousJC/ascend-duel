@@ -61,11 +61,11 @@ func heldRunes(gs *state.GlobalState) []session.Rune {
 	return out
 }
 
-// runeRowGap is the air between two cards in a row of them. The same gap the shop's shelf
+// consumableRowGap is the air between two cards in a row of them. The same gap the shop's shelf
 // takes, so a row of cards reads the same wherever it stands.
-const runeRowGap = 18
+const consumableRowGap = 18
 
-// runeRowSlots is the left edges of n cards laid out in a centered row.
+// consumableRowSlots is the left edges of n cards laid out in a centered row.
 //
 // **It tightens rather than overflowing**: the pitch closes up exactly as the hand's does rather
 // than the row running off both edges of the panel.
@@ -73,17 +73,17 @@ const runeRowGap = 18
 // **Its one caller is the shop's pouch now** *(2026-09-06)*, the rune dialog this was written
 // for having gone. It stays here rather than moving because the pouch's row is the same row of
 // full-size cards in a modal, and a second copy is what would drift.
-func runeRowSlots(r image.Rectangle, n int) []int {
+func consumableRowSlots(r image.Rectangle, n int) []int {
 	if n <= 0 {
 		return nil
 	}
 
-	pitch := cards.Hand.Width + runeRowGap
-	if width := r.Dx() - 2*runeRowGap; n*pitch > width {
+	pitch := cards.Hand.Width + consumableRowGap
+	if width := r.Dx() - 2*consumableRowGap; n*pitch > width {
 		pitch = width / n
 	}
 
-	left := r.Min.X + r.Dx()/2 - (n*pitch-runeRowGap)/2
+	left := r.Min.X + r.Dx()/2 - (n*pitch-consumableRowGap)/2
 	out := make([]int, n)
 	for i := range out {
 		out[i] = left + i*pitch
@@ -93,7 +93,7 @@ func runeRowSlots(r image.Rectangle, n int) []int {
 
 // runeCardRects is where each card of a row stands.
 func runeCardRects(r image.Rectangle, n, centerY int) []image.Rectangle {
-	slots := runeRowSlots(r, n)
+	slots := consumableRowSlots(r, n)
 	out := make([]image.Rectangle, len(slots))
 	for i, x := range slots {
 		top := centerY - cards.Hand.Height/2
@@ -152,6 +152,45 @@ func (s *CombatScene) runeTarget(gs *state.GlobalState, p session.Rune) consumab
 // **Apply, then drop, and only drop if the apply succeeded.** A rune dropped from the sack by
 // an application that then refused would be a consumable the player paid for and did not get;
 // `ApplyRune` is all-or-nothing, so asking it first is what makes the pair safe.
+// spendConsumable is what a click on a seat of the pane does, whichever kind stands in it.
+//
+// **The pane's seat is not the run's index**, so this is the one place the two are told apart: the
+// merged row is the sack then the pouch, and each entry carries the position it came from. See
+// session.Consumable.At.
+func (s *CombatScene) spendConsumable(gs *state.GlobalState, seat int) {
+	held := heldConsumables(gs)
+	if seat < 0 || seat >= len(held) {
+		return
+	}
+	c := held[seat]
+
+	switch c.Kind {
+	case session.ConsumableStone:
+		s.spendStone(gs, c.At)
+	default:
+		s.spendRune(gs, c.At)
+	}
+}
+
+// spendStone puts one out of the pouch onto its rung, for the rest of the run.
+//
+// **It needs nothing selected and changes no card**, so there is no morph to raise and no hand to
+// resync — what moves is the ladder, which the hands panel and every later sum read through. The
+// run is saved because a rung raised and then lost to a crash is a consumable the player spent and
+// did not get.
+func (s *CombatScene) spendStone(gs *state.GlobalState, i int) {
+	if gs.Run == nil || !gs.Run.SpendCarried(i) {
+		return
+	}
+
+	// **The fighter is re-equipped where they stand**, because the stone counts ride on the
+	// duelist — see combat.Duelist.HandStones — and the fighter was built from the run at Init.
+	// Without this the raised rung would not be read until the next fight, which is exactly the
+	// dud a mid-fight consumable must not be.
+	s.fighter.Duelist = gs.Run.Equip(s.fighter.Duelist)
+	saveRun(gs)
+}
+
 func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	held := heldRunes(gs)
 	if i < 0 || i >= len(held) {
@@ -210,7 +249,11 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	// nothing to choose and nothing to confirm — so what is owed the player is a picture of where
 	// they went, not a panel to dismiss. See stoneflight.go.
 	if shown := gs.Run.Granted(); len(shown) > 0 {
-		s.flyStonesToPouch(gs, i, shown)
+		// **The rungs are raised on the fighter standing there**, for spendStone's reason: a shower
+		// applies its stones on arrival, and the counts ride on the duelist the screen built at
+		// Init.
+		s.fighter.Duelist = gs.Run.Equip(s.fighter.Duelist)
+		s.flyStonesToDuelist(gs, i, shown)
 	}
 
 	saveRun(gs)
@@ -433,17 +476,24 @@ func runeRiderLine(k combat.RiderKind) string {
 	}
 }
 
-// runeSpendable is the pane's "would clicking this do anything" predicate on this screen.
+// consumableSpendable is the pane's "would clicking this do anything" predicate on this screen.
 //
 // **The card's lit state and the click read the same function**, which is what stops a control
 // looking available and doing nothing.
-func (s *CombatScene) runeSpendable(gs *state.GlobalState) func(session.Rune) bool {
+// **A stone is spendable whenever anything is** *(owner's call, 2026-09-19)*. It names its own
+// rung, so there is nothing for it to be aimed at and nothing about the hand that can make it
+// illegal — where a rune goes dim until the cards it wants are selected, a stone is lit for the
+// whole of planning.
+func (s *CombatScene) consumableSpendable(gs *state.GlobalState) func(session.Consumable) bool {
 	if !s.canSpendRunes(gs) {
 		return nil
 	}
 	ids := s.selectedCardIDs()
-	return func(p session.Rune) bool {
-		return s.runeTarget(gs, p).satisfiedBy(ids)
+	return func(c session.Consumable) bool {
+		if c.Kind == session.ConsumableStone {
+			return true
+		}
+		return s.runeTarget(gs, c.Rune).satisfiedBy(ids)
 	}
 }
 
@@ -453,7 +503,7 @@ func (s *CombatScene) runeSpendable(gs *state.GlobalState) func(session.Rune) bo
 // cannot be clicked and a card that is lit always works. Two predicates here is how a control comes
 // to look available and do nothing.
 func (s *CombatScene) updateConsumables(gs *state.GlobalState) {
-	row := s.runeRow(gs)
+	row := s.consumableRow(gs)
 
 	// A modal covering the screen, or a tutorial step holding input elsewhere, takes the row with
 	// it — canceling rather than returning, exactly as the worn relic row does.
@@ -465,7 +515,7 @@ func (s *CombatScene) updateConsumables(gs *state.GlobalState) {
 	s.runeDrag.Update(gs, row)
 }
 
-// runeRow is the sack as a draggable row of cards, addressed by the shared drag — the same
+// consumableRow is the sack as a draggable row of cards, addressed by the shared drag — the same
 // controller the worn relics and the dealt hand use *(owner's call, 2026-09-17)*.
 //
 // **What a drop means here is an arrangement, not a rule.** Worn order decides what a relic does;
@@ -483,7 +533,7 @@ func (s *CombatScene) updateConsumables(gs *state.GlobalState) {
 //
 // **Nothing is lifted.** The run owns the sack and is not touched until the drop, exactly as the
 // relic row leaves the worn list alone — the drawing skips the seat the drag says is empty.
-type runeRow struct {
+type consumableRow struct {
 	rect  image.Rectangle
 	held  int
 	seats int
@@ -491,15 +541,15 @@ type runeRow struct {
 	move  func(from, to int)
 }
 
-func (r runeRow) RowLen() int { return r.held }
+func (r consumableRow) RowLen() int { return r.held }
 
-func (r runeRow) RowSlot(gs *state.GlobalState, i int) image.Rectangle {
+func (r consumableRow) RowSlot(gs *state.GlobalState, i int) image.Rectangle {
 	return consumableSlotRect(r.rect, i, r.seats)
 }
 
 // RowZone is the pane's own rectangle, for the relic row's reason: a drop outside it is not a
 // reorder, and the panes stand beside things that must not become drop targets.
-func (r runeRow) RowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
+func (r consumableRow) RowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
 
 // RowDropIndex is which seat the cursor is over, measured in pitches from the pane's left edge and
 // from the middle of a step — the relic row's arithmetic over this pane's pitch, since these
@@ -507,7 +557,7 @@ func (r runeRow) RowZone(gs *state.GlobalState) image.Rectangle { return r.rect 
 //
 // **Clamped to a seat that holds a rune**, never to the pane's empty seats: a sack of one drawn in a
 // pane of two has one place its card can go.
-func (r runeRow) RowDropIndex(gs *state.GlobalState) int {
+func (r consumableRow) RowDropIndex(gs *state.GlobalState) int {
 	if r.held < 2 {
 		return 0
 	}
@@ -527,33 +577,45 @@ func (r runeRow) RowDropIndex(gs *state.GlobalState) int {
 }
 
 // RowLift is deliberately empty. See the type comment.
-func (r runeRow) RowLift(int) {}
+func (r consumableRow) RowLift(int) {}
 
-func (r runeRow) RowReturn(from, to int) {
+func (r consumableRow) RowReturn(from, to int) {
 	if r.move != nil {
 		r.move(from, to)
 	}
 }
 
-func (r runeRow) RowClick(i int) {
+func (r consumableRow) RowClick(i int) {
 	if r.click != nil {
 		r.click(i)
 	}
 }
 
-// runeRow builds this screen's sack row.
-func (s *CombatScene) runeRow(gs *state.GlobalState) runeRow {
-	return runeRow{
+// consumableRow builds this screen's sack row.
+func (s *CombatScene) consumableRow(gs *state.GlobalState) consumableRow {
+	return consumableRow{
 		rect:  s.consumablePaneRect(gs),
-		held:  len(heldRunes(gs)),
+		held:  len(heldConsumables(gs)),
 		seats: consumableSeats(gs),
 		click: func(i int) {
 			if s.canSpendRunes(gs) {
-				s.spendRune(gs, i)
+				s.spendConsumable(gs, i)
 			}
 		},
+		// **Only the runes reorder, and only among themselves** *(owner's call, 2026-09-19)*. The
+		// row is the sack then the pouch, so a seat index is not a sack index past the last rune —
+		// dragging across the join would reorder by a number that means something else. A rune is
+		// ordered because a rune is *aimed* and the player reads the row left to right; a stone
+		// names its own rung and has nothing to be before or after.
 		move: func(from, to int) {
-			if gs.Run != nil && gs.Run.MoveRune(from, to) {
+			if gs.Run == nil {
+				return
+			}
+			runes := len(heldRunes(gs))
+			if from >= runes || to >= runes {
+				return
+			}
+			if gs.Run.MoveRune(from, to) {
 				saveRun(gs)
 			}
 		},
@@ -568,10 +630,10 @@ func (s *CombatScene) drawDraggedRune(gs *state.GlobalState, screen *ebiten.Imag
 	if !s.runeDrag.Dragging() {
 		return
 	}
-	held := heldRunes(gs)
+	held := heldConsumables(gs)
 	if s.runeDrag.Origin() >= len(held) {
 		return
 	}
-	p := held[s.runeDrag.Origin()]
-	ui.DrawRuneCard(gs, screen, s.runeDrag.At(gs), p, canSpend(s.runeSpendable(gs), p), true)
+	c := held[s.runeDrag.Origin()]
+	drawConsumableCard(gs, screen, s.runeDrag.At(gs), c, canSpend(s.consumableSpendable(gs), c), true)
 }

@@ -1165,7 +1165,7 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 		{"the wrong color held", []Card{ice, ice}, 0, 0},
 		{"one of each", []Card{fire, ice}, 5, 1},
 	} {
-		got, cards, seats := HeldBonus(wearer.WornRelics(), tc.held)
+		got, cards, seats, _ := HeldBonus(wearer.WornRelics(), tc.held)
 		if got != tc.want {
 			t.Errorf("%s paid %d, want %d", tc.name, got, tc.want)
 		}

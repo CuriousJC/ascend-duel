@@ -1699,7 +1699,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// and nothing equips, buys or reads one. Its width is what the two cards leave; see
 	// combat_relics.go.
 	s.drawRelicPane(gs, screen)
-	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.runeSpendable(gs),
+	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.consumableSpendable(gs),
 		func(i int) bool { return s.runeDrag.Dragging() && i == s.runeDrag.Origin() },
 		s.tip.Showing())
 	s.drawDraggedRune(gs, screen)

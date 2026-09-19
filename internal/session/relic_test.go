@@ -428,3 +428,50 @@ func TestAMovedWornRelicKeepsItsGrowth(t *testing.T) {
 		}
 	}
 }
+
+func TestHermesShortensTheClockForTheFightAndGivesItBackWhenSold(t *testing.T) {
+	// The reason the delta is summed over the run's number rather than written into it: a relic
+	// that called SetRoundLimit would leave the climb two rounds short forever, and selling is the
+	// only way a relic comes off.
+	run := wearing(t, "cost-three-rounds")
+
+	base := combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100}
+	if got := run.Equip(base).RoundLimit; got != 3 {
+		t.Errorf("wearing Hermes, a fight runs %d rounds, want 3", got)
+	}
+	if got := run.RoundLimit(); got != combat.DefaultRoundLimit {
+		t.Errorf("Hermes wrote %d onto the run's own clock, want %d left alone",
+			got, combat.DefaultRoundLimit)
+	}
+
+	if !run.Sell("cost-three-rounds") {
+		t.Fatal("Hermes would not come off")
+	}
+	if got := run.Equip(base).RoundLimit; got != combat.DefaultRoundLimit {
+		t.Errorf("after selling Hermes a fight runs %d rounds, want %d back",
+			got, combat.DefaultRoundLimit)
+	}
+}
+
+func TestTheClockRelicsMixRatherThanOneWinning(t *testing.T) {
+	// The whole argument for a delta over a figure, at the seat that actually equips a fighter.
+	// Hermes takes two rounds and The Turned Glass gives two, so wearing both is the run's own
+	// number back — and worn order decides nothing, because the deltas are summed.
+	base := combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100}
+
+	if got := wearing(t, "clock-plus-two").Equip(base).RoundLimit; got != combat.DefaultRoundLimit+2 {
+		t.Errorf("wearing The Turned Glass a fight runs %d rounds, want %d",
+			got, combat.DefaultRoundLimit+2)
+	}
+
+	for _, order := range [][]string{
+		{"cost-three-rounds", "clock-plus-two"},
+		{"clock-plus-two", "cost-three-rounds"},
+	} {
+		got := wearing(t, order...).Equip(base).RoundLimit
+		if got != combat.DefaultRoundLimit {
+			t.Errorf("worn %v the clock is %d rounds, want %d — one relic is winning outright "+
+				"rather than the two summing", order, got, combat.DefaultRoundLimit)
+		}
+	}
+}

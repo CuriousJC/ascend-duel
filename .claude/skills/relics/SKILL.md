@@ -189,6 +189,7 @@ not ignored.
 | `add-damage-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to the blow **for every card still in hand** matching the rule's card predicate. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
 | `drain-damage` | `attack-lands` | `Amount` percent | restores that share of the blow that **landed** to whoever threw it — after weight, vulnerability, the shield and the miss, so a blow that was eaten drains nothing. **Once per blow**, not per card: a rule's predicate asks whether *any* card of the blow matched |
 | `heal-share` | `turn-start` | `Amount` percent | restores that share of **maximum** life. Of the maximum rather than of what is left, so it is worth the same however badly the fight is going |
+| `adjust-round-limit` | `fight-start` | `Amount` rounds, **signed** | moves **this fight's** clock — Hermes takes two off. A delta rather than a figure, so it mixes with a relic that buys rounds; **every delta sums and worn order decides nothing**, because addition commutes. Clamped at one round, never at none, and read over the run's number rather than written into it, so selling gives the rounds back |
 | `echo-attack` | `blow-formed` | `Amount` landings | the blow's lead card lands Amount times, at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
 
 **Adding a verb is a Go change** — one entry here plus the one place applying it — and that cost

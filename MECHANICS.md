@@ -1450,10 +1450,27 @@ the end of the round and after every other way the round could have finished:
 
 **The number belongs to the run.** `session.Session.RoundLimit` is what a fight is actually on,
 seeded from `combat.DefaultRoundLimit` and carried to the fighter by `Equip` — the same seat the
-relics and the stones arrive in. Nothing moves it today, and the reason it is a field rather than a
-constant is that **a relic or a brand buying the player a sixth round is expected**, and when one
-lands it writes to one place and every fight of the run is on the new number. It is saved with the
-run; a save written before the clock existed resumes onto the default rather than onto no clock.
+relics and the stones arrive in. It is saved with the run; a save written before the clock existed
+resumes onto the default rather than onto no clock.
+
+**A relic may move it, and it moves the fight rather than the run.** `adjust-round-limit` names a
+signed number of rounds at `fight-start`, and `combat.RoundLimitFor` sums the worn set's deltas over
+the run's own number each time a fighter is put together — so selling the relic hands the rounds
+straight back, where a relic writing to the run would leave the whole climb moved. Hermes is the
+first record: every card 1 AP cheaper, every fight two rounds shorter.
+
+- **A delta, never a figure.** A relic naming three rounds outright could not be mixed with one
+  that buys rounds — whichever was read last would simply win, and which that was would depend on
+  nothing the player can see. Deltas sum, so a relic taking two and a relic giving one leave a
+  fight one round shorter and both sentences stay true.
+- **Summing is what makes worn order irrelevant**, which is the one place a relic verb steps
+  outside left-to-right compounding. Addition commutes; a figure would not, and a drawback a second
+  relic could cancel by sitting to its right is not a drawback.
+- **Never below one.** Zero is no clock at all in the rules, so a stack of drawbacks reaching it
+  would take the mechanic off the fight rather than tighten it — the direction
+  `session.SetRoundLimit` already clamps. A relic moving the clock by zero is refused at load.
+- **A fight already on no clock stays on none.** Creatures and every bare duelist in a test carry a
+  zero, and a delta off an unlimited fight is still unlimited.
 
 **The player watches it fill.** A five-cell bar under the tower place, one cell per round spent,
 with the last one taking the game's one red as it lights. It is a picture of the round counter and

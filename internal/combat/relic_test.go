@@ -1738,3 +1738,63 @@ func TestARungRelicRaisesTheDMGTheBlowIsSwungAt(t *testing.T) {
 		t.Errorf("the first term reads %d x %d%% (ok %v), want 12 x 300%%", dmg, pct, ok)
 	}
 }
+
+func TestClockDeltasSumAndWornOrderDoesNotMatter(t *testing.T) {
+	// Hermes' half of the grammar, and the one relic verb outside left-to-right compounding. A bare
+	// set has to hand the run's own number straight back, or every fight in the game would be on
+	// some other clock.
+	if got := RoundLimitFor(nil, DefaultRoundLimit); got != DefaultRoundLimit {
+		t.Errorf("nothing worn puts a fight on %d rounds, want %d", got, DefaultRoundLimit)
+	}
+
+	shorter := relic(t, "cost-three-rounds", RelicRule{
+		When: MomentFightStart,
+		Then: []RelicEffect{{Do: DoAdjustRoundLimit, Amount: -2}},
+	})
+	longer := relic(t, "one-more-round", RelicRule{
+		When: MomentFightStart,
+		Then: []RelicEffect{{Do: DoAdjustRoundLimit, Amount: 1}},
+	})
+
+	if got := RoundLimitFor([]WornRelic{{Relic: shorter}}, DefaultRoundLimit); got != 3 {
+		t.Errorf("wearing Hermes a fight runs %d rounds, want 3", got)
+	}
+	if got := RoundLimitFor([]WornRelic{{Relic: longer}}, DefaultRoundLimit); got != 6 {
+		t.Errorf("a relic buying a round gives %d, want 6", got)
+	}
+
+	// Deltas sum, and worn order decides nothing because addition commutes. That is the whole
+	// argument for a delta over a figure: the two relics mix instead of one silently winning.
+	for _, worn := range [][]WornRelic{
+		{{Relic: shorter}, {Relic: longer}},
+		{{Relic: longer}, {Relic: shorter}},
+	} {
+		if got := RoundLimitFor(worn, DefaultRoundLimit); got != 4 {
+			t.Errorf("-2 and +1 worn together give %d, want 4 whichever is left", got)
+		}
+	}
+
+	// Two drawbacks stack past the clock and are caught by the floor: zero is no clock at all here,
+	// so a stack reaching it would take the mechanic off rather than tighten it.
+	three := []WornRelic{{Relic: shorter}, {Relic: shorter}, {Relic: shorter}}
+	if got := RoundLimitFor(three, DefaultRoundLimit); got != 1 {
+		t.Errorf("three Hermes put a fight on %d rounds, want 1", got)
+	}
+
+	// A fight already on no clock has nothing to move — every creature and every bare duelist in
+	// this suite carries a zero here.
+	if got := RoundLimitFor([]WornRelic{{Relic: shorter}}, 0); got != 0 {
+		t.Errorf("an unclocked fight wearing Hermes runs %d rounds, want no clock", got)
+	}
+}
+
+func TestARelicMayNotMoveTheClockByNothing(t *testing.T) {
+	// Signed, so the zero check is the one that catches a typo — a relic moving the clock by no
+	// rounds is a record somebody meant to finish.
+	if _, err := RegisterRelic("still-clock", "Still Clock", []RelicRule{{
+		When: MomentFightStart,
+		Then: []RelicEffect{{Do: DoAdjustRoundLimit, Amount: 0}},
+	}}); err == nil {
+		t.Fatal("a relic moving the clock by 0 rounds registered")
+	}
+}

@@ -66,28 +66,92 @@ type Sources struct {
 // that did would price the card off it.
 //
 // A nil source rolls nothing, which is the whole of the determinism contract for this file.
-func rollGolden(odds int, rng *rand.Rand) (dmg, life int) {
+// **The die is widened rather than shrunk, and that is what lets a relic scale it** *(2026-09-18)*.
+// The face count is `odds * pctDie` and each outcome takes a band `scale` wide, so at the identity
+// scale of 100 this is exactly the d5 it has always been — 1 in 5 damage, 1 in 5 life, 3 in 5
+// nothing — and at 200 each paying band is twice as wide. **Still one sample**, which is the
+// determinism half: a relic may change what a roll means and may never change how often the stream
+// is drawn from. See DoScaleRolls.
+func rollGolden(odds, scale int, rng *rand.Rand) (dmg, life int) {
 	if rng == nil || odds < LuckOutcomes {
 		return 0, 0
 	}
-	switch rng.Intn(odds) {
-	case 0:
+
+	faces := odds * pctDie
+	band := luckBand(scale, faces, 2)
+
+	switch roll := rng.Intn(faces); {
+	case roll < band:
 		return LuckDMG, 0
-	case 1:
+	case roll < 2*band:
 		return 0, LuckLife
 	}
 	return 0, 0
+}
+
+// LuckOdds is one gamble's chance as a numerator over a denominator, reduced to the terms the
+// player reads: `1, 5` bare, and `2, 5` under a relic that has doubled the numerator.
+//
+// **It is the roll's own arithmetic, exported rather than restated** *(2026-09-18)*. `carddesc`
+// prints what this returns, so what a card promises and what the die does are one calculation — a
+// tooltip deriving its own figure is how a card comes to lie about its odds, and the clamp in
+// luckBand is exactly the kind of detail a second copy would miss.
+//
+// `bands` is how many paying outcomes share the die: two for gold, one for silver.
+func LuckOdds(odds, scale, bands int) (num, den int) {
+	if odds < LuckOutcomes {
+		return 0, odds
+	}
+	if scale <= 0 {
+		scale = 100
+	}
+
+	faces := odds * pctDie
+	band := luckBand(scale, faces, bands)
+
+	// Back into the record's own denominator, which is the number the card was authored around —
+	// a chance printed over 500 would be true and unreadable.
+	num, den = band, pctDie
+	for _, d := range []int{2, 5} {
+		for num%d == 0 && den%d == 0 {
+			num, den = num/d, den/d
+		}
+	}
+	return num, odds * den
+}
+
+// pctDie is how many faces one unit of the old die is cut into, which is what makes a percentage
+// scale expressible without a second sample. A hundred, so a scale is read directly as its own
+// band width.
+const pctDie = 100
+
+// luckBand is how wide one paying outcome is, held so that **at least one losing face survives**.
+//
+// **That is LuckOutcomes' rule generalized.** A record naming fewer than three faces is refused at
+// load because a gamble that always pays is a purchase; a relic wide enough to cover the die would
+// do the same thing from the other direction, and it would do it at runtime where no loader can
+// see it. `bands` is how many paying outcomes share the die — two for gold, one for silver.
+func luckBand(scale, faces, bands int) int {
+	if scale < 1 {
+		scale = 1
+	}
+	if most := (faces - 1) / bands; scale > most {
+		return most
+	}
+	return scale
 }
 
 // rollSilver takes one silver card's gamble and reports the vitae it paid.
 //
 // **One paying face rather than two**, which is the whole of what makes silver the cheaper metal:
 // same die, half the outcomes on it.
-func rollSilver(odds int, rng *rand.Rand) int {
+func rollSilver(odds, scale int, rng *rand.Rand) int {
 	if rng == nil || odds < LuckOutcomes {
 		return 0
 	}
-	if rng.Intn(odds) == 0 {
+
+	faces := odds * pctDie
+	if rng.Intn(faces) < luckBand(scale, faces, 1) {
 		return SilverVitae
 	}
 	return 0

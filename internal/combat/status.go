@@ -411,7 +411,23 @@ func amplify(dmg, pct int) int {
 }
 
 // missChance is how likely this duelist's attack is to come to nothing, in percentage points.
-func (d Duelist) missChance() int { return capPct(d.totalOf(EffectMissChance)) }
+//
+// **A worn roll-scaling relic reaches it, and it reaches it before the cap** — doubling a figure
+// that has already been held at 99 would do nothing. It can only ever make its own wearer worse:
+// this is read off the duelist who is swinging, so there is no way for a relic to reach the roll a
+// shocked opponent takes. See DoScaleRolls, where that is the intended drawback.
+func (d Duelist) missChance() int {
+	return capPct(d.totalOf(EffectMissChance) * d.rollScale() / 100)
+}
+
+// MissChance is what this duelist's attack actually rolls against, in percentage points, with every
+// worn roll-scaling relic already in it.
+//
+// **It is here so a tooltip cannot disagree with the die.** The authored sentence on a status says
+// what the status is worth; only the rules know what it is worth to *this* duelist, and printing
+// the authored figure beside a doubled roll is a card that lies. Same argument LuckOdds makes one
+// file over. See ui.DuelistTip.
+func (d Duelist) MissChance() int { return d.missChance() }
 
 // attackMisses rolls a duelist's attack and reports whether it misses.
 //

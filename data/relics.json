@@ -597,7 +597,7 @@
     "Family": "Elemental statuses",
     "Art": "status-burn",
     "Draw": "a gold ring with a red gem, the flames should be licking up the sides of the ring",
-    "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.",
+    "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 1/2 DMG each turn.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -629,7 +629,7 @@
     "Family": "Elemental statuses",
     "Art": "status-shock",
     "Draw": "a gold ring with a yellow gem, electricity crackling up the sides of the ring",
-    "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
+    "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 1/4 chance to miss.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -645,7 +645,7 @@
     "Family": "Elemental statuses",
     "Art": "status-weight",
     "Draw": "a gold ring with a green gem, chunks of rock stuck along the shoulders of the band and a few loose pebbles around it",
-    "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
+    "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 1/4 less DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1700,7 +1700,7 @@
     "Family": "Form statuses",
     "Art": "bruise",
     "Draw": "an obsidian mace topped with a green glowing blunt rock",
-    "Text": "Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
+    "Text": "Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 1/4 less DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1716,7 +1716,7 @@
     "Family": "Form statuses",
     "Art": "strike",
     "Draw": "a spear made of yellow glass with lightning crackling along the shaft",
-    "Text": "Stab attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
+    "Text": "Stab attacks apply SHOCKED status to target. SHOCKED enemies have 1/4 chance to miss.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -2127,7 +2127,7 @@
     "Family": "Cost bargains",
     "Art": "cost-life-lost",
     "Draw": "a solid platinum spear with blood staining the handle and not the blade",
-    "Text": "Every card costs 1 AP less. Lose 25% of your HP.",
+    "Text": "Every card costs 1 AP less. Lose 1/4 of your HP.",
     "Rarity": "rare",
     "Rules": [
       {
@@ -2298,6 +2298,51 @@
       {
         "When": "prizes-dealt",
         "Then": [{ "Do": "adjust-picks", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "drain-blow",
+    "Name": "Vampiric Fang",
+    "Family": "Lifedrain",
+    "Art": "",
+    "Draw": "an ivory curved fang capped at the root with gold, hanging on a jade chain",
+    "Text": "Every blow gives back 3/10 of its DMG as life.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "Then": [{ "Do": "drain-damage", "Amount": 30 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "heal-turn-start",
+    "Name": "The Tear",
+    "Family": "Lifedrain",
+    "Art": "",
+    "Draw": "a jade amulet set with a ruby cut in the shape of a teardrop, on a platinum chain",
+    "Text": "Restores 1/4 of max life at the start of your turn.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "turn-start",
+        "Then": [{ "Do": "heal-share", "Amount": 25 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "scale-rolls",
+    "Name": "The Rabbit's Foot",
+    "Family": "Luck",
+    "Art": "",
+    "Draw": "a snow-white rabbit's foot capped at the root with bronze, on a bronze necklace",
+    "Text": "Doubles the numerator of every roll. Gold and silver pay twice as often. You miss twice as often while SHOCKED.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "scale-rolls", "Amount": 200 }]
       }
     ]
   }

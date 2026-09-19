@@ -242,6 +242,14 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorActorSeat, anchorActorCard, gestureFly,
 		"a rider is a property of the card, so the life flies out of that card's seat into the bar it fills",
 	},
+	combat.KindDrained: {
+		anchorTargetCard, anchorActorCard, gestureFly,
+		"the damage figure's journey run backwards - the share comes back out of the body it was taken from, because that is where the eye already is and the life was not created there",
+	},
+	combat.KindRegenerated: {
+		anchorRelic, anchorActorCard, gestureFly,
+		"a relic makes this life out of nothing, as it makes a status out of nothing - so it leaves the ring rather than a body, which is the one thing that separates it from a drain",
+	},
 	combat.KindVitae: {
 		anchorActorSeat, anchorActorCard, gestureFly,
 		"the duelist card carries a VITAE row, so the payment has somewhere to land after all - a held card flies from its seat in the hand",
@@ -350,6 +358,11 @@ type combatTheater struct {
 	// while one of these is up; what waits is the drawing.
 	hits []hitFlight
 
+	// drains are the shares of a blow currently traveling back out of the body they were taken
+	// from, and the reason the drainer's health bar can lag the life it has already been given.
+	// See combat_drain.go — the hits' rule pointing the other way.
+	drains []drainFlight
+
 	// shields are the defend cards' pips currently traveling to a fighter card. **They set off on
 	// the beat their card is scored into the hand**, which is several beats before the defend phase
 	// raises them — see combat_shields.go, where the trade that buys is written down.
@@ -415,6 +428,7 @@ func (t *combatTheater) Tick() {
 	// both of them rewrite the hand. CombatScene.tickDeal and tickSettle drive them.
 
 	t.hits = ui.Advance(t.hits)
+	t.drains = ui.Advance(t.drains)
 	t.shields = ui.Advance(t.shields)
 
 	// **The breaks tick and settle in one pass, and it has to be one pass.** `advance` ticks a
@@ -450,7 +464,8 @@ func (t *combatTheater) Tick() {
 // holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
 // the number reaches it. Adding a mover here is deciding that the round should wait for it.
 func (t *combatTheater) Running() bool {
-	return ui.Running(t.hits) || ui.Running(t.shields) || ui.Running(t.breaks) || ui.Running(t.signals)
+	return ui.Running(t.hits) || ui.Running(t.drains) || ui.Running(t.shields) ||
+		ui.Running(t.breaks) || ui.Running(t.signals)
 }
 
 // clear takes the whole stage down, view state included.

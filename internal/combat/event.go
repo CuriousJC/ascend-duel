@@ -143,6 +143,29 @@ const (
 	// raised only the ceiling would read as nothing happening. Life is what they are on afterwards.
 	KindGrantedLife
 
+	// KindDrained is a worn relic turning part of a blow into life for the duelist who threw it.
+	// Relic names which one and Amount is the life actually restored, **after the cap** — so a
+	// drain on a duelist already at full life emits nothing at all rather than a beat worth zero,
+	// which is the rule the heal rider is already under.
+	//
+	// **Its own kind rather than a KindHealed with a relic on it.** The two come off different
+	// things and therefore fly from different places: a rider's heal leaves the card that carried
+	// it, and a drain leaves the ring in the relic row. The choreography table is one entry per
+	// kind, so a shared kind would be one anchor for two sources and the relic would fire without
+	// saying which relic fired.
+	KindDrained
+
+	// KindRegenerated is a worn relic putting life on its wearer at the top of their own turn.
+	// Relic names which one and Amount is the life actually restored, after the cap — so a duelist
+	// at full life emits nothing at all, like every other heal.
+	//
+	// **Its own kind rather than a KindDrained, and the difference is where the life came from.**
+	// A drain takes its share out of a blow, so the figure flies out of the body it was taken
+	// from; a regeneration is made by the relic out of nothing, so it flies out of the ring. That
+	// is the same distinction KindStatus draws by taking anchorRelic, and the choreography table is
+	// one entry per kind.
+	KindRegenerated
+
 	KindRoundEnd
 )
 
@@ -216,7 +239,7 @@ type Event struct {
 	// concepts. It is set on the two kinds that mean it and read on no others.
 	Status StatusID
 
-	// Relic is the worn relic that applied the status, on KindStatus.
+	// Relic is the worn relic behind the event, on KindStatus, KindDrained and KindRegenerated.
 	//
 	// **It is here because a status has a cause the player can see** *(2026-08-18)*. The screen
 	// flies the word out of the relic that caused it, and there is no other honest way for it to
@@ -229,7 +252,7 @@ type Event struct {
 	// worn list, which is at most five entries and is the same order the relic row is drawn in.
 	//
 	// **The zero value is a real relic**, exactly as Status's is a real status, so it is set on the
-	// one kind that means it and read on no others. NoRelic is the absence, for a caller that wants
+	// kinds that mean it and read on no others. NoRelic is the absence, for a caller that wants
 	// to say so explicitly.
 	Relic RelicID
 

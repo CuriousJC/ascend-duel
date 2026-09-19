@@ -160,6 +160,22 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 		case combat.KindStatus:
 			attach(ui.StatusPhrase(e.Status))
 
+		case combat.KindDrained:
+			// **It attaches to the attacker's own line**, like a status does, because it is
+			// something the blow did rather than an event of its own: the hit is the line above and
+			// this is the rest of what that hit was worth.
+			//
+			// **The relic names itself.** A second drain relic would otherwise narrate identically
+			// to the first, which is the argument KindBurned already makes for naming its status.
+			attach(fmt.Sprintf("%s drains %d", combat.RelicOf(e.Relic).Name, e.Amount))
+
+		case combat.KindRegenerated:
+			// **A line of its own, where a drain attaches to one.** A drain is part of what the
+			// blow was worth and has an attacker's sentence above it to hang on; this happens at
+			// the top of a turn with nothing before it, so there is nothing to attach to.
+			announce(fmt.Sprintf("%s restores %d - %s", s.sideName(e.Side), e.Amount,
+				combat.RelicOf(e.Relic).Name), ui.VoiceFor(e.Side))
+
 		case combat.KindBurned:
 			// A tick belongs to nobody's card, so it opens its own line. It carries the
 			// victim's swatch because it is a thing happening *to* them, which is also the

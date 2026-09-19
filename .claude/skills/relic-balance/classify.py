@@ -38,6 +38,13 @@ VERBS = {
     # defense
     "add-hp":                  (("defense",), "flat"),
     "scale-hp":                (("defense",), "multiplicative"),
+    # sustain is defense: it buys life back rather than stopping the blow, and the share
+    # scales with what the blow was worth, so it reads as multiplicative
+    "drain-damage":            (("defense",), "multiplicative"),
+    # a share of the maximum every turn: sustain, and the figure does not move with the fight
+    "heal-share":              (("defense",), "flat"),
+    # luck: widens the paying band on every roll, and widens the miss roll against its own wearer
+    "scale-rolls":             (("offense", "drawback"), "multiplicative"),
     # tempo -- buys action points, never damage
     "adjust-cost":             (("tempo",), "flat"),
     "demote-card":             (("tempo",), "flat"),

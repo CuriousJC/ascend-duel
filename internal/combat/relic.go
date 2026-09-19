@@ -96,13 +96,30 @@ const (
 	//
 	// **Appended, because the enum is append-only.**
 	MomentCardDrawn
+
+	// MomentTurnStart fires once at the top of each of this duelist's own turns, in playTurn,
+	// **before the chill, the riders and both phases** — so a relic that puts life back does it in
+	// time for the turn it is about to survive.
+	//
+	// **It is MomentTurnTaken's other end and it is deliberately a second moment rather than a
+	// flag on that one.** What a turn-taken rule reads is the turn: Momentum grows because a turn
+	// held no defense, which is a fact that does not exist until the turn is over. A turn-start
+	// rule has no turn to read at all, which is why it takes no predicate.
+	//
+	// **It has no card, so it reads none** — see readsACard. A rule carrying any `If` here is
+	// refused at registration rather than matching everything: "heal on a turn with a fire card in
+	// it" is a sentence this moment cannot answer, because the cards have not been committed to
+	// anything yet.
+	//
+	// **Appended, because the enum is append-only.**
+	MomentTurnStart
 )
 
 // Moments is every moment in a fixed order, for anything that walks them.
 func Moments() []Moment {
 	return []Moment{MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt,
 		MomentFightStart, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken,
-		MomentCardDrawn}
+		MomentCardDrawn, MomentTurnStart}
 }
 
 func (m Moment) String() string {
@@ -125,6 +142,8 @@ func (m Moment) String() string {
 		return "turn-taken"
 	case MomentCardDrawn:
 		return "card-drawn"
+	case MomentTurnStart:
+		return "turn-start"
 	default:
 		return "card-cost"
 	}
@@ -149,6 +168,11 @@ func (m Moment) readsACard() bool {
 	case MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt, MomentBlowFormed,
 		MomentTurnTaken, MomentCardDrawn:
 		return true
+	case MomentTurnStart:
+		// **Nothing has been committed yet**, so there is no card and no turn to ask about. A
+		// predicate here would have to match everything, which is the silent-rule failure
+		// readsACard exists to refuse.
+		return false
 	default:
 		return false
 	}
@@ -331,6 +355,66 @@ const (
 	// **It reads Duelist.Vitae at the card**, like every other per-vitae rule, because the purse
 	// moves inside a fight.
 	DoScaleDamagePerVitae
+
+	// DoDrainDamage restores Amount percent of a landed blow to the duelist who threw it — the
+	// first verb in the grammar that gives a relic's wearer life back.
+	//
+	// **Once per blow, not once per card**, which is DoApplyStatus's rule rather than DoGrowOnHit's:
+	// the share is taken out of the blow, and a blow is one figure however many cards went into it.
+	// A rule carrying a predicate asks whether *any* card of the blow matched, so an elemental drain
+	// is "your fire hands drain" rather than a share paid per fire card.
+	//
+	// **It reads the figure that landed**, after weight, after the target's vulnerability, and after
+	// the shield and the miss — so a blow that was eaten or never thrown drains nothing, and a
+	// drain is never worth more than the blow the player watched.
+	//
+	// **Two relics add rather than compound**, like every other flat share of one figure.
+	//
+	// **Capped at full life by `restore`**, which is what keeps it a comeback rather than a ceiling:
+	// nothing in the game heals above full.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoDrainDamage
+
+	// DoHealShare restores Amount percent of the duelist's **maximum** life at the top of their own
+	// turn — the regeneration verb, where DoDrainDamage is the one that takes its life off a blow.
+	//
+	// **Of the maximum, never of what is left.** A share of the current life is worth least at the
+	// moment a duelist needs it and most when they need nothing, which is a comeback relic that
+	// does not come back. This one is the same figure however badly the fight is going.
+	//
+	// **Two relics add rather than compound**, like every other share of one figure.
+	//
+	// **Capped at full life by `restore`**: nothing in the game heals above full, so this is worth
+	// nothing to a duelist who has not been hit and everything to one who has.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoHealShare
+
+	// DoScaleRolls scales **the numerator of every roll in the rules** by Amount percent: 200 is
+	// twice as many winning faces on a gold or a silver card, and twice as likely to miss while
+	// shocked.
+	//
+	// **The numerator, never the denominator.** Halving a d5 to a d2 is the obvious reading and it
+	// is a trap: LuckOutcomes refuses a die with under three faces, so the card would silently stop
+	// paying altogether. Widening the paying band leaves the die alone.
+	//
+	// **It must not change how many times a stream is drawn from.** Rolling twice and taking the
+	// better would advance the luck cursor twice, so wearing this would reroll every later gamble
+	// in the run — which is the determinism rule in the randomness skill, met by scaling the
+	// comparison rather than the number of draws. See rollGolden and attackMisses, both of which
+	// still take exactly one sample.
+	//
+	// **It reaches the shock as well, and that is a drawback rather than an oversight**
+	// *(owner's call)*. attackMisses reads the *acting* duelist's own miss chance, so a worn relic
+	// can only ever double its wearer's own chance of whiffing — there is no way from here to make
+	// a shocked opponent miss more. A relic about luck that is only ever lucky would be the
+	// dishonest version.
+	//
+	// **Two of them compound**, like DoScaleHP and unlike the flat shares — it is a multiplier.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoScaleRolls
 )
 
 // RelicVerbs is every verb in a fixed order.
@@ -339,7 +423,7 @@ func RelicVerbs() []RelicVerb {
 		DoAddHP, DoGrowOnWin, DoScalePropagation, DoAdjustPicks, DoAdjustPrizeVitae, DoScaleHP,
 		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth,
 		DoAddHandDMG, DoAddDamagePerHeld, DoGrowPerCard, DoAddDamagePerVitae,
-		DoScaleHandDamage, DoScaleDamagePerVitae}
+		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls}
 }
 
 func (v RelicVerb) String() string {
@@ -388,6 +472,12 @@ func (v RelicVerb) String() string {
 		return "add-hand-dmg"
 	case DoAddDamagePerHeld:
 		return "add-damage-per-held"
+	case DoDrainDamage:
+		return "drain-damage"
+	case DoHealShare:
+		return "heal-share"
+	case DoScaleRolls:
+		return "scale-rolls"
 	default:
 		return "adjust-cost"
 	}
@@ -412,15 +502,17 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentCardCost
 	case DoScaleDamage, DoScaleDamagePerVitae:
 		return MomentCardDamage
-	case DoApplyStatus, DoGrowOnHit:
+	case DoApplyStatus, DoGrowOnHit, DoDrainDamage:
 		return MomentAttackLands
+	case DoHealShare:
+		return MomentTurnStart
 	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard:
 		return MomentTurnTaken
 	case DoSetElement:
 		return MomentCardDrawn
 	case DoDemoteCard:
 		return MomentDeckBuilt
-	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDamagePerVitae:
+	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDamagePerVitae, DoScaleRolls:
 		return MomentFightStart
 	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDamagePerHeld, DoScaleHandDamage:
 		return MomentBlowFormed
@@ -1009,6 +1101,86 @@ func (d Duelist) statusesFrom(cards []Card) []appliedStatus {
 	return out
 }
 
+// drainsFrom is every share of a blow this duelist's relics turn back into life, in worn order.
+//
+// **One entry per relic, where statusesFrom deduplicates by status.** Two relics that both drain
+// both pay, because two shares of a figure are two different amounts; two relics that both set
+// something burning are one burn. What is deduplicated here is the *cards*: a relic fires once for
+// the blow however many of its cards matched, so an elemental drain is a share of the hand rather
+// than a share per card of that color.
+//
+// **It says which relic each share came from**, for appliedStatus's reason: the screen flies the
+// life out of the ring that produced it, and nothing else on the event can name which ring that was.
+func (d Duelist) drainsFrom(cards []Card) []relicDrain {
+	var out []relicDrain
+
+	for _, w := range d.WornRelics() {
+		pct := 0
+		for _, rule := range RelicOf(w.Relic).Rules {
+			if rule.When != MomentAttackLands {
+				continue
+			}
+			matched := false
+			for _, card := range cards {
+				if rule.If.Matches(card) {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do == DoDrainDamage {
+					pct += e.Amount + w.Grown
+				}
+			}
+		}
+		if pct > 0 {
+			out = append(out, relicDrain{Relic: w.Relic, Pct: pct})
+		}
+	}
+	return out
+}
+
+// healsFrom is every share of maximum life this duelist's relics put back at the top of a turn, in
+// worn order.
+//
+// **One entry per relic**, like drainsFrom and for the same reason: two shares of one figure are
+// two different amounts, and each has to fly out of its own ring.
+//
+// **No predicate is read, because this moment has none to read** — see MomentTurnStart. The rules
+// refuse a conditioned turn-start rule at registration, so there is nothing to check here.
+func (d Duelist) healsFrom() []relicDrain {
+	var out []relicDrain
+
+	for _, w := range d.WornRelics() {
+		pct := 0
+		for _, rule := range RelicOf(w.Relic).Rules {
+			if rule.When != MomentTurnStart {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do == DoHealShare {
+					pct += e.Amount + w.Grown
+				}
+			}
+		}
+		if pct > 0 {
+			out = append(out, relicDrain{Relic: w.Relic, Pct: pct})
+		}
+	}
+	return out
+}
+
+// relicDrain is one worn relic's share of a figure, as a percent. **Shared by the two life verbs**
+// — a drain's share of a blow and a regeneration's share of a maximum — because what travels is the
+// same pair either way: which ring, and how much of it.
+type relicDrain struct {
+	Relic RelicID
+	Pct   int
+}
+
 // appliedStatus is one status a blow lands, and the worn relic that put it there.
 //
 // **The pair travels together because the screen needs both and can derive neither.** A status
@@ -1036,6 +1208,28 @@ func HPScale(worn []WornRelic) int {
 	}
 	return out
 }
+
+// RollScale is what a worn set does to the numerator of every roll, as a percentage — 100 when
+// nothing scales it, which is the identity and what every bare duelist carries.
+//
+// **Compounding left to right**, like HPScale and every other multiplicative relic effect.
+//
+// **It is read off the duelist at each roll rather than resolved once at fight-start**, which is
+// the shape add-damage-per-vitae already has: the verb declares a rate and the product is taken
+// where it is needed. Here it is because the two roll sites are in different phases and neither
+// has a figure to cache on.
+func RollScale(worn []WornRelic) int {
+	out := 100
+	for _, e := range RelicEffectsAt(worn, MomentFightStart, Card{}) {
+		if e.Do == DoScaleRolls {
+			out = out * e.Amount / 100
+		}
+	}
+	return out
+}
+
+// rollScale is RollScale for a duelist, which is how both roll sites reach it.
+func (d Duelist) rollScale() int { return RollScale(d.WornRelics()) }
 
 // LandingAmounts is what one card of a blow pays, term by term: its own damage first, then a term
 // for every extra landing its relics buy. One entry when nothing repeats or echoes it, which is

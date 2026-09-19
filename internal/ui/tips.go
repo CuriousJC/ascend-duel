@@ -60,7 +60,7 @@ func TipDwell() int { return Beat(3, 2) }
 // **The block itself is `internal/carddesc`**, which is windowless, so `tools/upgradesheet` prints
 // the same strings this panel does rather than a snapshot of them.
 func CardTip(c combat.Card, h held) (string, []string) {
-	lines := carddesc.Lines(c, h.cost, h.dmg, relicScale(c, h))
+	lines := carddesc.Lines(c, h.cost, h.dmg, relicScale(c, h), combat.RollScale(h.worn))
 	lines = append(lines, damageChainLines(c, h)...)
 	if c.AmountPct != 0 {
 		lines = append(lines, "an essence changed this card")
@@ -206,7 +206,7 @@ func DuelistTip(name string, d combat.Duelist) (string, []string) {
 		}
 		spec := combat.StatusOf(id)
 		lines = append(lines, "", spec.Name+" - "+statusRounds(st.Rounds))
-		if Text := statusText(spec.Key); Text != "" {
+		if Text := statusEffectText(spec, d); Text != "" {
 			lines = append(lines, Text)
 		}
 	}
@@ -218,6 +218,25 @@ func statusRounds(n int) string {
 		return "1 round left"
 	}
 	return strconv.Itoa(n) + " rounds left"
+}
+
+// statusEffectText is what a status says it does **to this duelist**, which is not always what the
+// record says it does.
+//
+// **A miss chance is the one figure a relic can move**, and when one has, the authored sentence is
+// wrong — `1/4 CHANCE TO MISS ATTACKS` over a duelist who is actually missing half the time. The
+// rules are asked for the live figure and the line is rewritten around it; every other status is
+// its authored sentence, because nothing scales them.
+//
+// **The wording is rebuilt rather than patched**, so there is one sentence rather than an authored
+// one with a correction stapled to it.
+func statusEffectText(spec combat.StatusSpec, d combat.Duelist) string {
+	if spec.Effect == combat.EffectMissChance {
+		if live := d.MissChance(); live != spec.Amount {
+			return carddesc.Fraction(live) + " CHANCE TO MISS ATTACKS"
+		}
+	}
+	return statusText(spec.Key)
 }
 
 // statusText is the authored line for a status, out of `statuses.json`.

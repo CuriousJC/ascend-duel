@@ -118,12 +118,12 @@ func ElementWord(c combat.Card) string {
 // bare card. **It is passed in rather than worked out**, because the relics belong to a duelist in a
 // fight and this package knows about cards; the caller walks `combat.RelicContributionsAt` and hands
 // over the product, so the figure printed here is the engine's rather than a second sum.
-func Lines(c combat.Card, cost, dmg, scale int) []string {
+func Lines(c combat.Card, cost, dmg, scale, rolls int) []string {
 	lines := []string{FormLine(c, cost)}
 	if effect := EffectLine(c, dmg, scale); effect != "" {
 		lines = append(lines, effect)
 	}
-	return append(lines, RiderLines(c)...)
+	return append(lines, RiderLines(c, rolls)...)
 }
 
 // EffectLine is the one line saying what the card is worth, in the terms its verb is measured in.
@@ -168,7 +168,7 @@ func EffectLine(c combat.Card, dmg, scale int) string {
 // **A card carries one**, so this is at most one entry long — except for gold, which is two, because
 // its two payouts are mutually exclusive and a single line joining them with "or" reads as a card
 // that pays both.
-func RiderLines(c combat.Card) []string {
+func RiderLines(c combat.Card, rolls int) []string {
 	var out []string
 	for _, r := range c.RiderList() {
 		switch r.Kind {
@@ -201,15 +201,55 @@ func RiderLines(c combat.Card) []string {
 			//
 			// The odds are the record's; the payouts are combat's constants. Both are read rather
 			// than written out, so a retune moves these lines with the rule.
+			odds := Odds(r.Amount, rolls, 2)
 			out = append(out, Gold+" CARD",
-				"1 IN "+strconv.Itoa(r.Amount)+" ON PLAY: "+plus(combat.LuckDMG)+" DMG",
-				"1 IN "+strconv.Itoa(r.Amount)+" ON PLAY: "+plus(combat.LuckLife)+" MAX LIFE")
+				odds+" ON PLAY: "+plus(combat.LuckDMG)+" DMG",
+				odds+" ON PLAY: "+plus(combat.LuckLife)+" MAX LIFE")
 		case combat.RiderSilver:
 			out = append(out, Silver+" CARD",
-				"1 IN "+strconv.Itoa(r.Amount)+" ON PLAY: "+plus(combat.SilverVitae)+" VITAE")
+				Odds(r.Amount, rolls, 1)+" ON PLAY: "+plus(combat.SilverVitae)+" VITAE")
 		}
 	}
 	return out
+}
+
+// Odds writes a gamble's chance as the player reads it — `1 IN 5`, and `2 IN 5` under a relic that
+// has doubled the numerator.
+//
+// **It asks the rules rather than doing the arithmetic**, which is the whole point: `combat.LuckOdds`
+// is the same function the roll itself uses, so a printed chance cannot disagree with the die. A
+// tooltip that derived its own figure is how a card comes to promise something the resolver does not
+// do. `bands` is how many paying outcomes share the die — two for gold, one for silver.
+func Odds(amount, rolls, bands int) string {
+	num, den := combat.LuckOdds(amount, rolls, bands)
+	return strconv.Itoa(num) + " IN " + strconv.Itoa(den)
+}
+
+// Fraction writes a percentage as a reduced fraction — 25 as `1/4`, 50 as `1/2`, 30 as `3/10`.
+//
+// **Every probability in the game is written this way** *(owner's call, 2026-09-18)*. A percentage
+// and a fraction were both in use — `statuses.json` said `1/4 CHANCE TO MISS` while the relic
+// applying it said `25% chance to miss` — which is one fact in two notations, and the player has to
+// notice they are the same number. The fraction won because the figures that move are *numerators*:
+// a relic that doubles a roll turns 1/4 into 2/4, and there is nowhere in `25%` for that to show.
+//
+// **It is not for a multiplier.** `4x DMG` is a scaling rather than a chance, and `Multiplier` is
+// its own function for that reason — a card dealing `4/1 DMG` would be arithmetic pretending to be
+// a probability.
+func Fraction(pct int) string {
+	if pct <= 0 {
+		return "0"
+	}
+	num, den := pct, 100
+	for _, d := range []int{2, 5} {
+		for num%d == 0 && den%d == 0 {
+			num, den = num/d, den/d
+		}
+	}
+	if den == 1 {
+		return strconv.Itoa(num)
+	}
+	return strconv.Itoa(num) + "/" + strconv.Itoa(den)
 }
 
 // Multiplier writes a percentage as a multiplier — 200 as `2X`, 250 as `2.5X`.

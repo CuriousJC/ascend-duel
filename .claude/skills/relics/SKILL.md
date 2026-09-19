@@ -84,6 +84,7 @@ which is what makes a relic a *run* concept rather than a combat one.
 | `turn-taken` | `combat` | `playTurn` | once at the end of each of this duelist's own turns, **including an empty one**. Its `If` is matched against the turn as a whole: the rule fires when *any* card of the turn matches |
 | `blow-formed` | `combat` | `handEvent` | once per blow, as the base sum is added up — **the only moment that sees the blow rather than a card**, and its `If` matches the *lead* card |
 | `turn-start` | `combat` | `playTurn` | once at the top of each of this duelist's own turns, **before the chill, the riders and both phases**. It has no card and no turn to read, so **a rule carrying any `If` is refused at registration** |
+| `essence-spent` | `session` | `Session.EssenceTargets` | as an essence is pointed at the deck — the reward offer, the shop's vial, one out of the satchel. **A question rather than an event**, the shape `prizes-dealt` has: it has no card and no turn, so **a rule carrying any `If` is refused at registration** |
 
 **Flips chain, in worn order, within one draw** *(owner's call, 2026-09-15)*. `combat.FlipSteps`
 carries a running card through the worn list and each ring reads what the ring before it left, so a
@@ -191,6 +192,7 @@ not ignored.
 | `heal-share` | `turn-start` | `Amount` percent | restores that share of **maximum** life. Of the maximum rather than of what is left, so it is worth the same however badly the fight is going |
 | `adjust-round-limit` | `fight-start` | `Amount` rounds, **signed** | moves **this fight's** clock — Hermes takes two off. A delta rather than a figure, so it mixes with a relic that buys rounds; **every delta sums and worn order decides nothing**, because addition commutes. Clamped at one round, never at none, and read over the run's number rather than written into it, so selling gives the rounds back |
 | `echo-attack` | `blow-formed` | `Amount` landings | the blow's lead card lands Amount times, at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
+| `adjust-essence-targets` | `essence-spent` | `Amount` cards, **signed** | moves how many cards one essence is spent on. 1 is two where the mechanic gives one; **every delta sums and worn order decides nothing**, because addition commutes, so two relics are three cards. **Floored at one card, never at none** |
 
 **Adding a verb is a Go change** — one entry here plus the one place applying it — and that cost
 is charged on purpose, exactly as it is for `combat.Verb` and `session.EssenceTarget`. A file may

@@ -178,10 +178,9 @@ type RelicIfData struct {
 // RelicEffectData is one entry in a rule's `Then`. Which fields mean anything depends on `Do`, the same
 // way a card's Amount is read against its verb.
 type RelicEffectData struct {
-	// Do is the effect verb: `adjust-cost`, `scale-damage`, `apply-status`, `set-element`, `add-dmg`,
-	// `add-hp`, `scale-hp`, `grow-on-win`, `grow-on-hit`, `scale-propagation`, `adjust-picks`,
-	// `adjust-prize-vitae`,
-	// `echo-attack`, `repeat-card`, `demote-card`, `grow-on-hit`, `grow-on-turn` or `reset-growth`.
+	// Do is the effect verb. **The vocabulary is closed and `combat.RelicVerbs` is the whole of
+	// it** — a word this file does not resolve is refused at load rather than ignored — so the list
+	// is not written out here, where it would go quietly out of step with the enum it names.
 	//
 	// **One word carrying both the operation and its subject** *(owner's call, 2026-08-17)*, rather
 	// than an operation crossed with a subject: two lists would buy a grid that is mostly

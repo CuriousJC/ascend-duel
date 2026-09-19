@@ -101,6 +101,11 @@ func NewGame() *Game {
 			// would be a scene the fallback quietly swaps for the title; what the flag gates is the
 			// button that reaches it. See screens.AnimationsScene.
 			state.Animations: &screens.AnimationsScene{},
+
+			// **A sealed good, opened.** Not a station of a run either — it is reached from the
+			// shop's shelf and goes back there — so it is in the registry and not in
+			// screens/flow.go. See screens/goods.go.
+			state.Goods: &screens.GoodsScene{},
 		},
 	}
 }

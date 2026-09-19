@@ -182,8 +182,13 @@ func ShopRelicTip(record data.RelicData) (string, []string) {
 //
 // **An authored line break on a face is a tooltip's own line.** The two are the same sentence
 // written for two widths, which is why the split is here rather than in the catalog.
-func EssenceTip(w session.Essence) (string, []string) {
-	return w.Name, strings.Split(w.Text, "\n")
+// **`targets` is how many cards it will actually take**, which is one plus whatever the run is
+// wearing — so the panel says CARD BECOMES FIRE bare and 2 CARDS BECOME FIRE under a Cloud
+// Necklace. It is a parameter rather than something read off the run here, because this package
+// draws what it is handed and how far an essence reaches is a fact about a run. See
+// session.Essence.TextAt.
+func EssenceTip(w session.Essence, targets int) (string, []string) {
+	return w.Name, strings.Split(w.TextAt(targets), "\n")
 }
 
 // DuelistTip explains one of the two fighters: what they hit for, what is left of them, and every

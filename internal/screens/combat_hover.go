@@ -107,7 +107,10 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 	// **The consumables pane shares this door**, exactly as it does on the build band: it is the
 	// other half of the same row, and a caller that had to remember two calls is a caller that will
 	// eventually make one.
-	if hoverConsumables(gs, s.consumablePaneRect(gs), at, &s.tip) {
+	// **What the pane says an essence does is what this click would do**, so it counts the cards
+	// already selected rather than the ceiling the relics bought. See essenceReach.
+	reach := essenceReach(len(s.selectedCardIDs()), essenceTargetCount(gs, len(s.hand)))
+	if hoverConsumables(gs, s.consumablePaneRect(gs), at, &s.tip, reach) {
 		return true
 	}
 

@@ -218,6 +218,15 @@ type PostBattleScene struct {
 	// the prose has just described: two essences bleeding from the enemy you beat.
 	entry []ui.Travel
 
+	// deck is the panel over the whole deck, opened by clicking the draw pile.
+	//
+	// **An essence is aimed at a card, so the deck is what the choice is about** *(owner's call,
+	// 2026-09-19)*. The offer is a hand's worth off a deck of fifty-odd, and judging "do I want one
+	// fewer earth Bash" against eight of them and nothing else was the one screen in the game where
+	// the deck mattered most and could not be read. The same widget and the same pile the shop and
+	// the sealed good carry — see deckpile.go.
+	deck ui.DeckToggle
+
 	// relicDrag is the press in progress over the worn relic row in the build band. **The row is
 	// reorderable here like everywhere else** — worn order is a rule, and between fights is when a
 	// player is thinking about their build.
@@ -231,37 +240,31 @@ type PostBattleScene struct {
 	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
 	tut tutorialOverlay
 
-	// selected is which offered card is picked out, or -1. **An essence takes exactly one target**, so
-	// this is one index rather than a set — see consumableTarget, which is what asks whether it is
-	// enough for the essence being clicked.
+	// selected is which offered cards are picked out, as row slots.
 	//
-	// **It is the offer row's counterpart of the hand's `selected` flag**, and it is deliberately a
-	// different shape: the hand's selection is also the round's queue and may hold five, where this
-	// selects the one card an essence is about to eat.
-	selected int
-
-	// aimed is which offered card the essence was pointed at, and after is what it became.
-	// **Computed once, when the card is picked** rather than every frame: the essence is run against a
-	// throwaway copy of the run, and doing that in Draw would be a screen that alters the deck
-	// sixty times a second.
-	aimed int
-	after combat.Card
-
-	// before is the card as it was when the player clicked it, and it is what flies to the middle.
+	// **A set rather than one index, because an essence may take more than one card** *(owner's
+	// call, 2026-09-19)*. One is the mechanic and a relic scales it — see essence_targets.go — so
+	// what asks whether the selection is enough is consumableTarget, exactly as it does for a rune
+	// naming two cards on the combat screen.
 	//
-	// **The card that moves is the card the player was looking at** *(owner's call, 2026-09-08)*.
-	// It used to be `after` that flew, which meant the alteration had already happened by the time
-	// anything moved: the card left the row as one thing and arrived as another, with the change
-	// itself never on screen. The change is now its own beat once the flight has landed — see
-	// `change`, and cardmorph.go for the machinery.
-	before combat.Card
+	// **It is the offer row's counterpart of the hand's `selected` flag**, and it stays a different
+	// shape: the hand's selection is also the round's queue, where this is only the cards an
+	// essence is about to eat.
+	selected []int
 
-	// change is the alteration happening: the old face coming apart and the new one coming through
-	// it. Which of the three shapes it takes is decided in aimAt, by what the essence did.
-	change ui.Morph
+	// lands is what the essence did to each card it was pointed at: the seat each one flew out of,
+	// the face it had, the face it became, and the change between them.
+	//
+	// **Computed once, when the cards are picked** rather than every frame: the essence is run
+	// against a throwaway copy of the run, and doing that in Draw would be a screen that alters the
+	// deck sixty times a second. See essence_spend.go.
+	lands []essenceLanding
 
 	// removes says the alteration has no "after" card, because the card is gone. What is left when
 	// the dissolve finishes is an empty seat.
+	//
+	// **One flag for the whole spend rather than one per card**, because an essence that eats eats
+	// every card it was aimed at: what an essence *did* is a fact about the essence.
 	removes bool
 
 	// copied says the alteration added a card rather than changing one, so two cards are on screen
@@ -327,10 +330,11 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 		s.skipButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
 	}
 
-	s.chosen, s.aimed, s.selected = -1, -1, -1
+	s.deck.InitAsPile()
+	s.chosen, s.selected = -1, nil
 	s.stage = choosing
 	s.removes, s.copied, s.held = false, false, 0
-	s.change = ui.Morph{}
+	s.lands = nil
 	s.arrival, s.arrivedFrom = ui.Travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.prizes = dealPrizes(gs)
@@ -459,6 +463,13 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		s.prose.tick(gs, func(i int) image.Point { return proseLineAt(gs, len(s.prose.lines), i) })
 	}
 
+	// **The deck panel runs before anything else and swallows the frame**, the shop's own order:
+	// while it is up the rows underneath are dead, so a press meant for the panel cannot reach the
+	// offer behind it.
+	if s.deck.Update(gs, ui.OwnedContents(gs)) {
+		return nil
+	}
+
 	// **The relic row is live from the moment the narration ends**, under the panels rather than
 	// over them: a drag started behind an open deck panel would be a card moving where the player
 	// cannot see it. It runs before the stage branches below, because the settled stage returns
@@ -475,8 +486,7 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		// **The change is its own beat, and it does not start until the card has landed** — the
 		// same rule the hold below follows, and for the same reason: a dissolve running over a
 		// moving card would put the one thing worth watching on a target the eye is still chasing.
-		if !s.change.Done() {
-			s.change.Tick()
+		if !tickLandings(s.lands) {
 			return nil
 		}
 		s.held--
@@ -491,7 +501,9 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 				// moment is not raised — see achieve.MomentCardAltered, which carries the resulting
 				// card's label rather than the essence's, because several essences can arrive at one card.
 				if !s.removes {
-					earnMoment(gs, achieve.CardAltered(s.after.Label()))
+					for _, l := range s.lands {
+						earnMoment(gs, achieve.CardAltered(l.after.Label()))
+					}
 				}
 			}
 			if s.rearm(gs) {
@@ -571,7 +583,7 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 			return s.essenceSlot(gs, i)
 		}); i >= 0 {
 			seat := s.essenceSlot(gs, i)
-			title, lines := ui.EssenceTip(s.prizes[i].essence)
+			title, lines := ui.EssenceTip(s.prizes[i].essence, s.reachNow(gs))
 			s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 			return
 		}
@@ -602,13 +614,21 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 		return
 	}
 
-	// **The card row is asked first**, because it is the row a click is most often meant for and
+	// **The pile is asked first**, because the panel it opens covers both rows: a press here while
+	// the panel is up must not reach the offer underneath. See deckpile.go.
+	if at.In(deckPileBounds(gs)) {
+		s.deck.Toggle()
+		s.tip.Forget()
+		return
+	}
+
+	// **The card row is asked next**, because it is the row a click is most often meant for and
 	// the two do not overlap. Selecting is free and reversible; clicking an essence spends the pick.
 	// **Both go through ui.HoveredSeat**, so a click lands on the card the tooltip just described.
 	if i := ui.HoveredSeat(at, len(s.offer), func(i int) image.Rectangle {
 		return s.offerSlot(gs, i)
 	}); i >= 0 {
-		s.selectOffered(i)
+		s.selectOffered(gs, i)
 		return
 	}
 
@@ -643,47 +663,101 @@ func (s *PostBattleScene) claimThePayout(gs *state.GlobalState) {
 
 // selectOffered picks a card out of the offer row, or puts it back.
 //
-// **Clicking the selected card deselects it**, which is the hand row's own gesture — a card clicked
+// **Clicking a selected card deselects it**, which is the hand row's own gesture — a card clicked
 // into the queue is clicked out of it — so the one thing a player already knows how to undo works
 // here too.
 //
-// **One card at a time.** An essence eats exactly one, so a second click moves the selection rather than
-// adding to it; there is no set for it to be wrong about.
-func (s *PostBattleScene) selectOffered(i int) {
-	if s.selected == i {
-		s.selected = -1
-		return
+// **A full selection replaces its oldest card rather than refusing the click** *(owner's call,
+// 2026-09-19)*. An essence takes a fixed number of cards, so at the cap there is nothing a further
+// click could add, and a row that ignored it would leave a player who picked the wrong card having
+// to work out that they must deselect one first. Replacing the oldest is also what keeps the
+// single-target case behaving exactly as it always did: clicking a second card moves the pick.
+func (s *PostBattleScene) selectOffered(gs *state.GlobalState, i int) {
+	for k, sel := range s.selected {
+		if sel == i {
+			s.selected = append(s.selected[:k], s.selected[k+1:]...)
+			s.tip.Forget()
+			return
+		}
 	}
-	s.selected = i
+
+	if n := s.targets(gs); len(s.selected) >= n {
+		s.selected = append([]int(nil), s.selected[len(s.selected)-n+1:]...)
+	}
+	s.selected = append(s.selected, i)
 	s.tip.Forget()
 }
 
-// selectedDeckIndex is the offer's current pick as an index into the run deck, and whether there is
-// one.
-func (s *PostBattleScene) selectedDeckIndex() (int, bool) {
-	if s.selected < 0 || s.selected >= len(s.offer) {
-		return 0, false
+// isSelected reports whether this row slot is one of the picked cards.
+func (s *PostBattleScene) isSelected(i int) bool {
+	for _, sel := range s.selected {
+		if sel == i {
+			return true
+		}
 	}
-	return s.offer[s.selected], true
+	return false
 }
 
-// essenceSpendable is whether clicking this prize now would take it: a card is selected, and this essence
-// can actually change that card.
+// targets is how many cards an essence takes on this screen — one, whatever the relics make of it,
+// and never more than the offer is holding. See essence_targets.go.
+func (s *PostBattleScene) targets(gs *state.GlobalState) int {
+	return essenceTargetCount(gs, len(s.offer))
+}
+
+// reachNow is how many cards a click on an essence would change right now: what is selected, or the
+// ceiling when nothing is. See essenceReach.
+func (s *PostBattleScene) reachNow(gs *state.GlobalState) int {
+	return essenceReach(len(s.selected), s.targets(gs))
+}
+
+// selectedSlots is the picked cards **in row order**, whatever order they were clicked in.
+//
+// **The order of a selection is the order of the row**, which is the rule the combat screen's
+// consumables are already under: what the player reads left to right is what the settled row shows
+// left to right, and there is no separate click order to learn.
+func (s *PostBattleScene) selectedSlots() []int {
+	out := append([]int(nil), s.selected...)
+	sort.Ints(out)
+	return out
+}
+
+// selectedDeckIndexes is the offer's current picks as indexes into the run deck, in row order.
+func (s *PostBattleScene) selectedDeckIndexes() []int {
+	out := make([]int, 0, len(s.selected))
+	for _, slot := range s.selectedSlots() {
+		if slot < 0 || slot >= len(s.offer) {
+			return nil
+		}
+		out = append(out, s.offer[slot])
+	}
+	return out
+}
+
+// essenceSpendable is whether clicking this prize now would take it: at least one card and no more
+// than the essence reaches is selected, and this essence can change every one of them.
+//
+// **A player may always take fewer.** The reach is a ceiling rather than a quota — see
+// consumableTarget.fewest.
 //
 // **It is the same question the click asks and the same one the card's lit state reads**, which is
 // what stops a prize looking available and doing nothing. See consumableTarget.
 func (s *PostBattleScene) essenceSpendable(gs *state.GlobalState, p prize) bool {
-	if p.taken {
+	if p.taken || gs.Run == nil {
 		return false
 	}
 	target := consumableTarget{
-		needs: 1,
-		legal: func(ids []int) bool { return gs.Run.CanApply(p.essence, ids[0]) },
+		needs:  s.targets(gs),
+		fewest: 1,
+		legal: func(idx []int) bool {
+			for _, i := range idx {
+				if !gs.Run.CanApply(p.essence, i) {
+					return false
+				}
+			}
+			return true
+		},
 	}
-	if idx, ok := s.selectedDeckIndex(); ok {
-		return target.satisfiedBy([]int{idx})
-	}
-	return target.satisfiedBy(nil)
+	return target.satisfiedBy(s.selectedDeckIndexes())
 }
 
 // takePrize is the click on the prize row: this essence is spent on the card that is selected.
@@ -694,10 +768,7 @@ func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
 	if i < 0 || i >= len(s.prizes) || !s.essenceSpendable(gs, s.prizes[i]) {
 		return
 	}
-	slot, ok := s.selected, true
-	if _, ok = s.selectedDeckIndex(); !ok {
-		return
-	}
+	slots := s.selectedSlots()
 
 	// **The purse is settled before the essence is**, because the settled stage returns early and
 	// the narration stops ticking the moment the choosing stage ends. See claimThePayout.
@@ -705,7 +776,7 @@ func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
 
 	s.chosen = i
 	s.tip.Forget()
-	s.aimAt(gs, slot)
+	s.aimAt(gs, slots)
 }
 
 // rearm is what a second pick is: the taken prize is struck off, the row stays where it is, and the
@@ -725,10 +796,10 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 		s.prizes[s.chosen].taken = true
 	}
 
-	s.chosen, s.aimed, s.selected = -1, -1, -1
+	s.chosen, s.selected = -1, nil
 	s.stage = choosing
 	s.removes, s.copied, s.held = false, false, 0
-	s.change = ui.Morph{}
+	s.lands = nil
 	s.arrival, s.arrivedFrom = ui.Travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.offer = dealOffer(gs)
@@ -750,71 +821,58 @@ func (s *PostBattleScene) settle(gs *state.GlobalState, from image.Rectangle) {
 	s.arrivedFrom = from
 }
 
-// aimAt points the chosen essence at one offered card and works out what it would become.
+// aimAt points the chosen essence at the offered cards and works out what each would become.
 //
 // **The preview runs the real essence against a throwaway copy of the run**, rather than a second
 // implementation of what each target does. A preview computed by its own arithmetic is a preview
 // that can disagree with the thing it is previewing, which is the one failure this screen exists
-// to prevent.
-func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
+// to prevent. See essence_spend.go, which is that preview and the shop's vial's at once.
+//
+// **The commitment is by identity, not by position** *(2026-09-19)*. An essence may take several
+// cards now, and removing one moves every deck position above it — so the positions this frame read
+// are resolved to the cards they name before anything is promised, and `ApplyToAll` finds them
+// again when the settled stage is over.
+func (s *PostBattleScene) aimAt(gs *state.GlobalState, slots []int) {
 	essence, ok := s.chosenEssence()
-	if !ok || slot < 0 || slot >= len(s.offer) {
-		return
-	}
-	deckIndex := s.offer[slot]
-
-	before, ok := gs.Run.Card(deckIndex)
-	if !ok || !gs.Run.CanApply(essence, deckIndex) {
-		// **An essence that would change nothing is refused rather than shown** — a Smash cannot be
-		// promoted and a defend card has no ladder — so the click does nothing and the card stays
-		// pickable. Saying no here is why CanApply exists.
+	if !ok || len(slots) == 0 || gs.Run == nil {
 		return
 	}
 
-	trial := session.New(gs.Run.Deck())
-	if !trial.Apply(essence, deckIndex) {
+	at := make([]int, 0, len(slots))
+	from := make([]image.Rectangle, 0, len(slots))
+	ids := make([]int, 0, len(slots))
+	for _, slot := range slots {
+		if slot < 0 || slot >= len(s.offer) {
+			return
+		}
+		card, ok := gs.Run.Card(s.offer[slot])
+		if !ok {
+			return
+		}
+		at = append(at, s.offer[slot])
+		from = append(from, s.offerSlot(gs, slot))
+		ids = append(ids, card.ID)
+	}
+
+	// **An essence that cannot take one of the cards is refused rather than shown** — the same
+	// question the prize's lit state asked, so a prize drawn lit always works.
+	lands, ok := previewEssence(gs, essence, at, from)
+	if !ok {
 		return
 	}
 
-	s.aimed = slot
-	s.before = before
+	s.lands = lands
 	s.removes = essence.Target == session.TargetRemove
 	s.copied = essence.Target == session.TargetDuplicate
-
-	switch {
-	case s.copied:
-		// The copy is appended, so the card that arrived is the last one — and it is the *new*
-		// card that is the reward, even though it is identical to the one that was picked.
-		s.after, _ = trial.Card(trial.Size() - 1)
-	case !s.removes:
-		s.after, _ = trial.Card(deckIndex)
-	}
-
-	// **What the essence did decides which shape the change takes**, and the three cases are the
-	// three things an essence can be: it recolored the card, it ate it, or it made a second one. See
-	// cardmorph.go — the morph is handed two finished faces and works out the rest.
-	beforeSpec := ui.CardSpec(before, ui.HeldByRun(gs, before), true, false)
-	switch {
-	case s.removes:
-		s.change = ui.MorphAway(beforeSpec, cards.Hand)
-	case s.copied:
-		// **The original is not changed, so it does not morph.** It stands where it landed and the
-		// copy arrives out of nothing beside it, which is the only honest picture of a duplicate:
-		// there is no old face to come apart.
-		s.change = ui.MorphIn(ui.CardSpec(s.after, ui.HeldByRun(gs, s.after), true, false), cards.Hand)
-	default:
-		s.change = ui.MorphInto(beforeSpec,
-			ui.CardSpec(s.after, ui.HeldByRun(gs, s.after), true, false), cards.Hand)
-	}
 
 	// **The click is the commitment** *(owner's call, 2026-09-05)*. It was a preview with Take and
 	// Back under it; picking the card is now the whole decision, and what follows is the result
 	// being shown rather than a question about it. The deck is still not touched until the settled
-	// stage is over — see applyNow — so the card on screen is drawn from the trial run above.
-	s.pendingWhat = fmt.Sprintf("%s on card %d", essence.Record, deckIndex)
-	s.applyNow = func(run *session.Session) { run.Apply(essence, deckIndex) }
+	// stage is over — see applyNow — so the cards on screen are drawn from the trial run above.
+	s.pendingWhat = fmt.Sprintf("%s on %d card(s) %v", essence.Record, len(at), at)
+	s.applyNow = func(run *session.Session) { run.ApplyToAll(essence, ids) }
 	s.tip.Forget()
-	s.settle(gs, s.offerSlot(gs, slot))
+	s.settle(gs, from[0])
 }
 
 // essenceSlot is where one offered essence is drawn, and the rectangle it is clicked in.
@@ -918,7 +976,7 @@ func offerRowOf(gs *state.GlobalState, n int) image.Rectangle {
 // shaped to avoid.
 func (s *PostBattleScene) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
 	at := s.offerSeat(gs, i, len(s.offer))
-	if i == s.selected {
+	if s.isSelected(i) {
 		at.Y -= offerSelectedNudge
 	}
 	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight)
@@ -1044,6 +1102,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,
 	// and what an essence is about to change.
 	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.relicDrag, s.tip.Showing())
+	drawDeckPile(gs, screen)
 
 	// **The narration stays up for the whole visit, in its own column** — the payout is what the
 	// essence beside it is being chosen with, so it does not clear when the offer arrives.
@@ -1097,11 +1156,14 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 			// the other direction — with the card picked first there is no essence yet to ask, so the
 			// legality lands on the prize row instead. See essenceSpendable.
 			ui.DrawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, ui.HeldByRun(gs, card),
-				true, i == s.selected)
+				true, s.isSelected(i))
 		}
 		s.drawSlides(gs, screen)
 		s.sortTabs.Draw(gs, screen)
 	}
+
+	// The deck panel covers the screen, so nothing of this one may be drawn on top of it.
+	s.deck.Draw(gs, screen, ui.OwnedContents(gs))
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
 	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.
@@ -1137,32 +1199,12 @@ func settledSeats(gs *state.GlobalState, n int) []image.Rectangle {
 // asks what the essence did: `change` was handed the two faces in aimAt and is the only thing that
 // knows which of the three shapes this is. A removal ends on an empty seat, a duplicate ends on two
 // cards, everything else ends on one.
+// **An eaten card leaves nothing** *(owner's call, 2026-09-08)*. It left an outlined hole until
+// then, on the argument that a blank gap reads as a layout fault — which is true of a seat that was
+// never filled, and not of this one: the player has just watched the card come apart square by
+// square, so the emptiness is the thing they were shown rather than something to explain.
 func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Image) {
-	seats := settledSeats(gs, 1)
-	if s.copied {
-		seats = settledSeats(gs, 2)
-	}
-
-	at := ui.FlyingTo(s.arrivedFrom, seats[0], s.arrival)
-
-	// The card that was picked. While a copy is being made it is the original, untouched, and it is
-	// drawn plainly — the morph in the second seat is the whole of what is happening.
-	if s.copied {
-		ui.DrawCard(gs, screen, at, cards.Hand, s.before, ui.HeldByRun(gs, s.before), true, false)
-		ui.DrawMorph(gs, screen, seats[1].Min, s.change)
-		return
-	}
-
-	// **An eaten card leaves nothing** *(owner's call, 2026-09-08)*. It left an outlined hole until
-	// then, on the argument that a blank gap reads as a layout fault — which is true of a seat that
-	// was never filled, and not of this one: the player has just watched the card come apart square
-	// by square, so the emptiness is the thing they were shown rather than something to explain. An
-	// outline redrawn over the space the dissolve had just cleared put the card's silhouette back on
-	// the table the frame after eating it.
-	//
-	// The morph is what draws the absence, by having no second face to hand over to. Nothing here
-	// asks whether this was a removal.
-	ui.DrawMorph(gs, screen, at, s.change)
+	drawLandings(gs, screen, s.lands, s.arrival, s.copied)
 }
 
 func (s *PostBattleScene) title() string {
@@ -1206,16 +1248,27 @@ func (s *PostBattleScene) hint(gs *state.GlobalState) string {
 	switch s.stage {
 	case settled:
 		if s.removes {
+			if len(s.lands) > 1 {
+				return fmt.Sprintf("%d fewer cards to draw", len(s.lands))
+			}
 			return "one fewer card to draw"
 		}
 		return "into the deck it goes"
 	default:
+		// **The essence's reach is said in words, because nothing else on the screen says it.**
+		// A run wearing a Cloud Necklace is asked for two cards and told so; the row lights the
+		// prizes only once it has them, which says when but never how many.
+		take := "take one"
 		if s.picksLeft > 1 {
-			return fmt.Sprintf("take %d - %d cards in your deck, %d vitae in hand",
-				s.picksLeft, gs.Run.Size(), gs.Run.Vitae())
+			take = fmt.Sprintf("take %d", s.picksLeft)
 		}
-		return fmt.Sprintf("take one - %d cards in your deck, %d vitae in hand",
-			gs.Run.Size(), gs.Run.Vitae())
+		if n := s.targets(gs); n > 1 {
+			// **Up to, because the reach is a ceiling rather than a quota** — one card is always a
+			// legal spend. See consumableTarget.fewest.
+			take += fmt.Sprintf(", up to %d cards each", n)
+		}
+		return fmt.Sprintf("%s - %d cards in your deck, %d vitae in hand",
+			take, gs.Run.Size(), gs.Run.Vitae())
 	}
 }
 

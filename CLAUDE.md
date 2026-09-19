@@ -687,17 +687,32 @@ log at launch and nowhere a player could see, which made a six-character code th
 transcribed unreachable. `screens.abandonLabel` is what puts it on the settings screen, and it
 names no code with no run standing.
 
-### Four screens that are not stations of a run
+### Five screens that are not stations of a run
 
-**Settings, Achievements, Credits and RunOver.** None appears in `screens/flow.go` — which is what
-"not a station" means mechanically — and the chrome stands down on all four. The first three are
+**Settings, Achievements, Credits, RunOver and Goods.** None appears in `screens/flow.go` — which is
+what "not a station" means mechanically — and the chrome stands down on all five. The first three are
 reached by an `actions.Open*` call and record `gs.ReturnScreen` so Back works from anywhere; **RunOver
 is the exception and goes to the title outright**, because the screen it came from was drawing a run
 that has ended and there is nowhere to put the player back to.
 
+**Goods is the fifth and it is the one with a door of its own** *(owner's call, 2026-09-19)*. It is a
+sealed good, opened: the three to five things inside it, and the one of them the player takes. It is
+reached from exactly one place and returns to exactly one place — the shop's shelf — so
+`screens.openGoods` sits beside the screen rather than in `actions`, whose explicit list is about
+screens openable from anywhere. **There is no way out but taking a card**, because the good is
+already paid for; the good travels as `gs.PendingGood`, a record key, since a screen cannot be handed
+an argument. See `internal/screens/goods.go`.
+
+**What it cost the shop is a re-entry guard.** Leaving for a good and coming back runs
+`ShopScene.Init` again, and a second deal would restock the shelf, forget which goods had been
+opened, un-drink the potions and replay the shopkeeper. `ShopScene.visit` is the run and the fight
+the scene's state belongs to, and a matching one is picked up rather than dealt again — read it
+before adding anything to that Init.
+
 - **Adding one is two edits, not three**: an ordinal in `state.ActiveScreen` (append-only, and its
   `String` case) and an entry in the registry in `internal/game`. There is no phase, because there is
-  no station.
+  no station. A screen the chrome should stand down on is a third: `chromeShowing` in
+  `internal/game/chrome.go`.
 - **`actions` has one function per screen rather than one taking a destination.** A shared
   `openScreen(gs, dest)` would be shorter and would also be the seam through which a *run* screen
   gets opened without its phase being set. The explicit list is what says which screens may work this

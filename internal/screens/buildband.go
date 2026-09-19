@@ -215,7 +215,9 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 	// **The consumables pane is asked first and through the same door** *(2026-09-06)*. It is the
 	// other half of the row this function already owns, and a second call at every site is the
 	// forgetting hoverBuildRelics exists to prevent.
-	if hoverConsumables(gs, buildConsumableRect(gs), at, tip) {
+	// **No hand to clamp against**: an essence carried past a between-fights screen is spent in a
+	// fight that has not been dealt, so what the pane can say is what the essence will do.
+	if hoverConsumables(gs, buildConsumableRect(gs), at, tip, runEssenceTargets(gs)) {
 		return true
 	}
 

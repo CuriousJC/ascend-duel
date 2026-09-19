@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -501,4 +502,159 @@ func (s *Session) positionOf(id int) (int, bool) {
 		}
 	}
 	return 0, false
+}
+
+// EssenceTargets is how many cards one essence is spent on: **one, and whatever the relics make of
+// it** — the `essence-spent` moment. See combat.EssenceTargets, which is where the compounding and
+// the floor of one live.
+//
+// **The one seat all three spend sites ask through**: the reward screen's offer, the shop's vial and
+// a satchel essence aimed at the hand. Three screens reading three counts is three screens that can
+// disagree about what the player was promised.
+func (s *Session) EssenceTargets() int {
+	return combat.EssenceTargets(s.WornRelics())
+}
+
+// ApplyToAll performs one essence against every card named, and reports whether it fired.
+//
+// **All or nothing, the rule ApplyRune is under**: every card is checked before any of them is
+// changed, so an essence that lit up cannot land on two cards and refuse the third. A consumable
+// half spent is a consumable the player paid for and did not get.
+//
+// **The deck is walked from the back**, which is what makes several targets safe in one call: a
+// removal shifts every position above it and leaves everything below it alone, so a descending walk
+// never aims at a card that has moved. Identities are resolved to positions up front for the same
+// reason a rune resolves them — three piles hold copies of the same card.
+//
+// **What it mints is accumulated rather than replaced.** Session.Apply appends a duplicate to the
+// end of the deck, and a caller wanting the copies has to be handed all of them: Duplicated is
+// emptied here once, at the top, rather than once per card.
+func (s *Session) ApplyToAll(w Essence, ids []int) bool {
+	if len(ids) == 0 {
+		return false
+	}
+
+	seen := make(map[int]bool, len(ids))
+	at := make([]int, 0, len(ids))
+	for _, id := range ids {
+		if seen[id] {
+			// **A card named twice is refused rather than changed twice.** The row a selection is
+			// made in cannot produce one, so this is a caller bug, and changing one card for two
+			// would be an essence quietly doing half of what the player was shown.
+			return false
+		}
+		seen[id] = true
+		i, ok := s.positionOf(id)
+		if !ok || !s.CanApply(w, i) {
+			return false
+		}
+		at = append(at, i)
+	}
+
+	sort.Sort(sort.Reverse(sort.IntSlice(at)))
+
+	s.duplicated = s.duplicated[:0]
+	for _, i := range at {
+		before := len(s.deck)
+		if !s.Apply(w, i) {
+			return false
+		}
+		for j := before; j < len(s.deck); j++ {
+			s.duplicated = append(s.duplicated, s.deck[j])
+		}
+	}
+	return true
+}
+
+// CanApplyToAll reports whether one essence can be spent on every one of these cards at once.
+//
+// **The question the lit state asks and the question ApplyToAll asks**, so a consumable drawn lit
+// cannot then be refused — the rule consumableTarget is built around.
+func (s *Session) CanApplyToAll(w Essence, ids []int) bool {
+	if len(ids) == 0 {
+		return false
+	}
+	seen := make(map[int]bool, len(ids))
+	for _, id := range ids {
+		if seen[id] {
+			return false
+		}
+		seen[id] = true
+		i, ok := s.positionOf(id)
+		if !ok || !s.CanApply(w, i) {
+			return false
+		}
+	}
+	return true
+}
+
+// What an essence says about itself when it reaches more than one card.
+//
+// **The authored line is written for one card and the wider ones are derived from it** *(owner's
+// call, 2026-09-19)*. The alternative was a plural string beside `Text` on every record, and it is
+// not one string but one per count — a relic may put an essence on two cards or on five — so the
+// catalog would be carrying a sentence per reach for fifteen records that all say the same thing a
+// different way. What is authored is the essence; what is derived is the arithmetic on top of it.
+//
+// **The shapes are closed, and a line that fits none of them is left alone.** Every record today is
+// either `CARD <verb> ...` or `<verb> CARD`, so those are the two rewrites; an author who writes a
+// third shape gets their sentence printed as they wrote it rather than mangled, which is the
+// failure worth choosing between.
+
+// essencePlurals is the verb agreement the first rewrite needs: a sentence about one card says
+// BECOMES and a sentence about two says BECOME.
+//
+// **A closed table rather than a rule**, because English does not have one that is safe on three
+// words — and three is what the catalog uses.
+var essencePlurals = map[string]string{
+	"BECOMES": "BECOME",
+	"GAINS":   "GAIN",
+	"LOSES":   "LOSE",
+}
+
+// TextAt is what this essence says when it is spent on this many cards.
+//
+// **One card is the authored line, unchanged.** That is the shipped reach and the reach every
+// review sheet shows, so nothing rewrites anything until a relic has moved the number.
+func (w Essence) TextAt(targets int) string {
+	if targets <= 1 {
+		return w.Text
+	}
+
+	lines := strings.Split(w.Text, "\n")
+	for i, line := range lines {
+		lines[i] = w.lineAt(line, targets)
+	}
+	return strings.Join(lines, "\n")
+}
+
+// lineAt rewrites one authored line for a wider reach.
+func (w Essence) lineAt(line string, targets int) string {
+	// `CARD BECOMES FIRE` is about the cards, so the count leads and the verb agrees with it.
+	if rest, ok := strings.CutPrefix(line, "CARD "); ok {
+		words := strings.SplitN(rest, " ", 2)
+		if plural, ok := essencePlurals[words[0]]; ok {
+			words[0] = plural
+		}
+		return fmt.Sprintf("%d CARDS %s", targets, strings.Join(words, " "))
+	}
+
+	// `DESTROY CARD` is about the doing, so the count lands on what is being done to.
+	if verb, ok := strings.CutSuffix(line, " CARD"); ok {
+		// **A copy is counted in times rather than in cards** *(owner's call, 2026-09-19)*.
+		if w.Target == TargetDuplicate {
+			return verb + " CARD " + essenceTimes(targets)
+		}
+		return fmt.Sprintf("%s %d CARDS", verb, targets)
+	}
+
+	return line
+}
+
+// essenceTimes is how often something happens, said the way a player would say it.
+func essenceTimes(n int) string {
+	if n == 2 {
+		return "TWICE"
+	}
+	return fmt.Sprintf("%d TIMES", n)
 }

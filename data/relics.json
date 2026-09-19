@@ -2397,5 +2397,20 @@
         "Then": [{ "Do": "scale-rolls", "Amount": 200 }]
       }
     ]
+  },
+  {
+    "RelicRecord": "essence-targets",
+    "Name": "Cloud Necklace",
+    "Family": "Deck alteration",
+    "Art": "",
+    "Draw": "a ring of deep blue lapis lazuli on a platinum chain, with a small ephemeral rainbow cloud trapped inside the ring, its edges fading away into nothing",
+    "Text": "Every essence takes one more card.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "essence-spent",
+        "Then": [{ "Do": "adjust-essence-targets", "Amount": 1 }]
+      }
+    ]
   }
 ]

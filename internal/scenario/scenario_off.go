@@ -29,6 +29,9 @@ func Runes() []string { return nil }
 // Stones is what the run should open carrying in its pouch. Nil here.
 func Stones() []string { return nil }
 
+// Essences is what the run should open carrying in its satchel. Nil here.
+func Essences() []string { return nil }
+
 // Enemy is the record key to fight instead of the climb's own. Empty here.
 func Enemy() string { return "" }
 

@@ -653,9 +653,7 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 		return false
 	}
 	// **Remembered on the way in rather than on the way out.** Every branch below returns from
-	// inside itself, so a single recording after the switch would be a line nothing reaches; and
-	// the only branch that can still fail from here is the rider's, which fails on a card already
-	// carrying its maximum — a case CanApplyRune has already refused.
+	// inside itself, so a single recording after the switch would be a line nothing reaches.
 	s.rememberRune(p)
 
 	// **Both handovers are emptied here, by the rune that is firing, rather than by the branch
@@ -736,9 +734,10 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 
 	case RuneClone:
 		// **The order of the picks is the whole rule**: the first becomes the second. Everything
-		// else about a rune treats its targets as a set, and this is the one that cannot —
-		// `CanApplyRune` refuses a pick that would change nothing, so there is always a
-		// direction.
+		// else about a rune treats its targets as a set, and this is the one that cannot. Two
+		// picks alike in everything but their identity are legal and leave the deck as it was
+		// found — a wasted rune, which is the player's to waste — but they are still two cards,
+		// which is what the named-twice guard in CanApplyRune holds.
 		positions := s.positionsOf(ids)
 		if len(positions) != 2 {
 			return false
@@ -769,11 +768,17 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 	}
 }
 
-// CanApplyRune reports whether this rune would do anything to these cards.
+// CanApplyRune reports whether this rune can be spent on these cards at all.
 //
-// **The board piece asks before it offers**, on the same terms CanApply is asked for an essence: a
-// rune that lands and changes nothing is something bought and taken away. It also refuses the
-// wrong number of targets, which is what stops a two-card rune being spent on one.
+// **A pick that would change nothing is legal, and the burden is the player's** *(owner's call,
+// 2026-09-19)*. The same rule CanApply is under one file over: painting a lightning card lightning
+// wastes a rune, and it is wasted by a player who picked that card out of their hand — where a
+// refusal is a card sitting dead under the cursor mid-fight with the screen declining to say why.
+//
+// What is still refused is a pick the rules cannot resolve: the wrong number of targets, which is
+// what stops a two-card rune being spent on one; the same card named twice, which is a picker bug
+// and would spend a two-card rune on one card for double the effect; a card that is not in the
+// deck; and a chimera with nothing behind it to copy.
 func (s *Session) CanApplyRune(p Rune, ids []int) bool {
 	// **The chimera is resolved first, so the count and the legality asked about below are the
 	// copied rune's.** A chimera with nothing to copy is refused here rather than lower down,
@@ -796,50 +801,7 @@ func (s *Session) CanApplyRune(p Rune, ids []int) bool {
 		}
 		seen[id] = true
 
-		card, ok := s.CardByID(id)
-		if !ok {
-			return false
-		}
-
-		switch p.Target {
-		case RuneElement:
-			if card.Element == p.Element {
-				return false
-			}
-		case RuneForm:
-			// **Asked of the card's *current* form, not of its concept's**, so a card already
-			// overridden to crush is not a legal target for a second crush rune. A defend card
-			// is legal and deliberately so — see RuneForm.
-			if card.Form() == p.Form {
-				return false
-			}
-		case RuneRider:
-			// **A card already carrying exactly this upgrade is the only illegal pick.** It used
-			// to be a card carrying its maximum, which is a different question and stopped making
-			// sense the day the maximum became one: a gold card the player wants to make silver is
-			// full and is also the pick they came for. What is refused now is the pick that would
-			// change nothing, which is the rule every other target here is under.
-			if card.Rider() == (combat.Rider{Kind: p.Rider, Amount: p.Number}) {
-				return false
-			}
-		}
-	}
-
-	// **The clone is checked as a pair rather than card by card**, which is the only target that
-	// can be: whether it does anything is a fact about the two picks together.
-	//
-	// **Compared on everything but the identity**, which is exactly what the apply copies. It asked
-	// only about the concept while only the concept was copied, and that made two same-named cards
-	// of different colors an illegal pick — the pick a player reaching for this most obviously
-	// wants, now that the color travels with the name.
-	if p.Target == RuneClone && len(ids) == 2 {
-		first, ok1 := s.CardByID(ids[0])
-		second, ok2 := s.CardByID(ids[1])
-		if !ok1 || !ok2 {
-			return false
-		}
-		first.ID, second.ID = 0, 0
-		if first == second {
+		if _, ok := s.CardByID(id); !ok {
 			return false
 		}
 	}

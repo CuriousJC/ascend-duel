@@ -147,6 +147,75 @@ func (s *CombatScene) runeTarget(gs *state.GlobalState, p session.Rune) consumab
 	}
 }
 
+// essenceTarget is what one carried essence needs from the selection.
+//
+// **One card, always.** An essence names a card and changes it; there is no essence in the catalog
+// that reads two, and the count is written here rather than on the record because it is a fact
+// about the mechanic rather than about any one of them.
+//
+// **The legality question goes to the run**, exactly as a rune's does — see `Session.CanApplyTo`,
+// which is what the apply itself checks, so an essence that lit up cannot then be refused.
+func (s *CombatScene) essenceTarget(gs *state.GlobalState, w session.Essence) consumableTarget {
+	return consumableTarget{
+		needs: 1,
+		legal: func(ids []int) bool { return len(ids) == 1 && gs.Run.CanApplyTo(w, ids[0]) },
+	}
+}
+
+// spendEssence aims one out of the satchel at the selected card.
+//
+// **It is spendRune with one target and no roll.** The two are deliberately not one function: what
+// they share is the choreography — read the faces, apply, drop, resync, seat whatever was minted,
+// morph, settle, save — and what differs is the call in the middle and the handover afterwards. A
+// shared body would be a switch on the kind at every one of those steps, which is the thing
+// session.Consumable exists to keep out of this file.
+//
+// **Apply, then drop, and only drop if the apply succeeded**, which is the rule a rune's spend is
+// under: a consumable dropped by an application that then refused is something the player paid for
+// and did not get.
+func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
+	if gs.Run == nil {
+		return
+	}
+	stowed := gs.Run.Stowed()
+	if i < 0 || i >= len(stowed) {
+		return
+	}
+	w, ok := session.EssenceByKey(stowed[i])
+	if !ok {
+		return
+	}
+
+	ids := s.selectedCardIDs()
+	if !s.essenceTarget(gs, w).satisfiedBy(ids) {
+		return
+	}
+
+	// **The hand as it stands, before any of this lands**, so the morphs are the difference between
+	// two hands and this file goes on knowing nothing about what any one essence does.
+	was, seats := s.handFaces(gs)
+
+	if !gs.Run.ApplyTo(w, ids[0]) {
+		return
+	}
+	gs.Run.DropStowed(i)
+
+	s.resyncHandFromRun(gs)
+
+	// **A copy joins the hand it was copied from**, the duplicate rune's rule: the fight's piles
+	// were dealt before the copy existed, so a card that went only into the run would not be
+	// playable until the next fight. It arrives unselected, whatever the card it came from was
+	// doing — a copy that queued itself would spend action points the player had not committed.
+	for _, copied := range gs.Run.Duplicated() {
+		s.hand = append(s.hand, paletteCard{Card: copied})
+	}
+	s.syncQueue()
+
+	s.raiseHandMorphs(gs, was, seats)
+	s.beginSettle()
+	saveRun(gs)
+}
+
 // spendRune hands one to the run against the cards the player has selected.
 //
 // **Apply, then drop, and only drop if the apply succeeded.** A rune dropped from the sack by
@@ -167,6 +236,8 @@ func (s *CombatScene) spendConsumable(gs *state.GlobalState, seat int) {
 	switch c.Kind {
 	case session.ConsumableStone:
 		s.spendStone(gs, c.At)
+	case session.ConsumableEssence:
+		s.spendEssence(gs, c.At)
 	default:
 		s.spendRune(gs, c.At)
 	}
@@ -490,10 +561,14 @@ func (s *CombatScene) consumableSpendable(gs *state.GlobalState) func(session.Co
 	}
 	ids := s.selectedCardIDs()
 	return func(c session.Consumable) bool {
-		if c.Kind == session.ConsumableStone {
+		switch c.Kind {
+		case session.ConsumableStone:
 			return true
+		case session.ConsumableEssence:
+			return s.essenceTarget(gs, c.Essence).satisfiedBy(ids)
+		default:
+			return s.runeTarget(gs, c.Rune).satisfiedBy(ids)
 		}
-		return s.runeTarget(gs, c.Rune).satisfiedBy(ids)
 	}
 }
 

@@ -1609,6 +1609,10 @@ combination looks like on screen. It is the relic-and-hand counterpart of `deckS
   shelf both needed a duel played to reach them, every time. It sets the run's *phase* and lets
   `screens/flow.go` decide the scene, so the run never disagrees with what is on screen.
   `reward-payout` and `shop-shelf` are the two entries.
+- **`"Essences"` plants the satchel** *(2026-09-19)*, beside `Runes` and `Stones`. An essence is
+  normally spent the instant it is taken, so a run *carrying* one into a duel is the one state no
+  amount of playing reaches — see MECHANICS.md §An essence can be carried into a fight, and the
+  `ladder-wrap` fixture.
 - **It can also pin the seed and replace the whole deck** *(2026-08-25)*. `"Seed"` is a six-character
   Crockford base32 run code and outranks `fixedRunSeed`, and `"Deck"` sets the run's deck outright rather than dealing over the shuffle
   the way `"Hand"` does — through `session.StartingDeckList`, which is the deck counterpart of

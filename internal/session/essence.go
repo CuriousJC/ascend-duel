@@ -355,7 +355,7 @@ func (s *Session) Apply(w Essence, i int) bool {
 		if w.Target == TargetDemote {
 			step = -1
 		}
-		next, ok := combat.Neighbor(card.Concept, step)
+		next, ok := combat.NeighborWrapping(card.Concept, step)
 		if !ok {
 			return false
 		}
@@ -368,10 +368,16 @@ func (s *Session) Apply(w Essence, i int) bool {
 	}
 }
 
-// CanApply reports whether this essence would do anything to this card. **The screen asks before it
-// offers**, because an essence that lands and changes nothing is a reward taken away: a Pulverize cannot
-// be promoted, and neither can a Guard — the defenses are a ladder of their own since 2026-09-06,
-// so the ends stop the same way rather than the whole verb being refused.
+// CanApply reports whether this essence can be spent on this card at all.
+//
+// **A pick that would change nothing is legal, and the burden is the player's** *(owner's call,
+// 2026-09-19)*. Painting a lightning card lightning is a wasted essence, and it is wasted by a
+// player who chose it over the other cards in their deck — where a refusal is a card sitting dead
+// under the cursor with the screen declining to say why. The ladder wraps for the same reason, so
+// there is no rung an Exalt or a Debase cannot reach.
+//
+// What is still refused is a card that is not there: an index off the end of the deck is a caller
+// bug, not a choice.
 func (s *Session) CanApply(w Essence, i int) bool {
 	card, ok := s.Card(i)
 	if !ok {
@@ -380,16 +386,119 @@ func (s *Session) CanApply(w Essence, i int) bool {
 
 	switch w.Target {
 	case TargetPromote:
-		_, ok := combat.Neighbor(card.Concept, 1)
+		_, ok := combat.NeighborWrapping(card.Concept, 1)
 		return ok
 	case TargetDemote:
-		_, ok := combat.Neighbor(card.Concept, -1)
+		_, ok := combat.NeighborWrapping(card.Concept, -1)
 		return ok
-	case TargetElement:
-		return card.Element != w.Element
-	case TargetForm:
-		return card.Form() != w.Form
 	default:
 		return true
 	}
+}
+
+// The satchel: essences the run is carrying, unspent.
+//
+// **An essence is a consumable now** *(owner's call, 2026-09-19)*. It is still what a won fight
+// offers and still what a vial sells, and taking one there still spends it on a card there — but an
+// essence that goes into the satchel instead is carried into a duel and aimed at a card in the hand,
+// out of the same pane a rune and a stone are spent from.
+//
+// **Why it can be**: an essence edits the run's deck, and so does a rune. `resyncHandFromRun` is
+// what makes either legible mid-fight, and the gate is `planning()` for the reason every consumable
+// is under — `ResolveRound` decides a whole round before a frame of it is drawn, so a card altered
+// during playback would show a face disagreeing with a blow already computed.
+//
+// **There is no cap, unlike the sack.** `MaxHeld` exists because the consumables pane draws `held/2`
+// and a fraction has to be a rule; the satchel is counted with the pouch, which has never had one.
+
+// StartingEssences is what a run opens carrying in its satchel, by record key.
+//
+// **Empty as shipped, and it is a debug seat** — the counterpart of StartingRunes and
+// StartingStones, written only by `internal/scenario`, which is compiled out of every normal build.
+var StartingEssences []string
+
+// Stow puts an essence in the satchel, and reports whether the catalog held it.
+//
+// **An essence the catalog does not have is refused** rather than carried as a key nothing can
+// resolve, which is the posture `Hold` and `Carry` both take: a seat that cannot be resolved is a
+// seat the player cannot spend.
+func (s *Session) Stow(key string) bool {
+	if _, ok := essences[key]; !ok {
+		return false
+	}
+	s.satchel = append(s.satchel, key)
+	return true
+}
+
+// Stowed is every essence the run is carrying, by record key, in the order they were acquired.
+func (s *Session) Stowed() []string {
+	out := make([]string, len(s.satchel))
+	copy(out, s.satchel)
+	return out
+}
+
+// StowCount is how many essences are in the satchel.
+func (s *Session) StowCount() int { return len(s.satchel) }
+
+// DropStowed takes one out of the satchel by position, and reports whether it was there.
+//
+// **By position rather than by key**, because the satchel may hold two of the same essence and
+// spending one must not be ambiguous about which — the rule a rune's sack seat and a stone's pouch
+// position are both under.
+//
+// **Spending is ApplyTo plus DropStowed, and they are separate on purpose**, exactly as a rune's
+// spend is Drop plus ApplyRune: the card is picked before the essence is clicked and the picker can
+// be backed out of, so dropping first would charge for a choice that was never made.
+func (s *Session) DropStowed(i int) bool {
+	if i < 0 || i >= len(s.satchel) {
+		return false
+	}
+	s.satchel = append(s.satchel[:i], s.satchel[i+1:]...)
+	return true
+}
+
+// CanApplyTo reports whether this essence can be spent on the card with this identity.
+//
+// **Aimed by identity rather than by deck position, because a fight holds copies.** A card in the
+// hand was dealt off the deck and three piles hold cards that look alike; `combat.Card.ID` is the
+// handle that says which one, which is the argument `Session.CanApplyRune` is already under.
+func (s *Session) CanApplyTo(w Essence, id int) bool {
+	i, ok := s.positionOf(id)
+	if !ok {
+		return false
+	}
+	return s.CanApply(w, i)
+}
+
+// ApplyTo performs an essence against the card with this identity. It reports whether it fired.
+//
+// **What it mints is handed over the way a rune's copy is**, through `Session.Duplicated`: an
+// essence spent between fights only has to put the copy in the deck, and one spent in the middle of
+// a duel has to reach the hand it was aimed at or it reads as a dud. The handover is emptied here
+// rather than by the reader, so it only ever says what the last consumable did.
+func (s *Session) ApplyTo(w Essence, id int) bool {
+	i, ok := s.positionOf(id)
+	if !ok {
+		return false
+	}
+
+	s.duplicated = s.duplicated[:0]
+	before := len(s.deck)
+	if !s.Apply(w, i) {
+		return false
+	}
+	for j := before; j < len(s.deck); j++ {
+		s.duplicated = append(s.duplicated, s.deck[j])
+	}
+	return true
+}
+
+// positionOf turns one identity into a deck position.
+func (s *Session) positionOf(id int) (int, bool) {
+	for i, c := range s.deck {
+		if c.ID == id {
+			return i, true
+		}
+	}
+	return 0, false
 }

@@ -67,6 +67,14 @@ type record struct {
 	// on the terms Runes is under.
 	Stones []string `json:"Stones"`
 
+	// Essences is what the run opens carrying in its satchel, by record key, resolved by the caller
+	// on the terms Runes is under.
+	//
+	// **An essence is normally spent the moment it is taken**, at a reward or a vial, so a satchel
+	// is the one state this fixture cannot be reached from by playing: the run has to be carrying
+	// one into a duel. That is what this plants.
+	Essences []string `json:"Essences"`
+
 	// Enemy is a record key from enemies.json. **Empty means the climb's own**, so a scenario that
 	// is only about the hand does not have to pick a fight.
 	Enemy string `json:"Enemy"`
@@ -420,6 +428,9 @@ func Runes() []string { return current.Runes }
 
 // Stones is what the run opens carrying in its pouch, by record key.
 func Stones() []string { return current.Stones }
+
+// Essences is what the run opens carrying in its satchel, by record key. The caller resolves them.
+func Essences() []string { return current.Essences }
 
 // Hand is the opening hand to deal, resolved into real cards.
 func Hand() []combat.Card {

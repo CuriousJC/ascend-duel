@@ -276,7 +276,7 @@ func TestTheNumericTargetsApply(t *testing.T) {
 	})
 }
 
-// TestTheLadderEssencesMoveOneRung, and refuse rather than doing nothing at the ends.
+// TestTheLadderEssencesMoveOneRung, and wrap round rather than stopping at the ends.
 func TestTheLadderEssencesMoveOneRung(t *testing.T) {
 	up, _ := combat.Neighbor(combat.Jab, 1)
 
@@ -293,28 +293,41 @@ func TestTheLadderEssencesMoveOneRung(t *testing.T) {
 		t.Errorf("promoting changed the element to %v", got.Element)
 	}
 
-	// The bottom of a ladder cannot be demoted, and CanApply is what stops the screen offering it.
-	// **The bottom is the zero-copy Poke now**, not the Jab — which is the change the new rungs
-	// bought: every card a run actually deals can be walked in both directions.
+	// **The ends are joined, so no card is ever an illegal pick.** The bottom of the stab ladder
+	// demoted lands on its top rung, and the top promoted lands back on the bottom.
+	rungs := combat.Ladder(combat.Poke)
+	top := rungs[len(rungs)-1]
+
 	bottom := New([]combat.Card{{Concept: combat.Poke}})
-	if bottom.CanApply(Essence{Target: TargetDemote}, 0) {
-		t.Error("CanApply said a Poke could be demoted")
+	if !bottom.CanApply(Essence{Target: TargetDemote}, 0) {
+		t.Error("CanApply said the bottom rung could not be demoted")
 	}
-	if bottom.Apply(Essence{Target: TargetDemote}, 0) {
-		t.Error("demoting a Poke claimed to work")
+	if !bottom.Apply(Essence{Target: TargetDemote}, 0) {
+		t.Fatal("demoting the bottom rung was refused")
 	}
-	if !New([]combat.Card{{Concept: combat.Jab}}).CanApply(Essence{Target: TargetDemote}, 0) {
-		t.Error("a Jab could not be demoted, and the ladder now has a rung under it")
+	if got, _ := bottom.Card(0); got.Concept != top {
+		t.Errorf("demoting the bottom rung gave %v, want the top rung %v", got.Concept, top)
+	}
+
+	over := New([]combat.Card{{Concept: top}})
+	if !over.Apply(Essence{Target: TargetPromote}, 0) {
+		t.Fatal("promoting the top rung was refused")
+	}
+	if got, _ := over.Card(0); got.Concept != combat.Poke {
+		t.Errorf("promoting the top rung gave %v, want the bottom rung %v", got.Concept, combat.Poke)
 	}
 }
 
-// TestCanApplyRefusesAEssenceThatWouldDoNothing. A reward that lands and changes nothing is a reward
-// taken away, so the screen asks before it offers a card.
-func TestCanApplyRefusesAEssenceThatWouldDoNothing(t *testing.T) {
+// TestCanApplyRefusesOnlyACardThatIsNotThere. A pick that would change nothing is the player's to
+// make and their essence to waste; what cannot be applied is an index the deck does not hold.
+func TestCanApplyRefusesOnlyACardThatIsNotThere(t *testing.T) {
 	run := New([]combat.Card{{Concept: combat.Bash, Element: combat.Fire}})
 
-	if run.CanApply(Essence{Target: TargetElement, Element: combat.Fire}, 0) {
-		t.Error("recoloring a fire card to fire was offered")
+	if !run.CanApply(Essence{Target: TargetElement, Element: combat.Fire}, 0) {
+		t.Error("recoloring a fire card to fire was refused")
+	}
+	if !run.Apply(Essence{Target: TargetElement, Element: combat.Fire}, 0) {
+		t.Error("recoloring a fire card to fire did not take")
 	}
 	if !run.CanApply(Essence{Target: TargetElement, Element: combat.Ice}, 0) {
 		t.Error("recoloring a fire card to ice was refused")

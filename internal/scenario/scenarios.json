@@ -2668,5 +2668,35 @@
     "Enemy": "GiantRat",
     "Dummy": true,
     "Actions": 15
+  },
+  {
+    "ScenarioRecord": "ladder-wrap",
+    "Note": "Ten essences in the consumables pane - five Essence of Strength, five Essence of Weakness - carried into a duel rather than spent at a reward. Select one card in the hand, click an essence, and the card walks its own form's ladder a rung. The question it exists for is the two ends: the ladder is a ring, so demoting the Poke gives an Impale and promoting the Impale gives a Poke, and the same round trip runs on Flinch and Guard down the defend ladder. The eight cards are the two ends of the stab ladder, the two ends of the defend ladder, and four middles, which is what says a rung in the middle still just steps. Nothing goes dim for being pointless - an essence is lit whenever exactly one card is selected - so a wasted pick is the player's to make. Against a dummy at 15 AP, so the hand can be walked up and down for as long as it is interesting.",
+    "Relics": [],
+    "Essences": [
+      "add-ap",
+      "add-ap",
+      "add-ap",
+      "add-ap",
+      "add-ap",
+      "demote",
+      "demote",
+      "demote",
+      "demote",
+      "demote"
+    ],
+    "Hand": [
+      { "Card": "Poke", "Element": "fire" },
+      { "Card": "Impale", "Element": "ice" },
+      { "Card": "Flinch", "Element": "earth" },
+      { "Card": "Guard", "Element": "arcane" },
+      { "Card": "Thrust", "Element": "lightning" },
+      { "Card": "Slice", "Element": "fire" },
+      { "Card": "Bash", "Element": "ice" },
+      { "Card": "Block", "Element": "earth" }
+    ],
+    "Enemy": "GiantRat",
+    "Dummy": true,
+    "Actions": 15
   }
 ]

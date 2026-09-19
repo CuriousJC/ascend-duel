@@ -2341,9 +2341,13 @@ scratch before adding one.
   ceiling.
 - **`amount` compounds rather than replaces** — 150% twice is 225% — so a second essence on the same
   card is worth taking.
-- **A ladder has two ends.** A Smash cannot be promoted and a Jab cannot be demoted, and a defend
-  card is not an attack, so `Neighbor` refuses it a ladder at all. The screen asks `CanApply` before offering a card, so
-  an essence that would do nothing is never presented as a choice.
+- **A ladder is a ring** *(owner's call, 2026-09-19)*. The top rung promoted lands on the bottom and
+  the bottom demoted lands on the top, so there is no card an Exalt or a Debase cannot reach.
+  `combat.NeighborWrapping` is the essence's door and `combat.Neighbor` — which stops at both ends —
+  is still what a relic demoting a card as it is dealt reads: a relic aimed at nothing, and a wrap
+  there would turn one that weakens a hand into one that hands it the top rung.
+- **The two ladders never meet.** A defend card is not an attack, so it walks its own rung list and
+  wraps inside it; a card with no form has no ladder at all.
 
 ### The card says what the card does
 
@@ -2503,6 +2507,62 @@ in the game.
   click, so a step lighting only the essences would have been a lock-up the moment taking one required
   a selection first.
 
+### An essence can be carried into a fight *(owner's call, 2026-09-19)*
+
+**An essence is a consumable now, beside a rune and a stone.** It is still what a won fight offers
+and still what a vial sells, and taking one there still spends it on a card there — that is the
+ordinary way to meet one. What is new is the **satchel**: an essence carried into a duel, drawn in
+the consumables pane, and aimed at a card in the hand.
+
+**Why it can be.** An essence edits the run's deck and so does a rune; `resyncHandFromRun` is what
+makes either legible mid-fight, and the hand morphs are raised off the difference between the hand
+before and after — so no essence needs a picture of its own. The gate is `planning()`, the rule every
+consumable is under: `ResolveRound` decides a whole round before a frame of it is drawn, so a card
+altered during playback would show a face disagreeing with a blow already computed.
+
+- **One card, always.** A rune's record says how many cards it eats; an essence names one, and the
+  count is a fact about the mechanic rather than about any record. It is lit when exactly one card
+  is selected, dim otherwise — the same predicate the whole pane reads.
+- **Aimed by identity, never by deck position.** A fight holds copies of the run's cards across
+  three piles, so the card in the hand is found by `combat.Card.ID`. `Session.CanApplyTo` and
+  `Session.ApplyTo` are the two doors; `Session.CanApply` and `Apply` still take a position and are
+  still what the reward screen and the vial use.
+- **A copy joins the hand it was copied from.** `spawn` spent between fights only has to put the
+  card in the deck; spent mid-duel it has to reach the hand or it reads as a dud. `ApplyTo` hands it
+  over through `Session.Duplicated`, which is the duplicate rune's own handover.
+- **There is no cap.** `MaxHeld` is two because the pane draws `held/2` and a fraction has to be a
+  rule. The satchel is counted with the pouch, which has never had one.
+- **Carried in acquisition order, and written down.** `RunSnapshot.Satchel` sits beside `Held` and
+  `Pouch`; an essence the catalog no longer holds refuses a resume rather than being dropped, which
+  is what a carried rune and a carried stone both do.
+- **Nothing puts one in the satchel yet except a fixture.** `scenarios.json` takes `"Essences"`, and
+  the `ladder-wrap` record is ten of them. Where a run *acquires* a carried essence — a shop seat, a
+  sealed good, a reward that offers keep-or-spend — is an open question and a catalog decision.
+
+### Nothing is greyed out for being pointless *(owner's call, 2026-09-19)*
+
+**A pick that would change nothing is legal, and the burden is the player's.** Painting a lightning
+card lightning, grafting a card onto its own twin, writing an upgrade a card already carries — each
+of those wastes the consumable, and each is wasted by a player who chose that card over every other
+card in front of them.
+
+The rule it replaces refused those picks, and what a refusal actually is on screen is **a card
+sitting dead under the cursor while the screen declines to say why**. A player who cannot tell an
+illegal pick from a pointless one cannot learn either, and a mechanic that quietly edits the set of
+things you may click is teaching a grammar nobody wrote down.
+
+**What is still refused is a pick the rules cannot resolve**, which is a different question:
+
+- the wrong number of targets, which is what stops a two-card rune being spent on one
+- the same card named twice, which would spend a two-card rune on one card for double the effect
+- a card or a deck index that is not there
+- a chimera with nothing behind it to copy — there is no effect to resolve, so there is nothing to
+  waste
+
+`Session.CanApply` and `Session.CanApplyRune` are the two doors, and they now answer that narrower
+question. **The consumables pane still goes dim on the count**, which is the selection being the
+wrong shape rather than the pick being a poor one.
+
 ### Why between turns, and never inside one
 
 `ResolveRound` decides a whole round before a frame of playback runs, so a card altered
@@ -2555,10 +2615,8 @@ changed my card", and what separates them is what the *next* rune does.
   computed — and a computed field says nothing, where an authored one is a claim the record makes
   and the loader checks. Same posture as `Match` in the tutorial script: the thing the author meant,
   written where the author is looking.
-- **The illegal pick is the one that changes nothing.** A card already carrying exactly this upgrade
-  is refused; a gold card the player wants to make silver is offered, which is the pick they came
-  for. That replaces the old rule — a card carrying its maximum — which stopped meaning anything the
-  day the maximum became one.
+- **No rider pick is illegal.** The same upgrade twice writes what the card already carries and
+  wastes the rune; a different one replaces it outright. See §Nothing is greyed out.
 - **Riders stacked until 2026-09-09**, three to a card, and two Siphons were twenty life. They no
   longer do, and that is a real nerf to the rune economy taken deliberately.
 

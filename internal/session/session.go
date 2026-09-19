@@ -122,6 +122,11 @@ type Session struct {
 	// distinction is written down.
 	pouch []string
 
+	// satchel is the essences the run is carrying but has not spent, by record key, in the order
+	// they were acquired. **The sack's shape and the pouch's**, for the same argument: two of the
+	// same essence are two cards to draw and two decisions to make. See essence.go.
+	satchel []string
+
 	// granted is the stones the last rock-shower rune handed over, so the dialog can show what
 	// the player just got. **Not snapshotted**, for the reason duplicated is not: it is a handover
 	// between two calls a frame apart, and the stones themselves are already on their rungs in
@@ -200,7 +205,7 @@ func New(deck []combat.Card) *Session {
 	// **Nothing a player can reach comes through here.** All three vars are empty as shipped and
 	// only `internal/scenario` writes them, which is compiled out of every normal build; `Wear`,
 	// `Hold` and `Carry` go on reporting a refusal to their real callers rather than ending the
-	// process. See StartingRelics, StartingRunes and StartingStones.
+	// process. See StartingRelics, StartingRunes, StartingStones and StartingEssences.
 	for _, key := range StartingRelics {
 		if _, ok := registeredRelics[key]; !ok {
 			log.Fatalf("StartingRelics names %q, which is in no relic record", key)
@@ -228,6 +233,13 @@ func New(deck []combat.Card) *Session {
 	for _, key := range StartingStones {
 		if !s.Carry(key) {
 			log.Fatalf("StartingStones names %q, which is in no stone record", key)
+		}
+	}
+	// **And the satchel.** There is no cap to go past — an essence is carried rather than held
+	// against a rule — so this is `Stow` on its ordinary terms.
+	for _, key := range StartingEssences {
+		if !s.Stow(key) {
+			log.Fatalf("StartingEssences names %q, which is in no essence record", key)
 		}
 	}
 	return s

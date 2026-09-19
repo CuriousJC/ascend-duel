@@ -197,6 +197,7 @@ type record struct {
 	Hand           []handCard `json:"Hand"`
 	Runes          []string   `json:"Runes"`
 	Stones         []string   `json:"Stones"`
+	Essences       []string   `json:"Essences"`
 	Enemy          string     `json:"Enemy"`
 	Screen         string     `json:"Screen"`
 	Fight          int        `json:"Fight"`
@@ -305,6 +306,17 @@ func wornSpecs(r record) section {
 			s.specs = append(s.specs, goodSpec(p.Name))
 		}
 	}
+	if len(r.Essences) > 0 {
+		s.splits = append(s.splits, len(s.specs))
+		for _, key := range r.Essences {
+			w, ok := session.EssenceByKey(key)
+			if !ok {
+				s.specs = append(s.specs, missingSpec(key))
+				continue
+			}
+			s.specs = append(s.specs, goodSpec(w.Name))
+		}
+	}
 	if len(r.Stones) > 0 {
 		s.splits = append(s.splits, len(s.specs))
 		stones := data.LoadStones()
@@ -320,9 +332,9 @@ func wornSpecs(r record) section {
 	return s
 }
 
-// goodSpec is a rune or a stone as a face. **The name and nothing else** — what either one
-// does is `tools/runesheet` and `tools/stonesheet`'s subject, and repeating their text here
-// would be a third place the same sentence can go stale.
+// goodSpec is a rune, an essence or a stone as a face. **The name and nothing else** — what any of
+// them does is `tools/runesheet`, `tools/essencesheet` and `tools/stonesheet`'s subject, and
+// repeating their text here would be a third place the same sentence can go stale.
 func goodSpec(name string) cards.Spec {
 	return cards.Spec{Name: name, Element: cards.Relic, Art: artwork(placeholderArt), Enabled: true}
 }
@@ -472,7 +484,7 @@ func relicLines(keys []string) []named {
 	return out
 }
 
-// heldLines is the sack and the pouch, in that order, each row saying which it is.
+// heldLines is the sack, the satchel and the pouch, in that order, each row saying which it is.
 func heldLines(r record) []named {
 	var out []named
 	for _, key := range r.Runes {
@@ -482,6 +494,14 @@ func heldLines(r record) []named {
 			continue
 		}
 		out = append(out, named{Key: key, Name: p.Name, Text: oneLine(p.Text), Kind: "sack"})
+	}
+	for _, key := range r.Essences {
+		w, ok := session.EssenceByKey(key)
+		if !ok {
+			out = append(out, named{Key: key, Name: "-- no such essence --", Kind: "satchel"})
+			continue
+		}
+		out = append(out, named{Key: key, Name: w.Name, Text: oneLine(w.Text), Kind: "satchel"})
 	}
 	stones := data.LoadStones()
 	for _, key := range r.Stones {

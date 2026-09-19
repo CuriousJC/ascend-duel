@@ -281,9 +281,11 @@ func drawConsumableCard(gs *state.GlobalState, screen *ebiten.Image, at image.Po
 		ui.DrawRuneCard(gs, screen, at, c.Rune, enabled, selected)
 	case session.ConsumableStone:
 		// **A stone is never drawn selected**, because there is nothing to select it *for*: a rune
-		// is aimed at cards and a stone names its own rung. The flag is taken anyway so both kinds
-		// answer one signature.
+		// is aimed at cards and a stone names its own rung. The flag is taken anyway so every kind
+		// answers one signature.
 		ui.DrawStoneCard(gs, screen, at, c.Stone, enabled)
+	case session.ConsumableEssence:
+		ui.DrawEssenceCard(gs, screen, at, c.Essence, enabled)
 	}
 }
 
@@ -292,7 +294,20 @@ func consumableTipLines(gs *state.GlobalState, c session.Consumable) []string {
 	switch c.Kind {
 	case session.ConsumableStone:
 		return stoneTipLines(gs, c.Stone)
+	case session.ConsumableEssence:
+		return essenceTipLines(c.Essence)
 	default:
 		return runeTipLines(gs, c.Rune)
 	}
+}
+
+// essenceTipLines is what the pane says about a carried essence: the line the catalog authored,
+// and where it can be spent.
+//
+// **`ui.EssenceTip` is the one wording**, so a carried essence and an offered one say the same
+// thing — a second sentence written here is how the pane comes to describe a mechanic the reward
+// screen describes differently.
+func essenceTipLines(w session.Essence) []string {
+	_, lines := ui.EssenceTip(w)
+	return append(lines, "spent between the turns of a fight")
 }

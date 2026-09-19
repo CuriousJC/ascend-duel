@@ -280,6 +280,14 @@ type GlobalState struct {
 	// which is what makes opening settings mid-duel a look at a dialog rather than a decision.
 	ReturnScreen ActiveScreen
 
+	// PendingGood is the sealed good the shop has just paid for, by record key, waiting for the
+	// screen that opens it to pick it up.
+	//
+	// **A screen cannot be handed an argument**, so a scene that needs to know what it is showing
+	// reads it off the state — the shape state.Summary already has for the run-over splash. It is
+	// cleared by the screen that consumes it, so a second visit cannot open a good nobody bought.
+	PendingGood string
+
 	//Assets
 	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct
 	Fonts  map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
@@ -377,6 +385,20 @@ const (
 	// flag off — the placement grid's arrangement. Not a station of a run, like the four above it,
 	// and appended because ActiveScreen is append-only.
 	Animations
+
+	// Goods is a sealed good, opened: the three or four things that were inside it, and the one of
+	// them the player takes.
+	//
+	// **It is a screen rather than a dialog** *(owner's call, 2026-09-19)*. What is on it is a
+	// decision about the deck and the build — which stone, which rune, which essence and which card
+	// it lands on — and a panel covering the screen to ask that hides the relics and the deck the
+	// answer depends on. So the build band is up, the draw pile is up, and the deck panel opens over
+	// it like anywhere else.
+	//
+	// **Not a station of a run**, like Settings and the two menu screens: it never touches
+	// session.Phase, it is reached only from the shop and it goes back there. Appended, because
+	// ActiveScreen is append-only.
+	Goods
 )
 
 func (active ActiveScreen) String() string {
@@ -401,6 +423,8 @@ func (active ActiveScreen) String() string {
 		return "RunOver"
 	case Animations:
 		return "Animations"
+	case Goods:
+		return "Goods"
 	default:
 		return "Unknown"
 	}

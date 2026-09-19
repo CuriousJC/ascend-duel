@@ -227,8 +227,12 @@ func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image
 // **Every screen that draws the pane gets it for free**, which is the lesson hoverBuildRelics records:
 // the relic row was drawn on three screens and explained on one, and the row a player reads their
 // build off went silent exactly where they were choosing what to do to it.
+// **`essenceTargets` is how many cards a carried essence would take**, and it is the caller's
+// because the answer depends on where the pane is standing: on the combat screen it is clamped to
+// the hand the player is about to aim at, and on a between-fights screen there is no hand yet, so
+// what the essence will do is all there is to say.
 func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
-	tip *models.Tooltip) bool {
+	tip *models.Tooltip, essenceTargets int) bool {
 
 	held := heldConsumables(gs)
 	seats := consumableSeats(gs)
@@ -242,7 +246,8 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 		return false
 	}
 	seat := row.RowSlot(gs, i)
-	tip.Point(seat, ui.TipLine(held[i].Name()), ui.TipLines(consumableTipLines(gs, held[i])))
+	tip.Point(seat, ui.TipLine(held[i].Name()),
+		ui.TipLines(consumableTipLines(gs, held[i], essenceTargets)))
 	return true
 }
 
@@ -290,12 +295,12 @@ func drawConsumableCard(gs *state.GlobalState, screen *ebiten.Image, at image.Po
 }
 
 // consumableTipLines is what the pane says about one carried thing.
-func consumableTipLines(gs *state.GlobalState, c session.Consumable) []string {
+func consumableTipLines(gs *state.GlobalState, c session.Consumable, essenceTargets int) []string {
 	switch c.Kind {
 	case session.ConsumableStone:
 		return stoneTipLines(gs, c.Stone)
 	case session.ConsumableEssence:
-		return essenceTipLines(c.Essence)
+		return essenceTipLines(c.Essence, essenceTargets)
 	default:
 		return runeTipLines(gs, c.Rune)
 	}
@@ -307,7 +312,7 @@ func consumableTipLines(gs *state.GlobalState, c session.Consumable) []string {
 // **`ui.EssenceTip` is the one wording**, so a carried essence and an offered one say the same
 // thing — a second sentence written here is how the pane comes to describe a mechanic the reward
 // screen describes differently.
-func essenceTipLines(w session.Essence) []string {
-	_, lines := ui.EssenceTip(w)
+func essenceTipLines(w session.Essence, targets int) []string {
+	_, lines := ui.EssenceTip(w, targets)
 	return append(lines, "spent between the turns of a fight")
 }

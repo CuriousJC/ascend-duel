@@ -437,7 +437,7 @@ func TestAnEssenceSaysItsRuleInItsTooltipRatherThanOnItsFace(t *testing.T) {
 			t.Errorf("%s prints %q across its own picture", w.Record, spec.Text)
 		}
 
-		title, lines := EssenceTip(w)
+		title, lines := EssenceTip(w, 1)
 		if title != w.Name {
 			t.Errorf("%s is titled %q, want %q", w.Record, title, w.Name)
 		}
@@ -450,7 +450,7 @@ func TestAnEssenceSaysItsRuleInItsTooltipRatherThanOnItsFace(t *testing.T) {
 // **An authored line break is a tooltip's own line**, which is the treatment a rune already takes:
 // the face and the panel are the same sentence written for two widths.
 func TestAnAuthoredBreakBecomesTwoTooltipLines(t *testing.T) {
-	_, lines := EssenceTip(session.Essence{Name: "Ember", Text: "makes a card\nFIRE"})
+	_, lines := EssenceTip(session.Essence{Name: "Ember", Text: "makes a card\nFIRE"}, 1)
 	if len(lines) != 2 || lines[0] != "makes a card" || lines[1] != "FIRE" {
 		t.Errorf("split into %q, want two lines", lines)
 	}

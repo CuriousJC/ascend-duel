@@ -9,7 +9,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The sealed goods: what a bag holds, where the row puts them, and the one thing about the
@@ -236,20 +235,20 @@ func TestAEssenceIsDeadUntilACardIsSelected(t *testing.T) {
 	}
 
 	// With a card picked, an essence is live exactly when the run says it can change that card.
-	g.selectCard(0)
-	idx, ok := g.selectedDeckIndex()
-	if !ok {
-		t.Fatal("selecting the first offered card left no deck index")
+	g.selectCard(gs, 0)
+	idx := g.selectedDeckIndexes()
+	if len(idx) != 1 {
+		t.Fatalf("selecting the first offered card left %d deck indexes", len(idx))
 	}
 	for _, w := range g.essences {
-		if got, want := g.essenceSpendable(gs, w), gs.Run.CanApply(w, idx); got != want {
+		if got, want := g.essenceSpendable(gs, w), gs.Run.CanApply(w, idx[0]); got != want {
 			t.Errorf("%s reads spendable=%v against CanApply=%v", w.Record, got, want)
 		}
 	}
 
 	// Clicking the selected card again puts it back, and the row goes dead with it.
-	g.selectCard(0)
-	if _, ok := g.selectedDeckIndex(); ok {
+	g.selectCard(gs, 0)
+	if len(g.selectedDeckIndexes()) != 0 {
 		t.Error("clicking the selected card again left it selected")
 	}
 }
@@ -265,12 +264,13 @@ func TestTheCanAppliesTheEssenceToTheSelectedCard(t *testing.T) {
 
 	var g goods
 	g.open(gs, goodHolding(t, session.ContentsEssences))
-	g.selectCard(0)
+	g.selectCard(gs, 0)
 
-	idx, ok := g.selectedDeckIndex()
-	if !ok {
+	picked := g.selectedDeckIndexes()
+	if len(picked) != 1 {
 		t.Fatal("nothing selected")
 	}
+	idx := picked[0]
 
 	pick := -1
 	for i, w := range g.essences {
@@ -327,31 +327,49 @@ func TestTakingAStoneRaisesTheRunsRung(t *testing.T) {
 	}
 }
 
-// Both of the vial's rows have to fit inside the modal panel, with the lift a selected card takes.
-// **The failure this exists for shipped once**: the offer row ended exactly on the panel's bottom
-// edge, which was survivable while it was the only row on screen and was not once the essences stayed
-// up beside it.
-func TestTheCansTwoRowsFitInsideThePanel(t *testing.T) {
+// Both of the vial's rows have to fit on the screen, under the hint and with the lift a selected
+// card takes.
+//
+// **The failure this exists for shipped once**: the offer row ended exactly on the bottom edge,
+// which was survivable while it was the only row on screen and was not once the essences stayed up
+// beside it. **What it measures against moved on 2026-09-19** — the good is a screen rather than a
+// modal, so the ceiling is the build band's own type and the floor is the screen.
+func TestTheVialsTwoRowsFitOnTheScreen(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = state.ScreenWidth, state.ScreenHeight
 
 	var g goods
 	g.open(gs, goodHolding(t, session.ContentsEssences))
 
-	panel := ui.ModalPanelRect(gs)
 	essences := g.slot(gs, 0)
-	if essences.Min.Y < panel.Min.Y+goodsHintTop {
-		t.Errorf("the essences start at %d, over the hint at %d",
-			essences.Min.Y, panel.Min.Y+goodsHintTop)
+	if hint := offerHintTop(gs); essences.Min.Y < hint {
+		t.Errorf("the essences start at %d, over the hint at %d", essences.Min.Y, hint)
 	}
 
-	g.selectCard(0)
+	g.selectCard(gs, 0)
 	offer := g.offerSlot(gs, 0)
 	if offer.Min.Y < essences.Max.Y {
 		t.Errorf("a lifted card starts at %d and the essences end at %d", offer.Min.Y, essences.Max.Y)
 	}
-	if offer.Max.Y > panel.Max.Y {
-		t.Errorf("the offer row ends at %d, past the panel's %d", offer.Max.Y, panel.Max.Y)
+	if offer.Max.Y > gs.ScreenHeight {
+		t.Errorf("the offer row ends at %d, past the screen's %d", offer.Max.Y, gs.ScreenHeight)
+	}
+}
+
+// The bag's and the sack's one row stands clear of the same type.
+func TestTheBagsRowClearsTheBuildBand(t *testing.T) {
+	gs := testRun()
+	gs.ScreenWidth, gs.ScreenHeight = state.ScreenWidth, state.ScreenHeight
+
+	var g goods
+	g.open(gs, goodHolding(t, session.ContentsStones))
+
+	row := g.slot(gs, 0)
+	if hint := offerHintTop(gs); row.Min.Y < hint {
+		t.Errorf("the stones start at %d, over the hint at %d", row.Min.Y, hint)
+	}
+	if row.Max.Y > gs.ScreenHeight {
+		t.Errorf("the stones end at %d, past the screen's %d", row.Max.Y, gs.ScreenHeight)
 	}
 }
 

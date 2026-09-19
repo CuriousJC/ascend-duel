@@ -2537,9 +2537,10 @@ before and after — so no essence needs a picture of its own. The gate is `plan
 consumable is under: `ResolveRound` decides a whole round before a frame of it is drawn, so a card
 altered during playback would show a face disagreeing with a blow already computed.
 
-- **One card, always.** A rune's record says how many cards it eats; an essence names one, and the
-  count is a fact about the mechanic rather than about any record. It is lit when exactly one card
-  is selected, dim otherwise — the same predicate the whole pane reads.
+- **One card, and no record may say otherwise.** A rune's record says how many cards it eats; an
+  essence's does not, because the count is a fact about the mechanic. What moves it is a relic —
+  see *An essence takes one card, and a relic widens it* below. It is lit when exactly that many
+  cards are selected, dim otherwise, which is the predicate the whole pane reads.
 - **Aimed by identity, never by deck position.** A fight holds copies of the run's cards across
   three piles, so the card in the hand is found by `combat.Card.ID`. `Session.CanApplyTo` and
   `Session.ApplyTo` are the two doors; `Session.CanApply` and `Apply` still take a position and are
@@ -2555,6 +2556,97 @@ altered during playback would show a face disagreeing with a blow already comput
 - **Nothing puts one in the satchel yet except a fixture.** `scenarios.json` takes `"Essences"`, and
   the `ladder-wrap` record is ten of them. Where a run *acquires* a carried essence — a shop seat, a
   sealed good, a reward that offers keep-or-spend — is an open question and a catalog decision.
+
+### A sealed good is a screen *(owner's call, 2026-09-19)*
+
+**Opening a bag of rocks, a sack of runes or a vial of essence takes the whole screen**, with the
+build band up, the draw pile in the corner and the deck panel a click away. What is on it is a
+decision about the build — which rung to raise, which rune to carry, which essence to spend and on
+which cards — and a panel covering the screen to ask that was covering the answer.
+
+- **The deck panel is on every between-fights screen now**, not just the shop: the reward screen
+  aims an essence at a card off a deck of fifty-odd while showing eight of them, which was the place
+  the deck mattered most and could not be read. `deckpile.go` is the pile all three draw, and each
+  screen owns its own toggle and its own click.
+- **There is still no way out but taking a card.** The good is already paid for, so nothing on the
+  screen abandons it and the chrome stands down — the reward screen's arrangement.
+- **It is not a station of the run.** The run is standing in the shop the whole time and is standing
+  there when the good is finished with. See CLAUDE.md §Five screens that are not stations of a run.
+
+### An essence takes one card, and a relic widens it *(owner's call, 2026-09-19)*
+
+**One card is the mechanic, and the number is not on any record.** Every essence in the catalog
+reaches exactly as far as every other, so what an essence *is* stays a single idea — a change to a
+card you already own — and a record that could ask for three would be a second dial hidden inside a
+catalog nobody prices.
+
+**What moves the number is a relic**, at the `essence-spent` moment: `adjust-essence-targets` moves
+it, and `Session.EssenceTargets` is the one seat every spend site asks through. Cloud Necklace is
+the first, at +1.
+
+**A card at a time, and every delta sums.** Worn order decides nothing because addition commutes —
+the argument `adjust-round-limit` is already under — so two Cloud Necklaces are three cards. What
+that buys is a step the essence catalog can be priced against: a doubling would make a second copy
+worth four cards and a third worth eight, which is a curve nothing else in the game is on.
+
+- **Never below one card.** A scaling that rounded away would take the essence mechanic off the run
+  rather than making it meaner — the clamp `SetRoundLimit` and `SetRelicSlots` are both under.
+- **Never more cards than the screen is offering.** A run wanting four cards out of a deck of three
+  would leave every essence in the game unclickable, so each spend site clamps to the row in front
+  of the player: the reward offer, the vial's offer, the hand. A consumable that can never be
+  clicked is worse than one that reaches less far than it promised.
+- **The reach is a ceiling, never a quota** *(owner's call, 2026-09-19)*. A player wearing a Cloud
+  Necklace may spend an essence on one card. Being made to spend the whole reach would turn a relic
+  that gives you more into a relic that takes the small move away — and there is nothing ambiguous
+  about a short selection, because **every card selected is a card the essence lands on**. That is
+  what `consumableTarget.fewest` opens, and it is the one consumable in the game with a range: a
+  rune names its cards, so a selection of the wrong size leaves it unclickable.
+- **What the tooltip says is what this click would do.** With cards picked it counts them, and with
+  nothing picked it says how far the essence can go — a panel promising two cards to a player who
+  has picked one is describing a click they are not making. `screens.essenceReach` is the one
+  answer all three spend sites read.
+- **All or nothing.** Every card is checked before any of them is changed, so an essence that lit up
+  cannot land on two cards and refuse the third. `Session.CanApplyToAll` is the question and
+  `Session.ApplyToAll` is the answer, and they ask the same thing.
+- **The deck is edited from the back forwards.** A removal shifts every position above it and leaves
+  everything below it alone, so a descending walk is what makes several targets in one spend safe.
+  The preview walks it the same way, or the picture would be of a deck the run never reached.
+- **A card named twice is refused.** Neither the offer row nor the hand can produce one; a spend that
+  changed one card twice would be an essence quietly doing half of what the player was shown.
+- **The order of a selection is the order of the row.** The settled cards land left to right in the
+  order they were sitting in, whatever order they were clicked in — the rule every consumable on the
+  combat screen is already under.
+- **One beat for all of them.** Every card a spend took changes at once. Four dissolves in sequence
+  would be four pauses over a row the player is waiting to read, and what the beat says is one thing
+  about the essence rather than one thing about each card.
+- **A full selection replaces its oldest card.** At the cap there is nothing a further click could
+  add, and a row that ignored it would leave a player who picked the wrong card having to work out
+  that they must deselect one first. With one target that reads as the pick simply moving.
+
+**The essence says how far it reaches, in its own tooltip** *(owner's call, 2026-09-19)*. CARD
+BECOMES FIRE is what one card reads; two is 2 CARDS BECOME FIRE, DESTROY CARD is DESTROY 2 CARDS,
+and COPY CARD is COPY CARD TWICE. Nothing else on the screen says the number — the row lights the
+essences only once it has enough cards, which says *when* and never *how many*.
+
+- **The catalog is authored for one card and the wider lines are derived.** `Essence.TextAt` is the
+  derivation and `data/essences.json` is untouched: a plural string beside `Text` would not be one
+  string but one per reach, so fifteen records would each carry a sentence per count, all saying the
+  same thing a different way.
+- **Two authored shapes, and they are rewritten differently.** `CARD <verb> ...` is a sentence about
+  the cards, so the count leads and the verb agrees with it; `<verb> CARD` is a sentence about the
+  doing, so the count lands on what is being done to.
+- **A copy is counted in times rather than in cards**, which is read off the essence's *target*
+  rather than off its wording — so a second duplicating essence gets the same treatment without
+  anybody noticing it needed it.
+- **A line fitting neither shape is printed as it was written.** Mangling is the worse failure: a
+  sentence nobody can read is harder to spot than one that has not learned to count, and
+  `TestEveryEssenceSaysHowFarItReaches` fails on a record the rewrite cannot reach.
+- **The review sheets show the catalog as shipped**, which is one card. A sheet is a picture of what
+  was authored, not of a run that has bought a relic — the rule `tools/handodds` and
+  `tools/handsheet` are already under for stones.
+- **The consumables pane is the one place the count is not clamped to a row.** An essence carried
+  past a between-fights screen is spent in a fight that has not been dealt, so there is no hand to
+  clamp against and what the pane says is what the essence will do.
 
 ### Nothing is greyed out for being pointless *(owner's call, 2026-09-19)*
 

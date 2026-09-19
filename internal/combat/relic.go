@@ -113,13 +113,27 @@ const (
 	//
 	// **Appended, because the enum is append-only.**
 	MomentTurnStart
+
+	// MomentEssenceSpent fires as an essence is pointed at the run's deck — the reward screen's
+	// offer, the shop's vial, and one carried into a duel out of the satchel.
+	//
+	// **It is a question rather than an event, which is the shape MomentPrizesDealt already has.**
+	// Nothing about the round or the run has happened yet; what the moment answers is how many
+	// cards the essence about to be spent may take, and Session.EssenceTargets is the seat all
+	// three spend sites ask through.
+	//
+	// **It has no card, so it reads none** — see readsACard. A rule narrowed to a fire card here
+	// would be asking about a card the player has not picked yet.
+	//
+	// **Appended, because the enum is append-only.**
+	MomentEssenceSpent
 )
 
 // Moments is every moment in a fixed order, for anything that walks them.
 func Moments() []Moment {
 	return []Moment{MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt,
 		MomentFightStart, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken,
-		MomentCardDrawn, MomentTurnStart}
+		MomentCardDrawn, MomentTurnStart, MomentEssenceSpent}
 }
 
 func (m Moment) String() string {
@@ -144,6 +158,8 @@ func (m Moment) String() string {
 		return "card-drawn"
 	case MomentTurnStart:
 		return "turn-start"
+	case MomentEssenceSpent:
+		return "essence-spent"
 	default:
 		return "card-cost"
 	}
@@ -440,6 +456,22 @@ const (
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoAdjustRoundLimit
+
+	// DoAdjustEssenceTargets moves how many cards one essence is spent on, by a **signed** Amount.
+	// 1 is two cards where the mechanic gives one.
+	//
+	// **A delta rather than a percentage, so worn order decides nothing** *(owner's call,
+	// 2026-09-19)*. Every delta sums, because addition commutes — the argument DoAdjustRoundLimit
+	// is already under — and what that buys here is a step whose worth does not run away with the
+	// number of copies: a card at a time is a dial the essence catalog can be priced against, where
+	// a doubling turns a second copy into four cards and a third into eight.
+	//
+	// **Floored at one card, never at none.** A delta that reached zero would take the essence
+	// mechanic off the run rather than making it meaner — the clamp SetRoundLimit and
+	// SetRelicSlots are both under.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoAdjustEssenceTargets
 )
 
 // RelicVerbs is every verb in a fixed order.
@@ -449,7 +481,7 @@ func RelicVerbs() []RelicVerb {
 		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth,
 		DoAddHandDMG, DoAddDamagePerHeld, DoGrowPerCard, DoAddDamagePerVitae,
 		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls,
-		DoAdjustRoundLimit}
+		DoAdjustRoundLimit, DoAdjustEssenceTargets}
 }
 
 func (v RelicVerb) String() string {
@@ -506,6 +538,8 @@ func (v RelicVerb) String() string {
 		return "scale-rolls"
 	case DoAdjustRoundLimit:
 		return "adjust-round-limit"
+	case DoAdjustEssenceTargets:
+		return "adjust-essence-targets"
 	default:
 		return "adjust-cost"
 	}
@@ -546,6 +580,8 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentBlowFormed
 	case DoGrowOnWin, DoScalePropagation:
 		return MomentFightWon
+	case DoAdjustEssenceTargets:
+		return MomentEssenceSpent
 	default:
 		return MomentPrizesDealt
 	}
@@ -806,7 +842,8 @@ func checkEffect(key string, e RelicEffect) error {
 		}
 	case DoResetGrowth:
 		// The one verb that names no quantity: it puts an accumulator to zero.
-	case DoAdjustCost, DoAdjustPicks, DoAdjustPrizeVitae, DoAdjustRoundLimit:
+	case DoAdjustCost, DoAdjustPicks, DoAdjustPrizeVitae, DoAdjustRoundLimit,
+		DoAdjustEssenceTargets:
 		// Signed on purpose: a discount is negative and a relic with a drawback is expressible.
 		if e.Amount == 0 {
 			return fmt.Errorf("%s does %s by 0", key, e.Do)
@@ -1886,6 +1923,27 @@ func ScalePropagation(worn []WornRelic, base int) int {
 		}
 	}
 	return base
+}
+
+// EssenceTargets is how many cards one essence is spent on, given a worn set.
+//
+// **One card is the mechanic and a relic moves it** — see DoAdjustEssenceTargets. **Every delta
+// sums and worn order decides nothing**, because addition commutes: two relics at 1 make three
+// cards, which is the shape RoundLimitFor already has.
+//
+// **Never below one.** An essence with no card to land on is a reward that is not one, so a stack
+// of drawbacks reaching zero is clamped back up rather than taken as a refusal.
+func EssenceTargets(worn []WornRelic) int {
+	n := 1
+	for _, e := range RelicEffectsAt(worn, MomentEssenceSpent, Card{}) {
+		if e.Do == DoAdjustEssenceTargets {
+			n += e.Amount
+		}
+	}
+	if n < 1 {
+		n = 1
+	}
+	return n
 }
 
 // DemoteConcept is which concept a card is dealt as, given a worn set. It reports false when no

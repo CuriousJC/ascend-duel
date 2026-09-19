@@ -190,6 +190,13 @@ type ShopScene struct {
 	// three Salves in a row would be buying a life bar rather than a potion.
 	drunk map[string]bool
 
+	// visit is which shop visit the state below belongs to — the run and the fight it follows.
+	//
+	// **It exists because this screen can now be left and come back to.** A sealed good is its own
+	// screen, so returning from one runs Init again, and a shelf re-dealt at that moment would be a
+	// second offer the player did not earn. See Init.
+	visit shopVisit
+
 	// opened is which of this visit's sealed goods have been taken, by record key.
 	//
 	// **Once each per visit** *(owner's call, 2026-08-27)*, restocked on the next. It bounds what a
@@ -197,10 +204,6 @@ type ShopScene struct {
 	// the same argument the three-ring shelf is under. **A map rather than a flag each** since the
 	// catalog became data/goods.json: a fourth good is a record, not a field on this scene.
 	opened map[string]bool
-
-	// good is the dialog a purchase opens: the four that were inside, and which one is taken. See
-	// shop_goods.go.
-	good goods
 
 	// pouch is the S button beside them: the stones the run is carrying, and the two things
 	// that can be done to one. **A panel rather than a row**, because the screen has no vertical
@@ -214,7 +217,26 @@ type ShopScene struct {
 }
 
 // Init deals the shelf. **Re-entered on every visit**, because each fight earns its own.
+//
+// **A visit is one deal, however many times the screen is entered** *(2026-09-19)*. Opening a
+// sealed good is a screen now, so coming back from one re-enters the shop — and a second deal would
+// restock the shelf, forget which goods had been opened, un-drink the potions and replay the
+// shopkeeper. `visit` is which visit the state on this scene belongs to, and a matching one is
+// picked up rather than dealt again.
 func (s *ShopScene) Init(gs *state.GlobalState) {
+	if gs.Run != nil {
+		if now := (shopVisit{seed: gs.RunSeed, fight: gs.Run.Fight()}); now == s.visit {
+			// **Only the widgets are rebuilt.** Everything a visit accumulates — the shelf, what
+			// has been opened, what has been drunk, both streams — is the visit's and stays.
+			s.armed, s.selling = "", ""
+			s.leaving = false
+			s.from, s.move = nil, ui.Travel{}
+			s.tip.Forget()
+			return
+		}
+		s.visit = shopVisit{seed: gs.RunSeed, fight: gs.Run.Fight()}
+	}
+
 	if s.leaveButton == nil {
 		s.leaveButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LEAVE",
 			func() { s.leaving = true })
@@ -238,7 +260,6 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.from, s.move = nil, ui.Travel{}
 	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 	s.opened = map[string]bool{}
-	s.good.reset()
 
 	// **Both stocks are dealt from an rng the visit keeps**, rather than from one built per call.
 	// That is what makes a reroll *advance* the stream instead of drawing a second sequence
@@ -261,6 +282,14 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 
 	trace.Logf("shop", "after fight %d: %v for sale, %d vitae in hand, wearing %d",
 		gs.Run.Fight(), shelfKeys(s.shelf), gs.Run.Vitae(), len(gs.Run.Worn()))
+}
+
+// shopVisit names one stop at the shop: a run and the fight it comes after. **Comparable, so Init
+// can ask whether it is looking at the same visit it dealt** — and it carries the seed as well as
+// the fight because a fresh run starts at fight one too.
+type shopVisit struct {
+	seed  int64
+	fight int
 }
 
 func shelfKeys(items []shelfItem) []string {
@@ -375,13 +404,6 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 		if s.prose.filled() {
 			s.prose.release()
 		}
-		return nil
-	}
-
-	// **The goods dialog runs before anything else and swallows the frame.** It stands between a
-	// purchase and what it bought, so nothing behind it may be clickable — including the two
-	// panels, whose buttons would otherwise sit live under a dialog with no exit but a card.
-	if s.good.update(gs) {
 		return nil
 	}
 
@@ -756,7 +778,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawPotions(gs, screen)
 	s.drawBrand(gs, screen)
 	s.drawRerollButtons(gs, screen)
-	s.drawShopPile(gs, screen)
+	drawDeckPile(gs, screen)
 
 	systems.DrawButton(gs, screen, s.leaveButton)
 	systems.DrawTooltip(gs, screen, &s.tip)
@@ -766,10 +788,6 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.deck.Draw(gs, screen, ui.OwnedContents(gs))
 	s.hands.Draw(gs, screen, ui.OwnedHands(gs))
 	s.drawPouch(gs, screen)
-
-	// The sealed good's dialog, over both panels: it is the one dialog on this screen that a
-	// purchase has already been made for, so nothing may be drawn on top of it but the tutorial.
-	s.good.draw(gs, screen)
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
 	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.
@@ -1013,8 +1031,8 @@ func (s *ShopScene) openGood(gs *state.GlobalState, key string) {
 	}
 
 	s.opened[key] = true
-	s.good.open(gs, good)
 	s.tip.Forget()
+	openGoods(gs, key)
 
 	trace.Logf("shop", "opened %s, %d vitae left", good.Name, gs.Run.Vitae())
 }

@@ -1,13 +1,13 @@
 """What every ring in the catalogue *is*, derived from its rules rather than authored.
 
-    python .claude/skills/ring-balance/classify.py                 # the summary, every axis by rarity
-    python .claude/skills/ring-balance/classify.py --by category element
-    python .claude/skills/ring-balance/classify.py --list defense
-    python .claude/skills/ring-balance/classify.py --ring "Fire Ring"
-    python .claude/skills/ring-balance/classify.py --shelf           # counts against what a player actually sees
-    python .claude/skills/ring-balance/classify.py --holes          # a filled family with an empty sibling
+    python .claude/skills/relic-balance/classify.py                 # the summary, every axis by rarity
+    python .claude/skills/relic-balance/classify.py --by category element
+    python .claude/skills/relic-balance/classify.py --list defense
+    python .claude/skills/relic-balance/classify.py --ring "Fire Ring"
+    python .claude/skills/relic-balance/classify.py --shelf           # counts against what a player actually sees
+    python .claude/skills/relic-balance/classify.py --holes          # a filled family with an empty sibling
 
-Run from the repo root. It reads data/rings.json and data/statuses.json and puts
+Run from the repo root. It reads data/relics.json and data/statuses.json and puts
 each ring on several axes. Nothing is written down in rings.json: a ring's
 category is a fact about its verbs, so the file cannot disagree with the rules.
 
@@ -29,7 +29,7 @@ VERBS = {
     "scale-damage":            (("offense",), "multiplicative"),
     "scale-hand-damage":       (("offense",), "multiplicative"),
     "scale-damage-per-vitae":  (("offense",), "multiplicative"),
-    "add-hand-damage":         (("offense",), "flat"),
+    "add-hand-dmg":            (("offense",), "flat"),
     "add-damage-per-held":     (("offense",), "flat"),
     "add-damage-per-vitae":    (("offense",), "flat"),
     "add-dmg":                 (("offense",), "flat"),
@@ -52,8 +52,13 @@ VERBS = {
     "scale-propagation":       (("economy",), "multiplicative"),
     "adjust-prize-vitae":      (("economy",), "flat"),
     "adjust-picks":            (("economy",), "flat"),
+    # tempo -- rounds are the turn budget of the whole fight, and a relic may take them away
+    "adjust-round-limit":      (("tempo", "drawback"), "flat"),
     # enabler -- changes what you are holding so something else can fire
     "set-element":             (("enabler",), "enabler"),
+    # enabler -- does nothing on its own; it widens what an essence reaches, so the value is
+    # entirely in the deck the player goes on to build
+    "adjust-essence-targets":  (("enabler",), "flat"),
     # growth -- value is a function of time, and the accumulator is state
     "grow-on-hit":             (("offense", "growth"), "stateful"),
     "grow-on-win":             (("growth",), "stateful"),
@@ -82,16 +87,20 @@ SCOPES = {
     "attack-lands": "per-blow",
     "blow-formed":  "per-blow",
     "turn-taken":   "per-turn",
+    "turn-start":   "per-turn",
     "deck-built":   "per-fight",
     "fight-start":  "per-fight",
     "fight-won":    "per-run",
     "prizes-dealt": "per-run",
+    # an essence edits the deck the whole climb is played with, so its reach is the run's
+    "essence-spent": "per-run",
 }
 
 # predicate key -> breadth. How much of the deck a rule can see.
 BREADTHS = {
     "Element": "element", "Form": "form", "Concept": "concept",
-    "Tier": "tier", "Hand": "hand", "MinForms": "hand", "Lead": "positional",
+    "Tier": "tier", "Hand": "hand", "Hands": "hand", "MinForms": "hand",
+    "Lead": "positional",
 }
 
 AXES = ("category", "payload", "scope", "breadth", "rarity", "build",
@@ -99,13 +108,13 @@ AXES = ("category", "payload", "scope", "breadth", "rarity", "build",
 
 # --- deriving ---------------------------------------------------------------
 
-RINGS = json.load(open("data/rings.json"))
+RINGS = json.load(open("data/relics.json"))
 STATUSES = {s["StatusRecord"]: s for s in json.load(open("data/statuses.json"))}
 
 
 def unknown(what, word):
     sys.exit("unknown %s: %r -- add it to the table in "
-             ".claude/skills/ring-balance/classify.py" % (what, word))
+             ".claude/skills/relic-balance/classify.py" % (what, word))
 
 
 def classify(ring):

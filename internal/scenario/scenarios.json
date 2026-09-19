@@ -1733,6 +1733,18 @@
     "Life": 0
   },
   {
+    "ScenarioRecord": "essence-reach",
+    "Note": "The reward screen wearing the Cloud Necklace: an essence takes two cards rather than one. Select two cards in the row, then click an essence, and watch both change together. Sell the necklace in the shop to see the row go back to asking for one.",
+    "Relics": [
+      "essence-targets"
+    ],
+    "Hand": [],
+    "Screen": "reward",
+    "Fight": 3,
+    "Vitae": 22,
+    "Life": 63
+  },
+  {
     "ScenarioRecord": "reward-payout",
     "Note": "The reward screen with something to say: a purse big enough to earn interest, a fight won on 63 life, and the stairway's award. Watch the three sentences type and each figure fly to the duelist card.",
     "Relics": [

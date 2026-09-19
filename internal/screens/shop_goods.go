@@ -33,8 +33,8 @@ package screens
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"math/rand"
+	"sort"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/achieve"
@@ -50,7 +50,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 // **There is no goodKind enum any more** *(2026-09-14)*. A shelf seat names a good by its record
@@ -58,21 +57,20 @@ import (
 // session.GoodContents — the closed vocabulary that says which catalog is inside. The three names
 // that used to be constants here are the records' own Name fields.
 
-// Where the goods row sits, and how the dialog lays its cards out.
+// Where the goods rows sit.
+//
+// **Measured from the screen, and now standing on it** *(2026-09-19)*. These were always screen
+// percentages, because the modal panel covered most of it; what changed is what they have to clear.
+// The build band and the two lines of type under it are at the top of the screen, so the cards
+// start below them rather than below a panel's title bar — see buildBandBottom and offerHintTop.
 const (
-	// The dialog's four cards, centered in the panel — the bag's and the sack's, which have one
-	// row and nothing under it.
+	// The bag's and the sack's one row, centered, with nothing under it.
 	goodsChoiceRowPct = 42
 
-	// The vial has two rows and they both have to fit inside the panel, so its essences sit high and
-	// the cards they may eat sit under them. **Not 42 and 70** *(2026-09-06)*: the offer row ended
-	// exactly on the panel's bottom edge, which was survivable while it was the only row on screen
-	// and is not now that a selected card is lifted into the row above it.
-	vialEssenceRowPct = 22
-	goodsOfferRowPct  = 55
-
-	// The line under the title, saying what to do with what is up.
-	goodsHintTop = 120
+	// The vial has two rows, and both of them plus the lift a selected card takes have to fit
+	// between the hint and the bottom of the screen.
+	vialEssenceRowPct = 38
+	goodsOfferRowPct  = 68
 )
 
 // goodsStage is how far through opening a good the player is.
@@ -122,10 +120,10 @@ type goods struct {
 	// two rows are up at once, so the cards cannot be a function of a choice not yet made.
 	offer []int
 
-	// selected is which offered card is picked out, or -1. **One card**, because an essence eats
-	// exactly one — the reward screen's own field, and the same reason it is an index rather than
-	// a set. See consumableTarget.
-	selected int
+	// selected is which offered cards are picked out, as row slots. **A set, because an essence may
+	// take more than one card** — one is the mechanic and a relic scales it, see
+	// essence_targets.go. The reward screen's own field, under the same rules. See consumableTarget.
+	selected []int
 
 	// tip explains whichever card the cursor is resting on.
 	tip models.Tooltip
@@ -134,9 +132,7 @@ type goods struct {
 	// fields and the same rules** — see PostBattleScene, where each of these is written up: the card
 	// that flies is the card the player was looking at, the morph is the change happening in front
 	// of them, and the deck is not touched until the hold is over.
-	before      combat.Card
-	after       combat.Card
-	change      ui.Morph
+	lands       []essenceLanding
 	removes     bool
 	copied      bool
 	held        int
@@ -152,7 +148,7 @@ type goods struct {
 // visit is not possible — see the shelf's `bought` flag — so a stream per fight is a stream per
 // bag.
 func (g *goods) open(gs *state.GlobalState, good session.Good) {
-	g.good, g.stage, g.selected = good, goodsPick, -1
+	g.good, g.stage, g.selected = good, goodsPick, nil
 	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
 	g.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 
@@ -172,9 +168,9 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 
 // close puts it away.
 func (g *goods) reset() {
-	g.good, g.stage, g.selected = session.Good{}, goodsClosed, -1
+	g.good, g.stage, g.selected = session.Good{}, goodsClosed, nil
 	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
-	g.before, g.after, g.change = combat.Card{}, combat.Card{}, ui.Morph{}
+	g.lands = nil
 	g.removes, g.copied, g.held = false, false, 0
 	g.arrival, g.arrivedFrom, g.applyNow = ui.Travel{}, image.Rectangle{}, nil
 	g.tip.Forget()
@@ -343,23 +339,59 @@ func (g *goods) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
 	width := (n-1)*pitch + cardWidth
 	left := gs.PctX(50) - width/2 + i*pitch
 	top := gs.PctY(goodsOfferRowPct)
-	if i == g.selected {
+	if g.isSelected(i) {
 		top -= offerSelectedNudge
 	}
 	return image.Rect(left, top, left+cardWidth, top+cardHeight)
 }
 
-// selectedDeckIndex is the offer's current pick as an index into the run deck, and whether there is
-// one. The reward screen's function of the same name, and the same job.
-func (g *goods) selectedDeckIndex() (int, bool) {
-	if g.selected < 0 || g.selected >= len(g.offer) {
-		return 0, false
+// isSelected reports whether this row slot is one of the picked cards.
+func (g *goods) isSelected(i int) bool {
+	for _, sel := range g.selected {
+		if sel == i {
+			return true
+		}
 	}
-	return g.offer[g.selected], true
+	return false
 }
 
-// essenceSpendable is whether clicking this essence now would take it: a card is selected, and this essence
-// can actually change that card.
+// targets is how many cards an essence takes here — one, whatever the relics make of it, and never
+// more than the offer is holding. See essence_targets.go.
+func (g *goods) targets(gs *state.GlobalState) int {
+	return essenceTargetCount(gs, len(g.offer))
+}
+
+// reachNow is how many cards a click on an essence would change right now: what is selected, or the
+// ceiling when nothing is — the reward screen's rule. See essenceReach.
+func (g *goods) reachNow(gs *state.GlobalState) int {
+	return essenceReach(len(g.selected), g.targets(gs))
+}
+
+// selectedSlots is the picked cards **in row order**, whatever order they were clicked in — the
+// reward screen's rule, and the combat screen's.
+func (g *goods) selectedSlots() []int {
+	out := append([]int(nil), g.selected...)
+	sort.Ints(out)
+	return out
+}
+
+// selectedDeckIndexes is the offer's current picks as indexes into the run deck, in row order. The
+// reward screen's function of the same name, and the same job.
+func (g *goods) selectedDeckIndexes() []int {
+	out := make([]int, 0, len(g.selected))
+	for _, slot := range g.selectedSlots() {
+		if slot < 0 || slot >= len(g.offer) {
+			return nil
+		}
+		out = append(out, g.offer[slot])
+	}
+	return out
+}
+
+// essenceSpendable is whether clicking this essence now would take it: at least one card and no
+// more than the essence reaches is selected, and this essence can change every one of them.
+//
+// **A player may always take fewer**, the reward screen's rule — see consumableTarget.fewest.
 //
 // **The same question the click asks and the same one the card's lit state reads**, which is what
 // stops an essence looking available and doing nothing. It is the reward screen's predicate over the
@@ -369,22 +401,27 @@ func (g *goods) essenceSpendable(gs *state.GlobalState, w session.Essence) bool 
 		return false
 	}
 	target := consumableTarget{
-		needs: 1,
-		legal: func(ids []int) bool { return gs.Run.CanApply(w, ids[0]) },
+		needs:  g.targets(gs),
+		fewest: 1,
+		legal: func(idx []int) bool {
+			for _, i := range idx {
+				if !gs.Run.CanApply(w, i) {
+					return false
+				}
+			}
+			return true
+		},
 	}
-	if idx, ok := g.selectedDeckIndex(); ok {
-		return target.satisfiedBy([]int{idx})
-	}
-	return target.satisfiedBy(nil)
+	return target.satisfiedBy(g.selectedDeckIndexes())
 }
 
-// update runs the dialog and reports whether it swallowed the frame. **The shop is dead while it
-// is up**, which is what `gs.ModalOpen` says to the game's own chrome as well.
-func (g *goods) update(gs *state.GlobalState) bool {
+// update runs the good and reports whether anything is still open. **It no longer claims the frame**
+// *(2026-09-19)*: this is a screen now, so there is nothing behind it to protect and no ModalOpen to
+// set. False means the card has been taken and whatever it did has finished playing.
+func (g *goods) update(gs *state.GlobalState, pile func(image.Point) bool) bool {
 	if !g.openNow() {
 		return false
 	}
-	gs.ModalOpen = true
 
 	if g.stage == goodsShowing {
 		g.tickShowing(gs)
@@ -395,7 +432,11 @@ func (g *goods) update(gs *state.GlobalState) bool {
 	systems.UpdateTooltip(gs, &g.tip)
 
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
-		g.click(gs)
+		// **The pile is asked first and it is the scene's**, because the panel it opens covers the
+		// cards this file draws — see GoodsScene.clickedPile.
+		if pile == nil || !pile(image.Pt(gs.MouseX, gs.MouseY)) {
+			g.click(gs)
+		}
 	}
 	return true
 }
@@ -431,7 +472,7 @@ func (g *goods) hover(gs *state.GlobalState) {
 			// 2026-09-18)*, now that its face is a picture rather than a sentence on a scrim. What
 			// a dim essence means — "not for the card you have selected" — is still left to the row.
 			w := g.essences[i]
-			title, lines := ui.EssenceTip(w)
+			title, lines := ui.EssenceTip(w, g.reachNow(gs))
 			g.tip.Point(g.slot(gs, i), ui.TipLine(title), ui.TipLines(lines))
 		case session.ContentsStones:
 			st := g.stones[i]
@@ -456,7 +497,7 @@ func (g *goods) click(gs *state.GlobalState) {
 	if i := ui.HoveredSeat(at, len(g.offer), func(i int) image.Rectangle {
 		return g.offerSlot(gs, i)
 	}); i >= 0 {
-		g.selectCard(i)
+		g.selectCard(gs, i)
 		return
 	}
 
@@ -476,12 +517,11 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		// read: a dim essence cannot be taken and a lit one always works. With no card selected every
 		// essence is dim, so the dialog waits rather than choosing a card for the player.
 		essence := g.essences[i]
-		idx, ok := g.selectedDeckIndex()
-		if !ok || !g.essenceSpendable(gs, essence) {
+		if !g.essenceSpendable(gs, essence) {
 			return
 		}
 
-		g.show(gs, essence, idx, g.offerSlot(gs, g.selected))
+		g.show(gs, essence, g.selectedSlots())
 
 	case session.ContentsStones:
 		stone := g.stones[i]
@@ -512,48 +552,45 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 // PostBattleScene.aimAt. A preview computed by its own arithmetic is a preview that can disagree
 // with the thing it is previewing, and a deck altered while the result is on screen would make the
 // after-card impossible to draw from anything but a deck that has already moved on.
-func (g *goods) show(gs *state.GlobalState, essence session.Essence, deckIndex int, from image.Rectangle) {
-	before, ok := gs.Run.Card(deckIndex)
+func (g *goods) show(gs *state.GlobalState, essence session.Essence, slots []int) {
+	if gs.Run == nil || len(slots) == 0 {
+		return
+	}
+
+	at := make([]int, 0, len(slots))
+	from := make([]image.Rectangle, 0, len(slots))
+	ids := make([]int, 0, len(slots))
+	for _, slot := range slots {
+		if slot < 0 || slot >= len(g.offer) {
+			return
+		}
+		card, ok := gs.Run.Card(g.offer[slot])
+		if !ok {
+			return
+		}
+		at = append(at, g.offer[slot])
+		from = append(from, g.offerSlot(gs, slot))
+		ids = append(ids, card.ID)
+	}
+
+	lands, ok := previewEssence(gs, essence, at, from)
 	if !ok {
 		return
 	}
 
-	trial := session.New(gs.Run.Deck())
-	if !trial.Apply(essence, deckIndex) {
-		return
-	}
-
-	g.before = before
+	g.lands = lands
 	g.removes = essence.Target == session.TargetRemove
 	g.copied = essence.Target == session.TargetDuplicate
 
-	switch {
-	case g.copied:
-		// The copy is appended, so the card that arrived is the last one.
-		g.after, _ = trial.Card(trial.Size() - 1)
-	case !g.removes:
-		g.after, _ = trial.Card(deckIndex)
-	}
-
-	// **What the essence did decides which shape the change takes** — recolored, eaten, or copied.
-	// See cardmorph.go; the morph is handed two finished faces and works out the rest.
-	beforeSpec := ui.CardSpec(before, ui.HeldByRun(gs, before), true, false)
-	switch {
-	case g.removes:
-		g.change = ui.MorphAway(beforeSpec, cards.Hand)
-	case g.copied:
-		g.change = ui.MorphIn(ui.CardSpec(g.after, ui.HeldByRun(gs, g.after), true, false), cards.Hand)
-	default:
-		g.change = ui.MorphInto(beforeSpec,
-			ui.CardSpec(g.after, ui.HeldByRun(gs, g.after), true, false), cards.Hand)
-	}
-
 	g.stage, g.held = goodsShowing, settledHoldTicks()
-	g.arrival, g.arrivedFrom = ui.NewTravel(0, settleFlightTicks()), from
-	g.applyNow = func(run *session.Session) { run.Apply(essence, deckIndex) }
+	g.arrival, g.arrivedFrom = ui.NewTravel(0, settleFlightTicks()), from[0]
+
+	// **The commitment is by identity, not by position**, the reward screen's rule: an essence may
+	// take several cards, and removing one moves every deck position above it.
+	g.applyNow = func(run *session.Session) { run.ApplyToAll(essence, ids) }
 	g.tip.Forget()
 
-	trace.Logf("shop", "vial of essence: %s aimed at deck position %d", essence.Record, deckIndex)
+	trace.Logf("shop", "vial of essence: %s aimed at deck positions %v", essence.Record, at)
 }
 
 // tickShowing runs the held picture: the flight, then the change, then the hold, and the deck edit
@@ -567,8 +604,7 @@ func (g *goods) tickShowing(gs *state.GlobalState) {
 		g.arrival.Tick()
 		return
 	}
-	if !g.change.Done() {
-		g.change.Tick()
+	if !tickLandings(g.lands) {
 		return
 	}
 
@@ -584,7 +620,9 @@ func (g *goods) tickShowing(gs *state.GlobalState) {
 		// **The same moment the post-battle screen raises**, because it is the same event: a card in
 		// the run's deck is now a different card. Skipped for a removal, which leaves nothing to name.
 		if !g.removes {
-			earnMoment(gs, achieve.CardAltered(g.after.Label()))
+			for _, l := range g.lands {
+				earnMoment(gs, achieve.CardAltered(l.after.Label()))
+			}
 		}
 	}
 	g.reset()
@@ -593,31 +631,35 @@ func (g *goods) tickShowing(gs *state.GlobalState) {
 // selectCard picks a card out of the offer row, or puts it back. **Clicking the selected card
 // deselects it**, the hand row's own gesture, so the thing a player already knows how to undo works
 // here too.
-func (g *goods) selectCard(i int) {
-	if g.selected == i {
-		g.selected = -1
-		return
+//
+// **A full selection replaces its oldest card rather than refusing the click** — the reward
+// screen's rule, written up in PostBattleScene.selectOffered: with one target it reads as the pick
+// moving, which is exactly what it always did.
+func (g *goods) selectCard(gs *state.GlobalState, i int) {
+	for k, sel := range g.selected {
+		if sel == i {
+			g.selected = append(g.selected[:k], g.selected[k+1:]...)
+			g.tip.Forget()
+			return
+		}
 	}
-	g.selected = i
+
+	if n := g.targets(gs); len(g.selected) >= n {
+		g.selected = append([]int(nil), g.selected[len(g.selected)-n+1:]...)
+	}
+	g.selected = append(g.selected, i)
 	g.tip.Forget()
 }
 
-// draw puts the dialog up. It takes the shared modal frame, so it reads as the same kind of thing
-// as the deck and hands panels — **minus the X**, for the reason at the top of this file.
-func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
-	if !g.openNow() {
+// drawCards puts the good's own rows up: what was drawn from it, and — for a vial — the cards an
+// essence may be aimed at.
+//
+// **The screen around it is the scene's** *(2026-09-19)*. This was a modal frame with a title bar
+// and a scrim; the ground, the build band, the heading and the draw pile are GoodsScene's now, and
+// what is left here is the thing the good actually is.
+func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
+	if !g.openNow() || gs.Run == nil {
 		return
-	}
-
-	panel := ui.DrawModalFrame(gs, screen, ui.ModalHead{Title: g.title()})
-
-	if line := g.hint(); line != "" && g.stage != goodsShowing {
-		hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}
-		op := &text.DrawOptions{}
-		op.GeoM.Translate(float64(panel.Min.X+panel.Dx()/2), float64(panel.Min.Y+goodsHintTop))
-		op.PrimaryAlign = text.AlignCenter
-		op.ColorScale.ScaleWithColor(color.RGBA{R: 226, G: 228, B: 236, A: 255})
-		text.Draw(screen, line, hint, op)
 	}
 
 	if g.stage == goodsShowing {
@@ -633,7 +675,7 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 		case session.ContentsRunes:
 			ui.DrawRuneCard(gs, screen, at, g.runes[i], true, false)
 		default:
-			// **An essence is lit only for the card that is selected.** With nothing selected the
+			// **An essence is lit only for the cards that are selected.** With nothing selected the
 			// whole row is dim, which is what says the gesture starts underneath — the reward
 			// screen's rule, and the rune pane's.
 			ui.DrawEssenceCard(gs, screen, at, g.essences[i], g.essenceSpendable(gs, g.essences[i]))
@@ -649,10 +691,8 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 			continue
 		}
 		ui.DrawCard(gs, screen, g.offerSlot(gs, i).Min, cards.Hand, card, ui.HeldByRun(gs, card),
-			true, i == g.selected)
+			true, g.isSelected(i))
 	}
-
-	systems.DrawTooltip(gs, screen, &g.tip)
 }
 
 // title names what is open, and hint says what to do with it. **Two short lines rather than a
@@ -681,25 +721,25 @@ func (g *goods) title() string {
 // knows which of the three shapes this is. A removal ends on an empty seat, a duplicate ends on two
 // cards, everything else ends on one.
 func (g *goods) drawShowing(gs *state.GlobalState, screen *ebiten.Image) {
-	seats := settledSeats(gs, 1)
-	if g.copied {
-		seats = settledSeats(gs, 2)
-	}
-
-	at := ui.FlyingTo(g.arrivedFrom, seats[0], g.arrival)
-
-	// While a copy is being made the card that flew is the original, untouched: the morph in the
-	// second seat is the whole of what is happening.
-	if g.copied {
-		ui.DrawCard(gs, screen, at, cards.Hand, g.before, ui.HeldByRun(gs, g.before), true, false)
-		ui.DrawMorph(gs, screen, seats[1].Min, g.change)
-		return
-	}
-
-	ui.DrawMorph(gs, screen, at, g.change)
+	drawLandings(gs, screen, g.lands, g.arrival, g.copied)
 }
 
-func (g *goods) hint() string { return g.good.Hint }
+// hint is the line under the title: the record's own, plus how far an essence reaches when a relic
+// has widened it.
+//
+// **The reach is said in words because nothing else on the screen says it** — the row lights the
+// essences only once it has enough cards, which says when and never how many. "Up to", because the
+// reach is a ceiling rather than a quota; see consumableTarget.fewest.
+func (g *goods) hint(gs *state.GlobalState) string {
+	line := g.good.Hint
+	if g.good.Contains != session.ContentsEssences {
+		return line
+	}
+	if n := g.targets(gs); n > 1 {
+		return fmt.Sprintf("%s - up to %d cards each", line, n)
+	}
+	return line
+}
 
 // stoneTipLines is what a stone's tooltip says: the rung it raises, what one is worth, and where
 // that rung stands for this run right now.

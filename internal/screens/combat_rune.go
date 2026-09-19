@@ -149,16 +149,26 @@ func (s *CombatScene) runeTarget(gs *state.GlobalState, p session.Rune) consumab
 
 // essenceTarget is what one carried essence needs from the selection.
 //
-// **One card, always.** An essence names a card and changes it; there is no essence in the catalog
-// that reads two, and the count is written here rather than on the record because it is a fact
-// about the mechanic rather than about any one of them.
+// **One card, and whatever the relics make of it.** The count is not on the record and never was —
+// it is a fact about the mechanic rather than about any one essence, which is what lets a relic
+// move it for the whole catalog at once. See `Session.EssenceTargets` and the `essence-spent`
+// moment.
 //
-// **The legality question goes to the run**, exactly as a rune's does — see `Session.CanApplyTo`,
+// **It cannot ask for more cards than the hand is holding.** A run wearing two Cloud Necklaces
+// aiming four cards at a hand of three would be a consumable that can never be spent, so the
+// requirement is clamped to the row the player is choosing in — the same courtesy the reward
+// screen's offer and the shop's vial extend.
+//
+// **The reach is a ceiling rather than a quota.** One card is always a legal spend, however far the
+// relics let an essence stretch — see consumableTarget.fewest.
+//
+// **The legality question goes to the run**, exactly as a rune's does — see `Session.CanApplyToAll`,
 // which is what the apply itself checks, so an essence that lit up cannot then be refused.
 func (s *CombatScene) essenceTarget(gs *state.GlobalState, w session.Essence) consumableTarget {
 	return consumableTarget{
-		needs: 1,
-		legal: func(ids []int) bool { return len(ids) == 1 && gs.Run.CanApplyTo(w, ids[0]) },
+		needs:  essenceTargetCount(gs, len(s.hand)),
+		fewest: 1,
+		legal:  func(ids []int) bool { return gs.Run.CanApplyToAll(w, ids) },
 	}
 }
 
@@ -195,7 +205,7 @@ func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
 	// two hands and this file goes on knowing nothing about what any one essence does.
 	was, seats := s.handFaces(gs)
 
-	if !gs.Run.ApplyTo(w, ids[0]) {
+	if !gs.Run.ApplyToAll(w, ids) {
 		return
 	}
 	gs.Run.DropStowed(i)

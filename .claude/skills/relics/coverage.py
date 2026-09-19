@@ -3,7 +3,7 @@
     python .claude/skills/rings/coverage.py          # the grid, then the gaps
     python .claude/skills/rings/coverage.py --gaps   # gaps only
 
-Run from the repo root. It reads data/rings.json and data/duelist_cards.json and
+Run from the repo root. It reads data/relics.json and data/duelist_cards.json and
 prints, for every (When, Do, predicate) cell, which rings occupy it -- and then
 which cells on a symmetry axis are empty while their siblings are filled.
 
@@ -14,7 +14,7 @@ import collections
 import json
 import sys
 
-R = json.load(open("data/rings.json"))
+R = json.load(open("data/relics.json"))
 C = json.load(open("data/duelist_cards.json"))
 H = json.load(open("data/hands.json"))["hands"]
 

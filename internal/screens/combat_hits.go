@@ -196,6 +196,12 @@ func (s *CombatScene) shownLife(side combat.Side, actual int) int {
 			return h.held + granted
 		}
 	}
+	// **A drain holds the bar the same way a blow does, in the other direction.** The life is
+	// already on the model; what waits is the rise, so the bar fills as the figure lands rather
+	// than a beat before it sets off. See combat_drain.go.
+	if held, waiting := s.shownDrain(side); waiting {
+		return held + granted
+	}
 	return actual + granted
 }
 

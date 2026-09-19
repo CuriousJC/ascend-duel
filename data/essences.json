@@ -85,7 +85,7 @@
     "Draw": "a variegated spear fading into nothing",
     "Target": "amount",
     "Value": "150",
-    "Text": "CARD GAINS DMG +50%"
+    "Text": "CARD GAINS DMG +1/2"
   },
   {
     "EssenceRecord": "add-ap",

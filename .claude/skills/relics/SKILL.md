@@ -68,7 +68,7 @@ new one.
 
 ### `When` — the moments
 
-Every one has a seat that already exists. **Four of the ten fire outside `internal/combat`**,
+Every one has a seat that already exists. **Four of the eleven fire outside `internal/combat`**,
 which is what makes a relic a *run* concept rather than a combat one.
 
 | `When` | Package | Seat | Fires |
@@ -83,16 +83,27 @@ which is what makes a relic a *run* concept rather than a combat one.
 | `prizes-dealt` | `screens` | `dealPrizes` | once, as the post-battle cards go down |
 | `turn-taken` | `combat` | `playTurn` | once at the end of each of this duelist's own turns, **including an empty one**. Its `If` is matched against the turn as a whole: the rule fires when *any* card of the turn matches |
 | `blow-formed` | `combat` | `handEvent` | once per blow, as the base sum is added up — **the only moment that sees the blow rather than a card**, and its `If` matches the *lead* card |
+| `turn-start` | `combat` | `playTurn` | once at the top of each of this duelist's own turns, **before the chill, the riders and both phases**. It has no card and no turn to read, so **a rule carrying any `If` is refused at registration** |
+
+**Flips chain, in worn order, within one draw** *(owner's call, 2026-09-15)*. `combat.FlipSteps`
+carries a running card through the worn list and each ring reads what the ring before it left, so a
+lightning card under Frozen Lightning worn left of Meltdown is dealt **fire** — two steps, and the
+screen gives each its own beat and its own relic toast. **Worn order decides the result**: swap
+those two and lightning stays lightning, because Meltdown reads the card before the other ring has
+touched it. `TestFlipsCompose` and `TestFlipStepsNameEveryRingThatTouchedTheCard` are the tripwires,
+and `session.AlteredAs` is the deck panel's preview of the same walk.
+
+**What the cascade costs is that a card may only make one trip.** Every flip reads the *running*
+element, so a card handed back through `DrawnAs` would take a second cascade from wherever the first
+one left it — `screens.restoreToDeck` restores a discard to the color the run owns before folding it
+back into the draw pile, and the draw pile therefore holds cards as the run owns them.
 
 **`card-drawn` is the only moment a screen owns, and the invariant it costs is worth knowing**
-*(2026-08-24)*. Every flip reads the card's **original** element, so that two of them cannot chain a
-deck to one color between them — lightning to ice to fire. While the flip fired at `deck-built`
-that was true for free, because the fight deck was built out of the run's own cards once and nothing
-had recolored anything yet. Firing per draw, the discard pile is full of cards a flip has already
-been through, so **the draw pile has to hold cards in the colors the run owns**: `drawHand`
-restores a discarded card before folding it back in, and `session.DrawnAs` must never be handed a
-card that has already been drawn. `TestFlipsCompose` and `TestFlipStepsNameEveryRingThatTouchedTheCard`
-in `internal/combat` are what hold the composing half of it.
+*(2026-08-24)*. A cascade runs once per card per draw, so **the draw pile has to hold cards in the
+colors the run owns**: `drawHand` restores a discarded card before folding it back in, and
+`session.DrawnAs` must never be handed a card that has already been drawn. Hand one back and it
+takes a second cascade from wherever the first left it, which is how a deck walks to one color over
+a long fight.
 
 **A drawn card does not remember what it was** *(owner's call, 2026-08-24)*. It carries the color it
 became and nothing else, so a later rule — a `card-damage` relic keyed on ice — matches the card in
@@ -176,6 +187,8 @@ not ignored.
 | `repeat-card` | `blow-formed` | `Amount` landings | every **matching** card lands Amount times, each at **full** damage — the form repeat relics |
 | `add-hand-dmg` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one blow** when the blow satisfied the named rung, so every card of the hand grows by its own multiplier — *not* a term of `Base`, and already inside every figure the sum prints |
 | `add-damage-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to the blow **for every card still in hand** matching the rule's card predicate. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
+| `drain-damage` | `attack-lands` | `Amount` percent | restores that share of the blow that **landed** to whoever threw it — after weight, vulnerability, the shield and the miss, so a blow that was eaten drains nothing. **Once per blow**, not per card: a rule's predicate asks whether *any* card of the blow matched |
+| `heal-share` | `turn-start` | `Amount` percent | restores that share of **maximum** life. Of the maximum rather than of what is left, so it is worth the same however badly the fight is going |
 | `echo-attack` | `blow-formed` | `Amount` landings | the blow's lead card lands Amount times, at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
 
 **Adding a verb is a Go change** — one entry here plus the one place applying it — and that cost
@@ -306,8 +319,6 @@ Reach for these first when an idea sounds too easy.
 - **No relic raises `MaxActions`.** Frozen at five — see *A round is bounded twice* in
   `MECHANICS.md`. A relic may make five cards cheaper; it may never make it six.
 - **No relic reduces a blow to zero.** Nothing in the game does.
-- **Flips do not compose.** Every `set-element` reads the card's *original* element, so two flips
-  cannot chain a deck to one color and the order they were bought in cannot change the result.
 - **Relics are the duelist's only** *(owner's call, 2026-08-17)*. An enemy wears none; affixes are
   the enemy-side counterpart. `attack-lands` is symmetric in the engine, so nothing has to be
   undone if affixes later reuse the machinery.

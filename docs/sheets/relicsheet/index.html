@@ -86,7 +86,7 @@
 
 <h1>Relic sheet</h1>
 <p class="facts">
-  137 relics, 0 of them drawing the default face,
+  140 relics, 3 of them drawing the default face,
   0 with no subject paragraph written.
   Relic card <code>200&times;280</code>,
   corner radius <code>15</code>,
@@ -147,15 +147,15 @@
 
   <li class="tier common"><strong>common</strong>
     55 relics &middot; 3 vitae, sells for 1 &middot;
-    weight 10 each &middot; 68.8% of a shelf draw</li>
+    weight 10 each &middot; 68.5% of a shelf draw</li>
 
   <li class="tier uncommon"><strong>uncommon</strong>
     56 relics &middot; 5 vitae, sells for 2 &middot;
-    weight 4 each &middot; 28.0% of a shelf draw</li>
+    weight 4 each &middot; 27.9% of a shelf draw</li>
 
   <li class="tier rare"><strong>rare</strong>
-    26 relics &middot; 7 vitae, sells for 3 &middot;
-    weight 1 each &middot; 3.2% of a shelf draw</li>
+    29 relics &middot; 7 vitae, sells for 3 &middot;
+    weight 1 each &middot; 3.6% of a shelf draw</li>
 
 </ul>
 
@@ -1007,7 +1007,7 @@
         <p class="name">Burning</p>
         <div class="record">status-burn</div>
         <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
-        <p class="text">Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.</p>
+        <p class="text">Fire attacks apply BURNING status to target. BURNING enemies receive 1/2 DMG each turn.</p>
         
           <p class="draw">a gold ring with a red gem, the flames should be licking up the sides of the ring</p>
         
@@ -1049,7 +1049,7 @@
         <p class="name">Shocking</p>
         <div class="record">status-shock</div>
         <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
-        <p class="text">Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.</p>
+        <p class="text">Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 1/4 chance to miss.</p>
         
           <p class="draw">a gold ring with a yellow gem, electricity crackling up the sides of the ring</p>
         
@@ -1070,7 +1070,7 @@
         <p class="name">Weighted</p>
         <div class="record">status-weight</div>
         <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
-        <p class="text">Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.</p>
+        <p class="text">Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 1/4 less DMG.</p>
         
           <p class="draw">a gold ring with a green gem, chunks of rock stuck along the shoulders of the band and a few loose pebbles around it</p>
         
@@ -2444,7 +2444,7 @@ kept in hand.</p>
         <p class="name">The Bruise</p>
         <div class="record">bruise</div>
         <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
-        <p class="text">Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.</p>
+        <p class="text">Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 1/4 less DMG.</p>
         
           <p class="draw">an obsidian mace topped with a green glowing blunt rock</p>
         
@@ -2465,7 +2465,7 @@ kept in hand.</p>
         <p class="name">The Strike</p>
         <div class="record">strike</div>
         <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
-        <p class="text">Stab attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.</p>
+        <p class="text">Stab attacks apply SHOCKED status to target. SHOCKED enemies have 1/4 chance to miss.</p>
         
           <p class="draw">a spear made of yellow glass with lightning crackling along the shaft</p>
         
@@ -3054,7 +3054,7 @@ you play. Grows while worn.</p>
         <p class="name">Onslaught</p>
         <div class="record">cost-life-lost</div>
         <p class="price"><span class="rarity rare">rare</span>7 vitae, sells back for 3</p>
-        <p class="text">Every card costs 1 AP less. Lose 25% of your HP.</p>
+        <p class="text">Every card costs 1 AP less. Lose 1/4 of your HP.</p>
         
           <p class="draw">a solid platinum spear with blood staining the handle and not the blade</p>
         
@@ -3309,6 +3309,85 @@ different forms deals 3x DMG.</p>
         </ul>
         
           <p class="art">art: <code>prizes-add</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Lifedrain
+  <span>2 relics &middot; all rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-drain-blow.png" width="228" height="308"
+           alt="Vampiric Fang">
+      <div class="about">
+        <p class="name">Vampiric Fang</p>
+        <div class="record">drain-blow</div>
+        <p class="price"><span class="rarity rare">rare</span>7 vitae, sells back for 3</p>
+        <p class="text">Every blow gives back 3/10 of its DMG as life.</p>
+        
+          <p class="draw">an ivory curved fang capped at the root with gold, hanging on a jade chain</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands → drain-damage &#43;30</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-heal-turn-start.png" width="228" height="308"
+           alt="The Tear">
+      <div class="about">
+        <p class="name">The Tear</p>
+        <div class="record">heal-turn-start</div>
+        <p class="price"><span class="rarity rare">rare</span>7 vitae, sells back for 3</p>
+        <p class="text">Restores 1/4 of max life at the start of your turn.</p>
+        
+          <p class="draw">a jade amulet set with a ruby cut in the shape of a teardrop, on a platinum chain</p>
+        
+        
+        <ul class="rules">
+          <li>when turn-start → heal-share &#43;25</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Luck
+  <span>1 relic &middot; rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-scale-rolls.png" width="228" height="308"
+           alt="The Rabbit&#39;s Foot">
+      <div class="about">
+        <p class="name">The Rabbit&#39;s Foot</p>
+        <div class="record">scale-rolls</div>
+        <p class="price"><span class="rarity rare">rare</span>7 vitae, sells back for 3</p>
+        <p class="text">Doubles the numerator of every roll. Gold and silver pay twice as often. You miss twice as often while SHOCKED.</p>
+        
+          <p class="draw">a snow-white rabbit&#39;s foot capped at the root with bronze, on a bronze necklace</p>
+        
+        
+        <ul class="rules">
+          <li>when fight-start → scale-rolls &#43;200</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>

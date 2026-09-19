@@ -2442,5 +2442,21 @@
     "Screen": "combat",
     "Vitae": 400,
     "Actions": 30
+  },
+  {
+    "ScenarioRecord": "life-relics",
+    "Note": "Two flips that chain and the two life relics, on a real duelist with a readable health bar. The deck is half lightning and half ice; Frozen Lightning is worn left of Meltdown, so a lightning card is dealt ice and then fire - two steps, two beats, a toast on each ring - while a native ice card takes the second step alone. That is combat.FlipSteps carrying a running element through the worn list, and the worn order is what decides it: swap the two rings and lightning stays lightning, because Meltdown reads the card before Frozen Lightning has touched it. Vampiric Fang gives back 3/10 of every blow and The Tear restores 1/4 of maximum life at the top of each turn, so the two life gestures are side by side: a drain leaves the body it was taken out of, a regeneration leaves the ring that made it. It has NO Hand on purpose - a plugged hand is seated straight out of the run and never goes through drawHand, so it would show the cards unflipped and the cascade would not run at all. It is not a dummy for the same kind of reason: 999999 life each way makes both life figures land on a bar that cannot visibly move. The Rabbit's Foot is worn last, so every gold and silver card in the deck reads 2 IN 5 rather than 1 IN 5 on its tooltip and pays that often - and if anything shocks the duelist, their own miss chance reads 1/2 rather than 1/4, which is the drawback the relic is honest about. Round one heals nothing either way, since nothing in the game heals above full.",
+    "Relics": ["flip-lightning-to-ice", "flip-ice-to-fire", "drain-blow", "heal-turn-start", "scale-rolls"],
+    "Enemy": "Basilisk",
+    "RoundLimit": 20,
+    "Deck": [
+      { "Card": "Bash", "Element": "lightning", "Copies": 12 },
+      { "Card": "Smash", "Element": "lightning", "Copies": 8 },
+      { "Card": "Bash", "Element": "ice", "Copies": 8 },
+      { "Card": "Jab", "Element": "ice", "Copies": 4 },
+      { "Card": "Jab", "Element": "ice", "Copies": 4, "Riders": ["golden:5"] },
+      { "Card": "Poke", "Element": "lightning", "Copies": 4, "Riders": ["silver:5"] }
+    ],
+    "Actions": 10
   }
 ]

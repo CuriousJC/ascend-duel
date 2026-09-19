@@ -180,11 +180,11 @@ func TestTheTooltipStatesMultipliersWhenNobodyIsHoldingTheCard(t *testing.T) {
 func TestEveryRiderKindHasTipLines(t *testing.T) {
 	for _, k := range combat.RiderKinds() {
 		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 5})
-		if lines := carddesc.RiderLines(c); len(lines) == 0 {
+		if lines := carddesc.RiderLines(c, 100); len(lines) == 0 {
 			t.Errorf("rider %s adds no line to a card's tooltip", k)
 		}
 	}
-	if lines := carddesc.RiderLines(combat.Plain(combat.Bash)); len(lines) != 0 {
+	if lines := carddesc.RiderLines(combat.Plain(combat.Bash), 100); len(lines) != 0 {
 		t.Errorf("an unridden card claimed an upgrade: %v", lines)
 	}
 }

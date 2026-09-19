@@ -354,7 +354,7 @@ func grantsFor(u systems.Upgrade) string {
 func tipFor(u systems.Upgrade) tip {
 	c := demoRidden(u)
 	out := tip{Title: tipRuns(carddesc.Title(c))}
-	for _, line := range carddesc.Lines(c, c.Cost(), demoDMG, 100) {
+	for _, line := range carddesc.Lines(c, c.Cost(), demoDMG, 100, 100) {
 		out.Lines = append(out.Lines, tipRuns(line))
 	}
 	return out

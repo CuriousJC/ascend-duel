@@ -118,6 +118,11 @@ func playTurn(
 	hands []Hand,
 	src Sources,
 ) ([]Event, Duelist, Duelist) {
+	// **Regeneration is the first thing that happens in a turn**, ahead of the chill, the riders
+	// and both phases — a relic that puts life back does it in time for the turn it is about to
+	// survive rather than after it. See MomentTurnStart and DoHealShare.
+	events, actor = healAtTurnStart(events, side, actor, round)
+
 	events, actor = expireDefenses(events, side, actor, round)
 
 	// A chill comes off the front, which needs no tie-break and so is the only pick that is
@@ -514,6 +519,34 @@ func resolveAttackPhase(
 	// handEvent and Duelist.GrowOnLanding.
 	actor = grown
 
+	// **A drain is taken out of the figure that landed**, so it sits here: after the shield and the
+	// miss, which are the two ways a blow produces no figure at all, and after the damage event, so
+	// the feed reads the hit and then what it gave back. See DoDrainDamage.
+	//
+	// **Nothing drains in resolveSoloAttacks**, and that is the relics-are-the-duelist's rule rather
+	// than an omission: only a duelist wears relics and no duelist attacks solo. The day a creature
+	// wears one, this is the second place it has to land.
+	for _, dr := range actor.drainsFrom(blowCards) {
+		before := actor.CurrentLife
+		actor.CurrentLife = restore(actor.CurrentLife, dmg*dr.Pct/100, actor.MaxLife)
+		// **A drain that restored nothing writes no beat**, exactly as the heal rider's does: a
+		// duelist already at full life has a relic that did not fire, and a flight carrying a zero
+		// out of the ring says it did.
+		if actor.CurrentLife == before {
+			continue
+		}
+
+		events = append(events, Event{
+			Kind:   KindDrained,
+			Side:   side,
+			Target: side,
+			Relic:  dr.Relic,
+			Amount: actor.CurrentLife - before,
+			Life:   actor.CurrentLife,
+			Round:  round,
+		})
+	}
+
 	for _, a := range actor.statusesFrom(blowCards) {
 		applied, amount, ok := applyStatus(target, a.Status, actor)
 		if !ok {
@@ -542,6 +575,35 @@ func resolveAttackPhase(
 	}
 
 	return events, actor, target
+}
+
+// healAtTurnStart is every worn regeneration relic firing, at the top of this duelist's own turn.
+//
+// **It is a whole function rather than four lines inside playTurn** because it is the only thing
+// that happens before the chill, and the order there is the argument — see MomentTurnStart.
+//
+// **A share that restored nothing writes no beat.** A duelist at full life has a relic that did not
+// fire, and a figure leaving the ring carrying a zero would say it did. Same rule as the heal rider
+// and the drain.
+func healAtTurnStart(events []Event, side Side, actor Duelist, round int) ([]Event, Duelist) {
+	for _, h := range actor.healsFrom() {
+		before := actor.CurrentLife
+		actor.CurrentLife = restore(actor.CurrentLife, actor.MaxLife*h.Pct/100, actor.MaxLife)
+		if actor.CurrentLife == before {
+			continue
+		}
+
+		events = append(events, Event{
+			Kind:   KindRegenerated,
+			Side:   side,
+			Target: side,
+			Relic:  h.Relic,
+			Amount: actor.CurrentLife - before,
+			Life:   actor.CurrentLife,
+			Round:  round,
+		})
+	}
+	return events, actor
 }
 
 // blockedByShield spends one of the target's shields against one incoming attack, and reports
@@ -945,7 +1007,7 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 		// would be a bonus that evaporated at the round boundary, or one the player could not use
 		// until the next fight.
 		if odds := slot.Card.GoldenOdds(); odds > 0 {
-			dmg, life := rollGolden(odds, luck)
+			dmg, life := rollGolden(odds, actor.rollScale(), luck)
 			if dmg > 0 {
 				actor.DMG += dmg
 				events = append(events, Event{
@@ -985,7 +1047,7 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 		// **Silver needs no grant event**, because vitae already has a way out of a resolved round:
 		// the purse the duel closes with, less the one it opened with. See KindVitae.
 		if odds := slot.Card.SilverOdds(); odds > 0 {
-			if paid := rollSilver(odds, luck); paid > 0 {
+			if paid := rollSilver(odds, actor.rollScale(), luck); paid > 0 {
 				actor.Vitae += paid
 				events = append(events, Event{
 					Kind:    KindVitae,

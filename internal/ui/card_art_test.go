@@ -722,7 +722,7 @@ func TestAMetalStillExplainsItselfInTheTooltip(t *testing.T) {
 		{combat.RiderSilver, carddesc.Silver},
 	} {
 		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: metal.kind, Amount: 5})
-		lines := carddesc.RiderLines(c)
+		lines := carddesc.RiderLines(c, 100)
 		if len(lines) < 2 {
 			t.Errorf("%s says %d lines, and the name alone is not an explanation", metal.kind, len(lines))
 			continue
@@ -750,7 +750,7 @@ func TestAMetalsNameIsLitInTheTooltip(t *testing.T) {
 		{combat.RiderSilver, carddesc.Silver},
 	} {
 		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: metal.kind, Amount: 5})
-		spans := TipLine(carddesc.RiderLines(c)[0])
+		spans := TipLine(carddesc.RiderLines(c, 100)[0])
 
 		lit := ""
 		for _, span := range spans {

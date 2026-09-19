@@ -147,7 +147,11 @@ func cardWords(c combat.Card) string {
 	if c.Form() != c.Spec().Form && c.Form() != combat.FormNone {
 		notes = append(notes, strings.ToLower(ui.AttackVerb(c.Form())))
 	}
-	for _, line := range carddesc.RiderLines(c) {
+	// **The bare odds, not the odds under what is worn** *(2026-09-18)*. This line is written once
+	// and read back fights later, so a relic-scaled figure would be the chance that applied on the
+	// day rather than what the card is — the same reason a ledger span stores an ink *name* and not
+	// a color. See carddesc.Odds.
+	for _, line := range carddesc.RiderLines(c, 100) {
 		notes = append(notes, strings.ToLower(line))
 	}
 	if len(notes) > 0 {

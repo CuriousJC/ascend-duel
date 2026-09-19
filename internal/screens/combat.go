@@ -70,20 +70,22 @@ const defeatButtonLabel = "END RUN"
 // drawn; these decide only how long the player looks at each part of it. Same constraint as the
 // debug flags and every card in flight.
 var eventDwells = map[combat.EventKind]float64{
-	combat.KindRoundStart: 1,
-	combat.KindAction:     1,
-	combat.KindRaised:     1,
-	combat.KindBlocked:    1,
-	combat.KindExpired:    1,
-	combat.KindDamage:     1,
-	combat.KindDefeated:   1,
-	combat.KindHand:       1,
-	combat.KindChilled:    1,
-	combat.KindStatus:     1,
-	combat.KindMissed:     1,
-	combat.KindBurned:     1,
-	combat.KindHealed:     1,
-	combat.KindVitae:      1,
+	combat.KindRoundStart:  1,
+	combat.KindAction:      1,
+	combat.KindRaised:      1,
+	combat.KindBlocked:     1,
+	combat.KindExpired:     1,
+	combat.KindDamage:      1,
+	combat.KindDefeated:    1,
+	combat.KindHand:        1,
+	combat.KindChilled:     1,
+	combat.KindStatus:      1,
+	combat.KindMissed:      1,
+	combat.KindBurned:      1,
+	combat.KindHealed:      1,
+	combat.KindDrained:     1,
+	combat.KindRegenerated: 1,
+	combat.KindVitae:       1,
 	// **Two beats, because a permanent bonus is the rarest thing that happens on this screen.**
 	// Everything else in a round is spent by the end of it; this one follows the player up the
 	// tower, and a grant that went past on the same beat as a shield pip would be the least
@@ -1287,6 +1289,12 @@ func eventLabel(e combat.Event) string {
 	case combat.KindHealed:
 		return fmt.Sprintf("healed      %v restores %d from %v, leaving %d",
 			e.Side, e.Amount, combat.ConceptOf(e.Action).Label, e.Life)
+	case combat.KindDrained:
+		return fmt.Sprintf("drained     %v takes %d back on %v, leaving %d",
+			e.Side, e.Amount, combat.RelicOf(e.Relic).Name, e.Life)
+	case combat.KindRegenerated:
+		return fmt.Sprintf("regrown     %v gains %d from %v, standing at %d",
+			e.Side, e.Amount, combat.RelicOf(e.Relic).Name, e.Life)
 	case combat.KindRaised:
 		return fmt.Sprintf("raised      %v puts up %d from %v, standing at %d", e.Side, e.Amount, combat.ConceptOf(e.Action).Label, e.Life)
 	case combat.KindBlocked:
@@ -1600,7 +1608,12 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// **The clock empties a bar the same way**, and for the same reason a burn does: nobody acted,
 	// so nothing else on this screen would ever move that life. A duelist timed out with a full
 	// bar would fall looking untouched until the end-of-round adoption caught up.
-	if e.Kind != combat.KindDamage && e.Kind != combat.KindBurned && e.Kind != combat.KindTimeUp {
+	// **A drain moves a life total with nobody being hit**, so it joins the three above rather
+	// than being a consequence of a card: it is the one event that puts life *back*, and without
+	// it here the drainer's bar would not move until the round was adopted — which is the rise
+	// arriving several beats after the reason for it. See combat_drain.go.
+	if e.Kind != combat.KindDamage && e.Kind != combat.KindBurned && e.Kind != combat.KindTimeUp &&
+		e.Kind != combat.KindDrained && e.Kind != combat.KindRegenerated {
 		return
 	}
 
@@ -1626,6 +1639,11 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// it has its own source, the badge it ticks off, and its own row in the theater table.
 	if e.Kind == combat.KindDamage {
 		s.noteHit(e, before)
+	}
+	// **A drain's figure sets off from the card it was taken out of**, so it is raised the same
+	// way and for the same reason: the bar it fills waits on it through shownLife.
+	if e.Kind == combat.KindDrained || e.Kind == combat.KindRegenerated {
+		s.noteDrain(e, before)
 	}
 }
 
@@ -1753,6 +1771,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// They are drawn after the dialog because a figure leaving the sum has to be on top of it —
 	// underneath, the first frames of the flight would be hidden by the number it left.
 	s.drawHits(gs, screen)
+
+	// **After the hits, because a drain is a share of one.** The two are never up together — the
+	// cursor waits for the blow's figure before the drain's event is reached — so the order here
+	// is about reading the file rather than about overlap. See combat_drain.go.
+	s.drawDrains(gs, screen)
 	// The pips, over the cards they are crossing and under the dialogs. See combat_shields.go.
 	s.drawShields(gs, screen)
 

@@ -147,7 +147,7 @@ light is that hue lightened, the contour is near-black. Shade it as richly as th
 inside that — this is a limit on the *hue*, not on the number of tones.
 
 **Every lit part is the badge's own hue made lighter — never a warm color, and never gold.** A blue
-badge is lit in a paler blue; a violet badge is lit in a paler violet. No second hue anywhere: no
+badge is lit in a paler blue; a purple badge is lit in a paler purple. No second hue anywhere: no
 metal rim, no silver edge, no gold trim, no complementary rim light, no colored bounce. **And no
 near-white hot spot**, which is the one thing that would break the number sitting on it. The
 numeral is the one exception to the single-hue rule: it is near-white or near-black, whichever can
@@ -166,13 +166,19 @@ everything else.**
 
 Five hues, and the hue is the only thing that changes. **Match these exactly.**
 
-| Name | Hex |
-|---|---|
-| `fire` | `#F06A24` orange |
-| `ice` | `#4E9ED6` blue |
-| `lightning` | `#F2D13D` yellow |
-| `earth` | `#4E9B57` green |
-| `arcane` | `#8A5BC7` violet |
+| Name | Word | dark | core | light |
+|---|---|---|---|---|
+| `fire` | orange | `#9E2F13` | `#F06A24` | `#FFB24A` |
+| `ice` | blue | `#245A86` | `#4E9ED6` | `#A8DDF4` |
+| `lightning` | yellow | `#A98200` | `#F2D13D` | `#FFF38A` |
+| `earth` | green | `#285E35` | `#4E9B57` | `#8BCB78` |
+| `arcane` | purple | `#4C2A78` | `#8A5BC7` | `#C8A4F2` |
+
+**`core` is the hue to match**, and the element name and the color word are the same instruction —
+`arcane` and "purple" both mean that row. `light` is the faces turned toward the light and the top
+of the specular ramp; `dark` is the faces turned away and the color the shadow settles into, above
+the near-black contour. **Stay inside the ramp**: anything between `dark` and `light` is in range,
+anything outside it is a different color.
 
 **And a sixth in neutral gray**: mid-gray body, lighter gray toward the upper-left edge, darker
 gray toward the lower-right, the same near-black contour. **No hue at all** — not a warm gray, not

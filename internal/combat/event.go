@@ -355,6 +355,33 @@ type Event struct {
 	// interesting. That is the reason this is a field rather than a reading of two others.
 	HandCardBase [maxHandTerms]int
 
+	// HandCardPct[i] is the percentage term i applied to HandDMG — the card's own multiplier, with
+	// an echo's fraction already taken off it. 300 is a 3x card; 200 is that card's second landing
+	// under one echo.
+	//
+	// **It is here so the sum can be written the way the game works it out** *(owner's call,
+	// 2026-09-19)*: `(12 x 3) x 1 = 36` rather than `36`. A term was the card's landed figure and
+	// nothing else, so the DMG the whole hand swings at — the one number a relic raises — was
+	// arithmetic the player could see the answer to and never the working. The screen prints
+	// HandDMG and this beside it; **neither is what the blow deals**, which is still HandAmounts.
+	//
+	// **A screen may not divide HandCardBase by HandDMG to get it back**, for HandCardBase's own
+	// reason: an echo fraction is taken off the damage rather than off the percentage, so the two
+	// roundings need not agree. Where they disagree the working is written the flat way — see
+	// ui.TermSplit, which is the one place that comparison is made.
+	HandCardPct [maxHandTerms]int
+
+	// HandDMG is the DMG every term of this blow was swung at, and HandDMGBare is what that figure
+	// would have been with no rung relic worn.
+	//
+	// **The difference between them is what a rung relic actually put into the blow**, which is not
+	// HandBonus: the riders scale DMG after the raise is folded in, so a +2 under a held rider is
+	// worth more than 2. A screen showing the duelist's figure climbing shows this difference.
+	//
+	// Both are the whole blow's, not a term's — one duelist swings one hand at one DMG.
+	HandDMG     int
+	HandDMGBare int
+
 	// EchoTerms is how many of those terms are echoes rather than cards — the tail of the list.
 	// Zero on almost every blow. It is here so a screen can say *why* one card paid three terms
 	// without re-deriving the relic that did it.
@@ -504,4 +531,41 @@ func (e Event) GrownAt(term, seat int) int {
 		return 0
 	}
 	return row[seat]
+}
+
+// TermSplit is one term of a blow written the way the game worked it out: the DMG the hand was
+// swung at, and the percentage this card applied to it. It reports false when the two do not come
+// to the term's own figure, and a caller that gets false writes the flat figure instead.
+//
+// **It exists so that no screen divides one field of this event by another.** Every reading of a
+// term's working goes through here — the hand dialog and the run's account are two drawings of one
+// event, and a split each of them derived would be two drawings of two.
+//
+// **False is reachable and is not a bug.** An echo takes its fraction off the damage while
+// HandCardPct takes the same fraction off the percentage, so the two roundings can land a point
+// apart; a card whose damage hit CardDamage's floor of 1 is the other case. The working is written
+// without the split there rather than printing a product that is not the term.
+func (e Event) TermSplit(term int) (dmg, pct int, ok bool) {
+	if term < 0 || term >= len(e.HandCardPct) {
+		return 0, 0, false
+	}
+	dmg, pct = e.HandDMG, e.HandCardPct[term]
+	if dmg <= 0 || pct <= 0 {
+		return 0, 0, false
+	}
+	if scaleDamage(dmg, pct) != e.HandCardBase[term] {
+		return 0, 0, false
+	}
+	return dmg, pct, true
+}
+
+// DMGRaise is what a rung relic put into the DMG this blow was swung at — the climb the duelist's
+// own figure makes, which is what a screen animates. Zero when nothing raised it.
+//
+// **Not HandBonus**, which is the relic's raw figure before the riders scaled it. See HandDMG.
+func (e Event) DMGRaise() int {
+	if e.HandBonus == 0 {
+		return 0
+	}
+	return e.HandDMG - e.HandDMGBare
 }

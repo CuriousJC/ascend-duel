@@ -1679,3 +1679,62 @@ func TestResolvingARoundDoesNotGrowTheCallersRelics(t *testing.T) {
 		t.Error("the second round grew nothing, so the first one wrote through after all")
 	}
 }
+
+// **Every term of a resolved blow can be written as the product it was worked out as**: the DMG the
+// hand swung at, times the card's own multiplier. That is what the hand dialog and the run's
+// account both print, and the one thing that would make either of them lie is this event not
+// carrying the two figures.
+func TestATermSplitsIntoTheDMGAndTheCardsMultiplier(t *testing.T) {
+	card := cardOfAmount(t, 300)
+	log, _, _ := resolve(duelist(10, 5, 100), duelist(10, 5, 100000), []Card{card, card}, nil, 1)
+	e := handEventOf(t, log, SideA)
+
+	if e.HandDMG != 10 {
+		t.Errorf("the blow was swung at %d DMG, want the duelist's 10", e.HandDMG)
+	}
+	for i := 0; i < e.HandCardCount; i++ {
+		dmg, pct, ok := e.TermSplit(i)
+		if !ok {
+			t.Fatalf("term %d does not split, so the sum cannot be written as a product", i)
+		}
+		if dmg != 10 || pct != 300 {
+			t.Errorf("term %d reads %d x %d%%, want 10 x 300%%", i, dmg, pct)
+		}
+	}
+}
+
+// **The climb the duelist's figure makes is what the relic was worth to this blow**, which is the
+// figure the screen flies onto the card. With no relic there is no climb at all.
+func TestARungRelicRaisesTheDMGTheBlowIsSwungAt(t *testing.T) {
+	trips, _ := HandIDForKey("concept-three-of-a-kind")
+	forged := relic(t, "raises-dmg", RelicRule{
+		When: MomentBlowFormed,
+		If:   RelicCondition{Hands: []HandID{trips}},
+		Then: []RelicEffect{{Do: DoAddHandDMG, Amount: 2}},
+	})
+
+	card := cardOfAmount(t, 300)
+	cards := []Card{card, card, card}
+
+	bare, _, _ := resolve(duelist(10, 5, 100), duelist(10, 5, 100000), cards, nil, 1)
+	worn, _, _ := resolve(duelist(10, 5, 100).Wearing(WornRelic{Relic: forged}),
+		duelist(10, 5, 100000), cards, nil, 1)
+
+	if got := handEventOf(t, bare, SideA).DMGRaise(); got != 0 {
+		t.Errorf("a duelist wearing nothing climbed %d, want 0", got)
+	}
+
+	e := handEventOf(t, worn, SideA)
+	if got := e.DMGRaise(); got != 2 {
+		t.Errorf("the relic raised the blow's DMG by %d, want 2", got)
+	}
+	if e.HandDMG != 12 || e.HandDMGBare != 10 {
+		t.Errorf("the blow was swung at %d from %d, want 12 from 10", e.HandDMG, e.HandDMGBare)
+	}
+
+	// And the split follows the raise, so the sum reads `(12 x 3)` rather than `(10 x 3)`.
+	dmg, pct, ok := e.TermSplit(0)
+	if !ok || dmg != 12 || pct != 300 {
+		t.Errorf("the first term reads %d x %d%% (ok %v), want 12 x 300%%", dmg, pct, ok)
+	}
+}

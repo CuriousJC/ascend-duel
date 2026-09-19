@@ -156,6 +156,13 @@ const (
 	// signalLife is the health bar. Two riders land here — a heal and gold's life face — and they
 	// are told apart by their color rather than by where they go.
 	signalLife
+
+	// signalRaise is the DMG row again, for a figure that is **true for one blow rather than for
+	// the rest of the run** *(owner's call, 2026-09-19)*: a rung relic raising the DMG the hand is
+	// swung at. It is its own destination rather than a signalDMG with a shorter life, because the
+	// two are cleared by different things — a grant stands until the round is adopted, and this
+	// stands until the sum it belongs to is over. See combatTheater.clearRaise.
+	signalRaise
 )
 
 // cardSignal is one rider's firing, on its way from the card that fired it to the figure it moved.
@@ -174,6 +181,10 @@ type cardSignal struct {
 	// signalOrigin.
 	seat int
 	held bool
+
+	// relic is the worn seat this signal came out of, plus one, and 0 for a signal thrown by a
+	// card. **Plus one so the zero value is a card's**, the convention mathItem.relicSeat is under.
+	relic int
 
 	t ui.Travel
 }
@@ -198,6 +209,10 @@ type signalShown struct {
 	life    int
 	maxLife int
 	vitae   int
+
+	// raise is DMG that is true for the length of one blow — a rung relic's — and is dropped when
+	// the sum ends rather than when the round is adopted. See signalRaise.
+	raise int
 }
 
 // riderDrawing is one rider's account of itself: whether firing it reaches the event log at all,
@@ -419,6 +434,8 @@ func (t *combatTheater) land(c cardSignal) {
 		if c.rider == combat.RiderGolden {
 			sh.maxLife += c.amount
 		}
+	case signalRaise:
+		sh.raise += c.amount
 	}
 }
 
@@ -429,7 +446,17 @@ func (t *combatTheater) adopted() { t.shown = [2]signalShown{} }
 // shownDMG, shownMaxLife and shownVitae are the figures a fighter card draws, which are not always
 // the figures the model holds. See signalShown, and shownLife, which is the same idea for the bar.
 func (s *CombatScene) shownDMG(side combat.Side, actual int) int {
-	return actual + s.Theater.shownFor(side).dmg
+	sh := s.Theater.shownFor(side)
+	return actual + sh.dmg + sh.raise
+}
+
+// clearRaise drops the blow-length raise, on the frame the sum that earned it comes down. **Not
+// adopted()**, which is the round's: a relic that raised one blow's DMG would otherwise leave the
+// duelist card reading a figure it does not have while the creature swings back.
+func (t *combatTheater) clearRaise() {
+	for i := range t.shown {
+		t.shown[i].raise = 0
+	}
 }
 
 func (s *CombatScene) shownMaxLife(side combat.Side, actual int) int {
@@ -466,7 +493,14 @@ func (t *combatTheater) shownFor(side combat.Side) signalShown {
 // being said there is *the metal came up*, and the metal is what the card is; the row it lands on
 // is already crimson and does not need the figure to agree with it. The vitae card has no metal to
 // be, which is exactly why it takes the currency's color instead.
-func signalInk(rider combat.RiderKind) color.RGBA {
+func signalInk(c cardSignal) color.RGBA {
+	// **A relic's own figure is pink**, which is what pink means everywhere else on this screen.
+	// It has no rider to take a color from — a relic is not a card — and `ui.BoostInk` is the same
+	// ink its multiplier wears inside the sum a moment later.
+	if c.relic > 0 {
+		return ui.BoostInk
+	}
+	rider := c.rider
 	if rider == combat.RiderVitaeInHand {
 		return ui.VitaeInk
 	}
@@ -483,8 +517,8 @@ func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
 		if !ok {
 			continue
 		}
-		ink := signalInk(c.rider)
-		drawBurst(screen, from, c, ink)
+		ink := signalInk(c)
+		drawBurst(screen, from, c.t.Age, burstSeed(c), ink)
 
 		to := s.signalTarget(gs, c)
 		p := ui.EaseOut(ui.Clamp01(float64(c.t.Age) / float64(signalFlyTicks())))
@@ -505,11 +539,15 @@ func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
 // carries the density — a single relic of fifteen is legible as fifteen lines, where two relics at
 // different lengths read as a scatter — and the core is the one place they are all still touching,
 // which is what makes them one object instead of twenty-six.
-func drawBurst(screen *ebiten.Image, at image.Point, c cardSignal, ink color.RGBA) {
-	if c.t.Age >= signalBurstTicks() {
+// **It takes an age and a seed rather than the signal itself** *(2026-09-19)*, so the one burst in
+// the game can be thrown by something that is not a cardSignal: a relic's figure leaving its ring
+// for the sum does exactly what a rider's figure leaving its card does, and two drawings of one
+// gesture would drift the first time either was tuned.
+func drawBurst(screen *ebiten.Image, at image.Point, age int, seed uint32, ink color.RGBA) {
+	if age >= signalBurstTicks() {
 		return
 	}
-	p := ui.EaseOut(ui.Clamp01(float64(c.t.Age) / float64(signalBurstTicks())))
+	p := ui.EaseOut(ui.Clamp01(float64(age) / float64(signalBurstTicks())))
 	fade := 1 - p*p
 
 	x, y := float32(at.X), float32(at.Y)
@@ -517,12 +555,12 @@ func drawBurst(screen *ebiten.Image, at image.Point, c cardSignal, ink color.RGB
 
 	arm := ink
 	arm.A = uint8(255 * fade)
-	drawSparkRelic(screen, x, y, inner, signalRayLen, signalRayWidth, p, arm, burstRays(c, 0))
+	drawSparkRelic(screen, x, y, inner, signalRayLen, signalRayWidth, p, arm, burstRays(seed, 0))
 
 	// The inner relic is offset half a step so its arms sit between the long ones rather than under
 	// them, and it is thinner: it is the shower, not the reach.
 	drawSparkRelic(screen, x, y, inner*0.7, signalSparkLen, signalRayWidth*0.6, p, arm,
-		burstRays(c, 1))
+		burstRays(seed, 1))
 
 	// **The core is the ink lifted a little toward white**, not white itself — a saturated color
 	// has nowhere to climb by scaling, the same reason `BevelEdges` derives its light edge with
@@ -562,13 +600,13 @@ func drawSparkRelic(screen *ebiten.Image, x, y float32, inner, reach, width floa
 //
 // **The spread is wide on purpose.** Arms of nearly one length are a circle with a fringe; arms
 // between two fifths and full reach are an explosion.
-func burstRays(c cardSignal, relic int) []float64 {
+func burstRays(seed uint32, relic int) []float64 {
 	n := signalRays
 	if relic > 0 {
 		n = signalSparks
 	}
 	out := make([]float64, n)
-	h := uint32(int(c.rider)*2654435761) ^ uint32(c.seat*40503+7) ^ uint32(relic*2246822519)
+	h := seed ^ uint32(relic*2246822519)
 	for i := range out {
 		h ^= h << 13
 		h ^= h >> 17
@@ -579,6 +617,13 @@ func burstRays(c cardSignal, relic int) []float64 {
 }
 
 // signalAlpha fades the figure over its hold, the same shape hitAlpha has.
+// burstSeed is what makes one signal's arms a different scatter from the next one's, derived from
+// what threw it and where it came from. **Derived rather than rolled**, the exception the
+// randomness skill records: a burst interrupted and redrawn is the same burst.
+func burstSeed(c cardSignal) uint32 {
+	return uint32(int(c.rider)*2654435761) ^ uint32(c.seat*40503+7)
+}
+
 func signalAlpha(c cardSignal) float32 {
 	if !c.arrived() {
 		return 1
@@ -593,6 +638,11 @@ func signalAlpha(c cardSignal) float32 {
 // user — the row was in the anchor enum from the start with nothing pointing at it, waiting for the
 // first thing that happened to the *hand* rather than to a duelist.
 func (s *CombatScene) signalOrigin(gs *state.GlobalState, c cardSignal) (image.Point, bool) {
+	// **A relic's figure leaves the relic**, like every other figure on this screen leaves the
+	// thing that produced it. See relicCardCenter, which is the worn row's own geometry.
+	if c.relic > 0 {
+		return s.relicCardCenter(gs, c.relic-1), true
+	}
 	if c.held {
 		if c.seat < 0 || c.seat >= len(s.hand) {
 			r := handBand(gs, s.laidOutCount())

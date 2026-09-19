@@ -365,7 +365,7 @@ func TestTheScriptAnnotatesEveryRelicThatFired(t *testing.T) {
 	e.HandRelicScale[1] = []int{200, 110}
 
 	got := scriptText(mathScript(e))
-	if want := "40 2x 1x + 44 2x 1.1x x 1.5 = 126"; got != want {
+	if want := "40 x 2 x 1 + 44 x 2 x 1.1 x 1.5 = 126"; got != want {
 		t.Errorf("the script reads %q, want %q", got, want)
 	}
 }
@@ -392,7 +392,7 @@ func TestARelicFiringAtTheIdentityStillSaysSo(t *testing.T) {
 	e.HandRelicScale[1] = []int{100}
 
 	got := scriptText(mathScript(e))
-	if want := "20 1x + 20 1x x 1.5 = 60"; got != want {
+	if want := "20 x 1 + 20 x 1 x 1.5 = 60"; got != want {
 		t.Errorf("the script reads %q, want %q", got, want)
 	}
 }
@@ -458,7 +458,7 @@ func TestTheRelicFiguresFollowTheirOwnTerm(t *testing.T) {
 	e.HandRelicScale[1] = []int{210}
 
 	got := scriptText(mathScript(e))
-	if want := "20 2x + 22 2.1x x 1.5 = 63"; got != want {
+	if want := "20 x 2 + 22 x 2.1 x 1.5 = 63"; got != want {
 		t.Errorf("the script reads %q, want %q", got, want)
 	}
 }
@@ -492,5 +492,148 @@ func TestEachItemNamesWhatShakesWithIt(t *testing.T) {
 	}
 	if len(relics) != 1 || relics[0] != 1 {
 		t.Errorf("the relic figures name seats %v, want just seat 1", relics)
+	}
+}
+
+// splitEvent is a blow whose terms can be written as the product the game worked out: one DMG, and
+// a percentage per card. `pcts` are the cards' own multipliers, 300 being a 3x card.
+func splitEvent(hand string, dmg int, pcts []int, multiplier, total int) combat.Event {
+	amounts := make([]int, len(pcts))
+	for i, pct := range pcts {
+		amounts[i] = dmg * pct / 100
+	}
+	e := handEvent(hand, amounts, multiplier, total)
+	e.HandDMG, e.HandDMGBare = dmg, dmg
+	for i, pct := range pcts {
+		e.HandCardPct[i] = pct
+		e.HandCardBase[i] = amounts[i]
+	}
+	return e
+}
+
+// **A term is the product, not its answer** *(owner's call, 2026-09-19)*. The DMG the hand swings
+// at is the one figure a rung relic moves, and a line that printed only what each card came to
+// showed the player the answer to a sum it never showed them.
+func TestATermIsWrittenAsDMGTimesTheCardsMultiplier(t *testing.T) {
+	got := scriptText(mathScript(splitEvent("no-hand", 12, []int{300}, 100, 36)))
+	if want := "( 12 x 3 ) x 1 = 36"; got != want {
+		t.Errorf("a 3x card on 12 DMG reads %q, want %q", got, want)
+	}
+}
+
+// Every card of a hand takes its own multiple of the same DMG, which is what the brackets say.
+func TestEveryTermSwingsAtTheSameDMG(t *testing.T) {
+	got := scriptText(mathScript(splitEvent("pair", 12, []int{300, 100}, 100, 48)))
+	if want := "( 12 x 3 ) + ( 12 x 1 ) x 1 = 48"; got != want {
+		t.Errorf("a Pair reads %q, want %q", got, want)
+	}
+}
+
+// **A relic is a factor inside the bracket**, where it used to be a label beside the figure it had
+// already been folded into. The product on the line is the one the resolver did.
+func TestARelicIsAFactorInsideTheTerm(t *testing.T) {
+	e := splitEvent("no-hand", 12, []int{300}, 100, 72)
+	e.HandRelicScale[0] = []int{200}
+
+	got := scriptText(mathScript(e))
+	if want := "( 12 x 3 x 2 ) x 1 = 72"; got != want {
+		t.Errorf("a doubling relic reads %q, want %q", got, want)
+	}
+}
+
+// **A term whose split does not come to the term is written flat**, which is the whole of what
+// combat.Event.TermSplit's false return buys: an echo takes its fraction off the damage and the
+// percentage separately, and a bracket coming to the wrong number is worse than a bare figure.
+func TestATermThatDoesNotSplitIsWrittenFlat(t *testing.T) {
+	e := splitEvent("no-hand", 12, []int{300}, 100, 36)
+	e.HandCardBase[0] = 35 // what an echo's rounding looks like from here
+
+	got := scriptText(mathScript(e))
+	if want := "36 x 1 = 36"; got != want {
+		t.Errorf("a term that does not split reads %q, want %q", got, want)
+	}
+}
+
+// **The DMG figure flies out of the duelist and the card's multiplier out of the card.** Every
+// figure in this box leaves the thing that produced it, and the duelist is what produced the DMG.
+func TestTheDMGFigureBelongsToTheDuelist(t *testing.T) {
+	items := mathScript(splitEvent("pair", 12, []int{300, 100}, 100, 48))
+
+	var duelist, card int
+	for _, it := range items {
+		if !it.fly {
+			continue
+		}
+		if it.fromDuelist {
+			duelist++
+			if it.text != "12" {
+				t.Errorf("the duelist's figure reads %q, want the DMG", it.text)
+			}
+			continue
+		}
+		card++
+	}
+	if duelist != 2 {
+		t.Errorf("%d figures came off the duelist, want one per term", duelist)
+	}
+	// Two cards and the hand's own multiplier.
+	if card != 3 {
+		t.Errorf("%d figures came off the table, want the two cards and the multiplier", card)
+	}
+}
+
+// **The line has three levels and the air says which is which** *(owner's call, 2026-09-19)*: a
+// product inside a term is set close, the terms are set apart by the sum's own gap, and the
+// multiplier that applies to all of them is set further apart again. At one gap throughout, the
+// `x` inside a term and the `x` multiplying the finished sum read as the same operation.
+func TestTheSumIsSetInThreeLevelsOfAir(t *testing.T) {
+	items := mathScript(splitEvent("pair", 12, []int{300, 200}, 100, 60))
+
+	at := func(text string, nth int) int {
+		for i, it := range items {
+			if it.text == text {
+				if nth == 0 {
+					return i
+				}
+				nth--
+			}
+		}
+		t.Fatalf("the script has no %q at that count: %q", text, scriptText(items))
+		return 0
+	}
+
+	// Inside the first bracket: the parens hug their figures and the `x` binds tight.
+	if got := gapBefore(items, at("12", 0)); got != mathHugGap {
+		t.Errorf("a bracket stands %v off its figure, want the hug %v", got, mathHugGap)
+	}
+	if got := gapBefore(items, at("3", 0)); got != mathTightGap {
+		t.Errorf("a card's multiplier is set %v off the DMG, want the tight %v", got, mathTightGap)
+	}
+
+	// Between the terms: the sum's own gap, on the `+`.
+	if got := gapBefore(items, at("+", 0)); got != mathItemGap {
+		t.Errorf("the terms are %v apart, want the sum's own %v", got, mathItemGap)
+	}
+
+	// The hand's multiplier and the answer: apart from everything to their left. **The last `x` in
+	// the script**, which is the one that multiplies the finished sum.
+	last := 0
+	for i, it := range items {
+		if it.text == "x" {
+			last = i
+		}
+	}
+	if got := gapBefore(items, last); got != mathWideGap {
+		t.Errorf("the hand's multiplier is set %v off the terms, want the wide %v", got, mathWideGap)
+	}
+	if got := gapBefore(items, at("=", 0)); got != mathWideGap {
+		t.Errorf("the answer is set %v off the sum, want the wide %v", got, mathWideGap)
+	}
+
+	// And the three are actually three. A tuning pass that collapsed any pair would pass every
+	// assertion above and lose the thing they are for.
+	if !(mathTightGap < mathItemGap && mathItemGap < mathWideGap) {
+		t.Errorf("the three gaps are %v, %v, %v — they have to be three widths in that order",
+			mathTightGap, mathItemGap, mathWideGap)
 	}
 }

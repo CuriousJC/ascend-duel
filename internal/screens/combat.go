@@ -1248,6 +1248,8 @@ func (s *CombatScene) startRound() {
 	// above is already resolved. See combat_table.go.
 	s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
 	s.Theater.mathBox.Clear()
+	// **The blow-length raise comes down with the sum that used it.** See signalRaise.
+	s.Theater.clearRaise()
 	s.seatPlayedCards()
 
 	// The whole round, not a count of it. ResolveRound already decided every one of these
@@ -1436,6 +1438,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// strike-through arrives that event will want this same handoff, so keep them together.
 	if s.Theater.mathBox.active && !s.Theater.mathBox.Running() {
 		s.Theater.mathBox.Clear()
+		// **The blow-length raise comes down with the sum that used it.** See signalRaise.
+		s.Theater.clearRaise()
 
 		// **Anything the sum never claimed fires now.** A card can be played and earn no term — a
 		// lone Brace beside a pair, a third element in a two-card hand — so it has no beat in the

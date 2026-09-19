@@ -206,18 +206,30 @@ func HandMathSpans(e combat.Event, played []combat.Card) []session.LedgerSpan {
 			ink = ElementInk(played[idx].Element)
 		}
 
-		base, scales := TermBase(e, i), relicFactors(e, i)
+		scales := relicFactors(e, i)
+
+		// **The term is the product the game worked out, not its answer** *(owner's call,
+		// 2026-09-19)*: the DMG the hand was swung at, times this card's own multiplier, times
+		// whatever a relic priced it at. The hand dialog draws the same bracket on the same
+		// figures — see screens.termItems — and this is the reading of it that keeps.
+		if dmg, pct, ok := e.TermSplit(i); ok {
+			spans = append(spans, session.LedgerSpan{Text: "(" + strconv.Itoa(dmg)})
+			spans = append(spans, session.LedgerSpan{Text: " x " + HandMultiplierText(pct), Ink: ink})
+			spans = append(spans, relicFactorSpans(scales)...)
+			spans = append(spans, session.LedgerSpan{Text: ")"})
+			continue
+		}
+
+		// **The flat form is for the term the split cannot describe** — an echo's rounding, or a
+		// card that hit the damage floor. See combat.Event.TermSplit.
+		base := TermBase(e, i)
 		if len(scales) == 0 {
 			spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(base), Ink: ink})
 			continue
 		}
 
 		spans = append(spans, session.LedgerSpan{Text: "(" + strconv.Itoa(base), Ink: ink})
-		for _, pct := range scales {
-			spans = append(spans, session.LedgerSpan{
-				Text: " x " + HandMultiplierText(pct), Ink: session.InkRelic,
-			})
-		}
+		spans = append(spans, relicFactorSpans(scales)...)
 		spans = append(spans, session.LedgerSpan{Text: ")", Ink: ink})
 	}
 
@@ -264,6 +276,18 @@ func HandMathSpans(e combat.Event, played []combat.Card) []session.LedgerSpan {
 		session.LedgerSpan{Text: strconv.Itoa(e.Amount), Ink: session.InkTotal},
 	)
 	return spans
+}
+
+// relicFactorSpans writes those multipliers as factors inside a term's bracket, in the relic pink
+// the rest of the panel gives a relic's own figure.
+func relicFactorSpans(scales []int) []session.LedgerSpan {
+	out := make([]session.LedgerSpan, 0, len(scales))
+	for _, pct := range scales {
+		out = append(out, session.LedgerSpan{
+			Text: " x " + HandMultiplierText(pct), Ink: session.InkRelic,
+		})
+	}
+	return out
 }
 
 // relicFactors is every relic multiplier that priced one term, in worn order — which is firing order.

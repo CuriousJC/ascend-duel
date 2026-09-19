@@ -43,6 +43,42 @@ particles, sparks, smoke, motion lines, and clutter of any kind.
 Priority order: readable silhouette -> recognizable object -> material shading -> coherent color
 scheme -> subtle background texture.
 
+## The color words
+
+**A color word in the brief names one of these ramps.** "A purple orb" is an orb in arcane;
+"an ivory haft" is a haft in the stab material. These are the game's own colors and the picture has
+to sit beside cards drawn in them, so the word means this range here rather than whatever the
+generator would otherwise reach for.
+
+| Word | Ramp | dark | core | light |
+|---|---|---|---|---|
+| orange | fire | `#9E2F13` | `#F06A24` | `#FFB24A` |
+| yellow | lightning | `#A98200` | `#F2D13D` | `#FFF38A` |
+| green | earth | `#285E35` | `#4E9B57` | `#8BCB78` |
+| blue | ice | `#245A86` | `#4E9ED6` | `#A8DDF4` |
+| purple | arcane | `#4C2A78` | `#8A5BC7` | `#C8A4F2` |
+| cream, ivory | ivory | `#9B8B68` | `#DCCFAE` | `#FFF3D2` |
+| cool gray, steel | steel | `#59636B` | `#9DA8B0` | `#D8DEE2` |
+| dark gray, granite | granite | `#3C3E41` | `#6B6D70` | `#A1A3A6` |
+
+The element name and the color word are the same instruction — `arcane` and "purple" both mean
+that row, and so do `ivory` and "cream". The last three rows are the game's three form materials:
+**ivory is stab, steel is slash, granite is crush.**
+
+**How the three columns are used.** `core` is the object's own color, carrying the large planes and
+whatever the eye reads the hue as at a glance. `light` is the faces turned toward the light and the
+top of the specular ramp — **the lit part is always the object's own hue made lighter, never a warm
+color and never gold.** `dark` is the faces turned away and the color the shadow settles into,
+above the near-black contour, which stays near-black.
+
+**The ramp directs the picture; it does not fence it.** The word's colors should be the
+**dominant** ones — the large planes and whatever the eye reads the object's color as — so that the
+picture is unmistakably that word at card size. Other colors are welcome wherever the subject
+wants them: an accent, a metal fitting, a warm glint inside a gem, a rope, a contour. What is
+wrong is **drift** — an object whose dominant hue has slid to a neighbouring one, or washed out far
+enough that the word stops being readable. A color word not in this table (brown, black, white,
+gold, copper, bone) is an ordinary word and carries no ramp.
+
 ## Composition
 
 Composition: one object, centered and large. It spans roughly 80% of the width and roughly 70% of

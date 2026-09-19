@@ -1,11 +1,11 @@
 {
-  "fire":      { "dark": "#9E2F13", "core": "#F06A24", "light": "#FFB24A" },
-  "lightning": { "dark": "#A98200", "core": "#F2D13D", "light": "#FFF38A" },
-  "earth":     { "dark": "#285E35", "core": "#4E9B57", "light": "#8BCB78" },
-  "ice":       { "dark": "#245A86", "core": "#4E9ED6", "light": "#A8DDF4" },
-  "arcane":    { "dark": "#4C2A78", "core": "#8A5BC7", "light": "#C8A4F2" },
+  "fire":      { "hue": "orange", "axis": "element", "dark": "#9E2F13", "core": "#F06A24", "light": "#FFB24A" },
+  "lightning": { "hue": "yellow", "axis": "element", "dark": "#A98200", "core": "#F2D13D", "light": "#FFF38A" },
+  "earth":     { "hue": "green",  "axis": "element", "dark": "#285E35", "core": "#4E9B57", "light": "#8BCB78" },
+  "ice":       { "hue": "blue",   "axis": "element", "dark": "#245A86", "core": "#4E9ED6", "light": "#A8DDF4" },
+  "arcane":    { "hue": "purple", "axis": "element", "dark": "#4C2A78", "core": "#8A5BC7", "light": "#C8A4F2" },
 
-  "steel":     { "dark": "#59636B", "core": "#9DA8B0", "light": "#D8DEE2" },
-  "ivory":     { "dark": "#9B8B68", "core": "#DCCFAE", "light": "#FFF3D2" },
-  "granite":   { "dark": "#3C3E41", "core": "#6B6D70", "light": "#A1A3A6" }
+  "ivory":     { "hue": "cream",      "axis": "form", "form": "stab",  "dark": "#9B8B68", "core": "#DCCFAE", "light": "#FFF3D2" },
+  "steel":     { "hue": "cool gray",  "axis": "form", "form": "slash", "dark": "#59636B", "core": "#9DA8B0", "light": "#D8DEE2" },
+  "granite":   { "hue": "dark gray",  "axis": "form", "form": "crush", "dark": "#3C3E41", "core": "#6B6D70", "light": "#A1A3A6" }
 }

@@ -23,7 +23,7 @@
       "flip-arcane-to-ice",
       "flip-arcane-to-lightning",
       "flip-arcane-to-earth",
-      "dmg-high-hand",
+      "dmg-no-hand",
       "dmg-pair-hand",
       "dmg-concept-doubled-hand",
       "dmg-concept-tripled-hand",
@@ -2458,5 +2458,102 @@
       { "Card": "Poke", "Element": "lightning", "Copies": 4, "Riders": ["silver:5"] }
     ],
     "Actions": 10
+  },
+  {
+    "ScenarioRecord": "no-hand-ring",
+    "Note": "Does the Singular Ring pay on a No Hand, now that the rung is called no-hand rather than high-hand? Wear it and queue the Skewer on its own: one attack card forms no rung of two or more, so the blow is the catalog's No Hand at its 1x, and the ring's add-hand-dmg puts 2 on the duelist's DMG for that one blow - every figure the sum prints is already the raised one. Two cards that agree on nothing are still a No Hand, and the Cut and the Thump are that pair: different concept, different form, different element. Queue the Thump beside the Bash instead and the rung is a Pair, the ring is silent, and the sum says so - which is the comparison to make, since a bonus folded into DMG is only visible against the blow that did not get it. A dummy, so the fight cannot end while the three readings are tried against each other.",
+    "Relics": [
+      "dmg-no-hand"
+    ],
+    "Hand": [
+      {
+        "Card": "Skewer",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice"
+      },
+      {
+        "Card": "Thump",
+        "Element": "fire"
+      },
+      {
+        "Card": "Bash",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Jab",
+        "Element": "earth"
+      }
+    ],
+    "Enemy": "GiantRat",
+    "Dummy": true,
+    "Actions": 12
+  },
+  {
+    "ScenarioRecord": "pair-ring",
+    "Note": "The Twinned Ring against the sum that shows what it did. Every element in the hand is different and every concept is, so the only rung any selection can form is a form Pair - queue the Smash beside the Bash and both are crush: the ring raises the duelist's DMG by 2 before the hand is counted, the figure flies out of the ring onto the duelist card, and both terms are then worked out at 12 rather than 10. The Skewer on its own is the control: a No Hand, nothing raised, and the same card written at 10. What to watch is that the raise is one climb on the duelist rather than a term of its own - two cards in the hand means the ring is worth twice what it says, which is the whole reason it stopped being a flat addition. A dummy, so both readings can be tried against each other for as long as they are interesting.",
+    "Relics": [
+      "dmg-pair-hand"
+    ],
+    "Hand": [
+      {
+        "Card": "Smash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Bash",
+        "Element": "ice"
+      },
+      {
+        "Card": "Skewer",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Cut",
+        "Element": "earth"
+      },
+      {
+        "Card": "Jab",
+        "Element": "lightning"
+      }
+    ],
+    "Enemy": "GiantRat",
+    "Dummy": true,
+    "Actions": 12
+  },
+  {
+    "ScenarioRecord": "pair-and-element-rings",
+    "Note": "The two levels a relic can pay at, in one sum. The Twinned Ring raises the DUELIST - a Pair is worth 2 more DMG, and every term of the blow is worked out at 12 rather than 10 - where Fire scales a CARD, so it is a factor inside one bracket and not the other. Queue the Smash beside the Bash: both are crush so the rung is a Pair, the ring's 2 flies onto the duelist card first, and the sum then reads the fire card at 12 x 3 x 2 and the ice card at 12 x 2, which is the whole distinction drawn in one line. Every element in the hand is different, so exactly one card is fire and the contrast between the two brackets is visible. The Skewer on its own is still the control: a No Hand, no raise, no fire, one bare term. A dummy, so the readings can be tried against each other.",
+    "Relics": [
+      "dmg-pair-hand",
+      "dmgx-fire"
+    ],
+    "Hand": [
+      {
+        "Card": "Smash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Bash",
+        "Element": "ice"
+      },
+      {
+        "Card": "Skewer",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Cut",
+        "Element": "earth"
+      },
+      {
+        "Card": "Jab",
+        "Element": "lightning"
+      }
+    ],
+    "Enemy": "GiantRat",
+    "Dummy": true,
+    "Actions": 12
   }
 ]

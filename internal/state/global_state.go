@@ -184,16 +184,22 @@ type GlobalState struct {
 	ScreenHeight int
 
 	//Data
-	// **Two rosters since 2026-08-11**, where there was one map of combatants. The player and
-	// the opponents stopped sharing a struct — an enemy has a plan style, a portrait and an
-	// affix pool, a duelist has a card back — so one map would have been a map of records
-	// where most fields were empty. See data/duelists_data.go.
-	Enemies map[string]data.EnemyData
+	// Motifs is the whole roster, one entry per themed floor, each holding the creatures that
+	// can stand in its three rooms. **A floor takes one motif and one element**; see
+	// internal/pyramid.
+	Motifs map[string]data.MotifData
 
-	// Bosses is the stairway protectors, in their own map for the reason data/bosses_data.go
-	// gives: they are placed by a different rule and must not be shuffled into an ordinary
-	// room. A screen hydrating an opponent looks here when the roster does not know the record.
-	Bosses   map[string]data.BossData
+	// Records is every motif's creatures flattened by key, because a screen hydrating an opponent
+	// holds a record key and not the motif it came from. Built once beside Motifs rather than
+	// searched, since it is read on every entry to the combat screen.
+	Records map[string]data.MotifRecord
+
+	// Tower is how tall the climb is and how fast it steepens. It is read wherever a stat is
+	// grown to the fight it is met at, which is one place — entities.NewEnemyFrom.
+	Tower data.TowerData
+
+	// **The player and the opponents do not share a struct.** A creature has affinities, a
+	// picture family and a tier; a duelist has a card back. See data/duelists_data.go.
 	Duelists map[string]data.DuelistData
 
 	// Relics is what the player can equip. **Genuinely global for the same reason the rosters

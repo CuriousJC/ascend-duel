@@ -1,0 +1,393 @@
+{
+  "Motif": "animals",
+  "Name": "Animals",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
+  "ValidFloors": [
+    1,
+    6
+  ],
+  "Records": [
+    {
+      "Record": "animals-outer-bat",
+      "Name": "Giant Bat",
+      "Tier": "outer",
+      "Art": "animals-bat",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 80,
+      "DMG": 5,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Nip",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Swoop",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Drain",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "animals-outer-rat",
+      "Name": "Giant Rat",
+      "Tier": "outer",
+      "Art": "animals-rat",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 95,
+      "DMG": 5,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Gnaw",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Bite",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Maul",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "animals-outer-boar",
+      "Name": "Tusk Boar",
+      "Tier": "outer",
+      "Art": "animals-boar",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 135,
+      "DMG": 5,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Snort",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Gore",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Charge",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "animals-inner-wolf",
+      "Name": "Dire Wolf",
+      "Tier": "inner",
+      "Art": "animals-wolf",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 150,
+      "DMG": 7,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Snap",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Bite",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Rend",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "animals-inner-hound",
+      "Name": "Rot Hound",
+      "Tier": "inner",
+      "Art": "animals-hound",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 125,
+      "DMG": 8,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Snap",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Worry",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Sepsis",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "animals-inner-bear",
+      "Name": "Cave Bear",
+      "Tier": "inner",
+      "Art": "animals-bear",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 190,
+      "DMG": 6,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Cuff",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Claw",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Bear Down",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "animals-boss-alpha",
+      "Name": "The Grey Alpha",
+      "Tier": "boss",
+      "Art": "animals-alpha",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 250,
+      "DMG": 10,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Snarl",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Hamstring",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Throat Take",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "The Pack Answers",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "of the Long Winter"
+    },
+    {
+      "Record": "animals-boss-behemoth",
+      "Name": "Doomsday Beast",
+      "Tier": "boss",
+      "Art": "animals-behemoth",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 285,
+      "DMG": 9,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Gore",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Trample",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Devour",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Stampede",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "the Trampler"
+    },
+    {
+      "Record": "animals-boss-chimera",
+      "Name": "The Chimera",
+      "Tier": "boss",
+      "Art": "animals-chimera",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 240,
+      "DMG": 12,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Bite",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Rake",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Three Mouths",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "All At Once",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Three-Throated"
+    }
+  ]
+}

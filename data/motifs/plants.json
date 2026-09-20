@@ -1,0 +1,393 @@
+{
+  "Motif": "plants",
+  "Name": "Plants",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
+  "ValidFloors": [
+    2,
+    7
+  ],
+  "Records": [
+    {
+      "Record": "plants-outer-sapling",
+      "Name": "Hungry Sapling",
+      "Tier": "outer",
+      "Art": "plants-sapling",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 110,
+      "DMG": 5,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Thorn",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Vine Lash",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Snap Trap",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "plants-outer-pod",
+      "Name": "Spore Pod",
+      "Tier": "outer",
+      "Art": "plants-pod",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 125,
+      "DMG": 5,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Spore",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Lash",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Burst",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "plants-outer-bramble",
+      "Name": "Bramble Wall",
+      "Tier": "outer",
+      "Art": "plants-bramble",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 155,
+      "DMG": 4,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Snag",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Rake",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Thicket",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "plants-inner-creeper",
+      "Name": "Strangle Creeper",
+      "Tier": "inner",
+      "Art": "plants-creeper",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 170,
+      "DMG": 7,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Tendril",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Wind",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Strangle",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "plants-inner-bloom",
+      "Name": "Corpse Bloom",
+      "Tier": "inner",
+      "Art": "plants-bloom",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 200,
+      "DMG": 6,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Waft",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Pollen",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Bloom Burst",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "plants-inner-flytrap",
+      "Name": "Titan Flytrap",
+      "Tier": "inner",
+      "Art": "plants-flytrap",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 150,
+      "DMG": 8,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Snip",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Chew",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Swallow Whole",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "plants-boss-heartwood",
+      "Name": "The Heartwood",
+      "Tier": "boss",
+      "Art": "plants-heartwood",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 300,
+      "DMG": 9,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Root",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Bough",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Uproot",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Old Growth",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "That Remembers"
+    },
+    {
+      "Record": "plants-boss-witchgrass",
+      "Name": "Witchgrass",
+      "Tier": "boss",
+      "Art": "plants-witchgrass",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 245,
+      "DMG": 12,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Whisker",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Seed Storm",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Overrun",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "The Field Turns",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "the Choking Field"
+    },
+    {
+      "Record": "plants-boss-mycelium",
+      "Name": "The Mycelium",
+      "Tier": "boss",
+      "Art": "plants-mycelium",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 270,
+      "DMG": 10,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Filament",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Bloom",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Rot Through",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Everything Is One",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Beneath It All"
+    }
+  ]
+}

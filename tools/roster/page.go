@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"html/template"
 	"strings"
+
+	"github.com/curiousjc/ascend-duel/data"
 )
 
 // The page and the types it walks.
 //
-// One static file, no JavaScript, no build step: the loop is "edit enemies.json, re-run the tool,
-// refresh the tab", the same loop every other sheet here has.
+// One static file and no build step: the loop is "edit a motif file, re-run the tool, refresh the
+// tab", the same loop every other sheet here has. The only script on it is the chip bar from
+// tools/sheetfilter, which narrows what is already on the page — the whole roster is in the file
+// and readable with scripting off.
 //
 // **Grouped by floor rather than listed alphabetically**, for the reason the relic sheet groups by
 // rarity: the floor is the whole placement decision, so the review question is "does anything in
@@ -44,6 +48,10 @@ type plate struct {
 	Deck int
 
 	Rows []row
+
+	// Elems is the record's colours as the element chips match them — space-separated, where
+	// Affixes is the same list written for a reader.
+	Elems string
 }
 
 // group is one floor's worth of the catalog, with the band's own spread beside it.
@@ -55,15 +63,41 @@ type group struct {
 	Order  int
 	Plates []plate
 
+	// Motif is the record key of the motif this section is, and Floors is its band as the floor
+	// chips match it. A floor is a fact about the motif rather than about one creature, so it is
+	// the section that carries it and the section the chips cut.
+	Motif  string
+	Floors string
+
 	MinHP, MaxHP   int
 	MinDMG, MaxDMG int
 	MinAP, MaxAP   int
 
-	// Mix is the family spread within the band, written out on the heading — "6 Slimes, 2 Pods".
-	// **It is what the Family field buys at this level**: the band's stat spread says whether the
-	// floor is pitched right and this says whether it is four more of the same thing, which is the
-	// question the numbers cannot answer.
+	// Mix is the tier spread within the motif, written out on the heading — "3 outer, 3 inner,
+	// 3 boss". The stat spread says whether the motif is pitched right and this says whether it
+	// can fill a floor at all, which is the question the numbers cannot answer.
 	Mix string
+
+	// Coverage is the motif's grid: how many records can field each room at each element.
+	//
+	// **It is the one thing about a motif that cannot be seen by reading its records one at a
+	// time.** A floor picks a motif and an element, so what has to hold is that every element can
+	// field all three rooms — and the loader refuses a file that cannot, out of this same
+	// function, so the page and the launch can never disagree about it.
+	Coverage []coverRow
+}
+
+// coverRow is one element's row of the coverage grid: the element's name, and one cell per tier.
+type coverRow struct {
+	Element string
+	Cells   []coverCell
+}
+
+// coverCell is one (tier, element) fight: how many records can be dealt into it, and whether that
+// is fewer than a floor needs.
+type coverCell struct {
+	Count int
+	Short bool
 }
 
 type page struct {
@@ -73,7 +107,12 @@ type page struct {
 	GroupLabel string
 	Count      int
 	Style      map[string]int
+	Filters    template.HTML
 	Groups     []group
+
+	// SpanLo and SpanHi are the shallowest and deepest floor any motif reaches, which is what a
+	// motif written with no band is expanded against.
+	SpanLo, SpanHi int
 }
 
 // add files one opponent under its floor, opening the section if it is the first.
@@ -89,9 +128,11 @@ func (p *page) add(pl plate) {
 	// creature reaches a floor it does not.
 	if i < 0 || p.Groups[i].Label != pl.Entry.Floors {
 		p.Groups = append(p.Groups, group{
-			Label: pl.Entry.Floors,
-			Order: pl.Entry.Group,
-			MinHP: pl.Entry.HP, MaxHP: pl.Entry.HP,
+			Label:  pl.Entry.Floors,
+			Order:  pl.Entry.Group,
+			Motif:  pl.Entry.Motif,
+			Floors: floorTokens(pl.Entry.Band, p.SpanLo, p.SpanHi),
+			MinHP:  pl.Entry.HP, MaxHP: pl.Entry.HP,
 			MinDMG: pl.Entry.DMG, MaxDMG: pl.Entry.DMG,
 			MinAP: pl.Entry.Actions, MaxAP: pl.Entry.Actions,
 		})
@@ -104,6 +145,35 @@ func (p *page) add(pl plate) {
 	stretch(&g.MinDMG, &g.MaxDMG, pl.Entry.DMG)
 	stretch(&g.MinAP, &g.MaxAP, pl.Entry.Actions)
 	g.Mix = familyMix(g.Plates)
+	g.Coverage = coverageOf(pl.Entry.Motif)
+}
+
+// coverageOf reads the motif's grid straight out of data, so the page reports exactly what the
+// loader checked.
+//
+// **A motif key that names nothing gives no grid**, which is what a pool that is not the motif
+// pool would produce — the page then simply has no grid rather than an empty one.
+func coverageOf(motif string) []coverRow {
+	if motif == "" {
+		return nil
+	}
+	motifs := data.LoadMotifs()
+	m, ok := motifs[motif]
+	if !ok {
+		return nil
+	}
+
+	counts := data.CoverageOf(m).Counts
+	rows := make([]coverRow, 0, len(data.AffinityElements))
+	for ai, element := range data.AffinityElements {
+		row := coverRow{Element: element}
+		for ti := range data.TierOrder {
+			n := counts[ti][ai]
+			row.Cells = append(row.Cells, coverCell{Count: n, Short: n < data.MinCoverage})
+		}
+		rows = append(rows, row)
+	}
+	return rows
 }
 
 // familyMix is the band's family spread, in the order the families first appear in it — which is
@@ -219,11 +289,17 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
   }
   /* The subject paragraph is an *input* to an art generator rather than anything the game reads,
      so it is set apart from the stat line and the deck: indented and quieted, under everything
-     the record actually does. Every one of them reads TO BE DETERMINED today. */
+     the record actually does. Every one of them reads TBD today. */
   .draw {
     color: var(--dim); font-size: 12px; margin: 8px 0 0;
     border-left: 2px solid var(--rule); padding-left: 9px;
   }
+table.cover { border-collapse: collapse; margin: 0 0 18px; font-size: 13px; }
+table.cover caption { text-align: left; opacity: .6; padding-bottom: 6px; max-width: 60ch; }
+table.cover th, table.cover td { border: 1px solid rgba(128,128,128,.35); padding: 3px 10px; }
+table.cover th { font-weight: 600; text-align: left; opacity: .75; }
+table.cover td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.cover td.short { color: #b03a3a; font-weight: 700; }
 </style>
 
 <h1>{{.Title}}</h1>
@@ -241,15 +317,32 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
   concept — the <em>copies</em> column says how many of each the pile holds.
 </p>
 
+{{.Filters}}
+
 {{range .Groups}}
+<section class="sheet-group" data-motif="{{.Motif}}" data-floor="{{.Floors}}">
   <h2 class="floor">
     {{.Label}}
     <span>{{len .Plates}} records · HP {{.MinHP}}–{{.MaxHP}} · DMG {{.MinDMG}}–{{.MaxDMG}} ·
       AP {{.MinAP}}–{{.MaxAP}} · {{.Mix}}</span>
   </h2>
 
+  {{if .Coverage}}
+  <table class="cover">
+    <caption>How many records can field each fight. A floor picks this motif and one element and
+      holds three rooms, so every cell needs at least two.</caption>
+    <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
+    {{range .Coverage}}
+      <tr>
+        <th>{{.Element}}</th>
+        {{range .Cells}}<td class="num{{if .Short}} short{{end}}">{{.Count}}</td>{{end}}
+      </tr>
+    {{end}}
+  </table>
+  {{end}}
+
   {{range .Plates}}
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="{{.Entry.Tier}}" data-element="{{.Elems}}">
       <div class="head">
         <span class="named">
           <span class="name">{{.Entry.Name}}</span>
@@ -281,9 +374,10 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
         {{end}}
       </table>
 
-      {{if .Affixes}}<p class="affix">Affixes it may be themed with: {{.Affixes}}</p>{{end}}
+      {{if .Affixes}}<p class="affix">Dealt as: {{.Affixes}}</p>{{end}}
       {{if .Entry.Draw}}<p class="draw">{{.Entry.Draw}}</p>{{end}}
     </div>
   {{end}}
+</section>
 {{end}}
 `))

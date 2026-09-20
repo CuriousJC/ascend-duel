@@ -132,6 +132,9 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if err := drawEffectText(img, s, st, f, ink); err != nil {
 		return nil, err
 	}
+	if err := drawPortraitStat(img, s, st, f, ink); err != nil {
+		return nil, err
+	}
 	if st.HealthBarHeight > 0 {
 		if err := drawHealth(img, s, st, f); err != nil {
 			return nil, err
@@ -875,51 +878,6 @@ func fadeToward(dst *image.RGBA, r image.Rectangle, to color.RGBA, pct int) {
 			dst.SetRGBA(x, y, systems.ColorToward(c, to, pct))
 		}
 	}
-}
-
-// The health bar's two colors, and the fraction under it.
-//
-// **Red for what is left, not for what is lost.** The bar is a quantity the reader is
-// tracking downward, so the saturated color has to be the part that shrinks — a bar where
-// the red grows as the enemy weakens says the opposite of what it means. The empty part is
-// a dim version of the same hue rather than a neutral gray, so the two read as one bar
-// partly filled instead of as two bars.
-var (
-	HealthFull  = color.RGBA{R: 198, G: 46, B: 46, A: 255}
-	HealthEmpty = color.RGBA{R: 92, G: 66, B: 66, A: 255}
-)
-
-// drawHealth draws the bar and the "42/60" line beneath it.
-//
-// **The bar is square-cornered**, which matches the cost ticks and the card's own hard-edged
-// corners. It read as an inconsistency while the screen still rounded its own health bar
-// through a GPU mask; that bar is gone, so a square one is now the only shape a bar has ever
-// had here rather than the poorer half of a pair.
-//
-// A zero or negative MaxLife draws the empty bar and no fraction rather than dividing by it.
-func drawHealth(dst *image.RGBA, s Spec, st Style, f *Faces) error {
-	left, width := st.HealthBarInset, st.Width-2*st.HealthBarInset
-
-	fillRect(dst, left, st.HealthBarTop, width, st.HealthBarHeight, HealthEmpty)
-	if s.MaxLife <= 0 {
-		return nil
-	}
-
-	life := s.Life
-	if life < 0 {
-		life = 0
-	}
-	if life > s.MaxLife {
-		life = s.MaxLife
-	}
-	fillRect(dst, left, st.HealthBarTop, width*life/s.MaxLife, st.HealthBarHeight, HealthFull)
-
-	// **The exact number as well as the bar, deliberately** — the same argument the character
-	// block settled for the player on 2026-08-07. A bar says roughly how hurt something is,
-	// and a duel decided in whole points wants the figure. The block writes the player's as a
-	// fraction, so the enemy's is written the same way rather than inventing a second form.
-	return drawTextHCentered(dst, f, st.HealthTextSize,
-		fmt.Sprintf("%d/%d", life, s.MaxLife), st.Width, st.HealthTextTop, NumberInk)
 }
 
 // drawEffectText writes what the card does, as a block centered in the space the left column

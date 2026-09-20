@@ -1,0 +1,393 @@
+{
+  "Motif": "elves",
+  "Name": "Elves",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
+  "ValidFloors": [
+    3,
+    8
+  ],
+  "Records": [
+    {
+      "Record": "elves-outer-scout",
+      "Name": "Wood Scout",
+      "Tier": "outer",
+      "Art": "elves-scout",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 110,
+      "DMG": 7,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Loose",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Quick Shot",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Volley",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "elves-outer-blade",
+      "Name": "Glade Blade",
+      "Tier": "outer",
+      "Art": "elves-blade",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 135,
+      "DMG": 7,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Draw Cut",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Riposte",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Long Thrust",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "elves-outer-warden",
+      "Name": "Thorn Warden",
+      "Tier": "outer",
+      "Art": "elves-warden",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 155,
+      "DMG": 6,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Barb",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Bramble Lash",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Thornfall",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "elves-inner-archer",
+      "Name": "Longbow Archer",
+      "Tier": "inner",
+      "Art": "elves-archer",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 150,
+      "DMG": 10,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Nock",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Loose Arrow",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Arrow Storm",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "elves-inner-dancer",
+      "Name": "Blade Dancer",
+      "Tier": "inner",
+      "Art": "elves-dancer",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 175,
+      "DMG": 9,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Step",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Turn Cut",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Full Figure",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "elves-inner-singer",
+      "Name": "Moon Singer",
+      "Tier": "inner",
+      "Art": "elves-singer",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 195,
+      "DMG": 8,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Note",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Chord",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Silver Song",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "elves-boss-queen",
+      "Name": "The Silver Queen",
+      "Tier": "boss",
+      "Art": "elves-queen",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 290,
+      "DMG": 14,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Command",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Silver Bough",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Grove Law",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "The Grove Answers",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "of the Last Grove"
+    },
+    {
+      "Record": "elves-boss-skyhunter",
+      "Name": "The Skyhunter",
+      "Tier": "boss",
+      "Art": "elves-skyhunter",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 265,
+      "DMG": 16,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Sight",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Diving Shot",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Skyfall",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Hunter's Mark",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Who Never Misses"
+    },
+    {
+      "Record": "elves-boss-exile",
+      "Name": "The Exile",
+      "Tier": "boss",
+      "Art": "elves-exile",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 305,
+      "DMG": 12,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Whisper",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Withering",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Severance",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Nothing Grows Back",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Who Cut The Root"
+    }
+  ]
+}

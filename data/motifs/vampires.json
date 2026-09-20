@@ -1,0 +1,393 @@
+{
+  "Motif": "vampires",
+  "Name": "Vampires",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
+  "ValidFloors": [
+    4,
+    8
+  ],
+  "Records": [
+    {
+      "Record": "vampires-outer-thrall",
+      "Name": "Blood Thrall",
+      "Tier": "outer",
+      "Art": "vampires-thrall",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 155,
+      "DMG": 9,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Nick",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Slit",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Open Vein",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "vampires-outer-consort",
+      "Name": "Pale Consort",
+      "Tier": "outer",
+      "Art": "vampires-consort",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 180,
+      "DMG": 8,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Caress",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Draw",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Take Deep",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "vampires-outer-ghoul",
+      "Name": "Crypt Ghoul",
+      "Tier": "outer",
+      "Art": "vampires-ghoul",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 215,
+      "DMG": 7,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Claw",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Worry",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Feed",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "vampires-inner-count",
+      "Name": "Lesser Count",
+      "Tier": "inner",
+      "Art": "vampires-count",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 225,
+      "DMG": 11,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Command",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Red Cut",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Bleed Out",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "vampires-inner-shade",
+      "Name": "Blood Shade",
+      "Tier": "inner",
+      "Art": "vampires-shade",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 185,
+      "DMG": 13,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Mist",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Flicker",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Behind You",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "vampires-inner-flenser",
+      "Name": "The Flenser",
+      "Tier": "inner",
+      "Art": "vampires-flenser",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 260,
+      "DMG": 9,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Skinner",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Flense",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Carve",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "vampires-boss-elder",
+      "Name": "The Elder",
+      "Tier": "boss",
+      "Art": "vampires-elder",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 380,
+      "DMG": 15,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Whisper",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Old Blood",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Red Harvest",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Since Before",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Who Was First"
+    },
+    {
+      "Record": "vampires-boss-palewatch",
+      "Name": "The Pale Watch",
+      "Tier": "boss",
+      "Art": "vampires-palewatch",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 410,
+      "DMG": 13,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Chill Touch",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Frost Grip",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Killing Cold",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Pale Hour",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "of the Long Night"
+    },
+    {
+      "Record": "vampires-boss-crimson",
+      "Name": "The Crimson Bride",
+      "Tier": "boss",
+      "Art": "vampires-crimson",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 355,
+      "DMG": 17,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Lance",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Open",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Blade Storm",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Every Drop",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Who Keeps Count"
+    }
+  ]
+}

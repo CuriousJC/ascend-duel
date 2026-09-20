@@ -90,7 +90,7 @@ var credits = []creditsLine{
 	{"", creditsGap},
 
 	{"ART AND SOUND", creditsHeading},
-	{"Creature and boss portraits by PVGames", creditsBody},
+	{"All art generated from prompts in this repository", creditsBody},
 	{"Interface art and glyphs generated in-engine", creditsQuiet},
 	{"Score synthesized from MIDI in-engine", creditsQuiet},
 	{"", creditsGap},

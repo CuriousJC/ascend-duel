@@ -102,6 +102,7 @@ skill that does not exist.
 | [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / essences, or writing a loader |
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
+| [`motifs`](.claude/skills/motifs/SKILL.md) | adding a motif file, adding or changing a record under `data/motifs/`, authoring creatures or bosses, touching `data/tower.json`, or wiring anything that picks an opponent |
 | [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn relic |
 | [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
 | [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
@@ -150,11 +151,10 @@ The project is **source-available, not open source**, and is intended to be sold
   cannot go into a product licensed this way. Check the license before adding anything
   to `go.mod`, and flag it in the PR.
 - **Assets need provable licenses.** Do not add assets with unclear provenance; "found
-  it online" is not sufficient for a paid release. The enemy portraits are PVGames creature
-  art from the Humble *Isometric Assets Galore* bundle, whose license permits shipping
-  inside a game; the pack and its terms are in `.scratch/flat-creatures` (gitignored).
-  Everything else in `assets/` is first-party: art generated from the prompts in `docs/art/`,
-  and a score synthesized at startup from a MIDI file this repo owns.
+  it online" is not sufficient for a paid release. **Everything in `assets/` is first-party**: art
+  generated from the prompts in `docs/art/`, and a score synthesized at startup from a MIDI file
+  this repo owns. Nothing in it came from anywhere else, and nothing in it needs a third party's
+  permission to ship.
 - **Do not propose rewriting git history over the relicense.** The Apache 2.0 grant on
   commits published before it is irrevocable, and the owners have accepted that.
 
@@ -177,8 +177,9 @@ go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then 
 go run ./tools/relicsheet    # every relic to PNGs + a page grouped by rarity: art, price, text, rules
 go run ./tools/essencesheet    # every essence to PNGs + a page grouped by what it changes about a card
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
-go run ./tools/enemysheet   # every creature by floor band: card, stat line, whole deck
-go run ./tools/bosssheet    # the stairway protectors, the same way, by floor
+go run ./tools/motifsheet   # the roster motif by motif: card, stat line, deck, coverage grid
+go run ./tools/creatureprompt -record goblins-outer-bomber -element ice   # the four-layer brief
+go run ./tools/creatureprompt -gaps      # which art briefs are still unwritten, roster-wide
 go run ./tools/stonesheet   # every stone against the rung it raises, grouped by axis
 go run ./tools/runesheet # every rune: the line it prints against the rule that fires
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
@@ -196,6 +197,20 @@ go run ./tools/artcompare -catalog relic    # the same for relics; card, essence
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
+
+**A sheet can be narrowed with a chip bar, and `tools/sheetfilter` is the whole of it** — the
+third shared library under `tools/`. A sheet declares its facets, tags each record with
+`class="sheet-item"` and a `data-` attribute per facet, wraps each heading and its records in
+`class="sheet-group"`, and drops the bar in above the contents; values within a facet are an OR
+and facets are an AND. The motif sheet is cut on floor, room and element, and the relic sheet on
+rarity and family. Two rules to keep:
+
+- **A facet's values are counted off the records, never typed into the tool.** A motif authored
+  onto a ninth floor puts a ninth chip up with nothing edited — the same reason nothing in this
+  file writes down how many of anything there is.
+- **The page is complete before the script runs.** Filtering hides what is already in the file,
+  so a sheet stays one static file with no build step and reads whole with scripting off. That is
+  the line a new facet may not cross: nothing is fetched and nothing is templated in the browser.
 
 **The sheets are committed, under `docs/sheets/`**. They write there
 rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone opens to
@@ -215,8 +230,7 @@ batch is judged record by record rather than all at once — and it takes any nu
 because a generator produces options rather than an answer. Every cell is `cards.Render` at the
 catalog's own style, so what is compared is the card as it will be dealt, type over picture;
 clicking the one to keep builds the copy list at the top of the page. Six catalogs: `card`,
-`relic`, `essence`, `rune`, `stone`, `other`. The creature and boss portraits are absent on
-purpose — licensed art arrives once and nobody generates three of it.
+`relic`, `essence`, `rune`, `stone`, `other`.
 
 **`artreview/` is gitignored and is the whole of its working directory.** A batch dropped in
 `artreview/<catalog>-<label>/` is found as the set `<label>`, the installed `assets/` directory is
@@ -295,7 +309,7 @@ attack whole**. See MECHANICS.md §Shields. Five things to know before touching 
   nothing shaves a fraction off a blow — **`Duelist.ActionPoints()` is the whole of a turn's
   budget** with nothing that adds to it mid-round, and **every creature deck is pure attack**,
   which is why a creature's whole
-  personality is which blows come round how often. `go run ./tools/enemysheet` is where a deck's
+  personality is which blows come round how often. `go run ./tools/motifsheet` is where a deck's
   size is read; no figure for it is written down here, because it moves whenever a creature is
   retuned and nothing fails when it does.
 - **One card raises at most five shields; a duelist holds as many as the turn paid for.** The
@@ -616,10 +630,22 @@ Two things worth knowing without opening it:
 - **`combat.ResolutionOrder` is the single authority on play order**, and both `ResolveRound`
   and the table's two rows read it rather than deriving their own.
 
-## UI: clicks and drag-and-drop only
+## UI: clicks and drag-and-drop, and a gamepad has to be able to do all of it
 
-A firm design decision, not a current limitation. These apply everywhere, the combat screen
-included. The entire input vocabulary is:
+**The game ships on Steam Deck**, so every control has to be reachable with a standard gamepad and
+nothing may be designed that only a pointer can do. What is *built* today is the pointer
+vocabulary below, and building against it is correct — the controller layer is a refactor that
+happens before release, not a thing each new screen bolts on. What each new screen owes it is one
+question answered while the screen is being designed: **could a focus ring walk this?** A control
+that only answers to a cursor's position, an action with no discrete step, or an ordering that
+exists only as a drag is a screen that will have to be redesigned rather than adapted. See the
+platform-readiness section of [TODO.md](TODO.md) for the ticket and its constraints.
+
+**Two rules the controller work does not get to bend.** There is no virtual cursor — a pad drives
+focus, never a hidden mouse. And a semantic action reaches only controls that are visible on the
+screen, exactly as a key does.
+
+These apply everywhere, the combat screen included. The pointer vocabulary is:
 
 - **Left click** — buttons and selection.
 - **Drag and drop** — the action box, and anything else that needs ordering or moving.
@@ -639,7 +665,9 @@ included. The entire input vocabulary is:
   else anywhere accepts typed input.
 
 **No right click, ever.** There is no context menu and no secondary action. Anything
-that feels like it wants one needs a different design.
+that feels like it wants one needs a different design. **A gamepad's spare face buttons are not a
+way back in**: a pad gets the reveal a cursor gets by hovering and an explicit mode for the
+ordering a cursor gets by dragging, and neither is a second thing a control does.
 
 - **Wanting a text field is a design smell.** Find the click or drag version instead.
   A settings value is a row of buttons or a slider, never a number you type.
@@ -1196,15 +1224,14 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
 
 - **Six catalogs carry `Family` and `Draw`, and nothing that plays the game reads either** .
  `relics.json`, `essences.json`, `runes.json`, `potions.json` and `goods.json` carry `Art`
- beside them; `enemies.json` and `bosses.json` carry the two alone, with every `Draw` reading
- `TO BE DETERMINED` — their portraits are licensed creature art rather than generated pictures,
- so the field is a seat for briefs to be written into a few at a time rather than a backlog
- anybody is working. **`Family` is the motif a record was authored beside** and is what its
+ beside them; every record under `data/motifs/` carries `Draw` and `Art`, with every `Draw`
+ reading `TBD` — the roster's pictures are all still to be generated, so the field is
+ a seat for briefs to be written into a motif at a time. **`Family` is the motif a record was
+ authored beside** and is what its
  review sheet groups by; it is authored rather than derived for the relic catalog's reason, and
  it carries the same caveat — **it can go quietly out of date when a record is retuned and no
- test fails**, so re-read the block when you change what something does. **An enemy's `Family`
- is deliberately not its floor band**: the roster sheet still cuts by floor, because the floor
- is the placement decision, and a field repeating the heading above it would say nothing.
+ test fails**, so re-read the block when you change what something does. **A creature has no `Family` field**: the file it
+ is in *is* its motif, so a field repeating the name at the top of the file would say nothing.
 
 **Relic, essence and rune art is a globbed family, keyed by filename stem** — `relic/fire.png`
 is `fire`, which is what `data/relics.json` writes in
@@ -1242,9 +1269,9 @@ cost is the tie-break among equally illustrative sets.
 **It carries the reachability, and `tools/hands` is what makes that safe.** Two tools reporting
 the same probability by different methods are two numbers that can disagree, so the deck, the
 round's bounds, `MinCost` and the sample all live in `tools/hands` with the seed and the trial
-count pinned — `handsheet` and `handodds` print the identical table to the last decimal. It is
-the second shared library under `tools/` and it earns the exception for `roster`'s reason: these
-are the same question read two ways. **The cost is about thirty seconds on every
+count pinned — `handsheet` and `handodds` print the identical table to the last decimal. It is a
+shared library under `tools/` and it earns the exception for `roster`'s reason: these are the
+same question read two ways. **The cost is about thirty seconds on every
 `tools/handsheet` run**, which a full `tools/sheets` pays too.
 
 **Two figures, and the page says which is which.** The AP beside a rung is what that example costs
@@ -1267,23 +1294,21 @@ shaped — the authored line against the resolved rule — and earned a page bef
 records, because a rune is the least readable record in `data/`: which of `Rider`, `Value` and
 `Count` the rules read depends entirely on the target.
 
-**`tools/enemysheet` and `tools/bosssheet` do it for the two opponent pools**. A
-creature is met one at a time, three rooms to a floor, and its whole personality is a deck the
-player only ever sees the played half of — so "is floor five dearer than floor four" was a
-question answered by reading JSON. Each page groups its pool by floor, prints the band's HP, DMG
-and AP spread in the heading, and draws every record as **one composite strip**: the opponent's
-own card as the combat screen draws it, then its deck, one card per concept with the copy count
-in the table under it.
+**`tools/motifsheet` does it for the roster**. A creature is met one at a time, three rooms to a
+floor, and its whole personality is a deck the player only ever sees the played half of — so "do
+this motif's three rooms read as a climb" was a question answered by reading JSON. The page groups
+by motif, prints the motif's HP, DMG and AP spread and its tier mix in the heading, and draws every
+record as **one composite strip**: the opponent's own card as the combat screen draws it, then its
+deck, one card per concept with the copy count in the table under it.
 
-- **A strip rather than a file per card**, because a file per card is about five hundred binaries
-  rewritten on every full run against a hundred and twenty-six, for the same pixels. These two
-  sheets are three quarters of the committed weight; see the note above about regenerating only
-  what changed.
-- **Both are one tool over two pools.** `tools/roster` holds the whole page and the two commands
-  are a `Pool` plus a `main`, which is the deliberate exception to `tools/sheets`'s "no shared
-  library" argument — the other four sheets share nothing, and these two are the *same sheet*
-  read against each other. A boss sheet that had not learned about a new column would show the
-  game as it was.
+- **A strip rather than a file per card**, because a file per card is several hundred binaries
+  rewritten on every full run for the same pixels. This sheet is most of the committed weight; see
+  the note above about regenerating only what changed.
+- **It carries the coverage grid**, which is the one thing about a motif that cannot be seen by
+  looking at its records one at a time: a floor picks a motif and an element, so what has to hold
+  is that every element can field all three rooms at least twice. It is drawn from
+  `data.CoverageOf` — the same function the loader refuses a file with — so the page and the
+  launch cannot disagree about it.
 - **The deck size is read off `internal/decks`**, not added up from `Copies` in a template, and
   importing that package registers every concept at init — so a card naming a verb the rules do
   not have fails the sheet exactly as it fails a launch.
@@ -1630,7 +1655,7 @@ combination looks like on screen. It is the relic-and-hand counterpart of `deckS
 - **`"Dummy": true` is a fight that cannot end**. Both duelists get
   `scenario.DummyLife` and the clock goes to `scenario.DummyRounds`, so a scenario can be *played
   with* rather than survived — every blow, every shield break, every status and every signal, for
-  as long as it is interesting. **It is not a creature in `data/enemies.json`, deliberately**: a
+  as long as it is interesting. **It is not a record under `data/motifs/`, deliberately**: a
   training dummy is a fixture and `data/` is the game's own catalog, loaded by every build, drawn
   on the roster sheet and reachable by the climb's own roll. So it changes the *stats* of whichever
   opponent was already there, which means the fight keeps a real portrait, a real deck and a real
@@ -1913,10 +1938,10 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 
 Six facts about it that are load-bearing:
 
-- **`data` is the bottom and must never import upward.** That is why enemy concepts are
-  registered by `internal/decks` rather than handed over by `data`: enemy cards live in
-  `enemies.json` beside portraits and floor bands, so the rules reading that file directly would
-  cross the who-consumes-it line.
+- **`data` is the bottom and must never import upward.** That is why creature concepts are
+  registered by `internal/decks` rather than handed over by `data`: a creature's cards live in its
+  motif file beside art keys and floor bands, so the rules reading that file directly would cross
+  the who-consumes-it line.
 - **`profile` imports nothing of ours, like `seeds`, and that is what makes saving possible at
   all.** It owns the two files on disk and knows nothing about a run: `session` converts itself to
   and from a plain snapshot struct, so the persistence layer never learns what a card is and the
@@ -2061,21 +2086,23 @@ refiling something is one line there and nothing anywhere else.
 `data/*.json` writes them down; tying one to a path would mean a data migration every time a
 file was refiled. A named asset is three edits: the file, an `//go:embed` var, and a map entry.
 
-**The enemy portraits are the exception, and they are a *family* rather than named
-assets.** There are too many to name one at a time, so `//go:embed enemy/*-portrait.png` pulls
-the directory in as an `embed.FS` and `LoadImageData` walks it, keying each by filename
-stem — `enemy/ogrewarlord-portrait.png` is `ogrewarlord-portrait`, which is what
-`data/enemies.json` writes in its `Portrait` field. **The consequence is exactly what the
-three-edit rule protects against: a portrait's key is tied to its filename**, so renaming
-one means editing the JSON. That is the price of not hand-maintaining two lines per portrait that
-nobody could review. Reach for the glob only when a *set* of files is being added; a one-off asset
-still gets its own var.
+**The creature pictures are the exception, and they are a *family* rather than named
+assets.** There are far too many to name one at a time, so `//go:embed enemy/*.png` pulls the
+directory in as an `embed.FS` and `LoadImageData` walks it, keying each by filename stem.
+**There is one picture per record per element** — `enemy/goblins-serf-fire.png` is
+`goblins-serf-fire`, which is what `data.MotifRecord.ArtKey` builds out of the record's `Art`
+field and the element the floor dealt it as — so a fire goblin serf and an ice goblin serf are two
+drawings of one creature. **The consequence is exactly what the three-edit rule protects against:
+a picture's key is tied to its filename**, so renaming one means editing the `Art` field of the
+record that names it. Reach for the glob only when a *set* of files is being added; a one-off
+asset still gets its own var.
 
-**The boss portraits are a second family, in `assets/boss/`**, globbed the same way and
-keyed by stem — so `boss/bayaz-boss.png` is `bayaz-boss`, which is what `data/bosses.json` writes.
-The `-boss` suffix is load-bearing: both families land in one flat map, and a boss whose key
-collided with a creature's would silently draw that creature.
-`TestNoBossPortraitIsAnEnemyPortrait` fails on it.
+**`default-enemy.png` is the whole of the fallback**, and nearly every record draws it today. A
+record whose own picture has not been generated yet falls back to it rather than drawing a hole,
+so a blank face means art nobody has made rather than a name nobody spelled right.
+`TestEveryOpponentHasSomethingToDraw` holds that the placeholder is embedded and
+`TestNoTwoRecordsDrawTheSamePicture` holds that no two records claim one key — the map is flat,
+and two records on one key is one lookup with two answers.
 
 They are handed out as **bytes, not `*ebiten.Image`** — they are drawn into a card by
 `internal/cards`, which has no graphics context, and decoding every one of them at startup would
@@ -2096,6 +2123,6 @@ screen without measuring. **The enemy's carries a badge row under its fraction a
 player's does not**, which is not a break of that rule: an enemy wears no relics, so nothing can
 put a status on the player to draw.
 
-**The full animation sheets stay in `.scratch/flat-creatures`** (gitignored) — that folder's
-README documents the grid, the frame table and the facing order — so animating enemies later
-means going back for them rather than starting over.
+**A creature is one still picture and there is no animation anywhere.** Animating one means
+generating frames from the same brief `tools/creatureprompt` assembles, not going back for a sprite
+sheet — there is none to go back for.

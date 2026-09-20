@@ -17,9 +17,9 @@ func testEnemy() combat.Duelist {
 	return d
 }
 
-// sampleRecords is a handful of records spanning the roster rather than all ninety-six: these
-// tests are about the *pile*, and running every enemy through forty rounds each says the same
-// thing ninety-six times.
+// sampleRecords is a handful of records spanning the roster rather than every one of them: these
+// tests are about the *pile*, and running the whole roster through forty rounds each says the same
+// thing once per record.
 func sampleRecords(t *testing.T) []string {
 	t.Helper()
 
@@ -38,10 +38,10 @@ func sampleRecords(t *testing.T) []string {
 func TestEveryEnemyHasADeck(t *testing.T) {
 	// **The failure this replaced was silent.** Every enemy used to draw from one shared list, so
 	// a record could not be short of cards; now a record whose Cards array was never written would
-	// deal nothing and stand still for a whole duel. buildEnemyDecks panics on an empty one — this
+	// deal nothing and stand still for a whole duel. buildEnemyConcepts panics on an empty one — this
 	// is the positive side of that, and it also holds the hand size against the smallest deck.
 	for _, name := range EnemyRecords() {
-		deck := EnemyCards(name)
+		deck := EnemyCards(name, "")
 		if len(deck) < EnemyHandSize {
 			t.Errorf("%s has %d cards against a hand of %d, so it draws its whole deck every round",
 				name, len(deck), EnemyHandSize)
@@ -68,7 +68,7 @@ func TestAnEnemyKeepsActingForAWholeDuel(t *testing.T) {
 	//
 	// Forty rounds is longer than any duel runs, so this covers a whole one.
 	for _, name := range sampleRecords(t) {
-		p := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
+		p := NewEnemyPile(name, "", seeds.EnemyDeckPin, EnemyHandSize)
 		d := testEnemy()
 
 		for round := 1; round <= 40; round++ {
@@ -84,11 +84,11 @@ func TestAPlanOnlyEverSpendsCardsFromTheDeck(t *testing.T) {
 	// enemies having one, and what makes the Cards array in enemies.json worth editing.
 	for _, name := range sampleRecords(t) {
 		held := map[combat.Card]bool{}
-		for _, c := range EnemyCards(name) {
+		for _, c := range EnemyCards(name, "") {
 			held[c] = true
 		}
 
-		p := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
+		p := NewEnemyPile(name, "", seeds.EnemyDeckPin, EnemyHandSize)
 		d := testEnemy()
 
 		for round := 1; round <= 20; round++ {
@@ -108,7 +108,7 @@ func TestOneEnemysCardsAreNotAnothers(t *testing.T) {
 	// every other creature's.
 	seen := map[combat.ConceptID]string{}
 	for _, name := range EnemyRecords() {
-		for _, c := range EnemyCards(name) {
+		for _, c := range EnemyCards(name, "") {
 			if owner, taken := seen[c.Concept]; taken && owner != name {
 				t.Fatalf("%s and %s share the concept %q", owner, name, c.Label())
 			}
@@ -121,9 +121,9 @@ func TestTheDeckIsConserved(t *testing.T) {
 	// Cards may move between the three piles and may not appear or vanish. A pile that leaked
 	// would look like a deck that thinned, which the reshuffle would then quietly hide.
 	for _, name := range sampleRecords(t) {
-		want := len(EnemyCards(name))
+		want := len(EnemyCards(name, ""))
 
-		p := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
+		p := NewEnemyPile(name, "", seeds.EnemyDeckPin, EnemyHandSize)
 		d := testEnemy()
 
 		for round := 1; round <= 30; round++ {
@@ -143,8 +143,8 @@ func TestTheSameSeedDealsTheSameDuel(t *testing.T) {
 	// what lets a run be replayed and what stops the balance tool reporting a different
 	// roster every time it is run.
 	for _, name := range sampleRecords(t) {
-		a := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
-		b := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
+		a := NewEnemyPile(name, "", seeds.EnemyDeckPin, EnemyHandSize)
+		b := NewEnemyPile(name, "", seeds.EnemyDeckPin, EnemyHandSize)
 		d := testEnemy()
 
 		for round := 1; round <= 20; round++ {
@@ -172,14 +172,14 @@ func TestEnemyCardsCannotBeEditedByACaller(t *testing.T) {
 	name := EnemyRecords()[0]
 	notInDeck := combat.Plain(combat.Cleave)
 
-	first := EnemyCards(name)
+	first := EnemyCards(name, "")
 	if len(first) == 0 {
 		t.Fatalf("%s has an empty deck", name)
 	}
 	original := first[0]
 	first[0] = notInDeck
 
-	if second := EnemyCards(name); second[0] != original {
+	if second := EnemyCards(name, ""); second[0] != original {
 		t.Errorf("editing the returned slice changed the deck %s draws from: got %v, want %v",
 			name, second[0], original)
 	}

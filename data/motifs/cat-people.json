@@ -1,0 +1,393 @@
+{
+  "Motif": "cat-people",
+  "Name": "Cat-people",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
+  "ValidFloors": [
+    2,
+    7
+  ],
+  "Records": [
+    {
+      "Record": "cat-people-outer-prowler",
+      "Name": "Prowler",
+      "Tier": "outer",
+      "Art": "cat-people-prowler",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 105,
+      "DMG": 7,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Rake",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Pounce",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Throat Rip",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "cat-people-outer-sneak",
+      "Name": "Alley Sneak",
+      "Tier": "outer",
+      "Art": "cat-people-sneak",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 120,
+      "DMG": 6,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Swipe",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Shiv",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Cutpurse",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "cat-people-outer-clawguard",
+      "Name": "Claw Guard",
+      "Tier": "outer",
+      "Art": "cat-people-clawguard",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 150,
+      "DMG": 5,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Bat",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Slash",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Full Claw",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "cat-people-inner-stalker",
+      "Name": "Night Stalker",
+      "Tier": "inner",
+      "Art": "cat-people-stalker",
+      "Draw": "TBD",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 140,
+      "DMG": 9,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Stalk",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Spring",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Nine Cuts",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "cat-people-inner-duelist",
+      "Name": "Whisker Duelist",
+      "Tier": "inner",
+      "Art": "cat-people-duelist",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 165,
+      "DMG": 9,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Feint",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Lunge",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Perfect Cut",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "cat-people-inner-maneater",
+      "Name": "Maneater",
+      "Tier": "inner",
+      "Art": "cat-people-maneater",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 200,
+      "DMG": 8,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Cuff",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Crush",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Drag Down",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "cat-people-boss-matriarch",
+      "Name": "The Matriarch",
+      "Tier": "boss",
+      "Art": "cat-people-matriarch",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 275,
+      "DMG": 13,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Correct",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Discipline",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Matriarch's Due",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "All Her Children",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "of Nine Litters"
+    },
+    {
+      "Record": "cat-people-boss-shadow",
+      "Name": "The Shadow Cat",
+      "Tier": "boss",
+      "Art": "cat-people-shadow",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 250,
+      "DMG": 15,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Unseen",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Behind You",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Killing Stroke",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Gone Again",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Never Seen"
+    },
+    {
+      "Record": "cat-people-boss-lion",
+      "Name": "The Bronze Lion",
+      "Tier": "boss",
+      "Art": "cat-people-lion",
+      "Draw": "TBD",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 310,
+      "DMG": 11,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Bat Down",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Roar",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Bear Down",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "None Shall Pass",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Who Guards"
+    }
+  ]
+}

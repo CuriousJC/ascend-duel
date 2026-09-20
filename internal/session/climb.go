@@ -28,9 +28,10 @@ import (
 //
 // **The climb is rolled once, here.** A defeat and a retry meet the same opponent again, because
 // nothing re-rolls it; see the randomness skill on why the enemy stream is its own.
-// **The bosses come in as a second pool rather than merged into the first**, because the climb
-// places them differently: a boss stands on a floor's stairway and nowhere else.
-func Start(enemies map[string]data.EnemyData, bosses map[string]data.BossData, runSeed int64) *Session {
+//
+// **The tower's shape comes in beside the roster**, because how tall the climb is decides how many
+// motifs it has to spend and the roster alone cannot say.
+func Start(motifs map[string]data.MotifData, tower data.TowerData, runSeed int64) *Session {
 	deck := StartingDeck()
 	if StartingDeckList != nil {
 		// A chosen deck, for a fixture or a lesson. Copied, so the caller's slice cannot be
@@ -38,7 +39,7 @@ func Start(enemies map[string]data.EnemyData, bosses map[string]data.BossData, r
 		deck = append([]combat.Card(nil), StartingDeckList...)
 	}
 	s := New(deck)
-	s.climb = newClimb(enemies, bosses, runSeed)
+	s.climb = newClimb(motifs, tower, runSeed)
 	return s
 }
 
@@ -48,8 +49,8 @@ func Start(enemies map[string]data.EnemyData, bosses map[string]data.BossData, r
 // climb is not saved — it is rebuilt from the run code — which is only safe while there is exactly
 // one expression that turns a seed into an order. Two would be two towers that agree until one of
 // them is edited.
-func newClimb(enemies map[string]data.EnemyData, bosses map[string]data.BossData, runSeed int64) *pyramid.Pyramid {
-	return pyramid.New(enemies, bosses, rand.New(rand.NewSource(seeds.For(runSeed, seeds.EnemySelect))))
+func newClimb(motifs map[string]data.MotifData, tower data.TowerData, runSeed int64) *pyramid.Pyramid {
+	return pyramid.New(motifs, tower, rand.New(rand.NewSource(seeds.For(runSeed, seeds.EnemySelect))))
 }
 
 // Enemy is the record key of whoever stands in the room the run is currently in.
@@ -79,3 +80,23 @@ func (s *Session) Enemy() string {
 
 // Floor is which floor of the tower the run is on, counting from one.
 func (s *Session) Floor() int { return pyramid.FloorOf(s.fight) }
+
+// Element is the element whoever stands in the current room is dealt as, which is the floor's
+// theme. Empty on a run with no climb.
+//
+// **It is a string rather than a combat.Element** for the reason a card back is: this package
+// carries what the data file writes, and the parsing belongs where the cards are built.
+func (s *Session) Element() string {
+	if s.climb == nil {
+		return ""
+	}
+	return s.climb.ElementAt(s.fight)
+}
+
+// Motif is which motif themes the floor the run is on. Empty on a run with no climb.
+func (s *Session) Motif() string {
+	if s.climb == nil {
+		return ""
+	}
+	return s.climb.FloorAt(s.Floor()).Motif
+}

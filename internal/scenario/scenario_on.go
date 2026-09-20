@@ -75,9 +75,16 @@ type record struct {
 	// one into a duel. That is what this plants.
 	Essences []string `json:"Essences"`
 
-	// Enemy is a record key from enemies.json. **Empty means the climb's own**, so a scenario that
-	// is only about the hand does not have to pick a fight.
+	// Enemy is a record key from any file under data/motifs. **Empty means the climb's own**, so a
+	// scenario that is only about the hand does not have to pick a fight.
 	Enemy string `json:"Enemy"`
+
+	// EnemyElement is the colour to deal that opponent as. **Empty means the floor's own**, which
+	// is what a fixture wants unless the colour is the thing being looked at — a picture that has
+	// not been generated yet, say, or a deck whose ticks are the point. It is refused if the
+	// record cannot be dealt as it, so a fixture cannot quietly fight a creature that does not
+	// exist.
+	EnemyElement string `json:"EnemyElement"`
 
 	// Screen is which scene to open on: `combat` (the default), `reward` or `shop`.
 	//
@@ -390,11 +397,15 @@ func check(r *record) error {
 		return fmt.Errorf("fight %d is before the first room", r.Fight)
 	}
 	if r.Enemy != "" {
-		_, enemy := data.LoadEnemies()[r.Enemy]
-		_, boss := data.LoadBosses()[r.Enemy]
-		if !enemy && !boss {
-			return fmt.Errorf("%q is in no enemy or boss record", r.Enemy)
+		rec, ok := data.MotifRecords(data.LoadMotifs())[r.Enemy]
+		if !ok {
+			return fmt.Errorf("%q is in no motif file", r.Enemy)
 		}
+		if r.EnemyElement != "" && !rec.HasAffinity(r.EnemyElement) {
+			return fmt.Errorf("%s cannot be dealt as %s", r.Enemy, r.EnemyElement)
+		}
+	} else if r.EnemyElement != "" {
+		return fmt.Errorf("names the element %s and no opponent to deal as it", r.EnemyElement)
 	}
 	for _, c := range r.Hand {
 		if _, ok := combat.ConceptByKey(c.Card); !ok {
@@ -445,6 +456,10 @@ func Hand() []combat.Card {
 
 // Enemy is the record key to fight instead of the climb's own, or empty for the climb's.
 func Enemy() string { return current.Enemy }
+
+// EnemyElement is the colour to deal the opponent as instead of the floor's, or empty for the
+// floor's own.
+func EnemyElement() string { return current.EnemyElement }
 
 // Teach reports whether this scenario starts the tutorial.
 func Teach() bool { return current.Teach }

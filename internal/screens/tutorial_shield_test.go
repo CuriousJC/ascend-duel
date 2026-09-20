@@ -23,6 +23,13 @@ import (
 // **It is the whole round, resolved**, rather than an assertion about the mask. What the step
 // claims is a thing the player watches happen, so what is checked is the log they will watch.
 func TestTheTutorialsShieldEatsTheCreaturesHeaviestBlow(t *testing.T) {
+	// **Skipped while the tutorial is switched off.** The lesson pinned a creature and a run code
+	// together and the roster it named no longer exists, so there is nothing for this to measure.
+	// It is kept rather than deleted because it is the promise a replacement seed has to satisfy:
+	// delete this line when one is chosen, and let the test say whether the candidate works. See
+	// TODO.md.
+	t.Skip("the tutorial is switched off until a motif, an element and a seed are chosen for it")
+
 	script := tutorial.Load()
 	runSeed, err := seeds.Parse(script.Seed)
 	if err != nil {
@@ -33,7 +40,7 @@ func TestTheTutorialsShieldEatsTheCreaturesHeaviestBlow(t *testing.T) {
 	if !ok {
 		t.Fatal("no duelist record Fighter1")
 	}
-	foe, ok := data.LoadEnemies()[script.Enemy]
+	foe, ok := data.MotifRecords(data.LoadMotifs())[script.Enemy]
 	if !ok {
 		t.Fatalf("tutorial.json names enemy %q, which is in no roster", script.Enemy)
 	}
@@ -48,7 +55,7 @@ func TestTheTutorialsShieldEatsTheCreaturesHeaviestBlow(t *testing.T) {
 	}
 
 	// The creature's own turn, planned exactly as the screen plans it.
-	pile := decks.NewEnemyPile(script.Enemy, seeds.ForFight(runSeed, seeds.EnemyDeck, 0), decks.EnemyHandSize)
+	pile := decks.NewEnemyPile(script.Enemy, "", seeds.ForFight(runSeed, seeds.EnemyDeck, 0), decks.EnemyHandSize)
 	fighter := combat.Duelist{
 		DMG: me.DMG, MaxLife: me.HP, CurrentLife: me.HP, Actions: me.Actions,
 	}

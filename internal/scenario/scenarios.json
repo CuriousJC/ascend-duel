@@ -55,7 +55,7 @@
       "pair-status-weight-shock"
     ],
     "RelicSlots": 50,
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Runes": [
       "left-to-right",
       "duplicate-card",
@@ -350,7 +350,7 @@
     "ScenarioRecord": "card-full-house",
     "Note": "The Card Full House, dealt on purpose: three Cuts and two Braces out of a hand of eight, which is 5 AP and pays 3.42x. It is the hand that says most about how the ladder is counted, because both halves of it are things a player has to be told. The rung matches on CONCEPT - data/hands.json writes match concept, groups [3, 2] - so the three Cuts are a set because they are Cuts, and the colors they happen to wear are worth nothing to it; recolor every card in this hand and the multiplier does not move. And the two Braces are DEFEND cards that join the hand like anything else: they carry a form and an element, they count toward the rung, and they bring no damage with them - so the sum is three 0.5x slashes under a 3.42x multiplier, and the shields go up beside the blow rather than instead of it. The other three cards - a Flinch, a Jab and a Block - are there to be left behind, so the hand is a choice rather than the only five cards in the row. Giant Bat, 15 AP and a dummy, and it shares the shields fixture's deck so the refill behaves the same way. See ASCEND_DUEL_SCENARIO=shields for the defences on their own.",
     "Relics": [],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Hand": [
       {
         "Card": "Flinch",
@@ -554,7 +554,7 @@
     "ScenarioRecord": "shields",
     "Note": "The shields, on their own: what a defend card raises, what one eats, and how the break is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is two thirds defend cards across all five colors - Flinch at 0 AP, Brace at 1, Block at 2, Guard at 3 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside a blow rather than instead of one. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature's HEAVIEST blow, not its first, and it decides that at the top of the creature's turn. Watch the beat between the two turns, where the blocked pips fly out of the duelist card into the card they kill and the crack opens across its face. The pip row along the bottom of the duelist card draws at most six - screens.maxShieldPips - so a turn that raises ten draws a full row and the true count is on the engine. Against a dummy, so it can be watched as many times as it takes rather than survived.",
     "Relics": [],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Hand": [
       {
         "Card": "Brace",
@@ -1800,7 +1800,7 @@
         "Element": "fire"
       }
     ],
-    "Enemy": "Bayaz",
+    "Enemy": "magic-users-boss-archmage",
     "Fight": 2
   },
   {
@@ -1833,7 +1833,7 @@
         "Element": "fire"
       }
     ],
-    "Enemy": "GiantRat"
+    "Enemy": "animals-outer-rat"
   },
   {
     "ScenarioRecord": "seven-term-sum",
@@ -1864,7 +1864,7 @@
         "Element": "fire"
       }
     ],
-    "Enemy": "GiantRat"
+    "Enemy": "animals-outer-rat"
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
@@ -1891,7 +1891,7 @@
         "Element": "fire"
       }
     ],
-    "Enemy": "OgreWarlord"
+    "Enemy": "ogres-inner-warlord"
   },
   {
     "ScenarioRecord": "altered-deck",
@@ -2158,7 +2158,7 @@
         "Element": "fire"
       }
     ],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Screen": "combat",
     "Actions": 30
   },
@@ -2176,7 +2176,7 @@
         "Copies": 40
       }
     ],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Screen": "combat",
     "Actions": 30
   },
@@ -2189,7 +2189,7 @@
       "dmg-shield-use"
     ],
     "Hand": [],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Dummy": true,
     "Actions": 15,
     "Screen": "combat",
@@ -2226,7 +2226,7 @@
       { "Card": "Brace", "Element": "arcane" },
       { "Card": "Cut", "Element": "arcane" }
     ],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Dummy": true,
     "Actions": 15,
     "Screen": "combat"
@@ -2243,7 +2243,7 @@
   {
     "ScenarioRecord": "every-attack-counts",
     "Note": "Every attack the turn paid for pays into the blow, whether or not it made the rung (owner's call, 2026-09-17). The hand is two ice shields and five attacks in four colours, so the two cases are one click apart. Take the two shields and one attack: they form the Pair on themselves, the attack is in no rung, and it lands anyway at the Pair's multiplier - which it did not before, because the blow was the shields' own zero and the attack never swung. Take the two earth Jabs and add the fire Bash: the Card Pair is the two Jabs, the Bash rides at its rate and burns as well, which is the same widening applied to colours. The budget is wide and nothing dies, so every combination can be tried against the same bat.",
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Hand": [
       { "Card": "Brace", "Element": "ice" },
       { "Card": "Block", "Element": "ice" },
@@ -2272,7 +2272,7 @@
       "two-destroyed",
       "play-dmgx"
     ],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Seed": "R1NGS4",
     "Dummy": true,
     "Actions": 12
@@ -2341,7 +2341,7 @@
       { "Card": "Brace", "Element": "arcane" },
       { "Card": "Cut", "Element": "arcane" }
     ],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Seed": "R1NGS4",
     "Dummy": true,
     "Actions": 15
@@ -2388,7 +2388,7 @@
       "play-dmgx",
       "change-wildcard"
     ],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Seed": "R0W14S",
     "Dummy": true,
     "Actions": 12
@@ -2450,7 +2450,7 @@
       { "Card": "Pulverize", "Element": "fire" },
       { "Card": "Pulverize", "Element": "fire" }
     ],
-    "Enemy": "GiantBat",
+    "Enemy": "animals-outer-bat",
     "Screen": "combat",
     "Vitae": 400,
     "Actions": 30
@@ -2459,7 +2459,7 @@
     "ScenarioRecord": "life-relics",
     "Note": "Two flips that chain and the two life relics, on a real duelist with a readable health bar. The deck is half lightning and half ice; Frozen Lightning is worn left of Meltdown, so a lightning card is dealt ice and then fire - two steps, two beats, a toast on each ring - while a native ice card takes the second step alone. That is combat.FlipSteps carrying a running element through the worn list, and the worn order is what decides it: swap the two rings and lightning stays lightning, because Meltdown reads the card before Frozen Lightning has touched it. Vampiric Fang gives back 3/10 of every blow and The Tear restores 1/4 of maximum life at the top of each turn, so the two life gestures are side by side: a drain leaves the body it was taken out of, a regeneration leaves the ring that made it. It has NO Hand on purpose - a plugged hand is seated straight out of the run and never goes through drawHand, so it would show the cards unflipped and the cascade would not run at all. It is not a dummy for the same kind of reason: 999999 life each way makes both life figures land on a bar that cannot visibly move. The Rabbit's Foot is worn last, so every gold and silver card in the deck reads 2 IN 5 rather than 1 IN 5 on its tooltip and pays that often - and if anything shocks the duelist, their own miss chance reads 1/2 rather than 1/4, which is the drawback the relic is honest about. Round one heals nothing either way, since nothing in the game heals above full.",
     "Relics": ["flip-lightning-to-ice", "flip-ice-to-fire", "drain-blow", "heal-turn-start", "scale-rolls"],
-    "Enemy": "Basilisk",
+    "Enemy": "draconics-outer-basilisk",
     "RoundLimit": 20,
     "Deck": [
       { "Card": "Bash", "Element": "lightning", "Copies": 12 },
@@ -2499,7 +2499,7 @@
         "Element": "earth"
       }
     ],
-    "Enemy": "GiantRat",
+    "Enemy": "animals-outer-rat",
     "Dummy": true,
     "Actions": 12
   },
@@ -2531,7 +2531,7 @@
         "Element": "lightning"
       }
     ],
-    "Enemy": "GiantRat",
+    "Enemy": "animals-outer-rat",
     "Dummy": true,
     "Actions": 12
   },
@@ -2564,7 +2564,7 @@
         "Element": "lightning"
       }
     ],
-    "Enemy": "GiantRat",
+    "Enemy": "animals-outer-rat",
     "Dummy": true,
     "Actions": 12
   },
@@ -2650,7 +2650,7 @@
         "Copies": 5
       }
     ],
-    "Enemy": "GiantRat",
+    "Enemy": "animals-outer-rat",
     "Dummy": true,
     "Actions": 15
   },
@@ -2677,7 +2677,7 @@
       { "Card": "Slice", "Element": "earth" },
       { "Card": "Brace", "Element": "earth" }
     ],
-    "Enemy": "GiantRat",
+    "Enemy": "animals-outer-rat",
     "Dummy": true,
     "Actions": 15
   },
@@ -2707,7 +2707,7 @@
       { "Card": "Bash", "Element": "ice" },
       { "Card": "Block", "Element": "earth" }
     ],
-    "Enemy": "GiantRat",
+    "Enemy": "animals-outer-rat",
     "Dummy": true,
     "Actions": 15
   }

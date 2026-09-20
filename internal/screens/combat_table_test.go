@@ -516,7 +516,7 @@ func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
 	// the opponent commits at the start of the planning phase instead. If startRound ever
 	// re-planned, the cards the player chose against would not be the cards they faced.
 	s := &CombatScene{}
-	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, seeds.EnemyDeckPin, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, "", seeds.EnemyDeckPin, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
 		Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 60},
 	}
@@ -695,7 +695,7 @@ func TestANewPlanArrivesWithNothingRaised(t *testing.T) {
 	// round that ended with the opponent's second card up would leave it up under the *next*
 	// plan — cards standing as though they had been committed, dropping again at DUEL!.
 	s := &CombatScene{}
-	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, seeds.EnemyDeckPin, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, "", seeds.EnemyDeckPin, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
 		Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 60},
 	}
@@ -719,7 +719,7 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 	// The row stays on the table when a duel ends — it is the round the player is looking at
 	// the result of — and nothing is drawn from a pile for a fight that is over.
 	s := &CombatScene{}
-	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, seeds.EnemyDeckPin, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, "", seeds.EnemyDeckPin, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
 		Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 0},
 	}
@@ -742,8 +742,9 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 
 // testEnemyRecord is the roster entry the table tests deal from. **A named record rather than the
 // first one sorted**, so a change to the roster's order does not silently change which deck these
-// tests are exercising — and a low-floor enemy, so the hand it draws is small and cheap.
-const testEnemyRecord = "ClearSlime1"
+// tests are exercising — and an outer-chamber creature of an early motif, so the hand it draws is
+// small and cheap.
+const testEnemyRecord = "goblins-outer-serf"
 
 // **A defense that already flew its pips does not rise again.** The engine resolves defenses at
 // the end of the turn, several beats after the hand they were scored into — so with the pips

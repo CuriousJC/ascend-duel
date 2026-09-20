@@ -466,6 +466,20 @@ func artworkFrom(key string) image.Image {
 	return img
 }
 
+// ArtworkOr is Artwork with a second key to fall back to when the first names no file.
+//
+// **It exists for the roster, where nearly every picture is still to be generated.** A record's
+// own art key is built from its `Art` field and the element it was dealt as, so a creature has one
+// picture per colour and most of them do not exist yet — and a card with a hole in it reads as a
+// bug rather than as art nobody has made. The fallback is deliberate rather than silent: the
+// placeholder is a drawing that says so.
+func ArtworkOr(gs *state.GlobalState, key, fallback string) image.Image {
+	if img := Artwork(gs, key); img != nil {
+		return img
+	}
+	return Artwork(gs, fallback)
+}
+
 func Artwork(gs *state.GlobalState, key string) image.Image {
 	if key == "" {
 		return nil
@@ -504,13 +518,22 @@ func Artwork(gs *state.GlobalState, key string) image.Image {
 // underneath — see `CombatScene.shownLife`, which is a view over it and never a second copy.
 func EnemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life int) cards.Spec {
 	spec := cards.Spec{
-		Name:    name,
+		// **No name on the face.** The card is a picture, and the full name and title are the
+		// tooltip's — see EnemyStyle. The parameter stays because every caller already has the
+		// name and the tooltip is built from the same pairing.
 		Element: cards.Basic,
-		Art:     Artwork(gs, c.Portrait),
+		Art:     ArtworkOr(gs, c.Portrait, data.DefaultEnemyArt),
 		Life:    life,
 		MaxLife: c.MaxLife,
 		Enabled: true,
 	}
+
+	// **The one figure a player cannot read off the table.** Life is already the bar and the
+	// fraction, and the action budget is visible as the cards the creature queues; what the next
+	// blow takes off them is not anywhere else. It is written under the portrait, between the
+	// badge row and the bar — see cards.FighterBlockTop, which is what the art is composed
+	// against.
+	spec.PortraitStat = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
 
 	// **Walked in registration order, which is what makes the row stable.** A badge that moved along
 	// the row as another status came and went would read as a different badge. `AllStatuses` is the

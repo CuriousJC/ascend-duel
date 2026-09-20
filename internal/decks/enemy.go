@@ -9,15 +9,21 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// enemyDecks is every enemy's deck, keyed by record, built once at package init so a bad record
-// fails on launch rather than mid-duel.
+// enemyConcepts is every record's cards as registered concepts, keyed by record, built once at
+// package init so a bad record fails on launch rather than mid-duel.
 //
-// **One deck per enemy, not one for the roster** *(2026-08-16)*. Every opponent used to draw from
-// `enemy_cards.json`, twelve Attacks and twelve Heavies, and its behavior came from a `PlanStyle`
-// string picking one of four planners. Both are gone: an enemy is what it holds.
-var enemyDecks = buildEnemyDecks()
+// **A concept, not a card.** A creature's colour is its floor's rather than its own, so the deck
+// it actually fights with is not known until a fight is built — see EnemyCards, which is the one
+// place a concept and an element become cards.
+var enemyConcepts = buildEnemyConcepts()
 
-// buildEnemyDecks registers every enemy's concepts and expands its deck.
+// conceptCopies is one registered concept and how many of it a deck holds.
+type conceptCopies struct {
+	id     combat.ConceptID
+	copies int
+}
+
+// buildEnemyConcepts registers every motif record's cards.
 //
 // **It walks the roster in sorted order**, per the determinism rules in CLAUDE.md — a map range
 // would assign concept IDs in whatever order Go felt like, and while nothing compares IDs across
@@ -26,73 +32,63 @@ var enemyDecks = buildEnemyDecks()
 //
 // It panics on a bad record for the reason the player's deck builder does: a deck quietly missing
 // cards is a balance change nobody made, and a launch failure naming the record is cheaper to fix
-// than an enemy that turns out to be harmless three floors in.
-func buildEnemyDecks() map[string][]combat.Card {
-	records := data.LoadEnemies()
+// than a creature that turns out to be harmless three floors in.
+func buildEnemyConcepts() map[string][]conceptCopies {
+	motifs := data.LoadMotifs()
 
-	// **The bosses join the same map, converted to enemy records.** They are a separate pool
-	// because they are *placed* differently — see data/bosses_data.go — but a deck is a deck,
-	// and a second registry keyed the same way would mean every caller asking twice. They are
-	// registered after the roster and in their own sorted order, so adding a boss cannot
-	// renumber a creature's concepts.
-	bosses := data.LoadBosses()
-	order := data.EnemyOrder(records)
-	for _, name := range data.BossOrder(bosses) {
-		if _, clash := records[name]; clash {
-			panic("bosses.json: " + name + " is also an enemy record, so its deck would be ambiguous")
-		}
-		records[name] = bosses[name].Enemy()
-		order = append(order, name)
-	}
-
-	out := make(map[string][]combat.Card, len(records))
-
-	for _, name := range order {
-		rec := records[name]
-		if len(rec.Cards) == 0 {
-			panic(fmt.Sprintf("enemies.json: %s has no cards, so it cannot fight", name))
-		}
-
-		var deck []combat.Card
-		for _, c := range rec.Cards {
-			id, err := combat.RegisterConcept(name, c)
-			if err != nil {
-				panic("enemies.json: " + err.Error())
+	out := map[string][]conceptCopies{}
+	for _, motif := range data.MotifOrder(motifs) {
+		for _, rec := range motifs[motif].Records {
+			if len(rec.Cards) == 0 {
+				panic(fmt.Sprintf("motifs: %s has no cards, so it cannot fight", rec.Record))
 			}
-
-			elements := c.Elements
-			if len(elements) == 0 {
-				// **Empty means basic**, which is what every enemy card is today. An enemy's color
-				// does nothing until an elemental affix attunes it — see MECHANICS.md — so writing
-				// one in now would hand it a status it has no source for.
-				elements = []string{combat.Basic.String()}
-			}
-			for _, en := range elements {
-				element, ok := combat.ParseElement(en)
-				if !ok {
-					panic(fmt.Sprintf("enemies.json: %s.%s names unknown element %q", name, c.Label, en))
+			var list []conceptCopies
+			for _, c := range rec.Cards {
+				id, err := combat.RegisterConcept(rec.Record, c)
+				if err != nil {
+					panic("motifs: " + err.Error())
 				}
-				for i := 0; i < c.Copies; i++ {
-					deck = append(deck, combat.Of(id, element))
-				}
+				list = append(list, conceptCopies{id: id, copies: c.Copies})
 			}
+			out[rec.Record] = list
 		}
-		out[name] = deck
 	}
 	return out
 }
 
-// EnemyCards is one opponent's deck, copied, so a caller cannot change what every future duel is
-// dealt. An unknown record hands back nothing rather than panicking — the roster is walked from
-// the same map, so a miss here means the caller invented a name.
-func EnemyCards(record string) []combat.Card {
-	return append([]combat.Card(nil), enemyDecks[record]...)
+// EnemyCards is one opponent's deck as it is dealt on a given floor: its own concepts, every one
+// of them in the floor's element.
+//
+// **The element is the floor's, not the card's.** A creature is instantiated as one element and
+// its whole deck takes it, the same way a duelist's Jab is a concept that ships in five colours —
+// so there is no element anywhere in data/motifs, and a card cannot carry one of its own.
+//
+// An unnamed element deals a basic deck, which is what a fixture with no floor behind it gets.
+// An unknown record hands back nothing rather than panicking — the roster is walked from the same
+// map, so a miss here means the caller invented a name.
+func EnemyCards(record, element string) []combat.Card {
+	el := combat.Basic
+	if element != "" {
+		parsed, ok := combat.ParseElement(element)
+		if !ok {
+			panic("motifs: " + record + " cannot be dealt as " + element)
+		}
+		el = parsed
+	}
+
+	var out []combat.Card
+	for _, c := range enemyConcepts[record] {
+		for i := 0; i < c.copies; i++ {
+			out = append(out, combat.Of(c.id, el))
+		}
+	}
+	return out
 }
 
 // EnemyRecords is every record with a deck, sorted. For a tool walking the roster.
 func EnemyRecords() []string {
-	out := make([]string, 0, len(enemyDecks))
-	for name := range enemyDecks {
+	out := make([]string, 0, len(enemyConcepts))
+	for name := range enemyConcepts {
 		out = append(out, name)
 	}
 	sort.Strings(out)
@@ -139,10 +135,10 @@ type EnemyPile struct {
 	rng *rand.Rand
 }
 
-// NewEnemyPile shuffles one enemy's deck and deals an opening hand.
-func NewEnemyPile(record string, seed int64, handSize int) *EnemyPile {
+// NewEnemyPile shuffles one enemy's deck, dealt in the floor's element, and deals an opening hand.
+func NewEnemyPile(record, element string, seed int64, handSize int) *EnemyPile {
 	p := &EnemyPile{
-		draw:     EnemyCards(record),
+		draw:     EnemyCards(record, element),
 		handSize: handSize,
 		rng:      rand.New(rand.NewSource(seed)),
 	}

@@ -22,14 +22,14 @@
 // tools/cardsheet calls it with no window. Both read the same embedded bytes, so the game and the
 // contact sheet cannot end up showing different pictures.
 //
-// The portraits are bytes only. Decoding 96 at startup would cost around 20 MB of resident memory
-// for pictures most runs never show.
+// The creature pictures are bytes only. Decoding the whole roster at startup would cost tens of
+// megabytes of resident memory for pictures most runs never show.
 //
 // # Provenance
 //
-// This game is source-available and will be sold, so every asset needs a provable license. The
-// enemy portraits are PVGames creature art from a Humble bundle whose license permits shipping
-// inside a game; everything else here is first-party or generated at runtime. "Found it online" is
-// not sufficient. That constraint is the reason the glyphs and the score are generated rather than
-// loaded — see internal/systems and internal/music.
+// This game is source-available and will be sold, so every asset needs a provable license.
+// **Everything here is first-party**: generated from the prompts under docs/art/, or generated at
+// runtime. "Found it online" is not sufficient, and nothing in this directory came from anywhere
+// else. That constraint is the reason the glyphs and the score are generated rather than loaded —
+// see internal/systems and internal/music.
 package assets

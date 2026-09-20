@@ -45,38 +45,47 @@ type Combatant struct {
 	//
 	// Empty for an enemy: enemies do not have a deck the player ever sees the back of.
 	CardBack string
+
+	// Element is which element this opponent was dealt as, by name — the floor's theme. Empty for
+	// the player, whose cards each carry their own.
+	//
+	// **A string rather than a combat.Element**, like CardBack: what this package carries is what
+	// the data file writes, and the parsing belongs where the cards are built.
+	Element string
 }
 
-// NewEnemyFrom builds an opponent from an enemy record, **grown to the fight it is met at** — see
-// pyramid.ScaleToFight. Fight 0 is the first fight of a run and takes the record's stats unchanged.
+// NewEnemyFrom builds an opponent from a motif record, dealt as one element and **grown to the
+// fight it is met at** — see pyramid.ScaleToFight. Fight 0 is the first room of the tower and
+// takes the record's bases unchanged.
 //
 // **The fight index is a parameter rather than something read later**, so an unscaled opponent
 // cannot be built by accident: every caller has to say where in the ascent this one stands.
 //
-// **It takes no sprite sheet since 2026-08-11.** It used to slice a west-facing idle frame
-// out of one, which is why the caller had to resolve an asset out of global state and pass
-// it in; the enemy is a card now, so all that is left is the portrait's key.
-func NewEnemyFrom(d data.EnemyData, fight int) *Combatant {
+// **The element is the floor's**, and what it currently decides is the picture this opponent wears
+// and the colour of every card in its deck. A record carries a picture per element it can be dealt
+// as, so a fire goblin and an ice goblin are two drawings of one creature.
+func NewEnemyFrom(r data.MotifRecord, element string, fight int, tower data.TowerData) *Combatant {
 	c := &Combatant{
 		Duelist: combat.Duelist{
 			// **Two of the three stats climb and one does not.** HP and DMG are what the curve is
-			// made of; `Actions` is left alone because it is the budget a *deck* is spent out of,
-			// and growing it would hand a floor-eight opponent more cards rather than a harder
-			// version of its own. It is the dial to reach for on purpose, per enemy, not one to
-			// move by arithmetic.
-			DMG:     pyramid.ScaleToFight(d.DMG, fight),
-			Actions: d.Actions,
-			MaxLife: pyramid.ScaleToFight(d.HP, fight),
+			// made of, on their own growth rates; `Actions` is left alone because it is the budget
+			// a *deck* is spent out of, and growing it would hand a floor-eight opponent more cards
+			// rather than a harder version of its own. It is the dial to reach for on purpose, per
+			// record, not one to move by arithmetic.
+			DMG:     pyramid.ScaleToFight(r.DMG, fight, tower.DMGGrowth),
+			Actions: r.Actions,
+			MaxLife: pyramid.ScaleToFight(r.HP, fight, tower.HPGrowth),
 
-			// **Enemies do not form hands** *(2026-08-17)*. Their cards resolve one at a time, in the
-			// order the planner chose them. It is set here because this is the one place an
-			// opponent is built from a record — the same seat `Relics` deliberately leaves at its
-			// zero value for the mirror-image reason.
+			// **Enemies do not form hands.** Their cards resolve one at a time, in the order the
+			// planner chose them. It is set here because this is the one place an opponent is built
+			// from a record — the same seat `Relics` deliberately leaves at its zero value for the
+			// mirror-image reason.
 			SoloAttacks: true,
 		},
-		Record:   d.EnemyRecord,
-		Name:     d.Name,
-		Portrait: d.Portrait,
+		Record:   r.Record,
+		Name:     r.FullName(),
+		Portrait: r.ArtKey(element),
+		Element:  element,
 	}
 	c.CurrentLife = c.MaxLife
 	return c

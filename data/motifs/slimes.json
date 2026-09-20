@@ -1,0 +1,345 @@
+{
+  "Motif": "slimes",
+  "Name": "Slimes",
+  "Draw": "slimes are jelly-like creatures with amorphous shapes",
+  "ElementDraw": {
+    "fire": "slimes will have the games orange color throughout their jelly bodies",
+    "ice": "slimes will have the games blue color throughout their jelly bodies",
+    "lightning": "slimes will have the games yellow color throughout their jelly bodies",
+    "earth": "slimes will have the games green color throughout their jelly bodies",
+    "arcane": "slimes will have the games purple color throughout their jelly bodies"
+  },
+  "ValidFloors": [1, 5],
+  "Records": [
+    {
+      "Record": "slimes-outer-blob",
+      "Name": "Blob",
+      "Tier": "outer",
+      "Art": "slimes-blob",
+      "Draw": "a clear translucent goopy blob creature with tints coming from their element",
+      "Affinities": ["ice", "lightning", "earth", "arcane"],
+      "HP": 110,
+      "DMG": 4,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Ooze",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Engulf",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Dissolve",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "slimes-outer-cube",
+      "Name": "Cube",
+      "Tier": "outer",
+      "Art": "slimes-cube",
+      "Draw": "a cube shaped translucent slime with a knife trapped inside it",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
+      "HP": 95,
+      "DMG": 5,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Spit",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Slap",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Drown",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "slimes-outer-orb",
+      "Name": "Orb",
+      "Tier": "outer",
+      "Art": "slimes-orb",
+      "Draw": "a clear translucent slime drawn into a nearly perfect round orb, with tints coming from its element",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
+      "HP": 125,
+      "DMG": 4,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Seep",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Smother",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Digest",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "slimes-inner-spire",
+      "Name": "Spire",
+      "Tier": "inner",
+      "Art": "slimes-spire",
+      "Draw": "a tall translucent slime rising from a broad puddled base into a single sharp tapering spire, with tints coming from its element",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
+      "HP": 150,
+      "DMG": 6,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Drip",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Encase",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Harden",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "slimes-inner-cluster",
+      "Name": "Cluster",
+      "Tier": "inner",
+      "Art": "slimes-cluster",
+      "Draw": "a cluster of clear translucent slime globules fused together into one lumpy creature, with tints coming from its element",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
+      "HP": 175,
+      "DMG": 5,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Clot",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Congeal",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Coagulate",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "slimes-inner-bouncer",
+      "Name": "Bouncer",
+      "Tier": "inner",
+      "Art": "slimes-bouncer",
+      "Draw": "a squat translucent slime in a mushroom shape, with a broad domed cap above a thick springy stem and tints coming from its element",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
+      "HP": 130,
+      "DMG": 7,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Grit",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Grind",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Avalanche",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "slimes-boss-spitter",
+      "Name": "Spitter",
+      "Tier": "boss",
+      "Art": "slimes-spitter",
+      "Draw": "a large clear translucent slime with a long raised pseudopod appendage ending in an open spitting tip, with tints coming from its element",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
+      "HP": 235,
+      "DMG": 9,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Glint",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Refract",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Prism Beam",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Whole Spectrum",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "the Unbroken Sheen"
+    },
+    {
+      "Record": "slimes-boss-entropic",
+      "Name": "Entropic",
+      "Tier": "boss",
+      "Art": "slimes-entropic",
+      "Draw": "a large translucent slime whose body is coming apart at the edges into curling strands, loose droplets and ragged gaps, with tints coming from its element",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
+      "HP": 260,
+      "DMG": 10,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Fray",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Unravel",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Collapse",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Nothing Left",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "the Unmaking"
+    },
+    {
+      "Record": "slimes-boss-galaxy",
+      "Name": "Galaxy",
+      "Tier": "boss",
+      "Art": "slimes-galaxy",
+      "Draw": "a vast translucent slime with a slowly spiraling body full of suspended bubbles, bright motes and a deep central hollow, with tints coming from its element",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
+      "HP": 245,
+      "DMG": 11,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Mote",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Gravity Well",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Starfall",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Event Horizon",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "of the Long Fall"
+    }
+  ]
+}

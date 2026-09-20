@@ -167,8 +167,10 @@ func main() {
 	g.GlobalState.Fonts = assets.LoadFonts()
 	g.GlobalState.FontData = assets.LoadFontData()
 	g.GlobalState.ImageData = assets.LoadImageData()
-	g.GlobalState.Enemies = data.LoadEnemies()
-	g.GlobalState.Bosses = data.LoadBosses()
+	g.GlobalState.Motifs = data.LoadMotifs()
+	g.GlobalState.Records = data.MotifRecords(g.GlobalState.Motifs)
+	g.GlobalState.Tower = data.LoadTower()
+	data.MustBeClimbable(g.GlobalState.Motifs, g.GlobalState.Tower.Floors)
 	g.GlobalState.Duelists = data.LoadDuelists()
 	g.GlobalState.Relics = data.LoadRelics()
 

@@ -42,7 +42,7 @@ func BootRun(gs *state.GlobalState) {
 		if snap, ok, err := profile.LoadRun(gs.Store); err != nil {
 			log.Printf("saved run: %v — starting a new one", err)
 		} else if ok {
-			run, seed, err := session.Resume(gs.Enemies, gs.Bosses, snap)
+			run, seed, err := session.Resume(gs.Motifs, gs.Tower, snap)
 			if err != nil {
 				log.Printf("saved run: %v — starting a new one", err)
 			} else {
@@ -94,7 +94,7 @@ func buildRun(gs *state.GlobalState) *session.Session {
 		gs.RunSeed = seed
 	}
 
-	run := session.Start(gs.Enemies, gs.Bosses, gs.RunSeed)
+	run := session.Start(gs.Motifs, gs.Tower, gs.RunSeed)
 	if teaching {
 		run.Teach(script)
 		log.Printf("teaching this run: %d steps, seed %s, first room %s",
@@ -103,27 +103,18 @@ func buildRun(gs *state.GlobalState) *session.Session {
 	return run
 }
 
-// tutorialForThisRun is the script to teach and whether to teach it, which is a question about the
-// profile and about how this particular run started.
+// tutorialForThisRun is the script to teach and whether to teach it.
 //
-// **A scenario answers no**, because it has its own switch — one that forces the lesson whatever
-// the profile says, which is the only way to see it twice — and because a fixture that jumped the
-// run to the shop cannot also be teaching a lesson that opens in a duel.
+// **It answers no to everything, because the lesson has no fight to be taught in.** The script
+// names a creature and a run code together — the taught hand, the blow it lands and the answering
+// turn were one tuned set — and the roster it names no longer exists. A lesson that opened on a
+// creature the script had not measured would describe a hand it had not dealt, which is worse than
+// no lesson: the tutorial is the one feature whose audience cannot tell a bug from the game.
 //
-// **gs.Resumed is not consulted here**, because a resumed run never reaches this function: it is
-// returned above without one being built. A player who quits during the tutorial is taught again
-// next launch, because nothing has marked it seen — the intended answer rather than a gap.
+// Re-teaching it is a motif, an element and a fresh run code that satisfy all of it at once; see
+// TODO.md, and the tutorial section of CLAUDE.md for the constraints a replacement has to meet.
 func tutorialForThisRun(gs *state.GlobalState) (tutorial.Script, bool) {
-	if scenario.Active() {
-		if scenario.Teach() {
-			return tutorial.Load(), true
-		}
-		return tutorial.Script{}, false
-	}
-	if gs.Profile == nil || gs.Profile.TutorialSeen {
-		return tutorial.Script{}, false
-	}
-	return tutorial.Load(), true
+	return tutorial.Script{}, false
 }
 
 // NewRun throws away whatever run was in progress and starts one from the beginning.

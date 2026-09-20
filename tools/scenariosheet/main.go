@@ -199,6 +199,7 @@ type record struct {
 	Stones         []string   `json:"Stones"`
 	Essences       []string   `json:"Essences"`
 	Enemy          string     `json:"Enemy"`
+	EnemyElement   string     `json:"EnemyElement"`
 	Screen         string     `json:"Screen"`
 	Fight          int        `json:"Fight"`
 	Vitae          int        `json:"Vitae"`
@@ -442,7 +443,11 @@ func factsOf(r record) []string {
 		out = append(out, "seed "+r.Seed)
 	}
 	if r.Enemy != "" {
-		out = append(out, "against "+r.Enemy)
+		against := "against " + r.Enemy
+		if r.EnemyElement != "" {
+			against += " in " + r.EnemyElement
+		}
+		out = append(out, against)
 	}
 	if r.Vitae > 0 {
 		out = append(out, strconv.Itoa(r.Vitae)+" vitae")

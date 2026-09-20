@@ -667,6 +667,18 @@ func (s *CombatScene) signalOrigin(gs *state.GlobalState, c cardSignal) (image.P
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }
 
+// statRowTopOf is where stat row i is drawn on a card in this style.
+//
+// **It counts the rule's gap**, exactly as cards.statRowTop does for the renderer — a figure flying
+// to a row measured without it lands short of every row under the rule.
+func statRowTopOf(st cards.Style, i int) int {
+	y := st.StatsTop + i*st.StatRowPitch
+	if st.StatRuleAfter > 0 && i >= st.StatRuleAfter {
+		y += st.StatRuleGap
+	}
+	return y
+}
+
 // signalTarget is the figure the signal lands on — a stat row or the health bar of the acting
 // side's fighter card.
 //
@@ -691,7 +703,7 @@ func (s *CombatScene) signalTarget(gs *state.GlobalState, c cardSignal) image.Po
 		if c.dest == signalVitae {
 			row = 2
 		}
-		return image.Pt(x, r.Min.Y+st.StatsTop+row*st.StatRowPitch+st.StatRowPitch/3)
+		return image.Pt(x, r.Min.Y+statRowTopOf(st, row)+st.StatRowPitch/3)
 	}
 	return image.Pt(x, r.Min.Y+st.HealthBarTop+st.HealthBarHeight/2)
 }

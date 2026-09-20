@@ -38,6 +38,13 @@ import (
 // with no window. It is deliberately *not* in `internal/scenario`, which is compiled out of every
 // ordinary build and so would take the check with it.
 func TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt(t *testing.T) {
+	// **Skipped while the tutorial is switched off.** The lesson pinned a creature and a run code
+	// together and the roster it named no longer exists, so there is nothing for this to measure.
+	// It is kept rather than deleted because it is the promise a replacement seed has to satisfy:
+	// delete this line when one is chosen, and let the test say whether the candidate works. See
+	// TODO.md.
+	t.Skip("the tutorial is switched off until a motif, an element and a seed are chosen for it")
+
 	const duelist = "Fighter1"
 
 	// The taught turn, as `data/tutorial.json`'s seed deals it: four lightning cards, 6 AP exactly,
@@ -57,7 +64,7 @@ func TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt(t *testing.T) {
 	if !ok {
 		t.Fatalf("no duelist record %q", duelist)
 	}
-	bat, ok := data.LoadEnemies()[enemyRecord]
+	bat, ok := data.MotifRecords(data.LoadMotifs())[enemyRecord]
 	if !ok {
 		t.Fatalf("no enemy record %q", enemyRecord)
 	}

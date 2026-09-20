@@ -35,6 +35,9 @@ func Essences() []string { return nil }
 // Enemy is the record key to fight instead of the climb's own. Empty here.
 func Enemy() string { return "" }
 
+// EnemyElement is the colour to deal the opponent as instead of the floor's. Empty here.
+func EnemyElement() string { return "" }
+
 // Teach reports whether this scenario starts the tutorial. Always false here.
 func Teach() bool { return false }
 

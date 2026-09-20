@@ -1,31 +1,23 @@
 {
   "Motif": "avians",
   "Name": "Avians",
-  "Draw": "TBD",
+  "Draw": "Each avian should be a humanoid shaped bird creature carrying a weapon.  The element should be visibile in the color of their feathers, the color of their weapons, and the color of their claws.  They should generally look somewhat primitive, having spears and bows more than heaivly worked metal.  Their clothing should be minimal and tight with leather so that their wings are free.  pay particular attention to their claws and their beaks and feather aspects.",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "red coloring with a fire crest",
+    "ice": "blue coloring with an ice crest",
+    "lightning": "yellow coloring with an lightning bolt crest",
+    "earth": "green coloring with an rock crest",
+    "arcane": "purple coloring with a purple gem crest"
   },
-  "ValidFloors": [
-    2,
-    7
-  ],
+  "ValidFloors": [2, 7],
   "Records": [
     {
       "Record": "avians-outer-crow",
       "Name": "Carrion Crow",
       "Tier": "outer",
       "Art": "avians-crow",
-      "Draw": "TBD",
-      "Affinities": [
-        "ice",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "A scavenger that has been at something already. A heavy straight corvid bill, a ragged ruff standing up around the neck, and a lean frame with the wing-arms held half open and the primaries splayed. It carries a short hooked knife low in one claw, held the way a tool is held rather than a weapon, and it is looking at the viewer sideways with one eye.",
+      "Affinities": ["ice", "lightning", "earth", "arcane"],
       "HP": 95,
       "DMG": 7,
       "Actions": 6,
@@ -58,13 +50,8 @@
       "Name": "Cliff Harrier",
       "Tier": "outer",
       "Art": "avians-harrier",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "A hunter that is about to leave. A raptor's head — small, smooth, with a deep hooked bill and a hard brow ridge over the eye — on narrow shoulders, with long pointed wing-arms swept back and mantled high behind it. It holds a short hunting spear upright against one shoulder, and the whole body is pitched slightly forward as though the ledge is right there.",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
       "HP": 120,
       "DMG": 6,
       "Actions": 5,
@@ -97,13 +84,8 @@
       "Name": "Bone Ratite",
       "Tier": "outer",
       "Art": "avians-ratite",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "A flightless bulk, built low and forward. A small flat head on a thick column of a neck, a blunt heavy bill, and shaggy hair-like plumage over a barrel chest; the wing-arms are stunted and useless, held tight in against the ribs. It grips a crude weighted club in both stubby claws. Frame it lower than its siblings so the tops of its enormous thighs make the bottom of the picture — that is where the creature lives.",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 150,
       "DMG": 5,
       "Actions": 4,
@@ -136,13 +118,8 @@
       "Name": "Young Roc",
       "Tier": "inner",
       "Art": "avians-roc",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "A juvenile far too big for how young it is. An eagle's head and bill at twice the scale of anything around it, with patches of unshed down still standing up along the crown and shoulders, and wing-arms so broad they run out of the picture on both sides. It carries a length of splintered ship's timber as a club, one end still trailing rope.",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
       "HP": 205,
       "DMG": 8,
       "Actions": 5,
@@ -175,13 +152,8 @@
       "Name": "Harpy",
       "Tier": "inner",
       "Art": "avians-harpy",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "Caught mid-shriek. A gaunt narrow head with the bill wide open and the throat distended, the crest feathers flattened back by its own noise, and every feather on the neck and chest ragged and out of line. Hooked blades are strapped along the inside of both forearms rather than held, so the wing-arms are flung out and empty.",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 140,
       "DMG": 9,
       "Actions": 6,
@@ -214,13 +186,8 @@
       "Name": "Ember Phoenix",
       "Tier": "inner",
       "Art": "avians-phoenix",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "The elegant one. A slender head, a fine tapered bill, and a long trailing crest that lifts up and back out of the top of the frame, with plumes streaming off the forearms as though a draft is coming up past it from below. It holds a slim curved sword point-up in front of itself, both claws on the grip, perfectly still.",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 170,
       "DMG": 9,
       "Actions": 6,
@@ -253,13 +220,8 @@
       "Name": "The Sky-Father",
       "Tier": "boss",
       "Art": "avians-skyfather",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "An old king of birds. A broad heavy eagle's head, deeply hooded over the eyes, with a mantle of long overlapping feathers lying across the shoulders like a cloak, and a chest twice the width of anything below it in the tower. It holds a long-hafted spear upright in one claw, planted, and does not lean on it.",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 295,
       "DMG": 13,
       "Actions": 6,
@@ -300,13 +262,8 @@
       "Name": "The Great Roc",
       "Tier": "boss",
       "Art": "avians-greatroc",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "Too large for the picture and composed that way. The shoulders reach both edges, the folded wing-arms run out of the top of the frame, and the head — an enormous hooked bill, the eye small in all that bone — is turned square onto the viewer with the bill slightly parted. A ship's anchor hangs from one claw on a short length of chain, carried as casually as a stone.",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 330,
       "DMG": 11,
       "Actions": 6,
@@ -347,13 +304,8 @@
       "Name": "The Corvid King",
       "Tier": "boss",
       "Art": "avians-corvid",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "earth"
-      ],
+      "Draw": "A crow that has collected. A high domed skull and a long straight bill, with rings, coin discs and threaded links worked in among the feathers of the neck and crown until the plumage reads as a hoard rather than as ornament. It holds a long hooked bill-hook across its body in one claw and a bundle of notched tally sticks in the other, and it is counting you.",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
       "HP": 260,
       "DMG": 15,
       "Actions": 6,

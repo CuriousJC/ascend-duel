@@ -3143,10 +3143,12 @@ unrelated creatures who happen to share a corridor.
 - **A motif carries the band of floors it may theme**, at the file level rather than per record: a
   motif whose creatures were valid on floors 1 to 3 and whose boss was valid on 4 to 6 could never
   theme a floor at all.
-- **Every fight of every motif can be dealt at least two ways.** For each of the three rooms and
-  each of the five elements there are at least two records that fit, so a floor is a pool rather
-  than a fixed set. The loader refuses a motif that cannot — a floor the generator can offer and
-  then fail to build is worse than one that never existed.
+- **Every chamber of every motif can be dealt at least two ways.** For the outer and inner rooms
+  and each of the five elements there are at least two records that fit, so a chamber is a pool
+  rather than a fixed set. **The stairway needs only one**, because a boss is a name rather than a
+  room the climb fills: a motif may field one boss per element and each is the fight that floor is
+  remembered by. The loader refuses a motif that cannot reach either figure — a floor the generator
+  can offer and then fail to build is worse than one that never existed.
 - **A record is dealt as exactly one element and its whole deck takes it.** There is no element
   anywhere on a creature's card: the colour belongs to the creature, the way a duelist's Jab is a
   concept that ships in five colours. Today the element marks the attacks and picks the picture,

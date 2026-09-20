@@ -149,17 +149,22 @@ with the art, never with the game. It is not the `CostTier` mistake.
 
 ## The coverage rule
 
-> For every motif, for every tier, for every one of the five elements, **at least two records**
-> can field that fight.
+> For every motif, for every one of the five elements, **at least two records** can field the
+> outer chamber and **at least two** can field the inner. The stairway needs **one**.
 
-`data.MinCoverage` is the two, and `LoadMotifs` **panics** on a hole — the floor generator will
-eventually present a choice and it must not be able to offer an impossible one.
+`data.MinCoverageFor(tier)` is the figure, and `LoadMotifs` **panics** on a hole — the floor
+generator will eventually present a choice and it must not be able to offer an impossible one.
 
-**Nothing is prescribed about how you satisfy it.** Three records at four affinities works; two at
-five works; four at two each works if they are chosen well. One clean pattern, offered as a
-pattern rather than a rule: three records per tier, each taking four of the five elements and each
-omitting a *different* one. That gives two elements three candidates and three elements two, and
-there is nothing to check by hand.
+**The boss is one because a boss is a name.** A chamber is a room the climb fills and wants a pool
+to fill it from; a stairway is the creature a floor is remembered by, so it is authored for its
+element. That is what lets a motif field five bosses of one element each — and three bosses at
+four affinities is equally fine, and is what the rest of the roster does.
+
+**Nothing is prescribed about how you satisfy the chambers.** Three records at four affinities
+works; two at five works; four at two each works if they are chosen well. One clean pattern,
+offered as a pattern rather than a rule: three records per tier, each taking four of the five
+elements and each omitting a *different* one. That gives two elements three candidates and three
+elements two, and there is nothing to check by hand.
 
 `data.CoverageOf(m).Holes()` is the report. The sheet and this skill read the same function, so
 there is one answer to "does this cover".

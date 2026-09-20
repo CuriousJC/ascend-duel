@@ -7,10 +7,10 @@ package screens
 // stood a 44px `D` beside its other corner controls to do the same job — a second thing to learn
 // for one panel, and the only control in the game whose meaning was a letter.
 //
-// **It is deliberately not part of the corner widget.** The column and the bottom line are shared
-// because they are the same controls in the same place on every screen; this pile is *not* where
-// the combat screen's pile is, and pretending otherwise would mean moving one of them. What is
-// shared is the picture and the panel behind it, which is what the player actually recognizes.
+// **It stands where the fight's pile stands** *(owner's call)* — the duelist's column, bottom left,
+// with its count on the line the chrome's own squares sit on at the other end. The deck is one
+// object the player tracks across a whole run, so it is in one place: a pile that changed corners
+// between the duel and the shop would be a thing to find again on every screen.
 //
 // **It is free functions rather than a scene's** *(owner's call, 2026-09-19)*, because three
 // between-fights screens draw it now — the shop, the reward screen and the sealed good. Each owns
@@ -33,28 +33,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-// deckPileGap is the air between the pile and the control column it stands to the left of.
-const deckPileGap = 20
-
 // deckPileRect is the front card of the pile: what is drawn on top, and what a click is tested
 // against once the backs behind it are added.
 //
-// **Both edges come off things that already exist**, never off a percentage — the rule the combat
-// screen's own pile is under, and the reason the corner survived being rearranged twice. The right
-// edge is the control column's line, so the pile stands beside HANDS and LEDGER rather than under
-// them; the bottom is the fight pile's own, so its count lands on the line the cog stands on.
-func deckPileRect(gs *state.GlobalState) image.Rectangle {
-	w, h := cards.Stack.Width, cards.Stack.Height
-
-	// **The same bottom rule the fight's pile is under** — the screen's own inset, less the line the
-	// count is written on — so the count lands on the bottom line the cog and the stones button
-	// stand on. Only the left edge differs between the two screens, which is the point: this is the
-	// same object in a different corner, not a second thing that looks like it.
-	right := ui.ControlColumnLeft(gs) - deckPileGap
-	bottom := gs.ScreenHeight - deckStackBottomInset - deckCountSize - deckCaptionGap
-
-	return image.Rect(right-w, bottom-h, right, bottom)
-}
+// **It is the fight's own rectangle, not a copy of it.** One expression for where the deck sits is
+// what makes "the same place on every screen" true by construction; two that agree today are two
+// that drift the first time either is nudged.
+func deckPileRect(gs *state.GlobalState) image.Rectangle { return deckStackRect(gs) }
 
 // deckPileBounds is the whole pile including the backs drawn up and to the left of the front card,
 // which is what the click is tested against.

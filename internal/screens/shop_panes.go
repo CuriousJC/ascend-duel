@@ -41,8 +41,17 @@ const (
 )
 
 // shopPaneOrder is the four in standing order, for anything that walks them.
+//
+// **Standing order is not declaration order** *(owner's call)*, which is why this is a list rather
+// than a range over the enum: the constants are identities and this is a layout, and the two are
+// free to disagree. Everything that lays the row out walks this, so moving a pane is one edit here.
+//
+// The brand stands first and the packs last. The brand is a placeholder that buys nothing yet, so
+// it takes the end of the row nearest the deck pile in the corner, where it is least in the way;
+// the packs are the widest and loudest pane and take the end furthest from it. Neither of the two
+// on the left reroll, so nothing hangs beneath them into that corner.
 func shopPaneOrder() []shopPane {
-	return []shopPane{shopPanePacks, shopPaneRelics, shopPanePotions, shopPaneBrand}
+	return []shopPane{shopPaneBrand, shopPanePotions, shopPaneRelics, shopPanePacks}
 }
 
 const (

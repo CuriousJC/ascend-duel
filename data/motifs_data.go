@@ -70,13 +70,23 @@ func AffinityIndex(element string) (int, bool) {
 	return 0, false
 }
 
-// MinCoverage is how many records must be able to field any one (tier, element) fight.
+// MinCoverageFor is how many records must be able to field one (tier, element) fight.
 //
-// **Two, so no floor is ever the same fight twice.** A motif that can field an ice inner chamber
-// with exactly one record deals that creature every time an ice floor of that motif comes up,
-// and the floor stops being a draw. What it costs is that a motif is nine records rather than
-// three; what it buys is that picking a floor is picking a pool.
-const MinCoverage = 2
+// **Two in a chamber, so no floor is ever the same fight twice.** A motif that can field an ice
+// inner chamber with exactly one record deals that creature every time an ice floor of that motif
+// comes up, and the room stops being a draw. What it costs is that a motif is six chamber records
+// rather than two; what it buys is that picking a floor is picking a pool.
+//
+// **One at the stairway, because a boss is a name.** The stairway is the fight a floor is
+// remembered by, so it is authored for its element rather than drawn from a pool of things that
+// would do — which is what lets a motif field five bosses of one element each. A chamber is a
+// room the climb fills; a stairway is a creature the climb arrives at.
+func MinCoverageFor(tier string) int {
+	if tier == TierBoss {
+		return 1
+	}
+	return 2
+}
 
 // MotifData is one themed floor's worth of creatures: the name, the band of floors it may theme,
 // and every record that can stand in one of its three rooms.
@@ -282,14 +292,15 @@ func CoverageOf(m MotifData) Coverage {
 	return c
 }
 
-// Holes is every fight this motif cannot field MinCoverage ways, as readable phrases, in tier
-// then element order. Empty means the motif covers.
+// Holes is every fight this motif cannot field as many ways as its tier requires, as readable
+// phrases, in tier then element order. Empty means the motif covers.
 func (c Coverage) Holes() []string {
 	var out []string
 	for ti, tier := range TierOrder {
+		want := MinCoverageFor(tier)
 		for ai, element := range AffinityElements {
-			if n := c.Counts[ti][ai]; n < MinCoverage {
-				out = append(out, fmt.Sprintf("%s %s: %d record(s), needs %d", element, tier, n, MinCoverage))
+			if n := c.Counts[ti][ai]; n < want {
+				out = append(out, fmt.Sprintf("%s %s: %d record(s), needs %d", element, tier, n, want))
 			}
 		}
 	}

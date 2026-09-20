@@ -179,9 +179,9 @@ func coverageOf(motif string) []coverRow {
 	rows := make([]coverRow, 0, len(data.AffinityElements))
 	for ai, element := range data.AffinityElements {
 		row := coverRow{Element: element}
-		for ti := range data.TierOrder {
+		for ti, tier := range data.TierOrder {
 			n := counts[ti][ai]
-			row.Cells = append(row.Cells, coverCell{Count: n, Short: n < data.MinCoverage})
+			row.Cells = append(row.Cells, coverCell{Count: n, Short: n < data.MinCoverageFor(tier)})
 		}
 		rows = append(rows, row)
 	}

@@ -1,13 +1,13 @@
 {
   "Motif": "animals",
   "Name": "Animals",
-  "Draw": "TBD",
+  "Draw": "standard terrestrial creatures but they are large enough to threaten the human sized duelist",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "has trailing fire and smoke coming from appendages",
+    "ice": "has ice spikes at the joints",
+    "lightning": "has sparks at the joints",
+    "earth": "covered in mud with rootlike structures in their body",
+    "arcane": "magical energy suffusing their whole body and glowing purple"
   },
   "ValidFloors": [
     1,
@@ -19,7 +19,7 @@
       "Name": "Giant Bat",
       "Tier": "outer",
       "Art": "animals-bat",
-      "Draw": "TBD",
+      "Draw": "A black creature with pale wings where veins are prominently poking out of the wingspan, portrayed in such a manner of making it look scary",
       "Affinities": [
         "fire",
         "ice",
@@ -58,7 +58,7 @@
       "Name": "Giant Rat",
       "Tier": "outer",
       "Art": "animals-rat",
-      "Draw": "TBD",
+      "Draw": "A grey creature of a rounded shaped body. It should have fur, and also have a set of two white teeth sticking out from the top of its lip",
       "Affinities": [
         "fire",
         "ice",
@@ -70,7 +70,7 @@
       "Actions": 5,
       "Cards": [
         {
-          "Label": "Gnaw",
+          "Label": "Nibble",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
@@ -97,7 +97,7 @@
       "Name": "Tusk Boar",
       "Tier": "outer",
       "Art": "animals-boar",
-      "Draw": "TBD",
+      "Draw": "A pig like creature with rough gray skin and tusks coming from the inside of its mouth",
       "Affinities": [
         "fire",
         "ice",
@@ -136,7 +136,7 @@
       "Name": "Dire Wolf",
       "Tier": "inner",
       "Art": "animals-wolf",
-      "Draw": "TBD",
+      "Draw": "A dog like creature with grey fur and tufts of black fur. Its mouth should be filled with sharp rotted out teeth",
       "Affinities": [
         "fire",
         "ice",
@@ -175,7 +175,7 @@
       "Name": "Rot Hound",
       "Tier": "inner",
       "Art": "animals-hound",
-      "Draw": "TBD",
+      "Draw": "A dog with spikes from its paws and blood on its body. It should have rotted out flesh across its body.",
       "Affinities": [
         "fire",
         "ice",
@@ -214,7 +214,7 @@
       "Name": "Cave Bear",
       "Tier": "inner",
       "Art": "animals-bear",
-      "Draw": "TBD",
+      "Draw": "A brown creature with a bulbous slightly curved shape on four legs. It should have fur all around its body.",
       "Affinities": [
         "ice",
         "lightning",
@@ -253,7 +253,7 @@
       "Name": "The Grey Alpha",
       "Tier": "boss",
       "Art": "animals-alpha",
-      "Draw": "TBD",
+      "Draw": "A massive grey wolf with sharp white teeth with blood on them made to look as scary as possible",
       "Affinities": [
         "fire",
         "ice",
@@ -300,7 +300,7 @@
       "Name": "Doomsday Beast",
       "Tier": "boss",
       "Art": "animals-behemoth",
-      "Draw": "TBD",
+      "Draw": "A massive fox bellowing out all of the elements. It should have wings with one being portrayed as if being made of water and the other fire",
       "Affinities": [
         "ice",
         "lightning",
@@ -347,7 +347,7 @@
       "Name": "The Chimera",
       "Tier": "boss",
       "Art": "animals-chimera",
-      "Draw": "TBD",
+      "Draw": "A lion with red wings and two creatures on its shoulders. One is a red dragon its skin matching the color of the wings. The other should be a tan goat.",
       "Affinities": [
         "fire",
         "lightning",

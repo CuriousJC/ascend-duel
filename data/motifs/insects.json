@@ -1,6 +1,14 @@
 {
   "Motif": "insects",
   "Name": "Insects",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     1,
     5
@@ -11,7 +19,7 @@
       "Name": "Dragonfly",
       "Tier": "outer",
       "Art": "insects-dragonfly",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -50,7 +58,7 @@
       "Name": "Hive Drone",
       "Tier": "outer",
       "Art": "insects-drone",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -89,7 +97,7 @@
       "Name": "Iron Beetle",
       "Tier": "outer",
       "Art": "insects-beetle",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -128,7 +136,7 @@
       "Name": "Giant Spider",
       "Tier": "inner",
       "Art": "insects-spider",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -167,7 +175,7 @@
       "Name": "Blade Mantis",
       "Tier": "inner",
       "Art": "insects-mantis",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -206,7 +214,7 @@
       "Name": "Gorge Centipede",
       "Tier": "inner",
       "Art": "insects-centipede",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -245,7 +253,7 @@
       "Name": "The Broodmother",
       "Tier": "boss",
       "Art": "insects-broodmother",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -292,7 +300,7 @@
       "Name": "Emperor Hornet",
       "Tier": "boss",
       "Art": "insects-hornet",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -339,7 +347,7 @@
       "Name": "Tomb Scarab",
       "Tier": "boss",
       "Art": "insects-scarab",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",

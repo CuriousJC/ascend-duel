@@ -153,8 +153,14 @@ type Style struct {
 	StatRuleAfter int
 	StatRuleGap   int
 
-	// The health bar and the fraction under it, drawn from Spec.Life and Spec.MaxLife.
-	// Zero HealthBarHeight means the style has no health and neither is drawn.
+	// The one figure written under a portrait, from Spec.PortraitStat. Zero PortraitStatSize
+	// means the style writes none, which is every style but the opponent's. See fighter.go,
+	// which owns the offsets of the block it sits in.
+	PortraitStatTop  int
+	PortraitStatSize float64
+
+	// The health bar, drawn from Spec.Life and Spec.MaxLife, with the fraction written across
+	// it. Zero HealthBarHeight means the style has no health and none of it is drawn.
 	//
 	// HealthBarInset is the bar's side margin. **It is its own field rather than a reuse
 	// of ArtInset**, which is what it was until the duelist card arrived: that card has a
@@ -163,7 +169,6 @@ type Style struct {
 	HealthBarInset  int
 	HealthBarTop    int
 	HealthBarHeight int
-	HealthTextTop   int
 	HealthTextSize  float64
 
 	// Spec.Effects drawn as a centered row of squares along the bottom edge. A zero
@@ -440,8 +445,10 @@ func (st Style) Scaled(num, den int) Style {
 	// this block — it is an index into Spec.Stats, not a measurement. StatRuleGap is pixels and is.
 	out.StatRuleAfter, out.StatRuleGap = st.StatRuleAfter, i(st.StatRuleGap)
 
+	out.PortraitStatTop, out.PortraitStatSize = i(st.PortraitStatTop), f(st.PortraitStatSize)
+
 	out.HealthBarInset, out.HealthBarTop = i(st.HealthBarInset), i(st.HealthBarTop)
-	out.HealthBarHeight, out.HealthTextTop = i(st.HealthBarHeight), i(st.HealthTextTop)
+	out.HealthBarHeight = i(st.HealthBarHeight)
 	out.HealthTextSize = f(st.HealthTextSize)
 
 	out.EffectSize, out.EffectTop, out.EffectGap = i(st.EffectSize), i(st.EffectTop), i(st.EffectGap)
@@ -595,20 +602,20 @@ var EnemyStyle = Style{
 
 	TextLeft: 15,
 
-	// The one stat row, and the one figure a player cannot read off the table.
-	StatsTop:     30,
-	StatRowPitch: 27,
-	StatSize:     20,
+	// **The one figure a portrait leaves no room for**, written under it. Its offsets and the
+	// bar's and the badge row's all come out of fighter.go, so the seats the two fighter cards
+	// share cannot be moved on one of them.
+	PortraitStatTop:  fighterStatTop,
+	PortraitStatSize: fighterStatSize,
 
-	HealthBarInset:  15,
-	HealthBarTop:    207,
-	HealthBarHeight: 18,
-	HealthTextTop:   229,
-	HealthTextSize:  20,
+	HealthBarInset:  fighterBarInset,
+	HealthBarTop:    fighterBarTop,
+	HealthBarHeight: fighterBarHeight,
+	HealthTextSize:  fighterBarText,
 
-	EffectSize: 24,
-	EffectTop:  247,
-	EffectGap:  8,
+	EffectSize: fighterBadgeSize,
+	EffectTop:  fighterBadgeTop,
+	EffectGap:  fighterBadgeGap,
 }
 
 // DuelistStyle is the player, in the card format *(2026-08-12)*.
@@ -684,23 +691,22 @@ var DuelistStyle = Style{
 	StatRuleAfter: 3,
 	StatRuleGap:   18,
 
-	// **Everything from here down is packed, and the empty space under the fraction is *reserved*
-	// rather than spare** *(owner's call, 2026-09-15)*. The pip row draws nothing until shields are
-	// standing, so a duel that has raised none looks like fifty pixels of slack — and taking them
-	// would mean a row of pips with nowhere to land the first time a Guard goes down. Bar, gap,
-	// fraction and pips spend 207..271 of the 272 inside the bottom border, which is the same one
-	// pixel of slack the card carried before the bar moved. Nudging the bar again means taking the
-	// pixels off something below it; TestTheBottomBlockFitsInsideTheCard fails instead of drawing
-	// off the card.
-	HealthBarInset:  15,
-	HealthBarTop:    207,
-	HealthBarHeight: 18,
-	HealthTextTop:   229,
-	HealthTextSize:  20,
+	// **The bar and the pip row are the opponent's seats exactly**, out of fighter.go — those two
+	// are read across the table against each other. The row between them is the opponent's DMG
+	// and this card leaves it empty: the duelist writes its DMG at the top, where it has a ladder
+	// of stat rows and the opponent has a picture.
+	//
+	// The pip row draws nothing until shields are standing, and the space it holds is *reserved*
+	// rather than spare: taking it would mean a row of pips with nowhere to land the first time a
+	// Guard goes down.
+	HealthBarInset:  fighterBarInset,
+	HealthBarTop:    fighterBarTop,
+	HealthBarHeight: fighterBarHeight,
+	HealthTextSize:  fighterBarText,
 
-	EffectSize: 24,
-	EffectTop:  247,
-	EffectGap:  8,
+	EffectSize: fighterBadgeSize,
+	EffectTop:  fighterBadgeTop,
+	EffectGap:  fighterBadgeGap,
 }
 
 // EssenceStyle is an essence, in the card format *(2026-08-22)*.

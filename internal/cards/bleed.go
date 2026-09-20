@@ -175,6 +175,15 @@ func (st Style) scrimBands(s Spec) []image.Rectangle {
 	if s.Text != "" && st.TextBandBottom > st.TextBandTop {
 		bands = append(bands, image.Rect(0, st.TextBandTop-scrimPad, st.Width, st.TextBandBottom+scrimPad))
 	}
+
+	// **The fighter's block gets one too, and it runs to the bottom edge.** A figure and a health
+	// bar sit down there on a card whose whole face is a picture, and light type on an unknown
+	// passage of art is a number you have to hunt for. It is derived from the figure's own offset
+	// like the band above it, which is also what keeps it off the duelist card: that card writes
+	// no figure under a portrait it does not have.
+	if st.PortraitStatSize > 0 {
+		bands = append(bands, image.Rect(0, st.PortraitStatTop-scrimPad, st.Width, st.Height))
+	}
 	return bands
 }
 

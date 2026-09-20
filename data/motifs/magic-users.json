@@ -1,6 +1,14 @@
 {
   "Motif": "magic-users",
   "Name": "Magic-users",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     4,
     8
@@ -11,7 +19,7 @@
       "Name": "Apprentice",
       "Tier": "outer",
       "Art": "magic-users-apprentice",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -50,7 +58,7 @@
       "Name": "Hedge Witch",
       "Tier": "outer",
       "Art": "magic-users-hedgewitch",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -89,7 +97,7 @@
       "Name": "Pact Warlock",
       "Tier": "outer",
       "Art": "magic-users-warlock",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -128,7 +136,7 @@
       "Name": "Hexwright",
       "Tier": "inner",
       "Art": "magic-users-hexwright",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -167,7 +175,7 @@
       "Name": "Stormcaller",
       "Tier": "inner",
       "Art": "magic-users-stormcaller",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -206,7 +214,7 @@
       "Name": "Pyre-Keeper",
       "Tier": "inner",
       "Art": "magic-users-pyrekeeper",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -245,7 +253,7 @@
       "Name": "The Archmage",
       "Tier": "boss",
       "Art": "magic-users-archmage",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -292,7 +300,7 @@
       "Name": "The Voidtouched",
       "Tier": "boss",
       "Art": "magic-users-voidtouched",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -339,7 +347,7 @@
       "Name": "The Discordant",
       "Tier": "boss",
       "Art": "magic-users-discordant",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",

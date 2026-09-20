@@ -56,6 +56,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
+	"github.com/curiousjc/ascend-duel/tools/sheetfilter"
 )
 
 // Ground is the one an opponent card is actually drawn on — `screens.screenGround`, the fill
@@ -134,6 +135,10 @@ type Entry struct {
 	Group  int
 	Floors string
 
+	// Band is the same band as a pair of floors, which is what the floor chips are matched
+	// against. Written out rather than parsed back off Floors, which is prose.
+	Band [2]int
+
 	// Motif is which file this record came from, and Tier is which of a floor's three rooms it can
 	// stand in.
 	Motif string
@@ -173,6 +178,7 @@ var MotifPool = Pool{
 					Element:  element, Elements: r.Affinities,
 					DMG: r.DMG, Actions: r.Actions, HP: r.HP,
 					Group: m.ValidFloors[0], Floors: m.Name + " — " + floorBand(m.ValidFloors),
+					Band:  m.ValidFloors,
 					Motif: m.Motif, Tier: r.Tier,
 					Cards: r.Cards,
 				})
@@ -208,13 +214,17 @@ func Run(p Pool, dir string) error {
 	}
 
 	entries := p.Entries()
+	lo, hi := span(entries)
 	pg := page{
+		SpanLo:     lo,
+		SpanHi:     hi,
 		Ground:     Ground,
 		Title:      p.Title,
 		Blurb:      p.Blurb,
 		GroupLabel: p.GroupLabel,
 		Count:      len(entries),
 		Style:      styleFacts(cards.EnemyStyle),
+		Filters:    sheetfilter.Bar(facetsFor(entries)),
 	}
 
 	var written int64
@@ -234,6 +244,7 @@ func Run(p Pool, dir string) error {
 			Entry:   e,
 			Cell:    cell{File: name, Width: strip.Bounds().Dx(), Height: strip.Bounds().Dy()},
 			Affixes: strings.Join(e.Elements, ", "),
+			Elems:   strings.Join(e.Elements, " "),
 			Deck:    len(decks.EnemyCards(e.Record, e.Element)),
 			Rows:    deckRows(e.Cards),
 		})
@@ -337,6 +348,10 @@ func opponentSpec(e Entry, art image.Image) cards.Spec {
 		Life:    e.HP,
 		MaxLife: e.HP,
 		Enabled: true,
+
+		// **The figure under the portrait, as the game writes it.** A card here missing a row the
+		// combat screen draws is a page about a card that does not exist.
+		PortraitStat: cards.StatLine{Label: "DMG", Value: strconv.Itoa(e.DMG)},
 	}
 }
 

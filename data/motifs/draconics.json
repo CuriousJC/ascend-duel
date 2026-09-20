@@ -1,6 +1,14 @@
 {
   "Motif": "draconics",
   "Name": "Draconics",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     5,
     8
@@ -11,7 +19,7 @@
       "Name": "Drake Whelp",
       "Tier": "outer",
       "Art": "draconics-whelp",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -50,7 +58,7 @@
       "Name": "Basilisk",
       "Tier": "outer",
       "Art": "draconics-basilisk",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -89,7 +97,7 @@
       "Name": "Wyvern",
       "Tier": "outer",
       "Art": "draconics-wyvern",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -128,7 +136,7 @@
       "Name": "Dracolisk",
       "Tier": "inner",
       "Art": "draconics-dracolisk",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -167,7 +175,7 @@
       "Name": "Cave Wyrm",
       "Tier": "inner",
       "Art": "draconics-wyrm",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -206,7 +214,7 @@
       "Name": "Storm Drake",
       "Tier": "inner",
       "Art": "draconics-drake",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -245,7 +253,7 @@
       "Name": "The Red Dragon",
       "Tier": "boss",
       "Art": "draconics-red",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -292,7 +300,7 @@
       "Name": "The Blue Dragon",
       "Tier": "boss",
       "Art": "draconics-blue",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -339,7 +347,7 @@
       "Name": "The Serpent Prince",
       "Tier": "boss",
       "Art": "draconics-serpent",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",

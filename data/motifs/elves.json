@@ -1,6 +1,14 @@
 {
   "Motif": "elves",
   "Name": "Elves",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     3,
     8
@@ -11,7 +19,7 @@
       "Name": "Wood Scout",
       "Tier": "outer",
       "Art": "elves-scout",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -50,7 +58,7 @@
       "Name": "Glade Blade",
       "Tier": "outer",
       "Art": "elves-blade",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -89,7 +97,7 @@
       "Name": "Thorn Warden",
       "Tier": "outer",
       "Art": "elves-warden",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -128,7 +136,7 @@
       "Name": "Longbow Archer",
       "Tier": "inner",
       "Art": "elves-archer",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -167,7 +175,7 @@
       "Name": "Blade Dancer",
       "Tier": "inner",
       "Art": "elves-dancer",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -206,7 +214,7 @@
       "Name": "Moon Singer",
       "Tier": "inner",
       "Art": "elves-singer",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -245,7 +253,7 @@
       "Name": "The Silver Queen",
       "Tier": "boss",
       "Art": "elves-queen",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -292,7 +300,7 @@
       "Name": "The Skyhunter",
       "Tier": "boss",
       "Art": "elves-skyhunter",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -339,7 +347,7 @@
       "Name": "The Exile",
       "Tier": "boss",
       "Art": "elves-exile",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",

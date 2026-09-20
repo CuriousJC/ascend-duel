@@ -1,6 +1,14 @@
 {
   "Motif": "vampires",
   "Name": "Vampires",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     4,
     8
@@ -11,7 +19,7 @@
       "Name": "Blood Thrall",
       "Tier": "outer",
       "Art": "vampires-thrall",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -50,7 +58,7 @@
       "Name": "Pale Consort",
       "Tier": "outer",
       "Art": "vampires-consort",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -89,7 +97,7 @@
       "Name": "Crypt Ghoul",
       "Tier": "outer",
       "Art": "vampires-ghoul",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -128,7 +136,7 @@
       "Name": "Lesser Count",
       "Tier": "inner",
       "Art": "vampires-count",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -167,7 +175,7 @@
       "Name": "Blood Shade",
       "Tier": "inner",
       "Art": "vampires-shade",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -206,7 +214,7 @@
       "Name": "The Flenser",
       "Tier": "inner",
       "Art": "vampires-flenser",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -245,7 +253,7 @@
       "Name": "The Elder",
       "Tier": "boss",
       "Art": "vampires-elder",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -292,7 +300,7 @@
       "Name": "The Pale Watch",
       "Tier": "boss",
       "Art": "vampires-palewatch",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -339,7 +347,7 @@
       "Name": "The Crimson Bride",
       "Tier": "boss",
       "Art": "vampires-crimson",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",

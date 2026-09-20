@@ -545,6 +545,15 @@ type Spec struct {
 	// for why the size is what the card fits rather than a round number.
 	Stats [MaxStatLines]StatLine
 
+	// PortraitStat is the one figure written under a portrait, on a card whose face is a picture
+	// and therefore has no room for a ladder of stat rows. It is the opponent's DMG and nothing
+	// else uses it.
+	//
+	// **It is its own field rather than an entry in Stats** because it is not on that ladder: the
+	// rows in Stats stack from the top of the card at one pitch, and this one sits in the block at
+	// the bottom, between the badge row and the health bar. See fighter.go.
+	PortraitStat StatLine
+
 	// Effects are the status badges drawn in a row along the bottom edge, on the styles that
 	// ask for them. Nil entries are skipped, so the row is as wide as the statuses actually
 	// standing on the combatant and stays centered as they come and go.

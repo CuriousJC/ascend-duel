@@ -114,8 +114,16 @@ it** — the essences, runes, stones, potions and goods all say their rule in a 
 carries on underneath, so a prompt that described either would produce art with a hole in it —
 and a generator told that a corner is special decorates it, which is how you get a drawn disc
 sitting under the real one. **No prompt here asks for a title band, a disc, a badge or an empty
-corner, and no prompt reserves anything**; both say so in as many words, at length, because it is
-the instruction a generator is most inclined to helpfully ignore.
+corner, and no prompt but the creature one reserves anything**; they say so in as many words, at
+length, because it is the instruction a generator is most inclined to helpfully ignore.
+
+**The creature prompt is the one that constrains a strip.** An opponent card writes its badges,
+its DMG and its health bar across the bottom 80 pixels, and a scrim covers that strip from y 216
+down — so nothing the creature is recognized by may live below y 200, and the sixteen pixels the
+badges sit on have to stay quiet. The paint still runs through all of it and the ground still
+crosses those lines unchanged: what is withheld is anything that has to be seen, never the paint.
+That scrim is derived from the figure's own offset, which is what keeps it off the duelist card —
+that one has no portrait, writes no figure there, and stays off-white.
 
 **Go and look at the art before changing a composition block.** The shipped relic pictures are a
 centred subject at about 60% of the canvas on a dark textured ground that shows on all four

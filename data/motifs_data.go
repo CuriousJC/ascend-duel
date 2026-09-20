@@ -467,7 +467,7 @@ func (m MotifData) Brief(r MotifRecord, element string) []string {
 // DrawUnwritten is what an unwritten brief says. It is a value rather than an empty string so a
 // record that has been *looked at* and left reads differently from one nobody has reached, and
 // the review sheet counts both.
-const DrawUnwritten = "TO BE DETERMINED"
+const DrawUnwritten = "TBD"
 
 // MotifOrder is every motif key, sorted.
 //

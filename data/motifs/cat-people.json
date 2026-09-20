@@ -1,6 +1,14 @@
 {
   "Motif": "cat-people",
   "Name": "Cat-people",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     2,
     7
@@ -11,7 +19,7 @@
       "Name": "Prowler",
       "Tier": "outer",
       "Art": "cat-people-prowler",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -50,7 +58,7 @@
       "Name": "Alley Sneak",
       "Tier": "outer",
       "Art": "cat-people-sneak",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -89,7 +97,7 @@
       "Name": "Claw Guard",
       "Tier": "outer",
       "Art": "cat-people-clawguard",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -128,7 +136,7 @@
       "Name": "Night Stalker",
       "Tier": "inner",
       "Art": "cat-people-stalker",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -167,7 +175,7 @@
       "Name": "Whisker Duelist",
       "Tier": "inner",
       "Art": "cat-people-duelist",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -206,7 +214,7 @@
       "Name": "Maneater",
       "Tier": "inner",
       "Art": "cat-people-maneater",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -245,7 +253,7 @@
       "Name": "The Matriarch",
       "Tier": "boss",
       "Art": "cat-people-matriarch",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -292,7 +300,7 @@
       "Name": "The Shadow Cat",
       "Tier": "boss",
       "Art": "cat-people-shadow",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -339,7 +347,7 @@
       "Name": "The Bronze Lion",
       "Tier": "boss",
       "Art": "cat-people-lion",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",

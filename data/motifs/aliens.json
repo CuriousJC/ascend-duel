@@ -1,6 +1,14 @@
 {
   "Motif": "aliens",
   "Name": "Aliens",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     5,
     8
@@ -11,7 +19,7 @@
       "Name": "Specimen",
       "Tier": "outer",
       "Art": "aliens-specimen",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -50,7 +58,7 @@
       "Name": "Survey Drone",
       "Tier": "outer",
       "Art": "aliens-drone",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -89,7 +97,7 @@
       "Name": "Seeded Husk",
       "Tier": "outer",
       "Art": "aliens-husk",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -128,7 +136,7 @@
       "Name": "Abomination",
       "Tier": "inner",
       "Art": "aliens-abomination",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -167,7 +175,7 @@
       "Name": "The Watcher",
       "Tier": "inner",
       "Art": "aliens-watcher",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -206,7 +214,7 @@
       "Name": "Harvester",
       "Tier": "inner",
       "Art": "aliens-harvester",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -245,7 +253,7 @@
       "Name": "Bio-Titan Toxoid",
       "Tier": "boss",
       "Art": "aliens-toxoid",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -292,7 +300,7 @@
       "Name": "Bio-Titan Plagueborn",
       "Tier": "boss",
       "Art": "aliens-plagueborn",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -339,7 +347,7 @@
       "Name": "Bio-Titan Omega",
       "Tier": "boss",
       "Art": "aliens-omega",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",

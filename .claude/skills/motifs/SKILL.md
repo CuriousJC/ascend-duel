@@ -61,7 +61,7 @@ and a motif split across two files is a question neither half can answer.
   "Name": "Goblin Bomber",
   "Tier": "outer",
   "Art": "goblins-bomber",
-  "Draw": "TO BE DETERMINED",
+  "Draw": "TBD",
   "Affinities": ["fire", "ice", "lightning", "earth"],
   "HP": 100, "DMG": 5, "Actions": 5,
   "Cards": [

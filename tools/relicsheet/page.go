@@ -2,8 +2,10 @@ package main
 
 import "html/template"
 
-// The page. One static file, no JavaScript, no build step: the loop is "edit relics.json,
-// re-run the tool, refresh the tab", the same loop every other tool here has.
+// The page. One static file and no build step: the loop is "edit relics.json, re-run the tool,
+// refresh the tab", the same loop every other tool here has. The only script on it is the chip bar
+// from tools/sheetfilter, which narrows what is already there — the whole catalog is in the file
+// and readable with scripting off.
 //
 // **Images are shown at their natural size with image-rendering: pixelated**, for the reason
 // the card sheet's template gives: a card's rim is one pixel thick and a browser that scales
@@ -193,14 +195,17 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   at once, and a family with a mix says so on its heading rather than hiding it.
 </p>
 
+{{.Filters}}
+
 {{range .Families}}
+<section class="sheet-group" data-family="{{.Key}}">
 <h3 class="family">
   {{.Name}}
   <span>{{.Count}} {{.Noun}} &middot; {{.Mix}}</span>
 </h3>
 <div class="plates">
   {{range .Relics}}
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="{{.Rarity}}">
       <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}"
            alt="{{.Name}}">
       <div class="about">
@@ -226,6 +231,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
     </div>
   {{end}}
 </div>
+</section>
 {{end}}
 
 <h2>Card states</h2>

@@ -1,6 +1,14 @@
 {
   "Motif": "ogres",
   "Name": "Ogres",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     4,
     8
@@ -11,7 +19,7 @@
       "Name": "Ogre Grunt",
       "Tier": "outer",
       "Art": "ogres-grunt",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -50,7 +58,7 @@
       "Name": "Rock Thrower",
       "Tier": "outer",
       "Art": "ogres-thrower",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -89,7 +97,7 @@
       "Name": "Ogre Warrior",
       "Tier": "outer",
       "Art": "ogres-warrior",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -128,7 +136,7 @@
       "Name": "Ettin",
       "Tier": "inner",
       "Art": "ogres-ettin",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -167,7 +175,7 @@
       "Name": "Ogre Warlord",
       "Tier": "inner",
       "Art": "ogres-warlord",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -206,7 +214,7 @@
       "Name": "Bridge Troll",
       "Tier": "inner",
       "Art": "ogres-troll",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -245,7 +253,7 @@
       "Name": "The Hill King",
       "Tier": "boss",
       "Art": "ogres-hillking",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -292,7 +300,7 @@
       "Name": "The Stonecast",
       "Tier": "boss",
       "Art": "ogres-stonecast",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -339,7 +347,7 @@
       "Name": "The Gorger",
       "Tier": "boss",
       "Art": "ogres-gorger",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",

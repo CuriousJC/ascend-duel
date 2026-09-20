@@ -530,8 +530,10 @@ func EnemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life i
 
 	// **The one figure a player cannot read off the table.** Life is already the bar and the
 	// fraction, and the action budget is visible as the cards the creature queues; what the next
-	// blow takes off them is not anywhere else.
-	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
+	// blow takes off them is not anywhere else. It is written under the portrait, between the
+	// badge row and the bar — see cards.FighterBlockTop, which is what the art is composed
+	// against.
+	spec.PortraitStat = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
 
 	// **Walked in registration order, which is what makes the row stable.** A badge that moved along
 	// the row as another status came and went would read as a different badge. `AllStatuses` is the

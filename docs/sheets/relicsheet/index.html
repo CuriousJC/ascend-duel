@@ -167,14 +167,188 @@
   at once, and a family with a mix says so on its heading rather than hiding it.
 </p>
 
+<style>
+  .sheet-filters {
+    position: sticky; top: 0; z-index: 5;
+    margin: 14px 0 0; padding: 10px 12px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+    background: var(--panel, #c6d5e6);
+    border: 1px solid var(--rule, #8fa3bd); border-radius: 8px;
+  }
+  .sheet-facet { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .sheet-facet-label {
+    color: var(--dim, #5a6472); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em; margin-right: 2px;
+  }
+  .sheet-filters button {
+    font: inherit; font-size: 12.5px; line-height: 1;
+    padding: 5px 9px; border-radius: 999px; cursor: pointer;
+    color: var(--ink, #2c2822);
+    background: transparent;
+    border: 1px solid var(--rule, #8fa3bd);
+  }
+  .sheet-filters button:hover { background: rgba(255,255,255,.45); }
+  /* A chip that is down is filled rather than merely outlined: an outline shifting shade is the
+     one state change that does not survive being looked at quickly. */
+  .sheet-filters button[aria-pressed="true"] {
+    background: var(--ink, #2c2822); color: var(--panel, #c6d5e6);
+    border-color: var(--ink, #2c2822);
+  }
+  .sheet-filters button i {
+    font-style: normal; opacity: .6; margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sheet-filters-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .sheet-tally { color: var(--dim, #5a6472); font-size: 12px; font-variant-numeric: tabular-nums; }
+</style>
+<div class="sheet-filters" hidden>
+  <div class="sheet-facet"><span class="sheet-facet-label">rarity</span>
+    <button type="button" data-facet="rarity" data-value="common" aria-pressed="false">common<i>55</i></button>
+    <button type="button" data-facet="rarity" data-value="uncommon" aria-pressed="false">uncommon<i>58</i></button>
+    <button type="button" data-facet="rarity" data-value="rare" aria-pressed="false">rare<i>31</i></button>
+  </div>
+  <div class="sheet-facet"><span class="sheet-facet-label">family</span>
+    <button type="button" data-facet="family" data-value="elemental-flips" aria-pressed="false">Elemental flips<i>20</i></button>
+    <button type="button" data-facet="family" data-value="jade-rings" aria-pressed="false">Jade rings<i>7</i></button>
+    <button type="button" data-facet="family" data-value="indigo-rings" aria-pressed="false">Indigo rings<i>5</i></button>
+    <button type="button" data-facet="family" data-value="sandstone-rings" aria-pressed="false">Sandstone rings<i>5</i></button>
+    <button type="button" data-facet="family" data-value="elemental-statuses" aria-pressed="false">Elemental statuses<i>5</i></button>
+    <button type="button" data-facet="family" data-value="paired-statuses" aria-pressed="false">Paired statuses<i>10</i></button>
+    <button type="button" data-facet="family" data-value="weapons" aria-pressed="false">Weapons<i>15</i></button>
+    <button type="button" data-facet="family" data-value="elements-held" aria-pressed="false">Elements held<i>5</i></button>
+    <button type="button" data-facet="family" data-value="elemental-damage" aria-pressed="false">Elemental damage<i>5</i></button>
+    <button type="button" data-facet="family" data-value="elemental-repeats" aria-pressed="false">Elemental repeats<i>5</i></button>
+    <button type="button" data-facet="family" data-value="elemental-growth" aria-pressed="false">Elemental growth<i>5</i></button>
+    <button type="button" data-facet="family" data-value="elemental-discounts" aria-pressed="false">Elemental discounts<i>5</i></button>
+    <button type="button" data-facet="family" data-value="hand-multipliers" aria-pressed="false">Hand multipliers<i>6</i></button>
+    <button type="button" data-facet="family" data-value="forms-held" aria-pressed="false">Forms held<i>3</i></button>
+    <button type="button" data-facet="family" data-value="form-statuses" aria-pressed="false">Form statuses<i>3</i></button>
+    <button type="button" data-facet="family" data-value="form-weapons" aria-pressed="false">Form weapons<i>3</i></button>
+    <button type="button" data-facet="family" data-value="form-repeats" aria-pressed="false">Form repeats<i>3</i></button>
+    <button type="button" data-facet="family" data-value="form-growth" aria-pressed="false">Form growth<i>3</i></button>
+    <button type="button" data-facet="family" data-value="tier-demotions" aria-pressed="false">Tier demotions<i>3</i></button>
+    <button type="button" data-facet="family" data-value="form-discounts" aria-pressed="false">Form discounts<i>3</i></button>
+    <button type="button" data-facet="family" data-value="element-and-form" aria-pressed="false">Element and form<i>3</i></button>
+    <button type="button" data-facet="family" data-value="tier-damage" aria-pressed="false">Tier damage<i>2</i></button>
+    <button type="button" data-facet="family" data-value="shield-streaks" aria-pressed="false">Shield streaks<i>2</i></button>
+    <button type="button" data-facet="family" data-value="lead-attack" aria-pressed="false">Lead attack<i>1</i></button>
+    <button type="button" data-facet="family" data-value="cost-bargains" aria-pressed="false">Cost bargains<i>3</i></button>
+    <button type="button" data-facet="family" data-value="the-clock" aria-pressed="false">The clock<i>1</i></button>
+    <button type="button" data-facet="family" data-value="standing-stats" aria-pressed="false">Standing stats<i>3</i></button>
+    <button type="button" data-facet="family" data-value="vitae-power" aria-pressed="false">Vitae power<i>2</i></button>
+    <button type="button" data-facet="family" data-value="mixed-hands" aria-pressed="false">Mixed hands<i>1</i></button>
+    <button type="button" data-facet="family" data-value="spoils" aria-pressed="false">Spoils<i>3</i></button>
+    <button type="button" data-facet="family" data-value="lifedrain" aria-pressed="false">Lifedrain<i>2</i></button>
+    <button type="button" data-facet="family" data-value="luck" aria-pressed="false">Luck<i>1</i></button>
+    <button type="button" data-facet="family" data-value="deck-alteration" aria-pressed="false">Deck alteration<i>1</i></button>
+  </div>
+  <div class="sheet-filters-end">
+    <button type="button" class="sheet-clear" hidden>clear</button>
+    <span class="sheet-tally"></span>
+  </div>
+</div>
+<script>
+(function () {
+  function start() {
+    var bar = document.querySelector('.sheet-filters');
+    if (!bar) return;
+    bar.hidden = false;
 
+    var chips = Array.prototype.slice.call(bar.querySelectorAll('button[data-facet]'));
+    var clear = bar.querySelector('.sheet-clear');
+    var tally = bar.querySelector('.sheet-tally');
+    var items = Array.prototype.slice.call(document.querySelectorAll('.sheet-item'));
+    var groups = Array.prototype.slice.call(document.querySelectorAll('.sheet-group'));
+    var picked = {};
+
+    function tokens(el, key) {
+      var v = el.getAttribute('data-' + key);
+      if (v === null) return null;
+      return v.split(/\s+/).filter(Boolean);
+    }
+
+    function matches(el) {
+      for (var key in picked) {
+        var want = picked[key];
+        if (!want.length) continue;
+        var have = tokens(el, key);
+        if (have === null) continue;
+        var hit = false;
+        for (var i = 0; i < have.length; i++) {
+          if (want.indexOf(have[i]) !== -1) { hit = true; break; }
+        }
+        if (!hit) return false;
+      }
+      return true;
+    }
+
+    function apply() {
+      var shown = 0, any = false;
+      for (var key in picked) { if (picked[key].length) any = true; }
+
+      var open = [];
+      for (var g = 0; g < groups.length; g++) open.push(matches(groups[g]));
+
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        var owner = groups.indexOf(it.closest('.sheet-group'));
+        var ok = matches(it) && (owner === -1 || open[owner]);
+        it.hidden = !ok;
+        if (ok) shown++;
+      }
+
+      for (var g2 = 0; g2 < groups.length; g2++) {
+        var grp = groups[g2];
+        var held = grp.querySelector('.sheet-item');
+        var live = grp.querySelector('.sheet-item:not([hidden])');
+        grp.hidden = !open[g2] || (held !== null && live === null);
+      }
+
+      if (clear) clear.hidden = !any;
+      if (tally) tally.textContent = any ? 'showing ' + shown + ' of ' + items.length : '';
+    }
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var key = chip.getAttribute('data-facet');
+        var val = chip.getAttribute('data-value');
+        var list = picked[key] || (picked[key] = []);
+        var at = list.indexOf(val);
+        if (at === -1) { list.push(val); } else { list.splice(at, 1); }
+        chip.setAttribute('aria-pressed', at === -1 ? 'true' : 'false');
+        apply();
+      });
+    });
+
+    if (clear) {
+      clear.addEventListener('click', function () {
+        picked = {};
+        chips.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+        apply();
+      });
+    }
+
+    apply();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+</script>
+
+
+
+<section class="sheet-group" data-family="elemental-flips">
 <h3 class="family">
   Elemental flips
   <span>20 relics &middot; all uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-lightning-to-ice.png" width="228" height="308"
            alt="Frozen Charged Orb">
       <div class="about">
@@ -195,7 +369,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-earth-to-ice.png" width="228" height="308"
            alt="Frozen Rock Orb">
       <div class="about">
@@ -216,7 +390,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-fire-to-ice.png" width="228" height="308"
            alt="Frozen Fire Orb">
       <div class="about">
@@ -237,7 +411,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-ice-to-fire.png" width="228" height="308"
            alt="Burning Frozen Orb">
       <div class="about">
@@ -258,7 +432,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-lightning-to-fire.png" width="228" height="308"
            alt="Burning Charged Orb">
       <div class="about">
@@ -279,7 +453,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-earth-to-fire.png" width="228" height="308"
            alt="Burning Stone Orb">
       <div class="about">
@@ -300,7 +474,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-ice-to-lightning.png" width="228" height="308"
            alt="Charged Frozen Orb">
       <div class="about">
@@ -321,7 +495,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-fire-to-lightning.png" width="228" height="308"
            alt="Charged Fire Orb">
       <div class="about">
@@ -342,7 +516,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-earth-to-lightning.png" width="228" height="308"
            alt="Charged Stone Orb">
       <div class="about">
@@ -363,7 +537,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-ice-to-earth.png" width="228" height="308"
            alt="Muddy Frozen Orb">
       <div class="about">
@@ -384,7 +558,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-fire-to-earth.png" width="228" height="308"
            alt="Muddy Fire Orb">
       <div class="about">
@@ -405,7 +579,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-lightning-to-earth.png" width="228" height="308"
            alt="Muddy Charged Orb">
       <div class="about">
@@ -426,7 +600,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-fire-to-arcane.png" width="228" height="308"
            alt="Enchanted Fire Orb">
       <div class="about">
@@ -447,7 +621,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-ice-to-arcane.png" width="228" height="308"
            alt="Enchanted Frozen Orb">
       <div class="about">
@@ -468,7 +642,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-lightning-to-arcane.png" width="228" height="308"
            alt="Enchanted Charged Orb">
       <div class="about">
@@ -489,7 +663,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-earth-to-arcane.png" width="228" height="308"
            alt="Enchanted Stone Orb">
       <div class="about">
@@ -510,7 +684,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-arcane-to-fire.png" width="228" height="308"
            alt="Burning Arcane Orb">
       <div class="about">
@@ -531,7 +705,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-arcane-to-ice.png" width="228" height="308"
            alt="Frozen Arcane Orb">
       <div class="about">
@@ -552,7 +726,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-arcane-to-lightning.png" width="228" height="308"
            alt="Charged Arcane Orb">
       <div class="about">
@@ -573,7 +747,7 @@
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-flip-arcane-to-earth.png" width="228" height="308"
            alt="Muddy Arcane Orb">
       <div class="about">
@@ -595,14 +769,16 @@
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="jade-rings">
 <h3 class="family">
   Jade rings
   <span>7 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-no-hand.png" width="228" height="308"
            alt="Singular Ring">
       <div class="about">
@@ -624,7 +800,7 @@ on No Hand played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-pair-hand.png" width="228" height="308"
            alt="Twinned Ring">
       <div class="about">
@@ -646,7 +822,7 @@ on Pair played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-concept-doubled-hand.png" width="228" height="308"
            alt="Doubled Ring">
       <div class="about">
@@ -668,7 +844,7 @@ on Card Two Pair played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-concept-tripled-hand.png" width="228" height="308"
            alt="Tripled Ring">
       <div class="about">
@@ -690,7 +866,7 @@ on Card Three of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-concept-full-house-hand.png" width="228" height="308"
            alt="Filled Ring">
       <div class="about">
@@ -712,7 +888,7 @@ on Card Full House played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-concept-four-of-a-kind-hand.png" width="228" height="308"
            alt="Fourth Ring">
       <div class="about">
@@ -734,7 +910,7 @@ on Card Four of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-concept-five-of-a-kind-hand.png" width="228" height="308"
            alt="Perfect Ring">
       <div class="about">
@@ -757,14 +933,16 @@ on Card Five of a Kind played.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="indigo-rings">
 <h3 class="family">
   Indigo rings
   <span>5 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-form-two-pair-hand.png" width="228" height="308"
            alt="Paired Ring">
       <div class="about">
@@ -786,7 +964,7 @@ on Form Two Pair played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-form-three-of-a-kind-hand.png" width="228" height="308"
            alt="Trine Ring">
       <div class="about">
@@ -808,7 +986,7 @@ on Form Three of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-form-full-house-hand.png" width="228" height="308"
            alt="Full Ring">
       <div class="about">
@@ -830,7 +1008,7 @@ on Form Full House played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-form-four-of-a-kind-hand.png" width="228" height="308"
            alt="Quad Ring">
       <div class="about">
@@ -852,7 +1030,7 @@ on Form Four of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-form-five-of-a-kind-hand.png" width="228" height="308"
            alt="Pent Ring">
       <div class="about">
@@ -875,14 +1053,16 @@ on Form Five of a Kind played.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="sandstone-rings">
 <h3 class="family">
   Sandstone rings
   <span>5 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-element-two-pair-hand.png" width="228" height="308"
            alt="Duet Ring">
       <div class="about">
@@ -904,7 +1084,7 @@ on Elemental Two Pair played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-element-three-of-a-kind-hand.png" width="228" height="308"
            alt="Trio Ring">
       <div class="about">
@@ -926,7 +1106,7 @@ on Elemental Three of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-element-full-house-hand.png" width="228" height="308"
            alt="Laden Ring">
       <div class="about">
@@ -948,7 +1128,7 @@ on Elemental Full House played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-element-four-of-a-kind-hand.png" width="228" height="308"
            alt="Quartet Ring">
       <div class="about">
@@ -970,7 +1150,7 @@ on Elemental Four of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-element-five-of-a-kind-hand.png" width="228" height="308"
            alt="Quintet Ring">
       <div class="about">
@@ -993,14 +1173,16 @@ on Elemental Five of a Kind played.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="elemental-statuses">
 <h3 class="family">
   Elemental statuses
   <span>5 relics &middot; all uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-status-burn.png" width="228" height="308"
            alt="Burning">
       <div class="about">
@@ -1021,7 +1203,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-status-chill.png" width="228" height="308"
            alt="Chilling">
       <div class="about">
@@ -1042,7 +1224,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-status-shock.png" width="228" height="308"
            alt="Shocking">
       <div class="about">
@@ -1063,7 +1245,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-status-weight.png" width="228" height="308"
            alt="Weighted">
       <div class="about">
@@ -1084,7 +1266,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-status-weak.png" width="228" height="308"
            alt="Weakening">
       <div class="about">
@@ -1106,14 +1288,16 @@ on Elemental Five of a Kind played.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="paired-statuses">
 <h3 class="family">
   Paired statuses
   <span>10 relics &middot; all rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-shock-chill.png" width="228" height="308"
            alt="Storm">
       <div class="about">
@@ -1134,7 +1318,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-burn-chill.png" width="228" height="308"
            alt="Scald">
       <div class="about">
@@ -1155,7 +1339,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-burn-shock.png" width="228" height="308"
            alt="Wildfire">
       <div class="about">
@@ -1176,7 +1360,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-chill-weight.png" width="228" height="308"
            alt="Hoarfrost">
       <div class="about">
@@ -1197,7 +1381,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-chill-weak.png" width="228" height="308"
            alt="Brittle">
       <div class="about">
@@ -1218,7 +1402,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-shock-weak.png" width="228" height="308"
            alt="Palsy">
       <div class="about">
@@ -1239,7 +1423,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-weight-burn.png" width="228" height="308"
            alt="Caldera">
       <div class="about">
@@ -1260,7 +1444,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-weight-shock.png" width="228" height="308"
            alt="Tremor">
       <div class="about">
@@ -1281,7 +1465,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-weak-burn.png" width="228" height="308"
            alt="Blightfire">
       <div class="about">
@@ -1302,7 +1486,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-pair-status-weak-weight.png" width="228" height="308"
            alt="Millstone">
       <div class="about">
@@ -1324,14 +1508,16 @@ on Elemental Five of a Kind played.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="weapons">
 <h3 class="family">
   Weapons
   <span>15 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-stick.png" width="228" height="308"
            alt="The Stick">
       <div class="about">
@@ -1352,7 +1538,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-old-dagger.png" width="228" height="308"
            alt="The Old Dagger">
       <div class="about">
@@ -1373,7 +1559,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-epee.png" width="228" height="308"
            alt="The Epee">
       <div class="about">
@@ -1394,7 +1580,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-skewer-spear.png" width="228" height="308"
            alt="The Skewer">
       <div class="about">
@@ -1415,7 +1601,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-lance.png" width="228" height="308"
            alt="The Lance">
       <div class="about">
@@ -1436,7 +1622,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-bread-knife.png" width="228" height="308"
            alt="The Bread Knife">
       <div class="about">
@@ -1457,7 +1643,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-hunting-knife.png" width="228" height="308"
            alt="The Hunting Knife">
       <div class="about">
@@ -1478,7 +1664,7 @@ on Elemental Five of a Kind played.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-katana-blade.png" width="228" height="308"
            alt="The Blade">
       <div class="about">
@@ -1500,7 +1686,7 @@ deals 4x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-cleaver.png" width="228" height="308"
            alt="The Cleaver">
       <div class="about">
@@ -1521,7 +1707,7 @@ deals 4x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-headsman.png" width="228" height="308"
            alt="The Headsman">
       <div class="about">
@@ -1542,7 +1728,7 @@ deals 4x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-spoon.png" width="228" height="308"
            alt="Grandma&#39;s Spoon">
       <div class="about">
@@ -1563,7 +1749,7 @@ deals 4x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-brass-knuckles.png" width="228" height="308"
            alt="The Knuckles">
       <div class="about">
@@ -1584,7 +1770,7 @@ deals 4x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-basher.png" width="228" height="308"
            alt="The Basher">
       <div class="about">
@@ -1605,7 +1791,7 @@ deals 4x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-warhammer.png" width="228" height="308"
            alt="The Warhammer">
       <div class="about">
@@ -1626,7 +1812,7 @@ deals 4x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-stone-maul.png" width="228" height="308"
            alt="The Maul">
       <div class="about">
@@ -1648,14 +1834,16 @@ deals 4x DMG.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="elements-held">
 <h3 class="family">
   Elements held
   <span>5 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-jar-fire.png" width="228" height="308"
            alt="Smoldering Jar">
       <div class="about">
@@ -1677,7 +1865,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-jar-ice.png" width="228" height="308"
            alt="Jar of Ice">
       <div class="about">
@@ -1699,7 +1887,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-jar-lightning.png" width="228" height="308"
            alt="Jar of Sparks">
       <div class="about">
@@ -1721,7 +1909,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-jar-earth.png" width="228" height="308"
            alt="Jar of Earth">
       <div class="about">
@@ -1743,7 +1931,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-jar-arcane.png" width="228" height="308"
            alt="Jar of Magic">
       <div class="about">
@@ -1766,14 +1954,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="elemental-damage">
 <h3 class="family">
   Elemental damage
   <span>5 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmgx-fire.png" width="228" height="308"
            alt="Fire">
       <div class="about">
@@ -1794,7 +1984,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmgx-ice.png" width="228" height="308"
            alt="Ice">
       <div class="about">
@@ -1815,7 +2005,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmgx-lightning.png" width="228" height="308"
            alt="Lightning">
       <div class="about">
@@ -1836,7 +2026,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmgx-earth.png" width="228" height="308"
            alt="Earth">
       <div class="about">
@@ -1857,7 +2047,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmgx-arcane.png" width="228" height="308"
            alt="Arcane">
       <div class="about">
@@ -1879,14 +2069,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="elemental-repeats">
 <h3 class="family">
   Elemental repeats
   <span>5 relics &middot; all uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-repeat-fire.png" width="228" height="308"
            alt="Twisted Flame">
       <div class="about">
@@ -1907,7 +2099,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-repeat-ice.png" width="228" height="308"
            alt="Twisted Ice">
       <div class="about">
@@ -1928,7 +2120,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-repeat-lightning.png" width="228" height="308"
            alt="Twisted Light">
       <div class="about">
@@ -1949,7 +2141,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-repeat-earth.png" width="228" height="308"
            alt="Twisted Earth">
       <div class="about">
@@ -1970,7 +2162,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-repeat-arcane.png" width="228" height="308"
            alt="Twisted Power">
       <div class="about">
@@ -1992,14 +2184,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="elemental-growth">
 <h3 class="family">
   Elemental growth
   <span>5 relics &middot; all uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-growth-fire.png" width="228" height="308"
            alt="Weight of the Flame">
       <div class="about">
@@ -2020,7 +2214,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-growth-ice.png" width="228" height="308"
            alt="Weight of the Ice">
       <div class="about">
@@ -2041,7 +2235,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-growth-lightning.png" width="228" height="308"
            alt="Weight of the Light">
       <div class="about">
@@ -2062,7 +2256,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-growth-earth.png" width="228" height="308"
            alt="Weight of the Earth">
       <div class="about">
@@ -2083,7 +2277,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-growth-arcane.png" width="228" height="308"
            alt="Weight of the Power">
       <div class="about">
@@ -2105,14 +2299,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="elemental-discounts">
 <h3 class="family">
   Elemental discounts
   <span>5 relics &middot; all rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-discount-fire.png" width="228" height="308"
            alt="Warm Robe">
       <div class="about">
@@ -2133,7 +2329,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-discount-ice.png" width="228" height="308"
            alt="Cold Robe">
       <div class="about">
@@ -2154,7 +2350,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-discount-lightning.png" width="228" height="308"
            alt="Static Robe">
       <div class="about">
@@ -2175,7 +2371,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-discount-earth.png" width="228" height="308"
            alt="Dirty Robe">
       <div class="about">
@@ -2196,7 +2392,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-discount-arcane.png" width="228" height="308"
            alt="Eerie Robe">
       <div class="about">
@@ -2218,14 +2414,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="hand-multipliers">
 <h3 class="family">
   Hand multipliers
   <span>6 relics &middot; 4 uncommon, 2 rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-handmult-pair.png" width="228" height="308"
            alt="Paired Rings">
       <div class="about">
@@ -2246,7 +2444,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-handmult-triplicate.png" width="228" height="308"
            alt="Triplicate Rings">
       <div class="about">
@@ -2268,7 +2466,7 @@ deals 3x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-handmult-full.png" width="228" height="308"
            alt="Fulsome Rings">
       <div class="about">
@@ -2290,7 +2488,7 @@ deals 3x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-handmult-two-pair.png" width="228" height="308"
            alt="Mirrored Rings">
       <div class="about">
@@ -2312,7 +2510,7 @@ deals 2x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-handmult-four.png" width="228" height="308"
            alt="Quartered Rings">
       <div class="about">
@@ -2334,7 +2532,7 @@ deals 4x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-handmult-five.png" width="228" height="308"
            alt="Perfected Rings">
       <div class="about">
@@ -2357,14 +2555,16 @@ deals 5x DMG.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="forms-held">
 <h3 class="family">
   Forms held
   <span>3 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-jar-stab.png" width="228" height="308"
            alt="Jar of Needles">
       <div class="about">
@@ -2386,7 +2586,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-jar-slash.png" width="228" height="308"
            alt="Jar of Razors">
       <div class="about">
@@ -2408,7 +2608,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-jar-crush.png" width="228" height="308"
            alt="Jar of Granite">
       <div class="about">
@@ -2431,14 +2631,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="form-statuses">
 <h3 class="family">
   Form statuses
   <span>3 relics &middot; all uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-sundering.png" width="228" height="308"
            alt="The Sundering">
       <div class="about">
@@ -2459,7 +2661,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-bruise.png" width="228" height="308"
            alt="The Bruise">
       <div class="about">
@@ -2480,7 +2682,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-strike.png" width="228" height="308"
            alt="The Strike">
       <div class="about">
@@ -2502,14 +2704,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="form-weapons">
 <h3 class="family">
   Form weapons
   <span>3 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-all-slash.png" width="228" height="308"
            alt="The Sickle">
       <div class="about">
@@ -2530,7 +2734,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-all-crush.png" width="228" height="308"
            alt="The Club">
       <div class="about">
@@ -2551,7 +2755,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-all-stab.png" width="228" height="308"
            alt="The Needle">
       <div class="about">
@@ -2573,14 +2777,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="form-repeats">
 <h3 class="family">
   Form repeats
   <span>3 relics &middot; all uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-repeat-stab.png" width="228" height="308"
            alt="Twisted Points">
       <div class="about">
@@ -2601,7 +2807,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-repeat-slash.png" width="228" height="308"
            alt="Twisted Edges">
       <div class="about">
@@ -2622,7 +2828,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-repeat-crush.png" width="228" height="308"
            alt="Twisted Weights">
       <div class="about">
@@ -2644,14 +2850,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="form-growth">
 <h3 class="family">
   Form growth
   <span>3 relics &middot; all uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-growth-slash.png" width="228" height="308"
            alt="Weight of the Edge">
       <div class="about">
@@ -2672,7 +2880,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-growth-crush.png" width="228" height="308"
            alt="Weight of the Metal">
       <div class="about">
@@ -2693,7 +2901,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-growth-stab.png" width="228" height="308"
            alt="Weight of the Needle">
       <div class="about">
@@ -2715,14 +2923,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="tier-demotions">
 <h3 class="family">
   Tier demotions
   <span>3 relics &middot; all rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-demotion-three.png" width="228" height="308"
            alt="Atrophy Ring">
       <div class="about">
@@ -2743,7 +2953,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-demotion-two.png" width="228" height="308"
            alt="Eroding Ring">
       <div class="about">
@@ -2764,7 +2974,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-demotion-one.png" width="228" height="308"
            alt="Whittling Ring">
       <div class="about">
@@ -2786,14 +2996,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="form-discounts">
 <h3 class="family">
   Form discounts
   <span>3 relics &middot; all rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-discount-slash.png" width="228" height="308"
            alt="Whetted">
       <div class="about">
@@ -2814,7 +3026,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-discount-crush.png" width="228" height="308"
            alt="Hefted">
       <div class="about">
@@ -2835,7 +3047,7 @@ kept in hand.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-discount-stab.png" width="228" height="308"
            alt="Tapered">
       <div class="about">
@@ -2857,14 +3069,16 @@ kept in hand.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="element-and-form">
 <h3 class="family">
   Element and form
   <span>3 relics &middot; all uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-dmg-earth-crush.png" width="228" height="308"
            alt="Crushed by Stone">
       <div class="about">
@@ -2886,7 +3100,7 @@ deals 3x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-dmg-lightning-stab.png" width="228" height="308"
            alt="Struck by Lightning">
       <div class="about">
@@ -2908,7 +3122,7 @@ deals 3x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-dmg-ice-slash.png" width="228" height="308"
            alt="Sharp as Ice">
       <div class="about">
@@ -2931,14 +3145,16 @@ deals 3x DMG.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="tier-damage">
 <h3 class="family">
   Tier damage
   <span>2 relics &middot; all uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-dmgx-one-ap.png" width="228" height="308"
            alt="Swarm">
       <div class="about">
@@ -2959,7 +3175,7 @@ deals 3x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-dmg-cost-three.png" width="228" height="308"
            alt="Shimmering Crown">
       <div class="about">
@@ -2981,14 +3197,16 @@ deals 3x DMG.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="shield-streaks">
 <h3 class="family">
   Shield streaks
   <span>2 relics &middot; 1 common, 1 rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-dmg-shield-use.png" width="228" height="308"
            alt="Ebb &amp; Flow">
       <div class="about">
@@ -3011,7 +3229,7 @@ you play. Grows while worn.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-no-shield.png" width="228" height="308"
            alt="Momentum">
       <div class="about">
@@ -3033,14 +3251,16 @@ you play. Grows while worn.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="lead-attack">
 <h3 class="family">
   Lead attack
   <span>1 relic &middot; uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-lead-three-times.png" width="228" height="308"
            alt="Echo">
       <div class="about">
@@ -3062,14 +3282,16 @@ you play. Grows while worn.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="cost-bargains">
 <h3 class="family">
   Cost bargains
   <span>3 relics &middot; 1 uncommon, 2 rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-cost-life-lost.png" width="228" height="308"
            alt="Onslaught">
       <div class="about">
@@ -3090,7 +3312,7 @@ you play. Grows while worn.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-cost-three-rounds.png" width="228" height="308"
            alt="Hermes">
       <div class="about">
@@ -3111,7 +3333,7 @@ you play. Grows while worn.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-cost-defend-less.png" width="228" height="308"
            alt="Braced">
       <div class="about">
@@ -3133,14 +3355,16 @@ you play. Grows while worn.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="the-clock">
 <h3 class="family">
   The clock
   <span>1 relic &middot; uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-clock-plus-two.png" width="228" height="308"
            alt="The Turned Glass">
       <div class="about">
@@ -3162,14 +3386,16 @@ you play. Grows while worn.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="standing-stats">
 <h3 class="family">
   Standing stats
   <span>3 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-dmg-plus.png" width="228" height="308"
            alt="Might">
       <div class="about">
@@ -3190,7 +3416,7 @@ you play. Grows while worn.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-hp-plus.png" width="228" height="308"
            alt="Bulwark">
       <div class="about">
@@ -3211,7 +3437,7 @@ you play. Grows while worn.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-hp-scale.png" width="228" height="308"
            alt="The Heart">
       <div class="about">
@@ -3233,14 +3459,16 @@ you play. Grows while worn.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="vitae-power">
 <h3 class="family">
   Vitae power
   <span>2 relics &middot; 1 uncommon, 1 rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-dmg-vitae-scale.png" width="228" height="308"
            alt="The Rampant">
       <div class="about">
@@ -3261,7 +3489,7 @@ you play. Grows while worn.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-dmg-vitae-fire-scale.png" width="228" height="308"
            alt="The Fire of Life">
       <div class="about">
@@ -3284,14 +3512,16 @@ for every 10 vitae you hold.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="mixed-hands">
 <h3 class="family">
   Mixed hands
   <span>1 relic &middot; uncommon</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="uncommon">
       <img src="relic-dmg-two-forms.png" width="228" height="308"
            alt="Dual Wield">
       <div class="about">
@@ -3314,14 +3544,16 @@ different forms deals 3x DMG.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="spoils">
 <h3 class="family">
   Spoils
   <span>3 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-banker.png" width="228" height="308"
            alt="Banker">
       <div class="about">
@@ -3342,7 +3574,7 @@ different forms deals 3x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-vitae-plus-room.png" width="228" height="308"
            alt="Soul Taker">
       <div class="about">
@@ -3363,7 +3595,7 @@ different forms deals 3x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="common">
       <img src="relic-prizes-add.png" width="228" height="308"
            alt="Hungry">
       <div class="about">
@@ -3385,14 +3617,16 @@ different forms deals 3x DMG.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="lifedrain">
 <h3 class="family">
   Lifedrain
   <span>2 relics &middot; all rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-drain-blow.png" width="228" height="308"
            alt="Vampiric Fang">
       <div class="about">
@@ -3413,7 +3647,7 @@ different forms deals 3x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-heal-turn-start.png" width="228" height="308"
            alt="The Tear">
       <div class="about">
@@ -3435,14 +3669,16 @@ different forms deals 3x DMG.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="luck">
 <h3 class="family">
   Luck
   <span>1 relic &middot; rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-scale-rolls.png" width="228" height="308"
            alt="The Rabbit&#39;s Foot">
       <div class="about">
@@ -3464,14 +3700,16 @@ different forms deals 3x DMG.</p>
     </div>
   
 </div>
+</section>
 
+<section class="sheet-group" data-family="deck-alteration">
 <h3 class="family">
   Deck alteration
   <span>1 relic &middot; rare</span>
 </h3>
 <div class="plates">
   
-    <div class="plate">
+    <div class="plate sheet-item" data-rarity="rare">
       <img src="relic-essence-targets.png" width="228" height="308"
            alt="Cloud Necklace">
       <div class="about">
@@ -3493,6 +3731,7 @@ different forms deals 3x DMG.</p>
     </div>
   
 </div>
+</section>
 
 
 <h2>Card states</h2>

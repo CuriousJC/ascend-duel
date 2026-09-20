@@ -1,23 +1,23 @@
 {
   "Motif": "slimes",
   "Name": "Slimes",
-  "ValidFloors": [
-    1,
-    5
-  ],
+  "Draw": "slimes are jelly-like creatures with amorphous shapes",
+  "ElementDraw": {
+    "fire": "slimes will have the games orange color throughout their jelly bodies",
+    "ice": "slimes will have the games blue color throughout their jelly bodies",
+    "lightning": "slimes will have the games yellow color throughout their jelly bodies",
+    "earth": "slimes will have the games green color throughout their jelly bodies",
+    "arcane": "slimes will have the games purple color throughout their jelly bodies"
+  },
+  "ValidFloors": [1, 5],
   "Records": [
     {
-      "Record": "slimes-outer-clear",
-      "Name": "Clear Slime",
+      "Record": "slimes-outer-blob",
+      "Name": "Blob",
       "Tier": "outer",
-      "Art": "slimes-clear",
-      "Draw": "TO BE DETERMINED",
-      "Affinities": [
-        "ice",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Art": "slimes-blob",
+      "Draw": "a clear translucent goopy blob creature with tints coming from their element",
+      "Affinities": ["ice", "lightning", "earth", "arcane"],
       "HP": 110,
       "DMG": 4,
       "Actions": 4,
@@ -46,17 +46,12 @@
       ]
     },
     {
-      "Record": "slimes-outer-blue",
-      "Name": "Blue Slime",
+      "Record": "slimes-outer-cube",
+      "Name": "Cube",
       "Tier": "outer",
-      "Art": "slimes-blue",
-      "Draw": "TO BE DETERMINED",
-      "Affinities": [
-        "fire",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Art": "slimes-cube",
+      "Draw": "a cube shaped translucent slime with a knife trapped inside it",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
       "HP": 95,
       "DMG": 5,
       "Actions": 5,
@@ -85,17 +80,12 @@
       ]
     },
     {
-      "Record": "slimes-outer-green",
-      "Name": "Green Slime",
+      "Record": "slimes-outer-orb",
+      "Name": "Orb",
       "Tier": "outer",
-      "Art": "slimes-green",
-      "Draw": "TO BE DETERMINED",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Art": "slimes-orb",
+      "Draw": "a clear translucent slime drawn into a nearly perfect round orb, with tints coming from its element",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 125,
       "DMG": 4,
       "Actions": 4,
@@ -124,17 +114,12 @@
       ]
     },
     {
-      "Record": "slimes-inner-amber",
-      "Name": "Amber Slime",
+      "Record": "slimes-inner-spire",
+      "Name": "Spire",
       "Tier": "inner",
-      "Art": "slimes-amber",
-      "Draw": "TO BE DETERMINED",
-      "Affinities": [
-        "fire",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Art": "slimes-spire",
+      "Draw": "a tall translucent slime rising from a broad puddled base into a single sharp tapering spire, with tints coming from its element",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
       "HP": 150,
       "DMG": 6,
       "Actions": 5,
@@ -163,17 +148,12 @@
       ]
     },
     {
-      "Record": "slimes-inner-clot",
-      "Name": "Clot Slime",
+      "Record": "slimes-inner-cluster",
+      "Name": "Cluster",
       "Tier": "inner",
-      "Art": "slimes-clot",
-      "Draw": "TO BE DETERMINED",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Art": "slimes-cluster",
+      "Draw": "a cluster of clear translucent slime globules fused together into one lumpy creature, with tints coming from its element",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 175,
       "DMG": 5,
       "Actions": 4,
@@ -202,17 +182,12 @@
       ]
     },
     {
-      "Record": "slimes-inner-mineral",
-      "Name": "Mineral Slime",
+      "Record": "slimes-inner-bouncer",
+      "Name": "Bouncer",
       "Tier": "inner",
-      "Art": "slimes-mineral",
-      "Draw": "TO BE DETERMINED",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Art": "slimes-bouncer",
+      "Draw": "a squat translucent slime in a mushroom shape, with a broad domed cap above a thick springy stem and tints coming from its element",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 130,
       "DMG": 7,
       "Actions": 5,
@@ -241,17 +216,12 @@
       ]
     },
     {
-      "Record": "slimes-boss-iridescent",
-      "Name": "Iridescent Slime",
+      "Record": "slimes-boss-spitter",
+      "Name": "Spitter",
       "Tier": "boss",
-      "Art": "slimes-iridescent",
-      "Draw": "TO BE DETERMINED",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Art": "slimes-spitter",
+      "Draw": "a large clear translucent slime with a long raised pseudopod appendage ending in an open spitting tip, with tints coming from its element",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 235,
       "DMG": 9,
       "Actions": 6,
@@ -289,16 +259,11 @@
     },
     {
       "Record": "slimes-boss-entropic",
-      "Name": "Entropic Slime",
+      "Name": "Entropic",
       "Tier": "boss",
       "Art": "slimes-entropic",
-      "Draw": "TO BE DETERMINED",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "a large translucent slime whose body is coming apart at the edges into curling strands, loose droplets and ragged gaps, with tints coming from its element",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 260,
       "DMG": 10,
       "Actions": 6,
@@ -336,16 +301,11 @@
     },
     {
       "Record": "slimes-boss-galaxy",
-      "Name": "Galaxy Slime",
+      "Name": "Galaxy",
       "Tier": "boss",
       "Art": "slimes-galaxy",
-      "Draw": "TO BE DETERMINED",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "earth"
-      ],
+      "Draw": "a vast translucent slime with a slowly spiraling body full of suspended bubbles, bright motes and a deep central hollow, with tints coming from its element",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
       "HP": 245,
       "DMG": 11,
       "Actions": 6,

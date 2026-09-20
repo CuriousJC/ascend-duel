@@ -1,6 +1,14 @@
 {
   "Motif": "mutants",
   "Name": "Mutants",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     3,
     8
@@ -11,7 +19,7 @@
       "Name": "Warped Mutant",
       "Tier": "outer",
       "Art": "mutants-warped",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -50,7 +58,7 @@
       "Name": "Torch Mutant",
       "Tier": "outer",
       "Art": "mutants-torch",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -89,7 +97,7 @@
       "Name": "Fist Mutant",
       "Tier": "outer",
       "Art": "mutants-fist",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -128,7 +136,7 @@
       "Name": "Gun Mutant",
       "Tier": "inner",
       "Art": "mutants-gun",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -167,7 +175,7 @@
       "Name": "Mega Mutant",
       "Tier": "inner",
       "Art": "mutants-mega",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -206,7 +214,7 @@
       "Name": "Grafted Mutant",
       "Tier": "inner",
       "Art": "mutants-grafted",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -245,7 +253,7 @@
       "Name": "The Mega Brute",
       "Tier": "boss",
       "Art": "mutants-brute",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -292,7 +300,7 @@
       "Name": "The Amalgam",
       "Tier": "boss",
       "Art": "mutants-amalgam",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -339,7 +347,7 @@
       "Name": "Prototype Omega",
       "Tier": "boss",
       "Art": "mutants-prototype",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",

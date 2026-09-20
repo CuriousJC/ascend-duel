@@ -1,6 +1,14 @@
 {
   "Motif": "animals",
   "Name": "Animals",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     1,
     6
@@ -11,7 +19,7 @@
       "Name": "Giant Bat",
       "Tier": "outer",
       "Art": "animals-bat",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -50,7 +58,7 @@
       "Name": "Giant Rat",
       "Tier": "outer",
       "Art": "animals-rat",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -89,7 +97,7 @@
       "Name": "Tusk Boar",
       "Tier": "outer",
       "Art": "animals-boar",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -128,7 +136,7 @@
       "Name": "Dire Wolf",
       "Tier": "inner",
       "Art": "animals-wolf",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -167,7 +175,7 @@
       "Name": "Rot Hound",
       "Tier": "inner",
       "Art": "animals-hound",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -206,7 +214,7 @@
       "Name": "Cave Bear",
       "Tier": "inner",
       "Art": "animals-bear",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -245,7 +253,7 @@
       "Name": "The Grey Alpha",
       "Tier": "boss",
       "Art": "animals-alpha",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -292,7 +300,7 @@
       "Name": "Doomsday Beast",
       "Tier": "boss",
       "Art": "animals-behemoth",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -339,7 +347,7 @@
       "Name": "The Chimera",
       "Tier": "boss",
       "Art": "animals-chimera",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",

@@ -1,6 +1,14 @@
 {
   "Motif": "dwarves",
   "Name": "Dwarves",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     2,
     7
@@ -11,7 +19,7 @@
       "Name": "Deep Digger",
       "Tier": "outer",
       "Art": "dwarves-digger",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -50,7 +58,7 @@
       "Name": "Forge Smith",
       "Tier": "outer",
       "Art": "dwarves-smith",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -89,7 +97,7 @@
       "Name": "Tunnel Scout",
       "Tier": "outer",
       "Art": "dwarves-scout",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -128,7 +136,7 @@
       "Name": "Shield Dwarf",
       "Tier": "inner",
       "Art": "dwarves-shieldman",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -167,7 +175,7 @@
       "Name": "Runesmith",
       "Tier": "inner",
       "Art": "dwarves-runesmith",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -206,7 +214,7 @@
       "Name": "Thane",
       "Tier": "inner",
       "Art": "dwarves-thane",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -245,7 +253,7 @@
       "Name": "The King Under",
       "Tier": "boss",
       "Art": "dwarves-kingunder",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -292,7 +300,7 @@
       "Name": "The Forge-Father",
       "Tier": "boss",
       "Art": "dwarves-forgefather",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -339,7 +347,7 @@
       "Name": "The Deep Warden",
       "Tier": "boss",
       "Art": "dwarves-deepwarden",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",

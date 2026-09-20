@@ -1,6 +1,14 @@
 {
   "Motif": "golems",
   "Name": "Golems",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     4,
     8
@@ -11,7 +19,7 @@
       "Name": "Clay Golem",
       "Tier": "outer",
       "Art": "golems-clay",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -50,7 +58,7 @@
       "Name": "Scrap Golem",
       "Tier": "outer",
       "Art": "golems-scrap",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -89,7 +97,7 @@
       "Name": "Stone Golem",
       "Tier": "outer",
       "Art": "golems-stone",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -128,7 +136,7 @@
       "Name": "Iron Golem",
       "Tier": "inner",
       "Art": "golems-iron",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -167,7 +175,7 @@
       "Name": "Glass Golem",
       "Tier": "inner",
       "Art": "golems-glass",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -206,7 +214,7 @@
       "Name": "Bone Golem",
       "Tier": "inner",
       "Art": "golems-bone",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -245,7 +253,7 @@
       "Name": "The Colossus",
       "Tier": "boss",
       "Art": "golems-colossus",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -292,7 +300,7 @@
       "Name": "The Sentinel",
       "Tier": "boss",
       "Art": "golems-sentinel",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -339,7 +347,7 @@
       "Name": "The Juggernaut",
       "Tier": "boss",
       "Art": "golems-juggernaut",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",

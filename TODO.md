@@ -308,6 +308,174 @@ here.
       66 more rather than changing a constant. The three blanks are on the badge sheet to be
       compared before that batch is ordered.
 
+## Platform readiness — the Steam Deck refactor, and the seams a port would need
+
+*(owner asked for these to be tracked)*. Three tickets that add controller support and isolate the
+desktop assumptions left in the game. **None of them changes combat rules, run rules, save
+semantics or the visual design.** Take them in the order below: the input one is the biggest, and
+the other two are independent of it and of each other.
+
+**This is a pre-release refactor, not the next thing to build.** Steam Deck is a shipping target,
+so all three land before release; ordinary development carries on with the mouse until then. What
+each new screen owes ticket 1 in the meantime is the design check in `CLAUDE.md`'s input section —
+could a focus ring walk this — so the refactor is a refactor rather than a redesign.
+
+The posture they all share is the repo's own — rules stay below presentation, a failure in an
+optional platform facility never stops play, an outcome never depends on presentation or on which
+physical device is in the player's hands, and a test states the contract before the old path is
+removed.
+
+- [ ] **1. Semantic controls, and a controller that can play the whole game.** A run is playable
+      start to finish on a standard gamepad with no mouse and no keyboard, and no screen or
+      ordinary widget reads Ebitengine keys or mouse buttons directly. Mouse behavior is unchanged.
+      - **The design record already allows it.** `CLAUDE.md`'s input section carries the two
+        rules this ticket may not bend — no virtual cursor, and a semantic action reaches only
+        controls that are on the screen — plus the question a new screen answers to stay
+        refactorable. Read it before designing the focus model.
+      - **The seam is an engine-neutral package** — suggested `internal/controls`, no Ebitengine
+        import — holding an `Action` vocabulary that names intent rather than a button: confirm,
+        cancel, the four navigations, previous and next region, secondary, inspect, menu. It hands
+        out a per-tick frame answering `JustPressed` / `JustReleased` / `Pressed`, the pointer, and
+        which device was last used. **The Ebitengine adapter sits at the top of the graph** —
+        `internal/game`, or a narrow `internal/platform/ebiteninput` — sampled once near the start
+        of `Game.Update`. Keyboard mappings ship beside the gamepad ones so navigation can be
+        tested without a pad plugged in.
+      - **No virtual cursor.** Controller focus is a first-class mode, not a hidden mouse being
+        driven around. The two may be alternated at any moment, and switching device changes
+        nothing but which treatment is drawn.
+      - **A physical edge is sampled once a tick** and a held button does not repeat unless the
+        control it is over asks for repeat.
+      - **Focus is semantic, not derived from draw order.** A target has a stable identity for the
+        screen it is on, a rectangle, an enabled state, an activation, and either explicit
+        neighbors or a deterministic row and column order. Each scene builds its own focus graph in
+        `Update`; **do not build a retained UI framework** — that is the decision
+        `internal/models/doc.go` is under. Every screen picks a sensible default target, a disabled
+        or hidden target is skipped, and a target that disappears hands focus to the nearest valid
+        one deterministically.
+      - **The focus treatment has to be legible against every state a card and a button already
+        have**, and must not read as selection, unaffordability, hover raising or a latched sort.
+      - **An overlay traps focus.** Nothing behind a modal, a toast, the ledger or a tutorial gate
+        may be reached or fired. `Cancel` unwinds exactly one level: reorder mode, then the top
+        overlay, then whatever the scene does with Back.
+      - **The mouse contract survives intact** — a click fires on release over the same control,
+        and dragging off cancels it. Confirm fires once on a defined edge. Both lifecycles get
+        tests.
+      - **Escape keeps meaning "press the settings cog"**, and the controller gets its own `Menu`
+        action for it rather than `Cancel` being overloaded into a settings key.
+      - **Controller reorder calls the same row operations mouse dragging calls** —
+        `RowLift`/`RowReturn` — so worn-relic order and hand order cannot grow a second
+        implementation. Entering reorder remembers the origin, Confirm commits, Cancel restores.
+      - **Card focus follows the card's identity, not its seat**, through a sort, a refill, an
+        insertion and a removal.
+      - **Everything on the combat screen is reachable**: the hand, the sort tabs, the deck, hands
+        and ledger panels, the consumables, Discard, DUEL! and the cog. Region cycling is a fixed
+        order — the hand, the action buttons, the right-hand control column, the consumables and
+        relics, back to the hand.
+      - **A shop or reward screen opens on the first affordable offer**, or on the first offer if
+        none is. An unaffordable offer may be inspected; it may not be activated.
+      - **The tutorial gate grows a semantic half rather than being bypassed.** An anchor resolves
+        to target IDs as well as to rectangles, focus cannot leave the allowed set, and a step
+        naming a set of cards allows exactly those card identities — the same rule the rectangles
+        are already under. `TestTheMatchingCardsGateLightsOnlyTheTaughtCards` is the pointer-side
+        tripwire and wants a focus-side twin.
+      - **Glyphs are looked up by semantic action and controller family**, never a letter typed
+        into rule or screen text; text labels are an acceptable first version. Steam Input maps
+        onto the semantic layer and is never consulted by a rule.
+      - **A disconnect with no usable pad left pauses, or shows a non-destructive reconnect
+        notice**, dismissible by mouse or keyboard on PC.
+      - **The migration is ten steps and the last one is the guard**: the action types and their
+        edge tests, the adapter populated in `Game.Update` with the old mouse fields still
+        standing, `systems.UpdateButton`, the confirm dialog and the chrome plus the focus drawing,
+        the sliders and scrollbars, the direct-click call sites, scene focus scopes and modal
+        trapping, card rows, tutorial targets, device presentation and disconnect — then the
+        transitional fields go and an architectural check holds the line.
+      - **The direct readers today** are `internal/game/game.go` and `chrome.go`,
+        `internal/systems/button_sys.go`, `slider_sys.go` and `scrollbar_sys.go`,
+        `internal/ui/carddrag.go`, and the screens `ledger.go`, `postbattle.go`, `shop.go`,
+        `shop_goods.go`, `shop_pouch.go`, `combat_flight.go` and `tutorial.go`. A grep for
+        `inpututil`, `IsMouseButton` and `CursorPosition` is the list that stays current.
+      - **The acceptance test is a controller-only smoke path** — title, tutorial or new run,
+        combat, reward, shop, the next combat, settings, the end of the run — plus a
+        controller-only completion of the tutorial with nothing outside its gate accepted. **That
+        half waits on the tutorial being re-taught**, which is its own entry above; the rest of the
+        ticket does not.
+      - **Not in this ticket**: a console SDK, local multiplayer, any redesign of the combat
+        screen, any change to combat timing, and full key rebinding — though the mapping boundary
+        has to be able to carry rebinding later.
+
+- [ ] **2. Profile and run persistence behind an injectable storage backend.** The JSON schemas,
+      the version handling, the unknown-field preservation and the corruption policy are all
+      exactly what they are today; what changes is that nothing above the backend knows a save is a
+      file in a directory.
+      - **The boundary is raw bytes**: read by name, write by name, delete, and say whether it is
+        writable. Encoding and version policy stay above it, storage mechanics below. **No
+        `Save(any)`** — the backend must not learn what a profile, a run, a version or an unknown
+        field is.
+      - **`LoadProfile`, `SaveProfile`, `LoadRun`, `SaveRun` and `DeleteRun` take the interface**,
+        marshal and unmarshal exactly as they do now, and hand over complete bytes. Atomicity is an
+        implementation detail of the filesystem backend, which keeps `ASCEND_DUEL_PROFILE`,
+        `os.UserConfigDir`, lazy directory creation, filename validation, permissions, temp-file
+        cleanup and the atomic rename.
+      - **`main` constructs the desktop backend**; a screen never chooses storage. `GlobalState`
+        carries the interface, and a bare `GlobalState` in a test gets an inert implementation
+        through one helper rather than a nil check at every call site.
+      - **`Store.Dir() == ""` is what the abstraction costs.** Two call sites —
+        `internal/screens/run.go` and `save.go` — read an empty directory as "an inert store, so
+        suppress the save error". That becomes an explicit capability query.
+      - **"The backend cannot write" and `ProfileWritable == false` are different facts** and must
+        stay different: the second means the loaded data is corrupt or from a future build and must
+        not be overwritten, and no backend's writability may override it.
+      - **Ledger export is an optional second capability, not part of saving.** A platform without
+        exports disables the control rather than writing a ledger into the save container under a
+        made-up name, and failing to export is not failing to save. The desktop exporter keeps the
+        safe filename and the path-traversal protection.
+      - **A memory fake with injectable read, write and delete failures** is what makes the
+        nonfatal behavior testable without filesystem permission tricks, and the core contract
+        tests run against both it and the real one.
+      - **The tripwire is that no screen and no session code imports `os` or `filepath`** or
+        assumes a config path, and that the desktop files stay byte-compatible.
+      - **Not in this ticket**: Steam Cloud, which syncs the desktop directory from outside;
+        console storage SDKs; mid-duel serialization; encryption; compression; and any change to
+        saving only at phase boundaries.
+
+- [ ] **3. Thin platform services for achievements and application lifecycle.** Game code publishes
+      an achievement and reacts to suspend, resume and quit without importing Steam, Nintendo,
+      PlayStation or Ebitengine platform APIs. **A no-op implementation is a legitimate shipping
+      implementation** for a DRM-free desktop build.
+      - **Suggested `internal/platform`**, engine-neutral, holding narrow capabilities and their
+        no-op and recording-fake implementations; SDK adapters sit above it or behind build tags.
+        Two capabilities only — unlock an achievement key, poll lifecycle events — independently
+        replaceable. **No leaderboards, presence, networking, commerce, telemetry or DLC** until
+        something implemented needs them.
+      - **`combat`, `session`, `data` and achievement rule evaluation may never import it**, and a
+        platform call may never touch a random stream, a resolution, a reward, a price, an unlock
+        or a save.
+      - **The local profile stays authoritative.** An outage cannot revoke or block an award. The
+        toast is queued and the profile saved whether publication succeeded or not, and
+        `internal/screens/achieve.go` is the one seam the publication call joins, after
+        `Profile.Award` reports a genuinely new award.
+      - **Reconciliation replaces a durable retry queue**: every key already in the profile is
+        offered to the provider at startup, so offline play and transient failures heal themselves.
+        `Unlock` is therefore idempotent by contract.
+      - **A platform ID is mapped at the provider boundary if it has to be.** A stored profile key
+        is never renamed to satisfy a provider.
+      - **Lifecycle is processed near `Game.Update`, before any scene updates.** Suspended stops
+        input, cancels in-flight pointer and controller gestures, pauses the clocks and the audio,
+        and flushes the profile if it is writable. Resumed restores audio to the saved settings,
+        clears stale edges so the button that woke the application cannot press a control,
+        re-enumerates pads, and resumes the clocks **without applying elapsed wall time**.
+        QuitRequested goes through the existing `ShouldClose` / `ErrClosing` path.
+      - **Suspending does not invent a new save point.** The last phase-boundary snapshot is the
+        resumable state, so a process killed mid-duel resumes that room from its start, exactly as
+        quitting mid-duel does.
+      - **The desktop window's close and focus become lifecycle events at the adapter**, rather
+        than `ebiten.IsWindowBeingClosed` being consulted around the codebase.
+      - **Fullscreen stays where it is.** It is already isolated in the settings screen and a
+        console can make it a no-op; broadening this ticket to abstract every Ebitengine call is
+        explicitly not wanted.
+      - **Not in this ticket**: any SDK integration, mid-duel saves, any change to achievement
+        keys, conditions or the toast, and any abstraction of rendering or of the game loop.
+
 ## Licensing (for an eventual Steam release)
 
 Model: source stays public under PolyForm Noncommercial 1.0.0, nobody else may commercialise

@@ -249,7 +249,7 @@ every record under `data/motifs/` carries `Art` and `Draw`, and has no `Family` 
   *is* and what it is doing. The *generic* prompt is the one for that card's style —
   `docs/art/relic_art_prompt.MD` or `docs/art/essence_art_prompt.MD` — and is about no record at
   all. **Empty means nobody has written one**, which — read against an empty `Art` — is
-  the backlog each sheet marks in pink. **Every enemy and boss `Draw` reads `TO BE DETERMINED`**:
+  the backlog each sheet marks in pink. **Every enemy and boss `Draw` reads `TBD`**:
   those portraits are licensed art rather than generated pictures, so the field is a seat rather
   than a backlog.
 - **`go run ./tools/relicart -kind relic|essence|rune|stone|other`** files a generated picture into

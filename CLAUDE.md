@@ -198,6 +198,20 @@ go run ./tools/seeds        # re-check the named deck seeds, and search for new 
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
 
+**A sheet can be narrowed with a chip bar, and `tools/sheetfilter` is the whole of it** — the
+third shared library under `tools/`. A sheet declares its facets, tags each record with
+`class="sheet-item"` and a `data-` attribute per facet, wraps each heading and its records in
+`class="sheet-group"`, and drops the bar in above the contents; values within a facet are an OR
+and facets are an AND. The motif sheet is cut on floor, room and element, and the relic sheet on
+rarity and family. Two rules to keep:
+
+- **A facet's values are counted off the records, never typed into the tool.** A motif authored
+  onto a ninth floor puts a ninth chip up with nothing edited — the same reason nothing in this
+  file writes down how many of anything there is.
+- **The page is complete before the script runs.** Filtering hides what is already in the file,
+  so a sheet stays one static file with no build step and reads whole with scripting off. That is
+  the line a new facet may not cross: nothing is fetched and nothing is templated in the browser.
+
 **The sheets are committed, under `docs/sheets/`**. They write there
 rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone opens to
 see every card, relic, essence, hand, stone, rune, upgrade, creature and boss in the game. A
@@ -616,10 +630,22 @@ Two things worth knowing without opening it:
 - **`combat.ResolutionOrder` is the single authority on play order**, and both `ResolveRound`
   and the table's two rows read it rather than deriving their own.
 
-## UI: clicks and drag-and-drop only
+## UI: clicks and drag-and-drop, and a gamepad has to be able to do all of it
 
-A firm design decision, not a current limitation. These apply everywhere, the combat screen
-included. The entire input vocabulary is:
+**The game ships on Steam Deck**, so every control has to be reachable with a standard gamepad and
+nothing may be designed that only a pointer can do. What is *built* today is the pointer
+vocabulary below, and building against it is correct — the controller layer is a refactor that
+happens before release, not a thing each new screen bolts on. What each new screen owes it is one
+question answered while the screen is being designed: **could a focus ring walk this?** A control
+that only answers to a cursor's position, an action with no discrete step, or an ordering that
+exists only as a drag is a screen that will have to be redesigned rather than adapted. See the
+platform-readiness section of [TODO.md](TODO.md) for the ticket and its constraints.
+
+**Two rules the controller work does not get to bend.** There is no virtual cursor — a pad drives
+focus, never a hidden mouse. And a semantic action reaches only controls that are visible on the
+screen, exactly as a key does.
+
+These apply everywhere, the combat screen included. The pointer vocabulary is:
 
 - **Left click** — buttons and selection.
 - **Drag and drop** — the action box, and anything else that needs ordering or moving.
@@ -639,7 +665,9 @@ included. The entire input vocabulary is:
   else anywhere accepts typed input.
 
 **No right click, ever.** There is no context menu and no secondary action. Anything
-that feels like it wants one needs a different design.
+that feels like it wants one needs a different design. **A gamepad's spare face buttons are not a
+way back in**: a pad gets the reveal a cursor gets by hovering and an explicit mode for the
+ordering a cursor gets by dragging, and neither is a second thing a control does.
 
 - **Wanting a text field is a design smell.** Find the click or drag version instead.
   A settings value is a row of buttons or a slider, never a number you type.
@@ -1197,7 +1225,7 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
 - **Six catalogs carry `Family` and `Draw`, and nothing that plays the game reads either** .
  `relics.json`, `essences.json`, `runes.json`, `potions.json` and `goods.json` carry `Art`
  beside them; every record under `data/motifs/` carries `Draw` and `Art`, with every `Draw`
- reading `TO BE DETERMINED` — the roster's pictures are all still to be generated, so the field is
+ reading `TBD` — the roster's pictures are all still to be generated, so the field is
  a seat for briefs to be written into a motif at a time. **`Family` is the motif a record was
  authored beside** and is what its
  review sheet groups by; it is authored rather than derived for the relic catalog's reason, and
@@ -1241,9 +1269,9 @@ cost is the tie-break among equally illustrative sets.
 **It carries the reachability, and `tools/hands` is what makes that safe.** Two tools reporting
 the same probability by different methods are two numbers that can disagree, so the deck, the
 round's bounds, `MinCost` and the sample all live in `tools/hands` with the seed and the trial
-count pinned — `handsheet` and `handodds` print the identical table to the last decimal. It is
-the second shared library under `tools/` and it earns the exception for `roster`'s reason: these
-are the same question read two ways. **The cost is about thirty seconds on every
+count pinned — `handsheet` and `handodds` print the identical table to the last decimal. It is a
+shared library under `tools/` and it earns the exception for `roster`'s reason: these are the
+same question read two ways. **The cost is about thirty seconds on every
 `tools/handsheet` run**, which a full `tools/sheets` pays too.
 
 **Two figures, and the page says which is which.** The AP beside a rung is what that example costs

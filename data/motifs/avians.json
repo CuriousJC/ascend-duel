@@ -1,6 +1,14 @@
 {
   "Motif": "avians",
   "Name": "Avians",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     2,
     7
@@ -11,7 +19,7 @@
       "Name": "Carrion Crow",
       "Tier": "outer",
       "Art": "avians-crow",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -50,7 +58,7 @@
       "Name": "Cliff Harrier",
       "Tier": "outer",
       "Art": "avians-harrier",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -89,7 +97,7 @@
       "Name": "Bone Ratite",
       "Tier": "outer",
       "Art": "avians-ratite",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -128,7 +136,7 @@
       "Name": "Young Roc",
       "Tier": "inner",
       "Art": "avians-roc",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -167,7 +175,7 @@
       "Name": "Harpy",
       "Tier": "inner",
       "Art": "avians-harpy",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -206,7 +214,7 @@
       "Name": "Ember Phoenix",
       "Tier": "inner",
       "Art": "avians-phoenix",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -245,7 +253,7 @@
       "Name": "The Sky-Father",
       "Tier": "boss",
       "Art": "avians-skyfather",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -292,7 +300,7 @@
       "Name": "The Great Roc",
       "Tier": "boss",
       "Art": "avians-greatroc",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -339,7 +347,7 @@
       "Name": "The Corvid King",
       "Tier": "boss",
       "Art": "avians-corvid",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",

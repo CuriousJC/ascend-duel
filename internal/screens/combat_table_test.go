@@ -744,7 +744,7 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 // first one sorted**, so a change to the roster's order does not silently change which deck these
 // tests are exercising — and an outer-chamber creature of an early motif, so the hand it draws is
 // small and cheap.
-const testEnemyRecord = "slimes-outer-clear"
+const testEnemyRecord = "goblins-outer-serf"
 
 // **A defense that already flew its pips does not rise again.** The engine resolves defenses at
 // the end of the turn, several beats after the hand they were scored into — so with the pips

@@ -1,6 +1,14 @@
 {
   "Motif": "plants",
   "Name": "Plants",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
   "ValidFloors": [
     2,
     7
@@ -11,7 +19,7 @@
       "Name": "Hungry Sapling",
       "Tier": "outer",
       "Art": "plants-sapling",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -50,7 +58,7 @@
       "Name": "Spore Pod",
       "Tier": "outer",
       "Art": "plants-pod",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -89,7 +97,7 @@
       "Name": "Bramble Wall",
       "Tier": "outer",
       "Art": "plants-bramble",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -128,7 +136,7 @@
       "Name": "Strangle Creeper",
       "Tier": "inner",
       "Art": "plants-creeper",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "ice",
         "lightning",
@@ -167,7 +175,7 @@
       "Name": "Corpse Bloom",
       "Tier": "inner",
       "Art": "plants-bloom",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -206,7 +214,7 @@
       "Name": "Titan Flytrap",
       "Tier": "inner",
       "Art": "plants-flytrap",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -245,7 +253,7 @@
       "Name": "The Heartwood",
       "Tier": "boss",
       "Art": "plants-heartwood",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "lightning",
@@ -292,7 +300,7 @@
       "Name": "Witchgrass",
       "Tier": "boss",
       "Art": "plants-witchgrass",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",
@@ -339,7 +347,7 @@
       "Name": "The Mycelium",
       "Tier": "boss",
       "Art": "plants-mycelium",
-      "Draw": "TO BE DETERMINED",
+      "Draw": "TBD",
       "Affinities": [
         "fire",
         "ice",

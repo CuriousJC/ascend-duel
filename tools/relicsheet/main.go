@@ -48,6 +48,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"html/template"
 	"image"
 	"image/png"
 	"log"
@@ -60,6 +61,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/tools/sheetfilter"
 )
 
 // ground is the one the relics are actually drawn on — `screens.screenGround`, which is
@@ -154,6 +156,7 @@ func run(dir string) error {
 
 	page.Tiers = groupByRarity(plates)
 	page.Families = groupByFamily(plates)
+	page.Filters = sheetfilter.Bar(relicFacets(page.Tiers, page.Families))
 
 	// The three states a relic card is drawn in, on one relic so the card underneath is
 	// provably the same one. **Not "not owned"** — a relic the run has neither bought nor been
@@ -368,7 +371,7 @@ func groupByFamily(plates []plate) []family {
 
 	out := make([]family, 0, len(order))
 	for _, name := range order {
-		f := family{Name: name, Relics: byName[name], Count: len(byName[name])}
+		f := family{Name: name, Key: familyKey(name), Relics: byName[name], Count: len(byName[name])}
 		f.Noun = "relics"
 		if f.Count == 1 {
 			f.Noun = "relic"
@@ -510,6 +513,61 @@ type family struct {
 	Noun   string
 	Mix    string
 	Relics []plate
+
+	// Key is Name as the family chips match it, since a family is written for a reader —
+	// "Jade rings" — and an attribute token cannot hold a space.
+	Key string
+}
+
+// relicFacets is the chip bar: the two axes a relic is looked up on.
+//
+// **Rarity is the pricing dial and family is the motif**, which are the two questions the page's
+// own grouping can only answer one of at a time — it is cut by family, so "every rare together"
+// is the reading that costs a scroll of the whole catalog.
+//
+// **Both lists are counted off the plates**, so a new family or a retuned rarity moves the bar
+// with nothing edited here.
+func relicFacets(tiers []tier, families []family) []sheetfilter.Facet {
+	rarity := sheetfilter.Facet{Key: "rarity", Label: "rarity"}
+	for _, t := range tiers {
+		if t.Count == 0 {
+			continue
+		}
+		rarity.Values = append(rarity.Values,
+			sheetfilter.Value{Value: t.Rarity, Label: t.Rarity, Count: t.Count})
+	}
+
+	family := sheetfilter.Facet{Key: "family", Label: "family"}
+	for _, f := range families {
+		family.Values = append(family.Values,
+			sheetfilter.Value{Value: f.Key, Label: f.Name, Count: f.Count})
+	}
+
+	var out []sheetfilter.Facet
+	if len(rarity.Values) > 0 {
+		out = append(out, rarity)
+	}
+	if len(family.Values) > 0 {
+		out = append(out, family)
+	}
+	return out
+}
+
+// familyKey is a family's name as one attribute token.
+func familyKey(name string) string {
+	key := strings.ToLower(strings.TrimSpace(name))
+	key = strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			return r
+		default:
+			return '-'
+		}
+	}, key)
+	for strings.Contains(key, "--") {
+		key = strings.ReplaceAll(key, "--", "-")
+	}
+	return strings.Trim(key, "-")
 }
 
 type page struct {
@@ -520,5 +578,6 @@ type page struct {
 	Unwritten int
 	Tiers     []tier
 	Families  []family
+	Filters   template.HTML
 	States    []cell
 }

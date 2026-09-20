@@ -84,7 +84,163 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   concept — the <em>copies</em> column says how many of each the pile holds.
 </p>
 
+<style>
+  .sheet-filters {
+    position: sticky; top: 0; z-index: 5;
+    margin: 14px 0 0; padding: 10px 12px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+    background: var(--panel, #c6d5e6);
+    border: 1px solid var(--rule, #8fa3bd); border-radius: 8px;
+  }
+  .sheet-facet { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .sheet-facet-label {
+    color: var(--dim, #5a6472); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em; margin-right: 2px;
+  }
+  .sheet-filters button {
+    font: inherit; font-size: 12.5px; line-height: 1;
+    padding: 5px 9px; border-radius: 999px; cursor: pointer;
+    color: var(--ink, #2c2822);
+    background: transparent;
+    border: 1px solid var(--rule, #8fa3bd);
+  }
+  .sheet-filters button:hover { background: rgba(255,255,255,.45); }
+  /* A chip that is down is filled rather than merely outlined: an outline shifting shade is the
+     one state change that does not survive being looked at quickly. */
+  .sheet-filters button[aria-pressed="true"] {
+    background: var(--ink, #2c2822); color: var(--panel, #c6d5e6);
+    border-color: var(--ink, #2c2822);
+  }
+  .sheet-filters button i {
+    font-style: normal; opacity: .6; margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sheet-filters-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .sheet-tally { color: var(--dim, #5a6472); font-size: 12px; font-variant-numeric: tabular-nums; }
+</style>
+<div class="sheet-filters" hidden>
+  <div class="sheet-facet"><span class="sheet-facet-label">floor</span>
+    <button type="button" data-facet="floor" data-value="1" aria-pressed="false">1<i>36</i></button>
+    <button type="button" data-facet="floor" data-value="2" aria-pressed="false">2<i>81</i></button>
+    <button type="button" data-facet="floor" data-value="3" aria-pressed="false">3<i>99</i></button>
+    <button type="button" data-facet="floor" data-value="4" aria-pressed="false">4<i>135</i></button>
+    <button type="button" data-facet="floor" data-value="5" aria-pressed="false">5<i>153</i></button>
+    <button type="button" data-facet="floor" data-value="6" aria-pressed="false">6<i>135</i></button>
+    <button type="button" data-facet="floor" data-value="7" aria-pressed="false">7<i>117</i></button>
+    <button type="button" data-facet="floor" data-value="8" aria-pressed="false">8<i>72</i></button>
+  </div>
+  <div class="sheet-facet"><span class="sheet-facet-label">room</span>
+    <button type="button" data-facet="tier" data-value="outer" aria-pressed="false">outer<i>51</i></button>
+    <button type="button" data-facet="tier" data-value="inner" aria-pressed="false">inner<i>51</i></button>
+    <button type="button" data-facet="tier" data-value="boss" aria-pressed="false">boss<i>51</i></button>
+  </div>
+  <div class="sheet-facet"><span class="sheet-facet-label">element</span>
+    <button type="button" data-facet="element" data-value="fire" aria-pressed="false">fire<i>124</i></button>
+    <button type="button" data-facet="element" data-value="ice" aria-pressed="false">ice<i>123</i></button>
+    <button type="button" data-facet="element" data-value="lightning" aria-pressed="false">lightning<i>121</i></button>
+    <button type="button" data-facet="element" data-value="earth" aria-pressed="false">earth<i>121</i></button>
+    <button type="button" data-facet="element" data-value="arcane" aria-pressed="false">arcane<i>123</i></button>
+  </div>
+  <div class="sheet-filters-end">
+    <button type="button" class="sheet-clear" hidden>clear</button>
+    <span class="sheet-tally"></span>
+  </div>
+</div>
+<script>
+(function () {
+  function start() {
+    var bar = document.querySelector('.sheet-filters');
+    if (!bar) return;
+    bar.hidden = false;
 
+    var chips = Array.prototype.slice.call(bar.querySelectorAll('button[data-facet]'));
+    var clear = bar.querySelector('.sheet-clear');
+    var tally = bar.querySelector('.sheet-tally');
+    var items = Array.prototype.slice.call(document.querySelectorAll('.sheet-item'));
+    var groups = Array.prototype.slice.call(document.querySelectorAll('.sheet-group'));
+    var picked = {};
+
+    function tokens(el, key) {
+      var v = el.getAttribute('data-' + key);
+      if (v === null) return null;
+      return v.split(/\s+/).filter(Boolean);
+    }
+
+    function matches(el) {
+      for (var key in picked) {
+        var want = picked[key];
+        if (!want.length) continue;
+        var have = tokens(el, key);
+        if (have === null) continue;
+        var hit = false;
+        for (var i = 0; i < have.length; i++) {
+          if (want.indexOf(have[i]) !== -1) { hit = true; break; }
+        }
+        if (!hit) return false;
+      }
+      return true;
+    }
+
+    function apply() {
+      var shown = 0, any = false;
+      for (var key in picked) { if (picked[key].length) any = true; }
+
+      var open = [];
+      for (var g = 0; g < groups.length; g++) open.push(matches(groups[g]));
+
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        var owner = groups.indexOf(it.closest('.sheet-group'));
+        var ok = matches(it) && (owner === -1 || open[owner]);
+        it.hidden = !ok;
+        if (ok) shown++;
+      }
+
+      for (var g2 = 0; g2 < groups.length; g2++) {
+        var grp = groups[g2];
+        var held = grp.querySelector('.sheet-item');
+        var live = grp.querySelector('.sheet-item:not([hidden])');
+        grp.hidden = !open[g2] || (held !== null && live === null);
+      }
+
+      if (clear) clear.hidden = !any;
+      if (tally) tally.textContent = any ? 'showing ' + shown + ' of ' + items.length : '';
+    }
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var key = chip.getAttribute('data-facet');
+        var val = chip.getAttribute('data-value');
+        var list = picked[key] || (picked[key] = []);
+        var at = list.indexOf(val);
+        if (at === -1) { list.push(val); } else { list.splice(at, 1); }
+        chip.setAttribute('aria-pressed', at === -1 ? 'true' : 'false');
+        apply();
+      });
+    });
+
+    if (clear) {
+      clear.addEventListener('click', function () {
+        picked = {};
+        chips.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+        apply();
+      });
+    }
+
+    apply();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+</script>
+
+
+
+<section class="sheet-group" data-motif="aliens" data-floor="5 6 7 8">
   <h2 class="floor">
     Aliens — Floors 5–8
     <span>9 records · HP 155–415 · DMG 8–18 ·
@@ -126,7 +282,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Specimen</span>
@@ -175,10 +331,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Survey Drone</span>
@@ -227,10 +383,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Seeded Husk</span>
@@ -279,10 +435,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Abomination</span>
@@ -331,10 +487,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Watcher</span>
@@ -383,10 +539,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Harvester</span>
@@ -435,10 +591,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Bio-Titan Toxoid</span>
@@ -495,10 +651,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Bio-Titan Plagueborn</span>
@@ -555,10 +711,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Bio-Titan Omega</span>
@@ -615,10 +771,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="animals" data-floor="1 2 3 4 5 6">
   <h2 class="floor">
     Animals — Floors 1–6
     <span>9 records · HP 80–285 · DMG 5–12 ·
@@ -660,7 +818,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Giant Bat</span>
@@ -709,10 +867,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Giant Rat</span>
@@ -761,10 +919,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Tusk Boar</span>
@@ -813,10 +971,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Dire Wolf</span>
@@ -865,10 +1023,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Rot Hound</span>
@@ -917,10 +1075,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Cave Bear</span>
@@ -969,10 +1127,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">The Grey Alpha</span>
@@ -1029,10 +1187,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Doomsday Beast</span>
@@ -1089,10 +1247,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Chimera</span>
@@ -1149,10 +1307,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="avians" data-floor="2 3 4 5 6 7">
   <h2 class="floor">
     Avians — Floors 2–7
     <span>9 records · HP 95–330 · DMG 5–15 ·
@@ -1194,7 +1354,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Carrion Crow</span>
@@ -1243,10 +1403,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Cliff Harrier</span>
@@ -1295,10 +1455,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Bone Ratite</span>
@@ -1347,10 +1507,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Young Roc</span>
@@ -1399,10 +1559,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Harpy</span>
@@ -1451,10 +1611,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Ember Phoenix</span>
@@ -1503,10 +1663,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Sky-Father</span>
@@ -1563,10 +1723,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Great Roc</span>
@@ -1623,10 +1783,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">The Corvid King</span>
@@ -1683,10 +1843,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="barbarians" data-floor="2 3 4 5 6 7">
   <h2 class="floor">
     Barbarians — Floors 2–7
     <span>9 records · HP 115–310 · DMG 5–14 ·
@@ -1728,7 +1890,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Steppe Raider</span>
@@ -1777,10 +1939,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Axeman</span>
@@ -1829,10 +1991,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Shieldbreaker</span>
@@ -1881,10 +2043,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Berserker</span>
@@ -1933,10 +2095,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Hetman</span>
@@ -1985,10 +2147,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Bonecaller</span>
@@ -2037,10 +2199,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Khan</span>
@@ -2097,10 +2259,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">The Skull King</span>
@@ -2157,10 +2319,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Red Widow</span>
@@ -2217,10 +2379,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="cat-people" data-floor="2 3 4 5 6 7">
   <h2 class="floor">
     Cat-people — Floors 2–7
     <span>9 records · HP 105–310 · DMG 5–15 ·
@@ -2262,7 +2426,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Prowler</span>
@@ -2311,10 +2475,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Alley Sneak</span>
@@ -2363,10 +2527,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Claw Guard</span>
@@ -2415,10 +2579,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Night Stalker</span>
@@ -2467,10 +2631,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Whisker Duelist</span>
@@ -2519,10 +2683,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Maneater</span>
@@ -2571,10 +2735,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Matriarch</span>
@@ -2631,10 +2795,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Shadow Cat</span>
@@ -2691,10 +2855,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Bronze Lion</span>
@@ -2751,10 +2915,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="draconics" data-floor="5 6 7 8">
   <h2 class="floor">
     Draconics — Floors 5–8
     <span>9 records · HP 170–430 · DMG 9–19 ·
@@ -2796,7 +2962,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Drake Whelp</span>
@@ -2845,10 +3011,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Basilisk</span>
@@ -2897,10 +3063,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Wyvern</span>
@@ -2949,10 +3115,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Dracolisk</span>
@@ -3001,10 +3167,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Cave Wyrm</span>
@@ -3053,10 +3219,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Storm Drake</span>
@@ -3105,10 +3271,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Red Dragon</span>
@@ -3165,10 +3331,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">The Blue Dragon</span>
@@ -3225,10 +3391,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Serpent Prince</span>
@@ -3285,10 +3451,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="dwarves" data-floor="2 3 4 5 6 7">
   <h2 class="floor">
     Dwarves — Floors 2–7
     <span>9 records · HP 110–320 · DMG 5–13 ·
@@ -3330,7 +3498,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Deep Digger</span>
@@ -3379,10 +3547,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Forge Smith</span>
@@ -3431,10 +3599,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Tunnel Scout</span>
@@ -3483,10 +3651,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Shield Dwarf</span>
@@ -3535,10 +3703,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Runesmith</span>
@@ -3587,10 +3755,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Thane</span>
@@ -3639,10 +3807,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">The King Under</span>
@@ -3699,10 +3867,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Forge-Father</span>
@@ -3759,10 +3927,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Deep Warden</span>
@@ -3819,10 +3987,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="elves" data-floor="3 4 5 6 7 8">
   <h2 class="floor">
     Elves — Floors 3–8
     <span>9 records · HP 110–305 · DMG 6–16 ·
@@ -3864,7 +4034,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Wood Scout</span>
@@ -3913,10 +4083,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Glade Blade</span>
@@ -3965,10 +4135,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Thorn Warden</span>
@@ -4017,10 +4187,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Longbow Archer</span>
@@ -4069,10 +4239,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Blade Dancer</span>
@@ -4121,10 +4291,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Moon Singer</span>
@@ -4173,10 +4343,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Silver Queen</span>
@@ -4233,10 +4403,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Skyhunter</span>
@@ -4293,10 +4463,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Exile</span>
@@ -4353,10 +4523,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="goblins" data-floor="1 2 3 4 5 6">
   <h2 class="floor">
     Goblins — Floors 1–6
     <span>9 records · HP 88–265 · DMG 4–12 ·
@@ -4398,7 +4570,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Goblin Serf</span>
@@ -4450,7 +4622,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">A drudge. Stooped under a bundle of somebody else&#39;s belongings, gripping a short notched blade it clearly did not make. Wary, resentful, entirely unheroic.</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Goblin Scrapper</span>
@@ -4502,7 +4674,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">All elbows and speed. Crouched low with a shiv reversed in one fist, weight already shifting sideways. Its ears are up and its mouth is open — it has seen you first and is pleased about it.</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Goblin Bomber</span>
@@ -4554,7 +4726,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">Cradling a satchel of fused clay spheres against its chest with both arms, one fuse already smoking. It is grinning at the viewer rather than at the bomb, which is the problem.</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Goblin Raider</span>
@@ -4606,7 +4778,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">Better fed and better armed than the ones below. A hooked blade in one hand and a fistful of taken things in the other — cord, a ring, a strip of cloth. It is mid-stride toward you.</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Goblin Shaman</span>
@@ -4658,7 +4830,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">Draped in rattling bone and dried skin, arms raised in a gesture it half remembers. Its eyes are rolled back and its mouth is moving. Whatever it is calling on is not in the picture.</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Goblin Brute</span>
@@ -4710,7 +4882,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">Thick where the others are wiry — a slab of a goblin, shoulders up around its ears, dragging a knotted club. The face is the same face, which is what makes it a goblin and not an ogre.</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Goblin King</span>
@@ -4770,7 +4942,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">Crowned with a circlet of beaten scrap that does not fit, sceptre held like a cudgel. It is seated even though we only see it from the chest up — the posture of something that expects to be waited on.</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Goblin Warlord</span>
@@ -4830,7 +5002,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">Scarred across the muzzle and one ear torn to a stump. A standard&#39;s broken shaft rests on its shoulder, the banner itself out of frame. It is looking past you at something behind you.</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Goblin Tinker</span>
@@ -4890,7 +5062,9 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">Four fingers on one hand and five improvised tools on the other. Goggles pushed up onto the brow, spectacles of scavenged glass, a contraption half-built and ticking in its grip.</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="golems" data-floor="4 5 6 7 8">
   <h2 class="floor">
     Golems — Floors 4–8
     <span>9 records · HP 165–430 · DMG 6–16 ·
@@ -4932,7 +5106,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Clay Golem</span>
@@ -4981,10 +5155,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Scrap Golem</span>
@@ -5033,10 +5207,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Stone Golem</span>
@@ -5085,10 +5259,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Iron Golem</span>
@@ -5137,10 +5311,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Glass Golem</span>
@@ -5189,10 +5363,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Bone Golem</span>
@@ -5241,10 +5415,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">The Colossus</span>
@@ -5301,10 +5475,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Sentinel</span>
@@ -5361,10 +5535,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Juggernaut</span>
@@ -5421,10 +5595,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="insects" data-floor="1 2 3 4 5">
   <h2 class="floor">
     Insects — Floors 1–5
     <span>9 records · HP 85–265 · DMG 4–12 ·
@@ -5466,7 +5642,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Dragonfly</span>
@@ -5515,10 +5691,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Hive Drone</span>
@@ -5567,10 +5743,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Iron Beetle</span>
@@ -5619,10 +5795,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Giant Spider</span>
@@ -5671,10 +5847,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Blade Mantis</span>
@@ -5723,10 +5899,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Gorge Centipede</span>
@@ -5775,10 +5951,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Broodmother</span>
@@ -5835,10 +6011,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Emperor Hornet</span>
@@ -5895,10 +6071,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Tomb Scarab</span>
@@ -5955,10 +6131,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="magic-users" data-floor="4 5 6 7 8">
   <h2 class="floor">
     Magic-users — Floors 4–8
     <span>9 records · HP 150–400 · DMG 8–17 ·
@@ -6000,7 +6178,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Apprentice</span>
@@ -6049,10 +6227,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Hedge Witch</span>
@@ -6101,10 +6279,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Pact Warlock</span>
@@ -6153,10 +6331,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Hexwright</span>
@@ -6205,10 +6383,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Stormcaller</span>
@@ -6257,10 +6435,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Pyre-Keeper</span>
@@ -6309,10 +6487,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Archmage</span>
@@ -6369,10 +6547,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Voidtouched</span>
@@ -6429,10 +6607,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Discordant</span>
@@ -6489,10 +6667,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="mutants" data-floor="3 4 5 6 7 8">
   <h2 class="floor">
     Mutants — Floors 3–8
     <span>9 records · HP 115–320 · DMG 6–14 ·
@@ -6534,7 +6714,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Warped Mutant</span>
@@ -6583,10 +6763,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Torch Mutant</span>
@@ -6635,10 +6815,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Fist Mutant</span>
@@ -6687,10 +6867,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Gun Mutant</span>
@@ -6739,10 +6919,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Mega Mutant</span>
@@ -6791,10 +6971,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Grafted Mutant</span>
@@ -6843,10 +7023,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Mega Brute</span>
@@ -6903,10 +7083,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Amalgam</span>
@@ -6963,10 +7143,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Prototype Omega</span>
@@ -7023,10 +7203,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="ogres" data-floor="4 5 6 7 8">
   <h2 class="floor">
     Ogres — Floors 4–8
     <span>9 records · HP 160–420 · DMG 7–16 ·
@@ -7068,7 +7250,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Ogre Grunt</span>
@@ -7117,10 +7299,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Rock Thrower</span>
@@ -7169,10 +7351,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Ogre Warrior</span>
@@ -7221,10 +7403,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Ettin</span>
@@ -7273,10 +7455,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Ogre Warlord</span>
@@ -7325,10 +7507,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Bridge Troll</span>
@@ -7377,10 +7559,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Hill King</span>
@@ -7437,10 +7619,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">The Stonecast</span>
@@ -7497,10 +7679,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Gorger</span>
@@ -7557,10 +7739,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="plants" data-floor="2 3 4 5 6 7">
   <h2 class="floor">
     Plants — Floors 2–7
     <span>9 records · HP 110–300 · DMG 4–12 ·
@@ -7602,7 +7786,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Hungry Sapling</span>
@@ -7651,10 +7835,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Spore Pod</span>
@@ -7703,10 +7887,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Bramble Wall</span>
@@ -7755,10 +7939,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Strangle Creeper</span>
@@ -7807,10 +7991,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Corpse Bloom</span>
@@ -7859,10 +8043,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Titan Flytrap</span>
@@ -7911,10 +8095,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Heartwood</span>
@@ -7971,10 +8155,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Witchgrass</span>
@@ -8031,10 +8215,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Mycelium</span>
@@ -8091,10 +8275,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="slimes" data-floor="1 2 3 4 5">
   <h2 class="floor">
     Slimes — Floors 1–5
     <span>9 records · HP 95–260 · DMG 4–11 ·
@@ -8136,13 +8322,13 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Clear Slime</span>
+          <span class="name">Blob</span>
           
         </span>
-        <span class="record">slimes-outer-clear</span>
+        <span class="record">slimes-outer-blob</span>
         <span class="family">outer</span>
         <span class="stats">
           <b>HP 110</b><span>DMG 4</span><span>AP 4</span>
@@ -8151,8 +8337,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-slimes-outer-clear.png" width="862" height="280"
-             alt="Clear Slime and its deck">
+        <img src="strip-slimes-outer-blob.png" width="862" height="280"
+             alt="Blob and its deck">
       </div>
 
       <table>
@@ -8185,16 +8371,16 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">a clear translucent goopy blob creature with tints coming from their element</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Blue Slime</span>
+          <span class="name">Cube</span>
           
         </span>
-        <span class="record">slimes-outer-blue</span>
+        <span class="record">slimes-outer-cube</span>
         <span class="family">outer</span>
         <span class="stats">
           <b>HP 95</b><span>DMG 5</span><span>AP 5</span>
@@ -8203,8 +8389,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-slimes-outer-blue.png" width="862" height="280"
-             alt="Blue Slime and its deck">
+        <img src="strip-slimes-outer-cube.png" width="862" height="280"
+             alt="Cube and its deck">
       </div>
 
       <table>
@@ -8237,16 +8423,16 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">a cube shaped translucent slime with a knife trapped inside it</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Green Slime</span>
+          <span class="name">Orb</span>
           
         </span>
-        <span class="record">slimes-outer-green</span>
+        <span class="record">slimes-outer-orb</span>
         <span class="family">outer</span>
         <span class="stats">
           <b>HP 125</b><span>DMG 4</span><span>AP 4</span>
@@ -8255,8 +8441,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-slimes-outer-green.png" width="862" height="280"
-             alt="Green Slime and its deck">
+        <img src="strip-slimes-outer-orb.png" width="862" height="280"
+             alt="Orb and its deck">
       </div>
 
       <table>
@@ -8289,16 +8475,16 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">a clear translucent slime drawn into a nearly perfect round orb, with tints coming from its element</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Amber Slime</span>
+          <span class="name">Spire</span>
           
         </span>
-        <span class="record">slimes-inner-amber</span>
+        <span class="record">slimes-inner-spire</span>
         <span class="family">inner</span>
         <span class="stats">
           <b>HP 150</b><span>DMG 6</span><span>AP 5</span>
@@ -8307,8 +8493,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-slimes-inner-amber.png" width="862" height="280"
-             alt="Amber Slime and its deck">
+        <img src="strip-slimes-inner-spire.png" width="862" height="280"
+             alt="Spire and its deck">
       </div>
 
       <table>
@@ -8341,16 +8527,16 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">a tall translucent slime rising from a broad puddled base into a single sharp tapering spire, with tints coming from its element</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Clot Slime</span>
+          <span class="name">Cluster</span>
           
         </span>
-        <span class="record">slimes-inner-clot</span>
+        <span class="record">slimes-inner-cluster</span>
         <span class="family">inner</span>
         <span class="stats">
           <b>HP 175</b><span>DMG 5</span><span>AP 4</span>
@@ -8359,8 +8545,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-slimes-inner-clot.png" width="862" height="280"
-             alt="Clot Slime and its deck">
+        <img src="strip-slimes-inner-cluster.png" width="862" height="280"
+             alt="Cluster and its deck">
       </div>
 
       <table>
@@ -8393,16 +8579,16 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">a cluster of clear translucent slime globules fused together into one lumpy creature, with tints coming from its element</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Mineral Slime</span>
+          <span class="name">Bouncer</span>
           
         </span>
-        <span class="record">slimes-inner-mineral</span>
+        <span class="record">slimes-inner-bouncer</span>
         <span class="family">inner</span>
         <span class="stats">
           <b>HP 130</b><span>DMG 7</span><span>AP 5</span>
@@ -8411,8 +8597,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-slimes-inner-mineral.png" width="862" height="280"
-             alt="Mineral Slime and its deck">
+        <img src="strip-slimes-inner-bouncer.png" width="862" height="280"
+             alt="Bouncer and its deck">
       </div>
 
       <table>
@@ -8445,16 +8631,16 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">a squat translucent slime in a mushroom shape, with a broad domed cap above a thick springy stem and tints coming from its element</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Iridescent Slime</span>
+          <span class="name">Spitter</span>
           <span class="title">the Unbroken Sheen</span>
         </span>
-        <span class="record">slimes-boss-iridescent</span>
+        <span class="record">slimes-boss-spitter</span>
         <span class="family">boss</span>
         <span class="stats">
           <b>HP 235</b><span>DMG 9</span><span>AP 6</span>
@@ -8463,8 +8649,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-slimes-boss-iridescent.png" width="1076" height="280"
-             alt="Iridescent Slime and its deck">
+        <img src="strip-slimes-boss-spitter.png" width="1076" height="280"
+             alt="Spitter and its deck">
       </div>
 
       <table>
@@ -8505,13 +8691,13 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">a large clear translucent slime with a long raised pseudopod appendage ending in an open spitting tip, with tints coming from its element</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Entropic Slime</span>
+          <span class="name">Entropic</span>
           <span class="title">the Unmaking</span>
         </span>
         <span class="record">slimes-boss-entropic</span>
@@ -8524,7 +8710,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
       <div class="strip">
         <img src="strip-slimes-boss-entropic.png" width="1076" height="280"
-             alt="Entropic Slime and its deck">
+             alt="Entropic and its deck">
       </div>
 
       <table>
@@ -8565,13 +8751,13 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">a large translucent slime whose body is coming apart at the edges into curling strands, loose droplets and ragged gaps, with tints coming from its element</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
-          <span class="name">Galaxy Slime</span>
+          <span class="name">Galaxy</span>
           <span class="title">of the Long Fall</span>
         </span>
         <span class="record">slimes-boss-galaxy</span>
@@ -8584,7 +8770,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
       <div class="strip">
         <img src="strip-slimes-boss-galaxy.png" width="1076" height="280"
-             alt="Galaxy Slime and its deck">
+             alt="Galaxy and its deck">
       </div>
 
       <table>
@@ -8625,10 +8811,12 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">a vast translucent slime with a slowly spiraling body full of suspended bubbles, bright motes and a deep central hollow, with tints coming from its element</p>
     </div>
   
+</section>
 
+<section class="sheet-group" data-motif="vampires" data-floor="4 5 6 7 8">
   <h2 class="floor">
     Vampires — Floors 4–8
     <span>9 records · HP 155–410 · DMG 7–17 ·
@@ -8670,7 +8858,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   
 
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
           <span class="name">Blood Thrall</span>
@@ -8719,10 +8907,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Pale Consort</span>
@@ -8771,10 +8959,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Crypt Ghoul</span>
@@ -8823,10 +9011,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
           <span class="name">Lesser Count</span>
@@ -8875,10 +9063,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">Blood Shade</span>
@@ -8927,10 +9115,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Flenser</span>
@@ -8979,10 +9167,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Elder</span>
@@ -9039,10 +9227,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Pale Watch</span>
@@ -9099,10 +9287,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
-    <div class="plate">
+    <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
           <span class="name">The Crimson Bride</span>
@@ -9159,7 +9347,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </table>
 
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
-      <p class="draw">TO BE DETERMINED</p>
+      <p class="draw">TBD</p>
     </div>
   
+</section>
 

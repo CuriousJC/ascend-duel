@@ -119,6 +119,11 @@ type Entry struct {
 	// this row is showing it at.
 	Portrait string
 
+	// Portraits is that key for every colour the record can be dealt as, keyed by element. The
+	// strip draws Portrait and the expander under it draws the rest out of this, so the page never
+	// learns how a record builds its own art key.
+	Portraits map[string]string
+
 	// Element is the colour this row draws the record at, and Elements is every colour it could be
 	// dealt as. The strip shows one because a record has one card face per colour and nine of them
 	// in a row would be nine copies of the same reading; the list beside it is what says the
@@ -171,11 +176,15 @@ var MotifPool = Pool{
 				if len(r.Affinities) > 0 {
 					element = r.Affinities[0]
 				}
+				portraits := make(map[string]string, len(r.Affinities))
+				for _, el := range r.Affinities {
+					portraits[el] = r.ArtKey(el)
+				}
 				out = append(out, Entry{
 					Record: r.Record, Name: r.Name, Title: r.Title,
 					Family: r.Tier, Draw: r.Draw,
-					Portrait: r.ArtKey(element),
-					Element:  element, Elements: r.Affinities,
+					Portrait: r.ArtKey(element), Portraits: portraits,
+					Element: element, Elements: r.Affinities,
 					DMG: r.DMG, Actions: r.Actions, HP: r.HP,
 					Group: m.ValidFloors[0], Floors: m.Name + " — " + floorBand(m.ValidFloors),
 					Band:  m.ValidFloors,
@@ -219,6 +228,8 @@ func Run(p Pool, dir string) error {
 		SpanLo:     lo,
 		SpanHi:     hi,
 		Ground:     Ground,
+		CardWidth:  cards.EnemyStyle.Width,
+		Gap:        stripGap,
 		Title:      p.Title,
 		Blurb:      p.Blurb,
 		GroupLabel: p.GroupLabel,
@@ -228,6 +239,7 @@ func Run(p Pool, dir string) error {
 	}
 
 	var written int64
+	var colours int
 	for _, e := range entries {
 		strip, err := stripFor(faces, e)
 		if err != nil {
@@ -240,14 +252,32 @@ func Run(p Pool, dir string) error {
 		}
 		written += n
 
-		pg.add(plate{
+		pl := plate{
 			Entry:   e,
 			Cell:    cell{File: name, Width: strip.Bounds().Dx(), Height: strip.Bounds().Dy()},
 			Affixes: strings.Join(e.Elements, ", "),
 			Elems:   strings.Join(e.Elements, " "),
 			Deck:    len(decks.EnemyCards(e.Record, e.Element)),
 			Rows:    deckRows(e.Cards),
-		})
+		}
+
+		if rest := otherElements(e); anyDrawn(e, rest) {
+			row, err := elementRow(faces, e, rest)
+			if err != nil {
+				return err
+			}
+			file := "elements-" + strings.ToLower(e.Record) + ".png"
+			n, err := writePNG(filepath.Join(dir, file), row)
+			if err != nil {
+				return err
+			}
+			written += n
+			colours++
+
+			pl.Others = cell{File: file, Width: row.Bounds().Dx(), Height: row.Bounds().Dy()}
+			pl.OtherLabels = labels(rest)
+		}
+		pg.add(pl)
 	}
 
 	out := filepath.Join(dir, "index.html")
@@ -261,8 +291,8 @@ func Run(p Pool, dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d strips — %d %s records, %.1f MB of PNG\n",
-		out, len(entries), pg.Count, p.Name, float64(written)/(1<<20))
+	fmt.Printf("wrote %s, %d strips and %d colour rows — %d %s records, %.1f MB of PNG\n",
+		out, len(entries), colours, pg.Count, p.Name, float64(written)/(1<<20))
 	for _, g := range pg.Groups {
 		plural := "s"
 		if len(g.Plates) == 1 {
@@ -332,6 +362,93 @@ func stripFor(f *cards.Faces, e Entry) (*image.RGBA, error) {
 		place(img)
 	}
 	return strip, nil
+}
+
+// otherElements is every colour the record can be dealt as apart from the one the strip draws.
+func otherElements(e Entry) []string {
+	out := make([]string, 0, len(e.Elements))
+	for _, el := range e.Elements {
+		if el != e.Element {
+			out = append(out, el)
+		}
+	}
+	return out
+}
+
+// anyDrawn reports whether at least one of these colours has a picture of its own, which is what
+// decides whether the expander exists at all.
+//
+// **A record's card says its colour only through its portrait** — see opponentSpec, which draws
+// every one of them basic — so for a record nobody has drawn yet the extra row is three identical
+// placeholders under a line promising other colours. The row appears as the art does, one record
+// at a time, and a record part-way through shows the gaps among the pictures rather than hiding
+// them.
+func anyDrawn(e Entry, list []string) bool {
+	for _, el := range list {
+		if len(assets.LoadImageData()[e.Portraits[el]]) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// elementRow composites the record's remaining colours into one picture, at the strip's own pitch
+// so the names the page prints under it land on the cards without measuring anything.
+//
+// **The cards only, never the deck.** A deck is the same cards whatever colour the floor deals
+// them — the element is the floor's and the whole pile takes it — so repeating it under every
+// colour would be four copies of one reading.
+func elementRow(f *cards.Faces, e Entry, list []string) (*image.RGBA, error) {
+	drawn := make([]*image.RGBA, 0, len(list))
+	for _, el := range list {
+		art, err := artwork(e.Portraits[el])
+		if err != nil {
+			return nil, err
+		}
+		img, err := cards.Render(opponentSpec(e, art), cards.EnemyStyle, f)
+		if err != nil {
+			return nil, fmt.Errorf("rendering %s at %s: %w", e.Record, el, err)
+		}
+		drawn = append(drawn, img)
+	}
+
+	w, h := 0, 0
+	for i, img := range drawn {
+		if i > 0 {
+			w += stripGap
+		}
+		w += img.Bounds().Dx()
+		if d := img.Bounds().Dy(); d > h {
+			h = d
+		}
+	}
+
+	row := image.NewRGBA(image.Rect(0, 0, w, h))
+	draw.Draw(row, row.Bounds(), &image.Uniform{C: groundRGBA}, image.Point{}, draw.Src)
+	x := 0
+	for i, img := range drawn {
+		if i > 0 {
+			x += stripGap
+		}
+		r := image.Rect(x, 0, x+img.Bounds().Dx(), img.Bounds().Dy())
+		draw.Draw(row, r, img, img.Bounds().Min, draw.Over)
+		x = r.Max.X
+	}
+	return row, nil
+}
+
+// labels writes element keys the way a reader reads them. **Written here rather than taken from
+// internal/ui**, which holds the game's own ElementWord and links Ebitengine: the same wall every
+// sheet in this repo is on the far side of.
+func labels(list []string) []string {
+	out := make([]string, 0, len(list))
+	for _, el := range list {
+		if el == "" {
+			continue
+		}
+		out = append(out, strings.ToUpper(el[:1])+el[1:])
+	}
+	return out
 }
 
 // opponentSpec is the opponent as the game's own card: name, portrait, and a full health bar.

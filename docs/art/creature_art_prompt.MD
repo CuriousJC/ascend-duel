@@ -10,14 +10,14 @@ band — so the portrait is composed against the 200 x 200 above it.
 Nothing here is the whole prompt. A finished brief is these four blocks in this order, and the
 first is the only one in this file:
 
-| layer | where it lives | what it says |
-|---|---|---|
-| 1. style and composition | **this file** | canvas, framing, ground, light, rendering — true of every creature in the game |
-| 2. the motif | `Draw` on the motif's file header | the body plan: what makes a goblin a goblin |
-| 3. the element, for that motif | `ElementDraw` on the same header | what fire does *to a goblin*, which is not what it does to a slime |
-| 4. the record | `Draw` on the record | this particular creature: what it is doing, what it carries |
+| layer                          | where it lives                    | what it says                                                                   |
+| ------------------------------ | --------------------------------- | ------------------------------------------------------------------------------ |
+| 1. style and composition       | **this file**                     | canvas, framing, ground, light, rendering — true of every creature in the game |
+| 2. the motif                   | `Draw` on the motif's file header | the body plan: what makes a goblin a goblin                                    |
+| 3. the element, for that motif | `ElementDraw` on the same header  | what fire does _to a goblin_, which is not what it does to a slime             |
+| 4. the record                  | `Draw` on the record              | this particular creature: what it is doing, what it carries                    |
 
-**Layer 3 is per motif on purpose.** An ice slime *is* ice, all the way through; an ice goblin is a
+**Layer 3 is per motif on purpose.** An ice slime _is_ ice, all the way through; an ice goblin is a
 goblin wearing frost. One elemental block written for the whole roster would be right for one of
 them and wrong for the other.
 
@@ -90,16 +90,16 @@ haft" is a haft in the stab material. These are the game's own colors and the pi
 beside cards drawn in them, so the word means this range here rather than whatever you would
 otherwise reach for.
 
-| Word | Ramp | dark | core | light |
-|---|---|---|---|---|
-| orange | fire | `#9E2F13` | `#F06A24` | `#FFB24A` |
-| yellow | lightning | `#A98200` | `#F2D13D` | `#FFF38A` |
-| green | earth | `#285E35` | `#4E9B57` | `#8BCB78` |
-| blue | ice | `#245A86` | `#4E9ED6` | `#A8DDF4` |
-| purple | arcane | `#4C2A78` | `#8A5BC7` | `#C8A4F2` |
-| cream, ivory | ivory | `#9B8B68` | `#DCCFAE` | `#FFF3D2` |
-| cool gray, steel | steel | `#59636B` | `#9DA8B0` | `#D8DEE2` |
-| dark gray, granite | granite | `#3C3E41` | `#6B6D70` | `#A1A3A6` |
+| Word               | Ramp      | dark      | core      | light     |
+| ------------------ | --------- | --------- | --------- | --------- |
+| orange             | fire      | `#9E2F13` | `#F06A24` | `#FFB24A` |
+| yellow             | lightning | `#A98200` | `#F2D13D` | `#FFF38A` |
+| green              | earth     | `#285E35` | `#4E9B57` | `#8BCB78` |
+| blue               | ice       | `#245A86` | `#4E9ED6` | `#A8DDF4` |
+| purple             | arcane    | `#4C2A78` | `#8A5BC7` | `#C8A4F2` |
+| cream, ivory       | ivory     | `#9B8B68` | `#DCCFAE` | `#FFF3D2` |
+| cool gray, steel   | steel     | `#59636B` | `#9DA8B0` | `#D8DEE2` |
+| dark gray, granite | granite   | `#3C3E41` | `#6B6D70` | `#A1A3A6` |
 
 The element name and the color word are the same instruction — `arcane` and "purple" both mean that
 row, and so do `ivory` and "cream". The last three rows are the game's three form materials:
@@ -137,7 +137,7 @@ or washed out far enough that the element stops being readable. A color word not
    different enough to tell them apart in the dark? For a creature with no face this is the whole
    of what distinguishes it.
 5. **Is the element unmistakable** without reading the name, and is it the element doing what
-   layer 3 said it does to *this* motif?
+   layer 3 said it does to _this_ motif?
 6. **Is the ground opaque to all four edges**, tinted toward the element's ramp rather than pure
    black, and empty of scenery?
 7. **Is there anything in the corners** — a mark, a device, a darkening, a reserved patch? There
@@ -145,4 +145,4 @@ or washed out far enough that the element stops being readable. A color word not
 8. **Is there a contour** all the way round, thick enough to survive the reduction?
 
 Name it `<Art>-<element>.png`, exactly as the brief says, and give me a link I can click to
-download it.
+download it. give me a bundled zip of all the files.

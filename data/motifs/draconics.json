@@ -1,0 +1,385 @@
+{
+  "Motif": "draconics",
+  "Name": "Draconics",
+  "ValidFloors": [
+    5,
+    8
+  ],
+  "Records": [
+    {
+      "Record": "draconics-outer-whelp",
+      "Name": "Drake Whelp",
+      "Tier": "outer",
+      "Art": "draconics-whelp",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 170,
+      "DMG": 11,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Nip",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Snap",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Wing Buffet",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "draconics-outer-basilisk",
+      "Name": "Basilisk",
+      "Tier": "outer",
+      "Art": "draconics-basilisk",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 205,
+      "DMG": 9,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Nip",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Bite",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Petrify",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "draconics-outer-wyvern",
+      "Name": "Wyvern",
+      "Tier": "outer",
+      "Art": "draconics-wyvern",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 235,
+      "DMG": 9,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Claw",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Bite",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Tail Sweep",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "draconics-inner-dracolisk",
+      "Name": "Dracolisk",
+      "Tier": "inner",
+      "Art": "draconics-dracolisk",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 260,
+      "DMG": 12,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Claw",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Bite",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Stone Gaze",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "draconics-inner-wyrm",
+      "Name": "Cave Wyrm",
+      "Tier": "inner",
+      "Art": "draconics-wyrm",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 300,
+      "DMG": 11,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Coil",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Constrict",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Swallow",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "draconics-inner-drake",
+      "Name": "Storm Drake",
+      "Tier": "inner",
+      "Art": "draconics-drake",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 230,
+      "DMG": 14,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Spark",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Arc Breath",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Storm Wing",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "draconics-boss-red",
+      "Name": "The Red Dragon",
+      "Tier": "boss",
+      "Art": "draconics-red",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 410,
+      "DMG": 18,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Claw",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Bite",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Fire Breath",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "The Hall Burns",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Who Burns The Hall"
+    },
+    {
+      "Record": "draconics-boss-blue",
+      "Name": "The Blue Dragon",
+      "Tier": "boss",
+      "Art": "draconics-blue",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 430,
+      "DMG": 16,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Claw",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Bite",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Frost Breath",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "The Long Freeze",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "of the Cold Peak"
+    },
+    {
+      "Record": "draconics-boss-serpent",
+      "Name": "The Serpent Prince",
+      "Tier": "boss",
+      "Art": "draconics-serpent",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 385,
+      "DMG": 19,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Fang",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Coil",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Venom Strike",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Prince's Poison",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "Twice Crowned"
+    }
+  ]
+}

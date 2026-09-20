@@ -1,6 +1,6 @@
 {
   "Seed": "0009D4",
-  "Enemy": "GiantBat",
+  "Enemy": "animals-outer-bat",
   "Match": "element",
   "Steps": [
     {

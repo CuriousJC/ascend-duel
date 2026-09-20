@@ -70,20 +70,13 @@ var sheets = []sheet{
 			"fight and one is kept, so a run only ever meets a slice of what is here.",
 	},
 	{
-		Dir:   "enemysheet",
-		Tool:  "./tools/enemysheet",
-		Title: "Enemy sheet",
-		Blurb: "All ninety-six creatures, grouped by the floors they may appear on: the card the " +
-			"game draws, the stat line, and the whole deck each one fights with. The only place " +
-			"a floor's roster can be read against the floor below it.",
-	},
-	{
-		Dir:   "bosssheet",
-		Tool:  "./tools/bosssheet",
-		Title: "Boss sheet",
-		Blurb: "The thirty stairway protectors, the same way. Read against the enemy sheet's band " +
-			"of the same number — a boss is pitched above the creatures of its own floor, and " +
-			"this is where that claim can be checked.",
+		Dir:   "motifsheet",
+		Tool:  "./tools/motifsheet",
+		Title: "Motif sheet",
+		Blurb: "The whole roster, motif by motif: the card the game draws, the stat line, the " +
+			"colours each record can be dealt as, and the deck it fights with. A floor takes one " +
+			"motif and one element and holds three fights, so this is where a motif is read as a " +
+			"climb and where its coverage grid is checked.",
 	},
 	{
 		Dir:   "handsheet",

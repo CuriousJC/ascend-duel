@@ -1025,22 +1025,22 @@ func TestABlankStatRowLeavesItsRowEmpty(t *testing.T) {
 	}
 }
 
-func TestTheEnemyNamesItselfAboveItsPortrait(t *testing.T) {
-	// **A card that names itself names itself across the top** — the enemy did not until
-	// 2026-08-12, and this is the invariant rather than the offset: a card whose name sits
-	// somewhere else reads as a different kind of object.
-	//
-	// **A card whose picture is its whole face names itself nowhere** *(owner's call,
-	// 2026-09-11)*, which is the other half of the same rule: a title bar over a full-bleed
-	// illustration covers the one thing worth looking at in order to repeat it. The two bleeding
-	// styles are checked for the absence, so turning a name back on is a decision rather than an
-	// accident.
-	for name, st := range map[string]Style{"enemy": EnemyStyle, "hand": Hand} {
+func TestACardWhosePictureIsItsFaceNamesItselfNowhere(t *testing.T) {
+	// **A card that names itself names itself across the top** — the invariant rather than the
+	// offset: a card whose name sits somewhere else reads as a different kind of object.
+	for name, st := range map[string]Style{"hand": Hand} {
 		if !st.ShowName || !st.NameCentered {
 			t.Errorf("%s does not center a name across its top", name)
 		}
 	}
-	for name, st := range map[string]Style{"relic": RelicStyle, "essence": EssenceStyle} {
+
+	// **A card whose picture is its whole face names itself nowhere**, which is the other half of
+	// the same rule: a title bar over a full-bleed illustration covers the one thing worth looking
+	// at in order to repeat it. Every bleeding style is checked for the absence, so turning a name
+	// back on is a decision rather than an accident.
+	for name, st := range map[string]Style{
+		"relic": RelicStyle, "essence": EssenceStyle, "enemy": EnemyStyle,
+	} {
 		if !st.ArtBleed {
 			t.Errorf("%s is no longer full-bleed — this test is checking the wrong styles", name)
 		}
@@ -1049,23 +1049,13 @@ func TestTheEnemyNamesItselfAboveItsPortrait(t *testing.T) {
 		}
 	}
 
-	// **The duelist card is the third case and it is neither** *(owner's call, 2026-09-15)*: no
-	// name and no picture. It carried "Duelist" until then, which spent the best line on the card
-	// repeating what the corner it sits in already says. Its top line is the first stat row.
+	// **The duelist card is the third case and it is neither**: no name and no picture. Its top
+	// line is the first stat row, because the corner it sits in already says who it is.
 	if DuelistStyle.ShowName {
 		t.Error("the duelist card names itself again; the corner it sits in already says who it is")
 	}
 	if DuelistStyle.ArtBleed {
 		t.Error("this test is checking the wrong style — the duelist card has no picture")
-	}
-	if EnemyStyle.NameTop >= EnemyStyle.ArtTop {
-		t.Errorf("the enemy's name is at y=%d, at or below its portrait at y=%d",
-			EnemyStyle.NameTop, EnemyStyle.ArtTop)
-	}
-	// And the portrait still clears the bar under it.
-	if bottom := EnemyStyle.ArtTop + EnemyStyle.ArtMaxH; bottom > EnemyStyle.HealthBarTop {
-		t.Errorf("the portrait box ends at y=%d, %dpx into the health bar at y=%d",
-			bottom, bottom-EnemyStyle.HealthBarTop, EnemyStyle.HealthBarTop)
 	}
 }
 

@@ -1,6 +1,6 @@
 ---
 name: data
-description: The game's static data - the ten JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or bosses or relics or tutorial steps, or writing a loader.
+description: The game's static data - the JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or bosses or relics or tutorial steps, or writing a loader.
 ---
 
 # The data files
@@ -12,8 +12,8 @@ is what lets every layer above read it, and it **must never import upward**.
 | File | Loader | Holds |
 |---|---|---|
 | `duelists.json` | `LoadDuelists` | who the player can be: three stats and their card back |
-| `enemies.json` | `LoadEnemies` | 96 opponents: three stats, their own deck, portrait, valid floors |
-| `bosses.json` | `LoadBosses` | 30 stairway protectors: the enemy shape, with one floor instead of a band |
+| `motifs/*.json` | `LoadMotifs` | the roster, one file per motif: the floors it may theme, and every creature that can stand in one of its three rooms |
+| `tower.json` | `LoadTower` | how tall the climb is and the two rates the ascent curve compounds at |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
 | `relics.json` | `LoadRelics` | the relics that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
@@ -45,12 +45,12 @@ by definition; a portrait key, an art key and a floor band are a screen's or a r
 business. A rule reaching for one of those would mean the rules had grown an opinion about
 pictures.
 
-**`internal/decks` exists for the one case that does not fit.** Enemy cards live in
-`enemies.json` beside portraits and floor bands, so `internal/combat` reading that file directly
-would cross the line above — and `data` may not import the rules to hand them over. `decks` sits
-between the two and is the only package allowed to turn a JSON card list into rules types. It
-registers every enemy concept. **No Ebitengine in it, ever**, so an enemy deck can be built
-headlessly.
+**`internal/decks` exists for the one case that does not fit.** A creature's cards live in its
+motif file beside art keys and floor bands, so `internal/combat` reading that file directly would
+cross the line above — and `data` may not import the rules to hand them over. `decks` sits between
+the two and is the only package allowed to turn a JSON card list into rules types. It registers
+every creature concept, and `EnemyCards(record, element)` is where a concept and the floor's colour
+become cards. **No Ebitengine in it, ever**, so a deck can be built headlessly.
 
 ## The loader pattern
 
@@ -60,7 +60,7 @@ that unmarshals it, and — for anything returning a map — a sorted `…Order`
 - **`//go:embed`, never a file read.** The data ships inside the binary.
 - **A bad file panics**, with the filename in the message. It fails at launch rather than
   producing a roster quietly missing a record.
-- **`EnemyOrder` and `RelicOrder` are not optional.** `LoadEnemies` and `LoadRelics` return maps
+- **`MotifOrder` and `RelicOrder` are not optional.** `LoadMotifs` and `LoadRelics` return maps
   and Go randomizes map iteration, so anything whose *outcome* depends on order must walk a
   sorted key slice. See the `randomness` skill.
 - **`LoadDuelistCards` returns a slice**, deliberately: the deck is built by walking it in
@@ -89,11 +89,13 @@ enemies'. Eight fields:
 - **No player card is drab** *(2026-08-25)*. Every card in the deck ships in one of the five
   elements, the defenses included — a color is worth a hand axis and a relic discount even
   where nothing the card does is elemental.
-- **Enemy cards are all `basic` and `FormNone`**, and that is deliberate rather than sloppy.
-  The color is read and carried, but `MECHANICS.md` has affixes *transforming* a basic deck
-  into an element, so a color typed into `enemies.json` would pre-empt a mechanic that does not
-  exist. A form would be worse: it would claim an enemy card forms hands, and hands are the
-  player's axis.
+- **A creature card carries no element of its own, and no form.** The colour belongs to the
+  creature and comes from the floor: a record is dealt as one element and its whole deck takes it,
+  the way a duelist's Jab is a concept that ships in five colours. A card naming its own elements
+  is **refused at load** — it would be a second answer to a question the floor already answers, and
+  the loader used to multiply `Copies` once per element listed, so `["fire","ice"]` on a four-copy
+  card silently built eight. A form would be worse: it would claim a creature card forms hands, and
+  hands are the player's axis.
 
 ### Validation lives at registration, not in a cross-check
 
@@ -135,17 +137,19 @@ card back. One struct would make every field optional and none of them mean anyt
 on floor one. Nothing generates floors yet, so today it only sorts the fight order.
 
 **A portrait's key is its filename stem**, unlike every other asset: 96 of them come in through
-one `//go:embed enemy/*-portrait.png` glob, so renaming a file means editing the JSON. That is
-the price of not hand-maintaining 192 lines nobody could review.
+one `//go:embed enemy/*.png` glob, so renaming a file means editing the `Art` field of the record
+that names it. That is the price of not hand-maintaining two lines per picture that nobody could
+review.
 
 ### Bosses
 
-`bosses.json` is **the enemy record with `ValidFloors` replaced by a single `Floor`, plus a
-`Title`**, because a
-boss guards the stairway of exactly one floor. `BossData.Enemy()` converts, so `internal/decks`,
-`internal/entities` and `internal/cards` read one shape and never learn which pool an opponent came
-from — the only two places that tell them apart are `pyramid.EnemyAt`, which answers a stairway
-room from the boss pool, and the screen's `enemyFromRecord`.
+**A boss is a record whose `Tier` says `boss`, plus a `Title`.** It is not a separate catalog and
+not a separate file: a floor takes one whole motif, so a goblin floor ends on a goblin. Nothing
+downstream tells the two apart — `internal/decks`, `internal/entities` and `internal/cards` read
+one shape, and the climb is what puts a boss on a stairway.
+
+**The full record grammar is the `motifs` skill**, which also holds the coverage rule this file's
+loader refuses a motif for.
 
 **A separate file rather than an `IsBoss` column** *(2026-08-23)*: the two are placed by different
 rules, and a flag would let a record be both while making every selection read it before it could
@@ -227,8 +231,8 @@ That is the card language paying off, and it is the shape to reach for before ad
 
 **`Family`, `Art` and `Draw` are authored, ignored, and read only by a review sheet.** They landed
 on `relics.json` first and were taken to `essences.json` and `runes.json` on 2026-09-12;
-`enemies.json` and `bosses.json` carry `Family` and `Draw` without an `Art`, because a portrait
-key is what those two already have.
+every record under `data/motifs/` carries `Art` and `Draw`, and has no `Family` — the file it is in
+*is* its motif, so a field repeating the name at the top of the file would say nothing.
 
 - **`Family` is the motif a record was authored beside**, and it is what its sheet groups by —
   "Elemental essences", "Elemental marks", "Slimes", "Stairway keepers". It is **authored rather than

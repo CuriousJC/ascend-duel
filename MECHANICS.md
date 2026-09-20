@@ -78,16 +78,17 @@ carrier, the way `Damage` is already a function of the action and the wielder.
 
 Attributes do **not** need this. `DMG`, `Actions` and `HP` are already fields on `Duelist`, and
 `ResolveRound` takes duelists by value, so a relic granting `+5 DMG` just hands it a different
-duelist. Base values live in `data/duelists.json` and `data/enemies.json`, and are expected to
-move with playtesting.
+duelist. Base values live in `data/duelists.json` and the motif files under `data/motifs/`, and are expected to
+move with playtesting. A creature's are in its motif file under `data/motifs/`.
 
 ---
 
 ## Attributes and scaling
 
 **Three stats, and every one of them is the number it sounds like**: `DMG`,
-`Actions` and `HP` on `Duelist`, all three straight out of `data/duelists.json` and
-`data/enemies.json`. Life is HP. The action-point budget is `Actions`. Damage is
+`Actions` and `HP` on `Duelist`, the player's straight out of `data/duelists.json` and a
+creature's out of its motif file under `data/motifs/`, grown by the ascent curve to the fight it is
+met at. Life is HP. The action-point budget is `Actions`. Damage is
 `DMG × the card's own multiplier ÷ 100`.
 
 **Damage reduction is a percentage on the attacker and a percentage on the target, and no
@@ -3128,19 +3129,64 @@ faster.
 **8 floors × 3 fights.** Fixed layout, drawing no randomness — what is *in* it is random, the
 shape is not.
 
-- **Every third fight is a floor boss, and the bosses are their own catalog.**
-  `data/bosses.json` holds the named stairway protectors, several authored per floor, and a run
-  draws one for each floor when the climb is rolled — so a floor's stairway is a face the
-  player can be told about rather than a creature from the same roster with bigger numbers. They
-  never stand in an outer or inner room, and a stairway does not consume a roster entry.
-- **A boss is pitched above the floor it guards**: more HP than the toughest enemy that can appear
-  there and more DMG than the hardest hitter, on top of the ascent curve, which scales it like
-  anything else. Bosses are durable — high `HP`, and earth on them if a boss should also blunt
-  damage — with one strong attribute. They cannot spawn enemies, which implies normal enemies can,
-  a mechanic recorded nowhere else and otherwise undefined.
-- `[?]` Whether a boss should carry an affix of its own by default, and whether the several bosses
-  authored for one floor should differ in shape rather than only in name and picture — today their
-  decks are one template at five rungs.
+### A floor is a motif and an element
+
+**The tower picks one whole motif and one of the five elements per floor**, and the floor's three
+rooms are three records of that motif dealt as that element. A fire goblin floor is three goblins
+in fire — so what the player walked into is something they can plan against, rather than three
+unrelated creatures who happen to share a corridor.
+
+- **A motif is a file**, `data/motifs/<motif>.json`, holding every creature that can stand in one
+  of its three rooms: outer chamber, inner chamber, stairway.
+- **A motif is never fought twice in one run.** Each floor strikes its theme off before the next
+  is rolled, so a climb is a tour of the roster rather than a shuffle of it.
+- **A motif carries the band of floors it may theme**, at the file level rather than per record: a
+  motif whose creatures were valid on floors 1 to 3 and whose boss was valid on 4 to 6 could never
+  theme a floor at all.
+- **Every fight of every motif can be dealt at least two ways.** For each of the three rooms and
+  each of the five elements there are at least two records that fit, so a floor is a pool rather
+  than a fixed set. The loader refuses a motif that cannot — a floor the generator can offer and
+  then fail to build is worse than one that never existed.
+- **A record is dealt as exactly one element and its whole deck takes it.** There is no element
+  anywhere on a creature's card: the colour belongs to the creature, the way a duelist's Jab is a
+  concept that ships in five colours. Today the element marks the attacks and picks the picture,
+  and `[?]` what else it should do — a status on hit, a resistance, something the floor does to the
+  *player* — is open.
+- **A record carries one picture per element it can be dealt as.** A fire goblin serf and an ice
+  goblin serf are two drawings of one creature.
+
+- **The stairway is the floor's third room and the boss is a record of the same motif.** It is a
+  face the player can be told about, tiered above the two rooms below it and further along the
+  ascent curve than either, but it is not a separate catalog: a goblin floor ends on a goblin.
+- `[?]` **A boss has no advantage of its own yet.** What separates it from the creatures below it
+  is its place on the curve and its own base stat line. One advantage per boss, drawn from a pool
+  the record carries out of a closed vocabulary, is the decision still to make. See TODO.md.
+- `[?]` Whether an inner-chamber creature should differ from an outer one by anything other than
+  its place on the curve.
+
+### The ascent curve
+
+**Every fight is harder than the one before it, and the step is the fight rather than the floor.**
+A creature's `HP` and `DMG` are **step-zero quantities** — what it is worth in the very first room
+of the tower, whatever floor it is actually met on — and the curve puts it where it stands:
+
+```
+step = (floor - 1) * 3 + room          room: outer 0, inner 1, stairway 2
+```
+
+- **Two rates, not one.** `data/tower.json` holds `HPGrowth` and `DMGGrowth` in basis points, so
+  how fast a creature's life outruns the player's damage is a separate dial from how fast its
+  blows outrun the player's life.
+- **Stepping per fight is what makes the ordering free.** A floor's boss is harder than its own
+  inner chamber, and the next floor's outer chamber is harder than that boss, with no constraint
+  between two separate numbers to get wrong.
+- **So a late-band creature is not written as a high stat line.** It is written as the multiple of
+  its neighbours it is meant to be. That also keeps the ratio between two motifs fixed however the
+  curve is retuned.
+- **`Actions` never scales.** Growing the budget would hand a high-floor creature more cards rather
+  than a harder version of its own.
+- **Nothing caps it.** The tower has a configured height and the climb wraps past it; the curve
+  keeps counting, which is what makes the endless tower a number rather than a rewrite.
 - **After fights 1 and 2: a choice of two doors.** After the boss: **a choice of stairwell.**
   Captured as two concepts even though the mechanic is likely the same, because one is "next
   fight on this floor" and the other is "next floor" — a real difference to hang divergence on.
@@ -3207,7 +3253,7 @@ be built by accident.
 **It doubles a curve that is already in the data, and that is deliberate but worth stating.**
 `ValidFloors` sorts the roster from the weakest floor-one creature to the strongest at the top,
 which is several times the climb on its own; the ascent curve multiplies on top of that. **What
-that costs a player is unmeasured** — read the floor bands off `go run ./tools/enemysheet` rather
+that costs a player is unmeasured** — read the floor bands off `go run ./tools/motifsheet` rather
 than from a figure written here.
 
 `[?]` Whether the curve should be flatter now that it stacks on the roster's own progression, or
@@ -3222,15 +3268,18 @@ are one screen or two, and in which order.
 
 ## Enemies
 
-**Every enemy carries its own deck, and that is what makes it itself.** `data/enemies.json`
-holds a `Cards` array per record, written in the card language above — attacks named to the
+**Every creature carries its own deck, and that is what makes it itself.** Each record under
+`data/motifs/` holds a `Cards` array, written in the card language above — attacks named to the
 creature, at that creature's own rungs, and **never fewer than three distinct concepts**. A Clear
 Slime oozes, engulfs and dissolves.
+
+**Two creatures of one motif hold different cards.** They are two different fights rather than one
+fight at two weights, which is what makes a floor's pool worth having.
 
 **Every creature deck is pure attack.** A creature raises no shields and blunts nothing, so its
 whole personality is which blows come round how often: four cheap copies of one card is a swarm,
 four expensive ones is a brute, a spiky deck with one big card in it is the one a shield hurts
-most. The player learns a deck. `go run ./tools/enemysheet` is where one is read.
+most. The player learns a deck. `go run ./tools/motifsheet` is where one is read.
 
 ### Enemies do not form hands
 
@@ -3240,8 +3289,8 @@ there is no multiplier and no hand off an enemy's turn. `Duelist.SoloAttacks`
 carries it and `resolveSoloAttacks` is the phase.
 
 **Hands are the player's axis and an enemy has no way into it.** A hand counts copies of a
-*concept*, and every enemy card in the roster is authored `basic` and `FormNone`, so what an
-enemy "formed" was an accident of what its planner could afford. Now
+*concept*, and every creature card is `FormNone`, so what an enemy "formed" was an accident of
+what its planner could afford. Now
 three cards on the table mean three blows, which is a round the player can read off the table
 before pressing DUEL!.
 

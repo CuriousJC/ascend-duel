@@ -598,88 +598,82 @@ func TestTheDeckPanelDrawsEveryCardItIsGiven(t *testing.T) {
 	}
 }
 
-func TestEveryBossDrawsItsPortrait(t *testing.T) {
-	// The same failure as the relic above, one catalog over, and worse: a boss has no default
-	// picture to fall back on, so a mistyped `Portrait` is a stairway fight against a card with a
-	// hole in it — and the earliest one of those is three fights into a run.
+func TestEveryOpponentHasSomethingToDraw(t *testing.T) {
+	// **Nearly every record's own picture is still to be generated**, so what this holds is the
+	// fallback rather than the pictures: a record whose art key names no file has to land on the
+	// placeholder, because a card with a hole in it reads as a bug where a placeholder reads as
+	// art nobody has made yet.
 	//
-	// **The key is the filename stem, unlike almost every other asset** — see the //go:embed in
-	// assets/embed.go — so renaming a file is exactly what this catches.
-	records := data.LoadBosses()
-	if len(records) == 0 {
-		t.Fatal("no bosses loaded — this test is checking nothing")
+	// **The key is the filename stem** — see the //go:embed in assets/embed.go — so renaming a
+	// file is what this catches once the pictures exist.
+	if _, ok := assets.LoadImageData()[data.DefaultEnemyArt]; !ok {
+		t.Fatalf("%s is not embedded, so a record with no picture draws nothing at all",
+			data.DefaultEnemyArt)
 	}
-	for _, key := range data.BossOrder(records) {
-		art := records[key].Portrait
-		if _, ok := assets.LoadImageData()[art]; !ok {
-			t.Errorf("%s draws %q, which is not an embedded image", key, art)
+
+	motifs := data.LoadMotifs()
+	if len(motifs) == 0 {
+		t.Fatal("no motifs loaded — this test is checking nothing")
+	}
+	for _, key := range data.MotifOrder(motifs) {
+		for _, r := range motifs[key].Records {
+			for _, e := range r.Affinities {
+				if _, ok := assets.LoadImageData()[r.ArtKey(e)]; ok {
+					continue
+				}
+				// Not an error: it is the state the whole roster is in. The check that matters is
+				// that the key is well formed and the placeholder is there to take it.
+				if r.ArtKey(e) == "" {
+					t.Errorf("%s dealt as %s names no picture at all", r.Record, e)
+				}
+			}
 		}
 	}
 }
 
-func TestNoBossPortraitIsAnEnemyPortrait(t *testing.T) {
-	// The two families share one flat map of images, so the `-boss` suffix is the whole of what
-	// keeps them apart. A boss whose portrait key collided with a creature's would draw that
-	// creature, silently and correctly as far as every lookup is concerned.
-	enemies := data.LoadEnemies()
-	taken := make(map[string]string, len(enemies))
-	for _, key := range data.EnemyOrder(enemies) {
-		taken[enemies[key].Portrait] = key
-	}
-
-	bosses := data.LoadBosses()
-	for _, key := range data.BossOrder(bosses) {
-		if other, clash := taken[bosses[key].Portrait]; clash {
-			t.Errorf("%s and the enemy %s both draw %q", key, other, bosses[key].Portrait)
+func TestNoTwoRecordsDrawTheSamePicture(t *testing.T) {
+	// Every picture lands in one flat map of images, so two records claiming one key is one
+	// lookup with two answers — and the wrong creature drawn, silently and correctly as far as
+	// every lookup is concerned.
+	motifs := data.LoadMotifs()
+	taken := map[string]string{}
+	for _, key := range data.MotifOrder(motifs) {
+		for _, r := range motifs[key].Records {
+			for _, e := range r.Affinities {
+				art := r.ArtKey(e)
+				if other, clash := taken[art]; clash {
+					t.Errorf("%s and %s both draw %q", r.Record, other, art)
+				}
+				taken[art] = r.Record
+			}
 		}
 	}
 }
 
-// TestEveryOpponentNameFitsItsCard holds both opponent pools against the width of the card they
-// are drawn on.
+// TestNoOpponentCardWritesItsOwnName holds the trade EnemyStyle makes: the picture is the card,
+// and the name is the tooltip's.
 //
-// **`EnemyStyle` sets a name as one centered line and never wraps it**, which means a name too
-// wide is not a name that spills onto a second line, it is a name with a letter clipped off each
-// end. That is what
-// `Jerry the Toll-Taker` did to half the boss roster until the title moved into its own field on
-// 2026-08-24, and it was invisible until `tools/bosssheet` drew all thirty on one page.
-//
-// It measures the whole string rather than the longest word, because there is nowhere for a
-// second word to go.
-func TestEveryOpponentNameFitsItsCard(t *testing.T) {
-	faces, err := cards.NewFaces(assets.LoadFontData()["kubasta"])
-	if err != nil {
-		t.Fatal(err)
-	}
-	st := cards.EnemyStyle
-	usable := st.Width - 2*st.BorderWidth - 4
-
-	fits := func(kind, key, name string) {
-		t.Helper()
-		got, _, err := faces.Measure(st.NameSize, name)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got > usable {
-			t.Errorf("%s %s is called %q, %dpx at %gpt against the %dpx the card has — the card "+
-				"clips it at both ends rather than wrapping", kind, key, name, got, st.NameSize, usable)
-		}
+// **It replaced a width check.** A name set as one centered line and never wrapped is not a name
+// that spills onto a second line, it is a name with a letter clipped off each end — which is what
+// half the roster did until the name came off the face. There is nothing left to measure, and the
+// thing worth holding is that nobody turns it back on without deciding to.
+func TestNoOpponentCardWritesItsOwnName(t *testing.T) {
+	if cards.EnemyStyle.ShowName {
+		t.Error("the opponent card names itself across its own picture again")
 	}
 
-	// **The roster is deliberately not checked yet, and that is an open decision rather than an
-	// oversight.** Five creatures are over the line today — Mega Mutant II Torch, Mega Mutant III
-	// Torch, Mega Mutant III Fist, Greater Abomination and Bio-Titan Plagueborn, by 4 to 16px —
-	// and every one of them is a member of a family whose other members fit. Trimming a subset of
-	// "Mega Mutant III Torch" and leaving "Mega Mutant III Gun" alone would make a naming scheme
-	// that reads as a mistake, so the fix is an owner's call between renaming the family, dropping
-	// NameSize on EnemyStyle, and letting a long name wrap. Widen this loop to the roster when it
-	// is made.
-	bosses := data.LoadBosses()
-	for _, key := range data.BossOrder(bosses) {
-		// **The name alone, which is what the card carries.** `FullName` is for the hover that
-		// will print the title, and measuring it here would fail the file for a string the card
-		// never draws.
-		fits("boss", key, bosses[key].Name)
+	// The full name is still built, because the tooltip needs it — and it is built in one place so
+	// the hover and a review sheet cannot join the two halves differently.
+	motifs := data.LoadMotifs()
+	for _, key := range data.MotifOrder(motifs) {
+		for _, r := range motifs[key].Records {
+			if r.Title == "" {
+				continue
+			}
+			if want := r.Name + " " + r.Title; r.FullName() != want {
+				t.Errorf("%s: FullName is %q, want %q", r.Record, r.FullName(), want)
+			}
+		}
 	}
 }
 

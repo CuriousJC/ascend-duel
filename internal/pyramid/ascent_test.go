@@ -2,8 +2,14 @@ package pyramid
 
 import "testing"
 
-// The ascent curve: every room grows an opponent's HP and DMG by AscentGrowthPct, compounding, so
+// The ascent curve: every room grows an opponent's HP and DMG by its own rate, compounding, so
 // winning is what makes the next fight harder. See ScaleToFight.
+//
+// testGrowth is 10.00% a fight, written in basis points, and it is what the figures below were
+// computed against. It is a constant here rather than read from data/tower.json so that retuning
+// the tower does not rewrite this file's arithmetic.
+const testGrowth = 1000
+
 //
 // This package has no test file until now and needs no window — it imports `data` and
 // `internal/combat` and nothing else, which is the property that lets anything headless read
@@ -13,7 +19,7 @@ func TestTheFirstFightIsTheBaseline(t *testing.T) {
 	// Floor 1's outer room is fight 0 and takes the record's own numbers. If this ever scales, a
 	// roster tuned by hand is being read through a multiplier nobody applied on purpose.
 	for _, base := range []int{0, 1, 5, 100, 400} {
-		if got := ScaleToFight(base, 0); got != base {
+		if got := ScaleToFight(base, 0, testGrowth); got != base {
 			t.Errorf("fight 0 scaled %d to %d, want it untouched", base, got)
 		}
 	}
@@ -28,7 +34,7 @@ func TestEachRoomGrowsOnTheOneBeforeIt(t *testing.T) {
 	want := []int{100, 110, 121, 133, 146, 161, 177, 194, 214, 235}
 
 	for fight, w := range want {
-		if got := ScaleToFight(base, fight); got != w {
+		if got := ScaleToFight(base, fight, testGrowth); got != w {
 			t.Errorf("fight %d grew %d to %d, want %d", fight, base, got, w)
 		}
 	}
@@ -38,9 +44,9 @@ func TestTheCurveOnlyEverGrows(t *testing.T) {
 	// A stat that went down a room would be a difficulty curve with a dip in it, which is worse
 	// than a flat one: the player would learn that some rooms are free.
 	for _, base := range []int{1, 5, 9, 10, 11, 80, 400} {
-		prev := ScaleToFight(base, 0)
+		prev := ScaleToFight(base, 0, testGrowth)
 		for fight := 1; fight < 24; fight++ {
-			got := ScaleToFight(base, fight)
+			got := ScaleToFight(base, fight, testGrowth)
 			if got < prev {
 				t.Errorf("base %d shrank from %d to %d at fight %d", base, prev, got, fight)
 			}
@@ -55,14 +61,14 @@ func TestASmallStatStillClimbs(t *testing.T) {
 	// whole ascent — and half the roster opens on DMG 5 or 6, which is exactly the band the curve
 	// exists to lift. It looks correct on a 100 HP enemy and does nothing at all on a Giant Bat.
 	for _, base := range []int{1, 4, 5, 6, 9} {
-		if got := ScaleToFight(base, 8); got <= base {
+		if got := ScaleToFight(base, 8, testGrowth); got <= base {
 			t.Errorf("a stat of %d is still %d eight rooms in — the curve rounds it away", base, got)
 		}
 	}
 
 	// Slow is fine and expected: 5 grows by half a point a room, so the first room cannot move it.
 	// What must not happen is never moving.
-	if got := ScaleToFight(5, 1); got != 5 {
+	if got := ScaleToFight(5, 1, testGrowth); got != 5 {
 		t.Errorf("DMG 5 reached %d after one room, want 5 — truncation is the intended rounding", got)
 	}
 }

@@ -1,13 +1,8 @@
 # Ascending Duel
 
-Ascending Duel is a roguelike game where you must duel up a tower and build your skills while collecting magical relics and brands of power to aid you.
+Ascending Duel is a roguelike engine-building card game for dueling up a tower.
 
-It is still a prototype, but the shape of a run is there. A duel is a hand of cards, an
-action-point budget and an order you choose; cards that match make a *hand*, and a hand
-multiplies the whole blow. Win and you choose an **essence** to alter a card in your deck,
-spend **vitae** in the shop on a **relic** off a shelf of three, and climb — eight floors of
-three rooms, every third one a named stairway boss. Picking the room ahead is the one
-station of that loop still to be built.
+The duelist draws eight cards and can play up to five cards within their AP budget. They can spend AP to defend first or they can attack. Cards played create a poker-like hand across the elements, attack type, or specifc attacks to get multipliers.
 
 A first-time player is taught the game by a short scripted tutorial on their opening
 fight, and a run is written to disk between rooms, so quitting and relaunching picks the
@@ -56,7 +51,7 @@ nothing.
 Then everything a run picks up, each touching a different thing. A **relic** is worn, a **stone**
 raises a rung, an **essence** eats a card, a **potion** changes the duelist, and a **rune** is the
 only one spent during a fight, between the turns of a round. A **sealed good** is the shop's
-gamble: paid for and *then* read, four stones or four essences inside and you keep one.
+gamble: paid for and _then_ read, four stones or four essences inside and you keep one.
 
 Against all that, **creatures** sorted into floor bands, each with a deck of its own, and
 **bosses** guarding every stairway.
@@ -83,13 +78,13 @@ player reads. Open [docs/sheets/index.html](docs/sheets/index.html).
 
 ## Where things are written down
 
-| File | What it holds |
-|---|---|
-| [MECHANICS.md](MECHANICS.md) | what the game *is* — elements, cards, hands, relics, the tower |
-| [TODO.md](TODO.md) | what to build next — open work only |
-| [ideas.md](ideas.md) | the unfiltered inbox |
-| [CLAUDE.md](CLAUDE.md) | how the code is organized and the conventions it follows |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | the contributor license grant |
+| File                               | What it holds                                                  |
+| ---------------------------------- | -------------------------------------------------------------- |
+| [MECHANICS.md](MECHANICS.md)       | what the game _is_ — elements, cards, hands, relics, the tower |
+| [TODO.md](TODO.md)                 | what to build next — open work only                            |
+| [ideas.md](ideas.md)               | the unfiltered inbox                                           |
+| [CLAUDE.md](CLAUDE.md)             | how the code is organized and the conventions it follows       |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | the contributor license grant                                  |
 
 ## License
 
@@ -115,13 +110,10 @@ Art by: CuriousJC and KingSherman1820
 
 ### Third-party assets
 
-- **Creature and boss portraits** — [PVGames](https://pvgames.itch.io/), from the Humble
-  *Isometric Assets Galore* bundle. Licensed for use inside a game; they may not be redistributed
-  as assets, so please do not lift them out of this repository for your own project.
 - **Fonts** — `Kubasta.ttf` (CC0, via FontStruct), Fira Sans, and Roboto Flex.
 
-Everything else under [assets/](assets/) is first-party, or generated from the prompts in
-[docs/art/](docs/art/).
+Everything else under [assets/](assets/) is first-party: generated from the prompts in
+[docs/art/](docs/art/), or generated at runtime.
 
 ## References
 

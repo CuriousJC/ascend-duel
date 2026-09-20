@@ -22,11 +22,11 @@ func saveState(t *testing.T) *state.GlobalState {
 		t.Fatal(err)
 	}
 	seed, _ := seeds.Parse("00H602")
-	enemies, bosses := data.LoadEnemies(), data.LoadBosses()
+	motifs, tower := data.LoadMotifs(), data.LoadTower()
 	return &state.GlobalState{
 		Store: store, Profile: prof, ProfileWritable: writable,
-		RunSeed: seed, Enemies: enemies, Bosses: bosses,
-		Run: session.Start(enemies, bosses, seed),
+		RunSeed: seed, Motifs: motifs, Records: data.MotifRecords(motifs), Tower: tower,
+		Run: session.Start(motifs, tower, seed),
 	}
 }
 
@@ -50,7 +50,7 @@ func TestAdvancingTheRunWritesIt(t *testing.T) {
 	}
 
 	// And what was written comes back as the run it was.
-	back, _, err := session.Resume(gs.Enemies, gs.Bosses, snap)
+	back, _, err := session.Resume(gs.Motifs, gs.Tower, snap)
 	if err != nil {
 		t.Fatalf("what advanceRun wrote must resume: %v", err)
 	}

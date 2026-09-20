@@ -540,77 +540,66 @@ func stackOf(st Style) Style {
 	return out
 }
 
-// EnemyStyle is the opponent, in the card format *(2026-08-11)*.
+// EnemyStyle is the opponent, in the card format.
 //
-// **The enemy was a bare sprite with a health bar hanging under it** until this landed —
-// the last thing on the combat screen still drawn as a loose picture floating on the
-// background. Putting it in the card format says the obvious thing: everything the duel is
-// made of is a card, and the one you are fighting is one too.
+// **Everything the duel is made of is a card, and the one you are fighting is one too.**
 //
-// The face reads top to bottom: name, portrait, bar, numbers.
+// **The picture is the card and the numbers sit on top of it.** The art is authored at the card's
+// own 200x280 and bleeds to the inside of the border, the same path a relic takes — so a creature
+// is recognized by its portrait rather than read off a caption, and a fire goblin and an ice
+// goblin are two pictures of one creature rather than one picture and a word.
 //
-//	 15  name              centered   (15..46 at 25pt)
-//	 55  portrait          55..195   (Spec.Art, scaled to fit and centered)
-//	201  health bar        201..219
-//	225  hit points        "42/60", centered
-//	246  status badges     246..271  (Spec.Effects, a centered row)
+// **It carries no name.** The full name and the title are the tooltip's, which is where a player
+// who does not recognize a picture yet goes; a title bar across the illustration would cover the
+// one thing worth looking at in order to repeat it. `RelicStyle` and `EssenceStyle` made the same
+// trade for the same reason.
+//
+// What is left on the face reads bottom-up:
+//
+//	 30  DMG               30..50    label left, figure right, on its own scrim
+//	207  health bar        207..225
+//	229  hit points        "42/60", centered
+//	247  status badges     247..271  (Spec.Effects, a centered row)
 //	272  inside of the bottom border
 //
-// **The badges are on this card and not the duelist's** *(2026-08-16)*, which breaks the
-// twins rule everywhere except where that rule actually bites — the bar and the fraction are
-// still at identical offsets, and the band under them is the same free strip on both. The
-// reason was that nothing could put a status on the player: the enemy wears no relics and a relic
-// is what makes a status happen. **`DuelistStyle` gained the row on 2026-08-31**, in the three
-// lines this comment promised, and what fills it is not a status — it is the shield count, one pip
-// per shield. The band is at the same offsets on both cards, so the two still read as twins.
+// **DMG is on the face and the rest of the stat line is not** *(owner's call)*. What a player is
+// deciding is how much the next blow takes off them, and that is the one figure they cannot work
+// out from the cards on the table. Life is already two things — a bar and a fraction — and the
+// action budget is visible as the cards the creature queues.
 //
-// **The strip they sit in is what was left, not what was wanted.** The fraction's ink ends
-// around y=246 and the border starts at 272, so the badges get twenty-five pixels — small
-// for a 500-pixel drawing, and legible because what a badge has to say is a color and a rough
-// shape rather than a picture. `TestStatusBadgesClearTheHealthTextAndTheBorder` holds both
-// ends of that strip; making them bigger means moving the fraction on *both* fighter cards.
+// **The bar sits where the duelist card's does.** See DuelistStyle, which is where the argument
+// for the figures lives — the two cards face each other across the table and a bar at a different
+// height on each would make comparing them an act of measurement.
 //
-// **The name moved above the portrait on 2026-08-12**, having sat between the portrait and
-// the bar since the card was built. It puts the name where every other card in the game
-// carries it — Hand, Mini and RelicStyle all name themselves across the top — so the enemy
-// reads as one of the set rather than as a card with its own reading order. What it costs is
-// the portrait's proximity to its name; they are still adjacent, only the other way round.
+// **The badges are on this card and not the duelist's**, which breaks the twins rule everywhere
+// except where that rule actually bites: the bar and the fraction are at identical offsets on
+// both, and the band under them is the same free strip. `DuelistStyle`'s holds the shield count,
+// one pip per shield, at the same offsets — so the two still read as twins.
 //
-// **Every offset here scaled with the card on 2026-08-11**, unlike Hand's — nothing on this
-// face is fixed-size art. The portrait is scaled to fit its box and the bar is drawn to the
-// width it is given, so the whole layout is a proportion of the card and stays one.
+// **The strip the badges sit in is twenty-five pixels.** The fraction's ink ends around y=246 and
+// the border starts at 272. `TestStatusBadgesClearTheHealthTextAndTheBorder` holds both ends of
+// it; making them bigger means moving the fraction on *both* fighter cards.
 //
-// **The portrait gets the middle and the rest shares the bottom**, which is the layout the
-// owner asked for and also the one the art wants: the vendor portraits are wider than they
-// are tall once cropped, so a box 138 wide by 112 gives them their width rather than letting
-// height decide the scale.
-//
-// What it drops is everything describing a *play* — no category glyph, no cost dashes, no
-// damage badge — for the same reason RelicStyle does: none of them are things an enemy card
-// is. `Element` is Basic, so the border is the neutral mid gray rather than claiming the
-// opponent is made of fire.
+// **Every offset here scales with the card**, unlike Hand's — nothing on this face is fixed-size
+// art, so the whole layout is a proportion of the card and stays one.
 var EnemyStyle = Style{
 	Width: 200, Height: 280,
 
 	CornerRadius: 15,
 	BorderWidth:  4,
 
-	ShowName: true,
+	ShowName: false,
 	ShowForm: false,
 
-	TextLeft:     15,
-	NameTop:      15,
-	NameSize:     25,
-	NameCentered: true,
+	ArtBleed: true,
 
-	ArtTop:   55,
-	ArtInset: 15,
-	ArtMaxH:  140,
+	TextLeft: 15,
 
-	// **The bar sits where the duelist card's does, and it moved down with it on 2026-09-15.**
-	// See DuelistStyle, which is where the argument for the figures lives — the two cards face
-	// each other across the table and a bar at a different height on each would make comparing
-	// them an act of measurement.
+	// The one stat row, and the one figure a player cannot read off the table.
+	StatsTop:     30,
+	StatRowPitch: 27,
+	StatSize:     20,
+
 	HealthBarInset:  15,
 	HealthBarTop:    207,
 	HealthBarHeight: 18,

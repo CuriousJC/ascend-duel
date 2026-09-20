@@ -34,16 +34,17 @@ var titleEaster_png []byte
 
 // THE GUIDE
 //
-// Bob, the guide: the face on the tutorial's speech bubble. **A named one-off rather than a
-// member of either portrait family**, because he is not an opponent — nothing places him on a
-// floor, nothing fights him, and filing him under `boss/` would put him in the glob that
-// `data/bosses.json` is read against, where a portrait with no record behind it is a record
-// somebody has lost.
+// The guide: the face on the tutorial's speech bubble. **A named one-off rather than a member of
+// the creature family**, because it is not an opponent — nothing places it on a floor and nothing
+// fights it, and filing it under `enemy/` would put it in the glob the roster is read against,
+// where a picture with no record behind it is a record somebody has lost.
 //
-// 256x256, the same canvas the boss portraits are cut to, so he sits in a card's art box on the
-// same terms as everything else drawn into one.
-//
-// Provenance: the same set the thirty boss portraits came from.
+// **It is the same figure as `enemy/default-enemy.png`**, rendered for a different canvas: a
+// faceless human shape made of rainbow vapour, which is what both the guide and the not-yet-drawn
+// creature have in common — neither of them is anybody in particular. See
+// docs/art/guide_art_prompt.MD, which asks for the two renders together and says why one file
+// cannot serve both: this one is 256x256 with a transparent ground for the bubble, and the card's
+// is 200x280 and opaque because a bleeding card has nothing behind it.
 //
 //go:embed game/guide.png
 var guide_png []byte
@@ -118,42 +119,31 @@ var wildcardupgrade_png []byte
 
 // CREATURES
 //
-// One portrait per enemy: the vendor's 2048x2048 facing portrait, cropped to its subject and
-// scaled to fit the enemy card's art box. 96 of them, 2.1 MB together.
-//
-// **The west-facing idle sprite frames went on 2026-08-11.** The enemy is drawn as a card
-// now, so nothing used them — and cutting 96 more frames for a drawing that does not exist
-// would have been the expensive half of this change. They are in git, and the full animation
-// sheets are still in `.scratch/flat-creatures` if enemies are ever animated.
+// **One picture per record per element**, keyed by filename stem: `enemy/goblins-serf-fire.png`
+// is `goblins-serf-fire`, which is what `data.MotifRecord.ArtKey` builds out of the record's `Art`
+// field and the element the floor dealt it as. A fire goblin serf and an ice goblin serf are two
+// drawings of one creature.
 //
 // **Embedded as a directory rather than one var each, which is a deliberate exception to the
 // three-edit rule** at the top of this file. That rule — the file, an //go:embed var, a map
-// entry — is right for a handful of named assets and absurd for ninety-six: it would be 192
-// lines that no reviewer could check and that would drift the first time a creature was
-// renamed. So the portraits are a *family*, globbed in and keyed by filename stem.
+// entry — is right for a handful of named assets and absurd for a roster of this size: it would
+// be hundreds of lines no reviewer could check, drifting the first time a creature was renamed.
+// So the pictures are a *family*, globbed in and keyed by stem.
 //
-// The consequence, stated because it is the thing the rule was protecting: **a portrait's
-// key is now tied to its filename**, so renaming `ogrewarlord-portrait.png` renames its key
-// and `data/enemies.json` has to follow. That is the price of not hand-maintaining 96
-// entries, and it is checked — an enemy whose Portrait names no file draws a card with a
-// hole in it and logs once.
+// The consequence, stated because it is the thing the rule was protecting: **a picture's key is
+// tied to its filename**, so renaming one means editing the `Art` field of the record that names
+// it.
 //
-// Provenance: PVGames, bought in the Humble *Isometric Assets Galore* bundle. The license
-// permits shipping them inside a game; see the README in that folder.
+// **`default-enemy.png` is the whole of the fallback**, and it is what nearly every record draws
+// today. A record whose own picture has not been generated yet falls back to it rather than
+// drawing a hole, so a blank face means art nobody has made rather than a name nobody spelled
+// right. One placeholder for every motif and both kinds of record: a per-motif placeholder is a
+// picture somebody has to draw before the motif can be looked at.
 //
-//go:embed enemy/*-portrait.png
+// Provenance: generated from the prompts under `docs/art/`, like everything else in `assets/`.
+//
+//go:embed enemy/*.png
 var portraits embed.FS
-
-// The thirty boss portraits, globbed for the same reason and keyed the same way — the stem,
-// so `boss/bayaz-boss.png` is `bayaz-boss`, which is what `data/bosses.json` writes in its
-// Portrait field. **The `-boss` suffix is what keeps the two families out of each other's key
-// space**: the map is flat, and a boss called `Sentry` beside a creature portrait of the same
-// name would otherwise be one lookup with two answers.
-//
-// Their provenance is the same PVGames bundle as the creature portraits.
-//
-//go:embed boss/*-boss.png
-var bossPortraits embed.FS
 
 // The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
 // `fire`, which is what `data/relics.json` writes in its Art field.
@@ -345,7 +335,6 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, formArt, "form")
 	embedFamily(images, textureArt, "texture")
 	embedFamily(images, portraits, "enemy")
-	embedFamily(images, bossPortraits, "boss")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.

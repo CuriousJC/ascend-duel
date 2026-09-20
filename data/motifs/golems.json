@@ -1,0 +1,385 @@
+{
+  "Motif": "golems",
+  "Name": "Golems",
+  "ValidFloors": [
+    4,
+    8
+  ],
+  "Records": [
+    {
+      "Record": "golems-outer-clay",
+      "Name": "Clay Golem",
+      "Tier": "outer",
+      "Art": "golems-clay",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 195,
+      "DMG": 7,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Nudge",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Slam",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Crush",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "golems-outer-scrap",
+      "Name": "Scrap Golem",
+      "Tier": "outer",
+      "Art": "golems-scrap",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 165,
+      "DMG": 9,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Clatter",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Shard Fling",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Come Apart",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "golems-outer-stone",
+      "Name": "Stone Golem",
+      "Tier": "outer",
+      "Art": "golems-stone",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 235,
+      "DMG": 6,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Grind",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Press",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Dead Weight",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "golems-inner-iron",
+      "Name": "Iron Golem",
+      "Tier": "inner",
+      "Art": "golems-iron",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 280,
+      "DMG": 9,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Piston",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Servo Strike",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Drive",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "golems-inner-glass",
+      "Name": "Glass Golem",
+      "Tier": "inner",
+      "Art": "golems-glass",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 190,
+      "DMG": 12,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Glint",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Refract",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Shatter Out",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "golems-inner-bone",
+      "Name": "Bone Golem",
+      "Tier": "inner",
+      "Art": "golems-bone",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 240,
+      "DMG": 10,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Rib Snap",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Bone Whip",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Marrow Draw",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "golems-boss-colossus",
+      "Name": "The Colossus",
+      "Tier": "boss",
+      "Art": "golems-colossus",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 430,
+      "DMG": 12,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Step",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Gate Bar",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Portcullis",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "None Shall Enter",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "of the Fourth Gate"
+    },
+    {
+      "Record": "golems-boss-sentinel",
+      "Name": "The Sentinel",
+      "Tier": "boss",
+      "Art": "golems-sentinel",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 395,
+      "DMG": 14,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Pike Jab",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Halberd",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Execution",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Standing Order",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "the Standing Order"
+    },
+    {
+      "Record": "golems-boss-juggernaut",
+      "Name": "The Juggernaut",
+      "Tier": "boss",
+      "Art": "golems-juggernaut",
+      "Draw": "TO BE DETERMINED",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 370,
+      "DMG": 16,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Roll",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Bear Down",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Flatten",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "It Does Not Stop",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "That Does Not Stop"
+    }
+  ]
+}

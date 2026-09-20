@@ -12,21 +12,21 @@ import (
 // theSeed is a run code, because that is what a snapshot writes. Any valid one does.
 const theSeed = "00H602"
 
-func rosters(t *testing.T) (map[string]data.EnemyData, map[string]data.BossData) {
+func rosters(t *testing.T) (map[string]data.MotifData, data.TowerData) {
 	t.Helper()
-	return data.LoadEnemies(), data.LoadBosses()
+	return data.LoadMotifs(), data.LoadTower()
 }
 
 // TestARunSurvivesBeingSavedAndResumed is the whole feature in one test: everything the player is
 // carrying comes back.
 func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
-	enemies, bosses := rosters(t)
+	motifs, tower := rosters(t)
 	seed, err := seeds.Parse(theSeed)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	s := Start(enemies, bosses, seed)
+	s := Start(motifs, tower, seed)
 	s.AddVitae(9)
 	s.WonFight(41, 41)
 	s.SetPhase(PhaseShop)
@@ -35,7 +35,7 @@ func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
 	}
 	s.SetElement(0, combat.Fire)
 
-	back, gotSeed, err := Resume(enemies, bosses, s.Snapshot(seed))
+	back, gotSeed, err := Resume(motifs, tower, s.Snapshot(seed))
 	if err != nil {
 		t.Fatalf("a snapshot this build wrote must resume: %v", err)
 	}
@@ -68,11 +68,11 @@ func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
 // and that is only safe while it is a function of the run code and nothing else. If this ever goes
 // red, the answer is to write the climb into the snapshot, never to weaken the check.
 func TestTheClimbIsRebuiltFromTheSeed(t *testing.T) {
-	enemies, bosses := rosters(t)
+	motifs, tower := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
-	s := Start(enemies, bosses, seed)
-	back, _, err := Resume(enemies, bosses, s.Snapshot(seed))
+	s := Start(motifs, tower, seed)
+	back, _, err := Resume(motifs, tower, s.Snapshot(seed))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,15 +89,15 @@ func TestTheClimbIsRebuiltFromTheSeed(t *testing.T) {
 // TestUnclaimedSpoilsSurvive keeps a run saved at the reward station honest: the payout is frozen by
 // WonFight and handed over a sentence at a time, so quitting mid-narration must not cost the rest.
 func TestUnclaimedSpoilsSurvive(t *testing.T) {
-	enemies, bosses := rosters(t)
+	motifs, tower := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
-	s := Start(enemies, bosses, seed)
+	s := Start(motifs, tower, seed)
 	s.WonFight(50, 50)
 	s.ClaimFromLife()
 	want := s.Spoils()
 
-	back, _, err := Resume(enemies, bosses, s.Snapshot(seed))
+	back, _, err := Resume(motifs, tower, s.Snapshot(seed))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,14 +109,14 @@ func TestUnclaimedSpoilsSurvive(t *testing.T) {
 // TestTheIdentityCounterIsSavedRatherThanRecomputed: an essence removing the newest card takes the
 // highest id with it, and a counter derived from what survives would hand that number out twice.
 func TestTheIdentityCounterIsSavedRatherThanRecomputed(t *testing.T) {
-	enemies, bosses := rosters(t)
+	motifs, tower := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
-	s := Start(enemies, bosses, seed)
+	s := Start(motifs, tower, seed)
 	s.Remove(s.Size() - 1)
 	want := s.nextCardID
 
-	back, _, err := Resume(enemies, bosses, s.Snapshot(seed))
+	back, _, err := Resume(motifs, tower, s.Snapshot(seed))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,9 +136,9 @@ func TestTheIdentityCounterIsSavedRatherThanRecomputed(t *testing.T) {
 // TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused: every name is resolved rather than
 // trusted, so a run that would resume quietly wrong does not resume at all.
 func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
-	enemies, bosses := rosters(t)
+	motifs, tower := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
-	good := Start(enemies, bosses, seed).Snapshot(seed)
+	good := Start(motifs, tower, seed).Snapshot(seed)
 
 	for _, tc := range []struct {
 		name string
@@ -156,7 +156,7 @@ func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
 			bent := *good
 			bent.Deck = append([]profile.CardSnapshot(nil), good.Deck...)
 			tc.bend(&bent)
-			if _, _, err := Resume(enemies, bosses, &bent); err == nil {
+			if _, _, err := Resume(motifs, tower, &bent); err == nil {
 				t.Error("should be refused rather than resumed wrong")
 			}
 		})
@@ -166,18 +166,18 @@ func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
 // TestAResumedRunDoesNotPutTheStartingRelicsBackOn: Resume rebuilds a run exactly as it was, where
 // New and Start both dress a run that is beginning.
 func TestAResumedRunDoesNotPutTheStartingRelicsBackOn(t *testing.T) {
-	enemies, bosses := rosters(t)
+	motifs, tower := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
 	before := StartingRelics
 	StartingRelics = []string{Relics()[0]}
 	defer func() { StartingRelics = before }()
 
-	s := Start(enemies, bosses, seed)
+	s := Start(motifs, tower, seed)
 	snap := s.Snapshot(seed)
 	snap.Worn = nil
 
-	back, _, err := Resume(enemies, bosses, snap)
+	back, _, err := Resume(motifs, tower, snap)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +221,7 @@ func TestTheRunsStonesSurviveBeingSavedAndResumed(t *testing.T) {
 
 	want, _ := s.HandMultiplier("pair")
 
-	back, _, err := Resume(nil, nil, s.Snapshot(0))
+	back, _, err := Resume(nil, data.TowerData{}, s.Snapshot(0))
 	if err != nil {
 		t.Fatalf("the run would not resume: %v", err)
 	}
@@ -245,7 +245,7 @@ func TestASnapshotNamingARungThisBuildHasNotGotIsRefused(t *testing.T) {
 	snap := s.Snapshot(0)
 	snap.Stones = map[string]int{"no-such-rung": 1}
 
-	if _, _, err := Resume(nil, nil, snap); err == nil {
+	if _, _, err := Resume(nil, data.TowerData{}, snap); err == nil {
 		t.Error("a run resumed holding stones on a rung that does not exist")
 	}
 }

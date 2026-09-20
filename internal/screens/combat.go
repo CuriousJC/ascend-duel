@@ -216,6 +216,11 @@ type CombatScene struct {
 	fighter *entities.Combatant
 	enemy   *entities.Combatant
 
+	// enemyElement is the colour this fight's opponent was dealt as — the floor's theme. The
+	// scene keeps it because the deck is built from it and the card faces are drawn from it, and
+	// both happen after the opponent itself has been hydrated.
+	enemyElement string
+
 	// The queued sets for the coming round. fighterActions is derived from the hand by
 	// syncQueue and never written directly; enemyActions is re-planned each round.
 	fighterActions []combat.Card
@@ -524,7 +529,16 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	if scenario.Active() && scenario.Enemy() != "" {
 		enemyKey = scenario.Enemy()
 	}
-	s.enemy = enemyFromRecord(gs, enemyKey, s.fightIndex)
+
+	// **The element is the floor's theme**, so every card this opponent plays is one colour and
+	// its picture is the one drawn for that colour. A fixture naming its own opponent may name the
+	// colour too; without one it takes whichever the climb rolled for this floor.
+	enemyElement := gs.Run.Element()
+	if scenario.Active() && scenario.EnemyElement() != "" {
+		enemyElement = scenario.EnemyElement()
+	}
+	s.enemyElement = enemyElement
+	s.enemy = enemyFromRecord(gs, enemyKey, enemyElement, s.fightIndex)
 
 	// **A scenario may also make the fight unkillable in both directions**, which is what a training
 	// dummy is: a real creature with a real portrait and a real deck, whose blows can be watched for
@@ -577,7 +591,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.relicShake, s.cardShake, s.shakeItem = nil, nil, 0
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
-	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, enemySeed, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, s.enemyElement, enemySeed, decks.EnemyHandSize)
 
 	// **A fresh duel, but not a fresh body** *(owner's call, 2026-09-06)*. The wound the run is
 	// carrying comes with it into this room; only a stairway win clears it, and `WonFight` is
@@ -615,7 +629,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.planEnemyRound()
 
 	trace.Logf("scene", "fight %d: %s, %d cards, %d life, %d AP",
-		s.fightIndex+1, s.enemy.Name, len(decks.EnemyCards(s.enemy.Record)),
+		s.fightIndex+1, s.enemy.Name, len(decks.EnemyCards(s.enemy.Record, s.enemyElement)),
 		s.enemy.MaxLife, s.enemy.ActionPoints())
 	trace.Logf("scene", "combat init: deck %d hand %d discard %d, seeds player %d enemy %d",
 		len(s.deck), len(s.hand), len(s.discard), playerSeed, enemySeed)
@@ -1957,18 +1971,17 @@ func planLabel(cards []combat.Card) string {
 	return label
 }
 
-// enemyFromRecord hydrates an enemy out of global state, **grown to the fight it is met at** —
-// see pyramid.ScaleToFight. `fightIndex` is the whole of what the ascent curve reads, which is
-// the same counter the floor and room under the duelist card are derived from.
+// enemyFromRecord hydrates an opponent out of global state, dealt as the floor's element and
+// **grown to the fight it is met at** — see pyramid.ScaleToFight. `fight` is the whole of what the
+// ascent curve reads, which is the same counter the floor and room under the duelist card are
+// derived from.
 //
-// **No sheet to look up any more** — the enemy is a card, so its picture is a portrait key
-// that internal/cards decodes when it draws one.
-// **A stairway record comes from the boss pool** *(2026-08-23)*, which is the one place the two
-// pools have to be told apart on this side: `data.BossData.Enemy()` hands back the enemy shape, so
-// nothing below this line knows which one it got.
-func enemyFromRecord(gs *state.GlobalState, record string, fight int) *entities.Combatant {
-	if boss, ok := gs.Bosses[record]; ok {
-		return entities.NewEnemyFrom(boss.Enemy(), fight)
-	}
-	return entities.NewEnemyFrom(gs.Enemies[record], fight)
+// **One pool, one lookup.** A boss is a record whose tier says boss; it stands on a floor's
+// stairway because the climb puts it there, not because it came from somewhere else. So nothing
+// below this line has to know which room it was built for.
+//
+// **No sheet to look up** — the opponent is a card, so its picture is an art key that
+// internal/cards decodes when it draws one.
+func enemyFromRecord(gs *state.GlobalState, record, element string, fight int) *entities.Combatant {
+	return entities.NewEnemyFrom(gs.Records[record], element, fight, gs.Tower)
 }

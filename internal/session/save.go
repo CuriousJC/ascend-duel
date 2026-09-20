@@ -195,7 +195,7 @@ func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 // **A relic the catalog no longer holds is refused rather than dropped**, on the same grounds: a
 // run silently resuming without the relic it was wearing is a run the player would have to work out
 // had changed.
-func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, snap *profile.RunSnapshot) (*Session, int64, error) {
+func Resume(motifs map[string]data.MotifData, tower data.TowerData, snap *profile.RunSnapshot) (*Session, int64, error) {
 	if snap == nil {
 		return nil, 0, fmt.Errorf("no run to resume")
 	}
@@ -271,7 +271,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 			FromRoom:   snap.Spoils.FromRoom,
 		},
 	}
-	s.climb = newClimb(enemies, bosses, runSeed)
+	s.climb = newClimb(motifs, tower, runSeed)
 	s.ledger = resumeLedger(snap.Ledger)
 
 	for _, key := range snap.Worn {

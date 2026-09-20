@@ -3,22 +3,17 @@
 //
 // # Why this is a library and the other sheets are not
 //
-// `tools/sheets` says the four existing sheets share nothing but the words `png.Encode`, and
-// that a library between them would exist to be a seam that command already is. That argument
-// is still right and this is not a counter-example to it: the enemy sheet and the boss sheet
-// are not two sheets, they are **one sheet over two pools**. The two catalogs carry the same
-// fields, are drawn by the same style, and are read to answer the same question. Copying four
-// hundred lines so that the second one could differ in a heading and a floor field is how two
-// pages that must agree quietly stop agreeing — a boss sheet that had not learned about a new
-// column would show the game as it was.
-//
-// So the pool is the parameter and everything else is here. `tools/enemysheet` and
-// `tools/bosssheet` are the two commands, and each is a `Pool` plus a `main`.
+// `tools/sheets` says the other sheets share nothing but the words `png.Encode`, and that a
+// library between them would exist to be a seam that command already is. That argument is still
+// right, and this package is a `Pool` plus a page rather than a library between sheets:
+// `tools/motifsheet` is a pool and a `main`. The shape is kept because the pool is the one thing
+// a second roster view would vary, and a second view that had not learned about a new column
+// would show the game as it was.
 //
 // # It is a report, like the relic and essence sheets
 //
-// It reads `data/enemies.json` and `data/bosses.json` rather than writing its own contents out.
-// It also imports `internal/decks`, which registers every enemy and boss concept at init — so a
+// It reads the motif files under `data/motifs` rather than writing its own contents out.
+// It also imports `internal/decks`, which registers every creature concept at init — so a
 // card naming a verb the rules do not have fails the sheet exactly as it fails the launch, and
 // the deck sizes printed here are the real expanded piles rather than a `Copies` column added up
 // in a template.
@@ -113,82 +108,75 @@ type Entry struct {
 	// on the card. Empty for every creature in the roster: a creature has no title.
 	Title string
 
-	// Family is the kind of thing this is — a creature's is "Slimes" or "Beasts", a boss's is the
-	// post it holds — and Draw is the subject paragraph an art generator would be given. **Both
-	// are authored, both are ignored by everything that plays the game**, exactly as a relic's
-	// Family and Draw are.
-	//
-	// **Family is not the floor band, deliberately** *(owner's call, 2026-09-12)*. The page is
-	// still cut by floor, because the floor is the placement decision and the spread beside each
-	// heading is what a balance review reads — so a Family repeating it would say nothing. What it
-	// adds is the axis the floor does not carry: whether a band is four more slimes or a floor
-	// with a shape of its own. It is printed on each record and summarized on each band's heading.
+	// Family is the tier this record stands in — outer, inner or the stairway's boss — and Draw is
+	// the subject paragraph an art generator would be given. **Draw is authored and ignored by
+	// everything that plays the game**, exactly as a relic's is.
 	Family string
 	Draw   string
 
+	// Portrait is the art key drawn on the card, which is the record's own picture in the element
+	// this row is showing it at.
 	Portrait string
+
+	// Element is the colour this row draws the record at, and Elements is every colour it could be
+	// dealt as. The strip shows one because a record has one card face per colour and nine of them
+	// in a row would be nine copies of the same reading; the list beside it is what says the
+	// record is not stuck at the one drawn.
+	Element  string
+	Elements []string
 
 	DMG     int
 	Actions int
 	HP      int
 
 	// Group is the sort key the page's sections are cut on, and Floors is how that section is
-	// written. A creature has a band and a boss has a single floor; both reduce to a heading and
-	// a number to order it by.
+	// written. A section is one motif, ordered by the floor its band opens on.
 	Group  int
 	Floors string
 
-	Affixes []string
-	Cards   []data.CardData
+	// Motif is which file this record came from, and Tier is which of a floor's three rooms it can
+	// stand in.
+	Motif string
+	Tier  string
+
+	Cards []data.CardData
 }
 
-// EnemyPool is every creature in data/enemies.json, in EnemyOrder — shallowest floor first.
-var EnemyPool = Pool{
-	Name:       "enemy",
-	Title:      "Enemy sheet",
-	GroupLabel: "floor band",
-	Blurb: "Every creature in the roster, grouped by the floors it may appear on: its card as " +
-		"the game draws it, its stat line, and the deck it fights with. The roster is " +
-		"hand-assigned, so the question this page answers is whether a floor's creatures are " +
-		"actually dearer than the floor below it.",
+// MotifPool is every record in every motif file, motif by motif, shallowest band first.
+//
+// **Cut by motif rather than by floor**, because a motif is the unit a floor is built from: a
+// floor takes one whole motif and one element, so the question this page answers is whether one
+// motif's three rooms read as a climb and whether its creatures look like each other.
+var MotifPool = Pool{
+	Name:       "motif",
+	Title:      "Motif sheet",
+	GroupLabel: "motif",
+	Blurb: "The whole roster, motif by motif: every creature's card as the game draws it, its " +
+		"stat line, the colours it can be dealt as, and the deck it fights with. A floor takes " +
+		"one motif and one element and holds three fights, so the questions this page answers " +
+		"are whether a motif's outer, inner and stairway records read as a climb, and whether " +
+		"every one of its fights can be dealt at least two ways.",
 	Entries: func() []Entry {
-		records := data.LoadEnemies()
-		out := make([]Entry, 0, len(records))
-		for _, key := range data.EnemyOrder(records) {
-			r := records[key]
-			out = append(out, Entry{
-				Record: r.EnemyRecord, Name: r.Name, Portrait: r.Portrait,
-				Family: r.Family, Draw: r.Draw,
-				DMG: r.DMG, Actions: r.Actions, HP: r.HP,
-				Group: r.ValidFloors[0], Floors: floorBand(r.ValidFloors),
-				Affixes: r.AvailableAffixes, Cards: r.Cards,
-			})
-		}
-		return out
-	},
-}
-
-// BossPool is the thirty stairway protectors, in BossOrder — lowest floor first.
-var BossPool = Pool{
-	Name:       "boss",
-	Title:      "Boss sheet",
-	GroupLabel: "floor",
-	Blurb: "The thirty stairway protectors, one of whom stands in the third room of every " +
-		"floor: the card, the stat line and the deck. A boss is pitched above the creatures of " +
-		"its own floor — roughly 1.6x their HP and 1.3x their DMG — so this page is read against " +
-		"the enemy sheet's band of the same number.",
-	Entries: func() []Entry {
-		records := data.LoadBosses()
-		out := make([]Entry, 0, len(records))
-		for _, key := range data.BossOrder(records) {
-			r := records[key]
-			out = append(out, Entry{
-				Record: r.BossRecord, Name: r.Name, Title: r.Title, Portrait: r.Portrait,
-				Family: r.Family, Draw: r.Draw,
-				DMG: r.DMG, Actions: r.Actions, HP: r.HP,
-				Group: r.Floor, Floors: "Floor " + strconv.Itoa(r.Floor),
-				Affixes: r.AvailableAffixes, Cards: r.Cards,
-			})
+		motifs := data.LoadMotifs()
+		var out []Entry
+		for _, key := range data.MotifOrder(motifs) {
+			m := motifs[key]
+			for _, r := range m.Records {
+				element := ""
+				if len(r.Affinities) > 0 {
+					element = r.Affinities[0]
+				}
+				out = append(out, Entry{
+					Record: r.Record, Name: r.Name, Title: r.Title,
+					Family: r.Tier, Draw: r.Draw,
+					Portrait: r.ArtKey(element),
+					Element:  element, Elements: r.Affinities,
+					DMG: r.DMG, Actions: r.Actions, HP: r.HP,
+					Group: m.ValidFloors[0], Floors: m.Name + " — " + floorBand(m.ValidFloors),
+					Motif: m.Motif, Tier: r.Tier,
+					Cards: r.Cards,
+				})
+			}
 		}
 		return out
 	},
@@ -245,8 +233,8 @@ func Run(p Pool, dir string) error {
 		pg.add(plate{
 			Entry:   e,
 			Cell:    cell{File: name, Width: strip.Bounds().Dx(), Height: strip.Bounds().Dy()},
-			Affixes: strings.Join(e.Affixes, ", "),
-			Deck:    len(decks.EnemyCards(e.Record)),
+			Affixes: strings.Join(e.Elements, ", "),
+			Deck:    len(decks.EnemyCards(e.Record, e.Element)),
 			Rows:    deckRows(e.Cards),
 		})
 	}
@@ -294,7 +282,7 @@ func stripFor(f *cards.Faces, e Entry) (*image.RGBA, error) {
 
 	deck := make([]*image.RGBA, 0, len(e.Cards))
 	for _, c := range e.Cards {
-		img, err := cards.Render(cardSpec(c), cards.Hand, f)
+		img, err := cards.Render(cardSpec(c, e.Element), cards.Hand, f)
 		if err != nil {
 			return nil, fmt.Errorf("rendering %s.%s: %w", e.Record, c.Label, err)
 		}
@@ -358,12 +346,12 @@ func opponentSpec(e Entry, art image.Image) cards.Spec {
 // that shows a cost column and an effect band, which is the whole of what there is to review about
 // an enemy card. Drawing it in the style the player's deck is drawn in is also what lets the two
 // be compared, which is the actual balance question.
-func cardSpec(c data.CardData) cards.Spec {
+func cardSpec(c data.CardData, el string) cards.Spec {
 	return cards.Spec{
 		Name:       c.Label,
 		Form:       form(c.Form),
 		Cost:       c.Cost,
-		Element:    element(c.Elements),
+		Element:    element([]string{el}),
 		Text:       effectText(c),
 		Highlights: cards.ElementHighlights(effectText(c)),
 		Enabled:    true,
@@ -472,7 +460,13 @@ func deckRows(list []data.CardData) []row {
 func artwork(key string) (image.Image, error) {
 	raw := assets.LoadImageData()[key]
 	if len(raw) == 0 {
-		return nil, fmt.Errorf("no embedded portrait called %q", key)
+		// **The placeholder rather than an error.** Nearly every record's own picture is still to
+		// be generated, and a sheet that refused to build until the last one existed would be a
+		// sheet nobody could use while the art was being made.
+		raw = assets.LoadImageData()[data.DefaultEnemyArt]
+	}
+	if len(raw) == 0 {
+		return nil, fmt.Errorf("no embedded picture called %q and no placeholder either", key)
 	}
 	img, _, err := image.Decode(bytes.NewReader(raw))
 	if err != nil {

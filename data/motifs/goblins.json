@@ -1,0 +1,393 @@
+{
+  "Motif": "goblins",
+  "Name": "Goblins",
+  "Draw": "Goblins are small, wiry humanoids with too much face. The head is the read: a long drooping nose that overhangs the mouth, wide batlike ears swept back and notched at the edges, a heavy brow and a receding chin. Skin is mottled and leathery in greens and sallow yellows, darker at the knuckles and the ear tips. They are lean rather than starved, with ropey forearms and hands too big for the wrists. Their gear is scavenged and mismatched — leather scraps, cord, a strap of animal hide, metal that was something else first and still shows it — and nothing they wear is a matched pair. They hunch, and they look up at the viewer rather than level.",
+  "ElementDraw": {
+    "fire": "Frost does not belong to a goblin and neither does fire; they carry it rather than being made of it. Fire arrives as burn scarring and soot — singed ear tips, one eyebrow gone, smoke-blacked fingers — and as live embers glowing in whatever they are holding. The skin keeps its green and picks up a warm orange rim light from below, as though something is burning just out of frame.",
+    "ice": "Frost rides on a goblin rather than filling it. Rime crusts the ear tips, the nose and the knuckles where the skin is thinnest, breath fogs in a visible plume, and the scavenged leather is stiff and pale with ice. The mottled green goes grey and bloodless at the extremities; the eyes water. Cold light from a pale blue.",
+    "lightning": "Lightning makes a goblin twitchy. The ears stand up instead of sweeping back, the sparse hair lifts, and small arcs crawl between metal scraps on its gear. Skin shows faint branching burn tracery up the forearms. The eyes are too wide and too bright, and everything metal it carries is pitted and haloed in hot yellow.",
+    "earth": "Earth makes a goblin heavier than it should be. Grit and dried mud cake the skin in plates that crack at the joints, small stones are set into the leather or grown through it, and the knuckles and brow have gone hard and mineral. The green darkens toward moss. It is dug in rather than poised — squat, low, and dusty.",
+    "arcane": "Arcane goes wrong on a goblin. Something is mismeasured: an ear too long, a hand with a joint too many, a shadow falling the wrong way. A faint violet light comes from *inside* the mouth and behind the eyes rather than from any source in the picture, and the edges of the figure smear very slightly, as though it has not finished arriving."
+  },
+  "ValidFloors": [
+    1,
+    6
+  ],
+  "Records": [
+    {
+      "Record": "goblins-outer-serf",
+      "Name": "Goblin Serf",
+      "Tier": "outer",
+      "Art": "goblins-serf",
+      "Draw": "A drudge. Stooped under a bundle of somebody else's belongings, gripping a short notched blade it clearly did not make. Wary, resentful, entirely unheroic.",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "arcane"
+      ],
+      "HP": 105,
+      "DMG": 4,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Poke",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Stab",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Cleaver",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "goblins-outer-scrapper",
+      "Name": "Goblin Scrapper",
+      "Tier": "outer",
+      "Art": "goblins-scrapper",
+      "Draw": "All elbows and speed. Crouched low with a shiv reversed in one fist, weight already shifting sideways. Its ears are up and its mouth is open — it has seen you first and is pleased about it.",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 88,
+      "DMG": 6,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Scratch",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Shiv",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Gut",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "goblins-outer-bomber",
+      "Name": "Goblin Bomber",
+      "Tier": "outer",
+      "Art": "goblins-bomber",
+      "Draw": "Cradling a satchel of fused clay spheres against its chest with both arms, one fuse already smoking. It is grinning at the viewer rather than at the bomb, which is the problem.",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 100,
+      "DMG": 5,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Fuse",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Lob",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Big Bang",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "goblins-inner-raider",
+      "Name": "Goblin Raider",
+      "Tier": "inner",
+      "Art": "goblins-raider",
+      "Draw": "Better fed and better armed than the ones below. A hooked blade in one hand and a fistful of taken things in the other — cord, a ring, a strip of cloth. It is mid-stride toward you.",
+      "Affinities": [
+        "fire",
+        "ice",
+        "lightning",
+        "earth"
+      ],
+      "HP": 145,
+      "DMG": 7,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Jab",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Hook Blade",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Ransack",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "goblins-inner-shaman",
+      "Name": "Goblin Shaman",
+      "Tier": "inner",
+      "Art": "goblins-shaman",
+      "Draw": "Draped in rattling bone and dried skin, arms raised in a gesture it half remembers. Its eyes are rolled back and its mouth is moving. Whatever it is calling on is not in the picture.",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 120,
+      "DMG": 8,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Hex Spit",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Bone Rattle",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Ill Wind",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "goblins-inner-brute",
+      "Name": "Goblin Brute",
+      "Tier": "inner",
+      "Art": "goblins-brute",
+      "Draw": "Thick where the others are wiry — a slab of a goblin, shoulders up around its ears, dragging a knotted club. The face is the same face, which is what makes it a goblin and not an ogre.",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 180,
+      "DMG": 6,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Cuff",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 1
+        },
+        {
+          "Label": "Club",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Overhead",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "goblins-boss-king",
+      "Name": "The Goblin King",
+      "Tier": "boss",
+      "Art": "goblins-king",
+      "Draw": "Crowned with a circlet of beaten scrap that does not fit, sceptre held like a cudgel. It is seated even though we only see it from the chest up — the posture of something that expects to be waited on.",
+      "Affinities": [
+        "ice",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 245,
+      "DMG": 10,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Sceptre",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Tax Collected",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Crown Law",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "Royal Right",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "of the Low Crown"
+    },
+    {
+      "Record": "goblins-boss-warlord",
+      "Name": "Goblin Warlord",
+      "Tier": "boss",
+      "Art": "goblins-warlord",
+      "Draw": "Scarred across the muzzle and one ear torn to a stump. A standard's broken shaft rests on its shoulder, the banner itself out of frame. It is looking past you at something behind you.",
+      "Affinities": [
+        "fire",
+        "lightning",
+        "earth",
+        "arcane"
+      ],
+      "HP": 265,
+      "DMG": 9,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Prod",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Standard Swing",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "War Cry",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "The Whole Horde",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "the Banner-Taker"
+    },
+    {
+      "Record": "goblins-boss-tinker",
+      "Name": "The Goblin Tinker",
+      "Tier": "boss",
+      "Art": "goblins-tinker",
+      "Draw": "Four fingers on one hand and five improvised tools on the other. Goggles pushed up onto the brow, spectacles of scavenged glass, a contraption half-built and ticking in its grip.",
+      "Affinities": [
+        "fire",
+        "ice",
+        "earth",
+        "arcane"
+      ],
+      "HP": 220,
+      "DMG": 12,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Spanner",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Sparkbox",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Contraption",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        },
+        {
+          "Label": "It Explodes",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ],
+      "Title": "of Nine Fingers"
+    }
+  ]
+}

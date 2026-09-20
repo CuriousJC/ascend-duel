@@ -21,7 +21,7 @@ func drabCard(t *testing.T) combat.Card {
 	if len(records) == 0 {
 		t.Fatal("no enemy decks registered")
 	}
-	cards := decks.EnemyCards(records[0])
+	cards := decks.EnemyCards(records[0], "")
 	if len(cards) == 0 {
 		t.Fatalf("%s has no cards", records[0])
 	}

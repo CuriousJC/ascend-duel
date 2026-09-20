@@ -29,6 +29,27 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       shelf now reads badly. See the tutorial section of `CLAUDE.md`, which carries the
       constraints a replacement seed has to satisfy.
 
+- [ ] **A curve tool: plug in bases, pick a motif, read the whole tower** *(owner asked for this
+      to be tracked)*. The ascent curve is two compounding growth rates in `data/tower.json` and a
+      per-record `HP`/`DMG` base in a motif file, and the only way to see what a number does today
+      is to play to the floor it lands on. What is wanted is a page that takes the bases and the
+      two rates and prints every fight in the tower — floors down the side, outer / inner / boss
+      across, `HP / DMG` in each cell — plus a few rows past floor 8 so the geometric wall is
+      visible.
+      - **The arithmetic is `pyramid.ScaleToFight`**, which is fixed-point integer on purpose (see
+        `ascent.go`), so the tool must call it rather than reimplement it in floating point — two
+        answers to one question is the stale-sheet failure.
+      - **The step is the fight, not the floor**: `step = (floor-1)*FightsPerFloor + room`, which
+        is what makes floor 2's outer room harder than floor 1's boss.
+      - **Picking a motif means reading its records' bases** and drawing one column per record, so
+        the page answers "what does a Goblin Bomber actually hit for on floor 5" rather than
+        "what does base 100 do".
+      - **Rows past floor 8 are the point, not a flourish** — the endless tower is where the two
+        rates have to be felt, and a table stopping at the summit says nothing about them.
+      - It belongs under `docs/sheets/` with the rest, built by a tool under `tools/`, and it is
+        the one page there that is interactive: the bases and the rates are inputs, because the
+        question is "what would happen if" rather than "what is".
+
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
       of a drum tail past bar 13. That is inaudible and the tail is folded back over the
@@ -44,19 +65,45 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Next — where the game actually starts
 
-- [ ] **Procedurally generated enemies.** A file of hand-written records in
-      `data/enemies.json`, with the combat screen walking a shuffled band per floor, is
-      scaffolding. An enemy should be
-      **generated** from the floor, so the tower can be endless and a seed can reproduce it.
-      - **Assembled from parts, not rolled from scratch.** The pieces that exist or are already
-        decided: a **stat line** scaled by floor depth; a **deck** (`internal/decks` has the
-        enemy pile); an **affix** that transforms that deck rather than adding to it; a
-        **portrait**; and a **personality** — which plan it reaches for first.
-      - **Needs its own randomness stream**, per the stream rules in `CLAUDE.md`. Enemy
-        selection already reads `RunSeed ^ enemySelectSalt`; generation is what will draw on it
-        next, and must salt its own source rather than share one.
-      - **Blocked on nothing**, but the current records become **seeds for the generator or
-        test fixtures**, not the roster.
+- [ ] **Boss advantages** *(owner asked for this to be tracked)*. Every boss is the same boss
+      today: the tier puts it further up the ascent curve and nothing else separates it from the
+      creatures on its own floor. What is wanted is **one advantage per boss, drawn from a pool
+      the record carries**, out of a closed vocabulary checked at package init — the shape
+      `internal/achieve` is under, and for its reason: an advantage a file can assert into
+      existence is a boss rule nothing implements.
+      - **Different bosses carry different pools**, overlapping where two bosses deserve the same
+        trick.
+      - **Rolled off its own salted stream**, so a replayed run code meets the same boss with the
+        same advantage. See the `randomness` skill before adding the salt.
+      - The vocabulary itself is undecided. Candidates that need no new rules are a heavier deck
+        and a single enormous card; the rest — taking vitae, applying a status, healing on a
+        kill, an extra action — are new verbs, and a shield-raising boss contradicts the rule in
+        `CLAUDE.md` that creatures raise none.
+
+- [ ] **The tutorial is switched off and has to be re-taught** *(owner asked for this to be
+      tracked)*. `main.teachThisRun` returns false, so no run starts the lesson and the script in
+      `data/tutorial.json` is unreachable. What broke it is that the lesson pinned a creature and
+      a run code together: the taught hand, the taught blow and the creature's answering turn were
+      one tuned set, and the roster it named no longer exists.
+      - **Re-teaching it means choosing a motif, an element and a fresh run code** that together
+        deal a hand the script can describe, land a blow that wounds without killing, and leave
+        the creature alive to swing back — the constraints in the tutorial section of `CLAUDE.md`
+        still hold, and `SEEDSEARCH=1 go test ./internal/screens -run TestFindATutorialSeed` is
+        the search.
+      - **The three tests that guarded the promise are skipped, not deleted**, so they come back
+        with the seed rather than being rediscovered.
+
+- [ ] **What an element does to a creature** *(owner asked for this to be tracked)*. A creature is
+      instantiated as one element, and today that element picks the art and marks the attack cards
+      and nothing else — a fire goblin and an ice goblin resolve identically. What it could carry:
+      a status applied on hit, a resistance, a weakness, or something the floor's element does to
+      the **player** rather than to the creature.
+      - **It needs its own argument in `MECHANICS.md`** before it is written, and a status applied
+        by a creature is the first thing in the game to put one on the player.
+
+- [ ] **What makes an inner-chamber creature different from an outer one** *(owner asked for this
+      to be tracked)*, beyond its place on the ascent curve. The tier is a position today. Whether
+      it should also be a shape — a deck rule, a budget, a behaviour — is open.
 
 ### Cards and piles — presentation
 
@@ -291,4 +338,4 @@ go into a product licensed this way.
 | `github.com/ebitengine/oto/v3` | Apache 2.0, first-party to Ebitengine |
 | `golang.org/x/*`, incl. `golang.org/x/image` | BSD-3-Clause |
 | `Kubasta.ttf` | CC0, per the author's own FontStruct page |
-| Enemy portraits — PVGames, Humble *Isometric Assets Galore* | permits shipping inside a game |
+| Everything under `assets/` | first-party: generated from the prompts in `docs/art/`, or generated at runtime |

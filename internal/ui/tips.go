@@ -198,11 +198,23 @@ func EssenceTip(w session.Essence, targets int) (string, []string) {
 // only thing on screen that says a status is running, and nothing anywhere says what one *does* —
 // `statuses.json` has carried the sentence since the day statuses became data, with nowhere to print
 // it.
-func DuelistTip(name string, d combat.Duelist) (string, []string) {
-	lines := []string{
-		strconv.Itoa(d.DMG) + " DMG",
-		fmt.Sprintf("%d of %d HP", d.CurrentLife, d.MaxLife),
+// **The element is the line under the name** *(owner's call)*, ahead of the figures. It is the one
+// thing about an opponent that nothing else on the screen says in words — the card states it in the
+// colour of its picture and in nothing else — and it is what the floor was themed on, so it belongs
+// beside what the creature is called rather than among what it is worth. `TipLines` writes it in
+// that element's own colour, like every other element word in the game.
+//
+// **A fighter with no element gets no line.** The duelist is colourless and a row reading `Basic`
+// would be a word for the absence of one.
+func DuelistTip(name, element string, d combat.Duelist) (string, []string) {
+	var lines []string
+	if element != "" {
+		lines = append(lines, ElementWord(element))
 	}
+	lines = append(lines,
+		strconv.Itoa(d.DMG)+" DMG",
+		fmt.Sprintf("%d of %d HP", d.CurrentLife, d.MaxLife),
+	)
 
 	for _, id := range combat.AllStatuses() {
 		st := d.Statuses[id]
@@ -216,6 +228,18 @@ func DuelistTip(name string, d combat.Duelist) (string, []string) {
 		}
 	}
 	return name, lines
+}
+
+// ElementWord is an element key as it is written for a reader: "lightning" becomes "Lightning".
+//
+// **Title case rather than caps**, because it is set at tooltip size against a name above it, and
+// kubasta's caps stop being legible below about 14 points — see the note in the combat-screen
+// skill about VITAE rendering as VITRE.
+func ElementWord(element string) string {
+	if element == "" {
+		return ""
+	}
+	return strings.ToUpper(element[:1]) + element[1:]
 }
 
 func statusRounds(n int) string {

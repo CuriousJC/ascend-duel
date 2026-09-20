@@ -140,12 +140,12 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 // `statuses.json` since the day statuses became data, with nowhere to print it.
 func (s *CombatScene) hoverFighters(gs *state.GlobalState, at image.Point) {
 	if seat := ui.EnemyCardRect(gs); at.In(seat) {
-		title, lines := ui.DuelistTip(s.enemy.Name, s.enemy.Duelist)
+		title, lines := ui.DuelistTip(s.enemy.Name, s.enemy.Element, s.enemy.Duelist)
 		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 	if seat := ui.DuelistCardRect(gs); at.In(seat) {
-		title, lines := ui.DuelistTip(s.fighter.Name, s.fighter.Duelist)
+		title, lines := ui.DuelistTip(s.fighter.Name, s.fighter.Element, s.fighter.Duelist)
 		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 	}
 }

@@ -1,31 +1,23 @@
 {
   "Motif": "insects",
   "Name": "Insects",
-  "Draw": "TBD",
+  "Draw": "insects should be large enough to damage a human sized figure - large dog or bigger - and incorporate elements into their obvious offensive capabilities.  segmentations can also show the elements, as well as coloration for chitin or wings.",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "red coloring",
+    "ice": "blue coloring",
+    "lightning": "yellow coloring",
+    "earth": "green coloring",
+    "arcane": "purple coloring"
   },
-  "ValidFloors": [
-    1,
-    5
-  ],
+  "ValidFloors": [1, 5],
   "Records": [
     {
       "Record": "insects-outer-dragonfly",
       "Name": "Dragonfly",
       "Tier": "outer",
       "Art": "insects-dragonfly",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "A hunter that never lands. Two pairs of long veined wings held out flat and rigid, a slim rod of an abdomen trailing well past them, and a head that is almost entirely eye — two vast domes meeting in the middle above a small set of biting jaws. The six legs are folded forward into a basket under the thorax, the way this animal carries prey while still flying, and it hangs square onto the viewer as though it has stopped dead in the air.",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
       "HP": 85,
       "DMG": 6,
       "Actions": 6,
@@ -58,13 +50,8 @@
       "Name": "Hive Drone",
       "Tier": "outer",
       "Art": "insects-drone",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "A worker rather than a soldier. A furred barrel of a thorax and a banded abdomen tapering to the sting, with short blurred wings and stubby legs loaded with packed pollen at the joints. The head is blunt and simple and the antennae are short, and it is hunched slightly forward in the posture of something that has been carrying weight all day and will fight only because you are standing in the doorway.",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 100,
       "DMG": 5,
       "Actions": 5,
@@ -97,13 +84,8 @@
       "Name": "Iron Beetle",
       "Tier": "outer",
       "Art": "insects-beetle",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "Armour with legs. A single enormous domed carapace filling most of the frame, split down the centre line, with a heavy squared plate over the head and a stout horn rising off the front of it. The legs are short, thick and set wide, barely lifting the body off the ground. Draw it low and square onto the viewer so the shell reads as a wall rather than as a back.",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 130,
       "DMG": 4,
       "Actions": 4,
@@ -136,13 +118,8 @@
       "Name": "Giant Spider",
       "Tier": "inner",
       "Art": "insects-spider",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "Reach before bulk. A compact body slung low between eight long angular legs that run out of the frame at both sides, every joint standing high above the body itself. The front of the head carries a bank of small eyes in two rows and a pair of heavy fangs held slightly apart, and stiff hairs stand up along every limb. Frame it high and wide so the legs make the picture and the body is the small dense thing in the middle of them.",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 125,
       "DMG": 7,
       "Actions": 6,
@@ -175,13 +152,8 @@
       "Name": "Blade Mantis",
       "Tier": "inner",
       "Art": "insects-mantis",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "Held perfectly still, and about to not be. A long upright body balanced on four thin walking legs, with the two raised forelimbs folded up in front of the chest — spined along the inner edge, hooked at the tip, the single most worked part of the animal. A narrow triangular head is turned back over its own shoulder to look at the viewer, and the folded wing-cases lie flat down the length of the back.",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 145,
       "DMG": 8,
       "Actions": 5,
@@ -214,13 +186,8 @@
       "Name": "Gorge Centipede",
       "Tier": "inner",
       "Art": "insects-centipede",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "earth"
-      ],
+      "Draw": "A body that keeps going. The front third of an enormous segmented column rearing up off the ground, each plate overlapping the next and each carrying its own pair of legs, with the rest of the length coiling away behind it and out of the bottom of the picture. At the head, a pair of curved venom claws sit under short blunt antennae. Frame it so the viewer cannot see where it ends.",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
       "HP": 170,
       "DMG": 6,
       "Actions": 5,
@@ -253,13 +220,8 @@
       "Name": "The Broodmother",
       "Tier": "boss",
       "Art": "insects-broodmother",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "Swollen past moving. A grotesquely distended abdomen, taut and glossy, dwarfing the small original body at the front of it and propped on legs that are now far too thin for the load. Clustered eggs are packed into the folds where the abdomen meets the thorax and a few newly hatched young are already up on her back. The head is small and high and turned onto the viewer, and she is going nowhere — this is a creature that has become a place.",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 240,
       "DMG": 10,
       "Actions": 6,
@@ -300,13 +262,8 @@
       "Name": "Emperor Hornet",
       "Tier": "boss",
       "Art": "insects-hornet",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "earth"
-      ],
+      "Draw": "Built around one weapon. A heavy wasp hanging in the air with its legs trailing loose beneath it, the abdomen curled forward and down so the long barbed sting is the nearest thing in the picture to the viewer. Broad hard plates over a wide head, mandibles open, short rapid wings held in a blur behind. Everything in the drawing points at the sting.",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
       "HP": 215,
       "DMG": 12,
       "Actions": 6,
@@ -347,13 +304,8 @@
       "Name": "Tomb Scarab",
       "Tier": "boss",
       "Art": "insects-scarab",
-      "Draw": "TBD",
-      "Affinities": [
-        "ice",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "Old, polished and patient. A broad oval carapace worked like a burial ornament — the plates ridged and inlaid, the front head-plate fanned out into a row of blunt teeth — carried on thick digging legs half sunk in fine dust. Grave goods and small bones lie in that dust around it, and it faces the viewer head-on and low, the way something interrupted mid-meal turns round.",
+      "Affinities": ["ice", "lightning", "earth", "arcane"],
       "HP": 265,
       "DMG": 9,
       "Actions": 6,

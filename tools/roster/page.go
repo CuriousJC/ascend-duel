@@ -263,6 +263,20 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
   h2.floor span {
     font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 12px;
   }
+  /* A motif folds away. The page is one section per motif and a roster this deep is mostly
+     scrolling past the motifs you are not reviewing, so the heading is the handle: a <details>,
+     open by default, which keeps the whole roster in the file and prints and reads with
+     scripting off. */
+  details.motif > summary { list-style: none; cursor: pointer; }
+  details.motif > summary::-webkit-details-marker { display: none; }
+  /* The caret is drawn in the heading rather than left to the browser's marker, which would sit
+     on its own line above a block-level h2 and read as a bullet rather than as a handle. */
+  h2.floor::before {
+    content: "▾"; color: var(--dim); font-weight: 400;
+    display: inline-block; width: 1em; margin-left: -1em;
+  }
+  details.motif:not([open]) > summary h2.floor::before { content: "▸"; }
+  details.motif > summary:hover h2.floor { color: var(--dim); }
   .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
   .facts code { color: var(--ink); }
   .note { color: var(--dim); font-size: 12.5px; max-width: 74ch; margin: 12px 0 0; }
@@ -347,11 +361,14 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
 {{range .Groups}}
 <section class="sheet-group" data-motif="{{.Motif}}" data-floor="{{.Floors}}">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     {{.Label}}
     <span>{{len .Plates}} records · HP {{.MinHP}}–{{.MaxHP}} · DMG {{.MinDMG}}–{{.MaxDMG}} ·
       AP {{.MinAP}}–{{.MaxAP}} · {{.Mix}}</span>
   </h2>
+  </summary>
 
   {{if .Coverage}}
   <table class="cover">
@@ -419,6 +436,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       {{if .Entry.Draw}}<p class="draw">{{.Entry.Draw}}</p>{{end}}
     </div>
   {{end}}
+  </details>
 </section>
 {{end}}
 `))

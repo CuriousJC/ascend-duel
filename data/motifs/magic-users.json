@@ -1,13 +1,13 @@
 {
   "Motif": "magic-users",
   "Name": "Magic-users",
-  "Draw": "TBD",
+  "Draw": "Magic users are ordinary human bodies doing extraordinary things with their hands. Heavy layered robes, hoods, stoles, and belts hung with tools and tokens; staves, rods, open books, chalk and written work. The physique says nothing - the read is the face, the hands, and what the hands are making. The element belongs to the spell rather than to the caster, so it lives in the light coming off the hands and the staff, and that light is what illuminates the face.",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "The spell is orange. Flame standing clear of the palms and the staff head, sparks lifting, the robe hems edged hot, and every shadow on the face thrown upward by what is being cast.",
+    "ice": "The spell is pale blue. Frost spreading from the fingertips back across the sleeve, a fog of cold pouring off the open hand, rime climbing the staff.",
+    "lightning": "The spell is yellow. Arcs standing between the fingers and jumping to the staff, hair and robe hems lifted, the flicker sharp and blue-white at its core.",
+    "earth": "The spell is green. Rough stone and crystal growing up the forearms and out of the staff head, dust hanging in the air, the robes dragged heavy by the weight of it.",
+    "arcane": "The spell is violet. Script and sigils burning in the air around the hands, light leaking from the eyes and the mouth, and the edges of the robe not quite finished settling."
   },
   "ValidFloors": [
     4,
@@ -19,7 +19,7 @@
       "Name": "Apprentice",
       "Tier": "outer",
       "Art": "magic-users-apprentice",
-      "Draw": "TBD",
+      "Draw": "Young, in an ill-fitting robe thrown over ordinary clothes, one hand out with a sigil half-formed and visibly going wrong. Alarmed about it.",
       "Affinities": [
         "fire",
         "ice",
@@ -58,7 +58,7 @@
       "Name": "Hedge Witch",
       "Tier": "outer",
       "Art": "magic-users-hedgewitch",
-      "Draw": "TBD",
+      "Draw": "An old woman in layered shawls hung with charms, a bundle of cut sticks in one hand and a small knife in the other, a written curse pinned to her sleeve.",
       "Affinities": [
         "ice",
         "lightning",
@@ -97,7 +97,7 @@
       "Name": "Pact Warlock",
       "Tier": "outer",
       "Art": "magic-users-warlock",
-      "Draw": "TBD",
+      "Draw": "A man in a fine dark coat rather than a robe, one sleeve rolled back to show a contract cut into the forearm, offering his hand as though to shake on it.",
       "Affinities": [
         "fire",
         "lightning",
@@ -136,7 +136,7 @@
       "Name": "Hexwright",
       "Tier": "inner",
       "Art": "magic-users-hexwright",
-      "Draw": "TBD",
+      "Draw": "Cold and precise in a long buttoned coat, drawing a sigil in the air with two fingers while holding an open ledger in the other hand.",
       "Affinities": [
         "ice",
         "lightning",
@@ -175,7 +175,7 @@
       "Name": "Stormcaller",
       "Tier": "inner",
       "Art": "magic-users-stormcaller",
-      "Draw": "TBD",
+      "Draw": "Arms thrown wide, head back, robes and hair streaming upward. The spell has already left.",
       "Affinities": [
         "fire",
         "lightning",
@@ -214,7 +214,7 @@
       "Name": "Pyre-Keeper",
       "Tier": "inner",
       "Art": "magic-users-pyrekeeper",
-      "Draw": "TBD",
+      "Draw": "A masked figure in heavy scorched vestments holding a covered brazier in both hands, head bowed over the lid.",
       "Affinities": [
         "fire",
         "ice",
@@ -253,7 +253,7 @@
       "Name": "The Archmage",
       "Tier": "boss",
       "Art": "magic-users-archmage",
-      "Draw": "TBD",
+      "Draw": "An old man in the finest robes in the game, staff planted, one hand open and relaxed. Entirely unbothered; the light in the picture is his.",
       "Affinities": [
         "fire",
         "lightning",
@@ -300,7 +300,7 @@
       "Name": "The Voidtouched",
       "Tier": "boss",
       "Art": "magic-users-voidtouched",
-      "Draw": "TBD",
+      "Draw": "A figure with a hole through it. The robe hangs empty around a rift opened through the chest, and both hands are gripping the torn edges of it, holding it open.",
       "Affinities": [
         "fire",
         "ice",
@@ -347,7 +347,7 @@
       "Name": "The Discordant",
       "Tier": "boss",
       "Art": "magic-users-discordant",
-      "Draw": "TBD",
+      "Draw": "A caster out of tune with itself. Three overlapping outlines of the same figure a half-step apart, hands plucking at strings that are not there.",
       "Affinities": [
         "fire",
         "ice",

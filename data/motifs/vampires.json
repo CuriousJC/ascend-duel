@@ -1,13 +1,13 @@
 {
   "Motif": "vampires",
   "Name": "Vampires",
-  "Draw": "TBD",
+  "Draw": "Vampires are aristocratic undead in human shape: tall, thin, very still, with bloodless white skin pulled tight over the bone, dark eyes set deep, long nails and visible teeth. Their clothing is fine and decades out of date, and worn perfectly - high collars, brocade, lace, long coats, mourning dress. The lesser ones are further gone and further down: hunched, ragged, more animal than noble. The only red in the picture is where blood actually is.",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "The clothing smoulders at the hems and the skin has cracked and gone black at every exposed edge, as though the light has already found it. Hot orange from below.",
+    "ice": "Frost on the collar and the lashes, the skin gone blue-white and glassy. Everything around it fogs and it has no breath of its own.",
+    "lightning": "Arcs run the rings, the buttons and the fine chain at the throat, the hair lifts, and the eyes are lit yellow from inside.",
+    "earth": "Grave soil still on the clothing and roots grown through the coat. The skin is dried dark and drawn like something dug up, in green-black.",
+    "arcane": "Violet light behind the eyes and under the skin picking out the veins, the edges of the figure smearing, and nothing of it reflecting in anything."
   },
   "ValidFloors": [
     4,
@@ -19,7 +19,7 @@
       "Name": "Blood Thrall",
       "Tier": "outer",
       "Art": "vampires-thrall",
-      "Draw": "TBD",
+      "Draw": "A human servant, not yet turned. Pale, bitten at the throat, in a bloodied shirt, holding a small knife in one hand and offering the other wrist up.",
       "Affinities": [
         "fire",
         "ice",
@@ -58,7 +58,7 @@
       "Name": "Pale Consort",
       "Tier": "outer",
       "Art": "vampires-consort",
-      "Draw": "TBD",
+      "Draw": "A beautiful pale figure in an out-of-date gown or coat, one hand raised toward the viewer's face. Entirely calm.",
       "Affinities": [
         "fire",
         "ice",
@@ -97,7 +97,7 @@
       "Name": "Crypt Ghoul",
       "Tier": "outer",
       "Art": "vampires-ghoul",
-      "Draw": "TBD",
+      "Draw": "Hunched and naked but for grave rags, skin grey, the jaw too wide for the face, fingers ending in digging claws. Crouched low and looking up.",
       "Affinities": [
         "ice",
         "lightning",
@@ -136,7 +136,7 @@
       "Name": "Lesser Count",
       "Tier": "inner",
       "Art": "vampires-count",
-      "Draw": "TBD",
+      "Draw": "A young nobleman in a high-collared coat with one hand resting on the hilt at his hip and his chin lifted. Recently powerful and enjoying it.",
       "Affinities": [
         "fire",
         "ice",
@@ -175,7 +175,7 @@
       "Name": "Blood Shade",
       "Tier": "inner",
       "Art": "vampires-shade",
-      "Draw": "TBD",
+      "Draw": "One arm and shoulder already unravelling into red mist while the face stays intact and turns toward the viewer.",
       "Affinities": [
         "ice",
         "lightning",
@@ -214,7 +214,7 @@
       "Name": "The Flenser",
       "Tier": "inner",
       "Art": "vampires-flenser",
-      "Draw": "TBD",
+      "Draw": "An apron over fine clothes, sleeves pinned back, a long thin skinning knife held in each hand. Precise and unhurried.",
       "Affinities": [
         "fire",
         "lightning",
@@ -253,7 +253,7 @@
       "Name": "The Elder",
       "Tier": "boss",
       "Art": "vampires-elder",
-      "Draw": "TBD",
+      "Draw": "Ancient and desiccated in layered antique robes, skin like parchment stretched over the skull, eyes sunk to two points of light. Seated, hands folded.",
       "Affinities": [
         "ice",
         "lightning",
@@ -300,7 +300,7 @@
       "Name": "The Pale Watch",
       "Tier": "boss",
       "Art": "vampires-palewatch",
-      "Draw": "TBD",
+      "Draw": "Tall and straight in a long pale uniform coat with frost at every seam, gloved hands clasped in front. Utterly still, and watching.",
       "Affinities": [
         "fire",
         "lightning",
@@ -347,7 +347,7 @@
       "Name": "The Crimson Bride",
       "Tier": "boss",
       "Art": "vampires-crimson",
-      "Draw": "TBD",
+      "Draw": "A woman in a red gown, arms bare and spattered to the elbow, a slim rapier in one hand and the veil thrown back off her face. Smiling.",
       "Affinities": [
         "fire",
         "ice",

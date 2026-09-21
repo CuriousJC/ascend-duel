@@ -1,13 +1,13 @@
 {
   "Motif": "elves",
   "Name": "Elves",
-  "Draw": "TBD",
+  "Draw": "Elves are tall, slim and very still. Long limbs, narrow faces, high cheekbones, swept pointed ears, and long hair bound back. Their gear is grown rather than forged - layered cloth and soft leather cut in leaf shapes, bark and living wood worked into bowstaves and hilts, silver used only as fine line detail. Nothing about them is bulky and nothing about them is hurried.",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "The cloth is burnt autumn at every hem and smoking faintly, embers are caught in the hair, and the wood of their gear is edged hot orange as though lit along the grain.",
+    "ice": "Frost forms along the folds of the cloth and down the bowstring, the hair is stiff with rime, and the skin has gone bloodless white. Pale blue light and visible breath.",
+    "lightning": "The hair lifts and floats, arcs run the length of the stave and the arrow, and every silver line on the gear flickers yellow.",
+    "earth": "Moss and lichen have grown into the cloth, bark has thickened over the forearms, and root and green thread run through the hair. The wood of their weapons is still alive.",
+    "arcane": "Violet light along every silver line and inside the eyes, and the outline of the figure is faintly doubled, as though it is standing slightly to one side of itself."
   },
   "ValidFloors": [
     3,
@@ -19,7 +19,7 @@
       "Name": "Wood Scout",
       "Tier": "outer",
       "Art": "elves-scout",
-      "Draw": "TBD",
+      "Draw": "Light, half-turned away, a short bow drawn to the cheek under a leaf-cut hood. Already loosing.",
       "Affinities": [
         "fire",
         "ice",
@@ -58,7 +58,7 @@
       "Name": "Glade Blade",
       "Tier": "outer",
       "Art": "elves-blade",
-      "Draw": "TBD",
+      "Draw": "A duelist's stance: a long straight single-edged blade held low and back, the empty hand forward and open. Completely calm.",
       "Affinities": [
         "fire",
         "ice",
@@ -97,7 +97,7 @@
       "Name": "Thorn Warden",
       "Tier": "outer",
       "Art": "elves-warden",
-      "Draw": "TBD",
+      "Draw": "Wrapped in thorn and bramble that has been worked into the armour itself, a barbed whip of live briar coiled in one hand.",
       "Affinities": [
         "ice",
         "lightning",
@@ -136,7 +136,7 @@
       "Name": "Longbow Archer",
       "Tier": "inner",
       "Art": "elves-archer",
-      "Draw": "TBD",
+      "Draw": "A longbow whose stave runs the full height of the picture, drawn to full and held there, the face steady beside the string.",
       "Affinities": [
         "fire",
         "ice",
@@ -175,7 +175,7 @@
       "Name": "Blade Dancer",
       "Tier": "inner",
       "Art": "elves-dancer",
-      "Draw": "TBD",
+      "Draw": "Mid-turn, two slim blades describing an arc through the frame, cloth trailing behind the spin. The movement is all in the shoulders.",
       "Affinities": [
         "ice",
         "lightning",
@@ -214,7 +214,7 @@
       "Name": "Moon Singer",
       "Tier": "inner",
       "Art": "elves-singer",
-      "Draw": "TBD",
+      "Draw": "Mouth open in song, both arms raised, silver at the throat and brow. There is no weapon, and the air around the head is visibly shivering.",
       "Affinities": [
         "fire",
         "lightning",
@@ -253,7 +253,7 @@
       "Name": "The Silver Queen",
       "Tier": "boss",
       "Art": "elves-queen",
-      "Draw": "TBD",
+      "Draw": "Crowned with a silver bough that was grown rather than made, in a long pale mantle, one hand raised in command. Looking down at the viewer.",
       "Affinities": [
         "ice",
         "lightning",
@@ -300,7 +300,7 @@
       "Name": "The Skyhunter",
       "Tier": "boss",
       "Art": "elves-skyhunter",
-      "Draw": "TBD",
+      "Draw": "A bow held one-handed across the body with an arrow already nocked, hawk feathers and fittings through the gear, head tipped back as though sighting something high up.",
       "Affinities": [
         "fire",
         "lightning",
@@ -347,7 +347,7 @@
       "Name": "The Exile",
       "Tier": "boss",
       "Art": "elves-exile",
-      "Draw": "TBD",
+      "Draw": "Cut off from it. The cloak is grey where the others are living, the hair is cut short, the worked wood in the gear is dead and split, and a single curved knife hangs loose in one hand.",
       "Affinities": [
         "fire",
         "ice",

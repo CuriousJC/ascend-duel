@@ -1,13 +1,13 @@
 {
   "Motif": "barbarians",
   "Name": "Barbarians",
-  "Draw": "TBD",
+  "Draw": "Barbarians are big cold-country humans built out of meat and weather. Bare arms and shoulders whatever the season, fur half-cloaks and lashed hide over the rest, braided hair and beards ringed with bone and metal, old scars and inked marks on the skin. Their gear is plain and heavy: iron sharpened so many times the shape has changed, wooden hafts bound in cord and hide, trophies taken off people. No plate, no uniform, nothing matched. They stand wide and square and look straight at the viewer.",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "Fire is carried rather than worn. Soot up the forearms, fur singed back at the hems, the working end of the iron glowing dull orange, sparks lifting past the beard. The skin keeps its own colour and picks up a hot orange rim from below.",
+    "ice": "Ice rides on them. Rime in the beard braids and the fur, breath standing out in a plume, the hide gone stiff and pale, hands and nose bloodless. Cold pale blue light.",
+    "lightning": "Lightning lifts everything. Hair and fur stand out from the body, arcs crawl between the iron fittings and the rings in the beard, the eyes are too wide and too bright, and every metal thing carried is pitted and haloed yellow.",
+    "earth": "Earth makes them heavier. Dried mud and dust caked over the skin in plates that crack at the joints, rough green stone worked into the straps and the beard rings, knuckles gone hard and mineral. Set low and dug in.",
+    "arcane": "Arcane lights them from inside. The inked marks burn violet through the skin, light comes out of the mouth and from behind the eyes with no source in the picture, and the outline of the figure smears very slightly."
   },
   "ValidFloors": [
     2,
@@ -19,7 +19,7 @@
       "Name": "Steppe Raider",
       "Tier": "outer",
       "Art": "barbarians-raider",
-      "Draw": "TBD",
+      "Draw": "A rider on foot. Stripped to the waist under a fur half-cloak, a curved knife reversed in each fist, weight already shifting off one side. Grinning.",
       "Affinities": [
         "fire",
         "lightning",
@@ -58,7 +58,7 @@
       "Name": "Axeman",
       "Tier": "outer",
       "Art": "barbarians-axeman",
-      "Draw": "TBD",
+      "Draw": "A squat wall of a man with a broad bearded axe held two-handed across the chest, no shield, both forearms wrapped in cord. Braced, and waiting for you to come to him.",
       "Affinities": [
         "fire",
         "ice",
@@ -97,7 +97,7 @@
       "Name": "Shieldbreaker",
       "Tier": "outer",
       "Art": "barbarians-shieldbreaker",
-      "Draw": "TBD",
+      "Draw": "Carries a long iron maul with a flattened head, held up beside the shoulder ready to come down. A broken shield rim is hooked to the belt as a trophy.",
       "Affinities": [
         "fire",
         "ice",
@@ -136,7 +136,7 @@
       "Name": "Berserker",
       "Tier": "inner",
       "Art": "barbarians-berserk",
-      "Draw": "TBD",
+      "Draw": "Stripped bare but for a strap, eyes rolled white, mouth open mid-scream, an axe held loose and forgotten in one hand. Lunging straight at the viewer.",
       "Affinities": [
         "fire",
         "ice",
@@ -175,7 +175,7 @@
       "Name": "Hetman",
       "Tier": "inner",
       "Art": "barbarians-hetman",
-      "Draw": "TBD",
+      "Draw": "A chieftain in a fur mantle with a gold-ringed braided beard, a long single-handed sword raised in a broad arc, the other hand open and giving an order. Commanding rather than charging.",
       "Affinities": [
         "fire",
         "ice",
@@ -214,7 +214,7 @@
       "Name": "Bonecaller",
       "Tier": "inner",
       "Art": "barbarians-bonecaller",
-      "Draw": "TBD",
+      "Draw": "A shaman hung with animal skulls and rattles, chalk handprints on the face and chest, one hand raised holding a bone fetish. Looking past the viewer at something behind them.",
       "Affinities": [
         "fire",
         "ice",
@@ -253,7 +253,7 @@
       "Name": "The Khan",
       "Tier": "boss",
       "Art": "barbarians-khan",
-      "Draw": "TBD",
+      "Draw": "An old warlord in laminated hide and a fur-trimmed helm, a short recurve bow held across the body with a fist of arrows in the draw hand. Unhurried, looking over the viewer's shoulder at the rest of it.",
       "Affinities": [
         "fire",
         "ice",
@@ -300,7 +300,7 @@
       "Name": "The Skull King",
       "Tier": "boss",
       "Art": "barbarians-skullking",
-      "Draw": "TBD",
+      "Draw": "A giant in a crown of stacked skulls jammed down over the brow, a club of bound femurs raised beside the head, teeth filed. Head tipped forward so the crown is the first thing read.",
       "Affinities": [
         "fire",
         "ice",
@@ -347,7 +347,7 @@
       "Name": "The Red Widow",
       "Tier": "boss",
       "Art": "barbarians-widow",
-      "Draw": "TBD",
+      "Draw": "Lean and wiry in red-dyed furs, arms bare and scored elbow to shoulder with tally cuts, a thin knife held point-down in each hand. Smiling.",
       "Affinities": [
         "ice",
         "lightning",

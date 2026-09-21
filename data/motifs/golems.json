@@ -1,31 +1,23 @@
 {
   "Motif": "golems",
   "Name": "Golems",
-  "Draw": "TBD",
+  "Draw": "every golem is going to have element colors being the vein that runs through the rock ",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "red glowing veins in the rock",
+    "ice": "blue glowing veins in the rock",
+    "lightning": "yellow glowing veins in the rock",
+    "earth": "green glowing veins in the rock",
+    "arcane": "purple glowing veins in the rock"
   },
-  "ValidFloors": [
-    4,
-    8
-  ],
+  "ValidFloors": [4, 8],
   "Records": [
     {
-      "Record": "golems-outer-clay",
-      "Name": "Clay Golem",
+      "Record": "golems-outer-copper",
+      "Name": "Copper Golem",
       "Tier": "outer",
-      "Art": "golems-clay",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Art": "golems-copper",
+      "Draw": "a copper golem gone green with verdigris across the shoulders and back, its plates riveted together at the joints",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 195,
       "DMG": 7,
       "Actions": 4,
@@ -54,17 +46,12 @@
       ]
     },
     {
-      "Record": "golems-outer-scrap",
-      "Name": "Scrap Golem",
+      "Record": "golems-outer-amber",
+      "Name": "Amber Golem",
       "Tier": "outer",
-      "Art": "golems-scrap",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Art": "golems-amber",
+      "Draw": "an amber golem, translucent and honey coloured, with insects caught and suspended inside its chest and arms",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 165,
       "DMG": 9,
       "Actions": 5,
@@ -93,17 +80,12 @@
       ]
     },
     {
-      "Record": "golems-outer-stone",
-      "Name": "Stone Golem",
+      "Record": "golems-outer-wood",
+      "Name": "Wood Golem",
       "Tier": "outer",
-      "Art": "golems-stone",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "earth"
-      ],
+      "Art": "golems-wood",
+      "Draw": "a wood golem grown out of a knotted root ball, with living branches for arms and thick bark plating over the shoulders",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
       "HP": 235,
       "DMG": 6,
       "Actions": 4,
@@ -136,13 +118,8 @@
       "Name": "Iron Golem",
       "Tier": "inner",
       "Art": "golems-iron",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "a heavy iron golem of riveted black plate, standing square, with rust bleeding out of every seam",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 280,
       "DMG": 9,
       "Actions": 4,
@@ -171,17 +148,12 @@
       ]
     },
     {
-      "Record": "golems-inner-glass",
-      "Name": "Glass Golem",
+      "Record": "golems-inner-quartz",
+      "Name": "Quartz Golem",
       "Tier": "inner",
-      "Art": "golems-glass",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "earth"
-      ],
+      "Art": "golems-quartz",
+      "Draw": "a quartz golem built out of clustered milky crystal, faceted and sharp at every edge",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
       "HP": 190,
       "DMG": 12,
       "Actions": 6,
@@ -214,13 +186,8 @@
       "Name": "Bone Golem",
       "Tier": "inner",
       "Art": "golems-bone",
-      "Draw": "TBD",
-      "Affinities": [
-        "ice",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "a bone golem lashed together out of the ribs and skulls of several different animals, none of them matching",
+      "Affinities": ["ice", "lightning", "earth", "arcane"],
       "HP": 240,
       "DMG": 10,
       "Actions": 5,
@@ -253,13 +220,8 @@
       "Name": "The Colossus",
       "Tier": "boss",
       "Art": "golems-colossus",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "earth"
-      ],
+      "Draw": "an obsidian golem, larger than any other golem, looming with well defined muscles of a barbarian queen and flowing lapis dreadlocks",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
       "HP": 430,
       "DMG": 12,
       "Actions": 6,
@@ -300,13 +262,8 @@
       "Name": "The Sentinel",
       "Tier": "boss",
       "Art": "golems-sentinel",
-      "Draw": "TBD",
-      "Affinities": [
-        "ice",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "a bloodstone golem with a thick bone spear that has a malachite stalagtite attached to the end",
+      "Affinities": ["ice", "lightning", "earth", "arcane"],
       "HP": 395,
       "DMG": 14,
       "Actions": 6,
@@ -347,13 +304,8 @@
       "Name": "The Juggernaut",
       "Tier": "boss",
       "Art": "golems-juggernaut",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "a tiny hematite golem that looks almost cute instead of intimidating with eyes of jade",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
       "HP": 370,
       "DMG": 16,
       "Actions": 6,

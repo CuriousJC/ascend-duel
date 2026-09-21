@@ -1,13 +1,13 @@
 {
   "Motif": "dwarves",
   "Name": "Dwarves",
-  "Draw": "TBD",
+  "Draw": "Dwarves are short and nearly as wide as they are tall, with thick forearms, heavy brows, and a beard that is the biggest thing about them - braided, ringed, and running down out of the picture. Everything they wear is made rather than found: riveted plate, mail, leather aprons, tools slung and clipped along belts, and metalwork that is clean, deliberate and worn from use. They plant themselves and do not lean.",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "Forge heat. The beard singed back and full of soot, black in every crease of the skin, the iron glowing dull orange at its working end and sparks standing in the air around it.",
+    "ice": "Rime along the mail rings and down the beard braids, breath fogging heavily, the leather gone stiff and white. The skin is chapped and ruddy under cold blue light.",
+    "lightning": "Arcs crawl the rivets and run the mail, the beard and hair lift out of their braids, and every tool on the belt is pitted and haloed yellow.",
+    "earth": "Rock dust over everything, green stone grit packed into the beard, raw ore set into the plate and grown through the leather. The knuckles have gone to stone.",
+    "arcane": "Violet runework burning along the metal and through the beard rings, and light coming out from under the helm rim and the brow with no source in the picture."
   },
   "ValidFloors": [
     2,
@@ -19,7 +19,7 @@
       "Name": "Deep Digger",
       "Tier": "outer",
       "Art": "dwarves-digger",
-      "Draw": "TBD",
+      "Draw": "In a leather apron and a lamp-fitted helm, both hands on a heavy pick held mid-swing across the body, grimed black to the elbows.",
       "Affinities": [
         "fire",
         "ice",
@@ -58,7 +58,7 @@
       "Name": "Forge Smith",
       "Tier": "outer",
       "Art": "dwarves-smith",
-      "Draw": "TBD",
+      "Draw": "Stripped to the apron, enormous through the shoulders, a hammer in one fist and tongs in the other gripping a bar of worked iron up beside the head.",
       "Affinities": [
         "fire",
         "ice",
@@ -97,7 +97,7 @@
       "Name": "Tunnel Scout",
       "Tier": "outer",
       "Art": "dwarves-scout",
-      "Draw": "TBD",
+      "Draw": "The lean one. Cropped beard, light mail, a short axe in one hand and a shuttered lantern in the other, head turned and listening rather than looking.",
       "Affinities": [
         "fire",
         "ice",
@@ -136,7 +136,7 @@
       "Name": "Shield Dwarf",
       "Tier": "inner",
       "Art": "dwarves-shieldman",
-      "Draw": "TBD",
+      "Draw": "Almost entirely shield. A tower shield with a heavy central boss held forward and covering him to the eyes, with only a helm rim and one eye above it.",
       "Affinities": [
         "fire",
         "ice",
@@ -175,7 +175,7 @@
       "Name": "Runesmith",
       "Tier": "inner",
       "Art": "dwarves-runesmith",
-      "Draw": "TBD",
+      "Draw": "A chisel in one hand and the other palm held out with a cut rune burning on it. The arms carry more marks than the metal does.",
       "Affinities": [
         "fire",
         "ice",
@@ -214,7 +214,7 @@
       "Name": "Thane",
       "Tier": "inner",
       "Art": "dwarves-thane",
-      "Draw": "TBD",
+      "Draw": "A lord in fine mail with a ringed and forked beard, one hand axe cocked back to throw and two more on the belt.",
       "Affinities": [
         "ice",
         "lightning",
@@ -253,7 +253,7 @@
       "Name": "The King Under",
       "Tier": "boss",
       "Art": "dwarves-kingunder",
-      "Draw": "TBD",
+      "Draw": "Crowned, in gold-chased plate, a short stone sceptre held across the chest in both hands, the beard forked and enormous. Shut like a gate.",
       "Affinities": [
         "fire",
         "ice",
@@ -300,7 +300,7 @@
       "Name": "The Forge-Father",
       "Tier": "boss",
       "Art": "dwarves-forgefather",
-      "Draw": "TBD",
+      "Draw": "An ancient smith, beard burned back to stubble, a scorched leather apron over bare arms, holding a crucible up in long tongs beside his head.",
       "Affinities": [
         "ice",
         "lightning",
@@ -347,7 +347,7 @@
       "Name": "The Deep Warden",
       "Tier": "boss",
       "Art": "dwarves-deepwarden",
-      "Draw": "TBD",
+      "Draw": "Gaunt for a dwarf, a hood pulled over mail, a shuttered lantern raised in one hand and a long pick haft in the other. The face is mostly shadow under the hood.",
       "Affinities": [
         "fire",
         "lightning",

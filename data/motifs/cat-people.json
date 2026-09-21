@@ -1,13 +1,13 @@
 {
   "Motif": "cat-people",
   "Name": "Cat-people",
-  "Draw": "TBD",
+  "Draw": "Cat people are upright humanoid cats on a lean human frame: a proper muzzle, whiskers, slit pupils, ears that move independently, short fur over the whole body, and a tail always in the picture. Clothing is minimal and cut around the fur - wraps, belts, harnesses, a fitted jacket at most - so the animal reads before the costume does. Hands are hands with claws in them, and the claws are out. Fur length and pattern vary between them the way breeds do.",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "Fur singed and smoking at the tips, ember light down in the coat, the guard hairs and the claws edged hot orange. The pattern of the fur is still visible under the burn.",
+    "ice": "Frost on the whiskers and the ear tips, the coat puffed out and crusted with rime, breath visible. Claws like blue glass and the eyes watering.",
+    "lightning": "The coat stands up in a charged ruff, sparks jump between the claw tips and every buckle on the harness, the ears are rigid and the pupils blown wide. Yellow halo on the metal.",
+    "earth": "Fur matted flat with dust and dried mud, rough green stone beads worked into the wraps, the claws blunted to dark mineral. Low and planted rather than poised.",
+    "arcane": "Violet light behind the slit pupils and running the length of the tail, the markings in the fur lit from underneath, and the edges of the silhouette not quite settled."
   },
   "ValidFloors": [
     2,
@@ -19,7 +19,7 @@
       "Name": "Prowler",
       "Tier": "outer",
       "Art": "cat-people-prowler",
-      "Draw": "TBD",
+      "Draw": "Short-furred and lean, crouched low with the shoulders up above the head and every claw spread. Already leaving the ground.",
       "Affinities": [
         "fire",
         "ice",
@@ -58,7 +58,7 @@
       "Name": "Alley Sneak",
       "Tier": "outer",
       "Art": "cat-people-sneak",
-      "Draw": "TBD",
+      "Draw": "A scruffy alley cat in a hooded wrap, one hand on a shiv and the other closed around something it has taken. Looking back over its shoulder at the viewer.",
       "Affinities": [
         "ice",
         "lightning",
@@ -97,7 +97,7 @@
       "Name": "Claw Guard",
       "Tier": "outer",
       "Art": "cat-people-clawguard",
-      "Draw": "TBD",
+      "Draw": "Heavy built and broad through the chest, in a studded harness across the shoulders. Both hands up and open with the claws fully extended, holding ground rather than advancing.",
       "Affinities": [
         "fire",
         "lightning",
@@ -136,7 +136,7 @@
       "Name": "Night Stalker",
       "Tier": "inner",
       "Art": "cat-people-stalker",
-      "Draw": "TBD",
+      "Draw": "Black-furred and long-limbed, half out of the light, ears flat and body dropped low. Only the eyes and the claws catch anything.",
       "Affinities": [
         "ice",
         "lightning",
@@ -175,7 +175,7 @@
       "Name": "Whisker Duelist",
       "Tier": "inner",
       "Art": "cat-people-duelist",
-      "Draw": "TBD",
+      "Draw": "Slim and upright in a fitted jacket, a thin blade extended in one hand and the other arm swept back behind. Whiskers forward, perfectly balanced.",
       "Affinities": [
         "fire",
         "lightning",
@@ -214,7 +214,7 @@
       "Name": "Maneater",
       "Tier": "inner",
       "Art": "cat-people-maneater",
-      "Draw": "TBD",
+      "Draw": "A huge broad-headed brute with a scarred muzzle and a mane-like ruff, jaws open wide, one heavy hand reaching straight out at the viewer.",
       "Affinities": [
         "fire",
         "ice",
@@ -253,7 +253,7 @@
       "Name": "The Matriarch",
       "Tier": "boss",
       "Art": "cat-people-matriarch",
-      "Draw": "TBD",
+      "Draw": "An old queen gone silver at the muzzle, seated upright in layered wraps and rings, hands resting with the claws out. Heavy-lidded and entirely unbothered.",
       "Affinities": [
         "fire",
         "lightning",
@@ -300,7 +300,7 @@
       "Name": "The Shadow Cat",
       "Tier": "boss",
       "Art": "cat-people-shadow",
-      "Draw": "TBD",
+      "Draw": "Almost not there. A flat black silhouette with two lit eyes and the suggestion of a muzzle, the only solid thing in it the one raised claw.",
       "Affinities": [
         "fire",
         "ice",
@@ -347,7 +347,7 @@
       "Name": "The Bronze Lion",
       "Tier": "boss",
       "Art": "cat-people-lion",
-      "Draw": "TBD",
+      "Draw": "A massive lion-maned warrior in bronze scale across the chest and shoulders, standing square on with one palm out. A door rather than a fighter.",
       "Affinities": [
         "fire",
         "ice",

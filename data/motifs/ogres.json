@@ -1,13 +1,13 @@
 {
   "Motif": "ogres",
   "Name": "Ogres",
-  "Draw": "TBD",
+  "Draw": "Ogres are enormous, thick and slow. A small head sunk into a huge sloped body, a heavy jaw with tusks or broken teeth, tiny deep-set eyes, and a gut. The skin is thick and hide-like, scarred, boil-marked and filthy. They wear whatever is big enough - hides lashed with rope, a barrel or a cauldron worn as armour, iron scraps hammered flat and tied on - and their weapons are found rather than made: a tree, a stone, a wagon axle. Frame them so the body overfills the picture.",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "Hide blistered and split, soot black up both arms, the end of whatever they are carrying alight. Hot orange light coming up off it.",
+    "ice": "Rime over the whole hide, frost in the tusks and the matted hair, breath in enormous plumes. The skin has gone blue-grey.",
+    "lightning": "Arcs jump between every iron scrap lashed to the body, the hair stands off the skull, and all the metal is haloed yellow.",
+    "earth": "Mud-caked and stone-studded, green rock grown through the hide plates and moss packed into the folds. It reads as half quarry.",
+    "arcane": "Violet light comes out of the mouth and the deep-set eyes, the tusks glow from inside, and the silhouette will not hold still."
   },
   "ValidFloors": [
     4,
@@ -19,7 +19,7 @@
       "Name": "Ogre Grunt",
       "Tier": "outer",
       "Art": "ogres-grunt",
-      "Draw": "TBD",
+      "Draw": "A plain ogre in a lashed hide kilt with both hands on a knotted tree limb, holding it up overhead and about to bring it down.",
       "Affinities": [
         "fire",
         "lightning",
@@ -58,7 +58,7 @@
       "Name": "Rock Thrower",
       "Tier": "outer",
       "Art": "ogres-thrower",
-      "Draw": "TBD",
+      "Draw": "Wound back with a boulder held behind the head in one hand and the other arm out for balance. Mouth open.",
       "Affinities": [
         "fire",
         "ice",
@@ -97,7 +97,7 @@
       "Name": "Ogre Warrior",
       "Tier": "outer",
       "Art": "ogres-warrior",
-      "Draw": "TBD",
+      "Draw": "Kitted out by ogre standards: a barrel lid as a shoulder plate, a strap of skulls, a flattened iron maul held across the body. Standing square.",
       "Affinities": [
         "fire",
         "ice",
@@ -136,7 +136,7 @@
       "Name": "Ettin",
       "Tier": "inner",
       "Art": "ogres-ettin",
-      "Draw": "TBD",
+      "Draw": "Two heads on one body, arguing with each other, a club in each fist. Neither head is looking at the viewer.",
       "Affinities": [
         "fire",
         "ice",
@@ -175,7 +175,7 @@
       "Name": "Ogre Warlord",
       "Tier": "inner",
       "Art": "ogres-warlord",
-      "Draw": "TBD",
+      "Draw": "The biggest of them, a crude iron crown hammered down onto the skull and a great club resting back on one shoulder. Jaw out.",
       "Affinities": [
         "fire",
         "ice",
@@ -214,7 +214,7 @@
       "Name": "Bridge Troll",
       "Tier": "inner",
       "Art": "ogres-troll",
-      "Draw": "TBD",
+      "Draw": "Long-armed and hunched, grey wet hide, reaching forward with both hands spread wide to grab. Stones and old mortar still packed in its fists.",
       "Affinities": [
         "fire",
         "ice",
@@ -253,7 +253,7 @@
       "Name": "The Hill King",
       "Tier": "boss",
       "Art": "ogres-hillking",
-      "Draw": "TBD",
+      "Draw": "So heavy it is drawn seated: a mountain of a body filling the whole frame, a small head at the top of it, and one enormous flat hand filling the foreground.",
       "Affinities": [
         "fire",
         "ice",
@@ -300,7 +300,7 @@
       "Name": "The Stonecast",
       "Tier": "boss",
       "Art": "ogres-stonecast",
-      "Draw": "TBD",
+      "Draw": "A hurler of enormous size, one arm cocked with a stone bigger than its own head and the other braced across the body. Square on and immovable.",
       "Affinities": [
         "fire",
         "ice",
@@ -347,7 +347,7 @@
       "Name": "The Gorger",
       "Tier": "boss",
       "Art": "ogres-gorger",
-      "Draw": "TBD",
+      "Draw": "A vast open mouth. The jaw unhinged wider than the skull, both hands stuffing something into it, the eyes rolled back.",
       "Affinities": [
         "ice",
         "lightning",

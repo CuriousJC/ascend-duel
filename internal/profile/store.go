@@ -13,6 +13,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -139,6 +140,60 @@ func (s Store) remove(name string) error {
 	return nil
 }
 
+// checkName refuses a file name that is not one.
+//
+// **This is the one door out of the store that takes a name from further up**, so a name carrying
+// a separator or a `..` would be a way to write anywhere on the machine from a panel button. It is
+// refused rather than sanitized — a quietly renamed export is a file nobody can find again.
+// **Both separators are refused whatever the platform**, since `filepath` on Linux reads a
+// backslash as an ordinary character and would write a file literally called `..\log.json` rather
+// than refusing the name a Windows caller meant.
+func checkName(name string) error {
+	if name == "" || name != filepath.Base(name) || name == "." || name == ".." ||
+		strings.ContainsAny(name, `/\`) {
+		return fmt.Errorf("profile: %q is not a file name", name)
+	}
+	return nil
+}
+
+// Names lists the files in the store whose names begin with a prefix, sorted.
+//
+// **Sorted, because the caller is pruning by age and the names lead with a timestamp.** That is
+// the whole reason a crash report is named the way it is — see internal/crashlog — and it is what
+// lets a directory be swept without reading a single file.
+//
+// **An inert store and an unreadable directory are both "nothing here".** Listing is something a
+// prune does on the way to writing a report, and a prune that failed a crash report would be the
+// tidying costing the thing it was tidying up after.
+func (s Store) Names(prefix string) []string {
+	if s.dir == "" {
+		return nil
+	}
+	entries, err := os.ReadDir(s.dir)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasPrefix(e.Name(), prefix) {
+			continue
+		}
+		out = append(out, e.Name())
+	}
+	sort.Strings(out)
+	return out
+}
+
+// RemoveFile deletes one named file from the store, and is content for it not to be there.
+//
+// **The name is checked exactly as WriteExport's is**, and for a sharper reason: this one deletes.
+func (s Store) RemoveFile(name string) error {
+	if err := checkName(name); err != nil {
+		return err
+	}
+	return s.remove(name)
+}
+
 // WriteExport puts one export file in the store's directory and hands back where it went.
 //
 // **It writes beside the profile rather than beside the executable**, on the rule the whole package
@@ -146,18 +201,13 @@ func (s Store) remove(name string) error {
 // directory is per-install rather than per-player. So an export lands wherever `ASCEND_DUEL_PROFILE`
 // or the platform's config root put the two files the game already keeps.
 //
-// **The name is the caller's and is checked here.** This is the one door out of the store that takes
-// a name from further up, so a name carrying a separator or a `..` would be a way to write anywhere
-// on the machine from a panel button. It is refused rather than sanitized — a quietly renamed export
-// is a file nobody can find again. **Both separators are refused whatever the platform**, since
-// `filepath` on Linux reads a backslash as an ordinary character and would write a file literally
-// called `..\log.json` rather than refusing the name a Windows caller meant.
+// **The name is the caller's and is checked by checkName**, which is where the rule lives now that
+// a crash report deletes by name as well as writing by one.
 //
 // It is atomic and indented like every other write, for the same two reasons.
 func (s Store) WriteExport(name string, v any) (string, error) {
-	if name == "" || name != filepath.Base(name) || name == "." || name == ".." ||
-		strings.ContainsAny(name, `/\`) {
-		return "", fmt.Errorf("profile: %q is not a file name", name)
+	if err := checkName(name); err != nil {
+		return "", err
 	}
 	if err := s.write(name, v); err != nil {
 		return "", err

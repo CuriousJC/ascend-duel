@@ -146,6 +146,15 @@ var sheets = []sheet{
 			"once. Two stand on a shelf at a time, one catalog each.",
 	},
 	{
+		Dir:   "artsheet",
+		Tool:  "./tools/artsheet",
+		Title: "All art",
+		Blurb: "Every picture in `assets/`, grouped by the directory it lives in, at its own size " +
+			"with its filename under it. **The one sheet that writes no images** — each tile points " +
+			"straight at the committed file — so it is for *finding* a file, and the targeted sheet " +
+			"linked beside each heading is where art is judged under the type it ends up under.",
+	},
+	{
 		Dir:   "runesheet",
 		Tool:  "./tools/runesheet",
 		Title: "Rune sheet",

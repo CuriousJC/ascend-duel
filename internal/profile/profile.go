@@ -326,6 +326,13 @@ func (p *Profile) merged() map[string]any {
 	out["achievements"] = nonNil(p.Achievements)
 	out["unlocks"] = nonNil(p.Unlocks)
 	out["handsDiscovered"] = nonNil(p.HandsDiscovered)
+
+	// **An empty tally writes no field at all**, which is what the struct's own `omitempty` says
+	// and is why this is a condition rather than a line: a fresh profile carrying `"counters": {}`
+	// would be a player the file claims has been counted and came to nothing.
+	if len(p.Counters) > 0 {
+		out["counters"] = p.Counters
+	}
 	out["settings"] = p.Settings
 	return out
 }
@@ -334,7 +341,7 @@ func (p *Profile) merged() map[string]any {
 var known = map[string]bool{
 	"version": true, "installId": true, "tutorialSeen": true,
 	"achievements": true, "unlocks": true, "handsDiscovered": true,
-	"settings": true,
+	"counters": true, "settings": true,
 }
 
 func unrecognized(raw map[string]any) map[string]any {

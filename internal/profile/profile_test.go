@@ -278,3 +278,68 @@ func TestAnExportNameMayNotLeaveTheStore(t *testing.T) {
 		}
 	}
 }
+
+// TestATallySurvivesARoundTrip is the whole premise of screens.settleCounters: a duel's tallies are
+// held in memory and land when it ends. A counter that is bumped and then not written is a counter
+// that reads zero forever, and an achievement asking for 300 of something can never be earned.
+//
+// **It fails on a field that is written but not known as well as on one that is neither.** A name
+// missing from `known` is carried through as an unrecognized field, so the figure on disk survives
+// a save and every bump since the load is dropped on top of it — which looks like working until
+// somebody counts.
+func TestATallySurvivesARoundTrip(t *testing.T) {
+	dir := t.TempDir()
+
+	p, writable, err := LoadProfile(At(dir))
+	if err != nil || !writable {
+		t.Fatalf("a fresh profile should be writable: %v", err)
+	}
+	p.Bump("concept:Bash", 2)
+	p.Bump("form:slash", 7)
+	if err := SaveProfile(At(dir), p); err != nil {
+		t.Fatalf("saving: %v", err)
+	}
+
+	back, _, err := LoadProfile(At(dir))
+	if err != nil {
+		t.Fatalf("reading it back: %v", err)
+	}
+	if got := back.Count("concept:Bash"); got != 2 {
+		t.Errorf("concept:Bash came back as %d, want 2", got)
+	}
+	if got := back.Count("form:slash"); got != 7 {
+		t.Errorf("form:slash came back as %d, want 7", got)
+	}
+
+	// The second save is where a counter carried as an unrecognized field goes wrong: it is put
+	// back exactly as it was found, so anything bumped since the load is lost.
+	back.Bump("concept:Bash", 3)
+	if err := SaveProfile(At(dir), back); err != nil {
+		t.Fatalf("saving again: %v", err)
+	}
+	again, _, err := LoadProfile(At(dir))
+	if err != nil {
+		t.Fatalf("reading it back again: %v", err)
+	}
+	if got := again.Count("concept:Bash"); got != 5 {
+		t.Errorf("concept:Bash came back as %d after a second bump, want 5", got)
+	}
+}
+
+// TestAProfileWithNothingTalliedWritesNoCounters holds the other half: the field is `omitempty`, so
+// a player who has done nothing has a file that says so rather than one carrying an empty object.
+func TestAProfileWithNothingTalliedWritesNoCounters(t *testing.T) {
+	dir := t.TempDir()
+	p, _, _ := LoadProfile(At(dir))
+	if err := SaveProfile(At(dir), p); err != nil {
+		t.Fatalf("saving: %v", err)
+	}
+
+	raw, err := os.ReadFile(filepath.Join(dir, profileFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw), "counters") {
+		t.Errorf("a profile with nothing tallied wrote a counters field:\n%s", raw)
+	}
+}

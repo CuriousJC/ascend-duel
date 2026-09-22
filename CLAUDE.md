@@ -1877,6 +1877,46 @@ shows the player how to satisfy the step's condition**, and that is where every 
 so far has been: a step pointing at the shop shelf while waiting for the player to press *Leave*
 reads as a lock-up. Read each new step against its own condition.
 
+### `internal/crashlog` is an eighth thing, and it is *not* compiled out
+
+[internal/crashlog](internal/crashlog) writes a file when the game panics, and keeps a running note
+of the small failures that did not. **Unlike `trace`, `idle`, the demo and the scenario fixture it
+is in every binary**: the case it exists for is an exe on somebody else's machine going wrong once,
+with nobody watching but the person it happened to.
+
+- **A `recover()` at the top of `Game.Update` and `Game.Draw`, and one in `main`** for the panics
+  raised while the catalogs load. `internal/game/crash.go` is the handler.
+- **A crash is a whole screen, not a dialog** — `state.Crashed` and `screens.CrashScene`. A dialog
+  draws the scene underneath it, and the scene underneath is the one that has just panicked, which
+  is how one crash becomes two. The chrome stands down, the ledger is closed, the toast queue is
+  dropped, and the page draws with the ground, the fonts and two buttons. **There is no way back**:
+  a crashed process is one whose state is not trustworthy, so the way out is quitting.
+- **A second panic quits rather than writing a second report.** The only thing still running after
+  the first is the screen written to report it.
+- **The non-fatal notice is the other half**, and it is the confirm box's shape with one answer —
+  `ui.ProblemNotice`, chrome on the toast's terms. **It never raises during a duel**: it waits for
+  a phase boundary, because a box in front of a round in playback stops a fight to talk about a
+  file. It takes the modal red and says PROBLEM where the toast says ACHIEVEMENT, which is the
+  whole of the difference between the two.
+- **Two verbs, and which one a call site wants is a judgment about the player.** `crashlog.Note`
+  records and logs; `crashlog.Tell` does that and also queues a notice. "The score has no device"
+  is a Note; "this run is not being saved" is a Tell.
+- **It writes through `profile.Store`, never through `os`** — the storage-boundary rule — and the
+  report is named `crash-<utc>-<code>.json` so **the directory sorts by when**. A run code cannot
+  lead, because a pinned seed deals the same one every launch. **Pruning is not optional**: a
+  config directory that grows without bound is a bug that only shows up on the machine of the
+  player who plays most.
+- **The tiers are identity, the run snapshot, the ledger's records so far, and the recent
+  problems.** The third is the one the snapshot cannot give — a run is written to disk only at
+  phase boundaries, so a crash mid-duel has the room's start state and nothing since.
+- **The report carries no path, no machine name and no user name.** Platform and build version are
+  the whole of the environment, and `profile.Profile.InstallID` — sixteen random characters made
+  once — is the only thing in it that is about *whom*. That rule is here rather than in the sending
+  code deliberately: a field added now on the assumption that it stays local is a field that leaves
+  the machine the day a send button lands.
+- **Nothing here may ever be fatal and none of it may change an outcome.** Both rules the audio
+  device and `internal/trace` are already under.
+
 ## Architecture — and how to navigate it
 
 **Every package's story lives in its own `doc.go`, and that is the navigation rubric.** This
@@ -1927,14 +1967,15 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `decks` | data, combat |
 | `entities` | data, combat, pyramid |
 | `session` | data, combat, pyramid, profile, seeds, tutorial |
+| `crashlog` | profile, seeds, session |
 | `state` | data, session |
 | `systems` | assets, models, state |
 | `cards` | systems |
 | `actions` | state |
-| `ui` | data, achieve, carddesc, cards, combat, decks, entities, models, pyramid, session, state, systems |
+| `ui` | data, achieve, carddesc, cards, combat, crashlog, decks, entities, models, pyramid, session, state, systems |
 | `screens` | all of the above, plus `ui` and `scenario` |
-| `game` | screens, ui, state, systems, models, music, idle, trace |
-| `main` | game, session, assets, data, music, scenario |
+| `game` | screens, ui, state, systems, models, profile, crashlog, music, idle, trace |
+| `main` | game, session, assets, data, music, profile, crashlog, scenario, screens, seeds, state |
 
 Six facts about it that are load-bearing:
 
@@ -1951,6 +1992,11 @@ Six facts about it that are load-bearing:
   Ebitengine for the reason `combat` is: the whole script can be walked in a test rather than by
   playing to the end of it. `session` holds the cursor, because a lesson outlives a fight; the
   rectangle behind an anchor is `screens`, because a rectangle is a fact about a layout.
+- **`crashlog` sits beside `session` and `combat` may never import it**, for `internal/trace`'s
+  reason: the rules package stays free of everything, which is what makes it testable without a
+  window. It is above `session` rather than beside `profile` because a crash report carries the
+  run's own account of itself, which is the one tier a snapshot on disk cannot give — see the
+  section below.
 - **`seeds` imports nothing and `combat` deliberately does not import it.** The rules take an
   injected `*rand.Rand` and stay ignorant of where it came from.
 - **`carddesc` is the words a card says about itself**, and it is here rather than in

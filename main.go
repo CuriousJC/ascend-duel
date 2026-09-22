@@ -3,10 +3,12 @@ package main
 import (
 	"errors"
 	"log"
+	"os"
 	"time"
 
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/crashlog"
 	"github.com/curiousjc/ascend-duel/internal/game"
 	"github.com/curiousjc/ascend-duel/internal/music"
 	"github.com/curiousjc/ascend-duel/internal/profile"
@@ -100,6 +102,14 @@ func main() {
 	//Create our Game instance
 	g := game.NewGame()
 
+	// **The store is opened before anything is loaded, so a panic during the load has somewhere to
+	// write.** Open creates no directory and cannot fail — see internal/profile — so this costs
+	// nothing on the launches where nothing goes wrong, and it is the difference between a crash
+	// report and a console nobody is reading on the launches where something does.
+	g.GlobalState.Store = profile.Open()
+	g.GlobalState.Version = version
+	defer reportLoadPanic(g)
+
 	// Both off: the screen is far enough along that the grid is now in the way of judging
 	// how it actually looks. Turn placement back on when moving things, and gameplay on to
 	// watch the opponent plan — remembering that what you see with it on is not what a
@@ -112,10 +122,6 @@ func main() {
 	// other two are under. See screens.AnimationsScene, which is the shared vocabulary for talking
 	// about one of the game's gestures.
 	g.GlobalState.DebugAnimations = true
-
-	// Handed to the state rather than read from this package by the screens, so nothing
-	// below main has to import it — the dependency direction only ever points down.
-	g.GlobalState.Version = version
 
 	// **The run's seed, chosen once, here, and printed.** Everything random in a run derives
 	// from it, each consumer seeding its own source — see GlobalState.RunSeed and the
@@ -208,12 +214,22 @@ func main() {
 	//
 	// Nothing here is fatal: a missing, corrupt or unwritable profile is a new player, and a
 	// machine that cannot write still plays the game. See internal/profile.
-	g.GlobalState.Store = profile.Open()
 	prof, writable, err := profile.LoadProfile(g.GlobalState.Store)
 	if err != nil {
-		log.Printf("profile: %v — carrying on as a new player", err)
+		crashlog.Tell("Your profile could not be read, so this is a new player: %v", err)
 	}
 	g.GlobalState.Profile, g.GlobalState.ProfileWritable = prof, writable
+
+	// **The install id is made here and saved in the same breath.** It groups several crash reports
+	// from one player and identifies nobody — see profile.Profile.InstallID, and internal/crashlog
+	// for what it is for. Loading deliberately does not mint one: a profile that may not be written
+	// over would otherwise carry an id it could never record, and an id that changes every launch is
+	// the one thing an install id may not be.
+	if writable && prof.EnsureInstallID() {
+		if err := profile.SaveProfile(g.GlobalState.Store, prof); err != nil {
+			crashlog.Note("could not record the install id: %v", err)
+		}
+	}
 
 	// **What the player chose about the program, put into force before anything reads it.** The
 	// music level has to be in before Start opens the device, or a returning player gets a moment
@@ -263,7 +279,10 @@ func main() {
 	// Not having a sound device is not a reason to refuse to run, so a failure here is
 	// reported and stepped over. Nothing below this line depends on it.
 	if err := music.Start(assets.LoadMusic()["ascending_mid"]); err != nil {
-		log.Println(err)
+		// **Noted rather than told.** A machine with no audio device is a machine that plays the
+		// game in silence, which the volume bar on the settings screen already says out loud; a box
+		// in the player's way about it would be the game complaining about their hardware.
+		crashlog.Note("music: %v", err)
 	}
 
 	// Widgets are no longer wired up here. Each scene builds its own in Init, so main
@@ -274,6 +293,46 @@ func main() {
 	if err := ebiten.RunGame(g); err != nil && !errors.Is(err, game.ErrClosing) {
 		log.Fatal(err)
 	}
+}
+
+// reportLoadPanic catches a panic raised before the game loop is running.
+//
+// **The recovers in internal/game cover Update and Draw, and everything above is this one.** The
+// catalogs are loaded, validated and cross-checked before a window opens — data.MustBeClimbable is
+// a panic by design — so the one failure most likely to reach a player who has just downloaded an
+// exe is a failure with no frame to have happened in.
+//
+// **It exits rather than drawing anything.** There is no window yet and no fonts to draw with, so
+// the report and a line in the log are the whole of what can be said. A crash screen needs a game,
+// and a game is exactly what failed to start.
+func reportLoadPanic(g *game.Game) {
+	cause := recover()
+	if cause == nil {
+		return
+	}
+	gs := g.GlobalState
+	report := crashlog.Build(crashlog.State{
+		Version:   gs.Version,
+		Screen:    "loading",
+		RunSeed:   gs.RunSeed,
+		InstallID: installID(gs),
+	}, cause, crashlog.Stack())
+
+	path, err := crashlog.Write(gs.Store, report)
+	if err != nil {
+		log.Printf("crash while loading: %v (no report written: %v)", cause, err)
+	} else {
+		log.Printf("crash while loading: %v (report written to %s)", cause, path)
+	}
+	os.Exit(1)
+}
+
+// installID is the id off a profile that may not have been loaded yet.
+func installID(gs *state.GlobalState) string {
+	if gs.Profile == nil {
+		return ""
+	}
+	return gs.Profile.InstallID
 }
 
 // startScenarioAt puts a scenario's run where the fixture says, and the game on the screen that

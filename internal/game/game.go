@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"strconv"
 
+	"github.com/curiousjc/ascend-duel/internal/crashlog"
 	"github.com/curiousjc/ascend-duel/internal/idle"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/screens"
@@ -73,6 +74,17 @@ type Game struct {
 	// the scenes that happen to change a deck today is a watcher the next such scene forgets.
 	// See screens.RunWatch.
 	changes screens.RunWatch
+
+	// notice is the non-fatal problem box: a save that failed, a file that could not be read. **It
+	// is chrome on the toast's terms** — a failure happens wherever it happens and no scene owns
+	// it — and, like the toast, it holds no queue: internal/crashlog does. See ui.ProblemNotice,
+	// and noticeAllowed in crash.go for why it waits out a duel.
+	notice ui.ProblemNotice
+
+	// crashed is whether a panic has already been caught. **It is what makes a second one an exit
+	// rather than a second report**: the only thing left running after the first is the screen
+	// written to report it. See crash.go.
+	crashed bool
 }
 
 func NewGame() *Game {
@@ -102,6 +114,11 @@ func NewGame() *Game {
 			// button that reaches it. See screens.AnimationsScene.
 			state.Animations: &screens.AnimationsScene{},
 
+			// **The screen a panic ends on.** Registered like any other, because the registry is
+			// the only place a screen exists at all — and unlike the gallery this one is in every
+			// build, since a shipped game is exactly where it is needed. See screens/crash.go.
+			state.Crashed: &screens.CrashScene{},
+
 			// **A sealed good, opened.** Not a station of a run either — it is reached from the
 			// shop's shelf and goes back there — so it is in the registry and not in
 			// screens/flow.go. See screens/goods.go.
@@ -119,7 +136,19 @@ func (g *Game) scene() ui.Scene {
 	return g.scenes[state.Title]
 }
 
-func (g *Game) Update() error {
+// Update runs one tick of the game.
+//
+// **The whole of it is under a recover** *(2026-09-22)*. Nothing sits between a scene and the Go
+// runtime, so a panic anywhere below here would take the process down with a stack trace into a
+// console a player does not have — see crash.go, which catches it, and internal/crashlog, which
+// writes the file a bug report is made of. The named return is what lets the handler leave the
+// loop running: a caught panic is a screen change rather than an error.
+func (g *Game) Update() (err error) {
+	defer g.recoverFrame()
+	return g.update()
+}
+
+func (g *Game) update() error {
 
 	if g.GlobalState.ShouldClose || ebiten.IsWindowBeingClosed() {
 		//Would handle any saving of state or confirmation here
@@ -138,6 +167,11 @@ func (g *Game) Update() error {
 	// call, and it is the simulation counter rather than a clock, so a trace lines up with
 	// a replay of the same seed.
 	trace.Tick(g.GlobalState.Count)
+
+	// The tick a non-fatal problem is stamped with, on exactly the same terms: set once a frame,
+	// so a call site reporting a failed write does not have to be holding the state to say when it
+	// happened. See internal/crashlog.
+	crashlog.Tick(g.GlobalState.Count)
 
 	// Close an unattended window that nobody is using. Compiled out entirely unless the
 	// idleexit tag is set, so this is a no-op returning false in any build that ships.
@@ -172,6 +206,18 @@ func (g *Game) Update() error {
 		g.GlobalState.ModalOpen = false
 		g.GlobalState.InputGated = false
 		g.toast.Update(g.GlobalState)
+		return nil
+	}
+
+	// **The notice comes after the toast and before the ledger.** It is the game telling the
+	// player something rather than the player asking, which is what puts it above a panel they
+	// opened; and an achievement is news they will want either way, which is what keeps it below
+	// one. Unlike both it can decline to be up at all — see noticeAllowed, which holds it out of
+	// a duel.
+	if g.notice.Waiting() && noticeAllowed(g.GlobalState) {
+		g.GlobalState.ModalOpen = false
+		g.GlobalState.InputGated = false
+		g.notice.Update(g.GlobalState)
 		return nil
 	}
 
@@ -218,8 +264,17 @@ func (g *Game) Update() error {
 	return nil
 }
 
-// Draw runs as needed to update the screen at each frame
+// Draw runs as needed to update the screen at each frame.
+//
+// **Under the same recover Update is**, and for a sharper reason: most of the game's work happens
+// while something is being drawn, so a fault in a card face or a panel would otherwise be the one
+// kind of crash the handler never saw. See crash.go.
 func (g *Game) Draw(screen *ebiten.Image) {
+	defer g.recoverFrame()
+	g.draw(screen)
+}
+
+func (g *Game) draw(screen *ebiten.Image) {
 
 	// An action that switches screens sets ActiveScreen and NewScreen together, but the
 	// incoming scene's Init does not run until the next Update. Draw would otherwise
@@ -238,6 +293,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// **Over the chrome as well as the screen**, because it covers both: the cog stands down under
 	// it the way it does under any dialog, and the panel's own X is the way out.
 	g.ledger.Draw(g.GlobalState, screen)
+
+	// The notice, between them, matching the update order above.
+	g.notice.Draw(g.GlobalState, screen)
 
 	// **Over the ledger as well**, matching the update order above: the toast is the one thing in
 	// the frame that is waiting to be read, so nothing may be drawn on top of it.

@@ -7,13 +7,17 @@ package screens
 // that connect them — so the whole feature is three functions to find rather than a `Save()`
 // sprinkled through six screens.
 //
-// **Nothing here may fail a launch or interrupt play.** A failed write is logged once and the game
+// **Nothing here may fail a launch or interrupt play.** A failed write is noted once and the game
 // carries on: the machine that cannot save is the machine that gets to keep playing, the same rule
 // the audio device is under. See profile's doc.go.
+//
+// **A failure the player has to know about is told rather than noted.** A run that is not being
+// written down is a run that will not be there tomorrow, which is a fact worth having before the
+// climb rather than after it — so both writes here take crashlog.Tell, which queues a box the frame
+// puts up at the next phase boundary. See internal/crashlog and ui.ProblemNotice.
 
 import (
-	"log"
-
+	"github.com/curiousjc/ascend-duel/internal/crashlog"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
@@ -37,7 +41,7 @@ func saveRun(gs *state.GlobalState) {
 		return
 	}
 	if err := profile.SaveRun(gs.Store, gs.Run.Snapshot(gs.RunSeed)); err != nil {
-		log.Printf("could not save the run: %v", err)
+		crashlog.Tell("This run could not be saved: %v", err)
 	}
 }
 
@@ -65,6 +69,6 @@ func saveProfile(gs *state.GlobalState) {
 		return
 	}
 	if err := profile.SaveProfile(gs.Store, gs.Profile); err != nil {
-		log.Printf("could not save the profile: %v", err)
+		crashlog.Tell("Your profile could not be saved: %v", err)
 	}
 }

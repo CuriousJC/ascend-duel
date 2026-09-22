@@ -42,6 +42,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -521,11 +522,18 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 			return
 		}
 
+		gs.Journal.Write(journal.Record{
+			Kind:    journal.KindTake,
+			Key:     essence.Record,
+			Seat:    i,
+			Targets: deckCardIDs(gs, g.selectedDeckIndexes()),
+		})
 		g.show(gs, essence, g.selectedSlots())
 
 	case session.ContentsStones:
 		stone := g.stones[i]
 		if gs.Run.UseStone(stone.Record) {
+			gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: stone.Record, Seat: i})
 			trace.Logf("shop", "bag of rocks: %s, %s now at %d stones",
 				stone.Record, stone.Hand, gs.Run.StonesOn(stone.Hand))
 		}
@@ -537,6 +545,7 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		// spot, and a rune is carried into the next fight and spent between its turns.
 		p := g.runes[i]
 		if gs.Run.Hold(p.Record) {
+			gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: p.Record, Seat: i})
 			trace.Logf("shop", "sack of runes: %s held, %d in the sack",
 				p.Record, gs.Run.HoldCount())
 		}

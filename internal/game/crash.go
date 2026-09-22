@@ -19,6 +19,7 @@ package game
 
 import (
 	"github.com/curiousjc/ascend-duel/internal/crashlog"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -63,7 +64,11 @@ func (g *Game) crash(cause any, stack []byte) {
 		Ledger:    runLedger(gs),
 	}, cause, stack)
 
-	path, err := crashlog.Write(gs.Store, report)
+	// **The journal goes with it.** There is one journal and the next run truncates it, so the run
+	// that blew up — exactly the run worth retracing — would otherwise be overwritten by the next
+	// launch. It lands under the report's own name with its own extension, so the two sort
+	// together and are pruned together. See internal/journal and crashlog.Write.
+	path, err := crashlog.Write(gs.Store, report, journal.FileName)
 	if err != nil {
 		crashlog.Note("could not write the crash report: %v", err)
 	}

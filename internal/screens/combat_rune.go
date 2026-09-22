@@ -35,6 +35,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -210,6 +211,15 @@ func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
 	}
 	gs.Run.DropStowed(i)
 
+	// **Written after the apply, not before it.** A refused spend is not a choice the player made
+	// — the pane draws it dim and the click does nothing — and a line for one would put a card in
+	// the retrace that never changed.
+	gs.Journal.Write(journal.Record{
+		Kind:    journal.KindEssence,
+		Key:     w.Record,
+		Targets: ids,
+	})
+
 	s.resyncHandFromRun(gs)
 
 	// **A copy joins the hand it was copied from**, the duplicate rune's rule: the fight's piles
@@ -264,6 +274,8 @@ func (s *CombatScene) spendStone(gs *state.GlobalState, i int) {
 		return
 	}
 
+	gs.Journal.Write(journal.Record{Kind: journal.KindStone, Action: journal.StoneUsed, Seat: i})
+
 	// **The fighter is re-equipped where they stand**, because the stone counts ride on the
 	// duelist — see combat.Duelist.HandStones — and the fighter was built from the run at Init.
 	// Without this the raised rung would not be read until the next fight, which is exactly the
@@ -293,6 +305,16 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 		return
 	}
 	gs.Run.Drop(i)
+
+	// **The roll is not written down.** A rune that gambles takes its stream off the run seed and
+	// the cards it was aimed at, so a replay reaching this line with the same choices behind it
+	// rolls the same thing; a recorded result would be the journal storing an outcome, which is
+	// the one thing it may not do. See internal/journal.
+	gs.Journal.Write(journal.Record{
+		Kind:    journal.KindRune,
+		Key:     p.Record,
+		Targets: ids,
+	})
 
 	// **The hand is rebuilt from the run, because the cards in it are copies.** `s.hand` holds
 	// values dealt off the deck at the start of the round; a rider attached to the run's card would

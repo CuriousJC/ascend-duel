@@ -81,6 +81,12 @@ type Game struct {
 	// and noticeAllowed in crash.go for why it waits out a duel.
 	notice ui.ProblemNotice
 
+	// wherePlayed watches which screen is up and which station the run stands at, and writes a
+	// line into the journal when either moves. **Here for changes' reason and one of its own**:
+	// a screen is reached from a dozen places, so a call beside each is a list the next one gets
+	// left off. See journal.go.
+	wherePlayed journalWatch
+
 	// crashed is whether a panic has already been caught. **It is what makes a second one an exit
 	// rather than a second report**: the only thing left running after the first is the screen
 	// written to report it. See crash.go.
@@ -173,6 +179,9 @@ func (g *Game) update() error {
 	// happened. See internal/crashlog.
 	crashlog.Tick(g.GlobalState.Count)
 
+	// The tick every choice is stamped with, on exactly the same terms. See internal/journal.
+	g.GlobalState.Journal.At(g.GlobalState.Count)
+
 	// Close an unattended window that nobody is using. Compiled out entirely unless the
 	// idleexit tag is set, so this is a no-op returning false in any build that ships.
 	//
@@ -257,6 +266,10 @@ func (g *Game) update() error {
 	// fight is on — a card altered mid-round is an event of that round — and nothing at all on a
 	// frame where the run did not move.
 	g.changes.Note(g.GlobalState)
+
+	// **Beside the ledger's watcher and after it**, so a phase line and the account of what
+	// happened in that phase land in the order a reader expects. See journal.go.
+	g.wherePlayed.note(g.GlobalState)
 
 	// The frame's own controls, after the scene, so they read the modal flag the scene has
 	// just written. See chrome.go.

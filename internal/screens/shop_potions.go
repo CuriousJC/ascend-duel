@@ -30,6 +30,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/ui"
@@ -151,6 +152,8 @@ func (s *ShopScene) drinkPotion(gs *state.GlobalState, key string) {
 	// row would be a shop that sells the same thing until the purse is empty.
 	s.drunk[key] = true
 	s.tip.Forget()
+
+	gs.Journal.Write(journal.Record{Kind: journal.KindPotion, Key: key})
 }
 
 // potionTip is what resting on one says. **It is the whole of what the card says** *(owner's call,

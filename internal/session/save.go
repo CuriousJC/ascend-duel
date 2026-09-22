@@ -94,10 +94,11 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 
 // ledgerSnapshot writes the run's account out as plain records.
 //
-// **Prose is copied rather than resolved.** Every other conversion here turns a name back into a
-// thing this build has — a concept, an element, a relic — and refuses a snapshot naming something
-// it has not got. A ledger line names nothing: it is words that were true when they were written,
-// and the day a status is renamed is not a day a saved run should stop loading.
+// **A record is copied rather than resolved.** Every other conversion here turns a name back into
+// a thing this build has — a concept, an element, a relic — and refuses a snapshot naming something
+// it has not got. A ledger record resolves to nothing: its fields are already the labels that were
+// true when it was written, and the day a status is renamed is not a day a saved run should stop
+// loading.
 func (s *Session) ledgerSnapshot() []profile.LedgerFightSnapshot {
 	if len(s.ledger.Fights) == 0 {
 		return nil
@@ -114,55 +115,96 @@ func (s *Session) ledgerSnapshot() []profile.LedgerFightSnapshot {
 		}
 		for _, r := range f.Rounds {
 			rec.Rounds = append(rec.Rounds, profile.LedgerRoundSnapshot{
-				Number: r.Number, Lines: linesSnapshot(r.Lines),
+				Number: r.Number, Records: recordsSnapshot(r.Records),
 			})
 		}
-		rec.After = linesSnapshot(f.After)
+		rec.After = recordsSnapshot(f.After)
 		out = append(out, rec)
 	}
 	return out
 }
 
-// linesSnapshot and resumeLines are the one conversion each way for a block of lines.
+// recordsSnapshot and resumeRecords are the one conversion each way for a block of records.
 //
-// **Shared because a fight now carries two blocks of them** — its rounds and its aftermath — and
-// the walk written out twice per direction is four places for a field to be added to three of.
-func linesSnapshot(in []LedgerLine) []profile.LedgerLineSnapshot {
+// **Shared because a fight carries two blocks of them** — its rounds and its aftermath — and the
+// walk written out twice per direction is four places for a field to be added to three of.
+//
+// **A straight copy, field for field.** The two structs are mirrors on purpose; see
+// profile.LedgerRecordSnapshot for why the duplication is the price of the persistence boundary
+// rather than an oversight.
+func recordsSnapshot(in []LedgerRecord) []profile.LedgerRecordSnapshot {
 	if len(in) == 0 {
 		return nil
 	}
-	out := make([]profile.LedgerLineSnapshot, 0, len(in))
-	for _, l := range in {
-		spans := make([]profile.LedgerSpanSnapshot, 0, len(l.Spans))
-		for _, span := range l.Spans {
-			spans = append(spans, profile.LedgerSpanSnapshot{Text: span.Text, Ink: span.Ink, Mark: span.Mark})
+	out := make([]profile.LedgerRecordSnapshot, 0, len(in))
+	for _, r := range in {
+		rec := profile.LedgerRecordSnapshot{
+			Kind: r.Kind, Side: r.Side, Target: r.Target, Name: r.Name,
+			Card: r.Card, Element: r.Element, Verb: r.Verb, Raises: r.Raises,
+			Weight: r.Weight, Status: r.Status, Relic: r.Relic, Amount: r.Amount,
+			Hand: r.Hand, Multiplier: r.Multiplier, HandScale: r.HandScale,
+			Role: r.Role, Base: r.Base, Note: r.Note,
+			Flats: append([]int(nil), r.Flats...), Total: r.Total,
+			Subject: r.Subject, Into: r.Into,
 		}
-		out = append(out, profile.LedgerLineSnapshot{Voice: l.Voice, Spans: spans})
+		for _, f := range r.Factors {
+			rec.Factors = append(rec.Factors, profile.LedgerFactorSnapshot{
+				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown,
+			})
+		}
+		for _, t := range r.Terms {
+			rec.Terms = append(rec.Terms, profile.LedgerSumSnapshot{
+				Element: t.Element, Split: t.Split, DMG: t.DMG, Weight: t.Weight,
+				Base: t.Base, Scales: append([]int(nil), t.Scales...),
+			})
+		}
+		out = append(out, rec)
 	}
 	return out
 }
 
-func resumeLines(in []profile.LedgerLineSnapshot) []LedgerLine {
+func resumeRecords(in []profile.LedgerRecordSnapshot) []LedgerRecord {
 	if len(in) == 0 {
 		return nil
 	}
-	out := make([]LedgerLine, 0, len(in))
-	for _, l := range in {
-		spans := make([]LedgerSpan, 0, len(l.Spans))
-		for _, span := range l.Spans {
-			spans = append(spans, LedgerSpan{Text: span.Text, Ink: span.Ink, Mark: span.Mark})
+	out := make([]LedgerRecord, 0, len(in))
+	for _, r := range in {
+		rec := LedgerRecord{
+			Kind: r.Kind, Side: r.Side, Target: r.Target, Name: r.Name,
+			Card: r.Card, Element: r.Element, Verb: r.Verb, Raises: r.Raises,
+			Weight: r.Weight, Status: r.Status, Relic: r.Relic, Amount: r.Amount,
+			Hand: r.Hand, Multiplier: r.Multiplier, HandScale: r.HandScale,
+			Role: r.Role, Base: r.Base, Note: r.Note,
+			Flats: append([]int(nil), r.Flats...), Total: r.Total,
+			Subject: r.Subject, Into: r.Into,
 		}
-		out = append(out, LedgerLine{Voice: l.Voice, Spans: spans})
+		for _, f := range r.Factors {
+			rec.Factors = append(rec.Factors, LedgerFactor{
+				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown,
+			})
+		}
+		for _, t := range r.Terms {
+			rec.Terms = append(rec.Terms, LedgerSum{
+				Element: t.Element, Split: t.Split, DMG: t.DMG, Weight: t.Weight,
+				Base: t.Base, Scales: append([]int(nil), t.Scales...),
+			})
+		}
+		out = append(out, rec)
 	}
 	return out
 }
 
 // resumeLedger reads the account back.
 //
-// **It cannot fail, and that is deliberate.** A line is prose; there is nothing in it to resolve
-// against this build, so the worst a strange one can do is draw in the plain voice. Refusing a run
-// because a sentence in its history used a word this build no longer writes would trade the whole
-// run for the transcript of a fight already over.
+// **It cannot fail, and that is deliberate.** There is nothing in a record to resolve against this
+// build, so the worst a strange one can do is draw as a blank line. Refusing a run because a word
+// in its history is one this build no longer writes would trade the whole run for the transcript of
+// a fight already over.
+//
+// **A round saved by a build that stored sentences comes back empty.** Its records were never
+// written, so the heading and the fight's totals survive and the lines under it do not. That is
+// taken deliberately over carrying two shapes of account forever for the sake of one run in
+// progress on one machine.
 func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 	var out Ledger
 	for _, f := range snap {
@@ -174,9 +216,9 @@ func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 			dealt:   f.Dealt,
 		}
 		for _, r := range f.Rounds {
-			rec.Rounds = append(rec.Rounds, LedgerRound{Number: r.Number, Lines: resumeLines(r.Lines)})
+			rec.Rounds = append(rec.Rounds, LedgerRound{Number: r.Number, Records: resumeRecords(r.Records)})
 		}
-		rec.After = resumeLines(f.After)
+		rec.After = resumeRecords(f.After)
 		out.Fights = append(out.Fights, rec)
 	}
 	return out

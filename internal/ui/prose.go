@@ -56,7 +56,7 @@ var (
 	enemySwatch  = color.RGBA{R: 108, G: 110, B: 122, A: 255}
 )
 
-// PaneRowsFor draws already-worded lines as pane rows: the voice becomes a swatch, and each span's
+// PaneRowsFor draws worded lines as pane rows: the voice becomes a swatch, and each span's
 // ink name becomes a color.
 //
 // **The colors are decided here and never stored**, which is what lets a saved run be re-colored
@@ -107,10 +107,6 @@ func inkNamed(name string) color.RGBA {
 	return color.RGBA{}
 }
 
-// ElementInk is an element's ink name, which is simply what the element is called. A card's figure
-// in a sum wears its own card's color, exactly as the hand dialog's does.
-func ElementInk(e combat.Element) string { return e.String() }
-
 // swatchForVoice is the square a line is drawn beside. **A zero-alpha swatch is a line with no
 // swatch**, which drawPane centers — so headings read as blocks rather than as more of the list.
 func swatchForVoice(voice string) color.RGBA {
@@ -133,14 +129,6 @@ func indentForVoice(voice string) int {
 		return termIndent
 	}
 	return 0
-}
-
-// VoiceFor is whose line it is.
-func VoiceFor(side combat.Side) string {
-	if side == combat.SideB {
-		return session.VoiceFoe
-	}
-	return session.VoiceYou
 }
 
 // CardWeight is what an attack card multiplies its owner's DMG by, in brackets: ` (1.5x)`.
@@ -249,52 +237,6 @@ func riderText(card combat.Card) string {
 	return out
 }
 
-// actionPhrase is what follows the verb in a Resolution line, and every phrase carries an article
-// so cardPhrase can slot an element into it.
-//
-// **The card's own label is the noun.** That is what lets one function narrate four hundred
-// concepts: "with a fire strike" for the player, "behind a congeal" for a slime.
-func actionPhrase(id combat.ConceptID) string {
-	c := combat.ConceptOf(id)
-	name := lower(c.Label)
-	switch c.Verb {
-	case combat.VerbShield:
-		return "and raises a " + name
-	default:
-		return "with a " + name
-	}
-}
-
-// CardPhrase is actionPhrase with the element worked into it: "with a fire strike".
-//
-// **The element goes after the article rather than in front of the phrase**, which is what
-// makes it a sentence instead of a label. Every phrase that can carry a status has an article —
-// the four attacks are all "with a …" — so the insertion lands correctly on exactly the cards
-// where it matters most.
-//
-// A phrase with no article gets the element in brackets: "and raises two shields (fire)".
-// That is deliberately the plainer half of the rule. An elemental defense is a real card whose
-// color does nothing mechanical, so a line that reads slightly like a note is honest about
-// what it is — and it is better than a sentence bent around a word that does not fit it.
-func CardPhrase(c combat.Card) string {
-	phrase := actionPhrase(c.Concept)
-	if c.Element == combat.Basic {
-		return phrase
-	}
-
-	name := lower(c.Element.String())
-	if i := strings.Index(phrase, "a "); i >= 0 {
-		// **The article has to be corrected, not just followed.** Two of the five elements begin
-		// with a vowel, so "a earth strike" is a third of the lines this function writes.
-		article := "a "
-		if strings.ContainsRune("aeiou", rune(name[0])) {
-			article = "an "
-		}
-		return phrase[:i] + article + name + " " + phrase[i+2:]
-	}
-	return phrase + " (" + name + ")"
-}
-
 // ElementSpans cuts a clause into spans so the word naming an element is written in that element's
 // color — "attacks with a fire cut", with `fire` in the fire orange.
 //
@@ -344,7 +286,7 @@ func buildElementInkNames() map[string]string {
 	return out
 }
 
-// StatusPhrase is what a landed status says it did, as an outcome attached to the attacker's line.
+// StatusPhraseByKey is what a landed status says it did, as an outcome attached to the attacker's line.
 // Each names the *effect* rather than the status, because "chills them" says what happens next and
 // "applies chilled" says only that a rule fired.
 //
@@ -353,9 +295,12 @@ func buildElementInkNames() map[string]string {
 // not tell them apart. The fallback is what a status with no sentence of its own narrates as — its
 // own name, which is at least true — so authoring a status in the file does not need a Go change to
 // read properly.
-func StatusPhrase(id combat.StatusID) string {
-	spec := combat.StatusOf(id)
-	switch spec.Key {
+// **It is keyed by the status's key rather than by its ordinal**, because a ledger record holds
+// the key: a record outlives the build that wrote it, and a StatusID is an index into an array. A
+// key this build no longer has falls back to the key itself, which is honest where a blank is a
+// line the player would read as a bug.
+func StatusPhraseByKey(key string) string {
+	switch key {
 	case "burning":
 		return "sets them burning"
 	case "chilled":
@@ -364,19 +309,28 @@ func StatusPhrase(id combat.StatusID) string {
 		return "shocks them"
 	case "weighted":
 		return "weighs them down"
-	default:
-		return "leaves them " + lower(spec.Name)
 	}
+	return "leaves them " + lower(statusName(key))
 }
 
-// TickVerb is how a damage-over-time status reads when it bites at the end of a round: "Goblin burns
+// TickVerbByKey is how a damage-over-time status reads when it bites at the end of a round: "Goblin burns
 // for 2". A status with no verb of its own falls back to its name, which is true rather than
 // graceful — and is what stops a second such status narrating as a burn.
-func TickVerb(id combat.StatusID) string {
-	if combat.StatusOf(id).Key == "burning" {
+func TickVerbByKey(key string) string {
+	if key == "burning" {
 		return "burns for"
 	}
-	return "takes " + lower(combat.StatusOf(id).Name) + " damage:"
+	return "takes " + lower(statusName(key)) + " damage:"
+}
+
+// statusName is what a status is called, from its key, falling back to the key itself for one this
+// build no longer carries. **A key is named rather than hidden**, for relicName's reason: a line in
+// a saved account has to read as something.
+func statusName(key string) string {
+	if id, ok := combat.StatusByKey(key); ok {
+		return combat.StatusOf(id).Name
+	}
+	return key
 }
 
 // VerbFor is the verb a category is spoken with.

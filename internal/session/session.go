@@ -142,7 +142,7 @@ type Session struct {
 	// two of them in a row both fire the thing behind them.
 	lastRune string
 
-	// ledger is the run's account of itself: every fight, round by round, in already-worded
+	// ledger is the run's account of itself: every fight, round by round, as flat
 	// lines. **Run-level because that is the whole feature** — it used to be this fight's events
 	// on the combat screen, thrown away by the next Init. See ledger.go.
 	ledger Ledger

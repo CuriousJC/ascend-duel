@@ -152,7 +152,7 @@ type RunSnapshot struct {
 	// Deck is every card the run owns, in order.
 	Deck []CardSnapshot `json:"deck"`
 
-	// Ledger is the run's account of itself: every fight, round by round, in already-worded lines.
+	// Ledger is the run's account of itself: every fight, round by round, as flat records.
 	//
 	// **It is the one part of a snapshot that is prose rather than state** *(owner's call,
 	// 2026-09-02)*. Everything else here is resumed *into* the run; this is only ever read back and
@@ -177,38 +177,81 @@ type LedgerFightSnapshot struct {
 	Outcome string `json:"outcome,omitempty"`
 
 	// Dealt is what the player's blows came to across the fight. **Stored rather than recomputed**,
-	// because the lines are prose and adding them back up would mean parsing sentences.
+	// because a total the rounds do not support is worse than one the file carries.
 	Dealt int `json:"dealt,omitempty"`
 
 	Rounds []LedgerRoundSnapshot `json:"rounds,omitempty"`
 
-	// After is what the player did to the run between this fight and the next, in the same
-	// already-worded lines a round carries.
-	After []LedgerLineSnapshot `json:"after,omitempty"`
+	// After is what the player did to the run between this fight and the next, in the same records
+	// a round carries.
+	After []LedgerRecordSnapshot `json:"after,omitempty"`
 }
 
 // LedgerRoundSnapshot is one round of one fight.
 type LedgerRoundSnapshot struct {
-	Number int                  `json:"number"`
-	Lines  []LedgerLineSnapshot `json:"lines,omitempty"`
+	Number  int                    `json:"number"`
+	Records []LedgerRecordSnapshot `json:"records,omitempty"`
 }
 
-// LedgerLineSnapshot is one line of the account.
+// LedgerRecordSnapshot is one thing that happened, as flat named data.
 //
-// **Spans rather than one string**, because the panel colors a line in pieces: the verb by its
-// category, a figure by its card's element, a relic's multiplier in the relic pink. Voice and Ink are
-// short closed vocabularies written as words, on the rule every other name in this file is under —
-// a color in a save file would be a palette decision frozen into a run.
-type LedgerLineSnapshot struct {
-	Voice string               `json:"voice,omitempty"`
-	Spans []LedgerSpanSnapshot `json:"spans,omitempty"`
+// **A mirror of session.LedgerRecord, and that duplication is the boundary's price.** This package
+// imports nothing of ours so that the persistence layer never learns what a card is; `session`
+// converts itself to and from these. The fields are names, numbers and already-resolved labels —
+// no ordinals, no colors — which is the rule every snapshot in this file is under, and it is why
+// the mirror is a straight copy rather than a translation.
+type LedgerRecordSnapshot struct {
+	Kind string `json:"kind"`
+
+	Side   string `json:"side,omitempty"`
+	Target string `json:"target,omitempty"`
+	Name   string `json:"name,omitempty"`
+
+	Card    string `json:"card,omitempty"`
+	Element string `json:"element,omitempty"`
+	Verb    string `json:"verb,omitempty"`
+	Raises  bool   `json:"raises,omitempty"`
+
+	Weight int `json:"weight,omitempty"`
+
+	Status string `json:"status,omitempty"`
+	Relic  string `json:"relic,omitempty"`
+
+	Amount int `json:"amount,omitempty"`
+
+	Hand       string `json:"hand,omitempty"`
+	Multiplier int    `json:"multiplier,omitempty"`
+	HandScale  int    `json:"handScale,omitempty"`
+
+	Role string `json:"role,omitempty"`
+	Base int    `json:"base,omitempty"`
+	Note string `json:"note,omitempty"`
+
+	Factors []LedgerFactorSnapshot `json:"factors,omitempty"`
+	Terms   []LedgerSumSnapshot    `json:"terms,omitempty"`
+	Flats   []int                  `json:"flats,omitempty"`
+	Total   int                    `json:"total,omitempty"`
+
+	Subject string `json:"subject,omitempty"`
+	Into    string `json:"into,omitempty"`
 }
 
-// LedgerSpanSnapshot is one run of text inside a line.
-type LedgerSpanSnapshot struct {
-	Text string `json:"text"`
-	Ink  string `json:"ink,omitempty"`
-	Mark bool   `json:"mark,omitempty"`
+// LedgerFactorSnapshot is one relic's contribution to one term of a blow.
+type LedgerFactorSnapshot struct {
+	Relic  string `json:"relic"`
+	Landed bool   `json:"landed,omitempty"`
+	Scale  int    `json:"scale,omitempty"`
+	Grown  int    `json:"grown,omitempty"`
+}
+
+// LedgerSumSnapshot is one landing's figures as the sum reads them.
+type LedgerSumSnapshot struct {
+	Element string `json:"element,omitempty"`
+	Split   bool   `json:"split,omitempty"`
+	DMG     int    `json:"dmg,omitempty"`
+	Weight  int    `json:"weight,omitempty"`
+	Base    int    `json:"base,omitempty"`
+	Scales  []int  `json:"scales,omitempty"`
 }
 
 // SpoilsSnapshot is one win's unclaimed payout, split the way the reward screen reads it out.

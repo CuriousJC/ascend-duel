@@ -44,7 +44,8 @@
 //
 // What the run says about itself:
 //
-//   - ledger.go, export.go — the account, in already-worded lines, and writing it out to a file.
+//   - record.go, ledger.go, export.go — what happened as flat records, the account they make up,
+//     and writing it out to a file.
 //   - play.go, summary.go — how often each rung has actually been built, and what a run came to.
 //   - save.go — a run written down and read back, as plain data internal/profile can put on disk.
 //   - tutorial.go, jump.go — the teaching run parked on the run it teaches, and putting a run

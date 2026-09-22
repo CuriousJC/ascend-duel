@@ -10,6 +10,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/crashlog"
 	"github.com/curiousjc/ascend-duel/internal/game"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/music"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
@@ -236,6 +237,18 @@ func main() {
 	// of the wrong volume; the speed has to be in before the first scene's Init, since a screen
 	// can compute a duration in it. See internal/screens/settings.go.
 	screens.ApplySettings(prof.Settings)
+
+	// **The journal is opened before the run, because BootRun is what writes its first line.** It
+	// touches no file here — a journal that made its file at startup would leave one behind for
+	// every player who launched the game and never played — so this is a store and a sentence.
+	//
+	// **The wording of the failure lives here rather than in internal/journal.** A crash report
+	// takes a copy of the journal, so internal/crashlog has to be able to name that file; one of
+	// the two has to point at the other, and the one that knows what a player should be told is
+	// this one. A run that is not being written down cannot be got back, which is why it is a Tell.
+	g.GlobalState.Journal = journal.New(g.GlobalState.Store, func(err error) {
+		crashlog.Tell("This run's choices are not being recorded: %v", err)
+	})
 
 	screens.BootRun(g.GlobalState)
 

@@ -1916,6 +1916,60 @@ with nobody watching but the person it happened to.
   the machine the day a send button lands.
 - **Nothing here may ever be fatal and none of it may change an outcome.** Both rules the audio
   device and `internal/trace` are already under.
+- **A report takes a copy of every file named beside it**, and today that is the journal.
+  `crashlog.Write` takes the names from its caller, so nothing in it learns what a journal is, and a
+  copy lands under the report's own base name with the companion's own extension. **A report is
+  counted by its own `.json` when pruning**, or the allowance would shrink the day a second
+  companion joined the first.
+
+### `internal/journal` is a ninth thing, and it is *not* compiled out
+
+[internal/journal](internal/journal) is what the player chose, in order, on its way to the disk:
+`journal.jsonl` in the profile's own directory, one record per line, appended as it happens.
+
+**The run seed is not enough to get a run back.** It rebuilds the tower, the motifs, the elements
+and every shuffle, and the deck still changes with what the player takes and spends — and the hands
+follow from the deck. Same seed and different choices is a different fight two.
+
+**It ships**, like the tutorial and `internal/crashlog` and unlike `trace`, `idle`, the demo and the
+scenario fixture: the case it exists for is a run on somebody else's machine that nobody can
+describe.
+
+- **Inputs, never outputs.** A `session.LedgerRecord` is what `ResolveRound` produced and cannot
+  re-drive it; a journal record is a click. A journal holding what the engine decided stops being a
+  way to retrace a run and becomes a second, worse ledger. **So nothing in this package knows what a
+  blow came to or who won**, and a rune's gamble is not written down — the roll comes off the run
+  seed, so a replay reaching that line with the same choices behind it rolls the same thing.
+- **Legible rather than exhaustive**, because replay is a person at a keyboard. A record names a
+  relic key, a card's label and a seat — not a drag path and not a pointer position. **A card is
+  named by identity**, `combat.Card.ID`, for the reason a rune's targets are: three piles hold
+  copies of the same cards, so a position names a different card a moment later.
+- **One file, and starting a run truncates it.** A climb that ended without going wrong is one
+  nobody is going to ask about, and one fixed name means nothing has to sweep up after it. **What
+  makes that safe is the copy a crash takes** — see above; without it the one run worth retracing is
+  the one the next launch overwrites. **A resumed run appends rather than truncating**, and its
+  header says `resumed`, so two headers in one file is one climb played across two launches.
+- **A click has its line where its function is; a screen and a phase are diffed once a frame.** The
+  first is where the choice actually is. The second two are reached from a dozen places — a button,
+  a run advancing, a crash, a scenario opening the game halfway up a tower — so a call beside each
+  is a list the next one gets left off. `game.journalWatch` is the diff, on `screens.RunWatch`'s
+  argument.
+- **`CombatScene.choices` is the one stored handle**, taken at `Init`. Every other screen writes its
+  lines from a method already holding a `gs`; the hand row's click handlers are reached from a
+  button or a drag with nothing but the scene in hand.
+- **Every method is safe on a nil receiver**, which is what lets a scene write a line without asking
+  whether there is a journal — a test scene and a review tool both run without one.
+- **A journal that cannot be written gives up and is a `Tell` once**, not once per click: a box per
+  click is a queue the player has to fight their way out of to keep playing. **The wording lives in
+  `main`** rather than in the package, because `crashlog` has to be able to name the journal file
+  and only one of the two may point at the other.
+- **`profile.Store.AppendLine` is the door**, and it is the one write in that package that is not a
+  whole document through a temp file and a rename. The audience is somebody reading the file after
+  the process writing it died, so what matters is that the line before the panic is already there.
+  It is compact rather than indented, unlike every other write: one record per line is what makes
+  the file appendable without parsing what is above it.
+- **Nothing here may ever be fatal and none of it may change an outcome**, and **`internal/combat`
+  may never import it** — the rules the whole of `internal/crashlog` is already under.
 
 ## Architecture — and how to navigate it
 
@@ -1958,6 +2012,7 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 |---|---|
 | `seeds` `models` `assets` `idle` `trace` `music` | *nothing* |
 | `data` `profile` | *nothing* |
+| `journal` | profile |
 | `scenario` | data, combat *(compiled out unless `-tags scenario`)* |
 | `pyramid` | data |
 | `combat` | data |
@@ -1968,14 +2023,14 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `entities` | data, combat, pyramid |
 | `session` | data, combat, pyramid, profile, seeds, tutorial |
 | `crashlog` | profile, seeds, session |
-| `state` | data, session |
+| `state` | data, session, journal |
 | `systems` | assets, models, state |
 | `cards` | systems |
 | `actions` | state |
 | `ui` | data, achieve, carddesc, cards, combat, crashlog, decks, entities, models, pyramid, session, state, systems |
 | `screens` | all of the above, plus `ui` and `scenario` |
-| `game` | screens, ui, state, systems, models, profile, crashlog, music, idle, trace |
-| `main` | game, session, assets, data, music, profile, crashlog, scenario, screens, seeds, state |
+| `game` | screens, ui, state, systems, models, profile, crashlog, journal, music, idle, trace |
+| `main` | game, session, assets, data, music, profile, crashlog, journal, scenario, screens, seeds, state |
 
 Six facts about it that are load-bearing:
 

@@ -214,3 +214,88 @@ func (s Store) WriteExport(name string, v any) (string, error) {
 	}
 	return s.path(name), nil
 }
+
+// AppendLine adds one record to a file as a single line of JSON, making the file if it is not
+// there yet.
+//
+// **Append rather than rewrite, which is the whole reason this door exists.** Everything else in
+// this package writes a whole document through a temp file and a rename, because a half-written
+// save is worse than no save. A journal is the opposite case: it is read after the process that
+// was writing it died, so what matters is that the line before the panic is already on disk. A
+// document written at a phase boundary would have nothing to say about the frame that went wrong.
+//
+// **Compact rather than indented**, unlike every other write here. One record per line is what
+// makes the file readable by `tail` and appendable without parsing what is already in it, and a
+// pretty-printed record would break both.
+//
+// **The name is checked exactly as WriteExport's is.**
+func (s Store) AppendLine(name string, v any) error {
+	if err := checkName(name); err != nil {
+		return err
+	}
+	if s.dir == "" {
+		return errors.New("profile: nowhere to save to")
+	}
+	if err := os.MkdirAll(s.dir, 0o755); err != nil {
+		return err
+	}
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	raw = append(raw, '\n')
+
+	f, err := os.OpenFile(s.path(name), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(raw); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
+}
+
+// CopyFile takes a copy of one file in the store under another name, and reports whether there was
+// anything to copy.
+//
+// **It exists so a crash can keep the journal it was writing.** There is one journal and the next
+// run truncates it, so the run that blew up — which is exactly the run worth retracing — would
+// otherwise be overwritten by the next launch. See internal/crashlog.
+//
+// **Both names are checked**, since both come from further up, and the copy is written atomically
+// like every other whole-document write here.
+func (s Store) CopyFile(from, to string) (bool, error) {
+	if err := checkName(from); err != nil {
+		return false, err
+	}
+	if err := checkName(to); err != nil {
+		return false, err
+	}
+	if s.dir == "" {
+		return false, nil
+	}
+
+	raw, err := os.ReadFile(s.path(from))
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	if err := os.MkdirAll(s.dir, 0o755); err != nil {
+		return false, err
+	}
+
+	final := s.path(to)
+	tmp := final + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+		return false, err
+	}
+	if err := os.Rename(tmp, final); err != nil {
+		os.Remove(tmp)
+		return false, err
+	}
+	return true, nil
+}

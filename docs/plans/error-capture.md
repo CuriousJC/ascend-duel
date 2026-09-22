@@ -131,7 +131,7 @@ that shows up only on the machine of the player who plays most.
 
 ## The order
 
-### 1. Records and the translator
+### ~~1. Records and the translator~~
 
 Turn the ledger's storage from worded spans into flat records. `combat_prose.go` and
 `ledger_after.go` become the translator and run at read time instead of write time; the panel and
@@ -148,7 +148,7 @@ the export draw exactly what they draw today.
   swatch that is drawn in is the panel's answer — one step further along the argument that already
   keeps colors out of the save.
 
-### 2. Crash capture, and the two dialogs
+### ~~2. Crash capture, and the two dialogs~~
 
 `internal/crashlog`, a `recover()` at the top of `Game.Update` and `Game.Draw`, and one in `main`
 for the panics raised while the catalogs load.
@@ -177,7 +177,7 @@ Tiers, in the order they go in the file:
 **An install id is generated into `profile.json` here**, random and identifying nobody, so several
 reports from one player can be grouped. A run code is not an id.
 
-### 3. The journal
+### ~~3. The journal~~
 
 The append-only choice file: the header record, the choice kinds, written as the player plays.
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/curiousjc/ascend-duel/internal/profile"
@@ -119,7 +120,18 @@ func Build(st State, cause any, stack []byte) Report {
 // assembled the frames that panicked have already unwound.
 func Stack() []byte { return debug.Stack() }
 
-// Write puts a report in the store and hands back where it went.
+// Write puts a report in the store, takes a copy of every file named beside it, and hands back
+// where the report went.
+//
+// **A companion is a file the game was already writing that the report would be poorer without**,
+// and today that is the journal: there is one of it and the next run truncates it, so the run that
+// blew up — which is exactly the run worth retracing — would otherwise be overwritten by the next
+// launch. See internal/journal.
+//
+// **The names are the caller's**, on the rule the whole package is under: this one is written from
+// internal/game, which can already see the whole state, and nothing here learns what a journal is.
+// A copy lands under the report's own base name with the companion's own extension, so the two
+// travel together and sort together.
 //
 // **It prunes first.** A prune afterwards would be a sweep that never runs on the one launch that
 // mattered — the game is about to be quit — and a report deleted by its own tidying is worse than
@@ -127,31 +139,75 @@ func Stack() []byte { return debug.Stack() }
 //
 // **Nothing here is fatal and the error is for logging only.** A machine that cannot write a crash
 // report is a machine whose crash is not recorded, which is the rule internal/profile is under; the
-// crash screen still comes up and still says what happened, with nowhere to point at.
-func Write(s profile.Store, r Report) (string, error) {
+// crash screen still comes up and still says what happened, with nowhere to point at. **A
+// companion that will not copy costs the report nothing**, for the same reason a tier that cannot
+// be read is left out of one.
+func Write(s profile.Store, r Report, companions ...string) (string, error) {
 	if s.Dir() == "" {
 		return "", fmt.Errorf("crashlog: nowhere to write to")
 	}
 	Prune(s)
 
-	name := filePrefix + time.Now().UTC().Format(stampFormat) + "-" + r.RunCode + fileSuffix
-	return s.WriteExport(name, r)
+	base := filePrefix + time.Now().UTC().Format(stampFormat) + "-" + r.RunCode
+	path, err := s.WriteExport(base+fileSuffix, r)
+	if err != nil {
+		return path, err
+	}
+
+	for _, name := range companions {
+		if _, err := s.CopyFile(name, base+extOf(name)); err != nil {
+			Note("could not keep %s beside the crash report: %v", name, err)
+		}
+	}
+	return path, nil
 }
 
-// Prune deletes the oldest reports until there is room for one more.
+// extOf is a file name's extension, including the dot, or "" if it has none.
+//
+// **Written here rather than taken from `path/filepath`**, on the storage-boundary rule: this
+// package deliberately knows nothing about paths, and an extension is the one thing about a name it
+// does need. See doc.go.
+func extOf(name string) string {
+	if i := strings.LastIndex(name, "."); i > 0 {
+		return name[i:]
+	}
+	return ""
+}
+
+// Prune deletes the oldest reports until there is room for one more, and takes each one's
+// companions with it.
 //
 // **It sorts by name, which is what the name's shape is for**: the UTC stamp leads, so the
 // alphabetical order and the chronological one are the same and nothing has to open a file to know
 // how old it is.
+//
+// **A report is counted by its own file and nothing else.** Every crash writes a `.json` and may
+// write a companion beside it, so counting names would make the allowance depend on how many
+// companions a build happens to keep — and shrink the number of crashes kept the day a screenshot
+// joined them.
 func Prune(s profile.Store) {
 	names := s.Names(filePrefix)
-	for len(names) >= keep {
-		if err := s.RemoveFile(names[0]); err != nil {
-			// **One failure stops the sweep.** A directory that will not let a file be deleted will
-			// not let the next one be deleted either, and a loop that kept trying would be a report
-			// spending its last moments on a directory it cannot change.
-			return
+
+	var reports []string
+	for _, n := range names {
+		if strings.HasSuffix(n, fileSuffix) {
+			reports = append(reports, n)
 		}
-		names = names[1:]
+	}
+
+	for len(reports) >= keep {
+		base := strings.TrimSuffix(reports[0], fileSuffix)
+		for _, n := range names {
+			if !strings.HasPrefix(n, base) {
+				continue
+			}
+			if err := s.RemoveFile(n); err != nil {
+				// **One failure stops the sweep.** A directory that will not let a file be deleted
+				// will not let the next one be deleted either, and a loop that kept trying would be
+				// a report spending its last moments on a directory it cannot change.
+				return
+			}
+		}
+		reports = reports[1:]
 	}
 }

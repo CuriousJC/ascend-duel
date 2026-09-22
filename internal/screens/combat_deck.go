@@ -15,6 +15,7 @@ import (
 	"log"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -104,6 +105,17 @@ func (s *CombatScene) discardSelected() {
 		return
 	}
 	s.discardsLeft--
+
+	// **A discard is a choice and the plan's list did not have a word for it** *(2026-09-22)*.
+	// Every kind in internal/journal was derived from a line the ledger already words, and a
+	// discard writes no ledger line at all — but it takes cards out of a hand and deals others in,
+	// so a retrace without it diverges on the very next turn.
+	s.choices.Write(journal.Record{
+		Kind:    journal.KindDiscard,
+		Targets: s.selectedCardIDs(),
+		Amount:  s.discardsLeft,
+	})
+
 	s.spendSelected()
 
 	trace.Logf("input", "discard pressed, %d left this round, hand now %s",

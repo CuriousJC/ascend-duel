@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -237,6 +238,15 @@ type GlobalState struct {
 	// without first asking whether the filesystem cooperated. See internal/profile.
 	Store   profile.Store
 	Profile *profile.Profile
+
+	// Journal is the run's choices on their way to the disk — what was picked, bought, spent and
+	// pressed, in order. **Genuinely global on the same terms as Store**: it belongs to the run
+	// rather than to a screen, and it is written from every screen a choice can be made on.
+	//
+	// **It may be nil, and every method on it is safe when it is.** A test scene and a review tool
+	// both run without one, and a nil check at forty call sites is forty places to forget it. See
+	// internal/journal.
+	Journal *journal.Journal
 
 	// EarnedThisSession is the queue of achievements landed but not yet shown, by key, oldest
 	// first. **A queue rather than a flag**, because a single turn can earn three at once — a

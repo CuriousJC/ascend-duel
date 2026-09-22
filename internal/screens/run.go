@@ -20,6 +20,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
@@ -52,6 +53,7 @@ func BootRun(gs *state.GlobalState) {
 				gs.RunSeed = seed
 				gs.Resumed = true
 				gs.Run = run
+				resumeJournal(gs)
 				log.Printf("resuming run %s at room %d, %s", snap.Seed, snap.Fight, snap.Phase)
 				bootPastTheTitle(gs)
 				return
@@ -60,7 +62,48 @@ func BootRun(gs *state.GlobalState) {
 	}
 	gs.Resumed = false
 	gs.Run = buildRun(gs)
+	beginJournal(gs)
 	bootPastTheTitle(gs)
+}
+
+// beginJournal opens a journal for a run that is starting, and resumeJournal for one already being
+// climbed.
+//
+// **The seed has to be settled before either is called.** A taught run is dealt the script's own
+// code and a resumed one brings its own, so a header written at the moment a seed was rolled would
+// name a tower nobody is playing — the same ordering main's own log line is under.
+//
+// **They are two calls rather than one taking a flag** because they do opposite things to the file
+// on disk: starting a run truncates it and resuming one appends to it. See internal/journal.
+func beginJournal(gs *state.GlobalState) {
+	gs.Journal.Begin(journalHeader(gs))
+	gs.Journal.Write(journal.Record{
+		Kind:   journal.KindRun,
+		Action: journal.RunStarted,
+		Key:    seeds.Code(gs.RunSeed),
+	})
+}
+
+func resumeJournal(gs *state.GlobalState) {
+	gs.Journal.Resume(journalHeader(gs))
+	gs.Journal.Write(journal.Record{
+		Kind:   journal.KindRun,
+		Action: journal.RunResumed,
+		Key:    seeds.Code(gs.RunSeed),
+		Fight:  gs.Run.Fight(),
+	})
+}
+
+// journalHeader is what opens a journal file: which build wrote it and which run it is about.
+//
+// **The install id is the only thing in it that is about whom**, and it is copied rather than
+// looked up because a copy of this file travels beside a crash report — see profile.Profile.
+func journalHeader(gs *state.GlobalState) journal.Header {
+	h := journal.Header{Version: gs.Version, RunCode: seeds.Code(gs.RunSeed)}
+	if gs.Profile != nil {
+		h.Install = gs.Profile.InstallID
+	}
+	return h
 }
 
 // bootPastTheTitle walks straight into the run for the one build that cannot press a button to get
@@ -134,6 +177,7 @@ func NewRun(gs *state.GlobalState) {
 	}
 	gs.Resumed = false
 	gs.Run = buildRun(gs)
+	beginJournal(gs)
 	log.Printf("new run %s", seeds.Code(gs.RunSeed))
 
 	enterRun(gs)
@@ -176,6 +220,16 @@ func endRun(gs *state.GlobalState, ended string) {
 	if gs.Run != nil {
 		summary := gs.Run.Summarize(gs.RunSeed, ended)
 		gs.Summary = &summary
+
+		// **The journal is not truncated here, unlike the snapshot on disk.** A run that ended
+		// badly is the one somebody is going to ask about, so the choices that got it there stay
+		// until the next run starts and takes the file. See internal/journal.
+		gs.Journal.Write(journal.Record{
+			Kind:   journal.KindRun,
+			Action: ended,
+			Key:    seeds.Code(gs.RunSeed),
+			Fight:  gs.Run.Fight(),
+		})
 	}
 
 	discardSavedRun(gs)

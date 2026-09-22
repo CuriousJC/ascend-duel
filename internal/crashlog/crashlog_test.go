@@ -184,3 +184,76 @@ func TestAReportNamesNoPath(t *testing.T) {
 		t.Fatalf("the report names a path on this machine: %s", clean)
 	}
 }
+
+// TestACrashKeepsTheJournalItWasWriting holds the half of the retention policy that makes one
+// journal safe: there is one of it and the next run truncates it, so a crash has to take its own
+// copy or the run worth retracing is the run the next launch overwrites.
+func TestACrashKeepsTheJournalItWasWriting(t *testing.T) {
+	dir := t.TempDir()
+	s := profile.At(dir)
+
+	if err := s.AppendLine("journal.jsonl", map[string]any{"kind": "duel"}); err != nil {
+		t.Fatal(err)
+	}
+
+	path, err := Write(s, Build(State{RunSeed: 1}, "boom", nil), "journal.jsonl")
+	if err != nil {
+		t.Fatalf("writing the report: %v", err)
+	}
+
+	// **Under the report's own base name**, so the two sort together in a directory sorted by when
+	// and are pruned together below.
+	beside := strings.TrimSuffix(path, ".json") + ".jsonl"
+	raw, err := os.ReadFile(beside)
+	if err != nil {
+		t.Fatalf("the journal was not kept beside the report: %v", err)
+	}
+	if !strings.Contains(string(raw), `"duel"`) {
+		t.Fatalf("the copy holds %q, want the journal's own line", raw)
+	}
+}
+
+// TestPruningCountsReportsAndTakesTheirCompanionsWithThem holds both halves of the sweep. A report
+// is counted by its own file, so the allowance cannot shrink the day a companion joined it; and a
+// pruned report leaves nothing behind, so the directory cannot fill with orphaned journals.
+//
+// **The directory is fabricated rather than crashed into being.** A report's name leads with a
+// whole second, so writing a dozen through Write would mean sleeping a dozen seconds to keep them
+// apart — and what is under test is the sweep, not the naming.
+func TestPruningCountsReportsAndTakesTheirCompanionsWithThem(t *testing.T) {
+	quiet(t)
+	dir := t.TempDir()
+	s := profile.At(dir)
+
+	const made = keep + 3
+	for i := 0; i < made; i++ {
+		base := fmt.Sprintf("%s2026010%dT000000Z-0009D4", filePrefix, i)
+		if _, err := s.WriteExport(base+fileSuffix, map[string]any{"n": i}); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.AppendLine(base+".jsonl", map[string]any{"n": i}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	Prune(s)
+
+	var reports, companions int
+	for _, n := range s.Names(filePrefix) {
+		switch {
+		case strings.HasSuffix(n, fileSuffix):
+			reports++
+		case strings.HasSuffix(n, ".jsonl"):
+			companions++
+		}
+	}
+
+	// Prune makes room for the report about to be written, so what survives is one under the
+	// allowance.
+	if want := keep - 1; reports != want {
+		t.Fatalf("%d reports survived, want %d", reports, want)
+	}
+	if companions != reports {
+		t.Fatalf("%d journals beside %d reports, want one each", companions, reports)
+	}
+}

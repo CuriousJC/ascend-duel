@@ -46,7 +46,7 @@ func (s *CombatScene) recordRound() {
 		return
 	}
 	s.ledgerWritten = true
-	s.run.RecordRound(s.ledgerLines(s.log), dealtBy(combat.SideA, s.log))
+	s.run.RecordRound(s.ledgerRecords(s.log), dealtBy(combat.SideA, s.log))
 }
 
 // closeLedgerFight records the last round and says what became of the duel.

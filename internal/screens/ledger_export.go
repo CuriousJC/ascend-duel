@@ -108,7 +108,7 @@ func (e *ledgerExporter) export(gs *state.GlobalState) {
 	at := time.Now()
 	code := seeds.Code(gs.RunSeed)
 
-	path, err := gs.Store.WriteExport(session.LedgerExportName(code, at), gs.Run.ExportLedger(code, at))
+	path, err := gs.Store.WriteExport(session.LedgerExportName(code, at), gs.Run.ExportLedger(code, at, ui.LedgerLines))
 	if err != nil {
 		e.note, e.failed = err.Error(), true
 		return

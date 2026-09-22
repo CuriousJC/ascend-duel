@@ -8,9 +8,10 @@ package session
 // export, named for the run and the moment, holding what happened in plain sentences, so a fight
 // can be pasted into a bug report or read months later without the build that wrote it.
 //
-// **The words are the ledger's own** *(see ledger.go)*: a line was worded when it happened and is
-// copied out here verbatim. Nothing in this file decides anything, so an export cannot disagree
-// with the panel it is an export of.
+// **The words are the panel's own.** This package stores records rather than sentences — see
+// record.go — and deciding what a record reads as needs the drawing layer, which sits above this
+// one. So the caller hands the translator in and an export cannot disagree with the panel it is an
+// export of: they are the same function.
 //
 // **Spans collapse to one string, deliberately.** The inks are a picture of the screen — which
 // element a figure came off, which relic priced it — and a reader outside the game has no palette
@@ -79,7 +80,10 @@ type ExportLine struct {
 // **The clock is a parameter rather than a call to time.Now.** Nothing in this package reads a
 // wall clock — see the determinism rules — and an export is not a rule, but a function that took
 // one would be the first, and could not be tested to the second either.
-func (s *Session) ExportLedger(code string, at time.Time) LedgerExport {
+func (s *Session) ExportLedger(code string, at time.Time, words Worder) LedgerExport {
+	if words == nil {
+		words = func([]LedgerRecord) []LedgerLine { return nil }
+	}
 	out := LedgerExport{
 		Seed:     code,
 		Exported: at.Format(time.RFC3339),
@@ -95,15 +99,24 @@ func (s *Session) ExportLedger(code string, at time.Time) LedgerExport {
 			Dealt:   f.Dealt(),
 			Rounds:  f.RoundCount(),
 			Log:     make([]ExportRound, 0, len(f.Rounds)),
-			After:   exportLines(f.After),
+			After:   exportLines(words(f.After)),
 		}
 		for _, r := range f.Rounds {
-			rec.Log = append(rec.Log, ExportRound{Number: r.Number, Lines: exportLines(r.Lines)})
+			rec.Log = append(rec.Log, ExportRound{
+				Number: r.Number, Lines: exportLines(words(r.Records)),
+			})
 		}
 		out.Fights = append(out.Fights, rec)
 	}
 	return out
 }
+
+// Worder turns a block of records into the lines a panel would draw.
+//
+// **A parameter rather than an import**, because the words live in `internal/ui` and this package
+// sits below it. One function serves the panel and the file, which is what stops an export from
+// reading differently to the account it was taken of.
+type Worder func([]LedgerRecord) []LedgerLine
 
 // LedgerExportName is what the file is called: the run it is of, and the moment it was taken.
 //

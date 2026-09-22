@@ -303,10 +303,10 @@ func TestTheSummaryIsTakenBeforeTheRunIsDestroyed(t *testing.T) {
 	gs := saveState(t)
 
 	gs.Run.BeginFight(1, "GiantBat")
-	gs.Run.RecordRound([]session.LedgerLine{session.Line(session.VoicePlain, "hit")}, 40)
+	gs.Run.RecordRound([]session.LedgerRecord{{Kind: session.KindDamage, Side: session.SideYou, Amount: 40}}, 40)
 	gs.Run.EndFight(session.OutcomeWon)
 	gs.Run.BeginFight(1, "Cave Troll")
-	gs.Run.RecordRound([]session.LedgerLine{session.Line(session.VoicePlain, "hit")}, 12)
+	gs.Run.RecordRound([]session.LedgerRecord{{Kind: session.KindDamage, Side: session.SideYou, Amount: 12}}, 12)
 	gs.Run.EndFight(session.OutcomeLost)
 
 	EndRunInDefeat(gs)

@@ -44,11 +44,17 @@ func ledgerRun() *session.Session {
 	run := session.New(panelDeck())
 
 	run.BeginFight(1, "Giant Bat")
-	run.RecordRound([]session.LedgerLine{session.Line(session.VoiceYou, "Duelist attacks")}, 40)
+	run.RecordRound([]session.LedgerRecord{{
+		Kind: session.KindAct, Side: session.SideYou, Name: "Duelist",
+		Card: "Jab", Verb: session.InkAttack,
+	}}, 40)
 	run.EndFight(session.OutcomeWon)
 
 	run.BeginFight(1, "Cave Troll")
-	run.RecordRound([]session.LedgerLine{session.Line(session.VoiceFoe, "Cave Troll attacks")}, 12)
+	run.RecordRound([]session.LedgerRecord{{
+		Kind: session.KindAct, Side: session.SideFoe, Name: "Cave Troll",
+		Card: "Gnaw", Verb: session.InkAttack,
+	}}, 12)
 	return run
 }
 
@@ -174,8 +180,6 @@ func TestTheScrollbarStandsInsideThePanel(t *testing.T) {
 // **The working under a blow is what the ledger exists for**, so it is pinned: a line per landing,
 // each naming its card and its figure, with the relic that priced it beside it.
 func TestABlowWritesItsWorkingOut(t *testing.T) {
-	s := &CombatScene{}
-
 	e := combat.Event{
 		Kind:          combat.KindHand,
 		Side:          combat.SideA,
@@ -199,7 +203,9 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 		{Concept: combat.Jab, Element: combat.Ice},
 	}
 
-	lines := s.handTermLines(e, played)
+	// **No relics worn**, so every name falls back to "a relic" — which is what this test is
+	// about: the shape of the working and the figures in it, not which record paid them.
+	lines := ui.LedgerLines(ui.HandTermRecords(e, nil, played))
 	if len(lines) != 3 {
 		t.Fatalf("a two-term blow wrote %d lines, want 2 terms and the sum: %v", len(lines), lines)
 	}
@@ -249,13 +255,12 @@ func TestTheWorkingIsIndentedRatherThanCentered(t *testing.T) {
 // multiplier in the relic pink, the hand's own in the hand's color. **It is the reason a line is
 // runs rather than a string**, and it is the part a refactor would quietly flatten.
 func TestTheWorkingIsColoredLikeTheScreen(t *testing.T) {
-	s := &CombatScene{}
-
 	e := combat.Event{Kind: combat.KindHand, HandCardCount: 1, Multiplier: 200, Amount: 40}
 	e.HandAmounts[0], e.HandCardBase[0] = 20, 20
 	e.HandRelicScale[0] = []int{200}
 
-	lines := s.handTermLines(e, []combat.Card{{Concept: combat.Bash, Element: combat.Fire}})
+	lines := ui.LedgerLines(ui.HandTermRecords(e, nil,
+		[]combat.Card{{Concept: combat.Bash, Element: combat.Fire}}))
 	rows := ui.PaneRowsFor(lines)
 
 	fire := cards.BorderOf(ui.ArtFor(combat.Fire))

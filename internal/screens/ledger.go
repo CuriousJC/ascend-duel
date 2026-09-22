@@ -355,7 +355,7 @@ func ledgerSignature(gs *state.GlobalState, expanded map[int]bool) ledgerKey {
 		key.fights++
 		key.rounds += len(f.Rounds)
 		for _, r := range f.Rounds {
-			key.lines += len(r.Lines)
+			key.lines += len(r.Records)
 		}
 		key.lines += len(f.After)
 	}
@@ -412,7 +412,7 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 			head.Band = ground
 			rows = append(rows, ledgerRow{row: head})
 
-			for _, l := range ui.PaneRowsFor(round.Lines) {
+			for _, l := range ui.PaneRowsFor(ui.LedgerLines(round.Records)) {
 				l.Band = ground
 				rows = append(rows, ledgerRow{row: l})
 			}
@@ -426,7 +426,7 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 			head.Band = ground
 			rows = append(rows, ledgerRow{row: head})
 
-			for _, l := range ui.PaneRowsFor(f.After) {
+			for _, l := range ui.PaneRowsFor(ui.LedgerLines(f.After)) {
 				l.Band = ground
 				rows = append(rows, ledgerRow{row: l})
 			}

@@ -9,13 +9,9 @@ func TestTheLedgerSurvivesASnapshot(t *testing.T) {
 
 	s := New(testDeck())
 	s.BeginFight(1, "Giant Bat")
-	s.RecordRound([]LedgerLine{
-		{Voice: VoiceYou, Spans: []LedgerSpan{
-			{Text: "Duelist "},
-			{Text: "attacks", Ink: InkAttack, Mark: true},
-			{Text: " with a fire strike"},
-		}},
-		Line(VoiceTerm, "Bash  20  x Keen 2x"),
+	s.RecordRound([]LedgerRecord{
+		noted(VoiceYou, "Duelist attacks with a fire strike"),
+		noted(VoiceTerm, "Bash  20  x Keen 2x"),
 	}, 40)
 	s.EndFight(OutcomeWon)
 
@@ -35,18 +31,15 @@ func TestTheLedgerSurvivesASnapshot(t *testing.T) {
 	if f.Dealt() != 40 {
 		t.Errorf("the fight came back having dealt %d, want 40", f.Dealt())
 	}
-	if len(f.Rounds) != 1 || len(f.Rounds[0].Lines) != 2 {
+	if len(f.Rounds) != 1 || len(f.Rounds[0].Records) != 2 {
 		t.Fatalf("the fight came back with %d rounds", len(f.Rounds))
 	}
-	line := f.Rounds[0].Lines[0]
-	if line.Voice != VoiceYou || len(line.Spans) != 3 {
-		t.Fatalf("a line came back as %+v, which is not how it was written", line)
+	rec := f.Rounds[0].Records[0]
+	if rec.Kind != KindAct || rec.Side != VoiceYou {
+		t.Fatalf("a record came back as %+v, which is not how it was written", rec)
 	}
-	if verb := line.Spans[1]; verb.Text != "attacks" || verb.Ink != InkAttack || !verb.Mark {
-		t.Errorf("the marked verb came back as %+v", verb)
-	}
-	if got, want := line.Text(), "Duelist attacks with a fire strike"; got != want {
-		t.Errorf("the line reads %q, want %q", got, want)
+	if got, want := rec.Note, "Duelist attacks with a fire strike"; got != want {
+		t.Errorf("the record reads %q, want %q", got, want)
 	}
 }
 
@@ -58,7 +51,7 @@ func TestAnUnfoughtFightIsNotKept(t *testing.T) {
 
 	s.BeginFight(1, "Giant Bat")
 	s.BeginFight(1, "Giant Bat") // re-entered the room
-	s.RecordRound([]LedgerLine{Line(VoicePlain, "something happened")}, 5)
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "something happened")}, 5)
 	s.EndFight(OutcomeLost)
 
 	s.BeginFight(1, "Giant Bat") // the retry, left before a round was thrown
@@ -80,11 +73,11 @@ func TestTwoFightsInTheSameRoomAreTwoRecords(t *testing.T) {
 	s := New(testDeck())
 
 	s.BeginFight(2, "Cave Troll")
-	s.RecordRound([]LedgerLine{Line(VoicePlain, "lost it")}, 10)
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "lost it")}, 10)
 	s.EndFight(OutcomeLost)
 
 	s.BeginFight(2, "Cave Troll")
-	s.RecordRound([]LedgerLine{Line(VoicePlain, "won it")}, 90)
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "won it")}, 90)
 	s.EndFight(OutcomeWon)
 
 	fights := s.LedgerFights()
@@ -108,7 +101,7 @@ func TestTheOpenFightIsTheOneStillBeingFought(t *testing.T) {
 	}
 
 	s.BeginFight(1, "Giant Bat")
-	s.RecordRound([]LedgerLine{Line(VoicePlain, "a round")}, 1)
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "a round")}, 1)
 	if n, ok := s.LedgerOpenFight(); !ok || n != 1 {
 		t.Errorf("the live fight is (%d, %v), want (1, true)", n, ok)
 	}

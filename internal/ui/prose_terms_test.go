@@ -49,7 +49,7 @@ func blowWithEveryFlatTerm() (combat.Event, []combat.Card) {
 func TestTheLedgersSumAddsUpToItsOwnTotal(t *testing.T) {
 	e, played := blowWithEveryFlatTerm()
 
-	line := spanText(HandMathSpans(e, played))
+	line := spanText(sumSpans(sumRecord(e, played)))
 	sum, total := evaluateSum(t, line)
 	if sum != total {
 		t.Errorf("the ledger wrote %q, which comes to %d rather than %d", line, sum, total)
@@ -66,7 +66,7 @@ func TestTheRungRelicsMultiplierIsOnTheLine(t *testing.T) {
 	e.HandScale, e.HandScaleSeats = 200, []bool{true}
 	e.Amount = e.Base * 2
 
-	line := spanText(HandMathSpans(e, played))
+	line := spanText(sumSpans(sumRecord(e, played)))
 	if strings.Count(line, " x ") != 2 {
 		t.Errorf("the ledger wrote %q, want the hand's multiplier and the relic's as two terms", line)
 	}
@@ -82,12 +82,12 @@ func TestAHeldTermCountsTheCardsThatPaidIt(t *testing.T) {
 	e, _ := blowWithEveryFlatTerm()
 	relics := []combat.WornRelic{{}, {}, {}}
 
-	lines := FlatTermLines(e, relics)
-	if len(lines) != 2 {
-		t.Fatalf("the working has %d flat terms, want one each for the held cards and the purse", len(lines))
+	flats := flatTermRecords(e, relics)
+	if len(flats) != 2 {
+		t.Fatalf("the working has %d flat terms, want one each for the held cards and the purse", len(flats))
 	}
 
-	held := spanText(lines[0].Spans)
+	held := spanText(termLine(flats[0]).Spans)
 	if !strings.Contains(held, "4 cards") {
 		t.Errorf("the held term reads %q, want the count of cards that paid it", held)
 	}
@@ -104,15 +104,15 @@ func TestTheRungRelicsRaiseIsSaidButNeverSummed(t *testing.T) {
 	e, played := blowWithEveryFlatTerm()
 	relics := []combat.WornRelic{{}, {}, {}}
 
-	if line := spanText(HandMathSpans(e, played)); strings.Contains(line, "+ 2 ") {
+	if line := spanText(sumSpans(sumRecord(e, played))); strings.Contains(line, "+ 2 ") {
 		t.Errorf("the sum reads %q, and the rung relic's raise is already inside the card terms", line)
 	}
 
-	lines := HandDMGLines(e, relics)
-	if len(lines) != 1 {
-		t.Fatalf("a rung relic wrote %d lines of working, want the one saying what it raised", len(lines))
+	raise, ok := handDMGRecord(e, relics)
+	if !ok {
+		t.Fatal("a rung relic wrote no line of working, want the one saying what it raised")
 	}
-	if said := spanText(lines[0].Spans); !strings.Contains(said, "+2 DMG") {
+	if said := spanText(termLine(raise).Spans); !strings.Contains(said, "+2 DMG") {
 		t.Errorf("the raise reads %q, want the DMG it added", said)
 	}
 }

@@ -10,23 +10,36 @@ import (
 // theExportMoment is a fixed clock, so the name and the stamp in the file can be asserted at all.
 var theExportMoment = time.Date(2026, 9, 16, 14, 12, 33, 0, time.UTC)
 
-// **An export says what the panel says, in the panel's own words.** The lines are worded once,
-// when they happen, and this copies them out — so a test on the flattened line is a test that the
-// export cannot start paraphrasing what the run recorded.
+// noted is a record carrying a sentence, for the tests in this package.
+//
+// **The words a record reads as are decided above this package** — see internal/ui/ledger_prose.go
+// — so a session test cannot reach the real translator without importing upward. What these tests
+// hold is that a run stores what it is given and an export carries what it is handed, neither of
+// which is a question about the wording, so a stub is the honest fixture rather than a shortcut.
+func noted(voice, text string) LedgerRecord {
+	return LedgerRecord{Kind: KindAct, Side: voice, Note: text}
+}
+
+// testWords is the Worder those records read back through.
+func testWords(recs []LedgerRecord) []LedgerLine {
+	out := make([]LedgerLine, 0, len(recs))
+	for _, r := range recs {
+		out = append(out, Line(r.Side, r.Note))
+	}
+	return out
+}
+
+// **An export says what the panel says, in the panel's own words.** Both read the same records
+// through the same translator, so a test on the flattened line is a test that the export carries
+// the words it was handed rather than paraphrasing what the run recorded.
 func TestTheExportCarriesTheLedgersOwnWords(t *testing.T) {
 	s := New(testDeck())
 	s.BeginFight(1, "Giant Bat")
-	s.RecordRound([]LedgerLine{
-		{Voice: VoiceYou, Spans: []LedgerSpan{
-			{Text: "Duelist "},
-			{Text: "attacks", Ink: InkAttack, Mark: true},
-			{Text: " with a fire strike"},
-		}},
-	}, 40)
-	s.RecordAfter([]LedgerLine{Line(VoicePlain, "Took Jab")})
+	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks with a fire strike")}, 40)
+	s.RecordAfter([]LedgerRecord{noted(VoicePlain, "Took Jab")})
 	s.EndFight(OutcomeWon)
 
-	out := s.ExportLedger("0009D4", theExportMoment)
+	out := s.ExportLedger("0009D4", theExportMoment, testWords)
 	if out.Seed != "0009D4" {
 		t.Errorf("the export names run %q", out.Seed)
 	}
@@ -57,9 +70,9 @@ func TestTheExportCarriesTheLedgersOwnWords(t *testing.T) {
 func TestAnUnfinishedFightExportsAsFighting(t *testing.T) {
 	s := New(testDeck())
 	s.BeginFight(1, "Giant Bat")
-	s.RecordRound([]LedgerLine{Line(VoiceYou, "Duelist attacks")}, 10)
+	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks")}, 10)
 
-	out := s.ExportLedger("0009D4", theExportMoment)
+	out := s.ExportLedger("0009D4", theExportMoment, testWords)
 	if len(out.Fights) != 1 || out.Fights[0].Outcome != "fighting" {
 		t.Fatalf("the open fight exported as %+v", out.Fights)
 	}
@@ -79,10 +92,10 @@ func TestTheExportIsNamedForTheRunAndTheMoment(t *testing.T) {
 func TestTheExportIsReadableJSON(t *testing.T) {
 	s := New(testDeck())
 	s.BeginFight(3, "Giant Bat")
-	s.RecordRound([]LedgerLine{Line(VoiceHand, "Elemental Four of a Kind, 69")}, 69)
+	s.RecordRound([]LedgerRecord{noted(VoiceHand, "Elemental Four of a Kind, 69")}, 69)
 	s.EndFight(OutcomeLost)
 
-	raw, err := json.MarshalIndent(s.ExportLedger("0009D4", theExportMoment), "", "  ")
+	raw, err := json.MarshalIndent(s.ExportLedger("0009D4", theExportMoment, testWords), "", "  ")
 	if err != nil {
 		t.Fatalf("the export must marshal: %v", err)
 	}

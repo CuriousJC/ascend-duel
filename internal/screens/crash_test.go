@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -68,12 +69,16 @@ func TestAReportThatCouldNotBeWrittenSaysSo(t *testing.T) {
 // path was one value in the block, and the end of it — the thing the page exists to say — was
 // simply off the right edge.
 func TestTheReportLineDoesNotRunOffTheScreen(t *testing.T) {
-	deep := `C:\Users\somebody\AppData\Local\Temp\claude\c--repos-ascend-duel\` +
-		`ba39b14f-326f-4fa6-b72a-8216f384c422\scratchpad\blowup\prof-crash`
+	// The fixture is joined rather than written out, because filepath splits on the separator of
+	// the OS running the test and a backslash is an ordinary character everywhere but Windows.
+	deep := filepath.Join("C:/", "Users", "somebody", "AppData", "Local", "Temp", "claude",
+		"c--repos-ascend-duel", "ba39b14f-326f-4fa6-b72a-8216f384c422", "scratchpad",
+		"blowup", "prof-crash")
+	report := filepath.Join(deep, "crash-20260922T101500Z-0009D4.json")
 	gs := &state.GlobalState{
 		ScreenWidth:  state.ScreenWidth,
 		ScreenHeight: state.ScreenHeight,
-		Crash:        &state.CrashInfo{Path: deep + `\crash-20260922T101500Z-0009D4.json`},
+		Crash:        &state.CrashInfo{Path: report},
 	}
 
 	for _, f := range crashFacts(gs) {

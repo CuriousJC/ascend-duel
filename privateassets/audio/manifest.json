@@ -1,0 +1,23 @@
+{
+  "Bundle": "v1",
+  "Packs": [
+    {
+      "Name": "dark-fantasy",
+      "Note": "Two looping music beds, peak-normalized to -1.0 dBFS on the way in (+13.0 and +12.8 dB, no clipping): as delivered they peak at about -14 dBFS, roughly a fifth the amplitude of the synthesized score."
+    }
+  ],
+  "Files": [
+    {
+      "Name": "dark-fantasy-01.wav",
+      "Pack": "dark-fantasy",
+      "Bytes": 9141702,
+      "SHA256": "8910c19ebae2fe4ea9d89bc9ad7916367f96b82bca9ba9ef513906084ca886b0"
+    },
+    {
+      "Name": "dark-fantasy-02.wav",
+      "Pack": "dark-fantasy",
+      "Bytes": 4577626,
+      "SHA256": "35139ddf8806cac42bce9f83cd9dc287f0df27f7cc247e8b9a992093df47e03c"
+    }
+  ]
+}

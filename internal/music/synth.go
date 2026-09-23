@@ -6,11 +6,10 @@ import "math"
 // one audio format Ebitengine will take without a decoder.
 //
 // **There is no recorded audio and no SoundFont anywhere in this.** Every sample is
-// computed from the notes in the file, the same argument that makes the generated
-// glyphs in internal/systems worth their code: generated output has no provenance
-// question, and this is a game that has to be sellable. The cost is that it sounds
-// like a synthesizer rather than an orchestra, which for a score of two synth basses
-// and a drum part is close to what was asked for anyway.
+// computed from the notes in the file, so the whole score is a kilobyte that can be
+// read and edited. The cost is that it sounds like a synthesizer rather than an
+// orchestra, which for a score of two synth basses and a drum part is close to what
+// was asked for anyway.
 //
 // This file may not import Ebitengine. Rendering is pure arithmetic over a byte slice
 // and wants to stay testable without a window; only music.go touches the audio device.

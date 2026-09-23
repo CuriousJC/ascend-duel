@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/curiousjc/ascend-duel/assets"
@@ -18,6 +19,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/privateassets"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -296,6 +298,29 @@ func main() {
 		// game in silence, which the volume bar on the settings screen already says out loud; a box
 		// in the player's way about it would be the game complaining about their hardware.
 		crashlog.Note("music: %v", err)
+	}
+
+	// The bought loops, which are not in git and may not be on this machine at all — see
+	// privateassets/README.md. **Loading none of them is a normal build**: internal/game names a
+	// track per screen and music.PlayTrack falls back to the score for a name nothing was loaded
+	// under, so a clone with no bundle synced plays the synthesized score everywhere rather than
+	// falling silent in the shop.
+	//
+	// **Sorted rather than ranged over the map**, because map order is randomized deliberately
+	// and nothing in this game may depend on it. Nothing here does today; a loop that reported
+	// the first failure rather than all of them would.
+	private := privateassets.Audio()
+	files := make([]string, 0, len(private))
+	for file := range private {
+		files = append(files, file)
+	}
+	sort.Strings(files)
+	for _, file := range files {
+		// Filenames, not track names: the extension is what picks music.LoadTrack's decoder and
+		// the stem is what the track ends up called.
+		if err := music.LoadTrack(file, private[file]); err != nil {
+			log.Println(err)
+		}
 	}
 
 	// Widgets are no longer wired up here. Each scene builds its own in Init, so main

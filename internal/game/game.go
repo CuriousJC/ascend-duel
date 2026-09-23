@@ -274,6 +274,11 @@ func (g *Game) update() error {
 	// The frame's own controls, after the scene, so they read the modal flag the scene has
 	// just written. See chrome.go.
 	g.updateChrome(g.GlobalState)
+
+	// **After the scene, because the scene is what may have changed the screen.** A switch made
+	// this frame should be heard this frame rather than on the next one. See score.go; it is a
+	// table read, and does nothing on a frame where the screen did not move.
+	g.updateScore()
 	return nil
 }
 

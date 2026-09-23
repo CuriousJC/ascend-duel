@@ -166,6 +166,19 @@ jobs:
     runs-on: windows-latest
     env:
       VERSION: ${{ needs.version.outputs.version }}
+
+    # **The second elevated permission in the repo, and it is not a write token.**
+    # `id-token: write` mints a short-lived OIDC token this job exchanges with STS for read-only
+    # access to the audio bucket; it grants nothing in GitHub. Declared per job rather
+    # than at the top of the file, which stays `contents: read`, so the only jobs holding any
+    # elevated permission are the two that build and the one that publishes.
+    #
+    # `contents: read` is restated because a job-level block replaces the workflow-level one
+    # outright rather than adding to it.
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - uses: actions/checkout@v5
 
@@ -173,6 +186,37 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+
+      # The audio bundle, which is not in git. See the script and privateassets/README.md.
+      #
+      # **`SOUNDS_BUCKET` is the switch for the whole arrangement**, and both steps below are
+      # gated on it rather than only the first. Until the bucket, the role and the three
+      # repository variables exist, a release builds and ships with the synthesized score
+      # everywhere — which is what the game does anyway on any machine without the bundle.
+      #
+      # **One condition on both steps, never two.** Fetching without requiring is a release that
+      # can ship quiet; requiring without fetching is a release that cannot be cut at all, which
+      # is exactly the state this gate was added to get out of. They are one switch because a
+      # half-configured private-asset path has no correct behaviour.
+      - name: fetch the private assets
+        if: vars.SOUNDS_BUCKET != ''
+        shell: bash
+        env:
+          SOUNDS_BUCKET: ${{ vars.SOUNDS_BUCKET }}
+          SOUNDS_ROLE_ARN: ${{ vars.SOUNDS_ROLE_ARN }}
+          AWS_REGION: ${{ vars.SOUNDS_REGION }}
+        run: bash .github/scripts/fetch-private-assets.sh
+
+      # **The interlock.** The game builds and plays silent when the directory is empty, which is
+      # correct for a clean clone and for every pull-request CI run — and would be a catastrophe
+      # in a *configured* release, where it means shipping a game whose audio nobody noticed was
+      # missing. This fails the build when the manifest names a file the directory does not hold,
+      # when a file's bytes are not the ones recorded, or when a file belongs to no recorded
+      # batch. It arms itself the moment SOUNDS_BUCKET is set.
+      - name: require the private assets
+        if: vars.SOUNDS_BUCKET != ''
+        shell: bash
+        run: go run ./tools/privateassets -require
 
       # The same gates CI runs. A tag can be pushed at any commit, including one that never
       # went through a pull request, so the release path cannot assume CI has already passed
@@ -216,6 +260,13 @@ jobs:
     needs: version
     env:
       VERSION: ${{ needs.version.outputs.version }}
+
+    # See the note on the windows job: OIDC for the audio bucket, nothing more, and
+    # `contents: read` restated because a job-level block replaces rather than extends.
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - uses: actions/checkout@v5
 
@@ -234,6 +285,20 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+
+      # The audio bundle, and the interlock that stops a configured release shipping without
+      # it. Both steps and the gate on them are the windows job's, for the same reasons.
+      - name: fetch the private assets
+        if: vars.SOUNDS_BUCKET != ''
+        env:
+          SOUNDS_BUCKET: ${{ vars.SOUNDS_BUCKET }}
+          SOUNDS_ROLE_ARN: ${{ vars.SOUNDS_ROLE_ARN }}
+          AWS_REGION: ${{ vars.SOUNDS_REGION }}
+        run: bash .github/scripts/fetch-private-assets.sh
+
+      - name: require the private assets
+        if: vars.SOUNDS_BUCKET != ''
+        run: go run ./tools/privateassets -require
 
       - name: vet
         run: |

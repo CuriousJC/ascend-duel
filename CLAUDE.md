@@ -133,7 +133,7 @@ replies in the terminal and nothing else.
   left out and the honest token arithmetic.
 - **"stop caveman" or "normal mode" turns it off for a session** without editing anything.
 
-## Licensing and IP — read before adding dependencies or assets
+## Licensing and IP — read before adding dependencies
 
 The project is **source-available, not open source**, and is intended to be sold
 (Steam) by its two copyright holders while the source stays public.
@@ -150,13 +150,10 @@ The project is **source-available, not open source**, and is intended to be sold
 - **No GPL, ever.** Every dependency must be permissive (MIT / BSD / Apache-2.0) or it
   cannot go into a product licensed this way. Check the license before adding anything
   to `go.mod`, and flag it in the PR.
-- **Assets need provable licenses.** Do not add assets with unclear provenance; "found
-  it online" is not sufficient for a paid release. **Everything in `assets/` is first-party**: art
-  generated from the prompts in `docs/art/`, and a score synthesized at startup from a MIDI file
-  this repo owns. Nothing in it came from anywhere else, and nothing in it needs a third party's
-  permission to ship.
 - **Do not propose rewriting git history over the relicense.** The Apache 2.0 grant on
   commits published before it is irrevocable, and the owners have accepted that.
+- **Assets are the owner's business and not yours.** Do not reason about where a file came
+  from, do not ask, and do not write provenance into a comment, a doc or a data file.
 
 ## Commands
 
@@ -196,6 +193,9 @@ go run ./tools/artcompare   # one catalog's art, every candidate batch side by s
 go run ./tools/artcompare -catalog relic    # the same for relics; card, essence, rune, stone, other
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
+go run ./tools/privateassets   # the loops: what is present, what matches, what is unrecorded
+go run ./tools/privateassets -write     # record what is in privateassets/audio/ into its manifest
+go run ./tools/privateassets -require   # what a release runs: refuse a build missing or unattributed audio
 ```
 
 **A sheet can be narrowed with a chip bar, and `tools/sheetfilter` is the whole of it** — the
@@ -530,6 +530,25 @@ git tag -a v0.1.0 -m "..."; git push origin v0.1.0
   traveling with the binary the moment it is renamed.
 - **Neither `debugtrace` nor `idleexit` is ever set in a release build.** Instrumentation
   must not ship, and a game that closes itself on an idle player is a bug.
+- **The release fetches the bought sounds and refuses to build without them, once it is
+  configured to.**
+  `.github/scripts/fetch-private-assets.sh` runs in both build jobs, and CI runs it in neither —
+  so a credential is wanted on the two jobs that ship a binary and nowhere else, and a pull
+  request from a fork needs nothing. **There are no stored keys**: the build jobs carry
+  `id-token: write`, GitHub mints a short-lived OIDC token, and STS exchanges it for
+  fifteen-minute read-only credentials against one bucket prefix. **The exchange is written out
+  by hand rather than taken from `aws-actions/configure-aws-credentials`**, which is the
+  first-party-actions rule below costing about a dozen lines. **The bundle prefix comes out of
+  the committed manifest**, so adopting a new set of sounds is an edit somebody reviews. Three
+  repository variables configure it — `SOUNDS_BUCKET`, `SOUNDS_ROLE_ARN`, `SOUNDS_REGION`.
+
+  **`SOUNDS_BUCKET` is the switch for the whole arrangement, and both steps are gated on it.**
+  Unset, a release fetches nothing and requires nothing, and ships the synthesized score
+  everywhere — which is what the game does on any machine without the bundle, so a release can
+  be cut before the bucket exists. Set, the sync runs and `tools/privateassets -require` refuses
+  a build whose manifest names a file the directory does not hold. **The two share one condition
+  on purpose**: fetching without requiring is a release that can ship quiet, and requiring
+  without fetching is a release that cannot be cut at all.
 - **Only first-party actions**, and publishing goes through the `gh` CLI rather than a
   marketplace action. A job holding a write token is the last place to run unreviewed code.
   Build jobs upload artifacts; one `publish` job creates the release, because two jobs both
@@ -905,7 +924,7 @@ changing cards where they stand, mid-fight.
   it.
 - **ebitenui was evaluated and declined.** Everything the game needs is a *game* widget,
   which is where general-purpose toolkits are weakest, and a toolkit is one more dependency
-  to license-check against a product that will be sold. **The one trigger for revisiting is
+  to carry. **The one trigger for revisiting is
   the seed text field** — a text input with a caret, selection and clipboard is the single
   widget genuinely cheaper to take than to build.
 
@@ -920,10 +939,8 @@ per element, plus a neutral set, plus one cost tick per element** — a multipli
 a list, which is exactly why it is not an enum: thirty-odd append-only enum values would be
 thirty-odd cache slots naming pictures the rules know nothing about.
 
-**The provenance argument is what a generator was for, and it is answered differently**: the art
-is generated by an image model from a prompt this repo owns, `docs/art/`, rather than drawn by a
-third party — so there is still nothing to clear, and the pictures are files rather than code.
-**Do not reintroduce a silhouette generator.** A derived one-pixel rim means a smaller glyph is a
+**The art is generated by an image model from a prompt this repo owns**, `docs/art/`, so the
+pictures are files rather than code. **Do not reintroduce a silhouette generator.** A derived one-pixel rim means a smaller glyph is a
 *different drawing*, where a painting has interior detail to average and survives both
 reductions.
 
@@ -1012,14 +1029,75 @@ startup. `main.go` starts it after assets load; it loops for the whole session a
 every screen. Editing the tune means editing the MIDI file. **Nothing is baked and there
 is no build step.**
 
+**Beside the score, `internal/music` holds named tracks** — recorded WAV loops, loaded by `main`
+out of `privateassets/`. The score and a loop are the same kind of thing once they are in the
+package. Several things to know before touching any of it:
+
+- **Which screen plays what is `internal/game/score.go`, and no scene decides it.** One
+  `state.ActiveScreen` table, read **every frame** — `music.PlayTrack` does nothing when the
+  track is already sounding, so there is no previous screen to remember and no way for the table
+  and what is audible to drift. The alternative was a call in each scene's `Init` and a matching
+  one to put the score back, which is two edits per screen and one of them is the one that gets
+  forgotten, leaving the shop's loop playing over a duel.
+- **Every screen is listed, including the ones that play the score.** `music.Score` is a name —
+  `"ascending"` — rather than the empty string, because the score plays on nearly every screen
+  and was the one piece of music not written down anywhere near the decision about it. A zero
+  value standing for a real thing is the pattern this project rejects everywhere else, and
+  `TestEveryScreenNamesItsMusic` walks `state.ActiveScreen` so a new screen fails the suite
+  rather than falling back quietly.
+- **A screen gives one of two answers**: it names a piece of music, or it **leaves whatever is
+  sounding alone**. Settings, Achievements, Credits, the debug gallery and an opened sealed good
+  are all reached *from* somewhere and go back to it, so they are transparent to the music the
+  way they are transparent to the run — a player who opens the volume bar to turn the shop's loop
+  up must not have the shop's loop stop to let them. **The seamless return falls out of it for
+  free**: coming back asks for a track that is already sounding, which `PlayTrack` ignores, so
+  the loop plays through the visit instead of starting over.
+- **It is deliberately not `chromeShowing`.** That predicate answers whether the frame draws its
+  own controls; its list is close enough to be tempting and wrong in three places — `Title` and
+  `PostBattle` stand the chrome down while naming their own music, and `RunOver` is a destination
+  rather than an overlay, so there is nothing to be transparent *to*. Two questions that agree
+  about five screens and disagree about three are two tables.
+- **One table rather than a map of tracks beside a set of exceptions**, because a screen written
+  into both would be a contradiction nothing catches.
+- **The score and a loop are the same kind of thing**, and `internal/music` never learns which is
+  which — `main` loads the loops out of `privateassets/` and the package holds named players.
+  Where a piece came from is a fact about who loaded it, not a property to be written on it.
+- **A track nothing was loaded under gets the score.** A clone with no bundle synced plays the
+  score everywhere rather than falling silent wherever a loop was named — the empty-
+  `privateassets` rule reaching the screen. `TestEveryNamedTrackIsInTheBundle` holds `score.go`
+  against the committed manifest (**the manifest, not the directory** — the WAVs are not in git,
+  so a test looking for files would fail on every clean clone) and *reports* a bundled loop no
+  screen plays, rather than failing on one.
+- **The score resumes and a track restarts.** The score runs for the whole session and dropping
+  back into it mid-phrase is what it is for — the same argument `SetLevel` is under. A track
+  belongs to a *place*, so arriving there starts it.
+- **`SetLevel` sets every player, not the one that is sounding.** A paused track keeps the volume
+  it was set to, so a level changed while a loop is up would otherwise be the level the score
+  came back at — the bar and the music disagreeing about the number the bar is the only control
+  for.
+
+**Normalize a bought loop on the way in, and never fix a quiet one with the ceiling.**
+`music.fullVolume` is 0.35 and caps the score and every track *together*, so raising it to
+rescue one loop makes the chiptune harsh. The score sits at **-1.7 dBFS peak, -14.7 dBFS RMS**;
+peak-normalize a track to **-1.0 dBFS** and the two land within a decibel or two, which is what
+stops a player reaching for the bar when the screen changes. The gain applied goes in the pack's
+`Note`, because it means the bytes that ship are not the bytes that were bought.
+
+**A track is decoded by its extension, and the size is the thing to watch.** `music.decoders` is
+the table — WAV, Ogg Vorbis and MP3, the three Ebitengine takes, and the same three
+`privateassets.Audio` hands over, which is why `LoadTrack` is given a *filename* rather than a
+name: a loader accepting less than the embed carries is a manifested sound that ships and is
+never heard. `sampleRate` is 44100 and the loops are 16-bit stereo at exactly that, so nothing is
+resampled — but a minute of WAV is about ten megabytes in the binary where the Ogg would be a few
+hundred kilobytes. **Convert on the way into `privateassets/audio/`, not in the loader**, and read
+the size against the catalog before adding a third loop.
+
 - **Ebitengine cannot play MIDI.** Its audio package decodes MP3, Ogg Vorbis and WAV,
   and that is all. The three ways past that were converting to Ogg offline, embedding a
   SoundFont plus a synthesizer, or generating the audio in Go.
-- **The third was chosen for the glyph argument**: generated output has no provenance
-  question. A SoundFont is megabytes with a license to clear, and a rendered Ogg carries
-  that same question inside it *invisibly* — which is worse, because the problem stops
-  being visible in the diff. `oto` (Apache-2.0, first-party to Ebitengine) is the only
-  dependency this added.
+- **The third was chosen to keep the repository small.** A SoundFont is megabytes and a
+  rendered Ogg is a binary where a kilobyte of notes will do, and both put the tune somewhere
+  a diff cannot read. `oto` (first-party to Ebitengine) is the only dependency this added.
 - **What it costs is fidelity.** This is an oscillator, so the score sounds like a
   chiptune. The current file is two synth basses and a drum part, so the distance is
   short — **a score wanting strings or a piano would not survive the trip, and that is
@@ -2033,7 +2111,7 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | Package | imports, of ours |
 |---|---|
 | `seeds` `models` `assets` `idle` `trace` `music` | *nothing* |
-| `data` `profile` | *nothing* |
+| `data` `profile` `privateassets` | *nothing* |
 | `journal` | profile |
 | `scenario` | data, combat *(compiled out unless `-tags scenario`)* |
 | `pyramid` | data |
@@ -2074,6 +2152,10 @@ Six facts about it that are load-bearing:
   window. It is above `session` rather than beside `profile` because a crash report carries the
   run's own account of itself, which is the one tier a snapshot on disk cannot give — see the
   section below.
+- **`privateassets` sits at the bottom beside `assets`, and `assets` may never import it.** The
+  two are separate directories because what is in them is kept out of git separately, and the
+  arrow that is *missing* is what keeps that true: a caller that wants a loop names
+  `privateassets`, so nothing reaches it by accident through the asset loader.
 - **`seeds` imports nothing and `combat` deliberately does not import it.** The rules take an
   injected `*rand.Rand` and stay ignorant of where it came from.
 - **`carddesc` is the words a card says about itself**, and it is here rather than in
@@ -2204,6 +2286,14 @@ fight  →  reward  →  shop  →  choice  →  fight ...
 **`assets/` is grouped by what a file is for**: `game/` (fonts, title screens), `enemy/`,
 `relic/`, `effect/`, `upgrade/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
 refiling something is one line there and nothing anywhere else.
+
+**The music loops are not in here and must never be filed here.** They are `privateassets/`, a
+package of its own at the repository root, and they are kept out of git — see
+[privateassets/README.md](privateassets/README.md). **`privateassets.Audio`
+is the loader**, keyed by filename stem like every family here but across three extensions rather
+than one, so `.ogg` and `.wav` sharing a stem is one key with two answers and is refused at load.
+**It is also the only family whose being empty is correct**: a machine that has not synced the
+bundle builds and plays silent.
 
 **A map key is not tied to a file path.** Keys are the lookup names used across the game and
 `data/*.json` writes them down; tying one to a path would mean a data migration every time a

@@ -243,10 +243,7 @@ func disabled(s cards.Spec) cards.Spec { s.Enabled = false; return s }
 
 // relicSpecs is the first pass at a relic, in the card format.
 //
-// The art is assets/relic/dmgx-fire.png. **That is first-party work** — README credits the art
-// to CuriousJC and KingSherman1820, and only the sheets prefixed `tyrian_` come from the
-// Tyrian set. So it carries no provenance question and is not part of the release blocker
-// that set represents; it can ship.
+// The art is assets/relic/dmgx-fire.png.
 //
 // No cost dashes, no category glyph, no damage badge: a relic is not played from a hand
 // and has no phase. What it keeps is the footprint, the corners and the border, so it

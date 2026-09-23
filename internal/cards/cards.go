@@ -264,9 +264,8 @@ var (
 //
 // **Named designs drawn in code rather than a recolor or a picture** *(2026-08-11)*. A
 // recolor would have been one data field and nearly invisible on a near-black card at the
-// draw pile's 44 pixels; a picture per duelist would put the provenance question back on the
-// one part of the game that had escaped it. A silhouette is what reads at that size and what
-// can be generated, which is the same argument the glyphs are built on.
+// draw pile's 44 pixels. A silhouette is what reads at that size and what can be generated
+// without a file per duelist.
 //
 // The cost is deliberate and worth stating: **adding a back is a code change**, not a data
 // one. `data/duelists.json` can only choose among what is drawn here.
@@ -528,9 +527,8 @@ type Spec struct {
 	// Art is optional artwork drawn on the face, scaled to fit and centered. Relics use
 	// it; action cards do not, and their art is the generated glyphs instead.
 	//
-	// **This is the one thing on a card that is not generated**, so it is the one thing
-	// with a provenance question. Anything put here needs a license that survives a paid
-	// release — see CLAUDE.md on the Tyrian set.
+	// **This is the one thing on a card that is not generated**, so it is the one thing that
+	// is a file somebody has to supply rather than code.
 	Art image.Image
 
 	// Stats are the labeled figures the duelist card carries — DMG, AP, Vitae — drawn one

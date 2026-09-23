@@ -93,12 +93,18 @@ func Level() float64 { return level }
 // The level is recorded whether or not there is a player, so the setting survives a machine with
 // no audio device — see Available — and so that a level restored from the profile before Start
 // is what Start opens the device at.
+// **Every player, not only the one that is sounding.** A paused track keeps whatever volume it
+// was set to, so a level changed while the shop's loop is up would be the level the score came
+// back at — which is the bar and the music disagreeing about a number the bar is the only
+// control for. See track.go.
 func SetLevel(l float64) {
 	level = clamp01(l)
-	if player == nil {
-		return
+	if player != nil {
+		player.SetVolume(level * fullVolume)
 	}
-	player.SetVolume(level * fullVolume)
+	for _, p := range tracks {
+		p.SetVolume(level * fullVolume)
+	}
 }
 
 func clamp01(v float64) float64 {

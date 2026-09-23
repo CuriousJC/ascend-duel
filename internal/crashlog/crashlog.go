@@ -28,6 +28,10 @@ const (
 	filePrefix = "crash-"
 	fileSuffix = ".json"
 
+	// shotSuffix is the screen beside the report. It shares the report's base name, exactly as a
+	// companion does, so the two sort together and are pruned together.
+	shotSuffix = ".png"
+
 	// stampFormat is the time in the name: compact, sortable, and with nothing in it that a file
 	// system objects to. A colon is not a legal character in a Windows file name.
 	stampFormat = "20060102T150405Z"
@@ -65,6 +69,12 @@ type State struct {
 	// be nil: a panic on the title screen has neither.
 	Run    *profile.RunSnapshot
 	Ledger []session.LedgerFight
+
+	// Scene is whatever the screen that panicked had to say about itself, or nil for a screen that
+	// says nothing. **Assembled by the caller like every other tier**, which is what keeps this
+	// package ignorant of what a scene is — see ui.Reporter for the interface a screen opts into
+	// and internal/game for the guarded call.
+	Scene map[string]any
 }
 
 // Report is one crash, as it goes to the file.
@@ -91,6 +101,21 @@ type Report struct {
 	Run      *profile.RunSnapshot  `json:"run,omitempty"`
 	Ledger   []session.LedgerFight `json:"ledger,omitempty"`
 	Problems []Problem             `json:"problems,omitempty"`
+
+	// Scene is the screen's own account of itself. **Flat named values rather than a type**,
+	// because no two screens describe the same thing and a struct here would be this package
+	// learning what each of them is. See ui.Reporter.
+	Scene map[string]any `json:"scene,omitempty"`
+
+	// Screenshot is the name of the picture filed beside this report, and empty when there is
+	// none. **An absence is not an error**: a panic inside Update happens between two frames, so
+	// there is no half-drawn screen to read and the report simply has no picture.
+	Screenshot string `json:"screenshot,omitempty"`
+
+	// Shed names the tiers left out to get the document under its ceiling, in the order they went.
+	// **A report says when it is partial** rather than leaving a reader to guess whether a missing
+	// ledger means a quiet run or a fat one. See Encode.
+	Shed []string `json:"shed,omitempty"`
 }
 
 // Build assembles a report. **Separate from writing it** so a test can read what a panic produced
@@ -111,6 +136,7 @@ func Build(st State, cause any, stack []byte) Report {
 		Run:      st.Run,
 		Ledger:   st.Ledger,
 		Problems: Problems(),
+		Scene:    st.Scene,
 	}
 }
 
@@ -120,8 +146,14 @@ func Build(st State, cause any, stack []byte) Report {
 // assembled the frames that panicked have already unwound.
 func Stack() []byte { return debug.Stack() }
 
-// Write puts a report in the store, takes a copy of every file named beside it, and hands back
-// where the report went.
+// Write puts a report in the store, files the screen beside it, takes a copy of every file named
+// beside that, and hands back where the report went.
+//
+// **A screenshot is not a companion**, which is why it is a parameter rather than another name in
+// the list. A companion is a file the game was already writing and this one copies; the picture is
+// bytes that exist only because a panic happened, so there is nothing to copy and the caller hands
+// over what it captured. It may be nil, and usually is — see internal/game, which captures only on
+// a panic raised while the screen was being drawn.
 //
 // **A companion is a file the game was already writing that the report would be poorer without**,
 // and today that is the journal: there is one of it and the next run truncates it, so the run that
@@ -142,14 +174,31 @@ func Stack() []byte { return debug.Stack() }
 // crash screen still comes up and still says what happened, with nowhere to point at. **A
 // companion that will not copy costs the report nothing**, for the same reason a tier that cannot
 // be read is left out of one.
-func Write(s profile.Store, r Report, companions ...string) (string, error) {
+func Write(s profile.Store, r Report, shot []byte, companions ...string) (string, error) {
 	if s.Dir() == "" {
 		return "", fmt.Errorf("crashlog: nowhere to write to")
 	}
 	Prune(s)
 
 	base := filePrefix + time.Now().UTC().Format(stampFormat) + "-" + r.RunCode
-	path, err := s.WriteExport(base+fileSuffix, r)
+
+	// **The picture goes first, so the report can name it.** A report saying where its screenshot
+	// went and a screenshot nobody wrote is worse than either on its own, and a picture filed
+	// beside a report that never appeared is an orphan the prune would never sweep.
+	if len(shot) > 0 {
+		name := base + shotSuffix
+		if _, err := s.WriteBytes(name, shot); err != nil {
+			Note("could not keep the screenshot beside the crash report: %v", err)
+		} else {
+			r.Screenshot = name
+		}
+	}
+
+	raw, err := Encode(r)
+	if err != nil {
+		return "", err
+	}
+	path, err := s.WriteBytes(base+fileSuffix, raw)
 	if err != nil {
 		return path, err
 	}

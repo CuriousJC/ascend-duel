@@ -282,8 +282,12 @@ func (g *Game) update() error {
 // **Under the same recover Update is**, and for a sharper reason: most of the game's work happens
 // while something is being drawn, so a fault in a card face or a panel would otherwise be the one
 // kind of crash the handler never saw. See crash.go.
+//
+// **This is the half that can be photographed.** The handler takes the screen, because the image
+// being drawn into holds exactly as much of the frame as got drawn before the fault — see
+// recoverDraw, and crashlog.EncodeShot for what becomes of it.
 func (g *Game) Draw(screen *ebiten.Image) {
-	defer g.recoverFrame()
+	defer g.recoverDraw(screen)
 	g.draw(screen)
 }
 

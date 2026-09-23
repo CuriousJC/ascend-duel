@@ -4,6 +4,7 @@ package profile
 // document.**
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -62,5 +63,38 @@ func TestCopyingWhatIsNotThereIsNotAFailure(t *testing.T) {
 	}
 	if copied {
 		t.Fatal("reported a copy of a file that does not exist")
+	}
+}
+
+// TestWriteBytesLandsExactlyWhatItWasGiven is the door a crash screenshot goes through. Every other
+// whole-document write here marshals a value; this one is handed bytes that are already a file, so
+// what it owes is that they arrive unchanged and under a checked name.
+func TestWriteBytesLandsExactlyWhatItWasGiven(t *testing.T) {
+	dir := t.TempDir()
+	s := At(dir)
+
+	want := []byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0xFF}
+	path, err := s.WriteBytes("crash-20260923T000000Z-AAAAAA.png", want)
+	if err != nil {
+		t.Fatalf("WriteBytes: %v", err)
+	}
+
+	got, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading it back: %v", err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("got %v, want the bytes that went in", got)
+	}
+
+	// **The same name check WriteExport is under**, and it is not optional: this is a second door
+	// out of the store taking a name from further up.
+	if _, err := s.WriteBytes("../escape.png", want); err == nil {
+		t.Fatal("WriteBytes wrote outside the store")
+	}
+
+	// An inert store is the unwritable machine, which reports rather than panics.
+	if _, err := (Store{}).WriteBytes("x.png", want); err == nil {
+		t.Fatal("an inert store reported success with nowhere to write")
 	}
 }

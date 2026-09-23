@@ -124,8 +124,9 @@ that shows up only on the machine of the player who plays most.
   `filepath` is a second thing to port.
 - **`internal/combat` may never import any of it**, for `internal/trace`'s reason: the rules package
   stays free of everything, which is what makes it testable without a window.
-- **No file name is taken from further up without being checked.** `Store.WriteExport` already
-  refuses a name carrying a separator or a `..`, and every file here goes through it.
+- **No file name is taken from further up without being checked.** `checkName` refuses a name
+  carrying a separator or a `..`, and every door out of `profile.Store` goes through it —
+  `WriteExport`, `WriteBytes`, `AppendLine`, `CopyFile` and `RemoveFile` alike.
 
 ---
 
@@ -188,18 +189,24 @@ The append-only choice file: the header record, the choice kinds, written as the
 - **Legible rather than exhaustive.** Replay is a person at the keyboard, so a record names a relic
   key, a card label and a seat — not a drag path and not a pointer position.
 
-### 4. The richer crash payload
+### ~~4. The richer crash payload~~
 
-- **The screen**, as a PNG. Captured live on a panic inside `Draw`; for a panic inside `Update`,
-  from a rolling last-good frame. `ReadPixels` is a GPU-to-CPU readback that stalls the frame it
-  happens on, which is why `internal/trace` throttles to one every two seconds — the same throttle
-  applies.
-- **Scene state**, through an **optional** interface a scene opts into, so a new screen is not
-  broken by not having one. The combat screen is the one worth writing: the round, the playback
-  cursor, the selected seats, the shields, the opponent.
-- **Payload bounds.** A PNG is hundreds of kilobytes and a journal grows with the run, so a report
-  has a ceiling and sheds tiers from the bottom — the screen first — rather than writing a file too
-  big to send.
+- **The screen**, as a PNG. Captured live on a panic inside `Draw`, where the image being drawn into
+  holds exactly as much of the frame as got drawn before the fault. **A panic inside `Update` gets
+  no picture** *(owner's call, 2026-09-23)*: the rolling last-good frame that would have covered it
+  costs a persistent 8.29 MB buffer and a `ReadPixels` stall every two seconds, to attach a picture
+  of the game as it stood up to two seconds *before* anything went wrong. The report already carries
+  the screen, the phase, the tick, the run and the ledger, all of them current.
+- **Scene state**, through `ui.Reporter` — an **optional** interface a scene opts into, so a new
+  screen is not broken by not having one. The combat screen is the one written: playback against the
+  log, the three piles against the hand, the queue against the budget, and the exits. **It holds no
+  cards**, because the journal already has every selection and the ledger has what the engine made
+  of them.
+- **Payload bounds.** The picture is a companion file with its own ceiling, so it cannot push the
+  ledger out of the report. The document has its own and sheds from the bottom — scene state, the
+  problem ring, then the ledger a fight at a time, oldest first — and says in `shed` what it left
+  out. **It decides in memory and writes the file once**: a crash handler gets one chance at the
+  disk.
 
 ### 5. Sending a report
 

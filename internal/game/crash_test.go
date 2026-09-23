@@ -1,12 +1,15 @@
 package game
 
 import (
+	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/crashlog"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // This package links Ebitengine, so on Linux the test binary wants a display even though nothing
@@ -21,7 +24,7 @@ func TestAPanicBecomesAScreenRatherThanAnExit(t *testing.T) {
 	g.GlobalState.ActiveScreen = state.Combat
 	g.GlobalState.Version = "v9.9.9"
 
-	g.crash("something came apart", []byte("a stack"))
+	g.crash("something came apart", []byte("a stack"), nil)
 
 	if g.GlobalState.ActiveScreen != state.Crashed {
 		t.Fatalf("the game is on %v, want the crash screen", g.GlobalState.ActiveScreen)
@@ -54,7 +57,7 @@ func TestACrashStandsEverythingElseDown(t *testing.T) {
 	g.GlobalState.InputGated = true
 	g.ledger.Toggle()
 
-	g.crash("boom", nil)
+	g.crash("boom", nil, nil)
 
 	if len(g.GlobalState.EarnedThisSession) != 0 {
 		t.Error("an achievement toast is still queued over the crash screen")
@@ -116,7 +119,7 @@ func TestTheCrashReportCarriesWhatWentWrongBefore(t *testing.T) {
 	g.GlobalState.Store = profile.At(t.TempDir())
 	crashlog.Note("a save went wrong first")
 
-	g.crash("boom", nil)
+	g.crash("boom", nil, nil)
 
 	found := false
 	for _, p := range crashlog.Problems() {
@@ -126,5 +129,75 @@ func TestTheCrashReportCarriesWhatWentWrongBefore(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("the earlier problem was not kept for the report")
+	}
+}
+
+// quietScene is a screen with nothing to say: it implements ui.Scene and not ui.Reporter, which is
+// every screen in the game but one.
+type quietScene struct{}
+
+func (quietScene) Init(*state.GlobalState)                {}
+func (quietScene) Update(*state.GlobalState) error        { return nil }
+func (quietScene) Draw(*state.GlobalState, *ebiten.Image) {}
+
+// talkativeScene implements ui.Reporter.
+type talkativeScene struct{ quietScene }
+
+func (talkativeScene) Report() map[string]any { return map[string]any{"round": 3} }
+
+// brokenScene is the case the guard exists for: the scene being asked to describe itself is the one
+// that has just panicked.
+type brokenScene struct{ quietScene }
+
+func (brokenScene) Report() map[string]any { panic("not now") }
+
+// TestASceneWithNothingToSayIsNotAsked holds the optional half of ui.Reporter: a new screen is not
+// broken by not having one, it simply contributes no tier.
+func TestASceneWithNothingToSayIsNotAsked(t *testing.T) {
+	if got := sceneState(quietScene{}); got != nil {
+		t.Fatalf("a scene that implements nothing said %v", got)
+	}
+	got := sceneState(talkativeScene{})
+	if got == nil || got["round"] != 3 {
+		t.Fatalf("scene = %v, want what the screen said", got)
+	}
+}
+
+// TestASceneThatPanicsDescribingItselfCostsOnlyItsOwnTier is the rule every reader in crash.go is
+// under, at its sharpest: this one calls a method on the exact object that just came apart.
+func TestASceneThatPanicsDescribingItselfCostsOnlyItsOwnTier(t *testing.T) {
+	if got := sceneState(brokenScene{}); got != nil {
+		t.Fatalf("scene = %v, want nothing at all", got)
+	}
+}
+
+// TestTheSceneTierReachesTheReport is the wire: the screen that was up when the game came apart is
+// the screen the report describes.
+func TestTheSceneTierReachesTheReport(t *testing.T) {
+	g := NewGame()
+	g.GlobalState.Store = profile.At(t.TempDir())
+	g.GlobalState.ActiveScreen = state.Combat
+	g.scenes[state.Combat] = talkativeScene{}
+
+	g.crash("boom", nil, nil)
+
+	raw, err := os.ReadFile(g.GlobalState.Crash.Path)
+	if err != nil {
+		t.Fatalf("reading the report: %v", err)
+	}
+	var report crashlog.Report
+	if err := json.Unmarshal(raw, &report); err != nil {
+		t.Fatalf("the report is not readable: %v", err)
+	}
+	if report.Scene["round"] != float64(3) {
+		t.Fatalf("scene = %v, want the screen's own account", report.Scene)
+	}
+}
+
+// TestAnUpdatePanicHasNoPictureToTake is the absence rule, and it is why shotOf takes a screen that
+// may be nil: a panic between two frames has no half-drawn screen to read.
+func TestAnUpdatePanicHasNoPictureToTake(t *testing.T) {
+	if got := shotOf(nil); got != nil {
+		t.Fatalf("shotOf invented %d bytes with no frame to read", len(got))
 	}
 }

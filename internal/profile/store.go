@@ -215,6 +215,39 @@ func (s Store) WriteExport(name string, v any) (string, error) {
 	return s.path(name), nil
 }
 
+// WriteBytes puts one file of already-encoded bytes in the store and hands back where it went.
+//
+// **The door for a file this package cannot make itself.** Every other whole-document write here
+// marshals a value, which is the right shape for the profile, the run and an export; a screenshot
+// beside a crash report is a PNG, and there is no value to hand json. So the caller encodes and
+// this writes, and the checking, the directory and the atomicity are the same ones every other
+// write goes through.
+//
+// **The name is checked exactly as WriteExport's is**, and it is atomic for the same reason: a
+// half-written file that parses as far as it goes is worse than none.
+func (s Store) WriteBytes(name string, raw []byte) (string, error) {
+	if err := checkName(name); err != nil {
+		return "", err
+	}
+	if s.dir == "" {
+		return "", errors.New("profile: nowhere to save to")
+	}
+	if err := os.MkdirAll(s.dir, 0o755); err != nil {
+		return "", err
+	}
+
+	final := s.path(name)
+	tmp := final + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+		return "", err
+	}
+	if err := os.Rename(tmp, final); err != nil {
+		os.Remove(tmp)
+		return "", err
+	}
+	return final, nil
+}
+
 // AppendLine adds one record to a file as a single line of JSON, making the file if it is not
 // there yet.
 //

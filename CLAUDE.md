@@ -1921,6 +1921,28 @@ with nobody watching but the person it happened to.
   copy lands under the report's own base name with the companion's own extension. **A report is
   counted by its own `.json` when pruning**, or the allowance would shrink the day a second
   companion joined the first.
+- **The screenshot is not a companion**, because it is not a file the game was already writing: it
+  is bytes that exist only because a panic happened, so it is a parameter rather than a name in the
+  list and it goes through `profile.Store.WriteBytes` — the one write in that package handed a file
+  rather than a value. **Only a panic inside `Draw` has a picture**, since the image being drawn
+  into holds as much of the frame as got drawn before the fault; a panic in `Update` happens between
+  two frames and the report simply has no `screenshot` field. `game.shotOf` is the readback, on the
+  game goroutine because it is a GPU operation, and `crashlog.EncodeShot` is the encode and the
+  ceiling — the same split `internal/trace` makes.
+- **A report has a ceiling and sheds from the bottom.** `crashlog.Encode` marshals, and if the
+  document is over it drops the scene tier, then the problem ring, then the ledger a fight at a
+  time, oldest first, and names what went in `shed`. **The identity and the run snapshot are never
+  shed**, and the ledger goes a fight at a time rather than whole because a crash mid-duel has the
+  room's start state on disk and nothing since — the fight being played is the one tier the snapshot
+  cannot give. **It decides in memory and writes the file once**: a crash handler gets one chance at
+  the disk, and a file deleted and rewritten is a second chance for the rewrite to be the one that
+  fails.
+- **A screen describes itself through `ui.Reporter`, and it is optional** so a new screen is not
+  broken by not having one. **The method may read plain fields and nothing else** — the scene being
+  asked has just panicked, so a lookup or a layout or a rule read back off the run is a second crash
+  inside the first. `CombatScene.Report` is the one written, and what it carries is the shape of the
+  screen's four state machines rather than their contents: no cards, because the journal holds every
+  selection and the ledger holds what the engine made of them.
 
 ### `internal/journal` is a ninth thing, and it is *not* compiled out
 

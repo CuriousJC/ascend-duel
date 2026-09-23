@@ -29,7 +29,7 @@ func TestAReportLandsInTheStore(t *testing.T) {
 	quiet(t)
 	s := profile.At(t.TempDir())
 
-	path, err := Write(s, Build(State{Version: "v1.2.3", RunSeed: 7}, "boom", []byte("stack")))
+	path, err := Write(s, Build(State{Version: "v1.2.3", RunSeed: 7}, "boom", []byte("stack")), nil)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestTheNameLeadsWithTheTime(t *testing.T) {
 	quiet(t)
 	s := profile.At(t.TempDir())
 
-	path, err := Write(s, Build(State{RunSeed: 1}, "boom", nil))
+	path, err := Write(s, Build(State{RunSeed: 1}, "boom", nil), nil)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestOldReportsArePruned(t *testing.T) {
 			t.Fatalf("planting a report: %v", err)
 		}
 	}
-	if _, err := Write(s, Build(State{}, "boom", nil)); err != nil {
+	if _, err := Write(s, Build(State{}, "boom", nil), nil); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
 
@@ -102,7 +102,7 @@ func TestOldReportsArePruned(t *testing.T) {
 // a machine whose crash is not recorded, never a machine that crashes twice.
 func TestAnInertStoreIsNotFatal(t *testing.T) {
 	quiet(t)
-	if _, err := Write(profile.Store{}, Build(State{}, "boom", nil)); err == nil {
+	if _, err := Write(profile.Store{}, Build(State{}, "boom", nil), nil); err == nil {
 		t.Fatal("an inert store reported success with nowhere to write")
 	}
 }
@@ -196,7 +196,7 @@ func TestACrashKeepsTheJournalItWasWriting(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	path, err := Write(s, Build(State{RunSeed: 1}, "boom", nil), "journal.jsonl")
+	path, err := Write(s, Build(State{RunSeed: 1}, "boom", nil), nil, "journal.jsonl")
 	if err != nil {
 		t.Fatalf("writing the report: %v", err)
 	}

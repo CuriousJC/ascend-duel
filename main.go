@@ -331,7 +331,9 @@ func reportLoadPanic(g *game.Game) {
 		InstallID: installID(gs),
 	}, cause, crashlog.Stack())
 
-	path, err := crashlog.Write(gs.Store, report)
+	// **No picture and no companions**: this runs while the catalogs are loading, so there is no
+	// window to read a frame off and no journal yet to keep.
+	path, err := crashlog.Write(gs.Store, report, nil)
 	if err != nil {
 		log.Printf("crash while loading: %v (no report written: %v)", cause, err)
 	} else {

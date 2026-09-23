@@ -80,6 +80,12 @@ var screenTunes = map[state.ActiveScreen]tune{
 	state.Shop:       {track: darkFantasy01},
 	state.RunOver:    {track: music.Score},
 
+	// The screen a panic ends on. **The score rather than {keep: true}**, which would leave the
+	// shop's loop playing over a crash report — a destination like RunOver, not an overlay the
+	// player came to and will go back from. There is nothing to be transparent *to*: whatever
+	// was happening is over.
+	state.Crashed: {track: music.Score},
+
 	// Opened from anywhere, and back where they came from. See the note above.
 	state.Settings:     {keep: true},
 	state.Achievements: {keep: true},

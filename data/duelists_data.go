@@ -11,7 +11,7 @@ package data
 // **A duelist and a card back go together, and that is the point of the field.** The plan is
 // to offer different duelists as different *decks*, so the back is how you tell at a glance
 // whose deck is on the table. It is a name rather than a picture: the mark is drawn in code
-// by internal/cards, which is what keeps interface art free of a provenance question.
+// by internal/cards, so adding a back costs no file.
 
 import (
 	_ "embed"

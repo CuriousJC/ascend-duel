@@ -60,3 +60,18 @@ analysis.md
 # are regenerated. **Regenerate deliberately rather than reflexively** — a sheet rebuilt in a
 # commit that changed nothing about it is pure history weight. tools/glyphsheet already commits
 # its picture for the review-diff reason; this is the same trade taken wider.
+
+# The music loops. **Kept out of git and synced from a private S3 bucket instead** — see
+# privateassets/README.md, which is where the arrangement is described.
+#
+# **manifest.json is committed and is load-bearing twice over.** It is the checksum list, and it
+# is also what keeps `audio/` real: `//go:embed audio` is resolved at compile time, and a pattern
+# matching nothing is a build error, so without it a clean clone would fail to *build* rather
+# than merely play silent.
+#
+# **Ignore the entries, not the directory.** git cannot re-include anything under an excluded
+# parent, so `/privateassets/audio/` followed by a negation would silently keep the manifest out
+# as well. The trailing `*` excludes the entries instead, which is what makes the `!` line work.
+# Verify with `git check-ignore -v` on one of each.
+/privateassets/audio/*
+!/privateassets/audio/manifest.json

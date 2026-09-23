@@ -233,3 +233,27 @@ func TestTheLevelSurvivesHavingNoAudioDevice(t *testing.T) {
 		t.Errorf("a level below 0 recorded %v, want it clamped to 0", Level())
 	}
 }
+
+// TestAnUnloadedTrackFallsBackToTheScore is the guarantee the whole private-asset arrangement
+// rests on at the point where it reaches a screen: `internal/game` names a track for the shop,
+// and a clone with no bundle synced has never loaded it.
+//
+// **The failure it guards against is silence, not a crash.** PlayTrack pauses what is sounding
+// before it starts what is next, so a name that resolves to no player would stop the score and
+// start nothing — and the shop would be quiet on every machine that does not have the audio,
+// which is every clean clone, every fork and every CI run. Nothing else would go wrong, which is
+// exactly why it would survive review.
+//
+// It needs no audio device: with nothing loaded, `sounding` is nil throughout and every call
+// below nil-guards. What is being asserted is the bookkeeping, not that anything was heard.
+func TestAnUnloadedTrackFallsBackToTheScore(t *testing.T) {
+	was := current
+	t.Cleanup(func() { current = was })
+
+	current = Score
+	PlayTrack("a-track-nobody-loaded")
+
+	if got := Playing(); got != Score {
+		t.Fatalf("an unloaded track should leave the score playing; Playing() = %q, want %q", got, Score)
+	}
+}

@@ -5,11 +5,9 @@ package screens
 // It was a stub for months — registered in the scene map, drawing nothing, reachable from nowhere.
 // It is real as of 2026-09-03 *(owner's call)* and reachable from the title menu.
 //
-// **The licensing block is not decoration.** The project is source-available and intended to be
-// sold, the art is bundle art whose license permits shipping it inside a game, and the score is
-// synthesized rather than recorded precisely so there is no provenance question — see CLAUDE.md.
-// A game that ships without naming any of that is a game with an attribution problem the day it
-// goes on sale, so the page exists partly to be *correct* and only partly to be read.
+// **The LICENSE block is not decoration.** It is what the project is source-available *under*,
+// and a game that ships without naming its own terms is a game nobody can tell what they may do
+// with. The page exists partly to be *correct* and only partly to be read.
 //
 // **It is a static page, on purpose.** A scrolling crawl is the obvious thing to reach for and it
 // would be the wrong one here: there is no keyboard to skip it with, the input vocabulary has no
@@ -93,6 +91,7 @@ var credits = []creditsLine{
 	{"All art generated from prompts in this repository", creditsBody},
 	{"Interface art and glyphs generated in-engine", creditsQuiet},
 	{"Score synthesized from MIDI in-engine", creditsQuiet},
+	{"Music loops from Humble Bundle", creditsQuiet},
 	{"", creditsGap},
 
 	{"LICENSE", creditsHeading},

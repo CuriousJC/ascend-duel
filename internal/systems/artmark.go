@@ -5,8 +5,8 @@ package systems
 // **This is the whole of how art reaches the drawing now** *(2026-09-16)*. There used to be a
 // silhouette *generator* beside it — `internal/systems/glyphs.go`, a span language with a derived
 // rim and computed shading, keyed by an append-only `GlyphKind` enum. It was written when the only
-// interface art in the game was a handful of shapes and the argument was provenance: a generated
-// picture has no license to clear.
+// interface art in the game was a handful of shapes, and code that draws them is smaller than a
+// file for each.
 //
 // **What retired it was the marks being authored per element.** Four forms times five elements
 // plus a neutral set plus six ticks is thirty-one pictures, which is a multiplication rather than

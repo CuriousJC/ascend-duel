@@ -67,11 +67,10 @@ player reads. Open [docs/sheets/index.html](docs/sheets/index.html).
 
 - **[Ebitengine v2](https://ebitengine.org/)** for the window, input and drawing. No UI
   toolkit — the widgets are hand-rolled.
-- **Generated art and audio.** The pictures are generated from prompts this repository owns —
-  they live in [docs/art/](docs/art/) — and committed as ordinary PNGs. The score is a Standard
-  MIDI file synthesized to audio at startup rather than a shipped recording. Both choices are
-  about provenance as much as size: there is no third-party asset whose license has to be cleared
-  before the game can be sold.
+- **Generated art and a synthesized score.** The pictures are generated from prompts this
+  repository owns — they live in [docs/art/](docs/art/) — and committed as ordinary PNGs. The
+  score is a Standard MIDI file synthesized to audio at startup rather than a shipped recording,
+  so the whole tune is a kilobyte of notes that can be read and edited in a diff.
 - **No `math/rand` globals, no `time.Now()` in the rules.** A run is meant to be
   reproducible from its code, so every roll comes off an explicit stream salted from the
   run seed.
@@ -111,6 +110,9 @@ Art by: CuriousJC and KingSherman1820
 ### Third-party assets
 
 - **Fonts** — `Kubasta.ttf` (CC0, via FontStruct), Fira Sans, and Roboto Flex.
+- **Music loops** — from Humble Bundle. They are not in this repository; see
+  [privateassets/README.md](privateassets/README.md). A clone without them builds and plays the
+  synthesized score everywhere.
 
 Everything else under [assets/](assets/) is first-party: generated from the prompts in
 [docs/art/](docs/art/), or generated at runtime.

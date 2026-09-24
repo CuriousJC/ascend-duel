@@ -1,0 +1,497 @@
+{
+  "Motif": "big-cats",
+  "Name": "Big Cats",
+  "Draw": "TBD",
+  "ElementDraw": {
+    "fire": "TBD",
+    "ice": "TBD",
+    "lightning": "TBD",
+    "earth": "TBD",
+    "arcane": "TBD"
+  },
+  "ValidFloors": [1, 4],
+  "Records": [
+    {
+      "Record": "big-cats-outer-tiger",
+      "Name": "Tiger",
+      "Tier": "outer",
+      "Art": "big-cats-tiger",
+      "Draw": "TBD",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
+      "HP": 130,
+      "DMG": 5,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Swipe",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Maul",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Ambush",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 3
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-outer-lion",
+      "Name": "Lion",
+      "Tier": "outer",
+      "Art": "big-cats-lion",
+      "Draw": "TBD",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
+      "HP": 115,
+      "DMG": 6,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Cuff",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Bite",
+          "Verb": "attack",
+          "Amount": 100,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Roar Down",
+          "Verb": "attack",
+          "Amount": 200,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-outer-cougar",
+      "Name": "Cougar",
+      "Tier": "outer",
+      "Art": "big-cats-cougar",
+      "Draw": "TBD",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
+      "HP": 95,
+      "DMG": 6,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Stalk",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Claw",
+          "Verb": "attack",
+          "Amount": 110,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Drop",
+          "Verb": "attack",
+          "Amount": 220,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-outer-cheetah",
+      "Name": "Cheetah",
+      "Tier": "outer",
+      "Art": "big-cats-cheetah",
+      "Draw": "TBD",
+      "Affinities": ["ice", "lightning", "earth", "arcane"],
+      "HP": 80,
+      "DMG": 7,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Dash",
+          "Verb": "attack",
+          "Amount": 40,
+          "Cost": 1,
+          "Copies": 5
+        },
+        {
+          "Label": "Rake",
+          "Verb": "attack",
+          "Amount": 90,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Run Down",
+          "Verb": "attack",
+          "Amount": 180,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-inner-sabertooth",
+      "Name": "Sabertooth",
+      "Tier": "inner",
+      "Art": "big-cats-sabertooth",
+      "Draw": "TBD",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
+      "HP": 185,
+      "DMG": 7,
+      "Actions": 4,
+      "Cards": [
+        {
+          "Label": "Gore",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 2
+        },
+        {
+          "Label": "Sabres",
+          "Verb": "attack",
+          "Amount": 130,
+          "Cost": 2,
+          "Copies": 2
+        },
+        {
+          "Label": "Throat Hold",
+          "Verb": "attack",
+          "Amount": 260,
+          "Cost": 3,
+          "Copies": 4
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-inner-liger",
+      "Name": "Liger",
+      "Tier": "inner",
+      "Art": "big-cats-liger",
+      "Draw": "TBD",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
+      "HP": 170,
+      "DMG": 8,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Paw",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Crush Bite",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 3
+        },
+        {
+          "Label": "Bear Down",
+          "Verb": "attack",
+          "Amount": 240,
+          "Cost": 3,
+          "Copies": 3
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-inner-lynx",
+      "Name": "Dire Lynx",
+      "Tier": "inner",
+      "Art": "big-cats-lynx",
+      "Draw": "TBD",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
+      "HP": 125,
+      "DMG": 9,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Flick",
+          "Verb": "attack",
+          "Amount": 40,
+          "Cost": 1,
+          "Copies": 5
+        },
+        {
+          "Label": "Shred",
+          "Verb": "attack",
+          "Amount": 90,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Leap",
+          "Verb": "attack",
+          "Amount": 190,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-inner-panther",
+      "Name": "Cave Panther",
+      "Tier": "inner",
+      "Art": "big-cats-panther",
+      "Draw": "TBD",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
+      "HP": 150,
+      "DMG": 8,
+      "Actions": 5,
+      "Cards": [
+        {
+          "Label": "Pad",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Rip",
+          "Verb": "attack",
+          "Amount": 110,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Blindside",
+          "Verb": "attack",
+          "Amount": 230,
+          "Cost": 3,
+          "Copies": 2
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-boss-ash",
+      "Name": "Ash",
+      "Tier": "boss",
+      "Art": "big-cats-ash",
+      "Title": "the Burning",
+      "Draw": "TBD",
+      "Affinities": ["fire"],
+      "HP": 240,
+      "DMG": 12,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Ember Paw",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Scorch Bite",
+          "Verb": "attack",
+          "Amount": 130,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Pyre Pounce",
+          "Verb": "attack",
+          "Amount": 260,
+          "Cost": 3,
+          "Copies": 2
+        },
+        {
+          "Label": "Ashfall",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-boss-mouse",
+      "Name": "Mouse",
+      "Tier": "boss",
+      "Art": "big-cats-mouse",
+      "Title": "the Crooked",
+      "Draw": "TBD",
+      "Affinities": ["ice"],
+      "HP": 205,
+      "DMG": 13,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Crooked Swat",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Bent Claw",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Snapped Spine",
+          "Verb": "attack",
+          "Amount": 240,
+          "Cost": 3,
+          "Copies": 2
+        },
+        {
+          "Label": "Cold Shoulder",
+          "Verb": "attack",
+          "Amount": 290,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-boss-leah",
+      "Name": "Leah",
+      "Tier": "boss",
+      "Art": "big-cats-leah",
+      "Title": "the Sneaky",
+      "Draw": "TBD",
+      "Affinities": ["lightning"],
+      "HP": 225,
+      "DMG": 12,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Silent Step",
+          "Verb": "attack",
+          "Amount": 50,
+          "Cost": 1,
+          "Copies": 4
+        },
+        {
+          "Label": "Blindside",
+          "Verb": "attack",
+          "Amount": 120,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Backstab",
+          "Verb": "attack",
+          "Amount": 250,
+          "Cost": 3,
+          "Copies": 2
+        },
+        {
+          "Label": "Gone",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-boss-sasha",
+      "Name": "Sasha",
+      "Tier": "boss",
+      "Art": "big-cats-sasha",
+      "Title": "the Psycho",
+      "Draw": "TBD",
+      "Affinities": ["earth"],
+      "HP": 260,
+      "DMG": 10,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Headbutt",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Grind",
+          "Verb": "attack",
+          "Amount": 130,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Buried",
+          "Verb": "attack",
+          "Amount": 260,
+          "Cost": 3,
+          "Copies": 2
+        },
+        {
+          "Label": "Landslide",
+          "Verb": "attack",
+          "Amount": 310,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    },
+    {
+      "Record": "big-cats-boss-luna",
+      "Name": "Luna",
+      "Tier": "boss",
+      "Art": "big-cats-luna",
+      "Title": "the Arcane",
+      "Draw": "TBD",
+      "Affinities": ["arcane"],
+      "HP": 250,
+      "DMG": 11,
+      "Actions": 6,
+      "Cards": [
+        {
+          "Label": "Moon Paw",
+          "Verb": "attack",
+          "Amount": 60,
+          "Cost": 1,
+          "Copies": 3
+        },
+        {
+          "Label": "Pale Bite",
+          "Verb": "attack",
+          "Amount": 125,
+          "Cost": 2,
+          "Copies": 4
+        },
+        {
+          "Label": "Eclipse",
+          "Verb": "attack",
+          "Amount": 255,
+          "Cost": 3,
+          "Copies": 2
+        },
+        {
+          "Label": "New Moon",
+          "Verb": "attack",
+          "Amount": 300,
+          "Cost": 3,
+          "Copies": 1
+        }
+      ]
+    }
+  ]
+}

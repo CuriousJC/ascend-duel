@@ -3,7 +3,7 @@ package data
 import "testing"
 
 // TestEveryMotifCanFieldEveryFight is the promise the floor generator is built on: pick any
-// motif and any element and there are at least MinCoverage records for each of the three rooms.
+// motif and any element and each of the three rooms has as many records as its tier requires.
 //
 // LoadMotifs already panics on a hole, so this failing means the check was loosened rather than
 // that a file drifted. It is here because the panic is the tripwire and this is the statement of

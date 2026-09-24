@@ -19,7 +19,11 @@
       "Name": "Giant Bat",
       "Tier": "outer",
       "Art": "animals-bat",
+<<<<<<< HEAD
       "Draw": "A black creature with pale wings were veins are prominetly poking out of the wingspan portraited in such a manner of making it look scary",
+=======
+      "Draw": "A black creature with pale wings where veins are prominently poking out of the wingspan, portrayed in such a manner of making it look scary",
+>>>>>>> 9905c009c03821aea03aa0addf9e289750220464
       "Affinities": [
         "fire",
         "ice",
@@ -97,7 +101,11 @@
       "Name": "Tusk Boar",
       "Tier": "outer",
       "Art": "animals-boar",
+<<<<<<< HEAD
       "Draw": "A pig like creature with rough gray skin and tusk coming from the inside of its mouth"
+=======
+      "Draw": "A pig like creature with rough gray skin and tusks coming from the inside of its mouth",
+>>>>>>> 9905c009c03821aea03aa0addf9e289750220464
       "Affinities": [
         "fire",
         "ice",
@@ -136,7 +144,11 @@
       "Name": "Dire Wolf",
       "Tier": "inner",
       "Art": "animals-wolf",
+<<<<<<< HEAD
       "Draw": "A dog like creature with grey fur and tuffs of black fur its mouth should be filled with sharp rotted out teeth"
+=======
+      "Draw": "A dog like creature with grey fur and tufts of black fur. Its mouth should be filled with sharp rotted out teeth",
+>>>>>>> 9905c009c03821aea03aa0addf9e289750220464
       "Affinities": [
         "fire",
         "ice",
@@ -175,7 +187,11 @@
       "Name": "Rot Hound",
       "Tier": "inner",
       "Art": "animals-hound",
+<<<<<<< HEAD
       "Draw": "A dog with spike from its paws and blood on its body it should rotted out flesh across its body."
+=======
+      "Draw": "A dog with spikes from its paws and blood on its body. It should have rotted out flesh across its body.",
+>>>>>>> 9905c009c03821aea03aa0addf9e289750220464
       "Affinities": [
         "fire",
         "ice",
@@ -214,7 +230,11 @@
       "Name": "Cave Bear",
       "Tier": "inner",
       "Art": "animals-bear",
+<<<<<<< HEAD
       "Draw": "A brown creature with a bulbous slighty curved shape on four legs. It should have fur all around it body.",
+=======
+      "Draw": "A brown creature with a bulbous slightly curved shape on four legs. It should have fur all around its body.",
+>>>>>>> 9905c009c03821aea03aa0addf9e289750220464
       "Affinities": [
         "ice",
         "lightning",
@@ -300,7 +320,11 @@
       "Name": "Doomsday Beast",
       "Tier": "boss",
       "Art": "animals-behemoth",
+<<<<<<< HEAD
       "Draw": "A massive fox bellowing out all of the elements. It should have wings with one being portraied as if being made of water and the other fire",
+=======
+      "Draw": "A massive fox bellowing out all of the elements. It should have wings with one being portrayed as if being made of water and the other fire",
+>>>>>>> 9905c009c03821aea03aa0addf9e289750220464
       "Affinities": [
         "ice",
         "lightning",

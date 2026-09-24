@@ -261,26 +261,28 @@ every record under `data/motifs/` carries `Art` and `Draw`, and has no `Family` 
 ### Stones
 
 `stones.json` is **the essences' shape pointed at the hand ladder instead of at a card**: a record
-names a rung by its `hands.json` key, and using one raises that rung's multiplier by a tenth of the
-catalog figure for the rest of the run.
+names a hand *shape* by its `Groups` — written exactly as `hands.json` writes a rung's `groups`, so
+`[3]` is every Three of a Kind and `[3, 2]` every Full House — and using one raises every rung of that
+shape, whatever axis it counts on, each by a tenth of its own catalog figure for the rest of the run.
 
 **Parsed and validated in `internal/session`, like the essences and for the same reason** — a stone is
 held by a *run*. `internal/combat` owns the arithmetic and the seat a count sits in
 (`combat/stone.go`), because what a rung pays is a rule.
 
-**One stone per rung and one rung per stone, and every rung must have one.** A second stone on a
-rung, or a rung with none, panics at load: a rung with no stone can never be raised and nothing
-else would notice.
+**One stone per shape, and every shape must have one.** A second stone on a shape, a shape with
+none, or `Groups` no rung carries panics at load: a shape with no stone is a set of rungs that can
+never be raised and nothing else would notice. The shape is `combat.Hand.Shape`, derived from the
+rung's groups, so no field in `hands.json` declares it.
 
 **No amount field, on purpose.** A record could carry `"Percent": 10` and it would be the `CostTier`
 mistake again — a rules vocabulary declared in JSON ahead of the rules. The tenth is one decision
 about the whole mechanic and it lives in Go. It becomes a field the day two stones want to be worth
 different amounts, and not before.
 
-**The figure is not in the `Text` either.** What a stone is worth depends on its rung's multiplier,
-so `+11` written into the file goes stale the first time `hands.json` is tuned — silently, since
-nothing reads a card's text. The record carries the sentence and `screens.stoneSpec` carries the
-arithmetic.
+**The figure is not in the `Text` either.** One stone moves several rungs, each by a tenth of its
+own multiplier, so `+11` written into the file would be one number standing for several and would
+go stale the first time `hands.json` is tuned. The record carries the sentence and the shop's stone
+tooltip, `screens.stoneTipLines`, carries the arithmetic, a line per rung.
 
 ### Potions and sealed goods
 

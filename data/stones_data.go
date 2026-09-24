@@ -3,12 +3,13 @@ package data
 // The stones: **what the player may do to the hand ladder.**
 //
 // An essence record says what a stone's sibling changes about a *card*; a stone record says what it
-// changes about a *rung*. One stone raises one hand's multiplier by a tenth of the figure
-// `hands.json` writes down, for the rest of the run.
+// changes about the *ladder*. One stone raises every rung of one shape — every Three of a Kind,
+// whether it counts on the card, the form or the element — each by a tenth of the figure
+// `hands.json` writes for that rung, for the rest of the run.
 //
-// **A stone names a hand by key, and by nothing else.** The keys are `hands.json`'s own, and the
-// arithmetic — how much a tenth is, and how two stones on one rung stack — is
-// `internal/combat`'s. This file holds the shape; the rules hold the truth, which is the same
+// **A stone names a shape by its group sizes, and by nothing else.** `[3]` is every Three of a
+// Kind and `[3, 2]` every Full House, read against `hands.json`'s own `groups`; the arithmetic —
+// how much a tenth is, and how two stones on one rung stack — is `internal/combat`'s. This file holds the shape; the rules hold the truth, which is the same
 // division every list here is under.
 //
 // **What is deliberately not here: the bump.** A record could carry `"Percent": 10` and it would
@@ -32,23 +33,22 @@ type StoneData struct {
 	// and an essence's.
 	StoneRecord string `json:"StoneRecord"`
 
-	// Name is what is written across the top of the card. **A mineral rather than the rung**, so
+	// Name is what is written across the top of the card. **A mineral rather than the shape**, so
 	// the name and the text are not the same sentence twice: the text says which hand it raises.
 	Name string `json:"Name"`
 
-	// Hand is the rung this stone raises, by `hands.json` key. Resolved against the catalog the
-	// rules loaded — a stone naming a hand this build has not got fails the launch rather than
-	// landing on whichever rung happens to sit first.
-	Hand string `json:"Hand"`
+	// Groups is the shape this stone raises, written exactly as `hands.json` writes a rung's
+	// `groups`. Every rung whose groups match is raised, whichever axis it counts on. Resolved
+	// against the catalog the rules loaded — a shape no rung carries fails the launch rather than
+	// buying nothing.
+	Groups []int `json:"Groups"`
 
 	// Text is what the card says it does, in the same clipped register the essences use. A `\n` is an
-	// authored line break, honored by `cards.WrapText` — every stone carries one, because the
-	// eighteen differ only in the rung they name and left to the measurer they would read as
-	// eighteen layouts of one card.
+	// authored line break, honored by `cards.WrapText`.
 	//
-	// **The figure is not in it.** What a stone is worth depends on the rung's own multiplier, so
-	// writing `+11` here would be a number that goes stale the moment `hands.json` is tuned. The
-	// card face computes it; see `internal/screens/card_art.go`.
+	// **The figure is not in it.** One stone moves several rungs, each by a tenth of its own
+	// multiplier, so a `+11` here would be one number standing for several and would go stale the
+	// moment `hands.json` is tuned. The tooltip computes them.
 	Text string `json:"Text"`
 
 	// Art is the assets key of this stone's picture — the filename stem under `assets/stone/`, so
@@ -60,11 +60,10 @@ type StoneData struct {
 	// `docs/art/stone_art_prompt.MD` as this record's own JSON. **The engine ignores it**, exactly
 	// as it ignores a status's Badge.
 	//
-	// **The material is the prompt's rule, not this field's.** Which axis a stone raises decides
-	// its material class — silica on concept, plain rock on form, gem on element — and where it
-	// sits in that ladder decides how refined the specimen looks. So a brief says what this
-	// particular mineral is and leaves the family to the prompt; a brief that argued with the
-	// ladder would be a record overruling the catalog.
+	// **The finish is the prompt's rule, not this field's.** Where a stone's shape sits on the
+	// ladder decides how refined the specimen looks, so a brief says what this particular mineral
+	// is and leaves the finish to the prompt; a brief that argued with the ladder would be a record
+	// overruling the catalog.
 	Draw string `json:"Draw"`
 }
 
@@ -82,7 +81,7 @@ func LoadStones() map[string]StoneData {
 // **It replaced a generated boulder on 2026-09-16** *(owner's call)*. Every stone drew
 // a generated boulder before the catalog was painted, and the fallback stayed one after — so a
 // silhouette nothing had drawn in months was among the last reasons `internal/systems` generated
-// anything at all. All eighteen stones carry their own art, so this fires only for a record
+// anything at all. Every stone carries its own art, so this fires only for a record
 // somebody has just authored, which is precisely the case a default face is for.
 const DefaultStoneArt = DefaultRelicArt
 

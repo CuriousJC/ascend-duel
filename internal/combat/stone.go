@@ -1,10 +1,20 @@
 package combat
 
+import (
+	"strconv"
+	"strings"
+)
+
 // Stones: **the run's own opinion about what a hand is worth.**
 //
 // A hand's multiplier is written in `data/hands.json` and is a fact about the game. A *stone* is a
-// fact about one run: it raises one rung of the ladder by a tenth of that rung's catalog value,
-// and it does it for the duelist holding it and nobody else.
+// fact about one run: it raises every rung of one *shape* — every Three of a Kind, say, whatever
+// axis it counts on — each by a tenth of that rung's own catalog value, and it does it for the
+// duelist holding it and nobody else. See Hand.Shape.
+//
+// **The count is still kept per rung.** A stone lands on each rung of its shape, so the rungs of
+// one shape always carry the same count; keeping them apart costs nothing and leaves the ladder,
+// the hands panel and a save file all reading one number per rung, as they always have.
 //
 // **The bump lives on the duelist rather than on the catalog** *(owner's call, 2026-08-27)*.
 // `handTable` is package state built at init, shared by every fight, every tool and every test —
@@ -67,6 +77,53 @@ func buildHandSlots() map[string]int {
 func HandSlot(key string) (int, bool) {
 	i, ok := handSlots[key]
 	return i, ok
+}
+
+// Shape is what a rung asks its cards to agree on, with the axis left out: `"3"` for every Three
+// of a Kind, `"3+2"` for every Full House, `"1"` for the No Hand. It is the rung's `Groups`
+// written as one string, so two rungs share a shape exactly when they want the same group sizes.
+//
+// **A shape is what a stone raises.** A Three of a Kind counted on the card, on the form and on
+// the element is one idea read three ways, and a stone buys that idea rather than one reading of
+// it — so it names a shape and every rung carrying it moves together, each by a tenth of its own
+// multiplier. **Derived from `Groups` rather than written beside them**, so a rung cannot claim a
+// shape its groups disagree with.
+func (h Hand) Shape() string { return ShapeOf(h.Groups) }
+
+// ShapeOf is the shape a list of group sizes spells. See Hand.Shape.
+func ShapeOf(groups []int) string {
+	parts := make([]string, len(groups))
+	for i, g := range groups {
+		parts[i] = strconv.Itoa(g)
+	}
+	return strings.Join(parts, "+")
+}
+
+// HandsShaped is every rung carrying one shape, by key, in catalog order. Empty for a shape the
+// catalog does not hold, which is how a stone naming one is refused.
+func HandsShaped(shape string) []string {
+	var out []string
+	for _, h := range handTable {
+		if h.Shape() == shape {
+			out = append(out, h.Key)
+		}
+	}
+	return out
+}
+
+// HandShapes is every shape the ladder holds, once each, in the order its first rung appears.
+// It is what a catalog of stones is checked against: a shape with no stone is a set of rungs that
+// can never be raised.
+func HandShapes() []string {
+	var out []string
+	seen := map[string]bool{}
+	for _, h := range handTable {
+		if sh := h.Shape(); !seen[sh] {
+			seen[sh] = true
+			out = append(out, sh)
+		}
+	}
+	return out
 }
 
 // HandKeys is every hand's key, in catalog order. It is what a catalog of stones is checked

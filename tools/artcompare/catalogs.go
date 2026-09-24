@@ -219,20 +219,21 @@ func runeSubjects() ([]subject, error) {
 }
 
 // stoneSubjects is the stones. **Sorted by key rather than walked in file order**, because
-// stones.json has no file-order reader — one stone per rung is what the catalog is, and
+// stones.json has no file-order reader — one stone per shape is what the catalog is, and
 // tools/stonesheet walks the hand ladder to show it. A picture review wants a stable order and
 // nothing more.
 //
-// **Grouped by the rung it raises**, since this is the one catalog carrying no Family: a stone's
-// material is a rule about its axis rather than a motif it was authored beside, which is what
-// docs/art/stone_art_prompt.MD says and what the heading should therefore say too.
+// **Grouped by the shape it raises**, since this is the one catalog carrying no Family: a stone's
+// finish is a rule about where its shape sits on the ladder rather than a motif it was authored
+// beside, which is what docs/art/stone_art_prompt.MD says and what the heading should therefore
+// say too.
 func stoneSubjects() ([]subject, error) {
 	stones := data.LoadStones()
 	var out []subject
 	for _, key := range data.StoneOrder(stones) {
 		rec := stones[key]
 		out = append(out, subject{
-			Key: key, Stem: rec.Art, Group: "Hand — " + rec.Hand,
+			Key: key, Stem: rec.Art, Group: "Shape — " + fmt.Sprint(rec.Groups),
 			Caption: rec.Name,
 			Spec: cards.Spec{
 				Name: rec.Name, Element: cards.Basic, Text: rec.Text,

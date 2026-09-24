@@ -92,9 +92,10 @@ var sheets = []sheet{
 		Dir:   "stonesheet",
 		Tool:  "./tools/stonesheet",
 		Title: "Stone sheet",
-		Blurb: "Every stone, grouped by the axis its rung counts on, with the rung's multiplier " +
-			"and what one rock adds to it. The only place the ladder and what a purchase does to " +
-			"it are visible together, and the only place a rung with no stone shows as a gap.",
+		Blurb: "Every stone beside every rung it raises - one per hand shape, on every axis at " +
+			"once - with each rung's multiplier and what one rock adds to it. The only place the " +
+			"ladder and what a purchase does to it are visible together, and the only place a " +
+			"shape with no stone shows as a gap.",
 	},
 	{
 		Dir:   "upgradesheet",

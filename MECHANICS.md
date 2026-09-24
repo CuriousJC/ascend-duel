@@ -44,7 +44,7 @@ The run is written to disk between rooms and every run has a six-character code 
 | [A round is bounded twice](#a-round-is-bounded-twice) | the action budget and the five-card cap | built |
 | [The round limit](#the-round-limit--a-duel-is-bounded-too) | a duel is five rounds long | built |
 | [Relics](#relics) | the grammar, the catalog, the shop | built |
-| [Stones](#stones--altering-the-hand-ladder) | raising a rung for one run | built |
+| [Stones](#stones--altering-the-hand-ladder) | raising one hand shape, on every axis, for one run | built |
 | [Essences](#essences--altering-the-deck-between-fights) | editing the deck between fights | built |
 | [Runes](#runes--altering-the-deck-during-a-fight) | editing the deck inside a fight, and the riders a card can carry | built |
 | [Brands](#brands) | permanent changes to the chassis | **designed, not built** |
@@ -2091,11 +2091,28 @@ been designed.
 
 ## Stones — altering the hand ladder
 
-**An essence alters a card; a stone alters a rung.** One stone raises one hand's multiplier by
-**a tenth of the figure `hands.json` writes down**, for the rest of the run.
+**An essence alters a card; a stone alters a hand.** One stone raises **every rung of one shape**
+— a Three of a Kind counted on the card, on the form and on the element all at once — and each of
+them by **a tenth of the figure `hands.json` writes for that rung**, for the rest of the run.
 
-- **There is a stone for every rung**, and `data/stones.json` is refused at load if one is
-  missing — a rung with no stone is a rung that can never be raised, and nothing would fail.
+- **A stone buys a hand, not one reading of it.** A Card Three of a Kind, a Form Three of a Kind and
+  an Elemental Three of a Kind are one idea read on three axes, and a player choosing a rock is
+  choosing to lean on Three of a Kind rather than on one axis of it. So the stone names a *shape*
+  and every axis' rung of that shape moves together.
+- **The multipliers stay apart.** Each rung still pays its own catalog figure and moves by a tenth
+  of *that*, so one Jasper adds 24 to the Card Three of a Kind, 12 to the Form and 13 to the
+  Elemental — the ladder's pricing of how hard each axis is to land survives the stone.
+- **A shape is the rung's `groups` with the axis left out** — `[3]`, `[3, 2]`, `[4]` — and a stone
+  writes its `Groups` the same way. `combat.Hand.Shape` derives it rather than a field declaring
+  it, so a rung cannot be filed under a shape its groups disagree with. The Pair is already one
+  rung on every axis, and the No Hand and the Elementalist have no siblings, so each of those is a
+  shape of one rung.
+- **There is a stone for every shape, and one only**, and `data/stones.json` is refused at load if
+  one is missing or doubled — a shape with no stone is a set of rungs that can never be raised,
+  and nothing would fail.
+- **The count is still kept per rung.** A stone lands on each rung of its shape, so siblings always
+  carry the same level; keeping them apart is what leaves the resolver, the hands panel and
+  `run.json` reading one number per rung.
 - **A stone is a *level*, and a run keeps two counters against every rung.** The level is how
   many stones stand on the hand, and it moves what the hand pays; the
   *plays* are how many times the run has actually formed it, and they move nothing at all. They are
@@ -2107,7 +2124,7 @@ been designed.
   throughout, like the rest of the damage path. **The Pair's 100 makes its stone worth 10**, which
   is the cheapest step on the ladder and the only one starting from the identity.
 - **A stone is spent from the consumables pane, mid-fight, beside the runes.** It needs nothing
-  selected, because the rung it raises is written on the record, and it takes effect on the duelist
+  selected, because the shape it raises is written on the record, and it takes effect on the duelist
   standing there rather than at the next fight.
 - **It belongs to the run, not to the profile.** Stones are gone when the run is — the same
   lifetime as relics, essences and the deck — and they are written into `run.json` by hand
@@ -2121,8 +2138,11 @@ been designed.
   you bought moved this number*; a second hue for the second source would be two colors to learn
   one fact.
 - **A stone has no rarity and the bag is a flat draw.** Every rung is worth a tenth of itself, so a
-  Card Five stone is not a better rock than a Pair stone — it is a rock for a rung you may
+  Five of a Kind stone is not a better rock than a Pair stone — it is a rock for a hand you may
   never build. Weighting them would be pricing the *hand*, which the ladder already does.
+- **A shape stone is worth more rungs than a single-rung one.** Jasper moves three rungs and the
+  Pair's Agate moves one; that is the Pair being already merged rather than a price, and nothing
+  measures whether it wants correcting.
 - **Nothing measures whether a tenth is the right number**, on the same terms as every price in the
   shop section above. What it is worth in practice depends on which rung a run keeps hitting, which
   `tools/handodds` measures for the shipped deck and not for a run that has been distilling it.

@@ -177,7 +177,7 @@ go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by m
 go run ./tools/motifsheet   # the roster motif by motif: card, stat line, deck, coverage grid
 go run ./tools/creatureprompt -record goblins-outer-bomber -element ice   # the four-layer brief
 go run ./tools/creatureprompt -gaps      # which art briefs are still unwritten, roster-wide
-go run ./tools/stonesheet   # every stone against the rung it raises, grouped by axis
+go run ./tools/stonesheet   # every stone against the rungs it raises, walked by shape
 go run ./tools/runesheet # every rune: the line it prints against the rule that fires
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/goodsheet     # every sealed good beside the offer it actually makes
@@ -257,9 +257,11 @@ holds a catalog of named seeds, so a hand that demonstrates something can be ask
 instead of found by relaunching.
 `deckSeedName` picks which one a launch deals.
 
-**Stones raise a rung for one run and never touch the catalog**. `data/stones.json`
-holds one per hand, a run's counts ride on `combat.Duelist.HandStones`, and `handTable` is read
-*through* them — so the ladder every tool and test sees is the shipped one. See MECHANICS.md
+**Stones raise a hand shape for one run and never touch the catalog**. `data/stones.json`
+holds one per shape — `combat.Hand.Shape`, a rung's `groups` with the axis left out — and one
+stone raises every rung of that shape, card, form and element alike, each by a tenth of its own
+multiplier. A run's counts are still kept per rung and ride on `combat.Duelist.HandStones`, and
+`handTable` is read *through* them — so the ladder every tool and test sees is the shipped one. See MECHANICS.md
 §Stones and `internal/combat/stone.go`, which owns the arithmetic. **The corollary for tuning:**
 `tools/handodds` and `tools/handsheet` describe the game as shipped and say nothing about a run
 that has been buying rocks.
@@ -1274,8 +1276,8 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   `EssenceStyle`** — the stones, and then the potions, the three sealed goods and the placeholder
   brand. Both share the style and composition blocks verbatim, and both say the object is
   **whole** where the essence prompt says it is coming apart. **A stone's material is a rule
-  rather than a record's own idea**, which is what earns it a file: the concept axis is silica,
-  the form axis is plain rock, the element axis is gem, and each ladder ascends in finish. A new
+  rather than a record's own idea**, which is what earns it a file: the stones are one silica
+  ladder that ascends in finish, topped by the one gem. A new
   `EssenceStyle` good starts in the catch-all and earns a file the same way.
 - **The relic catalog is pixel art and the other three are not**. The 137
   pictures in `assets/relic/` were generated from a prompt asking for chunky blocks and sixteen
@@ -1359,15 +1361,13 @@ a turn holding cost discounts.
 
 **`tools/stonesheet` and `tools/runesheet` do it for the two consumable catalogs**
 . Both arrive four at a time inside a sealed good, so the whole of either is several
-shop visits and a lot of luck away in a launched game. The stone sheet is **walked by rung rather
-than by stone** — the catalog is one stone per rung, so walking the ladder orders the page for
-free *and* makes a rung nobody authored a stone for show as a gap rather than as an absence nobody
-notices. It is grouped by axis, with a merged rung under `any axis` and an axis with no rungs left
-dropped rather than drawn empty, which is deliberately not the hand sheet's layout: that one
-interleaves all three by multiplier because a player forming a hand chooses among all of them at
-once, where a stone is bought against one rung. **It is also the only place the ladder and the +N
-are visible together**, and the +N is computed from `hands.json` rather than authored, so a retuned
-rung moves the card's face with nothing edited in `stones.json`. The rune sheet is relic-sheet
+shop visits and a lot of luck away in a launched game. The stone sheet is **walked by shape rather
+than by stone** — the catalog is one stone per shape, so walking the ladder orders the page for
+free *and* makes a shape nobody authored a stone for show as a gap rather than as an absence nobody
+notices. Each stone lists every rung it raises. **It is also the only place the ladder and the +N
+are visible together**, and one stone is a different +N on every rung — a tenth of that rung's own
+multiplier, computed from `hands.json` rather than authored, so a retuned rung moves its row with
+nothing edited in `stones.json`. The rune sheet is relic-sheet
 shaped — the authored line against the resolved rule — and earned a page before it had many
 records, because a rune is the least readable record in `data/`: which of `Rider`, `Value` and
 `Count` the rules read depends entirely on the target.

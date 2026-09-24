@@ -47,6 +47,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -773,6 +774,16 @@ func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
 	// **The purse is settled before the essence is**, because the settled stage returns early and
 	// the narration stops ticking the moment the choosing stage ends. See claimThePayout.
 	s.claimThePayout(gs)
+
+	// **The essence and the cards it was aimed at, in one line.** The offer row's own clicks are
+	// deliberately not journalled: a selection that is replaced before the prize is taken changed
+	// nothing, and what has to be retraceable is which cards the essence actually landed on.
+	gs.Journal.Write(journal.Record{
+		Kind:    journal.KindEssence,
+		Key:     s.prizes[i].essence.Record,
+		Seat:    i,
+		Targets: deckCardIDs(gs, s.selectedDeckIndexes()),
+	})
 
 	s.chosen = i
 	s.tip.Forget()

@@ -8,16 +8,16 @@ func TestASummaryAddsUpTheAccount(t *testing.T) {
 	s := New(testDeck())
 
 	s.BeginFight(1, "GiantBat")
-	s.RecordRound([]LedgerLine{Line(VoicePlain, "one")}, 30)
-	s.RecordRound([]LedgerLine{Line(VoicePlain, "two")}, 25)
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "one")}, 30)
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "two")}, 25)
 	s.EndFight(OutcomeWon)
 
 	s.BeginFight(2, "Ogre")
-	s.RecordRound([]LedgerLine{Line(VoicePlain, "three")}, 40)
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "three")}, 40)
 	s.EndFight(OutcomeWon)
 
 	s.BeginFight(3, "Cave Troll")
-	s.RecordRound([]LedgerLine{Line(VoicePlain, "four")}, 11)
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "four")}, 11)
 	s.EndFight(OutcomeLost)
 
 	got := s.Summarize(0, EndedInDefeat)
@@ -46,7 +46,7 @@ func TestALostFightIsNotADefeatedEnemy(t *testing.T) {
 	s := New(testDeck())
 
 	s.BeginFight(1, "GiantBat")
-	s.RecordRound([]LedgerLine{Line(VoicePlain, "nope")}, 5)
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "nope")}, 5)
 	s.EndFight(OutcomeLost)
 
 	got := s.Summarize(0, EndedInDefeat)
@@ -78,7 +78,7 @@ func TestTheSummaryReportsTheDeepestFloorReached(t *testing.T) {
 		{2, "Cave Troll", OutcomeLost},
 	} {
 		s.BeginFight(f.floor, f.enemy)
-		s.RecordRound([]LedgerLine{Line(VoicePlain, "a round")}, 1)
+		s.RecordRound([]LedgerRecord{noted(VoicePlain, "a round")}, 1)
 		s.EndFight(f.outcome)
 	}
 

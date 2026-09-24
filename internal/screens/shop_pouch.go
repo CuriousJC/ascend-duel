@@ -26,6 +26,7 @@ import (
 	"image"
 	"image/color"
 
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -249,11 +250,24 @@ func (s *ShopScene) takeStone(gs *state.GlobalState, what pouchAction, i int) {
 	switch what {
 	case pouchUse:
 		if gs.Run.SpendCarried(i) {
-			trace.Logf("shop", "used stone %s on rung %s, %d left in the pouch",
-				st.Record, st.Hand, gs.Run.CarryCount())
+			gs.Journal.Write(journal.Record{
+				Kind:   journal.KindStone,
+				Action: journal.StoneUsed,
+				Key:    st.Record,
+				Seat:   i,
+			})
+			trace.Logf("shop", "used stone %s on shape %s, %d left in the pouch",
+				st.Record, st.Shape, gs.Run.CarryCount())
 		}
 	case pouchSell:
 		if gs.Run.SellCarried(i) {
+			gs.Journal.Write(journal.Record{
+				Kind:   journal.KindStone,
+				Action: journal.StoneSold,
+				Key:    st.Record,
+				Seat:   i,
+				Amount: session.StoneSalePrice,
+			})
 			trace.Logf("shop", "sold stone %s for %d, %d vitae in hand, %d left in the pouch",
 				st.Record, session.StoneSalePrice, gs.Run.Vitae(), gs.Run.CarryCount())
 		}

@@ -24,7 +24,6 @@ package screens
 // belongs to the round's own lines; this is the account of the gap between them.
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 
@@ -66,34 +65,38 @@ func (w *RunWatch) Note(gs *state.GlobalState) {
 		return
 	}
 
-	if lines := afterLines(gs, w.last, now); len(lines) > 0 {
-		gs.Run.RecordAfter(lines)
+	if recs := afterRecords(gs, w.last, now); len(recs) > 0 {
+		gs.Run.RecordAfter(recs)
 	}
 	w.last = now
 }
 
-// afterLines is the whole diff, worded.
+// afterRecords is the whole diff, as records.
 //
 // **The order is the order a player reads it in**: what happened to the deck first, because that is
 // what the block is for, then what they are wearing and carrying, then what it cost.
-func afterLines(gs *state.GlobalState, before, after session.Holdings) []session.LedgerLine {
-	var out []session.LedgerLine
-	out = append(out, deckLines(before.Cards, after.Cards)...)
-	out = append(out, keyLines(gs, "wore", "sold", before.Relics, after.Relics)...)
-	out = append(out, keyLines(gs, "took", "spent", before.Held, after.Held)...)
-	out = append(out, keyLines(gs, "took", "spent", before.Pouch, after.Pouch)...)
-	out = append(out, stoneLines(before.Stones, after.Stones)...)
-	out = append(out, vitaeLines(before.Vitae, after.Vitae)...)
+//
+// **Records rather than sentences**, on the rule a round is already under — see session/record.go.
+// What is decided here is which verb a change took and what it was done to; the line it reads as is
+// internal/ui/ledger_prose.go's.
+func afterRecords(gs *state.GlobalState, before, after session.Holdings) []session.LedgerRecord {
+	var out []session.LedgerRecord
+	out = append(out, deckRecords(before.Cards, after.Cards)...)
+	out = append(out, keyRecords(gs, session.KindWore, session.KindSold, before.Relics, after.Relics)...)
+	out = append(out, keyRecords(gs, session.KindTook, session.KindSpent, before.Held, after.Held)...)
+	out = append(out, keyRecords(gs, session.KindTook, session.KindSpent, before.Pouch, after.Pouch)...)
+	out = append(out, stoneRecords(before.Stones, after.Stones)...)
+	out = append(out, vitaeRecords(before.Vitae, after.Vitae)...)
 	return out
 }
 
-// deckLines is what happened to the cards: one taken, one cut, one turned into something else.
+// deckRecords is what happened to the cards: one taken, one cut, one turned into something else.
 //
 // **Cards are told apart by combat.Card.ID**, which is what makes the third case sayable at all: a
 // card that was altered and a card that was cut with another taken in its place look identical to
 // anything counting faces. The ids are exactly why they exist — see CLAUDE.md on runes naming
 // card identities rather than deck positions.
-func deckLines(before, after []combat.Card) []session.LedgerLine {
+func deckRecords(before, after []combat.Card) []session.LedgerRecord {
 	was := make(map[int]combat.Card, len(before))
 	for _, c := range before {
 		was[c.ID] = c
@@ -103,19 +106,21 @@ func deckLines(before, after []combat.Card) []session.LedgerLine {
 		now[c.ID] = c
 	}
 
-	var out []session.LedgerLine
+	var out []session.LedgerRecord
 	for _, c := range after {
 		old, held := was[c.ID]
 		switch {
 		case !held:
-			out = append(out, afterLine("took", cardWords(c)))
+			out = append(out, session.LedgerRecord{Kind: session.KindTook, Subject: cardWords(c)})
 		case !sameFace(old, c):
-			out = append(out, afterLine("changed", cardWords(old)+" into "+cardWords(c)))
+			out = append(out, session.LedgerRecord{
+				Kind: session.KindChanged, Subject: cardWords(old), Into: cardWords(c),
+			})
 		}
 	}
 	for _, c := range before {
 		if _, held := now[c.ID]; !held {
-			out = append(out, afterLine("cut", cardWords(c)))
+			out = append(out, session.LedgerRecord{Kind: session.KindCut, Subject: cardWords(c)})
 		}
 	}
 	return out
@@ -160,12 +165,12 @@ func cardWords(c combat.Card) string {
 	return name
 }
 
-// keyLines is the diff of a list of keys — the relic row, the runes in hand, the stones in the
+// keyRecords is the diff of a list of keys — the relic row, the runes in hand, the stones in the
 // pouch — with a verb for one arriving and one for one leaving.
 //
 // **By count rather than by set**, because all three lists can hold the same key twice and a set
 // would report a second copy as nothing having happened.
-func keyLines(gs *state.GlobalState, gained, lost string, before, after []string) []session.LedgerLine {
+func keyRecords(gs *state.GlobalState, gained, lost string, before, after []string) []session.LedgerRecord {
 	delta := map[string]int{}
 	for _, k := range before {
 		delta[k]--
@@ -174,58 +179,47 @@ func keyLines(gs *state.GlobalState, gained, lost string, before, after []string
 		delta[k]++
 	}
 
-	var out []session.LedgerLine
+	var out []session.LedgerRecord
 	for _, k := range sortedKeys(delta) {
 		n := delta[k]
-		verb := gained
+		kind := gained
 		if n < 0 {
-			verb, n = lost, -n
+			kind, n = lost, -n
 		}
 		for i := 0; i < n; i++ {
-			out = append(out, afterLine(verb, goodsName(gs, k)))
+			out = append(out, session.LedgerRecord{Kind: kind, Subject: goodsName(gs, k)})
 		}
 	}
 	return out
 }
 
-// stoneLines is a rung the run has raised. The stone leaves the pouch and lands here, so the pair
+// stoneRecords is a rung the run has raised. The stone leaves the pouch and lands here, so the pair
 // reads as one act in two lines — spent, then what it bought.
-func stoneLines(before, after map[string]int) []session.LedgerLine {
-	var out []session.LedgerLine
+func stoneRecords(before, after map[string]int) []session.LedgerRecord {
+	var out []session.LedgerRecord
 	for _, hand := range sortedKeys(after) {
 		if after[hand] > before[hand] {
-			out = append(out, afterLine("raised",
-				fmt.Sprintf("%s to +%d", handWords(hand), after[hand])))
+			out = append(out, session.LedgerRecord{
+				Kind: session.KindRaisedRung, Hand: handWords(hand), Amount: after[hand],
+			})
 		}
 	}
 	return out
 }
 
-// vitaeLines is what the gap cost or paid.
+// vitaeRecords is what the gap cost or paid.
 //
 // **One line per change rather than a net figure for the block**, because the block is an account:
 // a purse reporting only its balance at the end would leave a relic bought and a stone bought as
 // one number neither of them explains.
-func vitaeLines(before, after int) []session.LedgerLine {
+func vitaeRecords(before, after int) []session.LedgerRecord {
 	switch {
 	case after > before:
-		return []session.LedgerLine{afterLine("gained", fmt.Sprintf("%d vitae", after-before))}
+		return []session.LedgerRecord{{Kind: session.KindGained, Amount: after - before}}
 	case after < before:
-		return []session.LedgerLine{afterLine("spent", fmt.Sprintf("%d vitae", before-after))}
+		return []session.LedgerRecord{{Kind: session.KindPaid, Amount: before - after}}
 	}
 	return nil
-}
-
-// afterLine is one line of the block: a marked verb and what it was done to.
-//
-// **The verb is marked exactly as an action's is**, so the aftermath can be scanned for what kind
-// of thing happened before any of it is read — the rule the round lines are already under. The rest
-// goes through elementSpans, so a fire card is named in the fire color here as it is everywhere
-// else.
-func afterLine(verb, clause string) session.LedgerLine {
-	spans := []session.LedgerSpan{{Text: verb, Mark: true}}
-	spans = append(spans, ui.ElementSpans(" "+clause)...)
-	return session.LedgerLine{Voice: session.VoiceYou, Spans: spans}
 }
 
 // goodsName is what a relic, rune or stone is called on screen, falling back to its key.

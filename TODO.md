@@ -14,6 +14,49 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
+- [ ] **Stand up the private-asset bucket and arm the release guard** *(owner asked for this to
+      be tracked)*. **Nothing here is a repository change** — the workflow, the sync script and
+      the guard are written, reviewed and turned off. Both release steps, the OIDC sync and
+      `go run ./tools/privateassets -require`, are gated on the `SOUNDS_BUCKET` repository
+      variable, so a release cut in this state ships the synthesized score everywhere and passes.
+      What is left is AWS account work and three variable settings, in this order.
+
+      **1. AWS, once.**
+      - An OIDC identity provider for `token.actions.githubusercontent.com`, if the account does
+        not already have one.
+      - A private bucket with public access blocked, holding the bundle under the prefix the
+        manifest names: `aws s3 sync privateassets/audio/ s3://<bucket>/sounds/v1/ --exclude "*"
+        --include "*.wav"`. **`v1` has to match the `Bundle` field** in
+        `privateassets/audio/manifest.json`, which is where the script reads the prefix from — a
+        prefix typed into the workflow instead is the edit nobody reviews.
+      - A role with a read-only policy: `s3:GetObject` on `arn:aws:s3:::<bucket>/sounds/*`, plus
+        `s3:ListBucket` on the bucket with a prefix condition. **The list permission is not
+        optional** — `aws s3 sync` enumerates before it fetches and fails without it.
+      - A trust policy with the audience `sts.amazonaws.com`, which is the audience the script
+        asks GitHub for, and a `sub` condition. **The two release entrances produce different
+        subs**: a manual run is `repo:CuriousJC/ascend-duel:ref:refs/heads/main` and a pushed tag
+        is `repo:CuriousJC/ascend-duel:ref:refs/tags/v*`. One `StringLike` on
+        `repo:CuriousJC/ascend-duel:*` covers both and is the loosest worth having; two patterns
+        is the tighter version. **This repository is public**, so the trust policy is what stands
+        between a merged pull request and the bucket — read-only on one prefix is what keeps the
+        worst case boring.
+
+      **2. Confirm the runners have `jq` and the `aws` CLI**, including under bash on
+      `windows-latest`. Both are believed preinstalled and neither has been checked; the script
+      needs both, nothing tests for them, and the failure lands in the job holding the token.
+
+      **3. Set the three repository variables** — `SOUNDS_BUCKET`, `SOUNDS_ROLE_ARN`,
+      `SOUNDS_REGION`. Setting `SOUNDS_BUCKET` is the switch: it turns the sync and the guard on
+      together, which is why both steps carry the one condition.
+
+      **4. Cut a release and read the log.** `require the private assets` should print `every
+      manifested file is present, matching and attributed`. `manifested but not present` means
+      the sync fetched nothing — wrong prefix, or credentials that did not assume — and the build
+      fails rather than shipping quiet, which is the behaviour the whole arrangement is for.
+
+      Until all of this is done a release ships without the loops. That is a correct build and a
+      quieter game than the one on the owner's machine, not a broken one.
+
 - [?] **Three runes from the owner's list still need a design decision before they can be
       written as data** *(owner asked for this to be tracked)*. **Lucky card**; **chance to
       increase a relic** (which relic, and increase what?); **wild card** (matches any axis, or

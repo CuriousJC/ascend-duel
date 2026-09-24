@@ -13,6 +13,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
@@ -438,6 +439,16 @@ type CombatScene struct {
 	duelButton    *models.Button
 	discardButton *models.Button
 
+	// choices is the run's journal, taken at Init.
+	//
+	// **A handle rather than a lookup**, because the hand row's click handlers do not carry the
+	// state: `handRow.RowClick`, `toggle`, `discardSelected` and `startRound` are all reached from
+	// a button or a drag with nothing but the scene in hand. Every other screen writes its lines
+	// from a method that already holds a gs; this one is the exception and says so here rather
+	// than threading state through four signatures for one field. It may be nil — see
+	// state.GlobalState.Journal, whose methods all are.
+	choices *journal.Journal
+
 	// How the hand is arranged, and the block of tabs that chooses it. See combat_sort.go.
 	//
 	// **sortMode is this screen's working copy of `gs.HandSort`** *(2026-09-05)*, not the
@@ -476,6 +487,10 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// The deal captures its faces here, before anything has been drawn, so the picture bank has to
 	// be reachable before the first frame rather than on the first blit. See useImages.
 	ui.UseImages(gs)
+
+	// Taken on every entry rather than only on a fresh duel, because Init is re-run whenever the
+	// screen is come back to and a handle picked up once would outlive a run that ended in between.
+	s.choices = gs.Journal
 
 	if s.showingDuel(gs) {
 		s.placeWidgets(gs)
@@ -1184,6 +1199,15 @@ func (s *CombatScene) startRound() {
 	// never reaches either and freezes with its breaks on screen, which is the picture the player
 	// is looking at when the fight ended.
 	s.Theater.breaksStaged = false
+
+	// **The turn is written down before it is resolved**, which is the journal's whole posture: a
+	// line records what the player committed to, and what came of it is the ledger's. See
+	// internal/journal.
+	s.choices.Write(journal.Record{
+		Kind:    journal.KindDuel,
+		Targets: s.selectedCardIDs(),
+		Amount:  s.fighter.CostOf(s.fighterActions),
+	})
 
 	s.Theater.banner.Clear()
 	if blow, ok := s.previewAttack(); ok {

@@ -1,5 +1,5 @@
 // Command stonesheet renders every stone in data/stones.json to a PNG and writes an HTML page
-// that shows each one beside the rung it raises and what raising it is worth.
+// that shows each one beside the rungs it raises and what raising them is worth.
 //
 //	go run ./tools/stonesheet
 //
@@ -11,36 +11,34 @@
 // # It is a report, not a drawing-board
 //
 // Same split as relicsheet against cardsheet: this reads the real file, through internal/session,
-// which means the catalog is *validated* before anything is drawn. A stone naming a rung the
+// which means the catalog is *validated* before anything is drawn. A stone naming a shape the
 // rules have not got panics at init exactly as it would in the game, so a stone this page refuses
 // to draw is a stone the game refuses to start with.
 //
 // # What to look at
 //
-// **The +N against the rung beside it.** A stone's whole content is one number, and that number
-// is computed rather than authored — `combat.StoneValue` is a tenth of the rung's catalog
-// multiplier — so this is the only place the ladder and what a rock does to it are visible
-// together. A rung retuned in `hands.json` moves its stone's face here without anything being
-// edited in `stones.json`, which is the point of the split and also the thing to sanity-check.
+// **One stone, several rungs, several figures.** A stone raises a *shape* — every Three of a
+// Kind, on the card, the form and the element alike — and each rung moves by a tenth of its own
+// catalog multiplier, so one rock is worth a different +N on every rung it touches. The figures are
+// computed rather than authored, so a rung retuned in `hands.json` moves its row here without
+// anything being edited in `stones.json`.
 //
-// **The gap between the cheap rungs and the dear ones.** Every stone costs the same five vitae
-// inside the same bag, and a No Hand stone is worth a tenth of 100 where a Five of a Kind
-// stone is worth a tenth of a far larger number. Whether that spread is the intended bargain is
+// **The gap between the cheap shapes and the dear ones.** Every stone costs the same inside the
+// same bag, and a No Hand stone is worth a tenth of 100 where a Five of a Kind stone moves three
+// rungs each by a tenth of a far larger number. Whether that spread is the intended bargain is
 // a design question this page is for asking.
 //
-// **A rung with no stone.** Grouped by axis and walked in ladder order, so a hand the catalog
-// has not authored a stone for shows up as a gap rather than as an absence nobody notices.
-// `loadStones` allows it; the game just never offers one.
+// **A shape with no stone.** Walked in ladder order, so a shape the catalog has not authored a
+// stone for shows up as a gap rather than as an absence nobody notices.
 //
-// **The authored line against the rung it names.** `stones.json` carries a Text field the card
-// prints verbatim, and nothing checks it against the `Hand` key beside it — a stone reading
-// "raise FORM PAIR" while keyed to `form-two-pair` would be invisible everywhere but here.
+// **The authored line against the shape it names.** `stones.json` carries a Text field and a
+// Groups field side by side and nothing checks one against the other — a stone reading "raise
+// FULL HOUSE" while keyed to `[2, 2]` would be invisible everywhere but here.
 //
 // # Output
 //
-// Loose PNGs plus an index.html, written into `docs/sheets/stonesheet/` and **committed**
-// *(owner's call, 2026-08-23)*, on the same terms as every other sheet. A clone opens
-// `docs/sheets/index.html`.
+// Loose PNGs plus an index.html, written into `docs/sheets/stonesheet/` and **committed**, on the
+// same terms as every other sheet. A clone opens `docs/sheets/index.html`.
 package main
 
 import (
@@ -56,6 +54,7 @@ import (
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -90,27 +89,29 @@ func run(dir string) error {
 		Ground: ground,
 		Style:  styleFacts(cards.EssenceStyle),
 		Count:  len(session.Stones()),
-		Rungs:  len(combat.Hands()),
 		Bags:   goodsPhrase(session.ContentsStones),
 	}
 	page.Share = goodsShare(session.ContentsStones, page.Count)
 
-	// **Walked by rung rather than by stone**, which is the one decision in this file. The
-	// catalog is one stone per rung and `StoneForHand` is a lookup rather than a choice, so
-	// walking the ladder puts every stone in the table's own order for free *and* makes a rung
-	// nobody authored a stone for visible as a gap. Walking `session.Stones()` would sort by
-	// record key and hide exactly that.
+	// **Walked by shape in ladder order rather than by stone**, so the page reads bottom rung to
+	// top *and* a shape nobody authored a stone for is visible as a gap. Walking `session.Stones()`
+	// would sort by record key and hide exactly that.
 	var plates []plate
-	for _, h := range combat.Hands() {
-		p := plate{
-			Hand:        h.Name,
-			HandKey:     h.Key,
-			Axis:        axisLabel(h),
-			Multiplier:  h.Multiplier,
-			CardsWanted: h.Cards(),
+	for _, shape := range combat.HandShapes() {
+		p := plate{Shape: shape}
+		for _, h := range combat.Hands() {
+			if h.Shape() != shape {
+				continue
+			}
+			worth := session.StoneWorth(h.Key)
+			p.Rungs = append(p.Rungs, rung{
+				Hand: h.Name, HandKey: h.Key, Axis: axisLabel(h), CardsWanted: h.Cards(),
+				Multiplier: h.Multiplier, Worth: worth, Raised: h.Multiplier + worth,
+			})
 		}
+		page.Rungs += len(p.Rungs)
 
-		st, ok := session.StoneForHand(h.Key)
+		st, ok := session.StoneForShape(shape)
 		if !ok {
 			plates = append(plates, p)
 			page.Unstoned++
@@ -121,8 +122,7 @@ func run(dir string) error {
 		p.Record = st.Record
 		p.Name = st.Name
 		p.Text = st.Text
-		p.Worth = session.StoneWorth(h.Key)
-		p.Raised = h.Multiplier + p.Worth
+		p.DefaultArt = st.Art == data.DefaultStoneArt
 
 		art, err := stoneFace(st)
 		if err != nil {
@@ -135,8 +135,7 @@ func run(dir string) error {
 		p.Cell = cell
 		plates = append(plates, p)
 	}
-
-	page.Groups = groupByAxis(plates)
+	page.Plates = plates
 
 	// The two states a stone card is drawn in. **Not "chosen"** — the bag's dialog dims the three
 	// that were not kept rather than lighting the one that was, exactly as the essence offer does.
@@ -175,19 +174,12 @@ func run(dir string) error {
 
 	fmt.Printf("wrote %s and %d PNGs — %d stones over %d rungs, bags at %s, %s%% of the catalog a seat\n",
 		out, page.Count+len(page.States), page.Count, page.Rungs, page.Bags, page.Share)
-	for _, g := range page.Groups {
-		fmt.Printf("  %-8s %2d rungs, %2d stoned\n", g.Axis, len(g.Rungs), g.Stoned)
-	}
 	if page.Unstoned > 0 {
-		fmt.Printf("  %d rungs have no stone\n", page.Unstoned)
+		fmt.Printf("  %d shapes have no stone\n", page.Unstoned)
 	}
 	return nil
 }
 
-// specFor is a stone as the card the bag's dialog draws, and it fills the same fields
-// screens.stoneSpec does: a name, the authored line with the computed figure under it, and no
-// element. **Basic, not a color** — a stone raises a rung of the ladder and a rung is not one of
-// the five, so its border is the mid gray `cards.BorderOf` gives `basic`.
 // stoneFace is the picture one stone draws.
 //
 // **The fallback is resolved before this is called** *(2026-09-16)*: `session.Stone.Art` comes
@@ -209,28 +201,24 @@ func stoneFace(st session.Stone) (image.Image, error) {
 	return img, nil
 }
 
-// stoneLine is what a stone card says: its authored sentence, and the figure it raises its rung
-// by, computed from `hands.json` rather than authored. Derived in one place so the face and its
-// highlights read the same string — screens.stoneLine is the same line on the other side.
-func stoneLine(st session.Stone) string {
-	return fmt.Sprintf("%s\n+%d", st.Text, session.StoneWorth(st.Hand))
-}
-
+// specFor is a stone as the card the bag's dialog draws, and it fills the same fields
+// ui.StoneSpec does: a name, the picture and no element. **Basic, not a color** — a stone raises a
+// shape of the ladder and a shape is not one of the five, so its border is the mid gray
+// `cards.BorderOf` gives `basic`. **No figure on the face**, because one stone moves several rungs
+// by different amounts; the rows beside the card carry them.
 func specFor(st session.Stone, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:       st.Name,
-		Form:       cards.FormNone,
-		Cost:       0,
-		Element:    cards.Basic,
-		Art:        art,
-		Text:       stoneLine(st),
-		Highlights: cards.ElementHighlights(stoneLine(st)),
-		Enabled:    enabled,
+		Name:    st.Name,
+		Form:    cards.FormNone,
+		Cost:    0,
+		Element: cards.Basic,
+		Art:     art,
+		Enabled: enabled,
 	}
 }
 
-// firstStone is the first rung on the ladder that actually has a stone, for the states row. It is
-// a search rather than `plates[0]` because a No Hand nobody authored a stone for would otherwise
+// firstStone is the first shape on the ladder that actually has a stone, for the states row. It
+// is a search rather than `plates[0]` because a No Hand nobody authored a stone for would otherwise
 // draw the states row blank.
 func firstStone(plates []plate) (plate, bool) {
 	for _, p := range plates {
@@ -241,48 +229,10 @@ func firstStone(plates []plate) (plate, bool) {
 	return plate{}, false
 }
 
-// groupByAxis splits the ladder by what a rung counts on, in combat.AllAxes' order.
-//
-// **By axis rather than by multiplier across the whole catalog**, which is the difference from
-// tools/handsheet. That sheet interleaves all three axes deliberately, because a player choosing a
-// hand is choosing among all of them at once. A stone is bought against one rung, so the question
-// here is "is this axis' ladder priced sensibly against itself", and the rows have to be
-// comparable for that.
-// **A merged rung is its own group** *(2026-09-05)*. The Pair is read on concept, form and element
-// alike, so filing it under the narrowest of the three would say the concept ladder has a rung the
-// other two do not - which is the opposite of what the merge means.
-//
-// **An axis with no rungs left is dropped rather than drawn empty.** Cost carried two bespoke rungs
-// until they were cut; a heading over nothing reads as a sheet that failed to render.
-func groupByAxis(plates []plate) []group {
-	labels := []string{mergedLabel}
-	for _, a := range combat.AllAxes {
-		labels = append(labels, a.String())
-	}
-
-	out := make([]group, 0, len(labels))
-	for _, label := range labels {
-		g := group{Axis: label}
-		for _, p := range plates {
-			if p.Axis == label {
-				g.Rungs = append(g.Rungs, p)
-				if p.Has {
-					g.Stoned++
-				}
-			}
-		}
-		if len(g.Rungs) == 0 {
-			continue
-		}
-		out = append(out, g)
-	}
-	return out
-}
-
 // mergedLabel is what a rung read on more than one axis is filed under.
 const mergedLabel = "any axis"
 
-// axisLabel is the heading a rung belongs under.
+// axisLabel is the axis a rung counts on, as its row says it.
 func axisLabel(h combat.Hand) string {
 	if len(h.Axes) > 1 {
 		return mergedLabel
@@ -334,30 +284,29 @@ type cell struct {
 	Height int
 }
 
-// plate is one rung of the ladder and the stone that raises it — or the absence of one, which is
+// plate is one shape of the ladder and the stone that raises it — or the absence of one, which is
 // why every field about the stone is behind Has.
 type plate struct {
-	Cell cell
+	Cell  cell
+	Shape string
+	Rungs []rung
 
+	Has        bool
+	Record     string
+	Name       string
+	Text       string
+	DefaultArt bool
+}
+
+// rung is one hand the plate's stone raises, and what one stone does to it.
+type rung struct {
 	Hand        string
 	HandKey     string
 	Axis        string
-	Multiplier  int
 	CardsWanted int
-
-	Has    bool
-	Record string
-	Name   string
-	Text   string
-	Worth  int
-	Raised int
-}
-
-// group is one axis' worth of the ladder.
-type group struct {
-	Axis   string
-	Stoned int
-	Rungs  []plate
+	Multiplier  int
+	Worth       int
+	Raised      int
 }
 
 type page struct {
@@ -368,7 +317,7 @@ type page struct {
 	Unstoned int
 	Bags     string
 	Share    string
-	Groups   []group
+	Plates   []plate
 	States   []cell
 }
 

@@ -210,14 +210,14 @@ func TestTheRunsStonesSurviveBeingSavedAndResumed(t *testing.T) {
 	if !ok {
 		t.Fatal("no stone raises pair")
 	}
-	chert, ok := StoneForHand("form-two-pair")
+	twoPair, ok := StoneForHand("form-two-pair")
 	if !ok {
 		t.Fatal("no stone raises form-two-pair")
 	}
 
 	s.UseStone(agate.Record)
 	s.UseStone(agate.Record)
-	s.UseStone(chert.Record)
+	s.UseStone(twoPair.Record)
 
 	want, _ := s.HandMultiplier("pair")
 

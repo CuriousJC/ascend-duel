@@ -1,7 +1,9 @@
 # Stone art prompt
 
-**The prompt for one stone.** A stone's material is not free: it is a function of which axis the
-stone raises and how far up that axis it sits, which is what *The ladders* below sets out.
+**The prompt for one stone.** A stone's material is not free: it is a function of how far up the
+ladder the stone sits, which is what *The ladder* below sets out. Its inlays are not free either:
+how many there are and what they are made of is the record's own `Draw`, and *The inlays* below
+says how to draw them.
 
 ---
 
@@ -45,8 +47,8 @@ immediately around it. Nothing else casts anything, and there is no cast shadow.
 Avoid: scenery, environments, ground planes, hands, characters, props, borders, frames, panels,
 particles, sparks, smoke, motion lines, and clutter of any kind.
 
-Priority order: readable silhouette -> recognizable object -> material shading -> coherent color
-scheme -> subtle background texture.
+Priority order: readable silhouette -> recognizable object -> the inlays, countable at a glance ->
+material shading -> coherent color scheme -> subtle background texture.
 
 ## The color words
 
@@ -97,37 +99,72 @@ its way out.
 ## What a stone is
 
 **A single loose mineral specimen, in the hand rather than in the ground.** It is not set in
-anything, not mounted, not carved into a shape, not inscribed and not worked. There is no metal
-anywhere: no clasp, no band, no chain, no setting, no socket. A relic is a made object and a stone
-is a found one, and that is the whole distinction the shelf has to carry — a stone cut into a
-talisman is a relic with the wrong prompt.
+anything, not mounted and not carved into a shape. There is no metal anywhere: no clasp, no band,
+no chain, no setting, no socket. A relic is a made object and a stone is a found one — a stone cut
+into a talisman is a relic with the wrong prompt.
+
+**The one worked thing on it, when its `Draw` asks for them, is a row of inlays**, described
+below. The stone keeps its natural outline and its natural surface everywhere else; the inlays are
+set flush into it, not built on top of it.
 
 One specimen, not a handful. A scatter of pebbles reads as a quantity, where the card is one thing
 you keep.
 
-## The ladders
+## The ladder
 
-The catalog is three ladders, one per axis the hand ladder counts on, and **the material says
-which axis**. The concept ladder is silica, the form ladder is plain rock, the element ladder is
-gem. Draw the material the record's own name asks for, and let these say what that material is
-doing on the shelf:
+The catalog is one ladder, low rung to high, and it is **opaque silica** — chalcedony, the chert
+family, volcanic glass: banded, waxy, cryptocrystalline, a broken or tumbled nodule. Draw the
+material the record's own name asks for:
 
-| Ladder | Material class | Reads as | Records, low rung to high |
-|---|---|---|---|
-| **Concept** — cards of the same name | opaque silica: chalcedony, chert family, volcanic glass | banded, waxy, cryptocrystalline; a broken or tumbled nodule | Pebble, Agate, Banded Agate, Jasper, Bloodstone, Onyx, Obsidian |
-| **Form** — cards of the same form | plain rock: sedimentary and igneous | matte, granular, unglamorous; a quarried or split block | Chert, Slate, Basalt, Granite, Gabbro |
-| **Element** — cards of the same element | gem: translucent and refractive | clear, faceted or naturally crystalline; light gets inside it | Moonstone, Amber, Garnet, Topaz, Zircon, Tourmaline |
+| Rung | Record |
+|---|---|
+| 1 | Pebble |
+| 2 | Agate |
+| 3 | Banded Agate |
+| 4 | Jasper |
+| 5 | Bloodstone |
+| 6 | Onyx |
+| 7 | Obsidian |
+| 8 | Tourmaline — **the one gem**: translucent and naturally crystalline, light gets inside it |
 
-**The ladders ascend.** Where a record sits in its own column is how refined the specimen looks:
+**The ladder ascends.** Where a record sits in the column is how refined the specimen looks:
 the low end is rough, dull and irregular — a rounded pebble, an unremarkable grey block — and the
 high end is dense, saturated and sharply crystalline. That is a progression in *finish*, never in
 size and never in how many things are on the card. Every stone fills the canvas the same amount,
 and a high rung is not a bigger rock.
 
-**The material is the only thing that says the axis, and it must not be helped.** Do not draw a
-card, a suit mark, a form mark, a numeral, a tally, a rune, an engraved symbol, or any diagram of
-the hand the stone raises. What the stone does is printed in words across the lower half of the
-card afterwards, and a stone that also drew it would be saying it twice.
+## The inlays
+
+Most stones carry **a row of small upright rectangles etched into the broadest, most
+front-facing face**, each one filled flush with a polished inlay. The record's `Draw` says how many
+and of what — between one and five. **A `Draw` that says "no inlays" means exactly that**: the
+stone is left whole and unmarked, and everything below about inlays does not apply to it.
+
+- **Shape.** Each inlay is an upright rectangle in the proportion of a playing card, five wide to
+  seven tall, with very slightly softened corners. All the inlays on one stone are the same size.
+- **Size.** Large enough to survive the reduction: each inlay is roughly a tenth of the canvas
+  width wide, and the whole row spans no more than about two-thirds of the stone's width. Five
+  inlays sit closer together than two do; they never shrink to fit.
+- **Row.** One straight horizontal row, centered on the face, following the face's angle to the
+  viewer. The gap between inlays is about a third of an inlay's width.
+- **Groups.** When the `Draw` names two materials, the first material's inlays sit together on the
+  left, the second's together on the right, and the gap between the two groups is twice the
+  ordinary gap, so the row reads as two sets at a glance.
+- **Etched.** Each inlay sits in a crisply cut recess with a thin dark rim where it meets the stone,
+  the same near-black as the outer contour — that rim is what keeps a dark inlay readable on a dark
+  stone and a pale one on a pale stone.
+- **Pearl** is a lustrous white inlay with a soft pink-and-blue iridescent sheen, catching the
+  upper-left light as a gentle glow across its face.
+- **Onyx** is a glossy jet-black inlay with one crisp white highlight at its upper-left corner.
+- **Colored stone**, where a `Draw` names colors, is a polished opaque inlay in that color word's
+  ramp from *The color words* above.
+
+The inlays are **plain**. Nothing is drawn inside them — no pip, no number, no letter, no symbol,
+no picture, no suit mark — and there are no other marks on the stone: no engraving, no rune, no
+tally, no writing. The count and the material of the inlays are the whole of what they say.
+
+**The inlays share the ladder's finish.** A rough low-rung stone still has cleanly cut inlays, and
+the contrast is fine; what changes up the ladder is the stone around them.
 
 ## Composition
 
@@ -141,21 +178,19 @@ this catalog is a long object, so nothing runs corner to corner on the diagonal.
 
 **Nothing is reserved and nothing is kept clear.** There is no title, no name band, no caption
 strip, no counter, no disc, no badge, no coin, no gem socket, no plaque, no banner and no slot of
-any kind for text or a number. Do not leave a corner or an edge empty for one, and do not draw
+any kind for text or a number. The inlays are part of the stone, not a panel on it: they are never
+framed, never set on a raised plate and never given a background of their own. Do not leave a corner or an edge empty for one, and do not draw
 one. Anything placed on top of this picture is placed there afterwards, and the picture is meant
 to carry on underneath.
-
-A sentence is printed across the lower half of the picture afterwards, on a dark scrim. That is
-not a band to leave empty — draw the stone through it exactly as above — but it does mean the
-half carrying the recognition should be the upper one.
 
 ## The subject
 
 The block pasted below this prompt is one record, in JSON.
 
-**Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Hand` and
-the rest — is context for what the stone does and is never to be rendered: no title, no caption,
-no rules text, no numbers anywhere in the image. `Name` is the mineral, and it is what the ladder
+**Read `Draw` and nothing else as the subject.** It names the mineral and the inlays — how many,
+and of which material. Every other field — `Name`, `Text`, `Groups` and the rest — is context and
+is never to be rendered: no title, no caption, no rules text, no numbers anywhere in the image.
+**Take the inlay count from `Draw` alone**; do not work it out from any other field. `Name` is the mineral, and it is what the ladder
 table above is keyed on, so it tells you which row you are in; it is not a label to draw. If
 `Draw` is empty, stop and say so rather than inventing a subject.
 

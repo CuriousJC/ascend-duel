@@ -315,12 +315,17 @@ func TestTakingAStoneRaisesTheRunsRung(t *testing.T) {
 	g.open(gs, goodHolding(t, session.ContentsStones))
 	stone := g.stones[0]
 
-	before, _ := gs.Run.HandMultiplier(stone.Hand)
+	before := map[string]int{}
+	for _, hand := range stone.Hands() {
+		before[hand], _ = gs.Run.HandMultiplier(hand)
+	}
 	g.take(gs, 0)
 
-	after, _ := gs.Run.HandMultiplier(stone.Hand)
-	if want := before + session.StoneWorth(stone.Hand); after != want {
-		t.Errorf("%s pays %d after the stone, want %d", stone.Hand, after, want)
+	for _, hand := range stone.Hands() {
+		after, _ := gs.Run.HandMultiplier(hand)
+		if want := before[hand] + session.StoneWorth(hand); after != want {
+			t.Errorf("%s pays %d after the stone, want %d", hand, after, want)
+		}
 	}
 	if g.openNow() {
 		t.Error("the dialog is still up after the stone was taken")

@@ -1,6 +1,6 @@
 package session
 
-// **The ledger: the whole run's account of itself, in already-worded lines.**
+// **The ledger: the whole run's account of itself, as records something else words.**
 //
 // The fight log used to be `CombatScene.rounds` — this fight's events, thrown away by the next
 // `Init` — so the account of a run was something the player had to have been watching. The ledger
@@ -8,21 +8,21 @@ package session
 // to, which relic priced which term of it, and, at run scale, how a climb went and where it went
 // wrong. *(owner's call, 2026-09-02)*
 //
-// **Lines, not events, and that is the whole design decision.** `combat.Event` is a fat comparable
+// **Records, not events, and that is the whole design decision.** `combat.Event` is a fat comparable
 // struct — `HandGrown`, `HandRelicScale` and `HandLanding` are 25x5 arrays each, about 2.5 KB an
 // event, nearly all of it zero on everything that is not a `KindHand` — so keeping a run of them
-// would be several megabytes held for a session to say what a few hundred kilobytes of sentences
-// say. The events are still the source: `internal/screens` words them the instant a round ends,
-// through the same walk the log always used, and hands the result here. **The purpose is reading
-// back, not replaying** — a ledger cannot re-run a round and is not meant to.
+// would be several megabytes held for a session to say what a few hundred kilobytes of flat records
+// say. The events are still the source: `internal/screens` walks them the instant a round ends and
+// hands the result here. **The purpose is reading back, not replaying** — a ledger cannot re-run a
+// round and is not meant to.
 //
-// **Nothing here computes anything and nothing here knows what a card is.** A line arrives as
-// strings; this package stores them and hands them back. That is what keeps the run's record
-// structurally unable to disagree with the round it reports — see `internal/screens/prose.go`,
-// which is the one place the words are decided.
+// **Nothing here computes anything.** A record arrives as named fields; this package stores them
+// and hands them back. That is what keeps the run's record structurally unable to disagree with the
+// round it reports — see `internal/ui/ledger_prose.go`, which is the one place the words are
+// decided, and record.go for what a record holds.
 //
-// **Every field is a name or a number, never an ordinal**, because the ledger is saved: `Voice`
-// and `Category` are short closed vocabularies written as words, on the rule every other snapshot
+// **Every field is a name or a number, never an ordinal**, because the ledger is saved: a kind, a
+// voice and an ink are short closed vocabularies written as words, on the rule every other snapshot
 // is under. See save.go.
 
 // The voices a line can be spoken in. **A name rather than a color**, because a color in a save
@@ -99,10 +99,12 @@ type LedgerSpan struct {
 	Mark bool
 }
 
-// LedgerLine is one line of the account, already worded and already colored.
+// LedgerLine is one line of the account, worded and colored.
 //
-// **Worded once, when it happened**, so a line read back three fights later is the line that was on
-// screen while it was happening. See internal/screens/prose.go, the one place the words are chosen.
+// **Derived, never stored.** It is what a block of records reads as, built when a panel draws them
+// or a file is written — so a change to the wording reaches every account already on disk. See
+// internal/ui/ledger_prose.go, the one place the words are chosen, and record.go for what is
+// actually kept.
 type LedgerLine struct {
 	Spans []LedgerSpan
 
@@ -130,7 +132,10 @@ func Line(voice, text string) LedgerLine {
 type LedgerRound struct {
 	// Number is the round's place in its fight, 1-based, which is what the heading prints.
 	Number int
-	Lines  []LedgerLine
+
+	// Records is what happened, as flat data. The words are derived when the panel draws it — see
+	// record.go, and internal/ui/ledger_prose.go, which is the one translator.
+	Records []LedgerRecord
 }
 
 // LedgerFight is one duel, from the first round to the outcome.
@@ -151,14 +156,13 @@ type LedgerFight struct {
 	Rounds []LedgerRound
 
 	// After is what the player did to the run between this fight and the next: the card taken, the
-	// card cut, the essence spent, the relic bought, the rung raised.
+	// card cut, the essence spent, the relic bought, the rung raised. Records, like a round's.
 	//
 	// **It hangs off the fight rather than sitting between two of them** *(owner's call,
 	// 2026-09-12)*. The panel folds by fight, so a block of its own would be a third kind of thing
 	// to fold and a heading with no record to belong to; filed here it opens and closes with the
-	// duel it followed, which is how the player remembers it — "after fight one". The lines arrive
-	// already worded, exactly as a round's do.
-	After []LedgerLine
+	// duel it followed, which is how the player remembers it — "after fight one".
+	After []LedgerRecord
 
 	// dealt is what the player's blows came to across the fight. Unexported and read through
 	// Dealt(), so nothing outside this package can add to a total the rounds do not support.
@@ -212,13 +216,13 @@ func (s *Session) BeginFight(floor int, enemy string) {
 //
 // A round arriving with no fight open is dropped rather than opening one, because a record with no
 // enemy and no floor would be a heading the panel could not write.
-func (s *Session) RecordRound(lines []LedgerLine, dealt int) {
+func (s *Session) RecordRound(recs []LedgerRecord, dealt int) {
 	n := len(s.ledger.Fights)
-	if n == 0 || len(lines) == 0 {
+	if n == 0 || len(recs) == 0 {
 		return
 	}
 	f := &s.ledger.Fights[n-1]
-	f.Rounds = append(f.Rounds, LedgerRound{Number: len(f.Rounds) + 1, Lines: lines})
+	f.Rounds = append(f.Rounds, LedgerRound{Number: len(f.Rounds) + 1, Records: recs})
 	f.dealt += dealt
 }
 
@@ -246,12 +250,12 @@ func (s *Session) EndFight(outcome string) {
 // Lines arriving with no fight on record are dropped, on RecordRound's terms: there is no heading
 // for them to sit under. A fight that was left before a round was thrown has already been dropped
 // by BeginFight, so nothing can attach to a record that is not there.
-func (s *Session) RecordAfter(lines []LedgerLine) {
+func (s *Session) RecordAfter(recs []LedgerRecord) {
 	n := len(s.ledger.Fights)
-	if n == 0 || len(lines) == 0 {
+	if n == 0 || len(recs) == 0 {
 		return
 	}
-	s.ledger.Fights[n-1].After = append(s.ledger.Fights[n-1].After, lines...)
+	s.ledger.Fights[n-1].After = append(s.ledger.Fights[n-1].After, recs...)
 }
 
 // LedgerOpenFight reports whether a fight is still being fought, and which record it is. The panel

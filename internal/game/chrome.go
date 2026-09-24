@@ -160,6 +160,10 @@ func settingsButtonRect(gs *state.GlobalState) image.Rectangle {
 // carries its own Back, so nothing is lost — and a ledger button in the corner of the credits would
 // be one part of the game sitting on top of another.
 //
+// **The crash screen is on it for the sharpest reason of all**: everything the frame draws is a
+// control that runs game code, and the game has just been shown to be in a state where running it
+// panics. The page carries its own two buttons and nothing else may be reachable from it.
+//
 // **The end-of-run splash is on that list for a different reason**: the run is gone by the time it
 // draws, so the ledger button would be dead anyway and the cog would be a door out of the one page
 // that has something to say. It has a Back to Title of its own.
@@ -169,7 +173,7 @@ func chromeShowing(gs *state.GlobalState) bool {
 	}
 	switch gs.ActiveScreen {
 	case state.Settings, state.Achievements, state.Credits, state.RunOver, state.PostBattle,
-		state.Title, state.Goods:
+		state.Title, state.Goods, state.Crashed:
 		return false
 	}
 	return true

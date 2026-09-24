@@ -25,15 +25,14 @@
 //
 // **There was a generator here until 2026-09-16** (owner's call). glyphs.go described pixel-art
 // silhouettes in code — horizontal spans, a rim derived by asking which filled pixels touch empty
-// space, shading computed from where a pixel sat in its row — because generated art has no
-// provenance question, which is a real argument in a game that will be sold.
+// space, shading computed from where a pixel sat in its row — because code that draws a handful
+// of shapes is smaller than a file for each of them.
 //
 // What retired it was every one of its pictures becoming a drawing. The form marks went from four
 // tinted silhouettes to one authored picture per form per element plus a neutral set plus a tick
 // per element, which is a multiplication rather than a list; the rest had drawn nothing for a
-// month; and the settings cog, the last one standing, became assets/game/gear.png. The provenance
-// argument is answered differently now: the art comes from a prompt this repo owns, in docs/art/,
-// so there is still nothing to clear.
+// month; and the settings cog, the last one standing, became assets/game/gear.png. The art comes
+// from a prompt this repo owns, in docs/art/.
 //
 // Two properties of the old technique are worth remembering, because they are why it could not
 // hold this set:

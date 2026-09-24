@@ -6,6 +6,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -324,6 +325,20 @@ func (s *CombatScene) toggle(i int) {
 
 	s.hand[i].selected = !s.hand[i].selected
 	s.syncQueue()
+
+	// **The seat is the click and the identity is the card**, and both are written because they
+	// answer different questions: a person retracing this clicks a seat, and anything reading it
+	// afterwards needs to know which of three copies that was. See journal.Record.
+	kind := journal.KindUnselect
+	if s.hand[i].selected {
+		kind = journal.KindSelect
+	}
+	s.choices.Write(journal.Record{
+		Kind:  kind,
+		Card:  s.hand[i].Card.ID,
+		Label: cardLabel(s.hand[i].Card),
+		Seat:  i,
+	})
 
 	if trace.Enabled() {
 		verb := "deselected"

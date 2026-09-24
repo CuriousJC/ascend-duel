@@ -30,6 +30,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -675,6 +676,7 @@ func (s *ShopScene) buy(gs *state.GlobalState, i int) {
 	s.tip.Forget()
 
 	price, _ := session.RelicPrice(key)
+	gs.Journal.Write(journal.Record{Kind: journal.KindBuy, Key: key, Amount: price, Seat: i})
 	trace.Logf("shop", "bought %s for %d, %d vitae left, wearing %d",
 		key, price, gs.Run.Vitae(), len(gs.Run.Worn()))
 }
@@ -692,6 +694,12 @@ func (s *ShopScene) sell(gs *state.GlobalState, key string) {
 	}
 	s.start(seats)
 	s.tip.Forget()
+
+	gs.Journal.Write(journal.Record{
+		Kind:   journal.KindSell,
+		Key:    key,
+		Amount: session.SellValue(key),
+	})
 
 	trace.Logf("shop", "sold %s for %d, %d vitae in hand, wearing %d",
 		key, session.SellValue(key), gs.Run.Vitae(), len(gs.Run.Worn()))
@@ -1032,6 +1040,11 @@ func (s *ShopScene) openGood(gs *state.GlobalState, key string) {
 
 	s.opened[key] = true
 	s.tip.Forget()
+
+	// **Buying the good and taking what is inside it are two lines**, because they are two
+	// choices: the good is paid for before its contents are seen. See goods.take for the second.
+	gs.Journal.Write(journal.Record{Kind: journal.KindGood, Key: key, Amount: good.Price})
+
 	openGoods(gs, key)
 
 	trace.Logf("shop", "opened %s, %d vitae left", good.Name, gs.Run.Vitae())

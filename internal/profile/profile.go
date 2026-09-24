@@ -6,7 +6,11 @@ package profile
 // See TODO.md's profile entry for the shape this is filling in, and doc.go for why it is its own
 // file rather than a field on the run.
 
-import "sort"
+import (
+	"crypto/rand"
+	"encoding/hex"
+	"sort"
+)
 
 // profileFile is the profile's name inside the store's directory.
 const profileFile = "profile.json"
@@ -26,6 +30,23 @@ const Version = 1
 type Profile struct {
 	// Version is the format this file was written by. See loadProfile for what a future one does.
 	Version int `json:"version"`
+
+	// InstallID groups several reports from one player, and identifies nobody.
+	//
+	// **It is not a run code and not a player name.** A run code is the same six characters every
+	// launch when a seed is pinned and is reused by anyone who types it in, so several crash
+	// reports carrying one say nothing about whether they came from one machine. This is sixteen
+	// random hex characters generated once, here, and it is the only thing in a crash report that
+	// is about *whom*.
+	//
+	// **It is random rather than derived.** A hash of a machine name or a user name would be an
+	// identifier with a person inside it, recoverable by anyone holding the same hash function —
+	// and the report rule is that no path, no machine name and no user name leaves the machine.
+	//
+	// **An empty one is a profile written before it existed**, filled in by EnsureInstallID. A
+	// player whose profile may not be written over keeps whatever it holds, empty included: a
+	// report from that session is simply ungrouped, which is the honest answer.
+	InstallID string `json:"installId,omitempty"`
 
 	// TutorialSeen is whether the teaching run has been finished. **It is the only field the game
 	// currently reads**; the rest are recorded and not yet consulted.
@@ -218,6 +239,26 @@ func contains(set []string, key string) bool {
 	return false
 }
 
+// EnsureInstallID gives the profile an install id if it has none, and reports whether it made one.
+//
+// **It is a call rather than something LoadProfile does**, because loading must not decide that
+// the file needs writing: a profile that may not be written over would otherwise be handed an id
+// it can never record, and a new id every launch is the one thing an install id may not be. The
+// caller makes one and saves it in the same breath — see main.
+func (p *Profile) EnsureInstallID() bool {
+	if p.InstallID != "" {
+		return false
+	}
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		// **Not fatal, like everything else here.** A machine whose entropy source will not answer
+		// gets an ungrouped report rather than a refused launch.
+		return false
+	}
+	p.InstallID = hex.EncodeToString(b[:])
+	return true
+}
+
 // LoadProfile reads the player's profile, or hands back a fresh one.
 //
 // **A missing file, a corrupt file and a file from the future all produce a usable profile**, and
@@ -280,19 +321,27 @@ func (p *Profile) merged() map[string]any {
 		out[k] = v
 	}
 	out["version"] = p.Version
+	out["installId"] = p.InstallID
 	out["tutorialSeen"] = p.TutorialSeen
 	out["achievements"] = nonNil(p.Achievements)
 	out["unlocks"] = nonNil(p.Unlocks)
 	out["handsDiscovered"] = nonNil(p.HandsDiscovered)
+
+	// **An empty tally writes no field at all**, which is what the struct's own `omitempty` says
+	// and is why this is a condition rather than a line: a fresh profile carrying `"counters": {}`
+	// would be a player the file claims has been counted and came to nothing.
+	if len(p.Counters) > 0 {
+		out["counters"] = p.Counters
+	}
 	out["settings"] = p.Settings
 	return out
 }
 
 // known is every field name this build writes, which is how unrecognized tells the two apart.
 var known = map[string]bool{
-	"version": true, "tutorialSeen": true,
+	"version": true, "installId": true, "tutorialSeen": true,
 	"achievements": true, "unlocks": true, "handsDiscovered": true,
-	"settings": true,
+	"counters": true, "settings": true,
 }
 
 func unrecognized(raw map[string]any) map[string]any {

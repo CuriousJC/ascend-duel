@@ -96,8 +96,8 @@ type Session struct {
 	grown map[string]int
 
 	// stones is how many stones the run has put on each rung of the hand ladder, keyed by hand key.
-	// **Keyed by hand rather than by stone record** — one stone per rung, so the record is a name
-	// for the rung and the rung is what the ladder is actually read against. See stone.go.
+	// **Keyed by hand rather than by stone record** — a stone lands on every rung of its shape, and
+	// the rung is what the ladder is actually read against. See stone.go.
 	stones map[string]int
 
 	// plays is how many times the run has formed each rung, keyed by hand key. **A tally, not an
@@ -142,7 +142,7 @@ type Session struct {
 	// two of them in a row both fire the thing behind them.
 	lastRune string
 
-	// ledger is the run's account of itself: every fight, round by round, in already-worded
+	// ledger is the run's account of itself: every fight, round by round, as flat
 	// lines. **Run-level because that is the whole feature** — it used to be this fight's events
 	// on the combat screen, thrown away by the next Init. See ledger.go.
 	ledger Ledger

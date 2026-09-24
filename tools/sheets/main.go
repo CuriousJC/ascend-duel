@@ -92,9 +92,10 @@ var sheets = []sheet{
 		Dir:   "stonesheet",
 		Tool:  "./tools/stonesheet",
 		Title: "Stone sheet",
-		Blurb: "Every stone, grouped by the axis its rung counts on, with the rung's multiplier " +
-			"and what one rock adds to it. The only place the ladder and what a purchase does to " +
-			"it are visible together, and the only place a rung with no stone shows as a gap.",
+		Blurb: "Every stone beside every rung it raises - one per hand shape, on every axis at " +
+			"once - with each rung's multiplier and what one rock adds to it. The only place the " +
+			"ladder and what a purchase does to it are visible together, and the only place a " +
+			"shape with no stone shows as a gap.",
 	},
 	{
 		Dir:   "upgradesheet",
@@ -144,6 +145,15 @@ var sheets = []sheet{
 			"with the tooltip that is now the whole of what the card says, what the extra " +
 			"options cost over the size below, and how much of its catalog each one shows at " +
 			"once. Two stand on a shelf at a time, one catalog each.",
+	},
+	{
+		Dir:   "artsheet",
+		Tool:  "./tools/artsheet",
+		Title: "All art",
+		Blurb: "Every picture in `assets/`, grouped by the directory it lives in, at its own size " +
+			"with its filename under it. **The one sheet that writes no images** — each tile points " +
+			"straight at the committed file — so it is for *finding* a file, and the targeted sheet " +
+			"linked beside each heading is where art is judged under the type it ends up under.",
 	},
 	{
 		Dir:   "runesheet",

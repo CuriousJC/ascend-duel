@@ -13,6 +13,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -139,6 +140,60 @@ func (s Store) remove(name string) error {
 	return nil
 }
 
+// checkName refuses a file name that is not one.
+//
+// **This is the one door out of the store that takes a name from further up**, so a name carrying
+// a separator or a `..` would be a way to write anywhere on the machine from a panel button. It is
+// refused rather than sanitized — a quietly renamed export is a file nobody can find again.
+// **Both separators are refused whatever the platform**, since `filepath` on Linux reads a
+// backslash as an ordinary character and would write a file literally called `..\log.json` rather
+// than refusing the name a Windows caller meant.
+func checkName(name string) error {
+	if name == "" || name != filepath.Base(name) || name == "." || name == ".." ||
+		strings.ContainsAny(name, `/\`) {
+		return fmt.Errorf("profile: %q is not a file name", name)
+	}
+	return nil
+}
+
+// Names lists the files in the store whose names begin with a prefix, sorted.
+//
+// **Sorted, because the caller is pruning by age and the names lead with a timestamp.** That is
+// the whole reason a crash report is named the way it is — see internal/crashlog — and it is what
+// lets a directory be swept without reading a single file.
+//
+// **An inert store and an unreadable directory are both "nothing here".** Listing is something a
+// prune does on the way to writing a report, and a prune that failed a crash report would be the
+// tidying costing the thing it was tidying up after.
+func (s Store) Names(prefix string) []string {
+	if s.dir == "" {
+		return nil
+	}
+	entries, err := os.ReadDir(s.dir)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasPrefix(e.Name(), prefix) {
+			continue
+		}
+		out = append(out, e.Name())
+	}
+	sort.Strings(out)
+	return out
+}
+
+// RemoveFile deletes one named file from the store, and is content for it not to be there.
+//
+// **The name is checked exactly as WriteExport's is**, and for a sharper reason: this one deletes.
+func (s Store) RemoveFile(name string) error {
+	if err := checkName(name); err != nil {
+		return err
+	}
+	return s.remove(name)
+}
+
 // WriteExport puts one export file in the store's directory and hands back where it went.
 //
 // **It writes beside the profile rather than beside the executable**, on the rule the whole package
@@ -146,21 +201,134 @@ func (s Store) remove(name string) error {
 // directory is per-install rather than per-player. So an export lands wherever `ASCEND_DUEL_PROFILE`
 // or the platform's config root put the two files the game already keeps.
 //
-// **The name is the caller's and is checked here.** This is the one door out of the store that takes
-// a name from further up, so a name carrying a separator or a `..` would be a way to write anywhere
-// on the machine from a panel button. It is refused rather than sanitized — a quietly renamed export
-// is a file nobody can find again. **Both separators are refused whatever the platform**, since
-// `filepath` on Linux reads a backslash as an ordinary character and would write a file literally
-// called `..\log.json` rather than refusing the name a Windows caller meant.
+// **The name is the caller's and is checked by checkName**, which is where the rule lives now that
+// a crash report deletes by name as well as writing by one.
 //
 // It is atomic and indented like every other write, for the same two reasons.
 func (s Store) WriteExport(name string, v any) (string, error) {
-	if name == "" || name != filepath.Base(name) || name == "." || name == ".." ||
-		strings.ContainsAny(name, `/\`) {
-		return "", fmt.Errorf("profile: %q is not a file name", name)
+	if err := checkName(name); err != nil {
+		return "", err
 	}
 	if err := s.write(name, v); err != nil {
 		return "", err
 	}
 	return s.path(name), nil
+}
+
+// WriteBytes puts one file of already-encoded bytes in the store and hands back where it went.
+//
+// **The door for a file this package cannot make itself.** Every other whole-document write here
+// marshals a value, which is the right shape for the profile, the run and an export; a screenshot
+// beside a crash report is a PNG, and there is no value to hand json. So the caller encodes and
+// this writes, and the checking, the directory and the atomicity are the same ones every other
+// write goes through.
+//
+// **The name is checked exactly as WriteExport's is**, and it is atomic for the same reason: a
+// half-written file that parses as far as it goes is worse than none.
+func (s Store) WriteBytes(name string, raw []byte) (string, error) {
+	if err := checkName(name); err != nil {
+		return "", err
+	}
+	if s.dir == "" {
+		return "", errors.New("profile: nowhere to save to")
+	}
+	if err := os.MkdirAll(s.dir, 0o755); err != nil {
+		return "", err
+	}
+
+	final := s.path(name)
+	tmp := final + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+		return "", err
+	}
+	if err := os.Rename(tmp, final); err != nil {
+		os.Remove(tmp)
+		return "", err
+	}
+	return final, nil
+}
+
+// AppendLine adds one record to a file as a single line of JSON, making the file if it is not
+// there yet.
+//
+// **Append rather than rewrite, which is the whole reason this door exists.** Everything else in
+// this package writes a whole document through a temp file and a rename, because a half-written
+// save is worse than no save. A journal is the opposite case: it is read after the process that
+// was writing it died, so what matters is that the line before the panic is already on disk. A
+// document written at a phase boundary would have nothing to say about the frame that went wrong.
+//
+// **Compact rather than indented**, unlike every other write here. One record per line is what
+// makes the file readable by `tail` and appendable without parsing what is already in it, and a
+// pretty-printed record would break both.
+//
+// **The name is checked exactly as WriteExport's is.**
+func (s Store) AppendLine(name string, v any) error {
+	if err := checkName(name); err != nil {
+		return err
+	}
+	if s.dir == "" {
+		return errors.New("profile: nowhere to save to")
+	}
+	if err := os.MkdirAll(s.dir, 0o755); err != nil {
+		return err
+	}
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	raw = append(raw, '\n')
+
+	f, err := os.OpenFile(s.path(name), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(raw); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
+}
+
+// CopyFile takes a copy of one file in the store under another name, and reports whether there was
+// anything to copy.
+//
+// **It exists so a crash can keep the journal it was writing.** There is one journal and the next
+// run truncates it, so the run that blew up — which is exactly the run worth retracing — would
+// otherwise be overwritten by the next launch. See internal/crashlog.
+//
+// **Both names are checked**, since both come from further up, and the copy is written atomically
+// like every other whole-document write here.
+func (s Store) CopyFile(from, to string) (bool, error) {
+	if err := checkName(from); err != nil {
+		return false, err
+	}
+	if err := checkName(to); err != nil {
+		return false, err
+	}
+	if s.dir == "" {
+		return false, nil
+	}
+
+	raw, err := os.ReadFile(s.path(from))
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	if err := os.MkdirAll(s.dir, 0o755); err != nil {
+		return false, err
+	}
+
+	final := s.path(to)
+	tmp := final + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+		return false, err
+	}
+	if err := os.Rename(tmp, final); err != nil {
+		os.Remove(tmp)
+		return false, err
+	}
+	return true, nil
 }

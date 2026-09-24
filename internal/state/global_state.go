@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -238,6 +239,15 @@ type GlobalState struct {
 	Store   profile.Store
 	Profile *profile.Profile
 
+	// Journal is the run's choices on their way to the disk — what was picked, bought, spent and
+	// pressed, in order. **Genuinely global on the same terms as Store**: it belongs to the run
+	// rather than to a screen, and it is written from every screen a choice can be made on.
+	//
+	// **It may be nil, and every method on it is safe when it is.** A test scene and a review tool
+	// both run without one, and a nil check at forty call sites is forty places to forget it. See
+	// internal/journal.
+	Journal *journal.Journal
+
 	// EarnedThisSession is the queue of achievements landed but not yet shown, by key, oldest
 	// first. **A queue rather than a flag**, because a single turn can earn three at once — a
 	// five-element Prism is also an Elementalist and a Spectrum — and a toast that showed one and
@@ -285,6 +295,14 @@ type GlobalState struct {
 	// It deliberately does not touch `session.Phase`. The run stays exactly where it was standing,
 	// which is what makes opening settings mid-duel a look at a dialog rather than a decision.
 	ReturnScreen ActiveScreen
+
+	// Crash is what the game has to say about the panic it just survived, or nil while nothing has
+	// gone wrong. It is what the crash screen draws.
+	//
+	// **Plain strings, so state stays free of another import** — the same shape Version and RunSeed
+	// are in. The report itself is a internal/crashlog value held by whoever wrote it; this is the
+	// handful of things a player is shown.
+	Crash *CrashInfo
 
 	// PendingGood is the sealed good the shop has just paid for, by record key, waiting for the
 	// screen that opens it to pick it up.
@@ -348,6 +366,25 @@ func NewGlobalState() *GlobalState {
 func (gs *GlobalState) PctX(pct int) int { return gs.ScreenWidth * pct / 100 }
 func (gs *GlobalState) PctY(pct int) int { return gs.ScreenHeight * pct / 100 }
 
+// CrashInfo is what a crashed game tells the player.
+//
+// **Three facts and no stack.** The stack is in the file, where whoever reads a bug report will
+// find it; on screen it would be a wall of frames in front of somebody who has just lost a run.
+// What is up instead is the one line saying what happened, the code naming the run, and where the
+// report went — which together are everything a player has to be able to repeat.
+type CrashInfo struct {
+	// Panic is the recovered value, worded.
+	Panic string
+
+	// Code is the run code, which is also in the report's name.
+	Code string
+
+	// Path is where the report was written, or "" if it could not be. **An empty path is drawn as
+	// saying so** rather than as a blank line: a crash screen that silently omits the file is one
+	// that has told the player to send something they will never find.
+	Path string
+}
+
 type ActiveScreen int
 
 const (
@@ -405,6 +442,18 @@ const (
 	// session.Phase, it is reached only from the shop and it goes back there. Appended, because
 	// ActiveScreen is append-only.
 	Goods
+
+	// Crashed is the screen a panic ends on: what happened, the run code, where the report went,
+	// and the way out.
+	//
+	// **It is a whole screen rather than a dialog over the scene that panicked** *(2026-09-22)*.
+	// A dialog draws the scene underneath it, and drawing the scene that has just panicked is how
+	// one crash becomes two. So the registry is asked for this one instead and the old scene is
+	// never drawn again.
+	//
+	// **Not a station of a run**, like Settings and the menu screens — and unlike them it is a
+	// one-way door: there is nothing to go back to. Appended, because ActiveScreen is append-only.
+	Crashed
 )
 
 func (active ActiveScreen) String() string {
@@ -431,6 +480,8 @@ func (active ActiveScreen) String() string {
 		return "Animations"
 	case Goods:
 		return "Goods"
+	case Crashed:
+		return "Crashed"
 	default:
 		return "Unknown"
 	}

@@ -25,6 +25,16 @@
   h2.floor span {
     font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 12px;
   }
+   
+  details.motif > summary { list-style: none; cursor: pointer; }
+  details.motif > summary::-webkit-details-marker { display: none; }
+   
+  h2.floor::before {
+    content: "▾"; color: var(--dim); font-weight: 400;
+    display: inline-block; width: 1em; margin-left: -1em;
+  }
+  details.motif:not([open]) > summary h2.floor::before { content: "▸"; }
+  details.motif > summary:hover h2.floor { color: var(--dim); }
   .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
   .facts code { color: var(--ink); }
   .note { color: var(--dim); font-size: 12.5px; max-width: 74ch; margin: 12px 0 0; }
@@ -252,11 +262,14 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
 
 <section class="sheet-group" data-motif="aliens" data-floor="5 6 7 8">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Aliens — Floors 5–8
     <span>9 records · HP 155–415 · DMG 8–18 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -344,6 +357,19 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-aliens-outer-specimen.png" width="628" height="280"
+                 alt="Specimen in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
       <p class="draw">Something that was being kept and has got out. A slack upright trunk with four mismatched limbs, two of them tentacles, and a low crown of short eye stalks all swivelled onto the viewer at once. Its wrapped garment is torn open down one side and a cut length of tether still hangs from the collar. Upright but not braced — it has not decided what it is yet.</p>
     </div>
   
@@ -397,6 +423,19 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
+      
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-aliens-outer-drone.png" width="628" height="280"
+                 alt="Survey Drone in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
       
       <p class="draw">A squat hovering body with no legs at all, a ring of long thin eye stalks around its upper rim turning at different speeds, and three jointed arms folded underneath ending in instruments rather than hands. Its garment is a fitted band of hanging panels around the middle of the body, cut for a torso that is a sphere. It hangs slightly nose-down, measuring you.</p>
     </div>
@@ -452,6 +491,19 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-aliens-outer-husk.png" width="628" height="280"
+                 alt="Seeded Husk in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
       <p class="draw">A hollowed body carrying something else&#39;s young. The trunk has split down the front and the gap is packed with translucent sacs; two long tentacles hold the split closed from either side and a third has gone slack. Only two eye stalks are left and one has drooped. Its garment is intact and neatly fastened, which is the worst part.</p>
     </div>
   
@@ -505,6 +557,19 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
+      
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-aliens-inner-abomination.png" width="628" height="280"
+                 alt="Abomination in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
       
       <p class="draw">Too much of everything. Limbs in the wrong count, three of them tentacles, coming off a trunk with no clear front, and eye stalks in a disordered thicket rather than a row. It wears a harness built for something with half its limbs, buckled across it anyway and cutting into the flesh where the extra ones grew through.</p>
     </div>
@@ -560,6 +625,19 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-aliens-inner-watcher.png" width="628" height="280"
+                 alt="The Watcher in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
       <p class="draw">A tall narrow stalk of a creature that is almost entirely eyes. A slender trunk widens into a crown of long eye stalks, more than can be counted, fanned out and every one aimed forward. The two short tentacles below are folded and still. Its garment is a full-length robe of overlapping hanging panels running to the bottom of the picture, and the stalks come out of its collar.</p>
     </div>
   
@@ -613,6 +691,19 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
+      
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-aliens-inner-harvester.png" width="628" height="280"
+                 alt="Harvester in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
       
       <p class="draw">Built to take things apart. A heavy forward-leaning trunk on four short legs, with two long tentacles and two rigid arms ending in curved cutting hooks, held out and open. A cluster of eye stalks sits low on the front of the body, below the arms, so it looks up at what it is working on. It wears a panelled apron, heavily stained.</p>
     </div>
@@ -676,6 +767,19 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-aliens-boss-toxoid.png" width="628" height="280"
+                 alt="Bio-Titan Toxoid in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
       <p class="draw">A swollen giant. The trunk is a bloated sac overhanging a ring of short thick legs, its skin translucent over something that moves inside it, and four tentacles come off the upper body and drip steadily. The eye stalks are short and sunk into the swelling, barely clearing it. Its garment is a wide collar of plates around the top of the sac, far too small to cover what is under it.</p>
     </div>
   
@@ -737,6 +841,19 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
+      
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-aliens-boss-plagueborn.png" width="628" height="280"
+                 alt="Bio-Titan Plagueborn in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
       
       <p class="draw">A giant coming apart into others. The main trunk is ridged and split in several places, and smaller limbs — half-formed tentacles, partial eye stalks, a hand with nothing behind it — push out of the splits the whole length of it. Its garment is wrapped round and round the trunk in bands, and the new limbs have torn through it at every height.</p>
     </div>
@@ -800,17 +917,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-aliens-boss-omega.png" width="628" height="280"
+                 alt="Bio-Titan Omega in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
       <p class="draw">The largest and the only finished one. A tall trunk that reads symmetrical at a distance and resolves into nothing that matches: limbs in tiers down the body, the upper pair rigid and bladed, the lower pairs tentacles, and a single unbroken ring of long eye stalks at the top, evenly spaced and all open. It wears layered hanging panels from the ring down, cut cleanly and fitted exactly — the only one of them dressed on purpose.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="animals" data-floor="1 2 3 4 5 6">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Animals — Floors 1–6
     <span>9 records · HP 80–285 · DMG 5–12 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -1474,14 +1608,18 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">A lion with red wings and two creatures on its shoulders. One is a red dragon its skin matching the color of the wings. The other should be a tan goat.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="avians" data-floor="2 3 4 5 6 7">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Avians — Floors 2–7
     <span>9 records · HP 95–330 · DMG 5–15 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -1569,7 +1707,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-avians-outer-crow.png" width="628" height="280"
+                 alt="Carrion Crow in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A scavenger that has been at something already. A heavy straight corvid bill, a ragged ruff standing up around the neck, and a lean frame with the wing-arms held half open and the primaries splayed. It carries a short hooked knife low in one claw, held the way a tool is held rather than a weapon, and it is looking at the viewer sideways with one eye.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
@@ -1623,7 +1774,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-avians-outer-harrier.png" width="628" height="280"
+                 alt="Cliff Harrier in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A hunter that is about to leave. A raptor&#39;s head — small, smooth, with a deep hooked bill and a hard brow ridge over the eye — on narrow shoulders, with long pointed wing-arms swept back and mantled high behind it. It holds a short hunting spear upright against one shoulder, and the whole body is pitched slightly forward as though the ledge is right there.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
@@ -1677,7 +1841,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-avians-outer-ratite.png" width="628" height="280"
+                 alt="Bone Ratite in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A flightless bulk, built low and forward. A small flat head on a thick column of a neck, a blunt heavy bill, and shaggy hair-like plumage over a barrel chest; the wing-arms are stunted and useless, held tight in against the ribs. It grips a crude weighted club in both stubby claws. Frame it lower than its siblings so the tops of its enormous thighs make the bottom of the picture — that is where the creature lives.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
@@ -1731,7 +1908,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-avians-inner-roc.png" width="628" height="280"
+                 alt="Young Roc in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A juvenile far too big for how young it is. An eagle&#39;s head and bill at twice the scale of anything around it, with patches of unshed down still standing up along the crown and shoulders, and wing-arms so broad they run out of the picture on both sides. It carries a length of splintered ship&#39;s timber as a club, one end still trailing rope.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
@@ -1785,7 +1975,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-avians-inner-harpy.png" width="628" height="280"
+                 alt="Harpy in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Caught mid-shriek. A gaunt narrow head with the bill wide open and the throat distended, the crest feathers flattened back by its own noise, and every feather on the neck and chest ragged and out of line. Hooked blades are strapped along the inside of both forearms rather than held, so the wing-arms are flung out and empty.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
@@ -1839,7 +2042,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-avians-inner-phoenix.png" width="628" height="280"
+                 alt="Ember Phoenix in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">The elegant one. A slender head, a fine tapered bill, and a long trailing crest that lifts up and back out of the top of the frame, with plumes streaming off the forearms as though a draft is coming up past it from below. It holds a slim curved sword point-up in front of itself, both claws on the grip, perfectly still.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
@@ -1901,7 +2117,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-avians-boss-skyfather.png" width="628" height="280"
+                 alt="The Sky-Father in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">An old king of birds. A broad heavy eagle&#39;s head, deeply hooded over the eyes, with a mantle of long overlapping feathers lying across the shoulders like a cloak, and a chest twice the width of anything below it in the tower. It holds a long-hafted spear upright in one claw, planted, and does not lean on it.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
@@ -1963,7 +2192,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-avians-boss-greatroc.png" width="628" height="280"
+                 alt="The Great Roc in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Too large for the picture and composed that way. The shoulders reach both edges, the folded wing-arms run out of the top of the frame, and the head — an enormous hooked bill, the eye small in all that bone — is turned square onto the viewer with the bill slightly parted. A ship&#39;s anchor hangs from one claw on a short length of chain, carried as casually as a stone.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
@@ -2025,17 +2267,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-avians-boss-corvid.png" width="628" height="280"
+                 alt="The Corvid King in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A crow that has collected. A high domed skull and a long straight bill, with rings, coin discs and threaded links worked in among the feathers of the neck and crown until the plumage reads as a hoard rather than as ornament. It holds a long hooked bill-hook across its body in one claw and a bundle of notched tally sticks in the other, and it is counting you.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="barbarians" data-floor="2 3 4 5 6 7">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Barbarians — Floors 2–7
     <span>9 records · HP 115–310 · DMG 5–14 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -2123,7 +2382,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-barbarians-outer-raider.png" width="628" height="280"
+                 alt="Steppe Raider in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A rider on foot. Stripped to the waist under a fur half-cloak, a curved knife reversed in each fist, weight already shifting off one side. Grinning.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
@@ -2177,7 +2449,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-barbarians-outer-axeman.png" width="628" height="280"
+                 alt="Axeman in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A squat wall of a man with a broad bearded axe held two-handed across the chest, no shield, both forearms wrapped in cord. Braced, and waiting for you to come to him.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
@@ -2231,7 +2516,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-barbarians-outer-shieldbreaker.png" width="628" height="280"
+                 alt="Shieldbreaker in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Carries a long iron maul with a flattened head, held up beside the shoulder ready to come down. A broken shield rim is hooked to the belt as a trophy.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
@@ -2285,7 +2583,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-barbarians-inner-berserk.png" width="628" height="280"
+                 alt="Berserker in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Stripped bare but for a strap, eyes rolled white, mouth open mid-scream, an axe held loose and forgotten in one hand. Lunging straight at the viewer.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
@@ -2339,7 +2650,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-barbarians-inner-hetman.png" width="628" height="280"
+                 alt="Hetman in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A chieftain in a fur mantle with a gold-ringed braided beard, a long single-handed sword raised in a broad arc, the other hand open and giving an order. Commanding rather than charging.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
@@ -2393,7 +2717,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-barbarians-inner-bonecaller.png" width="628" height="280"
+                 alt="Bonecaller in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A shaman hung with animal skulls and rattles, chalk handprints on the face and chest, one hand raised holding a bone fetish. Looking past the viewer at something behind them.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
@@ -2455,7 +2792,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-barbarians-boss-khan.png" width="628" height="280"
+                 alt="The Khan in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">An old warlord in laminated hide and a fur-trimmed helm, a short recurve bow held across the body with a fist of arrows in the draw hand. Unhurried, looking over the viewer&#39;s shoulder at the rest of it.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
@@ -2517,7 +2867,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-barbarians-boss-skullking.png" width="628" height="280"
+                 alt="The Skull King in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A giant in a crown of stacked skulls jammed down over the brow, a club of bound femurs raised beside the head, teeth filed. Head tipped forward so the crown is the first thing read.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
@@ -2579,17 +2942,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-barbarians-boss-widow.png" width="628" height="280"
+                 alt="The Red Widow in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Lean and wiry in red-dyed furs, arms bare and scored elbow to shoulder with tally cuts, a thin knife held point-down in each hand. Smiling.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="big-cats" data-floor="1 2 3 4">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Big Cats — Floors 1–4
     <span>13 records · HP 80–260 · DMG 5–13 ·
       AP 4–6 · 4 outer, 4 inner, 5 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -3310,7 +3690,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <div class="head">
         <span class="named">
           <span class="name">Luna</span>
-          <span class="title">the Arcana</span>
+          <span class="title">the Arcane</span>
         </span>
         <span class="record">big-cats-boss-luna</span>
         <span class="family">boss</span>
@@ -3368,14 +3748,18 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">TBD</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="cat-people" data-floor="2 3 4 5 6 7">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Cat-people — Floors 2–7
     <span>9 records · HP 105–310 · DMG 5–15 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -3463,7 +3847,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-cat-people-outer-prowler.png" width="628" height="280"
+                 alt="Prowler in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Short-furred and lean, crouched low with the shoulders up above the head and every claw spread. Already leaving the ground.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
@@ -3517,7 +3914,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-cat-people-outer-sneak.png" width="628" height="280"
+                 alt="Alley Sneak in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A scruffy alley cat in a hooded wrap, one hand on a shiv and the other closed around something it has taken. Looking back over its shoulder at the viewer.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
@@ -3571,7 +3981,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-cat-people-outer-clawguard.png" width="628" height="280"
+                 alt="Claw Guard in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Heavy built and broad through the chest, in a studded harness across the shoulders. Both hands up and open with the claws fully extended, holding ground rather than advancing.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
@@ -3625,7 +4048,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-cat-people-inner-stalker.png" width="628" height="280"
+                 alt="Night Stalker in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Black-furred and long-limbed, half out of the light, ears flat and body dropped low. Only the eyes and the claws catch anything.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
@@ -3679,7 +4115,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-cat-people-inner-duelist.png" width="628" height="280"
+                 alt="Whisker Duelist in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Slim and upright in a fitted jacket, a thin blade extended in one hand and the other arm swept back behind. Whiskers forward, perfectly balanced.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
@@ -3733,7 +4182,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-cat-people-inner-maneater.png" width="628" height="280"
+                 alt="Maneater in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A huge broad-headed brute with a scarred muzzle and a mane-like ruff, jaws open wide, one heavy hand reaching straight out at the viewer.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
@@ -3795,7 +4257,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-cat-people-boss-matriarch.png" width="628" height="280"
+                 alt="The Matriarch in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">An old queen gone silver at the muzzle, seated upright in layered wraps and rings, hands resting with the claws out. Heavy-lidded and entirely unbothered.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
@@ -3857,7 +4332,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-cat-people-boss-shadow.png" width="628" height="280"
+                 alt="The Shadow Cat in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Almost not there. A flat black silhouette with two lit eyes and the suggestion of a muzzle, the only solid thing in it the one raised claw.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
@@ -3919,17 +4407,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-cat-people-boss-lion.png" width="628" height="280"
+                 alt="The Bronze Lion in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A massive lion-maned warrior in bronze scale across the chest and shoulders, standing square on with one palm out. A door rather than a fighter.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="draconics" data-floor="5 6 7 8">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Draconics — Floors 5–8
     <span>9 records · HP 170–430 · DMG 9–19 ·
       AP 5–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -4017,7 +4522,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <p class="draw">a small dragon the size of a very large dog with stubby wings it couldn&#39;t use to fly and an extra long tail with stubby horns</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
@@ -4071,7 +4576,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <p class="draw">a dragon that&#39;s closer to the size of an extra large draft horse with stonelike skin accents that make you think of a basilisk stare, it should have tufts that are more featherlike than scalelike as well</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
@@ -4125,16 +4630,16 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <p class="draw">a much more snakelike version of a dragon that has double wings and small feet and legs almost like a dachsund </p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Dracolisk</span>
+          <span class="name">Brood Mother</span>
           
         </span>
-        <span class="record">draconics-inner-dracolisk</span>
+        <span class="record">draconics-inner-broodmother</span>
         <span class="family">inner</span>
         <span class="stats">
           <b>HP 260</b><span>DMG 12</span><span>AP 5</span>
@@ -4143,8 +4648,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-draconics-inner-dracolisk.png" width="862" height="280"
-             alt="Dracolisk and its deck">
+        <img src="strip-draconics-inner-broodmother.png" width="862" height="280"
+             alt="Brood Mother and its deck">
       </div>
 
       <table>
@@ -4167,7 +4672,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
           </tr>
         
           <tr>
-            <td>Stone Gaze</td>
+            <td>Brood Fury</td>
             <td>attack</td>
             <td class="effect">Hits for 2x DMG</td>
             <td class="num">3</td>
@@ -4476,14 +4981,18 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">TBD</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="dwarves" data-floor="2 3 4 5 6 7">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Dwarves — Floors 2–7
     <span>9 records · HP 110–320 · DMG 5–13 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -4571,7 +5080,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-dwarves-outer-digger.png" width="628" height="280"
+                 alt="Deep Digger in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">In a leather apron and a lamp-fitted helm, both hands on a heavy pick held mid-swing across the body, grimed black to the elbows.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
@@ -4625,7 +5147,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-dwarves-outer-smith.png" width="628" height="280"
+                 alt="Forge Smith in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Stripped to the apron, enormous through the shoulders, a hammer in one fist and tongs in the other gripping a bar of worked iron up beside the head.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
@@ -4679,7 +5214,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-dwarves-outer-scout.png" width="628" height="280"
+                 alt="Tunnel Scout in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">The lean one. Cropped beard, light mail, a short axe in one hand and a shuttered lantern in the other, head turned and listening rather than looking.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
@@ -4733,7 +5281,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-dwarves-inner-shieldman.png" width="628" height="280"
+                 alt="Shield Dwarf in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Almost entirely shield. A tower shield with a heavy central boss held forward and covering him to the eyes, with only a helm rim and one eye above it.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
@@ -4787,7 +5348,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-dwarves-inner-runesmith.png" width="628" height="280"
+                 alt="Runesmith in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A chisel in one hand and the other palm held out with a cut rune burning on it. The arms carry more marks than the metal does.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
@@ -4841,7 +5415,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-dwarves-inner-thane.png" width="628" height="280"
+                 alt="Thane in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A lord in fine mail with a ringed and forked beard, one hand axe cocked back to throw and two more on the belt.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
@@ -4903,7 +5490,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-dwarves-boss-kingunder.png" width="628" height="280"
+                 alt="The King Under in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Crowned, in gold-chased plate, a short stone sceptre held across the chest in both hands, the beard forked and enormous. Shut like a gate.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
@@ -4965,7 +5565,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-dwarves-boss-forgefather.png" width="628" height="280"
+                 alt="The Forge-Father in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">An ancient smith, beard burned back to stubble, a scorched leather apron over bare arms, holding a crucible up in long tongs beside his head.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
@@ -5027,17 +5640,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-dwarves-boss-deepwarden.png" width="628" height="280"
+                 alt="The Deep Warden in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Gaunt for a dwarf, a hood pulled over mail, a shuttered lantern raised in one hand and a long pick haft in the other. The face is mostly shadow under the hood.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="elves" data-floor="3 4 5 6 7 8">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Elves — Floors 3–8
     <span>9 records · HP 110–305 · DMG 6–16 ·
       AP 5–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -5125,7 +5755,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-elves-outer-scout.png" width="628" height="280"
+                 alt="Wood Scout in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Light, half-turned away, a short bow drawn to the cheek under a leaf-cut hood. Already loosing.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
@@ -5179,7 +5822,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-elves-outer-blade.png" width="628" height="280"
+                 alt="Glade Blade in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A duelist&#39;s stance: a long straight single-edged blade held low and back, the empty hand forward and open. Completely calm.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
@@ -5233,7 +5889,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-elves-outer-warden.png" width="628" height="280"
+                 alt="Thorn Warden in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Wrapped in thorn and bramble that has been worked into the armour itself, a barbed whip of live briar coiled in one hand.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
@@ -5287,7 +5956,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-elves-inner-archer.png" width="628" height="280"
+                 alt="Longbow Archer in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A longbow whose stave runs the full height of the picture, drawn to full and held there, the face steady beside the string.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
@@ -5341,7 +6023,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-elves-inner-dancer.png" width="628" height="280"
+                 alt="Blade Dancer in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Mid-turn, two slim blades describing an arc through the frame, cloth trailing behind the spin. The movement is all in the shoulders.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
@@ -5395,7 +6090,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-elves-inner-singer.png" width="628" height="280"
+                 alt="Moon Singer in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Mouth open in song, both arms raised, silver at the throat and brow. There is no weapon, and the air around the head is visibly shivering.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
@@ -5457,7 +6165,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-elves-boss-queen.png" width="628" height="280"
+                 alt="The Silver Queen in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Crowned with a silver bough that was grown rather than made, in a long pale mantle, one hand raised in command. Looking down at the viewer.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
@@ -5519,7 +6240,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-elves-boss-skyhunter.png" width="628" height="280"
+                 alt="The Skyhunter in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A bow held one-handed across the body with an arrow already nocked, hawk feathers and fittings through the gear, head tipped back as though sighting something high up.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
@@ -5581,17 +6315,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-elves-boss-exile.png" width="628" height="280"
+                 alt="The Exile in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Cut off from it. The cloak is grey where the others are living, the hair is cut short, the worked wood in the gear is dead and split, and a single curved knife hangs loose in one hand.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="goblins" data-floor="1 2 3 4 5 6">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Goblins — Floors 1–6
     <span>9 records · HP 88–265 · DMG 4–12 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -6255,14 +7006,18 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">Four fingers on one hand and five improvised tools on the other. Goggles pushed up onto the brow, spectacles of scavenged glass, a contraption half-built and ticking in its grip.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="golems" data-floor="4 5 6 7 8">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Golems — Floors 4–8
     <span>9 records · HP 165–430 · DMG 6–16 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -6302,10 +7057,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Clay Golem</span>
+          <span class="name">Copper Golem</span>
           
         </span>
-        <span class="record">golems-outer-clay</span>
+        <span class="record">golems-outer-copper</span>
         <span class="family">outer</span>
         <span class="stats">
           <b>HP 195</b><span>DMG 7</span><span>AP 4</span>
@@ -6314,8 +7069,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-golems-outer-clay.png" width="862" height="280"
-             alt="Clay Golem and its deck">
+        <img src="strip-golems-outer-copper.png" width="862" height="280"
+             alt="Copper Golem and its deck">
       </div>
 
       <table>
@@ -6350,16 +7105,29 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-golems-outer-copper.png" width="628" height="280"
+                 alt="Copper Golem in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">a copper golem gone green with verdigris across the shoulders and back, its plates riveted together at the joints</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
       <div class="head">
         <span class="named">
-          <span class="name">Scrap Golem</span>
+          <span class="name">Amber Golem</span>
           
         </span>
-        <span class="record">golems-outer-scrap</span>
+        <span class="record">golems-outer-amber</span>
         <span class="family">outer</span>
         <span class="stats">
           <b>HP 165</b><span>DMG 9</span><span>AP 5</span>
@@ -6368,8 +7136,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-golems-outer-scrap.png" width="862" height="280"
-             alt="Scrap Golem and its deck">
+        <img src="strip-golems-outer-amber.png" width="862" height="280"
+             alt="Amber Golem and its deck">
       </div>
 
       <table>
@@ -6404,16 +7172,29 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-golems-outer-amber.png" width="628" height="280"
+                 alt="Amber Golem in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">an amber golem, translucent and honey coloured, with insects caught and suspended inside its chest and arms</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
-          <span class="name">Stone Golem</span>
+          <span class="name">Wood Golem</span>
           
         </span>
-        <span class="record">golems-outer-stone</span>
+        <span class="record">golems-outer-wood</span>
         <span class="family">outer</span>
         <span class="stats">
           <b>HP 235</b><span>DMG 6</span><span>AP 4</span>
@@ -6422,8 +7203,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-golems-outer-stone.png" width="862" height="280"
-             alt="Stone Golem and its deck">
+        <img src="strip-golems-outer-wood.png" width="862" height="280"
+             alt="Wood Golem and its deck">
       </div>
 
       <table>
@@ -6458,7 +7239,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-golems-outer-wood.png" width="628" height="280"
+                 alt="Wood Golem in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">a wood golem grown out of a knotted root ball, with living branches for arms and thick bark plating over the shoulders</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
@@ -6512,16 +7306,29 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-golems-inner-iron.png" width="628" height="280"
+                 alt="Iron Golem in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">a heavy iron golem of riveted black plate, standing square, with rust bleeding out of every seam</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
       <div class="head">
         <span class="named">
-          <span class="name">Glass Golem</span>
+          <span class="name">Quartz Golem</span>
           
         </span>
-        <span class="record">golems-inner-glass</span>
+        <span class="record">golems-inner-quartz</span>
         <span class="family">inner</span>
         <span class="stats">
           <b>HP 190</b><span>DMG 12</span><span>AP 6</span>
@@ -6530,8 +7337,8 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       </div>
 
       <div class="strip">
-        <img src="strip-golems-inner-glass.png" width="862" height="280"
-             alt="Glass Golem and its deck">
+        <img src="strip-golems-inner-quartz.png" width="862" height="280"
+             alt="Quartz Golem and its deck">
       </div>
 
       <table>
@@ -6566,7 +7373,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-golems-inner-quartz.png" width="628" height="280"
+                 alt="Quartz Golem in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">a quartz golem built out of clustered milky crystal, faceted and sharp at every edge</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
@@ -6620,7 +7440,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-golems-inner-bone.png" width="628" height="280"
+                 alt="Bone Golem in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">a bone golem lashed together out of the ribs and skulls of several different animals, none of them matching</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
@@ -6682,7 +7515,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-golems-boss-colossus.png" width="628" height="280"
+                 alt="The Colossus in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">an obsidian golem, larger than any other golem, looming with well defined muscles of a barbarian queen and flowing lapis dreadlocks</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
@@ -6744,7 +7590,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-golems-boss-sentinel.png" width="628" height="280"
+                 alt="The Sentinel in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">a bloodstone golem with a thick bone spear that has a malachite stalagtite attached to the end</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
@@ -6806,17 +7665,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-golems-boss-juggernaut.png" width="628" height="280"
+                 alt="The Juggernaut in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">a tiny hematite golem that looks almost cute instead of intimidating with eyes of jade</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="insects" data-floor="1 2 3 4 5">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Insects — Floors 1–5
     <span>9 records · HP 85–265 · DMG 4–12 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -6904,7 +7780,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-insects-outer-dragonfly.png" width="628" height="280"
+                 alt="Dragonfly in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A hunter that never lands. Two pairs of long veined wings held out flat and rigid, a slim rod of an abdomen trailing well past them, and a head that is almost entirely eye — two vast domes meeting in the middle above a small set of biting jaws. The six legs are folded forward into a basket under the thorax, the way this animal carries prey while still flying, and it hangs square onto the viewer as though it has stopped dead in the air.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
@@ -6958,7 +7847,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-insects-outer-drone.png" width="628" height="280"
+                 alt="Hive Drone in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A worker rather than a soldier. A furred barrel of a thorax and a banded abdomen tapering to the sting, with short blurred wings and stubby legs loaded with packed pollen at the joints. The head is blunt and simple and the antennae are short, and it is hunched slightly forward in the posture of something that has been carrying weight all day and will fight only because you are standing in the doorway.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
@@ -7012,7 +7914,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-insects-outer-beetle.png" width="628" height="280"
+                 alt="Iron Beetle in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Armour with legs. A single enormous domed carapace filling most of the frame, split down the centre line, with a heavy squared plate over the head and a stout horn rising off the front of it. The legs are short, thick and set wide, barely lifting the body off the ground. Draw it low and square onto the viewer so the shell reads as a wall rather than as a back.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
@@ -7066,7 +7981,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-insects-inner-spider.png" width="628" height="280"
+                 alt="Giant Spider in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Reach before bulk. A compact body slung low between eight long angular legs that run out of the frame at both sides, every joint standing high above the body itself. The front of the head carries a bank of small eyes in two rows and a pair of heavy fangs held slightly apart, and stiff hairs stand up along every limb. Frame it high and wide so the legs make the picture and the body is the small dense thing in the middle of them.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
@@ -7120,7 +8048,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-insects-inner-mantis.png" width="628" height="280"
+                 alt="Blade Mantis in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Held perfectly still, and about to not be. A long upright body balanced on four thin walking legs, with the two raised forelimbs folded up in front of the chest — spined along the inner edge, hooked at the tip, the single most worked part of the animal. A narrow triangular head is turned back over its own shoulder to look at the viewer, and the folded wing-cases lie flat down the length of the back.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
@@ -7174,7 +8115,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-insects-inner-centipede.png" width="628" height="280"
+                 alt="Gorge Centipede in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A body that keeps going. The front third of an enormous segmented column rearing up off the ground, each plate overlapping the next and each carrying its own pair of legs, with the rest of the length coiling away behind it and out of the bottom of the picture. At the head, a pair of curved venom claws sit under short blunt antennae. Frame it so the viewer cannot see where it ends.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
@@ -7236,7 +8190,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-insects-boss-broodmother.png" width="628" height="280"
+                 alt="The Broodmother in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Swollen past moving. A grotesquely distended abdomen, taut and glossy, dwarfing the small original body at the front of it and propped on legs that are now far too thin for the load. Clustered eggs are packed into the folds where the abdomen meets the thorax and a few newly hatched young are already up on her back. The head is small and high and turned onto the viewer, and she is going nowhere — this is a creature that has become a place.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
@@ -7298,7 +8265,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-insects-boss-hornet.png" width="628" height="280"
+                 alt="Emperor Hornet in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Built around one weapon. A heavy wasp hanging in the air with its legs trailing loose beneath it, the abdomen curled forward and down so the long barbed sting is the nearest thing in the picture to the viewer. Broad hard plates over a wide head, mandibles open, short rapid wings held in a blur behind. Everything in the drawing points at the sting.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
@@ -7360,17 +8340,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-insects-boss-scarab.png" width="628" height="280"
+                 alt="Tomb Scarab in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Old, polished and patient. A broad oval carapace worked like a burial ornament — the plates ridged and inlaid, the front head-plate fanned out into a row of blunt teeth — carried on thick digging legs half sunk in fine dust. Grave goods and small bones lie in that dust around it, and it faces the viewer head-on and low, the way something interrupted mid-meal turns round.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="magic-users" data-floor="4 5 6 7 8">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Magic-users — Floors 4–8
     <span>9 records · HP 150–400 · DMG 8–17 ·
       AP 5–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -7458,7 +8455,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-magic-users-outer-apprentice.png" width="628" height="280"
+                 alt="Apprentice in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Young, in an ill-fitting robe thrown over ordinary clothes, one hand out with a sigil half-formed and visibly going wrong. Alarmed about it.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
@@ -7512,7 +8522,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-magic-users-outer-hedgewitch.png" width="628" height="280"
+                 alt="Hedge Witch in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">An old woman in layered shawls hung with charms, a bundle of cut sticks in one hand and a small knife in the other, a written curse pinned to her sleeve.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
@@ -7566,7 +8589,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-magic-users-outer-warlock.png" width="628" height="280"
+                 alt="Pact Warlock in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A man in a fine dark coat rather than a robe, one sleeve rolled back to show a contract cut into the forearm, offering his hand as though to shake on it.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
@@ -7620,7 +8656,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-magic-users-inner-hexwright.png" width="628" height="280"
+                 alt="Hexwright in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Cold and precise in a long buttoned coat, drawing a sigil in the air with two fingers while holding an open ledger in the other hand.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
@@ -7674,7 +8723,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-magic-users-inner-stormcaller.png" width="628" height="280"
+                 alt="Stormcaller in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Arms thrown wide, head back, robes and hair streaming upward. The spell has already left.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
@@ -7728,7 +8790,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-magic-users-inner-pyrekeeper.png" width="628" height="280"
+                 alt="Pyre-Keeper in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A masked figure in heavy scorched vestments holding a covered brazier in both hands, head bowed over the lid.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
@@ -7790,7 +8865,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-magic-users-boss-archmage.png" width="628" height="280"
+                 alt="The Archmage in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">An old man in the finest robes in the game, staff planted, one hand open and relaxed. Entirely unbothered; the light in the picture is his.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
@@ -7852,7 +8940,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-magic-users-boss-voidtouched.png" width="628" height="280"
+                 alt="The Voidtouched in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A figure with a hole through it. The robe hangs empty around a rift opened through the chest, and both hands are gripping the torn edges of it, holding it open.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
@@ -7914,17 +9015,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-magic-users-boss-discordant.png" width="628" height="280"
+                 alt="The Discordant in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A caster out of tune with itself. Three overlapping outlines of the same figure a half-step apart, hands plucking at strings that are not there.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="mutants" data-floor="3 4 5 6 7 8">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Mutants — Floors 3–8
     <span>9 records · HP 115–320 · DMG 6–14 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -8012,7 +9130,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-mutants-outer-warped.png" width="628" height="280"
+                 alt="Warped Mutant in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Lopsided in shredded coveralls, one arm swollen and clawed to twice the length of the other, the spine pulled hard over to one side.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
@@ -8066,7 +9197,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-mutants-outer-torch.png" width="628" height="280"
+                 alt="Torch Mutant in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Both forearms have split open into vents. Arms crossed and held out from the body, head wrapped in rags with only the eyes showing.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
@@ -8120,7 +9264,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-mutants-outer-fist.png" width="628" height="280"
+                 alt="Fist Mutant in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">No weapon and no neck. A wall of a man in a strapped harness with both fists the size of his own head, chin down and guard up.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
@@ -8174,7 +9331,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-mutants-inner-gun.png" width="628" height="280"
+                 alt="Gun Mutant in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A scrap firearm grown into the arm at the elbow, the other hand steadying the barrel, belted ammunition across the chest.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
@@ -8228,7 +9398,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-mutants-inner-mega.png" width="628" height="280"
+                 alt="Mega Mutant in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">The warped one at twice the size. Bulk piled over the shoulders, the head sunk down between them, both arms hanging long and past the frame.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
@@ -8282,7 +9465,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-mutants-inner-grafted.png" width="628" height="280"
+                 alt="Grafted Mutant in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Stitched together out of parts that do not match - four arms at four different sizes, staples and clamps holding the seams shut, one hand gripping another of its own wrists.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
@@ -8344,7 +9540,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-mutants-boss-brute.png" width="628" height="280"
+                 alt="The Mega Brute in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">An enormous slab of a thing whose head barely clears its shoulders, industrial plate bolted directly through the flesh, both arms hanging to the edges of the frame.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
@@ -8406,7 +9615,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-mutants-boss-amalgam.png" width="628" height="280"
+                 alt="The Amalgam in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Several people&#39;s worth of arms. A mound of reaching hands with one small intact face somewhere near the top of it.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
@@ -8468,17 +9690,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-mutants-boss-prototype.png" width="628" height="280"
+                 alt="Prototype Omega in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">The finished version: symmetrical, armoured, almost elegant, with a numbered plate riveted to the chest and a smooth blank faceplate carrying one open eye.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="ogres" data-floor="4 5 6 7 8">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Ogres — Floors 4–8
     <span>9 records · HP 160–420 · DMG 7–16 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -8566,7 +9805,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-ogres-outer-grunt.png" width="628" height="280"
+                 alt="Ogre Grunt in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A plain ogre in a lashed hide kilt with both hands on a knotted tree limb, holding it up overhead and about to bring it down.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice earth arcane">
@@ -8620,7 +9872,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-ogres-outer-thrower.png" width="628" height="280"
+                 alt="Rock Thrower in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Wound back with a boulder held behind the head in one hand and the other arm out for balance. Mouth open.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning arcane">
@@ -8674,7 +9939,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-ogres-outer-warrior.png" width="628" height="280"
+                 alt="Ogre Warrior in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Kitted out by ogre standards: a barrel lid as a shoulder plate, a strap of skulls, a flattened iron maul held across the body. Standing square.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
@@ -8728,7 +10006,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-ogres-inner-ettin.png" width="628" height="280"
+                 alt="Ettin in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Two heads on one body, arguing with each other, a club in each fist. Neither head is looking at the viewer.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning arcane">
@@ -8782,7 +10073,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-ogres-inner-warlord.png" width="628" height="280"
+                 alt="Ogre Warlord in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">The biggest of them, a crude iron crown hammered down onto the skull and a great club resting back on one shoulder. Jaw out.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
@@ -8836,7 +10140,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-ogres-inner-troll.png" width="628" height="280"
+                 alt="Bridge Troll in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Long-armed and hunched, grey wet hide, reaching forward with both hands spread wide to grab. Stones and old mortar still packed in its fists.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
@@ -8898,7 +10215,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-ogres-boss-hillking.png" width="628" height="280"
+                 alt="The Hill King in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">So heavy it is drawn seated: a mountain of a body filling the whole frame, a small head at the top of it, and one enormous flat hand filling the foreground.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning earth">
@@ -8960,7 +10290,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-ogres-boss-stonecast.png" width="628" height="280"
+                 alt="The Stonecast in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A hurler of enormous size, one arm cocked with a stone bigger than its own head and the other braced across the body. Square on and immovable.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
@@ -9022,17 +10365,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-ogres-boss-gorger.png" width="628" height="280"
+                 alt="The Gorger in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A vast open mouth. The jaw unhinged wider than the skull, both hands stuffing something into it, the eyes rolled back.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="plants" data-floor="2 3 4 5 6 7">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Plants — Floors 2–7
     <span>9 records · HP 110–300 · DMG 4–12 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -9120,7 +10480,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-plants-outer-sapling.png" width="628" height="280"
+                 alt="Hungry Sapling in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A young tree pulled up and walking. A split trunk on two rooted legs, whip-thin branch arms tipped with long black thorns, and a vertical mouth cracked open down the front of the trunk.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
@@ -9174,7 +10547,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-plants-outer-pod.png" width="628" height="280"
+                 alt="Spore Pod in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A bulbous sac the size of a person on a thick stalk, its top already split open and venting spore, the inside of the opening ringed with small hooked teeth.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire lightning earth arcane">
@@ -9228,7 +10614,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-plants-outer-bramble.png" width="628" height="280"
+                 alt="Bramble Wall in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A dense mat of thorned briar standing upright and spread wide across the frame, with two grasping arms of woven bramble reaching out of it. A wall rather than a body.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
@@ -9282,7 +10681,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-plants-inner-creeper.png" width="628" height="280"
+                 alt="Strangle Creeper in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A coiled mass of rope-thick vines rising into a raised loop, the tip of the leading vine flattened and open like a mouth. Ready to drop.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
@@ -9336,7 +10748,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-plants-inner-bloom.png" width="628" height="280"
+                 alt="Corpse Bloom in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A single enormous flower on a thick stalk, petals open toward the viewer and ringed with fine stinging hairs, with something half-dissolved down inside the throat of it.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice earth arcane">
@@ -9390,7 +10815,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-plants-inner-flytrap.png" width="628" height="280"
+                 alt="Titan Flytrap in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">One huge hinged trap filling most of the frame on a short thick stem, open wide to show interlocking spike teeth and a wet red interior.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
@@ -9452,7 +10890,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-plants-boss-heartwood.png" width="628" height="280"
+                 alt="The Heartwood in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">An ancient tree with a face worn into the bark - deep knot eyes and a long split mouth - heavy boughs reaching forward as arms, and a trunk too wide for the frame.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
@@ -9514,7 +10965,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-plants-boss-witchgrass.png" width="628" height="280"
+                 alt="Witchgrass in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A standing sheaf of tall razor grass bound into a rough humanoid shape, faceless, seed heads hanging where a head should be and blades fanning out from the arms.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice lightning arcane">
@@ -9576,17 +11040,34 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-plants-boss-mycelium.png" width="628" height="280"
+                 alt="The Mycelium in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A towering fruiting body, a broad cap over a thick stalk, with a fine web of threads spreading out from it across everything and small caps growing wherever a thread has touched.</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="slimes" data-floor="1 2 3 4 5">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Slimes — Floors 1–5
     <span>9 records · HP 95–260 · DMG 4–11 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -10250,14 +11731,18 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="draw">a vast translucent slime with a slowly spiraling body full of suspended bubbles, bright motes and a deep central hollow, with tints coming from its element</p>
     </div>
   
+  </details>
 </section>
 
 <section class="sheet-group" data-motif="vampires" data-floor="4 5 6 7 8">
+  <details class="motif" open>
+  <summary>
   <h2 class="floor">
     Vampires — Floors 4–8
     <span>9 records · HP 155–410 · DMG 7–17 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
+  </summary>
 
   
   <table class="cover">
@@ -10345,7 +11830,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-vampires-outer-thrall.png" width="628" height="280"
+                 alt="Blood Thrall in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A human servant, not yet turned. Pale, bitten at the throat, in a bloodied shirt, holding a small knife in one hand and offering the other wrist up.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="fire ice lightning earth">
@@ -10399,7 +11897,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-vampires-outer-consort.png" width="628" height="280"
+                 alt="Pale Consort in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A beautiful pale figure in an out-of-date gown or coat, one hand raised toward the viewer&#39;s face. Entirely calm.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="outer" data-element="ice lightning earth arcane">
@@ -10453,7 +11964,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-vampires-outer-ghoul.png" width="628" height="280"
+                 alt="Crypt Ghoul in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Hunched and naked but for grave rags, skin grey, the jaw too wide for the face, fingers ending in digging claws. Crouched low and looking up.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire ice lightning earth">
@@ -10507,7 +12031,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, lightning, earth</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-vampires-inner-count.png" width="628" height="280"
+                 alt="Lesser Count in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Lightning</span><span>Earth</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A young nobleman in a high-collared coat with one hand resting on the hilt at his hip and his chin lifted. Recently powerful and enjoying it.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="ice lightning earth arcane">
@@ -10561,7 +12098,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-vampires-inner-shade.png" width="628" height="280"
+                 alt="Blood Shade in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">One arm and shoulder already unravelling into red mist while the face stays intact and turns toward the viewer.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="inner" data-element="fire lightning earth arcane">
@@ -10615,7 +12165,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-vampires-inner-flenser.png" width="628" height="280"
+                 alt="The Flenser in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">An apron over fine clothes, sleeves pinned back, a long thin skinning knife held in each hand. Precise and unhurried.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="ice lightning earth arcane">
@@ -10677,7 +12240,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: ice, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-vampires-boss-elder.png" width="628" height="280"
+                 alt="The Elder in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Ancient and desiccated in layered antique robes, skin like parchment stretched over the skull, eyes sunk to two points of light. Seated, hands folded.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire lightning earth arcane">
@@ -10739,7 +12315,20 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, lightning, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-vampires-boss-palewatch.png" width="628" height="280"
+                 alt="The Pale Watch in its other colours">
+            <div class="elabels">
+              <span>Lightning</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">Tall and straight in a long pale uniform coat with frost at every seam, gloved hands clasped in front. Utterly still, and watching.</p>
     </div>
   
     <div class="plate sheet-item" data-tier="boss" data-element="fire ice earth arcane">
@@ -10801,8 +12390,22 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
       <p class="affix">Dealt as: fire, ice, earth, arcane</p>
 
       
-      <p class="draw">TBD</p>
+      <details class="others">
+        <summary>Show its other 3 colours</summary>
+        <div class="strip">
+          <div>
+            <img src="elements-vampires-boss-crimson.png" width="628" height="280"
+                 alt="The Crimson Bride in its other colours">
+            <div class="elabels">
+              <span>Ice</span><span>Earth</span><span>Arcane</span>
+            </div>
+          </div>
+        </div>
+      </details>
+      
+      <p class="draw">A woman in a red gown, arms bare and spattered to the elbow, a slim rapier in one hand and the veil thrown back off her face. Smiling.</p>
     </div>
   
+  </details>
 </section>
 

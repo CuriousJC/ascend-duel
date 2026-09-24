@@ -7,8 +7,18 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
+
+// afterLines is the diff read back as the lines the panel would draw.
+//
+// **The tests assert on the words rather than on the records**, because what they are holding is
+// that a take and a cut are told apart in the account a player reads — and the wording is the half
+// of that a record cannot check. See internal/ui/ledger_prose.go, which is the translator.
+func afterLines(gs *state.GlobalState, before, after session.Holdings) []session.LedgerLine {
+	return ui.LedgerLines(afterRecords(gs, before, after))
+}
 
 // texts is every line of a diff as plain strings, which is what these tests assert on: the
 // coloring is elementSpans' business and is tested where that lives.

@@ -6,32 +6,34 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// The catalog's own promises. **A stone for every hand** is the mechanic as asked for, and it is
-// the one thing about the file that nothing else would notice: a rung with no stone is a rung that
-// can never be raised, and the bag simply never offers it.
-func TestEveryRungHasAStone(t *testing.T) {
-	byHand := map[string]string{}
+// The catalog's own promises. **A stone for every shape** is the mechanic, and it is the one thing
+// about the file that nothing else would notice: a shape with no stone is a set of rungs that can
+// never be raised, and the bag simply never offers it.
+func TestEveryShapeHasExactlyOneStone(t *testing.T) {
+	byShape := map[string]string{}
 	for _, s := range Stones() {
-		if prev, dup := byHand[s.Hand]; dup {
-			t.Errorf("%s and %s both raise %s", prev, s.Record, s.Hand)
+		if prev, dup := byShape[s.Shape]; dup {
+			t.Errorf("%s and %s both raise %s", prev, s.Record, s.Shape)
 		}
-		byHand[s.Hand] = s.Record
+		byShape[s.Shape] = s.Record
 	}
 
+	for _, shape := range combat.HandShapes() {
+		if _, ok := byShape[shape]; !ok {
+			t.Errorf("shape %s has no stone", shape)
+		}
+	}
 	for _, hand := range combat.HandKeys() {
-		if _, ok := byHand[hand]; !ok {
+		if _, ok := StoneForHand(hand); !ok {
 			t.Errorf("hand %q has no stone", hand)
 		}
 	}
-	if len(byHand) != len(combat.HandKeys()) {
-		t.Errorf("%d stones against %d rungs", len(byHand), len(combat.HandKeys()))
-	}
 }
 
-func TestEveryStoneNamesARungTheRulesHave(t *testing.T) {
+func TestEveryStoneNamesRungsTheRulesHave(t *testing.T) {
 	for _, s := range Stones() {
-		if _, ok := combat.HandSlot(s.Hand); !ok {
-			t.Errorf("%s raises %q, which is not a rung", s.Record, s.Hand)
+		if len(s.Hands()) == 0 {
+			t.Errorf("%s raises the shape %s, which no rung carries", s.Record, s.Shape)
 		}
 		if s.Name == "" || s.Text == "" {
 			t.Errorf("%s has no name or no text, so its card says nothing", s.Record)
@@ -39,22 +41,35 @@ func TestEveryStoneNamesARungTheRulesHave(t *testing.T) {
 	}
 }
 
-// A stone is worth a tenth of its own rung and never nothing. A rung so cheap that a tenth of it
-// floored away would be a card promising `+0`.
+// A stone is worth a tenth of each of its rungs and never nothing. A rung so cheap that a tenth of
+// it floored away would be a row promising `+0`.
 func TestNoStoneIsWorthNothing(t *testing.T) {
 	for _, s := range Stones() {
-		if worth := StoneWorth(s.Hand); worth <= 0 {
-			t.Errorf("%s is worth %d", s.Record, worth)
+		for _, hand := range s.Hands() {
+			if worth := StoneWorth(hand); worth <= 0 {
+				t.Errorf("%s is worth %d on %s", s.Record, worth, hand)
+			}
 		}
 	}
 }
 
-func TestUsingAStoneRaisesItsRungAndNothingElse(t *testing.T) {
+// **One stone raises every axis of its shape**, each by a tenth of that rung's own multiplier, and
+// nothing outside the shape moves.
+func TestUsingAStoneRaisesEveryRungOfItsShapeAndNothingElse(t *testing.T) {
 	s := New(nil)
 
-	stone, ok := StoneForHand("pair")
+	stone, ok := StoneForHand("concept-three-of-a-kind")
 	if !ok {
-		t.Fatal("no stone raises concept-pair")
+		t.Fatal("no stone raises concept-three-of-a-kind")
+	}
+	raised := map[string]bool{}
+	for _, hand := range stone.Hands() {
+		raised[hand] = true
+	}
+	for _, want := range []string{"concept-three-of-a-kind", "form-three-of-a-kind", "element-three-of-a-kind"} {
+		if !raised[want] {
+			t.Errorf("the three-of-a-kind stone does not raise %s", want)
+		}
 	}
 
 	before := map[string]int{}
@@ -72,7 +87,7 @@ func TestUsingAStoneRaisesItsRungAndNothingElse(t *testing.T) {
 			t.Fatalf("%s has no multiplier", h.Key)
 		}
 		want := before[h.Key]
-		if h.Key == "pair" {
+		if raised[h.Key] {
 			want += StoneWorth(h.Key)
 		}
 		if now != want {

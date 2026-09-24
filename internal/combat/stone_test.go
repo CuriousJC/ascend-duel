@@ -141,3 +141,33 @@ func blowDamage(t *testing.T, d Duelist) int {
 func blowBase(d Duelist) int {
 	return 2 * Plain(Bash).Damage(d.DMG)
 }
+
+// A shape is the rung's groups with the axis left out, so every axis' version of one hand shares
+// it and no two different hands do.
+func TestAShapeGathersEveryAxisOfOneHand(t *testing.T) {
+	if got, want := HandsShaped("3"), []string{
+		"concept-three-of-a-kind", "form-three-of-a-kind", "element-three-of-a-kind",
+	}; !reflect.DeepEqual(got, want) {
+		t.Errorf("shape 3 is %v, want %v", got, want)
+	}
+	if got := HandsShaped("2"); !reflect.DeepEqual(got, []string{"pair"}) {
+		t.Errorf("shape 2 is %v, want only the merged pair", got)
+	}
+	if got := HandsShaped("9"); len(got) != 0 {
+		t.Errorf("a shape no rung carries names %v", got)
+	}
+
+	for _, shape := range HandShapes() {
+		keys := HandsShaped(shape)
+		if len(keys) == 0 {
+			t.Errorf("shape %s is listed and carries no rung", shape)
+		}
+		for _, key := range keys {
+			for _, h := range handTable {
+				if h.Key == key && !reflect.DeepEqual(ShapeOf(h.Groups), shape) {
+					t.Errorf("%s is filed under %s and its groups spell %s", key, shape, ShapeOf(h.Groups))
+				}
+			}
+		}
+	}
+}

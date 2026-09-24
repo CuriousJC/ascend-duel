@@ -12,7 +12,7 @@ import "html/template"
 // **The ground is the one the stones actually sit on.** A gray border on white is a different
 // card from a gray border on the game's own blue.
 //
-// **A rung with no stone is still a row**, drawn as an empty seat rather than skipped. That is the
+// **A shape with no stone is still a plate**, drawn as an empty seat rather than skipped. That is the
 // one layout decision this template makes that the essence sheet's does not, and it is why the page
 // is worth having: the gap is the finding.
 var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
@@ -78,12 +78,16 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
   }
   .worth { margin: 10px 0 0; font-size: 13px; }
   .worth b { font-variant-numeric: tabular-nums; }
+  table.rungs { margin: 10px 0 0; border-collapse: collapse; font-size: 12.5px; }
+  table.rungs td { padding: 2px 10px 2px 0; vertical-align: top; }
+  table.rungs td.n { font-variant-numeric: tabular-nums; text-align: right; }
+  table.rungs td.k { color: var(--dim); font-family: ui-monospace, monospace; font-size: 11px; }
   .art { margin: 6px 0 0; font-size: 11.5px; color: var(--pink); }
 </style>
 
 <h1>Stone sheet</h1>
 <p class="facts">
-  {{.Count}} stones over {{.Rungs}} rungs{{if .Unstoned}} — {{.Unstoned}} rung(s) have none{{end}}.
+  {{.Count}} stones over {{.Rungs}} rungs{{if .Unstoned}} — {{.Unstoned}} shape(s) have none{{end}}.
   A sealed bag draws <code>{{.Bags}}</code>, keep one — {{.Share}}% of the catalog gets a seat.
   Stone card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
@@ -100,16 +104,16 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
   stone this page refuses to draw is a stone the game refuses to start with.
 </p>
 <p class="note">
-  <strong>The +N is computed, not authored.</strong> A stone adds a tenth of its rung's catalog
-  multiplier — <code>combat.StoneValue</code> — so the figure on the face follows
-  <code>hands.json</code> without anything being edited here. That is the split worth
-  sanity-checking: the record carries the sentence, the rules carry the arithmetic.
+  <strong>One stone, every axis.</strong> A stone raises a <em>shape</em> — every Three of a Kind,
+  whether it counts on the card, the form or the element — and each rung moves by a tenth of its
+  own catalog multiplier, <code>combat.StoneValue</code>. So one rock is a different +N on every
+  row beside it, and all of them follow <code>hands.json</code> without anything being edited here.
 </p>
 <p class="note">
-  <strong>Read the sentence against the key.</strong> The line under each name is the
-  <code>Text</code> field, which is what the card prints verbatim; the monospace line under it is
-  the rung it is actually keyed to. Nothing in the codebase checks one against the other, and a
-  stone naming the wrong rung would be invisible everywhere but here.
+  <strong>Read the sentence against the shape.</strong> The line under each name is the
+  <code>Text</code> field; the monospace line under it is the <code>Groups</code> it is actually
+  keyed to. Nothing in the codebase checks one against the other, and a stone naming the wrong
+  shape would be invisible everywhere but here.
 </p>
 <p class="note">
   <strong>Every stone in the catalog is painted.</strong> One that is not draws the relics&rsquo;
@@ -118,52 +122,44 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
   drew. A stone marked below as having no art of its own is a record to write a brief for.
 </p>
 
-<h2>The ladder, by axis</h2>
+<h2>The ladder, by shape</h2>
 <p class="note">
-  <strong>Grouped by what a rung counts on</strong>, and walked in the catalog's own order
-  inside each. This is deliberately not the hand sheet's layout: that one interleaves all three
-  axes by ascending multiplier, because a player forming a hand chooses among all of them at once.
-  A stone is bought against one rung, so the question here is whether an axis' ladder is priced
-  sensibly against itself.
+  <strong>Walked from the bottom rung up</strong>, one plate per shape. The rows under each stone
+  are every rung it raises, in the catalog's own order, with what one stone does to each.
 </p>
 
-{{range .Groups}}
-<h3 class="group">
-  {{.Axis}}
-  <span>{{len .Rungs}} rungs, {{.Stoned}} with a stone</span>
-</h3>
 <div class="plates">
-  {{range .Rungs}}
+  {{range .Plates}}
     <div class="plate">
       {{if .Has}}
         <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}"
              alt="{{.Name}}">
       {{else}}
-        <div class="empty">no stone raises this rung</div>
+        <div class="empty">no stone raises this shape</div>
       {{end}}
       <div class="about">
         {{if .Has}}
           <p class="name">{{.Name}}</p>
           <div class="record">{{.Record}}</div>
           <p class="text">{{.Text}}</p>
-          <p class="rule">raises {{.HandKey}}</p>
-          <p class="worth">
-            <b>{{.Multiplier}}</b> &rarr; <b>{{.Raised}}</b> with one stone
-            (<b>+{{.Worth}}</b> each)
-          </p>
-          <p class="art">no art of its own — drawing the default face</p>
         {{else}}
-          <p class="name">{{.Hand}}</p>
-          <div class="record">{{.HandKey}}</div>
-          <p class="worth"><b>{{.Multiplier}}</b> — nothing can raise it</p>
-          <p class="art">a rung the catalog has not authored a stone for</p>
+          <p class="name">nothing can raise these</p>
         {{end}}
-        <p class="rule">{{.CardsWanted}} cards, counted on {{.Axis}}</p>
+        <p class="rule">shape {{.Shape}}</p>
+        <table class="rungs">
+          {{range .Rungs}}
+            <tr>
+              <td>{{.Hand}}<br><span class="record">{{.HandKey}} &middot; {{.CardsWanted}} cards on {{.Axis}}</span></td>
+              <td class="n"><b>{{.Multiplier}}</b> &rarr; <b>{{.Raised}}</b></td>
+              <td class="n">+{{.Worth}}</td>
+            </tr>
+          {{end}}
+        </table>
+        {{if .DefaultArt}}<p class="art">no art of its own — drawing the default face</p>{{end}}
       </div>
     </div>
   {{end}}
 </div>
-{{end}}
 
 <h2>Card states</h2>
 <p class="note">

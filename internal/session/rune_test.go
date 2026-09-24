@@ -472,12 +472,16 @@ func TestARockShowerPutsEveryStoneItDrawsOnTheLadder(t *testing.T) {
 		t.Fatal("a rock shower was refused")
 	}
 
-	placed := 0
+	// A stone lands on every rung of its shape, so the ladder counts one per rung it raised.
+	placed, want := 0, 0
 	for _, n := range run.StoneCounts() {
 		placed += n
 	}
-	if placed != p.Number {
-		t.Errorf("a shower of %d placed %d stones on the ladder", p.Number, placed)
+	for _, st := range run.Granted() {
+		want += len(st.Hands())
+	}
+	if placed != want {
+		t.Errorf("a shower of %d put %d stones on the ladder's rungs, want %d", p.Number, placed, want)
 	}
 	if got := run.CarryCount(); got != 0 {
 		t.Errorf("a shower left %d stones in the pouch, and should have left none", got)
@@ -487,20 +491,25 @@ func TestARockShowerPutsEveryStoneItDrawsOnTheLadder(t *testing.T) {
 	}
 }
 
-func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
+func TestACarriedStoneIsSpentOntoItsOwnRungs(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 	p := anyWithTarget(t, RuneStones)
 	carryTwo(t, run)
 
 	first, _ := StoneByKey(run.Carried()[0])
-	before := run.StonesOn(first.Hand)
+	before := map[string]int{}
+	for _, hand := range first.Hands() {
+		before[hand] = run.StonesOn(hand)
+	}
 
 	if !run.SpendCarried(0) {
 		t.Fatal("a carried stone would not be spent")
 	}
-	if got := run.StonesOn(first.Hand); got != before+1 {
-		t.Errorf("%s went on rung %s and left it at %d, wanted %d",
-			first.Record, first.Hand, got, before+1)
+	for _, hand := range first.Hands() {
+		if got := run.StonesOn(hand); got != before[hand]+1 {
+			t.Errorf("%s went on rung %s and left it at %d, wanted %d",
+				first.Record, hand, got, before[hand]+1)
+		}
 	}
 	if run.CarryCount() != 1 {
 		t.Errorf("the pouch holds %d after spending one of two", run.CarryCount())
@@ -537,8 +546,10 @@ func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
 	if got := run.Vitae(); got != purse+StoneSalePrice {
 		t.Errorf("selling a stone paid %d, wanted %d", got-purse, StoneSalePrice)
 	}
-	if got := run.StonesOn(sold.Hand); got != 0 {
-		t.Errorf("a sold stone left %d on rung %s", got, sold.Hand)
+	for _, hand := range sold.Hands() {
+		if got := run.StonesOn(hand); got != 0 {
+			t.Errorf("a sold stone left %d on rung %s", got, hand)
+		}
 	}
 }
 

@@ -534,8 +534,8 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		stone := g.stones[i]
 		if gs.Run.UseStone(stone.Record) {
 			gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: stone.Record, Seat: i})
-			trace.Logf("shop", "bag of rocks: %s, %s now at %d stones",
-				stone.Record, stone.Hand, gs.Run.StonesOn(stone.Hand))
+			trace.Logf("shop", "bag of rocks: %s, shape %s now at %d stones",
+				stone.Record, stone.Shape, gs.Run.StonesOn(stone.Hands()[0]))
 		}
 		g.reset()
 
@@ -750,34 +750,40 @@ func (g *goods) hint(gs *state.GlobalState) string {
 	return line
 }
 
-// stoneTipLines is what a stone's tooltip says: the rung it raises, what one is worth, and where
-// that rung stands for this run right now.
+// stoneTipLines is what a stone's tooltip says: one line per rung it raises, with what the stone
+// adds to that rung and where the rung stands for this run right now.
+//
+// **One line per rung because the figures differ.** A stone raises every rung of its shape by a
+// tenth of that rung's *own* multiplier, so a Card Three of a Kind and a Form Three of a Kind move
+// by different amounts off the same rock, and a single "+N" would be true of neither.
 //
 // **The run's own figure rather than the catalog's**, because a second stone on a rung is worth
 // exactly what the first was and the player has no other way to see what the first one did.
 func stoneTipLines(gs *state.GlobalState, st session.Stone) []string {
-	worth := session.StoneWorth(st.Hand)
-
-	out := []string{fmt.Sprintf("raises %s by %d", stoneHandName(st.Hand), worth)}
-	if gs.Run == nil {
-		return out
+	var out []string
+	for _, hand := range st.Hands() {
+		worth := session.StoneWorth(hand)
+		line := fmt.Sprintf("%s +%d", stoneHandName(hand), worth)
+		if gs.Run != nil {
+			if now, ok := gs.Run.HandMultiplier(hand); ok {
+				line = fmt.Sprintf("%s: x%d to x%d", stoneHandName(hand), now, now+worth)
+			}
+		}
+		out = append(out, line)
 	}
-	if now, ok := gs.Run.HandMultiplier(st.Hand); ok {
-		out = append(out, fmt.Sprintf("it pays x%d today, and x%d after this",
-			now, now+worth))
-	}
-	if n := gs.Run.StonesOn(st.Hand); n > 0 {
-		out = append(out, fmt.Sprintf("%d already on this rung", n))
+	if gs.Run != nil && len(st.Hands()) > 0 {
+		if n := gs.Run.StonesOn(st.Hands()[0]); n > 0 {
+			out = append(out, fmt.Sprintf("%d already on these hands", n))
+		}
 	}
 	return out
 }
 
 // stoneHandName is the rung a stone raises, by the name the rest of the game calls it.
 //
-// **Read off the ladder rather than off the stone**, which is the same split stoneLine made when the
-// figure was computed: `data/stones.json` names a rung by key and `hands.json` owns what that rung
-// is called, so a renamed rung cannot leave a stone's tooltip saying the old one. The key itself is
-// the readable failure for a stone naming a rung that is not there.
+// **Read off the ladder rather than off the stone**: `data/stones.json` names a shape and
+// `hands.json` owns what each rung of it is called, so a renamed rung cannot leave a stone's
+// tooltip saying the old one. The key itself is the readable failure for a rung that is not there.
 func stoneHandName(key string) string {
 	for _, h := range combat.Hands() {
 		if h.Key == key {

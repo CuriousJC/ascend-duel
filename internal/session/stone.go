@@ -2,18 +2,20 @@ package session
 
 // Stones: the run's own opinion about what a hand is worth.
 //
-// **An essence alters a card; a stone alters a rung.** One stone raises one hand's multiplier by a
-// tenth of the figure `data/hands.json` writes down, for the rest of the run — see
-// `internal/combat/stone.go`, which owns the arithmetic and the seat a count sits in.
+// **An essence alters a card; a stone alters a shape.** One stone raises every rung of one shape —
+// every Three of a Kind, on the card, the form and the element alike — each by a tenth of the
+// figure `data/hands.json` writes for that rung, for the rest of the run. See
+// `internal/combat/stone.go`, which owns the arithmetic, the shape and the seat a count sits in.
 //
 // **This file is where a record becomes something usable, and where a bad record is refused**,
 // which is the same job `essence.go` does for the other catalog. It lives here rather than in
 // `internal/combat` because a stone is *held by a run*: the rules have no idea a run exists, and
 // what they are handed is a fighter that already carries its counts.
 //
-// **A run holds counts, not stones.** Two Agates are not two objects to keep track of, they are
-// `stones["concept-pair"] == 2` — which is what the ladder actually reads, and what a save file
-// can hold without inventing an identity for a rock.
+// **A run holds counts, not stones, and it holds them per rung.** Two Jaspers are not two objects to
+// keep track of, they are `stones["concept-three-of-a-kind"] == 2` and the same on the form and
+// element rungs — which is what the ladder actually reads, and what a save file can hold without
+// inventing an identity for a rock.
 
 import (
 	"fmt"
@@ -37,11 +39,14 @@ type Stone struct {
 	// that fallback lives so the shop and tools/stonesheet cannot disagree about it.
 	Art string
 
-	// Hand is the rung this stone raises, by catalog key. **A key rather than a seat**, because
-	// a seat is a position in the table this build loaded and a key is what a save file writes
-	// down. `combat.HandSlot` is what turns one into the other, and it is asked once, here.
-	Hand string
+	// Shape is the shape this stone raises — `combat.Hand.Shape`'s spelling of the record's
+	// Groups, `"3"` or `"3+2"`. **A string rather than the slice** so a Stone stays comparable;
+	// Hands is what turns it into rungs.
+	Shape string
 }
+
+// Hands is every rung this stone raises, by catalog key, in ladder order.
+func (st Stone) Hands() []string { return combat.HandsShaped(st.Shape) }
 
 // stones is the validated catalog, built once at package init.
 //
@@ -65,11 +70,21 @@ func StoneByKey(key string) (Stone, bool) {
 	return s, ok
 }
 
-// StoneForHand is the stone that raises one rung, by hand key. **One stone per rung and one rung
-// per stone** — loadStones refuses a second — so this is a lookup rather than a choice.
+// StoneForHand is the stone that raises one rung, by hand key. **One stone per shape** —
+// loadStones refuses a second — so this is a lookup rather than a choice.
 func StoneForHand(hand string) (Stone, bool) {
+	for _, h := range combat.Hands() {
+		if h.Key == hand {
+			return StoneForShape(h.Shape())
+		}
+	}
+	return Stone{}, false
+}
+
+// StoneForShape is the stone that raises one shape.
+func StoneForShape(shape string) (Stone, bool) {
 	for _, key := range stoneOrder {
-		if stones[key].Hand == hand {
+		if stones[key].Shape == shape {
 			return stones[key], true
 		}
 	}
@@ -80,16 +95,16 @@ func loadStones() (map[string]Stone, []string) {
 	recs := data.LoadStones()
 
 	out := make(map[string]Stone, len(recs))
-	byHand := map[string]string{}
+	byShape := map[string]string{}
 	for _, key := range data.StoneOrder(recs) {
 		s, err := resolveStone(recs[key])
 		if err != nil {
 			panic("stones.json: " + err.Error())
 		}
-		if prev, dup := byHand[s.Hand]; dup {
-			panic(fmt.Sprintf("stones.json: %s and %s both raise %s", prev, s.Record, s.Hand))
+		if prev, dup := byShape[s.Shape]; dup {
+			panic(fmt.Sprintf("stones.json: %s and %s both raise the shape %s", prev, s.Record, s.Shape))
 		}
-		byHand[s.Hand] = s.Record
+		byShape[s.Shape] = s.Record
 		out[key] = s
 	}
 
@@ -99,13 +114,13 @@ func loadStones() (map[string]Stone, []string) {
 	}
 	sort.Strings(keys)
 
-	// **Every rung has a stone, and the check is here rather than left to a review** *(owner's
-	// call, 2026-08-27)*. The mechanic is "a stone for every hand", so a rung with none is a rung
-	// that can never be improved — invisible in play, because nothing fails and the bag simply
-	// never offers it.
-	for _, hand := range combat.HandKeys() {
-		if _, ok := byHand[hand]; !ok {
-			panic(fmt.Sprintf("stones.json: hand %q has no stone, so that rung can never be raised", hand))
+	// **Every shape has a stone, and the check is here rather than left to a review.** A shape with
+	// none is a set of rungs that can never be improved — invisible in play, because nothing fails
+	// and the bag simply never offers it.
+	for _, shape := range combat.HandShapes() {
+		if _, ok := byShape[shape]; !ok {
+			panic(fmt.Sprintf("stones.json: shape %s (%v) has no stone, so those rungs can never be raised",
+				shape, combat.HandsShaped(shape)))
 		}
 	}
 
@@ -129,14 +144,16 @@ func resolveStone(r data.StoneData) (Stone, error) {
 	}
 	if r.Text == "" {
 		// The card is a name, a picture and a line of text. A stone with no text is a card that
-		// does not say which rung it raises, which is the only thing distinguishing nineteen of
-		// them.
+		// does not say which shape it raises, which is the only thing distinguishing one from
+		// another.
 		return Stone{}, fmt.Errorf("%s has no text, so its card says nothing", r.StoneRecord)
 	}
-	if _, ok := combat.HandSlot(r.Hand); !ok {
-		return Stone{}, fmt.Errorf("%s raises hand %q, which the catalog does not hold", r.StoneRecord, r.Hand)
+	shape := combat.ShapeOf(r.Groups)
+	if len(combat.HandsShaped(shape)) == 0 {
+		return Stone{}, fmt.Errorf("%s raises the shape %v, which no rung in the catalog carries",
+			r.StoneRecord, r.Groups)
 	}
-	return Stone{Record: r.StoneRecord, Name: r.Name, Text: r.Text, Hand: r.Hand, Art: r.ArtKey()}, nil
+	return Stone{Record: r.StoneRecord, Name: r.Name, Text: r.Text, Shape: shape, Art: r.ArtKey()}, nil
 }
 
 // StoneSalePrice is what one carried stone fetches when it is sold.
@@ -149,8 +166,8 @@ func resolveStone(r data.StoneData) (Stone, error) {
 // a vitae fountain.
 const StoneSalePrice = 5
 
-// UseStone puts a stone on its rung, for the rest of the run, and reports whether the catalog
-// held it.
+// UseStone puts a stone on every rung of its shape, for the rest of the run, and reports whether
+// the catalog held it.
 //
 // **Using is no longer the same as owning** *(owner's call, 2026-09-02, reversing 2026-08-27)*. A
 // stone used to be applied the moment it was chosen and there was no inventory at all. A run now
@@ -165,7 +182,9 @@ func (s *Session) UseStone(key string) bool {
 	if s.stones == nil {
 		s.stones = map[string]int{}
 	}
-	s.stones[stone.Hand]++
+	for _, hand := range stone.Hands() {
+		s.stones[hand]++
+	}
 	return true
 }
 
@@ -202,8 +221,8 @@ func (s *Session) HandMultiplier(hand string) (int, bool) {
 }
 
 // StoneWorth is what the *next* stone on a rung would be worth, in multiplier points. It is what
-// a stone card writes on its face, and it does not depend on how many are already there — a tenth
-// of the catalog figure, every time.
+// a stone's tooltip writes against each rung it raises, and it does not depend on how many are
+// already there — a tenth of the catalog figure, every time.
 func StoneWorth(hand string) int {
 	for _, h := range combat.Hands() {
 		if h.Key == hand {
@@ -269,7 +288,7 @@ func (s *Session) Carried() []string {
 // CarryCount is how many stones are in the pouch.
 func (s *Session) CarryCount() int { return len(s.pouch) }
 
-// SpendCarried takes one out of the pouch and puts it on its rung. It reports whether it was there.
+// SpendCarried takes one out of the pouch and puts it on its rungs. It reports whether it was there.
 //
 // **Out of the pouch first, then onto the rung**, and by position rather than by key because the
 // pouch may hold two of the same stone and spending one must not be ambiguous about which — the

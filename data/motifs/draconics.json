@@ -1,31 +1,23 @@
 {
   "Motif": "draconics",
   "Name": "Draconics",
-  "Draw": "TBD",
+  "Draw": "all draconics are western world dragons with a quadripedal body and wings and a long sinuous neck and horns",
   "ElementDraw": {
-    "fire": "TBD",
-    "ice": "TBD",
-    "lightning": "TBD",
-    "earth": "TBD",
-    "arcane": "TBD"
+    "fire": "red coloring with a fire crest",
+    "ice": "blue coloring with an ice crest",
+    "lightning": "yellow coloring with an lightning bolt crest",
+    "earth": "green coloring with an rock crest",
+    "arcane": "purple coloring with a purple gem crest"
   },
-  "ValidFloors": [
-    5,
-    8
-  ],
+  "ValidFloors": [5, 8],
   "Records": [
     {
       "Record": "draconics-outer-whelp",
       "Name": "Drake Whelp",
       "Tier": "outer",
       "Art": "draconics-whelp",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "a small dragon the size of a very large dog with stubby wings it couldn't use to fly and an extra long tail with stubby horns",
+      "Affinities": ["fire", "lightning", "earth", "arcane"],
       "HP": 170,
       "DMG": 11,
       "Actions": 6,
@@ -58,13 +50,8 @@
       "Name": "Basilisk",
       "Tier": "outer",
       "Art": "draconics-basilisk",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "a dragon that's closer to the size of an extra large draft horse with stonelike skin accents that make you think of a basilisk stare, it should have tufts that are more featherlike than scalelike as well",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 205,
       "DMG": 9,
       "Actions": 5,
@@ -97,13 +84,8 @@
       "Name": "Wyvern",
       "Tier": "outer",
       "Art": "draconics-wyvern",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "a much more snakelike version of a dragon that has double wings and small feet and legs almost like a dachsund ",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 235,
       "DMG": 9,
       "Actions": 5,
@@ -132,17 +114,12 @@
       ]
     },
     {
-      "Record": "draconics-inner-dracolisk",
-      "Name": "Dracolisk",
+      "Record": "draconics-inner-broodmother",
+      "Name": "Brood Mother",
       "Tier": "inner",
-      "Art": "draconics-dracolisk",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "earth",
-        "arcane"
-      ],
+      "Art": "draconics-broodmother",
+      "Draw": "an overweight female dragon with large wings and a stubby tail and rainbow eyes",
+      "Affinities": ["fire", "ice", "earth", "arcane"],
       "HP": 260,
       "DMG": 12,
       "Actions": 5,
@@ -162,7 +139,7 @@
           "Copies": 4
         },
         {
-          "Label": "Stone Gaze",
+          "Label": "Brood Fury",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
@@ -175,13 +152,8 @@
       "Name": "Cave Wyrm",
       "Tier": "inner",
       "Art": "draconics-wyrm",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "milky white eyes and extra large ear holes with a white muddy substance covering the lower half of the boddy and some mushrooms growing from the head of the cave wyrm with a thicker and more squate body",
+      "Affinities": ["fire", "ice", "lightning", "arcane"],
       "HP": 300,
       "DMG": 11,
       "Actions": 5,
@@ -214,13 +186,8 @@
       "Name": "Storm Drake",
       "Tier": "inner",
       "Art": "draconics-drake",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "earth"
-      ],
+      "Draw": "a slim but normal shaped dragon with folded up vein covered transparent wings",
+      "Affinities": ["fire", "ice", "lightning", "earth"],
       "HP": 230,
       "DMG": 14,
       "Actions": 6,
@@ -253,13 +220,8 @@
       "Name": "The Red Dragon",
       "Tier": "boss",
       "Art": "draconics-red",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "arcane"
-      ],
+      "Draw": "crimson dragon with eyes the color of the affinity and elemental sparks around the claws with large outspread wings with black undersides",
+      "Affinities": ["fire", "arcane"],
       "HP": 410,
       "DMG": 18,
       "Actions": 6,
@@ -300,13 +262,8 @@
       "Name": "The Blue Dragon",
       "Tier": "boss",
       "Art": "draconics-blue",
-      "Draw": "TBD",
-      "Affinities": [
-        "fire",
-        "ice",
-        "lightning",
-        "earth"
-      ],
+      "Draw": "midnight blue dragon with eyes the color of the affinity and elemental sparks around the claws with large outspread wings with white undersides",
+      "Affinities": ["ice", "lightning", "earth"],
       "HP": 430,
       "DMG": 16,
       "Actions": 6,
@@ -347,13 +304,8 @@
       "Name": "The Serpent Prince",
       "Tier": "boss",
       "Art": "draconics-serpent",
-      "Draw": "TBD",
-      "Affinities": [
-        "ice",
-        "lightning",
-        "earth",
-        "arcane"
-      ],
+      "Draw": "a humanoid dragon wearing a rainbow circlet but with legs of muscular golden dragon shape and long muscular arms with claws that are also golden",
+      "Affinities": ["ice", "lightning", "earth", "arcane"],
       "HP": 385,
       "DMG": 19,
       "Actions": 6,
@@ -366,7 +318,7 @@
           "Copies": 3
         },
         {
-          "Label": "Coil",
+          "Label": "Claw",
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,

@@ -96,8 +96,8 @@ type Session struct {
 	grown map[string]int
 
 	// stones is how many stones the run has put on each rung of the hand ladder, keyed by hand key.
-	// **Keyed by hand rather than by stone record** — one stone per rung, so the record is a name
-	// for the rung and the rung is what the ladder is actually read against. See stone.go.
+	// **Keyed by hand rather than by stone record** — a stone lands on every rung of its shape, and
+	// the rung is what the ladder is actually read against. See stone.go.
 	stones map[string]int
 
 	// plays is how many times the run has formed each rung, keyed by hand key. **A tally, not an

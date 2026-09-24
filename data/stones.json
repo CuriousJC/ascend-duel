@@ -2,145 +2,65 @@
   {
     "StoneRecord": "pebble",
     "Name": "Pebble",
-    "Hand": "no-hand",
+    "Groups": [1],
     "Art": "pebble",
     "Text": "RAISE NO HAND",
-    "Draw": "a small water-rounded grey pebble, smooth and dull, one pale band running across it"
+    "Draw": "a small water-rounded grey pebble, smooth and dull, one pale band running across it; one pearl inlay etched into its face"
   },
   {
     "StoneRecord": "agate",
     "Name": "Agate",
-    "Hand": "pair",
+    "Groups": [2],
     "Art": "agate",
-    "Text": "RAISE PAIR HAND",
-    "Draw": "a tumbled agate nodule, concentric grey and cream bands under a soft waxy sheen"
+    "Text": "RAISE PAIR",
+    "Draw": "a tumbled agate nodule, concentric grey and cream bands under a soft waxy sheen; two pearl inlays etched side by side into its face"
   },
   {
     "StoneRecord": "banded-agate",
     "Name": "Banded Agate",
-    "Hand": "concept-two-pair",
+    "Groups": [2, 2],
     "Art": "banded-agate",
-    "Text": "RAISE TWO PAIR HAND",
-    "Draw": "a sliced banded agate, tight concentric rings of orange and white, one cut face polished flat"
+    "Text": "RAISE TWO PAIR",
+    "Draw": "a sliced banded agate, tight concentric rings of orange and white, one cut face polished flat; etched into the polished face, two pearl inlays on the left and two onyx inlays on the right"
   },
   {
     "StoneRecord": "jasper",
     "Name": "Jasper",
-    "Hand": "concept-three-of-a-kind",
+    "Groups": [3],
     "Art": "jasper",
-    "Text": "RAISE THREE OF A KIND HAND",
-    "Draw": "a broken lump of red jasper, opaque brick red mottled with ochre, fresh shell-shaped fracture"
+    "Text": "RAISE THREE OF A KIND",
+    "Draw": "a broken lump of red jasper, opaque brick red mottled with ochre, fresh shell-shaped fracture; three pearl inlays etched in a row into its face"
   },
   {
     "StoneRecord": "bloodstone",
     "Name": "Bloodstone",
-    "Hand": "concept-full-house",
+    "Groups": [3, 2],
     "Art": "bloodstone",
-    "Text": "RAISE FULL HOUSE HAND",
-    "Draw": "a polished dome of dark green bloodstone, scattered blood-red flecks across its face"
+    "Text": "RAISE FULL HOUSE",
+    "Draw": "a polished dome of dark green bloodstone, scattered blood-red flecks across its face; etched into the polished face, three pearl inlays on the left and two onyx inlays on the right"
   },
   {
     "StoneRecord": "onyx",
     "Name": "Onyx",
-    "Hand": "concept-four-of-a-kind",
+    "Groups": [4],
     "Art": "onyx",
-    "Text": "RAISE FOUR OF A KIND HAND",
-    "Draw": "a squared block of black onyx with crisp white banding, mirror-polished"
+    "Text": "RAISE FOUR OF A KIND",
+    "Draw": "a squared block of black onyx with crisp white banding, mirror-polished; four pearl inlays etched in a row into the polished face"
   },
   {
     "StoneRecord": "obsidian",
     "Name": "Obsidian",
-    "Hand": "concept-five-of-a-kind",
+    "Groups": [5],
     "Art": "obsidian",
-    "Text": "RAISE FIVE OF A KIND HAND",
-    "Draw": "a knapped obsidian core, glassy black with razor-sharp facets and a thin warm sheen"
-  },
-  {
-    "StoneRecord": "chert",
-    "Name": "Chert",
-    "Hand": "form-two-pair",
-    "Art": "chert",
-    "Text": "RAISE FORM TWO PAIR",
-    "Draw": "a rough grey chert nodule, chalky white rind broken open to a dull flint-grey core"
-  },
-  {
-    "StoneRecord": "slate",
-    "Name": "Slate",
-    "Hand": "form-three-of-a-kind",
-    "Art": "slate",
-    "Text": "RAISE FORM THREE OF A KIND",
-    "Draw": "a flat split slab of blue-grey slate, one clean cleavage face, square broken edges"
-  },
-  {
-    "StoneRecord": "basalt",
-    "Name": "Basalt",
-    "Hand": "form-full-house",
-    "Art": "basalt",
-    "Text": "RAISE FORM FULL HOUSE",
-    "Draw": "a block of dark basalt, matte near-black, fine gas holes pocking the surface"
-  },
-  {
-    "StoneRecord": "granite",
-    "Name": "Granite",
-    "Hand": "form-four-of-a-kind",
-    "Art": "granite",
-    "Text": "RAISE FORM FOUR OF A KIND",
-    "Draw": "a split granite block speckled pink, grey and black, one face sawn flat"
-  },
-  {
-    "StoneRecord": "gabbro",
-    "Name": "Gabbro",
-    "Hand": "form-five-of-a-kind",
-    "Art": "gabbro",
-    "Text": "RAISE FORM FIVE OF A KIND",
-    "Draw": "a dense gabbro block of coarse black and dark green crystals, one face ground smooth"
-  },
-  {
-    "StoneRecord": "moonstone",
-    "Name": "Moonstone",
-    "Hand": "element-two-pair",
-    "Art": "moonstone",
-    "Text": "RAISE ELEMENT TWO PAIR",
-    "Draw": "a milky white moonstone cabochon, a soft blue sheen floating under its surface"
-  },
-  {
-    "StoneRecord": "amber",
-    "Name": "Amber",
-    "Hand": "element-three-of-a-kind",
-    "Art": "amber",
-    "Text": "RAISE ELEMENT THREE OF A KIND",
-    "Draw": "a rounded lump of golden amber, warm translucent orange lit from within"
-  },
-  {
-    "StoneRecord": "garnet",
-    "Name": "Garnet",
-    "Hand": "element-full-house",
-    "Art": "garnet",
-    "Text": "RAISE ELEMENT FULL HOUSE",
-    "Draw": "a deep red garnet crystal with natural many-sided faces, dark and glassy"
-  },
-  {
-    "StoneRecord": "topaz",
-    "Name": "Topaz",
-    "Hand": "element-four-of-a-kind",
-    "Art": "topaz",
-    "Text": "RAISE ELEMENT FOUR OF A KIND",
-    "Draw": "a pale gold topaz prism, clear and sharply faceted, long ridged crystal faces"
-  },
-  {
-    "StoneRecord": "zircon",
-    "Name": "Zircon",
-    "Hand": "element-five-of-a-kind",
-    "Art": "zircon",
-    "Text": "RAISE ELEMENT FIVE OF A KIND",
-    "Draw": "a brilliant-cut zircon, cold blue-white, hard bright facets throwing sharp highlights"
+    "Text": "RAISE FIVE OF A KIND",
+    "Draw": "a knapped obsidian core, glassy black with razor-sharp facets and a thin warm sheen; five pearl inlays etched in a row into its broadest facet"
   },
   {
     "StoneRecord": "tourmaline",
     "Name": "Tourmaline",
-    "Hand": "element-elementalist",
+    "Groups": [1, 1, 1, 1, 1],
     "Art": "tourmaline",
     "Text": "RAISE ELEMENTALIST",
-    "Draw": "a long tourmaline crystal banded green, blue, yellow, red and violet along its length, deeply striated faces glowing from inside"
+    "Draw": "a long tourmaline crystal banded green, blue, yellow, red and violet along its length, deeply striated faces glowing from inside; no inlays"
   }
 ]

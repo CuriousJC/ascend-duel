@@ -27,7 +27,7 @@ import "math/rand"
 // they form, and the hits that follow.
 //
 // The log it writes is: a KindAction per attack card, one KindHand carrying every hit's arithmetic,
-// then per hit a KindMissed, a KindBlocked or a KindDamage — each followed by whatever that hit
+// then per hit a KindFizzled, a KindMissed, a KindBlocked or a KindDamage — each followed by whatever that hit
 // drained and whatever statuses it landed, and a KindDefeated on the hit that killed. **Hits stop at
 // a death**: the terms after it are on the hand event and no event says they were thrown.
 func resolveAttackPhase(
@@ -168,20 +168,24 @@ func strike(
 
 	landings := landingsOf(blow, turn, worn)
 
-	// **Which hits the shields eat is decided before the first one is thrown**, the heaviest first,
-	// ranked on each landing's own figure at the turn's opening state. See shieldedSlots, whose
-	// argument this is.
+	// **Which hits the shields eat is decided before the first one is thrown**, the matching
+	// element first and then the heaviest, ranked on each landing's own figure at the turn's
+	// opening state. See shieldedHits, whose argument this is.
 	//
 	// **A hit of nothing is never eaten** *(owner's call)*: a shield is spent on something that
-	// would have hurt, or a turn of shields would strip the target's for free.
+	// would have hurt, or a turn of shields would strip the target's for free. A hit that fizzles is
+	// a hit of nothing.
 	planned := make([]int, len(landings))
+	elems := make([]Element, len(landings))
 	for h, l := range landings {
-		planned[h] = scaleDamage(l.shape.Amount(l.nth, actor.CardDamage(turn[l.seat].Card))+flat, blow.Multiplier)
-		if planned[h] <= 0 {
+		card := turn[l.seat].Card
+		elems[h] = card.Element
+		planned[h] = scaleDamage(l.shape.Amount(l.nth, actor.CardDamage(card))+flat, blow.Multiplier)
+		if planned[h] <= 0 || fizzles(card, target) {
 			planned[h] = -1
 		}
 	}
-	eaten := shieldedHits(planned, target.Shields)
+	eaten := shieldedHits(planned, elems, target.Shields)
 
 	var hits []Event
 	thrown := false
@@ -249,7 +253,7 @@ func strike(
 
 // throwHit rolls, blocks or lands one hit.
 //
-// **The order inside a hit is the order inside every attack**: the shock roll, then a shield, then
+// **The order inside a hit is the order inside every attack**: the fizzle, the shock roll, then a shield, then
 // weight and vulnerability, then the damage, then the growing relics step, then what the hit drains
 // and the statuses it lands. A miss spends no shield and a blocked hit lands nothing, and neither
 // drains, burns or grows.
@@ -259,10 +263,25 @@ func throwHit(
 	actor, target Duelist,
 	card Card,
 	seat, hit, figure int,
-	shielded bool,
+	shield Element,
 	round int,
 	rng *rand.Rand,
 ) ([]Event, Duelist, Duelist) {
+	// **A fizzle is decided before anything is rolled**: it is the target's nature rather than
+	// luck, so a hit that was never going to land draws no shock from the stream either.
+	if fizzles(card, target) {
+		return append(hits, Event{
+			Kind:    KindFizzled,
+			Side:    side,
+			Action:  card.Concept,
+			Element: card.Element,
+			Target:  targetSide,
+			Slot:    seat,
+			Hit:     hit,
+			Round:   round,
+		}), actor, target
+	}
+
 	if attackMisses(actor, rng) {
 		return append(hits, Event{
 			Kind:    KindMissed,
@@ -276,8 +295,8 @@ func throwHit(
 		}), actor, target
 	}
 
-	if blocked := false; shielded && target.Shields > 0 {
-		hits, target, blocked = blockedByShield(hits, side, target, card, seat, hit, round)
+	if blocked := false; shield >= 0 {
+		hits, target, blocked = blockedByShield(hits, side, target, card, shield, seat, hit, round)
 		if blocked {
 			return hits, actor, target
 		}
@@ -352,6 +371,20 @@ func throwHit(
 		hits = append(hits, Event{Kind: KindDefeated, Side: side, Target: targetSide, Round: round})
 	}
 	return hits, actor, target
+}
+
+// fizzles reports whether a card's hit lands nothing on this target because it is the target's own
+// element — an ice card thrown at an ice goblin. **Everything the hit would have done goes with
+// it**: the damage, the drain, the statuses, and the growing relics' step. The card still counts
+// toward the hand it formed; only its hit is wasted.
+//
+// **A wildcard never fizzles** *(owner's call)*. It counts as every element when a hand is formed,
+// and a card that matched every target's element would fizzle on every attack in the game.
+//
+// **Basic is no element**, so a plain card never fizzles and a target with no element — the
+// player, and every bare `Duelist{}` — takes every hit. That is what makes the rule one-way.
+func fizzles(card Card, target Duelist) bool {
+	return target.Element != Basic && card.Element == target.Element && !card.Wild(AxisElement)
 }
 
 // leadSlot is the turn index of the attack the blow is named by: the earliest attack card in the

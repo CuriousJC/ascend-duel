@@ -21,6 +21,7 @@ import (
 // which is what the lesson matches on. Under the default cost sort the taught four land at seats
 // 0, 1, 2 and 4 with an arcane card at seat 3, inside the square.
 func TestTheMatchingCardsGateLightsOnlyTheTaughtCards(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	s := newTaughtScene(t, gs)
@@ -62,6 +63,7 @@ func TestTheMatchingCardsGateLightsOnlyTheTaughtCards(t *testing.T) {
 // rather than a tautology. If a future sort ever made them contiguous this would go red, and the
 // answer is to delete it rather than to weaken the one above: the gate has to hold either way.
 func TestTheTaughtCardsAreNotContiguous(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	s := newTaughtScene(t, gs)
@@ -113,6 +115,7 @@ func teachRun(t *testing.T, gs *state.GlobalState, script tutorial.Script) {
 // click — and clicking it undoes the step before this one. It read as four red cards under a
 // sentence about three.
 func TestTheStepAsksOnlyForTheCardsStillToTake(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	s := newTaughtScene(t, gs)
@@ -155,6 +158,7 @@ func TestTheStepAsksOnlyForTheCardsStillToTake(t *testing.T) {
 // Once every taught card is queued the step has nothing left to ask for, and says so rather than
 // lighting the row it has finished with.
 func TestTheStepEmptiesAsTheCardsAreTaken(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	s := newTaughtScene(t, gs)

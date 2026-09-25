@@ -82,6 +82,7 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindChilled:     1,
 	combat.KindStatus:      1,
 	combat.KindMissed:      1,
+	combat.KindFizzled:     1,
 	combat.KindBurned:      1,
 	combat.KindHealed:      1,
 	combat.KindDrained:     1,
@@ -724,6 +725,7 @@ func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
 // function exists to know.
 func resetCombatState(d combat.Duelist) combat.Duelist {
 	d = combat.ClearDefenses(d)
+	d.Surge = 0
 	d.Statuses = [combat.MaxStatuses]combat.Status{}
 	return d
 }
@@ -1325,6 +1327,8 @@ func eventLabel(e combat.Event) string {
 		return fmt.Sprintf("status      %v puts %d %v on %v", e.Side, e.Amount, combat.StatusOf(e.Status).Key, e.Target)
 	case combat.KindMissed:
 		return fmt.Sprintf("missed      %v's %v never lands - shocked", e.Side, e.Action)
+	case combat.KindFizzled:
+		return fmt.Sprintf("fizzled     %v's %v %v lands nothing on its own element", e.Side, e.Element, e.Action)
 	case combat.KindBurned:
 		return fmt.Sprintf("burned      %v takes %d from %v, leaving %d",
 			e.Target, e.Amount, combat.StatusOf(e.Status).Key, e.Life)
@@ -1340,7 +1344,7 @@ func eventLabel(e combat.Event) string {
 	case combat.KindRaised:
 		return fmt.Sprintf("raised      %v puts up %d from %v, standing at %d", e.Side, e.Amount, combat.ConceptOf(e.Action).Label, e.Life)
 	case combat.KindBlocked:
-		return fmt.Sprintf("blocked     %v's shield eats %v, %d left", e.Target, combat.ConceptOf(e.Action).Label, e.Amount)
+		return fmt.Sprintf("blocked     %v's %v shield eats %v, %d left, surged %v", e.Target, e.Element, combat.ConceptOf(e.Action).Label, e.Amount, e.Surged)
 	case combat.KindExpired:
 		return fmt.Sprintf("expired     %v loses %d unspent shields", e.Target, e.Amount)
 	case combat.KindDamage:

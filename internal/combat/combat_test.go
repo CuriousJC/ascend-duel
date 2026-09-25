@@ -299,8 +299,8 @@ func TestSideBsDefenseProtectsItInTheFollowingRound(t *testing.T) {
 	b := duelist(10, 5, 500)
 
 	_, a1, b1 := resolve(a, b, nil, PlainCards(Brace), 1)
-	if b1.Shields != 1 {
-		t.Fatalf("side B holds %d shields after raising a Brace, want it to survive the round", b1.Shields)
+	if b1.Shields.Count() != 1 {
+		t.Fatalf("side B holds %d shields after raising a Brace, want it to survive the round", b1.Shields.Count())
 	}
 
 	round2, _, _ := resolve(a1, b1, PlainCards(Bash), nil, 2)
@@ -332,8 +332,8 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 	b := duelist(10, 5, 500)
 
 	_, a1, b1 := resolve(a, b, PlainCards(Brace), nil, 1)
-	if a1.Shields != 1 {
-		t.Fatalf("A ended round 1 holding %d shields, want the one it raised", a1.Shields)
+	if a1.Shields.Count() != 1 {
+		t.Fatalf("A ended round 1 holding %d shields, want the one it raised", a1.Shields.Count())
 	}
 
 	round2, _, _ := resolve(a1, b1, PlainCards(Jab), PlainCards(Bash), 2)
@@ -466,11 +466,11 @@ func TestBothSidesDefendingDoesNotAlias(t *testing.T) {
 	b := duelist(10, 5, 100)
 
 	_, a1, b1 := resolve(a, b, PlainCards(Block), PlainCards(Brace), 1)
-	if a1.Shields != 2 {
-		t.Errorf("A raised a Block and ended the round holding %d shields, want 2", a1.Shields)
+	if a1.Shields.Count() != 2 {
+		t.Errorf("A raised a Block and ended the round holding %d shields, want 2", a1.Shields.Count())
 	}
-	if b1.Shields != 1 {
-		t.Errorf("B raised a Brace and ended the round holding %d shields, want 1", b1.Shields)
+	if b1.Shields.Count() != 1 {
+		t.Errorf("B raised a Brace and ended the round holding %d shields, want 1", b1.Shields.Count())
 	}
 }
 

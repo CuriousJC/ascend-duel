@@ -141,7 +141,7 @@ func TestABlockedHitDrainsNothing(t *testing.T) {
 	a := duelist(10, 3, 100).Wearing(WornRelic{Relic: id})
 	a.CurrentLife = 10
 	b := duelist(0, 0, 500)
-	b.Shields = 2
+	b.Shields = ShieldStack{Basic: 2}
 
 	events, after, _ := resolve(a, b, []Card{Of(Bash, Fire), Of(Bash, Fire)}, nil, 1)
 

@@ -105,6 +105,11 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 			// look like a bug in a game with no dice in it.
 			add(session.LedgerRecord{Kind: session.KindMissed, Side: sideWord(e.Side), Hit: s.hitOf(e, e.Side)})
 
+		case combat.KindFizzled:
+			// The attacker's entry, like a miss: the card was played, and its hit was wasted on a
+			// creature of its own element.
+			add(session.LedgerRecord{Kind: session.KindFizzled, Side: sideWord(e.Side), Hit: s.hitOf(e, e.Side)})
+
 		case combat.KindStatus:
 			add(session.LedgerRecord{
 				Kind: session.KindStatus, Side: sideWord(e.Side),

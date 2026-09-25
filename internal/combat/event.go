@@ -30,8 +30,9 @@ const (
 	KindRaised
 
 	// KindBlocked is a shield eating one incoming hit outright. Action is the attack that was
-	// stopped, Target is the duelist that spent the shield, and Amount is how many shields are
-	// left afterwards.
+	// stopped, Target is the duelist that spent the shield, Amount is how many shields are left
+	// afterwards, and Element is **the shield's** element — which pip the row loses. Surged says the
+	// shield matched the hit's own element and banked an action point for the defender's next turn.
 	//
 	// **It leaves no figure**, so a feed reading
 	// `Amount` off the two would be reading a remaining blow in one case and a remaining shield in
@@ -167,6 +168,16 @@ const (
 	// one entry per kind.
 	KindRegenerated
 
+	// KindFizzled is one hit of the target's own element landing nothing at all: no damage, no
+	// drain, no status, and no relic stepping. Action is the card, Element its element, and Slot
+	// and Hit say which hit — like a miss, one card of a turn can fizzle while the rest land.
+	//
+	// **Its own kind rather than a KindMissed.** A miss is the attacker's shock and a matter of
+	// luck; a fizzle is the target's nature and a matter of the player's choice, and a feed saying
+	// "shocked" over an ice card thrown at an ice creature would send the player looking for a
+	// status that is not there.
+	KindFizzled
+
 	KindRoundEnd
 )
 
@@ -232,6 +243,10 @@ type Event struct {
 	// events a *card* produces - a Brace's KindRaised carries RiderNone, because the card raising
 	// shields is the card doing its own job.
 	Rider RiderKind
+
+	// Surged is set on a KindBlocked whose shield was the hit's own element, and says that block
+	// banked one action point for the defender's next turn. See Duelist.Surge.
+	Surged bool
 
 	// Element is the card's element on KindAction, KindMissed and KindStatus. Basic everywhere
 	// else, which is also the zero value — an event with nothing to say about color says `basic`,

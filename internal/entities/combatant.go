@@ -61,9 +61,10 @@ type Combatant struct {
 // **The fight index is a parameter rather than something read later**, so an unscaled opponent
 // cannot be built by accident: every caller has to say where in the ascent this one stands.
 //
-// **The element is the floor's**, and what it currently decides is the picture this opponent wears
-// and the colour of every card in its deck. A record carries a picture per element it can be dealt
-// as, so a fire goblin and an ice goblin are two drawings of one creature.
+// **The element is the floor's**, and it decides the picture this opponent wears, the colour of
+// every card in its deck, and which of the player's hits fizzle on it — see combat.Duelist.Element.
+// A record carries a picture per element it can be dealt as, so a fire goblin and an ice goblin
+// are two drawings of one creature.
 func NewEnemyFrom(r data.MotifRecord, element string, fight int, tower data.TowerData) *Combatant {
 	c := &Combatant{
 		Duelist: combat.Duelist{
@@ -81,6 +82,11 @@ func NewEnemyFrom(r data.MotifRecord, element string, fight int, tower data.Towe
 			// from a record — the same seat `Relics` deliberately leaves at its zero value for the
 			// mirror-image reason.
 			SoloAttacks: true,
+
+			// **The floor's element is the creature's own**, and a hit of it fizzles — see
+			// combat.fizzles. An element the rules cannot name leaves it Basic, which is no
+			// element; the deck builder refuses such a record long before a fight gets here.
+			Element: enemyElement(element),
 		},
 		Record:   r.Record,
 		Name:     r.FullName(),
@@ -89,6 +95,12 @@ func NewEnemyFrom(r data.MotifRecord, element string, fight int, tower data.Towe
 	}
 	c.CurrentLife = c.MaxLife
 	return c
+}
+
+// enemyElement is the rules' element for the name a floor dealt, and Basic for one it cannot read.
+func enemyElement(name string) combat.Element {
+	e, _ := combat.ParseElement(name)
+	return e
 }
 
 // NewDuelistFrom builds the player from a duelist record.

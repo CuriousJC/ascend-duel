@@ -139,6 +139,11 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		// in a game with no dice in it.
 		w.attach(r.Hit, "misses - shocked")
 
+	case session.KindFizzled:
+		// **Naming the reason is the point, as it is for a shock**: a hit that landed nothing with
+		// no word beside it would read as a bug.
+		w.attach(r.Hit, "fizzles - its own element")
+
 	case session.KindStatus:
 		w.attach(r.Hit, StatusPhraseByKey(r.Status))
 

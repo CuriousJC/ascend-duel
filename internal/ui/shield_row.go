@@ -37,8 +37,9 @@ const MaxShieldPips = cards.MaxEffects
 // drawn.
 type ShieldRow struct {
 	// Pips is one element per standing shield, oldest first, and its length is the count. The
-	// element is that of the card that raised it — cosmetic, per the owner's call: a fire ward
-	// and an ice ward stop the same attack.
+	// element is that of the card that raised it, and it is a rule: every shield stops any attack,
+	// but one that stops an attack of its own element banks an action point — see
+	// combat.Duelist.Surge. So a block takes away a pip of the shield the engine spent.
 	//
 	// **It was a color until 2026-09-16**, when the shield mark became five authored drawings
 	// rather than one drawing tinted five ways. What a pip *is* is now the element, and the color
@@ -95,6 +96,22 @@ func (r *ShieldRow) Hold(n int, fill cards.Element) {
 		for len(r.Pips) < n {
 			r.Pips = append(r.Pips, fill)
 		}
+	}
+}
+
+// Spend takes one pip of the given element away — the newest of that element — or the oldest pip
+// when the row holds none of it, which is a row that has already drifted from the engine and is
+// better one short in the right count than holding a pip that is gone.
+func (r *ShieldRow) Spend(e cards.Element) {
+	r.seen = true
+	for i := len(r.Pips) - 1; i >= 0; i-- {
+		if r.Pips[i] == e {
+			r.Pips = append(append([]cards.Element(nil), r.Pips[:i]...), r.Pips[i+1:]...)
+			return
+		}
+	}
+	if len(r.Pips) > 0 {
+		r.Pips = append([]cards.Element(nil), r.Pips[1:]...)
 	}
 }
 

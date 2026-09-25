@@ -234,6 +234,10 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorNone, anchorSumLine, gestureStrike,
 		"a shock rolls once per hit, so what is struck out is that hit's line and nothing else",
 	},
+	combat.KindFizzled: {
+		anchorNone, anchorSumLine, gestureStrike,
+		"a fizzle wastes one hit the way a shock does, so it is struck out on that hit's line - the word says which",
+	},
 	combat.KindBurned: {
 		anchorActorBadges, anchorActorCard, gestureFly,
 		"a burn is resident on its victim: off their own flame badge into their own bar",

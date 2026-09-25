@@ -39,6 +39,7 @@ import (
 // `the-shield-card` says Brace, `the-broken-card` says Drain — so a matching set is the difference
 // between changing one string and re-authoring the lesson.
 func TestFindATutorialSeed(t *testing.T) {
+	parkTutorial(t)
 	if os.Getenv("SEEDSEARCH") == "" {
 		t.Skip("a search, not a check: set SEEDSEARCH=1 to run it")
 	}

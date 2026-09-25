@@ -67,14 +67,19 @@ type Duelist struct {
 	// The copy is rebuilt on the next Equip, so it can only ever drift inside one fight.
 	Vitae int
 
-	// Shields is how many incoming attacks this duelist can still eat outright, and it is what the
-	// player's defend cards buy — Brace for one and Block for two. Guard is a third rung the file
-	// still declares at zero copies, so the rules can resolve a 3-shield card that nothing deals.
+	// Shields is how many incoming attacks this duelist can still eat outright, **counted by the
+	// element of the card that raised them** — see ShieldStack. It is what the player's defend cards
+	// buy: Brace for one and Block for two. Guard is a third rung the file still declares at zero
+	// copies, so the rules can resolve a 3-shield card that nothing deals.
 	//
 	// **A count rather than a percentage, because an enemy turn is several attacks.** Every
 	// creature in the game is a solo attacker, so its turn resolves card by card with a figure
 	// each; a shield takes one of those away entirely, which is what makes "how many hits am I
 	// taking this round" a question the player can answer exactly rather than approximately.
+	//
+	// **The element is a rule, not a colour.** A shield eats a hit of any element, but one that eats
+	// a hit of its own element banks an action point for its owner's next turn — see Surge and
+	// shieldedHits, which spends the matching shields first.
 	//
 	// **It is raised and expires on the same schedule Defends do** — up at the end of a turn,
 	// standing through the opponent's whole turn, gone at the start of its owner's next. See
@@ -87,7 +92,23 @@ type Duelist struct {
 	// **Nothing in the game gives one to an enemy**, and the asymmetry is deliberate rather than
 	// unfinished — see VerbShield. A count meeting a hand-forming attacker would delete that
 	// duelist's whole turn, since a hand lands one figure however many cards went into it.
-	Shields int
+	Shields ShieldStack
+
+	// Surge is action points banked for this duelist's next turn and no other: one for every hit a
+	// shield of the hit's own element ate. ActionPoints adds it to the budget, and the start of the
+	// duelist's own turn spends it — so it buys exactly the turn after the blocks, whatever that
+	// turn costs. **It is not capped**: five matched blocks are five more points.
+	//
+	// **It never outlives a fight.** The screen's reset between duels drops it with the shields.
+	Surge int
+
+	// Element is the duelist's own element, and **Basic means it has none** — which is the player,
+	// and every bare `Duelist{}`. A creature is dealt one with its floor.
+	//
+	// **A hit of the target's own element fizzles**: it lands nothing at all. See fizzles. The
+	// player has no element, so the rule runs one way by construction; the mirror of it is the
+	// shield that matches the hit it eats, which banks a Surge.
+	Element Element
 
 	// Statuses is what has been done to this duelist, **indexed by status** — see status.go for
 	// the lifecycle, which is one rule for all of them.
@@ -226,7 +247,7 @@ func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 // **An unspent shield is dropped rather than kept.** It expires with the turn it was raised
 // against; see Duelist.Shields.
 func ClearDefenses(d Duelist) Duelist {
-	d.Shields = 0
+	d.Shields = ShieldStack{}
 	return d
 }
 
@@ -246,21 +267,37 @@ func ClearDefenses(d Duelist) Duelist {
 //
 // The readout is what actually pays for this, and it is a screen problem rather than a rule:
 // the pip row on the duelist card fits six at its current pitch. See screens.maxShieldPips.
-func (d Duelist) raiseShields(n int) Duelist {
-	d.Shields += n
+func (d Duelist) raiseShields(e Element, n int) Duelist {
+	d.Shields[e] += n
 	return d
 }
 
-// spendShield takes one shield if there is one, and reports whether an incoming attack was eaten.
+// spendShield takes one shield of the given element if there is one, and reports whether an
+// incoming attack was eaten.
 //
 // **A shield negates one hit outright — no damage, no partial figure.** That is the whole mechanic:
-// one shield buys one of several hits, whichever kind of attacker is swinging. See shieldedHits.
-func (d Duelist) spendShield() (Duelist, bool) {
-	if d.Shields <= 0 {
+// one shield buys one of several hits, whichever kind of attacker is swinging. Which shield eats
+// which hit is decided up front by shieldedHits; this only takes the one it named.
+func (d Duelist) spendShield(e Element) (Duelist, bool) {
+	if e < 0 || int(e) >= ElementCount || d.Shields[e] <= 0 {
 		return d, false
 	}
-	d.Shields--
+	d.Shields[e]--
 	return d, true
+}
+
+// ShieldStack is a duelist's standing shields, counted by the element of the card that raised
+// each. **Indexed by element and fixed-width**, so a Duelist stays a value: a slice here would
+// alias between the copies the resolver hands around.
+type ShieldStack [ElementCount]int
+
+// Count is how many shields are standing, of every element.
+func (s ShieldStack) Count() int {
+	n := 0
+	for _, c := range s {
+		n += c
+	}
+	return n
 }
 
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
@@ -286,22 +323,15 @@ const MaxEchoLandings = 5
 // without touching a single call site. See MECHANICS.md.
 func (d Duelist) MaxActions() int { return baseMaxActions }
 
-// ActionPoints is how much this duelist has to spend in a round.
-//
-// **It is the stat and nothing else** *(2026-08-31)*. It used to be `4 + Spd/10`, a conversion
-// whose only observable effect was to flatten twenty-four distinct Speed values into three
-// budgets, and then the stat plus whatever a bank card had put by. Nothing banks anywhere in the
-// game now, so a round's budget is a number on the duelist and a player can plan against it for a
-// whole fight.
+// ActionPoints is how much this duelist has to spend in a round: the stat, plus whatever Surge
+// the blocks of the opponent's last turn banked. Nothing else adds to it, so a player can plan
+// against it for a whole fight and read the surge as a one-turn bonus on top.
 //
 // **It stays a method rather than becoming a field read**, for the reason MaxActions is one: a
 // relic or a brand raising a budget wants somewhere to bite that is not every call site.
 //
-// **No status touches it.** A chill did until 2026-08-16, and it is now a card off the front of
-// the turn instead — see playTurn. What that costs is the one thing the old version had going for
-// it: an AP cut was felt while the player was still choosing, and a card taken off a committed
-// turn is felt after they have. What it buys is a status a player can name.
-func (d Duelist) ActionPoints() int { return d.Actions }
+// **No status touches it.** A chill is a card off the front of the turn instead — see playTurn.
+func (d Duelist) ActionPoints() int { return d.Actions + d.Surge }
 
 // CanAfford reports whether a queued set fits inside this duelist's budget. The UI
 // enforces this while the player builds a set; ResolveRound trusts what it is given

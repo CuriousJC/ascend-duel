@@ -25,6 +25,7 @@ import (
 //
 // **If this goes red, the fix is a new seed, not a weaker check.**
 func TestTheTutorialsSeedDealsTheHandTheLessonDescribes(t *testing.T) {
+	parkTutorial(t)
 	// **Skipped while the tutorial is switched off.** The lesson pinned a creature and a run code
 	// together and the roster it named no longer exists, so there is nothing for this to measure.
 	// It is kept rather than deleted because it is the promise a replacement seed has to satisfy:

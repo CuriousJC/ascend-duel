@@ -54,10 +54,8 @@ type shieldFlight struct {
 	element cards.Element
 
 	// ink is the color the pips are drawn in: their card's element, the same color that card
-	// wears round its border and on its own corner mark. **Cosmetic** *(owner's call,
-	// 2026-09-02)* — nothing about a shield depends on which element raised it, and a fire ward and
-	// an ice ward stop the same attack. What it buys is that the thing crossing the screen looks
-	// like the card it came off.
+	// wears round its border and on its own corner mark. The element is a rule — a shield of the
+	// hit's own element banks an action point — and the ink is how the row says which is which.
 	ink color.RGBA
 
 	// standing is the count the row shows once the pips land, or -1 for a flight that adds its
@@ -244,7 +242,7 @@ func (s *CombatScene) modelShields(side combat.Side) int {
 	if c == nil {
 		return 0
 	}
-	return c.Duelist.Shields
+	return c.Duelist.Shields.Count()
 }
 
 // shieldsRaisedBy is how many pips the card in a table seat will raise, and 0 for anything that is
@@ -288,7 +286,14 @@ func (s *CombatScene) noteShields(e combat.Event) {
 		// card's element. Nothing is lit during the defend phase, so the event is the only source.
 		s.row(e.Side).RaiseTo(e.Life, s.handCardElement(e.Side, e.Slot))
 	case combat.KindBlocked:
-		s.row(e.Target).Hold(e.Amount, cards.Basic)
+		// **The block names the shield it spent**, so the pip that goes is one of that element.
+		// The count is squared up after it: a break staged ahead of the block has usually taken
+		// the pip already, and the block's `Amount` is the authority on what is left.
+		row := s.row(e.Target)
+		if row.Count() > e.Amount {
+			row.Spend(ui.ArtFor(e.Element))
+		}
+		row.Hold(e.Amount, cards.Basic)
 	case combat.KindExpired:
 		// **An expiry empties the row whatever it says.** Its `Amount` is the count read *before*
 		// the shields were cleared — how many lapsed, not how many are left — so a row taking it

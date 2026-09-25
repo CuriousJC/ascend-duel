@@ -3,7 +3,8 @@ package screens
 // Shields breaking the attacks they ate, between the player's turn and the creature's.
 //
 // **The engine already decided this before a frame of it was drawn.** `combat.shieldedSlots` picks
-// which of a creature's blows the player's shields eat — the heaviest first — and it picks them at
+// which of a creature's blows the player's shields eat — the matching element first, then the
+// heaviest — and it picks them at
 // the top of the creature's turn rather than as each card arrives. That is what makes this
 // drawable: the whole exchange is known at the boundary, so it can be *shown* at the boundary
 // instead of dribbling out one skipped card at a time while the turn plays.
@@ -43,6 +44,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -83,10 +85,13 @@ type shieldBreak struct {
 	// seat is the index into the opponent's table row.
 	seat int
 
-	// element is which shield drawing the pip is: that of a shield the player raised, so the thing
-	// crossing the table looks like what left the row. **Cosmetic**, exactly as the pips' own
-	// element is — a fire ward and an ice ward break the same attack.
+	// element is which shield drawing the pip is: the shield the engine spent on this attack, so
+	// the thing crossing the table is the pip that left the row.
 	element cards.Element
+
+	// surged says the shield matched the attack's element and banked an action point, which the
+	// break announces with a "+1 AP" over the card — see drawShieldBreaks.
+	surged bool
 
 	t ui.Travel
 }
@@ -125,34 +130,32 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 		return false
 	}
 
-	el := s.brokenPipElement()
-	for _, seat := range blocks {
+	row := s.row(combat.SideA)
+	for _, b := range blocks {
+		seat := b.Slot
 		if seat < 0 || seat >= len(s.Theater.enemyDealt) {
 			// A seat the row does not hold is dropped rather than flown to nowhere. It means the
 			// engine's slot indices and this row have come apart — see blocksAhead, where the one
 			// way that can happen is written down.
 			continue
 		}
+		// **The pip that crosses is the shield the engine spent**, and it leaves the row now with
+		// the thing carrying it. A prediction that disagrees with the engine costs a few beats of a
+		// wrong pip rather than a broken row — the block's own event squares it up.
+		el := ui.ArtFor(b.Element)
+		row.Spend(el)
 		s.Theater.breaks = append(s.Theater.breaks, shieldBreak{
 			seat:    seat,
 			element: el,
+			surged:  b.Surged,
 			t:       ui.NewTravel(0, shatterFlyTicks()+shatterSpreadTicks()+shatterHoldTicks()),
 		})
 	}
-	if len(s.Theater.breaks) == 0 {
-		return false
-	}
-
-	// The pips go now, with the things that are carrying them. The row cannot go below zero and
-	// `hold` clamps, so a prediction that disagrees with the engine costs a few beats of a wrong
-	// count rather than a broken row.
-	row := s.row(combat.SideA)
-	row.Hold(row.Count()-len(s.Theater.breaks), cards.Basic)
-	return true
+	return len(s.Theater.breaks) > 0
 }
 
-// blocksAhead is which seats of the opponent's row a shield will eat this round, read off the
-// resolved log.
+// blocksAhead is every block this round will make on the player's side, read off the resolved
+// log: which seat of the opponent's row each eats, with which shield, and whether it surged.
 //
 // **The seat is `Event.Slot`, and it indexes the turn as it resolved.** That is the same convention
 // `Event.HandCards` uses and the same one `noteHand` reads it under, so the two cannot drift apart.
@@ -161,8 +164,8 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 // creature's card and a shield eats another would break the wrong seat. Ice is the only thing that
 // can chill, no creature carries it today, and fixing it properly means the row learning what a
 // chill did, which is a change to `noteResolved` rather than to this.
-func (s *CombatScene) blocksAhead() []int {
-	var out []int
+func (s *CombatScene) blocksAhead() []combat.Event {
+	var out []combat.Event
 	for i := s.cursor; i < len(s.log); i++ {
 		e := s.log[i]
 		if e.Kind == combat.KindRoundEnd {
@@ -173,23 +176,10 @@ func (s *CombatScene) blocksAhead() []int {
 		// case the game produces, every creature being a solo attacker and none of them holding
 		// shields. See combat.blockedByShield, which carries the same note.
 		if e.Kind == combat.KindBlocked && e.Side == combat.SideA {
-			out = append(out, e.Slot)
+			out = append(out, e)
 		}
 	}
 	return out
-}
-
-// brokenPipInk is the color the crossing pips take: the newest shield in the player's row, which
-// is the one most recently raised and the color the player just watched land.
-//
-// **A row with no color recorded hands back a zero**, which `drawShieldPip` reads as "as drawn" —
-// the bare white mark. That is the same fallback the pips' own flight takes.
-func (s *CombatScene) brokenPipElement() cards.Element {
-	pips := s.row(combat.SideA).Pips
-	if len(pips) == 0 {
-		return cards.Basic
-	}
-	return pips[len(pips)-1]
 }
 
 // shattered reports whether a seat of the opponent's row is wearing a finished break.
@@ -248,6 +238,30 @@ func (s *CombatScene) drawShieldBreaks(gs *state.GlobalState, screen *ebiten.Ima
 			continue
 		}
 		drawSpreadingCracks(screen, at, s.Theater.enemyDealt[b.seat].card, b.spread())
+		if b.surged {
+			drawSurgeNote(gs, screen, at)
+		}
+	}
+}
+
+// surgeNoteSize is the "+1 AP" a matched block writes over the card it broke.
+const surgeNoteSize = 40
+
+// drawSurgeNote writes "+1 AP" across a broken card whose shield matched its element — the point
+// the block banked for the player's next turn, said where the block happened. **A placeholder**
+// *(owner's call)*: it is in the action-point bar's own amber so it reads as budget, and it is
+// written rather than flown until the gesture is designed.
+func drawSurgeNote(gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle) {
+	const label = "+1 AP"
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: surgeNoteSize}
+	w, h := text.Measure(label, face, 0)
+	x := float64(at.Min.X+at.Max.X)/2 - w/2
+	y := float64(at.Min.Y+at.Max.Y)/2 - h/2
+	for _, step := range []float64{0, mathBoldStep(surgeNoteSize)} {
+		op := &text.DrawOptions{}
+		op.GeoM.Translate(x+step, y)
+		op.ColorScale.ScaleWithColor(apSpentColor)
+		text.Draw(screen, label, face, op)
 	}
 }
 

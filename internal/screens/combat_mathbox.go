@@ -685,7 +685,7 @@ func hitOutcomes(log []combat.Event, at int) map[int]int {
 	out := map[int]int{}
 	for k := at + 1; k < len(log); k++ {
 		switch log[k].Kind {
-		case combat.KindDamage, combat.KindMissed, combat.KindBlocked:
+		case combat.KindDamage, combat.KindMissed, combat.KindFizzled, combat.KindBlocked:
 			if _, seen := out[log[k].Hit]; !seen {
 				out[log[k].Hit] = k
 			}

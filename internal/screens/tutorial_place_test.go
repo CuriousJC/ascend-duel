@@ -22,6 +22,7 @@ import (
 // misses the whole anchor, because against an anchor this size that is not achievable and a test
 // demanding it would be a test demanding no bubble at all.
 func TestTheBubbleDoesNotCoverTheEssencesItIsPointingAt(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Load())

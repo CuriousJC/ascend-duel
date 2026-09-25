@@ -40,7 +40,7 @@ The run is written to disk between rooms and every run has a six-character code 
 | [The thrust](#the-thrust) | the principle every rule is measured against | principle |
 | [Attributes and scaling](#attributes-and-scaling) | DMG, Actions, HP, and what may cut a hit | built |
 | [Cards](#cards) | forms, the cost ladder, shields, the deck, the card language | built |
-| [Elements](#elements) | the five colors, their statuses, and where a status comes from | built |
+| [Elements](#elements) | the five colors, their statuses, where a status comes from, and a creature's own element | built |
 | [Resolution — phases](#resolution--phases) | what order a round resolves in | built |
 | [Hands](#hands) | the ladder, its axes, and how every hit is multiplied | built |
 | [A round is bounded twice](#a-round-is-bounded-twice) | the action budget and the five-card cap | built |
@@ -252,6 +252,14 @@ buys is that the whole exchange is *showable* — every broken attack can be str
 the creature swings, rather than one card silently doing nothing at a time. Re-ranking as the turn
 resolved would win a little damage and cost the player any way of watching it happen.
 
+**The matching element goes first** *(owner's call)*. Every shield carries the element of the card
+that raised it, and a shield takes the heaviest hits **of its own element** before anything else;
+only the shields left over after that take the heaviest of what remains, whatever its element. So
+one ice shield against an ice Nip and a fire Drain eats the Nip. That is the trade the player made
+by raising ice against an ice creature: the shield is spent where it banks an action point — see
+§A shield of the hit's own element banks an action point — rather than where it saves the most
+life. Ties still go to the earliest.
+
 **Ranked on the card's own damage, which is the whole of the arithmetic.** Everything downstream —
 the attacker's weight, the target's vulnerability, the hand's multiplier — is one multiplier applied
 identically to every hit in the turn, so none of them can reorder two. See `combat.shieldedSlots`.
@@ -259,6 +267,24 @@ identically to every hit in the turn, so none of them can reorder two. See `comb
 **This is a straight buff to shields, and it scales with how spiky a creature's deck is.** A
 swarm of identical small attacks is unaffected; a deck with one big card in it is now much
 easier to blunt. Nothing simulates a duel, so no test catches what that does to a floor.
+
+#### A shield of the hit's own element banks an action point
+
+**A shield that eats a hit of its own element buys its owner one action point for their next turn.**
+An ice Brace eating an ice goblin's Bash is a block *and* a point; a fire Brace eating the same Bash
+is a block and nothing else. Basic is no element and matches nothing.
+
+- **The next turn only.** `Duelist.Surge` is spent by the start of its owner's own turn, the same
+  moment the shields lapse, so the points buy exactly the turn after the blocks and nothing later.
+  They never outlive a fight.
+- **No cap.** Five ice shields eating five ice hits is five more points. What bounds it is how many
+  shields a turn can pay for and how many hits a creature throws; the five-card cap on a turn still
+  holds, so a big surge buys dearer cards rather than more of them.
+- **It is the mirror of the fizzle** — see §A creature's own element. The duelist has no element
+  for a creature's hit to fizzle on, so matching a creature's element pays the player on defense
+  where it costs them on offense.
+- **The screen says it twice, as placeholders**: `+1 AP` over each card a matched shield breaks,
+  and `(+N surge)` beside the budget while the player plans the turn it pays for.
 
 #### The turn reads: shields, then the hand, then the hits
 
@@ -325,11 +351,12 @@ several — a real decision about how much of a turn to absorb.
 landing, so a shield would eat the heaviest of them and leave the rest. Nothing produces that today,
 since no creature raises one, and `VerbShield` would work on either side.
 
-**A round's action points are the stat on the card and nothing else**.
-`Duelist.ActionPoints()` is the whole of a turn's budget: nothing banks points from a previous
-round, nothing grants extras mid-round, and no card draws another. **What that buys is a budget
-the player can plan a whole fight against** rather than a number that can silently be two higher
-than the figure printed on the opponent's card.
+**A round's action points are the stat on the card, plus the surge the last creature turn's
+matched blocks banked, and nothing else**. `Duelist.ActionPoints()` is the whole of a turn's
+budget: nothing grants extras mid-round and no card draws another. **What that buys is a budget
+the player can plan a whole fight against**, with the one bonus on top being something they earned
+by the shields they chose and can see coming — a creature's element is on its card. Creatures raise
+no shields, so their budget is the figure printed on their card.
 
 **What it costs, stated:** a creature spends every turn swinging, so the roster is modestly
 stronger and considerably more predictable. **Every creature deck is pure attack**, and none
@@ -613,7 +640,8 @@ consequences follow and both are intended:
 
 **Statuses are off by default, and the relic is what switches one on**. A
 bare fire attack is a plain attack with a red border: it forms hands exactly as any other
-card does and it leaves nothing behind. The worn relics are read off the **attacker**, per hit,
+card does and it leaves no status behind. What an element does on its own is the fizzle — see
+§A creature's own element — which is about the target rather than the card. The worn relics are read off the **attacker**, per hit,
 before anything is applied.
 
 **Why a relic pays for it.** A status given away free leaves its element's relics with nothing
@@ -626,6 +654,33 @@ because one relic is one element.
 **Enemies never wear relics.** The zero value is what an enemy is hydrated with and nothing sets
 it, so an enemy's colors are inert by construction rather than by a rule written down somewhere
 else.
+
+### A creature's own element
+
+**A creature is dealt one element with its floor, and it is that element's own.** It decides the
+creature's picture and the colour of every card in its deck, and it is a rule: **a hit of the
+creature's own element fizzles**. An ice Bash thrown at an ice goblin lands nothing at all — a 200
+damage ice hit is 0 — while the fire Bash beside it lands as it always did.
+
+- **Per hit, not per hand.** Every card of a turn lands its own hit, so a fizzle wastes exactly the
+  hits of the matching element and nothing else. See §Damage: a hit per card, one multiplier.
+- **The card still forms the hand.** The hand is read off the turn before a hit is thrown, so two
+  ice Bashes at an ice goblin are still a pair; what fizzles is the damage.
+- **A fizzle wastes the whole hit.** No damage, no drain, no status, and no growing relic steps on
+  it — everything a relic would have done on that hit goes with it. It is decided before the shock
+  roll, since it is the target's nature rather than luck.
+- **A wildcard never fizzles** *(owner's call)*. It counts as every element when a hand is formed,
+  and a card that matched every creature's element would be wasted against all of them.
+- **Basic never fizzles, and the duelist has no element**, so the rule runs one way: a creature's
+  hits always land on the player. The mirror is on defense — a shield of the creature's element
+  banks an action point when it eats one of its hits. See §A shield of the hit's own element banks
+  an action point.
+
+**It is the one thing an element does on its own**, without a relic. Everything else a color does
+is switched on by something the player is wearing.
+
+The fight log says `fizzles - its own element` on the hit's line and the hit's arithmetic line
+takes `FIZZLE` where a shock takes `MISS`. `combat.fizzles` is the rule and `KindFizzled` the event.
 
 ### One rule, two sources — the intersection
 

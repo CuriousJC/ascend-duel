@@ -95,8 +95,8 @@
 //   - Nothing reduces a hit to zero by arithmetic. A shield eats a whole hit or none of it.
 //   - The rules cannot draw a card — there is no deck in this package, and nothing in the game
 //     asks for one any more.
-//   - A shield eats one whole incoming hit, the heaviest first, whichever kind of attacker is
-//     swinging — see shieldedHits.
+//   - A shield eats one whole incoming hit — its own element's heaviest first, then the heaviest
+//     of what is left — whichever kind of attacker is swinging; see shieldedHits.
 //   - Never change these rules to make a screen look right. If a screen contradicts the engine,
 //     say so and let the owner decide which one is wrong. That is a game-design call and it
 //     ripples into the tests and the balance.

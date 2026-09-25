@@ -48,8 +48,8 @@ func (s *CombatScene) Report() map[string]any {
 		"queued":       len(s.fighterActions),
 		"enemyQueued":  len(s.enemyActions),
 		"discardsLeft": s.discardsLeft,
-		"shields":      s.fighterAfter.Shields,
-		"enemyShields": s.enemyAfter.Shields,
+		"shields":      s.fighterAfter.Shields.Count(),
+		"enemyShields": s.enemyAfter.Shields.Count(),
 
 		// Which fight this is, and the way out of it. **The opponent's record key is what makes a
 		// report reproducible**: it is the name a scenario fixture would write down.

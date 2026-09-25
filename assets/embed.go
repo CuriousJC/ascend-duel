@@ -226,6 +226,23 @@ var stoneArtFS embed.FS
 //go:embed other/*.png
 var otherArt embed.FS
 
+// The figure glyphs: the numerals and math symbols the combat screen sets into every figure that
+// flies over the table. **A directory per set, and one set is drawn** — `systems.DefaultFigureSet`
+// names it — so an alternative look is a second directory beside the first rather than a batch
+// written over it. Each set is a sprite sheet per color plus one `figure-glyphs.json` saying where
+// every glyph sits in a sheet and how far it advances.
+//
+//go:embed figure
+var figureArt embed.FS
+
+// FigureFile returns one file out of one figure set: `FigureFile("v2", "figure-glyphs.json")`.
+//
+// **Bytes, and an error rather than a panic**, because the set is named by a constant a reviewer
+// flips and a set that is not there is a typo to report, not a corrupt binary.
+func FigureFile(set, name string) ([]byte, error) {
+	return figureArt.ReadFile("figure/" + set + "/" + name)
+}
+
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
 

@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
@@ -215,36 +216,53 @@ func laidOut(t *testing.T, scene *CombatScene, e combat.Event) handMathBox {
 	return box
 }
 
-// **Every line reads left to right and sits under its own card.** Each item rests to the right of
-// the one before it, and a line is centered on the card that threw its hit.
-func TestEveryLineIsLaidOutLeftToRightUnderItsCard(t *testing.T) {
+// **Every hit is a column of rows under its own card, and the answer is at the bottom.** Within a
+// row each item rests to the right of the one before it; each row sits below the last; a row
+// starts at every operator over the whole term; and each row is centered on the card that threw
+// the hit.
+func TestEveryHitIsStackedDownwardUnderItsCard(t *testing.T) {
 	gs := mathTestState(t)
 	var scene CombatScene
 	e := handEvent("pair", []int{20, 20}, 150, 60)
 	box := laidOut(t, &scene, e)
 
 	for c, col := range box.columns {
-		for i := 1; i < len(col.items); i++ {
-			if col.items[i].at.X <= col.items[i-1].at.X {
-				t.Fatalf("line %d: item %d (%q) rests at x=%d, not right of item %d at x=%d",
-					c, i, col.items[i].text, col.items[i].at.X, i-1, col.items[i-1].at.X)
+		rows := mathRows(col.items)
+		if len(rows) < 3 {
+			t.Fatalf("hit %d is %d rows, want the term, the multiplier and the answer apart", c, len(rows))
+		}
+		card := scene.handCardCenter(gs, combat.SideA, col.seat).X
+		for r, row := range rows {
+			for i := 1; i < len(row); i++ {
+				if row[i].at.X <= row[i-1].at.X {
+					t.Fatalf("hit %d row %d: %q rests at x=%d, not right of %q at x=%d",
+						c, r, row[i].text, row[i].at.X, row[i-1].text, row[i-1].at.X)
+				}
+				if row[i].at.Y != row[0].at.Y {
+					t.Errorf("hit %d row %d: %q is off the row's line", c, r, row[i].text)
+				}
+			}
+			if r > 0 && row[0].at.Y <= rows[r-1][0].at.Y {
+				t.Errorf("hit %d row %d sits at y=%d, not below row %d", c, r, row[0].at.Y, r-1)
+			}
+			mid := (row[0].at.X + row[len(row)-1].at.X) / 2
+			if diff := mid - card; diff < -cardWidth || diff > cardWidth {
+				t.Errorf("hit %d row %d is centered near x=%d, want it under its card at x=%d", c, r, mid, card)
 			}
 		}
-		first, last := col.items[0], col.items[len(col.items)-1]
-		mid := (first.at.X + last.at.X) / 2
-		card := scene.handCardCenter(gs, combat.SideA, col.seat).X
-		if diff := mid - card; diff < -cardWidth || diff > cardWidth {
-			t.Errorf("line %d is centered near x=%d, want it under its card at x=%d", c, mid, card)
+		last := rows[len(rows)-1]
+		if end, total := last[len(last)-1], col.total(); end.text != total.text || end.at != total.at {
+			t.Errorf("hit %d does not end on its answer", c)
 		}
 	}
 	if box.columns[0].items[0].at.X >= box.columns[1].items[0].at.X {
-		t.Error("the second card's line does not sit to the right of the first's")
+		t.Error("the second card's hit does not sit to the right of the first's")
 	}
 }
 
-// **A card that lands several times stacks its lines under itself**, one pitch apart, and a card
-// that lands once keeps its line in the band.
-func TestAnEchoedCardsLinesStackUnderIt(t *testing.T) {
+// **A card that lands several times stacks its hits under itself**, each one starting below the
+// last row of the one before, and another card's first hit starts back at the top.
+func TestAnEchoedCardsHitsStackUnderIt(t *testing.T) {
 	gs := mathTestState(t)
 	var scene CombatScene
 	e := handEvent("pair", []int{30, 20, 10, 30}, 150, 135)
@@ -254,12 +272,42 @@ func TestAnEchoedCardsLinesStackUnderIt(t *testing.T) {
 	bottom := scene.handCardCenter(gs, combat.SideA, 0).Y + cardHeight/2
 	first := box.columns[0].items[0].at.Y
 	if first <= bottom {
-		t.Errorf("the first line sits at y=%d, not under its card's bottom edge at %d", first, bottom)
+		t.Errorf("the first hit sits at y=%d, not under its card's bottom edge at %d", first, bottom)
 	}
-	for c, want := range []int{first, first + mathLinePitch, first + 2*mathLinePitch, first} {
-		if got := box.columns[c].items[0].at.Y; got != want {
-			t.Errorf("line %d sits at y=%d, want %d", c, got, want)
+	for c := 1; c < 3; c++ {
+		above := box.columns[c-1].total().at.Y
+		if got := box.columns[c].items[0].at.Y; got <= above {
+			t.Errorf("hit %d starts at y=%d, not below the answer of the hit above it at %d", c, got, above)
 		}
+	}
+	if got := box.columns[3].items[0].at.Y; got != first {
+		t.Errorf("the other card's hit starts at y=%d, want the top row at %d", got, first)
+	}
+}
+
+// **An echoed card builds its hits up one after another** *(owner's call)*: its second hit does not
+// begin until its first is totaled, while another card's hit runs alongside the first.
+func TestAnEchoedCardsHitsBuildUpInTurn(t *testing.T) {
+	var scene CombatScene
+	e := handEvent("pair", []int{30, 20, 10, 30}, 150, 135)
+	e.HandCards[1], e.HandCards[2], e.HandCards[3] = 0, 0, 1
+	box := laidOut(t, &scene, e)
+	box.active = true
+
+	box.Tick()
+	if !box.columns[0].begun || !box.columns[3].begun {
+		t.Fatal("the first hit of each card has not begun")
+	}
+	for !box.columns[0].done() {
+		if box.columns[1].begun || box.columns[2].begun {
+			t.Fatal("the card's second or third hit began before its first was totaled")
+		}
+		box.Tick()
+	}
+	box.Tick()
+	if !box.columns[1].begun || box.columns[2].begun {
+		t.Errorf("once the first is totaled the second should run and the third wait: begun %v %v",
+			box.columns[1].begun, box.columns[2].begun)
 	}
 }
 
@@ -317,8 +365,11 @@ func TestTheWidestHandNameFitsTheScreen(t *testing.T) {
 // **The name's second line is every hit's multiplier, said early** *(owner's call)*, so the two go
 // through one formatting.
 func TestTheHandNameCarriesTheMultiplierTheLinesWillShow(t *testing.T) {
-	if got := handMultiplierLine(115); got != "1.15x DMG" {
-		t.Errorf("115%% reads %q, want %q", got, "1.15x DMG")
+	if got := handMultiplierLine(115); got != "1.15x" {
+		t.Errorf("115%% reads %q, want %q", got, "1.15x")
+	}
+	if !systems.FigureCovers(handMultiplierLine(115)) {
+		t.Error("the multiplier line is not all figure glyphs, so it would be drawn in the font")
 	}
 
 	for _, hand := range combat.Hands() {
@@ -427,22 +478,22 @@ func splitEvent(hand string, dmg int, pcts []int, multiplier, total int) combat.
 // **A term is the product, not its answer** *(owner's call)*.
 func TestATermIsWrittenAsDMGTimesTheCardsMultiplier(t *testing.T) {
 	sameLines(t, "a 3x card on 12 DMG", linesOf(splitEvent("no-hand", 12, []int{300}, 100, 36)),
-		[]string{"( 12 x 3 ) x 1 = 36"})
+		[]string{"12 x 3 x 1 = 36"})
 }
 
-// Every hit takes its own multiple of the same DMG, which is what the brackets say.
+// Every hit takes its own multiple of the same DMG, which is what each term row says.
 func TestEveryHitSwingsAtTheSameDMG(t *testing.T) {
 	sameLines(t, "a Pair", linesOf(splitEvent("pair", 12, []int{300, 100}, 100, 48)),
-		[]string{"( 12 x 3 ) x 1 = 36", "+ ( 12 x 1 ) x 1 = 12"})
+		[]string{"12 x 3 x 1 = 36", "+ 12 x 1 x 1 = 12"})
 }
 
-// **A relic is a factor inside the bracket.**
+// **A relic is a factor in the term.**
 func TestARelicIsAFactorInsideTheTerm(t *testing.T) {
 	e := splitEvent("no-hand", 12, []int{300}, 100, 72)
 	e.HandRelicScale[0] = []int{200}
 	e.HitAmounts[0] = 72
 
-	sameLines(t, "a doubling relic", linesOf(e), []string{"( 12 x 3 x 2 ) x 1 = 72"})
+	sameLines(t, "a doubling relic", linesOf(e), []string{"12 x 3 x 2 x 1 = 72"})
 }
 
 // **A term whose split does not come to the term is written flat** — see combat.Event.TermSplit.
@@ -492,9 +543,6 @@ func TestALineIsSetInThreeLevelsOfAir(t *testing.T) {
 		return 0
 	}
 
-	if got := gapBefore(items, at("12", 0)); got != mathHugGap {
-		t.Errorf("a bracket stands %v off its figure, want the hug %v", got, mathHugGap)
-	}
 	if got := gapBefore(items, at("2", 0)); got != mathTightGap {
 		t.Errorf("a card's multiplier is set %v off the DMG, want the tight %v", got, mathTightGap)
 	}

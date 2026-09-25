@@ -88,7 +88,7 @@ const (
 	// mathGrowthSize is a relic's multiplier inside a term, and it is **mathTermSize** — the same
 	// size as every other figure on the line *(owner's call, 2026-09-19)*. It was well under it
 	// while the relic's figure was an annotation *beside* a term the relic had already been folded
-	// into; inside a bracket it is one of the factors being multiplied, and a factor set smaller
+	// into; in the term's product it is one of the factors being multiplied, and a factor set smaller
 	// than the ones either side of it reads as a footnote on the product rather than part of it.
 	//
 	// **It is still its own constant**, because how loud a relic's figure is against the cards'
@@ -122,11 +122,14 @@ const (
 	// mathItemGap is the air between one item of a line and the next.
 	mathItemGap = 16
 
-	// mathLinePitch is how far below one line of a card the next line of the same card sits: an
-	// echoed card's second and third hits stack under its first. mathLineGap is the air between the
-	// card's bottom edge and its first line.
-	mathLinePitch = mathTotalSize + 12
-	mathLineGap   = 4
+	// mathLineGap is the air between the card's bottom edge and the first row of its first hit,
+	// mathRowGap the air between two rows of one hit, and mathHitGap the extra air between one hit
+	// and the next under the same card, so an echoed card's hits read as separate sums.
+	// mathRowShare is a row's height against its digits', leaving room for the drop shadow.
+	mathLineGap  = 4
+	mathRowGap   = 6
+	mathHitGap   = 24
+	mathRowShare = 1.15
 
 	// mathUnthrownAlpha is how solid a line stays once it is known its hit was never thrown — the
 	// target fell to an earlier hit — and mathVerdictDim how solid the arithmetic under a MISS or a
@@ -134,12 +137,7 @@ const (
 	mathUnthrownAlpha = 0.35
 	mathVerdictDim    = 0.45
 
-	// mathHugGap is what a bracket leaves between itself and the term inside it. **Not zero**: the
-	// type is set with its own side bearings and a bracket hard against a numeral at 76 points
-	// touches it.
-	mathHugGap = 4
-
-	// mathTightGap is the air inside a bracket, and mathWideGap the air round the multiplier that
+	// mathTightGap is the air inside a term's product, and mathWideGap the air round the multiplier that
 	// applies to the whole line.
 	//
 	// **Three gaps rather than one, because the line has three levels** *(owner's call)*. At a
@@ -183,7 +181,7 @@ const (
 	mathBreathAmount = 0.06
 	mathBreathTicks  = 84
 
-	// mathMultLineSize is the `1.15x DMG` line under the hand's name, and mathMultLineGap the air
+	// mathMultLineSize is the `1.15x` line under the hand's name, and mathMultLineGap the air
 	// between the two, in points of the name's own size.
 	//
 	// **It is `mathTermSize` — the size a figure is written at in a line — and it does not grow
@@ -282,19 +280,14 @@ type mathItem struct {
 	// convention** because there is one duelist and any number of cards.
 	fromDuelist bool
 
-	// hugPrev and hugNext take the air out of one side of an item, so a bracket sits against the
-	// figure it encloses instead of floating a word's width off it. Only the parens use them.
-	hugPrev bool
-	hugNext bool
-
 	// burst says this item throws the signal's own firework as it sets off, and flies the way a
 	// signal flies: out of the thing that produced it at the size a signal's figure is drawn, and
 	// receding into its place on the line. **A relic's figure and a rider's are the same event** —
 	// something worn paying into this turn — so they are one gesture rather than two.
 	burst bool
 
-	// tightPrev sets an item close to the one before it — the inside of a bracket, where the
-	// figures are one product — and widePrev sets it far from it, which is what puts the line's own
+	// tightPrev sets an item close to the one before it — inside a term, where the figures are
+	// one product — and widePrev sets it far from it, which is what puts the line's own
 	// multiplier apart from the terms it multiplies. See mathTightGap.
 	tightPrev bool
 	widePrev  bool
@@ -353,7 +346,7 @@ type handBanner struct {
 	// `handShout` the fired event goes through, so the word cannot change as it travels.
 	name string
 
-	// mult is the second line — `1.15x DMG` — and it travels with the name as one object.
+	// mult is the second line — `1.15x` — and it travels with the name as one object.
 	//
 	// **It is what the name is worth** *(2026-08-19, owner's call)*. The hand's name alone says
 	// which rung of the ladder was built and says nothing about what building it bought, so the
@@ -459,6 +452,11 @@ type mathColumn struct {
 	verdict  string
 	verdictT ui.Travel
 	unthrown bool
+
+	// begun says the line has started running. **A card's second and third hits wait for the one
+	// above them** — see Tick — so a line can sit unbegun, and draws nothing, while another is
+	// being worked out.
+	begun bool
 }
 
 // done reports whether every item of the line is up.
@@ -765,16 +763,17 @@ func hitScript(e combat.Event, i int, first bool) []mathItem {
 }
 
 // termItems is one hit's card term, written as the product the game actually worked out:
-// `(12 x 3)` — the DMG the whole hand was swung at, times the card's own multiplier — with every
-// relic that priced it as a further factor inside the same bracket.
+// `12 x 3` — the DMG the whole hand was swung at, times the card's own multiplier — with every
+// relic that priced it as a further factor in the same product.
 //
-// **The bracket is the point** *(owner's call)*: a relic that raised DMG by two is visible where it
+// **The product is the point** *(owner's call)*: a relic that raised DMG by two is visible where it
 // happened — the duelist's own figure — and the card's contribution reads as the two things it is
-// made of.
+// made of. **It needs no brackets**: the term is a row of its own and everything that multiplies
+// the whole of it is on the rows below — see layOutMath.
 //
 // **The flat form survives for the term the split cannot describe.** See combat.Event.TermSplit:
 // an echo's fraction and CardDamage's floor can each put the product a point off the figure that
-// landed, and a bracket coming to the wrong number is worse than a bare one.
+// landed, and a product coming to the wrong number is worse than a bare figure.
 func termItems(e combat.Event, i int) []mathItem {
 	dmg, pct, ok := e.TermSplit(i)
 	if !ok {
@@ -806,7 +805,6 @@ func termItems(e combat.Event, i int) []mathItem {
 	}
 
 	out := []mathItem{
-		openBracket(),
 		{
 			// **The duelist's figure, flying off the duelist's card.** It is the same number in
 			// every hit of the turn, which is the fact the line is being rewritten to show: one
@@ -821,52 +819,35 @@ func termItems(e combat.Event, i int) []mathItem {
 		innerOperator("x"),
 		mult,
 	}
-	out = append(out, relicFactorItems(e, i)...)
-	return append(out, closeBracket())
+	return append(out, relicFactorItems(e, i)...)
 }
 
 // relicFactorItems is every relic that priced one term, in worn order — which is firing order.
 //
-// **A factor rather than a note** *(owner's call, 2026-09-19)*. It was a label beside the term —
-// `1.1x` — because the figure it annotated had already been multiplied by it; the bracket now
-// shows the multiplication happening, so the relic is an `x` in the product like the card's own
-// multiplier is. A product would still be wrong: one figure per relic is what says which of five
-// fingers did what.
+// **A factor rather than a note** *(owner's call, 2026-09-19)*: the relic is an `x` like the
+// card's own multiplier is. A product would be wrong: one figure per relic is what says which of
+// five fingers did what.
+//
+// **Each relic's factor is a row of its own** *(owner's call)*, under the card's term and above
+// the hand's multiplier — so a Cleaver reads `12 x 3`, then `x 4`, then the hand's `x 1.5`, and
+// the relic's contribution is a step in the working rather than a figure squeezed into the term.
+// Its `x` is therefore the line's own operator rather than the smaller one inside a term.
 func relicFactorItems(e combat.Event, term int) []mathItem {
 	var out []mathItem
 	for seat, pct := range e.HandRelicScale[term] {
 		if g := relicNote(pct, seat); g != nil {
-			g.tightPrev = true
-			out = append(out, innerOperator("x"), *g)
+			out = append(out, wide(mathOperator("x")), *g)
 		}
 	}
 	return out
 }
 
-// openBracket and closeBracket are the punctuation round a term. **They hug what they enclose**:
-// at the line's own item gap a bracket stands a figure's width off its own term and reads as a
-// symbol in a line rather than as something holding it together.
-func openBracket() mathItem {
-	it := mathOperator("(")
-	it.tint = mathBracketInk()
-	it.hugNext = true
-	return it
-}
-
-func closeBracket() mathItem {
-	it := mathOperator(")")
-	it.tint = mathBracketInk()
-	it.hugPrev = true
-	return it
-}
-
-// mathBracketInk is what the punctuation *inside* a term is drawn in: a step quieter again than
-// the line's own operators, which are already a step quieter than its figures.
+// mathInnerInk is what the `x` *inside* a term is drawn in: a step quieter again than the line's
+// own operators, which are already a step quieter than its figures.
 //
-// **Punctuation that is as loud as a figure is a figure.** A bracket is there to group, so it has
-// to be legible and must not be read — three levels of quiet is what keeps the numerals the thing
-// the eye lands on while the shape of the line still holds together.
-func mathBracketInk() color.RGBA { return systems.ColorToward(ui.GroundInk, ui.ScreenGround, 64) }
+// **Punctuation that is as loud as a figure is a figure.** Three levels of quiet is what keeps the
+// numerals the thing the eye lands on while the shape of the working still holds together.
+func mathInnerInk() color.RGBA { return systems.ColorToward(ui.GroundInk, ui.ScreenGround, 64) }
 
 // firstSeat is the leftmost worn seat in a set of contributors, as a 1-based relicSeat, or 0.
 func firstSeat(paid []bool) int {
@@ -933,10 +914,9 @@ func relicNote(pct, seat int) *mathItem {
 		// thing paying into this turn — so the eye should not have to learn two gestures for it.
 		fromScale: signalFigureSize / mathGrowthSize,
 		t:         ui.NewTravel(0, signalFlyTicks()),
-		// **The `x` is a separate operator, like every other factor in the bracket** *(2026-09-19)*.
-		// It was written `1.1x` while the figure beside it had already been multiplied and the
-		// label was all there was to say so; inside a bracket that shows the product being formed,
-		// a second way of writing a multiplication is two notations for one thing.
+		// **The `x` is a separate operator, like every other factor in the term** *(2026-09-19)*:
+		// in a row that shows the product being formed, a second way of writing a multiplication
+		// is two notations for one thing.
 		text: ui.HandMultiplierText(pct),
 		size: mathGrowthSize,
 		tint: ui.BoostInk,
@@ -948,7 +928,7 @@ func relicNote(pct, seat int) *mathItem {
 func innerOperator(str string) mathItem {
 	it := mathOperator(str)
 	it.size = mathInnerSymbolSize
-	it.tint = mathBracketInk()
+	it.tint = mathInnerInk()
 	it.tightPrev = true
 	return it
 }
@@ -1023,32 +1003,69 @@ func handShout(name string) string { return upper(name) + "!" }
 func mathOperatorInk() color.RGBA { return systems.ColorToward(ui.GroundInk, ui.ScreenGround, 45) }
 
 // handMathRect is the strip above the hand at the table's width: where the tutorial points when it
-// talks about the arithmetic. The lines themselves are placed by mathLineAt.
+// talks about the arithmetic. The hits themselves are placed by layOutMath.
 func (s *CombatScene) handMathRect(gs *state.GlobalState) image.Rectangle {
 	bottom := handTop(gs) - mathBandGapAboveCards
 	return image.Rect(tableInset, bottom-mathBandHeight, gs.ScreenWidth-tableInset, bottom)
 }
 
-// layOutMath measures every line and centers each under the card that threw its hit.
+// layOutMath measures every hit's working and stacks it under the card that threw the hit.
 //
-// **A card's first hit sits just under the card and each further one a pitch lower**, so an echoed
-// card reads as three lines stacked under itself. **Nothing is shrunk** — see the file comment.
+// **A hit is written as a column of rows, not as one line** *(owner's call)*: the card's term
+// on a row of its own, then each factor that multiplies everything above it — every relic's, then
+// the hand's — a row apiece, and the answer at the bottom, so the working reads downward into its
+// result and stays about a card wide. A row starts at every operator marked `wide`; see mathRows.
+//
+// **A card that lands several times stacks its hits under each other**, each one starting below
+// the last row of the one before. **Nothing is shrunk** — see the file comment.
 func (s *CombatScene) layOutMath(gs *state.GlobalState, box *handMathBox) {
-	lines := map[int]int{}
+	below := map[int]float64{}
 	for c := range box.columns {
 		col := &box.columns[c]
-		at := s.mathLineAt(gs, box.side, col.seat, lines[col.seat])
-		lines[col.seat]++
-		layOutLine(gs, col.items, at.X, at.Y)
+		card := s.handCardCenter(gs, box.side, col.seat)
+		y, ok := below[col.seat]
+		if !ok {
+			y = float64(card.Y + cardHeight/2 + mathLineGap)
+		} else {
+			y += mathHitGap
+		}
+		for _, row := range mathRows(col.items) {
+			h := mathRowHeight(row)
+			layOutLine(gs, row, card.X, int(y+h/2))
+			y += h + mathRowGap
+		}
+		below[col.seat] = y - mathRowGap
 	}
 }
 
-// mathLineAt is the center of the nth line under one played card: the card's own column, and a
-// pitch per line below the card's bottom edge.
-func (s *CombatScene) mathLineAt(gs *state.GlobalState, side combat.Side, seat, nth int) image.Point {
-	card := s.handCardCenter(gs, side, seat)
-	top := card.Y + cardHeight/2 + mathLineGap
-	return image.Pt(card.X, top+mathLinePitch/2+nth*mathLinePitch)
+// mathRows cuts one hit's items into the rows they are stacked in: a new row before every `wide`
+// operator — each relic's factor, the hand's multiplier, and the equals in front of the answer.
+//
+// **The rows are slices of the column's own items**, so laying one out writes the positions the
+// drawing reads.
+func mathRows(items []mathItem) [][]mathItem {
+	var rows [][]mathItem
+	start := 0
+	for i := 1; i < len(items); i++ {
+		if items[i].widePrev {
+			rows = append(rows, items[start:i])
+			start = i
+		}
+	}
+	if start < len(items) {
+		rows = append(rows, items[start:])
+	}
+	return rows
+}
+
+// mathRowHeight is how tall a row stands: its biggest item's figure height with room for the
+// drop shadow under the digits.
+func mathRowHeight(row []mathItem) float64 {
+	size := 0.0
+	for _, it := range row {
+		size = math.Max(size, it.size)
+	}
+	return figureHeight(size) * mathRowShare
 }
 
 // layOutLine measures one line and centers it on a point.
@@ -1056,7 +1073,7 @@ func layOutLine(gs *state.GlobalState, items []mathItem, cx, cy int) {
 	widths := make([]float64, len(items))
 	total := 0.0
 	for i := range items {
-		widths[i], _ = text.Measure(items[i].text, mathFace(gs, items[i].size), 0)
+		widths[i] = mathWidth(gs, items[i].text, items[i].size)
 		total += widths[i]
 		if i > 0 {
 			total += gapBefore(items, i)
@@ -1073,16 +1090,14 @@ func layOutLine(gs *state.GlobalState, items []mathItem, cx, cy int) {
 	}
 }
 
-// gapBefore is the air between one item and the one before it: the line's own gap, unless a bracket
-// on either side of the join asked to hug what it encloses.
+// gapBefore is the air between one item and the one before it: the row's own gap, unless the item
+// asked to sit tight against a product or wide of what it multiplies.
 //
-// **Measured and laid out by the same function**, which is the whole of why it is one: the line is
-// centered on a total, so a gap the measurer did not know about puts every figure half a bracket
-// off where it was measured to be.
+// **Measured and laid out by the same function**, which is the whole of why it is one: the row is
+// centered on its card, so a gap the measurer did not know about puts every figure half a gap off
+// where it was measured to be.
 func gapBefore(items []mathItem, i int) float64 {
 	switch {
-	case items[i].hugPrev || items[i-1].hugNext:
-		return mathHugGap
 	case items[i].widePrev:
 		return mathWideGap
 	case items[i].tightPrev:
@@ -1177,10 +1192,10 @@ func (s *CombatScene) handShoutAt(gs *state.GlobalState) image.Point {
 // **The figure sets off from where it was already being read** *(2026-08-19, owner's call)*. It
 // left the *word* until then — `PAIR!` and `1.5` being one fact said twice — which was right while
 // the multiplier was first met on that beat, and became wrong the moment the banner started
-// carrying `1.15x DMG` down from DUEL!: a figure leaving the name while the same figure sat
+// carrying `1.15x` down from DUEL!: a figure leaving the name while the same figure sat
 // untouched a line below it is two numbers, not one moving.
 //
-// **It is the `1.15` inside `1.15x DMG` that flies, so the origin is that run's own center** and
+// **It is the `1.15` inside `1.15x` that flies, so the origin is that run's own center** and
 // not the line's. The banner line is centered on the whole string, so setting off from the middle
 // of it would put the figure under the `x` and shift it sideways on the first frame — the same
 // "two numbers swapping" tell the damage figure's handoff is written to avoid.
@@ -1196,8 +1211,8 @@ func (s *CombatScene) handMultiplierOrigin(gs *state.GlobalState, e combat.Event
 	at := s.handShoutAt(gs)
 	at.Y += int(multLineDrop(gs, s.Theater.banner.name, mathNameSize))
 
-	line, _ := text.Measure(s.Theater.banner.mult, mathFace(gs, mathMultLineSize), 0)
-	figure, _ := text.Measure(ui.HandMultiplierText(e.Multiplier), mathFace(gs, mathMultLineSize), 0)
+	line := mathWidth(gs, s.Theater.banner.mult, mathMultLineSize)
+	figure := mathWidth(gs, ui.HandMultiplierText(e.Multiplier), mathMultLineSize)
 	at.X += int(figure/2 - line/2)
 	return at
 }
@@ -1221,11 +1236,16 @@ func (b *handMathBox) Running() bool {
 	return false
 }
 
-// Tick runs one frame: the announcement, then every line at once, then the hold.
+// Tick runs one frame: the announcement, then the lines, then the hold.
 //
-// **Every line advances on the same frame and none waits for another** *(owner's call)*. Within a
-// line the items still run one at a time — a figure arrives, is read, and is joined by an operator
-// — so a line with fewer terms is finished sooner, and it is thrown the moment it is.
+// **Different cards' lines advance on the same frame and none waits for another** *(owner's call)*.
+// Within a line the items still run one at a time — a figure arrives, is read, and is joined by an
+// operator — so a line with fewer terms is finished sooner, and it is thrown the moment it is.
+//
+// **A card that lands several times builds its hits up one after another** *(owner's call)*: an
+// echoed card's second hit does not begin until its first is totaled, and its third waits for the
+// second. Three hits of one card running at once is three totals arriving together under one card,
+// which reads as one sum written three times rather than a card landing again. See waitsOn.
 //
 // **The announcement beat runs whether or not the box owns the word.** The box shouts into it when
 // it has a word, and the banner flashes into it when it has not; every rung gets it, the No Hand
@@ -1237,9 +1257,7 @@ func (b *handMathBox) Tick() {
 	if !b.shoutT.Done() {
 		b.shoutT.Tick()
 		if b.shoutT.Done() {
-			for c := range b.columns {
-				b.started(c, 0)
-			}
+			b.begin()
 		}
 		return
 	}
@@ -1252,6 +1270,9 @@ func (b *handMathBox) Tick() {
 			continue
 		}
 		all = false
+		if !col.begun {
+			continue
+		}
 		col.items[col.at].t.Tick()
 		if col.items[col.at].t.Done() {
 			col.at++
@@ -1263,6 +1284,28 @@ func (b *handMathBox) Tick() {
 	if all {
 		b.Hold.Tick()
 	}
+	b.begin()
+}
+
+// begin starts every line whose card has no unfinished hit above it.
+func (b *handMathBox) begin() {
+	for c := range b.columns {
+		if !b.columns[c].begun && !b.waitsOn(c) {
+			b.columns[c].begun = true
+			b.started(c, 0)
+		}
+	}
+}
+
+// waitsOn reports whether a line is held behind an earlier hit of the same card that is not yet
+// totaled.
+func (b *handMathBox) waitsOn(c int) bool {
+	for k := 0; k < c; k++ {
+		if b.columns[k].seat == b.columns[c].seat && !b.columns[k].done() {
+			return true
+		}
+	}
+	return false
 }
 
 // started records that one item of one line has begun, for the shakes and the signals.
@@ -1388,13 +1431,14 @@ func (s *CombatScene) drawPlannedHand(gs *state.GlobalState, screen *ebiten.Imag
 		mathNameSize, tableCenter(gs), mathBreath(gs), mathPreviewAlpha)
 }
 
-// handMultiplierLine is the multiplier written as what it does: `1.15x DMG`.
+// handMultiplierLine is the multiplier written as what it does: `1.15x`.
 //
 // **The figure goes through `handMultiplierText`**, the same formatting the line's own multiplier
 // term uses, so the number the player reads while planning is character-for-character the one that
-// flies into the line when the hand fires. `DMG` rather than `damage` for the reason the cards use
-// it — it is the word this game already writes for the stat.
-func handMultiplierLine(pct int) string { return ui.HandMultiplierText(pct) + "x DMG" }
+// flies into the line when the hand fires. **It is all figure glyphs**, so it is drawn in the same
+// figures as the arithmetic it later flies into — a word after it would put type from the font
+// beside a figure from the sheets.
+func handMultiplierLine(pct int) string { return ui.HandMultiplierText(pct) + "x" }
 
 // drawHandName draws the hand's name and the multiplier under it as **one object**: two lines that
 // breathe, fade and travel together.
@@ -1426,7 +1470,7 @@ func drawHandName(gs *state.GlobalState, screen *ebiten.Image, name, mult string
 // within a pixel — the figure flies out of exactly the spot it was resting in.
 func multLineDrop(gs *state.GlobalState, name string, size float64) float64 {
 	_, nameH := text.Measure(name, mathFace(gs, size), 0)
-	_, multH := text.Measure("0", mathFace(gs, mathMultLineSize), 0)
+	multH := figureHeight(mathMultLineSize) * mathRowShare
 	return nameH/2 + size*mathMultLineGap + multH/2
 }
 
@@ -1464,6 +1508,9 @@ func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) 
 
 	for c := range b.columns {
 		col := &b.columns[c]
+		if !col.begun {
+			continue
+		}
 		alpha := float32(1)
 		switch {
 		case col.unthrown:
@@ -1549,6 +1596,12 @@ func drawMathText(gs *state.GlobalState, screen *ebiten.Image, str string, size 
 	tint color.RGBA, at image.Point, scale float64, alpha float32, bold bool) {
 
 	if str == "" || alpha <= 0 {
+		return
+	}
+	if systems.FigureCovers(str) {
+		sheet, ink := figureSheetFor(tint)
+		systems.DrawFigure(screen, str, sheet, ink, float64(at.X), float64(at.Y),
+			figureHeight(size), scale, alpha)
 		return
 	}
 	face := mathFace(gs, size)

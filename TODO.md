@@ -65,7 +65,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 - [ ] **Re-check the tutorial's taught shop after the relic key renames** *(owner asked for this
       to be tracked)*. The shop shelf is a weighted draw over `relics.json`'s *sorted* keys, so
-      any record added, removed or renamed moves what seed `0009D4` lands on. Nothing fails,
+      any record added, removed or renamed moves what seed `0019QS` lands on. Nothing fails,
       because no test asserts which relics the taught shelf offers; the shop step is the part of
       the lesson a catalog edit can break silently.
       `SEEDSEARCH=1 go test ./internal/screens -run TestFindATutorialSeed` is the search if the

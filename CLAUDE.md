@@ -1908,7 +1908,7 @@ read.
   thing that makes it true belong in one file** — pinned from a scenario instead, the lesson
   runs on whatever the clock rolled and describes a hand it has not dealt, because the profile
   can start it with no fixture in sight. The scenario entry keeps only `"Teach": true`.
-- **The taught fight is two rounds, and the shield is why.** Run code `0009D4` deals `Jab Brace
+- **The taught fight is two rounds, and the shield is why.** Run code `0019QS` deals `Jab Brace
   Thrust Bash`, all arcane, for exactly 6 AP — an Elemental Four of a Kind dealing 69 into a
   GiantBat's 80. **One of the four is a Brace**, which teaches the thing a
   hand of pure attacks cannot: a defense carries an element and joins a hand like anything else,

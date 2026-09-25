@@ -324,7 +324,7 @@
     "Name": "Singular Ring",
     "Family": "Jade rings",
     "Art": "dmg-no-hand",
-    "Draw": "jade ring with a single diamond",
+    "Draw": "jade ring without a gem",
     "Text": "Plus 2 duelist DMG\non No Hand played.",
     "Rarity": "common",
     "Rules": [
@@ -352,82 +352,124 @@
     ]
   },
   {
-    "RelicRecord": "dmg-concept-doubled-hand",
+    "RelicRecord": "dmg-two-pair-hand",
     "Name": "Doubled Ring",
     "Family": "Jade rings",
-    "Art": "dmg-concept-doubled-hand",
+    "Art": "dmg-two-pair-hand",
     "Draw": "jade ring with two diamonds and two black gems",
     "Text": "Plus 4 duelist DMG\non any Two Pair played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hands": ["concept-two-pair", "form-two-pair", "element-two-pair"] },
+        "If": {
+          "Hands": ["concept-two-pair", "form-two-pair", "element-two-pair"]
+        },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 4 }]
       }
     ]
   },
   {
-    "RelicRecord": "dmg-concept-tripled-hand",
+    "RelicRecord": "dmg-three-of-a-kind-hand",
     "Name": "Tripled Ring",
     "Family": "Jade rings",
-    "Art": "dmg-concept-tripled-hand",
+    "Art": "dmg-three-of-a-kind-hand",
     "Draw": "jade ring with three diamonds",
     "Text": "Plus 5 duelist DMG\non any Three of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hands": ["concept-three-of-a-kind", "form-three-of-a-kind", "element-three-of-a-kind"] },
+        "If": {
+          "Hands": [
+            "concept-three-of-a-kind",
+            "form-three-of-a-kind",
+            "element-three-of-a-kind"
+          ]
+        },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 5 }]
       }
     ]
   },
   {
-    "RelicRecord": "dmg-concept-full-house-hand",
+    "RelicRecord": "dmg-full-house-hand",
     "Name": "Filled Ring",
     "Family": "Jade rings",
-    "Art": "dmg-concept-full-house-hand",
+    "Art": "dmg-full-house-hand",
     "Draw": "jade ring with three diamonds and two black gems",
     "Text": "Plus 8 duelist DMG\non any Full House played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hands": ["concept-full-house", "form-full-house", "element-full-house"] },
+        "If": {
+          "Hands": [
+            "concept-full-house",
+            "form-full-house",
+            "element-full-house"
+          ]
+        },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 8 }]
       }
     ]
   },
   {
-    "RelicRecord": "dmg-concept-four-of-a-kind-hand",
+    "RelicRecord": "dmg-four-of-a-kind-hand",
     "Name": "Fourth Ring",
     "Family": "Jade rings",
-    "Art": "dmg-concept-four-of-a-kind-hand",
+    "Art": "dmg-four-of-a-kind-hand",
     "Draw": "jade ring with four diamonds",
     "Text": "Plus 10 duelist DMG\non any Four of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hands": ["concept-four-of-a-kind", "form-four-of-a-kind", "element-four-of-a-kind"] },
+        "If": {
+          "Hands": [
+            "concept-four-of-a-kind",
+            "form-four-of-a-kind",
+            "element-four-of-a-kind"
+          ]
+        },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 10 }]
       }
     ]
   },
   {
-    "RelicRecord": "dmg-concept-five-of-a-kind-hand",
+    "RelicRecord": "dmg-five-of-a-kind-hand",
     "Name": "Perfect Ring",
     "Family": "Jade rings",
-    "Art": "dmg-concept-five-of-a-kind-hand",
+    "Art": "dmg-five-of-a-kind-hand",
     "Draw": "jade ring with five diamonds",
     "Text": "Plus 16 duelist DMG\non any Five of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hands": ["concept-five-of-a-kind", "form-five-of-a-kind", "element-five-of-a-kind"] },
+        "If": {
+          "Hands": [
+            "concept-five-of-a-kind",
+            "form-five-of-a-kind",
+            "element-five-of-a-kind"
+          ]
+        },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 16 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "dmg-elementalist-hand",
+    "Name": "Prismatic Ring",
+    "Family": "Jade rings",
+    "Art": "dmg-elementalist-hand",
+    "Draw": "jade ring with five gems, one each of orange, blue, yellow, green and purple",
+    "Text": "Plus 10 duelist DMG\non Elementalist played.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-elementalist" },
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 10 }]
       }
     ]
   },

@@ -208,7 +208,12 @@ func strike(
 			e.HandCards[at] = l.seat
 			e.HandAmounts[at] = d
 			e.HandCardBase[at] = l.shape.Amount(l.nth, card.Damage(actor.DMG))
-			e.HandCardPct[at] = l.shape.Amount(l.nth, card.Amount())
+			// **Only an attack applies a percentage to the DMG.** A defense's Amount is how many
+			// shields it raises, and recorded here it would print as a multiplier of 0.01 per shield;
+			// zero sends its term to the flat figure, which is the 0 it deals.
+			if card.Spec().Verb == VerbAttack {
+				e.HandCardPct[at] = l.shape.Amount(l.nth, card.Amount())
+			}
 			e.HandRelicScale[at] = CardScaleBySeat(worn, card)
 			e.HitAmounts[at] = figure
 			if l.nth > 0 {

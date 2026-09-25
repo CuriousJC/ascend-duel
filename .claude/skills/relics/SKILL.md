@@ -435,6 +435,10 @@ Take the proposal's `(When, Do)` pair and read the grid at it. Three verdicts:
   and Unravelled Ring share `card-damage / scale-damage / Element=arcane` and are *not* a
   duplicate — one is flat and one grows — which is the distinction to draw rather than to flag.
 
+**Read the archive too.** `data/archive/relics.json` holds relics taken out of the game, and
+`coverage.py` does not see it. A proposal matching an archived relic is a relic the owner has
+already had and put away — say which one, and offer moving it back before authoring it again.
+
 ### 2. Expansion — which siblings does it imply?
 
 **Ask the question; do not assume the answer.** A filled family with an empty cell is a question
@@ -511,6 +515,21 @@ rewrites 4.9 MB including 126 portraits nothing touched. `Text` is what the play
 printed verbatim, so a rule authored without its sentence is a relic that lies. `go test ./...`
 covers the art resolving and the record parsing; a bad word panics at load rather than being
 ignored.
+
+### Archiving, and bringing one back
+
+**A relic comes out of the game by moving, never by being deleted.** The record goes from
+`data/relics.json` into `data/archive/relics.json` as it stands — no reason field, no note — and its
+picture from `assets/relic/` into `assets/archive/relic/`. Restoring is the same two moves the other
+way. Then regenerate both pages, `go run ./tools/relicsheet` and `go run ./tools/relicsheet
+-archive`; each deletes the PNGs of relics that left it.
+
+- **Grep the scenarios** — `internal/scenario/scenarios.json` names relics by key, and a fixture
+  wearing an archived one fails its launch. Nothing in the suite catches it.
+- **The shelf shares move.** Archiving is a catalog change like any other, so read the three tier
+  shares the sheet prints, before and after.
+- **An archived record is still held to the grammar** by `TestEveryArchivedRelicWouldLoad`. A new
+  verb or moment that renames a word has to rename it in the archive too, or the suite goes red.
 
 ## The relics that read the purse *(2026-09-05)*
 

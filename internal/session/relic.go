@@ -147,6 +147,27 @@ func registerRelics() (map[string]combat.RelicID, map[string]int, map[string]int
 	return out, prices, sells, weights
 }
 
+// CheckRelicRecord holds one record to everything registration would, without registering it.
+//
+// **It is for the archive**: a record in `data/archive/relics.json` is out of the game and never
+// registered, and this is what keeps it one that would load if it were moved back. Every word is
+// resolved as registerRelics resolves it, the rules go through `combat.CheckRelic`, and the rarity
+// has to be one of the three.
+func CheckRelicRecord(r data.RelicData) error {
+	rules, err := relicRules(r)
+	if err != nil {
+		return err
+	}
+	if err := combat.CheckRelic(r.RelicRecord, rules); err != nil {
+		return err
+	}
+	if !r.Rarity.Valid() {
+		return fmt.Errorf("%s has rarity %q, which is not one of common, uncommon or rare",
+			r.RelicRecord, r.Rarity)
+	}
+	return nil
+}
+
 // Relics is every registered record key, sorted. For a tool or a screen that wants the catalog
 // rather than what is worn.
 func Relics() []string {

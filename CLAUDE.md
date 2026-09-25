@@ -172,6 +172,7 @@ go run ./tools/marksheet    # every form mark and cost tick as a matrix, at both
 go run ./tools/sheets       # regenerate every review sheet and the index that links them
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
 go run ./tools/relicsheet    # every relic to PNGs + a page grouped by rarity: art, price, text, rules
+go run ./tools/relicsheet -archive   # the relics out of the game, off data/archive/ and assets/archive/
 go run ./tools/essencesheet    # every essence to PNGs + a page grouped by what it changes about a card
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
 go run ./tools/motifsheet   # the roster motif by motif: card, stat line, deck, coverage grid
@@ -1334,6 +1335,30 @@ over. The sheet draws each with its price, its authored `Text` and its rules sid
 which is also the only place the sentence a player reads can be checked against the rules that
 actually fire.
 
+**A relic comes out of the game by being archived, not deleted.** Its record moves from
+`data/relics.json` to `data/archive/relics.json` and its picture from `assets/relic/` to
+`assets/archive/relic/`; neither archive path is embedded, so a release carries none of it and no
+shelf can offer one, and moving the two files back is the whole of a restore. There is no reason
+field and no tombstone — the record itself is what is kept. `data/archive.go` holds the paths and
+the convention, and five things hold it together:
+
+- **The archive is held to the live grammar.** `TestEveryArchivedRelicWouldLoad` in
+  `internal/session` runs every archived record through `session.CheckRelicRecord` — the same
+  resolution and the same `combat.CheckRelic` registration uses, with nothing registered — so a
+  change to the relic vocabulary that strands an archived record fails the suite. **The fix is to
+  bring the record up to the vocabulary**, so it still loads the day it is wanted.
+- **A key lives in one file.** `TestNoRelicIsBothLiveAndArchived`, and
+  `TestArchivedRelicArtIsInTheArchive` holds each picture beside its record: an archived record's art
+  left in `assets/relic/` still ships.
+- **`go run ./tools/relicsheet -archive` is its page**, `docs/sheets/relicarchive/`, drawn the way
+  the catalog is but with nothing about the shelf. A record that would not load is drawn anyway,
+  with the reason on its plate — the page shows what is there and the test is the gate.
+- **Archiving a relic touches whatever wore it.** A scenario naming it fails its launch, and a saved
+  run wearing it is refused on resume like any relic the catalog no longer holds.
+- **Only the relics have an archive.** Another catalog takes the same shape — a file under
+  `data/archive/`, a directory under `assets/archive/`, a test beside the catalog's own loader, an
+  `-archive` mode on its sheet — and `data/archive.go` says so.
+
 **`tools/essencesheet` and `tools/handsheet` are the same idea on the other two catalogs**
 . An essence is offered two at a time after a won fight, so the whole catalog is five
 fights away; the sheet draws them all grouped by what each one changes about a card, with the
@@ -2259,9 +2284,9 @@ fight  →  reward  →  shop  →  choice  →  fight ...
   a disk write; `screens.settleCounters` is the one place the tallies land, on a win and on a
   defeat alike. A crash mid-duel loses that duel's counts, which was taken deliberately rather
   than discovered.
-- **Re-run `tools/relicsheet` after touching `relics.json`, and delete the PNG of a relic you
-  removed.** The sheet writes a file per relic and never cleans up, so a deleted record leaves
-  an orphan picture in `docs/sheets/relicsheet/` that no page links and nothing fails on.
+- **Re-run `tools/relicsheet` after touching `relics.json`, and `-archive` as well after moving a
+  relic in or out.** Each run deletes the PNG of every relic no longer on its page, so the two
+  directories under `docs/sheets/` are only as current as the last run of each.
 
 ### Drawing idioms
 

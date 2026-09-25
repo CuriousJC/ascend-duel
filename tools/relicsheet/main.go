@@ -33,12 +33,23 @@
 // rule edited without its sentence is a relic that lies to the player. This page is the only
 // place the two are visible together.
 //
+// # The archive
+//
+//	go run ./tools/relicsheet -archive
+//
+// draws `data/archive/relics.json` instead — the relics taken out of the game and kept in the
+// repository — into `docs/sheets/relicarchive/`. Same cards and same families, nothing about the
+// shelf; see archive.go.
+//
 // # Output
 //
 // Loose PNGs plus an index.html, written into `docs/sheets/relicsheet/` and **committed**
 // *(owner's call, 2026-08-23)*: the sheets are how the catalogs get reviewed, and requiring a
 // Go toolchain to see one meant only whoever just changed something ever looked. A clone opens
 // `docs/sheets/index.html`.
+//
+// **Each run deletes the PNG of every relic no longer on its page**, so a relic moved into the
+// archive or back out of it leaves nothing behind on the page it left.
 //
 // The price is a directory of near-identical binaries rewritten on every run, so **regenerate
 // deliberately** — `go run ./tools/sheets` does all of them and rewrites the index.
@@ -71,10 +82,23 @@ import (
 const ground = "#a8bcd4"
 
 func main() {
-	dir := flag.String("dir", filepath.Join("docs", "sheets", "relicsheet"),
-		"directory to write the PNGs and index.html into")
+	archive := flag.Bool("archive", false,
+		"draw the relic archive, "+data.ArchivedRelicsFile+", rather than the catalog the game loads")
+	dir := flag.String("dir", "",
+		"directory to write the PNGs and index.html into "+
+			"(default docs/sheets/relicsheet, or docs/sheets/relicarchive with -archive)")
 	flag.Parse()
 
+	run := run
+	if *archive {
+		run = runArchive
+	}
+	if *dir == "" {
+		*dir = filepath.Join("docs", "sheets", "relicsheet")
+		if *archive {
+			*dir = filepath.Join("docs", "sheets", "relicarchive")
+		}
+	}
 	if err := run(*dir); err != nil {
 		log.Fatal(err)
 	}
@@ -154,6 +178,10 @@ func run(dir string) error {
 		}
 	}
 
+	if err := prune(dir, plates); err != nil {
+		return err
+	}
+	page.Title = "Relic sheet"
 	page.Tiers = groupByRarity(plates)
 	page.Families = groupByFamily(plates)
 	page.Filters = sheetfilter.Bar(relicFacets(page.Tiers, page.Families))
@@ -276,6 +304,21 @@ func condition(in *data.RelicIfData) string {
 	}
 	if in.Concept != "" {
 		parts = append(parts, in.Concept)
+	}
+	if in.Tier != 0 {
+		parts = append(parts, fmt.Sprintf("tier %d", in.Tier))
+	}
+	if in.Lead {
+		parts = append(parts, "lead")
+	}
+	if in.Hand != "" {
+		parts = append(parts, in.Hand)
+	}
+	if len(in.Hands) > 0 {
+		parts = append(parts, "any of "+strings.Join(in.Hands, " / "))
+	}
+	if in.MinForms > 0 {
+		parts = append(parts, fmt.Sprintf("%d+ forms", in.MinForms))
 	}
 	return strings.Join(parts, " and ")
 }
@@ -486,6 +529,11 @@ type plate struct {
 	Counter string
 	Default bool
 	Rules   []string
+
+	// Problem is why an archived relic would not load if it were moved back, and empty for every
+	// relic that would. The live catalog never sets it: a live relic that would not load stops
+	// the tool at registration.
+	Problem string
 }
 
 // tier is one rarity's worth of the catalog: every relic at that price, with the tier's own
@@ -571,11 +619,17 @@ func familyKey(name string) string {
 }
 
 type page struct {
+	// Title heads the page, and Archive says which of the two pages this is: the archive
+	// leaves out everything about the shelf, since nothing in it can be offered.
+	Title   string
+	Archive bool
+
 	Ground    string
 	Style     map[string]int
 	Count     int
 	Undrawn   int
 	Unwritten int
+	Broken    int
 	Tiers     []tier
 	Families  []family
 	Filters   template.HTML

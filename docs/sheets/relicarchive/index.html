@@ -1,0 +1,526 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — Relic archive</title>
+<style>
+  :root {
+    --ground: #a8bcd4;
+    --ink: #2c2822;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
+    --pink: #c8508c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--dim); font-weight: 600;
+    margin: 44px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  }
+  h3.family {
+    font-size: 15px; font-weight: 600;
+    margin: 34px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
+  }
+  h3.family span {
+    font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 10px;
+  }
+   
+  ul.shelf { list-style: none; padding: 0; margin: 14px 0 0; }
+  li.tier {
+    font-size: 12.5px; color: var(--dim); padding: 5px 0 5px 10px;
+    border-left: 3px solid var(--rule); margin-bottom: 3px;
+  }
+  li.tier strong { color: var(--ink); text-transform: capitalize; margin-right: 6px; }
+  li.tier.common { border-left-color: var(--rule); }
+  li.tier.uncommon { border-left-color: #6c8fb5; }
+  li.tier.rare { border-left-color: var(--pink); }
+  .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+  .facts code { color: var(--ink); }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 68ch; margin: 12px 0 0; }
+  .plates { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 22px; }
+  .plate {
+    display: flex; gap: 18px; align-items: flex-start;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 16px; width: 520px;
+  }
+   
+  img { display: block; image-rendering: pixelated; flex: none; }
+  .about { min-width: 0; }
+  .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .record { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
+  .price { margin: 10px 0 0; font-size: 12.5px; }
+   
+  .rarity {
+    display: inline-block; margin-right: 7px; padding: 1px 7px 2px;
+    border-radius: 9px; font-size: 11px; letter-spacing: .05em;
+    text-transform: uppercase; font-weight: 600;
+    color: var(--ground); background: var(--rule);
+  }
+  .rarity.uncommon { background: #6c8fb5; }
+  .rarity.rare { background: var(--pink); }
+  .text { margin: 10px 0 0; font-size: 13px; }
+  .rules { margin: 10px 0 0; padding: 0; list-style: none; }
+  .rules li {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; color: var(--dim); margin-top: 3px;
+  }
+  .art { margin: 10px 0 0; font-size: 11.5px; color: var(--dim); }
+   
+  .draw {
+    margin: 10px 0 0; font-size: 12.5px; color: var(--dim);
+    border-left: 2px solid var(--rule); padding-left: 9px;
+  }
+  .draw.missing { color: var(--pink); border-left-color: var(--pink); }
+  .art.missing { color: var(--pink); }
+  .cells { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 22px; }
+  figure { margin: 0; }
+  figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
+</style>
+
+<h1>Relic archive</h1>
+
+<p class="facts">
+  10 archived relics, 0 of them drawing the default face,
+  0 with no subject paragraph written, 0 that would not load.
+</p>
+<p class="note">
+  <strong>These relics are out of the game and kept in the repository.</strong> The records are
+  <code>data/archive/relics.json</code> and the pictures are <code>assets/archive/relic/</code>;
+  neither is embedded, so a release carries none of it and no shelf can offer one. Each is drawn
+  exactly as the catalog's own sheet would draw it, family by family in the file's order.
+</p>
+<p class="note">
+  <strong>Moving one back is moving the record and its picture</strong> — the record into
+  <code>data/relics.json</code>, the picture into <code>assets/relic/</code> — and regenerating
+  both pages. The archive is held to the relic grammar by <code>TestEveryArchivedRelicWouldLoad</code>,
+  so a relic here loads the day it returns; one that has fallen out of step with the vocabulary
+  carries the reason in pink on its plate.
+</p>
+<p class="note">
+  Regenerate with <code>go run ./tools/relicsheet -archive</code> and refresh.
+</p>
+
+
+<h2>The catalog, by family</h2>
+
+
+<style>
+  .sheet-filters {
+    position: sticky; top: 0; z-index: 5;
+    margin: 14px 0 0; padding: 10px 12px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+    background: var(--panel, #c6d5e6);
+    border: 1px solid var(--rule, #8fa3bd); border-radius: 8px;
+  }
+  .sheet-facet { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .sheet-facet-label {
+    color: var(--dim, #5a6472); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em; margin-right: 2px;
+  }
+  .sheet-filters button {
+    font: inherit; font-size: 12.5px; line-height: 1;
+    padding: 5px 9px; border-radius: 999px; cursor: pointer;
+    color: var(--ink, #2c2822);
+    background: transparent;
+    border: 1px solid var(--rule, #8fa3bd);
+  }
+  .sheet-filters button:hover { background: rgba(255,255,255,.45); }
+  /* A chip that is down is filled rather than merely outlined: an outline shifting shade is the
+     one state change that does not survive being looked at quickly. */
+  .sheet-filters button[aria-pressed="true"] {
+    background: var(--ink, #2c2822); color: var(--panel, #c6d5e6);
+    border-color: var(--ink, #2c2822);
+  }
+  .sheet-filters button i {
+    font-style: normal; opacity: .6; margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sheet-filters-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .sheet-tally { color: var(--dim, #5a6472); font-size: 12px; font-variant-numeric: tabular-nums; }
+</style>
+<div class="sheet-filters" hidden>
+  <div class="sheet-facet"><span class="sheet-facet-label">rarity</span>
+    <button type="button" data-facet="rarity" data-value="common" aria-pressed="false">common<i>10</i></button>
+  </div>
+  <div class="sheet-facet"><span class="sheet-facet-label">family</span>
+    <button type="button" data-facet="family" data-value="indigo-rings" aria-pressed="false">Indigo rings<i>5</i></button>
+    <button type="button" data-facet="family" data-value="sandstone-rings" aria-pressed="false">Sandstone rings<i>5</i></button>
+  </div>
+  <div class="sheet-filters-end">
+    <button type="button" class="sheet-clear" hidden>clear</button>
+    <span class="sheet-tally"></span>
+  </div>
+</div>
+<script>
+(function () {
+  function start() {
+    var bar = document.querySelector('.sheet-filters');
+    if (!bar) return;
+    bar.hidden = false;
+
+    var chips = Array.prototype.slice.call(bar.querySelectorAll('button[data-facet]'));
+    var clear = bar.querySelector('.sheet-clear');
+    var tally = bar.querySelector('.sheet-tally');
+    var items = Array.prototype.slice.call(document.querySelectorAll('.sheet-item'));
+    var groups = Array.prototype.slice.call(document.querySelectorAll('.sheet-group'));
+    var picked = {};
+
+    function tokens(el, key) {
+      var v = el.getAttribute('data-' + key);
+      if (v === null) return null;
+      return v.split(/\s+/).filter(Boolean);
+    }
+
+    function matches(el) {
+      for (var key in picked) {
+        var want = picked[key];
+        if (!want.length) continue;
+        var have = tokens(el, key);
+        if (have === null) continue;
+        var hit = false;
+        for (var i = 0; i < have.length; i++) {
+          if (want.indexOf(have[i]) !== -1) { hit = true; break; }
+        }
+        if (!hit) return false;
+      }
+      return true;
+    }
+
+    function apply() {
+      var shown = 0, any = false;
+      for (var key in picked) { if (picked[key].length) any = true; }
+
+      var open = [];
+      for (var g = 0; g < groups.length; g++) open.push(matches(groups[g]));
+
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        var owner = groups.indexOf(it.closest('.sheet-group'));
+        var ok = matches(it) && (owner === -1 || open[owner]);
+        it.hidden = !ok;
+        if (ok) shown++;
+      }
+
+      for (var g2 = 0; g2 < groups.length; g2++) {
+        var grp = groups[g2];
+        var held = grp.querySelector('.sheet-item');
+        var live = grp.querySelector('.sheet-item:not([hidden])');
+        grp.hidden = !open[g2] || (held !== null && live === null);
+      }
+
+      if (clear) clear.hidden = !any;
+      if (tally) tally.textContent = any ? 'showing ' + shown + ' of ' + items.length : '';
+    }
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var key = chip.getAttribute('data-facet');
+        var val = chip.getAttribute('data-value');
+        var list = picked[key] || (picked[key] = []);
+        var at = list.indexOf(val);
+        if (at === -1) { list.push(val); } else { list.splice(at, 1); }
+        chip.setAttribute('aria-pressed', at === -1 ? 'true' : 'false');
+        apply();
+      });
+    });
+
+    if (clear) {
+      clear.addEventListener('click', function () {
+        picked = {};
+        chips.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+        apply();
+      });
+    }
+
+    apply();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+</script>
+
+
+
+<section class="sheet-group" data-family="indigo-rings">
+<h3 class="family">
+  Indigo rings
+  <span>5 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-form-two-pair-hand.png" width="228" height="308"
+           alt="Paired Ring">
+      <div class="about">
+        <p class="name">Paired Ring</p>
+        <div class="record">dmg-form-two-pair-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 3 duelist DMG
+on Form Two Pair played.</p>
+        
+          <p class="draw">indigo ring with two golden gems and two silver gems</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if form-two-pair → add-hand-dmg &#43;3</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-form-two-pair-hand</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-form-three-of-a-kind-hand.png" width="228" height="308"
+           alt="Trine Ring">
+      <div class="about">
+        <p class="name">Trine Ring</p>
+        <div class="record">dmg-form-three-of-a-kind-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 3 duelist DMG
+on Form Three of a Kind played.</p>
+        
+          <p class="draw">indigo ring with three golden gems</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if form-three-of-a-kind → add-hand-dmg &#43;3</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-form-three-of-a-kind-hand</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-form-full-house-hand.png" width="228" height="308"
+           alt="Full Ring">
+      <div class="about">
+        <p class="name">Full Ring</p>
+        <div class="record">dmg-form-full-house-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 6 duelist DMG
+on Form Full House played.</p>
+        
+          <p class="draw">indigo ring with three golden gems and two silver gems</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if form-full-house → add-hand-dmg &#43;6</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-form-full-house-hand</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-form-four-of-a-kind-hand.png" width="228" height="308"
+           alt="Quad Ring">
+      <div class="about">
+        <p class="name">Quad Ring</p>
+        <div class="record">dmg-form-four-of-a-kind-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 6 duelist DMG
+on Form Four of a Kind played.</p>
+        
+          <p class="draw">indigo ring with four golden gems</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if form-four-of-a-kind → add-hand-dmg &#43;6</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-form-four-of-a-kind-hand</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-form-five-of-a-kind-hand.png" width="228" height="308"
+           alt="Pent Ring">
+      <div class="about">
+        <p class="name">Pent Ring</p>
+        <div class="record">dmg-form-five-of-a-kind-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 12 duelist DMG
+on Form Five of a Kind played.</p>
+        
+          <p class="draw">indigo ring with five golden gems</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if form-five-of-a-kind → add-hand-dmg &#43;12</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-form-five-of-a-kind-hand</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="sandstone-rings">
+<h3 class="family">
+  Sandstone rings
+  <span>5 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-element-two-pair-hand.png" width="228" height="308"
+           alt="Duet Ring">
+      <div class="about">
+        <p class="name">Duet Ring</p>
+        <div class="record">dmg-element-two-pair-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 3 duelist DMG
+on Elemental Two Pair played.</p>
+        
+          <p class="draw">sandstone ring with two turquoise gems and two rubies</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if element-two-pair → add-hand-dmg &#43;3</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-element-two-pair-hand</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-element-three-of-a-kind-hand.png" width="228" height="308"
+           alt="Trio Ring">
+      <div class="about">
+        <p class="name">Trio Ring</p>
+        <div class="record">dmg-element-three-of-a-kind-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 3 duelist DMG
+on Elemental Three of a Kind played.</p>
+        
+          <p class="draw">sandstone ring with three turquoise gems</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if element-three-of-a-kind → add-hand-dmg &#43;3</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-element-three-of-a-kind-hand</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-element-full-house-hand.png" width="228" height="308"
+           alt="Laden Ring">
+      <div class="about">
+        <p class="name">Laden Ring</p>
+        <div class="record">dmg-element-full-house-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 7 duelist DMG
+on Elemental Full House played.</p>
+        
+          <p class="draw">sandstone ring with three turquoise gems and two rubies</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if element-full-house → add-hand-dmg &#43;7</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-element-full-house-hand</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-element-four-of-a-kind-hand.png" width="228" height="308"
+           alt="Quartet Ring">
+      <div class="about">
+        <p class="name">Quartet Ring</p>
+        <div class="record">dmg-element-four-of-a-kind-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 7 duelist DMG
+on Elemental Four of a Kind played.</p>
+        
+          <p class="draw">sandstone ring with four turquoise gems</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if element-four-of-a-kind → add-hand-dmg &#43;7</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-element-four-of-a-kind-hand</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common">
+      <img src="relic-dmg-element-five-of-a-kind-hand.png" width="228" height="308"
+           alt="Quintet Ring">
+      <div class="about">
+        <p class="name">Quintet Ring</p>
+        <div class="record">dmg-element-five-of-a-kind-hand</div>
+        
+          <p class="price"><span class="rarity common">common</span></p>
+        
+        
+        <p class="text">Plus 14 duelist DMG
+on Elemental Five of a Kind played.</p>
+        
+          <p class="draw">sandstone ring with five turquoise gems</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if element-five-of-a-kind → add-hand-dmg &#43;14</li>
+        </ul>
+        
+          <p class="art">art: <code>dmg-element-five-of-a-kind-hand</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+
+

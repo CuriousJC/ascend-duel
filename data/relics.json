@@ -357,12 +357,12 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-doubled-hand",
     "Draw": "jade ring with two diamonds and two black gems",
-    "Text": "Plus 4 duelist DMG\non Card Two Pair played.",
+    "Text": "Plus 4 duelist DMG\non any Two Pair played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-two-pair" },
+        "If": { "Hands": ["concept-two-pair", "form-two-pair", "element-two-pair"] },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 4 }]
       }
     ]
@@ -373,12 +373,12 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-tripled-hand",
     "Draw": "jade ring with three diamonds",
-    "Text": "Plus 5 duelist DMG\non Card Three of a Kind played.",
+    "Text": "Plus 5 duelist DMG\non any Three of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-three-of-a-kind" },
+        "If": { "Hands": ["concept-three-of-a-kind", "form-three-of-a-kind", "element-three-of-a-kind"] },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 5 }]
       }
     ]
@@ -389,12 +389,12 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-full-house-hand",
     "Draw": "jade ring with three diamonds and two black gems",
-    "Text": "Plus 8 duelist DMG\non Card Full House played.",
+    "Text": "Plus 8 duelist DMG\non any Full House played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-full-house" },
+        "If": { "Hands": ["concept-full-house", "form-full-house", "element-full-house"] },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 8 }]
       }
     ]
@@ -405,12 +405,12 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-four-of-a-kind-hand",
     "Draw": "jade ring with four diamonds",
-    "Text": "Plus 10 duelist DMG\non Card Four of a Kind played.",
+    "Text": "Plus 10 duelist DMG\non any Four of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-four-of-a-kind" },
+        "If": { "Hands": ["concept-four-of-a-kind", "form-four-of-a-kind", "element-four-of-a-kind"] },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 10 }]
       }
     ]
@@ -421,173 +421,13 @@
     "Family": "Jade rings",
     "Art": "dmg-concept-five-of-a-kind-hand",
     "Draw": "jade ring with five diamonds",
-    "Text": "Plus 16 duelist DMG\non Card Five of a Kind played.",
+    "Text": "Plus 16 duelist DMG\non any Five of a Kind played.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-five-of-a-kind" },
+        "If": { "Hands": ["concept-five-of-a-kind", "form-five-of-a-kind", "element-five-of-a-kind"] },
         "Then": [{ "Do": "add-hand-dmg", "Amount": 16 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-form-two-pair-hand",
-    "Name": "Paired Ring",
-    "Family": "Indigo rings",
-    "Art": "dmg-form-two-pair-hand",
-    "Draw": "indigo ring with two golden gems and two silver gems",
-    "Text": "Plus 3 duelist DMG\non Form Two Pair played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-two-pair" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 3 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-form-three-of-a-kind-hand",
-    "Name": "Trine Ring",
-    "Family": "Indigo rings",
-    "Art": "dmg-form-three-of-a-kind-hand",
-    "Draw": "indigo ring with three golden gems",
-    "Text": "Plus 3 duelist DMG\non Form Three of a Kind played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-three-of-a-kind" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 3 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-form-full-house-hand",
-    "Name": "Full Ring",
-    "Family": "Indigo rings",
-    "Art": "dmg-form-full-house-hand",
-    "Draw": "indigo ring with three golden gems and two silver gems",
-    "Text": "Plus 6 duelist DMG\non Form Full House played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-full-house" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 6 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-form-four-of-a-kind-hand",
-    "Name": "Quad Ring",
-    "Family": "Indigo rings",
-    "Art": "dmg-form-four-of-a-kind-hand",
-    "Draw": "indigo ring with four golden gems",
-    "Text": "Plus 6 duelist DMG\non Form Four of a Kind played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-four-of-a-kind" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 6 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-form-five-of-a-kind-hand",
-    "Name": "Pent Ring",
-    "Family": "Indigo rings",
-    "Art": "dmg-form-five-of-a-kind-hand",
-    "Draw": "indigo ring with five golden gems",
-    "Text": "Plus 12 duelist DMG\non Form Five of a Kind played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-five-of-a-kind" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 12 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-element-two-pair-hand",
-    "Name": "Duet Ring",
-    "Family": "Sandstone rings",
-    "Art": "dmg-element-two-pair-hand",
-    "Draw": "sandstone ring with two turquoise gems and two rubies",
-    "Text": "Plus 3 duelist DMG\non Elemental Two Pair played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-two-pair" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 3 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-element-three-of-a-kind-hand",
-    "Name": "Trio Ring",
-    "Family": "Sandstone rings",
-    "Art": "dmg-element-three-of-a-kind-hand",
-    "Draw": "sandstone ring with three turquoise gems",
-    "Text": "Plus 3 duelist DMG\non Elemental Three of a Kind played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-three-of-a-kind" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 3 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-element-full-house-hand",
-    "Name": "Laden Ring",
-    "Family": "Sandstone rings",
-    "Art": "dmg-element-full-house-hand",
-    "Draw": "sandstone ring with three turquoise gems and two rubies",
-    "Text": "Plus 7 duelist DMG\non Elemental Full House played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-full-house" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 7 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-element-four-of-a-kind-hand",
-    "Name": "Quartet Ring",
-    "Family": "Sandstone rings",
-    "Art": "dmg-element-four-of-a-kind-hand",
-    "Draw": "sandstone ring with four turquoise gems",
-    "Text": "Plus 7 duelist DMG\non Elemental Four of a Kind played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-four-of-a-kind" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 7 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dmg-element-five-of-a-kind-hand",
-    "Name": "Quintet Ring",
-    "Family": "Sandstone rings",
-    "Art": "dmg-element-five-of-a-kind-hand",
-    "Draw": "sandstone ring with five turquoise gems",
-    "Text": "Plus 14 duelist DMG\non Elemental Five of a Kind played.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-five-of-a-kind" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 14 }]
       }
     ]
   },

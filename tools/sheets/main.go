@@ -63,6 +63,15 @@ var sheets = []sheet{
 			"can be read against each other.",
 	},
 	{
+		Dir:   "relicarchive",
+		Tool:  "./tools/relicsheet",
+		Args:  []string{"-archive"},
+		Title: "Relic archive",
+		Blurb: "The relics taken out of the game and kept in the repository, drawn the way the " +
+			"relic sheet draws the catalog. **Nothing here ships** — the records and their pictures " +
+			"are not embedded — and moving one back is moving its record and its picture.",
+	},
+	{
 		Dir:   "essencesheet",
 		Tool:  "./tools/essencesheet",
 		Title: "Essence sheet",
@@ -184,8 +193,10 @@ func run(dir string, indexOnly bool) error {
 	var failed []string
 	if !indexOnly {
 		for _, s := range sheets {
-			fmt.Printf("== %s\n", s.Tool)
-			out, err := exec.Command("go", "run", s.Tool, "-dir", filepath.Join(dir, s.Dir)).CombinedOutput()
+			fmt.Printf("== %s\n", strings.Join(append([]string{s.Tool}, s.Args...), " "))
+			args := append([]string{"run", s.Tool}, s.Args...)
+			args = append(args, "-dir", filepath.Join(dir, s.Dir))
+			out, err := exec.Command("go", args...).CombinedOutput()
 			os.Stdout.Write(out)
 			if err != nil {
 				// Reported and carried on: see the package comment. A half-written directory under a
@@ -214,8 +225,12 @@ func run(dir string, indexOnly bool) error {
 }
 
 type sheet struct {
-	Dir   string
-	Tool  string
+	Dir  string
+	Tool string
+
+	// Args are passed to the tool ahead of -dir, for a tool that draws more than one page.
+	Args []string
+
 	Title string
 	Blurb string
 }

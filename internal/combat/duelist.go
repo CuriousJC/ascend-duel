@@ -28,6 +28,9 @@ func (s Side) String() string {
 	return "B"
 }
 
+// Other is the side that is not this one.
+func (s Side) Other() Side { return other(s) }
+
 // Duelist is a combatant's stats plus the combat state that persists between rounds.
 // entities.Combatant embeds this and adds the sprite, which keeps graphics out of
 // the rules entirely.
@@ -148,8 +151,8 @@ type Duelist struct {
 	RelicSlots int
 
 	// SoloAttacks makes this duelist's attack cards resolve **one at a time, in the order they
-	// were queued**, each landing its own blow — instead of being read as a set and scored
-	// through the hand table.
+	// were queued**, each landing its own hit at face damage — instead of being read as a set and
+	// every hit multiplied through the hand table.
 	//
 	// **It is what an enemy is** *(2026-08-17, owner's call)*. Hands are the player's mechanic:
 	// the hands are counted off concepts, and an enemy has no axis to play with — every enemy
@@ -250,9 +253,8 @@ func (d Duelist) raiseShields(n int) Duelist {
 
 // spendShield takes one shield if there is one, and reports whether an incoming attack was eaten.
 //
-// **A shield negates the attack outright — no damage, no partial figure.** That is the whole
-// mechanic and it is only safe because the duelists holding shields are only ever attacked by solo
-// attackers: one shield buys one of several blows rather than a whole turn. See VerbShield.
+// **A shield negates one hit outright — no damage, no partial figure.** That is the whole mechanic:
+// one shield buys one of several hits, whichever kind of attacker is swinging. See shieldedHits.
 func (d Duelist) spendShield() (Duelist, bool) {
 	if d.Shields <= 0 {
 		return d, false
@@ -264,7 +266,8 @@ func (d Duelist) spendShield() (Duelist, bool) {
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
 const baseMaxActions = 5
 
-// MaxEchoLandings is the most times one card can land inside a blow, echoes and repeats included.
+// MaxEchoLandings is the most times one card can land in a turn — the most hits it can throw —
+// echoes and repeats included.
 //
 // **A width rather than a design cap**, exactly like MaxStatuses: Event's hand
 // arrays are fixed so an Event stays comparable, and every landing is a term in them. Five is

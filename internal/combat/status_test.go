@@ -203,37 +203,35 @@ func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 	}
 }
 
-func TestOnlyAttacksApplyAStatus(t *testing.T) {
-	// **Decided 2026-08-12**: a plan card carries its element for hands and for the relic
-	// discount and applies nothing. Otherwise a 1-AP Brace would be as good a status delivery
-	// as a 1-AP Jab, and the plan phase would quietly become the status engine.
+func TestADefenseAppliesItsStatus(t *testing.T) {
+	// **Every card throws a hit, and a hit lands its card's statuses** *(owner's call)* — so a fire
+	// Brace burns like a fire Jab, for one rule rather than a special case for a verb.
 	for _, a := range []ConceptID{Block, Brace, Guard} {
 		attacker, target := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 		events, _, bAfter := resolve(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
-		if n := len(statusEvents(events, Fire)); n != 0 {
-			t.Errorf("a fire %v applied a status %d times", a, n)
+		if n := len(statusEvents(events, Fire)); n != 1 {
+			t.Errorf("a fire %v applied a status %d times, want once", a, n)
 		}
-		if bAfter.Statuses[statusOf(Fire)].Active() {
-			t.Errorf("a fire %v left a burn on the opponent", a)
+		if !bAfter.Statuses[statusOf(Fire)].Active() {
+			t.Errorf("a fire %v left no burn on the opponent", a)
 		}
 	}
 }
 
-func TestOneColorInAHandIsOneStatusHoweverManyCardsCarryIt(t *testing.T) {
-	// The mix counts **distinct** colors, not colored cards, so this is the rule that decides
-	// status volume now. Two fire Jabs are a mono fire Pair and land one burn — where under the
-	// per-card model they landed two.
+func TestEveryColoredHitLandsItsStatus(t *testing.T) {
+	// **A status lands per hit.** Two fire Jabs are two hits, and each lands a burn — which does
+	// not stack, so the second refreshes the first rather than doubling it.
 	a, b := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 
 	events, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Fire)}, nil, 1)
 
-	if n := len(statusEvents(events, Fire)); n != 1 {
-		t.Errorf("two fire cards in one hand applied %d burns, want 1", n)
+	if n := len(statusEvents(events, Fire)); n != 2 {
+		t.Errorf("two fire hits applied %d burns, want one each", n)
 	}
 	want := statusAmount(StatusOf(statusOf(Fire)), a)
 	if got := bAfter.Statuses[statusOf(Fire)].Amount; got != want {
-		t.Errorf("a mono fire hand burned for %d, want %d", got, want)
+		t.Errorf("two fire hits burned for %d, want %d — a burn is set, never added", got, want)
 	}
 }
 
@@ -467,23 +465,22 @@ func TestAShockRollsAgainOnEveryAttackItOutlives(t *testing.T) {
 	}
 }
 
-func TestAShockDeletesTheWholeTurnBecauseATurnIsOneBlow(t *testing.T) {
-	// Under the multi-blow model a shock canceled one attack out of several. A turn now resolves
-	// a single blow, so a landed roll deletes all of it — which is the whole reason the certain
-	// miss had to become a roll. See MECHANICS.md.
+func TestAShockRollsForEveryHit(t *testing.T) {
+	// **Each hit is its own chance to miss**, so a shocked duelist whose every roll fails misses
+	// with every hit, one miss each.
 	a, b := wearing(duelist(10, 5, 500), Lightning), duelist(10, 8, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
 	events, aAfter, _ := resolveWith(alwaysMisses(), a1, b1, nil, []Card{Plain(Jab), Plain(Jab)}, 2)
 
-	if n := countKind(events, KindMissed); n != 1 {
-		t.Errorf("%d misses, want exactly 1 — a turn has one attack to miss", n)
+	if n := countKind(events, KindMissed); n != 2 {
+		t.Errorf("%d misses, want one per hit", n)
 	}
 	if n := countKind(events, KindDamage); n != 0 {
-		t.Errorf("%d damage events, want 0 — the blow that missed was the whole turn", n)
+		t.Errorf("%d damage events, want 0 — every hit missed", n)
 	}
 	if aAfter.CurrentLife != a1.CurrentLife {
-		t.Errorf("a missed turn still dealt %d damage", a1.CurrentLife-aAfter.CurrentLife)
+		t.Errorf("a turn of misses still dealt %d damage", a1.CurrentLife-aAfter.CurrentLife)
 	}
 }
 

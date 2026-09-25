@@ -20,8 +20,8 @@ func handEvent(hand string, amounts []int, multiplier, total int) combat.Event {
 	for i, a := range amounts {
 		e.HandCards[i] = i
 		e.HandAmounts[i] = a
+		e.HitAmounts[i] = a * multiplier / 100
 		e.HandCardCount++
-		e.Base += a
 	}
 	return e
 }

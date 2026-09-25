@@ -16,17 +16,10 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
-// **The band above the hand, which the Resolution feed used to occupy** *(vacated 2026-08-18)*.
-// Nothing is drawn there at rest now; what claims it is the hand dialog, which writes the
-// blow's arithmetic across it, and `drawPlannedHand`, which writes the name of the hand the
-// selection has already formed in the same place. See combat_mathbox.go.
-//
-// **It is an overlay and reserves nothing** *(2026-09-04, owner's call)*. `tableRowTop` used to
-// subtract this height, so a band nothing is drawn in at rest cost the played cards a row of the
-// screen; the cards now come down over it and the sum is drawn on top of them, last. The
-// constants stay because the sum's own layout does: `handMathRect` is measured from them, and
-// their **values are the feed's** — the arithmetic was laid out and looked at against a box of
-// exactly this height, so changing the number is re-laying out the sum.
+// **The band above the hand**: the strip `handMathRect` measures, which is where the tutorial
+// points when it talks about the arithmetic. **It is an overlay and reserves nothing** *(owner's
+// call)* — the played cards come down over it, and the hits' lines are placed by `mathLineAt`
+// under each card rather than in the band.
 const (
 	// mathBandHeight is how deep it is: what the feed's collapsed three rows came to.
 	mathBandHeight = 82
@@ -39,33 +32,34 @@ const (
 	mathBandGapAboveCards = 5
 )
 
-// The hand dialog: the blow's arithmetic acted out at the size of the screen, on the beat the
-// hand fires.
+// The hand dialog: every hit's arithmetic acted out at the size of the screen, on the beat the hand
+// fires, **each hit worked out under the card that threw it and all of them at once**.
 //
-// **It exists because the sum was the one number on this screen nobody could source**
-// *(2026-08-18)*. The Resolution feed printed it — `(40 x 1.5 = 60)` — in sixteen-point text on
-// the third line of a three-line box, beside the sentence it belonged to. That is a record, and a
-// record is the right thing for a feed to be; what it is not is an *explanation*. A player
-// watching a blow land could see the total and could not see which card paid for which part of
-// it, so the multiplier read as a number the game had decided rather than one they had built. The
-// fix is not a better sentence: it is showing the figures leaving the cards.
+// A turn is a hit per landing, so a five-card turn is five lines of arithmetic, and an echoed card
+// is three lines stacked under itself. Each line runs its own script — the DMG flying off the
+// duelist, the card's multiplier off the card, each relic's factor off the relic, the flat terms,
+// the hand's multiplier off the banner, then the hit's figure — and the lines run in parallel, so a
+// simple hit finishes first and its figure flies into the target first. **They do not wait for each
+// other**: a line that is done is thrown.
 //
 // **It says nothing the event does not.** Every figure in it comes off the `KindHand` event —
-// `HandAmounts`, `Multiplier`, `Amount` — and nothing here multiplies, adds or rounds. That is
-// the rule to hold: this is a second *drawing* of one event, never a second arithmetic. If it
-// ever needs a figure the event does not carry, the field goes on the event.
+// `HandAmounts`, `HitAmounts`, `Multiplier` — and nothing here multiplies, adds or rounds. That is
+// the rule to hold: this is a second *drawing* of one event, never a second arithmetic. If it ever
+// needs a figure the event does not carry, the field goes on the event.
+//
+// **What became of each hit is read ahead in the log.** The hand event is followed by one outcome
+// per thrown hit, and a finished line looks its own up — see hitOutcomes — so a hit that landed
+// flies, a miss says MISS, a block says BLOCKED, and a hit after a death fades where it stands. The
+// damage that line throws is applied to the target's bar as it lands, and the log's own event for
+// it is walked past without a second flight: see CombatScene.throwColumn.
 //
 // **It may not change an outcome**, the same constraint as playback speed, the debug flags,
 // `internal/trace` and every card in flight. What it does change is *pacing* — playback stops
 // while it runs, and `advancePlayback` holds the cursor rather than the box racing a dwell it
-// cannot fit inside. A round therefore takes longer with a hand in it, which is the point: the
-// blow is the moment of the round and it used to go past in one and a quarter seconds.
+// cannot fit inside.
 //
-// **It draws across the band above the hand**, which the Resolution feed used to hold and left on
-// 2026-08-18, and clears itself before the damage lands. That band was chosen while the feed was
-// still in it, because it is where the player was already looking for what happened and because
-// it is the only place on the screen with room for forty-point numerals. **The feed leaving costs
-// this nothing and is why the band is still measured the way it is** — see handMathRect.
+// **The type is not shrunk to fit** *(owner's call)*. A line is set at the sizes below whatever its
+// width, centered on its card, so neighboring lines overlap and a long one runs off the screen.
 
 const (
 	// The script's beats, in ticks at 60 a second.
@@ -86,12 +80,9 @@ const (
 	// thing the box exists to make readable. `mathTotalSize` carries the landing damage figure
 	// with it — see `hitFigureSize`, which is this constant rather than a size of its own.
 	//
-	// **Width is checked and depth is not.** The widest sum the rules could ever produce is about
-	// 830 pixels against a 1232-wide band, which is what `TestTheWidestSumFitsItsBand` holds — but
-	// a 100-point total measures 85 pixels tall against `mathBandHeight`'s 82, so the line now
-	// stands a pixel and a half past the band top and bottom. It clears its neighbors either way
-	// (`firingGap` above, `mathBandGapAboveCards` below), so this is a note rather than a bug: the
-	// next increase is the one that has to move the band rather than only the type.
+	// **Neither width nor depth is held.** A hit's line is centered on its card and set at these
+	// sizes whatever that costs, so lines overlap their neighbors and a card that lands several
+	// times stacks lines down the screen and off it.
 	mathTermSize = 76
 
 	// mathGrowthSize is a relic's multiplier inside a term, and it is **mathTermSize** — the same
@@ -108,7 +99,7 @@ const (
 	// mathInnerSymbolSize is the `x` inside a term, against mathSymbolSize for the one that
 	// multiplies the whole sum. **The smaller operator is the tighter-binding one**, which is the
 	// typographic half of the same argument the gaps make: a product inside a term is a detail of
-	// that term, and the sum's own multiplier is an instruction about everything to its left.
+	// that term, and the line's own multiplier is an instruction about everything to its left.
 	mathInnerSymbolSize = 40
 	mathTotalSize       = 100
 
@@ -128,8 +119,20 @@ const (
 	// `mathPreviewAlpha` to solid. **The word is the same word, so it is the same size.**
 	mathNameSize = 80
 
-	// mathItemGap is the air between one item of the sum and the next.
+	// mathItemGap is the air between one item of a line and the next.
 	mathItemGap = 16
+
+	// mathLinePitch is how far below one line of a card the next line of the same card sits: an
+	// echoed card's second and third hits stack under its first. mathLineGap is the air between the
+	// card's bottom edge and its first line.
+	mathLinePitch = mathTotalSize + 12
+	mathLineGap   = 4
+
+	// mathUnthrownAlpha is how solid a line stays once it is known its hit was never thrown — the
+	// target fell to an earlier hit — and mathVerdictDim how solid the arithmetic under a MISS or a
+	// BLOCKED is.
+	mathUnthrownAlpha = 0.35
+	mathVerdictDim    = 0.45
 
 	// mathHugGap is what a bracket leaves between itself and the term inside it. **Not zero**: the
 	// type is set with its own side bearings and a bracket hard against a numeral at 76 points
@@ -137,13 +140,13 @@ const (
 	mathHugGap = 4
 
 	// mathTightGap is the air inside a bracket, and mathWideGap the air round the multiplier that
-	// applies to the whole sum.
+	// applies to the whole line.
 	//
-	// **Three gaps rather than one, because the line has three levels** *(owner's call,
-	// 2026-09-19)*. At a single gap everything on it is equally far from everything else, so the
-	// `x` inside a term and the `x` that multiplies the finished sum read as the same operation —
-	// and the hand's multiplier appeared to belong to the bracket on its left rather than to all of
-	// them. What says which is which is distance: a product is set close, a sum is set apart.
+	// **Three gaps rather than one, because the line has three levels** *(owner's call)*. At a
+	// single gap everything on it is equally far from everything else, so the `x` inside a term and
+	// the `x` that multiplies the finished line read as the same operation. What says which is which
+	// is distance: a product is set close, a sum is set apart.
+
 	mathTightGap = 7
 	mathWideGap  = 30
 
@@ -183,10 +186,10 @@ const (
 	// mathMultLineSize is the `1.15x DMG` line under the hand's name, and mathMultLineGap the air
 	// between the two, in points of the name's own size.
 	//
-	// **It is `mathTermSize` — the size a figure is written at in the sum — and it does not grow
+	// **It is `mathTermSize` — the size a figure is written at in a line — and it does not grow
 	// with the name** *(2026-08-19, owner's call)*. That is what makes the handoff work: this line
 	// is not a caption that gets replaced by the multiplier, it *is* the multiplier, sitting in
-	// the hand row until the sum calls for it and then flying into the line at the size it was
+	// the hand row until the line calls for it and then flying into the line at the size it was
 	// already being read at. A second size here would make the figure jump on the frame it set
 	// off, which is exactly the "two numbers swapping" failure the damage figure's handoff is
 	// written to avoid.
@@ -225,7 +228,7 @@ func bannerFlyTicks() int { return ui.Beat(1, 1) }
 // **Pink since 2026-08-19** *(owner's call)*, where it was the screen's attention yellow. The yellow had just
 // become the lightning element's color as well — see cards.BorderOf — so the loudest word on the
 // screen was wearing a hue that also means "this card is lightning", and a lightning figure flying
-// up out of a card into the sum was arriving in the name's own color.
+// up out of a card into its line was arriving in the name's own color.
 //
 // **The multiplier follows it rather than staying yellow**, because the multiplier flies out of
 // the word: `PAIR!` and `1.5` are one fact said twice, and a figure that leaves a pink word in
@@ -248,13 +251,13 @@ func bannerFlyTicks() int { return ui.Beat(1, 1) }
 // own ink: the color text on this screen is written in when nothing is claiming it.
 var handNameInk = ui.GroundInk
 
-// mathItem is one thing written on the line: a card's figure, an operator, the multiplier, or
-// the answer.
+// mathItem is one thing written on a hit's line: a figure, an operator, the multiplier, or the
+// hit's total.
 //
 // **Every item's resting place is computed once, before any of them is shown.** The alternative —
-// laying the line out again as each item appears — would recenter the whole sum on every beat, so
-// the figures already on screen would crawl sideways while the player was reading them. The line
-// is measured in full at the start and revealed left to right into space it has already claimed.
+// laying a line out again as each item appears — would recenter it on every beat, so the figures
+// already on screen would crawl sideways while the player was reading them. Each line is measured
+// in full at the start and revealed left to right into space it has already claimed.
 type mathItem struct {
 	text string
 	size float64
@@ -274,7 +277,7 @@ type mathItem struct {
 	fromScale float64
 
 	// fromDuelist says this item's figure flies out of the acting duelist's own card rather than
-	// out of a played card: the DMG the hand was swung at, which is the one figure in the sum that
+	// out of a played card: the DMG the hand was swung at, which is the one figure in a line that
 	// belongs to the fighter instead of to a card. **It is a flag rather than another seat
 	// convention** because there is one duelist and any number of cards.
 	fromDuelist bool
@@ -287,11 +290,11 @@ type mathItem struct {
 	// burst says this item throws the signal's own firework as it sets off, and flies the way a
 	// signal flies: out of the thing that produced it at the size a signal's figure is drawn, and
 	// receding into its place on the line. **A relic's figure and a rider's are the same event** —
-	// something worn paying into this blow — so they are one gesture rather than two.
+	// something worn paying into this turn — so they are one gesture rather than two.
 	burst bool
 
 	// tightPrev sets an item close to the one before it — the inside of a bracket, where the
-	// figures are one product — and widePrev sets it far from it, which is what puts the sum's own
+	// figures are one product — and widePrev sets it far from it, which is what puts the line's own
 	// multiplier apart from the terms it multiplies. See mathTightGap.
 	tightPrev bool
 	widePrev  bool
@@ -305,18 +308,18 @@ type mathItem struct {
 	// convention. Filled by `startHandMath`, which is the half of the box that knows the table.
 	cardSeat int
 
-	// heldPay is which of the blow's held payments this item is, plus one, and 0 for everything
+	// cardTerm marks the card's own figure on its line — the one item a hit has exactly one of that
+	// comes off the card — and handMult marks the hand's multiplier. The script sets both and
+	// `startHandMath` reads them, so nothing has to count items to find out which is which.
+	cardTerm bool
+	handMult bool
+
+	// heldPay is which of the turn's held payments this item is, plus one, and 0 for everything
 	// else. **The figure flies out of the card still in the hand**, not out of the relic that
 	// priced it — a jar pays *for* a card the player is looking at, so the number leaves that card
 	// and the relic shakes behind it. `startHandMath` turns the index into a seat in the row, which
 	// is the half of the box that knows where the hand is.
 	heldPay int
-
-	// signalsSent says this item's card has already thrown whatever its riders parked, so an item
-	// held on screen for its whole beat cannot throw them once a frame. **The signals themselves are not stored here** — the
-	// scene parked them against a seat when the events went past, and this only says when the seat
-	// is up. See combat_signal.go, and takeSignalSeat below.
-	signalsSent bool
 
 	// shakeRelics are worn seats that shake as this item runs without their figure being the one
 	// flying: the echo relic behind an extra landing, which buys a *term* rather than a multiplier
@@ -344,9 +347,9 @@ type mathItem struct {
 // recognize the same word twice rather than to watch it move — the card-flight argument, applied
 // to the one thing on this screen that is not a card.
 //
-// **It ends when its own figure sets off** *(2026-08-19, owner's call)*: the multiplier flies out
-// of the second line and into the sum, and the whole banner is taken down on that frame rather
-// than left lit over the hand while the sum finishes and the opponent swings back. It has been
+// **It ends when its own figure sets off** *(owner's call)*: the multiplier flies out of the second
+// line and into every hit's line, and the whole banner is taken down on the frame the first one
+// leaves rather than left lit over the hand while the hits finish and the opponent swings back. It has been
 // carried down, read, and spent by then — see `advancePlayback`, which is where the clear happens
 // because that is where the box's own clock runs.
 //
@@ -367,11 +370,11 @@ type handBanner struct {
 	//
 	// It is a string captured at DUEL! for the reason `name` is: the figure cannot change as it
 	// travels, and nothing here formats a second opinion of it — `handMultiplierText` is the same
-	// formatting the sum's own term goes through.
+	// formatting every line's own term goes through.
 	//
-	// **It is not replaced by the sum's copy, it becomes it.** The line rests under the name
-	// through every card's figure flying down, and the banner is cleared on the frame the sum's
-	// multiplier sets off from exactly this spot at exactly this size — see `handMultiplierOrigin`
+	// **It is not replaced by the lines' copies, it becomes them.** The line rests under the name
+	// until the hits start, and the banner is cleared on the frame the first line's multiplier sets
+	// off from exactly this spot at exactly this size — see `handMultiplierOrigin`
 	// and `mathMultLineSize`. A figure that vanished and popped up elsewhere would be two numbers;
 	// one that leaves is one number moving.
 	mult string
@@ -388,7 +391,7 @@ type handBanner struct {
 	// flash is the swell on the beat the hand actually scores *(owner's call, 2026-09-15)*.
 	//
 	// **The word travels at DUEL! and then has to wait**, because the defenses now resolve first —
-	// so between the journey and the sum there is a stretch of shields going up during which the
+	// so between the journey and the line there is a stretch of shields going up during which the
 	// name is sitting in the hand row saying something that has not happened yet. The flash is what
 	// gives it a second moment: it arrives as a promise and snaps once when it becomes the
 	// multiplier.
@@ -435,104 +438,143 @@ func (b *handBanner) Tick() {
 // clear takes the banner down: the round is over and the hand it named has been spent.
 func (b *handBanner) Clear() { *b = handBanner{} }
 
-// handMathBox is the whole dialog: a shout, a line of items, and a hold at the end.
+// mathColumn is one hit's line of arithmetic, run on its own cursor under the card that threw it.
+type mathColumn struct {
+	// hit is the term on the event, and seat the played card that threw it.
+	hit, seat int
+
+	items []mathItem
+
+	// at is the item this line is running, and equals len(items) once they are all up.
+	at int
+
+	// cardAt is the card's own figure and multAt the hand's multiplier, as indices into items.
+	// **cardAt counts the hit for the relic row**; multAt tells the banner its figure has set off.
+	cardAt, multAt int
+
+	// logAt is where this hit's outcome sits in the resolved log, and -1 for a hit that was never
+	// thrown because the target fell to an earlier one. See hitOutcomes.
+	logAt int
+
+	// thrown says the finished line has been handed on — its figure flown into the target, or
+	// marked as a miss or a block — so it happens once. spent says the total has left the line.
+	thrown bool
+	spent  bool
+
+	// verdict is the word drawn over a line whose hit did not land: MISS, BLOCKED, or "" for a hit
+	// that landed. unthrown dims a line whose hit never happened.
+	verdict  string
+	verdictT ui.Travel
+	unthrown bool
+}
+
+// done reports whether every item of the line is up.
+func (c mathColumn) done() bool { return c.at >= len(c.items) }
+
+// total is the line's last item: the hit's figure.
+func (c mathColumn) total() mathItem { return c.items[len(c.items)-1] }
+
+// mathRef is one item of one line.
+type mathRef struct{ col, item int }
+
+// handMathBox is the whole dialog: a shout, a line per hit, and a hold at the end.
 //
-// **It holds no arithmetic and no rules.** Everything in `items` is a string formatted once from
+// **It holds no arithmetic and no rules.** Everything in its lines is a string formatted once from
 // the event; nothing here can disagree with the resolver, because nothing here computes.
 type handMathBox struct {
 	active bool
 
-	// shout is the hand's name — `PAIR!` — and shoutAt its center. Empty when no hand was built,
-	// which is the No Hand: a lone attack shouting its own name is the same emptying of the
-	// word that keeps `HAND!` off a single Bash in the feed.
+	// shout is the hand's name — `PAIR!` — and shoutAt its center. Empty when the banner is already
+	// carrying the word.
 	shout   string
 	shoutAt image.Point
 	shoutT  ui.Travel
 
-	items []mathItem
+	columns []mathColumn
 
-	// at is the item the script is currently running, and equals len(items) once they are all up.
-	at int
-
-	// multAt is which item is the multiplier, so the banner knows when its own second line has
-	// been taken over by the sum. Filled by `startHandMath`, which is already the half of the box
-	// that knows which flying item is which.
-	multAt int
-
-	// Hold is the pause on the finished sum, before the box clears and playback resumes.
+	// Hold is the pause once every line is finished, before the box clears and playback resumes.
 	Hold ui.Travel
 
-	// side is whose blow this is, and grown[t] is what that duelist's worn relics had accumulated
-	// after term t was counted — both copied straight off the event.
-	//
-	// **This is what makes the relic badges move while the sum is read** *(2026-08-26)*. A growing
-	// relic now steps between the terms of one blow, so the row has a different number to show at
-	// each beat, and the alternative to carrying the figures here is the relic row re-deriving which
-	// relic grew — a resolver in a screen, which is the thing the whole event exists to prevent.
+	// side is whose turn this is, and grown[t] is what that duelist's worn relics had accumulated
+	// after hit t — both copied straight off the event. **This is what makes the relic badges move
+	// while the lines are read**: a growing relic steps between the hits of one turn, so the row has
+	// a different number to show as they land.
 	side  combat.Side
 	grown [][]int
 
-	// termOf[i] is how many card terms have been counted by the time item i is up. Punctuation and
-	// the annotations share the count of the term they follow, so the row holds still through them
-	// and steps on the beat a figure lands.
-	termOf []int
+	// freshShakes and freshSignals are every item that started since each was last read, for the
+	// shakes and the signals to act on once. **Two lists because two readers drain them** on their
+	// own schedules — the shakes from Update, the signals from playback.
+	freshShakes  []mathRef
+	freshSignals []mathRef
 }
 
-// termsShown is how many of the blow's terms have been counted so far, which is what the relic row
-// reads to know which accumulators to draw.
-func (b handMathBox) termsShown() int {
-	if !b.active || len(b.termOf) == 0 {
-		return 0
-	}
-	at := b.at
-	if at >= len(b.termOf) {
-		at = len(b.termOf) - 1
-	}
-	return b.termOf[at]
-}
-
-// shaking is what the item the box is running **right now** sets moving: the worn seats whose cards
-// shake, and the played card that does, if any.
+// growthNow is the accumulators one side's relics have reached at this point, and false when the
+// box is not running that side's turn or no hit has been counted yet.
 //
-// **Every figure in the sum is accompanied by its own card shaking** *(owner's call, 2026-08-26)*.
-// A card's damage shakes the card, a relic's multiplier shakes that relic, and an echo's extra term
-// shakes the relic that bought the landing even though it has no figure of its own on the line. They
-// read off the box's item cursor rather than the term cursor, so they happen one at a time in the
-// order the engine applied them — which is the whole point of the sequence.
-func (b handMathBox) shaking(side combat.Side) (relics []bool, card int, ok bool) {
-	if !b.active || b.side != side || b.at >= len(b.items) {
-		return relics, 0, false
-	}
-
-	it := b.items[b.at]
-	// **A copy, because the caller may write the lead seat into it** and the item is the box's own
-	// record of what happened. A shared slice would make reading the box change it.
-	relics = append([]bool(nil), it.shakeRelics...)
-	if seat := it.relicSeat; seat > 0 && seat-1 < len(relics) {
-		relics[seat-1] = true
-	}
-	return relics, it.cardSeat, true
-}
-
-// growthNow is the accumulators one side's relics have reached at this point in the sum, and false
-// when the box is not running that side's blow or has not reached a term yet.
+// **The furthest hit counted is the one that decides.** The lines run in parallel, so hits are
+// counted out of order; the latest of them is the one whose figure the relic row shows.
 func (b handMathBox) growthNow(side combat.Side) ([]int, bool) {
 	if !b.active || b.side != side {
 		return nil, false
 	}
-
-	t := b.termsShown()
-	if t < 1 || t > len(b.grown) {
+	best := -1
+	for _, c := range b.columns {
+		if c.at > c.cardAt && c.hit > best {
+			best = c.hit
+		}
+	}
+	if best < 0 || best >= len(b.grown) {
 		return nil, false
 	}
-	return b.grown[t-1], true
+	return b.grown[best], true
+}
+
+// takeShakes is what the items started since the last call set moving: the worn seats whose cards
+// shake, and the played cards that do.
+//
+// **Every figure is accompanied by its own card shaking** *(owner's call)*. A card's figure shakes
+// the card, a relic's multiplier shakes that relic, and an echo's extra hit shakes the relic that
+// bought the landing even though it has no figure of its own on the line.
+func (b *handMathBox) takeShakes(side combat.Side) (relics []bool, cards []int) {
+	if !b.active || b.side != side {
+		b.freshShakes = nil
+		return nil, nil
+	}
+	for _, ref := range b.freshShakes {
+		it := b.columns[ref.col].items[ref.item]
+		for seat, on := range it.shakeRelics {
+			if on {
+				relics = growTo(relics, seat)
+				relics[seat] = true
+			}
+		}
+		if seat := it.relicSeat; seat > 0 {
+			relics = growTo(relics, seat-1)
+			relics[seat-1] = true
+		}
+		if it.cardSeat > 0 {
+			cards = append(cards, it.cardSeat-1)
+		}
+	}
+	b.freshShakes = nil
+	return relics, cards
+}
+
+// growTo lengthens a seat row so `seat` can be written.
+func growTo(row []bool, seat int) []bool {
+	for len(row) <= seat {
+		row = append(row, false)
+	}
+	return row
 }
 
 // startHandMath builds the dialog for one KindHand event and starts it running.
 //
 // **The layout needs the screen and `applyEvent` does not have it** — playback runs from
-// `Update`, which does — so this takes `gs` and is called from there.
-func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
+// `Update`, which does — so this takes `gs` and is called from there. `at` is where the event sits
+// in the log, which is where each line's outcome is read ahead from.
+func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event, at int) {
 	if e.Kind != combat.KindHand || e.HandCardCount < 1 {
 		return
 	}
@@ -542,109 +584,35 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 		shout:  shoutFor(e),
 		shoutT: ui.NewTravel(0, mathShoutTicks()),
 		Hold:   ui.NewTravel(0, mathHoldTicks()),
-		items:  mathScript(e),
 		side:   e.Side,
 		grown:  append([][]int{}, e.HandGrown[:e.HandCardCount]...),
 	}
 
-	// **The name snaps on this beat** *(owner's call, 2026-09-15)*. It flew to the hand row at
-	// DUEL! and has been resting there through the defend phase, which now runs first — so without
-	// this the word is on screen for the whole of the shields going up and then simply is there
-	// when the sum starts. The flash is what says *now it matters*: this is the beat the hand
-	// scores and the multiplier it has been advertising becomes the thing the sum uses.
+	// **The name snaps on this beat** *(owner's call)*. It flew to the hand row at DUEL! and has
+	// been resting there through the defend phase, so without this the word is on screen for the
+	// whole of the shields going up and then simply is there when the hits start. The flash is what
+	// says *now it matters*.
 	s.Theater.banner.flashNow()
 
-	// **The banner is already saying it, so the box does not say it again** *(2026-08-19)*. The
-	// player's hand was named at DUEL! and the word has been sitting in the hand row ever since;
-	// popping a second copy of it over the top would be the same announcement twice, and the
-	// multiplier would fly out of whichever of the two happened to be drawn last. The box keeps
-	// its own shout for a hand it did not carry down — an opponent's, which nothing produces
-	// today but which the engine can still emit.
+	// **The banner is already saying it, so the box does not say it again.** The box keeps its own
+	// shout for a hand it did not carry down — an opponent's, which nothing produces today but
+	// which the engine can still emit.
 	if s.Theater.banner.showing(box.shout) {
 		box.shout = ""
 	} else if s.Theater.banner.flying {
 		// **The announcement wins over the banner it disagrees with.** The two can only differ if
-		// the hand that fired is not the hand that was planned — which nothing produces today,
-		// since only a chill can take a queued card away and no enemy can put a status on the
-		// player — but if it ever does, the truth is the event, and two words at one point would
-		// be worse than either alone.
+		// the hand that fired is not the hand that was planned, and then the truth is the event.
 		s.Theater.banner.Clear()
 	}
 
-	// **Where each figure sets off from is the screen's business, not the script's.** The script
-	// says what the sum reads; this says which card on the table paid which term, which is the one
-	// part of the box that has to know how a row is laid out.
-	term, raised := 0, false
-	for i := range box.items {
-		if !box.items[i].fly {
-			continue
+	outcomes := hitOutcomes(s.log, at)
+	for i := 0; i < e.HandCardCount; i++ {
+		col := mathColumn{hit: i, seat: e.HandCards[i], items: hitScript(e, i, i == 0), logAt: -1}
+		if k, ok := outcomes[i]; ok {
+			col.logAt = k
 		}
-		// **A relic's figure sets off from the relic**, and is skipped by the term counter: these are
-		// interleaved with the cards' own figures, and counting them would pair every figure after
-		// the first relic with the wrong card.
-		if seat := box.items[i].relicSeat; seat > 0 {
-			box.items[i].from = s.relicCardCenter(gs, seat-1)
-			continue
-		}
-		// **The DMG figure comes off the duelist's own card**, which is where the player has just
-		// watched a rung relic raise it. It is skipped by the term counter for the relics' reason:
-		// one of these leads every term, and counting them would pair every card's multiplier with
-		// the card after it.
-		// **A held card's figure sets off from the card that is still in the hand**, and is skipped
-		// by the term counter with the relics and the DMG: these sit after the played cards' own
-		// figures, and counting them would hand the last of them the multiplier's origin.
-		if pay := box.items[i].heldPay; pay > 0 {
-			box.items[i].from = s.heldPayOrigin(gs, e, pay-1)
-			continue
-		}
-		if box.items[i].fromDuelist {
-			box.items[i].from = s.fighterCardMid(gs, e.Side)
-
-			// **The rung relic shakes on the figure it raised** *(owner's call, 2026-09-19)*. It
-			// used to shake on the first card's term, which was the nearest thing available while
-			// the raise was invisible; the DMG is now on the line, so the relic can move on the
-			// beat its own contribution is read. **The first term only** — the same figure leads
-			// every term, and a relic shaking five times would read as five raises.
-			if !raised {
-				box.items[i].shakeRelics = append([]bool(nil), e.HandBonusSeats...)
-				raised = true
-			}
-			continue
-		}
-		if term < e.HandCardCount {
-			box.items[i].cardSeat = e.HandCards[term] + 1
-			box.items[i].shakeRelics = e.HandLanding[term]
-
-			// **A figure is drawn in the color of whatever produced it** *(2026-08-19, owner's
-			// call)*, and a card's figure is produced by the card — so it wears that card's
-			// element, which is the color of its border. It leaves the card in the card's own
-			// color and keeps it all the way into the line, which is what says the sum is made
-			// of the cards rather than handed down by the game.
-			seat := e.HandCards[term]
-			box.items[i].from = s.handCardCenter(gs, e.Side, seat)
-			box.items[i].tint = s.handCardInk(e.Side, seat)
-
-			term++
-			continue
-		}
-		// The only flying item past the blow's own cards is the multiplier.
-		box.items[i].from = s.handMultiplierOrigin(gs, e)
-		box.multAt = i
-	}
-
-	// **After the walk, because it needs multAt.** Every flying item but the multiplier is one card's
-	// figure, in order, so counting them is what turns an item index into a term index.
-	box.termOf = make([]int, len(box.items))
-	counted := 0
-	for i := range box.items {
-		// **The card's own multiplier is what counts a term**, which is the one flying item a term
-		// has exactly one of: the DMG leading it belongs to the duelist and a relic's factor
-		// belongs to the relic, so counting either would step the row mid-bracket.
-		it := box.items[i]
-		if it.fly && i != box.multAt && !it.fromDuelist && it.relicSeat == 0 && it.heldPay == 0 {
-			counted++
-		}
-		box.termOf[i] = counted
+		s.placeFigures(gs, e, &col)
+		box.columns = append(box.columns, col)
 	}
 
 	s.layOutMath(gs, &box)
@@ -652,28 +620,87 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 
 	s.Theater.mathBox = box
 
-	// **Everything the hand kept back fires now, before the box has run a frame** *(owner's call,
-	// 2026-09-10)*. The sum does not begin until those figures have finished their journey — the
-	// held cards pay, the figures land on the duelist card, and only then does the hand start
-	// counting. `advancePlayback` freezes the box while any signal is up, so releasing them here is
-	// what puts them in front of the shout rather than beside it.
-	//
-	// **Together, because what the turn kept back is one fact about the turn.** A hand holding four
-	// paying cards would otherwise be four pauses in front of a sum that has not started.
+	// **Everything the hand kept back fires now, before the box has run a frame** *(owner's
+	// call)*. The lines do not begin until those figures have finished their journey —
+	// `advancePlayback` freezes the box while any signal is up. **Together, because what the turn
+	// kept back is one fact about the turn.**
 	s.releaseHeldSignals()
 
-	// **And the rung relic pays into the duelist before the hand is counted** *(owner's call,
-	// 2026-09-19)*, on the same beat and for the same reason: the DMG every term of the sum is
-	// about to be worked out at is the figure this raises, so the player watches it climb and then
-	// watches the sum use it. It goes onto the stage directly rather than being parked — there is
-	// no card to park it against, and `advancePlayback` freezes the box while any signal is up.
+	// **And the rung relic pays into the duelist before the hits are worked out**, on the same beat
+	// and for the same reason: the DMG every line is about to use is the figure this raises.
 	s.raiseDMGSignal(e)
 }
 
-// raiseDMGSignal throws the figure a rung relic put into this blow's DMG, out of the relic and onto
+// placeFigures says where each flying item of one line sets off from and what color it is: the
+// half of the box that knows the table.
+func (s *CombatScene) placeFigures(gs *state.GlobalState, e combat.Event, col *mathColumn) {
+	raised := col.hit != 0
+	for i := range col.items {
+		it := &col.items[i]
+		switch {
+		case it.cardTerm:
+			col.cardAt = i
+		case it.handMult:
+			col.multAt = i
+		}
+		if !it.fly {
+			continue
+		}
+		switch {
+		case it.relicSeat > 0:
+			// **A relic's figure sets off from the relic.**
+			it.from = s.relicCardCenter(gs, it.relicSeat-1)
+		case it.heldPay > 0:
+			// **A held card's figure sets off from the card still in the hand.**
+			it.from = s.heldPayOrigin(gs, e, it.heldPay-1)
+		case it.fromDuelist:
+			// **The DMG figure comes off the duelist's own card**, where a rung relic has just
+			// raised it. **The rung relic shakes on the first hit's DMG only** — the same figure
+			// leads every line, and a relic shaking once per hit would read as that many raises.
+			it.from = s.fighterCardMid(gs, e.Side)
+			if !raised {
+				it.shakeRelics = append([]bool(nil), e.HandBonusSeats...)
+				raised = true
+			}
+		case it.cardTerm:
+			// **A figure is drawn in the color of whatever produced it**, and a card's figure is
+			// produced by the card — so it wears that card's element, the color of its border.
+			it.cardSeat = col.seat + 1
+			it.shakeRelics = e.HandLanding[col.hit]
+			it.from = s.handCardCenter(gs, e.Side, col.seat)
+			it.tint = s.handCardInk(e.Side, col.seat)
+		case it.handMult:
+			it.from = s.handMultiplierOrigin(gs, e)
+		}
+	}
+}
+
+// hitOutcomes reads ahead from a hand event to the hits it threw, and says where each hit's outcome
+// sits in the log, keyed by the hit.
+//
+// **The hits follow the hand event directly** and are everything the resolver writes for them — the
+// outcome, what it drained, what it landed, and a fall — so the walk stops at the first event that
+// is none of those. A hit that has no outcome was never thrown.
+func hitOutcomes(log []combat.Event, at int) map[int]int {
+	out := map[int]int{}
+	for k := at + 1; k < len(log); k++ {
+		switch log[k].Kind {
+		case combat.KindDamage, combat.KindMissed, combat.KindBlocked:
+			if _, seen := out[log[k].Hit]; !seen {
+				out[log[k].Hit] = k
+			}
+		case combat.KindDrained, combat.KindStatus, combat.KindDefeated:
+		default:
+			return out
+		}
+	}
+	return out
+}
+
+// raiseDMGSignal throws the figure a rung relic put into this turn's DMG, out of the relic and onto
 // the duelist card's DMG row.
 //
-// **The climb is what it is worth to this blow, not the relic's own number** — see
+// **The climb is what it is worth to this turn, not the relic's own number** — see
 // combat.Event.DMGRaise, which is the distance the riders left between the two figures.
 func (s *CombatScene) raiseDMGSignal(e combat.Event) {
 	raise := e.DMGRaise()
@@ -693,46 +720,27 @@ func (s *CombatScene) raiseDMGSignal(e combat.Event) {
 	})
 }
 
-// mathScript is the sum as a list of things to write, in the order they appear: a figure per card
-// of the hand, a plus between each pair, then the multiplier, then the answer.
+// hitScript is one hit's line as a list of things to write, in the order they appear: a plus in
+// front of every line but the first, the card's term, the flat terms, the hand's multiplier, any
+// relic that scales the hand, then the hit's figure.
 //
 // **It takes no screen and computes no arithmetic**, which is what makes it the testable half of
-// the box. Every string in it is formatted from a field the resolver already filled, so a test can
-// pin what the player is shown without needing a window to draw it in — the same property that
-// keeps `internal/combat` testable, applied to the one part of this file that is not geometry.
-func mathScript(e combat.Event) []mathItem {
+// the box. Every string in it is formatted from a field the resolver already filled.
+func hitScript(e combat.Event, i int, first bool) []mathItem {
 	var items []mathItem
 
-	for i := 0; i < e.HandCardCount; i++ {
-		if i > 0 {
-			items = append(items, mathOperator("+"))
-		}
-		items = append(items, termItems(e, i)...)
+	// **The plus sits to the left of the line rather than on a line of its own** *(owner's call)*:
+	// the hits add up across the table, and a row given over to one symbol is a row taken from the
+	// arithmetic.
+	if !first {
+		items = append(items, mathOperator("+"))
 	}
+	items = append(items, termItems(e, i)...)
 
-	// **The rung's own figure is not in this sum and has not been since 2026-09-14** *(owner's
-	// call)*. It was a term here from 2026-09-05 — the last of the additions, in the ground's ink
-	// — and it is now a raise on the DMG the whole hand is swung at, so it is already inside every
-	// card's figure above. Writing it again would print a sum over its own total. What says the
-	// relic fired is the first term shaking it on its way past; see startHandMath.
-
-	// **And the cards kept back pay after the ones spent**, on the same terms as the rung's own
-	// term above: its own figure, the ground's ink, flying out of the relic that paid it. Two terms
-	// rather than one merged figure, because they answer different questions — what the hand
-	// formed, and what it is still holding.
-	//
-	// **And it is a term per card kept back, not one merged figure** *(owner's call, 2026-09-19)*.
-	// Six earth cards held are `+5 +5 +5 +5 +5 +5`, so the term can be counted against the hand it
-	// was counted over — which is the one thing a player reading a single `+30` has to take on
-	// trust. Each flies out of the seat that paid it, so two jars in one row stay told apart.
-	//
-	// **In the pane's pink, flying out of the card in the hand** *(owner's call, 2026-09-19)*.
-	// Pink because a relic put the figure there, and out of the card because that is what the
-	// figure is *about*: the jar prices a card the player is still holding, so the number leaves
-	// that card and the relic shakes behind it. The relic's own pink signal is the shake — see the
-	// `shakeRelics` set here, which is the echo relic's arrangement: a relic that bought a term
-	// rather than a multiplier moves without a figure of its own on the line.
-	for i, pay := range e.HeldBonusEach {
+	// **The cards kept back pay into every hit, one term per card** *(owner's call)*, so the term
+	// can be counted against the hand it was counted over. In the pane's pink, flying out of the
+	// card in the hand, with the relic that priced it shaking behind it.
+	for n, pay := range e.HeldBonusEach {
 		shake := make([]bool, len(e.HeldBonusSeats))
 		if pay.Seat < len(shake) {
 			shake[pay.Seat] = true
@@ -742,14 +750,13 @@ func mathScript(e combat.Event) []mathItem {
 			size:        mathTermSize,
 			tint:        ui.PaneEdge,
 			fly:         true,
-			heldPay:     i + 1,
+			heldPay:     n + 1,
 			shakeRelics: shake,
 			t:           ui.NewTravel(0, mathTermTicks()),
 		})
 	}
 
-	// **And the purse, third and last of the flat terms.** Same ink and same flight as the other
-	// two: it is a figure a relic put into the sum, not a number the cards carried.
+	// **And the purse**, the same ink and the same flight: a figure a relic put into every hit.
 	if e.VitaeBonus != 0 {
 		items = append(items, mathOperator("+"), mathItem{
 			text:      strconv.Itoa(e.VitaeBonus),
@@ -761,31 +768,24 @@ func mathScript(e combat.Event) []mathItem {
 		})
 	}
 
-	// **The multiplier is always shown, the identity included** *(2026-08-19, owner's call)*. It
-	// was dropped at `x 1` on the argument that `20 x 1 = 20` is a sum with nothing in it — true
-	// of the arithmetic and wrong about the game: **hands are going to be upgradable**, so the
-	// No Hand's 1 is a number that will change, and a term that appears only once it stops being
-	// 1 would make an upgrade look like a new rule rather than a bigger figure. Every hand's sum
-	// reads the same shape, and the one the player sees most is the one teaching it.
+	// **The multiplier is always shown, the identity included** *(owner's call)*. Hands are going to
+	// be upgradable, so the No Hand's 1 is a number that will change, and a term that appeared only
+	// once it stopped being 1 would make an upgrade look like a new rule rather than a bigger figure.
 	items = append(items, wide(mathOperator("x")), mathItem{
 		text: ui.HandMultiplierText(e.Multiplier),
 		size: mathTermSize,
-		// The hand's own color, because the hand is what produced it — and the word it flies out
-		// of is written in it. See handNameInk.
+		// The hand's own color, because the hand is what produced it.
 		tint: handNameInk,
 		fly:  true,
-		// **It sets off at its own size**, unlike a card's figure: it is already on the screen as
-		// the banner's second line, so growing into place would make it a new number appearing
-		// rather than the one the player has been reading since DUEL!.
+		// **It sets off at its own size**: it is already on the screen as the banner's second line,
+		// so growing into place would make it a new number appearing.
 		fromScale: 1,
+		handMult:  true,
 		t:         ui.NewTravel(0, mathTermTicks()),
 	})
 
-	// **A rung relic is its own multiplier in the sum, after the hand's** *(owner's call,
-	// 2026-09-05)*. It is deliberately not folded into the figure beside it: the hand's number is
-	// the rung the player built and is what the banner and the ladder say, so a relic that quietly
-	// grew it would make the ladder look wrong. In the pane's pink and flying out of the relic that
-	// paid, like every other figure a relic put in this box.
+	// **A rung relic is its own multiplier, after the hand's** *(owner's call)*, in the pane's pink
+	// and flying out of the relic that paid.
 	if e.HandScale != 0 && e.HandScale != 100 {
 		items = append(items, wide(mathOperator("x")), mathItem{
 			text:      ui.HandMultiplierText(e.HandScale),
@@ -798,22 +798,20 @@ func mathScript(e combat.Event) []mathItem {
 	}
 
 	return append(items, wide(mathOperator("=")), mathItem{
-		text: strconv.Itoa(e.Amount),
+		text: strconv.Itoa(e.HitAmounts[i]),
 		size: mathTotalSize,
 		tint: ui.VerbInkFor(combat.CategoryAttack),
 		t:    ui.NewTravel(0, mathTotalTicks()),
 	})
 }
 
-// termItems is one card's term, written as the product the game actually worked out:
+// termItems is one hit's card term, written as the product the game actually worked out:
 // `(12 x 3)` — the DMG the whole hand was swung at, times the card's own multiplier — with every
 // relic that priced it as a further factor inside the same bracket.
 //
-// **The bracket is the point** *(owner's call, 2026-09-19)*. A term used to be the landed figure
-// and nothing else, so the DMG under it was arithmetic the player was shown the answer to and
-// never the working: a relic that raised DMG by two made every figure on the line bigger with
-// nothing on the line saying so. Written this way the raise is visible where it happened — the
-// duelist's own figure — and one card's contribution reads as the two things it is made of.
+// **The bracket is the point** *(owner's call)*: a relic that raised DMG by two is visible where it
+// happened — the duelist's own figure — and the card's contribution reads as the two things it is
+// made of.
 //
 // **The flat form survives for the term the split cannot describe.** See combat.Event.TermSplit:
 // an echo's fraction and CardDamage's floor can each put the product a point off the figure that
@@ -828,9 +826,10 @@ func termItems(e combat.Event, i int) []mathItem {
 			// wears the color of what produced it, and a card's figure is its card's element —
 			// which is a question about a row on a screen, so `startHandMath` fills it in. This
 			// half of the box has no screen and must not grow one.
-			tint: ui.GroundInk,
-			fly:  true,
-			t:    ui.NewTravel(0, mathTermTicks()),
+			tint:     ui.GroundInk,
+			fly:      true,
+			cardTerm: true,
+			t:        ui.NewTravel(0, mathTermTicks()),
 		}}
 		return append(out, relicFactorItems(e, i)...)
 	}
@@ -843,13 +842,15 @@ func termItems(e combat.Event, i int) []mathItem {
 		tint:      ui.GroundInk,
 		fly:       true,
 		tightPrev: true,
+		cardTerm:  true,
 		t:         ui.NewTravel(0, mathTermTicks()),
 	}
+
 	out := []mathItem{
 		openBracket(),
 		{
 			// **The duelist's figure, flying off the duelist's card.** It is the same number in
-			// every term of the blow, which is the fact the line is being rewritten to show: one
+			// every hit of the turn, which is the fact the line is being rewritten to show: one
 			// DMG, several cards taking their own multiple of it.
 			text:        strconv.Itoa(dmg),
 			size:        mathTermSize,
@@ -884,8 +885,8 @@ func relicFactorItems(e combat.Event, term int) []mathItem {
 }
 
 // openBracket and closeBracket are the punctuation round a term. **They hug what they enclose**:
-// at the sum's own item gap a bracket stands a figure's width off its own term and reads as a
-// symbol in the sum rather than as something holding it together.
+// at the line's own item gap a bracket stands a figure's width off its own term and reads as a
+// symbol in a line rather than as something holding it together.
 func openBracket() mathItem {
 	it := mathOperator("(")
 	it.tint = mathBracketInk()
@@ -901,7 +902,7 @@ func closeBracket() mathItem {
 }
 
 // mathBracketInk is what the punctuation *inside* a term is drawn in: a step quieter again than
-// the sum's own operators, which are already a step quieter than its figures.
+// the line's own operators, which are already a step quieter than its figures.
 //
 // **Punctuation that is as loud as a figure is a figure.** A bracket is there to group, so it has
 // to be legible and must not be read — three levels of quiet is what keeps the numerals the thing
@@ -921,14 +922,14 @@ func firstSeat(paid []bool) int {
 // relicNote is the little multiplier one relic put on one term, or nil when that relic did not fire.
 //
 // **It is here rather than on the card** *(owner's call, 2026-08-26)*. Nothing a relic does reaches a
-// card's printed damage any more: a growing relic's figure moves between the cards of a single blow —
+// card's printed damage any more: a growing relic's figure moves between the cards of one turn —
 // the first fire card steps it and the second is counted at the bigger number — so a figure printed
-// on the card would be right in one queue position and wrong in every other. The sum is where every
-// relic is accounted for, on the beat the term lands, and the relic's own card bounces with it.
+// on the card would be right in one queue position and wrong in every other. A hit's line is where
+// every relic is accounted for, on the beat the term lands, and the relic's own card bounces with it.
 //
 // **In the relic pink and smaller than the figure it annotates.** The pink already means "a relic did
 // this" everywhere else on screen — see boostInk — and the size is what keeps it a label on the term
-// rather than a second term in the sum.
+// rather than a second term in a line.
 //
 // **It flies out of its own relic's card** *(owner's call, 2026-08-26)*, like a card's figure flies
 // out of the card. Every figure in this box comes from the thing that produced it, and a relic's
@@ -955,7 +956,7 @@ func relicNote(pct, seat int) *mathItem {
 		// **The same arc a rider's figure takes onto the duelist card** *(owner's call,
 		// 2026-09-19)*: it leaves the ring at a signal figure's size and recedes into the line.
 		// The relic's own raise already arrives that way, and the two are the same fact — a worn
-		// thing paying into this blow — so the eye should not have to learn two gestures for it.
+		// thing paying into this turn — so the eye should not have to learn two gestures for it.
 		fromScale: signalFigureSize / mathGrowthSize,
 		t:         ui.NewTravel(0, signalFlyTicks()),
 		// **The `x` is a separate operator, like every other factor in the bracket** *(2026-09-19)*.
@@ -1002,12 +1003,12 @@ func mathOperator(str string) mathItem {
 // **The No Hand is shouted like any other hand.** It is a real entry in the catalog at the identity
 // multiplier, it is the commonest turn in the game, and it is the name the banner has been carrying
 // since DUEL! — so falling silent here would take the word off the screen at the exact moment the
-// blow lands. What it does not get is the lift; see builtARung.
+// hits land. What it does not get is the lift; see builtARung.
 //
 // **The name comes from the catalog**, like every other place the screen names a hand, so a hand
 // renamed in `data/hands.json` is renamed once. An event naming no hand at all still shouts
 // nothing; nothing in the game emits one, since a turn with an attack in it always produces a
-// blow. Caps are safe at this size — the kubasta note in CLAUDE.md is about small text, where
+// turn. Caps are safe at this size — the kubasta note in CLAUDE.md is about small text, where
 // `VITAE` renders as `VITRE`.
 func shoutFor(e combat.Event) string {
 	hand, ok := combat.HandByID(e.Hand)
@@ -1017,7 +1018,7 @@ func shoutFor(e combat.Event) string {
 	return handShout(hand.Name)
 }
 
-// builtARung reports whether this blow built a rung of two cards or more.
+// builtARung reports whether this turn built a rung of two cards or more.
 //
 // **It gates the lift and nothing else** *(owner's call, 2026-09-17)*. Every rung announces —
 // `NO HAND!` as much as `PAIR!`, since the bottom of the ladder is a rung the player can price,
@@ -1047,84 +1048,58 @@ func handShout(name string) string { return upper(name) + "!" }
 // CLAUDE.md's color section describes, and one this screen has fallen into before.
 func mathOperatorInk() color.RGBA { return systems.ColorToward(ui.GroundInk, ui.ScreenGround, 45) }
 
-// handMathRect is the band the sum is written in: the strip above the hand, at the table's
-// width.
-//
-// **It takes its height from the band and its width from the table, and neither is an accident.**
-//
-// The vertical band is `mathBandHeight`, which is the Resolution feed's collapsed box — the size
-// it was when the sum was laid out and looked at against it. The feed itself is gone
-// *(2026-08-18)*, and the constant deliberately survived it: the arithmetic was tuned against
-// that depth, so changing the number is re-laying out the sum rather than tidying up after a
-// deleted pane. While the feed was still there this was computed rather than read off `feedRect`
-// for a related reason — a player holding the box open grew it upward, and a dialog that moved
-// with it would have re-laid a line of figures out from under a reader mid-flight.
-//
-// The width was deliberately **not** the feed's. `feedRect` spanned `handBand`, which is a
-// function of how many cards are in the hand — fine for left-aligned sentences that simply have
-// less room, wrong for a centered line of large figures that does not wrap and cannot shrink. A
-// two-card hand gives a band around 330px against a widest sum of roughly 640, so the arithmetic
-// would have run off both ends of it in exactly the rounds a duel is decided in.
-// `TestTheWidestSumFitsItsBand` is what found that and what holds it. **The trap is still live
-// anywhere else that borrows `handBand` for something that is not the hand.**
-//
-// The table's insets are the right width because the box is drawn on the bare ground rather than
-// inside a pane — it is an overlay at the same width as the two rows of cards it is about.
+// handMathRect is the strip above the hand at the table's width: where the tutorial points when it
+// talks about the arithmetic. The lines themselves are placed by mathLineAt.
 func (s *CombatScene) handMathRect(gs *state.GlobalState) image.Rectangle {
 	bottom := handTop(gs) - mathBandGapAboveCards
 	return image.Rect(tableInset, bottom-mathBandHeight, gs.ScreenWidth-tableInset, bottom)
 }
 
-// layOutMath measures every item and centers the finished line in the band.
+// layOutMath measures every line and centers each under the card that threw its hit.
+//
+// **A card's first hit sits just under the card and each further one a pitch lower**, so an echoed
+// card reads as three lines stacked under itself. **Nothing is shrunk** — see the file comment.
 func (s *CombatScene) layOutMath(gs *state.GlobalState, box *handMathBox) {
-	r := s.handMathRect(gs)
-
-	widths := make([]float64, len(box.items))
-	measure := func() float64 {
-		total := 0.0
-		for i := range box.items {
-			widths[i], _ = text.Measure(box.items[i].text, mathFace(gs, box.items[i].size), 0)
-			total += widths[i]
-			if i > 0 {
-				total += gapBefore(box.items, i)
-			}
-		}
-		return total
+	lines := map[int]int{}
+	for c := range box.columns {
+		col := &box.columns[c]
+		at := s.mathLineAt(gs, box.side, col.seat, lines[col.seat])
+		lines[col.seat]++
+		layOutLine(gs, col.items, at.X, at.Y)
 	}
+}
 
-	total := measure()
+// mathLineAt is the center of the nth line under one played card: the card's own column, and a
+// pitch per line below the card's bottom edge.
+func (s *CombatScene) mathLineAt(gs *state.GlobalState, side combat.Side, seat, nth int) image.Point {
+	card := s.handCardCenter(gs, side, seat)
+	top := card.Y + cardHeight/2 + mathLineGap
+	return image.Pt(card.X, top+mathLinePitch/2+nth*mathLinePitch)
+}
 
-	// **A sum too wide for its band is shrunk to fit rather than allowed off the screen**
-	// *(2026-08-22)*. Echo made this reachable: a five-card turn whose lead card lands three times
-	// is seven terms where the band was laid out for five, and a figure hanging off the edge is
-	// worse than a small one — the whole box exists to be read.
-	//
-	// **Every item shrinks by the same factor**, so the multiplier stays smaller than the terms and
-	// the line keeps its shape. Nothing else changes: the script, the colors and the flights are
-	// what they were, and a sum that already fits is untouched.
-	if band := float64(r.Dx()) - mathBandInset; total > band && total > 0 {
-		shrink := band / total
-		if shrink < minMathShrink {
-			shrink = minMathShrink
-		}
-		for i := range box.items {
-			box.items[i].size *= shrink
-		}
-		total = measure()
-	}
-
-	x := float64(r.Min.X+r.Max.X)/2 - total/2
-	cy := (r.Min.Y + r.Max.Y) / 2
-	for i := range box.items {
+// layOutLine measures one line and centers it on a point.
+func layOutLine(gs *state.GlobalState, items []mathItem, cx, cy int) {
+	widths := make([]float64, len(items))
+	total := 0.0
+	for i := range items {
+		widths[i], _ = text.Measure(items[i].text, mathFace(gs, items[i].size), 0)
+		total += widths[i]
 		if i > 0 {
-			x += gapBefore(box.items, i)
+			total += gapBefore(items, i)
 		}
-		box.items[i].at = image.Pt(int(x+widths[i]/2), cy)
+	}
+
+	x := float64(cx) - total/2
+	for i := range items {
+		if i > 0 {
+			x += gapBefore(items, i)
+		}
+		items[i].at = image.Pt(int(x+widths[i]/2), cy)
 		x += widths[i]
 	}
 }
 
-// gapBefore is the air between one item and the one before it: the sum's own gap, unless a bracket
+// gapBefore is the air between one item and the one before it: the line's own gap, unless a bracket
 // on either side of the join asked to hug what it encloses.
 //
 // **Measured and laid out by the same function**, which is the whole of why it is one: the line is
@@ -1141,15 +1116,6 @@ func gapBefore(items []mathItem, i int) float64 {
 	}
 	return mathItemGap
 }
-
-// mathBandInset is the breathing room a sum keeps inside its band, so a shrunk line does not rest
-// against the edge it was shrunk away from.
-const mathBandInset = 16
-
-// minMathShrink is as small as the sum will ever be drawn, as a fraction of its authored sizes.
-// **A floor rather than a guarantee**: past this the figures stop being readable, and a line that
-// overflows is a better bug report than one nobody can read.
-const minMathShrink = 0.6
 
 // mathFace is the box's type. One font at four sizes; the screen has exactly one face.
 func mathFace(gs *state.GlobalState, size float64) *text.GoTextFace {
@@ -1179,7 +1145,7 @@ func (s *CombatScene) handCardCenter(gs *state.GlobalState, side combat.Side, se
 // card on the table is wearing round its edge.
 //
 // **It reads the card rather than the event**, because the event carries one `Element` for the
-// blow's lead card and the sum has a figure per card. Nothing here is arithmetic — the amount is
+// hand's lead card and every line has its own card. Nothing here is arithmetic — the amount is
 // still the event's — and a seat the table does not hold falls back to the ground ink rather than
 // inventing a color.
 func (s *CombatScene) handCardInk(side combat.Side, seat int) color.RGBA {
@@ -1264,85 +1230,125 @@ func (s *CombatScene) handMultiplierOrigin(gs *state.GlobalState, e combat.Event
 
 // --- the clock ---------------------------------------------------------------------------
 
-// running reports whether the box is holding the round. **Playback does not advance while this is
-// true**, which is what makes the dialog a beat of the round rather than something drawn over
-// one — and it is the only thing on this screen that can stop the cursor.
+// Running reports whether the box is holding the round. **Playback does not advance while this is
+// true**, which is what makes the dialog a beat of the round rather than something drawn over one.
 func (b *handMathBox) Running() bool {
 	if !b.active {
 		return false
 	}
-	return b.at < len(b.items) || !b.Hold.Done()
+	if !b.shoutT.Done() || !b.Hold.Done() {
+		return true
+	}
+	for _, c := range b.columns {
+		if !c.done() {
+			return true
+		}
+	}
+	return false
 }
 
-// tick runs one frame of the script: the announcement, then each item in turn, then the hold.
+// Tick runs one frame: the announcement, then every line at once, then the hold.
 //
-// **One item at a time and never two at once.** The whole point of the box is that a figure
-// arrives, is read, and is then joined by an operator; overlapping the beats would put the sum on
-// screen at the speed the feed already manages.
+// **Every line advances on the same frame and none waits for another** *(owner's call)*. Within a
+// line the items still run one at a time — a figure arrives, is read, and is joined by an operator
+// — so a line with fewer terms is finished sooner, and it is thrown the moment it is.
 //
-// **The announcement beat runs whether or not the box owns the word** *(owner's call, 2026-09-17)*.
-// It was gated on `shout` — so an opponent's hand got a beat to be named in and the player's, whose
-// name the banner has been carrying since DUEL!, went straight into counting. That left the
-// announcement and the tally on one frame, and the hand's cards raised for the whole sum rather
-// than for the moment the hand was named. The beat is the same length either way: the box shouts
-// into it when it has a word, and the banner flashes into it when it has not. **Every rung gets
-// it, the No Hand included** — that rung is announced like any other and only the *lift* is withheld
-// from it, see builtARung. See counting below.
+// **The announcement beat runs whether or not the box owns the word.** The box shouts into it when
+// it has a word, and the banner flashes into it when it has not; every rung gets it, the No Hand
+// included.
 func (b *handMathBox) Tick() {
 	if !b.active {
 		return
 	}
 	if !b.shoutT.Done() {
 		b.shoutT.Tick()
-		return
-	}
-	if b.at < len(b.items) {
-		b.items[b.at].t.Tick()
-		if b.items[b.at].t.Done() {
-			b.at++
+		if b.shoutT.Done() {
+			for c := range b.columns {
+				b.started(c, 0)
+			}
 		}
 		return
 	}
-	b.Hold.Tick()
+
+	all := true
+	for c := range b.columns {
+		col := &b.columns[c]
+		col.verdictT.Tick()
+		if col.done() {
+			continue
+		}
+		all = false
+		col.items[col.at].t.Tick()
+		if col.items[col.at].t.Done() {
+			col.at++
+			if !col.done() {
+				b.started(c, col.at)
+			}
+		}
+	}
+	if all {
+		b.Hold.Tick()
+	}
 }
 
-// **The box carried a defend card's pips until 2026-09-15** *(owner's call)*, flying them on the
-// beat that card's figure was written into the sum. That existed because the defend phase came
-// *last*: a defense paid a visible 0 into the sum and then did the thing it was for several beats
-// later, on a card the player had stopped watching. The phases flipped — see combat.Categories —
-// so the raise now happens before the sum exists, with a beat of its own, and the box carrying a
-// second copy of it would fly every pip twice. What is left is noteShieldRaise.
+// started records that one item of one line has begun, for the shakes and the signals.
+func (b *handMathBox) started(col, item int) {
+	if item >= len(b.columns[col].items) {
+		return
+	}
+	ref := mathRef{col, item}
+	b.freshShakes = append(b.freshShakes, ref)
+	b.freshSignals = append(b.freshSignals, ref)
+}
 
-// counting reports whether the box has moved past the announcement into the sum itself. **It is
-// what puts the hand's cards back down**: they are raised to say which cards the announcement is
-// about, and the tally that follows needs no card raised at all — the figures fly out of the cards
-// where they stand. See advancePlayback, which is the one reader.
+// counting reports whether the box has moved past the announcement into the lines. **It is what
+// puts the hand's cards back down**: they are raised to say which cards the announcement is about,
+// and the lines that follow need no card raised — the figures fly out of the cards where they stand.
 func (b *handMathBox) counting() bool { return b.active && b.shoutT.Done() }
 
-// takeSignalSeat hands back the played seat of the item now running, once, so whatever its riders
-// parked can be thrown on the beat that card's own figure sets off.
-//
-// **Asked on the beat the item starts rather than when it ends**, so a card's signals and its
-// figure leave together: they are two things one card did, and staggering them would make the
-// grant read as a consequence of the sum rather than of the card. The pips used to ride the same
-// mechanism and no longer do — see above.
-func (b *handMathBox) takeSignalSeat() (int, bool) {
-	if !b.active || b.at >= len(b.items) {
-		return 0, false
+// multStarted reports whether any line's multiplier has set off, which is when the banner — whose
+// second line that figure is — is taken down.
+func (b *handMathBox) multStarted() bool {
+	if !b.active {
+		return false
 	}
-	it := &b.items[b.at]
-	if it.signalsSent {
-		return 0, false
+	for _, c := range b.columns {
+		if c.at >= c.multAt && c.multAt > 0 {
+			return true
+		}
 	}
-	it.signalsSent = true
-	if it.cardSeat <= 0 {
-		return 0, false
-	}
-	return it.cardSeat - 1, true
+	return false
 }
 
-// clear takes the box down. Called when the script finishes and whenever a round or a fight
-// starts, so a box left up by a screen change cannot outlive the round it describes.
+// finished is every line that is done and has not been thrown yet.
+func (b *handMathBox) finished() []int {
+	var out []int
+	for c, col := range b.columns {
+		if col.done() && !col.thrown {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
+// takeSignalSeats hands back the played seat of every card whose own figure has started since the
+// last call, once each, so whatever its riders parked is thrown on the beat that card's figure sets
+// off. **Asked when the item starts rather than when it ends**, so a card's signals and its figure
+// leave together.
+func (b *handMathBox) takeSignalSeats() []int {
+	var seats []int
+	for _, ref := range b.freshSignals {
+		it := b.columns[ref.col].items[ref.item]
+		if it.cardSeat > 0 {
+			seats = append(seats, it.cardSeat-1)
+		}
+	}
+	b.freshSignals = nil
+	return seats
+}
+
+// Clear takes the box down. Called when the lines finish and whenever a round or a fight starts,
+// so a box left up by a screen change cannot outlive the round it describes.
 func (b *handMathBox) Clear() { *b = handMathBox{} }
 
 // --- drawing -----------------------------------------------------------------------------
@@ -1353,7 +1359,7 @@ func (b *handMathBox) Clear() { *b = handMathBox{} }
 // **The name goes where the cards it names are about to land** *(2026-08-19, owner's call)*. The
 // half is empty for the whole of the planning phase and fills at DUEL!, so the words are standing
 // in the space their own cards fly into — and being on the table rather than in the band above the
-// hand leaves the sum's line clear to arrive into.
+// hand leaves the lines clear to arrive into.
 //
 // **It is the only thing saying a hand has formed.** The yellow ring round the cards in the row
 // went with the move, so a player choosing a Two Pair out of five sees the *name* and not which
@@ -1410,7 +1416,7 @@ func (s *CombatScene) drawPlannedHand(gs *state.GlobalState, screen *ebiten.Imag
 
 // handMultiplierLine is the multiplier written as what it does: `1.15x DMG`.
 //
-// **The figure goes through `handMultiplierText`**, the same formatting the sum's own multiplier
+// **The figure goes through `handMultiplierText`**, the same formatting the line's own multiplier
 // term uses, so the number the player reads while planning is character-for-character the one that
 // flies into the line when the hand fires. `DMG` rather than `damage` for the reason the cards use
 // it — it is the word this game already writes for the stat.
@@ -1420,7 +1426,7 @@ func handMultiplierLine(pct int) string { return ui.HandMultiplierText(pct) + "x
 // breathe, fade and travel together.
 //
 // **Only the name grows.** The multiplier is written at `mathMultLineSize` wherever it is drawn,
-// because it is the figure that later flies into the sum and it has to arrive there the size it
+// because it is the figure that later flies into its line and it has to arrive there the size it
 // left, and the name is one size in both of its homes as well. The gap between the two is a
 // fraction of the name's size and the whole offset is scaled by the breath — a fixed gap under
 // breathing words would read as the lines drifting rather than as the pair breathing.
@@ -1464,11 +1470,11 @@ func mathBreath(gs *state.GlobalState) float64 {
 	return 1 + mathBreathAmount*math.Sin(2*math.Pi*float64(gs.Count)/mathBreathTicks)
 }
 
-// drawHandMath draws the shout and however much of the sum has been revealed.
+// drawHandMath draws the shout and however much of every line has been revealed.
 //
-// **Items past `at` are not drawn at all**, rather than drawn transparent. A figure fading up
-// from nothing over the eleven ticks before its turn would make the line look pre-written, which
-// is exactly the impression the box exists to break.
+// **Items past a line's cursor are not drawn at all**, rather than drawn transparent. A figure
+// fading up from nothing before its turn would make the line look pre-written, which is exactly the
+// impression the box exists to break.
 func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) {
 	b := &s.Theater.mathBox
 	if !b.active {
@@ -1476,21 +1482,39 @@ func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) 
 	}
 
 	if b.shout != "" {
-		// **The pop and the breath multiply rather than take turns.** The pop is the arrival and
-		// the breath is what the word does for the rest of its time on screen; handing over from
-		// one to the other at the moment the pop finished would put a step in the middle of the
-		// only thing moving.
+		// **The pop and the breath multiply rather than take turns**, so there is no step in the
+		// middle of the only thing moving.
 		drawMathText(gs, screen, b.shout, mathNameSize, handNameInk, b.shoutAt,
 			popScale(mathShoutPopScale, b.shoutT)*mathBreath(gs), alphaOf(b.shoutT), true)
 	}
 
-	for i := range b.items {
-		it := &b.items[i]
+	for c := range b.columns {
+		col := &b.columns[c]
+		alpha := float32(1)
 		switch {
-		case i < b.at:
-			drawMathText(gs, screen, it.text, it.size, it.tint, it.at, 1, 1, false)
-		case i == b.at:
-			drawArrivingMathItem(gs, screen, it)
+		case col.unthrown:
+			alpha = mathUnthrownAlpha
+		case col.verdict != "":
+			alpha = mathVerdictDim
+		}
+		for i := range col.items {
+			it := &col.items[i]
+			switch {
+			case i < col.at:
+				// **The total leaves the line when it is thrown**, so it is not drawn twice: the
+				// figure in flight is it.
+				if col.spent && i == len(col.items)-1 {
+					continue
+				}
+				drawMathText(gs, screen, it.text, it.size, it.tint, it.at, 1, alpha, false)
+			case i == col.at:
+				drawArrivingMathItem(gs, screen, it)
+			}
+		}
+		if col.verdict != "" {
+			at := col.total().at
+			drawMathText(gs, screen, col.verdict, mathTermSize, ui.VerbInkFor(combat.CategoryAttack), at,
+				popScale(mathPopFromScale, col.verdictT), alphaOf(col.verdictT), true)
 		}
 	}
 }

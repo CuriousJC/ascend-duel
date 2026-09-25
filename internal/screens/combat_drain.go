@@ -56,7 +56,7 @@ const (
 	drainFigureSize = mathTotalSize - 10
 
 	// drainFromScale is how big the share starts and drainToScale how big it arrives. It recedes
-	// into the card it lands on, like a blow and unlike a term flying into the sum.
+	// into the card it lands on, like a blow and unlike a term flying into its line.
 	drainFromScale = 1.0
 	drainToScale   = 0.74
 )

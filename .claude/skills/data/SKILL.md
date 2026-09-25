@@ -18,7 +18,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `relics.json` | `LoadRelics` | the relics that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
 | `archive/relics.json` | `ParseRelics`, off disk | relics taken out of the game and kept: **not embedded**, read only by `tools/relicsheet -archive` and the test holding it to the grammar — see `data/archive.go` |
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
-| `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies a blow by |
+| `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies every hit by |
 | `essences.json` | `LoadEssences` | the deck alterations offered between fights |
 | `runes.json` | `LoadRunes` | the deck alterations spent *during* a fight |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
@@ -106,7 +106,7 @@ switch statements over a closed `ActionKind` enum with a `CostTier` in the JSON 
 ~400 a per-enemy deck list produces, so the card became a record and both went.
 
 What is checked now: a verb the vocabulary has, a cost that can be paid, an amount that does
-something, a defense under 100% (**nothing may stop a blow outright**), and a shield count no higher
+something, a defense under 100% (**nothing may stop a hit outright**), and a shield count no higher
 than the attacks one turn can throw. **A card does not say
 who it lands on** — the verb decides, an attack on the opponent and everything else on its own
 duelist, and there is no field to disagree with.
@@ -349,7 +349,7 @@ a sequence like `duelist_cards.json`, since file order is play order and a map w
 first lesson wherever Go's hashing felt like it.
 
 - **`Seed`, `Enemy` and `Match` sit above the steps** *(2026-08-25)*. Bob promises four matching
-  cards and a fight ended in one blow, and both are facts about one deal against one creature rather
+  cards and a turn that wounds without killing, and both are facts about one deal against one creature rather
   than about the game. They were pinned by `internal/scenario` while a fixture was the only way to
   start the lesson; the day the profile became a real trigger, the tutorial ran on whatever the clock
   rolled and described a hand it had not dealt. **A promise and the thing that makes it true belong

@@ -87,16 +87,16 @@
 //     tested for the same reason.
 //   - It must never import internal/seeds either. The rules take an injected *rand.Rand and stay
 //     ignorant of where it came from.
-//   - A turn resolves exactly one attack for the player, scored as a hand; an enemy's attacks
-//     resolve one at a time, each landing its own face damage. That is Duelist.SoloAttacks, and it
-//     is a flag on the duelist rather than a rule about SideB — the engine has no idea which side
-//     is a person and must not learn, because the balance tool plays both sides headlessly.
-//   - Nothing reduces a blow to zero. A turn lands one figure however many cards made it, so total
-//     negation would be a whole opposing turn deleted by one card.
+//   - Every card lands its own hit. A hand-forming duelist's turn reads one hand off its cards and
+//     multiplies every hit by it (hit.go); an enemy's attacks resolve one at a
+//     time at face damage, with no hand. That is Duelist.SoloAttacks, and it is a flag on the
+//     duelist rather than a rule about SideB — the engine has no idea which side is a person and
+//     must not learn, because the balance tool plays both sides headlessly.
+//   - Nothing reduces a hit to zero by arithmetic. A shield eats a whole hit or none of it.
 //   - The rules cannot draw a card — there is no deck in this package, and nothing in the game
 //     asks for one any more.
-//   - A shield eats one whole incoming attack, and that is only safe because the duelists holding
-//     shields are only ever attacked by solo attackers — see VerbShield.
+//   - A shield eats one whole incoming hit, the heaviest first, whichever kind of attacker is
+//     swinging — see shieldedHits.
 //   - Never change these rules to make a screen look right. If a screen contradicts the engine,
 //     say so and let the owner decide which one is wrong. That is a game-design call and it
 //     ripples into the tests and the balance.

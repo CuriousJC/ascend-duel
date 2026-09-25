@@ -23,13 +23,8 @@ import (
 // **It cannot change an outcome.** The round was decided before a frame of it was drawn, and this
 // is a view over what the log already says.
 //
-// **The pips fly, as of 2026-09-02** *(owner's call)*, and they fly on the beat the card that
-// raises them is *scored* rather than on the beat the engine raises them. A defend card joins a
-// hand like any other card and pays a 0 into the sum; that 0 flying out of it used to be the whole
-// of what the card appeared to do, with the shield turning up several beats later in the defend
-// phase, by which time the card that bought it had stopped being the thing on screen. So the
-// shields leave the card with its figure: **what a card creates shows while the card is being
-// scored.**
+// **The pips fly** *(owner's call)*, out of the card that raised them and into the row: **what a
+// card creates shows while the card is on screen.**
 //
 // **The flight predicts and the announcement corrects.** `noteShields` writes the standing count
 // absolutely off `KindRaised`, so the raise arriving later either agrees with what is already drawn
@@ -110,9 +105,8 @@ func (s *CombatScene) row(side combat.Side) *ui.ShieldRow {
 // — and it is what lets the cards stay still under it, since a lift per card is three beats of
 // movement in front of a hand nobody has named yet. See noteResolved, which lifts no defense.
 //
-// **The pips are the phase's and never the sum's.** A defense that made the rung pays a visible 0
-// into the arithmetic and that 0 is all the sum has to say about it; what the card actually did
-// happened a phase earlier, where the player was watching for it.
+// **The pips are the phase's and never a hit's.** A defense's hit line comes to 0 and flies
+// nothing; what the card did happened a phase earlier, where the player was watching for it.
 //
 // **Each flight leaves its own card, named by `Event.Slot`** — nothing is lit during the defend
 // phase, so there is no lit card to read a seat off. It reports whether it flew anything, so the
@@ -256,9 +250,8 @@ func (s *CombatScene) modelShields(side combat.Side) int {
 // shieldsRaisedBy is how many pips the card in a table seat will raise, and 0 for anything that is
 // not a shield card.
 //
-// **It reads the card on the table, not the event.** A hand event names its terms as seats, and the
-// seat is what the sum's figure is flying out of — so asking the same seat is what keeps the pips
-// and the figure belonging to one card.
+// **It reads the card on the table, not the event**, so the pips and the card they leave belong to
+// one seat.
 func (s *CombatScene) shieldsRaisedBy(side combat.Side, seat int) int {
 	var card combat.Card
 	switch {

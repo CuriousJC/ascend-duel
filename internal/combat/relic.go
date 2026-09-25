@@ -246,9 +246,9 @@ const (
 	// win pays — same moment, same flat addition, a figure that is now always there.
 	DoAdjustPrizeVitae
 
-	// DoEchoAttack makes the blow's **lead attack card** land more than once. Amount is how many
-	// times it lands in total — 3 is full, two thirds, one third — and the echoes are added into
-	// the blow's base sum, so the hand still multiplies one figure and a turn still lands one blow.
+	// DoEchoAttack makes the turn's **lead attack card** land more than once. Amount is how many
+	// times it lands in total — 3 is full, two thirds, one third — and every landing is a hit of its
+	// own, multiplied by the hand like any other.
 	//
 	// **The ladder is even fractions counting down**, which is what makes one number enough: at
 	// Amount n the k-th landing is worth (n-k+1)/n of the card. See EchoBonus.
@@ -304,12 +304,10 @@ const (
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoScaleHP
 
-	// DoAddHandDMG adds Amount to the duelist's **DMG** for the length of one blow, when the blow
+	// DoAddHandDMG adds Amount to the duelist's **DMG** for the length of one turn, when the turn
 	// satisfied the rung named by the rule's `Hand` predicate.
 	//
-	// **It is base damage, not a term** *(owner's call, 2026-09-14)*. It was `add-hand-damage` and
-	// a flat addition to `Base` from 2026-09-05 until then, which paid the same 2 whether the Pair
-	// was two Jabs or two Skewers. What it does now is raise the figure every card of the hand
+	// **It is base damage, not a term** *(owner's call)*. It raises the figure every hit's card
 	// multiplies: a duelist on 14 swings a Pair at 16, so a 1x card in it gains 2 and a 0.5x card
 	// gains 1, and the relic is worth more to a hand that is worth more. The name says `dmg` rather
 	// than `damage` for exactly that reason — DMG is the duelist's stat, damage is a figure in a
@@ -1134,13 +1132,12 @@ func (d Duelist) CardDamage(c Card) int {
 	return dmg
 }
 
-// statusesFrom is every status this duelist's relics put on a target for a landed blow, in the order
-// they will be applied.
+// statusesFrom is every status this duelist's relics put on a target for a landed hit, in the order
+// they will be applied. The resolver asks it once per hit, with that hit's card.
 //
-// **Deduplicated, so one blow lands one of each.** Two fire cards in a hand match a fire relic twice,
-// and applying a status twice is the same as applying it once — see the no-stacking rule — but it
-// would announce itself twice, and a feed saying "sets them burning" twice for one blow is a feed
-// describing two things that did not happen.
+// **Deduplicated, so one hit lands one of each.** Two relics that both set something burning are one
+// burn for the hit — see the no-stacking rule — and a feed saying "sets them burning" twice for one
+// hit is a feed describing two things that did not happen.
 //
 // **Relic order outer, cards inner**, per the worn-order rule.
 //
@@ -1180,13 +1177,12 @@ func (d Duelist) statusesFrom(cards []Card) []appliedStatus {
 	return out
 }
 
-// drainsFrom is every share of a blow this duelist's relics turn back into life, in worn order.
+// drainsFrom is every share of a hit this duelist's relics turn back into life, in worn order. The
+// resolver asks it once per hit that landed, with that hit's card.
 //
 // **One entry per relic, where statusesFrom deduplicates by status.** Two relics that both drain
 // both pay, because two shares of a figure are two different amounts; two relics that both set
-// something burning are one burn. What is deduplicated here is the *cards*: a relic fires once for
-// the blow however many of its cards matched, so an elemental drain is a share of the hand rather
-// than a share per card of that color.
+// something burning are one burn.
 //
 // **It says which relic each share came from**, for appliedStatus's reason: the screen flies the
 // life out of the ring that produced it, and nothing else on the event can name which ring that was.
@@ -1819,18 +1815,17 @@ func KeepsGrowth(id RelicID) bool {
 	return true
 }
 
-// GrowOnLanding is the attacker after **one landing of one card** has been counted into the blow.
+// GrowOnLanding is the attacker after **one hit of one card** has connected.
 //
-// **It steps inside the sum as of 2026-08-26** *(owner's call)*, where it used to be one step taken
-// after the whole blow had landed. The rule the change buys is that the order of the cards in a turn
-// decides what they are worth: two fire cards no longer both fire at the relic's opening figure — the
-// first fires bare, steps the relic, and the second fires at the bigger multiplier. That makes the
-// queue an ordering decision the player is meant to make, which is the whole point of it.
+// **It steps between hits** *(owner's call)*, so the order of the cards in a turn decides what they
+// are worth: the first fire hit fires bare, steps the relic, and the second fires at the bigger
+// multiplier. That makes the queue an ordering decision the player is meant to make. A hit that
+// missed or was blocked does not step it.
 //
-// **Landings, not cards** *(owner's call, 2026-08-22, and it survives the move)*. A card that an
-// echo or a repeat seats three times *hit* three times, so it steps three times — and each of those
-// landings is counted at the figure the one before it left, so the ladder compounds inside itself.
-// That is the combination the relics are for: Echo plus Enflamed is meant to be a build.
+// **Hits, not cards** *(owner's call)*. A card that an echo or a repeat lands three times hits three
+// times, so it steps three times — and each of those hits is counted at the figure the one before it
+// left, so the ladder compounds inside itself. That is the combination the relics are for: Echo plus
+// Enflamed is meant to be a build.
 //
 // **It returns a duelist rather than writing through a pointer**, like everything else in this
 // package — a round is resolved by passing duelists along, and an accumulator that moved by side

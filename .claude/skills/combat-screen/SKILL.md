@@ -65,25 +65,23 @@ your turn is standing through the opponent's whole turn either way, since `expir
 the start of your *own* next turn — so what the order buys is how the turn reads: raise the guard,
 then swing.
 
-**The attack phase is one blow** *(2026-08-14)*. Every attack card queued is announced with a
-`KindAction`, then one `KindHand` names the hand they formed, then a single `KindDamage`
-lands. Five Bashes are not five hits.
+**The attack phase is one hand and a hit per landing.** Every attack card queued is announced with
+a `KindAction`, then one `KindHand` names the hand they formed and carries every hit's arithmetic,
+then each hit lands as its own `KindMissed`, `KindBlocked` or `KindDamage`, carrying `Slot` (the
+card) and `Hit` (its term on the hand event). Five Bashes are five hits under one Four of a Kind.
 
-**The phase is also one line in the log, and it is the hand's.** The `KindAction`s still play —
-each is a beat, and each raises its card on the table — but `logRows` writes no sentence for them.
-`KindHand` carries `Base`, `Multiplier` and `Amount`, so the line reads *"HAND! Duelist
-lands a Pair (20 x 1.5 = 30)"* and the damage attaches to it. **Every hand takes that line and
-every line carries its multiplier, the identity included** *(2026-08-19, owner's call)* — a High
-Card prints `(20 x 1 = 20)`, because hands are going to be upgradable and a term that appeared only
-once the multiplier stopped being 1 would make an upgrade read as a new rule. It is also the
-commonest turn in the game, so it is the line that teaches the shape. **Every attack card the turn played pays into the
-blow** *(owner's call, 2026-09-17)*, whether or not it made the rung — so every attack raised at the
-announcement stays raised, and the only card the hand lowers is a *defense* that agreed with
-nothing. See MECHANICS.md §Damage: one blow, one multiplier.
+**The run's account writes the hand once and a line per hit under it.** The `KindAction`s still
+play — each is a beat, and each raises its card on the table — but they write no record. Each hit's
+line carries its own working, the identity multiplier included *(owner's call)*, because hands are
+going to be upgradable and a term that appeared only once the multiplier stopped being 1 would
+make an upgrade read as a new rule; the hit's outcome attaches to that line by its `Hit`, whatever
+was written after it. **Every card the turn played throws a hit** *(owner's call)*, whether
+or not it made the rung. See MECHANICS.md §Damage: a hit per card, one multiplier.
 
-**None of the three paragraphs above describes an enemy's turn** *(2026-08-17)*. `Duelist.SoloAttacks`
-makes attack cards resolve one at a time in queue order, each landing its own blow, and **no
-`KindHand` is emitted at all**. `CombatScene.soloAttacker(side)` is the screen's single predicate
+**None of the paragraphs above describes an enemy's turn.** `Duelist.SoloAttacks` makes attack
+cards resolve one at a time in queue order, each landing its own hit at face damage, and **no
+`KindHand` is emitted at all** — so its damage events fly one at a time out of the lit card, through
+`noteHit`, rather than out of a line of arithmetic. `CombatScene.soloAttacker(side)` is the screen's single predicate
 for it and two things read it:
 
 - **The log writes a sentence per attack card**, because there is no phase line coming to carry
@@ -91,8 +89,8 @@ for it and two things read it:
 - **The table lights one card at a time, and a creature is the only thing that lights one at all.**
   `noteResolved` seats `[]int{seat}` for a solo attacker and nothing for anybody else — a duelist's
   cards are raised by the hand's announcement, which a creature never gets. Raising a set says
-  "these cards are one blow", which is exactly what an enemy's turn is not: three cards swing three
-  times, and the card that is up is the card that is hitting.
+  "these cards made the hand", which an enemy's turn has none of: three cards swing three times,
+  and the card that is up is the card that is hitting.
 
 Everything else about playback is unchanged — one `KindAction` per slot, so `currentSlot` still
 counts beats the same way.
@@ -110,15 +108,14 @@ for a faster action to lead. `Spd` still buys action points and still never buys
 - **Dragging a card changes nothing the engine can see** *(2026-08-14)*. Cross-category
   reordering never did — the drag lands the card in a queue that is then regrouped — and the two
   things that read *within*-category order are both gone: hands are counted, so a turn is a set,
-  and shields are ranked by the blow they would eat rather than by when they went up. **What order still
+  and shields are ranked by the hit they would eat rather than by when they went up. **What order still
   decides is the hand's tie-break** — `groupsOf` breaks a tie by whose first card was played first,
   so the lead card that names the hand and carries its element is chosen by where the player put it.
   Do not paper over the rest on the screen, and do not invent a rule to justify it.
-- **`Duelist.Shields` is a count, not a queue.** Which blows they eat is decided at the top of the
-  creature's turn by `combat.shieldedSlots`, heaviest first, so the order the shields went up in
-  reaches no outcome. **Nothing reduces a blow to zero by arithmetic** — a shield eats a whole
-  attack or it does not, and there is no percentage in between since the guard was deleted on
-  2026-09-16.
+- **`Duelist.Shields` is a count, not a queue.** Which hits they eat is decided at the top of the
+  attacker's turn by `combat.shieldedHits`, heaviest first, so the order the shields went up in
+  reaches no outcome. **Nothing reduces a hit to zero by arithmetic** — a shield eats a whole hit or
+  it does not.
 - **`Slot.Index` is not a position in the round.** It is where the card sits in its own
   side's queue, which regrouping breaks apart. Anything asking "how far through the round are
   we" counts slots — `CombatScene.currentSlot` does, and lighting the right Resolution row
@@ -152,23 +149,20 @@ in `MECHANICS.md`; these are what matter to the screen.
   left that treats it specially is `matchHand` reaching it by fallback rather than by counting,
   which is structural: counting would match the one-card hand against every turn in the game, and
   the fallback picks the hardest-hitting card rather than the commonest.
-- **The event carries the arithmetic, and the engine takes its damage from the same field.**
-  `Base` is what the blow's cards deal added up — every attack played, plus any defense that made
-  the rung — and `Amount` is `Base` under the multiplier —
-  the blow *before* the attacker's weight. `resolveAttackPhase` blunts `Amount` rather than
-  re-adding the sum, so the figure printed and the figure landed cannot be two different numbers.
-  A shield does not appear in that gap at all: it removes a whole attack up front, and
-  `KindBlocked` is what says so.
-- **The multiplier multiplies the cards, and there is no third term** *(2026-08-18, owner's call)*.
-  `no-hand` therefore sits at `100` rather than `0`: a multiplier applied to the cards cannot be
-  zero without deleting the blow. See MECHANICS.md.
-- **`Event.HandAmounts` is what each of the hand's cards deals**, parallel to `HandCards` and to
-  the same count, summing to `Base`. It exists so the hand dialog can show the sum term by term
-  without the screen owning `CardDamage`, the strength scaling and every relic that touches a card's
-  damage — which would be a second resolver, the thing `Base` and `Multiplier` are on the event to
-  prevent.
+- **The event carries every hit's arithmetic, and the engine lands the same figures.**
+  `HitAmounts[i]` is hit i before the attacker's weight and the target's vulnerability, and the
+  hit's own `KindDamage` is that figure after them — so the figure a line prints and the figure the
+  hit landed cannot come from two different sums. `Amount` on the hand event is every hit added up.
+  A shield does not appear in that gap at all: it removes a whole hit up front, and `KindBlocked` is
+  what says so.
+- **The multiplier multiplies the cards, and there is no third term** *(owner's call)*. `no-hand`
+  therefore sits at `100` rather than `0`: a multiplier applied to the cards cannot be zero without
+  deleting every hit. See MECHANICS.md.
+- **`Event.HandAmounts` is what each hit's card deals**, parallel to `HandCards`. It exists so a
+  hit's line can show the card's term without the screen owning `CardDamage`, the strength scaling
+  and every relic that touches a card's damage — which would be a second resolver.
 - **A fired hand keeps its own cards raised, and the list comes from the event**.
-  `Event.HandCards[:HandCardCount]` names which cards of the turn formed it. **Never derive
+  `Event.RungCards[:RungCardCount]` names which cards of the turn formed it. **Never derive
   that from the hand's group sizes, and never assume the cards are adjacent.** A counted hand is
   not contiguous — Two Pair is two cards, a card that earned nothing, and two more — which is why
   the event carries a list rather than a start and a length. `noteHand` narrows the raised set on
@@ -196,48 +190,49 @@ in `MECHANICS.md`; these are what matter to the screen.
   `TestEverySlotIsEitherTakenOrChilled` pins it. **The pane still draws that row as though it
   happened**, which is a known gap. Ice is the only thing that can take a slot.
 
-### The hand dialog: the sum acted out
+### The hand dialog: every hit worked out under its card
 
-*`combat_mathbox.go`, 2026-08-18.* On the beat a hand fires, the blow's arithmetic is played out at
-the size of the screen: the hand's name shouted beside the cards it names, then each card's own
-figure flying down out of that card into the band above the hand, then the multiplier, then
-the answer.
+*`combat_mathbox.go`.* On the beat a hand fires, **every hit's arithmetic is played out at once**, a
+line under each card on the table, defenses included: the DMG flying off the duelist card, the card's own
+multiplier off the card, each relic's factor off its relic, the flat terms, the hand's multiplier
+off the banner, then the hit's figure. A card that lands several times — an echo, a form repeat —
+stacks its lines under itself. Every line but the first carries its `+` on the left rather than on
+a row of its own *(owner's call)*.
 
-**It exists because the sum was the one number on this screen nobody could source.** The Resolution
-feed printed it, correctly, in sixteen-point text on the third row of a three-row box. That is a
-*record*, which is what a feed should be; what it is not is an *explanation*. A player could see
-the total and could not see which card paid for which part of it, so the multiplier read as a
-number the game had decided rather than one they had built.
+**The lines run in parallel and do not wait for each other** *(owner's call)*. Within a line the
+items still arrive one at a time; a line with fewer terms finishes first and is **thrown** the
+moment it does — see `throwColumn` below. A toggle for how this shows is wanted later and does not
+exist.
 
 - **It says nothing the event does not carry and computes nothing.** Every figure comes off the
-  `KindHand` event — `HandAmounts`, `Multiplier`, `Amount`. **This is the
-  rule to hold**: a second *drawing* of one event, never a second arithmetic. A figure it needs and
-  the event has not got is a field that goes on the event.
+  `KindHand` event — `HandAmounts`, `HitAmounts`, `Multiplier`. **This is the rule to hold**: a
+  second *drawing* of one event, never a second arithmetic. A figure it needs and the event has
+  not got is a field that goes on the event.
+- **What became of each hit is read ahead in the log.** `hitOutcomes` walks forward from the hand
+  event over the hits it threw and hands each line its own outcome's position. A finished line
+  that **landed** flies its figure into the target (`throwColumn` moves the target's life at that
+  moment and marks the event walked), a **miss** says MISS over the line, a **block** says BLOCKED,
+  and a line with no outcome — the target fell to an earlier hit — fades where it stands.
+  **This is the one place the screen reads ahead of the cursor besides the shield break**, and it
+  is confined to the hits directly after the hand.
+- **Events it has already shown are walked past.** `combatTheater.walked` holds the log positions
+  a line drew, and `advancePlayback` steps over them without a beat, so a hit is never drawn twice.
+  It is cleared at `startRound`, because a position means nothing in the next round's log.
 - **It is the one thing on this screen that can stop the playback cursor.** `advancePlayback` holds
-  while `mathBox.running()`, because a sum revealed a figure at a time does not fit inside one
-  event's dwell and the alternative is the box racing the log. Every other animation runs on its
-  own clock beside playback. **It still cannot change an outcome** — the round was decided before a
-  frame of it was drawn — but it *does* change pacing, and `demoGiveUpAt` is sized against the dwell
-  alone, so a longer script is worth checking against it.
-- **`mathScript(e)` is the half with no geometry in it**, and it is what `combat_mathbox_test.go`
-  pins: the strings, their order, which items fly, and that the line ends with the event's own total
-  rather than a sum of its terms. The tests create no `ebiten.Image` and need no font — the same
-  narrow exception the other screen tests take.
-- **The layout is computed once, before anything is shown**, and items are revealed left to right
-  into space already claimed. Laying the line out again as each item appeared would recenter the
-  whole sum on every beat, so figures already on screen would crawl sideways while being read.
-- **It takes its height from the band above the hand and its width from the table, and neither is
-  an accident.** The depth is `mathBandHeight`, which is what the Resolution feed's collapsed box
-  came to — the size the sum was laid out and looked at against. **The feed is gone and the
-  constant deliberately outlived it**: changing that number is re-laying out the arithmetic, not
-  tidying up after a deleted pane. While the feed was there this was computed in `handMathRect`
-  rather than read off `feedRect`, because a player holding the box open grew it upward and a
-  dialog that moved with it would re-lay a line of figures out from under a reader mid-flight. The
-  **width** was deliberately not the feed's either: `feedRect` spanned `handBand`, which narrows as
-  the hand empties, and a two-card hand gives about 330px against a widest sum of roughly 640 — so
-  a centered line that does not wrap and cannot shrink would have run off both ends in exactly the
-  rounds a duel is decided in. `TestTheWidestSumFitsItsBand` found that and holds it. **The same
-  trap is live anywhere else that borrows `handBand` for something that is not the hand.**
+  while `mathBox.Running()`, and the flights it throws hold the cursor after it. **It still cannot
+  change an outcome** — the round was decided before a frame of it was drawn — but it *does* change
+  pacing, and `demoGiveUpAt` is sized against the dwell alone, so a longer script is worth checking
+  against it.
+- **`hitScript(e, i, first)` is the half with no geometry in it**, and it is what
+  `combat_mathbox_test.go` pins: the strings, their order, which items fly, and that each line ends
+  with the event's own figure for that hit. The tests create no `ebiten.Image`.
+- **Each line is laid out once, before anything is shown**, and revealed left to right into space
+  already claimed, centered on its card's column, a `mathLinePitch` per line below the card's bottom
+  edge. **Nothing is shrunk** *(owner's call)*: at full type size neighboring lines overlap and a
+  long one runs off the screen, which is expected and is the next thing to design.
+- **Shakes and signals are read off what started this frame**, not off one cursor. `takeShakes` and
+  `takeSignalSeats` each drain their own list of items the box started, because two readers drain
+  them on different schedules and several lines start on one frame.
 - **Every rung the engine names is shouted, `NO HAND!` included.** The bottom of the ladder is a
   rung like any other — a multiplier, a stone that raises it, a relic that names it — and the word
   says what the turn was. **What the No Hand does not get is the lift**: the announcement raises the
@@ -265,20 +260,19 @@ number the game had decided rather than one they had built.
   **The multiplier used to be a number the player first met when it flew out of the word**, several
   beats after the round was committed — so the ladder was something to be told about afterwards
   rather than something to play toward. `handMultiplierLine` formats it through
-  `handMultiplierText`, the sum's own formatting, so the planned figure and the fired one cannot be
-  two spellings; `TestTheHandNameCarriesTheMultiplierTheSumWillShow` pins that.
+  `handMultiplierText`, the lines' own formatting, so the planned figure and the fired one cannot be
+  two spellings; `TestTheHandNameCarriesTheMultiplierTheLinesWillShow` pins that.
   **Only the name grows on the flight.** The line is written at `mathMultLineSize`, which *is*
-  `mathTermSize` — the size a figure is written at in the sum — wherever it is drawn, while the
+  `mathTermSize` — the size a figure is written at in a line — wherever it is drawn, while the
   name swells 80 → 124 around it. The gap between them stays proportional to the name, so the pair
   opens up rather than colliding, and `multLineDrop` is the one function both the drawing and the
   origin measure it with.
   **The line is not replaced by the multiplier — it *is* the multiplier, and it sets off**
-  *(2026-08-19, owner's call)*. It rests under the name through every card's figure flying into the
-  sum, and **the whole banner is cleared on the frame the sum's own copy leaves** —
-  `mathBox.at >= mathBox.multAt`, in `advancePlayback`, where the box's clock runs. The name goes
-  with the figure rather than a beat later: it has been carried down, read and spent by then, and
-  a word left breathing over the hand while the sum finishes and the opponent swings back is
-  saying something the round has moved past. The handoff is the damage figure's four-things-matching rule
+  *(owner's call)*. It rests under the name through the start of every line, and **the whole banner
+  is cleared on the frame the first line's copy leaves** — `mathBox.multStarted`, in
+  `advancePlayback`, where the box's clock runs. Every line's multiplier flies out of the same spot.
+  The name goes with the figure rather than a beat later: it has been carried down, read and spent
+  by then. The handoff is the damage figure's four-things-matching rule
   applied a second time — same size (`mathMultLineSize` = `mathTermSize`, and `fromScale: 1` so it
   does not grow like a card's figure), same color, same place, same frame. **The origin is the
   `1.15` inside `1.15x DMG`, not the line's center**, or the figure would start under the `x` and
@@ -294,8 +288,7 @@ number the game had decided rather than one they had built.
   nothing produces today) still pops on its own. **It is raised in `startRound`**, on the last frame
   `previewAttack` can still be asked, and cleared in `endOfRound` — except on a settled duel, which
   freezes with its cards and its name up. And **it is centered on `handRowCenter`, never on
-  `handBand`**, or it would drift sideways as the row narrowed under it — the same trap the sum's
-  width avoids.
+  `handBand`**, or it would drift sideways as the row narrowed under it.
 - **The name doubled and is bold** *(2026-08-19, owner's call)*: 80 points, wherever it is
   written, making it the biggest type on the screen. Bold is faux — the same word drawn again
   `mathBoldStep` to the right, the pane's own idiom, since `text/v2` has no synthetic bold and
@@ -321,22 +314,17 @@ number the game had decided rather than one they had built.
   leaving a pink word in yellow reads as a second thing appearing. `attentionYellow` has one user
   left, the ring round the deck stack. Pink already means relic and pane chrome, which is the
   question to answer before a third pink is proposed.
-- **The arithmetic doubled with the name** *(2026-08-19, owner's call)*: terms 38 → 76, operators
-  30 → 60, the total 50 → 100 — it was being overwhelmed by the cards and the shout around it. The
-  landing damage figure doubled with it and had to, `hitFigureSize` being `mathTotalSize` rather
-  than a size of its own. Width still fits with room — the widest sum the rules can produce is
-  about 830 against a 1232-wide band, and `TestTheWidestSumFitsItsBand` measures to the ink now
-  rather than to the resting centers. **Depth is the constraint that is nearly spent**: a
-  100-point total is 85 pixels tall against `mathBandHeight`'s 82, so it clears its neighbors but
-  the next increase has to move the band, not only the type.
+- **The arithmetic is set large** *(owner's call)*: terms at 76, operators at 60, a hit's figure at
+  100. The landing damage figure is the same size, `hitFigureSize` being `mathTotalSize` rather than
+  a size of its own. **Neither width nor depth is held** — see the layout bullet above.
 - **Every number is drawn in the color of what produced it** *(2026-08-19, owner's call)*. A
   card's figure wears that card's element — `cards.BorderOf`, the same color as the border it
-  flies out of — so the sum reads as being made *of the cards* rather than handed down by the
+  flies out of — so a hit reads as being made *of its card* rather than handed down by the
   game; the multiplier wears `handNameInk`, the hand's own color, which is also the banner it
   leaves; the total wears the attack ink, and the damage figure that flies on out of it wears the
   same. Operators stay faded ground ink, being the one thing on the line the game supplied rather
   than the player. **The element is read off the card in the seat, never off the event** —
-  `Event.Element` is the blow's lead card and the sum has a figure per card.
+  `Event.Element` is the hand's lead card and every line has its own.
   **Lightning's own color was darkened to make this work** — `{240,205,55}` to `{214,152,12}`, in
   `cards`, so every lightning border moved with it. A bright yellow is legible on a dark ground and
   nearly invisible on the two light ones this game draws on — the off-white card surface and the
@@ -348,28 +336,28 @@ number the game had decided rather than one they had built.
   punctuation the game supplied.
 
 **Within a turn the order is `combat.Categories()`: the defend cards first, then the attacks —
-announced, then the hand, then the damage.** The screen does nothing to arrange this; it replays
+announced, then the hand, then the hits.** The screen does nothing to arrange this; it replays
 the log in order, and the engine decides. Both the resolver and the table's two rows read
 `ResolutionOrder` rather than deriving an order of their own.
 
 Three consequences for playback. **The hand line lands after its cards are announced but before
-the damage**, so a boosted figure never arrives before the reason for it, and `noteHand` has
-real rows to mark because the whole queue is seated at DUEL! rather than a card at a time.
+any hit**, so a boosted figure never arrives before the reason for it, and `noteHand` has real rows
+to mark because the whole queue is seated at DUEL! rather than a card at a time.
 
 **The rung is raised by the hand's announcement and by nothing else.** `noteHand` lifts
-`Event.RungCards` — the cards that *made the hand* — rather than `HandCards`, which is every attack
-the turn played and would stand up a card that is in the sum and in no part of the rung.
-`firingSeats` is a list rather than one seat because a counted hand is not contiguous. Then
-`advancePlayback` puts them back down the moment the sum starts counting, and the sum walks
-`HandCards`: **the rung is raised, the blow is counted.**
+`Event.RungCards` — the cards that *made the hand* — rather than `HandCards`, which is every hit the
+turn throws and would stand up a card that is in no part of the rung. `firingSeats` is a list
+rather than one seat because a counted hand is not contiguous. Then `advancePlayback` puts them back
+down the moment the lines start, and the lines walk `HandCards`: **the rung is raised, the hits are
+thrown.**
 
 **A duelist's turn is three moments and each has exactly one gesture: the shields fire as a bundle
-with nothing lifted, the hand is announced with its cards up, and the tally runs with the table at
+with nothing lifted, the hand is announced with its cards up, and the lines run with the table at
 rest.** Nothing else on that turn may lift a card — a second gesture ahead of the announcement
 reads as whichever card it lifted having gone first.
 
-And **the hand is announced even if the blow then misses** — the shock roll happens after the hand
-event, because the hand is scored off the queue and the queue was committed at DUEL!.
+And **the hand is announced even if every hit then misses** — the shock rolls per hit, after the
+hand event, because the hand is scored off the queue and the queue was committed at DUEL!.
 
 ### Pacing: one speed, and a table of proportions
 
@@ -432,7 +420,7 @@ nothing.
   the ring before it left. Two rings is two beats. See MECHANICS.md §The flip relics.
 - **A ring that touches nothing in this hand is not a beat**, and the ring that *is* firing
   **toasts** — `relicToast`, which is the rattle, a tilt one way then the other, and the lit
-  border, all three off one `travel`. The sum's own toast, on a second clock, since one is playback
+  border, all three off one `travel`. The hits' own toast, on a second clock, since one is playback
   and the other is a hand arriving. **A resting relic is blitted and a toasting one is flown**,
   because a turn puts the card off the pixel grid.
 - **`tickDeal` is driven by the scene, not by `combatTheater.tick`.** Its stages hand over to each
@@ -445,7 +433,7 @@ nothing.
 ### Shields break the attacks they ate, and a card can be marked
 
 *`combat_shatter.go` and `internal/cards/mark.go`, 2026-09-08.* A shield eats the creature's
-**heaviest** blow rather than its first — `combat.shieldedSlots`, decided at the top of the
+**heaviest** hit rather than its first — `combat.shieldedSlots`, decided at the top of the
 creature's turn — and the screen plays that as **one beat between the two turns**: every blocked pip
 flies out of the duelist card into the attack card it kills, the break opens across that card's
 face, the round holds, then the creature swings with what is left.
@@ -480,53 +468,47 @@ face, the round holds, then the creature swings with what is left.
   hold after the break is the longest single one on this screen, deliberately: the round has three
   acts and the middle one had no beat of its own.
 
-### The blow landing, and the bar that waits for it
+### A hit landing, and the bar that waits for it
 
-*`combat_hits.go`, 2026-08-18.* The damage figure travels out of wherever the blow was last seen
-and into the card whose bar it empties, and **the bar holds its old figure until the number
-arrives**, so the drop and the arrival are one event rather than two. It is the second half of the
-hand dialog: that answered "where did that number come from", this answers "and what did it do" —
-which used to be a bar dropping while the total sat in the middle of the screen with nothing drawn
-between them.
+*`combat_hits.go`.* A hit's figure travels out of wherever it was worked out and into the card whose
+bar it empties, and **the bar holds what it had until the number arrives**, so the drop and the
+arrival are one event rather than two. It is the second half of the hand dialog: that answers
+"where did that number come from", this answers "and what did it do".
 
-- **The model has already moved.** `applyEvent` writes the new life the instant the event is
-  reached, exactly as it always did, and the flight is raised afterwards — so a figure in the air is
-  a ghost of something that has happened, and nothing that asks how much life is left gets a
-  different answer while it is up. What lags is the *drawing*, through `shownLife`, which is a view
-  over the combatant rather than a second copy of it. Same division `spendSelected` keeps: the
-  animation never owns the state. `enemySpec` and `duelistSpec` take the life to draw as an
+- **Several fly at once.** A hand-forming turn's lines finish in whatever order their arithmetic
+  allows and each is thrown the moment it does, so up to a turn's worth of figures can be in the air
+  together and the bar drops by each as it lands.
+- **The model has already moved.** The life is written before the figure is raised — by
+  `throwColumn` for a hand's hit, the moment its line finishes; by `applyEvent` for a solo
+  attacker's, when the event is reached — so a figure in the air is a ghost of something that has
+  happened. What lags is the *drawing*, through `shownLife`, which is a view over the combatant
+  rather than a second copy of it. `enemySpec` and `duelistSpec` take the life to draw as an
   argument for exactly this reason.
-- **It stops the playback cursor too**, for the dialog's reason: a figure crossing half the screen
-  does not fit inside one event's dwell, and the alternative is the bar dropping before the number
-  reaches it. `combatTheater.running` is what `advancePlayback` waits on. It changes pacing and cannot change
+- **`shownLife` is the model plus every figure still in the air, capped at the most any of them
+  was holding.** The sum of what is owed is what the bar has yet to lose, whatever order the
+  figures land in; the cap is what keeps a killing hit's overkill from drawing a bar above the life
+  that was there.
+- **What a figure holds is read off the combatant, never worked back from the event.** `e.Life` is
+  clamped at zero, so `e.Life + e.Amount` is the *size of the hit* on a killing blow and the bar
+  would jump up for the length of a flight. The caller reads the life before it overwrites it.
+- **It stops the playback cursor too**: a figure crossing half the screen does not fit inside one
+  event's dwell, and the alternative is the bar dropping before the number reaches it.
+  `combatTheater.Running` is what `advancePlayback` waits on. It changes pacing and cannot change
   an outcome.
-- **Where it sets off from is a rule, not a rectangle** — `anchorBlow`. The sum line when the turn
-  scored a hand, because the total is already on screen there and two figures for one blow would be
-  two blows; the acting card's own seat when it did not, because a solo attacker emits no
-  `KindHand` at all and every attack lands its own face damage. `soloAttacker(side)` is the
-  predicate that already knows which.
-- **The handoff from the sum is four things matching, and all four are deliberate**: the figure is
+- **Where it sets off from is a rule, not a rectangle** — `anchorBlow`. A hand's hit leaves its own
+  line's figure (`hitFlight.from`, the one mover that stores a point, because a line is laid out once
+  and never moves); a solo attacker's leaves the lit card's seat, because it emits no `KindHand` and
+  every attack lands its own face damage. `soloAttacker(side)` is the predicate that knows which.
+- **The handoff from a line is four things matching, and all four are deliberate**: the figure is
   the total's size (`hitFigureSize` *is* `mathTotalSize`), the total's color, at the total's
-  position, on the frame the box clears — `advancePlayback` clears a finished box at the top of the
-  beat the damage lands rather than a tick after the script stops, so the last frame of the sum and
-  the first frame of the flight are the same frame. Any one of the four missing and it reads as two
-  numbers swapping rather than one setting off. It also does not fade *in*, for the same reason.
-- **It shrinks where the sum's items grow**, and the difference is the meaning: a term flying into
-  the sum comes toward the reader, a total flying into a card goes away into it.
-- **What the bar holds is read off the combatant, never worked back from the event** *(2026-08-19,
-  bug)*. It was `e.Life + e.Amount` — what was there, from what is left plus what was dealt — which
-  is right for every blow except the one that ends a duel: `e.Life` is clamped at zero, so overkill
-  makes that arithmetic return the *size of the blow*. A pair of Cleaves for 60 on an enemy holding
-  30 of 90 drew `60/90` for the length of the flight and then emptied — health visibly going *up*,
-  on the killing blow and nowhere else. `applyEvent` reads the life before it overwrites it and
-  hands it to `noteHit`.
+  position, and the line stops drawing its total on the frame the figure sets off (`spent`). Any one
+  of the four missing and it reads as two numbers swapping rather than one setting off. It also does
+  not fade *in*, for the same reason.
+- **It shrinks where a line's items grow**, and the difference is the meaning: a term flying into a
+  line comes toward the reader, a figure flying into a card goes away into it.
 - **`Init` takes the whole theater down**, which is the lesson the frozen last round taught — anything
   tidied up only by the end-of-round spend assumes every round ends in one, and a settled duel does
   not.
-- **`shownLife` walks the list although there is only ever one figure owed.** The cursor holds for a
-  whole flight, so a second `KindDamage` cannot be reached while the first is up — but relying on
-  that would break the day the hold is shortened, and it would break as a bar showing a life nobody
-  has, which is hard to attribute.
 
 ### A card that fires says so: the signal widget
 
@@ -564,19 +546,19 @@ is lifted only a quarter toward white for the same reason — at more than half,
 silver's put a white disc back in the middle of the thing that had just stopped being one.
 
 **When they fire took the real decision.** Riders resolve *before* the attack phase — `playTurn`
-runs chill, then riders, then the blow — so every one of these events sits in the log ahead of
-`KindHand` and the sum. Drawing them where they sit would put four fireworks up before the hand was
-named. So the screen defers *(owner's call, 2026-09-10)*:
+runs chill, then riders, then the hits — so every one of these events sits in the log ahead of
+`KindHand`. Drawing them where they sit would put four fireworks up before the hand was named. So
+the screen defers *(owner's call)*:
 
-- **Every held card signals first, and the sum does not begin until they have landed** *(owner's
-  call, 2026-09-10)*. `startHandMath` calls `releaseHeldSignals` after building the box and before
-  it has run a frame; `advancePlayback` freezes the box while any signal is up, so the held figures
-  fly to the duelist card and only then does the hand start counting. Together, because what the
-  turn kept back is one fact about the turn rather than several about cards.
-- **Then each played card signals as it scores**, released by `handMathBox.takeSignalSeat` on the
-  beat that card's own term starts. That is **`takeShields` generalized** — a defend card's pips
-  already leave with its figure for the same reason.
-- **The resolver was not reordered to achieve this.** A heal arriving before the blow is a rules
+- **Every held card signals first, and the lines do not begin until they have landed** *(owner's
+  call)*. `startHandMath` calls `releaseHeldSignals` after building the box and before it has run a
+  frame; `advancePlayback` freezes the box while any signal is up, so the held figures fly to the
+  duelist card and only then do the hits start being worked out. Together, because what the turn
+  kept back is one fact about the turn rather than several about cards.
+- **Then each played card signals as its own figure sets off**, released by
+  `handMathBox.takeSignalSeats` on the beat that card's term starts in its line. The lines start
+  together, so the cards' signals mostly leave together.
+- **The resolver was not reordered to achieve this.** A heal arriving before the hits is a rules
   decision with its own argument in `playRiders`. The screen owns when it draws; the log owns what
   happened.
 - **A turn that never scores flushes at the boundary** — the acting side changing, or the round
@@ -584,7 +566,7 @@ named. So the screen defers *(owner's call, 2026-09-10)*:
   `noteShieldRaise` keeps the same fallback for pips.
 
 **Every signal holds the playback cursor** *(owner's call: every signal of a card firing holds)*,
-including inside the sum — the box waits on `running(theater.signals)` before its next term.
+including inside the lines — the box waits on `running(theater.signals)` before its next term.
 
 **`signalShown` is `shownLife`'s idea pointing the other way.** A damage figure lands on a life the
 model has already spent, so the drawing lags. A grant lands on a figure the screen's copy of the
@@ -671,8 +653,8 @@ cards themselves carry, so what was raised and what is standing are the same pic
   arrive at their own beats with nothing to do. **It is the shield break's rule and the deal
   cascade's**: what the defend phase says is one thing about the turn, not three things about cards.
   `noteShieldRaise` is the bundle and `raisesInPhase` is the walk. **The pips are the phase's and
-  never the sum's** — a defense that made the rung still pays its visible `0` into the arithmetic,
-  and that `0` is all the sum has to say about it.
+  never a hit's** — a defense's hit line comes to 0 and flies nothing; its shields went up a
+  phase earlier.
 - **A raise names its own card, in `Event.Slot`**, which is the only thing the pips have to leave
   from: nothing is lit during the defend phase, so a seat read off the lit card would have no
   answer. `noteShields` reads the same field for the element a pip lands wearing.
@@ -824,27 +806,25 @@ it again to take it out, drag sideways to move it along the row.
 column against the band's right edge, centered on the cards: **`$` cost, `T` type, `E` element**.
 The active one latches darker than the other two.
 
-- **Sorting a queued hand re-prices it** *(owner's call, 2026-08-26)*. Cross-category order is still
-  regrouped away by `ResolutionOrder` and a hand is still counted rather than read in sequence, but a
-  growing relic now steps between the cards of one blow — so the order of the queue decides what the
-  cards are worth. The buttons stay live and a bad sort can cost damage; that is the intent, not an
-  oversight. This paragraph used to say the opposite and it is the one thing to unlearn about the
-  file.
+- **Sorting a queued hand re-prices it** *(owner's call)*. Cross-category order is still regrouped
+  away by `ResolutionOrder` and a hand is still counted rather than read in sequence, but a growing
+  relic steps between the hits of one turn — so the order of the queue decides what the cards are
+  worth. The buttons stay live and a bad sort can cost damage; that is the intent, not an
+  oversight.
 - **Cost is the default, and every mode ends with it.** Each arrangement is the deck overlay's
   own key chain — cost, form, concept, element — with one key promoted to the front, so a row
   of cards means the same thing in the hand as in the panel. Only the leading key differs.
 - **The sort re-applies on every refill**, in `spendSelected` *before* anything is animated, so a
   dealt card flies to the slot it will actually occupy. A drag still works and survives until the
   next deal, at which point the sort reclaims the row.
-- **Every figure in the hand dialog's sum comes from a card, and that card shakes as it is written**
-  *(owner's call, 2026-08-26)*. A card's damage flies out of the played card, a relic's multiplier out
-  of that relic's card, and an echo's extra term shakes the relic that bought the landing even though
-  it puts no figure on the line. The box runs its items strictly one at a time, so putting the relic
-  figures *in* the script is the whole of the sequencing — there is no second clock. `mathItem`'s
-  `relicSeat` / `cardSeat` / `shakeRelics` are the marks, and `handMathBox.shaking` is what the screen
-  reads each tick.
+- **Every figure in a hit's line comes from a card, and that card shakes as it is written**
+  *(owner's call)*. A card's damage flies out of the played card, a relic's multiplier out of that
+  relic's card, and an echo's extra hit shakes the relic that bought the landing even though it puts
+  no figure on the line. Each line runs its items one at a time, so putting the relic figures *in*
+  the script is the whole of the sequencing within a hit. `mathItem`'s `relicSeat` / `cardSeat` /
+  `shakeRelics` are the marks, and `handMathBox.takeShakes` is what the screen drains each tick.
 - **Sideways, never a jump.** Vertical is spoken for twice already — a selected card lifts in the
-  hand, and a card that built the hand lifts on the table for the whole blow. The shake says "this
+  hand, and a card that built the hand lifts on the table while the hand is announced. The shake says "this
   one is paying *now*", so it needed a direction nothing else uses.
 - **The drag runs on the shared controller in `carddrag.go`** *(2026-08-26)*, which the worn relic
   row also uses on all three screens that draw it. The hand's adapter is `handRow`; it really does

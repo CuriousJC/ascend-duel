@@ -559,15 +559,15 @@ func runeRiderLine(k combat.RiderKind) string {
 	case combat.RiderShieldOnPlay:
 		return "raises a shield"
 	case combat.RiderDamageOnPlay:
-		return "adds DMG to the blow"
+		return "adds DMG to every hit"
 	case combat.RiderDamageInHand:
 		return "adds DMG while held"
 	case combat.RiderScaleInHand:
-		return "multiplies the blow while held"
+		return "multiplies every hit while held"
 	case combat.RiderVitaeInHand:
 		return "pays vitae while held"
 	case combat.RiderScaleInCombo:
-		return "multiplies the blow it makes"
+		return "multiplies every hit of the hand it makes"
 	case combat.RiderWildElement:
 		return "counts as every element"
 	case combat.RiderGolden:

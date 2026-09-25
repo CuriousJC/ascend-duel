@@ -51,11 +51,11 @@ func (s *CombatScene) backSpec() cards.Spec {
 // record is presentation of events the engine already decided; it computes nothing, so what is
 // written here still cannot disagree with what the round did.
 //
-// **The attack phase is one record, and it is the hand's.** The defenses write one each; the attack
-// cards write none. A turn lands one blow, so five entries saying "Duelist attacks with an earth
-// strike" would describe a round that does not happen, and the one that mattered — what the five
-// cards came to — would be the sixth. **Every hand takes that record, the No Hand included**: a
-// lone attack is the catalog's one-card hand and is announced like any other.
+// **The attack phase is the hand's record and a line per hit under it.** The defenses write one
+// each; the attack cards write no act, because each of them is a hit line with its arithmetic
+// beside it and a sentence saying "Duelist attacks with an earth strike" would say it twice.
+// **Every hand takes that record, the No Hand included**: a lone attack is the catalog's one-card
+// hand and is announced like any other.
 func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecord {
 	var out []session.LedgerRecord
 
@@ -101,23 +101,23 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 
 		case combat.KindMissed:
 			// It belongs to the attacker's own entry rather than opening one, because the card
-			// *was* played. Naming the shock is the whole point: a blow that simply missed would
+			// *was* played. Naming the shock is the whole point: a hit that simply missed would
 			// look like a bug in a game with no dice in it.
-			add(session.LedgerRecord{Kind: session.KindMissed, Side: sideWord(e.Side)})
+			add(session.LedgerRecord{Kind: session.KindMissed, Side: sideWord(e.Side), Hit: s.hitOf(e, e.Side)})
 
 		case combat.KindStatus:
 			add(session.LedgerRecord{
 				Kind: session.KindStatus, Side: sideWord(e.Side),
-				Status: combat.StatusOf(e.Status).Key,
+				Status: combat.StatusOf(e.Status).Key, Hit: s.hitOf(e, e.Side),
 			})
 
 		case combat.KindDrained:
 			// **It belongs to the attacker's entry**, like a status does, because it is something
-			// the blow did rather than an event of its own. **The relic names itself**, so a second
+			// the hit did rather than an event of its own. **The relic names itself**, so a second
 			// drain relic cannot narrate identically to the first.
 			add(session.LedgerRecord{
 				Kind: session.KindDrained, Side: sideWord(e.Side),
-				Relic: combat.RelicOf(e.Relic).Name, Amount: e.Amount,
+				Relic: combat.RelicOf(e.Relic).Name, Amount: e.Amount, Hit: s.hitOf(e, e.Side),
 			})
 
 		case combat.KindRegenerated:
@@ -167,7 +167,10 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 		case combat.KindBlocked:
 			// **The only record that the attack happened at all**, since it landed nothing and
 			// there is no damage entry coming.
-			add(session.LedgerRecord{Kind: session.KindBlocked, Side: sideWord(e.Side), Amount: e.Amount})
+			add(session.LedgerRecord{
+				Kind: session.KindBlocked, Side: sideWord(e.Side), Amount: e.Amount,
+				Hit: s.hitOf(e, e.Target.Other()),
+			})
 
 		case combat.KindTimeUp:
 			// **An entry of its own.** Nobody swung, so there is no attacker's sentence for this to
@@ -179,7 +182,9 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 			})
 
 		case combat.KindDamage:
-			add(session.LedgerRecord{Kind: session.KindDamage, Side: sideWord(e.Side), Amount: e.Amount})
+			add(session.LedgerRecord{
+				Kind: session.KindDamage, Side: sideWord(e.Side), Amount: e.Amount, Hit: s.hitOf(e, e.Side),
+			})
 
 		case combat.KindDefeated:
 			add(session.LedgerRecord{
@@ -189,6 +194,15 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 	}
 
 	return out
+}
+
+// hitOf is a hit event's Hit as a record counts it — from one — or zero when the attacker is a solo
+// attacker, whose hits have no hand event and no hit lines to attach to.
+func (s *CombatScene) hitOf(e combat.Event, attacker combat.Side) int {
+	if s.soloAttacker(attacker) {
+		return 0
+	}
+	return e.Hit + 1
 }
 
 // actRecord is one duelist playing one card.
@@ -238,7 +252,7 @@ func sideWord(side combat.Side) string {
 // **It reads the duelist the round was resolved for, not the side** — see
 // `combat.Duelist.SoloAttacks`. Two things on this screen change with it and both would otherwise
 // have to guess: the feed writes a sentence per attack card because no hand line is coming, and
-// the table lights one card at a time because no single blow is being assembled.
+// the table lights one card at a time because no hand is being read.
 //
 // A missing combatant answers false, which is the hand-forming case: this is asked while drawing, and
 // a half-built scene should read as the ordinary round rather than as an enemy's.
@@ -276,10 +290,9 @@ func (s *CombatScene) sideName(side combat.Side) string {
 // own**, because they are not something a card did â€” folding a hand into the line of the card
 // that happened to start it would bury the one thing worth reading.
 //
-// **The attack phase is one line, and it is the hand's** *(2026-08-14)*. The defenses write a
-// line each; the attack cards write none. A turn lands one blow, so five sentences
-// saying "Duelist attacks with an earth strike" described a round that does not happen, and the
-// line that mattered â€” what the five cards came to â€” was the sixth. **Every hand takes that line,
+// **The attack phase is the hand's line and a line per hit under it.** The defenses write a line
+// each; the attack cards write no sentence of their own, since each is a hit line with its
+// arithmetic beside it, and the line that mattered â€” what the five cards came to â€” was the sixth. **Every hand takes that line,
 // the No Hand included** *(2026-08-19)* â€” a lone attack is the catalog's one-card hand and is
 // announced like any other.
 //

@@ -25,12 +25,12 @@ import (
 //
 // **One lifecycle for all of them, so it is learned once**:
 //
-//   - **Applied by a landed attack, and by nothing else.**
+//   - **Applied by a hit that connects, and by nothing else**, once per hit.
 //   - **It does not stack; a second hit resets the clock.** *(2026-08-16)* Two chills chill for the
 //     same one card as one did, and the second simply buys two more round-ends of it. Amounts
 //     stacked until then, which made a status something to pile on rather than something to keep
-//     up — and with one blow a turn, four stacks of a thing was four cards spent saying one word
-//     louder. A relic that *does* stack is a relic that can be designed later; the base rule being
+//     up — and with a hit per card, four stacks of a thing would be four cards spent saying one
+//     word louder. A relic that *does* stack is a relic that can be designed later; the base rule being
 //     "no" is what leaves it somewhere to go.
 //   - **Cleared at the end of the round after the one that applied them.** A record's `Rounds` is
 //     counted in round *ends*, and every status in the file says 2 for one reason: a status applied
@@ -198,11 +198,10 @@ func registerStatus(s data.StatusData) error {
 		return fmt.Errorf("%s lasts %d rounds, so it is over before it is felt", s.StatusRecord, s.Rounds)
 	}
 
-	// Nothing in the game stops a blow outright and nothing misses every time: a defense that
-	// always works deletes a whole opposing turn for the price of one card, which is what one blow
-	// per turn cannot afford. The same bound RegisterConcept holds against a 100% defense.
+	// Nothing in the game stops a hit outright and nothing misses every time: a certain miss would
+	// delete every hit of an opposing turn for the price of one card.
 	if effect == EffectMissChance && s.Amount >= 100 {
-		return fmt.Errorf("%s misses %d%% of attacks, and nothing may stop a blow outright", s.StatusRecord, s.Amount)
+		return fmt.Errorf("%s misses %d%% of attacks, and nothing may stop a hit outright", s.StatusRecord, s.Amount)
 	}
 	if effect == EffectDamageReduction && s.Amount >= 100 {
 		return fmt.Errorf("%s blunts damage by %d%%, and nothing may reduce a blow to zero", s.StatusRecord, s.Amount)
@@ -429,16 +428,16 @@ func (d Duelist) missChance() int {
 // file over. See ui.DuelistTip.
 func (d Duelist) MissChance() int { return d.missChance() }
 
-// attackMisses rolls a duelist's attack and reports whether it misses.
+// attackMisses rolls one hit and reports whether it misses. **It is asked once per hit**, by both
+// attack phases.
 //
-// **Nothing is consumed** *(2026-08-16)*: the status rolls again on every attack until its rounds run
-// out. It therefore takes the duelist by value and gives nothing back — a status that neither stacks
-// nor depletes is read, not spent.
+// **Nothing is consumed**: the status rolls again on every hit until its rounds run out. It
+// therefore takes the duelist by value and gives nothing back — a status that neither stacks nor
+// depletes is read, not spent.
 //
-// **This is the only randomness in `internal/combat` and it arrives the way CLAUDE.md requires**: an
-// injected `*rand.Rand` on `ResolveRound`, never a package-level source. The costs are real and were
-// accepted — the stream is advanced per attack phase, so a change early in a duel reshuffles every
-// roll after it.
+// **It arrives the way CLAUDE.md requires**: an injected `*rand.Rand` on `ResolveRound`, never a
+// package-level source. The costs are real and were accepted — the stream is advanced per hit, so a
+// change early in a duel, or a change to how many hits a turn throws, reshuffles every roll after it.
 //
 // A nil source means "no rolls", which is what keeps a caller that has no business being random — a
 // preview, a test pinning the deterministic parts — from silently getting one.

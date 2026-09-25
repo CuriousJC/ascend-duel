@@ -46,13 +46,13 @@
     },
     {
       "StepRecord": "take-them-all",
-      "Text": "Now look closer. Four cards burn the same color. Matching cards make a hand, and a hand multiplies the whole blow - so take the other three.",
+      "Text": "Now look closer. Four cards burn the same color. Matching cards make a hand, and a hand multiplies every card's hit - so take the other three.",
       "Anchor": "matching-cards-left",
       "Until": "matching-queued"
     },
     {
       "StepRecord": "the-shield",
-      "Text": "One of those four is a Brace - a shield, not a blow. It deals nothing, but it counts toward the hand all the same. It buys you one shield, and a shield does not eat whatever swings first - it picks their hardest blow and swallows that one.",
+      "Text": "One of those four is a Brace - a shield, not a hit. It deals nothing, but it counts toward the hand all the same. It buys you one shield, and a shield does not eat whatever swings first - it picks their hardest hit and swallows that one.",
       "Anchor": "matching-cards",
       "Until": "next"
     },
@@ -88,7 +88,7 @@
     },
     {
       "StepRecord": "the-ledger",
-      "Text": "Every blow of this climb is written down here, term by term. Open it and see what that round actually cost.",
+      "Text": "Every hit of this climb is written down here, figure by figure. Open it and see what that round actually cost.",
       "Anchor": "ledger-button",
       "Until": "ledger-opened"
     },
@@ -143,7 +143,7 @@
     },
     {
       "StepRecord": "draught-is-permanent",
-      "Text": "That DMG is yours for good. A relic can be sold and a shield lasts a turn, but a draught changes the duelist - every blow you throw from here is bigger for it.",
+      "Text": "That DMG is yours for good. A relic can be sold and a shield lasts a turn, but a draught changes the duelist - every hit you throw from here is bigger for it.",
       "Anchor": "build-card",
       "Until": "next"
     },

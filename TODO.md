@@ -106,6 +106,23 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       exist is any of it in code: no `brands.json`, no acquisition, no seat on the duelist.
       `session.Session` is where a worn brand would live, beside the worn relics.
 
+- [ ] **Rename "blow" now that a turn is a hit per card** *(owner asked for this to be tracked)*.
+      `combat.Blow`, `blowFor`/`BlowFor`, `blowDMG`, `previewBlow` and `anchorBlow` all name the
+      formed hand and its scoring set, which no longer lands as one figure. **The Go identifiers are
+      a local rename**; the `blow-formed` relic moment is written into `data/relics.json` and the
+      archive, so renaming it is a data migration and a change to the `relics` skill's vocabulary.
+
+- [ ] **Split the banner out of `combat_mathbox.go`** *(owner asked for this to be tracked)*.
+      `handBanner` — the hand's name traveling from the table to the hand row, and its flash — is its
+      own object with its own clock, and it sits in a file of about 1,650 lines whose subject is the
+      per-hit lines. A `combat_banner.go` beside it is a move with no change in behavior.
+
+- [ ] **Trim what the old single-line sum left behind** *(owner asked for this to be tracked)*.
+      `mathBandHeight` and `handMathRect` now serve only the tutorial's pointer at "the arithmetic",
+      which should point at the lines themselves; `anchorSumLine` names a line per hit;
+      `combat.LandingAmounts` is called only by tests; and `session.RoleCard` / `RoleSum` are read
+      and never written, kept so older saved accounts still draw.
+
 ## Next — where the game actually starts
 
 - [ ] **Boss advantages** *(owner asked for this to be tracked)*. Every boss is the same boss
@@ -149,24 +166,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       it should also be a shape — a deck rule, a budget, a behaviour — is open.
 
 ### Cards and piles — presentation
-
-- [ ] **The math band should wrap, not shrink.** `layOutMath` lays the sum out as one
-      centered line and **shrinks every item by a common factor when the line is wider than
-      the band** — floored at `minMathShrink`, 0.6. That is a stopgap: seven terms is
-      reachable now (five cards in a legal turn plus the two extra landings an echo seats behind the
-      first), and the answer to a line that will not fit is a second line, not smaller type.
-      - **Why it is not done yet**: every figure *flies* from the card that paid it into its resting
-        place, so a wrap is not a text-layout change — it is a second row of destinations, and the
-        `x` and `=` have to land somewhere that still reads as one sum.
-      - **What would say it is needed**: a real game showing a shrunk line.
-        `TestTheWidestSumFitsItsBand` proves the deliberately-absurd case fits *after*
-        shrinking; it says nothing about whether the result is readable at 0.6.
-      - It is also the first thing to revisit if `MaxEchoLandings` ever rises above 5.
-      - **The arithmetic behind it is already wide enough.** The event's
-        term arrays hold 25 landings — every card of a legal turn, each landing up to
-        `MaxEchoLandings` times — so a long repeat-and-echo chain is fully *resolved* today and only
-        the drawing of it is short. Wrapping is what lets the screen show what the rules already
-        compute.
 
 - [ ] **The tooltip does not reach every card on screen.** Hand cards, the deck
       overlay, worn relics, the shop's two rows, both fighter cards, the reward screen's prizes and

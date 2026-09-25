@@ -82,11 +82,11 @@ func sideActions(events []Event, by Side) []ConceptID {
 // handCards is the cards one event says formed its hand.
 func handCards(e Event) []int { return e.HandCards[:e.HandCardCount] }
 
-// --- one blow per turn --------------------------------------------------------------------
+// --- a hit per card -----------------------------------------------------------------------
 
-// **The rule the whole model rests on.** However many attack cards a turn queues, exactly one
-// figure of damage lands.
-func TestATurnDealsDamageExactlyOnce(t *testing.T) {
+// **The rule the whole model rests on.** However many attack cards a turn queues, each of them
+// lands its own figure of damage.
+func TestATurnDealsDamageOncePerAttackCard(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	for _, turn := range [][]Card{
@@ -97,8 +97,8 @@ func TestATurnDealsDamageExactlyOnce(t *testing.T) {
 		PlainCards(Jab, Jab, Jab, Jab, Jab),
 	} {
 		events, _, _ := resolve(a, b, turn, nil, 1)
-		if n := kindCount(events, KindDamage); n != 1 {
-			t.Errorf("%v dealt damage %d times, want exactly 1", Concepts(turn), n)
+		if n := kindCount(events, KindDamage); n != len(turn) {
+			t.Errorf("%v dealt damage %d times, want once per card", Concepts(turn), n)
 		}
 	}
 }
@@ -176,9 +176,9 @@ func TestADefenseOutsideTheHandIsNotInTheBlow(t *testing.T) {
 }
 
 // **The event carries both sets, and they come apart on exactly this turn.** Two shields make the
-// Pair; the attack beside them pays into the sum and made no part of the rung. The screen raises
-// the rung on the announcement and counts the blow, so an event carrying only one of the two would
-// have to guess at the other.
+// Pair; every card throws a hit, and the attack beside them made no part of the rung.
+// The screen raises the rung on the announcement and works the hits out, so an event carrying only
+// one of the two would have to guess at the other.
 func TestTheEventNamesTheRungApartFromTheBlow(t *testing.T) {
 	a, b := duelist(10, 6, 5000), duelist(10, 6, 5000)
 
@@ -188,25 +188,13 @@ func TestTheEventNamesTheRungApartFromTheBlow(t *testing.T) {
 		t.Fatal("no attack phase event")
 	}
 
-	// Brace, Block, Bash once resolved: the two defenses are the Pair and the Bash is the blow.
+	// Brace, Block, Bash once resolved: the two defenses are the Pair, and every card throws a hit.
 	if got := handCards(e); len(got) != 3 {
-		t.Errorf("the blow was paid by %v, want all three cards", got)
+		t.Errorf("the hits were thrown by %v, want all three cards", got)
 	}
 	got := e.RungCards[:e.RungCardCount]
 	if len(got) != 2 || got[0] != 0 || got[1] != 1 {
 		t.Fatalf("the rung is %v, want the two defenses", got)
-	}
-	// And the rung is a subset of the blow rather than a second list of its own.
-	for _, i := range got {
-		held := false
-		for _, j := range handCards(e) {
-			if i == j {
-				held = true
-			}
-		}
-		if !held {
-			t.Errorf("the rung names card %d, which paid nothing into the blow", i)
-		}
 	}
 }
 
@@ -280,7 +268,7 @@ func TestTheSameHandPaysMoreOnBiggerCards(t *testing.T) {
 	}
 }
 
-// **Every multiplier the catalog holds is worth what it says against the cards.** The ladder is
+// **Every multiplier the catalog holds is worth what it says against every hit.** The ladder is
 // tuned by editing hands.json alone, which is only true while nothing in the resolver adds to the
 // figure the file's percent is applied to.
 func TestEveryHandIsWorthItsCatalogMultiplier(t *testing.T) {
@@ -306,20 +294,23 @@ func TestEveryHandIsWorthItsCatalogMultiplier(t *testing.T) {
 			t.Fatalf("%s: no KindHand event", tc.key)
 		}
 
-		base := Plain(Bash).Damage(10) * len(tc.turn)
-		if e.Base != base {
-			t.Errorf("%s: base was %d, want the %d cards' own %d", tc.key, e.Base, len(tc.turn), base)
+		card := Plain(Bash).Damage(10)
+		if got := cardTerms(e); got != card*len(tc.turn) {
+			t.Errorf("%s: the cards' terms came to %d, want the %d cards' own %d",
+				tc.key, got, len(tc.turn), card*len(tc.turn))
 		}
-		if want := base * h.Multiplier / multiplierScale; e.Amount != want {
-			t.Errorf("%s: came to %d, want %d x %d%% = %d", tc.key, e.Amount, base, h.Multiplier, want)
+		// **Each hit is multiplied and rounded on its own.**
+		if want := len(tc.turn) * scaleDamage(card, h.Multiplier); e.Amount != want {
+			t.Errorf("%s: came to %d, want %d hits of %d x %d%% = %d",
+				tc.key, e.Amount, len(tc.turn), card, h.Multiplier, want)
 		}
 	}
 }
 
-// **The per-card figures on the event add up to its base.** The hand dialog flies each one down
-// into a sum on screen, so a card whose figure disagreed with the total would be arithmetic the
-// player can see is wrong.
-func TestTheHandAmountsAddUpToTheBase(t *testing.T) {
+// **Every attack played throws a hit, and the hits add up to the hand's figure.** The hand dialog
+// works each one out on screen, so a hit whose figure disagreed with the total would be arithmetic
+// the player can see is wrong.
+func TestEveryAttackThrowsAHitAndTheHitsAddUp(t *testing.T) {
 	a, b := duelist(10, 8, 5000), duelist(10, 8, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Bash, Jab, Bash, Bash), nil, 1)
@@ -327,24 +318,23 @@ func TestTheHandAmountsAddUpToTheBase(t *testing.T) {
 	if !ok {
 		t.Fatal("no KindHand event")
 	}
-	// The Jab makes no trips and is paid into the blow anyway, so the bracket has four terms.
+	// The Jab makes no trips and throws a hit anyway, so there are four.
 	if e.HandCardCount != 4 {
-		t.Fatalf("the blow carries %d terms, want the four cards played", e.HandCardCount)
+		t.Fatalf("the hand carries %d hits, want the four cards played", e.HandCardCount)
 	}
 
 	sum := 0
 	for i := 0; i < e.HandCardCount; i++ {
-		if e.HandAmounts[i] <= 0 {
-			t.Errorf("card %d of the hand carries a figure of %d", i, e.HandAmounts[i])
+		if e.HitAmounts[i] <= 0 {
+			t.Errorf("hit %d carries a figure of %d", i, e.HitAmounts[i])
 		}
-		sum += e.HandAmounts[i]
+		sum += e.HitAmounts[i]
 	}
-	if sum != e.Base {
-		t.Errorf("the hand's cards carry %d between them, but the base is %d", sum, e.Base)
+	if sum != e.Amount {
+		t.Errorf("the hits come to %d between them, but the hand says %d", sum, e.Amount)
 	}
-	// The Jab makes no trips and pays into the blow anyway, so the base holds it.
-	if want := Plain(Bash).Damage(10)*3 + Plain(Jab).Damage(10); e.Base != want {
-		t.Errorf("the base is %d, want the four cards' own %d", e.Base, want)
+	if want := Plain(Bash).Damage(10)*3 + Plain(Jab).Damage(10); cardTerms(e) != want {
+		t.Errorf("the cards' terms are %d, want the four cards' own %d", cardTerms(e), want)
 	}
 }
 
@@ -453,10 +443,10 @@ func TestAHandIgnoresWhatSitsBetweenItsCards(t *testing.T) {
 	}
 }
 
-// **A turn of nothing but defenses is a hand, and it lands nothing** *(owner's call, 2026-09-02)*.
-// Every card carries a form and an element and every card is counted, so three Blocks are three of
-// a kind — the ladder can see a shield build. What the hand does not do is attack: no damage, and
-// nothing of the target's is spent.
+// **A turn of nothing but defenses is a hand, and it lands nothing** *(owner's call)*. Every card
+// carries a form and an element and every card is counted, so three Blocks are three of a kind —
+// the ladder can see a shield build. Each throws a hit, and every hit is worth nothing: no damage,
+// and nothing of the target's is spent.
 func TestATurnOfDefensesFormsAHandAndLandsNothing(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
@@ -465,8 +455,10 @@ func TestATurnOfDefensesFormsAHandAndLandsNothing(t *testing.T) {
 	if got := handsFormed(events, SideA); len(got) != 1 {
 		t.Fatalf("three Blocks formed %v, want one hand", got)
 	}
-	if n := kindCount(events, KindDamage); n != 0 {
-		t.Fatalf("a turn of defenses dealt damage %d times, want 0", n)
+	for _, e := range events {
+		if e.Kind == KindDamage && e.Amount != 0 {
+			t.Fatalf("a turn of defenses hit for %d, want nothing", e.Amount)
+		}
 	}
 	if after.CurrentLife != b.CurrentLife {
 		t.Errorf("the target is on %d life, want the %d it started with",
@@ -493,8 +485,8 @@ func TestWithNoHandEveryAttackLandsAtTheIdentity(t *testing.T) {
 	if !ok {
 		t.Fatal("no attack phase event")
 	}
-	if e.Base != want {
-		t.Errorf("the base is %d, want the three cards' %d", e.Base, want)
+	if cardTerms(e) != want {
+		t.Errorf("the cards' terms are %d, want the three cards' %d", cardTerms(e), want)
 	}
 }
 
@@ -587,9 +579,9 @@ func TestAnAttackOutsideTheHandStillColorsTheBlow(t *testing.T) {
 	}
 }
 
-// **A defense that made no hand still carries nothing**, which is the other side of the rule
-// above: the widening is about attacks, and a shield joins a blow only by making the rung.
-func TestADefenseOutsideTheHandCarriesNoColor(t *testing.T) {
+// **A defense that made no hand still lands its color**: every card throws a hit, and a hit lands
+// its card's statuses.
+func TestADefenseOutsideTheHandStillLandsItsColor(t *testing.T) {
 	a, b := reliced(duelist(10, 6, 5000)), duelist(10, 6, 5000)
 
 	// Brace, Block, Bash, Bash once resolved. The ice Brace makes the elemental trips with the two
@@ -601,8 +593,8 @@ func TestADefenseOutsideTheHandCarriesNoColor(t *testing.T) {
 	if !bAfter.Statuses[statusOf(Ice)].Active() {
 		t.Error("the ice trips are the hand and should have chilled")
 	}
-	if bAfter.Statuses[statusOf(Fire)].Active() {
-		t.Error("the fire Block made no hand and swung nothing, so it should have burned nobody")
+	if !bAfter.Statuses[statusOf(Fire)].Active() {
+		t.Error("the fire Block threw a hit and should have burned")
 	}
 }
 
@@ -698,10 +690,9 @@ func TestIceLandedByBBitesInTheFollowingRound(t *testing.T) {
 
 // --- the event ----------------------------------------------------------------------------
 
-// **A scored blow is not contiguous**, which is the case a start-and-length bracket could not
-// describe. Since 2026-09-17 every attack pays in, so the gap can only be a *defense* that made no
-// hand — and it still happens: resolution order puts the defenses first, so a shield sitting
-// between two that did make the hand is a hole in the middle of the set.
+// **A rung is not contiguous**, which is the case a start-and-length bracket could not describe:
+// resolution order puts the defenses first, so a shield that made no hand can sit between two
+// cards that did.
 func TestTheEventNamesScatteredCards(t *testing.T) {
 	a, b := duelist(10, 6, 20000), duelist(10, 6, 20000)
 
@@ -715,9 +706,13 @@ func TestTheEventNamesScatteredCards(t *testing.T) {
 	if !ok {
 		t.Fatal("no attack phase event")
 	}
-	got := handCards(e)
+	got := e.RungCards[:e.RungCardCount]
 	if len(got) != 3 || got[0] != 0 || got[1] != 2 || got[2] != 3 {
-		t.Fatalf("the blow says it was paid by %v, want [0 2 3] around the fire Block", got)
+		t.Fatalf("the rung is %v, want [0 2 3] around the fire Block", got)
+	}
+	// **Every card throws a hit**, the fire Block included.
+	if hits := handCards(e); len(hits) != 4 {
+		t.Errorf("the hits were thrown by %v, want all four cards", hits)
 	}
 }
 

@@ -177,24 +177,25 @@ func TestTheScrollbarStandsInsideThePanel(t *testing.T) {
 	}
 }
 
-// **The working under a blow is what the ledger exists for**, so it is pinned: a line per landing,
-// each naming its card and its figure, with the relic that priced it beside it.
+// **The working under a blow is what the ledger exists for**, so it is pinned: a line per hit, each
+// naming its card and written out as the arithmetic it was, with the relic that priced it beside it,
+// and the total of every hit under them.
 func TestABlowWritesItsWorkingOut(t *testing.T) {
 	e := combat.Event{
 		Kind:          combat.KindHand,
 		Side:          combat.SideA,
 		HandCardCount: 2,
-		Base:          60,
 		Multiplier:    150,
 		Amount:        90,
 	}
 	e.HandCards[0], e.HandCards[1] = 0, 1
 	e.HandAmounts[0], e.HandAmounts[1] = 20, 40
+	e.HitAmounts[0], e.HitAmounts[1] = 30, 60
 	// What each landing was worth before its relics: the second card is a 20 the relic doubled.
 	e.HandCardBase[0], e.HandCardBase[1] = 20, 20
 	// **Built rather than indexed into**: a seat row is a slice as long as the worn row it
 	// describes, so a hand-made event has to say how many seats it is talking about. Seat 0
-	// doubled the second term; seat 1 is why that term exists.
+	// doubled the second hit; seat 1 is why that hit exists.
 	e.HandRelicScale[1] = []int{200}
 	e.HandLanding[1] = []bool{false, true}
 
@@ -207,30 +208,27 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 	// about: the shape of the working and the figures in it, not which record paid them.
 	lines := ui.LedgerLines(ui.HandTermRecords(e, nil, played))
 	if len(lines) != 3 {
-		t.Fatalf("a two-term blow wrote %d lines, want 2 terms and the sum: %v", len(lines), lines)
+		t.Fatalf("a two-hit blow wrote %d lines, want 2 hits and the total: %v", len(lines), lines)
 	}
 
-	// **The sum is the working's last line and is the one the player watched fly into place** —
-	// term by term, not the cards folded into one figure.
-	// **The relic's figure stays with the term it priced**, in brackets — folding it into the term
-	// hides the relic, and hanging it off the end of the sum would read as multiplying every term
-	// and would not come to the total.
-	if got, want := lines[2].Text(), "20 + (20 x 2) x 1.5 = 90"; got != want {
-		t.Errorf("the sum reads %q, want %q", got, want)
+	// **Each hit is its own arithmetic**, and a relic's figure stays inside the term it priced.
+	if got := lines[0].Text(); !strings.Contains(got, "20 x 1.5 = 30") || !strings.Contains(got, "fire") {
+		t.Errorf("the first hit reads %q, want its card and its own working", got)
+	}
+	second := lines[1].Text()
+	if !strings.Contains(second, "(20 x 2) x 1.5 = 60") {
+		t.Errorf("the second hit reads %q, want the relic's factor inside its term", second)
+	}
+	if !strings.Contains(second, "2x") || !strings.Contains(second, "again") {
+		t.Errorf("the second hit reads %q, which does not say what the relics did", second)
+	}
+	if got := lines[2].Text(); !strings.Contains(got, "90") {
+		t.Errorf("the total reads %q, want every hit's 90", got)
 	}
 	for i, l := range lines {
 		if l.Voice != session.VoiceTerm {
-			t.Errorf("term %d is in the %q voice, want %q", i, l.Voice, session.VoiceTerm)
+			t.Errorf("line %d is in the %q voice, want %q", i, l.Voice, session.VoiceTerm)
 		}
-	}
-	if !strings.Contains(lines[0].Text(), "20") || !strings.Contains(lines[0].Text(), "fire") {
-		t.Errorf("the first term is %q, which does not say what card paid it", lines[0].Text())
-	}
-	if !strings.Contains(lines[1].Text(), "2x") {
-		t.Errorf("the second term is %q, which does not say what the relic did", lines[1].Text())
-	}
-	if !strings.Contains(lines[1].Text(), "again") {
-		t.Errorf("the second term is %q, which does not say a relic landed it again", lines[1].Text())
 	}
 }
 
@@ -256,7 +254,7 @@ func TestTheWorkingIsIndentedRatherThanCentered(t *testing.T) {
 // runs rather than a string**, and it is the part a refactor would quietly flatten.
 func TestTheWorkingIsColoredLikeTheScreen(t *testing.T) {
 	e := combat.Event{Kind: combat.KindHand, HandCardCount: 1, Multiplier: 200, Amount: 40}
-	e.HandAmounts[0], e.HandCardBase[0] = 20, 20
+	e.HandAmounts[0], e.HandCardBase[0], e.HitAmounts[0] = 20, 20, 40
 	e.HandRelicScale[0] = []int{200}
 
 	lines := ui.LedgerLines(ui.HandTermRecords(e, nil,
@@ -274,12 +272,11 @@ func TestTheWorkingIsColoredLikeTheScreen(t *testing.T) {
 		t.Errorf("the relic's note is in %v, want the relic pink %v", last.Ink, relic)
 	}
 
-	// **Nothing in the sum wears a hue that means something else**, and nothing in it is
+	// **Nothing in a hit's working wears a hue that means something else**, and nothing in it is
 	// underlined: hue belongs to the elements and the wheel is full, and an underline mid-sum
 	// reads as a typesetting accident. This is the check that catches either coming back.
-	sum := rows[len(rows)-1]
 	var sawRelic bool
-	for _, r := range sum.Spans {
+	for _, r := range term.Spans[1 : len(term.Spans)-1] {
 		sawRelic = sawRelic || r.Ink == relic
 		if r.Mark {
 			t.Errorf("a run of the sum is underlined: %q", r.Text)
@@ -289,7 +286,7 @@ func TestTheWorkingIsColoredLikeTheScreen(t *testing.T) {
 		}
 	}
 	if !sawRelic {
-		t.Error("the relic's figure in the sum is not in the relic's color")
+		t.Error("the relic's figure in the hit is not in the relic's color")
 	}
 }
 

@@ -187,8 +187,7 @@ Everything below is a panic at package init, in `data/motifs_data.go`:
 ## What a record may never do
 
 - **Carry an element on a card.** The colour is the floor's and the whole deck takes it.
-- **Raise a shield.** Only the player does; every creature is a solo attacker while the player
-  forms hands, and a count facing a hand would delete a whole turn. See `CLAUDE.md`.
+- **Raise a shield.** Only the player does; every creature deck is pure attack. See `CLAUDE.md`.
 - **Say what it is worth on the floor it debuts.** See above.
 - **Name a picture that exists.** Most do not yet, and the fallback is deliberate.
 

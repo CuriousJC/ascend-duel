@@ -2,13 +2,13 @@ package combat
 
 import "testing"
 
-// The drain verb: a relic that turns part of a landed blow back into its wearer's life.
+// The drain verb: a relic that turns part of every landed hit back into its wearer's life.
 //
 // **The two halves that can break independently** are the arithmetic — a share of the figure that
-// actually landed, not of the figure before the target's body shaped it — and the gating, which is
-// the whole of what keeps a drain from paying for a blow the player never saw.
+// actually landed, hit by hit, not of the figure before the target's body shaped it — and the
+// gating, which is the whole of what keeps a drain from paying for a hit the player never saw.
 
-// drainRelic is a relic taking pct of every blow, with an optional predicate.
+// drainRelic is a relic taking pct of every hit, with an optional predicate.
 func drainRelic(t *testing.T, key string, pct int, cond RelicCondition) RelicID {
 	t.Helper()
 
@@ -30,17 +30,27 @@ func drained(events []Event, side Side) int {
 	return total
 }
 
-// damageTo is what a side's blow actually landed, which is the figure a drain is a share of.
-func damageTo(events []Event, target Side) int {
+// hitsOn is every figure a side's hits actually landed, each of which a drain is a share of.
+func hitsOn(events []Event, target Side) []int {
+	var out []int
 	for _, e := range events {
 		if e.Kind == KindDamage && e.Target == target {
-			return e.Amount
+			out = append(out, e.Amount)
 		}
 	}
-	return 0
+	return out
 }
 
-func TestADrainRelicGivesBackAShareOfTheBlowThatLanded(t *testing.T) {
+// shareOf is pct of every hit, rounded one hit at a time.
+func shareOf(hits []int, pct int) int {
+	total := 0
+	for _, h := range hits {
+		total += h * pct / 100
+	}
+	return total
+}
+
+func TestADrainRelicGivesBackAShareOfEveryHitThatLanded(t *testing.T) {
 	id := drainRelic(t, "drain.share", 30, RelicCondition{})
 
 	a := duelist(10, 3, 100).Wearing(WornRelic{Relic: id})
@@ -49,40 +59,40 @@ func TestADrainRelicGivesBackAShareOfTheBlowThatLanded(t *testing.T) {
 
 	events, after, _ := resolve(a, b, []Card{Of(Bash, Fire), Of(Bash, Ice)}, nil, 1)
 
-	// **A share of what the target took**, read off the damage event rather than recomputed here:
-	// a test that did its own arithmetic would pass while the blow and the drain drifted apart.
-	want := damageTo(events, SideB) * 30 / 100
+	// **A share of what the target took**, read off the damage events rather than recomputed here:
+	// a test that did its own arithmetic would pass while the hits and the drain drifted apart.
+	hits := hitsOn(events, SideB)
+	want := shareOf(hits, 30)
 	if want <= 0 {
-		t.Fatalf("the blow landed %d, so this test is about nothing", damageTo(events, SideB))
+		t.Fatalf("the hits landed %v, so this test is about nothing", hits)
 	}
 	if got := drained(events, SideA); got != want {
-		t.Errorf("a 30%% drain on a blow of %d gave back %d, wanted %d",
-			damageTo(events, SideB), got, want)
+		t.Errorf("a 30%% drain on hits of %v gave back %d, wanted %d", hits, got, want)
 	}
 	if after.CurrentLife != 50+want {
 		t.Errorf("life went 50 to %d, wanted %d", after.CurrentLife, 50+want)
 	}
 }
 
-func TestADrainFiresOncePerBlowHoweverManyCardsMatched(t *testing.T) {
-	// **The status rule, not the growth rule.** The share comes out of one figure, so a hand of
-	// four fire cards is one drain — a drain per card would pay four shares of the whole blow.
-	id := drainRelic(t, "drain.once", 50, RelicCondition{Element: Fire, HasElement: true})
+func TestADrainFiresOncePerMatchingHit(t *testing.T) {
+	// **Each hit is its own figure**, so a drain takes its share of every hit whose card it matches
+	// and of nothing else — two fire hits and an ice hit is two drains.
+	id := drainRelic(t, "drain.perhit", 50, RelicCondition{Element: Fire, HasElement: true})
 
 	a := duelist(10, 3, 100).Wearing(WornRelic{Relic: id})
 	a.CurrentLife = 10
 	b := duelist(0, 0, 500)
 
-	events, _, _ := resolve(a, b, []Card{Of(Bash, Fire), Of(Bash, Fire)}, nil, 1)
+	events, _, _ := resolve(a, b, []Card{Of(Bash, Fire), Of(Jab, Ice), Of(Bash, Fire)}, nil, 1)
 
-	beats := 0
+	var on []int
 	for _, e := range events {
 		if e.Kind == KindDrained {
-			beats++
+			on = append(on, e.Hit)
 		}
 	}
-	if beats != 1 {
-		t.Errorf("two matching cards produced %d drains, wanted 1", beats)
+	if len(on) != 2 || on[0] != 0 || on[1] != 2 {
+		t.Errorf("drains came off hits %v, wanted [0 2] — the two fire hits", on)
 	}
 }
 
@@ -123,23 +133,23 @@ func TestADrainOnFullLifeWritesNoBeat(t *testing.T) {
 	}
 }
 
-func TestABlockedBlowDrainsNothing(t *testing.T) {
-	// **A shield eats the blow whole**, so there is no figure to take a share of. This is the gate
+func TestABlockedHitDrainsNothing(t *testing.T) {
+	// **A shield eats a hit whole**, so there is no figure to take a share of. This is the gate
 	// that stops a drain paying for an attack the player watched come to nothing.
 	id := drainRelic(t, "drain.blocked", 50, RelicCondition{})
 
 	a := duelist(10, 3, 100).Wearing(WornRelic{Relic: id})
 	a.CurrentLife = 10
 	b := duelist(0, 0, 500)
-	b.Shields = 1
+	b.Shields = 2
 
 	events, after, _ := resolve(a, b, []Card{Of(Bash, Fire), Of(Bash, Fire)}, nil, 1)
 
 	if got := drained(events, SideA); got != 0 {
-		t.Errorf("a blocked blow drained %d", got)
+		t.Errorf("two blocked hits drained %d", got)
 	}
 	if after.CurrentLife != 10 {
-		t.Errorf("life moved to %d on a blow that was eaten", after.CurrentLife)
+		t.Errorf("life moved to %d on hits that were eaten", after.CurrentLife)
 	}
 }
 
@@ -153,10 +163,10 @@ func TestTwoDrainRelicsAddRatherThanCompound(t *testing.T) {
 
 	events, _, _ := resolve(a, b, []Card{Of(Bash, Fire), Of(Bash, Fire)}, nil, 1)
 
-	dmg := damageTo(events, SideB)
-	want := dmg*20/100 + dmg*30/100
+	hits := hitsOn(events, SideB)
+	want := shareOf(hits, 20) + shareOf(hits, 30)
 	if got := drained(events, SideA); got != want {
-		t.Errorf("20%% and 30%% on a blow of %d gave back %d, wanted %d", dmg, got, want)
+		t.Errorf("20%% and 30%% on hits of %v gave back %d, wanted %d", hits, got, want)
 	}
 }
 

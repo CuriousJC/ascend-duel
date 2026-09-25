@@ -61,7 +61,7 @@
 //     AbandonRun under a second name because dying and giving up are one event.
 //   - **The combat screen** — combat.go and the combat_*.go files. The scene, the piles, the hand
 //     and its drag, the table, the relic row, the HUD, and one file per thing that moves on it:
-//     the flights, the hits, the shields, the shatter, the signals, the sum, the deal. Read the
+//     the flights, the hits, the shields, the shatter, the signals, the hand dialog, the deal. Read the
 //     `combat-screen` skill before touching any of them.
 //   - **The between-fight scenes** — postbattle*.go and shop*.go. Pick an essence and the card it
 //     eats; then three relics on a shelf, the sealed goods, the pouch and the hooded creature who

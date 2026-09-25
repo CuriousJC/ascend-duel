@@ -33,13 +33,12 @@ const (
 	VoiceYou = "you"
 	VoiceFoe = "foe"
 
-	// VoiceHand is the blow: the attack phase's one line, what the hand formed and what it came to.
+	// VoiceHand is the attack phase's heading: what the hand formed.
 	VoiceHand = "hand"
 
-	// VoiceTerm is one term of that blow's arithmetic — a card's own figure, what a relic did to it,
-	// the sum underneath. **It is what the log never had**: the total was printed and none of the
-	// working was, so a multiplier read as a number the game had decided rather than one the player
-	// had built.
+	// VoiceTerm is one line of the working under it — a hit and its arithmetic, a flat term, what a
+	// relic did to the DMG, or every hit's total — so a multiplier reads as a number the player built
+	// rather than one the game decided.
 	VoiceTerm = "term"
 
 	// VoicePlain is a line belonging to nobody: a heading, or an empty ledger saying so.
@@ -58,7 +57,7 @@ const (
 	InkAttack = "attack"
 	InkDefend = "defend"
 
-	// InkHand is the hand: its name, and the multiplier in the sum that came off it.
+	// InkHand is the hand: its name, and the multiplier in a hit's line that came off it.
 	//
 	// **It resolves to no color at all** *(owner's call, 2026-09-02)*. Hue belongs to the elements
 	// — five of them, plus pink for a relic and red and blue for the two verbs — and there is none
@@ -70,7 +69,7 @@ const (
 	InkRelic = "relic"
 
 	// InkTotal is what the blow came to. The damage color rather than the hand's, because that is
-	// the figure that leaves the sum and lands in a life bar.
+	// the figure that leaves the hand dialog and lands in a life bar.
 	InkTotal = "total"
 )
 
@@ -210,7 +209,7 @@ func (s *Session) BeginFight(floor int, enemy string) {
 // came to.
 //
 // **A round is recorded when it finishes, not while it plays.** The screen is already drawing the
-// round in progress — the table, the cards, the sum acted out — so a ledger racing playback would
+// round in progress — the table, the cards, the hand dialog acted out — so a ledger racing playback would
 // be the one place in the game that says what is about to happen. It also keeps this out of the
 // beat: one conversion per round rather than per frame.
 //

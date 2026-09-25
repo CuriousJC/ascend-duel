@@ -323,15 +323,14 @@ type CombatScene struct {
 	// conditions, and one controller would make a press on any of them cancel the others.
 	runeDrag ui.CardDrag
 
-	// relicShake is each worn seat's shake and cardShake each played card's, with shakeItem the item
-	// of the hand dialog's script that was running when the last one was started — which is how one
-	// beat starts one shake rather than a new one every frame the box sits on the same figure.
+	// relicShake is each worn seat's shake and cardShake each played card's. **One is started when a
+	// figure of the hand dialog sets off**, which the box reports once per item — see
+	// handMathBox.takeShakes — so one beat starts one shake rather than a new one every frame.
 	// **A slice, grown to reach whatever seat rattles** — the relic row has no width any more, so
 	// neither has this. See combat.Duelist.Relics, shakeRelicAt which grows it, and shakeFor which
 	// is how the drawing reads it.
 	relicShake []ui.Travel
 	cardShake  []ui.Travel
-	shakeItem  int
 
 	// DeckView is how the deck overlay is being read — the alterations and FULL/PLAYED toggles
 	// along its bottom edge. **Not reset by Init**, exactly like sortMode: a reading preference is
@@ -603,7 +602,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.drag = ui.CardDrag{}
 	s.relicDrag = ui.CardDrag{}
 	s.runeDrag = ui.CardDrag{}
-	s.relicShake, s.cardShake, s.shakeItem = nil, nil, 0
+	s.relicShake, s.cardShake = nil, nil
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
 	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, s.enemyElement, enemySeed, decks.EnemyHandSize)
@@ -1286,7 +1285,10 @@ func (s *CombatScene) startRound() {
 	// above is already resolved. See combat_table.go.
 	s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
 	s.Theater.mathBox.Clear()
-	// **The blow-length raise comes down with the sum that used it.** See signalRaise.
+	// **What the dialog showed was a position in last round's log**, and this round's log starts
+	// again from nothing.
+	s.Theater.walked = nil
+	// **The turn-length raise comes down with the lines that used it.** See signalRaise.
 	s.Theater.clearRaise()
 	s.seatPlayedCards()
 
@@ -1364,55 +1366,53 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	}
 
 	// **The hand dialog owns the beat while it runs, and it is the one exception to the dwell
-	// below** *(2026-08-18)*. A sum revealed a figure at a time takes several seconds and cannot
-	// be fitted inside one event's dwell, so rather than the box racing playback the cursor waits
-	// for it. Everything else that moves on this screen runs on its own clock alongside the log.
+	// below.** Every hit worked out a figure at a time takes several seconds and cannot be fitted
+	// inside one event's dwell, so rather than the box racing playback the cursor waits for it.
+	// Everything else that moves on this screen runs on its own clock alongside the log.
 	//
 	// **It still cannot change an outcome.** The round was decided before a frame of this was
 	// drawn; what waits is the drawing of it.
 	if s.Theater.mathBox.Running() {
-		// **A card firing holds the sum where it is** *(owner's call, 2026-09-10)*. The signals are
-		// launched one card's at a time, so letting the script run on would put the next term on
-		// screen over a firework belonging to the last one — and the cards the hand kept back are
-		// released by `startHandMath` before this branch has run once, so this is also what stops
-		// the sum beginning until their figures have landed. Only the signals: the shield pips
-		// below deliberately fly alongside the sum rather than stopping it, because a pip lands on
-		// a row two inches away and a signal crosses the screen.
+		// **A card firing holds the lines where they are** *(owner's call)*. Letting them run on
+		// would put the next term on screen over a firework belonging to the last one — and the
+		// cards the hand kept back are released by `startHandMath` before this branch has run once,
+		// so this is also what stops the lines beginning until their figures have landed.
 		if ui.Running(s.Theater.signals) {
 			return
 		}
 
 		s.Theater.mathBox.Tick()
 
-		// **The tally needs no card raised** *(owner's call, 2026-09-17)*. The blow's cards are lifted
-		// by noteHand on the `KindHand` beat, which is the announcement — what the hand is made of,
-		// said once — and they go back down the moment the sum starts counting. A row held up for the
-		// whole of the arithmetic is the announcement still being made while the thing it announced is
-		// being read out. Idempotent, so it needs no flag: nothing else writes these while the box
-		// holds the cursor.
+		// **The lines need no card raised** *(owner's call)*. The blow's cards are lifted by
+		// noteHand on the `KindHand` beat, which is the announcement — what the hand is made of,
+		// said once — and they go back down the moment the lines start. Idempotent, so it needs no
+		// flag: nothing else writes these while the box holds the cursor.
 		if s.Theater.mathBox.counting() {
 			s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
 		}
 
-		// **A played card's riders fire on the beat its own figure sets off**, which is the same
-		// beat and the same argument as the pips below. See combat_signal.go, where the deferral is
-		// argued: these events were reached several beats ago and are drawn here.
-		if seat, ok := s.Theater.mathBox.takeSignalSeat(); ok {
+		// **A played card's riders fire on the beat its own figure sets off.** See
+		// combat_signal.go, where the deferral is argued: these events were reached several beats
+		// ago and are drawn here.
+		for _, seat := range s.Theater.mathBox.takeSignalSeats() {
 			s.releaseSeatSignals(s.Theater.mathBox.side, seat)
 		}
 
-		// **The pips are not the sum's any more** *(owner's call, 2026-09-15)*. A defend card raises
-		// its shields in the defend phase, which now runs *before* the attack phase — so the raise
+		// **A finished line is thrown at once**, whatever the others are doing. See throwColumn.
+		for _, c := range s.Theater.mathBox.finished() {
+			s.throwColumn(c)
+		}
+
+		// **The pips are not a hit's** *(owner's call)*. A defend card raises
+		// its shields in the defend phase, which runs *before* the attack phase — so the raise
 		// has a beat of its own, in front of the hand, and noteShieldRaise is the one place pips fly
 		// from. See combat.Categories.
 		s.landShields()
-		// **The banner goes when its own figure sets off** *(2026-08-19, owner's call)*. The
-		// multiplier flies out of the second line under the hand's name and into the sum, so from
-		// that frame the number is in the line and the banner is a copy of something that has
-		// moved. The name goes with it rather than a beat later: it has been carried down, said,
-		// and spent, and leaving it lit over the hand while the sum finishes and the enemy swings
-		// back is a word breathing at the player long after it has anything left to tell them.
-		if s.Theater.mathBox.at >= s.Theater.mathBox.multAt {
+		// **The banner goes when its own figure sets off** *(owner's call)*. The multiplier flies
+		// out of the second line under the hand's name and into every hit's line, so from the first
+		// of those frames the number is in the lines and the banner is a copy of something that has
+		// moved. The name goes with it: it has been carried down, said, and spent.
+		if s.Theater.mathBox.multStarted() {
 			s.Theater.banner.Clear()
 		}
 		return
@@ -1464,31 +1464,30 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	}
 	s.ticks = 0
 
-	// **The finished sum stays on screen until the event after it lands, and that is a handoff
-	// rather than a hold** *(2026-08-18)*. It used to be cleared on the tick after the script
-	// stopped running, which put an empty band on screen for the whole of the dwell that follows —
-	// so the damage figure, whose whole job is to be *that total* traveling into the card, set off
-	// from a space the total had left a second and a quarter earlier. Clearing it here means the
-	// last frame of the sum and the first frame of the flight are the same frame, at the same
-	// point, in the same color and at the same size. See combat_hits.go.
-	//
-	// A turn that misses rather than landing clears it the same way, on its `KindMissed`. When the
-	// strike-through arrives that event will want this same handoff, so keep them together.
+	// **The finished lines stay on screen until the event after them is reached**, so a MISS or a
+	// BLOCKED is still being read while the flights that did land finish.
 	if s.Theater.mathBox.active && !s.Theater.mathBox.Running() {
 		s.Theater.mathBox.Clear()
-		// **The blow-length raise comes down with the sum that used it.** See signalRaise.
+		// **The turn-length raise comes down with the lines that used it.** See signalRaise.
 		s.Theater.clearRaise()
 
-		// **Anything the sum never claimed fires now.** A card can be played and earn no term — a
-		// lone Brace beside a pair, a third element in a two-card hand — so it has no beat in the
-		// script to be thrown on, and a signal parked for a seat nobody scored would otherwise sit
-		// there until the side changed. See combat_signal.go.
+		// **Anything the lines never claimed fires now.** A card whose hits fell past the event's
+		// width, or after a death, has no beat to be thrown on, and a signal parked for a seat
+		// nobody scored would otherwise sit there until the side changed. See
+		// combat_signal.go.
 		s.flushSignals()
 	}
 
 	s.applyEvent(s.log[s.cursor])
-	s.startHandMath(gs, s.log[s.cursor])
+	s.startHandMath(gs, s.log[s.cursor], s.cursor)
 	s.cursor++
+
+	// **An event the hand dialog has already shown is walked past without a beat**: a hit that
+	// landed or missed was drawn when its line finished, so reaching it again would be the same
+	// thing happening twice. See throwColumn.
+	for s.cursor < len(s.log) && s.Theater.walked[s.cursor] {
+		s.cursor++
+	}
 
 	// Playback has caught up with the resolver: hand control back to the player, or freeze
 	// the screen if there is nobody left to play against. See endOfRound.
@@ -1536,7 +1535,7 @@ func (s *CombatScene) endOfRound() {
 		return
 	}
 
-	// **The banner is usually gone by now**, cleared on the frame its multiplier flew into the sum
+	// **The banner is usually gone by now**, cleared on the frame its multiplier flew into a line
 	// — see advancePlayback. This is the round that scored no hand at all: nothing took the name
 	// down because nothing ever asked for it.
 	s.Theater.banner.Clear()
@@ -1596,7 +1595,7 @@ func (s *CombatScene) planEnemyRound() {
 // began, so these are three ways of showing the same log and the screen could stop calling
 // any of them without changing a result.
 func (s *CombatScene) applyEvent(e combat.Event) {
-	// **A turn that never scored throws its signals here.** The sum is what normally sequences
+	// **A turn that never scored throws its signals here.** The hand dialog is what normally sequences
 	// them, and a turn of nothing but defenses forms no hand — so the fallback is the boundary:
 	// the moment the acting side changes, or the round ends. Before anything else, so the parked
 	// signals belong to the turn that is finishing rather than to the one starting.
@@ -1800,8 +1799,8 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **The hand dialog, over everything but the deck overlay.** It is the loudest thing on the
 	// screen for the few seconds it is up, and it is deliberately over both rows of cards: the
-	// shout is written across the hand row, which is inert while it is up, and the sum across the
-	// band above it. See combat_mathbox.go.
+	// shout is written across the hand row, which is inert while it is up, and every hit's line
+	// under its card. See combat_mathbox.go.
 	s.drawHandMath(gs, screen)
 
 	// **The planned hand's name, in the middle of the half of the table its cards are about to
@@ -1809,14 +1808,14 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// and that one only runs during playback. See drawPlannedHand.
 	s.drawPlannedHand(gs, screen)
 
-	// **The damage figures, over the sum they came out of and the card they are flying into.**
-	// They are drawn after the dialog because a figure leaving the sum has to be on top of it —
+	// **The damage figures, over the lines they came out of and the card they are flying into.**
+	// They are drawn after the dialog because a figure leaving a line has to be on top of it —
 	// underneath, the first frames of the flight would be hidden by the number it left.
 	s.drawHits(gs, screen)
 
-	// **After the hits, because a drain is a share of one.** The two are never up together — the
-	// cursor waits for the blow's figure before the drain's event is reached — so the order here
-	// is about reading the file rather than about overlap. See combat_drain.go.
+	// **After the hits, because a drain is a share of one.** A drain's event is reached after the
+	// hand dialog has finished and its figures have landed, so the order here is about reading the
+	// file rather than about overlap. See combat_drain.go.
 	s.drawDrains(gs, screen)
 	// The pips, over the cards they are crossing and under the dialogs. See combat_shields.go.
 	s.drawShields(gs, screen)

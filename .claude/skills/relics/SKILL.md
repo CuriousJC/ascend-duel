@@ -74,15 +74,15 @@ which is what makes a relic a *run* concept rather than a combat one.
 | `When` | Package | Seat | Fires |
 |---|---|---|---|
 | `card-cost` | `combat` | `Card.Cost()` | per card, whenever a cost is asked for |
-| `card-damage` | `combat` | `Card.Damage()` | per card, inside the blow's base sum |
-| `attack-lands` | `combat` | `resolveAttackPhase` | once per landed blow |
+| `card-damage` | `combat` | `Card.Damage()` | per card, inside each of its hits' card term |
+| `attack-lands` | `combat` | `throwHit` (hit.go) | **once per hit that connects**, matched against that hit's card |
 | `deck-built` | `session` | `session.FightDeck` | once, as the fight's draw pile is built out of the run's deck |
 | `card-drawn` | `screens` | `CombatScene.drawHand` | **per card, as it leaves the draw pile for the hand** |
 | `fight-start` | `session` | fight setup | once per fight |
 | `fight-won` | `session` | after the win | once per win |
 | `prizes-dealt` | `screens` | `dealPrizes` | once, as the post-battle cards go down |
 | `turn-taken` | `combat` | `playTurn` | once at the end of each of this duelist's own turns, **including an empty one**. Its `If` is matched against the turn as a whole: the rule fires when *any* card of the turn matches |
-| `blow-formed` | `combat` | `handEvent` | once per blow, as the base sum is added up — **the only moment that sees the blow rather than a card**, and its `If` matches the *lead* card |
+| `blow-formed` | `combat` | `strike` (hit.go) | once per turn, as the hand is read and its hits are laid out — **the only moment that sees the turn's attacks as a set rather than a card**, and its `If` matches the *lead* card |
 | `turn-start` | `combat` | `playTurn` | once at the top of each of this duelist's own turns, **before the chill, the riders and both phases**. It has no card and no turn to read, so **a rule carrying any `If` is refused at registration** |
 | `essence-spent` | `session` | `Session.EssenceTargets` | as an essence is pointed at the deck — the reward offer, the shop's vial, one out of the satchel. **A question rather than an event**, the shape `prizes-dealt` has: it has no card and no turn, so **a rule carrying any `If` is refused at registration** |
 
@@ -125,9 +125,9 @@ inside the same blow.
 | `Form` | stab / slash / crush / defend | `{ "Form": "slash" }` |
 | `Concept` | one named card | `{ "Concept": "Bash" }` |
 | `Tier` | **the rung of its form's ladder** a card sits on — its *declared* cost, 1/2/3 | `{ "Tier": 3 }` — Atrophy |
-| `Lead` | **the blow's first attack card**, not a fact about the card | `{ "Lead": true }` — Echo. `blow-formed` only; refused elsewhere |
-| `Hand` | **the rung the blow formed**, by its `hands.json` key | `{ "Hand": "concept-full-house" }` — the rung relics. `blow-formed` only, and refused alongside any card predicate |
-| `MinForms` | **how many distinct forms the blow's scoring cards cover** | `{ "Hand": "pair", "MinForms": 2 }` — Dual Wield. `blow-formed` only. Legal beside `Hand`, since both narrow the same set |
+| `Lead` | **the turn's first attack card**, not a fact about the card | `{ "Lead": true }` — Echo. `blow-formed` only; refused elsewhere |
+| `Hand` | **the rung the turn formed**, by its `hands.json` key | `{ "Hand": "concept-full-house" }` — the rung relics. `blow-formed` only, and refused alongside any card predicate |
+| `MinForms` | **how many distinct forms the turn's scoring cards cover** | `{ "Hand": "pair", "MinForms": 2 }` — Dual Wield. `blow-formed` only. Legal beside `Hand`, since both narrow the same set |
 | *(absent)* | always | Banker, Hungry, the stat relics |
 
 **`Tier` reads the declared cost, never the wearer's.** A discount relic makes a Skewer cost 2 to the
@@ -136,7 +136,7 @@ worn together would silently switch each other off, and which one won would depe
 were bought in. Same reading an essence takes.
 
 **`Lead` is the first *positional* predicate, and more are expected** *(owner's call, 2026-08-22)*.
-Element, form and concept ask what a card **is**; `Lead` asks where it **sits in the blow**. When the
+Element, form and concept ask what a card **is**; `Lead` asks where it **sits in the turn**. When the
 next one of those arrives — last card, lone card, the card that formed the hand — it belongs here as
 a predicate rather than inside a verb. **A verb that names its own scope is the anti-pattern this
 replaced**: `echo-attack` meant "the lead card" until the form repeat relics needed the same
@@ -178,20 +178,20 @@ not ignored.
 | `grow-on-turn` | `turn-taken` | `Amount` | the same accumulator, once per matching turn — Momentum |
 | `grow-per-card` | `turn-taken` | `Amount` | the same accumulator, **once for every matching card of the turn** — Ebb & Flow. Refused with no `If`, since there would be nothing to count |
 | `add-damage-per-vitae` | `fight-start` | `Amount` | flat damage on every blow **per vitae the run holds** — Rampant. The verb declares a *rate*; the product is re-read at **every blow** against `Duelist.Vitae`, which moves inside a fight |
-| `scale-hand-damage` | `blow-formed` | `Amount` | scales **the blow**, after the hand's own multiplier, when it formed the named rung — the Pairing / Oak / Pentacle family. A **second multiplier**: `Event.Multiplier` stays the ladder's figure, because that is what the banner and hand row show |
+| `scale-hand-damage` | `blow-formed` | `Amount` | scales **every hit**, after the hand's own multiplier, when it formed the named rung — the Pairing / Oak / Pentacle family. A **second multiplier**: `Event.Multiplier` stays the ladder's figure, because that is what the banner and hand row show |
 | `scale-damage-per-vitae` | `card-damage` | `Amount` | scales a matching card by **Amount percentage points per vitae held** — Fire of Life. 1 is +1% a vitae |
 | `reset-growth` | `turn-taken` | *nothing* | puts the accumulator back to zero. **Growth is applied first and resets second**, so a turn cannot both bank and lose the same step |
-| `grow-on-hit` | `attack-lands` | `Amount` | the same accumulator, **once per matching landing, inside the blow's own sum** — so the card queued first is counted bare and pays for the one behind it to be counted bigger. Echoes and repeats each count |
+| `grow-on-hit` | `attack-lands` | `Amount` | the same accumulator, **once per matching hit that connects** — so the card queued first is counted bare and pays for the one behind it to be counted bigger. Echoes and repeats each count; a miss or a block does not |
 | `scale-propagation` | `fight-won` | `Amount` percent | scales vitae propagation, *after* its cap |
 | `adjust-picks` | `prizes-dealt` | `Amount` delta | more post-battle choices |
 | `adjust-prize-vitae` | `prizes-dealt` | `Amount` flat | the vitae card pays more |
 | `repeat-card` | `blow-formed` | `Amount` landings | every **matching** card lands Amount times, each at **full** damage — the form repeat relics |
-| `add-hand-dmg` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one blow** when the blow satisfied the named rung, so every card of the hand grows by its own multiplier — *not* a term of `Base`, and already inside every figure the sum prints |
-| `add-damage-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to the blow **for every card still in hand** matching the rule's card predicate. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
-| `drain-damage` | `attack-lands` | `Amount` percent | restores that share of the blow that **landed** to whoever threw it — after weight, vulnerability, the shield and the miss, so a blow that was eaten drains nothing. **Once per blow**, not per card: a rule's predicate asks whether *any* card of the blow matched |
+| `add-hand-dmg` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one turn** when the turn satisfied the named rung, so every hit grows by its card's own multiplier — *not* a term of its own, and already inside every figure a hit prints |
+| `add-damage-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to **every hit, for every card still in hand** matching the rule's card predicate. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
+| `drain-damage` | `attack-lands` | `Amount` percent | restores that share of each hit that **landed** to whoever threw it — after weight, vulnerability, the shield and the miss, so a hit that was eaten drains nothing. **Once per matching hit**: the predicate asks about that hit's card |
 | `heal-share` | `turn-start` | `Amount` percent | restores that share of **maximum** life. Of the maximum rather than of what is left, so it is worth the same however badly the fight is going |
 | `adjust-round-limit` | `fight-start` | `Amount` rounds, **signed** | moves **this fight's** clock — Hermes takes two off. A delta rather than a figure, so it mixes with a relic that buys rounds; **every delta sums and worn order decides nothing**, because addition commutes. Clamped at one round, never at none, and read over the run's number rather than written into it, so selling gives the rounds back |
-| `echo-attack` | `blow-formed` | `Amount` landings | the blow's lead card lands Amount times, at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
+| `echo-attack` | `blow-formed` | `Amount` landings | the turn's lead card lands Amount times — a hit each — at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
 | `adjust-essence-targets` | `essence-spent` | `Amount` cards, **signed** | moves how many cards one essence is spent on. 1 is two where the mechanic gives one; **every delta sums and worn order decides nothing**, because addition commutes, so two relics are three cards. **Floored at one card, never at none** |
 
 **Adding a verb is a Go change** — one entry here plus the one place applying it — and that cost
@@ -232,9 +232,9 @@ change.
 **`damage-amplification` is the odd one and the shape to know before adding a sixth**
 *(2026-08-25)*. Every other kind modifies what its carrier *does*, so it is read off whoever is
 acting; this one modifies what its carrier *takes*, so it is read off whoever is being acted upon —
-a second site in the damage pipeline, and it reaches the burn tick as well as the blow. It is also
+a second site in the damage pipeline, and it reaches the burn tick as well as the hit. It is also
 the only percentage with no natural ceiling, so `combat.maxAmplifyPct` caps it where the others are
-bounded by *nothing reduces a blow to zero*. WEAKENED is the one record.
+bounded by *nothing reduces a hit to zero*. WEAKENED is the one record.
 
 **Fully decoupled means fire does not burn on its own** — including for the five relics that ship.
 There is no default status per element. This is the 2026-08-16 position held rather than
@@ -278,15 +278,15 @@ not — it carries a number that lives on the run:
   not say when it fires reads as the default while the other looks like the special case.
 - **`grow-on-win` writes an accumulator on the worn relic**, and the relic's own effect amounts are read
   as `Amount + accumulator`. So this relic is +5 HP in fight one and +100 by fight twenty.
-- **`grow-on-hit` writes the same accumulator from inside a *blow*** *(2026-08-22, moved inside the
-  sum 2026-08-26)* — the Enflamed family, +0.1x to their color on **every matching landing**. A hand
-  with two fire cards is two steps and the second card is counted at the first one's step, so **the
-  order the cards are queued in decides what they are worth**; a fire card an echo relic seats three
-  times is three steps, each landing counted at the last one's figure. It counts *landings*, which is
+- **`grow-on-hit` writes the same accumulator from inside a turn** — the Enflamed family, +0.1x to
+  their color on **every matching hit that connects**. A hand with two fire cards is two steps and
+  the second card is counted at the first one's step, so **the order the cards are queued in decides
+  what they are worth**; a fire card an echo relic lands three times is three steps, each hit counted
+  at the last one's figure. It counts *hits*, which is
   what makes it compound with `echo-attack` and `repeat-card` rather than ignoring them. Three
   consequences `grow-on-win` does not have: the *second card of the first attack* is already
   stronger than the first, the growth is on the **duelist's** copy until `Session.AbsorbGrowth` reads
-  it back on the win, and a blow that misses pays nothing. A lost fight forfeits it, which needs no
+  it back on the win, and a hit that misses or is blocked pays nothing. A lost fight forfeits it, which needs no
   rule: a defeat ends the run.
 - **No relic reaches a card's printed damage** *(owner's call, 2026-08-26)*. A face says what the card
   does — `1x DMG` — whatever is worn: a growing relic's multiplier depends on where in the turn the
@@ -321,7 +321,7 @@ Reach for these first when an idea sounds too easy.
 
 - **No relic raises `MaxActions`.** Frozen at five — see *A round is bounded twice* in
   `MECHANICS.md`. A relic may make five cards cheaper; it may never make it six.
-- **No relic reduces a blow to zero.** Nothing in the game does.
+- **No relic reduces a hit to zero.** Nothing in the game does.
 - **Relics are the duelist's only** *(owner's call, 2026-08-17)*. An enemy wears none; affixes are
   the enemy-side counterpart. `attack-lands` is symmetric in the engine, so nothing has to be
   undone if affixes later reuse the machinery.
@@ -471,7 +471,7 @@ Four verdicts, in ascending cost. Name the one and the specific term:
 | **refused** | it collides with *What a relic may never do* | say which rule, and offer the nearest thing that is legal |
 
 **Check the refusals before anything else** — they are where an easy-sounding relic most often
-dies. Raising `MaxActions`, reducing a blow to zero, chaining flips, changing what a concept is,
+dies. Raising `MaxActions`, reducing a hit to zero, chaining flips, changing what a concept is,
 a sixth worn relic, and a growing relic with two numeric effects are all already decided.
 
 **A verb used at the wrong moment is refused at load**, so "this verb exists" is not the same as

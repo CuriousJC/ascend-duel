@@ -256,8 +256,8 @@ func TestARiddenCardRaisesShieldsAsItIsPlayed(t *testing.T) {
 	events, after, _ := resolve(a, duelist(0, 0, 1000),
 		[]Card{carrying(Jab, RiderShieldOnPlay, 1)}, nil, 1)
 
-	if after.Shields != 1 {
-		t.Errorf("an attack carrying a shield rider left %d shields, wanted 1", after.Shields)
+	if after.Shields.Count() != 1 {
+		t.Errorf("an attack carrying a shield rider left %d shields, wanted 1", after.Shields.Count())
 	}
 	raised := false
 	for _, e := range events {

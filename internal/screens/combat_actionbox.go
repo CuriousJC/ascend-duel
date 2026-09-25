@@ -720,6 +720,11 @@ func (s *CombatScene) drawAPFigure(gs *state.GlobalState, screen *ebiten.Image, 
 	// One ScaleWithColor, never two — the scale multiplies, so setting the ink and then the
 	// warning color would give a near-black red rather than the red.
 	ink := apSpentColor
+	// **The surge is named while it is in the budget**, so a figure one round bigger than the last
+	// says why. It is the placeholder for a readout of its own *(owner's call)*.
+	if s.fighter.Surge > 0 {
+		label = fmt.Sprintf("%s  (+%d surge)", label, s.fighter.Surge)
+	}
 	if spent > budget {
 		label = fmt.Sprintf("%s  +%d over", label, spent-budget)
 		ink = apOverColor

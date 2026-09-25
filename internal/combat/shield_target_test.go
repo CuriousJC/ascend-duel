@@ -22,10 +22,10 @@ func soloTurn(t *testing.T, keys ...string) []Slot {
 
 // eatenKeys names the cards a mask picked, for a failure message that says what happened rather
 // than which indices did.
-func eatenKeys(turn []Slot, eaten []bool) []string {
+func eatenKeys(turn []Slot, eaten []Element) []string {
 	var out []string
 	for i, on := range eaten {
-		if on {
+		if on >= 0 {
 			out = append(out, ConceptOf(turn[i].Card.Concept).Key)
 		}
 	}
@@ -36,7 +36,7 @@ func eatenKeys(turn []Slot, eaten []bool) []string {
 // cheapest card spent the player's shield on it and then landed its worst.
 func TestOneShieldEatsTheHeaviestBlow(t *testing.T) {
 	actor := Duelist{DMG: 10, SoloAttacks: true}
-	target := Duelist{Shields: 1}
+	target := Duelist{Shields: ShieldStack{Basic: 1}}
 
 	// Jab is the cheapest attack the player's own catalog holds and Skewer the dearest, which is
 	// what makes them the two ends to test between. The creature leads with the small one.
@@ -54,7 +54,7 @@ func TestOneShieldEatsTheHeaviestBlow(t *testing.T) {
 // the same against a given set of cards however the creature arranged them.
 func TestTheQueueOrderDoesNotDecideWhatAShieldEats(t *testing.T) {
 	actor := Duelist{DMG: 10, SoloAttacks: true}
-	target := Duelist{Shields: 1}
+	target := Duelist{Shields: ShieldStack{Basic: 1}}
 
 	first := shieldedSlots(actor, target, soloTurn(t, "Skewer", "Jab", "Bash"))
 	last := shieldedSlots(actor, target, soloTurn(t, "Jab", "Bash", "Skewer"))
@@ -69,7 +69,7 @@ func TestTheQueueOrderDoesNotDecideWhatAShieldEats(t *testing.T) {
 // card rather than whichever one happened to be queued last.
 func TestShieldsWorkDownTheOrder(t *testing.T) {
 	actor := Duelist{DMG: 10, SoloAttacks: true}
-	target := Duelist{Shields: 2}
+	target := Duelist{Shields: ShieldStack{Basic: 2}}
 
 	turn := soloTurn(t, "Jab", "Skewer", "Bash")
 	got := eatenKeys(turn, shieldedSlots(actor, target, turn))
@@ -89,12 +89,12 @@ func TestShieldsWorkDownTheOrder(t *testing.T) {
 // of the turn alone — see shieldedSlots.
 func TestATieGoesToTheEarliestCard(t *testing.T) {
 	actor := Duelist{DMG: 10, SoloAttacks: true}
-	target := Duelist{Shields: 1}
+	target := Duelist{Shields: ShieldStack{Basic: 1}}
 
 	turn := soloTurn(t, "Bash", "Bash", "Bash")
 	eaten := shieldedSlots(actor, target, turn)
 
-	if !eaten[0] {
+	if eaten[0] < 0 {
 		t.Errorf("three identical blows against one shield lost %v; the tie breaks on the earliest",
 			eatenKeys(turn, eaten))
 	}
@@ -104,7 +104,7 @@ func TestATieGoesToTheEarliestCard(t *testing.T) {
 // be a shield spent on nothing.
 func TestShieldsNeverEatADefense(t *testing.T) {
 	actor := Duelist{DMG: 10, SoloAttacks: true}
-	target := Duelist{Shields: 5}
+	target := Duelist{Shields: ShieldStack{Basic: 5}}
 
 	turn := soloTurn(t, "Brace", "Jab", "Block")
 	got := eatenKeys(turn, shieldedSlots(actor, target, turn))
@@ -119,7 +119,7 @@ func TestShieldsNeverEatADefense(t *testing.T) {
 func TestNoShieldsEatNothing(t *testing.T) {
 	turn := soloTurn(t, "Jab", "Skewer")
 	for _, on := range shieldedSlots(Duelist{DMG: 10}, Duelist{}, turn) {
-		if on {
+		if on >= 0 {
 			t.Fatal("a duelist holding no shields ate an attack")
 		}
 	}

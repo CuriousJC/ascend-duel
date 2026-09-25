@@ -802,7 +802,7 @@ func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 // whole reason the zero blow is counted and not thrown.
 func TestAZeroBlowSpendsNothingOfTheTargets(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
-	b.Shields = 2
+	b.Shields = ShieldStack{Basic: 2}
 
 	events, _, after := resolve(a, b, PlainCards(Block, Block, Block), nil, 1)
 

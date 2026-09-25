@@ -284,9 +284,10 @@ form, element — and a hand can only say what its cards must *agree* on.
 
 **Shields are the whole of the defensive half.** The player's defend cards — `Flinch`, `Brace`,
 `Block` and `Guard` at 0/1/2/3 AP — raise that many shields, and **one shield eats one incoming
-hit whole**. See MECHANICS.md §Shields. Five things to know before touching any of it:
+hit whole**. See MECHANICS.md §Shields. Six things to know before touching any of it:
 
-- **A shield eats the *heaviest* hit, not the first**. `combat.shieldedHits` is the whole rule,
+- **A shield eats its own element's heaviest hit first, then the heaviest of what is left — never
+  simply the first**. `combat.shieldedHits` is the whole rule,
   shared by both attack phases, and it decides the mask at the top of the turn rather than as each
   hit arrives — which is what lets the screen show the exchange before anything swings. Ranked on
   each landing's own damage, deliberately: weight, vulnerability and the hand's multiplier are one
@@ -298,6 +299,13 @@ hit whole**. See MECHANICS.md §Shields. Five things to know before touching any
   is what a card permanently *is* and is painted into the face, a mark is the card's situation
   and is painted over the top of it. `Render` fixes that order. See MECHANICS.md §Shields and
   §An upgrade washes the whole card.
+- **A shield's element is a rule, and so is a creature's**. `Duelist.Shields` is a
+  `combat.ShieldStack` — a count per element, fixed-width so a Duelist stays a value — and a
+  shield eating a hit of its own element banks one action point into `Duelist.Surge` for its
+  owner's next turn only. A creature carries the floor's element in `Duelist.Element`, and a hit of
+  it **fizzles** (`combat.fizzles`, `KindFizzled`): it lands nothing, though the card still forms
+  the hand. Wildcards never fizzle, and the duelist has no element, so the fizzle runs one way.
+  See MECHANICS.md §A creature's own element.
 - **`cards.Mark` is a bitmask and marks compose**. A card can be broken *and* pointed
   at; `internal/cards/mark.go`'s `drawMark` owns the order they are painted in, so one pair of facts
   draws one way. **Append-only, and worse to insert into than an ordinal enum** — claiming a bit in
@@ -308,9 +316,10 @@ hit whole**. See MECHANICS.md §Shields. Five things to know before touching any
   attacker (`SoloAttacks`, a hit per card) and the player forms hands and lands a hit per card,
   so a shield is worth one hit whichever way it faces; nothing in the rules stops a creature raising
   one, and nothing authored does.
-- **The verb vocabulary is two words: attack and shield.** Nothing banks, nothing draws, and
-  nothing shaves a fraction off a hit — **`Duelist.ActionPoints()` is the whole of a turn's
-  budget** with nothing that adds to it mid-round, and **every creature deck is pure attack**,
+- **The verb vocabulary is two words: attack and shield.** Nothing draws and nothing shaves a
+  fraction off a hit — **`Duelist.ActionPoints()` is the whole of a turn's budget**: the stat plus
+  the surge a matched block banked last turn, with nothing that adds to it mid-round — and **every
+  creature deck is pure attack**,
   which is why a creature's whole
   personality is which hits come round how often. `go run ./tools/motifsheet` is where a deck's
   size is read; no figure for it is written down here, because it moves whenever a creature is

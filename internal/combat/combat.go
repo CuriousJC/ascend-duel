@@ -125,6 +125,11 @@ func playTurn(
 
 	events, actor = expireDefenses(events, side, actor, round)
 
+	// **The surge is spent by the turn arriving**, exactly as the shields lapse: it bought this
+	// turn's budget, which the cards were already committed against, and it buys no other. See
+	// Duelist.Surge.
+	actor.Surge = 0
+
 	// A chill comes off the front, which needs no tie-break and so is the only pick that is
 	// deterministic without inventing a rule.
 	//
@@ -251,17 +256,18 @@ func resolveDefend(
 	case VerbShield:
 		// Raised, not spent. Each one eats a whole incoming attack when the opponent swings — see
 		// blockedByShield, and Duelist.Shields for when they expire.
-		actor = actor.raiseShields(card.Amount())
+		actor = actor.raiseShields(card.Element, card.Amount())
 		// **`Slot` names the card that raised them.** The defenses fire as one bundle and nothing
 		// lifts, so the event is the only thing that can say which card the pips come out of.
 		events = append(events, Event{
-			Kind:   KindRaised,
-			Side:   side,
-			Action: card.Concept,
-			Slot:   at,
-			Amount: card.Amount(),
-			Life:   actor.Shields,
-			Round:  round,
+			Kind:    KindRaised,
+			Side:    side,
+			Action:  card.Concept,
+			Element: card.Element,
+			Slot:    at,
+			Amount:  card.Amount(),
+			Life:    actor.Shields.Count(),
+			Round:   round,
 		})
 	}
 
@@ -281,12 +287,12 @@ func expireDefenses(events []Event, side Side, d Duelist, round int) ([]Event, D
 	// **The announcement is for the shields alone**, because they are the only half of this the
 	// screen draws. A guard lapsing unspent has no readout to correct, and a beat with no picture
 	// is the thing the choreography table exists to refuse.
-	if d.Shields > 0 {
+	if d.Shields.Count() > 0 {
 		events = append(events, Event{
 			Kind:   KindExpired,
 			Side:   side,
 			Target: side,
-			Amount: d.Shields,
+			Amount: d.Shields.Count(),
 			Round:  round,
 		})
 	}
@@ -375,9 +381,12 @@ func healAtTurnStart(events []Event, side Side, actor Duelist, round int) ([]Eve
 	return events, actor
 }
 
-// blockedByShield spends one of the target's shields against one incoming hit, and reports whether
-// the hit was eaten. A blocked hit lands nothing at all: no damage, no life change, and no KindDamage
-// for the feed to draw.
+// blockedByShield spends one of the target's shields — the one of element `shield` that
+// shieldedHits named — against one incoming hit, and reports whether the hit was eaten. A blocked hit
+// lands nothing at all: no damage, no life change, and no KindDamage for the feed to draw.
+//
+// **A shield of the hit's own element banks an action point** for the target's next turn — see
+// Duelist.Surge. Basic is no element, so a plain shield eating a plain hit matches nothing.
 //
 // **It is checked before weight and vulnerability** — everything downstream shapes a figure, and a
 // blocked hit never produces one. Ordering it after them would spend a shield on arithmetic nobody
@@ -385,20 +394,26 @@ func healAtTurnStart(events []Event, side Side, actor Duelist, round int) ([]Eve
 //
 // `slot` is the card's seat in the turn and `hit` is which term of the hand this was; a solo
 // attacker has no hand and passes zero.
-func blockedByShield(events []Event, side Side, target Duelist, card Card, slot, hit, round int) ([]Event, Duelist, bool) {
-	target, spent := target.spendShield()
+func blockedByShield(events []Event, side Side, target Duelist, card Card, shield Element, slot, hit, round int) ([]Event, Duelist, bool) {
+	target, spent := target.spendShield(shield)
 	if !spent {
 		return events, target, false
 	}
+	surged := shield != Basic && shield == card.Element
+	if surged {
+		target.Surge++
+	}
 	events = append(events, Event{
-		Kind:   KindBlocked,
-		Side:   other(side),
-		Action: card.Concept,
-		Target: other(side),
-		Amount: target.Shields,
-		Slot:   slot,
-		Hit:    hit,
-		Round:  round,
+		Kind:    KindBlocked,
+		Side:    other(side),
+		Action:  card.Concept,
+		Element: shield,
+		Target:  other(side),
+		Amount:  target.Shields.Count(),
+		Slot:    slot,
+		Hit:     hit,
+		Surged:  surged,
+		Round:   round,
 	})
 	return events, target, true
 }
@@ -463,10 +478,10 @@ func resolveSoloAttacks(
 		}
 
 		// **One shield, one hit**, and the hits it eats were chosen before the turn began — the
-		// heaviest first, by shieldedSlots. Spending is here rather than up there because a missed
+		// matching element first and then the heaviest, by shieldedSlots. Spending is here rather than up there because a missed
 		// hit spends nothing: the roll above continues before this line.
-		if blocked := false; eaten[i] && target.Shields > 0 {
-			events, target, blocked = blockedByShield(events, side, target, slot.Card, i, 0, round)
+		if blocked := false; eaten[i] >= 0 {
+			events, target, blocked = blockedByShield(events, side, target, slot.Card, eaten[i], i, 0, round)
 			if blocked {
 				continue
 			}
@@ -539,16 +554,17 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 		// halves happen in different phases. It goes through raiseShields, so the five-shield cap
 		// and the pip row hold exactly as they do for a Guard.
 		if up := slot.Card.ShieldOnPlay(); up > 0 {
-			actor = actor.raiseShields(up)
+			actor = actor.raiseShields(slot.Card.Element, up)
 			events = append(events, Event{
-				Kind:   KindRaised,
-				Side:   side,
-				Action: slot.Card.Concept,
-				Slot:   i,
-				Rider:  RiderShieldOnPlay,
-				Amount: up,
-				Life:   actor.Shields,
-				Round:  round,
+				Kind:    KindRaised,
+				Side:    side,
+				Action:  slot.Card.Concept,
+				Element: slot.Card.Element,
+				Slot:    i,
+				Rider:   RiderShieldOnPlay,
+				Amount:  up,
+				Life:    actor.Shields.Count(),
+				Round:   round,
 			})
 		}
 
@@ -702,9 +718,10 @@ func other(s Side) Side {
 	return SideA
 }
 
-// shieldedSlots picks which of a solo attacker's cards the target's shields eat: **the heaviest
-// hits first**, whatever order they were queued in. It reports a mask over the turn, indexed the
-// way the turn was played.
+// shieldedSlots picks which of a solo attacker's cards the target's shields eat, and with which
+// shield: **the matching element first, then the heaviest hits**, whatever order they were queued
+// in. It reports, per card of the turn, the element of the shield that eats it or -1 for a card no
+// shield eats.
 //
 // **What a shield costs to raise does not vary with the opponent's queue order, so what it is worth
 // does not either.** Eating whichever attack came first would make a shield worth whatever the
@@ -721,40 +738,79 @@ func other(s Side) Side {
 // amplifies the ones after it, so a shield can be provably not-optimal in hindsight. That is the
 // price of deciding up front, and deciding up front is what lets the screen show the whole exchange
 // before the creature swings — see screens.shatter.
-func shieldedSlots(actor, target Duelist, turn []Slot) []bool {
+func shieldedSlots(actor, target Duelist, turn []Slot) []Element {
 	planned := make([]int, len(turn))
+	elems := make([]Element, len(turn))
 	for i, slot := range turn {
 		planned[i] = -1
+		elems[i] = slot.Card.Element
 		if slot.Card.Category() == CategoryAttack {
 			planned[i] = actor.CardDamage(slot.Card)
 		}
 	}
-	return shieldedHits(planned, target.Shields)
+	return shieldedHits(planned, elems, target.Shields)
 }
 
-// shieldedHits is the rule both attack phases share: given what each hit is planned to deal, and
-// -1 for an entry that is not a hit at all, the `shields` heaviest are eaten. **Ties go to the
-// earliest**, so the mask is a function of the list and nothing else — a turn of three identical
-// hits against one shield loses the first of them.
+// shieldedHits is the rule both attack phases share: given what each hit is planned to deal, -1 for
+// an entry that is not a hit at all, and each hit's element, it says which shield eats which hit.
+// The answer is per hit: the element of the shield that eats it, or -1 for a hit that lands.
+//
+// **Two passes, and the order is the rule** *(owner's call)*:
+//
+//  1. **Every shield takes the heaviest hits of its own element first**, because a matched block
+//     banks an action point — see Duelist.Surge. Basic is no element and matches nothing.
+//  2. **Whatever shields are left take the heaviest of what is left**, whatever its element,
+//     spent lowest element first so the choice is a function of the stack and nothing else.
+//
+// So one ice shield against an ice Nip and a fire Drain eats the Nip: the point it banks is the
+// trade the player made by raising ice.
+//
+// **Ties go to the earliest**, so the mask is a function of the lists and nothing else — a turn of
+// three identical hits against one shield loses the first of them.
 //
 // A selection rather than a sort, because the list is at most a turn's landings long and the count
 // taken is at most the shields standing, and it keeps the tie-break impossible to get wrong.
-func shieldedHits(planned []int, shields int) []bool {
-	eaten := make([]bool, len(planned))
-	for taken := 0; taken < shields; taken++ {
+func shieldedHits(planned []int, elems []Element, shields ShieldStack) []Element {
+	eaten := make([]Element, len(planned))
+	for i := range eaten {
+		eaten[i] = -1
+	}
+	heaviest := func(match func(i int) bool) int {
 		best := -1
 		for i, dmg := range planned {
-			if eaten[i] || dmg < 0 {
+			if eaten[i] >= 0 || dmg < 0 || !match(i) {
 				continue
 			}
 			if best < 0 || dmg > planned[best] {
 				best = i
 			}
 		}
-		if best < 0 {
-			break
+		return best
+	}
+
+	for _, e := range AllElements {
+		if e == Basic {
+			continue
 		}
-		eaten[best] = true
+		for shields[e] > 0 {
+			best := heaviest(func(i int) bool { return elems[i] == e })
+			if best < 0 {
+				break
+			}
+			eaten[best] = e
+			shields[e]--
+		}
+	}
+
+	for _, e := range AllElements {
+		for shields[e] > 0 {
+			best := heaviest(func(int) bool { return true })
+			if best < 0 {
+				return eaten
+			}
+			eaten[best] = e
+			shields[e]--
+		}
 	}
 	return eaten
 }

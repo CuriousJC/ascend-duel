@@ -10,6 +10,7 @@ import (
 // The shipped script has to parse, or the game does not start. This is the test that turns a
 // misspelled anchor into a red `go test` instead of a panic in front of a player.
 func TestTheShippedScriptLoads(t *testing.T) {
+	parkTutorial(t)
 	s, err := Parse(data.LoadTutorial())
 	if err != nil {
 		t.Fatalf("data/tutorial.json does not parse: %v", err)
@@ -27,6 +28,7 @@ func TestTheShippedScriptLoads(t *testing.T) {
 // that the condition vocabulary is complete: a Condition added without an arm here fails at the
 // default rather than passing quietly.
 func TestEveryStepCanBeSatisfied(t *testing.T) {
+	parkTutorial(t)
 	run := NewRun(Load())
 
 	for guard := 0; run.Active(); guard++ {
@@ -84,6 +86,7 @@ func satisfying(t *testing.T, step Step, baseRounds, baseLedger, baseDMG, baseBr
 // The zero Facts is a scene that has published nothing, and it must stall rather than sail
 // through. A screen that forgets to publish should be obvious immediately.
 func TestNothingPublishedSatisfiesNothingButNext(t *testing.T) {
+	parkTutorial(t)
 	for c, name := range conditionNames {
 		if c == CondNext {
 			continue
@@ -99,6 +102,7 @@ func TestNothingPublishedSatisfiesNothingButNext(t *testing.T) {
 // A step asking for a click with nothing named to click would leave the player no legal click at
 // all and a condition only they could satisfy. Refused rather than quietly downgraded.
 func TestAnActionStepWithNothingToClickIsRefused(t *testing.T) {
+	parkTutorial(t)
 	_, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 		{StepRecord: "bad", Text: "click it", Until: "cards-queued"},
 	}})
@@ -112,6 +116,7 @@ func TestAnActionStepWithNothingToClickIsRefused(t *testing.T) {
 
 // Both vocabularies are closed, and a word the file invents does not exist.
 func TestAnInventedWordIsRefused(t *testing.T) {
+	parkTutorial(t)
 	for _, tc := range []struct {
 		name string
 		rec  data.TutorialStepData
@@ -133,6 +138,7 @@ func TestAnInventedWordIsRefused(t *testing.T) {
 // Lock. The bug it replaced was a step about which room you are standing in leaving the screen
 // live while the player queued cards it had not mentioned.
 func TestTheLockIsDerivedFromTheCondition(t *testing.T) {
+	parkTutorial(t)
 	s, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 		{StepRecord: "read", Text: "t", Until: "next", Anchor: "duel-button"},
 		{StepRecord: "bare-read", Text: "t", Until: "next"},
@@ -152,6 +158,7 @@ func TestTheLockIsDerivedFromTheCondition(t *testing.T) {
 // A read step locks the screen even though it points at something. That is this turn's bug stated
 // as a test: pointing and permitting are different, and only Bob's buttons are live.
 func TestAReadStepLocksTheScreen(t *testing.T) {
+	parkTutorial(t)
 	s, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 		{StepRecord: "rooms", Text: "eight floors", Until: "next", Anchor: "tower-place"},
 	}})
@@ -166,6 +173,7 @@ func TestAReadStepLocksTheScreen(t *testing.T) {
 // One step per frame. `phase-shop` is true for every frame the shop is up, so a script whose next
 // step also waited on it would never be seen at all if a satisfied step fell straight through.
 func TestOnlyOneStepAdvancesPerFrame(t *testing.T) {
+	parkTutorial(t)
 	run := &Run{script: Script{Steps: []Step{
 		{Key: "a", Text: "a", Until: CondPhaseShop},
 		{Key: "b", Text: "b", Until: CondPhaseShop},
@@ -182,6 +190,7 @@ func TestOnlyOneStepAdvancesPerFrame(t *testing.T) {
 // round-done must measure a round the step actually watched. A step that arrives mid-playback
 // would otherwise count the round it did not start and vanish on its first frame.
 func TestRoundDoneIgnoresTheRoundItArrivedDuring(t *testing.T) {
+	parkTutorial(t)
 	run := &Run{script: Script{Steps: []Step{
 		{Key: "watch", Text: "w", Until: CondRoundDone},
 		{Key: "after", Text: "a", Until: CondNext},
@@ -203,6 +212,7 @@ func TestRoundDoneIgnoresTheRoundItArrivedDuring(t *testing.T) {
 
 // Skip ends it, and nothing brings it back.
 func TestSkipEndsTheRun(t *testing.T) {
+	parkTutorial(t)
 	run := NewRun(Load())
 	run.Skip()
 	if run.Active() {
@@ -217,6 +227,7 @@ func TestSkipEndsTheRun(t *testing.T) {
 // Every anchor needs a name, or a step cannot write it down and String prints "unknown". This is
 // the append-only enum's tripwire: a kind added without a table entry fails here.
 func TestEveryAnchorAndConditionHasAName(t *testing.T) {
+	parkTutorial(t)
 	for _, a := range Anchors() {
 		if a.String() == "unknown" {
 			t.Errorf("anchor %d has no name", a)
@@ -232,6 +243,7 @@ func TestEveryAnchorAndConditionHasAName(t *testing.T) {
 // Every action condition locks to its anchor. A script cannot ask for a click and leave the rest of
 // the screen live, because that is not a thing the file can say any more.
 func TestEveryActionConditionLocksToItsAnchor(t *testing.T) {
+	parkTutorial(t)
 	for _, until := range []string{"cards-queued", "hand-emptied", "matching-queued", "duel-pressed"} {
 		s, err := Parse(data.TutorialData{Match: "concept", Steps: []data.TutorialStepData{
 			{StepRecord: "do-it", Text: "do it", Until: until, Anchor: "hand"},
@@ -249,6 +261,7 @@ func TestEveryActionConditionLocksToItsAnchor(t *testing.T) {
 // clicks as it takes on controls no step should be naming. Locking one would deadlock the tutorial
 // against its own condition.
 func TestAnOutcomeStepMayLeaveTheScreenAlone(t *testing.T) {
+	parkTutorial(t)
 	for _, until := range []string{"round-done", "phase-fight", "phase-reward", "phase-shop"} {
 		if _, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 			{StepRecord: "waiting", Text: "hold on", Until: until},
@@ -261,6 +274,7 @@ func TestAnOutcomeStepMayLeaveTheScreenAlone(t *testing.T) {
 // The shipped script has to obey its own rule. Parse enforces it, so this is really a guard against
 // the rule being loosened later without the script being re-read.
 func TestEveryActionStepInTheScriptGates(t *testing.T) {
+	parkTutorial(t)
 	for _, step := range Load().Steps {
 		if step.Until.isAction() && step.Lock != LockToAnchor {
 			t.Errorf("step %q waits on %q but locks %v", step.Key, step.Until, step.Lock)
@@ -272,6 +286,7 @@ func TestEveryActionStepInTheScriptGates(t *testing.T) {
 // the specific regression: `hand` is the whole row and permitted five clicks where one was asked
 // for.
 func TestTheFirstCardStepPointsAtOneCard(t *testing.T) {
+	parkTutorial(t)
 	var found bool
 	for _, step := range Load().Steps {
 		if step.Until != CondCardsQueued {
@@ -293,6 +308,7 @@ func TestTheFirstCardStepPointsAtOneCard(t *testing.T) {
 // why the fact is named for what is *unqueued* rather than for the hand's length. A step waiting
 // on the hand's length waits forever.
 func TestHandEmptiedCountsWhatIsUnqueuedNotWhatIsHeld(t *testing.T) {
+	parkTutorial(t)
 	run := &Run{script: Script{Steps: []Step{
 		{Key: "all", Text: "take them all", Anchor: AnchorHand,
 			Lock: LockToAnchor, Until: CondHandEmptied},
@@ -317,6 +333,7 @@ func TestHandEmptiedCountsWhatIsUnqueuedNotWhatIsHeld(t *testing.T) {
 // those are depends entirely on the axis — so defaulting it would be a lesson pointing confidently
 // at the wrong ones.
 func TestAMatchingStepWithoutAnAxisIsRefused(t *testing.T) {
+	parkTutorial(t)
 	_, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 		{StepRecord: "take", Text: "take them", Until: "matching-queued", Anchor: "matching-cards"},
 	}})
@@ -331,6 +348,7 @@ func TestAMatchingStepWithoutAnAxisIsRefused(t *testing.T) {
 // A script that never points at a set does not need one, which is what keeps the axis a property of
 // the lesson rather than a field every script has to carry.
 func TestAScriptWithNoMatchingStepNeedsNoAxis(t *testing.T) {
+	parkTutorial(t)
 	if _, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 		{StepRecord: "hello", Text: "hello", Until: "next"},
 	}}); err != nil {
@@ -340,6 +358,7 @@ func TestAScriptWithNoMatchingStepNeedsNoAxis(t *testing.T) {
 
 // The axis vocabulary is closed like the other three, and an invented word does not exist.
 func TestAnInventedAxisIsRefused(t *testing.T) {
+	parkTutorial(t)
 	if _, err := Parse(data.TutorialData{Match: "color", Steps: []data.TutorialStepData{
 		{StepRecord: "hello", Text: "hello", Until: "next"},
 	}}); err == nil {
@@ -355,6 +374,7 @@ func TestAnInventedAxisIsRefused(t *testing.T) {
 // thing it is waiting for: `watch` waits for the shield to bite, and a `watch` that froze the round
 // would deadlock the lesson on its own condition.
 func TestOnlyANextStepHoldsTheRound(t *testing.T) {
+	parkTutorial(t)
 	for _, step := range Load().Steps {
 		run := &Run{script: Script{Steps: []Step{step}}}
 
@@ -373,6 +393,7 @@ func TestOnlyANextStepHoldsTheRound(t *testing.T) {
 
 // A run that is over holds nothing, or a finished lesson would freeze every round after it.
 func TestASpentScriptHoldsNothing(t *testing.T) {
+	parkTutorial(t)
 	run := &Run{script: Script{Steps: []Step{{Key: "x", Text: "x", Until: CondNext}}}}
 	run.Advance(Facts{})
 	if run.HoldsRound() {

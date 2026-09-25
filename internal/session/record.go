@@ -50,6 +50,7 @@ const (
 	KindStatus  = "status"
 	KindDrained = "drained"
 	KindMissed  = "missed"
+	KindFizzled = "fizzled"
 	KindBlocked = "blocked"
 	KindRaised  = "raised"
 	KindLapsed  = "lapsed"
@@ -259,7 +260,7 @@ type LedgerSum struct {
 func RecordKinds() []string {
 	return []string{
 		KindAct, KindBlow, KindTerm,
-		KindDamage, KindStatus, KindDrained, KindMissed, KindBlocked,
+		KindDamage, KindStatus, KindDrained, KindMissed, KindFizzled, KindBlocked,
 		KindRaised, KindLapsed, KindHeld, KindSilver,
 		KindChilled, KindRegenerated, KindTicked, KindTimeUp, KindDefeated,
 		KindTook, KindCut, KindChanged, KindWore, KindSold, KindSpent,

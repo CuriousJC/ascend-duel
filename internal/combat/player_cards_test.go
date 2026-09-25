@@ -39,8 +39,8 @@ func TestEachDefendCardRaisesItsOwnNumberOfShields(t *testing.T) {
 		}
 
 		events, after, _ := resolve(duelist(10, 6, 100), duelist(10, 6, 100), PlainCards(tc.card), nil, 1)
-		if after.Shields != tc.want {
-			t.Errorf("a %s left %d shields standing, want %d", c.Label, after.Shields, tc.want)
+		if after.Shields.Count() != tc.want {
+			t.Errorf("a %s left %d shields standing, want %d", c.Label, after.Shields.Count(), tc.want)
 		}
 		if !hasKind(events, KindRaised) {
 			t.Errorf("a %s raised no KindRaised — the screen is never told to draw the pips", c.Label)
@@ -72,8 +72,8 @@ func TestAShieldEatsExactlyOneAttack(t *testing.T) {
 	if landed != 1 {
 		t.Errorf("%d attacks landed, want 1 — the third Bash had no shield left to meet it", landed)
 	}
-	if a2.Shields != 0 {
-		t.Errorf("%d shields left standing, want 0 — both were spent", a2.Shields)
+	if a2.Shields.Count() != 0 {
+		t.Errorf("%d shields left standing, want 0 — both were spent", a2.Shields.Count())
 	}
 }
 
@@ -102,14 +102,14 @@ func TestUnspentShieldsLapseBeforeTheirOwnerActsAgain(t *testing.T) {
 
 	// Round 1: A raises three and B swings at nothing, so all three survive the round.
 	_, a1, b1 := resolve(a, b, PlainCards(Guard), nil, 1)
-	if a1.Shields != 3 {
-		t.Fatalf("A ended round 1 with %d shields, want the Guard's three standing", a1.Shields)
+	if a1.Shields.Count() != 3 {
+		t.Fatalf("A ended round 1 with %d shields, want the Guard's three standing", a1.Shields.Count())
 	}
 
 	// Round 2: they expire at the start of A's own turn, before anything in it resolves.
 	events, a2, _ := resolve(a1, b1, nil, nil, 2)
-	if a2.Shields != 0 {
-		t.Errorf("A carried %d shields into round 3, want them lapsed", a2.Shields)
+	if a2.Shields.Count() != 0 {
+		t.Errorf("A carried %d shields into round 3, want them lapsed", a2.Shields.Count())
 	}
 	if !hasKind(events, KindExpired) {
 		t.Error("no KindExpired — the pip row would keep drawing shields the engine had taken away")
@@ -126,8 +126,8 @@ func TestATurnMayRaiseMoreShieldsThanOneCardCan(t *testing.T) {
 
 	// Three Guards is nine shields' worth, paid for out of a budget that can afford it.
 	_, after, _ := resolve(a, b, PlainCards(Guard, Guard, Guard), nil, 1)
-	if after.Shields != 9 {
-		t.Errorf("three Guards left %d standing, want the nine they raised", after.Shields)
+	if after.Shields.Count() != 9 {
+		t.Errorf("three Guards left %d standing, want the nine they raised", after.Shields.Count())
 	}
 }
 
@@ -163,8 +163,8 @@ func TestDefensesAreSpentWhetherOrNotTheyWereNeeded(t *testing.T) {
 
 	// A raises two defenses into a turn with nothing to answer.
 	_, a1, b1 := resolve(a, b, PlainCards(Guard, Guard), nil, 1)
-	if a1.Shields != 6 {
-		t.Fatalf("A ended round 1 holding %d shields, want the 6 two Guards raise", a1.Shields)
+	if a1.Shields.Count() != 6 {
+		t.Fatalf("A ended round 1 holding %d shields, want the 6 two Guards raise", a1.Shields.Count())
 	}
 
 	// Round two: A queues nothing, so its own turn expires them before B swings.
@@ -188,11 +188,11 @@ func TestClearDefensesClearsEveryDefensiveField(t *testing.T) {
 	// deleted; the shields are what is left, and the test stays because the failure it guards
 	// against is a *future* field being added and forgotten.
 	var d Duelist
-	d = d.raiseShields(3)
+	d = d.raiseShields(Basic, 3)
 
 	got := ClearDefenses(d)
 
-	if got.Shields != 0 {
+	if got.Shields.Count() != 0 {
 		t.Errorf("ClearDefenses left something standing: %+v", got)
 	}
 }

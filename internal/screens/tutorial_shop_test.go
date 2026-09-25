@@ -28,6 +28,7 @@ import (
 // does catch. **If it goes red, the fix is a cheaper shelf or a different seed, not a bigger
 // number here.**
 func TestTheTutorialsShopCanAffordWhatTheLessonDemands(t *testing.T) {
+	parkTutorial(t)
 	// What the taught run walks into the shop holding, observed in play on 2026-09-06.
 	const purse = 13
 

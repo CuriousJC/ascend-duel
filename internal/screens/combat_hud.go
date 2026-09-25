@@ -63,7 +63,7 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 			s.shownMaxLife(combat.SideA, s.fighter.MaxLife),
 			s.fighter.ActionPoints(),
 			s.fightIndex,
-			s.shownShields(combat.SideA, s.fighter.Shields),
+			s.shownShields(combat.SideA, s.fighter.Shields.Count()),
 			s.shownShieldElements(combat.SideA)...),
 		cards.DuelistStyle)
 	if img == nil {

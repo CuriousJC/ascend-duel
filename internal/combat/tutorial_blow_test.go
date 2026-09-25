@@ -38,6 +38,7 @@ import (
 // with no window. It is deliberately *not* in `internal/scenario`, which is compiled out of every
 // ordinary build and so would take the check with it.
 func TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt(t *testing.T) {
+	parkTutorial(t)
 	// **Skipped while the tutorial is switched off.** The lesson pinned a creature and a run code
 	// together and the roster it named no longer exists, so there is nothing for this to measure.
 	// It is kept rather than deleted because it is the promise a replacement seed has to satisfy:

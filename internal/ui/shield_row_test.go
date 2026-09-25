@@ -108,3 +108,17 @@ func TestAPaddedPipTakesTheColorItWasGiven(t *testing.T) {
 		}
 	}
 }
+
+// **A block takes the pip of the shield the engine spent**, not the oldest one: which shield ate a
+// hit is a rule now, since a matched one banks an action point.
+func TestSpendTakesThePipOfItsOwnElement(t *testing.T) {
+	var r ShieldRow
+	r.Add(rowFire, 1)
+	r.Add(rowIce, 1)
+	r.Add(rowFire, 1)
+	r.Spend(rowIce)
+
+	if r.Count() != 2 || r.Pips[0] != rowFire || r.Pips[1] != rowFire {
+		t.Errorf("spending an ice shield from fire, ice, fire left %v", r.Pips)
+	}
+}

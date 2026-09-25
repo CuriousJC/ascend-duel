@@ -112,10 +112,15 @@ for a faster action to lead. `Spd` still buys action points and still never buys
   decides is the hand's tie-break** — `groupsOf` breaks a tie by whose first card was played first,
   so the lead card that names the hand and carries its element is chosen by where the player put it.
   Do not paper over the rest on the screen, and do not invent a rule to justify it.
-- **`Duelist.Shields` is a count, not a queue.** Which hits they eat is decided at the top of the
-  attacker's turn by `combat.shieldedHits`, heaviest first, so the order the shields went up in
-  reaches no outcome. **Nothing reduces a hit to zero by arithmetic** — a shield eats a whole hit or
-  it does not.
+- **`Duelist.Shields` is a count per element, not a queue.** Which hits they eat is decided at the
+  top of the attacker's turn by `combat.shieldedHits` — each shield its own element's heaviest hit
+  first, then the heaviest of what is left — so the order the shields went up in reaches no outcome.
+  **The element is a rule**: a matched block banks an action point (`Event.Surged`,
+  `Duelist.Surge`), so a `KindBlocked` carries **the shield's** element in `Element` and the row
+  spends that pip (`ui.ShieldRow.Spend`). **Nothing reduces a hit to zero by arithmetic** — a
+  shield eats a whole hit or it does not, and a fizzle (`KindFizzled`, a hit of a creature's own
+  element) wastes a whole hit rather than zeroing a figure. It is drawn like a miss: `FIZZLE` on
+  the hit's line.
 - **`Slot.Index` is not a position in the round.** It is where the card sits in its own
   side's queue, which regrouping breaks apart. Anything asking "how far through the round are
   we" counts slots — `CombatScene.currentSlot` does, and lighting the right Resolution row
@@ -433,10 +438,13 @@ nothing.
 ### Shields break the attacks they ate, and a card can be marked
 
 *`combat_shatter.go` and `internal/cards/mark.go`, 2026-09-08.* A shield eats the creature's
-**heaviest** hit rather than its first — `combat.shieldedSlots`, decided at the top of the
-creature's turn — and the screen plays that as **one beat between the two turns**: every blocked pip
-flies out of the duelist card into the attack card it kills, the break opens across that card's
-face, the round holds, then the creature swings with what is left.
+hit of its own element first and then its **heaviest** — never simply its first —
+`combat.shieldedSlots`, decided at the top of the creature's turn — and the screen plays that as
+**one beat between the two turns**: every blocked pip flies out of the duelist card into the attack
+card it kills, wearing the element of the shield the engine spent, the break opens across that
+card's face, the round holds, then the creature swings with what is left. **A matched block writes
+`+1 AP` over the card it broke** — `drawSurgeNote`, a placeholder — and the banked points show as
+`(+N surge)` beside the AP figure while the player plans the turn they pay for.
 
 - **The rules decided it before a frame was drawn, which is the only reason it is drawable.** The
   mask is chosen up front rather than as each card arrives, so the whole exchange is known at the

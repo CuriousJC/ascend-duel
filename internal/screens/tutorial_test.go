@@ -22,6 +22,7 @@ import (
 // thing it names and no one scene knows them all. It is the same tripwire an `EventKind` has with
 // its choreography entry, and it exists for the same reason: the enum is the easy half to add to.
 func TestEveryAnchorHasARectangle(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	// **The run is taught the shipped script**, because `matching-cards` counts on the script's
@@ -89,6 +90,7 @@ func TestEveryAnchorHasARectangle(t *testing.T) {
 // holds is that every anchor the script uses is one some scene answers for. The stronger version
 // would need the script to declare its screen, which is a field nothing needs yet.
 func TestTheShippedScriptOnlyNamesRealAnchors(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Load())
@@ -121,6 +123,7 @@ func TestTheShippedScriptOnlyNamesRealAnchors(t *testing.T) {
 // before its first Init. It must read as "no anchor here" rather than as a rectangle at the
 // origin — the overlay drops the gate on the first and shields the screen on the second.
 func TestANilButtonIsNoRectangle(t *testing.T) {
+	parkTutorial(t)
 	if r := buttonRect(nil); !r.Empty() {
 		t.Errorf("a nil button gave the rectangle %v", r)
 	}
@@ -129,6 +132,7 @@ func TestANilButtonIsNoRectangle(t *testing.T) {
 // The bubble has to fit on the screen at every seat it can take, or a lesson ends up half off the
 // edge. The panel is a fixed size, so this is arithmetic rather than a rendering check.
 func TestTheBubbleFitsTheScreen(t *testing.T) {
+	parkTutorial(t)
 	const w, h = state.ScreenWidth, state.ScreenHeight
 	if tutorialPanelW+tutorialMargin*2 > w {
 		t.Errorf("the bubble is %dpx wide and the screen is %d", tutorialPanelW, w)
@@ -141,6 +145,7 @@ func TestTheBubbleFitsTheScreen(t *testing.T) {
 // The two buttons have to fit across the bottom of the bubble beside each other, since a step
 // waiting on Next draws both.
 func TestBothButtonsFitTheBubble(t *testing.T) {
+	parkTutorial(t)
 	need := tutorialButtonW*2 + tutorialButtonGap + tutorialPad*2
 	if need > tutorialPanelW {
 		t.Errorf("Next and Skip need %dpx and the bubble is %d", need, tutorialPanelW)
@@ -150,6 +155,7 @@ func TestBothButtonsFitTheBubble(t *testing.T) {
 // The bubble moves out of the way of what it is pointing at. That is the whole reason it is not a
 // modal, so it is worth a test rather than a comment.
 func TestTheBubbleAvoidsWhatItPointsAt(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	var t0 tutorialOverlay
 
@@ -185,6 +191,7 @@ func stubButton() *models.Button {
 // first stretch under the panel and reads as shorter than it is; one stopping short of the square
 // reads as pointing at nothing in particular.
 func TestTheLeaderTouchesBothEnds(t *testing.T) {
+	parkTutorial(t)
 	bubble := image.Rect(100, 600, 700, 860)
 
 	for _, target := range []image.Rectangle{
@@ -210,6 +217,7 @@ func TestTheLeaderTouchesBothEnds(t *testing.T) {
 // side. It is the degenerate case that happens when the bubble ends up overlapping its own
 // target — the last seat `place` falls back to.
 func TestTheLeaderDoesNotOvershootAnOverlap(t *testing.T) {
+	parkTutorial(t)
 	r := image.Rect(0, 0, 100, 100)
 	inside := image.Pt(60, 55)
 	if got := edgeToward(r, inside); got != inside {
@@ -220,6 +228,7 @@ func TestTheLeaderDoesNotOvershootAnOverlap(t *testing.T) {
 // A target dead-center on the bubble has no direction to point in, and must not divide by zero or
 // fly off to the origin.
 func TestTheLeaderSurvivesACoincidentCenter(t *testing.T) {
+	parkTutorial(t)
 	r := image.Rect(100, 100, 300, 200)
 	if got := edgeToward(r, center(r)); got != center(r) {
 		t.Errorf("a ray at its own center went to %v", got)
@@ -244,6 +253,7 @@ func onBorder(r image.Rectangle, p image.Point) bool {
 // The table has no default arm, so a condition added without a line here would silently inherit
 // nothing and print an empty hint. This is that table's tripwire.
 func TestEveryConditionSaysWhatItIsWaitingFor(t *testing.T) {
+	parkTutorial(t)
 	for _, step := range tutorial.Load().Steps {
 		if step.Until == tutorial.CondNext {
 			continue // it has a button
@@ -258,6 +268,7 @@ func TestEveryConditionSaysWhatItIsWaitingFor(t *testing.T) {
 // And the same over the whole vocabulary rather than only the conditions the shipped script
 // happens to use, since the failure arrives with the *next* script.
 func TestEveryConditionInTheVocabularyHasAWaitingLine(t *testing.T) {
+	parkTutorial(t)
 	for c, want := range map[tutorial.Condition]bool{
 		tutorial.CondNext:        false, // has a button
 		tutorial.CondCardsQueued: true,
@@ -278,6 +289,7 @@ func TestEveryConditionInTheVocabularyHasAWaitingLine(t *testing.T) {
 // The waiting line has to fit the slot the Next button would have taken, or it runs back under
 // Skip.
 func TestTheWaitingLineFitsItsSlot(t *testing.T) {
+	parkTutorial(t)
 	for c := range waitingWords {
 		if n := len(waitingFor(c)); n > 20 {
 			t.Errorf("the waiting line for %q is %d characters, which will not fit the slot", c, n)
@@ -291,6 +303,7 @@ func TestTheWaitingLineFitsItsSlot(t *testing.T) {
 // corner of the panel. The rectangle stays perfectly correct, which is why the scene has to be the
 // one to say it is covered.
 func TestACoveredSceneIsNotPointedAt(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	s := stubCombat()
@@ -317,6 +330,7 @@ func TestACoveredSceneIsNotPointedAt(t *testing.T) {
 // screen around a rectangle the player cannot see leaves them one legal click with no way to find
 // it — and the dialog's own X, which is what actually gets them out, would be outside the shield.
 func TestACoveredSceneDropsTheGate(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
@@ -369,6 +383,7 @@ func stubCombat() *CombatScene {
 // shields the game with it. The bug was visible on screen — Bob describing the tower while the
 // player queued two cards behind him — so it is worth checking at the layer where it was visible.
 func TestAReadStepShieldsTheWholeScreen(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
@@ -398,6 +413,7 @@ func TestAReadStepShieldsTheWholeScreen(t *testing.T) {
 // And an outcome step must leave the screen alone, or the tutorial deadlocks against its own
 // condition: winning a fight needs clicks on controls the step never names.
 func TestAnOutcomeStepLeavesTheScreenLive(t *testing.T) {
+	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
@@ -416,6 +432,7 @@ func TestAnOutcomeStepLeavesTheScreenLive(t *testing.T) {
 // underneath it — which is exactly how it first shipped, with "take them all" drawn through
 // "Skip".
 func TestTheWaitingLineClearsTheSkipButton(t *testing.T) {
+	parkTutorial(t)
 	var overlay tutorialOverlay
 	overlay.panel = image.Rect(100, 600, 100+tutorialPanelW, 600+tutorialPanelH)
 	overlay.build()
@@ -459,6 +476,7 @@ func taughtOn(axis string) *state.GlobalState {
 }
 
 func TestTheMatchingSetIsTheLargestOne(t *testing.T) {
+	parkTutorial(t)
 	var s CombatScene
 	s.hand = handOf(combat.Jab, combat.Jab, combat.Jab, combat.Cleave, combat.Cleave)
 
@@ -477,6 +495,7 @@ func TestTheMatchingSetIsTheLargestOne(t *testing.T) {
 // A tie has to resolve the same way every launch of the same seed, or the tutorial points at a
 // different pair of cards each time. Ranging the tally would be map order; the walk is the hand.
 func TestATiedMatchingSetGoesToTheConceptThatAppearsFirst(t *testing.T) {
+	parkTutorial(t)
 	var s CombatScene
 	s.hand = handOf(combat.Cleave, combat.Cleave, combat.Jab, combat.Jab)
 
@@ -491,6 +510,7 @@ func TestATiedMatchingSetGoesToTheConceptThatAppearsFirst(t *testing.T) {
 // One card matches nothing. A step gating the screen down to a single card and then waiting on a
 // condition already satisfied is worse than no step.
 func TestAHandWithNothingMatchingHasNoSet(t *testing.T) {
+	parkTutorial(t)
 	var s CombatScene
 	s.hand = handOf(combat.Jab, combat.Cleave, combat.Smash)
 	if got := s.matchingCards(taughtOn("concept")); got != nil {
@@ -507,6 +527,7 @@ func TestAHandWithNothingMatchingHasNoSet(t *testing.T) {
 // a concept pair and an elemental four of a kind, and a lesson about colors must not point at the
 // two cards that happen to share a name.
 func TestTheAxisDecidesWhichCardsAreTheSet(t *testing.T) {
+	parkTutorial(t)
 	var s CombatScene
 	s.hand = []paletteCard{
 		{Card: combat.Card{Concept: combat.Jab, Element: combat.Fire}},
@@ -527,6 +548,7 @@ func TestTheAxisDecidesWhichCardsAreTheSet(t *testing.T) {
 // A run nobody is teaching has no axis, so there is no set to point at. It is the ordinary case and
 // must not be a concept set by accident.
 func TestAnUntaughtRunHasNoMatchingSet(t *testing.T) {
+	parkTutorial(t)
 	var s CombatScene
 	s.hand = handOf(combat.Jab, combat.Jab, combat.Jab)
 	if got := s.matchingCards(&state.GlobalState{}); got != nil {

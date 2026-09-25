@@ -635,8 +635,8 @@ func DuelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 	// **`combat` caps a duelist at as many shields as this row holds**, so a count that would
 	// overflow cannot exist rather than being silently trimmed here — see Duelist.raiseShields.
 	// **Each pip keeps the element of the card that raised it** *(owner's call, 2026-09-02)*, which
-	// is the shield it was drawn as while it flew. Cosmetic: nothing about a shield depends on the
-	// element behind it, and a pip that changed on landing would say the opposite. A pip with no
+	// is the shield it was drawn as while it flew. The element is a rule — a shield of the hit's own
+	// element banks an action point — so a pip that changed on landing would be a wrong answer. A pip with no
 	// element — a shield standing from a round nobody watched, or one drawn outside a duel — is the
 	// neutral mark.
 	if shields > 0 {

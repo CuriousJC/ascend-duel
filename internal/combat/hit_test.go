@@ -38,7 +38,7 @@ func hitEvents(events []Event, by Side) []Event {
 	var out []Event
 	for _, e := range events {
 		switch e.Kind {
-		case KindDamage, KindMissed:
+		case KindDamage, KindMissed, KindFizzled:
 			if e.Side == by {
 				out = append(out, e)
 			}
@@ -220,7 +220,7 @@ func TestHitsStopAtADeath(t *testing.T) {
 func TestAShieldEatsTheHeaviestHit(t *testing.T) {
 	a := duelist(10, 8, 5000)
 	b := duelist(10, 8, 5000)
-	b.Shields = 1
+	b.Shields = ShieldStack{Basic: 1}
 
 	events, _, after := resolve(a, b, PlainCards(Jab, Smash, Cut), nil, 1)
 	hits := hitEvents(events, SideA)
@@ -240,8 +240,8 @@ func TestAShieldEatsTheHeaviestHit(t *testing.T) {
 			t.Errorf("seat %d was %v; the one shield eats the heaviest hit, seat %d", h.Slot, h.Kind, heaviest)
 		}
 	}
-	if after.Shields != 0 {
-		t.Errorf("%d shields left standing after the turn", after.Shields)
+	if after.Shields.Count() != 0 {
+		t.Errorf("%d shields left standing after the turn", after.Shields.Count())
 	}
 }
 

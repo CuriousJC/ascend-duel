@@ -176,6 +176,11 @@ func (s *CombatScene) throwColumn(c int) {
 		col.verdictT = ui.NewTravel(0, mathSymbolTicks())
 		s.markShown(col.logAt)
 
+	case combat.KindFizzled:
+		col.verdict = "FIZZLE"
+		col.verdictT = ui.NewTravel(0, mathSymbolTicks())
+		s.markShown(col.logAt)
+
 	case combat.KindBlocked:
 		col.verdict = "BLOCKED"
 		col.verdictT = ui.NewTravel(0, mathSymbolTicks())

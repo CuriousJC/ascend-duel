@@ -18,44 +18,79 @@ func spanText(spans []session.LedgerSpan) string {
 	return b.String()
 }
 
-// blowWithEveryFlatTerm is a hand of two cards carrying every figure no card pays: the two flat
-// terms, a rung relic's raise on DMG, and the seats that paid each. It is the shape that was
-// printing a sum short of its own answer.
+// blowWithEveryFlatTerm is a hand of two hits carrying every figure no card pays: the two flat
+// terms, a rung relic's raise on DMG, and the seats that paid each.
 //
-// **The rung relic's 2 is inside the cards' own figures**, not added to Base — it is base damage
-// since 2026-09-14 — so the fixture spends it the way the resolver does.
+// **The rung relic's 2 is inside the cards' own figures**, not a term — it is base damage — so the
+// fixture spends it the way the resolver does. **Each flat term joins every hit.**
 func blowWithEveryFlatTerm() (combat.Event, []combat.Card) {
 	e := handEvent("pair", []int{5, 10}, 100, 0)
 	e.HandBonus, e.HandBonusSeats = 2, []bool{true}
 	e.HeldBonus, e.HeldBonusCards = 20, 4
 	e.HeldBonusSeats = []bool{false, true}
 	e.VitaeBonus, e.VitaeBonusSeats = 8, []bool{false, false, true}
-	e.Base += e.HeldBonus + e.VitaeBonus
-	e.Amount = e.Base
+	restateHits(&e)
 
 	played := []combat.Card{combat.Of(combat.Jab, combat.Lightning), combat.Of(combat.Thrust, combat.Earth)}
 	return e, played
 }
 
-// TestTheLedgersSumAddsUpToItsOwnTotal is the tripwire this file exists for.
+// restateHits works a fixture's hits out again after its flat terms or its scale changed, the way
+// the resolver does: each hit is its card's term plus every flat term, times the multiplier, times
+// the hand scale.
+func restateHits(e *combat.Event) {
+	e.Amount = 0
+	for i := 0; i < e.HandCardCount; i++ {
+		hit := (e.HandAmounts[i] + e.HeldBonus + e.VitaeBonus) * e.Multiplier / 100
+		if e.HandScale != 0 && e.HandScale != 100 {
+			hit = hit * e.HandScale / 100
+		}
+		e.HitAmounts[i] = hit
+		e.Amount += hit
+	}
+}
+
+// TestEveryHitsLineAddsUpToItsOwnTotal is the tripwire this file exists for: a line of working that
+// does not come to its own figure reads as a bug in the rules rather than as a hole in the account.
 //
-// **The panel printed `5 + 10 x 1 = 37` for a blow of 37** — the card loop walks HandCardCount, so
-// the three flat terms a relic pays into Base were simply absent, in the one panel whose whole job
-// is to say where a figure came from. A sum that does not come to its own total reads as a bug in
-// the rules rather than as a hole in the account.
-//
-// **It evaluates the line rather than comparing it to a string**, so a fourth flat term arriving on
-// the event fails here rather than shipping as another silent gap.
-func TestTheLedgersSumAddsUpToItsOwnTotal(t *testing.T) {
+// **It evaluates the line rather than comparing it to a string**, so a third flat term arriving on
+// the event fails here rather than shipping as a silent gap.
+func TestEveryHitsLineAddsUpToItsOwnTotal(t *testing.T) {
 	e, played := blowWithEveryFlatTerm()
 
-	line := spanText(sumSpans(sumRecord(e, played)))
-	sum, total := evaluateSum(t, line)
-	if sum != total {
-		t.Errorf("the ledger wrote %q, which comes to %d rather than %d", line, sum, total)
+	for i := 0; i < e.HandCardCount; i++ {
+		line := spanText(sumSpans(hitRecord(e, i, played[i], nil)))
+		sum, total := evaluateSum(t, line)
+		if sum != total {
+			t.Errorf("hit %d wrote %q, which comes to %d rather than %d", i, line, sum, total)
+		}
+		if total != e.HitAmounts[i] {
+			t.Errorf("hit %d's total is %d, want the event's %d", i, total, e.HitAmounts[i])
+		}
 	}
-	if total != e.Amount {
-		t.Errorf("the ledger's total is %d, want the event's %d", total, e.Amount)
+}
+
+// TestTheWorkingEndsOnEveryHitTogether. The last line is the whole turn, so the column of hit
+// figures has an answer under it.
+func TestTheWorkingEndsOnEveryHitTogether(t *testing.T) {
+	e, played := blowWithEveryFlatTerm()
+
+	recs := HandTermRecords(e, nil, played)
+	last := recs[len(recs)-1]
+	if last.Role != session.RoleTotal || last.Total != e.Amount {
+		t.Errorf("the working ends on a %q of %d, want the total of every hit, %d", last.Role, last.Total, e.Amount)
+	}
+	hits := 0
+	for _, r := range recs {
+		if r.Role == session.RoleHit {
+			hits++
+			if r.Hit != hits {
+				t.Errorf("hit line %d says it is hit %d; hits are counted from one", hits, r.Hit)
+			}
+		}
+	}
+	if hits != e.HandCardCount {
+		t.Errorf("the working has %d hit lines, want one per hit", hits)
 	}
 }
 
@@ -64,9 +99,9 @@ func TestTheLedgersSumAddsUpToItsOwnTotal(t *testing.T) {
 func TestTheRungRelicsMultiplierIsOnTheLine(t *testing.T) {
 	e, played := blowWithEveryFlatTerm()
 	e.HandScale, e.HandScaleSeats = 200, []bool{true}
-	e.Amount = e.Base * 2
+	restateHits(&e)
 
-	line := spanText(sumSpans(sumRecord(e, played)))
+	line := spanText(sumSpans(hitRecord(e, 0, played[0], nil)))
 	if strings.Count(line, " x ") != 2 {
 		t.Errorf("the ledger wrote %q, want the hand's multiplier and the relic's as two terms", line)
 	}
@@ -104,8 +139,8 @@ func TestTheRungRelicsRaiseIsSaidButNeverSummed(t *testing.T) {
 	e, played := blowWithEveryFlatTerm()
 	relics := []combat.WornRelic{{}, {}, {}}
 
-	if line := spanText(sumSpans(sumRecord(e, played))); strings.Contains(line, "+ 2 ") {
-		t.Errorf("the sum reads %q, and the rung relic's raise is already inside the card terms", line)
+	if line := spanText(sumSpans(hitRecord(e, 0, played[0], relics))); strings.Contains(line, "+ 2 ") {
+		t.Errorf("the hit reads %q, and the rung relic's raise is already inside the card term", line)
 	}
 
 	raise, ok := handDMGRecord(e, relics)

@@ -119,8 +119,9 @@ func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand) ([]Car
 const maxSearchableAttacks = 14
 
 // blowScore is what one candidate turn would actually land, run through the same matcher the
-// resolver uses. It is the blow before any defense, which is all a planner can know — it cannot
-// see what the other side has raised.
+// resolver uses: a hit per attack card, each multiplied by the hand and rounded on its own. It is
+// the hits before any defense, which is all a planner can know — it cannot see what the other side
+// has raised.
 func blowScore(d Duelist, hand []Card, pick []int, hands []Hand) int {
 	// **A solo attacker's turn is worth the sum of its cards and nothing else.** No hand is read,
 	// so there is no multiplier to chase and no card that earns nothing — which also means the
@@ -143,11 +144,13 @@ func blowScore(d Duelist, hand []Card, pick []int, hands []Hand) int {
 		return 0
 	}
 
-	base := 0
+	total := 0
 	for _, i := range blow.Cards {
-		base += d.CardDamage(turn[i].Card)
+		if turn[i].Card.formsBlow() {
+			total += scaleDamage(d.CardDamage(turn[i].Card), blow.Multiplier)
+		}
 	}
-	return scaleDamage(base, blow.Multiplier)
+	return total
 }
 
 // greedyAttacks is the fallback for a hand too big to search: the dearest cards that fit, which is

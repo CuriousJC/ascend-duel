@@ -436,7 +436,7 @@ func relicCounters(worn []combat.WornRelic) map[string]string {
 // runCounters is the badges as the run holds them: what a relic has banked between fights.
 //
 // **The two callers are the screens with no duel on them** — the reward screen's build band and the
-// shop. The combat screen reads the duelist instead, and mid-blow the sum: see countersNow.
+// shop. The combat screen reads the duelist instead, and mid-blow the hand dialog: see countersNow.
 func runCounters(gs *state.GlobalState) map[string]string {
 	if gs.Run == nil {
 		return nil
@@ -446,14 +446,12 @@ func runCounters(gs *state.GlobalState) map[string]string {
 
 // countersNow is the badges as the *round being played back* has got to.
 //
-// **A growing relic steps between the terms of one blow as of 2026-08-26** *(owner's call)*, so the
-// duelist the screen is holding is a round behind while the sum is being read: `endOfRound` adopts
-// the resolved duelist only once playback is finished. The hand dialog carries the accumulator each
-// term left behind, so the row can step its badges on the beat the figure lands — which is the whole
-// point of moving the growth into the sum. The player watches the number that is about to price the
-// next card go up.
+// **A growing relic steps between the hits of one turn** *(owner's call)*, so the duelist the screen
+// is holding is a round behind while the lines are read: `endOfRound` adopts the resolved duelist
+// only once playback is finished. The hand dialog carries the accumulator each hit left behind, so
+// the row can step its badges as the hits are counted.
 //
-// **It reads figures the resolver produced and computes none**, exactly like the sum itself. Off the
+// **It reads figures the resolver produced and computes none**, exactly like the lines themselves. Off the
 // dialog it falls back to the duelist, which is every frame outside a blow.
 func (s *CombatScene) countersNow() map[string]string {
 	worn := s.fighter.Duelist.WornRelics()
@@ -481,7 +479,7 @@ func withGrown(worn []combat.WornRelic, grown []int) []combat.WornRelic {
 // The shake a card makes on the beat it does its work.
 //
 // **A card that does work should be seen doing it** *(owner's call, 2026-08-26)*. The figures leave
-// the cards and land in the sum; without the card moving, the number appears to come from nowhere
+// the cards and land in a hit's line; without the card moving, the number appears to come from nowhere
 // and the row of relics sits inert through the one moment it is earning its place.
 //
 // **Side to side rather than a jump** *(owner's call)*. A card that leaps reads as being *picked*,
@@ -530,7 +528,7 @@ func relicToastAngle(t ui.Travel) float64 {
 //
 // **The three travel together because they are one gesture** *(2026-09-15)*. They were a shift and a
 // bool read off one `travel` at the call site, which was fine with two marks and is the shape that
-// lets a third quietly reach only one of the two callers — the sum's toast and the deal's cascade
+// lets a third quietly reach only one of the two callers — the hand dialog's toast and the deal's cascade
 // both put a relic up, and a relic that turned in one and not the other would be two gestures with
 // one name. See the animation gallery, where `shake` and `toast` are told apart by exactly this.
 type relicToast struct {
@@ -600,12 +598,12 @@ func (s *CombatScene) shakeRelicAt(i int) {
 	s.relicShake[i] = ui.NewTravel(0, relicShakeTicks())
 }
 
-// tickShakes starts a shake on whatever the sum has just reached, and advances the ones already
-// running. Called every tick from Update.
+// tickShakes starts a shake on whatever the hand dialog has just set off, and advances the ones
+// already running. Called every tick from Update.
 //
-// **It fires on the beat one figure of the sum is written**, watching the hand dialog's own item
-// cursor rather than keeping a second clock: the number leaving a card and the card rattling are the
-// same event, and two clocks would eventually disagree about when it happened.
+// **It fires on the beat one figure is written**, reading what the box reports as started rather
+// than keeping a second clock: the number leaving a card and the card rattling are the same event.
+// The lines run in parallel, so several cards and relics can start on one frame.
 //
 // **It may not change an outcome**, like every other thing on this screen that moves.
 func (s *CombatScene) tickShakes(gs *state.GlobalState) {
@@ -616,28 +614,14 @@ func (s *CombatScene) tickShakes(gs *state.GlobalState) {
 		s.cardShake[i].Tick()
 	}
 
-	at := s.Theater.mathBox.at
-	if at == s.shakeItem {
-		return
-	}
-	s.shakeItem = at
-
-	relics, card, ok := s.Theater.mathBox.shaking(combat.SideA)
-	if !ok {
-		return
-	}
+	relics, cards := s.Theater.mathBox.takeShakes(combat.SideA)
 	for seat, shaking := range relics {
-		if !shaking {
-			continue
+		if shaking {
+			s.shakeRelicAt(seat)
 		}
-		// **The row is grown to reach the seat rather than the seat being dropped** *(2026-09-17)*.
-		// This was a fixed array as wide as `combat.MaxWornRelics` and the bound below quietly
-		// skipped anything past it; there is no width now, so the clock is as long as the row it
-		// is about. A relic that fired and did not rattle is the screen disagreeing with the sum.
-		s.shakeRelicAt(seat)
 	}
-	if card > 0 {
-		s.shakePlayedCard(card - 1)
+	for _, seat := range cards {
+		s.shakePlayedCard(seat)
 	}
 }
 
@@ -665,7 +649,7 @@ func (s *CombatScene) playedCardShake(seat int) int {
 }
 
 // relicCardCenter is the middle of one worn seat's card, which is where that relic's multiplier sets
-// off from on its way into the sum.
+// off from on its way into its line.
 //
 // **It reads the same two functions the row is drawn with** — `relicPaneRect` and `relicSlotAt` — so a
 // figure cannot set off from a seat the card is not in. That is the rule every origin on this screen

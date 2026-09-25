@@ -284,14 +284,14 @@ form, element — and a hand can only say what its cards must *agree* on.
 
 **Shields are the whole of the defensive half.** The player's defend cards — `Flinch`, `Brace`,
 `Block` and `Guard` at 0/1/2/3 AP — raise that many shields, and **one shield eats one incoming
-attack whole**. See MECHANICS.md §Shields. Five things to know before touching any of it:
+hit whole**. See MECHANICS.md §Shields. Five things to know before touching any of it:
 
-- **A shield eats the creature's *heaviest* blow, not its first**. `combat.shieldedSlots` is the
-  whole rule, and it decides the mask at the top of the creature's turn rather than as each card
-  arrives — which is what lets the screen show the exchange before anything swings. Ranked on
-  `CardDamage` alone, deliberately: weight, vulnerability and every guard are one multiplier
-  over the whole turn and cannot reorder two cards, so projecting the pipeline per card would be
-  a second resolver agreeing with the first. **The screen draws it as a broken window** —
+- **A shield eats the *heaviest* hit, not the first**. `combat.shieldedHits` is the whole rule,
+  shared by both attack phases, and it decides the mask at the top of the turn rather than as each
+  hit arrives — which is what lets the screen show the exchange before anything swings. Ranked on
+  each landing's own damage, deliberately: weight, vulnerability and the hand's multiplier are one
+  multiplier over the whole turn and cannot reorder two hits, so projecting the pipeline per hit
+  would be a second resolver agreeing with the first. **The screen draws it as a broken window** —
   `cards.MarkShattered` for the settled mark, `internal/screens/combat_shatter.go` for the pip
   crossing the table and the crack opening. **A mark is not an upgrade, and the drawing does not
   tell them apart** — both cover the whole face, so what separates them is ownership: an upgrade
@@ -304,15 +304,15 @@ attack whole**. See MECHANICS.md §Shields. Five things to know before touching 
   the middle changes what every existing value means, not just the ones after it. Three marks today:
   `MarkShattered`, `MarkHighlit` and `MarkPicked` — the last being the deck panel's filter column
   pointing at the cards its figures counted, in the relic pink rather than a sixth hue.
-- **The asymmetry is the mechanic.** Only the player raises shields and creatures raise nothing at
-  all, because every creature is a solo attacker (`SoloAttacks`, one blow per card) while the
-  player forms hands and lands one figure a turn. A count facing a hand would delete a whole turn.
-  `combat.blockedByShield` carries the note; the rules do not enforce it.
+- **Only the player raises shields**, and creatures raise nothing at all. Every creature is a solo
+  attacker (`SoloAttacks`, a hit per card) and the player forms hands and lands a hit per card,
+  so a shield is worth one hit whichever way it faces; nothing in the rules stops a creature raising
+  one, and nothing authored does.
 - **The verb vocabulary is two words: attack and shield.** Nothing banks, nothing draws, and
-  nothing shaves a fraction off a blow — **`Duelist.ActionPoints()` is the whole of a turn's
+  nothing shaves a fraction off a hit — **`Duelist.ActionPoints()` is the whole of a turn's
   budget** with nothing that adds to it mid-round, and **every creature deck is pure attack**,
   which is why a creature's whole
-  personality is which blows come round how often. `go run ./tools/motifsheet` is where a deck's
+  personality is which hits come round how often. `go run ./tools/motifsheet` is where a deck's
   size is read; no figure for it is written down here, because it moves whenever a creature is
   retuned and nothing fails when it does.
 - **One card raises at most five shields; a duelist holds as many as the turn paid for.** The
@@ -1479,7 +1479,7 @@ accepted rather than solved: the table is a surface and a verb is a mark on it, 
 never being compared, but it is why the AP bar's empty cells had to stop traveling 80% of the
 way to the ground and settle at 50 — see `combat_actionbox.go`. A *new* thing wanting blue has
 nowhere left to stand. **The hand's own name is the case that proves it**: the relic pink would
-put the two things that multiply a blow in one color in the same sum, and deep purple collides
+put the two things that multiply a hit in one color in the same line, and deep purple collides
 with arcane — so it takes the ground's own ink and is *marked* instead. See
 `screens.handNameInk` and `session.InkHand`, and note the second argument: three of the four
 axes a hand counts on are not elemental at all.
@@ -1914,9 +1914,9 @@ read.
   hand of pure attacks cannot: a defense carries an element and joins a hand like anything else,
   bringing no damage with it. Because it brings none, the creature lives on 11, takes its turn —
   Swoop, Drain, Nip — and **the Brace's one shield eats the Drain whole while the other two land**,
-  60 life down to 53. A creature that dies in one blow never swings, so a lesson about shields
+  60 life down to 53. A creature that dies to the player's turn never swings, so a lesson about shields
   cannot be taught in a round that kills. The player then reads the ledger and finishes it.
-  **The Drain is the bat's one big card**, which is what the heaviest-blow rule makes visible:
+  **The Drain is the bat's one big card**, which is what the heaviest-hit rule makes visible:
   the shield saves ten rather than five, and the step that explains it has a broken card on the
   table to point at.
 - **The other four cards are an arcane, an earth, a fire and an ice**, so there is no competing set,
@@ -1940,7 +1940,7 @@ names it.
 
 **Both halves of the promise are tested, and they check each other.**
   `TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` proves the
-  rules resolve that turn to a wound — **it is two-sided**, failing if the blow starts killing, if
+  rules resolve that turn to a wound — **it is two-sided**, failing if the hits start killing, if
   it leaves more than half the creature standing, or if the taught set stops holding exactly one
   shield. `TestTheTutorialsSeedDealsTheHandTheLessonDescribes` in `internal/screens` proves the seed
   actually deals it — the set's size, that it is the only one that size, that the first card belongs
@@ -1949,10 +1949,10 @@ names it.
   check**; `go run ./tools/seeds` is the search.
 - **A third test holds the creature's half of it**.
   `TestTheTutorialsShieldEatsTheCreaturesHeaviestBlow` in `internal/screens` plans the bat's turn
-  exactly as the screen does, resolves the whole round, and checks that one blow is blocked, that it
+  exactly as the screen does, resolves the whole round, and checks that one hit is blocked, that it
   is the heaviest, that the heaviest is the *only* card that size — a creature whose deck flattened
   out would make the lesson true and pointless — and that the step naming the card names the right
-  one. The two above are about the player's blow; this is about what comes back at them, which is
+  one. The two above are about the player's hits; this is about what comes back at them, which is
   the half the shield steps describe.
 - **The ledger step is the one anchor naming a control the frame owns**. `state.LedgerOpens`
   is a tally bumped by `internal/game` when the panel opens, published as a fact and read by
@@ -1970,7 +1970,7 @@ names it.
   whole screen; a thing whose job is to point at what is underneath cannot be the thing covering it.
   That is a second dialog shape, decided on purpose.
 - **`TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` is the one
-  to keep.** The lesson promises a blow that wounds and does *not* kill, and four files tuned for
+  to keep.** The lesson promises a turn that wounds and does *not* kill, and four files tuned for
   their own reasons can break that promise silently in either direction — the taught cards'
   `Amount`, the ladder's multiplier, the duelist's `DMG`, the bat's `HP`.
 

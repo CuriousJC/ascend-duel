@@ -154,7 +154,7 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // another queued third — and a face stating either would be wrong somewhere. The owner's call went
 // further than the accumulator: **no relic reaches the printed damage at all**, growing or not, so a
 // Bash reads `1x DMG` whatever is on the fingers. What the relics did is shown where it happens,
-// in the sum — see the hand dialog, `combat.GrowthScale` and `Event.HandGrowth`.
+// in a hit's line — see the hand dialog, `combat.GrowthScale` and `Event.HandGrowth`.
 //
 // **Cost is the exception and stays the pairing's** — see below. A discount is not order-dependent
 // and the face must agree with the AP bar.
@@ -325,7 +325,7 @@ func HeldBy(d combat.Duelist, c combat.Card) held {
 // what is left reading a worn set is the hover, which is the one place a player can ask what their
 // relics do to a card before committing it. The accumulator is kept out of that answer for the reason
 // it was kept off the face: it depends on where in the turn the card is counted, so any figure
-// quoted before the turn is resolved would be wrong somewhere. The growth is said in the sum, beside
+// quoted before the turn is resolved would be wrong somewhere. The growth is said in a hit's line, beside
 // the term it priced — see combat.GrowthScale and the hand dialog.
 //
 // **Cost is untouched by this**, because no growing relic adjusts a cost and a discount does not move
@@ -514,7 +514,7 @@ func Artwork(gs *state.GlobalState, key string) image.Image {
 // no badge to look at learns about either only by being surprised by it.
 // **`life` is passed in rather than read off the combatant** *(2026-08-18)*, because the bar waits
 // for the figure flying at it: while a hit is in the air the card keeps drawing what the duelist had
-// before the blow, so the drop and the arrival are one event. The combatant is already correct
+// before the hits, so the drop and the arrival are one event. The combatant is already correct
 // underneath — see `CombatScene.shownLife`, which is a view over it and never a second copy.
 func EnemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life int) cards.Spec {
 	spec := cards.Spec{

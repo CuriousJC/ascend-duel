@@ -15,15 +15,15 @@ import (
 )
 
 // These are the narrow kind of screen test CLAUDE.md allows: they create no `ebiten.Image`, need
-// no window and no font, and they guard a cross-package invariant a compiler cannot see — that
-// what the hand dialog writes on the screen is the arithmetic the resolver put on the event.
+// no window, and they guard a cross-package invariant a compiler cannot see — that what the hand
+// dialog writes on the screen is the arithmetic the resolver put on the event.
 //
-// **They test `mathScript`, which is the half of the box that has no geometry in it.** Where each
-// figure flies *from* is a question about a row of cards on a screen, and there is no way to check
-// that here; what the figures *say* is checkable, and it is the part that could quietly start
-// lying about the round.
+// **They test `hitScript`, which is the half of the box that has no geometry in it.** Where each
+// figure flies *from* is a question about a row of cards on a screen; what the figures *say* is
+// checkable, and it is the part that could quietly start lying about the round.
 
-// handEventFor builds a KindHand event by hand, standing in for one the resolver produced.
+// handEvent builds a KindHand event by hand, standing in for one the resolver produced. Each hit is
+// its card's figure times the multiplier.
 func handEvent(hand string, amounts []int, multiplier, total int) combat.Event {
 	id, ok := combat.HandIDForKey(hand)
 	if !ok {
@@ -39,8 +39,8 @@ func handEvent(hand string, amounts []int, multiplier, total int) combat.Event {
 	for i, a := range amounts {
 		e.HandCards[i] = i
 		e.HandAmounts[i] = a
+		e.HitAmounts[i] = a * multiplier / 100
 		e.HandCardCount++
-		e.Base += a
 	}
 	return e
 }
@@ -54,59 +54,56 @@ func scriptText(items []mathItem) string {
 	return strings.Join(parts, " ")
 }
 
-// **The sum is spelled out card by card.** This is the whole reason the dialog exists: the feed
-// prints the hand's cards as one term, and what a player could not see was which card paid what.
-func TestTheHandScriptSpellsOutEveryCard(t *testing.T) {
-	got := scriptText(mathScript(handEvent("pair", []int{20, 20}, 150, 60)))
-	if want := "20 + 20 x 1.5 = 60"; got != want {
-		t.Errorf("a Pair of Skewers reads %q, want %q", got, want)
+// linesOf is every hit's line of an event, as the box writes them.
+func linesOf(e combat.Event) []string {
+	var out []string
+	for i := 0; i < e.HandCardCount; i++ {
+		out = append(out, scriptText(hitScript(e, i, i == 0)))
+	}
+	return out
+}
+
+func sameLines(t *testing.T, what string, got, want []string) {
+	t.Helper()
+	if strings.Join(got, " | ") != strings.Join(want, " | ") {
+		t.Errorf("%s reads %q, want %q", what, got, want)
 	}
 }
 
-// A four-card hand keeps one plus between each pair of figures and gains nothing else.
-func TestAFourCardHandReadsAsFourTerms(t *testing.T) {
-	got := scriptText(mathScript(handEvent("concept-four-of-a-kind", []int{20, 20, 20, 20}, 500, 400)))
-	if want := "20 + 20 + 20 + 20 x 5 = 400"; got != want {
-		t.Errorf("a Four of a Kind reads %q, want %q", got, want)
-	}
+// **Every hit is its own line, and every line but the first carries its plus on the left**
+// *(owner's call)*. The hits add up across the table; the plus rides the line rather than taking a
+// row of its own.
+func TestEveryHitIsItsOwnLine(t *testing.T) {
+	sameLines(t, "a Pair of Skewers", linesOf(handEvent("pair", []int{20, 20}, 150, 60)),
+		[]string{"20 x 1.5 = 30", "+ 20 x 1.5 = 30"})
 }
 
-// **An echo is spelled out as its own terms** *(2026-08-22)*. The whole reason Echo pays into the
-// blow's sum rather than landing a second blow is that the player can watch the first card pay
-// three times — so a hand event carrying echo terms has to read as extra figures, not as one
-// bigger one.
-func TestAnEchoedCardReadsAsExtraTerms(t *testing.T) {
-	e := handEvent("pair", []int{30, 30, 20, 10}, 150, 135)
-	e.EchoTerms = 2
-
-	if got, want := scriptText(mathScript(e)), "30 + 30 + 20 + 10 x 1.5 = 135"; got != want {
-		t.Errorf("an echoed Pair reads %q, want %q", got, want)
-	}
+// A four-card hand is four lines, each multiplied on its own.
+func TestAFourCardHandIsFourLines(t *testing.T) {
+	sameLines(t, "a Four of a Kind",
+		linesOf(handEvent("concept-four-of-a-kind", []int{20, 20, 20, 20}, 500, 400)),
+		[]string{"20 x 5 = 100", "+ 20 x 5 = 100", "+ 20 x 5 = 100", "+ 20 x 5 = 100"})
 }
 
-// **Every sum reads the same shape, the identity multiplier included** *(2026-08-19, owner's
-// call)*. The No Hand's `x 1` was dropped until then, on the argument that a sum times one says
-// nothing — right about the arithmetic and wrong about the game: **hands are going to be
-// upgradable**, so that 1 is a number that will change, and a term appearing only once it stops
-// being 1 would make an upgrade read as a new rule rather than as a bigger figure. The log's line
-// says it the same way.
+// **An echo is three lines under one card**, each its own hit — the card seats the same index for
+// every landing, and each landing is multiplied by the hand.
+func TestAnEchoedCardIsALinePerLanding(t *testing.T) {
+	e := handEvent("pair", []int{30, 20, 10, 30}, 150, 135)
+	e.HandCards[1], e.HandCards[2], e.HandCards[3] = 0, 0, 1
+
+	sameLines(t, "an echoed Pair", linesOf(e),
+		[]string{"30 x 1.5 = 45", "+ 20 x 1.5 = 30", "+ 10 x 1.5 = 15", "+ 30 x 1.5 = 45"})
+}
+
+// **Every line reads the same shape, the identity multiplier included** *(owner's call)*: hands
+// are going to be upgradable, so the No Hand's 1 is a number that will change.
 func TestTheNoHandShowsItsMultiplier(t *testing.T) {
-	got := scriptText(mathScript(handEvent("no-hand", []int{20}, 100, 20)))
-	if want := "20 x 1 = 20"; got != want {
-		t.Errorf("a No Hand reads %q, want %q", got, want)
-	}
+	sameLines(t, "a No Hand", linesOf(handEvent("no-hand", []int{20}, 100, 20)),
+		[]string{"20 x 1 = 20"})
 }
 
-// **Every rung the engine names is shouted, the No Hand included.** The bottom of the ladder is a
-// rung like any other — it carries a multiplier, a stone raises it, a relic names it — so it is
-// announced like any other, and the word says what happened: `NO HAND!`.
-//
-// **What is withheld from it is the *lift*, not the word.** The announcement raises the cards that
-// made the rung and the No Hand is the turn that made none, so there is nothing to stand up. See
-// builtARung, and TestANoHandRaisesNothing, which is the other half of this.
-//
-// **An event naming no hand at all is still silent.** Nothing emits one, a turn with an attack in
-// it always producing a blow, and a bare `!` at 124 points is what the check is worth.
+// **Every rung the engine names is shouted, the No Hand included.** What is withheld from it is the
+// *lift*, not the word — see builtARung. An event naming no hand at all is still silent.
 func TestEveryRungIsShoutedIncludingTheNoHand(t *testing.T) {
 	if got := shoutFor(handEvent("pair", []int{20, 20}, 150, 60)); got != "PAIR!" {
 		t.Errorf("a Pair shouts %q, want %q", got, "PAIR!")
@@ -119,11 +116,7 @@ func TestEveryRungIsShoutedIncludingTheNoHand(t *testing.T) {
 	}
 }
 
-// **Every hand in the catalog can be shouted and none of them is empty.** A hand added to
-// `data/hands.json` with no name would put a bare `!` on the screen at 124 points.
-//
-// **The one-card hand is in the sweep**, No Hand included: every rung in the catalog is announced,
-// so every rung in the catalog needs a name worth putting on screen.
+// **Every hand in the catalog can be shouted and none of them is empty.**
 func TestEveryHandInTheCatalogHasAShout(t *testing.T) {
 	for _, h := range combat.Hands() {
 		e := combat.Event{Kind: combat.KindHand, Hand: h.ID}
@@ -137,74 +130,65 @@ func TestEveryHandInTheCatalogHasAShout(t *testing.T) {
 	}
 }
 
-// **Exactly the hand's own cards fly, plus the multiplier.** The flying items are the ones given a
-// launch point in `startHandMath`, and it walks them expecting the cards first and the multiplier
-// last — so a script that flew something else would seat a figure on the wrong card.
-func TestTheFlyingItemsAreTheCardsThenTheMultiplier(t *testing.T) {
-	for _, tc := range []struct {
-		what  string
-		e     combat.Event
-		flies int
-	}{
-		{"a Pair", handEvent("pair", []int{20, 20}, 150, 60), 3},
-		{"a No Hand", handEvent("no-hand", []int{20}, 100, 20), 2},
-		{"trips", handEvent("concept-three-of-a-kind", []int{10, 10, 10}, 200, 60), 4},
-	} {
-		items := mathScript(tc.e)
-
-		flies := 0
-		for _, it := range items {
+// **Each line flies its card's figure and the multiplier, and says which is which.**
+// `placeFigures` seats every flying item by its mark rather than by counting, so a line missing a
+// mark would seat a figure on nothing.
+func TestEveryLineMarksItsCardAndItsMultiplier(t *testing.T) {
+	e := handEvent("concept-three-of-a-kind", []int{10, 12, 14}, 200, 72)
+	for i := 0; i < e.HandCardCount; i++ {
+		cardTerms, mults, flies := 0, 0, 0
+		for _, it := range hitScript(e, i, i == 0) {
 			if it.fly {
 				flies++
 			}
-		}
-		if flies != tc.flies {
-			t.Errorf("%s flies %d items, want %d", tc.what, flies, tc.flies)
-		}
-
-		// The first HandCardCount flying items have to be the cards, in order, or the launch
-		// points in startHandMath are attached to the wrong figures.
-		seen := 0
-		for _, it := range items {
-			if !it.fly || seen >= tc.e.HandCardCount {
-				continue
+			if it.cardTerm {
+				cardTerms++
+				if it.text != strconv.Itoa(e.HandAmounts[i]) {
+					t.Errorf("hit %d's card figure reads %q, want %d", i, it.text, e.HandAmounts[i])
+				}
 			}
-			if want := tc.e.HandAmounts[seen]; it.text != strconv.Itoa(want) {
-				t.Errorf("%s: flying item %d reads %q, want the card's own %d", tc.what, seen, it.text, want)
+			if it.handMult {
+				mults++
 			}
-			seen++
+		}
+		if cardTerms != 1 || mults != 1 || flies != 2 {
+			t.Errorf("hit %d marks %d card figures and %d multipliers over %d flights, want one each and two",
+				i, cardTerms, mults, flies)
 		}
 	}
 }
 
-// **The script ends with the answer, and the answer is the event's.** Nothing in the box may
-// recompute a total: the figure shown and the figure landed have to be one number.
-func TestTheScriptEndsWithTheEventsOwnTotal(t *testing.T) {
-	e := handEvent("pair", []int{7, 7}, 150, 21)
-	items := mathScript(e)
+// **Each line ends with its hit's own figure, and the figure is the event's.** Nothing in the box
+// may recompute a total: the figure shown and the figure landed have to be one number.
+func TestEveryLineEndsWithItsHitsOwnFigure(t *testing.T) {
+	e := handEvent("pair", []int{7, 7}, 150, 20)
+	e.HitAmounts[1] = 11 // what the resolver's own rounding could leave, where 7 x 1.5 is 10
 
-	last := items[len(items)-1]
-	if last.text != strconv.Itoa(e.Amount) {
-		t.Errorf("the script ends with %q, want the event's %d", last.text, e.Amount)
-	}
-	// And it deliberately does not equal the sum of the terms: 7 + 7 is 14, and the total is what
-	// the multiplier made of it. A box that added its own terms up would print 14 here.
-	if last.text == strconv.Itoa(e.Base) {
-		t.Errorf("the script ended with the base %d rather than the blow %d", e.Base, e.Amount)
+	for i := 0; i < e.HandCardCount; i++ {
+		items := hitScript(e, i, i == 0)
+		if last := items[len(items)-1]; last.text != strconv.Itoa(e.HitAmounts[i]) {
+			t.Errorf("hit %d ends with %q, want the event's %d", i, last.text, e.HitAmounts[i])
+		}
 	}
 }
 
-// --- the widest line the box can ever draw -------------------------------------------------
+// **The flat terms are in every hit**, one per card kept back and one for the purse, after the
+// card's term and before the multiplier.
+func TestTheFlatTermsAreInEveryLine(t *testing.T) {
+	e := handEvent("pair", []int{20, 20}, 100, 70)
+	e.HeldBonusEach = []combat.HeldPay{{Amount: 5}, {Amount: 5}}
+	e.HeldBonus, e.HeldBonusSeats = 10, []bool{true}
+	e.VitaeBonus, e.VitaeBonusSeats = 5, []bool{false, true}
+	e.HitAmounts[0], e.HitAmounts[1] = 35, 35
 
-// **The line does not wrap and nothing shrinks to fit**, so the only thing keeping the sum inside
-// its band is that the band is wider than the longest sum the rules can produce. That is a
-// property worth pinning rather than eyeballing once: a bigger type size, a wider gap or a hand
-// of six would all break it silently, and what the player would see is a figure half off the edge.
-//
+	sameLines(t, "a Pair with two held cards and the purse", linesOf(e),
+		[]string{"20 + 5 + 5 + 5 x 1 = 35", "+ 20 + 5 + 5 + 5 x 1 = 35"})
+}
+
+// --- where the lines sit --------------------------------------------------------------------
+
 // **It needs a font, which is the one thing in this file that costs anything.** `LoadFontData`
-// hands back bytes and `NewGoTextFaceSource` is pure Go parsing, so no `ebiten.Image` is created
-// and nothing here needs a graphics context. The package already links Ebitengine directly, so
-// this joins no group it was not in — see the note in CLAUDE.md about `xvfb-run` on Linux.
+// hands back bytes and `NewGoTextFaceSource` is pure Go parsing, so no `ebiten.Image` is created.
 func mathTestState(t *testing.T) *state.GlobalState {
 	t.Helper()
 
@@ -219,81 +203,98 @@ func mathTestState(t *testing.T) *state.GlobalState {
 	}
 }
 
-// **The widest sum in the game fits its band**, with room to spare.
-//
-// **This is the test that found the box's width was wrong.** It first measured against `feedRect`'s
-// band, which spans `handBand` and therefore *narrows as the hand empties*: a two-card hand gives
-// about 330px against a widest sum of roughly 640, so the arithmetic would have run off both ends
-// in exactly the rounds a duel is decided in. The box takes the table's width now — see
-// `handMathRect` — which is a function of the screen alone.
-func TestTheWidestSumFitsItsBand(t *testing.T) {
+// laidOut is a box of one line per hit, seated as the event says, measured.
+func laidOut(t *testing.T, scene *CombatScene, e combat.Event) handMathBox {
+	t.Helper()
 	gs := mathTestState(t)
 
-	var scene CombatScene
-	band := scene.handMathRect(gs)
-
-	// Deliberately over the top: **seven** terms of three digits, a three-digit multiplier written
-	// out, and a five-digit total. Seven is the widest a blow can read — five cards in a legal turn
-	// plus the two extra landings an echo relic seats behind the first — and three digits each is
-	// past anything the rules produce, which is the point: the margin is what a later type-size
-	// change is spending.
-	e := handEvent("concept-four-of-a-kind", []int{999, 999, 999, 999, 999, 999, 999}, 500, 19980)
-
-	box := handMathBox{items: mathScript(e)}
-	scene.layOutMath(gs, &box)
-
-	// **Measured to the ink, not to the centers.** Checking the resting *points* passes a line
-	// half of which is off the screen, which is most of what this test is for — and it matters more
-	// since the figures doubled on 2026-08-19.
-	first, last := box.items[0], box.items[len(box.items)-1]
-	firstW, _ := text.Measure(first.text, mathFace(gs, first.size), 0)
-	lastW, _ := text.Measure(last.text, mathFace(gs, last.size), 0)
-
-	if left := first.at.X - int(firstW/2); left <= band.Min.X {
-		t.Errorf("the first figure starts at x=%d, outside the band's left edge at %d",
-			left, band.Min.X)
+	box := handMathBox{side: combat.SideA}
+	for i := 0; i < e.HandCardCount; i++ {
+		box.columns = append(box.columns,
+			mathColumn{hit: i, seat: e.HandCards[i], items: hitScript(e, i, i == 0)})
 	}
-	if right := last.at.X + int(lastW/2); right >= band.Max.X {
-		t.Errorf("the total ends at x=%d, outside the band's right edge at %d",
-			right, band.Max.X)
+	scene.layOutMath(gs, &box)
+	return box
+}
+
+// **Every line reads left to right and sits under its own card.** Each item rests to the right of
+// the one before it, and a line is centered on the card that threw its hit.
+func TestEveryLineIsLaidOutLeftToRightUnderItsCard(t *testing.T) {
+	gs := mathTestState(t)
+	var scene CombatScene
+	e := handEvent("pair", []int{20, 20}, 150, 60)
+	box := laidOut(t, &scene, e)
+
+	for c, col := range box.columns {
+		for i := 1; i < len(col.items); i++ {
+			if col.items[i].at.X <= col.items[i-1].at.X {
+				t.Fatalf("line %d: item %d (%q) rests at x=%d, not right of item %d at x=%d",
+					c, i, col.items[i].text, col.items[i].at.X, i-1, col.items[i-1].at.X)
+			}
+		}
+		first, last := col.items[0], col.items[len(col.items)-1]
+		mid := (first.at.X + last.at.X) / 2
+		card := scene.handCardCenter(gs, combat.SideA, col.seat).X
+		if diff := mid - card; diff < -cardWidth || diff > cardWidth {
+			t.Errorf("line %d is centered near x=%d, want it under its card at x=%d", c, mid, card)
+		}
+	}
+	if box.columns[0].items[0].at.X >= box.columns[1].items[0].at.X {
+		t.Error("the second card's line does not sit to the right of the first's")
 	}
 }
 
-// **The line reads left to right and never doubles back.** Each item rests to the right of the one
-// before it, which is the only thing making a sum read as a sum — and it is the property that
-// breaks first if the widths and the gaps are ever measured against different faces.
-func TestTheSumIsLaidOutLeftToRight(t *testing.T) {
+// **A card that lands several times stacks its lines under itself**, one pitch apart, and a card
+// that lands once keeps its line in the band.
+func TestAnEchoedCardsLinesStackUnderIt(t *testing.T) {
 	gs := mathTestState(t)
-
 	var scene CombatScene
-	box := handMathBox{items: mathScript(handEvent("concept-four-of-a-kind", []int{20, 20, 20, 20}, 500, 400))}
-	scene.layOutMath(gs, &box)
+	e := handEvent("pair", []int{30, 20, 10, 30}, 150, 135)
+	e.HandCards[1], e.HandCards[2], e.HandCards[3] = 0, 0, 1
+	box := laidOut(t, &scene, e)
 
-	for i := 1; i < len(box.items); i++ {
-		if box.items[i].at.X <= box.items[i-1].at.X {
-			t.Fatalf("item %d (%q) rests at x=%d, not right of item %d (%q) at x=%d",
-				i, box.items[i].text, box.items[i].at.X,
-				i-1, box.items[i-1].text, box.items[i-1].at.X)
-		}
+	bottom := scene.handCardCenter(gs, combat.SideA, 0).Y + cardHeight/2
+	first := box.columns[0].items[0].at.Y
+	if first <= bottom {
+		t.Errorf("the first line sits at y=%d, not under its card's bottom edge at %d", first, bottom)
 	}
-
-	// And every item shares the band's vertical center: the sum is one line, not a staircase.
-	band := scene.handMathRect(gs)
-	cy := (band.Min.Y + band.Max.Y) / 2
-	for i, it := range box.items {
-		if it.at.Y != cy {
-			t.Errorf("item %d (%q) sits at y=%d, want the band's center %d", i, it.text, it.at.Y, cy)
+	for c, want := range []int{first, first + mathLinePitch, first + 2*mathLinePitch, first} {
+		if got := box.columns[c].items[0].at.Y; got != want {
+			t.Errorf("line %d sits at y=%d, want %d", c, got, want)
 		}
 	}
 }
 
-// **The longest hand name in the catalog fits the screen at the size it is shouted.** The shout
-// doubled to 124 points on 2026-08-19, and a name is not a figure: `FOUR OF A KIND!` is fifteen
-// characters against `19980`'s five, so the shout reaches its limit long before the sum does. It is
+// --- what became of each hit -----------------------------------------------------------------
+
+// **A line finds its own hit's outcome by reading ahead**, and stops at the end of the hits: a
+// hit that was never thrown has no outcome to find.
+func TestEachLineFindsItsOwnOutcome(t *testing.T) {
+	log := []combat.Event{
+		{Kind: combat.KindHand},
+		{Kind: combat.KindMissed, Hit: 0},
+		{Kind: combat.KindDamage, Hit: 1},
+		{Kind: combat.KindStatus, Hit: 1},
+		{Kind: combat.KindDamage, Hit: 2},
+		{Kind: combat.KindDefeated},
+		{Kind: combat.KindRoundEnd},
+		{Kind: combat.KindDamage, Hit: 3},
+	}
+	got := hitOutcomes(log, 0)
+	for hit, want := range map[int]int{0: 1, 1: 2, 2: 4} {
+		if got[hit] != want {
+			t.Errorf("hit %d's outcome is at %d, want %d", hit, got[hit], want)
+		}
+	}
+	if _, ok := got[3]; ok {
+		t.Error("a hit past the end of this turn's hits was found")
+	}
+}
+
+// --- the hand's name -------------------------------------------------------------------------
+
+// **The longest hand name in the catalog fits the screen at the size it is shouted.** It is
 // centered on the hand row and does not wrap, so a name too wide runs off *both* edges at once.
-//
-// Measured against the whole screen rather than against a band, because that is what it is drawn
-// on — the row it stands over is narrower than the name is allowed to be.
 func TestTheWidestHandNameFitsTheScreen(t *testing.T) {
 	gs := mathTestState(t)
 
@@ -315,12 +316,9 @@ func TestTheWidestHandNameFitsTheScreen(t *testing.T) {
 	}
 }
 
-// **The name's second line is the sum's own multiplier, said early** *(2026-08-19, owner's call)*.
-// The banner writes `1.15x DMG` under the hand's name from the moment the hand forms, and the same
-// figure flies out of that word into the line when the hand fires — so the two go through one
-// formatting. Two spellings of the same multiplier would read as two numbers, which is exactly the
-// failure `handShout` exists to prevent for the name above it.
-func TestTheHandNameCarriesTheMultiplierTheSumWillShow(t *testing.T) {
+// **The name's second line is every hit's multiplier, said early** *(owner's call)*, so the two go
+// through one formatting.
+func TestTheHandNameCarriesTheMultiplierTheLinesWillShow(t *testing.T) {
 	if got := handMultiplierLine(115); got != "1.15x DMG" {
 		t.Errorf("115%% reads %q, want %q", got, "1.15x DMG")
 	}
@@ -334,149 +332,67 @@ func TestTheHandNameCarriesTheMultiplierTheSumWillShow(t *testing.T) {
 	}
 }
 
-// **The multiplier sets off at its own size and a card's figure grows into place.** The two are
-// different gestures for a reason and the difference is checkable without a window: a card's
-// figure is appearing — it comes toward the reader out of the card that paid it — while the
-// multiplier has been sitting under the hand's name since DUEL! and is simply traveling. A
-// multiplier that grew on the way would read as a second copy of a figure already on screen.
+// **The multiplier sets off at its own size and a card's figure grows into place.** The multiplier
+// has been sitting under the hand's name since DUEL! and is simply traveling; a card's figure is
+// appearing out of the card.
 func TestTheMultiplierLeavesTheBannerAtItsOwnSize(t *testing.T) {
-	items := mathScript(handEvent("pair", []int{20, 20}, 150, 60))
-
-	mult := items[len(items)-3]
-	if mult.text != "1.5" {
-		t.Fatalf("the multiplier is item %q, want %q", mult.text, "1.5")
-	}
-	if mult.fromScale != 1 {
-		t.Errorf("the multiplier sets off at %v, want 1", mult.fromScale)
-	}
-	if items[0].fromScale != 0 {
-		t.Errorf("a card's figure sets off at %v, want the flying default", items[0].fromScale)
+	for _, it := range hitScript(handEvent("pair", []int{20, 20}, 150, 60), 0, true) {
+		switch {
+		case it.handMult && it.fromScale != 1:
+			t.Errorf("the multiplier sets off at %v, want 1", it.fromScale)
+		case it.cardTerm && it.fromScale != 0:
+			t.Errorf("a card's figure sets off at %v, want the flying default", it.fromScale)
+		}
 	}
 }
 
-// **Every relic that fired says its own figure beside the term it priced, not on the card.**
-//
-// The figure moves between the cards of one blow — the first fire card steps a growing relic and the
-// second is counted bigger — so it is a fact about the term. And a card face carries no relic at all
-// now, so the sum is the only place any of it can be seen.
-func TestTheScriptAnnotatesEveryRelicThatFired(t *testing.T) {
+// --- relics ----------------------------------------------------------------------------------
+
+// **Every relic that fired says its own figure inside the hit it priced.**
+func TestEveryRelicThatFiredIsAFactorInItsHit(t *testing.T) {
 	e := handEvent("pair", []int{40, 44}, 150, 126)
 	e.HandRelicScale[0] = []int{200, 100}
 	e.HandRelicScale[1] = []int{200, 110}
 
-	got := scriptText(mathScript(e))
-	if want := "40 x 2 x 1 + 44 x 2 x 1.1 x 1.5 = 126"; got != want {
-		t.Errorf("the script reads %q, want %q", got, want)
-	}
+	sameLines(t, "two relics on two hits", linesOf(e),
+		[]string{"40 x 2 x 1 x 1.5 = 60", "+ 44 x 2 x 1.1 x 1.5 = 66"})
 }
 
-// **A relic that did not fire says nothing**, which is the only thing the zero means. A flat relic on
-// a card its predicate does not match has no beat and no figure.
-func TestARelicThatDidNotFireIsNotInTheScript(t *testing.T) {
+// **A relic that did not fire says nothing**, which is the only thing the zero means.
+func TestARelicThatDidNotFireIsNotInTheLine(t *testing.T) {
 	e := handEvent("pair", []int{20, 20}, 150, 60)
 	e.HandRelicScale[0] = []int{}
-	e.HandRelicScale[1] = []int{}
+	e.HandRelicScale[1] = []int{0}
 
-	got := scriptText(mathScript(e))
-	if want := "20 + 20 x 1.5 = 60"; got != want {
-		t.Errorf("the script reads %q, want %q", got, want)
-	}
+	sameLines(t, "a relic that did not fire", linesOf(e),
+		[]string{"20 x 1.5 = 30", "+ 20 x 1.5 = 30"})
 }
 
-// **A relic firing at the identity still says so.** A fresh Enflamed is 1x and its card bounces on
-// that beat; a bounce with no figure beside it would be a card jumping for no stated reason, and the
-// climb off 1x is the thing the player is meant to watch.
-func TestARelicFiringAtTheIdentityStillSaysSo(t *testing.T) {
-	e := handEvent("pair", []int{20, 20}, 150, 60)
-	e.HandRelicScale[0] = []int{100}
-	e.HandRelicScale[1] = []int{100}
-
-	got := scriptText(mathScript(e))
-	if want := "20 x 1 + 20 x 1 x 1.5 = 60"; got != want {
-		t.Errorf("the script reads %q, want %q", got, want)
-	}
-}
-
-// **Every figure flies out of the thing that produced it**, the relics included *(owner's call,
-// 2026-08-26)*. A multiplier appearing beside a term it had no visible part in was the one number on
-// the line with no source.
-//
-// What this holds is the bookkeeping that makes that safe: `startHandMath` pairs the flying items
-// with `HandCards` in order, so a relic's figure has to be tellable from a card's or every figure
-// after the first relic sets off from the wrong card. `relicSeat` is that mark.
-func TestEveryRelicFigureFliesFromItsOwnRelic(t *testing.T) {
-	e := handEvent("pair", []int{20, 22}, 150, 63)
-	e.HandRelicScale[0] = []int{200, 110}
-	e.HandRelicScale[1] = []int{200, 120}
-
-	cards, relics := 0, 0
-	for _, it := range mathScript(e) {
-		if !it.fly {
-			continue
-		}
-		if it.relicSeat > 0 {
-			relics++
-			continue
-		}
-		cards++
-	}
-
-	// Two card figures and the hand multiplier.
-	if cards != 3 {
-		t.Errorf("%d non-ring items fly, want 3 — the walk would pair figures with the wrong cards", cards)
-	}
-	// Two relics on each of two terms.
-	if relics != 4 {
-		t.Errorf("%d relic figures fly, want 4", relics)
-	}
-}
-
-// A relic's figure has to name the seat it sets off from, and the seats have to be the ones that
-// fired — a figure flying out of an empty finger is worse than one that simply appeared.
+// A relic's figure names the seat it sets off from, and the seats are the ones that fired.
 func TestARelicFigureNamesTheSeatItFliesFrom(t *testing.T) {
 	e := handEvent("pair", []int{20, 20}, 150, 60)
 	e.HandRelicScale[0] = []int{0, 0, 250}
 
 	var seats []int
-	for _, it := range mathScript(e) {
+	for _, it := range hitScript(e, 0, true) {
 		if it.relicSeat > 0 {
 			seats = append(seats, it.relicSeat-1)
 		}
 	}
-
 	if len(seats) != 1 || seats[0] != 2 {
 		t.Errorf("the relic figures fly from seats %v, want just seat 2", seats)
 	}
 }
 
-// **The script is the sequencing.** The box runs its items strictly one at a time, so a card's
-// figure landing before its relics' figures is a property of the order they are written in — the
-// order the engine applied them.
-func TestTheRelicFiguresFollowTheirOwnTerm(t *testing.T) {
-	e := handEvent("pair", []int{20, 22}, 150, 63)
-	e.HandRelicScale[0] = []int{200}
-	e.HandRelicScale[1] = []int{210}
-
-	got := scriptText(mathScript(e))
-	if want := "20 x 2 + 22 x 2.1 x 1.5 = 63"; got != want {
-		t.Errorf("the script reads %q, want %q", got, want)
-	}
-}
-
-// **Everything in the sum is accompanied by a card shaking** *(owner's call, 2026-08-26)*: a card's
-// damage shakes the card, a relic's multiplier shakes that relic, and an echo's extra term shakes the
-// relic that bought the landing even though it has no figure on the line.
-//
-// This checks the script side of that — which item names what. The beat it happens on is the box's
-// own item cursor, which no test without a window can reach.
-func TestEachItemNamesWhatShakesWithIt(t *testing.T) {
+// **The script names the relic; the table's seats are the screen's.** `hitScript` fills the relic a
+// figure flies out of and leaves every played card's seat to `placeFigures`.
+func TestTheScriptNamesRelicsAndLeavesCardSeatsToTheScreen(t *testing.T) {
 	e := handEvent("pair", []int{20, 14}, 150, 51)
-	e.HandCards[0], e.HandCards[1] = 3, 3
 	e.HandRelicScale[1] = []int{0, 180}
 	e.HandLanding[1] = []bool{true}
 
 	var cards, relics []int
-	for _, it := range mathScript(e) {
+	for _, it := range hitScript(e, 1, false) {
 		if it.cardSeat > 0 {
 			cards = append(cards, it.cardSeat-1)
 		}
@@ -484,18 +400,17 @@ func TestEachItemNamesWhatShakesWithIt(t *testing.T) {
 			relics = append(relics, it.relicSeat-1)
 		}
 	}
-
-	// mathScript fills neither: the seats are a fact about the table and the row, which is
-	// startHandMath's half of the box. What it does fill is the relic the figure flies out of.
 	if len(cards) != 0 {
-		t.Errorf("mathScript filled card seats %v; that is startHandMath's job", cards)
+		t.Errorf("hitScript filled card seats %v; that is placeFigures' job", cards)
 	}
 	if len(relics) != 1 || relics[0] != 1 {
 		t.Errorf("the relic figures name seats %v, want just seat 1", relics)
 	}
 }
 
-// splitEvent is a blow whose terms can be written as the product the game worked out: one DMG, and
+// --- the product inside a term ---------------------------------------------------------------
+
+// splitEvent is a hand whose terms can be written as the product the game worked out: one DMG, and
 // a percentage per card. `pcts` are the cards' own multipliers, 300 being a 3x card.
 func splitEvent(hand string, dmg int, pcts []int, multiplier, total int) combat.Event {
 	amounts := make([]int, len(pcts))
@@ -511,83 +426,61 @@ func splitEvent(hand string, dmg int, pcts []int, multiplier, total int) combat.
 	return e
 }
 
-// **A term is the product, not its answer** *(owner's call, 2026-09-19)*. The DMG the hand swings
-// at is the one figure a rung relic moves, and a line that printed only what each card came to
-// showed the player the answer to a sum it never showed them.
+// **A term is the product, not its answer** *(owner's call)*.
 func TestATermIsWrittenAsDMGTimesTheCardsMultiplier(t *testing.T) {
-	got := scriptText(mathScript(splitEvent("no-hand", 12, []int{300}, 100, 36)))
-	if want := "( 12 x 3 ) x 1 = 36"; got != want {
-		t.Errorf("a 3x card on 12 DMG reads %q, want %q", got, want)
-	}
+	sameLines(t, "a 3x card on 12 DMG", linesOf(splitEvent("no-hand", 12, []int{300}, 100, 36)),
+		[]string{"( 12 x 3 ) x 1 = 36"})
 }
 
-// Every card of a hand takes its own multiple of the same DMG, which is what the brackets say.
-func TestEveryTermSwingsAtTheSameDMG(t *testing.T) {
-	got := scriptText(mathScript(splitEvent("pair", 12, []int{300, 100}, 100, 48)))
-	if want := "( 12 x 3 ) + ( 12 x 1 ) x 1 = 48"; got != want {
-		t.Errorf("a Pair reads %q, want %q", got, want)
-	}
+// Every hit takes its own multiple of the same DMG, which is what the brackets say.
+func TestEveryHitSwingsAtTheSameDMG(t *testing.T) {
+	sameLines(t, "a Pair", linesOf(splitEvent("pair", 12, []int{300, 100}, 100, 48)),
+		[]string{"( 12 x 3 ) x 1 = 36", "+ ( 12 x 1 ) x 1 = 12"})
 }
 
-// **A relic is a factor inside the bracket**, where it used to be a label beside the figure it had
-// already been folded into. The product on the line is the one the resolver did.
+// **A relic is a factor inside the bracket.**
 func TestARelicIsAFactorInsideTheTerm(t *testing.T) {
 	e := splitEvent("no-hand", 12, []int{300}, 100, 72)
 	e.HandRelicScale[0] = []int{200}
+	e.HitAmounts[0] = 72
 
-	got := scriptText(mathScript(e))
-	if want := "( 12 x 3 x 2 ) x 1 = 72"; got != want {
-		t.Errorf("a doubling relic reads %q, want %q", got, want)
-	}
+	sameLines(t, "a doubling relic", linesOf(e), []string{"( 12 x 3 x 2 ) x 1 = 72"})
 }
 
-// **A term whose split does not come to the term is written flat**, which is the whole of what
-// combat.Event.TermSplit's false return buys: an echo takes its fraction off the damage and the
-// percentage separately, and a bracket coming to the wrong number is worse than a bare figure.
+// **A term whose split does not come to the term is written flat** — see combat.Event.TermSplit.
 func TestATermThatDoesNotSplitIsWrittenFlat(t *testing.T) {
 	e := splitEvent("no-hand", 12, []int{300}, 100, 36)
 	e.HandCardBase[0] = 35 // what an echo's rounding looks like from here
 
-	got := scriptText(mathScript(e))
-	if want := "36 x 1 = 36"; got != want {
-		t.Errorf("a term that does not split reads %q, want %q", got, want)
-	}
+	sameLines(t, "a term that does not split", linesOf(e), []string{"36 x 1 = 36"})
 }
 
-// **The DMG figure flies out of the duelist and the card's multiplier out of the card.** Every
-// figure in this box leaves the thing that produced it, and the duelist is what produced the DMG.
+// **The DMG figure flies out of the duelist and the card's multiplier out of the card.**
 func TestTheDMGFigureBelongsToTheDuelist(t *testing.T) {
-	items := mathScript(splitEvent("pair", 12, []int{300, 100}, 100, 48))
-
-	var duelist, card int
-	for _, it := range items {
-		if !it.fly {
-			continue
-		}
-		if it.fromDuelist {
-			duelist++
-			if it.text != "12" {
-				t.Errorf("the duelist's figure reads %q, want the DMG", it.text)
+	e := splitEvent("pair", 12, []int{300, 100}, 100, 48)
+	for i := 0; i < e.HandCardCount; i++ {
+		duelist := 0
+		for _, it := range hitScript(e, i, i == 0) {
+			if it.fly && it.fromDuelist {
+				duelist++
+				if it.text != "12" {
+					t.Errorf("hit %d: the duelist's figure reads %q, want the DMG", i, it.text)
+				}
 			}
-			continue
 		}
-		card++
-	}
-	if duelist != 2 {
-		t.Errorf("%d figures came off the duelist, want one per term", duelist)
-	}
-	// Two cards and the hand's own multiplier.
-	if card != 3 {
-		t.Errorf("%d figures came off the table, want the two cards and the multiplier", card)
+		if duelist != 1 {
+			t.Errorf("hit %d: %d figures came off the duelist, want one", i, duelist)
+		}
 	}
 }
 
-// **The line has three levels and the air says which is which** *(owner's call, 2026-09-19)*: a
-// product inside a term is set close, the terms are set apart by the sum's own gap, and the
-// multiplier that applies to all of them is set further apart again. At one gap throughout, the
-// `x` inside a term and the `x` multiplying the finished sum read as the same operation.
-func TestTheSumIsSetInThreeLevelsOfAir(t *testing.T) {
-	items := mathScript(splitEvent("pair", 12, []int{300, 200}, 100, 60))
+// **A line has three levels and the air says which is which** *(owner's call)*: a product inside a
+// term is set close, the flat terms are set apart by the line's own gap, and the multiplier that
+// applies to all of them is set further apart again.
+func TestALineIsSetInThreeLevelsOfAir(t *testing.T) {
+	e := splitEvent("pair", 12, []int{300, 200}, 100, 60)
+	e.VitaeBonus, e.VitaeBonusSeats = 5, []bool{true}
+	items := hitScript(e, 1, false)
 
 	at := func(text string, nth int) int {
 		for i, it := range items {
@@ -598,25 +491,20 @@ func TestTheSumIsSetInThreeLevelsOfAir(t *testing.T) {
 				nth--
 			}
 		}
-		t.Fatalf("the script has no %q at that count: %q", text, scriptText(items))
+		t.Fatalf("the line has no %q at that count: %q", text, scriptText(items))
 		return 0
 	}
 
-	// Inside the first bracket: the parens hug their figures and the `x` binds tight.
 	if got := gapBefore(items, at("12", 0)); got != mathHugGap {
 		t.Errorf("a bracket stands %v off its figure, want the hug %v", got, mathHugGap)
 	}
-	if got := gapBefore(items, at("3", 0)); got != mathTightGap {
+	if got := gapBefore(items, at("2", 0)); got != mathTightGap {
 		t.Errorf("a card's multiplier is set %v off the DMG, want the tight %v", got, mathTightGap)
 	}
-
-	// Between the terms: the sum's own gap, on the `+`.
-	if got := gapBefore(items, at("+", 0)); got != mathItemGap {
-		t.Errorf("the terms are %v apart, want the sum's own %v", got, mathItemGap)
+	if got := gapBefore(items, at("+", 1)); got != mathItemGap {
+		t.Errorf("the purse is %v off the term, want the line's own %v", got, mathItemGap)
 	}
 
-	// The hand's multiplier and the answer: apart from everything to their left. **The last `x` in
-	// the script**, which is the one that multiplies the finished sum.
 	last := 0
 	for i, it := range items {
 		if it.text == "x" {
@@ -627,11 +515,9 @@ func TestTheSumIsSetInThreeLevelsOfAir(t *testing.T) {
 		t.Errorf("the hand's multiplier is set %v off the terms, want the wide %v", got, mathWideGap)
 	}
 	if got := gapBefore(items, at("=", 0)); got != mathWideGap {
-		t.Errorf("the answer is set %v off the sum, want the wide %v", got, mathWideGap)
+		t.Errorf("the answer is set %v off the line, want the wide %v", got, mathWideGap)
 	}
 
-	// And the three are actually three. A tuning pass that collapsed any pair would pass every
-	// assertion above and lose the thing they are for.
 	if !(mathTightGap < mathItemGap && mathItemGap < mathWideGap) {
 		t.Errorf("the three gaps are %v, %v, %v — they have to be three widths in that order",
 			mathTightGap, mathItemGap, mathWideGap)

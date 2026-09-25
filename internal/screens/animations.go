@@ -132,7 +132,7 @@ type AnimationsScene struct {
 // was built to answer and then answered badly by listing them as peers. `shakeOffset` is the
 // sideways rattle; the toast is that rattle **plus a tilt and a lit border**, all three off the one
 // `travel` — see `relicToast`, which exists so a mark cannot reach one caller and not the other.
-// What differs is the wearer: a **card** paying into the sum rattles and nothing else
+// What differs is the wearer: a **card** paying into its line rattles and nothing else
 // (`drawPlayedCards`), a **relic** firing rattles, rocks and lights. They stay two entries because
 // the difference is exactly those two extra marks and the pair wants to be looked at side by side;
 // what they must not do is read as two movements.

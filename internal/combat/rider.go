@@ -47,7 +47,7 @@ const (
 	// `Duelist.raiseShields`, so the five-shield cap holds exactly as it does for a Guard.
 	RiderShieldOnPlay
 
-	// RiderDamageOnPlay adds to the duelist's own DMG for the blow this card is played into.
+	// RiderDamageOnPlay adds to the duelist's own DMG for every hit of the turn this card is played into.
 	// Amount is the figure, in DMG.
 	//
 	// **It is a bonus to the duelist, not to the card.** The owner's words: "add 10 to the
@@ -65,7 +65,7 @@ const (
 	// nothing on.
 	RiderDamageInHand
 
-	// RiderScaleInHand scales the duelist's DMG for the blow while this card sits unplayed in the
+	// RiderScaleInHand scales the duelist's DMG for every hit of the turn while this card sits unplayed in the
 	// hand. Amount is a percentage, so 200 is twice.
 	RiderScaleInHand
 
@@ -79,7 +79,7 @@ const (
 	// changed does the changing.
 	RiderVitaeInHand
 
-	// RiderScaleInCombo scales the duelist's DMG for the blow when this card is one of the cards
+	// RiderScaleInCombo scales the duelist's DMG for every hit of the turn when this card is one of the cards
 	// the hand was formed from. Amount is a percentage, so 200 is twice.
 	//
 	// **Formed from, not merely played.** It reads `Blow.Rung` — the cards that made the rung —
@@ -289,7 +289,7 @@ func (c Card) riderScale(kind RiderKind) int {
 // ShieldOnPlay is the shields this card raises as it is played, summed over its riders.
 func (c Card) ShieldOnPlay() int { return c.riderTotal(RiderShieldOnPlay) }
 
-// DamageOnPlay is the DMG this card adds to its duelist for the blow it is played into.
+// DamageOnPlay is the DMG this card adds to its duelist for every hit of the turn it is played into.
 func (c Card) DamageOnPlay() int { return c.riderTotal(RiderDamageOnPlay) }
 
 // DamageInHand is the DMG this card adds to its duelist while it sits unplayed in the hand.
@@ -325,7 +325,7 @@ func (c Card) GoldenOdds() int { return c.riderTotal(RiderGolden) }
 // SilverOdds is the denominator a silver card gambles on, or zero for a card that is not silver.
 func (c Card) SilverOdds() int { return c.riderTotal(RiderSilver) }
 
-// blowDMG is the duelist's DMG for one blow, after every rider with something to say about it.
+// blowDMG is the duelist's DMG for one turn's hits, after every rider with something to say about it.
 //
 // **One figure, applied to the duelist rather than to any card** *(owner's call, 2026-09-02)*.
 // `Card.Damage` is linear in DMG, so raising the duelist's figure for the length of one

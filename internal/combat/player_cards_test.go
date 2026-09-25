@@ -63,8 +63,14 @@ func TestAShieldEatsExactlyOneAttack(t *testing.T) {
 	if got := countKind(events, KindBlocked); got != 2 {
 		t.Errorf("%d attacks blocked, want 2 — one shield is one attack", got)
 	}
-	if got := damageCount(events); got != 1 {
-		t.Errorf("%d attacks landed, want 1 — the third Bash had no shield left to meet it", got)
+	landed := 0
+	for _, e := range events {
+		if e.Kind == KindDamage && e.Side == SideB {
+			landed++
+		}
+	}
+	if landed != 1 {
+		t.Errorf("%d attacks landed, want 1 — the third Bash had no shield left to meet it", landed)
 	}
 	if a2.Shields != 0 {
 		t.Errorf("%d shields left standing, want 0 — both were spent", a2.Shields)

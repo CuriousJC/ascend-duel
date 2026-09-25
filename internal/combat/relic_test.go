@@ -332,10 +332,9 @@ func TestTheFirstRelicToApplyAStatusIsTheOneCredited(t *testing.T) {
 	}
 }
 
-func TestOneBlowLandsOneOfEachStatus(t *testing.T) {
-	// Two fire cards match a fire relic twice. The status does not stack, so applying it twice is
-	// the same as applying it once — but announcing it twice would describe two things that did
-	// not happen. See statusesFrom.
+func TestEveryHitLandsItsStatusOnce(t *testing.T) {
+	// Two fire cards are two hits, and each lands the burn once. The status does not stack, so the
+	// second refreshes the first. See statusesFrom.
 	burning := MustStatus("burning")
 	fire := relic(t, "burns-fire", RelicRule{
 		When: MomentAttackLands,
@@ -348,8 +347,8 @@ func TestOneBlowLandsOneOfEachStatus(t *testing.T) {
 
 	events, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Fire)}, nil, 1)
 
-	if n := countKind(events, KindStatus); n != 1 {
-		t.Errorf("two fire cards announced %d statuses, want 1", n)
+	if n := countKind(events, KindStatus); n != 2 {
+		t.Errorf("two fire hits announced %d statuses, want one each", n)
 	}
 	if !bAfter.Statuses[burning].Active() {
 		t.Error("two fire cards left no burn at all")
@@ -1033,27 +1032,11 @@ func TestTheHandBonusIsBaseDamageAndNotATerm(t *testing.T) {
 				i, after.HandAmounts[i], before.HandAmounts[i]+3)
 		}
 	}
-	if after.Base != before.Base+9 {
-		t.Errorf("the bonus put %d into the base sum, want 9 — three cards at 3 more DMG each",
-			after.Base-before.Base)
-	}
-
-	// **And it is still inside the multiplier.** A bonus applied to the answer would be the same
-	// relic at every rung, which is what the 2026-09-05 call ruled out and is still ruled out.
-	if want := scaleDamage(before.Base+9, after.Multiplier); after.Amount != want {
-		t.Errorf("the blow came to %d, want %d — the raise is not being multiplied with the cards",
+	// **And it is still inside the multiplier**, on every hit. A bonus applied to the answer would
+	// be the same relic at every rung.
+	if want := hitsWorth(after, 0); after.Amount != want {
+		t.Errorf("the hits came to %d, want %d — the raise is not being multiplied with the cards",
 			after.Amount, want)
-	}
-
-	// **It is not reported as a term of Base**, because every figure in the bracket already has it
-	// inside: a screen adding HandBonus to the terms would print a sum over its own total.
-	sum := 0
-	for i := 0; i < after.HandCardCount; i++ {
-		sum += after.HandAmounts[i]
-	}
-	if sum != after.Base {
-		t.Errorf("the bracket comes to %d against a base of %d, so the raise is being counted twice",
-			sum, after.Base)
 	}
 }
 
@@ -1202,13 +1185,14 @@ func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 	after := handEventOf(t, worn, SideA)
 
 	if after.HeldBonus != 10 {
-		t.Errorf("two held fire cards paid %d into the blow, want 10", after.HeldBonus)
+		t.Errorf("two held fire cards paid %d into every hit, want 10", after.HeldBonus)
 	}
-	if after.Base != before.Base+10 {
-		t.Errorf("the held bonus put %d into the base sum, want 10", after.Base-before.Base)
+	// **Every hit carries it**, before the multiplier.
+	if cardTerms(after) != cardTerms(before) {
+		t.Errorf("the held bonus moved the cards' own terms from %d to %d", cardTerms(before), cardTerms(after))
 	}
-	if want := scaleDamage(before.Base+10, after.Multiplier); after.Amount != want {
-		t.Errorf("the blow came to %d, want %d — the held bonus is not being multiplied with the cards",
+	if want := hitsWorth(after, 10); after.Amount != want {
+		t.Errorf("the hits came to %d, want %d — the held bonus is not in every hit, multiplied",
 			after.Amount, want)
 	}
 }
@@ -1313,8 +1297,8 @@ func TestTheVitaeBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 	if !e.VitaeBonusSeats[0] {
 		t.Error("the relic that pays has to be attributable, or the figure cannot fly from it")
 	}
-	if want := scaleDamage(e.Base, e.Multiplier); e.Amount != want {
-		t.Errorf("the blow landed %d where its own base and multiplier say %d", e.Amount, want)
+	if want := hitsWorth(e, 30); e.Amount != want {
+		t.Errorf("the hits came to %d where each hit plus the purse, multiplied, says %d", e.Amount, want)
 	}
 }
 
@@ -1395,8 +1379,9 @@ func TestAHandScalerIsASecondMultiplierAndNotABiggerHand(t *testing.T) {
 		t.Errorf("the relic moved the hand's own multiplier from %d to %d, and it may not",
 			was.Multiplier, now.Multiplier)
 	}
-	if now.Base != was.Base {
-		t.Errorf("the relic moved Base from %d to %d, and it may only scale the result", was.Base, now.Base)
+	if cardTerms(now) != cardTerms(was) {
+		t.Errorf("the relic moved the cards' terms from %d to %d, and it may only scale the result",
+			cardTerms(was), cardTerms(now))
 	}
 	if now.Amount != was.Amount*2 {
 		t.Errorf("the blow landed %d against %d unworn, want double", now.Amount, was.Amount)

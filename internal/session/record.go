@@ -34,18 +34,18 @@ const (
 	// KindAct is one duelist playing one card. It is the line every outcome below attaches to.
 	KindAct = "act"
 
-	// KindBlow is the attack phase: the hand that formed and what it came to. **A hand-forming
-	// side plays several cards and lands one figure**, so the cards write no act of their own and
-	// this is the phase's line. A solo attacker has no blow and writes an act per card.
+	// KindBlow is the attack phase's heading: the hand that formed. **A hand-forming side's cards
+	// write no act of their own**; each of its hits writes a term line under this one. A solo
+	// attacker has no blow and writes an act per card.
 	KindBlow = "blow"
 
-	// KindTerm is one line of a blow's working: a card's own figure, what a relic priced it at, a
-	// flat term a relic paid, or the sum underneath. Which one is Term.Role.
+	// KindTerm is one line of a blow's working: a hit and its arithmetic, a flat term a relic
+	// adds to every hit, what a relic did to the DMG, or the total underneath. Which one is Role.
 	KindTerm = "term"
 
-	// The outcomes. **Each attaches to the act or blow above it** rather than opening a line,
-	// because they are what became of a card that was played and the sentence for it is already
-	// written.
+	// The outcomes. **Each attaches to the line above it that it belongs to** rather than opening
+	// one, because they are what became of a card that was played and the sentence for it is
+	// already written. An outcome carrying Hit attaches to that hit's line.
 	KindDamage  = "damage"
 	KindStatus  = "status"
 	KindDrained = "drained"
@@ -89,22 +89,31 @@ const (
 // role is what tells them apart without the translator having to infer it from which fields are
 // filled.
 const (
-	// RoleCard is one landing: a card that was in the hand, what it was worth, and what each relic
-	// did to it. **A landing rather than a card** — an echoed card lands twice and writes two.
+	// RoleHit is one hit: the card that threw it, its arithmetic from the card's term to the figure,
+	// and what each relic did to it. **A landing rather than a card** — an echoed card lands three
+	// times and writes three. What became of the hit attaches to its line.
+	RoleHit = "hit"
+
+	// RoleCard is one landing's card and relics without its arithmetic. **Nothing writes it**; the
+	// translator still reads it, so an account saved with one on it still draws.
 	RoleCard = "card"
 
 	// RoleFlat is a term no card paid: the cards kept back, or the purse. It names the relic that
-	// put it in the sum.
+	// put it in every hit.
 	RoleFlat = "flat"
 
 	// RoleDMG is what a relic did to the DMG the blow was swung at. **It is not a term and carries
-	// no figure in the sum's column** — the bigger figure is already inside every card term below
+	// no figure in a hit's line's column** — the bigger figure is already inside every card term below
 	// it, and this says where it came from. Without it the relic would be invisible, which is the
 	// one thing a relic may never be.
 	RoleDMG = "dmg"
 
-	// RoleSum is the blow written out as the sum it is, under the terms it adds up.
+	// RoleSum is several terms written out as one sum. **Nothing writes it**; the translator still
+	// reads it, so an account saved with one on it still draws.
 	RoleSum = "sum"
+
+	// RoleTotal is what every hit of a blow came to together, under the hits.
+	RoleTotal = "total"
 )
 
 // LedgerRecord is one thing that happened.
@@ -172,15 +181,20 @@ type LedgerRecord struct {
 	// contributes no arithmetic and a line crediting it with some would be wrong.
 	Factors []LedgerFactor `json:"factors,omitempty"`
 
-	// Terms is the sum's own figures, one per landing, so the sum line can be written out without
-	// re-reading the terms above it.
+	// Terms is a hit's card term as its arithmetic reads it — one entry on a RoleHit record.
 	Terms []LedgerSum `json:"terms,omitempty"`
 
-	// Flats are the flat terms inside the sum, in the order the resolver adds them.
+	// Flats are the flat terms inside a hit, in the order the resolver adds them.
 	Flats []int `json:"flats,omitempty"`
 
-	// Total is what the blow came to.
+	// Total is what a hit came to on RoleHit, and what every hit came to on RoleTotal.
 	Total int `json:"total,omitempty"`
+
+	// Hit is which hit of its side's blow a record is about, **counted from one** so that zero
+	// is "not about a hit". A RoleHit line carries it, and so does every outcome of that hit —
+	// which is how a status landed by the third hit attaches to the third hit's line rather than
+	// to whichever line happened to be written last.
+	Hit int `json:"hit,omitempty"`
 
 	// Subject is what an after-the-fight record was done to: a card in words, a relic's name, a
 	// rung's name. **Already worded**, because a deck line describes a card by more than its
@@ -213,14 +227,14 @@ type LedgerFactor struct {
 	Grown int `json:"grown,omitempty"`
 }
 
-// LedgerSum is one landing's figures as the sum reads them.
+// LedgerSum is one landing's figures as the hand dialog reads them.
 //
 // **The term is the product the game worked out, not its answer**: the DMG the hand was swung at,
 // times the card's own multiplier, times whatever a relic priced it at. A term the split cannot
 // describe — an echo's rounding, or a card that hit the damage floor — carries Base instead and
 // says so with Split false.
 type LedgerSum struct {
-	// Element is the card's, so a figure in the sum wears its own card's color.
+	// Element is the card's, so a figure in a hit's line wears its own card's color.
 	Element string `json:"element,omitempty"`
 
 	// Split says the first two figures are real. DMG is what the blow was swung at and Weight the

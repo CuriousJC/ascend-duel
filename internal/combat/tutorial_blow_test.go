@@ -100,18 +100,19 @@ func TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt(t *testing.T) {
 			len(blow.Cards), len(taught))
 	}
 
-	base := 0
+	// **Every attack card is its own hit**, multiplied and rounded on its own; the shield throws none.
+	total := 0
 	for _, i := range blow.Cards {
-		base += ConceptOf(turn[i].Card.Concept).Amount * me.DMG / 100
+		if turn[i].Card.formsBlow() {
+			total += scaleDamage(ConceptOf(turn[i].Card.Concept).Amount*me.DMG/100, blow.Multiplier)
+		}
 	}
-	total := scaleDamage(base, blow.Multiplier)
 
-	t.Logf("%s x%d: %d base x %d%% = %d against %d HP (%d of %d AP), leaving %d",
-		blow.Hand.Name, blow.Multiplier, base, blow.Multiplier, total, bat.HP, spent, me.Actions,
-		bat.HP-total)
+	t.Logf("%s x%d%%: hits come to %d against %d HP (%d of %d AP), leaving %d",
+		blow.Hand.Name, blow.Multiplier, total, bat.HP, spent, me.Actions, bat.HP-total)
 
 	if total >= bat.HP {
-		t.Errorf("the tutorial's blow deals %d and %s has %d HP: the taught round now kills in one, "+
+		t.Errorf("the tutorial's hits deal %d and %s has %d HP: the taught round now kills in one, "+
 			"so the creature never takes a turn and the shield, the counter-attack and the ledger "+
 			"steps all describe something the player cannot see. Retune the lesson or the numbers "+
 			"it depends on.", total, enemyRecord, bat.HP)
@@ -122,7 +123,7 @@ func TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt(t *testing.T) {
 	// script has nothing more to say about. Half is the line: a second turn of the same order
 	// clears it comfortably.
 	if left := bat.HP - total; left*2 > bat.HP {
-		t.Errorf("the taught blow leaves %s on %d of %d HP, which is more than half: the lesson "+
+		t.Errorf("the taught hits leave %s on %d of %d HP, which is more than half: the lesson "+
 			"tells the player to finish it on the next round", enemyRecord, left, bat.HP)
 	}
 }

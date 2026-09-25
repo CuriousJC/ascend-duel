@@ -7,7 +7,7 @@ package combat
 // crossing, and it unblocks the element hands, the relic discount and the flip relic together.
 //
 // **An element does two things.** It is matchable by a hand `Step`, and a landed attack applies
-// its element's status to whoever took the blow. Everything else about an element — its color,
+// its element's status to whoever took the hit. Everything else about an element — its color,
 // its name on a card — stays presentation and stays in `internal/screens`.
 //
 // **Only attacks apply statuses** *(decided 2026-08-12)*. An ice Guard is an ice card for hand

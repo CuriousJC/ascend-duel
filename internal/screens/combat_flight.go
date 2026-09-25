@@ -482,15 +482,9 @@ func (s *CombatScene) seatPlayedCards() {
 // so the lit cards walk the left row and then the right one; nothing has to clear the other
 // side's seats because the event that lights one side is the event that unlights the other.
 //
-// **The whole attack hand goes up at once; everything else replaces** *(2026-08-15)*. A turn
-// lands one blow, and the blow is the set — so the first attack announcement raises every attack
-// card of that turn rather than each one climbing on its own beat. What the beats then say is how
-// long the phase takes, not which card is acting, because no single card is: watching four cards
-// rise one at a time reads as four attacks, which is the model this replaced.
-//
-// It is recomputed rather than accumulated, so every later announcement in the phase names the
-// same set and the list cannot drift. noteHand then drops whichever of them earned nothing.
-// A prepare or a defend is its own beat and takes the row on its own.
+// **Only a solo attacker lifts a card on its own announcement**; a hand-forming turn's cards are
+// raised by the hand's announcement instead — see noteHand — because the hand is read off them as a
+// set before any of them lands a hit.
 func (s *CombatScene) noteResolved(e combat.Event) {
 	if e.Kind != combat.KindAction {
 		return
@@ -518,17 +512,16 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 	// **Nothing on a duelist's turn lifts on a card's own announcement.** A lift says "this card is
 	// acting now", and a duelist's turn has exactly one moment entitled to say that: the hand's
 	// announcement. See noteHand, which raises the cards that made the rung on the `KindHand` beat,
-	// and advancePlayback, which puts them back down before the tally. **The turn reads shields,
-	// then the announcement, then the sum**, and a second gesture ahead of the announcement reads
+	// and advancePlayback, which puts them back down before the hits. **The turn reads shields,
+	// then the announcement, then the hits**, and a second gesture ahead of the announcement reads
 	// as whichever card it lifted having gone first.
 	//
 	// The defend phase says what it has to say as one bundle of pips out of their own cards — see
 	// noteShieldRaise, and MECHANICS.md §Shields — so a defense has nothing left to add by moving.
 	//
-	// **A solo attacker is the exception and that is the whole point of it** *(2026-08-17)*.
-	// Raising a set says "these cards are one blow", which is exactly what an enemy's turn is not:
-	// three cards swing three times, in order, no hand is ever named, and the card that is up is
-	// the card that is hitting. It has no other beat to be lifted on.
+	// **A solo attacker is the exception and that is the whole point of it.** Its three cards swing
+	// three times, in order, no hand is ever named, and the card that is up is the card that is
+	// hitting. It has no other beat to be lifted on.
 	switch {
 	case s.soloAttacker(side) && combat.Plain(e.Action).Category() == combat.CategoryAttack:
 		*mine = []int{seat}
@@ -668,7 +661,7 @@ func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Imag
 	for i, r := range s.Theater.resolved {
 		at := r.at(gs, i, len(s.Theater.resolved), split, lit(s.Theater.firingSeats, i))
 
-		// **The card rattles as its own figure is written into the sum** *(owner's call,
+		// **The card rattles as its own figure is written into its line** *(owner's call,
 		// 2026-08-26)*. Sideways, where the lift above is vertical: the lift says this card built
 		// the hand and stays for the whole blow, and the shake says this card is paying *now*. Two
 		// vocabularies on one card, which is why the shake could not also be a jump.

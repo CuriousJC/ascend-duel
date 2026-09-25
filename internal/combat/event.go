@@ -29,7 +29,7 @@ const (
 	//
 	KindRaised
 
-	// KindBlocked is a shield eating one incoming attack outright. Action is the attack that was
+	// KindBlocked is a shield eating one incoming hit outright. Action is the attack that was
 	// stopped, Target is the duelist that spent the shield, and Amount is how many shields are
 	// left afterwards.
 	//
@@ -52,13 +52,14 @@ const (
 	// with nothing up is the ordinary case, which must not cost the feed a line.
 	KindExpired
 
+	// KindDamage is one hit landing. Slot is the card that threw it and, from a hand-forming
+	// attacker, Hit is which term of the hand it was.
 	KindDamage
 	KindDefeated
 
-	// KindHand says a hand formed. **Every one a turn forms is emitted before that turn's
-	// first KindAction**, because the hand phase resolves before the cards do — so a boosted
-	// hit is never shown before the reason for it. Several can arrive together and their runs
-	// may overlap; see matchSlots.
+	// KindHand says a hand formed, and carries the arithmetic of **every hit** the turn is about to
+	// throw. It follows the turn's attack KindActions and comes before the first hit, so no figure
+	// lands before the reason for it.
 	KindHand
 
 	// KindChilled is one action lost to a chill. One event per action, so a chill deep enough to
@@ -70,15 +71,15 @@ const (
 	// KindStatus is one element status landing on a duelist. Element says which, Amount says how
 	// much was added by this hit, Target is who is carrying it.
 	//
-	// It is a separate event rather than a field on KindDamage because a status is not the blow:
+	// It is a separate event rather than a field on KindDamage because a status is not the hit:
 	// a chill that lands is felt a round later and against a completely different card, and a
 	// Resolution feed that folded it into the damage line would announce it at the one moment it
 	// does nothing.
 	KindStatus
 
-	// KindMissed is an attack that never happened because its owner was shocked. Action is the
-	// attack that was lost and Side is whose it was, which makes it the lightning counterpart of
-	// KindChilled — a slot that resolves into nothing.
+	// KindMissed is one hit that never happened because its owner was shocked. Action is the
+	// attack that was lost, Side is whose it was, and Slot and Hit say which hit — a shock rolls
+	// once per hit, so one card of a turn can miss while the rest land.
 	//
 	// Nothing of the defender's stopped it, and a log
 	// saying a blow was "stopped cold" by a defense that was never raised would send the player
@@ -169,20 +170,18 @@ const (
 	KindRoundEnd
 )
 
-// Event is one entry in the replayable log for a single round.
-// maxHandTerms is the width of a hand event's two arrays: **every landing a legal turn can produce**
-// — each of its cards, each landing as many times as an echo or a repeat relic allows.
-//
-// It went from "one echoed card" to "every card" on 2026-08-22, when the form repeat relics landed:
-// a repeat matches on form, so five crush cards under Aftershock is five cards landing twice.
-// Over-long turns still drop terms from the *bracket* rather than from the sum.
+// maxHandTerms is the width of a hand event's arrays: **every hit a legal turn can throw** — each
+// of its cards, each landing as many times as an echo or a repeat relic allows. A repeat matches on
+// form, so five crush cards under Aftershock is ten hits. An over-long turn drops terms from the
+// *arithmetic* rather than from the fight.
 const maxHandTerms = baseMaxActions * MaxEchoLandings
 
+// Event is one entry in the replayable log for a single round.
 type Event struct {
 	Kind   EventKind
 	Side   Side      // who acted
-	Action ConceptID // set on KindAction, on KindRaised for the card that raised the shields, on KindBlocked for the attack a shield ate, on KindChilled for the action lost, on KindMissed for the attack that never landed, and on KindHand for the card the blow led with
-	Amount int       // damage dealt, shields raised or left standing, status applied, or on KindHand what the hand adds up to
+	Action ConceptID // set on KindAction, on KindRaised for the card that raised the shields, on KindBlocked for the attack a shield ate, on KindChilled for the action lost, on KindMissed for the attack that never landed, on KindDamage for the card that landed, and on KindHand for the card the hand led with
+	Amount int       // damage dealt, shields raised or left standing, status applied, or on KindHand what its hits add up to
 	Target Side      // who took the damage
 	Life   int       // target's life after the event
 	Round  int
@@ -191,7 +190,8 @@ type Event struct {
 	// it was played — the same sequence HandCards indexes and the same one this side's KindActions
 	// arrive in.
 	//
-	// **It is set on KindBlocked, on KindRaised, and on the rider events.** A block names its attack
+	// **It is set on every hit event — KindDamage, KindMissed, KindBlocked, and the KindDrained and
+	// KindStatus a hit produced — on KindRaised, and on the rider events.** A block names its attack
 	// by ConceptID, which is a *kind* of card rather than one of them: a creature queuing two Nips
 	// and having one of them eaten gives a screen reading `Action` no way to say which, and shields
 	// pick the heaviest blow, so the card a shield ate may be the third of five and the screen has
@@ -201,6 +201,16 @@ type Event struct {
 	// **The zero value is a real slot**, like Status's and Relic's, so it is read only on the kind
 	// that sets it.
 	Slot int
+
+	// Hit is which term of the turn's KindHand a hit event belongs to: an index into HandCards and
+	// every array beside it. **Set on the hit events of a hand-forming attacker** — KindDamage,
+	// KindMissed, KindBlocked, and the KindDrained and KindStatus that hit produced — and read on no
+	// others. A solo attacker has no hand event to point into, so its hits leave it zero, which is a
+	// real term, like Slot's zero is a real slot.
+	//
+	// **It is what lets a screen pair a hit with its arithmetic** when one card throws several hits:
+	// Slot names the card and cannot say which of its landings this was.
+	Hit int
 
 	// Rider is which rider on the card is responsible for this event, and RiderNone - the zero
 	// value - is every event no rider caused.
@@ -259,11 +269,9 @@ type Event struct {
 	// Hand is set on KindHand and names what the attack phase formed. The screen looks it up
 	// with HandByID rather than being told its name here, so a hand renamed is renamed once.
 	//
-	// **It always names a hand**, because `blowFor` falls back to the catalog's No Hand: a
-	// turn with an attack in it produces a blow, and a blow the engine could not name is the one
-	// failure this model can have. `HandNone` is the zero value and reaches a screen only on an
-	// event that is not a KindHand. The comment here claimed the opposite until 2026-08-19, and a
-	// dead branch in the log was written against it.
+	// **It always names a hand**, because `blowFor` falls back to the catalog's No Hand: a turn
+	// the engine could not name is the one failure this model can have. `HandNone` is the zero
+	// value and reaches a screen only on an event that is not a KindHand.
 	Hand HandID
 
 	// Multiplier is the turn's damage multiplier in percent — the hand's, so 150 is the 1.5x a
@@ -271,73 +279,50 @@ type Event struct {
 	// resolver already worked out.
 	Multiplier int
 
-	// Base is the other term of the blow's arithmetic on KindHand, and it is here for the same
-	// reason Multiplier is: the Resolution feed prints the sum — `(20 + 20) x 1.5 = 60` — and a
-	// screen working a damage figure out for itself would be a second resolver.
+	// HandCards and HandCardCount are set on KindHand alongside Hand: **the hits this turn
+	// throws**, one term per hit, each naming the card that throws it as an index into the turn *as
+	// it was played*. Every card played is here, defenses included. See RungCards
+	// for the cards that made the hand.
 	//
-	// Base is what the blow's cards carry, added up — every attack the turn played, plus any
-	// defense that made the rung. `Amount` is that figure after the hand's
-	// multiplier, and there is no third term: **the multiplier multiplies the cards** *(2026-08-18,
-	// owner's call)*. It used to be applied to a separate reference swing of one 1x attack at the
-	// attacker's DMG, added on top of the cards — which meant a hand's percent bought a fixed
-	// figure rather than a proportion, so 500% was worth 2.5x the base on Jabs and 0.6x on Skewers.
-	//
-	// **Amount is the blow before the attacker's weight and before anything the defender raised**,
-	// so it is what the hand was worth rather than what landed. What landed is the KindDamage
-	// after it, and the gap between the two figures is exactly what the defense was worth.
-	Base int
-
-	// HandCards and HandCardCount are set on KindHand alongside Hand: **which cards of this
-	// side's turn paid into the blow**, as indices into the turn *as it was played* — every attack
-	// played, plus any defense that made the rung. See RungCards for the narrower set.
-	//
-	// **They are here so a screen never has to work out which cards earned a hand.** The
-	// matcher already knows, and re-deriving it from the hand's pattern would be a second
-	// matcher — the drift ResolutionOrder exists to prevent. It would also be wrong: a counted
-	// hand is not contiguous, so Two Pair can be two cards, a card that earned nothing, and two
-	// more.
+	// **They are here so a screen never has to work out which cards earned a hand.** The matcher
+	// already knows, and re-deriving it from the hand's pattern would be a second matcher. It would
+	// also be wrong: a counted hand is not contiguous, so Two Pair can be two cards, a card that
+	// earned nothing, and two more.
 	//
 	// **A fixed array rather than a slice, because Event has to stay comparable** —
 	// TestHandsDoNotBreakDeterminism compares two logs entry by entry with ==. It is sized to
-	// maxHandTerms — every card a legal turn can hold, plus the extra landings an echo relic can
-	// add — and a balance sim deliberately queueing more gets its extra cards dropped from the
-	// *bracket* rather than from the hand, the same posture raiseDefend takes on an over-long
-	// defend list.
+	// maxHandTerms, and a turn throwing more hits than that has the extra ones dropped from the
+	// arithmetic rather than from the fight.
 	//
-	// **A term is a landing, not a card** *(2026-08-22)*. An echoed card seats the same index two
-	// or three times with a smaller amount each time, which is what makes the sum on screen read
-	// as the card being played again rather than as one card worth more.
+	// **A term is a landing, not a card.** An echoed card seats the same index two or three times
+	// with a smaller amount each time, and each of those is a hit of its own.
 	//
-	// The indices count the actions that actually resolved, chilled ones already removed,
-	// which is the same sequence as this side's KindAction events — **events that have not
-	// happened yet when this one arrives**, since the hand phase runs first. The screen seats
-	// the whole turn at DUEL! rather than a card at a time, so the cards are there to bracket.
+	// The indices count the actions that actually resolved, chilled ones already removed, which is
+	// the same sequence as this side's KindAction events. The screen seats the whole turn at DUEL!
+	// rather than a card at a time, so the cards are there to point at.
 	HandCards     [maxHandTerms]int
 	HandCardCount int
 
-	// RungCards and RungCardCount are **which cards actually made the hand** — `Blow.Rung`, a
-	// subset of HandCards in the same indices and the same order.
+	// RungCards and RungCardCount are **which cards actually made the hand** — `Blow.Rung`, in turn
+	// order.
 	//
-	// **Two sets, because the blow is wider than the rung.** Every attack the turn played pays into
-	// the sum whether or not it agreed with anything, so a Pair formed on two shields is paid by the
-	// shields *and* the attack beside them. The screen raises these on the hand's announcement,
-	// raising being the whole of what says which cards made the rung; the sum walks HandCards,
-	// because that is what the figures add up to.
+	// **Two sets, because the hits and the rung are different questions.** Every attack the turn
+	// played throws a hit whether or not it agreed with anything, and a shield that made the rung
+	// throws none. The screen raises these on the hand's announcement, raising being the whole of
+	// what says which cards made the rung; the hits walk HandCards.
 	//
-	// **A landing is not a term here.** HandCards seats an echoed card once per landing; this is
-	// cards, so it holds each of the rung's cards once.
+	// **A landing is not a term here.** This is cards, so it holds each of the rung's cards once.
 	//
 	// A fixed array for HandCards' reason, and sized the same way.
 	RungCards     [maxHandTerms]int
 	RungCardCount int
 
-	// HandAmounts is what each of those cards deals, in the same order and to the same count.
+	// HandAmounts is what each hit's card deals, in the same order and to the same count — the
+	// card's own term, before the flat bonuses and the multipliers.
 	//
-	// **It is here so the screen can show the arithmetic rather than assert it** *(2026-08-18)*.
-	// The hand dialog flies each card's own figure down into a sum, and re-deriving one on the
-	// screen would mean the screen owning `CardDamage`, the Strength scaling and every relic that
-	// touches a card's damage — a second resolver, exactly what Base and Multiplier are on the
-	// event to prevent. `Base` is the sum of the first HandCardCount entries.
+	// **It is here so the screen can show the arithmetic rather than assert it.** Re-deriving one
+	// on the screen would mean the screen owning `CardDamage`, the Strength scaling and every relic
+	// that touches a card's damage — a second resolver.
 	//
 	// A fixed array for the reason HandCards is one: Event has to stay comparable.
 	HandAmounts [maxHandTerms]int
@@ -345,10 +330,9 @@ type Event struct {
 	// HandCardBase is what each landing was worth **before any worn relic touched it** — the card's
 	// own damage at the wielder's DMG, with an echo's fraction already taken off.
 	//
-	// **It is here so the sum can be written the way it is worked out** *(owner's call,
-	// 2026-09-02)*: `10 + 10 + (10 x 2) x 2.5 = 100` rather than `10 + 10 + 20 x 2.5 = 100`. The
-	// relic's figure is beside the term it priced everywhere else — on the card in the hand dialog,
-	// on the term line in the ledger — and the sum was the one place it was silently folded in.
+	// **It is here so a hit can be written the way it is worked out** *(owner's call)*:
+	// `(10 x 2) x 2.5 = 50` rather than `20 x 2.5 = 50`, with the relic's figure beside the term it
+	// priced.
 	//
 	// **A screen may not divide HandAmounts by HandRelicScale to get it back.** Every relic rounds
 	// and CardDamage floors at 1, so the quotient is wrong exactly where the arithmetic is
@@ -359,11 +343,10 @@ type Event struct {
 	// an echo's fraction already taken off it. 300 is a 3x card; 200 is that card's second landing
 	// under one echo.
 	//
-	// **It is here so the sum can be written the way the game works it out** *(owner's call,
-	// 2026-09-19)*: `(12 x 3) x 1 = 36` rather than `36`. A term was the card's landed figure and
-	// nothing else, so the DMG the whole hand swings at — the one number a relic raises — was
-	// arithmetic the player could see the answer to and never the working. The screen prints
-	// HandDMG and this beside it; **neither is what the blow deals**, which is still HandAmounts.
+	// **It is here so a hit can be written the way the game works it out** *(owner's call)*:
+	// `(12 x 3) x 1 = 36` rather than `36`, which makes the DMG the whole hand swings at — the one
+	// number a rung relic raises — visible in every hit. **Neither this nor HandDMG is what the hit
+	// deals**: HandAmounts is the card's term and HitAmounts the hit.
 	//
 	// **A screen may not divide HandCardBase by HandDMG to get it back**, for HandCardBase's own
 	// reason: an echo fraction is taken off the damage rather than off the percentage, so the two
@@ -371,30 +354,34 @@ type Event struct {
 	// ui.TermSplit, which is the one place that comparison is made.
 	HandCardPct [maxHandTerms]int
 
-	// HandDMG is the DMG every term of this blow was swung at, and HandDMGBare is what that figure
+	// HandDMG is the DMG every hit of this turn was swung at, and HandDMGBare is what that figure
 	// would have been with no rung relic worn.
 	//
-	// **The difference between them is what a rung relic actually put into the blow**, which is not
+	// **The difference between them is what a rung relic actually put into every hit**, which is not
 	// HandBonus: the riders scale DMG after the raise is folded in, so a +2 under a held rider is
 	// worth more than 2. A screen showing the duelist's figure climbing shows this difference.
 	//
-	// Both are the whole blow's, not a term's — one duelist swings one hand at one DMG.
+	// Both are the whole hand's, not a hit's — one duelist swings one hand at one DMG.
 	HandDMG     int
 	HandDMGBare int
 
-	// EchoTerms is how many of those terms are echoes rather than cards — the tail of the list.
-	// Zero on almost every blow. It is here so a screen can say *why* one card paid three terms
-	// without re-deriving the relic that did it.
-	EchoTerms int
-
-	// HandRelicScale[i][seat] is what the relic on that worn seat multiplied term i by, as a percent,
-	// and 0 for a seat that did not touch it.
+	// HitAmounts[i] is what hit i comes to before the attacker's weight and the target's
+	// vulnerability: the card's term, plus every flat bonus, times the hand's multiplier, times
+	// HandScale — each step rounded toward zero, on this hit alone.
 	//
-	// **Every relic's figure moved off the card and into the sum on 2026-08-26** *(owner's call)*.
-	// Nothing a relic does reaches a card's printed damage any more: the face says what the card does,
-	// because a growing relic steps between the cards of one blow and the same card is worth different
-	// things in different queue positions. So the sum is where the relics are accounted for — each one
-	// says its own figure beside the term it priced, and its card bounces on that beat. See
+	// **It is the figure the hit's arithmetic ends on**, and `Amount` on this event is the sum of
+	// them — what the hand was worth, not what landed. What landed is each hit's KindDamage, and a
+	// hit that missed, was blocked, or came after a death has a figure here and nothing there.
+	HitAmounts [maxHandTerms]int
+
+	// HandRelicScale[i][seat] is what the relic on that worn seat multiplied hit i's card term by, as
+	// a percent, and 0 for a seat that did not touch it.
+	//
+	// **A relic's figure belongs to the hit, never to the card face** *(owner's call)*: the face says
+	// what the card does, because a growing relic steps between the hits of one turn and the same card
+	// is worth different things in different queue positions. So each hit's line is where the relics
+	// are accounted for — each says its own figure beside the term it priced, and its card bounces on
+	// that beat. See
 	// combat.CardScaleBySeat, which is the only place these are worked out.
 	//
 	// **Per seat, so the screen knows which relic to bounce.** A product would say what the term came
@@ -407,73 +394,63 @@ type Event struct {
 	//
 	// **It is separate from HandRelicScale because those relics contribute no multiplier.** An echo
 	// relic buys a *term*, not a figure, so it has nothing to say beside the number — and without
-	// this it would be the one thing in the sum with no card accounting for it while the player
-	// watches three terms it alone is responsible for. See combat.LandingSeats.
+	// this it would be the one thing in the hand dialog with no card accounting for it while the
+	// player watches three hits it alone is responsible for. See combat.LandingSeats.
 	HandLanding [maxHandTerms][]bool
 
-	// HandGrown[i][seat] is what the relic on that worn seat had accumulated **after** term i was
-	// counted. The relic row reads it to step each badge on the beat the term lands, so the player
-	// watches the number that is about to price the next card go up.
+	// HandGrown[i][seat] is what the relic on that worn seat had accumulated **after** hit i was
+	// thrown — unchanged by a hit that missed, was blocked or was never thrown, since only a hit
+	// that connects grows a relic. The relic row reads it to step each badge as the hits land.
 	//
-	// **Indexed by worn seat**, which is stable for the length of a blow: the row can be reordered
+	// **Indexed by worn seat**, which is stable for the length of a turn: the row can be reordered
 	// between rounds and not inside one. A screen that wants a relic's identity has the row itself.
 	//
 	// It is the widest thing on an Event by some way — a hand of five, each landing five times, over
 	// five fingers. That is affordable because a KindHand event happens once per turn, and the
-	// alternative is a screen re-deriving which relic grew, which is the resolver-in-the-screen this
-	// whole block of fields exists to prevent.
+	// alternative is a screen re-deriving which relic grew.
 	HandGrown [maxHandTerms][]int
 
 	// HandBonus is DMG a worn relic added to the duelist **because of the rung this blow formed**,
 	// and HandBonusSeats is which seats paid it.
 	//
-	// **It is base damage, not a term of Base** *(owner's call, 2026-09-14)*. It was the last term
-	// of the bracket from 2026-09-05 until then — a flat figure added after the cards were counted
-	// — and what it is now is a raise on the DMG every card of the hand is swung at: a duelist on
-	// 14 wearing a Twinned Ring swings a Pair at 16, so a 1x card in it gains 2 and a 0.5x card
-	// gains 1. That makes the relic worth more to a bigger hand, which a flat term was not, and it
-	// is the same fold the damage riders take — see combat.blowDMG.
+	// **It is base damage, not a term** *(owner's call)*: a duelist on 14 wearing a Twinned Ring
+	// swings a Pair at 16, so a 1x card in it gains 2 and a 0.5x card gains 1. That makes the relic
+	// worth more to a bigger hand, and it is the same fold the damage riders take — see
+	// combat.blowDMG.
 	//
 	// **So it is on the event to be *said*, never to be added.** Every figure in `HandAmounts`
-	// already has it inside; a screen that also wrote it as a term would print a sum that comes to
-	// more than its own total. What a screen does with it is name the relic that raised the figure
-	// — see screens.handDMGLines.
+	// already has it inside; a screen that also wrote it as a term would print a hit that comes to
+	// more than its own total. What a screen does with it is name the relic that raised the figure.
 	//
 	// Zero when nothing worn names this rung, which is the usual case.
 	HandBonus      int
 	HandBonusSeats []bool
 
-	// HeldBonus is flat damage a worn relic added to this blow **for the cards the turn kept back**,
-	// and HeldBonusSeats is which seats paid it.
-	//
-	// **A second term of Base, beside HandBonus and on the same terms**: after the cards, before
-	// the multiplier, drawn in the ground's own ink. The two are separate fields rather than one
-	// because they are different sentences — one is what the hand formed, the other is what the
-	// hand still holds — and a screen that merged them could not say which.
+	// HeldBonus is flat damage a worn relic adds to **every hit** for the cards the turn kept back,
+	// and HeldBonusSeats is which seats paid it. It joins each hit after the card's term and before
+	// the multiplier.
 	//
 	// **HeldBonusCards is how many held cards paid it**, across every seat that did. The run's
 	// account writes the term as `Jar of Ice (4 cards)  20`, and a count is the one thing a
 	// player reading the working back cannot re-derive: the hand it was counted over is three
-	// turns gone. See screens.handTermLines.
+	// turns gone.
 	//
-	// **HeldBonusEach is the same tally one card at a time** *(owner's call, 2026-09-19)*, so the
-	// sum on the combat screen writes six `+5` terms where six earth cards were kept back rather
-	// than one `+30`. The player counts a per-card term against the hand still in front of them;
-	// a merged figure is one they have to take on trust. Every entry names the seat that paid, so
-	// each term flies out of its own relic. See screens.mathScript.
+	// **HeldBonusEach is the same tally one card at a time** *(owner's call)*, so a hit on the combat
+	// screen writes six `+5` terms where six earth cards were kept back rather than one `+30`, each
+	// flying out of the card it was paid for. Every entry names the seat that paid.
 	HeldBonus      int
 	HeldBonusCards int
 	HeldBonusSeats []bool
 	HeldBonusEach  []HeldPay
 
-	// VitaeBonus is the duelist's Bounty as it joined this blow's Base, and VitaeBonusSeats is
-	// which worn relics put it there.
+	// VitaeBonus is the duelist's Bounty as it joins every hit, beside HeldBonus, and
+	// VitaeBonusSeats is which worn relics put it there.
 	VitaeBonus      int
 	VitaeBonusSeats []bool
 
-	// HandScale is the percentage the worn relics moved this blow's Multiplier by — 100 when
-	// nothing did — and HandScaleSeats is which relics paid. **Multiplier already has it applied**;
-	// this is kept so a screen can say the hand was improved rather than only show a bigger figure.
+	// HandScale is the percentage the worn relics multiply every hit by after the hand's own
+	// Multiplier — 100 when nothing did — and HandScaleSeats is which relics paid. **Multiplier does
+	// not include it**, so the ladder's own figure is what the banner shows.
 	HandScale      int
 	HandScaleSeats []bool
 }
@@ -540,7 +517,7 @@ func (e Event) GrownAt(term, seat int) int {
 	return row[seat]
 }
 
-// TermSplit is one term of a blow written the way the game worked it out: the DMG the hand was
+// TermSplit is one hit's card term written the way the game worked it out: the DMG the hand was
 // swung at, and the percentage this card applied to it. It reports false when the two do not come
 // to the term's own figure, and a caller that gets false writes the flat figure instead.
 //

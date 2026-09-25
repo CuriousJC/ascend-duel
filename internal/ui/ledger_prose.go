@@ -39,27 +39,55 @@ func LedgerLines(recs []session.LedgerRecord) []session.LedgerLine {
 //
 // **cur is the line an outcome attaches to**, or -1 when the last thing written was an announcement
 // with nothing to hang off. curSide is whose line it is, tracked rather than read back off the
-// row's swatch: the blow wears the hand's amber and takes outcomes, so a damage record compared
-// against that swatch would read every hit as belonging to the wrong duelist.
+// row's swatch: a damage record compared against a swatch would read every hit under the hand's
+// amber as belonging to the wrong duelist.
+//
+// **hits is where each hit's line was written**, keyed by its Hit, and an outcome that names a hit
+// attaches there instead: a blow writes every hit's line before any of them has landed, so the last
+// line written is the total and not the hit the outcome is about. outcomes counts per row for the
+// same reason — two hits' outcomes interleave.
 type lineWriter struct {
 	rows     []session.LedgerLine
 	cur      int
 	curSide  string
-	outcomes int
+	hits     map[int]int
+	hitSide  string
+	outcomes map[int]int
 }
 
-// attach adds an outcome to the tail of the open sentence, after the verb, so the colored verb
-// never moves as a line grows.
-func (w *lineWriter) attach(what string) {
-	if w.cur < 0 {
+// attach adds an outcome to the tail of the line it belongs to, after the verb, so the colored verb
+// never moves as a line grows. `hit` is the record's Hit, and zero attaches to the open line.
+func (w *lineWriter) attach(hit int, what string) {
+	row := w.cur
+	if w.onHit(hit) {
+		row = w.hits[hit]
+	}
+	if row < 0 {
 		return
 	}
+	if w.outcomes == nil {
+		w.outcomes = map[int]int{}
+	}
 	sep := " - "
-	if w.outcomes > 0 {
+	if w.outcomes[row] > 0 {
 		sep = ", "
 	}
-	w.rows[w.cur].Spans = append(w.rows[w.cur].Spans, session.LedgerSpan{Text: sep + what})
-	w.outcomes++
+	w.rows[row].Spans = append(w.rows[row].Spans, session.LedgerSpan{Text: sep + what})
+	w.outcomes[row]++
+}
+
+// onHit reports whether an outcome naming this hit has a hit's line to attach to.
+func (w *lineWriter) onHit(hit int) bool {
+	_, ok := w.hits[hit]
+	return ok && hit > 0
+}
+
+// sideOf is whose line an outcome is attaching to: the hit's, where it names one.
+func (w *lineWriter) sideOf(hit int) string {
+	if w.onHit(hit) {
+		return w.hitSide
+	}
+	return w.curSide
 }
 
 // announce opens a line belonging to nobody's card, which nothing may then attach to.
@@ -71,7 +99,7 @@ func (w *lineWriter) announce(voice, text string) {
 // open starts a line outcomes may attach to.
 func (w *lineWriter) open(line session.LedgerLine, side string) {
 	w.rows = append(w.rows, line)
-	w.cur, w.curSide, w.outcomes = len(w.rows)-1, side, 0
+	w.cur, w.curSide = len(w.rows)-1, side
 }
 
 func (w *lineWriter) write(r session.LedgerRecord) {
@@ -96,6 +124,9 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		// player's ledger the duelist is who forms them, so every word in front of the name was
 		// already said by something on the row. **And it is not marked**: bold is the whole panel,
 		// and an underline under a name alone on its line reads as a mistake rather than emphasis.
+		//
+		// **A new blow forgets the last one's hits**, since a Hit counts within one blow.
+		w.hits, w.hitSide = map[int]int{}, r.Side
 		w.open(session.LedgerLine{
 			Voice: session.VoiceHand,
 			Spans: []session.LedgerSpan{{Text: r.Hand, Ink: session.InkHand}},
@@ -104,51 +135,51 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 	// ---- the outcomes ----
 
 	case session.KindMissed:
-		// **Naming the shock is the whole point.** A blow that simply missed would look like a bug
+		// **Naming the shock is the whole point.** A hit that simply missed would look like a bug
 		// in a game with no dice in it.
-		w.attach("misses - shocked")
+		w.attach(r.Hit, "misses - shocked")
 
 	case session.KindStatus:
-		w.attach(StatusPhraseByKey(r.Status))
+		w.attach(r.Hit, StatusPhraseByKey(r.Status))
 
 	case session.KindDrained:
 		// **The relic names itself**, so a second drain relic cannot narrate identically to the
 		// first — the argument a ticking status is already under.
-		w.attach(fmt.Sprintf("%s drains %d", r.Relic, r.Amount))
+		w.attach(r.Hit, fmt.Sprintf("%s drains %d", r.Relic, r.Amount))
 
 	case session.KindRaised:
 		// **The count that is standing, not the count this card added.** Two Guards in a turn is
 		// one duelist behind six shields, and a line saying "+3" twice makes the reader do the
 		// arithmetic the readout has already done.
-		w.attach(ShieldCount(r.Amount) + " up")
+		w.attach(0, ShieldCount(r.Amount)+" up")
 
 	case session.KindHeld:
-		w.attach(fmt.Sprintf("kept back for %d vitae", r.Amount))
+		w.attach(0, fmt.Sprintf("kept back for %d vitae", r.Amount))
 
 	case session.KindSilver:
 		// **Two riders pay vitae and they are different sentences.** A held card is paid for being
 		// kept back; a played silver card gambled and came up.
-		w.attach(fmt.Sprintf("silver pays %d vitae", r.Amount))
+		w.attach(0, fmt.Sprintf("silver pays %d vitae", r.Amount))
 
 	case session.KindLapsed:
 		// **Shields that were never spent are the player's own decision coming back**, and a
 		// readout that simply went blank would read as a bug.
-		w.attach(ShieldCount(r.Amount) + " lapse")
+		w.attach(0, ShieldCount(r.Amount)+" lapse")
 
 	case session.KindBlocked:
-		// **The only record that the attack happened at all**, since it landed nothing and there
-		// is no damage line coming.
-		w.attach(fmt.Sprintf("blocked - %s left", ShieldCount(r.Amount)))
+		// **The only record that the hit happened at all**, since it landed nothing and there is no
+		// damage line coming.
+		w.attach(r.Hit, fmt.Sprintf("blocked - %s left", ShieldCount(r.Amount)))
 
 	case session.KindDamage:
 		// **Damage whose side does not match the line it is attaching to is damage running the
 		// other way**, which reads as something done back rather than as a hit of its own. Nothing
 		// produces it today; it costs one branch and catches the case rather than mis-narrating it.
-		if w.cur >= 0 && w.curSide != r.Side {
-			w.attach(fmt.Sprintf("hits back for %d", r.Amount))
+		if (w.cur >= 0 || w.onHit(r.Hit)) && w.sideOf(r.Hit) != r.Side {
+			w.attach(r.Hit, fmt.Sprintf("hits back for %d", r.Amount))
 			return
 		}
-		w.attach(fmt.Sprintf("%d damage", r.Amount))
+		w.attach(r.Hit, fmt.Sprintf("%d damage", r.Amount))
 
 	// ---- the announcements ----
 
@@ -184,6 +215,13 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 	case session.KindTerm:
 		w.rows = append(w.rows, termLine(r))
 		w.cur = -1
+		// **A hit's line is where its outcomes go**, however many lines are written after it.
+		if r.Role == session.RoleHit && r.Hit > 0 {
+			if w.hits == nil {
+				w.hits = map[int]int{}
+			}
+			w.hits[r.Hit] = len(w.rows) - 1
+		}
 
 	// ---- the gap between two fights ----
 
@@ -218,7 +256,7 @@ func termLine(r session.LedgerRecord) session.LedgerLine {
 	switch r.Role {
 
 	case session.RoleDMG:
-		// **It carries no figure in the sum's column**, because the bigger figure is already inside
+		// **It carries no figure in a hit's line's column**, because the bigger figure is already inside
 		// every term below it. This says where it came from, which is the whole reason it is drawn:
 		// a relic folded into a number the game already shows is a relic the player cannot see.
 		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
@@ -228,10 +266,23 @@ func termLine(r session.LedgerRecord) session.LedgerLine {
 
 	case session.RoleFlat:
 		// **The relic's name takes the relic ink and the figure does not**: a relic put the term in
-		// the sum, but the term is the hand paying rather than a number a relic moved on a card.
+		// every hit, but the term is the hand paying rather than a number a relic moved on a card.
 		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
 			{Text: fmt.Sprintf("%-14s", r.Relic+" ("+r.Note+")"), Ink: session.InkRelic},
-			{Text: fmt.Sprintf("%4d", r.Amount)},
+			{Text: fmt.Sprintf("+%d each hit", r.Amount)},
+		}}
+
+	case session.RoleHit:
+		// **The card, then its arithmetic, then its relics**, so the column of card names reads
+		// down the blow and each hit's working sits beside the card that threw it.
+		spans := []session.LedgerSpan{{Text: fmt.Sprintf("%-14s", termCardName(r)), Ink: r.Element}}
+		spans = append(spans, sumSpans(r)...)
+		return session.LedgerLine{Voice: session.VoiceTerm, Spans: append(spans, factorNotes(r.Factors)...)}
+
+	case session.RoleTotal:
+		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
+			{Text: fmt.Sprintf("%-14s", "every hit")},
+			{Text: strconv.Itoa(r.Total), Ink: session.InkTotal},
 		}}
 
 	case session.RoleSum:
@@ -287,7 +338,8 @@ func factorNotes(factors []session.LedgerFactor) []session.LedgerSpan {
 	return out
 }
 
-// sumSpans is the blow written out as the sum it is: `(10 x 2 x 1.5) + 10 x 2.5 = 100`.
+// sumSpans is arithmetic written out as the hand dialog it is: `(10 x 2 x 1.5) + 10 x 2.5 = 50`. A hit's
+// line is one term and its flats; a RoleSum read back from an older account is several terms.
 //
 // **A relic's figure stays with the term it priced**, in brackets, rather than being folded into
 // the term or hung on the end of the whole sum. Folding it in hides the relic; hanging it on the
@@ -324,7 +376,7 @@ func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
 	}
 
 	// **The flat terms, after the cards and before the multiplier**, which is where the resolver
-	// adds them in. Written in no ink at all: a relic put them in the sum and the term is still the
+	// adds them in. Written in no ink at all: a relic put them in a hit's line and the term is still the
 	// hand paying.
 	for _, flat := range r.Flats {
 		if len(spans) > 0 {
@@ -334,7 +386,7 @@ func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
 	}
 
 	// A blow whose record carries no terms still has its two figures. Nothing produces one today;
-	// saying the sum it did is better than a line reading `x 1.5 = 30` with nothing in front.
+	// saying the hand dialog it did is better than a line reading `x 1.5 = 30` with nothing in front.
 	if len(spans) == 0 {
 		spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(r.Base)})
 	}

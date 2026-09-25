@@ -67,11 +67,8 @@ const (
 
 // tableRowTop is the y both rows sit at: as low as it can go without reaching the hand.
 //
-// **The band the sum is written in is no longer subtracted** *(2026-09-04, owner's call)*. It
-// used to be reserved here, so the arithmetic had a row of the screen to itself and pushed the
-// played cards 82 pixels up — into the relic pane's backing, which is what the rows were actually
-// overlapping. The sum is an overlay now: it is drawn last, over the bottom of these cards, and
-// the space it used to claim went back to the table. See handMathRect.
+// **The hand dialog reserves nothing here** *(owner's call)*: it is an overlay, drawn last, its lines
+// under these cards and over whatever is below them. See mathLineAt.
 //
 // This is where `firingAt` used to put a single card; what moved is that a whole row lives here
 // now instead of one card passing through.

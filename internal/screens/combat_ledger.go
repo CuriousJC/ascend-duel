@@ -68,12 +68,12 @@ func (s *CombatScene) closeLedgerFight() {
 	s.run.EndFight(outcome)
 }
 
-// dealtBy is what one side's blows came to in a round: the damage that actually landed on the
+// dealtBy is what one side's hits came to in a round: the damage that actually landed on the
 // other duelist, after everything the defense took off it.
 //
-// **The landed figure rather than the hand's**, because the summary line it feeds is answering
+// **The landed figures rather than the hand's**, because the summary line it feeds is answering
 // "how did this fight go" — and a fight lost to shields is a fight where the hands were fine and
-// nothing arrived. See combat.Event.Base, which is the other figure and the wrong one here.
+// nothing arrived. See combat.Event.HitAmounts, which is the other figure and the wrong one here.
 func dealtBy(side combat.Side, events []combat.Event) int {
 	total := 0
 	for _, e := range events {

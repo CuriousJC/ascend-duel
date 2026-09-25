@@ -6,34 +6,30 @@ import "sort"
 // Throwing whatever you drew at the opponent works; *choosing* a shape and building toward it is
 // meant to work better, and this file is the machinery that pays for that choice.
 //
-// **A turn produces exactly one attack** *(2026-08-14)*. The attack phase reads every attack card
-// queued, forms the best hand it can, and resolves a single blow — so five Bashes are not five
-// hits, they are one Four of a Kind.
+// **A turn reads one hand, and every card lands its own hit under it.** The attack phase
+// reads every card queued, forms the best hand it can, and multiplies every hit by it — so five
+// Bashes are five hits under one Four of a Kind. See hit.go.
 //
-// **Every attack card the turn played pays into that blow, whether or not it made the hand.** An
-// action point spent on an attack buys a swing: `Bash, Jab, Bash` is a Pair the Jab makes no part
-// of, and the Jab lands anyway. **There is one sum and one multiplier** — the rung the turn built
-// scales every attack in it, so the Jab rides at the Pair's rate and a fifth card beside a Four of
-// a Kind rides at the Four of a Kind's.
+// **Every attack card the turn played throws a hit, whether or not it made the hand.** An action
+// point spent on an attack buys a swing: `Bash, Jab, Bash` is a Pair the Jab makes no part of, and
+// the Jab lands anyway at the Pair's rate.
 //
 // **Matching and scoring are separate questions and the sets differ.** What the rung decides is
-// what the blow is multiplied by, never what swings; the floor of the ladder is therefore every
+// what every hit is multiplied by, never what swings; the floor of the ladder is therefore every
 // attack at the identity, and building a rung pays more again by exactly the multiplier.
 //
 // **A hand counts cards that agree, and buys damage and nothing else** *(2026-08-17)*. The ladder
 // wears poker's names because it is poker's question — no hand, pair, two pair, three of a kind,
-// full house, four of a kind — and the whole of what forming one does is multiply the blow.
+// full house, four of a kind — and the whole of what forming one does is multiply every hit.
 //
 // **A hand is what you played, not what you hit with** *(owner's call, 2026-08-23)*. Defend cards
 // carry an element, so they are counted like anything else: two Braces are a Pair, and a turn of
-// four fire cards is an Elemental Four of a Kind whether any of them swung. They bring no damage
-// into the sum, since a defend card's `Damage` is zero — so a hand of nothing but shields multiplies
-// nothing and lands nothing, and a Brace beside two attacks raises the rung the two attacks are paid
-// at.
-// That last case is the whole of what the change buys, and the whole of what it costs.
+// four fire cards is an Elemental Four of a Kind whether any of them swung. A defend card's hit is
+// worth nothing of its own — so a hand of nothing but shields deals nothing, and a Brace beside two
+// attacks raises the rung the two attacks' hits are paid at.
 //
-// **The colors a hand shows include its defenses**, so a fire Brace arms a burn on a turn with no
-// fire attack in it. That follows from the same decision and is the sharper half of it.
+// **A defense's color counts toward the hand and lands its status**, since every card throws a hit
+// and a hit lands its card's statuses.
 //
 // **What "agree" means is the hand's own business** *(2026-08-19)*. Most rungs exist three times
 // over, once per `Axis`: two Thumps are a Card Two Pair only if a second pair joins them, a Thump and
@@ -635,9 +631,8 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 // **A turn of nothing but defenses is a hand too** *(owner's call, 2026-09-02)*. Every card carries
 // a form and an element and every card is counted toward a hand, so the one turn that could not
 // name one was the turn whose cards all deal zero — which made a shield build a build the ladder
-// could not see. The blow it forms sums to nothing and lands nothing, and the hand is still named
-// and still multiplied by whatever a relic makes of it. See resolveAttackPhase, which is what
-// declines to spend the target's shield on a blow of zero.
+// could not see. Its hits are worth nothing and it deals nothing, and the hand is still named. See
+// resolveAttackPhase.
 //
 // **It is compared on the concept's damage rather than its cost**, because damage is what the
 // blow is. The player's three forms ladder identically — a Skewer, a Cleave and a Smash all deal
@@ -711,8 +706,8 @@ func elementsOf(turn []Slot, cards []int) []Element {
 	return out
 }
 
-// scaleDamage applies a turn's multiplier to a base figure — since 2026-08-18 that figure is the
-// sum of the blow's cards, so this is the whole of the blow rather than a bonus term.
+// scaleDamage applies a multiplier to one hit's figure — the card's term plus its flat bonuses —
+// so it is the whole of the hit rather than a bonus term.
 //
 // Rounding is deliberately toward zero, matching guardDivisor and the defend reductions: the
 // package is integer arithmetic throughout, so a multiplier that rounded the other way would be

@@ -2,21 +2,19 @@ package ui
 
 // **The working under a blow, read off the event and written down as records.**
 //
-// The hand dialog spells a blow's sum out at the size of the screen while it lands, and then it is
-// gone. These are the same figures kept: what each card was worth, which relic priced it, and what
-// the whole thing came to. What the run's account is *for* is being read back after the fight,
-// which is the one thing the dialog cannot do.
+// The hand dialog works every hit out at the size of the screen while it lands, and then it is
+// gone. These are the same figures kept: each hit's card, which relic priced it, the flat terms,
+// the multipliers and what the hit came to. What the run's account is *for* is being read back
+// after the fight, which is the one thing the dialog cannot do.
 //
 // **Every figure comes off the event and nothing here multiplies, adds or rounds.** `HandAmounts`,
-// `HandRelicScale`, `HandLanding` and `HandGrown` are all filled by the resolver — see
+// `HitAmounts`, `HandRelicScale`, `HandLanding` and `HandGrown` are all filled by the resolver — see
 // combat.Event, where each says why it is on the event rather than being re-derived. This is a
 // second *reading* of one event, exactly as combat_mathbox.go is, and it is under the same rule: a
 // figure it wanted that the event does not carry goes on the event.
 //
 // **It produces records rather than sentences**, so the words can be decided when the panel draws
-// them — see ledger_prose.go, and session/record.go for the argument. What it keeps is the
-// knowledge of the event's fat arrays, which belongs beside the helpers that already read them
-// rather than in a scene.
+// them — see ledger_prose.go, and session/record.go for the argument.
 
 import (
 	"strconv"
@@ -30,50 +28,71 @@ import (
 // underneath the blow rather than as more lines of the round.
 const termIndent = 24
 
-// HandTermRecords is the whole working under one blow, in the order the arithmetic happens in.
+// HandTermRecords is the whole working under one blow, in the order the arithmetic happens in:
+// what raised the DMG, the flat terms every hit carries, a line per hit, and the total.
 //
 // `played` is the side's resolved actions in order, which is what `HandCards` indexes. A hand
-// naming an action the walk did not see writes no term rather than guessing at one; that cannot
+// naming an action the walk did not see writes no line rather than guessing at one; that cannot
 // happen from a resolved round and is checked because the alternative is a panic in a panel.
 func HandTermRecords(e combat.Event, relics []combat.WornRelic, played []combat.Card) []session.LedgerRecord {
 	if e.HandCardCount <= 0 {
 		return nil
 	}
 
-	out := make([]session.LedgerRecord, 0, e.HandCardCount+3)
+	out := make([]session.LedgerRecord, 0, e.HandCardCount+4)
 
-	// **What raised the DMG comes before the cards it raised**, because that is the order the
+	// **What raised the DMG comes before the hits it raised**, because that is the order the
 	// arithmetic happens in: the rung is read, the duelist swings bigger, and only then is there a
-	// term to write.
+	// hit to write.
 	if r, ok := handDMGRecord(e, relics); ok {
 		out = append(out, r)
 	}
+
+	// **Then the flat terms**, once each, because each is the same figure in every hit below.
+	out = append(out, flatTermRecords(e, relics)...)
 
 	for i := 0; i < e.HandCardCount && i < len(e.HandAmounts); i++ {
 		idx := e.HandCards[i]
 		if idx < 0 || idx >= len(played) {
 			continue
 		}
-		card := played[idx]
-		out = append(out, session.LedgerRecord{
-			Kind:    session.KindTerm,
-			Role:    session.RoleCard,
-			Card:    combat.ConceptOf(card.Concept).Label,
-			Element: ElementName(card.Element),
-			Base:    TermBase(e, i),
-			Factors: termFactors(e, i, relics),
-		})
+		out = append(out, hitRecord(e, i, played[idx], relics))
 	}
 
-	// **Then the flat terms, in the order the sum adds them.** Leaving them out is what made this
-	// panel print a sum that did not come to its own total.
-	out = append(out, flatTermRecords(e, relics)...)
+	return append(out, session.LedgerRecord{
+		Kind: session.KindTerm, Role: session.RoleTotal, Total: e.Amount,
+	})
+}
 
-	// **The sum, under the terms it adds up.** It is the last line rather than the first because
-	// that is the order the arithmetic happens in and the order the dialog acts it out in: the
-	// cards, then what they came to.
-	out = append(out, sumRecord(e, played))
-	return out
+// hitRecord is one hit written out: its card, its arithmetic from the card's term to the figure,
+// and what each relic did to it. **Its Hit is counted from one**, which is how the hit's outcomes
+// find this line — see session.LedgerRecord.Hit.
+func hitRecord(e combat.Event, i int, card combat.Card, relics []combat.WornRelic) session.LedgerRecord {
+	term := session.LedgerSum{Scales: relicFactors(e, i), Element: ElementName(card.Element)}
+	if dmg, pct, ok := e.TermSplit(i); ok {
+		term.Split, term.DMG, term.Weight = true, dmg, pct
+	} else {
+		term.Base = TermBase(e, i)
+	}
+
+	rec := session.LedgerRecord{
+		Kind:       session.KindTerm,
+		Role:       session.RoleHit,
+		Hit:        i + 1,
+		Card:       combat.ConceptOf(card.Concept).Label,
+		Element:    ElementName(card.Element),
+		Factors:    termFactors(e, i, relics),
+		Terms:      []session.LedgerSum{term},
+		Multiplier: e.Multiplier,
+		HandScale:  e.HandScale,
+		Total:      e.HitAmounts[i],
+	}
+	for _, flat := range []int{e.HeldBonus, e.VitaeBonus} {
+		if flat != 0 {
+			rec.Flats = append(rec.Flats, flat)
+		}
+	}
+	return rec
 }
 
 // handDMGRecord is what a relic did to the DMG this blow was swung at.
@@ -81,7 +100,7 @@ func HandTermRecords(e combat.Event, relics []combat.WornRelic, played []combat.
 // **It is not a term and must never be written as one.** A rung relic raises the duelist's DMG for
 // the length of one blow, so a Twinned Ring on a duelist of 14 makes a Pair swing at 16 and every
 // card in it grows by its own multiplier. That figure is already inside each card term, which is
-// why this record carries no figure for the sum's column: it says where the bigger terms came from.
+// why this record carries no figure for the hand dialog's column: it says where the bigger terms came from.
 //
 // **Without it the relic would be invisible**, which is the one thing a relic may never be — a
 // player whose cards quietly got bigger has no way to tell a relic from a better hand.
@@ -99,7 +118,7 @@ func handDMGRecord(e combat.Event, relics []combat.WornRelic) (session.LedgerRec
 }
 
 // flatTermRecords is the working under the two terms no card paid: the cards the turn kept back,
-// and the purse. Each names the relic that put it in the sum.
+// and the purse. Each names the relic that put it into every hit.
 //
 // **A count goes beside the figure wherever there is one to give.** `Jar of Ice (4 cards kept
 // back) 20` can be checked against the hand that was being held; a bare 20 is a number the player
@@ -125,43 +144,7 @@ func flatTermRecords(e combat.Event, relics []combat.WornRelic) []session.Ledger
 	return out
 }
 
-// sumRecord is the blow as the sum it is: every landing's figures, the flat terms, the rung's
-// multiplier, a rung relic's second one, and the total.
-//
-// **HandBonus is not among the flats.** It is base damage rather than a term, so it is already
-// inside every figure above — see handDMGRecord.
-func sumRecord(e combat.Event, played []combat.Card) session.LedgerRecord {
-	rec := session.LedgerRecord{
-		Kind:       session.KindTerm,
-		Role:       session.RoleSum,
-		Multiplier: e.Multiplier,
-		HandScale:  e.HandScale,
-		Base:       e.Base,
-		Total:      e.Amount,
-	}
-
-	for i := 0; i < e.HandCardCount && i < len(e.HandAmounts); i++ {
-		term := session.LedgerSum{Scales: relicFactors(e, i)}
-		if idx := e.HandCards[i]; idx >= 0 && idx < len(played) {
-			term.Element = ElementName(played[idx].Element)
-		}
-		if dmg, pct, ok := e.TermSplit(i); ok {
-			term.Split, term.DMG, term.Weight = true, dmg, pct
-		} else {
-			term.Base = TermBase(e, i)
-		}
-		rec.Terms = append(rec.Terms, term)
-	}
-
-	for _, flat := range []int{e.HeldBonus, e.VitaeBonus} {
-		if flat != 0 {
-			rec.Flats = append(rec.Flats, flat)
-		}
-	}
-	return rec
-}
-
-// termFactors is what the relics did to one term: the landings they bought, then the figures they
+// termFactors is what the relics did to one hit: the landings they bought, then the figures they
 // priced it at, in worn order — which is firing order.
 //
 // **A relic firing at the identity still fired.** A fresh Enflamed is 1x and is written: leaving it
@@ -181,9 +164,9 @@ func termFactors(e combat.Event, term int, relics []combat.WornRelic) []session.
 		}
 		f := session.LedgerFactor{Relic: relicName(relics, seat), Scale: pct}
 
-		// **What the relic stood at after this term**, and only when it moved. A growing relic is
-		// the one case where the same relic prices two terms of one blow differently, and the
-		// player watching it climb during the blow has nothing to read it off afterwards.
+		// **What the relic stood at after this hit**, and only when it moved. A growing relic is
+		// the one case where the same relic prices two hits of one blow differently, and the
+		// player watching it climb has nothing to read it off afterwards.
 		if grown := e.GrownAt(term, seat); term > 0 && grown != e.GrownAt(term-1, seat) {
 			f.Grown = grown
 		}
@@ -204,9 +187,8 @@ func cardCount(n int) string {
 
 // relicNames is every relic that paid a term, in worn order — which is firing order.
 //
-// **All of them, not the leftmost.** The dialog flies one figure out of one card and has to pick;
-// a line has room to say that two jars paid, and a line naming one of two would be wrong about the
-// half it left out.
+// **All of them, not the leftmost.** A line has room to say that two jars paid, and a line naming
+// one of two would be wrong about the half it left out.
 func relicNames(relics []combat.WornRelic, seats []bool) string {
 	var named []string
 	for seat, paid := range seats {
@@ -233,8 +215,9 @@ func TermBase(e combat.Event, term int) int {
 	return e.HandAmounts[term]
 }
 
-// relicFactors is every relic multiplier that priced one term, in worn order — which is firing
-// order. See termFactors on why an identity multiplier is kept.
+// relicFactors is every relic multiplier that priced one hit's card term, in worn order — which is
+// firing order. See termFactors on why an identity multiplier is kept.
+
 func relicFactors(e combat.Event, term int) []int {
 	var out []int
 	for _, pct := range e.HandRelicScale[term] {

@@ -266,15 +266,20 @@ func TestJabHitsForHalfButNeverZero(t *testing.T) {
 	}
 }
 
-func TestOnlyAttacksDealDamage(t *testing.T) {
-	// **Nothing in the plan form hits back.** A defense is a wall, not a counter, so a turn made
-	// of plans alone is a turn in which nobody is hurt.
+func TestADefenseHitsForNothing(t *testing.T) {
+	// **Every card throws a hit, and a defense's deals nothing of its own.** A defense is a wall, not
+	// a counter, so a turn made of defenses alone is a turn in which nobody is hurt.
 	for _, a := range []ConceptID{Block, Brace, Guard} {
 		events, _, bAfter := resolve(duelist(10, 5, 100), duelist(10, 5, 100),
 			PlainCards(a), nil, 1)
 
-		if n := damageCount(events); n != 0 {
-			t.Errorf("%v dealt damage %d times unprompted", a, n)
+		for _, e := range events {
+			if e.Kind == KindDamage && e.Amount != 0 {
+				t.Errorf("%v hit for %d", a, e.Amount)
+			}
+		}
+		if n := damageCount(events); n != 1 {
+			t.Errorf("%v threw %d hits, want its one", a, n)
 		}
 		if bAfter.CurrentLife != 100 {
 			t.Errorf("%v took the target to %d, want 100", a, bAfter.CurrentLife)

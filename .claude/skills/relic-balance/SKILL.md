@@ -55,7 +55,7 @@ with three rules can be per-card and per-blow at once, and that is information r
 
 | Category | Means | Derived from |
 |---|---|---|
-| **offense** | it makes a blow bigger | every damage verb, plus `apply-status` where the status is `damage-over-time` or `damage-amplification` |
+| **offense** | it makes a hit bigger | every damage verb, plus `apply-status` where the status is `damage-over-time` or `damage-amplification` |
 | **defense** | damage you do not take | `add-hp`, `scale-hp`, and `apply-status` where the status is `lose-actions`, `miss-chance` or `damage-reduction` |
 | **tempo** | it buys action points, never damage | `adjust-cost`, `demote-card` |
 | **economy** | the run's purse and its picks | `scale-propagation`, `adjust-prize-vitae`, `adjust-picks` |

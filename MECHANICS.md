@@ -17,9 +17,11 @@ of three rooms**, and every third room is a named stairway boss.
 are dealt a hand of eight from your deck and given an action-point budget; you queue up to five
 cards you can pay for, in an order you choose, and press DUEL!. Your attack cards are read as a
 **set** — what they agree on (concept, form or element) names a **hand** off a ladder wearing
-poker's names, and that hand's multiplier scales the whole blow. **A turn lands one figure.**
+poker's names, and that hand's multiplier scales **every hit**. **Each card lands its own hit**,
+worked out on its own: the card's damage, anything the relics add, times the hand — a defense's
+hit deals nothing of its own but still lands its color.
 Any defend cards in the turn go up first and raise **shields**; one shield eats one incoming
-attack whole. Then the creature swings, card by card, each blow its own. A duel is over when
+hit whole. Then the creature swings, card by card, each hit its own. A duel is over when
 someone dies or when the **fifth round** ends, which kills whoever is still standing.
 
 **Winning pays vitae and an essence.** An essence permanently edits one card of your deck. Vitae is
@@ -36,11 +38,11 @@ The run is written to disk between rooms and every run has a six-character code 
 | Section | What it settles | Status |
 |---|---|---|
 | [The thrust](#the-thrust) | the principle every rule is measured against | principle |
-| [Attributes and scaling](#attributes-and-scaling) | DMG, Actions, HP, and what may cut a blow | built |
+| [Attributes and scaling](#attributes-and-scaling) | DMG, Actions, HP, and what may cut a hit | built |
 | [Cards](#cards) | forms, the cost ladder, shields, the deck, the card language | built |
 | [Elements](#elements) | the five colors, their statuses, and where a status comes from | built |
 | [Resolution — phases](#resolution--phases) | what order a round resolves in | built |
-| [Hands](#hands) | the ladder, its axes, and how a blow is multiplied | built |
+| [Hands](#hands) | the ladder, its axes, and how every hit is multiplied | built |
 | [A round is bounded twice](#a-round-is-bounded-twice) | the action budget and the five-card cap | built |
 | [The round limit](#the-round-limit--a-duel-is-bounded-too) | a duel is five rounds long | built |
 | [Relics](#relics) | the grammar, the catalog, the shop | built |
@@ -96,18 +98,18 @@ attribute is either of them.** The **earth status** blunts what its carrier deal
 amplification raises what its carrier takes in. A durable combatant is one with high `HP`, or with
 earth standing on whatever is hitting it. Anything that should reduce damage extends one of those
 rather than arriving as a third system — two mechanics quietly stacking is the failure to avoid.
-**Nothing shaves a fraction off an incoming blow**: a shield eats one attack whole, and that is the
+**Nothing shaves a fraction off an incoming hit**: a shield eats one hit whole, and that is the
 whole of the defending side.
 
-**The terms compose multiplicatively and in a fixed order**: the concept's damage, the hand
+**The terms of a hit compose in a fixed order**: the concept's damage plus any flat bonus, the hand
 multiplier, the attacker's weight, then the target's vulnerability. Weight sits on the attacker's
 side of that line because it says how hard they can still swing; everything after it happens to a
-blow that has already been blunted.
+hit that has already been blunted.
 
 **Nothing subtracts from the action budget, so it has no floor.** Every term is non-negative. A
 future subtraction brings its own floor with it.
 
-`[?]` **Nothing has measured the roster against one blow a turn.** Enemy HP and damage are tuned
+`[?]` **Nothing has measured the roster against a hit per card.** Enemy HP and damage are tuned
 by hand, no simulation exists, and losing to a floor that cannot be beaten looks exactly like
 losing to bad draws — see *Enemies* below.
 
@@ -179,7 +181,7 @@ one, two and three — because a shield is *a hit you do not take* rather than a
 on it would make the top card the only one worth holding.
 
 **Flinch raises a shield for nothing, and that is the floor rather than a mistake**. A shield
-eats a whole blow, so there is no fraction of one to fall to: where Poke is a Jab at a quarter
+eats a whole hit, so there is no fraction of one to fall to: where Poke is a Jab at a quarter
 of the damage, Flinch is a Brace at none of the cost. What bounds it is the count — a turn plays
 at most `MaxActions` cards however cheap they are — rather than the budget, which is the same
 shift `minCardCost` took when a Hone could drive a card to free. **The duelist's own shield cap
@@ -195,8 +197,8 @@ being pinned to attacks, so the two ladders can never step onto each other.
 holds the name: `DMG` on the fighter card is `Bash.Damage(DMG)`, so the figure the player reads
 is what one middle-rung card deals. Nothing stops that reference moving to another form's middle
 rung; it is one constant. **It is not a term in the damage formula** — a hand's multiplier
-applies to the cards that formed it, never to a reference swing added on top, so `DMG` reaches a
-blow only through the cards themselves.
+applies to the cards' own hits, never to a reference swing added on top, so `DMG` reaches a hit
+only through its card.
 
 **The opponent has two cards of its own and they belong to no form** — `Attack` (2 AP, `DMG`)
 and `Heavy` (3 AP, `DMG × 2`), priced against the player's tiers. `FormNone` is a real answer
@@ -222,8 +224,8 @@ card says its element. The border does not.
 
 ### Shields
 
-**A shield eats one incoming attack, whole**. No damage and no partial
-figure: the attack lands nothing at all, and the feed says so in a line of its own because there is
+**A shield eats one incoming hit, whole**. No damage and no partial
+figure: the hit lands nothing at all, and the feed says so in a line of its own because there is
 no damage line for it to hang off. Brace and Block raise one and two shields for one and two AP;
 Flinch and Guard are the ends of the ladder and ship at zero copies.
 
@@ -231,15 +233,17 @@ Flinch and Guard are the ends of the ladder and ship at zero copies.
 number of attacks, so a shield turns "how much is this going to hurt" from an estimate into
 arithmetic. A percentage cannot: a fraction of an unknown figure is still unknown.
 
-#### A shield eats their heaviest blow, not their first
+#### A shield eats the heaviest hit, not the first
 
-A creature's turn is several discrete blows of different sizes. **What a shield costs to raise
-does not vary with the opponent's queue, so what it is worth must not either** — a shield spent on
-whichever card happened to be queued first is worth two damage against a Giant Bat opening with a
-Nip and ten against the same three cards in the other order.
+A turn is several discrete hits of different sizes. **What a shield costs to raise does not vary
+with the opponent's queue, so what it is worth must not either** — a shield spent on whichever card
+happened to be queued first is worth two damage against a Giant Bat opening with a Nip and ten
+against the same three cards in the other order.
 
-A shield takes the biggest blow of the turn, a second shield the next biggest, down the order.
-Ties go to the earliest card, so the choice is a function of the turn and nothing else.
+A shield takes the biggest hit of the turn, a second shield the next biggest, down the order.
+Ties go to the earliest, so the choice is a function of the turn and nothing else. **The rule is
+the same whichever kind of attacker is swinging** — `combat.shieldedHits` is the one ranking — and
+for a hand-forming attacker every landing is a hit to rank, an echo's included.
 
 **It is decided at the top of the creature's turn, before any of it resolves**, which is the part
 with a consequence. The ranking is a snapshot: a status landed by an early card amplifies the ones
@@ -249,22 +253,21 @@ the creature swings, rather than one card silently doing nothing at a time. Re-r
 resolved would win a little damage and cost the player any way of watching it happen.
 
 **Ranked on the card's own damage, which is the whole of the arithmetic.** Everything downstream —
-the attacker's weight, the target's vulnerability, every guard the target raised — is one multiplier
-applied identically to every attack in the turn, so none of them can reorder two cards. See
-`combat.shieldedSlots`.
+the attacker's weight, the target's vulnerability, the hand's multiplier — is one multiplier applied
+identically to every hit in the turn, so none of them can reorder two. See `combat.shieldedSlots`.
 
 **This is a straight buff to shields, and it scales with how spiky a creature's deck is.** A
 swarm of identical small attacks is unaffected; a deck with one big card in it is now much
 easier to blunt. Nothing simulates a duel, so no test catches what that does to a floor.
 
-#### The turn reads: shields, then the hand, then the tally
+#### The turn reads: shields, then the hand, then the hits
 
 The defend phase resolves first — see `combat.Categories` — and the screen plays it as **one
 gesture**: every shield in the turn goes up together, pips out of their own cards into the row
 along the bottom of the duelist card, with **no card lifting off the table**. Only then is the
-hand announced, with the cards that formed it raised, and only then does the sum run — where a
-defense that made the hand pays its visible `0` and every attack pays its figure into the
-multiplier.
+hand announced, with the cards that formed it raised, and only then are the hits worked out — a
+line of arithmetic under every card of the turn, all of them at once. A defense's line usually
+comes to 0.
 
 **A lift says "this card is acting now", so exactly one thing in the turn may use it.** The defend
 phase is one gesture for the whole set — the shield break's rule and the deal cascade's — because
@@ -272,12 +275,12 @@ three pauses over one phase say three things about cards where the phase says on
 turn. Nothing lifts on a card's own announcement; the raise belongs to the hand's, and it ends
 there.
 
-**The rung is raised and the blow is counted, and they are different sets.** On a turn of two
-shields and one attack the Pair is the two shields, so they are what stands up; the attack is in the
-sum and in no part of the hand, so it stays down. `Blow.Rung` against `Blow.Cards` is the
-distinction in the rules and `Event.RungCards` against `Event.HandCards` is how it reaches the
+**The rung is raised and the hits are thrown, and they are different sets.** On a turn of two
+shields and one attack the Pair is the two shields, so they are what stands up; every card throws
+a hit, and the attack's is the one that hurts while being in no part of the hand, so it stays down. `Blow.Rung` against `Blow.Cards` is
+the distinction in the rules and `Event.RungCards` against `Event.HandCards` is how it reaches the
 screen. **A row held up through the arithmetic is the announcement still being made while the thing
-it announced is being read out**, so the cards go back down when the tally starts.
+it announced is being read out**, so the cards go back down when the hits start.
 
 **The No Hand is announced and raises nothing.** It is a rung and the word says what happened, but
 it is the turn that made no hand — its `Blow.Rung` is a single card picked by damage rather than by
@@ -285,7 +288,7 @@ counting, and standing that card up says it did something while every other atta
 lands beside it unraised. `Blow.BuiltAHand` is the predicate and it gates the lift alone.
 
 **The creature's turn is the exception to all of it.** It names no hand, so its card lifting one at
-a time is the only thing saying which blow is landing.
+a time is the only thing saying which hit is landing.
 
 **None of it reaches the rules.** The order the events resolve in is unchanged, `ResolveRound`
 decided the whole round before a frame was drawn, and the bundle is the screen reading forward in a
@@ -304,7 +307,7 @@ thrown at it — and `RegisterConcept` refuses a concept declaring more.
 **The duelist's total is bounded by the action budget alone.** Three Guards in a turn is nine
 shields and is meant to be. Clamping the total to five would price a shield at what it stops
 rather than at what it cost, and a player paying six AP for two Guards has bought six shields
-whether or not the next turn throws six blows.
+whether or not the next turn throws six hits.
 
 **The pip row on the duelist card holds six**, which is what fits the bottom band at the current
 pitch, and it is a *readout* limit rather than a rule — `screens.maxShieldPips`, not
@@ -312,19 +315,15 @@ pitch, and it is a *readout* limit rather than a rule — `screens.maxShieldPips
 on the engine. **A row that says what a big count actually is has not been designed**; a seventh
 pip is a redesign of the band rather than a bigger number.
 
-#### The asymmetry is the mechanic, not a gap in it
+#### Only the player raises shields
 
-**Only the player raises shields, and creatures raise nothing at all.** Every creature deck is
-pure attack.
+**Creatures raise nothing at all.** Every creature deck is pure attack, and every creature is a
+solo attacker whose turn resolves card by card with a hit each, so a count buys one hit out of
+several — a real decision about how much of a turn to absorb.
 
-- **A creature is a solo attacker.** Its turn resolves card by card with a figure each, so a count
-  buys one blow out of several — a real decision about how much of a turn to absorb.
-- **The player forms hands and lands one figure a turn.** A single shield facing that would delete
-  the whole turn, so a count pointed the other way is the one thing this mechanic must not become.
-
-The rules do not enforce this — `VerbShield` would work on either side — and it is written down
-rather than guarded against, because the day an enemy forms hands is the day this becomes a dominant
-strategy, and a silent branch would not say so. `blockedByShield` carries the note.
+**A shield facing a hand-forming attacker is on the same terms**: the player's turn is a hit per
+landing, so a shield would eat the heaviest of them and leave the rest. Nothing produces that today,
+since no creature raises one, and `VerbShield` would work on either side.
 
 **A round's action points are the stat on the card and nothing else**.
 `Duelist.ActionPoints()` is the whole of a turn's budget: nothing banks points from a previous
@@ -579,7 +578,7 @@ color-coded or earth takes a green far enough from `playerSwatch` to read as a d
 ### Statuses
 
 *Implemented in `internal/combat/status.go`.* Each element has a status it applies **to whoever
-took the blow** — **and only if the attacker is wearing that element's relic**:
+took the hit** — **and only if the attacker is wearing that element's relic**:
 
 **`data/statuses.json` is the catalog and every figure here comes off it**, so read the file
 rather than this table when a number matters. All five last **two rounds** and none of them
@@ -589,7 +588,7 @@ stacks.
 |---|---|---|---|
 | **fire** | BURNING | BURN | ticks 50% of the attacker's DMG at the end of each round it survives, minimum 1, frozen at the DMG that lit it |
 | **ice** | CHILLED | CHILL | one card off the front of every turn it outlives |
-| **lightning** | SHOCKED | SHOCK | 25% chance the victim's attack misses, rolled every attack |
+| **lightning** | SHOCKED | SHOCK | 25% chance each of the victim's hits misses, rolled every hit |
 | **earth** | WEIGHTED | WEIGH | the victim deals 25% less damage |
 | **arcane** | WEAKENED | WEAKEN | the victim takes 100% more damage from everything, burn ticks included |
 
@@ -601,21 +600,21 @@ acted upon, and it is the first thing in the damage pipeline to be read off the 
 consequences follow and both are intended:
 
 - **A relic applying it is worth more against a slow opponent than a fast one**, because the value
-  is in the blows that land during its two rounds rather than in the ones you throw.
-- **It amplifies a burn tick as well as a blow.** A tick is damage the carrier takes, and exempting
+  is in the hits that land during its two rounds rather than in the ones you throw — **the later
+  hits of the very turn that lands it included**, since a status lands between hits.
+- **It amplifies a burn tick as well as a hit.** A tick is damage the carrier takes, and exempting
   it would have made the rule *"damage, except the kind that arrives at the end of the round"* —
   which is a sentence no card face can carry. Fire plus arcane is therefore the sharpest pair of
   statuses in the game, and it is a build rather than an oversight.
 - **It does not stack and it is capped**, like everything else here: a second application refreshes
   the clock, and `combat.maxAmplifyPct` holds any sum at 300. Amplification is the one percentage
-  with no natural ceiling — a miss chance and a weight both stop at *nothing reduces a blow to
+  with no natural ceiling — a miss chance and a weight both stop at *nothing reduces a hit to
   zero*, and this one stops nowhere at all.
 
 **Statuses are off by default, and the relic is what switches one on**. A
 bare fire attack is a plain attack with a red border: it forms hands exactly as any other
-card does and it leaves nothing behind. `combat.Duelist.Relics` is the flag array, indexed by
-element exactly as `Statuses` is, and `resolveAttackPhase` reads it off the **attacker** before
-applying anything.
+card does and it leaves nothing behind. The worn relics are read off the **attacker**, per hit,
+before anything is applied.
 
 **Why a relic pays for it.** A status given away free leaves its element's relics with nothing
 to *be* — each one has to invent a second mechanic to sell, because the thing the color does is
@@ -655,7 +654,7 @@ on without playing to a shop — the relic counterpart of `deckSeedName` — and
 **A status shows as a badge along the bottom of the enemy card**, from
 `assets/effect/`. It is the only place a standing status is stated, and it has to be: two of the
 four bite something the player has not done yet — a chill takes a card off a turn not yet queued,
-a weight blunts a blow not yet swung — so without a badge they are learned by being surprised.
+a weight blunts a hit not yet swung — so without a badge they are learned by being surprised.
 The row is centered and closes up as it fills. Earth's art is a placeholder. **The player's card
 carries no badges**, because nothing can put a status on the player: the enemy wears no relics.
 
@@ -667,30 +666,28 @@ card is never converted between the screen's idea of one and the engine's.
 figure and `Duelist.CardCost` is what it costs the duelist holding it, discounts included — which
 is what everything that spends or checks a budget reads.
 
-#### The trigger: the cards in the hand that formed
+#### The trigger: every hit that connects
 
-**A status is applied by the hand, not by a card.** The relics match against **the cards that
-formed the attack**, and each `apply-status` they fire lands
-once however many cards matched it — so the four elemental relics still read as "one status per
-distinct non-basic color", and a form or concept relic reaches the same moment by the same route.
-An all-basic hand lands nothing, because no elemental rule matches a colorless card. A defend card
-carries its element for the relic discount and applies nothing itself;
-the alternative — every card applying its status — would make a 1-AP Brace as good a delivery as
-a 1-AP Jab and turn the defend phase into the status engine. (This
-is a rule waiting for a card rather than one currently biting.)
+**A status is applied by a hit, off that hit's card.** The relics match against the card that threw
+the hit, and each `apply-status` they fire lands once for that hit — so a turn of three fire hits
+lands a burn three times, each refreshing the last. An all-basic hand lands nothing, because no
+elemental rule matches a colorless card. **A defend card throws a hit like any other and lands its
+status** *(owner's call)* — one rule, every card hits, with nothing special for a verb. The cost is
+taken knowingly: a 1-AP Brace is as good a status delivery as a 1-AP Jab, and buys a shield too.
 
-**This is the whole of what color does to a blow.** An element earns its keep by what it leaves
-on the victim, never by hitting harder — there is no damage multiplier anywhere on the element
-axis. Three consequences:
+**This is the whole of what color does to a hit.** An element earns its keep by what it leaves on
+the victim, never by hitting harder — there is no damage multiplier anywhere on the element axis.
+Three consequences:
 
-- **A color is counted once however many cards carry it.** Two ice Bashes and an ice Jab land one
-  chill. Status volume is a question of how many *different* colors the hand holds, not how many
-  colored cards.
-- **Cards outside the hand carry no color at all.** `Bash, Jab, Bash` in fire, ice, fire is a
-  fire Pair — one burn — and the ice Jab contributes neither damage nor a chill.
-- **The status lands because the hand formed, not because the blow hurt.** A blow blunted to
-  nothing still connected, and making the status conditional on the final figure would let the
-  target's own defenses silently un-apply an element the attacker had already paid for.
+- **A color lands once per hit that carries it.** Nothing stacks, so two ice hits and an ice hit
+  more are one chill refreshed three times; what more hits buy is more chances past a shock and a
+  shield, and a status that lands in time to shape the hits after it.
+- **Every card carries its color, in the hand or not.** `Bash, Jab, Bash` in fire, ice, fire is a
+  fire Pair, and the ice Jab's hit lands a chill anyway; a fire Brace beside them burns.
+- **A status lands because the hit connected, not because it hurt.** A hit blunted to nothing still
+  connected, and making the status conditional on the final figure would let the target's own
+  statuses silently un-apply an element the attacker had already paid for. **A miss and a block land
+  nothing** — the hit never connected.
 
 The cost, stated: **element is mechanically inert on a defend card**, which still carries one for
 the relic discount and for the hand axis.
@@ -712,12 +709,16 @@ lasts no rounds at all; the floor of 2 is not enforced, so an author setting 1 g
 never fires.
 
 **Nothing stacks, and that is the base rule so a relic has somewhere to go.** Adding amounts
-makes a status something to pile on rather than something to keep up, and with one blow a turn,
-four stacks is four cards spent saying one word louder. A relic that *does* stack is a relic
-someone can design.
+makes a status something to pile on rather than something to keep up. **Every hit that connects
+lands its card's statuses**, so four fire hits refresh one burn four times rather than stacking
+four. A relic that *does* stack is a relic someone can design.
+
+**A status lands between hits, so it can reach the hits after it.** Vulnerability landed by the
+second hit of a turn amplifies the third. *(Owner's call)*: it makes the order of the cards matter
+more. Nothing has measured it.
 
 **The ceiling is `combat.maxStatusPct` — 99.** One number holding *any* summed percentage short
-of one, so nothing misses every time and nothing stops a blow outright. Two registration checks
+of one, so nothing misses every time and nothing stops a hit outright. Two registration checks
 hold the same line for a single record, which is what makes a catalog edit unable to reach it
 either.
 
@@ -725,23 +726,28 @@ Per-element tuning is one constant each away, and **nothing measures what moving
 
 #### Lightning is a roll, and it is the only one in the rules
 
-**A shock is a 25% chance the turn's attack misses, rolled on every attack the shock outlives.**
+**A shock is a 25% chance each hit misses, rolled on every hit the shock outlives** — once per
+landing, so a five-card turn is five rolls and an echoed card rolls for each of its landings.
 Nothing is consumed by a roll: with no stacks to wear down, a shock that spent itself on contact
 would be a two-round status that reliably lasted one attack — a duration doing no work.
 
-**A shock is a chance and never a certainty, and one blow a turn is what demands it.** A certain
-miss deletes the whole of the opposing turn, so a 1 AP lightning Jab would erase an 8 AP Four of a
-Kind outright for a point. Breaking the hand or cutting the multiplier would each answer that; a
-roll is what was chosen, because lightning should *feel* unreliable — a design reason rather than
-a balance one. With nothing stacking, the ceiling is the number itself.
+**A shock is a chance and never a certainty.** A certain miss would delete every hit of the
+opposing turn, so a 1 AP lightning Jab would erase an 8 AP Four of a Kind outright for a point. A
+roll is what was chosen, because lightning should *feel* unreliable — a design reason rather than a
+balance one. With nothing stacking, the ceiling is the number itself.
+
+**Rolling per hit rather than per turn keeps the average and narrows the spread.** A shocked
+duelist loses about a quarter of each turn instead of a quarter of their turns outright; the
+expected damage is the same and a turn wiped out entirely becomes rare. *(Owner's call.)*
 
 **What it costs, accepted rather than argued away:**
 
 - `internal/combat` is no longer pure integer arithmetic. It takes an injected `*rand.Rand` on
   `ResolveRound` — never a package global, per the determinism rules — and a nil source means
   "no rolls", which is how tests and previews stay exact.
-- The stream advances **per attack phase**, so a change early in a duel reshuffles every roll
-  after it. That cost is real and is accepted.
+- The stream advances **per hit**, so a change early in a duel reshuffles every roll after it —
+  and so does any change to how many hits a turn throws, an echo relic included. That cost is real
+  and is accepted.
 - It breaks the rule hands otherwise follow — *what you committed to cannot be silently undone*.
   Lightning is the deliberate exception, and it is the only one.
 
@@ -771,14 +777,14 @@ a balance one. With nothing stacking, the ceiling is the number itself.
     side B, and the screen's `applyEvent` reads it alongside `KindDamage` because a burn changes a
     life total with nobody acting. **A burn can kill**, and produces a
     `KindDefeated` when it does.
-- **Earth applies attacker-side.** Weight says how hard you can still swing, so the order is the
-  hand's own cards, the hand multiplier, then the attacker's weight. **Rounding is toward zero**,
+- **Earth applies attacker-side.** Weight says how hard you can still swing, so the order within a
+  hit is the card's own term, the hand multiplier, then the attacker's weight. **Rounding is toward zero**,
   matching `scaleDamage` and every other percentage. **It is 25%**, because a smaller cut that
   cannot stack is a status nobody notices landing.
 - **Arcane applies victim-side, after the weight.** Vulnerability says how hard *this body* takes
-  a blow, so it is the last term: the hand's own cards, the hand multiplier, the attacker's
-  weight, the target's vulnerability. **Rounding is toward zero**, so the two halves of one sum
-  round the same way. **It is 100%** — double — and unlike the other four it is capped centrally
+  a hit, so it is the last term: the card's own term, the hand multiplier, the attacker's weight,
+  the target's vulnerability. **Rounding is toward zero**, so the two halves of one hit round the
+  same way. **It is 100%** — double — and unlike the other four it is capped centrally
   as well as per record, at `combat.maxAmplifyPct`.
   - **It reaches the burn tick too**, in `endRound` rather than in the attack phase, which is the
     one place a status modifies damage nobody threw.
@@ -795,7 +801,7 @@ A round is **a whole turn each**. Everything one side queued resolves before the
 does anything, and within a turn the two categories go in order:
 
 1. that side's **defenses** — every shield the turn paid for, raised in one gesture
-2. that side's **attack** — *one* blow, whatever it was assembled from
+2. that side's **attack** — one hand read off the attack cards, then a hit per card
 3. then the other side, the same way
 
 `combat.Categories` is the order and it is the single authority on it.
@@ -803,40 +809,33 @@ does anything, and within a turn the two categories go in order:
 **Within-turn order decides nothing about what a defense protects.** `expireDefenses` runs at the
 start of a side's *own* turn, so a shield raised anywhere in your turn is standing through the
 opponent's either way, and your attacks are aimed at them rather than at you. What the order
-decides is what the turn *reads* as: raise the guard, then swing. A defense pays a visible `0`
-into the hand's sum, and putting that several beats before the thing the card actually did is the
-reading this order exists to prevent.
+decides is what the turn *reads* as: raise the guard, then swing.
 
-**The one thing it genuinely moves is a growing relic**, which steps between the cards of one
-blow: a `grow-per-card` accumulator counts the defends before the attacks score. That is a
-balance change, nothing simulates a duel, and no test goes red for it.
+**The one thing it genuinely moves is a growing relic**, which steps between the hits of one turn:
+a `grow-per-card` accumulator counts the defends before the attacks score. Nothing simulates a
+duel, and no test goes red for it.
 
 **The combat screen lays a turn out in exactly this order**, left to right, with a gap at the
 boundary — the row on the table reads defenses, break, attacks. That is not decoration: it is the
 round's two phases made visible in the one place the round is a picture rather than a list.
 
-**The attack phase is a single event.** Every attack card queued is announced, the hand they
-form is announced, and then one figure of damage lands. The defenses are the only cards that
-resolve on their own, because each does something to its own duelist rather than contributing to
-a shared blow.
+**The attack phase is one hand and a hit per card.** Every attack card queued is announced, the
+hand they form is announced, and then every card of the turn lands its own hit. The defenses resolve on
+their own, each doing something to its own duelist.
 
-**And the phase says one thing, not one thing per card.** The announcements still happen — each is
-a beat, and the screen raises the card that made it — but the *sentence* is the hand's: "HAND!
-Duelist lands a Pair (20 x 1.5 = 30), 30 damage". Five lines saying a Bash was
-swung describe five blows, which is exactly the reading this rule was written to end. **A blow that
-forms no rung still takes that same line**, and it reads `HAND! Duelist lands a No Hand
-(20 x 1 = 20)` — the rung is named because it *is* a rung, and naming it No Hand is the line saying
-the true thing rather than dressing a turn that agreed about nothing as an achievement.
+**The run's account writes the hand once and the hits under it.** The hand's line names the rung;
+under it is a line per hit — the card that threw it, its arithmetic, what became of it — and the
+total of every hit. **A turn that forms no rung still takes that same heading**: the No Hand is a
+rung, and naming it says the true thing rather than dressing a turn that agreed about nothing as an
+achievement.
 
-**The sentence is a record, and it is not the only thing that says what a blow was made of.**
-The hand dialog acts the sum out at the size of the screen on the beat the hand fires — the
-hand's name shouted beside the cards it names, then each card's own figure flying down into a
-line, then the multiplier, then the answer. It exists because the Resolution feed's line was
-sixteen points of arithmetic on the third row of a three-row box: it *recorded* the sum
-correctly and never showed which card paid which part of it, so the multiplier read as a number
-the game had decided rather than one the player had built. **It says nothing the event does not
-carry and computes nothing**, and the one thing it changes is pacing — playback holds while it
-runs. See the `combat-screen` skill.
+**The hand dialog acts every hit out at once on the beat the hand fires.** Under each card
+on the table its hit is worked out figure by figure — the DMG flying off the duelist, the card's
+multiplier off the card, each relic's factor off the relic, the flat terms, the hand's multiplier
+off its name — and the moment a line finishes its figure flies into the target, which loses that
+much as it lands. The lines run in parallel and do not wait for each other, so a simple hit lands
+first. **It says nothing the event does not carry and computes nothing**, and the one thing it
+changes is pacing — playback holds while it runs. See the `combat-screen` skill.
 
 **There are two categories and no third.** Nothing resolves before the defenses, and a card
 that *fed* the hand rather than contributing to it would need the phase order reopened — which is
@@ -870,9 +869,9 @@ never buys priority.
 **Order within a category is queue order, and two things read it**.
 `groupsOf` fills largest-count-first and breaks a tie by whose first card was played first, so the
 lead card — the one that names the hand and carries its element — is chosen by where the player put
-it. And **a growing relic steps between the cards of the blow**, so the order the attacks are queued
-in decides what each of them is worth: the first fire card is counted bare, steps the relic, and the
-second is counted at the bigger multiplier. See *Growing relics step inside the blow* below.
+it. And **a growing relic steps between the hits of a turn**, so the order the attacks are queued
+in decides what each of them is worth: the first fire hit is counted bare, steps the relic, and the
+second is counted at the bigger multiplier. See *Growing relics step between hits* below.
 
 **Category order is fixed whatever order the queue is in** — a card cannot be dragged out of its
 phase. A counted hand still reads the turn as a set for the purpose of *naming* it, and the
@@ -971,8 +970,8 @@ serialized, so the order is free to mean something.
 than also the pair and the trips inside it — so a turn produces one hand with no ranking
 machinery beyond that comparison.
 
-**A lone attack forms no hand.** That is the fallback: when nothing counts, the single
-hardest-hitting attack card is the blow, ties going to the card queued first.
+**A lone attack forms no hand.** That is the fallback: when nothing counts, the turn is the No Hand,
+named after its hardest-hitting attack card, ties going to the card queued first.
 
 **The fallback rarely fires, and that is what having four axes buys.** Two attacks need only
 share a form or a color to count together, so Smash + Bash at DMG 10 lands **33** as a Form Pair
@@ -980,44 +979,59 @@ rather than the Smash's **20** alone — and none of that comes from the multipl
 since 1.1x of two cards beats 1.0x of one. Two attacks that agree on nothing at all are the rare
 case, and the No Hand is what names it.
 
-**Every attack the turn paid for contributes.** `Bash, Jab, Bash` is a Pair and the Jab makes no
-part of it; the Jab lands its damage and carries its color anyway, at the Pair's multiplier, in one
-sum. What makes *choosing a shape* pay more is the multiplier over the whole blow rather than an
-attack being deleted for disagreeing. See §Damage: one blow, one multiplier.
+**Every attack the turn paid for lands.** `Bash, Jab, Bash` is a Pair and the Jab makes no part of
+it; the Jab lands its own hit and carries its color anyway, at the Pair's multiplier. What makes
+*choosing a shape* pay more is the multiplier over every hit rather than an attack being deleted
+for disagreeing. See §Damage: a hit per card, one multiplier.
 
 **Every card in the turn is counted, and that is the matcher's rule rather than the catalog's.**
 A rung cannot name the categories it counts; what is left out is decided by the axis — a card with
 no value on it — and by nothing else. **A Brace joins a hand** and brings no damage into it.
 
-### Damage: one blow, one multiplier
+### Damage: a hit per card, one multiplier
 
-A turn deals damage **once**, in the attack phase, and the figure is:
+**Every card of the turn lands its own hit**, in the attack phase, and each hit is:
 
 ```
-(damage of every attack card played, plus any defense that made the hand)  ×  (hand multiplier)
+(the card's damage + every flat bonus)  ×  (hand multiplier)  ×  (every relic that scales the hand)
 ```
 
-So a pair of Skewers at DMG 10 is `(30 + 30) × 1` = **60** — the Skewer pays `DMG × 3`, and the
-Pair is the identity.
+then the attacker's weight and the target's vulnerability. **Each hit is worked out and rounded on
+its own**, so a turn's total is the sum of rounded hits. A pair of Skewers at DMG 10 is two hits of
+`30 × 1` — **60** in all.
 
-**Every attack the turn paid for is in that sum, whether or not it made the hand.** An action point
-spent on an attack buys a swing: `Bash, Jab, Bash` is a Pair the Jab makes no part of, and the Jab
-lands anyway.
+**A hit is a landing, not a card.** A card lands once, plus once for every extra landing a relic
+buys it — an echo's ladder, a form repeat — so a five-card turn is at least five hits and can be
+more, and every one of them is multiplied by the hand.
 
-**One sum, one multiplier.** The rung scales the whole thing, so the Jab above rides at the Pair's
-rate and a fifth card beside a Four of a Kind rides at the Four of a Kind's. **There is no separate
-unmultiplied term for the cards that missed the rung** — that would make the blow two sums and the
-arithmetic on screen two kinds of figure.
+**Nothing about the attack phase is singular except the hand that names it.** *(Owner's call.)*
+Everything else happens to each hit:
 
-**A defense joins only by making the hand.** It deals nothing either way, so what the rule decides
-is membership: an attack is in because it was paid for, a shield is in because it agreed with
-something. That is what keeps a hand of nothing but shields a hand that lands nothing.
+- **A flat bonus joins every hit.** The cards kept back and the purse add their figure to each hit,
+  before the multiplier, rather than to the turn once. A rung relic's raise and the damage riders
+  go into the DMG every card is swung at, so they are in every hit too.
+- **A shock rolls per hit.** See *Lightning is a roll*.
+- **A shield eats one hit**, the heaviest first.
+- **A status lands per hit that connects**, off that hit's card.
+- **A drain takes its share of each hit that landed.**
+- **A growing relic steps on every hit that connects**, and each hit is priced at the figure the
+  hits before it left. A miss or a block pays no relic.
+- **Hits stop at a death.** A hit after the one that killed is worked out on screen and not thrown.
+
+**Every card the turn played throws a hit, whether or not it made the hand** *(owner's call)*. An
+action point spent on an attack buys a swing: `Bash, Jab, Bash` is a Pair the Jab makes no part of,
+and the Jab lands anyway, at the Pair's rate.
+
+**A defense throws a hit too, and its card deals nothing.** Its hit is the flat bonuses times the
+hand — usually 0 — and it can miss and lands its card's statuses like any other. **A hit of nothing
+spends nothing of the target's** *(owner's call)*: no shield eats it and it does not clear the
+target's defenses, or a turn of shields would strip an opponent's for free. A hit a flat bonus
+lifted above 0 is a hit like any other.
 
 **The floor of the ladder is every attack at the identity**, so dumping action points pays real
-damage and building a rung pays more again by exactly the multiplier. That gradient is shallower
-than one where off-rung cards are deleted, and it is the intended shape. **Nothing re-prices
+damage and building a rung pays more again by exactly the multiplier. **Nothing re-prices
 `hands.json` automatically**: `tools/handodds` measures how often a rung can be *built* rather than
-what a blow comes to, so a change to what a blow is worth will not show up there.
+what a turn comes to, so a change to what a hit is worth will not show up there.
 
 **`data/hands.json` is the ladder and the figures live there**, one entry per rung with its
 multiplier in percent. They are priced off measured reachability rather than authored by feel, so
@@ -1040,25 +1054,27 @@ that had climbed furthest. Two things follow:
 **The No Hand pays the identity.** `×1` rather than `×0`, since ×0 would be an attack phase that
 dealt nothing; it means *no multiplier*, and every attack in the turn lands its own face damage. It
 is in `hands.json` with a name and an ID so the log can say what happened on the turn that happens
-most often — **a blow the engine could not name is the one failure this model can have**, which is
-why the loader panics without it. The hardest-hitting card is what the blow is **named** after, and
-is what the log, the shield break and a miss all point at.
+most often — **a turn the engine could not name is the one failure this model can have**, which is
+why the loader panics without it. The hardest-hitting card is what the rung is **named** after.
 
 **It is fallen back to rather than matched.** Counting is the wrong way to pick it — `matchCountOf`
 fills groups largest-count-first and would hand back whichever concept appeared most, not the card
 that hits hardest — so `matchHand` skips every one-card hand and `biggestAttack` answers the
 question on damage.
 
-**Color buys statuses and no damage.** The distinct non-basic elements **in the blow** each land
-their status, gated on the attacker wearing that element's relic; basic is not a color and never
-counts, so two basic Bashes and an ice Bash show one color. **The set is the blow's, not the
-rung's** — an attack that made no hand still swung, so it still burns, and a card the player
-watched land and leave nothing behind would read as a bug rather than as a rule.
+**Color buys statuses and no damage.** Each hit lands the status of its card's element, gated on the
+attacker wearing that element's relic; basic is not a color and never counts. **An attack that made
+no hand still lands its hit, so it still burns** — a card the player watched land and leave nothing
+behind would read as a bug rather than as a rule.
 
 **The rung is kept separately.** `Blow.Cards` is the scoring set and `Blow.Rung` is the cards that
 made the hand. Two readers ask the narrower question: `RiderScaleInCombo` — the `DMG IF IT SCORES`
-upgrade, whose whole subject is membership, and which read off the scoring set would be
-damage-on-play under a second name — and the screen's lift, which says which cards made the rung.
+upgrade, whose whole subject is membership — and the screen's lift, which says which cards made the
+rung.
+
+`[?]` **What a hit per card opens.** A hit is the unit an element can be judged on, so an ice hit
+against an ice creature *healing* it rather than harming it is now a rule with somewhere to live.
+Not built.
 
 ### What the axis costs
 
@@ -1067,8 +1083,8 @@ damage-on-play under a second name — and the screen's lift, which says which c
 - **The rung chooses what the swing is multiplied by, never what swings.** Deciding which four of
   five attacks to build around is the turn's decision; deciding which of them are allowed to hit is
   not.
-- **A hand cut short still pays out.** Nothing can interrupt it — a turn's attacks resolve as one
-  event — so this is true by construction rather than by rule.
+- **A hand cut short still pays out.** Nothing can interrupt the hand — it is read before any hit
+  is thrown — so every hit carries its multiplier however the hits before it went.
 - **The bottom rung fires constantly and is priced as such.** The Pair is a near-certain hand
   paying the identity, which is a floor rather than a reward. Whether the ladder should start
   higher is **answered by pricing instead** — a near-certain rung pays near the identity, so it
@@ -1110,7 +1126,7 @@ is the right shape for a floor: the ladder starts where every turn already is.
 `combat.Hand.Axes` is where the list lives and `combat.Hand.On` is how one reading is taken.
 
 **`Match` is the narrowest axis a merged rung names, and a *formed* hand reports the axis that
-satisfied it** — so the blow can always say how it was made even though the rung could have been
+satisfied it** — so the hand can always say how it was made even though the rung could have been
 made three ways.
 
 **`match` is required and never defaulted.** An entry that landed on the wrong axis by omission
@@ -1171,19 +1187,16 @@ you played, not what you hit with**. Five things follow:
   that is not an attack, so the multiplier multiplies the attacks that are in there with it — a
   fire Brace beside two fire Bashes turns a Pair into an Elemental Three of a Kind and pays it
   on the two Bashes' damage. That is the whole of what the change buys.
-- **A defense's color arms a status.** `elementsOf` reads the formed hand, so a fire Brace shows
-  fire and lands a burn on a turn with no fire attack in it. That is the sharper half of the
-  same decision.
-- **A hand of nothing but shields is real, is scored, and lands nothing** — which is the
-  accepted cost, see the decision below the table. It is named and multiplied like any other rung
-  and the blow sums to zero. Leaving it unscored would make the shield build the one hand the
-  ladder cannot see, and a relic or an authored card should be able to reward it.
-- **A blow of zero is counted and not thrown.** The gate is the sum the hand carries: below it
-  the turn spends nothing of the target's — no shield eaten, no miss rolled, no status landed and
-  no relic grown — because a shield build stripping an opponent's defenses for free is an attack
-  in everything but the arithmetic. **It reads the sum
-  rather than the cards**, so a shield card authored with damage, or a relic that gives a defense
-  some, is an attack like any other with nothing else to change.
+- **A defense's color counts toward the hand and lands its status.** Every card throws a hit,
+  and a hit lands its card's statuses — so a fire Brace makes a fire hand and burns.
+- **A hand of nothing but shields is real, is scored, and deals nothing** — which is the
+  accepted cost, see the decision below the table. It is named and multiplied like any other rung,
+  and every hit it throws is worth nothing but its flat bonuses. Leaving it unscored would make the
+  shield build the one hand the ladder cannot see, and a relic or an authored card should be able
+  to reward it.
+- **A hit of nothing spends nothing of the target's** — no shield eaten, no defense cleared —
+  because a shield build stripping an opponent's defenses for free is an attack in everything but
+  the arithmetic. It still rolls its shock and lands its statuses.
 
 The ladders are **not** the same numbers, and no two of them are. The starting deck is 55 cards —
 **5 per concept, 15 per attack form and 10 for defend, 11 per element, 20 at the commonest cost** —
@@ -1286,8 +1299,7 @@ Three things fall out of it and are worth keeping:
 look at damage, and the case that makes that visible is a turn of `Bash + two shields`: any two
 defenses share `FormDefend`, so it forms a **Pair on zero damage** and the Bash is announced
 inside a hand whose own two cards deal nothing. The Pair paying the identity means the player
-loses nothing to the multiplier — what can still cost them the blow is which cards the rung is
-made of. **Reading the board to avoid that is part of the game** rather than a bug to design out.
+loses nothing to the multiplier — what can still cost them is which cards the rung is made of. **Reading the board to avoid that is part of the game** rather than a bug to design out.
 
 **Hand IDs are written in the file, never derived.** There is **one ID per catalog key**, so
 reordering the cards cannot renumber a hand a player has already found — which matters the day
@@ -1320,22 +1332,19 @@ one they win. `go run ./tools/handsheet` draws it.
 - **A `KindHand` event** carrying what fired. *Done.* It carries a `HandID`, the multiplier and
   the list of cards that formed the hand, and the screen looks the name up with `HandByID` — so a
   hand renamed is renamed once.
-- **The hand event carries its own card list, not a span.** A counted hand is not contiguous —
-  Two Pair can be two cards, a card that earned nothing, and two more — so the screen brackets
-  what the engine names and never derives it from a pattern length.
+- **The hand event carries its own card lists, not a span.** A counted hand is not contiguous —
+  Two Pair can be two cards, a card that earned nothing, and two more — so the screen raises what
+  the engine names and never derives it from a pattern length.
 - **`KindChilled` counts as a slot in playback** even though nothing happened, or the
   log runs a row short for the rest of the round.
 - **A place to browse hands** — a reference the player can return to. Probably belongs with the
   profile rather than inside a duel. `Hands()` exists for it to read.
-- **The attack phase writes one line, and it is the hand's.** *Done.* Attack cards do not draw
-  a row each: a turn of five Bashes is five actions and one figure. The line carries the
-  arithmetic off the event, so the sum shown is the sum used, and the damage attaches to it.
-  **The hand dialog carries the same arithmetic at the size of the screen**, spelled out card by
-  card; the line stays because it is the record and the dialog is the moment. **What is still not
-  drawn** is a row that a chill deleted.
-- **A preview of the hand while planning is wanted and does not exist.** `BlowFor` is exported
-  and is the same function the engine uses, so a previewed hand would be the hand that fires by
-  construction. Nothing calls it from the screen yet.
+- **The attack phase writes the hand's line and a line per hit.** Attack cards write no act of
+  their own: a turn of five Bashes is the hand's heading and five hits under it, each carrying its
+  arithmetic off the event, so the figure shown is the figure used and the hit's outcome attaches
+  to it. **The hand dialog carries the same arithmetic at the size of the screen**; the lines stay
+  because they are the record and the dialog is the moment. **What is still not drawn** is a row
+  that a chill deleted.
 
 ---
 
@@ -1483,34 +1492,34 @@ language does not need.
 - **A relic may only bend a rule the game already has.** Banker scales vitae propagation, so
   propagation had to be designed first. This is the test to apply to any new relic.
 
-#### Growing relics step inside the blow
+#### Growing relics step between hits
 
-**A `grow-on-hit` relic steps on every landing, inside the sum**, and each landing is counted at
-the accumulator the one before it left. Stepping once after the whole blow would count every card
-of the turn at the figure the relic opened with, which is the same relic paying for one card.
+**A `grow-on-hit` relic steps on every hit that connects**, and each hit is counted at the
+accumulator the one before it left. Stepping once after the whole turn would count every card of
+the turn at the figure the relic opened with, which is the same relic paying for one card.
 
 - **The order of the queue is therefore a rule**, and it is the one thing to unlearn from any
   reading of a hand as an unordered set. The card that goes first pays for the card behind it, so
   the sort buttons and the hand's drag are not presentation. Paying attention to the order is the
   point.
-- **Landings, not cards.** A card an echo or a repeat seats three times steps the relic three times,
-  and each of those landings is itself counted at the figure the previous one left — so an echo
-  ladder compounds inside itself.
+- **Hits, not cards.** A card an echo or a repeat lands three times steps the relic three times,
+  and each of those hits is itself counted at the figure the previous one left — so an echo ladder
+  compounds inside itself.
 - **The shape is settled per card and the figures are asked per landing.** How many times a card
   lands is fixed when the card is reached; what each landing is worth is not. See
   `combat.LandingShape`.
-- **A miss pays nothing.** The growth is worked out with the sum and adopted only after the shock
-  roll, so a blow that never connected leaves the relic where it was.
-- **A relic's figure belongs to the sum, never to the card face.** A card says what the *card*
+- **A miss or a block pays nothing.** A hit that never connected leaves the relic where it was, and
+  the hits after it are counted at the figure it left.
+- **A relic's figure belongs to the hit's arithmetic, never to the card face.** A card says what the *card*
   does and nothing else — `1x DMG` whatever is on the fingers — because a growing relic's
   multiplier depends on where in the turn the card is counted and no printed figure could be
   right in every queue position. The flat relics go the same way: a fire relic doubling every
-  fire card would be invisible in the term's figure with nothing accounting for it. So the sum
-  is where every relic is read. **Every figure flies out of the card that produced it and that
-  card shakes as it lands, one at a time, in the order the engine applied them** — the card's
-  damage from the played card, each relic's multiplier from its own relic, and an echo's extra
-  term shaking the relic that bought the landing even though it puts no figure on the line. The
-  relic's badge steps as the sum is read. `combat.CardScaleBySeat` is the multiplier per worn
+  fire card would be invisible in the term's figure with nothing accounting for it. So each hit's
+  arithmetic is where every relic is read. **Every figure flies out of the card that produced it and
+  that card shakes as it lands**, one figure at a time within a hit and every hit at once — the
+  card's damage from the played card, each relic's multiplier from its own relic, and an echo's
+  extra hit shaking the relic that bought the landing even though it puts no figure on the line.
+  The relic's badge steps as the hits are counted. `combat.CardScaleBySeat` is the multiplier per worn
   seat, `combat.LandingSeats` is who bought an extra landing, and `Event.HandRelicScale` /
   `Event.HandLanding` / `Event.HandGrown` carry them.
 - **Cost is the exception and stays on the face.** A discount is not order-dependent, and a card
@@ -1604,7 +1613,7 @@ predicate at all, so the streak is worth the same on every card in the hand.
   on a turn holding a defend card, and **growth is applied before resets** — so a defending turn
   nets zero rather than depending on which rule the file lists first. The grammar has no `not`
   and this is the shape that means it does not need one.
-- **`turn-taken` is a new moment**, the first that is about a *turn* rather than a card, a blow or a
+- **`turn-taken` is a new moment**, the first that is about a *turn* rather than a card, a hit or a
   fight. Its predicate is matched against the turn as a whole: the rule fires when any card of the
   turn matches it.
 - **An empty turn is still a turn taken**, so a duelist chilled out of their whole turn keeps
@@ -1631,22 +1640,20 @@ second fire attack of a duel is already stronger than the first. That needed a s
 grows the *duelist's* copy of the accumulator, and `Session.AbsorbGrowth` reads it back on the
 win, before the screen throws that duelist away.
 
-- **Once per hit**, where a status is once per blow. Two fire cards in a hand are two steps, and
-  a fire card that Echo seats three times is three — it counts **landings** rather than cards.
-  **That is the combination it exists for**: the relics that multiply landings and the relics
-  that grow per landing are meant to compound into a build, not to politely ignore each other.
-  Echo plus Enflamed is +0.3x off one card.
-- **A blow is paid for after it lands, never during**. The four fire cards of a Four of a Kind
-  all hit at the relic's old strength and the +0.4x shows up on the next fire attack. A relic
-  that strengthened the blow that grew it would mean the first attack of a fight already wearing
-  its own bonus.
+- **Once per hit.** Two fire cards in a hand are two steps, and a fire card that Echo lands three
+  times is three — it counts **hits** rather than cards. **That is the combination it exists for**:
+  the relics that multiply landings and the relics that grow per hit are meant to compound into a
+  build, not to politely ignore each other. Echo plus Enflamed is +0.3x off one card.
+- **A hit is paid for after it lands, never during**. The first fire hit of a fight lands at the
+  relic's opening strength and the second at the stepped one; a relic that strengthened the hit
+  that grew it would mean the first attack of a fight already wearing its own bonus.
 - **The growth is linear, and deliberately.** The step reads the effect's raw `Amount`, never
   `Amount + Grown` — a growth that grew would compound, and no growing relic in the game does.
 - **A lost fight forfeits what it earned**, which needs no rule of its own: a defeat ends the run.
   **Selling forfeits it too**, by the shop's existing rule.
 - **It is relic state that changes mid-fight**, which is the thing a mid-fight save would have to
   write down. A run is only ever snapshotted between phases, so nothing writes it.
-- **Uncapped, like every other accumulator.** +0.1x a blow across a long fight is a big number by
+- **Uncapped, like every other accumulator.** +0.1x a hit across a long fight is a big number by
   the top of the tower, and nothing measures it.
 
 ### Atrophy, and the ladder as a relic
@@ -1676,55 +1683,49 @@ damage, the hand it forms, the card face — follows because the card genuinely 
 - **Nothing measures it**, and this one is the most likely of the new relics to be badly priced:
   `tools/handodds` measures which hands a deck can reach, and Atrophy changes that deck.
 
-### Echo, and the one blow a turn
+### Echo, and a hit per landing
 
-**The Echo Ring makes the blow's first attack card land three times — full DMG, two thirds, one
+**The Echo Ring makes the turn's first attack card land three times — full DMG, two thirds, one
 third.** Uncommon.
 
-**It is extra *terms in the sum*, not extra blows**, and that is the decision the relic forced. A
-turn lands one blow: every attack card is added up, the hand multiplies the total, and the result
-lands once. Three separate landings would have meant three misses to roll, three sets of defends and
-three status applications — a second shape for a round. So an echo seats the lead card again behind
-itself at a smaller figure, and the turn reads as *seven cards played, the first of them three
-times*.
+**Each landing is a hit of its own.** The lead card is seated again behind itself at a smaller
+figure, twice, and each of those is a hit with everything a hit carries: the hand's multiplier,
+every flat bonus, its own shock roll, its own statuses, a shield to eat it. The turn reads as
+*seven hits off five cards, the first card three times*.
 
-- **The echo never reaches the matcher.** `blowFor` has already run when `handEvent` adds the
-  echoes, so an echoed Bash does not turn a Pair into Three of a Kind. It pays into the hand the
-  real cards formed — which is also what stops one relic rewriting the hand ladder.
-- **The multiplier therefore multiplies the echoes too**, since they are in the base sum. Echo is
-  worth about two thirds of the lead card, times the hand — strongest in a big hand, which is the
+- **The echo never reaches the matcher.** The hand is read before the landings are laid out, so
+  an echoed Bash does not turn a Pair into Three of a Kind — which is also what stops one relic
+  rewriting the hand ladder.
+- **The multiplier multiplies every echo.** Echo is worth about two thirds of the lead card, plus
+  two more servings of every flat bonus, all times the hand — strongest in a big hand, which is the
   opposite of a relic that rescues a bad one.
-- **The player watches it happen.** The echo terms are seated on the lead card, so the sum in the
-  math box shows the first card's figure paying three times and each one flies out of that card.
-  That was the owner's requirement, not a side effect.
-- **`blow-formed` is a new moment and `echo-attack` a new verb**, and this is the first moment that
-  sees a *blow* rather than a card. `MaxEchoLandings` is 5 — a width on `Event`'s hand arrays,
-  which have to stay fixed for an Event to be comparable.
+- **The player watches it happen.** An echoed card's hits are three lines of arithmetic stacked
+  under it, each flying its own figure out. *(Owner's call.)*
+- **`blow-formed` is the moment that sees the turn's attacks as a set**, and `echo-attack` its verb.
+  `MaxEchoLandings` is 5 — a width on `Event`'s hand arrays, which have to stay fixed for an Event
+  to be comparable.
 - **Two echo relics add landings rather than multiplying**: three and three is five, not nine.
-- **A seven-term sum is wider than the box was laid out for**, so `layOutMath` now shrinks a line
-  that will not fit rather than letting a figure hang off the band.
 - **Nothing measures it**, like every other relic.
 
 **Flurry, Rend and Aftershock repeat a whole form**: every stab / slash
-/ crush card in the blow lands **twice, both at full damage**, uncommon. `repeat-card` is the second
+/ crush card of the turn lands **twice, both at full damage**, uncommon. `repeat-card` is the second
 verb at this moment and it is the one that does *not* diminish — an echo is a card ringing on, a
 repeat is the card played again.
 
-- **They deal exactly what Keen, Heavy and Needle deal today, and cost a tier more.** Two
-  full-strength landings and one doubled landing are the same figure inside the same sum. What the
-  repeat buys is **two hits instead of one**, and nothing in the game currently pays for a hit —
-  statuses land once per blow and are deduplicated. **So these three are, right now, a worse buy
-  than the commons they sit beside.** They are written for the hit mechanics that are coming, and
-  that is a deliberate bet rather than an oversight.
+- **They deal what Keen, Heavy and Needle deal on the card, and more once anything flat is in
+  play.** Two full-strength landings and one doubled landing are the same card term; what the
+  repeat buys is **two hits instead of one**, and a hit is now what pays — a flat bonus joins each,
+  a status lands on each, a drain takes a share of each and a growing relic steps on each. What
+  that makes them worth against the commons beside them is unmeasured.
 - **`Lead` is a new predicate, and the only one that is not a fact about the card.** It is what
   lets one pair of verbs cover both scopes: Echo says `{"Lead": true}`, a repeat says `{"Form":
   "crush"}`. A rule setting `Lead` at any other moment is refused at load, since no other moment
   knows which card leads.
 - **Repeats resolve before echoes** when a card has both, because an echo of a repeated card would
   be an echo of something that already happened twice.
-- **The event's term arrays widened from 9 to 25** — every card of a legal turn, each landing up to
-  `MaxEchoLandings` times. A repeat matches on form, so five crush cards is five cards landing
-  twice, where an echo only ever touched one card.
+- **The event's term arrays are 25 wide** — every card of a legal turn, each landing up to
+  `MaxEchoLandings` times. A repeat matches on form, so five crush cards is ten hits, where an echo
+  only ever touches one card.
 
 ### The discount relics — one per color
 
@@ -1983,7 +1984,7 @@ and a proposal landing in a full one is a sibling.
 | **form status / growth** | uncommon | a status relic and a growing relic per attack form |
 | **tier relics** | rare / uncommon | demote a whole tier, or pay for holding one |
 | **rung relics, flat** | common | one per rung, `add-hand-dmg`, the bonus derived from the rung's multiplier |
-| **rung relics, multiplying** | uncommon / rare | `scale-hand-damage` on one rung; **the top two rungs are rare**, because 4x on a Four of a Kind is a twentyfold blow |
+| **rung relics, multiplying** | uncommon / rare | `scale-hand-damage` on one rung; **the top two rungs are rare**, because 4x on a Four of a Kind makes every hit twentyfold |
 | **double-status** | rare | one per unordered status pair, triggered by an element holding one of the two |
 | **element repeats** | uncommon | the color half of Flurry / Rend / Aftershock |
 | **held-card relics** | common | DMG per matching card **kept back**, one per color and one per form |
@@ -2008,19 +2009,19 @@ matters when a batch lands is each tier's *share of a shelf draw*, not how many 
 
 ### A rung relic is a second multiplier, never a bigger hand
 
-`scale-hand-damage` scales the **blow**, after the ladder's own multiplier has been applied.
+`scale-hand-damage` scales **every hit**, after the ladder's own multiplier has been applied.
 `Event.Multiplier` stays the rung's figure and a relic may not touch it.
 
 **Folding the two together would say the *hand* changed** — a Pair under Pairing reading as
 2.3x — when what changed is that the player is wearing a relic. The banner, the hand row and the
-sum all show the rung actually built, and the relic's figure is drawn as its own term in the
-pane's pink, flying out of the relic that paid.
+hits all show the rung actually built, and the relic's figure is drawn as its own factor in every
+hit, in the pane's pink, flying out of the relic that paid.
 
 ### A flat rung relic is base damage, not a term
 
-`add-hand-dmg` raises the **DMG the hand is swung at**, for the length of one blow. A duelist on
+`add-hand-dmg` raises the **DMG the hand is swung at**, for the length of one turn. A duelist on
 14 wearing the Twinned Ring swings a Pair at 16, so every card in the hand grows by its own
-multiplier — a 1x card by 2, a 0.5x card by 1 — and the raise is inside every term before the ladder
+multiplier — a 1x card by 2, a 0.5x card by 1 — and the raise is inside every hit before the ladder
 multiplies anything.
 
 **It is not a flat term added after the cards are counted.** A flat term is worth the same 2
@@ -2028,19 +2029,19 @@ whether the Pair is two Jabs or two Skewers; a relic that raises DMG is worth mo
 is worth more, which is the relationship every other damage relic in the catalog has.
 
 **It is therefore not drawn as a term.** `Event.HandBonus` is still on the event, to be *said*
-rather than added: the ledger writes `Twinned Ring (Pair) +2 DMG` above the terms it raised, and
-the hand dialog shakes the relic as the first figure flies past it. A screen that also wrote it
-as a term would print a sum over its own total — and a relic folded silently into figures the
+rather than added: the ledger writes `Twinned Ring (Pair) +2 DMG` above the hits it raised, and
+the hand dialog shakes the relic as the first DMG figure flies past it. A screen that also wrote it
+as a term would print a hit over its own total — and a relic folded silently into figures the
 game already shows is a relic the player cannot tell apart from a better hand.
 
 So a rung relic can be written either as base damage the duelist gained or as a multiplier laid over
 the hand. The two are `add-hand-dmg` and `scale-hand-damage`, and neither one touches
 `Event.Multiplier`.
 
-**It is the one-blow counterpart of `add-dmg`, and the names are `dmg` on both for that reason.**
+**It is the one-turn counterpart of `add-dmg`, and the names are `dmg` on both for that reason.**
 `add-dmg` fires at `fight-start`, is unconditional, and is added to the duelist in
 `session.Equip` for the whole duel — Might's +10 is on every card of every turn. `add-hand-dmg`
-raises the same stat for one blow and only when the rung it names was satisfied. They stack
+raises the same stat for one turn and only when the rung it names was satisfied. They stack
 additively, and the strictly stronger shape per point is the unconditional one: a rung relic has to
 be earned before it pays, which is what lets its figure be bigger at the same rarity.
 
@@ -2085,7 +2086,7 @@ which is why the defend concepts have no concept relic, and why **Braced** reach
 sideways, through cost, rather than head on.
 
 `[?]` It is recorded as a **gap rather than a decision**: almost every relic in the catalog is
-about attacking, in a game whose one defensive mechanic — a shield eating a whole blow — is among
+about attacking, in a game whose one defensive mechanic — a shield eating a whole hit — is among
 its strongest. Filling it means a verb that raises, keeps or spends a shield, and that has not
 been designed.
 
@@ -2827,8 +2828,8 @@ hand and the discard, and fires only when that card is played.
 |---|---|---|
 | `heal-on-play` | as the card is played, **after a chill has taken what it takes** | restores life, capped at full |
 | `shield-on-play` | as the card is played | raises shields, through the same cap a Guard is under |
-| `damage-on-play` | the blow the card is played into | **adds to the duelist's DMG** for that calculation |
-| `damage-in-hand` | every turn the card is **kept back** | adds to the duelist's DMG for that turn's blow |
+| `damage-on-play` | the turn the card is played into | **adds to the duelist's DMG** for every hit of that turn |
+| `damage-in-hand` | every turn the card is **kept back** | adds to the duelist's DMG for every hit of that turn |
 | `scale-in-hand` | every turn the card is **kept back** | scales the duelist's DMG, as a percentage |
 | `vitae-in-hand` | every turn the card is **kept back** | pays vitae — **announced, never applied** |
 | `scale-in-combo` | when the card is one of the cards the hand was **formed from** | scales the duelist's DMG |
@@ -2837,10 +2838,10 @@ hand and the discard, and fires only when that card is played.
 
 - **A damage rider is a bonus to the *duelist*, not to the card** — the owner's words: "add 10
   to the duelist's base damage for that calculation and then use it for all of the calcs".
-  `Card.Damage` is linear in DMG, so raising the duelist's figure for the length of one sum
-  raises every term of the hand by the same proportion, and the printed bracket goes on summing
-  to the printed total. Adding to one card's amount would have made the bonus a fact about that
-  card instead of about the turn. **Flat first, then the percentages**, so a +10 and a doubling
+  `Card.Damage` is linear in DMG, so raising the duelist's figure for the length of one turn
+  raises every hit of the hand by the same proportion, and every printed hit goes on coming to its
+  printed figure. Adding to one card's amount would have made the bonus a fact about that card
+  instead of about the turn. **Flat first, then the percentages**, so a +10 and a doubling
   compose as `(DMG+10)×2`; two percentages compound. `combat.blowDMG` is the whole rule, and the
   DMG is **put back before the duelist is returned** — a bonus left standing would silently be a
   permanent upgrade.
@@ -2858,7 +2859,7 @@ hand and the discard, and fires only when that card is played.
   change what the player is paid. `KindVitae` is still emitted, but it is the feed's line rather
   than the payment — summing those events to move a purse is the old way and would now double-pay.
   The rules got a purse because a relic wanted to read one: see Rampant, which pays damage per vitae
-  held and would otherwise price a turn-three blow at turn-one rates.
+  held and would otherwise price a turn-three hit at turn-one rates.
 
 - **The vocabulary is a Go enum in `internal/combat`, not a data record.** Everything else a
   rune does happens to the run; a rider is the one thing read while a round resolves, and that
@@ -2874,7 +2875,7 @@ hand and the discard, and fires only when that card is played.
 - **Last one wins, and nothing stacks.** `Card.SetRider` replaces, so a second rune on a card is
   one upgrade forgetting the other rather than two ten-point heals adding to twenty life.
 - **A card a chill ate heals nothing**, which is why riders fire after the chill and before the
-  blow. A rider on the front card of a turn is exposed to the one thing that can delete it.
+  hits. A rider on the front card of a turn is exposed to the one thing that can delete it.
 - **A heal that restores nothing is silent.** The cap is applied first and the event carries what
   actually landed, so the log never reports life that the bar cannot show.
 
@@ -3306,22 +3307,21 @@ most. The player learns a deck. `go run ./tools/motifsheet` is where one is read
 ### Enemies do not form hands
 
 **An enemy's attack cards resolve one at a time, in the order its planner chose them**
-. Each lands its own blow at its own face damage; no hand is read, so
+. Each lands its own hit at its own face damage; no hand is read, so
 there is no multiplier and no hand off an enemy's turn. `Duelist.SoloAttacks`
 carries it and `resolveSoloAttacks` is the phase.
 
 **Hands are the player's axis and an enemy has no way into it.** A hand counts copies of a
 *concept*, and every creature card is `FormNone`, so what an enemy "formed" was an accident of
 what its planner could afford. Now
-three cards on the table mean three blows, which is a round the player can read off the table
+three cards on the table mean three hits, which is a round the player can read off the table
 before pressing DUEL!.
 
 - **The player's shields answer the whole turn.** A shield stands through the opposing turn and
-  eats the heaviest blow in it rather than the first — see §Shields. Spending one on whichever
+  eats the heaviest hit in it rather than the first — see §Shields. Spending one on whichever
   card came round first would make it worth least against exactly the opponents that swing most.
-- **One shock roll per turn, not one per card.** A shock is "the turn's attack misses". Rolling per
-  card would change what the status means and would advance the package's one random stream a
-  different number of times each round.
+- **A shock rolls once per hit**, exactly as it does against a hand-forming attacker — see
+  *Lightning is a roll*.
 - **It is a flag on the duelist, never a rule about side B.** The engine has no idea which side is a
   person and must not learn — a headless simulation plays both sides.
 - **`[?]` Whether a boss or an affix can give an enemy hands back.** The flag is per duelist, so
@@ -3343,7 +3343,7 @@ most damage the budget buys rather than for the best combination.
 what keeps a card a damage-maximizing pass would never reach from being dead content.
 
 **`Copies` is the difficulty dial and it is a blunt one.** With no hand to form, four copies of a
-1 AP card is four small blows, so the dial is simply *how many cards a turn holds*. The sharper
+1 AP card is four small hits, so the dial is simply *how many cards a turn holds*. The sharper
 one is **variety**: a creature with three different attacks lands all three, and how spiky that
 set is decides how much one shield takes off the turn.
 
@@ -3679,10 +3679,10 @@ own earlier rows.
 
 What it is for is two questions at two scales, and the design answers both on one panel:
 
-- **"What just happened?"** — a blow written as the sum it was: each landing, what the card was
+- **"What just happened?"** — every hit written as the arithmetic it was: each landing, what the card was
   worth, which relic multiplied it and which relic bought the extra landing, and what the hand's
-  multiplier did to the total. The hand dialog already acts this out while the blow lands and then
-  it is gone; the ledger is where it keeps.
+  multiplier did to it, and what became of it. The hand dialog acts this out while the hits land and
+  then it is gone; the ledger is where it keeps.
 - **"How did my run go, and where did it go wrong?"** — every fight as one line: floor, opponent,
   won or lost, in how many rounds, for how much damage. Clicking one opens it.
 
@@ -3770,13 +3770,14 @@ written down.
 unwinnable floor looks exactly like a run of bad draws, no test goes red, and every price and
 every stat below is therefore a judgment.
 
-- `[?]` **Nothing has measured the roster against one blow a turn.** Enemy HP and DMG are tuned
-  by hand.
+- `[?]` **Nothing has measured the roster against a hit per card.** Enemy HP and DMG are tuned
+  by hand, and every flat bonus, status, drain and shock now scales with how many hits a turn
+  throws.
 - `[?]` **How enemies scale up the tower.** Records carry no level term; the ascent curve is the
   only thing that scales one.
 - `[?]` **Whether the ascent curve should be flatter**, now that it compounds on top of the
   roster's own progression — or whether the roster should flatten and let the curve carry it.
-- `[?]` **Whether a Pair relic is priced right.** A blow satisfies every rung its cards reach, so
+- `[?]` **Whether a Pair relic is priced right.** A turn satisfies every rung its cards reach, so
   the Pair family is near-unconditional while still being priced as a conditional one.
 
 **Mechanics that exist and are unfinished:**

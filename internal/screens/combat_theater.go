@@ -62,18 +62,18 @@ const (
 	// status.
 	anchorRelic
 
-	// anchorSumLine is the hand dialog's line of figures, in the feed's collapsed band.
+	// anchorSumLine is a hit's line of figures in the hand dialog, under the card that threw it.
 	anchorSumLine
 
-	// anchorBlow is where this turn's damage figure was last seen, and it is the one anchor with a
-	// rule rather than a rectangle: **the sum line when the turn scored a hand, the acting card's
+	// anchorBlow is where a hit's damage figure was last seen, and it is the one anchor with a rule
+	// rather than a rectangle: **the hit's own line when the turn scored a hand, the acting card's
 	// own seat when it did not**.
 	//
-	// It exists because `KindDamage` means two different pictures. A player's turn is one blow
-	// scored off a hand, so its figure is already on screen in the sum and should travel from
-	// there. A solo attacker emits no `KindHand` at all — every attack lands its own face damage,
-	// one card at a time — so there is no sum, and the figure has to come out of the card that
-	// swung. `soloAttacker(side)` is the predicate that already knows which.
+	// It exists because `KindDamage` means two different pictures. A hand-forming turn has every
+	// hit's figure on screen at the end of its line, so the figure travels from there. A solo
+	// attacker emits no `KindHand` at all — every attack lands its own face damage, one card at a
+	// time — so there is no line, and the figure has to come out of the card that swung.
+	// `soloAttacker(side)` is the predicate that already knows which.
 	anchorBlow
 
 	// anchorAPFigure is the action-point figure on the button strip, under the left end of the AP
@@ -112,9 +112,9 @@ func (a anchor) String() string {
 	case anchorRelic:
 		return "the relic named on the event"
 	case anchorSumLine:
-		return "the sum line"
+		return "the hit's line"
 	case anchorBlow:
-		return "wherever this turn's figure last was"
+		return "wherever this hit's figure last was"
 	case anchorAPFigure:
 		return "the action-point figure"
 	case anchorHandRow:
@@ -126,7 +126,7 @@ func (a anchor) String() string {
 // gesture is how a thing gets from its source to its target.
 //
 // **A flown thing came off something; a popped thing is punctuation the game supplied.** That
-// distinction is the whole grammar of the sum box and it generalizes: if the player is meant to be
+// distinction is the whole grammar of the hand dialog and it generalizes: if the player is meant to be
 // able to ask "where did that come from", it flies.
 type gesture int
 
@@ -212,7 +212,7 @@ var choreography = map[combat.EventKind]flightSpec{
 	},
 	combat.KindDamage: {
 		anchorBlow, anchorTargetCard, gestureFly,
-		"the figure travels into the card whose bar it empties, and the bar drops on arrival",
+		"each hit's figure travels into the card whose bar it empties, and the bar drops on arrival",
 	},
 	combat.KindDefeated: {
 		anchorNone, anchorNone, gestureNone,
@@ -220,7 +220,7 @@ var choreography = map[combat.EventKind]flightSpec{
 	},
 	combat.KindHand: {
 		anchorActorSeat, anchorSumLine, gestureFly,
-		"each card's own figure flies out of that card into the sum - the dialog that started this",
+		"each card's own figure flies out of that card into its hit's line - the dialog that started this",
 	},
 	combat.KindChilled: {
 		anchorActorBadges, anchorActorSeat, gestureFly,
@@ -232,7 +232,7 @@ var choreography = map[combat.EventKind]flightSpec{
 	},
 	combat.KindMissed: {
 		anchorNone, anchorSumLine, gestureStrike,
-		"one shock roll takes the whole turn, so what is struck out is the total, not one card",
+		"a shock rolls once per hit, so what is struck out is that hit's line and nothing else",
 	},
 	combat.KindBurned: {
 		anchorActorBadges, anchorActorCard, gestureFly,
@@ -398,14 +398,19 @@ type combatTheater struct {
 	// that raises it — see startRound.
 	breaksStaged bool
 
-	// mathBox is the hand dialog: the blow's arithmetic acted out across the band above the hand
-	// on the beat the hand fires. See combat_mathbox.go.
+	// mathBox is the hand dialog: every hit's arithmetic acted out under its card on the beat the
+	// hand fires. See combat_mathbox.go.
 	//
 	// **It is the one thing on this screen that can stop the playback cursor.** Every other
 	// animation runs on its own clock beside the log; this one is a beat *of* the log, because a
 	// sum revealed a figure at a time does not fit inside a single event's dwell. It still
 	// decides nothing — `ResolveRound` settled the round before any of it was drawn.
 	mathBox handMathBox
+
+	// walked is every position in this round's log the hand dialog has already drawn — a hit that
+	// landed or missed, shown when its line finished — so playback walks past it without a second
+	// picture. See CombatScene.throwColumn.
+	walked map[int]bool
 }
 
 // combatTheater answers the shared contract. **The assertion is the point of the interface**:

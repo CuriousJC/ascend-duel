@@ -196,12 +196,12 @@ func playTurn(
 		return events, actor, target
 	}
 
-	// **The attack phase is one blow, whatever it was made of.** Every attack card queued is
-	// announced, then the hand they form is announced, then a single figure of damage lands. Five
-	// Bashes are not five hits; they are one Four of a Kind.
+	// **The attack phase is a hit per landing.** Every attack card queued is announced, then the
+	// hand they form is announced, then every card lands its own hit — five Bashes are five hits
+	// under one Four of a Kind. See hit.go.
 	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands, src.Roll)
 
-	// **Nothing follows the blow**, so a duelist who fell to it closes no turn: the streak below is
+	// **Nothing follows the hits**, so a duelist who fell to one closes no turn: the streak below is
 	// a fact about turns taken and a corpse takes none.
 	if !actor.Alive() || !target.Alive() {
 		return events, actor, target
@@ -346,237 +346,6 @@ func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist
 	return events, tickStatuses(d)
 }
 
-// resolveAttackPhase is the whole of one side's offense: every attack card it queued, the hand
-// they form, and the single blow that follows.
-//
-// **One blow per turn** *(2026-08-14)*. Attack cards no longer resolve one at a time; they are
-// announced, and then `BlowFor` reads them as a set and says what they amount to. Cards that
-// contribute to no hand are announced and then ignored — `Bash, Jab, Bash` is a Pair and the
-// Jab is not in it, so it adds nothing to the figure.
-//
-// The order inside the blow is: shock roll, base damage from the blow's cards, the hand
-// multiplier, the attacker's earth weight, the defender's arcane vulnerability, then the
-// defender's raised cards. **Weight sits where it does because it is a property of the attacker** —
-// it says how hard they can still swing — and vulnerability follows it because it is a property of
-// the body being hit, so everything the defender actively *does* happens to a blow that both
-// statuses have already shaped.
-func resolveAttackPhase(
-	events []Event,
-	side Side,
-	actor, target Duelist,
-	turn []Slot,
-	held []Card,
-	round int,
-	hands []Hand,
-	rng *rand.Rand,
-) ([]Event, Duelist, Duelist) {
-	targetSide := other(side)
-
-	// **A solo attacker takes a different phase entirely, not a special case inside this one.**
-	// The two are different shapes: one announces everything and then lands a single figure, the
-	// other resolves each card completely before the next one starts. Threading a flag through
-	// the blow, the multiplier and the hand event would leave a function whose every step had
-	// two readings.
-	if actor.SoloAttacks {
-		return resolveSoloAttacks(events, side, actor, target, turn, round, rng)
-	}
-
-	// Every attack card is announced whether or not it ends up in the hand. **A slot that
-	// resolved has to produce a beat**, because the screen counts one per slot to know how far
-	// through the round playback is — see TestEverySlotIsEitherTakenOrChilled.
-	attacks := 0
-	for _, slot := range turn {
-		if slot.Card.Category() != CategoryAttack {
-			continue
-		}
-		attacks++
-		events = append(events, Event{
-			Kind:    KindAction,
-			Side:    side,
-			Action:  slot.Card.Concept,
-			Element: slot.Card.Element,
-			Round:   round,
-		})
-	}
-	// **A turn with no attack in it still forms a hand** *(owner's call, 2026-09-02)*, and the
-	// `attacks` count above is only about announcements: every attack card gets its own beat, and a
-	// defense gets one later in its own phase. What used to stop here was the whole scoring of the
-	// turn, so a hand of nothing but shields was the one hand the ladder could not see — which
-	// makes a shield build unreachable the moment a relic or an authored card wants one. The blow it
-	// forms sums to zero and is declined below, before anything of the target's is spent.
-	_ = attacks
-
-	// **The ladder is read through the actor's own stones**, so a run that has bought a Pair
-	// stone plays a different ladder from the one its opponent does. A duelist holding none reads
-	// the table handed in, unchanged and uncopied — see stone.go.
-	blow := blowFor(turn, actor.handsFrom(hands))
-	if len(blow.Cards) == 0 {
-		return events, actor, target
-	}
-
-	// The hand is announced before the blow lands, so a boosted figure never arrives before the
-	// reason for it. **Every turn with an attack in it announces a hand** — a lone attack is the
-	// No Hand, which is a catalog entry like any other rather than an absence.
-	//
-	// **It also carries the sum**, which is what the damage below is taken from — see handEvent.
-	//
-	// **A hand buys damage and nothing else** *(2026-08-17)*. It used to be able to bank action
-	// points or take actions off the opponent's next turn, which is why there was a phase here
-	// paying those out before the blow landed. Statuses come from elements and relics now, so the
-	// multiplier is the whole reward and there is nothing to pay before the roll.
-	swung, grown := handEvent(side, blow, turn, held, actor, round)
-	events = append(events, swung)
-
-	// **A blow of nothing is counted and not thrown** *(owner's call, 2026-09-02)*. The hand above
-	// is named, multiplied and written into the account like any other; what stops here is the
-	// *attack*, so a turn of shields cannot spend the target's shield, clear the defenses they
-	// raised, roll for a miss, land a status or grow a relic. The gate is the sum the hand carries,
-	// which is the same figure the screen has just drawn — a card given damage, or a shield card
-	// authored with some, walks straight past it and is an attack like any other.
-	if swung.Amount <= 0 {
-		return events, actor, target
-	}
-
-	// A shocked attacker may miss outright, and misses before anything else happens — no defense
-	// spent, no status applied. The attack did not occur.
-	//
-	// **This is a roll**, and the only one in the package. See shockMissPct. Nothing is consumed
-	// by it: a shock rolls on every attack it outlives, so the duelist comes back unchanged.
-	if attackMisses(actor, rng) {
-		struck := turn[strikeSlot(blow, turn)].Card
-		events = append(events, Event{
-			Kind:    KindMissed,
-			Side:    side,
-			Action:  struck.Concept,
-			Element: struck.Element,
-			Target:  targetSide,
-			Round:   round,
-		})
-		return events, actor, target
-	}
-
-	// **A shield eats the blow whole, before any of the arithmetic below runs.** One blow is one
-	// attack, so one shield is the whole turn — see blockedByShield, which says why that is safe
-	// today and what would stop it being so.
-	if blocked := false; target.Shields > 0 {
-		at := strikeSlot(blow, turn)
-		events, target, blocked = blockedByShield(events, side, target, turn[at].Card, at, round)
-		if blocked {
-			return events, actor, target
-		}
-	}
-
-	// **Base damage is the cards in the hand, and the multiplier is DMG on top.** DMG is what one
-	// Bash deals at this duelist's strength, which is the figure the duelist card shows — so
-	// `20 + 10 x 1.5 = 35` for a pair of Bashes at Str 10, exactly as the design states it.
-	//
-	// That sum is the announcement's `Amount`, taken rather than repeated: the feed prints the
-	// arithmetic, and a second copy of it here is the one way the printed sum could be wrong.
-	dmg := blunt(swung.Amount, actor.weight())
-
-	// **Then the target's own vulnerability**, which is the one modifier read off the duelist being
-	// hit rather than the one swinging — see EffectDamageAmplification. Weight says how hard the
-	// attacker can still swing and vulnerability says how hard this body takes it.
-	//
-	// **Nothing reduces the figure after this point** *(2026-09-16)*. A percentage guard used to sit
-	// here, multiplying what was left; the verb is gone, and the only defense in the game now works
-	// earlier and differently — a shield eats a whole blow before it is ever totalled.
-	dmg = amplify(dmg, target.vulnerability())
-
-	// Every defense is spent on the turn it answered.
-	target = ClearDefenses(target)
-
-	target.CurrentLife = reduce(target.CurrentLife, dmg)
-	events = append(events, Event{
-		Kind:   KindDamage,
-		Side:   side,
-		Target: targetSide,
-		Amount: dmg,
-		Life:   target.CurrentLife,
-		Round:  round,
-	})
-
-	// **The blow lands whatever the attacker's relics say it does, and it does so because the hand
-	// was formed rather than because the blow hurt.** A hand halved by a Defend still connected, and
-	// making the status conditional on the final figure would mean a defensive card silently
-	// un-applied something the attacker had already paid for.
-	//
-	// **Every status comes off a worn relic** *(2026-08-16, re-expressed in the grammar 2026-08-17)*.
-	// A rainbow thrown by a duelist wearing two elemental relics lands two statuses; thrown by an
-	// enemy it lands none. The colors still count toward the hand either way — what a relic buys is
-	// the status, not the multiplier.
-	//
-	// The cards of the hand are what the relics match against, so a form relic or a concept relic
-	// reaches this the same way an elemental one does. `statusesFrom` deduplicates, which is what
-	// keeps two fire cards from announcing one burn twice.
-	blowCards := make([]Card, 0, len(blow.Cards))
-	for _, i := range blow.Cards {
-		blowCards = append(blowCards, turn[i].Card)
-	}
-	// **The accumulator was moved inside the sum**, term by term, and this is where it is adopted:
-	// after the miss check above, so a blow that never connected pays no relic, and after the damage
-	// has landed, so the first attack of a fight is never already wearing its own bonus. See
-	// handEvent and Duelist.GrowOnLanding.
-	actor = grown
-
-	// **A drain is taken out of the figure that landed**, so it sits here: after the shield and the
-	// miss, which are the two ways a blow produces no figure at all, and after the damage event, so
-	// the feed reads the hit and then what it gave back. See DoDrainDamage.
-	//
-	// **Nothing drains in resolveSoloAttacks**, and that is the relics-are-the-duelist's rule rather
-	// than an omission: only a duelist wears relics and no duelist attacks solo. The day a creature
-	// wears one, this is the second place it has to land.
-	for _, dr := range actor.drainsFrom(blowCards) {
-		before := actor.CurrentLife
-		actor.CurrentLife = restore(actor.CurrentLife, dmg*dr.Pct/100, actor.MaxLife)
-		// **A drain that restored nothing writes no beat**, exactly as the heal rider's does: a
-		// duelist already at full life has a relic that did not fire, and a flight carrying a zero
-		// out of the ring says it did.
-		if actor.CurrentLife == before {
-			continue
-		}
-
-		events = append(events, Event{
-			Kind:   KindDrained,
-			Side:   side,
-			Target: side,
-			Relic:  dr.Relic,
-			Amount: actor.CurrentLife - before,
-			Life:   actor.CurrentLife,
-			Round:  round,
-		})
-	}
-
-	for _, a := range actor.statusesFrom(blowCards) {
-		applied, amount, ok := applyStatus(target, a.Status, actor)
-		if !ok {
-			continue
-		}
-		target = applied
-		events = append(events, Event{
-			Kind:   KindStatus,
-			Side:   side,
-			Target: targetSide,
-			Status: a.Status,
-			Relic:  a.Relic,
-			Amount: amount,
-			Life:   target.CurrentLife,
-			Round:  round,
-		})
-	}
-
-	if !target.Alive() {
-		events = append(events, Event{
-			Kind:   KindDefeated,
-			Side:   side,
-			Target: targetSide,
-			Round:  round,
-		})
-	}
-
-	return events, actor, target
-}
-
 // healAtTurnStart is every worn regeneration relic firing, at the top of this duelist's own turn.
 //
 // **It is a whole function rather than four lines inside playTurn** because it is the only thing
@@ -606,21 +375,17 @@ func healAtTurnStart(events []Event, side Side, actor Duelist, round int) ([]Eve
 	return events, actor
 }
 
-// blockedByShield spends one of the target's shields against one incoming attack, and reports
-// whether the attack was eaten. A blocked attack lands nothing at all: no damage, no life change,
-// and no KindDamage for the feed to draw.
+// blockedByShield spends one of the target's shields against one incoming hit, and reports whether
+// the hit was eaten. A blocked hit lands nothing at all: no damage, no life change, and no KindDamage
+// for the feed to draw.
 //
-// **It is checked before weight, vulnerability and the guards** — everything downstream shapes a
-// figure, and a blocked attack never produces one. Ordering it after them would spend a shield on
-// arithmetic nobody sees.
+// **It is checked before weight and vulnerability** — everything downstream shapes a figure, and a
+// blocked hit never produces one. Ordering it after them would spend a shield on arithmetic nobody
+// sees.
 //
-// **A hand-forming attacker costs exactly one shield, and that deletes its whole turn.** Nothing
-// in the game reaches it — every creature is a solo attacker and no creature holds shields, so the
-// only shielded duelist is the player and the only thing swinging at them resolves card by card.
-// It is written down rather than guarded against because the day an enemy forms hands is the day
-// this becomes a dominant strategy rather than a decision, and a silent branch would not
-// say so.
-func blockedByShield(events []Event, side Side, target Duelist, card Card, slot, round int) ([]Event, Duelist, bool) {
+// `slot` is the card's seat in the turn and `hit` is which term of the hand this was; a solo
+// attacker has no hand and passes zero.
+func blockedByShield(events []Event, side Side, target Duelist, card Card, slot, hit, round int) ([]Event, Duelist, bool) {
 	target, spent := target.spendShield()
 	if !spent {
 		return events, target, false
@@ -632,6 +397,7 @@ func blockedByShield(events []Event, side Side, target Duelist, card Card, slot,
 		Target: other(side),
 		Amount: target.Shields,
 		Slot:   slot,
+		Hit:    hit,
 		Round:  round,
 	})
 	return events, target, true
@@ -640,23 +406,19 @@ func blockedByShield(events []Event, side Side, target Duelist, card Card, slot,
 // resolveSoloAttacks is the attack phase of a duelist whose cards form no hands: **every attack
 // resolves completely, in queue order, before the next one starts**.
 //
-// **No hand is read and no hand event is emitted** *(2026-08-17)*. That is the whole of the
-// difference — there is no set to score, so there is no multiplier. What lands is the sum of what
-// was played, one figure at a time, and the screen writes a sentence per card because there is no
-// phase line to carry them.
+// **No hand is read and no hand event is emitted.** There is no set to score, so there is no
+// multiplier: each card lands its own face damage as its own hit, and the screen writes a sentence
+// per card because there is no hand line to carry them.
 //
-// Three things it keeps deliberately in step with the hand-forming phase, because they are rules about
-// attacking rather than rules about hands:
+// What it shares with the hand-forming phase in hit.go, because these are rules about attacking
+// rather than rules about hands:
 //
 //   - **One beat per slot.** Every attack card announces itself with a KindAction, so playback can
 //     still count how far through the round it is — see TestEverySlotIsEitherTakenOrChilled.
-//   - **One shock roll for the turn, not one per card.** A shock is "the turn's attack misses", and
-//     rolling per card would both change what the status means and advance the one random stream in
-//     the package a different number of times per round. A shocked solo attacker misses with
-//     everything and says so on each card.
-//   - **Weight, vulnerability, then defenses, then statuses**, in that order, for the reason the
-//     other phase gives: weight is a property of the attacker and vulnerability of the target, so
-//     everything the defender actively does happens to a blow both of them have already shaped.
+//   - **A shock rolls once per hit.** Each attack is its own chance to miss.
+//   - **Weight, vulnerability, then shields, then statuses**, in that order: weight is a property of
+//     the attacker and vulnerability of the target, so everything the defender actively does happens
+//     to a hit both of them have already shaped.
 func resolveSoloAttacks(
 	events []Event,
 	side Side,
@@ -668,11 +430,9 @@ func resolveSoloAttacks(
 	targetSide := other(side)
 
 	attacked := false
-	missed := false
-	rolled := false
 
-	// **Which attacks the shields eat is decided before the turn starts**, not as each blow
-	// arrives. See shieldedSlots.
+	// **Which attacks the shields eat is decided before the turn starts**, not as each hit arrives.
+	// See shieldedSlots.
 	eaten := shieldedSlots(actor, target, turn)
 
 	for i, slot := range turn {
@@ -689,29 +449,24 @@ func resolveSoloAttacks(
 			Round:   round,
 		})
 
-		// The roll happens on the first card that could actually swing, and once only. Rolling
-		// before the loop would advance the stream for a turn that never reaches one.
-		if !rolled {
-			missed, rolled = attackMisses(actor, rng), true
-		}
-		if missed {
+		if attackMisses(actor, rng) {
 			events = append(events, Event{
 				Kind:    KindMissed,
 				Side:    side,
 				Action:  slot.Card.Concept,
 				Element: slot.Card.Element,
 				Target:  targetSide,
+				Slot:    i,
 				Round:   round,
 			})
 			continue
 		}
 
-		// **One shield, one attack**, and the attacks it eats were chosen before the turn began —
-		// the heaviest first, by shieldedSlots. Spending is still here rather than up there because
-		// a missed turn spends nothing: the roll above returns before this line, so a creature that
-		// swings at nothing costs the player no shield.
+		// **One shield, one hit**, and the hits it eats were chosen before the turn began — the
+		// heaviest first, by shieldedSlots. Spending is here rather than up there because a missed
+		// hit spends nothing: the roll above continues before this line.
 		if blocked := false; eaten[i] && target.Shields > 0 {
-			events, target, blocked = blockedByShield(events, side, target, slot.Card, i, round)
+			events, target, blocked = blockedByShield(events, side, target, slot.Card, i, 0, round)
 			if blocked {
 				continue
 			}
@@ -722,12 +477,15 @@ func resolveSoloAttacks(
 
 		target.CurrentLife = reduce(target.CurrentLife, dmg)
 		events = append(events, Event{
-			Kind:   KindDamage,
-			Side:   side,
-			Target: targetSide,
-			Amount: dmg,
-			Life:   target.CurrentLife,
-			Round:  round,
+			Kind:    KindDamage,
+			Side:    side,
+			Target:  targetSide,
+			Action:  slot.Card.Concept,
+			Element: slot.Card.Element,
+			Slot:    i,
+			Amount:  dmg,
+			Life:    target.CurrentLife,
+			Round:   round,
 		})
 
 		// One card, and the same relics the other phase reads. An enemy wears none, so this does
@@ -767,219 +525,6 @@ func resolveSoloAttacks(
 	return events, actor, target
 }
 
-// handEvent packages what the attack phase formed for the screen: which hand, the multiplier,
-// which cards of the turn earned it, and the arithmetic they come to.
-//
-// **It is the attack phase's one line in the feed** *(2026-08-14)*, so it carries everything that
-// line has to say. The individual attack cards are still announced — a slot that resolved has to
-// produce a beat — but the screen draws no sentence for them: five cards making one blow read as
-// five blows, which is the thing one-blow-per-turn was meant to stop saying.
-// strikeSlot is the turn index of the attack the blow is narrated by: the earliest attack card in
-// the scoring set, or its first card for a blow that holds none.
-//
-// **Earliest rather than heaviest.** On the commonest turn those are the same card, and picking by
-// damage instead would move which card a shield is drawn breaking on every turn in the game.
-//
-// **A blow with no attack in it never reaches a caller of this**: it sums to zero and
-// resolveAttackPhase declines it. The fallback is here so the function is total rather than because
-// something depends on it.
-func strikeSlot(blow Blow, turn []Slot) int {
-	for _, i := range blow.Cards {
-		if i >= 0 && i < len(turn) && turn[i].Card.formsBlow() {
-			return i
-		}
-	}
-	return blow.Cards[0]
-}
-
-// scoringCards is every card that paid into the blow, in turn order — the hand's own cards plus
-// every attack the turn played. **The scoring set, not the turn**: a defense that made no hand is
-// not here, having neither swung nor been counted.
-func scoringCards(blow Blow, turn []Slot) []Card {
-	out := make([]Card, 0, len(blow.Cards))
-	for _, i := range blow.Cards {
-		if i >= 0 && i < len(turn) {
-			out = append(out, turn[i].Card)
-		}
-	}
-	return out
-}
-
-func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, round int) (Event, Duelist) {
-	e := Event{
-		Kind:       KindHand,
-		Side:       side,
-		Hand:       blow.Hand.ID,
-		Multiplier: blow.Multiplier,
-		Round:      round,
-	}
-
-	// **The riders that speak to damage are folded into DMG here, for the length of this sum
-	// alone** *(owner's call, 2026-09-02)*. `CardDamage` reads `actor.DMG`, so raising it is what
-	// makes a +10 arrive in every term of the bracket rather than in one of them — see blowDMG,
-	// which is the whole rule.
-	//
-	// **It is put back before the actor is returned.** The caller adopts this duelist for the
-	// growth the loop below records; a DMG left raised would make the bonus permanent, which is
-	// the one way this could quietly become a different mechanic.
-	//
-	// **A rung relic joins them** *(owner's call, 2026-09-14)*. `add-hand-dmg` was a flat term
-	// added to Base after the cards were counted, so a Twinned Ring on a Pair of a 1x card and a
-	// 0.5x card paid a flat 2 whatever the Pair was made of. What the owner wants it to be is
-	// **base damage**: a duelist on 14 swings the whole hand at 16, so every card in it scales —
-	// the 1x card by 2, the 0.5x card by 1 — and the relic is worth more to a hand that is worth
-	// more. It is folded in before the percentages for blowDMG's own reason: flat first.
-	baseDMG := actor.DMG
-	e.HandBonus, e.HandBonusSeats = HandBonus(actor.WornRelics(), blow.Satisfied)
-	actor.DMG = blowDMG(baseDMG+e.HandBonus, turn, held, blow)
-
-	// **Both figures, because the screen shows the climb rather than the raise.** A rung relic's
-	// raise goes through the riders with the rest of the DMG, so what it is worth to this blow is
-	// the distance between these two and not HandBonus. See Event.HandDMG.
-	e.HandDMG, e.HandDMGBare = actor.DMG, blowDMG(baseDMG, turn, held, blow)
-
-	// **The blow is added up here and nowhere else.** The attack phase takes its damage figure off
-	// this event rather than recomputing it, so the sentence the feed prints and the damage that
-	// lands cannot be two different sums — and the dialog flying the figures down reads the same
-	// per-card amounts the sum was made of.
-	//
-	// A card past the array's width is dropped from the *bracket* rather than from the sum, which
-	// is the posture HandCards already takes: the arithmetic on screen may be short of a term
-	// before the damage that lands is wrong.
-	// **An echo seats the lead card again, at a smaller figure, right behind itself** *(2026-08-22,
-	// owner's call)*. It is deliberately a term in this sum rather than a second blow: the turn
-	// still lands once, the hand still multiplies one figure, and what the player sees is the first
-	// card paying three times — "seven cards played, the first one three of them".
-	//
-	// **The echo does not reach the matcher.** `blowFor` has already run, so an echoed Bash does
-	// not turn a Pair into Trips; it pays into the hand the real cards formed.
-	// **The accumulator moves inside this loop as of 2026-08-26** *(owner's call)*. It used to step
-	// once, after the whole blow had landed, so every fire card of a turn was counted at the figure
-	// the relic opened the turn with. It now steps on every landing, which makes the order of the
-	// cards a decision: the first fire card fires bare and pays for the second one to fire bigger.
-	//
-	// **The shape is settled per card and the figures are asked for per landing.** How many times a
-	// card lands is a fact about the relics when the card is reached; what each landing is worth is
-	// asked again at the accumulator the landing before it left. See LandingShape.
-	for n, i := range blow.Cards {
-		card := turn[i].Card
-		shape := LandingsOf(actor.WornRelics(), card, n == 0)
-
-		for t := 0; t < shape.Count(); t++ {
-			d := shape.Amount(t, actor.CardDamage(card))
-			e.Base += d
-
-			if e.HandCardCount < len(e.HandCards) {
-				at := e.HandCardCount
-				e.HandCards[at] = i
-				e.HandAmounts[at] = d
-				e.HandCardBase[at] = shape.Amount(t, card.Damage(actor.DMG))
-				// **The same shape applied to the percentage rather than to the damage**, which is
-				// what lets the sum be written `(12 x 3)` instead of `36`. It is a second reading
-				// of one landing and never a second arithmetic: the figure that lands is the line
-				// above. See Event.HandCardPct.
-				e.HandCardPct[at] = shape.Amount(t, card.Amount())
-				e.HandRelicScale[at] = CardScaleBySeat(actor.WornRelics(), card)
-				e.HandCardCount++
-				if t > 0 {
-					e.EchoTerms++
-					// **Only the extra landings are attributed to a relic.** The card's own first
-					// landing is the card being played, which needed no relic to seat it.
-					e.HandLanding[at] = LandingSeats(actor.WornRelics(), card, n == 0)
-				} else {
-					// **A row of falses rather than nothing** *(2026-09-17)*. The card's own
-					// landing is nobody's doing, and while this field was a fixed array that was
-					// the zero value and every reader could index it. A slice's zero value is nil,
-					// so leaving it unset made "no relic bought this term" indistinguishable from
-					// a panic at the first reader that asked.
-					e.HandLanding[at] = make([]bool, len(actor.WornRelics()))
-				}
-
-				// **After the step, not before**, so the row of badges reads as the number this
-				// term has just earned rather than as the number it was counted at.
-				actor = actor.GrowOnLanding(card)
-				// **Built rather than written into** *(2026-09-17)*. This indexed a fixed
-				// [MaxWornRelics]int; the seat row is a slice now and an Event's zero value holds a
-				// nil one, so a duelist wearing nothing indexed past the end of it. One slice per
-				// term, exactly as long as the row it describes — which is also what the two lines
-				// above already hand back.
-				worn := actor.WornRelics()
-				grown := make([]int, len(worn))
-				for seat, w := range worn {
-					grown[seat] = w.Grown
-				}
-				e.HandGrown[at] = grown
-				continue
-			}
-
-			// A term past the array's width is dropped from the *bracket* rather than from the sum,
-			// which is the posture HandCards already takes: the arithmetic on screen may be short
-			// of a term before the damage that lands is wrong. The growth still happens.
-			actor = actor.GrowOnLanding(card)
-		}
-	}
-
-	// **The rung travels beside the terms** — see Event.RungCards. It is the cards that made the
-	// hand rather than the cards that paid into it, and the screen is the only reader.
-	for _, i := range blow.Rung {
-		if e.RungCardCount >= len(e.RungCards) {
-			break
-		}
-		e.RungCards[e.RungCardCount] = i
-		e.RungCardCount++
-	}
-
-	lead := turn[strikeSlot(blow, turn)].Card
-
-	// **The rung's own figure is not a term of Base and has not been since 2026-09-14** — it was
-	// read before the cards, into the DMG they were all swung at. See the fold above; it is still
-	// reported on the event so a screen can say which relic raised the figure.
-
-	// **The cards the turn kept back pay after the ones it spent.** Same seat, same reason: it
-	// is a term the hand contributed rather than a number a relic moved on a card.
-	e.HeldBonus, e.HeldBonusCards, e.HeldBonusSeats, e.HeldBonusEach = HeldBonus(actor.WornRelics(), held)
-	e.Base += e.HeldBonus
-
-	// **And the purse pays last of the three.** It is not a card, not the rung and not the cards
-	// kept back — it is a fact about the run standing behind the duelist, so it joins the sum after
-	// everything the turn itself did and is multiplied with the rest.
-	//
-	// **Read at the blow, never cached** *(owner's call, 2026-09-05)*. The purse moves during a
-	// fight, so a figure resolved at fight-start would be a turn-three blow paid at turn-one prices.
-	e.VitaeBonus, e.VitaeBonusSeats = DamagePerVitae(actor.WornRelics())*actor.Vitae,
-		seatsDoing(actor.WornRelics(), DoAddDamagePerVitae)
-	e.Base += e.VitaeBonus
-
-	// **A rung relic is a second multiplier, never a bigger hand** *(owner's call, 2026-09-05)*.
-	// `Multiplier` is the ladder's own figure and stays it — the banner, the hand row and the sum
-	// all show the rung the player actually built. What a relic adds is another term in the
-	// arithmetic, applied after it. Folding the two into one number was the first version of this
-	// and it made a relic look like the hand having changed.
-	e.HandScale, e.HandScaleSeats = HandScale(actor.WornRelics(), blow.Satisfied, scoringCards(blow, turn))
-
-	// **The multiplier multiplies the cards** *(2026-08-18)*. There is no separate swing term: a
-	// hand is worth a proportion of what its own cards deal, so a Pair of Skewers is worth more
-	// than a Pair of Jabs by exactly the margin the cards themselves are worth.
-	e.Amount = scaleDamage(e.Base, blow.Multiplier)
-
-	// **And the relic's own multiplier last**, as a second scaling rather than a bigger first one.
-	// Two steps rather than one product, so the figure the player is shown at each stage is the
-	// figure the rules used.
-	if e.HandScale != 0 && e.HandScale != 100 {
-		e.Amount = scaleDamage(e.Amount, e.HandScale)
-	}
-
-	e.Action = lead.Concept
-	e.Element = lead.Element
-
-	// **The grown duelist goes back with the event and is adopted by the caller, not here.** A blow
-	// that misses is not paid for — see resolveAttackPhase, where the miss check sits between the
-	// two — so the growth has to be something the caller can decline.
-	actor.DMG = baseDMG
-	return e, actor
-}
-
-// reduce takes damage off a life total without letting it go negative.
 // playRiders fires every rider on every card of a turn, in queue order.
 //
 // **One event per rider that did something.** A heal on a duelist already at full life is a rider
@@ -1140,6 +685,7 @@ func restore(life, heal, max int) int {
 	return life
 }
 
+// reduce takes damage off a life total without letting it go negative.
 func reduce(life, dmg int) int {
 	life -= dmg
 	if life < 0 {
@@ -1157,54 +703,58 @@ func other(s Side) Side {
 }
 
 // shieldedSlots picks which of a solo attacker's cards the target's shields eat: **the heaviest
-// blows first** *(owner's call, 2026-09-08)*, whatever order they were queued in. It reports a
-// mask over the turn, indexed the way the turn was played.
+// hits first**, whatever order they were queued in. It reports a mask over the turn, indexed the
+// way the turn was played.
 //
-// **It reverses the rule that a shield ate whichever attack came first.** That made a shield worth
-// whatever the creature happened to have led with — a Giant Bat opening with a Nip spent the
-// player's shield on two damage and then landed a Drain for ten. What a shield costs to raise does
-// not vary with the opponent's queue order, so what it is worth should not either.
+// **What a shield costs to raise does not vary with the opponent's queue order, so what it is worth
+// does not either.** Eating whichever attack came first would make a shield worth whatever the
+// creature happened to lead with — a Giant Bat opening with a Nip would spend it on two damage and
+// then land a Drain for ten.
 //
 // **Ranked on CardDamage alone, and that is the whole of the arithmetic rather than a shortcut.**
-// Everything downstream of a card's own damage — the attacker's weight, the target's vulnerability
-// and every defense the target raised — is one multiplier applied identically to every attack in
-// the turn, so none of them can reorder two cards. Projecting the whole pipeline per card would be
-// a second resolver that agreed with the first, which is the drift `Base` and `Multiplier` are on
-// the event to prevent.
+// Everything downstream of a card's own damage — the attacker's weight and the target's
+// vulnerability — is one multiplier applied identically to every attack in the turn, so neither can
+// reorder two cards. Projecting the whole pipeline per card would be a second resolver that agreed
+// with the first.
 //
-// **It is a snapshot of the turn's opening state, knowingly.** A status landed by an early card
+// **It is a snapshot of the turn's opening state, knowingly.** A status landed by an early hit
 // amplifies the ones after it, so a shield can be provably not-optimal in hindsight. That is the
-// price of deciding up front, and deciding up front is what lets the screen show the whole
-// exchange before the creature swings — see screens.shatter. Re-ranking as the turn resolved would
-// buy a little optimality and cost the player any way of seeing it happen.
-//
-// **Ties go to the earliest card**, so the mask is a function of the turn and nothing else. A
-// creature holding three identical blows against one shield loses the first of them.
+// price of deciding up front, and deciding up front is what lets the screen show the whole exchange
+// before the creature swings — see screens.shatter.
 func shieldedSlots(actor, target Duelist, turn []Slot) []bool {
-	eaten := make([]bool, len(turn))
-	if target.Shields <= 0 {
-		return eaten
+	planned := make([]int, len(turn))
+	for i, slot := range turn {
+		planned[i] = -1
+		if slot.Card.Category() == CategoryAttack {
+			planned[i] = actor.CardDamage(slot.Card)
+		}
 	}
+	return shieldedHits(planned, target.Shields)
+}
 
-	// The attack slots, worst-first: descending damage, and by index within a tie. A sort would
-	// say the same thing; this is a selection because the list is at most MaxActions long and the
-	// count taken is at most MaxShields, and it keeps the tie-break impossible to get wrong.
-	taken := 0
-	for taken < target.Shields {
-		best, bestDmg := -1, 0
-		for i, slot := range turn {
-			if eaten[i] || slot.Card.Category() != CategoryAttack {
+// shieldedHits is the rule both attack phases share: given what each hit is planned to deal, and
+// -1 for an entry that is not a hit at all, the `shields` heaviest are eaten. **Ties go to the
+// earliest**, so the mask is a function of the list and nothing else — a turn of three identical
+// hits against one shield loses the first of them.
+//
+// A selection rather than a sort, because the list is at most a turn's landings long and the count
+// taken is at most the shields standing, and it keeps the tie-break impossible to get wrong.
+func shieldedHits(planned []int, shields int) []bool {
+	eaten := make([]bool, len(planned))
+	for taken := 0; taken < shields; taken++ {
+		best := -1
+		for i, dmg := range planned {
+			if eaten[i] || dmg < 0 {
 				continue
 			}
-			if dmg := actor.CardDamage(slot.Card); best < 0 || dmg > bestDmg {
-				best, bestDmg = i, dmg
+			if best < 0 || dmg > planned[best] {
+				best = i
 			}
 		}
 		if best < 0 {
 			break
 		}
 		eaten[best] = true
-		taken++
 	}
 	return eaten
 }

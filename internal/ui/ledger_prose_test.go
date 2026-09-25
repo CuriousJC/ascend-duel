@@ -51,10 +51,11 @@ func TestEveryRecordKindReadsAsSomething(t *testing.T) {
 	}
 }
 
-// A term is four kinds of line in one column and each is picked by its role, so a role with no case
-// falls through to the card term and prints a card that is not there.
+// A term is several kinds of line in one column and each is picked by its role, so a role with no
+// case falls through to the card term and prints a card that is not there.
 func TestEveryTermRoleReadsAsSomething(t *testing.T) {
-	roles := []string{session.RoleCard, session.RoleFlat, session.RoleDMG, session.RoleSum}
+	roles := []string{session.RoleHit, session.RoleCard, session.RoleFlat, session.RoleDMG,
+		session.RoleSum, session.RoleTotal}
 
 	for _, role := range roles {
 		rec := session.LedgerRecord{
@@ -127,5 +128,31 @@ func TestTheArticleAgreesWithTheElement(t *testing.T) {
 	got := LedgerLines([]session.LedgerRecord{rec})[0].Text()
 	if !strings.Contains(got, "an earth") {
 		t.Errorf("the line reads %q, want the article to agree with the element", got)
+	}
+}
+
+// **An outcome finds its own hit's line**, however many lines were written after it: a blow writes
+// every hit's working before any hit lands, so the line written last is the total and not the hit
+// the damage belongs to.
+func TestAHitsOutcomeAttachesToThatHitsLine(t *testing.T) {
+	lines := LedgerLines([]session.LedgerRecord{
+		{Kind: session.KindBlow, Side: session.SideYou, Hand: "Pair"},
+		{Kind: session.KindTerm, Role: session.RoleHit, Hit: 1, Card: "Bash", Total: 10, Multiplier: 100},
+		{Kind: session.KindTerm, Role: session.RoleHit, Hit: 2, Card: "Jab", Total: 5, Multiplier: 100},
+		{Kind: session.KindTerm, Role: session.RoleTotal, Total: 15},
+		{Kind: session.KindMissed, Side: session.SideYou, Hit: 1},
+		{Kind: session.KindDamage, Side: session.SideYou, Amount: 5, Hit: 2},
+	})
+	if len(lines) != 4 {
+		t.Fatalf("want a heading, two hits and a total, got %q", lineText(lines))
+	}
+	if got := lines[1].Text(); !strings.Contains(got, "misses") || strings.Contains(got, "damage") {
+		t.Errorf("the first hit reads %q, want its miss and nothing else", got)
+	}
+	if got := lines[2].Text(); !strings.Contains(got, "5 damage") || strings.Contains(got, "misses") {
+		t.Errorf("the second hit reads %q, want its damage and nothing else", got)
+	}
+	if got := lines[3].Text(); strings.Contains(got, "damage") || strings.Contains(got, "misses") {
+		t.Errorf("the total reads %q, and no outcome belongs to it", got)
 	}
 }

@@ -13,13 +13,16 @@ import (
 // text — the same narrow exception `combat_mathbox_test.go` takes.
 
 // hitScene is a scene with two live combatants and nothing else, which is all the hit logic reads.
+//
+// **Both are solo attackers**, because a solo attacker's damage event is the one `noteHit` flies;
+// a hand-forming side's hits are thrown by the hand dialog's lines — see the throwColumn tests.
 func hitScene() *CombatScene {
 	return &CombatScene{
 		fighter: &entities.Combatant{
-			Duelist: combat.Duelist{DMG: 10, Actions: 5, MaxLife: 60, CurrentLife: 60},
+			Duelist: combat.Duelist{DMG: 10, Actions: 5, MaxLife: 60, CurrentLife: 60, SoloAttacks: true},
 		},
 		enemy: &entities.Combatant{
-			Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 100, CurrentLife: 100},
+			Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 100, CurrentLife: 100, SoloAttacks: true},
 		},
 	}
 }
@@ -126,46 +129,125 @@ func TestTheFigureFinishesAndIsDroppedSoPlaybackCanResume(t *testing.T) {
 	}
 }
 
-func TestAScoredHandsFigureLeavesTheSumAndASoloAttackersLeavesItsCard(t *testing.T) {
-	// **This is `anchorBlow`**, and it is the one anchor that is a rule rather than a rectangle.
-	// A player's turn is one blow read off a hand, so the total is already on screen in the sum
-	// box and the figure travels from there. A solo attacker emits no hand at all — every attack
-	// lands its own face damage — so there is no sum, and the figure comes out of the card that
-	// swung.
-	//
-	// **`SoloAttacks` is what decides it, never which side it is.** The engine has no idea which
-	// duelist is a person and this screen must not grow a second opinion; the balance tool plays
-	// both sides headlessly on the same flag.
+func TestASoloAttackersFigureLeavesItsLitCard(t *testing.T) {
+	// **This is `anchorBlow` for a solo attacker**: every attack lands its own face damage, so the
+	// figure comes out of the card that swung — the one that is lit.
 	s := hitScene()
-	s.enemy.SoloAttacks = true
 	s.Theater.enemyFiringSeats = []int{2}
-	s.Theater.firingSeats = []int{1}
 
-	if got := s.blowSeat(combat.Event{Side: combat.SideA}); got != -1 {
-		t.Errorf("the player's blow leaves seat %d, want -1 for the sum line", got)
-	}
 	if got := s.blowSeat(combat.Event{Side: combat.SideB}); got != 2 {
-		t.Errorf("the solo attacker's blow leaves seat %d, want the card that is lit, 2", got)
-	}
-
-	// And the flag, not the side: a hand-forming opponent's figure comes out of the sum exactly as the
-	// player's does.
-	s.enemy.SoloAttacks = false
-	if got := s.blowSeat(combat.Event{Side: combat.SideB}); got != -1 {
-		t.Errorf("a hand-forming opponent's blow leaves seat %d, want -1 for the sum line", got)
+		t.Errorf("the solo attacker's hit leaves seat %d, want the card that is lit, 2", got)
 	}
 }
 
-func TestASoloAttackerWithNothingLitFallsBackToTheSum(t *testing.T) {
+func TestAHandFormingSidesDamageIsNotFlownByPlayback(t *testing.T) {
+	// **`SoloAttacks` decides it, never which side it is.** A hand-forming side's hits are thrown by
+	// the hand dialog's lines as they finish, so the damage event reached later in playback flies
+	// nothing — a second figure would be the same hit landing twice.
+	s := hitScene()
+	s.fighter.SoloAttacks = false
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Side: combat.SideA, Amount: 10, Target: combat.SideB, Life: 90}, 100)
+	if len(s.Theater.hits) != 0 {
+		t.Errorf("a hand-forming side's damage raised %d figures in playback", len(s.Theater.hits))
+	}
+}
+
+func TestASoloAttackerWithNothingLitFallsBackToNoSeat(t *testing.T) {
 	// Nothing should reach this — a solo attacker's damage always follows the action that lit its
 	// card — but the fallback has to be a place that exists rather than seat zero, which would
 	// point the figure at whichever card happens to sit at the left of the row.
 	s := hitScene()
-	s.enemy.SoloAttacks = true
 	s.Theater.enemyFiringSeats = nil
 
 	if got := s.blowSeat(combat.Event{Side: combat.SideB}); got != -1 {
-		t.Errorf("a solo attacker with nothing lit leaves seat %d, want the sum line", got)
+		t.Errorf("a solo attacker with nothing lit leaves seat %d, want -1", got)
+	}
+}
+
+// --- a hand's hits, thrown by their lines ----------------------------------------------------
+
+// throwScene is a hand-forming player mid-dialog: two lines, and a log whose hits are a landing and
+// a miss.
+func throwScene() *CombatScene {
+	s := hitScene()
+	s.fighter.SoloAttacks = false
+	s.log = []combat.Event{
+		{Kind: combat.KindHand, Side: combat.SideA},
+		{Kind: combat.KindDamage, Side: combat.SideA, Target: combat.SideB, Hit: 0, Amount: 30, Life: 70},
+		{Kind: combat.KindMissed, Side: combat.SideA, Hit: 1},
+		{Kind: combat.KindRoundEnd},
+	}
+	total := []mathItem{{text: "30"}}
+	s.Theater.mathBox = handMathBox{active: true, side: combat.SideA, columns: []mathColumn{
+		{hit: 0, items: total, at: 1, logAt: 1},
+		{hit: 1, items: total, at: 1, logAt: 2},
+		{hit: 2, items: total, at: 1, logAt: -1},
+	}}
+	return s
+}
+
+func TestALandedLineFliesAndTheBarWaitsForIt(t *testing.T) {
+	s := throwScene()
+	s.throwColumn(0)
+
+	if len(s.Theater.hits) != 1 || s.Theater.hits[0].amount != 30 {
+		t.Fatalf("the landed line raised %v, want one figure of 30", s.Theater.hits)
+	}
+	if s.enemy.CurrentLife != 70 {
+		t.Errorf("the model reads %d, want the 70 the hit left", s.enemy.CurrentLife)
+	}
+	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 100 {
+		t.Errorf("the bar draws %d while the figure is in the air, want 100", got)
+	}
+	if !s.Theater.walked[1] {
+		t.Error("the damage event is not marked as shown, so playback would fly it a second time")
+	}
+	if !s.Theater.mathBox.columns[0].spent {
+		t.Error("the line still draws its total while the figure is in the air")
+	}
+}
+
+func TestAMissedLineSaysSoAndFliesNothing(t *testing.T) {
+	s := throwScene()
+	s.throwColumn(1)
+
+	if col := s.Theater.mathBox.columns[1]; col.verdict != "MISS" {
+		t.Errorf("the missed line says %q, want MISS", col.verdict)
+	}
+	if len(s.Theater.hits) != 0 {
+		t.Error("a missed hit raised a figure")
+	}
+	if !s.Theater.walked[2] {
+		t.Error("the miss is not marked as shown")
+	}
+}
+
+func TestALineWhoseHitWasNeverThrownFades(t *testing.T) {
+	s := throwScene()
+	s.throwColumn(2)
+
+	if !s.Theater.mathBox.columns[2].unthrown {
+		t.Error("a hit that never came is drawn as though it did")
+	}
+}
+
+func TestParallelFiguresEmptyTheBarAsEachArrives(t *testing.T) {
+	// **Figures in parallel land in any order**, so the bar is the model plus whatever is still in
+	// the air: it drops by each figure as that figure arrives.
+	s := hitScene()
+	s.enemy.CurrentLife = 50 // two hits of 30 and 20 already written to the model
+	s.Theater.hits = []hitFlight{
+		{amount: 30, target: combat.SideB, held: 100, t: ui.NewTravel(0, hitFlyTicks()+hitHoldTicks())},
+		{amount: 20, target: combat.SideB, held: 70, t: ui.NewTravel(0, hitFlyTicks()+hitHoldTicks())},
+	}
+	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 100 {
+		t.Errorf("the bar draws %d with both figures in the air, want 100", got)
+	}
+
+	// The later figure lands first.
+	s.Theater.hits[1].t.Age = hitFlyTicks()
+	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 80 {
+		t.Errorf("the bar draws %d once the 20 has landed, want 80", got)
 	}
 }
 
@@ -197,6 +279,9 @@ func TestTheLandingFigureIsTheSumsTotalContinuing(t *testing.T) {
 	// And it is solid from the first frame: a fade-in would blink against the opaque total.
 	s := hitScene()
 	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
+	if len(s.Theater.hits) != 1 {
+		t.Fatalf("a solo attacker's damage raised %d figures, want 1", len(s.Theater.hits))
+	}
 	if got := hitAlpha(s.Theater.hits[0]); got != 1 {
 		t.Errorf("the figure sets off at alpha %v, want 1", got)
 	}

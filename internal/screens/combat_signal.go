@@ -34,8 +34,8 @@ package screens
 //
 // # When they fire, which is the part that took a design decision
 //
-// **Riders resolve before the attack phase** — `playTurn` runs chill, then riders, then the blow —
-// so every one of these events sits in the log *ahead* of `KindHand` and the sum. Drawing them
+// **Riders resolve before the attack phase** — `playTurn` runs chill, then riders, then the hits —
+// so every one of these events sits in the log *ahead* of `KindHand` and the hand dialog. Drawing them
 // where they sit would put four fireworks on screen before the hand had even been named.
 //
 // So the screen defers *(owner's call, 2026-09-10)*:
@@ -44,11 +44,11 @@ package screens
 //     seat, and released by the hand dialog on the beat that card's own term starts. That is
 //     `takeShields` generalized — a defend card's pips already leave with its figure for the same
 //     reason, and `mathItem` already carried a per-item payload for it.
-//   - **Every held card signals at once, as the sum begins.** They are one statement about what the
+//   - **Every held card signals at once, as the hits begin.** They are one statement about what the
 //     hand kept back rather than several about cards, and nothing sequences them because nothing
 //     about them is sequential.
 //
-// **The resolver was not reordered to achieve this.** A heal arriving before the blow is a rules
+// **The resolver was not reordered to achieve this.** A heal arriving before the hits is a rules
 // decision with its own argument in `playRiders`, and moving it so a screen could draw it in order
 // would be the rules bending to the picture. The screen owns when it draws; the log owns what
 // happened.
@@ -101,12 +101,12 @@ func signalFlyTicks() int { return ui.Beat(1, 1) }
 func signalHoldTicks() int { return ui.Beat(7, 10) }
 
 const (
-	// signalFigureSize is the type size of a traveling figure, and it is the sum's total size for
+	// signalFigureSize is the type size of a traveling figure, and it is a hit's total size for
 	// hitFigureSize's reason: every figure that crosses this screen is the same figure.
 	signalFigureSize = mathTotalSize
 
 	// signalFromScale and signalToScale: a signal *recedes* into the card it lands on, like a blow
-	// and unlike a term flying into the sum.
+	// and unlike a term flying into its line.
 	signalFromScale = 1.0
 	signalToScale   = 0.74
 
@@ -157,11 +157,11 @@ const (
 	// are told apart by their color rather than by where they go.
 	signalLife
 
-	// signalRaise is the DMG row again, for a figure that is **true for one blow rather than for
+	// signalRaise is the DMG row again, for a figure that is **true for one turn rather than for
 	// the rest of the run** *(owner's call, 2026-09-19)*: a rung relic raising the DMG the hand is
 	// swung at. It is its own destination rather than a signalDMG with a shorter life, because the
 	// two are cleared by different things — a grant stands until the round is adopted, and this
-	// stands until the sum it belongs to is over. See combatTheater.clearRaise.
+	// stands until the hand dialog it belongs to is over. See combatTheater.clearRaise.
 	signalRaise
 )
 
@@ -210,8 +210,8 @@ type signalShown struct {
 	maxLife int
 	vitae   int
 
-	// raise is DMG that is true for the length of one blow — a rung relic's — and is dropped when
-	// the sum ends rather than when the round is adopted. See signalRaise.
+	// raise is DMG that is true for the length of one turn — a rung relic's — and is dropped when
+	// the hand dialog ends rather than when the round is adopted. See signalRaise.
 	raise int
 }
 
@@ -219,7 +219,7 @@ type signalShown struct {
 // which kind it arrives as, and — when it draws no signal — why not.
 type riderDrawing struct {
 	// emits says the rider announces something. Four of the ten change only the arithmetic of a
-	// blow, so nothing about them reaches the log: the sum is where they are read.
+	// blow, so nothing about them reaches the log: a hit's line is where they are read.
 	emits bool
 
 	// kind is the event it arrives as, meaningful only when emits. Gold announces two and this
@@ -239,7 +239,7 @@ type riderDrawing struct {
 // from the code it describes.
 //
 // **A silent rider is not an undrawn one.** Six of the ten are silent because what they do is
-// already a figure in the sum, a pip on a row, or a question asked while the hand is matched — and
+// already a figure in a hit's line, a pip on a row, or a question asked while the hand is matched — and
 // a firework beside a term that is already flying would be the "said twice" failure.
 var riderDraws = map[combat.RiderKind]riderDrawing{
 	combat.RiderGolden:      {emits: true, kind: combat.KindGrantedDMG},
@@ -250,9 +250,9 @@ var riderDraws = map[combat.RiderKind]riderDrawing{
 	combat.RiderShieldOnPlay: {emits: true, kind: combat.KindRaised,
 		why: "the pips are the drawing, and they already fly out of the card with its figure"},
 
-	combat.RiderDamageOnPlay: {why: "it moves the duelist's DMG for the blow, so every term of the sum is already bigger"},
+	combat.RiderDamageOnPlay: {why: "it moves the duelist's DMG for every hit, so every hit is already bigger"},
 	combat.RiderDamageInHand: {why: "the same, for a card the turn kept back"},
-	combat.RiderScaleInHand:  {why: "it scales the blow, and the sum is where a multiplier is read"},
+	combat.RiderScaleInHand:  {why: "it scales every hit, and a hit's line is where a multiplier is read"},
 	combat.RiderScaleInCombo: {why: "the same, for a card that made the hand"},
 	combat.RiderWildElement:  {why: "it is read while the hand is matched rather than while the turn resolves - what it does is the rung's name"},
 }
@@ -342,7 +342,7 @@ func (s *CombatScene) releaseHeldSignals() int {
 }
 
 // releaseSeatSignals sends whatever the played card in this seat parked, on the beat its own term
-// starts in the sum. See handMathBox.takeSignals, which is what asks.
+// starts in a hit's line. See handMathBox.takeSignals, which is what asks.
 func (s *CombatScene) releaseSeatSignals(side combat.Side, seat int) int {
 	return s.releaseSignals(func(c cardSignal) bool {
 		return !c.held && c.side == side && c.seat == seat
@@ -352,7 +352,7 @@ func (s *CombatScene) releaseSeatSignals(side combat.Side, seat int) int {
 // flushSignalsAtBoundary throws whatever is still parked when the turn it belongs to is over.
 //
 // **The boundary is the acting side changing, or the round ending**, and nothing else: everything
-// inside one turn is either scored by the sum or flushed when the sum finishes. It is checked
+// inside one turn is either scored by the hand dialog or flushed when the hand dialog finishes. It is checked
 // against the parked signals' own side rather than against a remembered one, so a screen re-entered
 // mid-round cannot flush a turn it never watched.
 func (s *CombatScene) flushSignalsAtBoundary(e combat.Event) {
@@ -450,8 +450,8 @@ func (s *CombatScene) shownDMG(side combat.Side, actual int) int {
 	return actual + sh.dmg + sh.raise
 }
 
-// clearRaise drops the blow-length raise, on the frame the sum that earned it comes down. **Not
-// adopted()**, which is the round's: a relic that raised one blow's DMG would otherwise leave the
+// clearRaise drops the turn-length raise, on the frame the hand dialog that earned it comes down. **Not
+// adopted()**, which is the round's: a relic that raised one turn's DMG would otherwise leave the
 // duelist card reading a figure it does not have while the creature swings back.
 func (t *combatTheater) clearRaise() {
 	for i := range t.shown {
@@ -496,7 +496,7 @@ func (t *combatTheater) shownFor(side combat.Side) signalShown {
 func signalInk(c cardSignal) color.RGBA {
 	// **A relic's own figure is pink**, which is what pink means everywhere else on this screen.
 	// It has no rider to take a color from — a relic is not a card — and `ui.BoostInk` is the same
-	// ink its multiplier wears inside the sum a moment later.
+	// ink its multiplier wears inside the hand dialog a moment later.
 	if c.relic > 0 {
 		return ui.BoostInk
 	}
@@ -541,7 +541,7 @@ func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
 // which is what makes them one object instead of twenty-six.
 // **It takes an age and a seed rather than the signal itself** *(2026-09-19)*, so the one burst in
 // the game can be thrown by something that is not a cardSignal: a relic's figure leaving its ring
-// for the sum does exactly what a rider's figure leaving its card does, and two drawings of one
+// for the hand dialog does exactly what a rider's figure leaving its card does, and two drawings of one
 // gesture would drift the first time either was tuned.
 func drawBurst(screen *ebiten.Image, at image.Point, age int, seed uint32, ink color.RGBA) {
 	if age >= signalBurstTicks() {

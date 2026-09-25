@@ -370,7 +370,7 @@ type Event struct {
 	HandCardPct [maxHandTerms]int
 
 	// HandDMG is the DMG every hit of this turn was swung at, and HandDMGBare is what that figure
-	// would have been with no rung relic worn.
+	// would have been with no rung, held-card or purse relic worn.
 	//
 	// **The difference between them is what a rung relic actually put into every hit**, which is not
 	// HandBonus: the riders scale DMG after the raise is folded in, so a +2 under a held rider is
@@ -381,8 +381,8 @@ type Event struct {
 	HandDMGBare int
 
 	// HitAmounts[i] is what hit i comes to before the attacker's weight and the target's
-	// vulnerability: the card's term, plus every flat bonus, times the hand's multiplier, times
-	// HandScale — each step rounded toward zero, on this hit alone.
+	// vulnerability: the card's term, times the hand's multiplier, times HandScale — each step
+	// rounded toward zero, on this hit alone.
 	//
 	// **It is the figure the hit's arithmetic ends on**, and `Amount` on this event is the sum of
 	// them — what the hand was worth, not what landed. What landed is each hit's KindDamage, and a
@@ -441,27 +441,26 @@ type Event struct {
 	HandBonus      int
 	HandBonusSeats []bool
 
-	// HeldBonus is flat damage a worn relic adds to **every hit** for the cards the turn kept back,
-	// and HeldBonusSeats is which seats paid it. It joins each hit after the card's term and before
-	// the multiplier.
+	// HeldDMG is DMG a worn relic added to the duelist **for the cards the turn kept back**, and
+	// HeldDMGSeats is which seats paid it. **It is base damage, not a term**, on HandBonus's terms:
+	// folded into HandDMG before the riders scale it, so it is on the event to be *said*, never to
+	// be added.
 	//
-	// **HeldBonusCards is how many held cards paid it**, across every seat that did. The run's
-	// account writes the term as `Jar of Ice (4 cards)  20`, and a count is the one thing a
-	// player reading the working back cannot re-derive: the hand it was counted over is three
+	// **HeldDMGCards is how many held cards paid it**, across every seat that did. The run's
+	// account writes it as `Jar of Ice (4 cards kept back)  +20 DMG`, and a count is the one thing
+	// a player reading the working back cannot re-derive: the hand it was counted over is three
 	// turns gone.
-	//
-	// **HeldBonusEach is the same tally one card at a time** *(owner's call)*, so a hit on the combat
-	// screen writes six `+5` terms where six earth cards were kept back rather than one `+30`, each
-	// flying out of the card it was paid for. Every entry names the seat that paid.
-	HeldBonus      int
-	HeldBonusCards int
-	HeldBonusSeats []bool
-	HeldBonusEach  []HeldPay
+	HeldDMG      int
+	HeldDMGCards int
+	HeldDMGSeats []bool
 
-	// VitaeBonus is the duelist's Bounty as it joins every hit, beside HeldBonus, and
-	// VitaeBonusSeats is which worn relics put it there.
-	VitaeBonus      int
-	VitaeBonusSeats []bool
+	// VitaeDMG is DMG a worn relic added to the duelist **for the vitae the run is carrying**, and
+	// VitaeDMGSeats is which seats paid it.
+	//
+	// **It is base damage, not a term**, on HandBonus's terms: folded into HandDMG before the
+	// riders scale it, so it is on the event to be *said*, never to be added.
+	VitaeDMG      int
+	VitaeDMGSeats []bool
 
 	// HandScale is the percentage the worn relics multiply every hit by after the hand's own
 	// Multiplier — 100 when nothing did — and HandScaleSeats is which relics paid. **Multiplier does
@@ -558,12 +557,14 @@ func (e Event) TermSplit(term int) (dmg, pct int, ok bool) {
 	return dmg, pct, true
 }
 
-// DMGRaise is what a rung relic put into the DMG this blow was swung at — the climb the duelist's
-// own figure makes, which is what a screen animates. Zero when nothing raised it.
+// DMGRaise is what a rung relic, the cards kept back or the purse put into the DMG this blow was
+// swung at — the climb the duelist's own figure makes, which is what a screen animates. Zero when
+// nothing raised it.
 //
-// **Not HandBonus**, which is the relic's raw figure before the riders scaled it. See HandDMG.
+// **Not HandBonus, HeldDMG or VitaeDMG**, which are the relics' raw figures before the riders
+// scaled them. See HandDMG.
 func (e Event) DMGRaise() int {
-	if e.HandBonus == 0 {
+	if e.HandBonus == 0 && e.HeldDMG == 0 && e.VitaeDMG == 0 {
 		return 0
 	}
 	return e.HandDMG - e.HandDMGBare

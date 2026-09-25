@@ -18,17 +18,17 @@ func spanText(spans []session.LedgerSpan) string {
 	return b.String()
 }
 
-// blowWithEveryFlatTerm is a hand of two hits carrying every figure no card pays: the two flat
-// terms, a rung relic's raise on DMG, and the seats that paid each.
+// blowWithEveryFlatTerm is a hand of two hits carrying every figure no card pays: a rung relic's
+// raise on DMG, the held cards' raise, the purse's raise, and the seats that paid each.
 //
-// **The rung relic's 2 is inside the cards' own figures**, not a term — it is base damage — so the
-// fixture spends it the way the resolver does. **Each flat term joins every hit.**
+// **Every raise is inside the cards' own figures**, not a term — they are base damage — so the
+// fixture spends them the way the resolver does.
 func blowWithEveryFlatTerm() (combat.Event, []combat.Card) {
 	e := handEvent("pair", []int{5, 10}, 100, 0)
 	e.HandBonus, e.HandBonusSeats = 2, []bool{true}
-	e.HeldBonus, e.HeldBonusCards = 20, 4
-	e.HeldBonusSeats = []bool{false, true}
-	e.VitaeBonus, e.VitaeBonusSeats = 8, []bool{false, false, true}
+	e.HeldDMG, e.HeldDMGCards = 20, 4
+	e.HeldDMGSeats = []bool{false, true}
+	e.VitaeDMG, e.VitaeDMGSeats = 8, []bool{false, false, true}
 	restateHits(&e)
 
 	played := []combat.Card{combat.Of(combat.Jab, combat.Lightning), combat.Of(combat.Thrust, combat.Earth)}
@@ -41,7 +41,7 @@ func blowWithEveryFlatTerm() (combat.Event, []combat.Card) {
 func restateHits(e *combat.Event) {
 	e.Amount = 0
 	for i := 0; i < e.HandCardCount; i++ {
-		hit := (e.HandAmounts[i] + e.HeldBonus + e.VitaeBonus) * e.Multiplier / 100
+		hit := e.HandAmounts[i] * e.Multiplier / 100
 		if e.HandScale != 0 && e.HandScale != 100 {
 			hit = hit * e.HandScale / 100
 		}
@@ -117,16 +117,16 @@ func TestAHeldTermCountsTheCardsThatPaidIt(t *testing.T) {
 	e, _ := blowWithEveryFlatTerm()
 	relics := []combat.WornRelic{{}, {}, {}}
 
-	flats := flatTermRecords(e, relics)
-	if len(flats) != 2 {
-		t.Fatalf("the working has %d flat terms, want one each for the held cards and the purse", len(flats))
+	raises := handDMGRecords(e, relics)
+	if len(raises) != 3 {
+		t.Fatalf("the working has %d raises, want the rung's, the held cards' and the purse's", len(raises))
 	}
 
-	held := spanText(termLine(flats[0]).Spans)
+	held := spanText(termLine(raises[1]).Spans)
 	if !strings.Contains(held, "4 cards") {
 		t.Errorf("the held term reads %q, want the count of cards that paid it", held)
 	}
-	if !strings.Contains(held, "20") {
+	if !strings.Contains(held, "+20 DMG") {
 		t.Errorf("the held term reads %q, want the figure it paid", held)
 	}
 }
@@ -143,12 +143,18 @@ func TestTheRungRelicsRaiseIsSaidButNeverSummed(t *testing.T) {
 		t.Errorf("the hit reads %q, and the rung relic's raise is already inside the card term", line)
 	}
 
-	raise, ok := handDMGRecord(e, relics)
-	if !ok {
-		t.Fatal("a rung relic wrote no line of working, want the one saying what it raised")
+	raises := handDMGRecords(e, relics)
+	if len(raises) != 3 {
+		t.Fatalf("the raises wrote %d lines of working, want the rung's, the held cards' and the purse's", len(raises))
 	}
-	if said := spanText(termLine(raise).Spans); !strings.Contains(said, "+2 DMG") {
-		t.Errorf("the raise reads %q, want the DMG it added", said)
+	if said := spanText(termLine(raises[0]).Spans); !strings.Contains(said, "+2 DMG") {
+		t.Errorf("the rung's raise reads %q, want the DMG it added", said)
+	}
+	if said := spanText(termLine(raises[2]).Spans); !strings.Contains(said, "the purse") || !strings.Contains(said, "+8 DMG") {
+		t.Errorf("the purse's raise reads %q, want it named and the DMG it added", said)
+	}
+	if line := spanText(sumSpans(hitRecord(e, 0, played[0], relics))); strings.Contains(line, "+ 8 ") {
+		t.Errorf("the hit reads %q, and the purse's raise is already inside the card term", line)
 	}
 }
 

@@ -37,8 +37,8 @@ const (
 //
 // A turn is a hit per landing, so a five-card turn is five lines of arithmetic, and an echoed card
 // is three lines stacked under itself. Each line runs its own script — the DMG flying off the
-// duelist, the card's multiplier off the card, each relic's factor off the relic, the flat terms,
-// the hand's multiplier off the banner, then the hit's figure — and the lines run in parallel, so a
+// duelist, the card's multiplier off the card, each relic's factor off the relic, the hand's
+// multiplier off the banner, then the hit's figure — and the lines run in parallel, so a
 // simple hit finishes first and its figure flies into the target first. **They do not wait for each
 // other**: a line that is done is thrown.
 //
@@ -313,13 +313,6 @@ type mathItem struct {
 	// `startHandMath` reads them, so nothing has to count items to find out which is which.
 	cardTerm bool
 	handMult bool
-
-	// heldPay is which of the turn's held payments this item is, plus one, and 0 for everything
-	// else. **The figure flies out of the card still in the hand**, not out of the relic that
-	// priced it — a jar pays *for* a card the player is looking at, so the number leaves that card
-	// and the relic shakes behind it. `startHandMath` turns the index into a seat in the row, which
-	// is the half of the box that knows where the hand is.
-	heldPay int
 
 	// shakeRelics are worn seats that shake as this item runs without their figure being the one
 	// flying: the echo relic behind an extra landing, which buys a *term* rather than a multiplier
@@ -650,16 +643,13 @@ func (s *CombatScene) placeFigures(gs *state.GlobalState, e combat.Event, col *m
 		case it.relicSeat > 0:
 			// **A relic's figure sets off from the relic.**
 			it.from = s.relicCardCenter(gs, it.relicSeat-1)
-		case it.heldPay > 0:
-			// **A held card's figure sets off from the card still in the hand.**
-			it.from = s.heldPayOrigin(gs, e, it.heldPay-1)
 		case it.fromDuelist:
 			// **The DMG figure comes off the duelist's own card**, where a rung relic has just
 			// raised it. **The rung relic shakes on the first hit's DMG only** — the same figure
 			// leads every line, and a relic shaking once per hit would read as that many raises.
 			it.from = s.fighterCardMid(gs, e.Side)
 			if !raised {
-				it.shakeRelics = append([]bool(nil), e.HandBonusSeats...)
+				it.shakeRelics = dmgRaiseSeats(e)
 				raised = true
 			}
 		case it.cardTerm:
@@ -707,7 +697,7 @@ func (s *CombatScene) raiseDMGSignal(e combat.Event) {
 	if raise <= 0 {
 		return
 	}
-	seat := firstSeat(e.HandBonusSeats)
+	seat := firstSeat(dmgRaiseSeats(e))
 	if seat == 0 {
 		return
 	}
@@ -721,8 +711,8 @@ func (s *CombatScene) raiseDMGSignal(e combat.Event) {
 }
 
 // hitScript is one hit's line as a list of things to write, in the order they appear: a plus in
-// front of every line but the first, the card's term, the flat terms, the hand's multiplier, any
-// relic that scales the hand, then the hit's figure.
+// front of every line but the first, the card's term, the hand's multiplier, any relic that
+// scales the hand, then the hit's figure.
 //
 // **It takes no screen and computes no arithmetic**, which is what makes it the testable half of
 // the box. Every string in it is formatted from a field the resolver already filled.
@@ -736,37 +726,6 @@ func hitScript(e combat.Event, i int, first bool) []mathItem {
 		items = append(items, mathOperator("+"))
 	}
 	items = append(items, termItems(e, i)...)
-
-	// **The cards kept back pay into every hit, one term per card** *(owner's call)*, so the term
-	// can be counted against the hand it was counted over. In the pane's pink, flying out of the
-	// card in the hand, with the relic that priced it shaking behind it.
-	for n, pay := range e.HeldBonusEach {
-		shake := make([]bool, len(e.HeldBonusSeats))
-		if pay.Seat < len(shake) {
-			shake[pay.Seat] = true
-		}
-		items = append(items, mathOperator("+"), mathItem{
-			text:        strconv.Itoa(pay.Amount),
-			size:        mathTermSize,
-			tint:        ui.PaneEdge,
-			fly:         true,
-			heldPay:     n + 1,
-			shakeRelics: shake,
-			t:           ui.NewTravel(0, mathTermTicks()),
-		})
-	}
-
-	// **And the purse**, the same ink and the same flight: a figure a relic put into every hit.
-	if e.VitaeBonus != 0 {
-		items = append(items, mathOperator("+"), mathItem{
-			text:      strconv.Itoa(e.VitaeBonus),
-			size:      mathTermSize,
-			tint:      ui.GroundInk,
-			fly:       true,
-			relicSeat: firstSeat(e.VitaeBonusSeats),
-			t:         ui.NewTravel(0, mathTermTicks()),
-		})
-	}
 
 	// **The multiplier is always shown, the identity included** *(owner's call)*. Hands are going to
 	// be upgradable, so the No Hand's 1 is a number that will change, and a term that appeared only
@@ -917,6 +876,21 @@ func firstSeat(paid []bool) int {
 		}
 	}
 	return 0
+}
+
+// dmgRaiseSeats is every worn seat that raised the DMG this blow was swung at — a rung relic, the
+// cards kept back or the purse — which is what shakes as the DMG figure leaves the duelist card.
+func dmgRaiseSeats(e combat.Event) []bool {
+	var out []bool
+	for _, paid := range [][]bool{e.HandBonusSeats, e.HeldDMGSeats, e.VitaeDMGSeats} {
+		for len(out) < len(paid) {
+			out = append(out, false)
+		}
+		for i, did := range paid {
+			out[i] = out[i] || did
+		}
+	}
+	return out
 }
 
 // relicNote is the little multiplier one relic put on one term, or nil when that relic did not fire.
@@ -1622,57 +1596,4 @@ func upper(s string) string {
 		out = append(out, r)
 	}
 	return string(out)
-}
-
-// heldPayOrigin is where one held card's figure sets off from: the middle of that card, still in
-// the hand row.
-//
-// **The card is matched by identity where it has one and by kind where it does not.** A run's cards
-// carry `combat.Card.ID`, which is exactly the card the jar was paid for; a card written by a test
-// or built by `Of` has ID 0, so the fall back is the concept and the element — the same reading
-// `heldSeatOf` takes for a held rider, and it counts the copies already claimed so two of the same
-// card do not both point at one seat.
-//
-// **Two relics paying for one card land on that one card**, which is why the tally is kept per worn
-// seat: within a seat the payments walk the hand once, so the k-th payment for a kind is the k-th
-// card of it.
-//
-// A card the row no longer holds answers the hand band's own middle, the same honest fallback a
-// held rider's signal takes.
-func (s *CombatScene) heldPayOrigin(gs *state.GlobalState, e combat.Event, idx int) image.Point {
-	band := handBand(gs, s.laidOutCount())
-	middle := image.Pt((band.Min.X+band.Max.X)/2, (band.Min.Y+band.Max.Y)/2)
-	if idx < 0 || idx >= len(e.HeldBonusEach) {
-		return middle
-	}
-	pay := e.HeldBonusEach[idx]
-
-	taken := 0
-	for _, before := range e.HeldBonusEach[:idx] {
-		if before.Seat == pay.Seat && sameHeldCard(before.Card, pay.Card) {
-			taken++
-		}
-	}
-
-	for i, c := range s.hand {
-		if !sameHeldCard(c.Card, pay.Card) {
-			continue
-		}
-		if taken > 0 {
-			taken--
-			continue
-		}
-		r := s.cardSlot(gs, i)
-		return image.Pt((r.Min.X+r.Max.X)/2, (r.Min.Y+r.Max.Y)/2)
-	}
-	return middle
-}
-
-// sameHeldCard is whether two cards are the one card: their run identity when they have one, and
-// their kind otherwise.
-func sameHeldCard(a, b combat.Card) bool {
-	if a.ID != 0 || b.ID != 0 {
-		return a.ID == b.ID
-	}
-	return a.Concept == b.Concept && a.Element == b.Element
 }

@@ -886,7 +886,7 @@ achievement.
 
 **The hand dialog acts every hit out at once on the beat the hand fires.** Under each card
 on the table its hit is worked out figure by figure — the DMG flying off the duelist, the card's
-multiplier off the card, each relic's factor off the relic, the flat terms, the hand's multiplier
+multiplier off the card, each relic's factor off the relic, the hand's multiplier
 off its name — and the moment a line finishes its figure flies into the target, which loses that
 much as it lands. The lines run in parallel and do not wait for each other, so a simple hit lands
 first. **It says nothing the event does not carry and computes nothing**, and the one thing it
@@ -1062,9 +1062,9 @@ more, and every one of them is multiplied by the hand.
 **Nothing about the attack phase is singular except the hand that names it.** *(Owner's call.)*
 Everything else happens to each hit:
 
-- **A flat bonus joins every hit.** The cards kept back and the purse add their figure to each hit,
-  before the multiplier, rather than to the turn once. A rung relic's raise and the damage riders
-  go into the DMG every card is swung at, so they are in every hit too.
+- **A raise on the duelist reaches every hit.** A rung relic, the cards kept back, the purse and
+  the damage riders all go into the DMG every card is swung at, so each card grows by its own
+  multiplier. Nothing is added to a hit after its card.
 - **A shock rolls per hit.** See *Lightning is a roll*.
 - **A shield eats one hit**, the heaviest first.
 - **A status lands per hit that connects**, off that hit's card.
@@ -2913,7 +2913,7 @@ hand and the discard, and fires only when that card is played.
   reads that off the **resolved duelist**, not off the playback, so how fast a round is drawn cannot
   change what the player is paid. `KindVitae` is still emitted, but it is the feed's line rather
   than the payment — summing those events to move a purse is the old way and would now double-pay.
-  The rules got a purse because a relic wanted to read one: see Rampant, which pays damage per vitae
+  The rules got a purse because a relic wanted to read one: see Rampant, which raises the duelist's DMG per vitae
   held and would otherwise price a turn-three hit at turn-one rates.
 
 - **The vocabulary is a Go enum in `internal/combat`, not a data record.** Everything else a

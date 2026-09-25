@@ -8,13 +8,15 @@ package combat
 // be more. Each hit is its own arithmetic from end to end:
 //
 //	(the card's damage at the hand's DMG, with every relic that prices the card)
-//	  + every flat bonus the blow carries        — held cards, the purse
 //	  x the hand's multiplier
 //	  x every relic that scales the hand
 //	  then the attacker's weight and the target's vulnerability
 //
-// **Everything in that list is paid per hit.** A flat bonus joins every hit rather than the turn
-// once, a status lands on every hit that connects, a drain is a share of each hit's figure, and a
+// **The hand's DMG is where every relic that raises the duelist lands** — a rung relic, the cards
+// kept back, the purse — so each card grows by its own multiplier and nothing is added to a hit
+// afterwards.
+//
+// **Everything in that list is paid per hit.** A status lands on every hit that connects, a drain is a share of each hit's figure, and a
 // shock rolls once per hit. Nothing about the attack phase belongs to the turn as a whole except the
 // hand that names it.
 //
@@ -90,8 +92,8 @@ type landing struct {
 // together.
 //
 // **Every card of the turn throws a hit** *(owner's call)*, defenses included, whether or not it
-// made the hand. A defense deals nothing of its own, so its hit is its flat bonuses times the
-// hand, and it lands its card's statuses like any other hit — one rule, with nothing special for
+// made the hand. A defense deals nothing of its own, so its hit comes to nothing, and it lands its
+// card's statuses like any other hit — one rule, with nothing special for
 // a verb.
 //
 // **The lead is the turn's first attack card**, which is the only thing the `Lead` predicate reads.
@@ -141,17 +143,16 @@ func strike(
 	// **The DMG every hit is swung at.** The damage riders and a rung relic's raise are folded into
 	// it for the length of this blow alone, so a +10 arrives in every hit — see blowDMG. It is put
 	// back before the actor is returned; a DMG left raised would make the bonus permanent.
+	//
+	// **The cards kept back and the purse raise it the same way**, both read at the blow: a held
+	// card pays again every turn it is held, and vitae moves inside a fight — a card kept in hand
+	// pays one, and riders fire before the attack phase.
 	baseDMG := actor.DMG
 	e.HandBonus, e.HandBonusSeats = HandBonus(worn, blow.Satisfied)
-	actor.DMG = blowDMG(baseDMG+e.HandBonus, turn, held, blow)
+	e.HeldDMG, e.HeldDMGCards, e.HeldDMGSeats = HeldDMG(worn, held)
+	e.VitaeDMG, e.VitaeDMGSeats = DMGPerVitae(worn)*actor.Vitae, seatsDoing(worn, DoAddDMGPerVitae)
+	actor.DMG = blowDMG(baseDMG+e.HandBonus+e.HeldDMG+e.VitaeDMG, turn, held, blow)
 	e.HandDMG, e.HandDMGBare = actor.DMG, blowDMG(baseDMG, turn, held, blow)
-
-	// **The flat bonuses join every hit.** A card kept back pays its relic's figure into each hit
-	// the turn throws, and so does the purse — read at the blow, because vitae moves inside a
-	// fight.
-	e.HeldBonus, e.HeldBonusCards, e.HeldBonusSeats, e.HeldBonusEach = HeldBonus(worn, held)
-	e.VitaeBonus, e.VitaeBonusSeats = DamagePerVitae(worn)*actor.Vitae, seatsDoing(worn, DoAddDamagePerVitae)
-	flat := e.HeldBonus + e.VitaeBonus
 
 	// **A rung relic is a second multiplier, never a bigger hand.** `Multiplier` stays the ladder's
 	// own figure, so the banner and the hand row show the rung the player built; this is applied
@@ -180,7 +181,7 @@ func strike(
 	for h, l := range landings {
 		card := turn[l.seat].Card
 		elems[h] = card.Element
-		planned[h] = scaleDamage(l.shape.Amount(l.nth, actor.CardDamage(card))+flat, blow.Multiplier)
+		planned[h] = scaleDamage(l.shape.Amount(l.nth, actor.CardDamage(card)), blow.Multiplier)
 		if planned[h] <= 0 || fizzles(card, target) {
 			planned[h] = -1
 		}
@@ -193,7 +194,7 @@ func strike(
 		card := turn[l.seat].Card
 
 		d := l.shape.Amount(l.nth, actor.CardDamage(card))
-		figure := scaleDamage(d+flat, blow.Multiplier)
+		figure := scaleDamage(d, blow.Multiplier)
 		if e.HandScale != 0 && e.HandScale != 100 {
 			figure = scaleDamage(figure, e.HandScale)
 		}

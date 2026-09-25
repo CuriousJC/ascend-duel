@@ -19,12 +19,12 @@ func cardTerms(e Event) int {
 	return sum
 }
 
-// hitsWorth is what a hand's hits come to when each is its card's term plus `flat`, times the
-// multiplier and the hand scale, **rounded one hit at a time** — the rule written out a second way.
-func hitsWorth(e Event, flat int) int {
+// hitsWorth is what a hand's hits come to when each is its card's term times the multiplier and
+// the hand scale, **rounded one hit at a time** — the rule written out a second way.
+func hitsWorth(e Event) int {
 	sum := 0
 	for i := 0; i < e.HandCardCount; i++ {
-		hit := scaleDamage(e.HandAmounts[i]+flat, e.Multiplier)
+		hit := scaleDamage(e.HandAmounts[i], e.Multiplier)
 		if e.HandScale != 0 && e.HandScale != 100 {
 			hit = scaleDamage(hit, e.HandScale)
 		}
@@ -143,11 +143,11 @@ func TestAnEchoedCardThrowsAHitPerLanding(t *testing.T) {
 	}
 }
 
-func TestAFlatBonusJoinsEveryHit(t *testing.T) {
+func TestAHeldRaiseReachesEveryHitThroughTheCard(t *testing.T) {
 	smolder := relic(t, "hit-smolder", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddDMGPerHeld, Amount: 5}},
 	})
 
 	played := PlainCards(Bash, Jab, Cut)
@@ -157,8 +157,9 @@ func TestAFlatBonusJoinsEveryHit(t *testing.T) {
 	e := handEventOf(t, events, SideA)
 
 	for n := 0; n < e.HandCardCount; n++ {
-		if want := scaleDamage(e.HandAmounts[n]+5, e.Multiplier); e.HitAmounts[n] != want {
-			t.Errorf("hit %d came to %d, want its term plus the 5 held, multiplied = %d",
+		card := played[e.HandCards[n]]
+		if want := scaleDamage(card.Damage(15), e.Multiplier); e.HitAmounts[n] != want {
+			t.Errorf("hit %d came to %d, want its card at DMG 15, multiplied = %d",
 				n, e.HitAmounts[n], want)
 		}
 	}

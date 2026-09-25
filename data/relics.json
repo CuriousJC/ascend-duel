@@ -989,13 +989,13 @@
     "Family": "Elements held",
     "Art": "jar-fire",
     "Draw": "a jar with burning coals inside, the jar is made of clear glass with a copper lid",
-    "Text": "Every hit deals 5 more DMG for each\nfire card kept in hand.",
+    "Text": "+5 DMG per fire card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "fire" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
       }
     ]
   },
@@ -1005,13 +1005,13 @@
     "Family": "Elements held",
     "Art": "jar-ice",
     "Draw": "a jar with large shards of ice inside, the jar is made of clear glass with a copper lid",
-    "Text": "Every hit deals 5 more DMG for each\nice card kept in hand.",
+    "Text": "+5 DMG per ice card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "ice" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
       }
     ]
   },
@@ -1021,13 +1021,13 @@
     "Family": "Elements held",
     "Art": "jar-lightning",
     "Draw": "a jar with a small lightning bolts inside, the jar is made of clear glass with a copper lid",
-    "Text": "Every hit deals 5 more DMG for each\nlightning card kept in hand.",
+    "Text": "+5 DMG per lightning card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "lightning" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
       }
     ]
   },
@@ -1037,13 +1037,13 @@
     "Family": "Elements held",
     "Art": "jar-earth",
     "Draw": "a jar with a small rocks inside, the jar is made of clear glass with a copper lid",
-    "Text": "Every hit deals 5 more DMG for each\nearth card kept in hand.",
+    "Text": "+5 DMG per earth card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "earth" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
       }
     ]
   },
@@ -1053,13 +1053,13 @@
     "Family": "Elements held",
     "Art": "jar-arcane",
     "Draw": "a jar with a small glowing orbs inside, the jar is made of clear glass with a copper lid",
-    "Text": "Every hit deals 5 more DMG for each\narcane card kept in hand.",
+    "Text": "+5 DMG per arcane card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "arcane" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
       }
     ]
   },
@@ -1536,13 +1536,13 @@
     "Family": "Forms held",
     "Art": "jar-stab",
     "Draw": "a jar with ivory needles, the jar is made of clear glass with an indigo lid",
-    "Text": "Deals 5 more DMG for each stab card\nkept in hand.",
+    "Text": "+5 DMG per stab card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Form": "stab" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
       }
     ]
   },
@@ -1552,13 +1552,13 @@
     "Family": "Forms held",
     "Art": "jar-slash",
     "Draw": "a jar with steel razor blades inside, the jar is made of clear glass with an indigo lid",
-    "Text": "Deals 5 more DMG for each slash card\nkept in hand.",
+    "Text": "+5 DMG per slash card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Form": "slash" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
       }
     ]
   },
@@ -1568,13 +1568,13 @@
     "Family": "Forms held",
     "Art": "jar-crush",
     "Draw": "a jar with chunks of granite, the jar is made of clear glass with an indigo lid",
-    "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
+    "Text": "+5 DMG per crush card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Form": "crush" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
       }
     ]
   },
@@ -2149,12 +2149,12 @@
     "Family": "Vitae power",
     "Art": "dmg-vitae-scale",
     "Draw": "an amulet of a tangled knot of malachite lines in an organic knot shape with a platinum chain",
-    "Text": "+1 DMG TO EVERY HIT FOR EACH VITAE",
+    "Text": "+1 DMG per vitae held.",
     "Rarity": "rare",
     "Rules": [
       {
         "When": "fight-start",
-        "Then": [{ "Do": "add-damage-per-vitae", "Amount": 1 }]
+        "Then": [{ "Do": "add-dmg-per-vitae", "Amount": 1 }]
       }
     ]
   },

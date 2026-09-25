@@ -177,7 +177,7 @@ not ignored.
 | `grow-on-win` | `fight-won` | `Amount` | adds to **this relic's own accumulator**, once per win |
 | `grow-on-turn` | `turn-taken` | `Amount` | the same accumulator, once per matching turn — Momentum |
 | `grow-per-card` | `turn-taken` | `Amount` | the same accumulator, **once for every matching card of the turn** — Ebb & Flow. Refused with no `If`, since there would be nothing to count |
-| `add-damage-per-vitae` | `fight-start` | `Amount` | flat damage on every blow **per vitae the run holds** — Rampant. The verb declares a *rate*; the product is re-read at **every blow** against `Duelist.Vitae`, which moves inside a fight |
+| `add-dmg-per-vitae` | `fight-start` | `Amount` | adds `Amount` to the duelist's **DMG per vitae the run holds** — Rampant. Folded into the DMG a blow is swung at beside `add-hand-dmg`'s raise, so every hit grows by its card's own multiplier. The verb declares a *rate*; the product is re-read at **every blow** against `Duelist.Vitae`, which moves inside a fight |
 | `scale-hand-damage` | `blow-formed` | `Amount` | scales **every hit**, after the hand's own multiplier, when it formed the named rung — the Pairing / Oak / Pentacle family. A **second multiplier**: `Event.Multiplier` stays the ladder's figure, because that is what the banner and hand row show |
 | `scale-damage-per-vitae` | `card-damage` | `Amount` | scales a matching card by **Amount percentage points per vitae held** — Fire of Life. 1 is +1% a vitae |
 | `reset-growth` | `turn-taken` | *nothing* | puts the accumulator back to zero. **Growth is applied first and resets second**, so a turn cannot both bank and lose the same step |
@@ -187,7 +187,7 @@ not ignored.
 | `adjust-prize-vitae` | `prizes-dealt` | `Amount` flat | the vitae card pays more |
 | `repeat-card` | `blow-formed` | `Amount` landings | every **matching** card lands Amount times, each at **full** damage — the form repeat relics |
 | `add-hand-dmg` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one turn** when the turn satisfied the named rung, so every hit grows by its card's own multiplier — *not* a term of its own, and already inside every figure a hit prints |
-| `add-damage-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to **every hit, for every card still in hand** matching the rule's card predicate. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
+| `add-dmg-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one blow, for every card still in hand** matching the rule's card predicate — the jars. Folded in beside `add-hand-dmg`'s raise, so every hit grows by its card's own multiplier. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
 | `drain-damage` | `attack-lands` | `Amount` percent | restores that share of each hit that **landed** to whoever threw it — after weight, vulnerability, the shield and the miss, so a hit that was eaten drains nothing. **Once per matching hit**: the predicate asks about that hit's card |
 | `heal-share` | `turn-start` | `Amount` percent | restores that share of **maximum** life. Of the maximum rather than of what is left, so it is worth the same however badly the fight is going |
 | `adjust-round-limit` | `fight-start` | `Amount` rounds, **signed** | moves **this fight's** clock — Hermes takes two off. A delta rather than a figure, so it mixes with a relic that buys rounds; **every delta sums and worn order decides nothing**, because addition commutes. Clamped at one round, never at none, and read over the run's number rather than written into it, so selling gives the rounds back |
@@ -540,8 +540,8 @@ riders fire *before* the attack phase, so what a turn pays is already in the pur
 reads. **A figure resolved once at fight-start is the bug to avoid** — it was the first version of
 Rampant and it priced a turn-three blow at turn-one rates.
 
-- **Rampant** — `add-damage-per-vitae` at `fight-start`, flat damage per vitae, joining `Base` after
-  the cards and before the multiplier. Rare.
+- **Rampant** — `add-dmg-per-vitae` at `fight-start`, duelist DMG per vitae, raised before any card
+  is scored — the rung relics' fold, not a flat term. Rare.
 - **Fire of Life** — `scale-damage-per-vitae` at `card-damage`, percentage points per vitae on a
   matching card. `Amount: 1` is +1% a vitae, which is a tenth of a multiplier per ten held.
 

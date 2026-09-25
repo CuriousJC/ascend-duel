@@ -172,17 +172,15 @@ func TestEveryLineEndsWithItsHitsOwnFigure(t *testing.T) {
 	}
 }
 
-// **The flat terms are in every hit**, one per card kept back and one for the purse, after the
-// card's term and before the multiplier.
-func TestTheFlatTermsAreInEveryLine(t *testing.T) {
-	e := handEvent("pair", []int{20, 20}, 100, 70)
-	e.HeldBonusEach = []combat.HeldPay{{Amount: 5}, {Amount: 5}}
-	e.HeldBonus, e.HeldBonusSeats = 10, []bool{true}
-	e.VitaeBonus, e.VitaeBonusSeats = 5, []bool{false, true}
-	e.HitAmounts[0], e.HitAmounts[1] = 35, 35
+// **A raise on the duelist is never a term in a line**: the cards kept back and the purse are
+// inside each card's figure already, so a line is the card, the multiplier and the hit.
+func TestARaiseOnTheDuelistIsNoTermInALine(t *testing.T) {
+	e := handEvent("pair", []int{30, 30}, 100, 60)
+	e.HeldDMG, e.HeldDMGSeats = 10, []bool{true}
+	e.VitaeDMG, e.VitaeDMGSeats = 5, []bool{false, true}
 
-	sameLines(t, "a Pair with two held cards and the purse", linesOf(e),
-		[]string{"20 + 5 + 5 + 5 x 1 = 35", "+ 20 + 5 + 5 + 5 x 1 = 35"})
+	sameLines(t, "a Pair with two held cards and a purse relic", linesOf(e),
+		[]string{"30 x 1 = 30", "+ 30 x 1 = 30"})
 }
 
 // --- where the lines sit --------------------------------------------------------------------
@@ -475,11 +473,10 @@ func TestTheDMGFigureBelongsToTheDuelist(t *testing.T) {
 }
 
 // **A line has three levels and the air says which is which** *(owner's call)*: a product inside a
-// term is set close, the flat terms are set apart by the line's own gap, and the multiplier that
-// applies to all of them is set further apart again.
+// term is set close, terms added to one another are set apart by the line's own gap, and the
+// multiplier that applies to all of them is set further apart again.
 func TestALineIsSetInThreeLevelsOfAir(t *testing.T) {
 	e := splitEvent("pair", 12, []int{300, 200}, 100, 60)
-	e.VitaeBonus, e.VitaeBonusSeats = 5, []bool{true}
 	items := hitScript(e, 1, false)
 
 	at := func(text string, nth int) int {
@@ -500,9 +497,6 @@ func TestALineIsSetInThreeLevelsOfAir(t *testing.T) {
 	}
 	if got := gapBefore(items, at("2", 0)); got != mathTightGap {
 		t.Errorf("a card's multiplier is set %v off the DMG, want the tight %v", got, mathTightGap)
-	}
-	if got := gapBefore(items, at("+", 1)); got != mathItemGap {
-		t.Errorf("the purse is %v off the term, want the line's own %v", got, mathItemGap)
 	}
 
 	last := 0

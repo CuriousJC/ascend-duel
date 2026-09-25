@@ -755,39 +755,57 @@ var (
 // match, an `apply-status` naming a status no file defines, and a figure that makes the effect do
 // nothing. Every one of them would otherwise load cleanly and look like a relic with no rules.
 func RegisterRelic(key, name string, rules []RelicRule) (RelicID, error) {
-	if key == "" {
-		return NoRelic, fmt.Errorf("a relic has no record key")
-	}
 	if id, taken := relicBy[key]; taken {
 		return id, fmt.Errorf("%s is registered twice", key)
 	}
+	if err := CheckRelic(key, rules); err != nil {
+		return NoRelic, err
+	}
+
+	id := RelicID(len(relicRegistry))
+	relicRegistry = append(relicRegistry, Relic{Key: key, Name: name, Rules: rules})
+	relicBy[key] = id
+	return id, nil
+}
+
+// CheckRelic is every refusal RegisterRelic makes about the relic itself, with nothing registered.
+//
+// **It is how an archived relic is held to the grammar** without being put into the game: a record
+// in `data/archive/relics.json` is never registered, and this is what keeps it one that could be
+// moved back into the catalog and load. RegisterRelic calls it, so the two cannot disagree about
+// what a legal relic is; the only check it leaves out is the one about the registry, a key taken
+// twice.
+func CheckRelic(key string, rules []RelicRule) error {
+	if key == "" {
+		return fmt.Errorf("a relic has no record key")
+	}
 	if len(rules) == 0 {
-		return NoRelic, fmt.Errorf("%s has no rules, so wearing it does nothing", key)
+		return fmt.Errorf("%s has no rules, so wearing it does nothing", key)
 	}
 
 	for _, rule := range rules {
 		if len(rule.Then) == 0 {
-			return NoRelic, fmt.Errorf("%s has a %s rule with nothing in its Then", key, rule.When)
+			return fmt.Errorf("%s has a %s rule with nothing in its Then", key, rule.When)
 		}
 		if rule.If.Any() && !rule.When.readsACard() {
-			return NoRelic, fmt.Errorf("%s has a %s rule with an If, and %s has no card to match one against",
+			return fmt.Errorf("%s has a %s rule with an If, and %s has no card to match one against",
 				key, rule.When, rule.When)
 		}
 		if rule.If.Lead && rule.When != MomentBlowFormed {
-			return NoRelic, fmt.Errorf("%s narrows a %s rule to the lead card, and only blow-formed knows which card leads",
+			return fmt.Errorf("%s narrows a %s rule to the lead card, and only blow-formed knows which card leads",
 				key, rule.When)
 		}
 		if rule.If.HasHand() && rule.When != MomentBlowFormed {
-			return NoRelic, fmt.Errorf("%s narrows a %s rule to a hand, and only blow-formed knows what formed",
+			return fmt.Errorf("%s narrows a %s rule to a hand, and only blow-formed knows what formed",
 				key, rule.When)
 		}
 		if rule.If.HasHand() && (rule.If.HasElement || rule.If.HasForm || rule.If.HasConcept ||
 			rule.If.HasTier || rule.If.Lead) {
-			return NoRelic, fmt.Errorf("%s narrows a rule by both a hand and a card, and a hand is a fact about the whole blow",
+			return fmt.Errorf("%s narrows a rule by both a hand and a card, and a hand is a fact about the whole blow",
 				key)
 		}
 		if rule.If.HasConcept && (rule.If.Concept < 0 || int(rule.If.Concept) >= ConceptCount()) {
-			return NoRelic, fmt.Errorf("%s names a concept the registry does not hold", key)
+			return fmt.Errorf("%s names a concept the registry does not hold", key)
 		}
 
 		for _, e := range rule.Then {
@@ -798,31 +816,27 @@ func RegisterRelic(key, name string, rules []RelicRule) (RelicID, error) {
 			// Same seam as Hand: a form count is a fact about the set that formed, and only one
 			// moment knows what formed.
 			if rule.If.MinForms > 0 && rule.When != MomentBlowFormed {
-				return NoRelic, fmt.Errorf("%s counts the forms of a blow at %s, and only %s knows what formed",
+				return fmt.Errorf("%s counts the forms of a blow at %s, and only %s knows what formed",
 					key, rule.When, MomentBlowFormed)
 			}
 			if e.Do == DoAddDamagePerHeld && (rule.If.Lead || rule.If.HasHand() || rule.If.MinForms > 0) {
-				return NoRelic, fmt.Errorf("%s pays per held card and also narrows by the blow, and a held card is in neither", key)
+				return fmt.Errorf("%s pays per held card and also narrows by the blow, and a held card is in neither", key)
 			}
 			// A per-card step with nothing to count by is grow-on-turn wearing a longer name,
 			// and the two would then differ only by how many cards the turn happened to hold.
 			if e.Do == DoGrowPerCard && !rule.If.Any() {
-				return NoRelic, fmt.Errorf("%s grows per card and names no card to count", key)
+				return fmt.Errorf("%s grows per card and names no card to count", key)
 			}
 			if want := verbMoment(e.Do); want != rule.When {
-				return NoRelic, fmt.Errorf("%s does %s at %s, and %s belongs to %s",
+				return fmt.Errorf("%s does %s at %s, and %s belongs to %s",
 					key, e.Do, rule.When, e.Do, want)
 			}
 			if err := checkEffect(key, e); err != nil {
-				return NoRelic, err
+				return err
 			}
 		}
 	}
-
-	id := RelicID(len(relicRegistry))
-	relicRegistry = append(relicRegistry, Relic{Key: key, Name: name, Rules: rules})
-	relicBy[key] = id
-	return id, nil
+	return nil
 }
 
 // checkEffect holds each verb to the figure it needs. **A zero is refused rather than clamped**,

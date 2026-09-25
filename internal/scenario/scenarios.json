@@ -30,16 +30,6 @@
       "dmg-concept-full-house-hand",
       "dmg-concept-four-of-a-kind-hand",
       "dmg-concept-five-of-a-kind-hand",
-      "dmg-form-two-pair-hand",
-      "dmg-form-three-of-a-kind-hand",
-      "dmg-form-full-house-hand",
-      "dmg-form-four-of-a-kind-hand",
-      "dmg-form-five-of-a-kind-hand",
-      "dmg-element-two-pair-hand",
-      "dmg-element-three-of-a-kind-hand",
-      "dmg-element-full-house-hand",
-      "dmg-element-four-of-a-kind-hand",
-      "dmg-element-five-of-a-kind-hand",
       "status-burn",
       "status-chill",
       "status-shock",
@@ -52,7 +42,17 @@
       "pair-status-chill-weak",
       "pair-status-shock-weak",
       "pair-status-weight-burn",
-      "pair-status-weight-shock"
+      "pair-status-weight-shock",
+      "pair-status-weak-burn",
+      "pair-status-weak-weight",
+      "stick",
+      "old-dagger",
+      "epee",
+      "skewer-spear",
+      "lance",
+      "bread-knife",
+      "hunting-knife",
+      "katana-blade"
     ],
     "RelicSlots": 50,
     "Enemy": "animals-outer-bat",
@@ -959,266 +959,6 @@
     ],
     "Actions": 15,
     "Dummy": true
-  },
-  {
-    "ScenarioRecord": "new-relic-art",
-    "Note": "The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, the Jar of Earth, The Old Dagger, The Knuckles and Trio Ring. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Trio Ring pays an Elemental Three of a Kind, The Old Dagger quadruples the Jab, The Knuckles quadruples the Thump, and the Jar of Earth reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
-    "RelicSlots": 6,
-    "Relics": [
-      "hp-plus",
-      "banker",
-      "jar-earth",
-      "old-dagger",
-      "brass-knuckles",
-      "dmg-element-three-of-a-kind-hand"
-    ],
-    "Hand": [
-      {
-        "Card": "Jab",
-        "Element": "earth"
-      },
-      {
-        "Card": "Thump",
-        "Element": "earth"
-      },
-      {
-        "Card": "Bash",
-        "Element": "earth"
-      },
-      {
-        "Card": "Tap",
-        "Element": "earth"
-      },
-      {
-        "Card": "Brace",
-        "Element": "earth"
-      }
-    ],
-    "Actions": 15,
-    "Dummy": true
-  },
-  {
-    "ScenarioRecord": "arsenal-on-a-dummy",
-    "Note": "The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the relic fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Brace beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the relic's term sits inside the sum rather than on the end of it, and the figure it moved is written in the relic pink. The relic pane is where the new artwork is.",
-    "Relics": [
-      "dmg-form-four-of-a-kind-hand"
-    ],
-    "Deck": [
-      {
-        "Card": "Poke",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Poke",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Poke",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Poke",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Poke",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Jab",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Jab",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Jab",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Jab",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Jab",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Thrust",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Thrust",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Thrust",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Thrust",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Thrust",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Skewer",
-        "Element": "fire"
-      },
-      {
-        "Card": "Skewer",
-        "Element": "ice"
-      },
-      {
-        "Card": "Skewer",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Skewer",
-        "Element": "earth"
-      },
-      {
-        "Card": "Skewer",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Impale",
-        "Element": "fire"
-      },
-      {
-        "Card": "Impale",
-        "Element": "ice"
-      },
-      {
-        "Card": "Impale",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Impale",
-        "Element": "earth"
-      },
-      {
-        "Card": "Impale",
-        "Element": "arcane"
-      }
-    ],
-    "Hand": [
-      {
-        "Card": "Poke",
-        "Element": "fire"
-      },
-      {
-        "Card": "Jab",
-        "Element": "ice"
-      },
-      {
-        "Card": "Thrust",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Jab",
-        "Element": "earth"
-      },
-      {
-        "Card": "Brace",
-        "Element": "arcane"
-      }
-    ],
-    "Dummy": true,
-    "Actions": 15,
-    "Screen": "combat",
-    "Seed": "0000HX",
-    "Fight": 0,
-    "Vitae": 0,
-    "Life": 0
-  },
-  {
-    "ScenarioRecord": "form-hand-relics",
-    "Note": "The two form-hand relics on the fingers, Full Ring and Quad Ring, so the rules can be made to fire and the two can be told apart on the relic pane in one launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Quad Ring adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Full Ring adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the relic term, and the relic pane for whether the two pictures are tellable apart at the size they are drawn - they are two relics about the same axis, and the card carries no title.",
-    "Relics": [
-      "dmg-form-full-house-hand",
-      "dmg-form-four-of-a-kind-hand"
-    ],
-    "Deck": [
-      {
-        "Card": "Poke",
-        "Element": "fire",
-        "Copies": 6
-      },
-      {
-        "Card": "Jab",
-        "Element": "ice",
-        "Copies": 6
-      },
-      {
-        "Card": "Thrust",
-        "Element": "lightning",
-        "Copies": 4
-      },
-      {
-        "Card": "Nick",
-        "Element": "earth",
-        "Copies": 6
-      },
-      {
-        "Card": "Cut",
-        "Element": "arcane",
-        "Copies": 6
-      },
-      {
-        "Card": "Slice",
-        "Element": "fire",
-        "Copies": 4
-      }
-    ],
-    "Hand": [
-      {
-        "Card": "Poke",
-        "Element": "fire"
-      },
-      {
-        "Card": "Poke",
-        "Element": "ice"
-      },
-      {
-        "Card": "Jab",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Jab",
-        "Element": "earth"
-      },
-      {
-        "Card": "Nick",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Cut",
-        "Element": "fire"
-      }
-    ],
-    "Screen": "combat",
-    "Fight": 0,
-    "Vitae": 0,
-    "Life": 0
   },
   {
     "ScenarioRecord": "training-dummy",
@@ -2649,33 +2389,6 @@
         "Element": "earth",
         "Copies": 5
       }
-    ],
-    "Enemy": "animals-outer-rat",
-    "Dummy": true,
-    "Actions": 15
-  },
-  {
-    "ScenarioRecord": "three-rings-shaking",
-    "Note": "Four relics paying into one sum four different ways, so what each shake means can be told apart. The Twinned Ring adds 2 duelist DMG on a Pair and the Paired Ring adds 3 on a Form Two Pair - both are raises on the DMG every term is worked out at, so they fire together into one climb on the duelist card before the sum starts counting. The Paired Rings amulet is the third and it is the only one with a figure of its own on the line: it scales the whole hand by 2x on a Pair, so it lands as a second multiplier after the rung's, in the pane's pink, flying out of the amulet. The Jar of Earth is the fourth and it pays per card LEFT IN HAND, 5 apiece, as its own pink term flying out of each held card with the jar shaking behind it. The four cards to play are two stabs and two crushes in four different elements, which is a Form Two Pair and satisfies the Pair under it, so both rings fire and no elemental rung outranks either; they cost 6 AP together. The four kept back are earth, so the jar is worth 20 across four terms - drop one and the sum loses a term rather than shrinking a figure, which is the reading the per-card terms exist for. Two Agate sit in the consumables pane, each raising the Pair by a tenth of its 100: spend them in front of a two-card pair, since a hand is scored on the top rung it satisfies and a Form Two Pair is scored as that rather than as the Pair beneath it. The deck is the shipped one, so refills are ordinary cards. Against a dummy at 15 AP, so any four of the eight can be tried.",
-    "Relics": [
-      "dmg-pair-hand",
-      "dmg-form-two-pair-hand",
-      "handmult-pair",
-      "jar-earth"
-    ],
-    "Stones": [
-      "agate",
-      "agate"
-    ],
-    "Hand": [
-      { "Card": "Jab", "Element": "fire" },
-      { "Card": "Thrust", "Element": "ice" },
-      { "Card": "Thump", "Element": "lightning" },
-      { "Card": "Bash", "Element": "arcane" },
-      { "Card": "Skewer", "Element": "earth" },
-      { "Card": "Cut", "Element": "earth" },
-      { "Card": "Slice", "Element": "earth" },
-      { "Card": "Brace", "Element": "earth" }
     ],
     "Enemy": "animals-outer-rat",
     "Dummy": true,

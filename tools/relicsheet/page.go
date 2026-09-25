@@ -28,7 +28,7 @@ import "html/template"
 // authored line, and the rules — four things nothing else in the project shows together.
 var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — relic sheet</title>
+<title>Ascending Duel — {{.Title}}</title>
 <style>
   :root {
     --ground: {{.Ground}};
@@ -120,7 +120,29 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
 </style>
 
-<h1>Relic sheet</h1>
+<h1>{{.Title}}</h1>
+{{if .Archive}}
+<p class="facts">
+  {{.Count}} archived relics, {{.Undrawn}} of them drawing the default face,
+  {{.Unwritten}} with no subject paragraph written, {{.Broken}} that would not load.
+</p>
+<p class="note">
+  <strong>These relics are out of the game and kept in the repository.</strong> The records are
+  <code>data/archive/relics.json</code> and the pictures are <code>assets/archive/relic/</code>;
+  neither is embedded, so a release carries none of it and no shelf can offer one. Each is drawn
+  exactly as the catalog's own sheet would draw it, family by family in the file's order.
+</p>
+<p class="note">
+  <strong>Moving one back is moving the record and its picture</strong> — the record into
+  <code>data/relics.json</code>, the picture into <code>assets/relic/</code> — and regenerating
+  both pages. The archive is held to the relic grammar by <code>TestEveryArchivedRelicWouldLoad</code>,
+  so a relic here loads the day it returns; one that has fallen out of step with the vocabulary
+  carries the reason in pink on its plate.
+</p>
+<p class="note">
+  Regenerate with <code>go run ./tools/relicsheet -archive</code> and refresh.
+</p>
+{{else}}
 <p class="facts">
   {{.Count}} relics, {{.Undrawn}} of them drawing the default face,
   {{.Unwritten}} with no subject paragraph written.
@@ -166,6 +188,11 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   for what still needs writing rather than a worklist being kept in step by hand.
 </p>
 <p class="note">
+  <strong>A relic out of the game is on its own page.</strong> The archive — records taken out of
+  the catalog and kept in the repository — is <a href="../relicarchive/index.html">the relic
+  archive</a>.
+</p>
+<p class="note">
   <strong>Read the sentence against the rules.</strong> The line under each name is the
   <code>Text</code> field, which is what the hover tooltip prints verbatim; the monospace
   lines under it are the rules that actually fire. Nothing in the codebase checks one
@@ -186,14 +213,17 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
     weight {{.Weight}} each &middot; {{.Share}}% of a shelf draw</li>
 {{end}}
 </ul>
+{{end}}
 
 <h2>The catalog, by family</h2>
+{{if not .Archive}}
 <p class="note">
   <strong>Grouped by the motif each relic was authored beside, in the file's own order.</strong>
   The pricing review survives the move because nearly every family is one tier throughout: a
   heading reading <em>all common</em> asks "does one of these belong a tier up" of the whole block
   at once, and a family with a mix says so on its heading rather than hiding it.
 </p>
+{{end}}
 
 {{.Filters}}
 
@@ -211,7 +241,12 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
       <div class="about">
         <p class="name">{{.Name}}</p>
         <div class="record">{{.Record}}</div>
-        <p class="price"><span class="rarity {{.Rarity}}">{{.Rarity}}</span>{{.Price}} vitae, sells back for {{.Sell}}</p>
+        {{if $.Archive}}
+          <p class="price"><span class="rarity {{.Rarity}}">{{.Rarity}}</span></p>
+        {{else}}
+          <p class="price"><span class="rarity {{.Rarity}}">{{.Rarity}}</span>{{.Price}} vitae, sells back for {{.Sell}}</p>
+        {{end}}
+        {{if .Problem}}<p class="art missing">would not load: {{.Problem}}</p>{{end}}
         <p class="text">{{.Text}}</p>
         {{if .Draw}}
           <p class="draw">{{.Draw}}</p>
@@ -234,6 +269,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
 </section>
 {{end}}
 
+{{if not .Archive}}
 <h2>Card states</h2>
 <p class="note">
   The three states a relic card is drawn in. A relic the run neither owns nor has been offered
@@ -247,4 +283,5 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
     </figure>
   {{end}}
 </div>
+{{end}}
 `))

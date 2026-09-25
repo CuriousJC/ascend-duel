@@ -16,6 +16,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `tower.json` | `LoadTower` | how tall the climb is and the two rates the ascent curve compounds at |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
 | `relics.json` | `LoadRelics` | the relics that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
+| `archive/relics.json` | `ParseRelics`, off disk | relics taken out of the game and kept: **not embedded**, read only by `tools/relicsheet -archive` and the test holding it to the grammar — see `data/archive.go` |
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies a blow by |
 | `essences.json` | `LoadEssences` | the deck alterations offered between fights |

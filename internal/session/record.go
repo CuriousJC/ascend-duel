@@ -99,8 +99,8 @@ const (
 	// translator still reads it, so an account saved with one on it still draws.
 	RoleCard = "card"
 
-	// RoleFlat is a term no card paid: the cards kept back, or the purse. It names the relic that
-	// put it in every hit.
+	// RoleFlat is a term no card paid, which named the relic that put it in every hit. **Nothing
+	// writes it**; the translator still reads it, so an account saved with one on it still draws.
 	RoleFlat = "flat"
 
 	// RoleDMG is what a relic did to the DMG the blow was swung at. **It is not a term and carries

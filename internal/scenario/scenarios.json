@@ -2424,5 +2424,43 @@
     "Enemy": "animals-outer-rat",
     "Dummy": true,
     "Actions": 15
+  },
+  {
+    "ScenarioRecord": "rampant",
+    "Note": "The Rampant worn alone, with a purse to scale against: +1 duelist DMG for each vitae, so 40 vitae swings the whole hand at DMG plus 40 and every card grows by its own multiplier. The fight is a dummy so the scaling can be watched over as many rounds as it takes, and two Add Vitae runes are in the sack so the purse can be moved mid-fight to see whether the bonus follows it.",
+    "Relics": ["dmg-vitae-scale"],
+    "Runes": ["add-vitae", "add-vitae"],
+    "Hand": [
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Jab", "Element": "ice" },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Cut", "Element": "lightning" },
+      { "Card": "Smash", "Element": "arcane" },
+      { "Card": "Thrust", "Element": "fire" },
+      { "Card": "Slice", "Element": "ice" },
+      { "Card": "Brace", "Element": "earth" }
+    ],
+    "Enemy": "animals-outer-bat",
+    "Screen": "combat",
+    "Vitae": 40,
+    "Dummy": true
+  },
+  {
+    "ScenarioRecord": "jars",
+    "Note": "Smoldering Jar and Jar of Ice worn together, each +5 duelist DMG for every card of its color kept in hand. The hand is three fire and two ice cards to hold and three earth and lightning attacks to play, so playing the three and keeping the five raises DMG by 25 before a card is scored - one climb on the duelist card, with both jars shaking, and every hit growing by its own card's multiplier. Play a fire card instead and the raise drops by 5. A dummy, so it can be tried as many rounds as it takes.",
+    "Relics": ["jar-fire", "jar-ice"],
+    "Hand": [
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Jab", "Element": "earth" },
+      { "Card": "Cut", "Element": "lightning" },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Slice", "Element": "fire" },
+      { "Card": "Thrust", "Element": "fire" },
+      { "Card": "Jab", "Element": "ice" },
+      { "Card": "Brace", "Element": "ice" }
+    ],
+    "Enemy": "animals-outer-bat",
+    "Screen": "combat",
+    "Dummy": true
   }
 ]

@@ -322,19 +322,20 @@ const (
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoAddHandDMG
 
-	// DoAddDamagePerHeld adds Amount to the blow for **every card still in the hand** that matches
-	// the rule's predicate — the cards kept back, not the cards played.
+	// DoAddDMGPerHeld adds Amount to the duelist's **DMG** for the blow, for **every card still in
+	// the hand** that matches the rule's predicate — the cards kept back, not the cards played.
 	//
 	// **It is the one verb that pays for what a turn did not do** *(owner's call, 2026-09-05)*.
 	// Every other element and form relic pays for spending a card; this pays for holding one, so a
 	// run wearing both is being pulled in two directions on purpose.
 	//
 	// **The held hand is already something the rules see** — `blowDMG` reads it for the rune
-	// riders — so this needed no new moment. It lands in the blow's base sum beside the hand's own
-	// term, and is multiplied with the cards for the same reason that one is.
+	// riders — so this needed no new moment. **It raises the duelist, never the hit**: it is folded
+	// into the DMG the blow is swung at beside add-hand-dmg's raise and before the riders scale it,
+	// so every card grows by its own multiplier.
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
-	DoAddDamagePerHeld
+	DoAddDMGPerHeld
 
 	// DoGrowPerCard adds Amount to **this relic's own accumulator once for every card of the turn
 	// the rule matched** — where DoGrowOnTurn takes one step for a turn holding any match at all.
@@ -344,14 +345,16 @@ const (
 	// counts rather than fires.
 	DoGrowPerCard
 
-	// DoAddDamagePerVitae adds Amount flat damage to every blow **for each vitae the run is
-	// carrying** — Rampant, which pays a duelist for not spending.
+	// DoAddDMGPerVitae adds Amount to the duelist's **DMG** for each vitae the run is carrying —
+	// Rampant, which pays a duelist for not spending. **It raises the duelist, never the hit**: it
+	// is folded into the DMG a blow is swung at beside add-hand-dmg's raise and before the riders
+	// scale it, so every card grows by its own multiplier. See combat.blowDMG.
 	//
 	// **The rate is fixed at fight-start and the purse is not.** The verb sits at fight-start
 	// because that is when the relics are put on, but the figure it produces is re-asked at every
 	// blow against Duelist.Vitae, which moves during a fight. A relic resolved once at the door
 	// would pay a turn-three blow at turn-one prices.
-	DoAddDamagePerVitae
+	DoAddDMGPerVitae
 
 	// DoScaleHandDamage scales **the blow** by Amount percent when it formed the rung the rule
 	// names — the rung relics that multiply, where add-hand-dmg is the pair that raises the duelist.
@@ -477,7 +480,7 @@ func RelicVerbs() []RelicVerb {
 	return []RelicVerb{DoAdjustCost, DoScaleDamage, DoApplyStatus, DoSetElement, DoAddDMG,
 		DoAddHP, DoGrowOnWin, DoScalePropagation, DoAdjustPicks, DoAdjustPrizeVitae, DoScaleHP,
 		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth,
-		DoAddHandDMG, DoAddDamagePerHeld, DoGrowPerCard, DoAddDamagePerVitae,
+		DoAddHandDMG, DoAddDMGPerHeld, DoGrowPerCard, DoAddDMGPerVitae,
 		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls,
 		DoAdjustRoundLimit, DoAdjustEssenceTargets}
 }
@@ -502,8 +505,8 @@ func (v RelicVerb) String() string {
 		return "grow-on-turn"
 	case DoGrowPerCard:
 		return "grow-per-card"
-	case DoAddDamagePerVitae:
-		return "add-damage-per-vitae"
+	case DoAddDMGPerVitae:
+		return "add-dmg-per-vitae"
 	case DoScaleHandDamage:
 		return "scale-hand-damage"
 	case DoScaleDamagePerVitae:
@@ -526,8 +529,8 @@ func (v RelicVerb) String() string {
 		return "demote-card"
 	case DoAddHandDMG:
 		return "add-hand-dmg"
-	case DoAddDamagePerHeld:
-		return "add-damage-per-held"
+	case DoAddDMGPerHeld:
+		return "add-dmg-per-held"
 	case DoDrainDamage:
 		return "drain-damage"
 	case DoHealShare:
@@ -572,9 +575,9 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentCardDrawn
 	case DoDemoteCard:
 		return MomentDeckBuilt
-	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDamagePerVitae, DoScaleRolls, DoAdjustRoundLimit:
+	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDMGPerVitae, DoScaleRolls, DoAdjustRoundLimit:
 		return MomentFightStart
-	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDamagePerHeld, DoScaleHandDamage:
+	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDMGPerHeld, DoScaleHandDamage:
 		return MomentBlowFormed
 	case DoGrowOnWin, DoScalePropagation:
 		return MomentFightWon
@@ -817,7 +820,7 @@ func CheckRelic(key string, rules []RelicRule) error {
 				return fmt.Errorf("%s counts the forms of a blow at %s, and only %s knows what formed",
 					key, rule.When, MomentBlowFormed)
 			}
-			if e.Do == DoAddDamagePerHeld && (rule.If.Lead || rule.If.HasHand() || rule.If.MinForms > 0) {
+			if e.Do == DoAddDMGPerHeld && (rule.If.Lead || rule.If.HasHand() || rule.If.MinForms > 0) {
 				return fmt.Errorf("%s pays per held card and also narrows by the blow, and a held card is in neither", key)
 			}
 			// A per-card step with nothing to count by is grow-on-turn wearing a longer name,
@@ -1414,13 +1417,13 @@ func LandingSeats(worn []WornRelic, card Card, lead bool) []bool {
 // The seats come back for the same reason `LandingSeats` reports them: the bonus is a term in the
 // bracket that no card produced, so without this the relic paying for it would sit still while its
 // own figure landed.
-// DamagePerVitae is the flat damage every blow gains for each vitae the run holds, summed over the
-// worn relics that say so.
+// DMGPerVitae is the DMG the duelist gains for each vitae the run holds, summed over the worn
+// relics that say so.
 //
 // **It is the rate, not the payment.** The multiplication is done at each blow against the
 // duelist's live purse, because vitae moves inside a fight: a card kept in hand pays one. Asking
 // once at fight-start was the first version of this and it was wrong.
-func DamagePerVitae(worn []WornRelic) int {
+func DMGPerVitae(worn []WornRelic) int {
 	total := 0
 	for _, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1428,7 +1431,7 @@ func DamagePerVitae(worn []WornRelic) int {
 				continue
 			}
 			for _, e := range rule.Then {
-				if e.Do == DoAddDamagePerVitae {
+				if e.Do == DoAddDMGPerVitae {
 					total += e.Amount
 				}
 			}
@@ -1538,8 +1541,8 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
 	return total, seats
 }
 
-// HeldBonus is the flat damage a worn set adds to a blow for the cards the turn **kept back**, and
-// which seats are the reason.
+// HeldDMG is the DMG a worn set adds to the duelist for a blow, for the cards the turn **kept
+// back**, and which seats are the reason.
 //
 // **The predicate is matched against each held card**, so `{ Element: "fire" }` means "for every
 // fire card still in hand" and the amount is paid once per match. That is the same reading a
@@ -1549,12 +1552,11 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
 // same property the rune riders have, and for the same reason: it is a fact about the hand at
 // the moment the blow is added up rather than an event.
 //
-// **It reports how many cards paid as well as what they paid** *(2026-09-14)*, because the run's
-// account writes the term as `Jar of Ice (4 cards)  20` — a figure with no count beside it is the
-// one term in the working the player cannot check against the hand they were holding. It is the
-// tally across every seat, which is the figure the merged term is: two jars paying for six cards
-// between them is one term of six.
-func HeldBonus(worn []WornRelic, held []Card) (total, cards int, seats []bool, pays []HeldPay) {
+// **It reports how many cards paid as well as what they paid**, because the run's account writes
+// the raise as `Jar of Ice (4 cards kept back)  +20 DMG` — a figure with no count beside it is one
+// the player cannot check against the hand they were holding. It is the tally across every seat:
+// two jars paying for six cards between them is one raise of six.
+func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
 	// A named return, so it needs building like every other seat row here: one entry per worn
 	// relic, all false until one of them pays.
 	seats = make([]bool, len(worn))
@@ -1565,7 +1567,7 @@ func HeldBonus(worn []WornRelic, held []Card) (total, cards int, seats []bool, p
 				continue
 			}
 			for _, e := range rule.Then {
-				if e.Do != DoAddDamagePerHeld {
+				if e.Do != DoAddDMGPerHeld {
 					continue
 				}
 				for _, c := range held {
@@ -1573,33 +1575,12 @@ func HeldBonus(worn []WornRelic, held []Card) (total, cards int, seats []bool, p
 						total += e.Amount
 						cards++
 						seats[seat] = true
-						pays = append(pays, HeldPay{Amount: e.Amount, Seat: seat, Card: c})
 					}
 				}
 			}
 		}
 	}
-	return total, cards, seats, pays
-}
-
-// HeldPay is one held card paying one worn relic's figure into the blow: what it paid, which worn
-// seat paid it, and which card it was paid for.
-//
-// **It is the per-card reading of the same tally `HeldBonus` totals**, and it exists because the
-// sum shows its working a card at a time: six earth cards kept back are six `+5` terms rather than
-// one `+30`, so the player can count the jar's term against the hand still in front of them. The
-// total stays on the event beside it, because the run's account writes the merged figure.
-//
-// Two jars paying for the same card are two entries, one per seat — which is what lets each term
-// fly out of the relic that paid it.
-// **The card is on it so a screen can point at it.** The figure flies out of the card that is
-// still in the hand rather than out of the relic, and the only other way to find that card is to
-// match a concept and an element back against the row — which is what the held riders have to do
-// and is a second reading of a thing the rules already knew. See screens.mathScript.
-type HeldPay struct {
-	Amount int
-	Seat   int
-	Card   Card
+	return total, cards, seats
 }
 
 // LandingsOf is how many times a card lands, and how, given what its wearer has on.

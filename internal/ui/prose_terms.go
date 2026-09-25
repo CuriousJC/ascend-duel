@@ -3,8 +3,8 @@ package ui
 // **The working under a blow, read off the event and written down as records.**
 //
 // The hand dialog works every hit out at the size of the screen while it lands, and then it is
-// gone. These are the same figures kept: each hit's card, which relic priced it, the flat terms,
-// the multipliers and what the hit came to. What the run's account is *for* is being read back
+// gone. These are the same figures kept: each hit's card, which relic priced it, what raised the
+// DMG, the multipliers and what the hit came to. What the run's account is *for* is being read back
 // after the fight, which is the one thing the dialog cannot do.
 //
 // **Every figure comes off the event and nothing here multiplies, adds or rounds.** `HandAmounts`,
@@ -29,7 +29,7 @@ import (
 const termIndent = 24
 
 // HandTermRecords is the whole working under one blow, in the order the arithmetic happens in:
-// what raised the DMG, the flat terms every hit carries, a line per hit, and the total.
+// what raised the DMG, a line per hit, and the total.
 //
 // `played` is the side's resolved actions in order, which is what `HandCards` indexes. A hand
 // naming an action the walk did not see writes no line rather than guessing at one; that cannot
@@ -44,12 +44,7 @@ func HandTermRecords(e combat.Event, relics []combat.WornRelic, played []combat.
 	// **What raised the DMG comes before the hits it raised**, because that is the order the
 	// arithmetic happens in: the rung is read, the duelist swings bigger, and only then is there a
 	// hit to write.
-	if r, ok := handDMGRecord(e, relics); ok {
-		out = append(out, r)
-	}
-
-	// **Then the flat terms**, once each, because each is the same figure in every hit below.
-	out = append(out, flatTermRecords(e, relics)...)
+	out = append(out, handDMGRecords(e, relics)...)
 
 	for i := 0; i < e.HandCardCount && i < len(e.HandAmounts); i++ {
 		idx := e.HandCards[i]
@@ -87,15 +82,15 @@ func hitRecord(e combat.Event, i int, card combat.Card, relics []combat.WornReli
 		HandScale:  e.HandScale,
 		Total:      e.HitAmounts[i],
 	}
-	for _, flat := range []int{e.HeldBonus, e.VitaeBonus} {
-		if flat != 0 {
-			rec.Flats = append(rec.Flats, flat)
-		}
-	}
 	return rec
 }
 
-// handDMGRecord is what a relic did to the DMG this blow was swung at.
+// handDMGRecords is what the relics did to the DMG this blow was swung at: the rung's raise, the
+// cards kept back, then the purse.
+//
+// **A count goes beside the held cards' figure**: `Jar of Ice (4 cards kept back) +20 DMG` can be
+// checked against the hand that was being held; a bare 20 is a number the player has to take on
+// trust three fights later, when the hand is long gone.
 //
 // **It is not a term and must never be written as one.** A rung relic raises the duelist's DMG for
 // the length of one blow, so a Twinned Ring on a duelist of 14 makes a Pair swing at 16 and every
@@ -104,41 +99,33 @@ func hitRecord(e combat.Event, i int, card combat.Card, relics []combat.WornReli
 //
 // **Without it the relic would be invisible**, which is the one thing a relic may never be — a
 // player whose cards quietly got bigger has no way to tell a relic from a better hand.
-func handDMGRecord(e combat.Event, relics []combat.WornRelic) (session.LedgerRecord, bool) {
-	if e.HandBonus == 0 {
-		return session.LedgerRecord{}, false
-	}
-	return session.LedgerRecord{
-		Kind:   session.KindTerm,
-		Role:   session.RoleDMG,
-		Relic:  relicNames(relics, e.HandBonusSeats),
-		Hand:   HandTitle(e),
-		Amount: e.HandBonus,
-	}, true
-}
-
-// flatTermRecords is the working under the two terms no card paid: the cards the turn kept back,
-// and the purse. Each names the relic that put it into every hit.
-//
-// **A count goes beside the figure wherever there is one to give.** `Jar of Ice (4 cards kept
-// back) 20` can be checked against the hand that was being held; a bare 20 is a number the player
-// has to take on trust three fights later, when the hand is long gone.
-func flatTermRecords(e combat.Event, relics []combat.WornRelic) []session.LedgerRecord {
+func handDMGRecords(e combat.Event, relics []combat.WornRelic) []session.LedgerRecord {
 	var out []session.LedgerRecord
-	if e.HeldBonus != 0 {
+	if e.HandBonus != 0 {
 		out = append(out, session.LedgerRecord{
-			Kind: session.KindTerm, Role: session.RoleFlat,
-			Relic:  relicNames(relics, e.HeldBonusSeats),
-			Note:   cardCount(e.HeldBonusCards) + " kept back",
-			Amount: e.HeldBonus,
+			Kind:   session.KindTerm,
+			Role:   session.RoleDMG,
+			Relic:  relicNames(relics, e.HandBonusSeats),
+			Hand:   HandTitle(e),
+			Amount: e.HandBonus,
 		})
 	}
-	if e.VitaeBonus != 0 {
+	if e.HeldDMG != 0 {
 		out = append(out, session.LedgerRecord{
-			Kind: session.KindTerm, Role: session.RoleFlat,
-			Relic:  relicNames(relics, e.VitaeBonusSeats),
+			Kind:   session.KindTerm,
+			Role:   session.RoleDMG,
+			Relic:  relicNames(relics, e.HeldDMGSeats),
+			Note:   cardCount(e.HeldDMGCards) + " kept back",
+			Amount: e.HeldDMG,
+		})
+	}
+	if e.VitaeDMG != 0 {
+		out = append(out, session.LedgerRecord{
+			Kind:   session.KindTerm,
+			Role:   session.RoleDMG,
+			Relic:  relicNames(relics, e.VitaeDMGSeats),
 			Note:   "the purse",
-			Amount: e.VitaeBonus,
+			Amount: e.VitaeDMG,
 		})
 	}
 	return out

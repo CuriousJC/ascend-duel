@@ -199,7 +199,7 @@ in `MECHANICS.md`; these are what matter to the screen.
 
 *`combat_mathbox.go`.* On the beat a hand fires, **every hit's arithmetic is played out at once**, a
 line under each card on the table, defenses included: the DMG flying off the duelist card, the card's own
-multiplier off the card, each relic's factor off its relic, the flat terms, the hand's multiplier
+multiplier off the card, each relic's factor off its relic, the hand's multiplier
 off the banner, then the hit's figure. A card that lands several times — an echo, a form repeat —
 stacks its lines under itself. Every line but the first carries its `+` on the left rather than on
 a row of its own *(owner's call)*.

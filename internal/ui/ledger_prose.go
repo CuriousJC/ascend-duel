@@ -264,8 +264,13 @@ func termLine(r session.LedgerRecord) session.LedgerLine {
 		// **It carries no figure in a hit's line's column**, because the bigger figure is already inside
 		// every term below it. This says where it came from, which is the whole reason it is drawn:
 		// a relic folded into a number the game already shows is a relic the player cannot see.
+		// A rung's raise names the hand that paid it; the purse's names the purse.
+		why := r.Hand
+		if why == "" {
+			why = r.Note
+		}
 		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
-			{Text: fmt.Sprintf("%-14s", r.Relic+" ("+r.Hand+")"), Ink: session.InkRelic},
+			{Text: fmt.Sprintf("%-14s", r.Relic+" ("+why+")"), Ink: session.InkRelic},
 			{Text: fmt.Sprintf("+%d DMG", r.Amount), Ink: session.InkRelic},
 		}}
 

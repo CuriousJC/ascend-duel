@@ -1034,7 +1034,7 @@ func TestTheHandBonusIsBaseDamageAndNotATerm(t *testing.T) {
 	}
 	// **And it is still inside the multiplier**, on every hit. A bonus applied to the answer would
 	// be the same relic at every rung.
-	if want := hitsWorth(after, 0); after.Amount != want {
+	if want := hitsWorth(after); after.Amount != want {
 		t.Errorf("the hits came to %d, want %d — the raise is not being multiplied with the cards",
 			after.Amount, want)
 	}
@@ -1097,7 +1097,7 @@ func TestTwoHandRelicsOnOneRungAdd(t *testing.T) {
 	}
 }
 
-// --- the held bonus ----------------------------------------------------------------------------
+// --- the held raise ----------------------------------------------------------------------------
 
 func TestAHeldRuleIsRefusedAlongsideABlowPredicate(t *testing.T) {
 	// **A held card is in neither pile the blow predicates name.** `Lead` is the first card played
@@ -1108,17 +1108,17 @@ func TestAHeldRuleIsRefusedAlongsideABlowPredicate(t *testing.T) {
 	refused(t, "held and lead", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Lead: true},
-		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddDMGPerHeld, Amount: 5}},
 	})
 	refused(t, "held and hand", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Hands: []HandID{pair}},
-		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddDMGPerHeld, Amount: 5}},
 	})
 	refused(t, "held at card-damage", RelicRule{
 		When: MomentCardDamage,
 		If:   RelicCondition{Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddDMGPerHeld, Amount: 5}},
 	})
 }
 
@@ -1129,7 +1129,7 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 	smolder := relic(t, "smolder", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddDMGPerHeld, Amount: 5}},
 	})
 
 	fire := Of(Bash, Fire)
@@ -1148,7 +1148,7 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 		{"the wrong color held", []Card{ice, ice}, 0, 0},
 		{"one of each", []Card{fire, ice}, 5, 1},
 	} {
-		got, cards, seats, _ := HeldBonus(wearer.WornRelics(), tc.held)
+		got, cards, seats := HeldDMG(wearer.WornRelics(), tc.held)
 		if got != tc.want {
 			t.Errorf("%s paid %d, want %d", tc.name, got, tc.want)
 		}
@@ -1163,37 +1163,36 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 	}
 }
 
-func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
+func TestTheHeldCardsRaiseTheDuelistsDMG(t *testing.T) {
 	// **Through the real round**, because the seat is the thing being tested: the held hand is a
-	// parameter of ResolveRound that only the blow's own sum ever reads, and a verb wired to the
-	// wrong pile would still pass every unit test of HeldBonus.
+	// parameter of ResolveRound that only the blow ever reads, and a verb wired to the wrong pile
+	// would still pass every unit test of HeldDMG.
 	smolder := relic(t, "smolder-round", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddDMGPerHeld, Amount: 5}},
 	})
 
 	played := []Card{Of(Slice, Earth), Of(Slice, Earth)}
 	held := []Card{Of(Bash, Fire), Of(Bash, Fire)}
 
-	bare, _, _ := ResolveRoundHolding(duelist(10, 5, 100), duelist(10, 5, 100000),
-		played, nil, held, nil, 1, Sources{})
-	worn, _, _ := ResolveRoundHolding(duelist(10, 5, 100).Wearing(WornRelic{Relic: smolder}),
+	events, _, _ := ResolveRoundHolding(duelist(10, 5, 100).Wearing(WornRelic{Relic: smolder}),
 		duelist(10, 5, 100000), played, nil, held, nil, 1, Sources{})
+	e := handEventOf(t, events, SideA)
 
-	before := handEventOf(t, bare, SideA)
-	after := handEventOf(t, worn, SideA)
-
-	if after.HeldBonus != 10 {
-		t.Errorf("two held fire cards paid %d into every hit, want 10", after.HeldBonus)
+	if e.HeldDMG != 10 || e.HeldDMGCards != 2 {
+		t.Errorf("two held fire cards raised DMG by %d over %d cards, want 10 over 2", e.HeldDMG, e.HeldDMGCards)
 	}
-	// **Every hit carries it**, before the multiplier.
-	if cardTerms(after) != cardTerms(before) {
-		t.Errorf("the held bonus moved the cards' own terms from %d to %d", cardTerms(before), cardTerms(after))
+	// **It raises the duelist, never the hit**: the cards are swung at 20 and nothing is added
+	// after them.
+	if e.HandDMG != 20 || e.HandDMGBare != 10 {
+		t.Errorf("the blow was swung at %d (bare %d), want 20 on a bare 10", e.HandDMG, e.HandDMGBare)
 	}
-	if want := hitsWorth(after, 10); after.Amount != want {
-		t.Errorf("the hits came to %d, want %d — the held bonus is not in every hit, multiplied",
-			after.Amount, want)
+	if want := played[0].Damage(20); e.HandCardBase[0] != want {
+		t.Errorf("the card's term was %d, want the card at DMG 20, %d", e.HandCardBase[0], want)
+	}
+	if want := hitsWorth(e); e.Amount != want {
+		t.Errorf("the hits came to %d, want the raised cards multiplied, %d", e.Amount, want)
 	}
 }
 
@@ -1203,7 +1202,7 @@ func TestAHeldCardPaysAgainEveryTurnItIsStillHeld(t *testing.T) {
 	bedrock := relic(t, "bedrock", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Element: Earth, HasElement: true},
-		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddDMGPerHeld, Amount: 5}},
 	})
 
 	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: bedrock})
@@ -1214,8 +1213,8 @@ func TestAHeldCardPaysAgainEveryTurnItIsStillHeld(t *testing.T) {
 		events, _, _ := ResolveRoundHolding(wearer, duelist(10, 5, 100000),
 			played, nil, held, nil, round, Sources{})
 		e := handEventOf(t, events, SideA)
-		if e.HeldBonus != 5 {
-			t.Errorf("round %d paid %d for the same held card, want 5", round, e.HeldBonus)
+		if e.HeldDMG != 5 {
+			t.Errorf("round %d raised DMG by %d for the same held card, want 5", round, e.HeldDMG)
 		}
 	}
 }
@@ -1276,49 +1275,59 @@ func TestGrowPerCardIsRefusedWithNothingToCount(t *testing.T) {
 	})
 }
 
-// TestTheVitaeBonusReachesTheBlowAndIsMultiplied. Rampant's figure is a fact about the run, not
-// about a card, so it joins Base after every card term and is scaled with the rest of them.
-func TestTheVitaeBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
+// TestThePurseRaisesTheDuelistsDMG. Rampant raises the duelist rather than the hit: the purse is
+// folded into the DMG the blow is swung at, as a rung relic's raise is, so every card grows by its
+// own multiplier and nothing is added to a hit afterwards.
+func TestThePurseRaisesTheDuelistsDMG(t *testing.T) {
 	id := relic(t, "rampanttest.pays", RelicRule{
 		When: MomentFightStart,
-		Then: []RelicEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
+		Then: []RelicEffect{{Do: DoAddDMGPerVitae, Amount: 1}},
 	})
 
 	slash := slashCard(t)
 	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: id})
 	wearer.Vitae = 30 // the purse session.Equip seeded the duel with
 
-	events, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
+	events, after, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
 	e := handEventOf(t, events, SideA)
 
-	if e.VitaeBonus != 30 {
-		t.Errorf("the purse paid %d, want 30", e.VitaeBonus)
+	if e.VitaeDMG != 30 {
+		t.Errorf("the purse raised DMG by %d, want 30", e.VitaeDMG)
 	}
-	if !e.VitaeBonusSeats[0] {
-		t.Error("the relic that pays has to be attributable, or the figure cannot fly from it")
+	if !e.VitaeDMGSeats[0] {
+		t.Error("the relic that raises has to be attributable, or the duelist card cannot say which")
 	}
-	if want := hitsWorth(e, 30); e.Amount != want {
-		t.Errorf("the hits came to %d where each hit plus the purse, multiplied, says %d", e.Amount, want)
+	if e.HandDMG != 40 || e.HandDMGBare != 10 {
+		t.Errorf("the blow was swung at %d (bare %d), want 40 on a bare 10", e.HandDMG, e.HandDMGBare)
+	}
+	if want := slash.Damage(40); e.HandCardBase[0] != want {
+		t.Errorf("the card's term was %d, want the card at DMG 40, %d", e.HandCardBase[0], want)
+	}
+	if want := hitsWorth(e); e.Amount != want {
+		t.Errorf("the hits came to %d where the raised cards, multiplied, say %d", e.Amount, want)
+	}
+	if after.DMG != 10 {
+		t.Errorf("the duelist left the round on DMG %d, want the 10 it came in with", after.DMG)
 	}
 }
 
-// TestDamagePerVitaeIsAskedOfTheRelicsAndNotTheDuelist. The seam that keeps the purse out of the
+// TestDMGPerVitaeIsAskedOfTheRelicsAndNotTheDuelist. The seam that keeps the purse out of the
 // rules: combat reports the *rate*, and whoever knows what the run is carrying does the sum.
-func TestDamagePerVitaeIsAskedOfTheRelicsAndNotTheDuelist(t *testing.T) {
+func TestDMGPerVitaeIsAskedOfTheRelicsAndNotTheDuelist(t *testing.T) {
 	one := relic(t, "rampanttest.rateOne", RelicRule{
 		When: MomentFightStart,
-		Then: []RelicEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
+		Then: []RelicEffect{{Do: DoAddDMGPerVitae, Amount: 1}},
 	})
 	two := relic(t, "rampanttest.rateTwo", RelicRule{
 		When: MomentFightStart,
-		Then: []RelicEffect{{Do: DoAddDamagePerVitae, Amount: 2}},
+		Then: []RelicEffect{{Do: DoAddDMGPerVitae, Amount: 2}},
 	})
 
 	worn := []WornRelic{{Relic: one}, {Relic: two}}
-	if got := DamagePerVitae(worn); got != 3 {
+	if got := DMGPerVitae(worn); got != 3 {
 		t.Errorf("two relics rated %d a vitae between them, want 3", got)
 	}
-	if got := DamagePerVitae(nil); got != 0 {
+	if got := DMGPerVitae(nil); got != 0 {
 		t.Errorf("a bare duelist is rated %d a vitae, want 0", got)
 	}
 }
@@ -1330,7 +1339,7 @@ func TestDamagePerVitaeIsAskedOfTheRelicsAndNotTheDuelist(t *testing.T) {
 func TestThePurseIsReReadEveryBlow(t *testing.T) {
 	id := relic(t, "rampanttest.reread", RelicRule{
 		When: MomentFightStart,
-		Then: []RelicEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
+		Then: []RelicEffect{{Do: DoAddDMGPerVitae, Amount: 1}},
 	})
 
 	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: id})
@@ -1346,8 +1355,8 @@ func TestThePurseIsReReadEveryBlow(t *testing.T) {
 			played, nil, held, nil, round, Sources{})
 
 		e := handEventOf(t, events, SideA)
-		if e.VitaeBonus != want {
-			t.Errorf("round %d paid %d on a purse of %d, want %d", round, e.VitaeBonus, wearer.Vitae, want)
+		if e.VitaeDMG != want {
+			t.Errorf("round %d raised DMG by %d on a purse of %d, want %d", round, e.VitaeDMG, wearer.Vitae, want)
 		}
 		wearer = after
 	}

@@ -15,7 +15,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -271,8 +270,8 @@ func (s *CombatScene) roundTimerSpent(limit int) int {
 
 // drawRoundTimer draws one cell per round, filled for the rounds already spent.
 //
-// **The last cell is the game's one red** — `modalCloseColor`, the color the destructive answer
-// on a confirm dialog takes — and it is lit only once the fight has actually reached it. There is
+// **The last cell is the red one** — `ui.BarCellOver`, the AP bar's overspend cell, in the game's
+// one red — and it is lit only once the fight has actually reached it. There is
 // no hue left to claim (see CLAUDE.md), and this is not claiming one: it is the existing meaning
 // of that red, which is "this ends something", arriving at the moment it becomes true.
 func (s *CombatScene) drawRoundTimer(gs *state.GlobalState, screen *ebiten.Image) {
@@ -294,18 +293,13 @@ func (s *CombatScene) drawRoundTimer(gs *state.GlobalState, screen *ebiten.Image
 			continue // a limit high enough that a cell is thinner than its own gap draws nothing
 		}
 
-		// An unspent round is the ground's ink at a quarter strength: present enough to be
-		// counted, quiet enough not to read as a round already gone. `ColorToward` rather than
-		// `ColorAtStrength`, because the table is light — see CLAUDE.md.
-		fill := systems.ColorToward(ui.GroundInk, ui.ScreenGround, 75)
+		kind := ui.BarCellEmpty
 		if i < spent {
-			fill = ui.GroundInk
+			kind = ui.BarCellSpent
 			if i == limit-1 {
-				fill = ui.ModalCloseColor
+				kind = ui.BarCellOver
 			}
 		}
-
-		systems.BevelRect(screen, x0, r.Min.Y, x1-x0, r.Dy(),
-			systems.PaneBevelWidth, fill, i >= spent)
+		ui.DrawBarCell(gs, screen, kind, image.Rect(x0, r.Min.Y, x1, r.Max.Y))
 	}
 }

@@ -2534,5 +2534,14 @@
     "Screen": "combat",
     "Dummy": true,
     "Actions": 9
+  },
+  {
+    "ScenarioRecord": "backdrop",
+    "Note": "The duel's painted backdrop with everything that sits on top of it: five relics in the translucent pane, two runes filling the sack beside it, and a five-round fight so the round timer and the AP bar both fill with the authored bar cells as it is played. It answers one question - does everything drawn straight onto the table still read over a picture rather than over the old gradient. Select cards to watch the AP bar fill, go over budget to see the red cells, and play the rounds out to see the timer's last cell turn red.",
+    "Relics": ["dmgx-fire", "repeat-ice", "discount-arcane", "jar-earth", "sundering"],
+    "Runes": ["left-to-right", "change-wildcard"],
+    "Screen": "combat",
+    "Seed": "CGPBSC",
+    "Life": 60
   }
 ]

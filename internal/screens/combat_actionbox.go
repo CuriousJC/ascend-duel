@@ -8,7 +8,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -71,7 +70,7 @@ const (
 	// rather than the bar moving up: the strip below it holds the deck stack, and its top is
 	// measured from the bar.
 	apBarBelow  = 14
-	apBarHeight = 8
+	apBarHeight = 16
 
 	// Both buttons on that strip are the same size, and it is named here rather than written
 	// at the two NewButton calls because **three other things are placed against it**: the
@@ -542,7 +541,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 	top := float32(handTop(gs))
 	below := top + cardHeight
 
-	s.drawAPBar(screen, left, below+apBarBelow, right-left)
+	s.drawAPBar(gs, screen, left, below+apBarBelow, right-left)
 	s.drawAPFigure(gs, screen, band.Min.X, int(below)+apBarBelow+apBarHeight)
 
 	// **The card under the cursor is drawn last, so it is drawn whole** — raisedSeat, the reading
@@ -789,20 +788,19 @@ func buttonStripSlots(gs *state.GlobalState, discardWidth, duelWidth int) (int, 
 // which is the small text the bar exists to save them from. Segmented, the count is
 // countable: three lit cells and three dark ones says "three left" without a number.
 //
-// **It is the round timer's picture, one row down** *(owner's call, 2026-09-10)*. Both bars
-// answer the same shape of question — a discrete resource being spent down over a fight — and
-// they were answering it two different ways: flat rectangles here, bevelled cells up there. The
-// cells now come off `systems.BevelRect` at `PaneBevelWidth` on the same rule the timer uses, so
-// **an unspent point is sunken and a spent one is raised**: the bar fills with bubbles standing
-// out of the row rather than with a stripe growing along it, which is what makes the spend read
-// as something arriving rather than as a level. The two bars deliberately keep their own
-// dimensions — this one is 8px tall in the hand band and the timer is 14 in the left column — so
-// what is shared is the treatment, not the footprint.
+// **It is the round timer's picture, one row down.** Both bars answer the same shape of question —
+// a discrete resource being spent down over a fight — so both are built from the same three
+// authored cells, `ui.DrawBarCell`: an unspent point is an empty socket and a spent one a piece
+// standing in it, so the bar fills with pieces arriving rather than with a stripe growing along
+// it. **The art carries its own heavy black contour**, which is what lets it read over a painted
+// backdrop. The two bars keep their own dimensions — this one is 16px tall in the hand band and the
+// timer is 14 in the left column — so what is shared is the art, not the footprint. At 16px the
+// contour is about two pixels; much shorter and it averages away.
 //
 // The cells still make the budget boundary draw itself. Where amber meets red *is* the edge of
 // what can be afforded, so the white tick that used to mark it is gone — it was pointing at
 // something the colors now say on their own.
-func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) {
+func (s *CombatScene) drawAPBar(gs *state.GlobalState, screen *ebiten.Image, left, top, width float32) {
 	budget := s.fighter.ActionPoints()
 	if budget <= 0 {
 		return
@@ -816,45 +814,34 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 		cells = spent
 	}
 
-	// **The empty cell is the round timer's, not a dimmed version of the fill.** It was
-	// `ColorToward(bar color, ground, 50)` while the fill was blue, which made an unspent cell a
-	// quiet copy of a spent one; now that a spent cell is red, a red at half strength would read
-	// as a *partly* spent point. The ground's ink at a quarter strength is present enough to be
-	// counted and says nothing about the resource. `ColorToward` rather than `ColorAtStrength`,
-	// because the table is light — see CLAUDE.md.
-	empty := systems.ColorToward(ui.GroundInk, ui.ScreenGround, 75)
 	cellWidth := (width - float32(cells-1)*apBarGap) / float32(cells)
+	bar := func(kind ui.BarCell, x, w float32) {
+		ui.DrawBarCell(gs, screen, kind, image.Rect(int(x), int(top), int(x+w), int(top)+apBarHeight))
+	}
 
 	// A cell narrower than a couple of pixels is a smear rather than a count, which a big
 	// enough bonus could produce. Fall back to one unbroken bar at that point: it stops
 	// being countable either way, and stripes are the worse of the two.
 	if cellWidth < apBarMinCell {
-		systems.BevelRect(screen, int(left), int(top), int(width), apBarHeight,
-			systems.PaneBevelWidth, empty, true)
+		bar(ui.BarCellEmpty, left, width)
 		filled := width * float32(min(spent, budget)) / float32(cells)
-		systems.BevelRect(screen, int(left), int(top), int(filled), apBarHeight,
-			systems.PaneBevelWidth, apSpentColor, false)
+		bar(ui.BarCellSpent, left, filled)
 		if spent > budget {
-			over := width * float32(spent-budget) / float32(cells)
-			systems.BevelRect(screen, int(left+filled), int(top), int(over), apBarHeight,
-				systems.PaneBevelWidth, apOverColor, false)
+			bar(ui.BarCellOver, left+filled, width*float32(spent-budget)/float32(cells))
 		}
 		return
 	}
 
 	for i := 0; i < cells; i++ {
-		fill, sunken := empty, true
+		kind := ui.BarCellEmpty // still available
 		switch {
-		case i >= spent: // still available
+		case i >= spent:
 		case i < budget:
-			fill, sunken = apSpentColor, false
+			kind = ui.BarCellSpent
 		default:
-			fill, sunken = apOverColor, false
+			kind = ui.BarCellOver
 		}
-
-		systems.BevelRect(screen,
-			int(left+float32(i)*(cellWidth+apBarGap)), int(top),
-			int(cellWidth), apBarHeight, systems.PaneBevelWidth, fill, sunken)
+		bar(kind, left+float32(i)*(cellWidth+apBarGap), cellWidth)
 	}
 }
 

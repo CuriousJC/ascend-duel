@@ -5,6 +5,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
@@ -508,6 +509,11 @@ func TestThereIsOneButtonPerSortMode(t *testing.T) {
 
 		if spec.Label == "" {
 			t.Errorf("%v has no symbol on its button", spec.Mode)
+		}
+		// A label the figure lettering does not cover falls back to the font, and is then the
+		// one button on the screen not in the game's own lettering.
+		if !systems.FigureCovers(spec.Label) {
+			t.Errorf("%v's label %q is not drawable in the figure lettering", spec.Mode, spec.Label)
 		}
 	}
 	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByType, ui.SortByElement} {

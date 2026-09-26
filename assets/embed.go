@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"embed"
 	"image"
+	_ "image/jpeg"
 	_ "image/png"
 	"log"
 	"strings"
@@ -31,6 +32,37 @@ var title_png []byte
 
 //go:embed game/title-easter-egg.png
 var titleEaster_png []byte
+
+// THE DUEL'S BACKDROPS
+//
+// The painted places a duel is fought in front of, at the screen's own 1920x1080. **A family**,
+// keyed by filename stem like the relics, so `background/default-background.jpg` is
+// `default-background` — which is what `data.BackgroundData.ArtKey` answers for a backdrop nobody has
+// painted yet. See data/backgrounds.json and docs/art/background_art_prompt.MD.
+//
+// **JPEG, not PNG**: a backdrop is opaque edge to edge and a painted scene is about a sixth the size
+// that way. The image/jpeg import below is what decodes one. Handed out as bytes and decoded when a
+// floor asks for one, because a decoded 1920x1080 picture is eight megabytes and a run only ever
+// shows a handful of them.
+//
+//go:embed background/*.jpg
+var backgroundArt embed.FS
+
+// BAR CELLS
+//
+// The three states a resource bar's cell can be in — a point still to spend, a point spent, a
+// point spent past what there was — drawn once each and stretched by the caller to whatever width
+// the row needs. **A cell is two end caps and a middle every column of which is identical**, so
+// only the middle stretches; see ui.DrawBarCell and docs/art/bar_art_prompt.MD.
+//
+//go:embed bar/bar-cell-empty.png
+var barCellEmpty_png []byte
+
+//go:embed bar/bar-cell-spent.png
+var barCellSpent_png []byte
+
+//go:embed bar/bar-cell-over.png
+var barCellOver_png []byte
 
 // THE GUIDE
 //
@@ -288,6 +320,9 @@ func LoadAssets() map[string]*ebiten.Image {
 
 	assets["title_png"] = loadImage(title_png)
 	assets["titleEaster_png"] = loadImage(titleEaster_png)
+	assets["barCellEmpty_png"] = loadImage(barCellEmpty_png)
+	assets["barCellSpent_png"] = loadImage(barCellSpent_png)
+	assets["barCellOver_png"] = loadImage(barCellOver_png)
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)
@@ -350,6 +385,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, otherArt, "other")
 	embedFamily(images, formArt, "form")
+	embedFamily(images, backgroundArt, "background")
 	embedFamily(images, textureArt, "texture")
 	embedFamily(images, portraits, "enemy")
 
@@ -401,8 +437,20 @@ func embedFamily(images map[string][]byte, fsys embed.FS, dir string) {
 		if err != nil {
 			log.Fatalf("failed to read embedded %s/%s: %v", dir, e.Name(), err)
 		}
-		images[strings.TrimSuffix(e.Name(), ".png")] = raw
+		images[imageStem(e.Name())] = raw
 	}
+}
+
+// imageStem is a family file's key: its name less the picture extension. Only a picture's extension
+// comes off, so a stray file that is not a picture keeps its whole name rather than colliding with
+// one that is.
+func imageStem(name string) string {
+	for _, ext := range []string{".png", ".jpg"} {
+		if strings.HasSuffix(name, ext) {
+			return strings.TrimSuffix(name, ext)
+		}
+	}
+	return name
 }
 
 // LoadFontData returns the raw bytes of each embedded font, keyed like the other maps.

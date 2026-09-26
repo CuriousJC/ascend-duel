@@ -17,6 +17,7 @@ package screens
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"log"
 
 	"math"
@@ -105,9 +106,19 @@ const (
 // **It is derived rather than written down** *(2026-09-07)*. It was a hand-picked tan for as long
 // as the ground was one, and a hand-picked color that is supposed to be "one step off the
 // background" is a color that silently stops being that the moment the background moves — which
-// is exactly what the ground going blue would have done to it. Nine percent is what the tan
-// actually was, kept so the pane reads as it always did.
-var relicPaneBackColor = systems.ColorAtStrength(ui.ScreenGround, 91)
+// is exactly what the ground going blue would have done to it.
+//
+// **It is translucent, so a duel's backdrop shows through it.** An opaque slab across the top of a
+// painted scene cuts the picture in half; a darkened wash keeps the scene and still says where the
+// middle begins. On the gradient the same wash blends to about 84% of the ground — one step off it,
+// which is what the pane has to be there.
+var relicPaneBackColor = func() color.NRGBA {
+	c := systems.ColorAtStrength(ui.ScreenGround, 60)
+	return color.NRGBA{R: c.R, G: c.G, B: c.B, A: relicPaneBackAlpha}
+}()
+
+// relicPaneBackAlpha is how much of the pane's wash covers what is under it: 40%.
+const relicPaneBackAlpha = 102
 
 // relicPaneRect is the row's extent: the cards' own band, running between the two corner cards
 // and dropped relicPaneTopDrop below them.

@@ -70,15 +70,19 @@ const SortColumnGap = 12
 // times to say what the group is. `Form` is the axis the middle one actually sorts on; it was
 // called Type when the label was one letter.
 //
+// **They are set in capitals so the button draws them in the figure lettering** — the set is upper
+// case, and a label with a lower-case letter in it falls back to the font, which is how these three
+// came to be the only buttons on the screen not in the game's own lettering.
+//
 // **They carry no tooltip**, and with the labels spelled out they no longer want one — see the
 // tooltip entry in TODO.md, which names the figures written straight onto the table as the gap.
 var SortButtonSpecs = []struct {
 	Mode  HandSort
 	Label string
 }{
-	{SortByCost, "Cost"},
-	{SortByType, "Form"},
-	{SortByElement, "Element"},
+	{SortByCost, "COST"},
+	{SortByType, "FORM"},
+	{SortByElement, "ELEMENT"},
 }
 
 // SortButtonColor is a muted slate, quieter than either button on the combat screen's strip.

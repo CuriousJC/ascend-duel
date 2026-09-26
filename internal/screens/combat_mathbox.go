@@ -155,10 +155,11 @@ const (
 	mathBoldMinStep  = 1
 	mathBoldSizeStep = 32 // one pixel of thickening per this many points
 
-	// mathPreviewAlpha is how solid it is. Far enough back to read as a proposal rather than an
-	// event, and it is the second mark saying so: the size alone was ambiguous against a long
-	// hand name, which fills more of the band than a short one at any size.
-	mathPreviewAlpha = 0.62
+	// mathPreviewAlpha is how solid it is: fully. **A see-through word over a painted backdrop
+	// takes on the scene under it**, and the figure glyphs carry their own black contour
+	// precisely so they read on anything — a fade throws that away. The breath is what says the
+	// word is a proposal rather than an event.
+	mathPreviewAlpha = 1.0
 
 	// The breath: how far the hand's name swells past its own size and how long a full
 	// expand-and-contract takes, in ticks at 60 a second.

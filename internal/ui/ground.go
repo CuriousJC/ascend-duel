@@ -1,8 +1,15 @@
 package ui
 
 import (
+	"bytes"
+	"image"
 	"image/color"
+	_ "image/jpeg"
+	"log"
+	"sync"
 
+	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -126,6 +133,65 @@ func FillGround(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(float64(screen.Bounds().Dx()), 1)
 	screen.DrawImage(groundStrip, op)
+}
+
+// Backgrounds is the backdrop catalog, loaded once.
+var Backgrounds = sync.OnceValue(data.LoadBackgrounds)
+
+// backdrops holds each backdrop decoded, by asset key. A run shows a handful of them and a decoded
+// one is eight megabytes, so one is decoded the first time a floor asks for it rather than at launch.
+var backdrops = map[string]*ebiten.Image{}
+
+// Backdrop is the picture an asset key names, decoded, or the default backdrop when the key names
+// nothing — and nil only when even that is missing, which FillBackdrop answers with the gradient.
+func Backdrop(gs *state.GlobalState, key string) *ebiten.Image {
+	if img, ok := backdrops[key]; ok {
+		return img
+	}
+	raw := gs.ImageData[key]
+	if len(raw) == 0 {
+		if key != data.DefaultBackgroundArt {
+			log.Printf("backdrop: no picture named %q", key)
+			return Backdrop(gs, data.DefaultBackgroundArt)
+		}
+		return nil
+	}
+	decoded, _, err := image.Decode(bytes.NewReader(raw))
+	if err != nil {
+		log.Printf("backdrop: decoding %q: %v", key, err)
+		backdrops[key] = nil
+		return nil
+	}
+	img := ebiten.NewImageFromImage(decoded)
+	backdrops[key] = img
+	return img
+}
+
+// FillBackdrop paints a picture as the whole ground of a screen, scaled to cover it. A nil picture
+// falls back to FillGround, so a screen asking for a backdrop that was never loaded still has a
+// table to stand on.
+//
+// **What is painted straight onto the table was tuned against FillGround's light slate**, and a
+// backdrop does not guarantee it: `GroundInk` type and anything dimmed toward `ScreenGround` are
+// both reading a color the picture is not.
+func FillBackdrop(screen, picture *ebiten.Image) {
+	if picture == nil {
+		FillGround(screen)
+		return
+	}
+	sw, sh := screen.Bounds().Dx(), screen.Bounds().Dy()
+	pw, ph := picture.Bounds().Dx(), picture.Bounds().Dy()
+	if pw <= 0 || ph <= 0 {
+		FillGround(screen)
+		return
+	}
+	scale := max(float64(sw)/float64(pw), float64(sh)/float64(ph))
+
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(scale, scale)
+	op.GeoM.Translate((float64(sw)-float64(pw)*scale)/2, (float64(sh)-float64(ph)*scale)/2)
+	op.Filter = ebiten.FilterLinear
+	screen.DrawImage(picture, op)
 }
 
 // groundAtRow is the gradient's color on one row of a screen h tall.

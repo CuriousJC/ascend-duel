@@ -321,8 +321,7 @@ type Blow struct {
 	Cards []int
 
 	// Rung is the cards that actually made the hand, a subset of Cards and in the same turn
-	// indices. Two things ask that narrower question: `RiderScaleInCombo`, whose entire meaning is
-	// "this card made the hand", and the screen's lift, which says which cards the announcement is
+	// indices. The screen's lift asks that narrower question — which cards the announcement is
 	// about.
 	//
 	// **Nothing else reads it.** Damage, colors, statuses and every relic read `Cards`: what landed

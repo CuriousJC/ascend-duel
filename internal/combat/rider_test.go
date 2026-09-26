@@ -270,26 +270,74 @@ func TestARiddenCardRaisesShieldsAsItIsPlayed(t *testing.T) {
 	}
 }
 
-func TestARiderThatScalesInComboNeedsTheCardToMakeTheHand(t *testing.T) {
-	// **`Blow.Cards` is the scoring set, not the turn** — so a ridden card played *outside* the
-	// hand pays nothing, and the same card played into it doubles the blow. That is the whole
-	// distinction the rider is written to make.
+func TestARiderThatScalesInComboDoublesOnlyItsOwnHit(t *testing.T) {
+	// **A played card's rider prices its own hit and nothing else** *(owner's call, 2026-09-26)*.
+	// Two Bashes form a pair and the ridden Bash is one of them: its hit doubles, and the other
+	// Bash's hit is exactly what it is without the rider in the turn.
 	a := duelist(10, 3, 100)
 	b := duelist(0, 0, 1000)
 
-	// Two Bashes form a pair; the ridden Bash is one of them.
-	inHand, _, _ := resolve(a, b, []Card{carrying(Bash, RiderScaleInCombo, 200), Plain(Bash)}, nil, 1)
+	ridden, _, _ := resolve(a, b, []Card{carrying(Bash, RiderScaleInCombo, 200), Plain(Bash)}, nil, 1)
 	bare, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
+	re, be := handEventOf(t, ridden, SideA), handEventOf(t, bare, SideA)
 
-	// **Within a point, because the multiplier truncates** *(2026-09-05)*. scaleDamage is integer
-	// arithmetic rounding toward zero, so doubling the DMG and *then* scaling is not always the
-	// same as scaling and then doubling — `40 * 114 / 100` is 45 where `(20 * 114 / 100) * 2` is
-	// 44. What this pins is that the ridden card doubled the blow; the odd point is the ladder's
-	// rounding and pinning it exactly would make the test fail on any multiplier that is not a
-	// factor of the sum, which is a tuning constraint nobody agreed to.
-	got, want := blowOf(inHand, SideA), blowOf(bare, SideA)*2
-	if got < want || got > want+1 {
-		t.Errorf("a 2x rider in the combo dealt %d, wanted %d (or one more, for the truncation)", got, want)
+	if want := scaleDamage(be.HandAmounts[0]*2, be.Multiplier); re.HitAmounts[0] != want {
+		t.Errorf("the ridden Bash's hit came to %d, want its term doubled under the hand = %d",
+			re.HitAmounts[0], want)
+	}
+	if re.HitAmounts[1] != be.HitAmounts[1] {
+		t.Errorf("the other Bash's hit came to %d, want the %d it deals with no rider in the turn",
+			re.HitAmounts[1], be.HitAmounts[1])
+	}
+	if re.HandDMG != be.HandDMG {
+		t.Errorf("the turn was swung at %d DMG, want the bare %d: a played card's rider is not the turn's",
+			re.HandDMG, be.HandDMG)
+	}
+	if re.HandPlayPct[0] != 200 || re.HandPlayPct[1] != 100 {
+		t.Errorf("the working says %d%% and %d%%, want 200 on the ridden hit and 100 on the other",
+			re.HandPlayPct[0], re.HandPlayPct[1])
+	}
+}
+
+func TestAScaleOnPlayRiderPaysWithoutMakingTheHand(t *testing.T) {
+	// **Played is enough** *(owner's call, 2026-09-26)*: a Bash beside a pair of Jabs rides along on
+	// their Pair without making it, and its own hit still doubles.
+	a := duelist(10, 3, 100)
+	b := duelist(0, 0, 1000)
+
+	ridden, _, _ := resolve(a, b, []Card{Plain(Jab), Plain(Jab), carrying(Bash, RiderScaleInCombo, 200)}, nil, 1)
+	bare, _, _ := resolve(a, b, PlainCards(Jab, Jab, Bash), nil, 1)
+	re, be := handEventOf(t, ridden, SideA), handEventOf(t, bare, SideA)
+
+	last := re.HandCardCount - 1
+	if want := scaleDamage(be.HandAmounts[last]*2, be.Multiplier); re.HitAmounts[last] != want {
+		t.Errorf("the ridden Bash outside the hand came to %d, want its term doubled under the hand = %d",
+			re.HitAmounts[last], want)
+	}
+	for n := 0; n < last; n++ {
+		if re.HitAmounts[n] != be.HitAmounts[n] {
+			t.Errorf("Jab %d came to %d, want the bare %d", n, re.HitAmounts[n], be.HitAmounts[n])
+		}
+	}
+}
+
+func TestACardsRidersGoOnBeforeItsRelics(t *testing.T) {
+	// **DUELIST, CARD, RELICS, HAND** *(owner's call, 2026-09-26)*: a relic prices what the card came
+	// to after its own riders, so a +10 under a 2x relic is worth 20.
+	keen := relic(t, "order-keen", RelicRule{
+		When: MomentCardDamage,
+		If:   RelicCondition{},
+		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
+	})
+	a := duelist(10, 3, 100).Wearing(WornRelic{Relic: keen})
+	b := duelist(0, 0, 1000)
+
+	ridden, _, _ := resolve(a, b, []Card{carrying(Bash, RiderDamageOnPlay, 10)}, nil, 1)
+	e := handEventOf(t, ridden, SideA)
+	// Bash is 1x: (10 x 1 + 10) x 2 = 40 before the hand.
+	if e.HandAmounts[0] != 40 {
+		t.Errorf("a Bash with +10 under a 2x relic came to %d before the hand, want (10+10) x 2 = 40",
+			e.HandAmounts[0])
 	}
 }
 
@@ -302,5 +350,29 @@ func TestARidersDamageBonusDoesNotOutliveTheBlow(t *testing.T) {
 
 	if after.DMG != 10 {
 		t.Errorf("the duelist came out of the round at %d DMG, wanted 10", after.DMG)
+	}
+}
+
+func TestADamageOnPlayRiderAddsToOnlyItsOwnHit(t *testing.T) {
+	// **The +10 is the card's, not the turn's** *(owner's call, 2026-09-26)*: it goes on the ridden
+	// card's term before the hand multiplies it, and the other card's hit does not see it.
+	a := duelist(10, 3, 100)
+	b := duelist(0, 0, 1000)
+
+	ridden, _, _ := resolve(a, b, []Card{carrying(Bash, RiderDamageOnPlay, 10), Plain(Bash)}, nil, 1)
+	bare, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
+	re, be := handEventOf(t, ridden, SideA), handEventOf(t, bare, SideA)
+
+	if want := scaleDamage(be.HandAmounts[0]+10, be.Multiplier); re.HitAmounts[0] != want {
+		t.Errorf("the ridden Bash's hit came to %d, want its term plus 10 under the hand = %d",
+			re.HitAmounts[0], want)
+	}
+	if re.HitAmounts[1] != be.HitAmounts[1] {
+		t.Errorf("the other Bash's hit came to %d, want the %d it deals with no rider in the turn",
+			re.HitAmounts[1], be.HitAmounts[1])
+	}
+	if re.HandPlayAdd[0] != 10 || re.HandPlayAdd[1] != 0 {
+		t.Errorf("the working says +%d and +%d, want +10 on the ridden hit and nothing on the other",
+			re.HandPlayAdd[0], re.HandPlayAdd[1])
 	}
 }

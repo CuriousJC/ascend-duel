@@ -185,11 +185,7 @@ func RiderLines(c combat.Card, rolls int) []string {
 		case combat.RiderVitaeInHand:
 			out = append(out, plus(r.Amount)+" VITAE IN HAND")
 		case combat.RiderScaleInCombo:
-			// **"IF IT SCORES", not "ON PLAY".** It reads `Blow.Rung` — the cards that made the
-			// rung — so a card can be played, and even swing, without paying this: an attack that
-			// rode along on someone else's Pair did not make it. That distinction is the whole of
-			// what separates this from damage-on-play, and it is one the player can lose.
-			out = append(out, Multiplier(r.Amount)+" DMG IF IT SCORES")
+			out = append(out, Multiplier(r.Amount)+" DMG ON PLAY")
 		case combat.RiderWildElement:
 			out = append(out, "COUNTS AS EVERY ELEMENT")
 		case combat.RiderGolden:
@@ -339,10 +335,7 @@ func FaceLines(c combat.Card) []string {
 		case combat.RiderVitaeInHand:
 			out = append(out, inHand, plus(r.Amount)+" VITAE")
 		case combat.RiderScaleInCombo:
-			// **"IF IT SCORES" rather than "ON PLAY"**, for RiderLines' reason: a turn can play a
-			// card that pays nothing into the scoring set, and that distinction is the whole of what
-			// separates this rider from damage-on-play.
-			out = append(out, scoring, FaceMultiplier(r.Amount)+" DMG")
+			out = append(out, onPlay, FaceMultiplier(r.Amount)+" DMG")
 		case combat.RiderWildElement:
 			// **No heading, because there is no moment.** Every other rider happens at a time; this
 			// one is something the card permanently *is*, and a timing word over it would be
@@ -367,18 +360,13 @@ func FaceLines(c combat.Card) []string {
 	return out
 }
 
-// The three headings a face may carry. **Constants rather than literals** so the set is countable:
-// a fourth moment is a line here, which is where the question "does the player already know this
-// word" gets asked, rather than a string typed into one case.
-//
-// **SCORING is one word where the other two are phrases, and the budget is why.** One word to a
-// line makes the tooltip's `IF IT SCORES` three lines, which is a heading longer than the card it
-// heads; `ON PLAY` and `IN HAND` cost two each and the band can afford those. It is the register
-// the rest of the face is already in — HITS, CUTS, SHIELD — so it does not read as a fourth voice.
+// The two headings a face may carry. **Constants rather than literals** so the set is countable:
+// a third moment is a line here, which is where the question "does the player already know this
+// word" gets asked, rather than a string typed into one case. It is the register the rest of the
+// face is already in — HITS, CUTS, SHIELD — so it does not read as another voice.
 const (
-	onPlay  = "ON PLAY"
-	inHand  = "IN HAND"
-	scoring = "SCORING"
+	onPlay = "ON PLAY"
+	inHand = "IN HAND"
 )
 
 // FaceMultiplier is Multiplier in the case the card faces are set in — 200 as `2x`.

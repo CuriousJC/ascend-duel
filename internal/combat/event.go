@@ -380,9 +380,17 @@ type Event struct {
 	HandDMG     int
 	HandDMGBare int
 
+	// HandPlayAdd[i] and HandPlayPct[i] are what hit i's own card's riders did to its term, after the
+	// card's own multiplier and before any relic: DMG added, then a percentage, 100 for none.
+	// **A played card's rider prices its own hit and nothing else** *(owner's call, 2026-09-26)*,
+	// so it is a step in that hit's working rather than a raise in the DMG every hit is swung at.
+	// HandAmounts already has both inside it, as it has the relics.
+	HandPlayAdd [maxHandTerms]int
+	HandPlayPct [maxHandTerms]int
+
 	// HitAmounts[i] is what hit i comes to before the attacker's weight and the target's
-	// vulnerability: the card's term, times the hand's multiplier, times HandScale — each step
-	// rounded toward zero, on this hit alone.
+	// vulnerability: the card's term (its riders and its relics inside it), times the hand's
+	// multiplier, times HandScale — each step rounded toward zero, on this hit alone.
 	//
 	// **It is the figure the hit's arithmetic ends on**, and `Amount` on this event is the sum of
 	// them — what the hand was worth, not what landed. What landed is each hit's KindDamage, and a

@@ -11,10 +11,11 @@ package screens
 // does on the shop and in a fight. What was a modal frame is now the screen's own ground, and the
 // cards sit where the reward screen's do.
 //
-// **There is still no way out but taking a card.** The dialog had no X because the good is already
-// paid for, and that survives the move: nothing on this screen leaves it, and the chrome stands
-// down the way it does on the reward screen. A good bought and abandoned would be five vitae spent
-// on nothing.
+// **SKIP is the one way out that is not a card** *(owner's call, 2026-09-26)*. The good is already
+// paid for, so skipping it is the player's own choice to spend those vitae on nothing — the reward
+// screen's LET THEM ESCAPE, on the same terms. It is a labelled button at the bottom of the screen
+// rather than an X, because an X means "put this away" everywhere else and this forfeits something.
+// The chrome still stands down the way it does on the reward screen.
 //
 // **It is not a station of a run.** It never touches `session.Phase` — it is reached from the
 // shop's shelf and it goes back to the shop — which is the shape Settings, Achievements, Credits
@@ -23,10 +24,12 @@ package screens
 
 import (
 	"image"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 
+	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -64,7 +67,21 @@ type GoodsScene struct {
 	// like everywhere else** — worn order is a rule, and a screen where a relic is being chosen is
 	// a screen where the order it fires in is worth thinking about.
 	relicDrag ui.CardDrag
+
+	// skipButton leaves without taking anything, and skipping is its request, consumed by Update —
+	// a button's OnClick reaches no global state, and leaving the screen needs it.
+	skipButton *models.Button
+	skipping   bool
 }
+
+// The skip button: its face, and a size about a third of the shop's LEAVE, because it stands in
+// the gutter beside the good's row rather than on a line of its own.
+const (
+	goodsSkipLabel    = "SKIP"
+	goodsSkipWidth    = 140
+	goodsSkipHeight   = 52
+	goodsSkipTextSize = 28
+)
 
 // Init opens whatever the shop paid for.
 //
@@ -72,6 +89,14 @@ type GoodsScene struct {
 // screen reached by a route that should not exist, and it leaves rather than drawing an empty
 // table.
 func (s *GoodsScene) Init(gs *state.GlobalState) {
+	if s.skipButton == nil {
+		s.skipButton = models.NewButton(goodsSkipWidth, goodsSkipHeight, goodsSkipLabel,
+			func() { s.skipping = true })
+		s.skipButton.TextSize = goodsSkipTextSize
+		s.skipButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
+	}
+	s.skipping = false
+
 	s.deck.InitAsPile()
 	s.relicDrag = ui.CardDrag{}
 
@@ -98,6 +123,21 @@ func (s *GoodsScene) Update(gs *state.GlobalState) error {
 	}
 
 	s.updateRelicRow(gs)
+
+	// **Only while the cards are up.** Once an essence is spent the change is playing and the
+	// choice is made, so there is nothing left to skip.
+	if s.stage == goodsPick {
+		seat := s.skipSeat(gs)
+		s.skipButton.ScreenX, s.skipButton.ScreenY = seat.Min.X+seat.Dx()/2, seat.Min.Y+seat.Dy()/2
+		systems.UpdateButton(gs, s.skipButton)
+		if s.skipping {
+			s.skipping = false
+			trace.Logf("goods", "skipped %s, took nothing", s.good.Record)
+			s.reset()
+			leaveGoods(gs)
+			return nil
+		}
+	}
 
 	if !s.update(gs, func(at image.Point) bool { return s.clickedPile(gs, at) }) {
 		// Nothing is open any more: the card was taken and whatever it did has finished playing.
@@ -141,11 +181,25 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	s.drawCards(gs, screen)
+	if s.stage == goodsPick {
+		systems.DrawButton(gs, screen, s.skipButton)
+	}
 	systems.DrawTooltip(gs, screen, &s.tip)
 
 	// Last, and over everything: the panel covers the screen, so nothing of this one may be drawn
 	// on top of it.
 	s.deck.Draw(gs, screen, ui.OwnedContents(gs))
+}
+
+// skipSeat is where SKIP stands: **at the far right, its bottom level with the bottom of the row of
+// things in the good** — the essences, the stones or the runes. Its right edge is the build band's,
+// so the button lines up with the relic row above it rather than with a margin of its own.
+//
+// **Beside the good's own row rather than under the cards**, because the vial's second row is a
+// hand's worth of cards and its compressing pitch runs close to the screen's middle and bottom.
+func (s *GoodsScene) skipSeat(gs *state.GlobalState) image.Rectangle {
+	right, bottom := gs.PctX(buildBandRightPct), s.slot(gs, 0).Max.Y
+	return image.Rect(right-goodsSkipWidth, bottom-goodsSkipHeight, right, bottom)
 }
 
 // updateRelicRow runs the drag over the worn row in the build band.

@@ -221,6 +221,19 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 		nudge = 1
 	}
 
+	// **A label the figure set covers is drawn from it**, white under its black contour, so a
+	// button reads in the same lettering as the figures flying over the table. A label with a
+	// lower-case letter in it is not covered and stays in the font.
+	if FigureCovers(button.Text) {
+		drawButtonFigure(button, nudge)
+		button.Painted = true
+		button.PaintedState = button.State
+		button.PaintedText = button.Text
+		button.PaintedTextSize = button.TextSize
+		button.PaintedColor = button.BaseColor
+		return
+	}
+
 	centerButtonTextOp := &text.DrawOptions{}
 	centerButtonTextOp.GeoM.Translate(
 		float64(button.Width)/2+nudge, float64(button.Height)/2+nudge)
@@ -241,6 +254,36 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 // something does not move it — and disabled never gets a bevel to sink.
 func buttonSunken(button *models.Button) bool {
 	return button.State == models.ButtonStatePressed || button.State == models.ButtonStateLatched
+}
+
+// buttonFigureShare is how tall a figure label's digits stand against the point size the same
+// label would be set at in the font, so a button's TextSize keeps meaning what it meant.
+const buttonFigureShare = 0.6
+
+// buttonFigurePad is the room a figure label keeps from each side of the face before it shrinks.
+const buttonFigurePad = 14
+
+// buttonFigureDisabled is what a disabled button's figure label is multiplied by: the fill goes
+// gray and the contour stays black, which reads as unavailable against the flat disabled face.
+var buttonFigureDisabled = color.RGBA{R: 150, G: 150, B: 150, A: 255}
+
+// drawButtonFigure sets the label from the figure set's neutral sheet, centered on the face.
+//
+// **It shrinks to fit rather than overflowing**: the lettering is wider than the font at the
+// same height, and a face is a fixed width, so a long label on a narrow button comes down in size
+// until it clears both sides.
+func drawButtonFigure(button *models.Button, nudge float64) {
+	height := textSizeOf(button) * buttonFigureShare
+	room := float64(button.Width - 2*buttonFigurePad)
+	if w := MeasureFigure(button.Text, height); w > room && w > 0 {
+		height *= room / w
+	}
+	ink := color.RGBA{}
+	if button.State == models.ButtonStateDisabled {
+		ink = buttonFigureDisabled
+	}
+	DrawFigure(button.Image, button.Text, FigureNeutral, ink,
+		float64(button.Width)/2+nudge, float64(button.Height)/2+nudge, height, 1, 1)
 }
 
 // defaultButtonTextSize is what a button that names no size draws its label at, which is

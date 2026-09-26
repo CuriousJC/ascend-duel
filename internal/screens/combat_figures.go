@@ -4,18 +4,19 @@ package screens
 //
 // **Every string the hand dialog and the flying figures write goes through `drawMathText`**, and a
 // string made only of glyphs the figure set carries is drawn from it rather than set in kubasta.
-// Words — a hand's name, MISS, BLOCKED — stay in the font. `mathWidth` is the one
-// measure both the layout and the drawing agree on.
+// The set carries the capitals, so an upper-case word — a hand's name, MISS, BLOCKED — is a figure
+// as well; anything with a lower-case letter stays in the font. `mathWidth` is the one measure both
+// the layout and the drawing agree on.
 //
 // **The ink a caller asks for picks the sheet**, so no call site learned about sheets:
 //
-//   - an element's border color draws that element's sheet, the attack ink the attack sheet, and
-//     the relic pink the relic sheet — each authored in its own ramp;
+//   - an element's border color draws that element's sheet, the attack ink the attack sheet, the
+//     relic pink the relic sheet and the vitae crimson the vitae sheet — each in its own ramp;
 //   - **a dark ink draws the neutral sheet as it is**, white under its black contour. The ground ink
 //     every duelist figure and operator is written in cannot be multiplied onto a sheet
 //     whose outline is already black: it would come out a black shape with a black edge;
 //   - **any other ink multiplies the neutral sheet**, which is pure gray so the ink comes through as
-//     itself — drain green, a rider's tint, the vitae crimson.
+//     itself — drain green, a rider's tint.
 
 import (
 	"image/color"
@@ -65,6 +66,10 @@ func figureSheetFor(tint color.RGBA) (string, color.RGBA) {
 		return "attack", color.RGBA{}
 	case ui.BoostInk, ui.PaneEdge:
 		return "relic", color.RGBA{}
+	case ui.VitaeInk:
+		if systems.FigureHasSheet("vitae") {
+			return "vitae", color.RGBA{}
+		}
 	}
 	if tint == cards.BorderOf(cards.Basic) || luminance(tint) < figureDarkInk {
 		return systems.FigureNeutral, color.RGBA{}

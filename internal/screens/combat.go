@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 
@@ -222,6 +223,10 @@ type CombatScene struct {
 	// scene keeps it because the deck is built from it and the card faces are drawn from it, and
 	// both happen after the opponent itself has been hydrated.
 	enemyElement string
+
+	// backdrop is the asset key of the place this fight is drawn in front of — one of the floor's
+	// element's backdrops, the same for every room on the floor. See data.BackdropFor.
+	backdrop string
 
 	// The queued sets for the coming round. fighterActions is derived from the hand by
 	// syncQueue and never written directly; enemyActions is re-planned each round.
@@ -553,6 +558,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 		enemyElement = scenario.EnemyElement()
 	}
 	s.enemyElement = enemyElement
+	s.backdrop = data.BackdropFor(ui.Backgrounds(), enemyElement, gs.RunSeed, gs.Run.Floor())
 	s.enemy = enemyFromRecord(gs, enemyKey, enemyElement, s.fightIndex)
 
 	// **A scenario may also make the fight unkillable in both directions**, which is what a training
@@ -1735,7 +1741,8 @@ func (s *CombatScene) applyStatusBadge(e combat.Event) {
 // somewhere else, not a box.
 
 func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	ui.FillGround(screen)
+	// **The duel is the only screen drawn on a backdrop**; every other scene keeps the gradient.
+	ui.FillBackdrop(screen, ui.Backdrop(gs, s.backdrop))
 
 	// **The top of the screen is one row of three things** *(2026-08-12)*: the player's card
 	// in the left corner, the enemy's in the right, and the relics filling everything between

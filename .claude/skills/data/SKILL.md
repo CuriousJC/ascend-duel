@@ -24,6 +24,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `potions.json` | `LoadPotions` | the three bottles the shop sells: which of the duelist's figures each moves, by how much, and what it costs |
 | `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
+| `backgrounds.json` | `LoadBackgrounds` | the painted places a duel is fought in front of: an element, an `Art` key and a `Draw` brief. A floor keeps one for all three rooms, picked by `BackdropFor` off the run seed and the floor — derived, never rolled — and an undrawn record or an element with none draws `default-background` |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 

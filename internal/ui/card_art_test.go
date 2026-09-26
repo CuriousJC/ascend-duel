@@ -342,6 +342,22 @@ func TestEveryRelicDrawsSomething(t *testing.T) {
 	}
 }
 
+func TestEveryBackdropDrawsSomething(t *testing.T) {
+	// The backdrop half of TestEveryRelicDrawsSomething, plus the default itself: a floor whose
+	// element has no backdrop draws the default, so a default that is not embedded is a duel on the
+	// bare gradient with nothing failing.
+	images := assets.LoadImageData()
+	if _, ok := images[data.DefaultBackgroundArt]; !ok {
+		t.Errorf("the default backdrop %q is not an embedded image", data.DefaultBackgroundArt)
+	}
+	records := data.LoadBackgrounds()
+	for _, key := range data.BackgroundOrder(records) {
+		if _, ok := images[records[key].ArtKey()]; !ok {
+			t.Errorf("%s draws %q, which is not an embedded image", key, records[key].ArtKey())
+		}
+	}
+}
+
 func TestEveryPotionDrawsSomething(t *testing.T) {
 	// The potion half of TestEveryRelicDrawsSomething. `PotionData.ArtKey` closes the empty case —
 	// a bottle nobody has painted draws the catalog default — and this closes the misspelled one,

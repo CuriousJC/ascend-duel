@@ -1,0 +1,37 @@
+[
+  {
+    "BackgroundRecord": "arcane-workshop-hall",
+    "Name": "Workshop Hall",
+    "Element": "arcane",
+    "Art": "",
+    "Draw": "A wizard's and witch's great workshop hall at the top of a tower, with nobody in it: a broad flagstone floor, clear from the foreground to the far wall, under a vaulted ceiling three storeys high. Tall arched windows along the far wall open onto violet sky. Shelves climb both side walls, crowded with spellbooks, stoppered bottles, crystal orbs, brass astrolabes, candles and hanging dried herbs. Against the left wall a lectern holds a great book left open beside a tall pointed hat; against the right wall a cauldron gives off a thin purple glow, a wide-brimmed hat hung on a peg above it. A broom leans by a far window, and a star chart and a curling scroll hang high over the shelves."
+  },
+  {
+    "BackgroundRecord": "fire-foundry-floor",
+    "Name": "Foundry Floor",
+    "Element": "fire",
+    "Art": "",
+    "Draw": "The floor of a great foundry cut into the heart of a volcano, with nobody in it: a wide expanse of iron-plated flagstones, clear from the foreground to the far wall, under a soaring rock ceiling lost in smoke. Along the far wall a channel of molten orange metal runs from a tall furnace mouth, its glow lighting the whole hall from below. Anvils, quenching barrels, racks of tongs and half-finished blades stand against both side walls. Chains hang from the ceiling, and a haze of heat and drifting embers softens everything at the far end."
+  },
+  {
+    "BackgroundRecord": "ice-frozen-court",
+    "Name": "Frozen Court",
+    "Element": "ice",
+    "Art": "",
+    "Draw": "The courtyard of an abandoned palace of ice, with nobody in it: a broad floor of polished blue ice dusted with snow, clear from the foreground to the far colonnade, open to a pale winter sky. Tall pillars of clear ice line both sides, frost-furred banners hanging stiff between them. At the far side a grand frozen staircase rises to sealed doors, and icicles as long as spears hang from every arch. A light snowfall drifts across the whole court."
+  },
+  {
+    "BackgroundRecord": "lightning-storm-spire",
+    "Name": "Storm Spire",
+    "Element": "lightning",
+    "Art": "",
+    "Draw": "The open summit platform of a storm spire high above the clouds, with nobody in it: a wide round floor of dark stone inlaid with brass, clear from the foreground to the far parapet. Tall copper lightning rods and coiled brass conductors stand around the rim, crackling with yellow sparks. Beyond the parapet a sea of storm clouds churns, lit from within by forks of yellow lightning. Broken chains and scorched banners flap from the rods in a steady wind."
+  },
+  {
+    "BackgroundRecord": "earth-root-cavern",
+    "Name": "Root Cavern",
+    "Element": "earth",
+    "Art": "",
+    "Draw": "A vast cavern beneath an ancient forest, with nobody in it: a broad floor of packed earth and flat mossy stone, clear from the foreground to the far wall, under a ceiling of enormous tree roots arching like the ribs of a cathedral. Shafts of soft green light fall through gaps in the roots far above. Moss, ferns, glowing mushrooms and tumbled boulders line the cavern walls, and a thin stream runs along the far side into the dark."
+  }
+]

@@ -226,6 +226,10 @@ type LedgerFactor struct {
 	// Grown is what a growing relic stood at after this term, written only where it moved — the
 	// one case in which the same relic prices two terms of one blow differently.
 	Grown int `json:"grown,omitempty"`
+
+	// Add is DMG this factor added to the term rather than a percentage it priced it at: a played
+	// card's damage-on-play rider. **It is not a relic's**, and Relic then names the rider instead.
+	Add int `json:"add,omitempty"`
 }
 
 // LedgerSum is one landing's figures as the hand dialog reads them.
@@ -246,6 +250,11 @@ type LedgerSum struct {
 
 	// Base is the flat form, for a term the split cannot describe.
 	Base int `json:"base,omitempty"`
+
+	// PlayAdd and PlayPct are what the card's own played riders did to it, after its own multiplier
+	// and before the relics: DMG added, then a percentage. Zero is none for both.
+	PlayAdd int `json:"playAdd,omitempty"`
+	PlayPct int `json:"playPct,omitempty"`
 
 	// Scales is what the relics priced it at, in worn order.
 	Scales []int `json:"scales,omitempty"`

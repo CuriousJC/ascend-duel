@@ -149,13 +149,13 @@ func recordsSnapshot(in []LedgerRecord) []profile.LedgerRecordSnapshot {
 		}
 		for _, f := range r.Factors {
 			rec.Factors = append(rec.Factors, profile.LedgerFactorSnapshot{
-				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown,
+				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown, Add: f.Add,
 			})
 		}
 		for _, t := range r.Terms {
 			rec.Terms = append(rec.Terms, profile.LedgerSumSnapshot{
 				Element: t.Element, Split: t.Split, DMG: t.DMG, Weight: t.Weight,
-				Base: t.Base, Scales: append([]int(nil), t.Scales...),
+				Base: t.Base, PlayAdd: t.PlayAdd, PlayPct: t.PlayPct, Scales: append([]int(nil), t.Scales...),
 			})
 		}
 		out = append(out, rec)
@@ -180,13 +180,13 @@ func resumeRecords(in []profile.LedgerRecordSnapshot) []LedgerRecord {
 		}
 		for _, f := range r.Factors {
 			rec.Factors = append(rec.Factors, LedgerFactor{
-				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown,
+				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown, Add: f.Add,
 			})
 		}
 		for _, t := range r.Terms {
 			rec.Terms = append(rec.Terms, LedgerSum{
 				Element: t.Element, Split: t.Split, DMG: t.DMG, Weight: t.Weight,
-				Base: t.Base, Scales: append([]int(nil), t.Scales...),
+				Base: t.Base, PlayAdd: t.PlayAdd, PlayPct: t.PlayPct, Scales: append([]int(nil), t.Scales...),
 			})
 		}
 		out = append(out, rec)

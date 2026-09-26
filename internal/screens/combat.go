@@ -1482,6 +1482,20 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		s.flushSignals()
 	}
 
+	// **Walked past here as well as below**, because the cursor can come to rest on an event before
+	// the hand dialog has shown it: the hand's own event starts the dialog and steps the cursor onto
+	// the first hit, which is not marked until its line is thrown. Applying that hit once the dialog
+	// finishes would write its life total — the life after that one hit — over the life the thrown
+	// lines had already taken the bar down to, and the bar would jump back up until the round was
+	// adopted.
+	for s.cursor < len(s.log) && s.Theater.walked[s.cursor] {
+		s.cursor++
+	}
+	if s.cursor >= len(s.log) {
+		s.endOfRound()
+		return
+	}
+
 	s.applyEvent(s.log[s.cursor])
 	s.startHandMath(gs, s.log[s.cursor], s.cursor)
 	s.cursor++

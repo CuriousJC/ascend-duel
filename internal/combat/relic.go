@@ -1115,7 +1115,11 @@ func (d Duelist) CostOf(cards []Card) int {
 // is the one `Card.Damage` holds for the same reason: a card that is meant to deal nothing is not an
 // attack.
 func (d Duelist) CardDamage(c Card) int {
-	dmg := c.Damage(d.DMG)
+	// **DUELIST, then CARD, then CARD RELICS** — and the hand and the hand's relics after all three,
+	// in the resolver. The duelist's DMG is already the turn's; the card's own multiplier and its
+	// played riders come next, on this card alone; then the relics price what the card came to. See
+	// MECHANICS.md §Damage: a hit per card, one multiplier.
+	dmg := playRidden(c.Damage(d.DMG), c.DamageOnPlay(), c.ScaleOnPlay())
 	if dmg == 0 {
 		return 0
 	}

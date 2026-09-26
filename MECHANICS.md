@@ -1045,13 +1045,40 @@ no value on it — and by nothing else. **A Brace joins a hand** and brings no d
 
 ### Damage: a hit per card, one multiplier
 
-**Every card of the turn lands its own hit**, in the attack phase, and each hit is:
+**Every card of the turn lands its own hit**, in the attack phase, and each hit is built in four
+steps, always in this order *(owner's call, 2026-09-26)*:
 
 ```
-(the card's damage + every flat bonus)  ×  (hand multiplier)  ×  (every relic that scales the hand)
+DUELIST  →  CARD  →  CARD RELICS  →  HAND  →  HAND RELICS
 ```
 
-then the attacker's weight and the target's vulnerability. **Each hit is worked out and rounded on
+1. **DUELIST** — the DMG every hit of the turn is swung at: the duelist's own DMG, plus what the
+   turn's **duelist upgrades** raise it by — the riders on the cards kept back, a rung relic's
+   `add-hand-dmg`, the jars, the purse.
+2. **CARD** — that DMG times the card's own multiplier, then the card's **card upgrades**: its own
+   played riders, a flat `+N` first and then a percentage. They touch this card's hit and nothing
+   else.
+3. **CARD RELICS** — every relic that prices this card, in worn order.
+4. **HAND** — the hand's multiplier.
+5. **HAND RELICS** — every relic that multiplies the hand, `scale-hand-damage`: Paired Rings,
+   Triplicate Rings and the rest of the family, and Dual Wield. They reach every hit of a hand they
+   name, as the hand does.
+
+then the attacker's weight and the target's vulnerability, which are statuses on the two duelists
+rather than part of what was built.
+
+**Every damage increase is one of two kinds, and which kind decides where it goes.** A **duelist
+upgrade** raises the DMG at step 1 and so reaches every hit of the turn; a **card upgrade** changes
+one card at step 2 and reaches that card's hit alone. The hand multiplier reaches every hit too,
+like a duelist upgrade, but it is the hand's and it comes after the card; the hand relics
+multiply it, and they come last. A rider fires on a card that is
+**played** — it does not have to make the hand — and a rider on a card **kept back** is a duelist
+upgrade, since that card has no hit of its own to raise.
+
+`combat.blowDMG` is step 1, `combat.Duelist.CardDamage` is steps 2 and 3, and `combat.strike` puts
+the five together. **Multiplying is multiplying**, so the order changes a figure only by where a
+rounding lands; what it decides is how a hit's working reads, and the hand dialog and the ledger
+write the steps in this order, a row per step. **Each hit is worked out and rounded on
 its own**, so a turn's total is the sum of rounded hits. A pair of Skewers at DMG 10 is two hits of
 `30 × 1` — **60** in all.
 
@@ -1062,9 +1089,7 @@ more, and every one of them is multiplied by the hand.
 **Nothing about the attack phase is singular except the hand that names it.** *(Owner's call.)*
 Everything else happens to each hit:
 
-- **A raise on the duelist reaches every hit.** A rung relic, the cards kept back, the purse and
-  the damage riders all go into the DMG every card is swung at, so each card grows by its own
-  multiplier. Nothing is added to a hit after its card.
+- **A duelist upgrade reaches every hit, a card upgrade only its own.** See the five steps above.
 - **A shock rolls per hit.** See *Lightning is a roll*.
 - **A shield eats one hit**, the heaviest first.
 - **A status lands per hit that connects**, off that hit's card.
@@ -1077,10 +1102,10 @@ Everything else happens to each hit:
 action point spent on an attack buys a swing: `Bash, Jab, Bash` is a Pair the Jab makes no part of,
 and the Jab lands anyway, at the Pair's rate.
 
-**A defense throws a hit too, and its card deals nothing.** Its hit is the flat bonuses times the
-hand — usually 0 — and it can miss and lands its card's statuses like any other. **A hit of nothing
+**A defense throws a hit too, and its card deals nothing.** Its hit is its own card upgrades, then
+its relics, times the hand — usually 0 — and it can miss and lands its card's statuses like any other. **A hit of nothing
 spends nothing of the target's** *(owner's call)*: no shield eats it and it does not clear the
-target's defenses, or a turn of shields would strip an opponent's for free. A hit a flat bonus
+target's defenses, or a turn of shields would strip an opponent's for free. A hit a card upgrade
 lifted above 0 is a hit like any other.
 
 **The floor of the ladder is every attack at the identity**, so dumping action points pays real
@@ -2065,7 +2090,8 @@ matters when a batch lands is each tier's *share of a shelf draw*, not how many 
 
 ### A rung relic is a second multiplier, never a bigger hand
 
-`scale-hand-damage` scales **every hit**, after the ladder's own multiplier has been applied.
+`scale-hand-damage` scales **every hit**, after the ladder's own multiplier — the HAND RELICS
+step.
 `Event.Multiplier` stays the rung's figure and a relic may not touch it.
 
 **Folding the two together would say the *hand* changed** — a Pair under Pairing reading as
@@ -2885,30 +2911,29 @@ hand and the discard, and fires only when that card is played.
 |---|---|---|
 | `heal-on-play` | as the card is played, **after a chill has taken what it takes** | restores life, capped at full |
 | `shield-on-play` | as the card is played | raises shields, through the same cap a Guard is under |
-| `damage-on-play` | the turn the card is played into | **adds to the duelist's DMG** for every hit of that turn |
+| `damage-on-play` | the turn the card is played into | **adds to that card's own hit** |
 | `damage-in-hand` | every turn the card is **kept back** | adds to the duelist's DMG for every hit of that turn |
 | `scale-in-hand` | every turn the card is **kept back** | scales the duelist's DMG, as a percentage |
 | `vitae-in-hand` | every turn the card is **kept back** | pays vitae — **announced, never applied** |
-| `scale-in-combo` | when the card is one of the cards the hand was **formed from** | scales the duelist's DMG |
+| `scale-in-combo` | as the card is played | **scales that card's own hit**, as a percentage |
 
 **The riders add two ideas nothing else in the game has:**
 
-- **A damage rider is a bonus to the *duelist*, not to the card** — the owner's words: "add 10
-  to the duelist's base damage for that calculation and then use it for all of the calcs".
-  `Card.Damage` is linear in DMG, so raising the duelist's figure for the length of one turn
-  raises every hit of the hand by the same proportion, and every printed hit goes on coming to its
-  printed figure. Adding to one card's amount would have made the bonus a fact about that card
-  instead of about the turn. **Flat first, then the percentages**, so a +10 and a doubling
-  compose as `(DMG+10)×2`; two percentages compound. `combat.blowDMG` is the whole rule, and the
-  DMG is **put back before the duelist is returned** — a bonus left standing would silently be a
-  permanent upgrade.
+- **A played card's damage rider is a card upgrade** *(owner's call, 2026-09-26)*: step 2 of the
+  five in *Damage: a hit per card, one multiplier* — after the card's own multiplier and before any
+  relic — and no other hit of the turn sees it. It fires on any card that is played, whether or not
+  it made the hand. Flat first, then the percentage, so a +10 and a doubling on one card come to
+  `(DMG × card + 10) × 2`. The hand dialog writes each as a row of its own in that card's line —
+  `+ 10`, `× 2` — in the rider's tint, flying out of the card.
+- **A kept-back card's damage rider is a duelist upgrade**: step 1, raising the DMG every hit of
+  the turn is swung at, since the card is not in the turn to own a hit of its own. `Card.Damage`
+  is linear in DMG, so every hit grows by the same proportion. `combat.blowDMG` is that rule, and
+  the DMG is **put back before the duelist is returned** — a bonus left standing would silently be
+  a permanent upgrade.
 - **The four in-hand riders are the first mechanic that rewards *not* playing a card.** They pay on
   every turn the card is still being held, so a card dealt on the first turn and kept for three
   has paid three times, and nothing is ever spent. `ResolveRoundHolding` is what tells the
   resolver what a side did *not* play; `ResolveRound` delegates to it with nothing held.
-- **`scale-in-combo` asks a question the player can lose.** `Blow.Cards` is the scoring set, and a
-  turn can play a card that pays nothing into it. The card has to *make the hand*, not merely be in
-  the turn.
 - **The rules hold the purse for the length of a round, and the run holds it the rest of the
   time.** `combat.Duelist.Vitae` is seeded from the run at the top of each
   round and stepped as the round pays; the combat screen then hands the run the **difference**. It

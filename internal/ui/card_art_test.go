@@ -776,7 +776,7 @@ func TestEveryRiderSaysWhenItHappens(t *testing.T) {
 			continue
 		}
 		switch lines[0] {
-		case "ON PLAY", "IN HAND", "SCORING":
+		case "ON PLAY", "IN HAND":
 		default:
 			t.Errorf("rider %s opens with %q, which is not a moment the player can read", k, lines[0])
 		}

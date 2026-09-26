@@ -64,6 +64,10 @@ func HandTermRecords(e combat.Event, relics []combat.WornRelic, played []combat.
 // find this line — see session.LedgerRecord.Hit.
 func hitRecord(e combat.Event, i int, card combat.Card, relics []combat.WornRelic) session.LedgerRecord {
 	term := session.LedgerSum{Scales: relicFactors(e, i), Element: ElementName(card.Element)}
+	term.PlayAdd = e.HandPlayAdd[i]
+	if pct := e.HandPlayPct[i]; pct != 0 && pct != 100 {
+		term.PlayPct = pct
+	}
 	if dmg, pct, ok := e.TermSplit(i); ok {
 		term.Split, term.DMG, term.Weight = true, dmg, pct
 	} else {
@@ -76,7 +80,7 @@ func hitRecord(e combat.Event, i int, card combat.Card, relics []combat.WornReli
 		Hit:        i + 1,
 		Card:       combat.ConceptOf(card.Concept).Label,
 		Element:    ElementName(card.Element),
-		Factors:    termFactors(e, i, relics),
+		Factors:    append(termFactors(e, i, relics), playRiderFactors(e, i)...),
 		Terms:      []session.LedgerSum{term},
 		Multiplier: e.Multiplier,
 		HandScale:  e.HandScale,
@@ -161,6 +165,30 @@ func termFactors(e combat.Event, term int, relics []combat.WornRelic) []session.
 	}
 
 	return out
+}
+
+// playRiderFactors is what the hit's own card's riders did to it, named by the rune that puts each
+// rider on a card: the flat DMG first, then the percentage, the order the engine applies them in.
+func playRiderFactors(e combat.Event, term int) []session.LedgerFactor {
+	var out []session.LedgerFactor
+	if add := e.HandPlayAdd[term]; add != 0 {
+		out = append(out, session.LedgerFactor{Relic: riderName(combat.RiderDamageOnPlay), Add: add})
+	}
+	if pct := e.HandPlayPct[term]; pct != 0 && pct != 100 {
+		out = append(out, session.LedgerFactor{Relic: riderName(combat.RiderScaleInCombo), Scale: pct})
+	}
+	return out
+}
+
+// riderName is what the account calls a rider: the name of the rune that puts it on a card, since
+// that is the name the player bought it under. A rider no rune carries falls back to its rule name.
+func riderName(kind combat.RiderKind) string {
+	for _, r := range session.Runes() {
+		if r.Rider == kind {
+			return r.Name
+		}
+	}
+	return kind.String()
 }
 
 // cardCount is "1 card" or "4 cards" — the same pluralising ShieldCount does for shields, and the

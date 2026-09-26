@@ -140,9 +140,10 @@ func strike(
 		Round:      round,
 	}
 
-	// **The DMG every hit is swung at.** The damage riders and a rung relic's raise are folded into
-	// it for the length of this blow alone, so a +10 arrives in every hit — see blowDMG. It is put
-	// back before the actor is returned; a DMG left raised would make the bonus permanent.
+	// **The DMG every hit is swung at.** The held cards' riders and a rung relic's raise are folded
+	// into it for the length of this blow alone, so they arrive in every hit — see blowDMG. A played
+	// card's own riders are not: they price that card's hit, below. It is put back before the actor
+	// is returned; a DMG left raised would make the bonus permanent.
 	//
 	// **The cards kept back and the purse raise it the same way**, both read at the blow: a held
 	// card pays again every turn it is held, and vitae moves inside a fight — a card kept in hand
@@ -151,12 +152,12 @@ func strike(
 	e.HandBonus, e.HandBonusSeats = HandBonus(worn, blow.Satisfied)
 	e.HeldDMG, e.HeldDMGCards, e.HeldDMGSeats = HeldDMG(worn, held)
 	e.VitaeDMG, e.VitaeDMGSeats = DMGPerVitae(worn)*actor.Vitae, seatsDoing(worn, DoAddDMGPerVitae)
-	actor.DMG = blowDMG(baseDMG+e.HandBonus+e.HeldDMG+e.VitaeDMG, turn, held, blow)
-	e.HandDMG, e.HandDMGBare = actor.DMG, blowDMG(baseDMG, turn, held, blow)
+	actor.DMG = blowDMG(baseDMG+e.HandBonus+e.HeldDMG+e.VitaeDMG, held)
+	e.HandDMG, e.HandDMGBare = actor.DMG, blowDMG(baseDMG, held)
 
 	// **A rung relic is a second multiplier, never a bigger hand.** `Multiplier` stays the ladder's
 	// own figure, so the banner and the hand row show the rung the player built; this is applied
-	// after it on every hit.
+	// after it on every hit — the HAND RELICS step.
 	e.HandScale, e.HandScaleSeats = HandScale(worn, blow.Satisfied, scoringCards(blow, turn))
 
 	for _, i := range blow.Rung {
@@ -193,6 +194,8 @@ func strike(
 	for h, l := range landings {
 		card := turn[l.seat].Card
 
+		// **DUELIST, CARD, CARD RELICS, HAND, HAND RELICS** — `CardDamage` is the first three; then
+		// the hand's multiplier, then the relics that multiply the hand.
 		d := l.shape.Amount(l.nth, actor.CardDamage(card))
 		figure := scaleDamage(d, blow.Multiplier)
 		if e.HandScale != 0 && e.HandScale != 100 {
@@ -215,6 +218,10 @@ func strike(
 				e.HandCardPct[at] = l.shape.Amount(l.nth, card.Amount())
 			}
 			e.HandRelicScale[at] = CardScaleBySeat(worn, card)
+			if add := card.DamageOnPlay(); add != 0 {
+				e.HandPlayAdd[at] = l.shape.Amount(l.nth, add)
+			}
+			e.HandPlayPct[at] = card.ScaleOnPlay()
 			e.HitAmounts[at] = figure
 			if l.nth > 0 {
 				// **Only the extra landings are attributed to a relic.** The card's own first

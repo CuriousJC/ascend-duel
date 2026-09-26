@@ -336,6 +336,12 @@ func factorNotes(factors []session.LedgerFactor) []session.LedgerSpan {
 			})
 			continue
 		}
+		if f.Add != 0 {
+			out = append(out, session.LedgerSpan{
+				Text: fmt.Sprintf("  + %s %d", f.Relic, f.Add), Ink: session.InkRelic,
+			})
+			continue
+		}
 		note := "  x " + f.Relic + " " + HandMultiplierText(f.Scale) + "x"
 
 		// **What the relic stood at after this term**, written only where it moved — the one case
@@ -369,6 +375,7 @@ func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
 			spans = append(spans, session.LedgerSpan{
 				Text: " x " + HandMultiplierText(t.Weight), Ink: t.Element,
 			})
+			spans = append(spans, playSpans(t)...)
 			spans = append(spans, scaleSpans(t.Scales)...)
 			spans = append(spans, session.LedgerSpan{Text: ")"})
 			continue
@@ -376,11 +383,12 @@ func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
 
 		// **The flat form is for the term the split cannot describe** — an echo's rounding, or a
 		// card that hit the damage floor.
-		if len(t.Scales) == 0 {
+		if len(t.Scales) == 0 && t.PlayAdd == 0 && t.PlayPct == 0 {
 			spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(t.Base), Ink: t.Element})
 			continue
 		}
 		spans = append(spans, session.LedgerSpan{Text: "(" + strconv.Itoa(t.Base), Ink: t.Element})
+		spans = append(spans, playSpans(t)...)
 		spans = append(spans, scaleSpans(t.Scales)...)
 		spans = append(spans, session.LedgerSpan{Text: ")", Ink: t.Element})
 	}
@@ -407,9 +415,9 @@ func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
 		Text: " x " + HandMultiplierText(r.Multiplier), Ink: session.InkHand,
 	})
 
-	// **A rung relic is a second multiplier, after the hand's own**, so it is a second `x` on the
-	// line rather than a bigger figure in the first — which is what keeps the first reading as the
-	// rung the player built.
+	// **A hand relic is a second multiplier, after the hand's own** — the HAND RELICS step — so it
+	// is a second `x` on the line rather than a bigger figure in the first, which is what keeps the
+	// hand's reading as the rung the player built.
 	if r.HandScale != 0 && r.HandScale != 100 {
 		spans = append(spans, session.LedgerSpan{
 			Text: " x " + HandMultiplierText(r.HandScale), Ink: session.InkRelic,
@@ -420,6 +428,19 @@ func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
 		session.LedgerSpan{Text: " = "},
 		session.LedgerSpan{Text: strconv.Itoa(r.Total), Ink: session.InkTotal},
 	)
+}
+
+// playSpans writes a card's own played riders inside its term, after its own multiplier and before
+// the relics — the order the resolver applies them in — in the card's own color.
+func playSpans(t session.LedgerSum) []session.LedgerSpan {
+	var out []session.LedgerSpan
+	if t.PlayAdd != 0 {
+		out = append(out, session.LedgerSpan{Text: " + " + strconv.Itoa(t.PlayAdd), Ink: t.Element})
+	}
+	if t.PlayPct != 0 {
+		out = append(out, session.LedgerSpan{Text: " x " + HandMultiplierText(t.PlayPct), Ink: t.Element})
+	}
+	return out
 }
 
 // scaleSpans writes relic multipliers as factors inside a term's bracket, in the relic pink the

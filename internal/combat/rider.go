@@ -79,13 +79,13 @@ const (
 	// changed does the changing.
 	RiderVitaeInHand
 
-	// RiderScaleInCombo scales the duelist's DMG for every hit of the turn when this card is one of the cards
-	// the hand was formed from. Amount is a percentage, so 200 is twice.
+	// RiderScaleInCombo scales **this card's own hit** whenever the card is played. Amount is a
+	// percentage, so 200 is twice. **The name is the rule's old one and stays**, because it is what a
+	// saved run and a scenario write; what it does is ScaleOnPlay.
 	//
-	// **Formed from, not merely played.** It reads `Blow.Rung` — the cards that made the rung —
-	// rather than `Blow.Cards`, which is every attack the turn played. So this asks a question the
-	// player can lose: the card has to make the hand, and an attack that only rode along on the
-	// multiplier does not.
+	// **A played card's rider is a fact about that card** *(owner's call, 2026-09-26)*: it prices the
+	// card's own figure, after the card's own multiplier and before any relic, and no other hit sees
+	// it. See Duelist.CardDamage.
 	RiderScaleInCombo
 
 	// RiderWildElement makes this card count as **every** element at once when a hand is formed.
@@ -301,9 +301,8 @@ func (c Card) VitaeInHand() int { return c.riderTotal(RiderVitaeInHand) }
 // ScaleInHand is the percentage this card scales its duelist's DMG by while it sits unplayed.
 func (c Card) ScaleInHand() int { return c.riderScale(RiderScaleInHand) }
 
-// ScaleInCombo is the percentage this card scales its duelist's DMG by when it is one of the
-// cards the hand was formed from.
-func (c Card) ScaleInCombo() int { return c.riderScale(RiderScaleInCombo) }
+// ScaleOnPlay is the percentage this card scales its own figure by when it is played, 100 for none.
+func (c Card) ScaleOnPlay() int { return c.riderScale(RiderScaleInCombo) }
 
 // HealOnPlay is the life this card restores as it is played, summed over its riders.
 //
@@ -325,26 +324,18 @@ func (c Card) GoldenOdds() int { return c.riderTotal(RiderGolden) }
 // SilverOdds is the denominator a silver card gambles on, or zero for a card that is not silver.
 func (c Card) SilverOdds() int { return c.riderTotal(RiderSilver) }
 
-// blowDMG is the duelist's DMG for one turn's hits, after every rider with something to say about it.
+// blowDMG is the duelist's DMG for one turn's hits, after the riders on the cards kept back.
 //
-// **One figure, applied to the duelist rather than to any card** *(owner's call, 2026-09-02)*.
-// `Card.Damage` is linear in DMG, so raising the duelist's figure for the length of one
-// calculation raises every term of the hand by the same proportion — which is what makes the
-// printed bracket go on summing to the printed total. Adding to a single card's amount would have
-// made the bonus a fact about that card, and the owner's version is a fact about the turn.
+// **A held card's rider is a fact about the turn, applied to the duelist.** `Card.Damage` is linear
+// in DMG, so raising the duelist's figure for the length of one calculation raises every term of
+// the hand by the same proportion. **A played card's rider is not**: it prices its own hit — see
+// Card.PlayTerm — so it never reaches this figure.
 //
-// **Flat first, then the percentages.** A +10 and a doubling on the same turn is (DMG+10)x2, so
-// the two kinds of rider compose rather than race; percentages compound with each other for the
-// reason `Card.riderScale` gives.
-//
-// **Three populations, and they are asked different questions.** The turn's cards answer "were you
-// played"; the held cards answer "did you stay in hand"; and the blow's own cards answer "did you
-// make the hand", which is the narrowest of the three and the only one the player can miss.
-func blowDMG(base int, turn []Slot, held []Card, blow Blow) int {
+// **Flat first, then the percentages.** A +10 and a doubling held together is (DMG+10)x2, so the two
+// kinds compose rather than race; percentages compound with each other for the reason
+// `Card.riderScale` gives.
+func blowDMG(base int, held []Card) int {
 	dmg := base
-	for _, slot := range turn {
-		dmg += slot.Card.DamageOnPlay()
-	}
 	for _, c := range held {
 		dmg += c.DamageInHand()
 	}
@@ -352,12 +343,6 @@ func blowDMG(base int, turn []Slot, held []Card, blow Blow) int {
 	pct := 100
 	for _, c := range held {
 		pct = pct * c.ScaleInHand() / 100
-	}
-	// **`Rung`, not `Cards`.** The scoring set is every attack the turn played, and this rider's
-	// whole subject is having *made the hand* — read off `Cards` it would be damage-on-play wearing
-	// a second name.
-	for _, i := range blow.Rung {
-		pct = pct * turn[i].Card.ScaleInCombo() / 100
 	}
 	dmg = dmg * pct / 100
 
@@ -395,4 +380,13 @@ func (c Card) Wild(a Axis) bool {
 		}
 	}
 	return false
+}
+
+// playRidden is a card's figure after its own played riders: the flat DMG first, then the
+// percentage, so a +10 and a doubling on one card come to (figure+10)x2.
+func playRidden(figure, add, pct int) int {
+	if add == 0 && pct == 100 {
+		return figure
+	}
+	return scaleDamage(figure+add, pct)
 }

@@ -242,6 +242,7 @@ type LedgerFactorSnapshot struct {
 	Landed bool   `json:"landed,omitempty"`
 	Scale  int    `json:"scale,omitempty"`
 	Grown  int    `json:"grown,omitempty"`
+	Add    int    `json:"add,omitempty"`
 }
 
 // LedgerSumSnapshot is one landing's figures as the sum reads them.
@@ -251,6 +252,8 @@ type LedgerSumSnapshot struct {
 	DMG     int    `json:"dmg,omitempty"`
 	Weight  int    `json:"weight,omitempty"`
 	Base    int    `json:"base,omitempty"`
+	PlayAdd int    `json:"playAdd,omitempty"`
+	PlayPct int    `json:"playPct,omitempty"`
 	Scales  []int  `json:"scales,omitempty"`
 }
 

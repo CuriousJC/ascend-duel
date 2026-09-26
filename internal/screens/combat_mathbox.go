@@ -307,6 +307,11 @@ type mathItem struct {
 	cardTerm bool
 	handMult bool
 
+	// cardRider marks a figure one of the card's own riders put on its hit — a Goad's +10, a
+	// Hunger's x2. It flies out of the card like the card's term does, but keeps the rider's tint
+	// the script gave it: the rider is what produced it, not the card's element.
+	cardRider bool
+
 	// shakeRelics are worn seats that shake as this item runs without their figure being the one
 	// flying: the echo relic behind an extra landing, which buys a *term* rather than a multiplier
 	// and so has no number of its own in the line.
@@ -657,6 +662,11 @@ func (s *CombatScene) placeFigures(gs *state.GlobalState, e combat.Event, col *m
 			it.shakeRelics = e.HandLanding[col.hit]
 			it.from = s.handCardCenter(gs, e.Side, col.seat)
 			it.tint = s.handCardInk(e.Side, col.seat)
+		case it.cardRider:
+			// **Out of the card that carries the rider**, and the card shakes as it goes — the rule
+			// every figure on the line keeps: whatever produced it is what moves.
+			it.cardSeat = col.seat + 1
+			it.from = s.handCardCenter(gs, e.Side, col.seat)
 		case it.handMult:
 			it.from = s.handMultiplierOrigin(gs, e)
 		}
@@ -741,7 +751,7 @@ func hitScript(e combat.Event, i int, first bool) []mathItem {
 		t:         ui.NewTravel(0, mathTermTicks()),
 	})
 
-	// **A rung relic is its own multiplier, after the hand's** *(owner's call)*, in the pane's pink
+	// **A hand relic multiplies after the hand's own** — the HAND RELICS step — in the pane's pink
 	// and flying out of the relic that paid.
 	if e.HandScale != 0 && e.HandScale != 100 {
 		items = append(items, wide(mathOperator("x")), mathItem{
@@ -789,6 +799,7 @@ func termItems(e combat.Event, i int) []mathItem {
 			cardTerm: true,
 			t:        ui.NewTravel(0, mathTermTicks()),
 		}}
+		out = append(out, playRiderItems(e, i)...)
 		return append(out, relicFactorItems(e, i)...)
 	}
 
@@ -819,7 +830,38 @@ func termItems(e combat.Event, i int) []mathItem {
 		innerOperator("x"),
 		mult,
 	}
+	// **DUELIST, CARD, CARD RELICS**: the duelist's DMG times the card's own multiplier, then the
+	// card's own riders, then the relics that priced what the card came to.
+	out = append(out, playRiderItems(e, i)...)
 	return append(out, relicFactorItems(e, i)...)
+}
+
+// playRiderItems is what the hit's own card's riders did to its term, each a row of its own after
+// the card's own multiplier and before the relics: the flat DMG first, then the percentage, the
+// order the engine applies them in.
+//
+// **A played card's rider is a step in its own hit's working** *(owner's call, 2026-09-26)*. It
+// used to be folded into the DMG every line starts from, so a Hunger doubled the whole turn and no
+// line said so; it prices only its own card now, and the row is where the player sees it.
+func playRiderItems(e combat.Event, i int) []mathItem {
+	var out []mathItem
+	rider := func(text string, kind combat.RiderKind) mathItem {
+		return mathItem{
+			text:      text,
+			size:      mathTermSize,
+			tint:      systems.UpgradeTint(ui.UpgradeForRider[kind]),
+			fly:       true,
+			cardRider: true,
+			t:         ui.NewTravel(0, mathTermTicks()),
+		}
+	}
+	if add := e.HandPlayAdd[i]; add != 0 {
+		out = append(out, wide(mathOperator("+")), rider(strconv.Itoa(add), combat.RiderDamageOnPlay))
+	}
+	if pct := e.HandPlayPct[i]; pct != 0 && pct != 100 {
+		out = append(out, wide(mathOperator("x")), rider(ui.HandMultiplierText(pct), combat.RiderScaleInCombo))
+	}
+	return out
 }
 
 // relicFactorItems is every relic that priced one term, in worn order — which is firing order.

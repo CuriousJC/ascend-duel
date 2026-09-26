@@ -9,7 +9,12 @@ package systems
 // knows what a color *means* — the caller names a sheet, and may multiply it by an ink.
 //
 // **The glyph list is closed and a string outside it is not drawn here.** `FigureCovers` is the
-// question a caller asks first; a word such as MISS or a hand's name stays in the font.
+// question a caller asks first. The set carries the capitals, the digits, the punctuation a label
+// writes and the vitae mark `¤`, so a short upper-case word such as MISS is a figure too; a string
+// with a lower-case letter in it is not covered and stays in the font.
+//
+// **A space is not a glyph.** It is the set's `spaceAdvance`, pen travel with nothing drawn, and a
+// set that does not declare one covers no string with a space in it.
 //
 // **Smooth art, linear filtering.** The sheets are drawn large and reduced to the height asked
 // for, and Ebitengine takes a mipmap on the way down, so a figure keeps its contour at a third of
@@ -31,7 +36,7 @@ import (
 
 // DefaultFigureSet is which set of figure glyphs the game draws — a directory under
 // `assets/figure/` — unless FigureSetEnv names another.
-const DefaultFigureSet = "v2"
+const DefaultFigureSet = "v3"
 
 // FigureSetEnv names a figure set for one launch, so two sets are compared by relaunching rather
 // than by editing: `ASCEND_DUEL_FIGURES=v1 go run .`. **A set that does not exist falls back to
@@ -60,8 +65,13 @@ type figureSetFile struct {
 	CellHeight  int
 	Baseline    int
 	DigitHeight int
-	Glyphs      map[string]figureGlyph
-	Sheets      map[string]figureSheet
+
+	// SpaceAdvance is how far a space moves the pen, in sheet pixels. Zero means the set has no
+	// space, and a string containing one is not covered.
+	SpaceAdvance int
+
+	Glyphs map[string]figureGlyph
+	Sheets map[string]figureSheet
 }
 
 // figureSet is a loaded set: the metrics, and each sheet cut into one sub-image per glyph.
@@ -144,6 +154,9 @@ func FigureCovers(str string) bool {
 		return false
 	}
 	for _, r := range str {
+		if r == ' ' && fs.meta.SpaceAdvance > 0 {
+			continue
+		}
 		if _, ok := fs.glyphs[r]; !ok {
 			return false
 		}
@@ -178,6 +191,10 @@ func (fs *figureSet) span(str string) (int, []int) {
 	var pens []int
 	pen, last := 0, figureGlyph{}
 	for _, r := range str {
+		if r == ' ' {
+			pen += fs.meta.SpaceAdvance
+			continue
+		}
 		g, ok := fs.glyphs[r]
 		if !ok {
 			continue

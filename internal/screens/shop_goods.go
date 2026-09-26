@@ -24,11 +24,11 @@ package screens
 // **The vial's title is an instruction and its hint is the gesture**, because a dialog whose two
 // rows are both live has to say which one is clicked first.
 //
-// **This dialog has no X, and that is deliberate.** Every other modal in the game is a look at
-// something and closes without consequence; this one stands between a purchase and what it bought,
-// so an exit that forfeited five vitae would be a trap wearing the same red square that means
-// "close" everywhere else. Every card in it is an exit — the dialog ends when one is chosen — and
-// the second stage cannot be reached without the first.
+// **There is no X, and the way out is SKIP.** Every other modal in the game is a look at something
+// and closes without consequence; this stands between a purchase and what it bought, so leaving it
+// forfeits the vitae. That is a choice the player may make, and GoodsScene gives it a labelled
+// button rather than the red square that means "close" everywhere else. Every card is also an exit
+// — the screen ends when one is chosen.
 
 import (
 	"fmt"
@@ -486,9 +486,9 @@ func (g *goods) hover(gs *state.GlobalState) {
 	}
 }
 
-// click is the whole of what this dialog does. **A click on a card is the only input it takes** —
-// there is no confirm and no close, because the purchase has already happened and what is left is
-// which one.
+// click is what this dialog does with a press. **A click on a card is the only input it takes
+// itself** — there is no confirm, because the purchase has already happened and what is left is
+// which one. The screen around it owns SKIP.
 func (g *goods) click(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 

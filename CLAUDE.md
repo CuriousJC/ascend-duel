@@ -757,8 +757,8 @@ it came from was drawing a run that has ended and there is nowhere to put the pl
 the three to five things inside it, and the one of them the player takes. It is reached from
 exactly one place and returns to exactly one place — the shop's shelf — so `screens.openGoods`
 sits beside the screen rather than in `actions`, whose explicit list is about screens openable
-from anywhere. **There is no way out but taking a card**, because the good is already paid for;
-the good travels as `gs.PendingGood`, a record key, since a screen cannot be handed an argument.
+from anywhere. **The ways out are taking a card or SKIP**, which takes nothing and forfeits the
+price; the good travels as `gs.PendingGood`, a record key, since a screen cannot be handed an argument.
 See `internal/screens/goods.go`.
 
 **What it cost the shop is a re-entry guard.** Leaving for a good and coming back runs

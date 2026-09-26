@@ -38,7 +38,7 @@
   {
     "Label": "Impale",
     "Verb": "attack",
-    "Amount": 400,
+    "Amount": 500,
     "Cost": 4,
     "Form": "stab",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
@@ -84,7 +84,7 @@
   {
     "Label": "Sever",
     "Verb": "attack",
-    "Amount": 400,
+    "Amount": 500,
     "Cost": 4,
     "Form": "slash",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
@@ -130,7 +130,7 @@
   {
     "Label": "Pulverize",
     "Verb": "attack",
-    "Amount": 400,
+    "Amount": 500,
     "Cost": 4,
     "Form": "crush",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],

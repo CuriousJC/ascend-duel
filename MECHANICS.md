@@ -147,7 +147,7 @@ ends, Debase is dead on every 1 AP card and Exalt on every 3 AP one.
 
 | Form | Concept | AP | Effect |
 |---|---|---|---|
-| **stab** | Poke / Jab / Thrust / Skewer / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 3` / `DMG × 4` |
+| **stab** | Poke / Jab / Thrust / Skewer / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 3` / `DMG × 5` |
 | **slash** | Nick / Cut / Slash / Cleave / Sever | 0 / 1 / 2 / 3 / 4 | Slashes for the same five figures |
 | **crush** | Tap / Thump / Bash / Smash / Pulverize | 0 / 1 / 2 / 3 / 4 | Crushes for the same five figures |
 | **defend** | Flinch | 0 | Raises **1 shield** |
@@ -169,14 +169,14 @@ player's deck is drab**: every card ships in one of the five elements, the defen
 
 **A 0 AP card is bounded by the count rather than the cost**, which is the shift `minCardCost`
 already took deliberately when a Hone could drive a card to free: a turn is capped at
-`MaxActions` cards however cheap they are. **A 4 AP card is priced level with the rung below
-it**, at 1.33× a Skewer for 1.33× the price, so what it buys is a single figure a five-card turn
-cannot otherwise reach — which is why it is an essence's prize rather than something a run can
-stock.
+`MaxActions` cards however cheap they are. **A 4 AP card pays 5x, 1.67× a Skewer for 1.33× the
+price**, so it is the one rung that pays more per AP than the rung below it, and it buys a single
+figure a five-card turn cannot otherwise reach — which is why it is an essence's prize rather than
+something a run can stock.
 
 **The defenses sit on the same ladder the attacks do**, 0 through 3 AP. **The price is the count**:
 one AP buys one shield, and that is the whole of the pricing decision. It is the flattest rung in
-the game on purpose — the attack tiers buy 0.25x, 0.5x, 1x, 2x and 4x, where the defend tiers buy
+the game on purpose — the attack tiers buy 0.25x, 0.5x, 1x, 3x and 5x, where the defend tiers buy
 one, two and three — because a shield is *a hit you do not take* rather than a figure, and a curve
 on it would make the top card the only one worth holding.
 
@@ -2013,10 +2013,11 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
   the shop's four a function of which two had just been offered free, so buying the vial could
   guarantee — or rule out — the pair the player had turned down. A rule nobody designed,
   arriving out of an implementation detail.
-- **The dialog has no close button, and that is deliberate.** Every other modal in the game is a
-  look at something; this one stands between a purchase and what it bought, so an exit that
-  forfeited five vitae would be a trap wearing the same red X that means "close" everywhere else.
-  Every card in it is an exit.
+- **The way out without a card is SKIP, and there is no close button.** Every other modal in the
+  game is a look at something; this one stands between a purchase and what it bought, so leaving
+  forfeits the vitae. That is the player's call to make *(owner's call, 2026-09-26)*, and it is a
+  labelled button at the bottom of the screen rather than the red X that means "close" everywhere
+  else. Every card is an exit too.
 - **The row is five seats rather than two rows, and the screen decided that.** A relic is worn and a
   good is opened, so two rows would have read better — but the shop is 960 tall with a build band,
   two sentences of narration and the Leave button at 88%, and a card is 224. There is room for one
@@ -2594,8 +2595,9 @@ which cards — and a panel covering the screen to ask that was covering the ans
   aims an essence at a card off a deck of fifty-odd while showing eight of them, which was the place
   the deck mattered most and could not be read. `deckpile.go` is the pile all three draw, and each
   screen owns its own toggle and its own click.
-- **There is still no way out but taking a card.** The good is already paid for, so nothing on the
-  screen abandons it and the chrome stands down — the reward screen's arrangement.
+- **The ways out are taking a card or pressing SKIP**, which takes nothing and forfeits what the
+  good cost — the reward screen's LET THEM ESCAPE on the same terms. The chrome stands down, as it
+  does on the reward screen.
 - **It is not a station of the run.** The run is standing in the shop the whole time and is standing
   there when the good is finished with. See CLAUDE.md §Five screens that are not stations of a run.
 

@@ -13,11 +13,11 @@ package screens
 //  1. **Deal.** Cards fly out of the pile left to right, staggered, turning face up as they go —
 //     and they land **in pile order**, not in sorted order. What the row says at the end of this
 //     stage is "this is what the shuffle gave you".
-//  2. **Cascade.** One beat per worn ring that recolors anything in the hand, in worn order. The
-//     ring rattles and lights, every card it touches rattles with it and morphs into its new
-//     color, all at once. A second ring reading the first one's answer is a second beat, so a
+//  2. **Cascade.** One beat per worn ring that changes anything in the hand, in worn order — a flip
+//     recoloring a card or a demotion stepping it down its ladder. The ring rattles and lights,
+//     every card it touches rattles with it and morphs into what it became, all at once. A second ring reading the first one's answer is a second beat, so a
 //     lightning card under lightning-to-ice and ice-to-earth is watched going lightning, then
-//     ice, then earth — see combat.FlipSteps, which is the walk this is a picture of.
+//     ice, then earth — see combat.DealSteps, which is the walk this is a picture of.
 //  3. **Sort.** The row rearranges itself into the player's chosen key, on the slides the sort
 //     buttons already use.
 //
@@ -160,16 +160,16 @@ func (s *CombatScene) startDeal(from int, pile []combat.Card) {
 	deal := handDeal{stage: dealDealing}
 
 	// Each dealt card's own cascade, which is what the rings are then drawn from.
-	steps := make([][]combat.FlipStep, len(pile))
+	steps := make([][]combat.DealStep, len(pile))
 	if s.run != nil {
 		for i, raw := range pile {
-			steps[i] = s.run.FlipStepsFor(raw)
+			steps[i] = s.run.DealStepsFor(raw)
 		}
 	}
 
 	// **The rings are walked off the worn row, not off the cards** *(bug, 2026-09-15)*. The first
 	// version built this list in the order the first card to meet each ring happened to see it in,
-	// on the reasoning that combat.FlipSteps walks the worn row — which is true *per card* and says
+	// on the reasoning that combat.DealSteps walks the worn row — which is true *per card* and says
 	// nothing about the order across a hand. A hand whose first earth card sits before its first
 	// lightning card gave the third-worn relic ring 0 and the first-worn relic ring 1, so the row
 	// fired right to left.
@@ -207,12 +207,10 @@ func (s *CombatScene) startDeal(from int, pile []combat.Card) {
 	for i, raw := range pile {
 		faces := []dealFace{{ring: -1, spec: s.dealFace(raw)}}
 
-		running := raw
 		for _, st := range steps[i] {
-			running.Element = st.To
 			faces = append(faces, dealFace{
 				ring: ring[combat.RelicOf(st.Relic).Key],
-				spec: s.dealFace(running),
+				spec: s.dealFace(st.Card),
 			})
 		}
 

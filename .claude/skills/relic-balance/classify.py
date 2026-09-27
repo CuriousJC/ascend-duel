@@ -88,7 +88,6 @@ SCOPES = {
     "blow-formed":  "per-blow",
     "turn-taken":   "per-turn",
     "turn-start":   "per-turn",
-    "deck-built":   "per-fight",
     "fight-start":  "per-fight",
     "fight-won":    "per-run",
     "prizes-dealt": "per-run",

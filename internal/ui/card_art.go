@@ -409,21 +409,8 @@ var cardArt = data.LoadCardArt()
 // cost ticks and the border are drawn from it, so a picture keyed off anything else would be the
 // one thing on the card disagreeing with them.
 //
-// **The form is the opposite, and that is the owner's call** *(2026-09-16)*. A form override moves
-// the corner mark — a Slice told to be a crush wears the club — so a picture keyed off the card's
-// own concept left the one figure on the card still swinging a sabre under a club. The art follows
-// the mark instead: `combat.Counterpart` answers the concept standing at the same rung of the
-// overridden form, and that concept's label is what the catalog is asked for. **The two axes
-// therefore disagree on purpose**, and the reason is which of them the rest of the face agrees
-// with: nothing on a card is drawn from a flipped element, and the mark is drawn from the
-// overridden form.
-//
-// **A defense keeps its own picture, and that is decided rather than left over** *(owner's call,
-// 2026-09-16)*. `combat.Counterpart` matches on the verb, so nothing on the attack ladders answers
-// a Brace told to be a crush — and it should not: the card still raises shields, so a club in its
-// hands would be the picture lying about what it does. Crossing the attack/defend line changes the
-// mark and nothing else; the repaint is for a card moving between the three attack forms, where
-// what it does is the same and only the weapon differs.
+// **The form needs no rule here**: a card told to be another form becomes that form's concept, so
+// its own label already names the picture.
 func cardArtwork(c combat.Card) image.Image {
 	rec, ok := cardArt[cardArtRecord(c)]
 	if !ok {
@@ -436,11 +423,7 @@ func cardArtwork(c combat.Card) image.Image {
 // rule above can be tested without a picture: the catalog is mostly undrawn, so asserting on the
 // image would be asserting on which pairings happen to have been painted.
 func cardArtRecord(c combat.Card) string {
-	label := c.Label()
-	if id, ok := combat.Counterpart(c.Concept, c.Form()); ok {
-		label = combat.ConceptOf(id).Label
-	}
-	return data.CardArtKey(label, c.Element.String())
+	return data.CardArtKey(c.Label(), c.Element.String())
 }
 
 // artworkFrom is artwork() without a GlobalState, reading the stash instead. See cardImages.

@@ -120,7 +120,7 @@ func TestAnEffectWithNothingToDoIsRefused(t *testing.T) {
 		Then: []RelicEffect{{Do: DoAdjustCost, Amount: 0}},
 	})
 	refused(t, "a flip to basic", RelicRule{
-		When: MomentDeckBuilt,
+		When: MomentCardDrawn,
 		Then: []RelicEffect{{Do: DoSetElement, Element: Basic}},
 	})
 	refused(t, "a relic with no rules at all")
@@ -397,26 +397,26 @@ func TestFlipsCompose(t *testing.T) {
 
 	worn := []WornRelic{{Relic: toIce}, {Relic: toEarth}}
 
-	if e, ok := FlipElement(worn, Of(Bash, Lightning)); !ok || e != Earth {
-		t.Errorf("a lightning card became %v (flipped %v), want earth — the cascade stopped short", e, ok)
+	if e := DealtAs(worn, Of(Bash, Lightning)).Element; e != Earth {
+		t.Errorf("a lightning card became %v, want earth — the cascade stopped short", e)
 	}
-	if e, ok := FlipElement(worn, Of(Bash, Ice)); !ok || e != Earth {
-		t.Errorf("an ice card became %v (flipped %v), want earth", e, ok)
+	if e := DealtAs(worn, Of(Bash, Ice)).Element; e != Earth {
+		t.Errorf("an ice card became %v, want earth", e)
 	}
-	if _, ok := FlipElement(worn, Of(Bash, Fire)); ok {
-		t.Error("a fire card was flipped by relics that do not name it")
+	if e := DealtAs(worn, Of(Bash, Fire)).Element; e != Fire {
+		t.Errorf("a fire card became %v under relics that do not name it", e)
 	}
 
 	// Worn the other way round the cascade has nothing to chain onto: the ice ring fires first
 	// and there is no ice yet, so a lightning card stops at ice.
 	back := []WornRelic{{Relic: toEarth}, {Relic: toIce}}
-	if e, ok := FlipElement(back, Of(Bash, Lightning)); !ok || e != Ice {
+	if e := DealtAs(back, Of(Bash, Lightning)).Element; e != Ice {
 		t.Errorf("worn the other way a lightning card became %v, want ice", e)
 	}
 }
 
 // The screen plays one beat per ring, so it needs the steps rather than the answer.
-func TestFlipStepsNameEveryRingThatTouchedTheCard(t *testing.T) {
+func TestDealStepsNameEveryRingThatTouchedTheCard(t *testing.T) {
 	toIce := relic(t, "steps lightning to ice", RelicRule{
 		When: MomentCardDrawn,
 		If:   RelicCondition{Element: Lightning, HasElement: true},
@@ -430,20 +430,20 @@ func TestFlipStepsNameEveryRingThatTouchedTheCard(t *testing.T) {
 
 	worn := []WornRelic{{Relic: toIce}, {Relic: toEarth}}
 
-	steps := FlipSteps(worn, Of(Bash, Lightning))
+	steps := DealSteps(worn, Of(Bash, Lightning))
 	if len(steps) != 2 {
 		t.Fatalf("a lightning card took %d steps, want 2: %v", len(steps), steps)
 	}
-	if steps[0].Relic != toIce || steps[0].To != Ice {
-		t.Errorf("first step is %v to %v, want the ice ring", steps[0].Relic, steps[0].To)
+	if steps[0].Relic != toIce || steps[0].Card.Element != Ice {
+		t.Errorf("first step is %v to %v, want the ice ring", steps[0].Relic, steps[0].Card.Element)
 	}
-	if steps[1].Relic != toEarth || steps[1].To != Earth {
-		t.Errorf("second step is %v to %v, want the earth ring", steps[1].Relic, steps[1].To)
+	if steps[1].Relic != toEarth || steps[1].Card.Element != Earth {
+		t.Errorf("second step is %v to %v, want the earth ring", steps[1].Relic, steps[1].Card.Element)
 	}
 
 	// A card the cascade never reaches takes no steps at all, which is what lets the deal leave
 	// it alone rather than morphing it into itself.
-	if steps := FlipSteps(worn, Of(Bash, Fire)); len(steps) != 0 {
+	if steps := DealSteps(worn, Of(Bash, Fire)); len(steps) != 0 {
 		t.Errorf("a fire card took %d steps, want none: %v", len(steps), steps)
 	}
 }
@@ -681,7 +681,7 @@ func TestAtrophyStepsThreeAPAttacksDownOneRung(t *testing.T) {
 	// Atrophy's whole shape: the top rung of each form becomes the middle rung, nothing else moves,
 	// and the ladder is read off the declared cost rather than off what the wearer pays.
 	atrophy := relic(t, "atrophy", RelicRule{
-		When: MomentDeckBuilt,
+		When: MomentCardDrawn,
 		If:   RelicCondition{Tier: 3, HasTier: true},
 		Then: []RelicEffect{{Do: DoDemoteCard, Amount: 1}},
 	})
@@ -690,22 +690,53 @@ func TestAtrophyStepsThreeAPAttacksDownOneRung(t *testing.T) {
 	for _, f := range []Form{FormStab, FormSlash, FormCrush} {
 		top, mid := cardOfTier(t, f, 3), cardOfTier(t, f, 2)
 
-		got, demoted := DemoteConcept(worn, top)
-		if !demoted {
-			t.Errorf("%s was not stepped down", top.Label())
-			continue
-		}
-		if got != mid.Concept {
-			t.Errorf("%s became %s, want %s", top.Label(), Of(got, Basic).Label(), mid.Label())
+		if got := DealtAs(worn, top); got.Concept != mid.Concept {
+			t.Errorf("%s became %s, want %s", top.Label(), got.Label(), mid.Label())
 		}
 
 		// The rungs below the top are left where they are.
-		if _, moved := DemoteConcept(worn, mid); moved {
+		if steps := DealSteps(worn, mid); len(steps) != 0 {
 			t.Errorf("%s was stepped down, and only the 3 AP rung should move", mid.Label())
 		}
-		if _, moved := DemoteConcept(worn, cardOfTier(t, f, 1)); moved {
+		if steps := DealSteps(worn, cardOfTier(t, f, 1)); len(steps) != 0 {
 			t.Errorf("the bottom rung of %v was stepped down", f)
 		}
+	}
+}
+
+// A demotion and a flip are one walk, so they chain the way two flips do: each worn ring reads the
+// card the ring before it left, and worn order decides the result.
+func TestDemotionsAndFlipsChainInWornOrder(t *testing.T) {
+	threeDown := relic(t, "chain three down", RelicRule{
+		When: MomentCardDrawn,
+		If:   RelicCondition{Tier: 3, HasTier: true},
+		Then: []RelicEffect{{Do: DoDemoteCard, Amount: 1}},
+	})
+	twoDown := relic(t, "chain two down", RelicRule{
+		When: MomentCardDrawn,
+		If:   RelicCondition{Tier: 2, HasTier: true},
+		Then: []RelicEffect{{Do: DoDemoteCard, Amount: 1}},
+	})
+	toFire := relic(t, "chain ice to fire", RelicRule{
+		When: MomentCardDrawn,
+		If:   RelicCondition{Element: Ice, HasElement: true},
+		Then: []RelicEffect{{Do: DoSetElement, Element: Fire}},
+	})
+
+	skewer := Of(Skewer, Ice)
+	worn := []WornRelic{{Relic: threeDown}, {Relic: toFire}, {Relic: twoDown}}
+	steps := DealSteps(worn, skewer)
+	if len(steps) != 3 {
+		t.Fatalf("an ice Skewer took %d steps, want 3: %v", len(steps), steps)
+	}
+	if got := steps[2].Card; got.Concept != Jab || got.Element != Fire {
+		t.Errorf("an ice Skewer was dealt as %v %s, want a fire Jab", got.Element, got.Label())
+	}
+
+	// Worn the other way round the 2 AP ring reads the Skewer before the 3 AP ring has touched it.
+	back := []WornRelic{{Relic: twoDown}, {Relic: threeDown}}
+	if got := DealtAs(back, skewer); got.Concept != Thrust {
+		t.Errorf("worn the other way a Skewer was dealt as %s, want a Thrust", got.Label())
 	}
 }
 

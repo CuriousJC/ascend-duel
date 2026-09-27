@@ -76,23 +76,6 @@ func TestAnAlteredCardIsOneLineRatherThanTwo(t *testing.T) {
 	has(t, lines, "into")
 }
 
-// An essence that moves a card's form moves nothing the card's name says, so the line has to name it —
-// the same gap that had an altered Crush drawing a spear over the word CRUSH.
-func TestAnAlteredFormIsNamedInTheLine(t *testing.T) {
-	was := combat.Card{ID: 9, Concept: combat.Bash, Element: combat.Fire}
-	if was.Form() != combat.FormCrush {
-		t.Skipf("bash is no longer a crush; this test needs a card whose form an essence can move")
-	}
-	now := was
-	now.FormOverride = combat.FormStab
-
-	lines := afterLines(nil,
-		session.Holdings{Cards: []combat.Card{was}},
-		session.Holdings{Cards: []combat.Card{now}})
-
-	has(t, lines, "stab")
-}
-
 // Nothing moving writes nothing at all. The watcher runs every frame, so a diff that reported a
 // change on a quiet frame would fill a run's account with itself.
 func TestAQuietFrameWritesNothing(t *testing.T) {

@@ -336,3 +336,26 @@ func TestCanApplyRefusesOnlyACardThatIsNotThere(t *testing.T) {
 		t.Error("an index the deck does not hold was offered")
 	}
 }
+
+// TestAFormEssenceMakesTheCardTheOtherFormsCard. The card becomes the new form's card at its own
+// rung — across the attack/defend line too — and keeps what is its own: element, identity, upgrade.
+func TestAFormEssenceMakesTheCardTheOtherFormsCard(t *testing.T) {
+	gold := combat.Rider{Kind: combat.RiderGolden}
+	run := New([]combat.Card{combat.Card{Concept: combat.Block, Element: combat.Ice}.SetRider(gold)})
+	was, _ := run.Card(0)
+
+	if !run.Apply(Essence{Target: TargetForm, Form: combat.FormCrush}, 0) {
+		t.Fatal("Apply refused a valid index")
+	}
+	got, _ := run.Card(0)
+
+	if got.Concept != combat.Bash {
+		t.Errorf("a Block told to be a crush became %s, want Bash", got.Label())
+	}
+	if got.Category() != combat.CategoryAttack {
+		t.Errorf("it is a %v card, want an attack", got.Category())
+	}
+	if got.Element != was.Element || got.ID != was.ID || got.Rider() != gold {
+		t.Errorf("it lost what was its own: %+v became %+v", was, got)
+	}
+}

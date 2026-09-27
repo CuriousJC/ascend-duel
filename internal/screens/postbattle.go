@@ -1042,6 +1042,7 @@ func (s *PostBattleScene) sortOffer(gs *state.GlobalState) {
 	}
 
 	card := func(deckIndex int) (combat.Card, bool) { return gs.Run.Card(deckIndex) }
+	worn := gs.Run.WornRelics()
 
 	order := make([]int, len(s.offer))
 	for i := range order {
@@ -1056,7 +1057,7 @@ func (s *PostBattleScene) sortOffer(gs *state.GlobalState) {
 			// the player can still read if one ever does.
 			return s.offer[order[i]] < s.offer[order[j]]
 		}
-		return ui.HandLess(s.sortMode, a, b)
+		return ui.HandLess(s.sortMode, a, b, worn)
 	})
 
 	sorted := make([]int, len(s.offer))

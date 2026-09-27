@@ -59,30 +59,63 @@ func TestCostSortRunsCheapestFirst(t *testing.T) {
 	}
 }
 
-func TestTypeSortPutsEveryAttackBeforeEveryPlan(t *testing.T) {
-	hand := sortHandOf(ui.SortByType,
-		card(combat.Guard, combat.Basic), // plan, 3
-		card(combat.Cleave, combat.Ice),  // attack, 3
-		card(combat.Brace, combat.Basic), // plan, 1
-		card(combat.Jab, combat.Fire),    // attack, 1
+func TestFormSortRunsStabSlashCrushThenDefend(t *testing.T) {
+	// The tab says FORM, so the leading key is the form mark in the card's corner — not whether
+	// the card attacks, which would leave the three attack forms interleaved by cost.
+	want := []combat.Form{combat.FormStab, combat.FormStab, combat.FormSlash, combat.FormCrush,
+		combat.FormDefend}
+
+	hand := sortHandOf(ui.SortByForm,
+		card(combat.Guard, combat.Basic), // defend, 3
+		card(combat.Smash, combat.Ice),   // crush, 3
+		card(combat.Cut, combat.Fire),    // slash, 1
+		card(combat.Skewer, combat.Fire), // stab, 3
+		card(combat.Jab, combat.Earth),   // stab, 1
 	)
 
-	seenPlan := false
-	for _, c := range hand {
-		isPlan := c.Category() == combat.CategoryDefend
-		if seenPlan && !isPlan {
-			t.Fatalf("hand runs %s, which puts an attack after a plan", handLabel(hand))
+	for i, c := range hand {
+		if c.Form() != want[i] {
+			t.Fatalf("hand runs %s, want the forms in the order %v", handLabel(hand), want)
 		}
-		seenPlan = seenPlan || isPlan
 	}
 
-	// And within each group it is the cost sort, which is the whole point of the chain: a
-	// type sort is a cost sort with one key in front of it.
-	if hand[0].Concept != combat.Jab || hand[1].Concept != combat.Cleave {
-		t.Errorf("attacks run %s, want the cheaper one first", handLabel(hand[:2]))
+	// And within a form it is the cost sort, which is the whole point of the chain: a form sort
+	// is a cost sort with one key in front of it.
+	if hand[0].Concept != combat.Jab || hand[1].Concept != combat.Skewer {
+		t.Errorf("stabs run %s, want the cheaper one first", handLabel(hand[:2]))
 	}
-	if hand[2].Concept != combat.Brace || hand[3].Concept != combat.Guard {
-		t.Errorf("plans run %s, want the cheaper one first", handLabel(hand[2:]))
+}
+
+func TestCostSortReadsTheCostTheFacePrints(t *testing.T) {
+	// A relic's discount is not on the card — it is asked of the wearer, which is what the face
+	// and the AP bar both print. Sorting on the card's own cost put a fire Smash showing 2 AP after
+	// an ice Skewer showing 3.
+	robe, ok := combat.RelicByKey("discount-fire")
+	if !ok {
+		t.Fatal("discount-fire is not in the catalog; pick another cost relic")
+	}
+	d := combat.Duelist{RelicSlots: 5}.Wearing(combat.WornRelic{Relic: robe})
+
+	hand := make([]paletteCard, 0, 3)
+	for _, c := range []combat.Card{
+		card(combat.Skewer, combat.Ice), // 3
+		card(combat.Smash, combat.Fire), // 3, shows 2
+		card(combat.Thrust, combat.Ice), // 2
+	} {
+		hand = append(hand, paletteCard{Card: c})
+	}
+	s := &CombatScene{hand: hand, sortMode: ui.SortByCost,
+		fighter: &entities.Combatant{Duelist: d}}
+	s.sortHand()
+
+	last := 0
+	for _, c := range s.hand {
+		if got := d.CardCost(c.Card); got < last {
+			t.Fatalf("hand runs %s, which drops from %d AP to %d on the face",
+				handLabel(s.hand), last, got)
+		} else {
+			last = got
+		}
 	}
 }
 
@@ -103,6 +136,23 @@ func TestElementSortRunsFireIceLightningEarthThenDrab(t *testing.T) {
 		if c.Element != want[i] {
 			t.Fatalf("hand runs %s, want %v", handLabel(hand), want)
 		}
+	}
+}
+
+func TestTheElementSortPutsEveryWildcardLast(t *testing.T) {
+	// A wildcard counts as every element, so it trails the drab cards too rather than sitting
+	// among the color it happens to carry.
+	wild := card(combat.Jab, combat.Fire).SetRider(combat.Rider{Kind: combat.RiderWildElement})
+
+	hand := sortHandOf(ui.SortByElement,
+		wild,
+		card(combat.Brace, combat.Basic),
+		card(combat.Jab, combat.Arcane),
+		card(combat.Skewer, combat.Fire),
+	)
+
+	if !hand[len(hand)-1].Wild(combat.AxisElement) {
+		t.Errorf("hand runs %s, want the wildcard last", handLabel(hand))
 	}
 }
 
@@ -129,7 +179,7 @@ func TestEverySortFallsThroughToTheSameChain(t *testing.T) {
 	// first key differs.
 	cheap, dear := card(combat.Jab, combat.Fire), card(combat.Skewer, combat.Fire)
 
-	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByType, ui.SortByElement} {
+	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByForm, ui.SortByElement} {
 		hand := sortHandOf(mode, dear, cheap)
 		if hand[0].Concept != combat.Jab {
 			t.Errorf("sorting by %v ran %s, want the cost chain to break the tie",
@@ -516,7 +566,7 @@ func TestThereIsOneButtonPerSortMode(t *testing.T) {
 			t.Errorf("%v's label %q is not drawable in the figure lettering", spec.Mode, spec.Label)
 		}
 	}
-	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByType, ui.SortByElement} {
+	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByForm, ui.SortByElement} {
 		if !seen[mode] {
 			t.Errorf("%v has no button to select it", mode)
 		}

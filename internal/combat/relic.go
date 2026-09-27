@@ -45,9 +45,6 @@ const (
 	// MomentAttackLands fires once per landed blow, in resolveAttackPhase and resolveSoloAttacks.
 	MomentAttackLands
 
-	// MomentDeckBuilt fires once as a fight's deck is dealt out of the run: session.FightDeck.
-	MomentDeckBuilt
-
 	// MomentFightStart fires once per fight, as the duelist is put together.
 	MomentFightStart
 
@@ -77,22 +74,20 @@ const (
 	// MomentCardDrawn fires per card as it leaves the draw pile for the hand: the combat screen's
 	// drawHand.
 	//
-	// **It is the element flip's moment, and the flip is all it holds** *(owner's call,
-	// 2026-08-24)*. It used to be a `deck-built` verb, recoloring the whole fight deck once as it
-	// came out of the run — which deals the same cards, since a flip is unconditional over an
-	// element, and says the wrong thing about *when*. Every one of these relics is worded "every X
-	// card is dealt as a Y card", and dealing is what a draw is.
+	// **Every relic that changes what a card is dealt as fires here**, the flip and the demotion
+	// alike, and they are one walk: each worn ring, left to right, reads the card the ring before it
+	// left — see DealSteps. Every one of these relics is worded "is dealt as", and dealing is what a
+	// draw is.
 	//
-	// **The draw pile therefore holds cards as the run owns them**, and the flip is applied on the
+	// **The draw pile therefore holds cards as the run owns them**, and the change is applied on the
 	// way into the hand. That is the invariant the reshuffle has to keep: a discarded card is put
-	// back as the run owns it, or a second flip would land on the color the first one made and two
-	// relics would chain a deck to one color between them. See screens/combat_deck.go.
+	// back as the run owns it, or it would take a second walk from wherever the first one left it.
+	// See screens/combat_deck.go.
 	//
-	// **A card drawn under a flip does not remember what it was.** It carries the color it became
-	// and nothing else, so a rule firing later — a card-damage relic keyed on ice — matches the card
-	// in the hand rather than the card in the run. What the original is still reachable *from* is
-	// the card's ID, which is a handle for the layers above the rules and never something a rule
-	// reads.
+	// **A card drawn this way does not remember what it was.** It carries what it became and nothing
+	// else, so a rule firing later — a card-damage relic keyed on ice — matches the card in the hand
+	// rather than the card in the run. What the original is still reachable *from* is the card's ID,
+	// which is a handle for the layers above the rules and never something a rule reads.
 	//
 	// **Appended, because the enum is append-only.**
 	MomentCardDrawn
@@ -131,7 +126,7 @@ const (
 
 // Moments is every moment in a fixed order, for anything that walks them.
 func Moments() []Moment {
-	return []Moment{MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt,
+	return []Moment{MomentCardCost, MomentCardDamage, MomentAttackLands,
 		MomentFightStart, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken,
 		MomentCardDrawn, MomentTurnStart, MomentEssenceSpent}
 }
@@ -142,8 +137,6 @@ func (m Moment) String() string {
 		return "card-damage"
 	case MomentAttackLands:
 		return "attack-lands"
-	case MomentDeckBuilt:
-		return "deck-built"
 	case MomentFightStart:
 		return "fight-start"
 	case MomentFightWon:
@@ -181,7 +174,7 @@ func ParseMoment(name string) (Moment, bool) {
 // than silently matching everything.
 func (m Moment) readsACard() bool {
 	switch m {
-	case MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt, MomentBlowFormed,
+	case MomentCardCost, MomentCardDamage, MomentAttackLands, MomentBlowFormed,
 		MomentTurnTaken, MomentCardDrawn:
 		return true
 	case MomentTurnStart:
@@ -213,12 +206,8 @@ const (
 	// DoApplyStatus puts a status on whoever took the blow.
 	DoApplyStatus
 
-	// DoSetElement is the flip: it recolors a matching card **as that card is drawn**.
-	//
-	// **The only verb at MomentCardDrawn**, and it moved there on 2026-08-24 from `deck-built`,
-	// where it recolored the whole fight deck in one pass. The cards dealt are the same either way
-	// — a flip is unconditional over an element — so what changed is what the game *says*: these
-	// relics are all worded "every X card is dealt as a Y card", and a draw is the dealing.
+	// DoSetElement is the flip: it recolors a matching card **as that card is drawn**. One of the
+	// two verbs at MomentCardDrawn, with DoDemoteCard; see DealSteps.
 	DoSetElement
 
 	// DoAddDMG is flat DMG for the fight.
@@ -285,9 +274,8 @@ const (
 	// compound, and every growing relic in the game is linear by decision.
 	DoGrowOnHit
 
-	// DoDemoteCard steps a matching attack card Amount rungs **down its own form's ladder** as the
-	// fight's deck is dealt: a 3 AP Skewer becomes a 2 AP Thrust, same form, one rung cheaper and
-	// half the damage.
+	// DoDemoteCard steps a matching card Amount rungs **down its own form's ladder** as it is
+	// drawn: a 3 AP Skewer becomes a 2 AP Thrust, same form, one rung cheaper and half the damage.
 	//
 	// **It walks `Neighbor`, so the ladder stays a consequence of `duelist_cards.json`** rather
 	// than a table here to keep in step with it. A card with no rung below it is left alone — the
@@ -574,7 +562,7 @@ func verbMoment(v RelicVerb) Moment {
 	case DoSetElement:
 		return MomentCardDrawn
 	case DoDemoteCard:
-		return MomentDeckBuilt
+		return MomentCardDrawn
 	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDMGPerVitae, DoScaleRolls, DoAdjustRoundLimit:
 		return MomentFightStart
 	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDMGPerHeld, DoScaleHandDamage:
@@ -1940,94 +1928,74 @@ func EssenceTargets(worn []WornRelic) int {
 	return n
 }
 
-// DemoteConcept is which concept a card is dealt as, given a worn set. It reports false when no
-// relic steps it, so a caller can leave the card alone.
+// DealStep is one relic changing a card on its way out of the draw pile: which relic did it, and
+// the card it left.
 //
-// **It reads the card as the run owns it, exactly like FlipElement**, so two demoting relics cannot
-// walk one card two rungs down the ladder between them — the deepest single step wins and worn
-// order decides a tie. A relic wanting two rungs says `Amount: 2`.
-//
-// **A card with no rung below it is left where it is.** Atrophy on a hand of Jabs is a relic doing
-// nothing, which is a fact about that hand rather than a case to special-case.
-func DemoteConcept(worn []WornRelic, card Card) (ConceptID, bool) {
-	deepest := 0
-	for _, e := range RelicEffectsAt(worn, MomentDeckBuilt, card) {
-		if e.Do == DoDemoteCard && e.Amount > deepest {
-			deepest = e.Amount
-		}
-	}
-	if deepest == 0 {
-		return NoConcept, false
-	}
-	return Neighbor(card.Concept, -deepest)
-}
-
-// FlipStep is one relic recoloring a card on its way out of the draw pile: which relic did it, and
-// what the card became.
-//
-// **It exists because the cascade is something to watch.** A card dealt under two flips changes
-// twice, once per ring, and a caller handed only the final color could draw one change out of two —
+// **It exists because the cascade is something to watch.** A card dealt under two rings changes
+// twice, once per ring, and a caller handed only the final card could draw one change out of two —
 // see screens/combat_deal.go, which plays a beat per step with the ring that caused it rattling.
-type FlipStep struct {
+type DealStep struct {
 	Relic RelicID
-	To    Element
+	Card  Card
 }
 
-// FlipSteps is every flip that touches a card as it is dealt, **in worn order, each one reading what
-// the flip before it left behind**.
+// DealSteps is every relic that changes a card as it is dealt, **in worn order, each one reading
+// what the ring before it left behind**. A flip recolors the running card and a demotion steps it
+// down its ladder; they are one walk because they are one operation on two properties.
 //
-// **They chain** *(owner's call, 2026-09-15)*. Lightning-to-ice worn beside ice-to-earth deals a
-// lightning card as earth, through ice, rather than leaving it at ice. Every flip used to match on
-// the card's *original* element on the argument that chaining lets a run funnel a whole deck into
-// one color — which it does, and which is now the intent rather than the hazard. The deck panel's
-// alterations view is what answers "so what am I actually holding"; see session.AlteredAs, which
-// reads the same walk.
+// **They chain** *(owner's call, 2026-09-15 for the flips, 2026-09-27 for the demotions)*.
+// Lightning-to-ice worn left of ice-to-earth deals a lightning card as earth, through ice; a 3 AP
+// demotion worn left of a 2 AP one deals a Skewer as a Jab, through Thrust. Worn order decides: swap
+// either pair and the second ring reads a card the first has not touched yet. The deck panel's
+// alterations view is what answers "so what am I actually holding"; it reads the same walk.
 //
-// **A flip onto the color the card already wears is not a step.** Nothing happened, so there is
-// nothing to draw and nothing to report — which is also what stops a relic listing itself as a
-// contributor to a card it left alone.
-func FlipSteps(worn []WornRelic, card Card) []FlipStep {
-	var out []FlipStep
+// **A ring that leaves the card as it found it is not a step.** A flip onto the color the card
+// already wears, or a demotion with no rung below, changed nothing — so there is nothing to draw and
+// nothing to report, which is also what stops a relic listing itself as a contributor to a card it
+// left alone.
+//
+// **The card handed in must be the card the run owns.** Every step reads the running card, so one
+// that has already been through here and is handed back would take a second trip — the discard
+// folded into the draw pile is restored first, which is what screens.restoreToDeck is for.
+func DealSteps(worn []WornRelic, card Card) []DealStep {
+	var out []DealStep
 
 	running := card
 	for _, w := range worn {
-		to, matched := Basic, false
+		next := running
 		for _, rule := range RelicOf(w.Relic).Rules {
 			if rule.When != MomentCardDrawn || !rule.If.Matches(running) {
 				continue
 			}
 			for _, e := range rule.Then {
-				if e.Do == DoSetElement {
-					to, matched = e.Element, true
+				switch e.Do {
+				case DoSetElement:
+					next.Element = e.Element
+				case DoDemoteCard:
+					if id, ok := Neighbor(next.Concept, -e.Amount); ok {
+						next.Concept = id
+					}
 				}
 			}
 		}
-		if !matched || to == running.Element {
+		if next == running {
 			continue
 		}
-		running.Element = to
-		out = append(out, FlipStep{Relic: w.Relic, To: to})
+		running = next
+		out = append(out, DealStep{Relic: w.Relic, Card: running})
 	}
 	return out
 }
 
-// FlipElement is what color a card is dealt as, given a worn set. It reports false when no relic
-// touches it, so a caller can leave the card alone rather than writing its own color back over it.
-//
-// **It is the last step of FlipSteps**, which is the walk — two walks would be two chances to
-// disagree about what a card is dealt as, and the screen draws every step of the one this answers
-// the end of.
-//
-// **The card handed in must be the card the run owns.** A flip reads the running element now, so a
-// card that has already been through here and is handed back would take a second trip: the
-// discard folded into the draw pile is restored to the run's own color first, which is what
-// screens.restoreToDeck is for. That was true before the flips chained and it matters more now.
-func FlipElement(worn []WornRelic, card Card) (Element, bool) {
-	steps := FlipSteps(worn, card)
+// DealtAs is the card a worn set deals: the last step of DealSteps, or the card unchanged when no
+// ring touches it. **It is the end of that walk and nothing else**, since two walks would be two
+// chances to disagree about what a card is dealt as.
+func DealtAs(worn []WornRelic, card Card) Card {
+	steps := DealSteps(worn, card)
 	if len(steps) == 0 {
-		return Basic, false
+		return card
 	}
-	return steps[len(steps)-1].To, true
+	return steps[len(steps)-1].Card
 }
 
 // Grows reports whether a relic holds an accumulator at all — a rule with any of the three growth

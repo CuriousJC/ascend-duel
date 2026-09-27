@@ -51,7 +51,7 @@ func TestTheEssenceOfferIsArrangedByTheSortMode(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = 1920, 1080
 
-	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByType, ui.SortByElement} {
+	for _, mode := range []ui.HandSort{ui.SortByCost, ui.SortByForm, ui.SortByElement} {
 		ui.SetHandSort(gs, mode)
 
 		var s PostBattleScene
@@ -66,7 +66,7 @@ func TestTheEssenceOfferIsArrangedByTheSortMode(t *testing.T) {
 			if !aok || !bok {
 				t.Fatalf("offer holds an index the deck does not: %v", s.offer)
 			}
-			if ui.HandLess(mode, b, a) {
+			if ui.HandLess(mode, b, a, gs.Run.WornRelics()) {
 				t.Errorf("sorted by %v, card %d comes before card %d in the row", mode, i, i-1)
 			}
 		}

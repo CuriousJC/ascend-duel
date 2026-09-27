@@ -203,20 +203,12 @@ func TestSoulTakerPaysFlatAndHungryAddsAPick(t *testing.T) {
 }
 
 func TestAFlipRecolorsTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
-	// **A flip fires as a card is drawn, not as the deck is built** *(2026-08-24)*. The pile a
-	// fight opens with therefore holds the run's own colors, and the recolor lands one card at a
-	// time on the way into the hand — which is what every one of these relics' text has always said.
+	// **A flip fires as a card is drawn**, one card at a time on the way into the hand — which is
+	// what every one of these relics' text says — and never writes back into what the run owns.
 	run := wearing(t, "flip-lightning-to-ice")
 	run.deck = []combat.Card{
 		{Concept: combat.Bash, Element: combat.Lightning},
 		{Concept: combat.Bash, Element: combat.Fire},
-	}
-
-	for i, want := range []combat.Element{combat.Lightning, combat.Fire} {
-		if got := run.FightDeck()[i].Element; got != want {
-			t.Errorf("the draw pile holds card %d as %v, want %v — a flip is not a deck-built rule",
-				i, got, want)
-		}
 	}
 
 	if got := run.DrawnAs(run.Deck()[0]).Element; got != combat.Ice {
@@ -250,12 +242,13 @@ func TestARedrawnCardDoesNotTakeTheCascadeTwice(t *testing.T) {
 	}
 
 	// The cascade is the steps, and the screen plays a beat per step. Two rings, two beats.
-	steps := run.FlipStepsFor(owned)
+	steps := run.DealStepsFor(owned)
 	if len(steps) != 2 {
 		t.Fatalf("a lightning card took %d steps, want 2: %v", len(steps), steps)
 	}
-	if steps[0].To != combat.Ice || steps[1].To != combat.Fire {
-		t.Errorf("the cascade ran %v then %v, want ice then fire", steps[0].To, steps[1].To)
+	if steps[0].Card.Element != combat.Ice || steps[1].Card.Element != combat.Fire {
+		t.Errorf("the cascade ran %v then %v, want ice then fire",
+			steps[0].Card.Element, steps[1].Card.Element)
 	}
 }
 
@@ -296,12 +289,19 @@ func TestARunOpensBare(t *testing.T) {
 }
 
 func TestSellingAtrophyGivesTheCardsBack(t *testing.T) {
-	// **A deck-built relic rewrites the deck a fight is dealt from, never the deck the run owns.**
-	// The question this answers is a player's: take Atrophy off and the Skewers are back. If
-	// FightDeck ever wrote through to the stored deck, selling would leave a run permanently
-	// smaller — a loss no screen would explain and no test but this one would catch.
+	// **A demotion changes what a card is dealt as, never the deck the run owns.** The question this
+	// answers is a player's: take Atrophy off and the Skewers are back. If the draw ever wrote
+	// through to the stored deck, selling would leave a run permanently smaller — a loss no screen
+	// would explain and no test but this one would catch.
 	run := wearing(t, "demotion-three")
 
+	dealt := func() []combat.Card {
+		var out []combat.Card
+		for _, c := range run.Deck() {
+			out = append(out, run.DrawnAs(c))
+		}
+		return out
+	}
 	tops := func(deck []combat.Card) int {
 		n := 0
 		for _, c := range deck {
@@ -317,18 +317,18 @@ func TestSellingAtrophyGivesTheCardsBack(t *testing.T) {
 		t.Fatal("the starting deck holds no 3 AP attacks, so this test proves nothing")
 	}
 
-	if got := tops(run.FightDeck()); got != 0 {
+	if got := tops(dealt()); got != 0 {
 		t.Errorf("wearing Atrophy, the fight is dealt %d 3 AP attacks, want none", got)
 	}
 	if got := tops(run.Deck()); got != owned {
-		t.Errorf("the run now owns %d 3 AP attacks, want %d — FightDeck wrote through to the "+
+		t.Errorf("the run now owns %d 3 AP attacks, want %d — the draw wrote through to the "+
 			"stored deck", got, owned)
 	}
 
 	if !run.Sell("demotion-three") {
 		t.Fatal("Atrophy would not come off")
 	}
-	if got := tops(run.FightDeck()); got != owned {
+	if got := tops(dealt()); got != owned {
 		t.Errorf("after selling Atrophy the fight is dealt %d 3 AP attacks, want %d back",
 			got, owned)
 	}

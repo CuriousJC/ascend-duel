@@ -107,9 +107,8 @@ type RelicData struct {
 
 // RelicRuleData is one `When` / `If` / `Then`.
 type RelicRuleData struct {
-	// When is the moment that wakes this rule: one of `card-cost`, `card-damage`, `attack-lands`,
-	// `deck-built`, `fight-start`, `fight-won`, `prizes-dealt`, `blow-formed` or `turn-taken`.
-	// Closed, and each has one Go seat.
+	// When is the moment that wakes this rule — see combat.Moments for the closed list. Each has one
+	// Go seat.
 	When string `json:"When"`
 
 	// If is what has to be true. **Absent means the rule always fires**, which is what the stat

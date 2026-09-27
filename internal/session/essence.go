@@ -70,16 +70,12 @@ const (
 	// copies rather than damage.
 	TargetDemote
 
-	// TargetForm changes what one card counts as on the form axis — the element essences' trick on
-	// the other matching axis.
+	// TargetForm turns one card into its counterpart on another form's ladder — a 2 AP slash told
+	// to be a crush is a 2 AP crush, name and all. See `combat.Counterpart`.
 	//
-	// **It writes `Card.FormOverride`, which a rune already owns**, so this is the vocabulary
-	// arriving at a mechanic rather than a new one: form is concept-wide and an essence swapping the
-	// concept's form would change every copy in the deck, which is the argument the target list
-	// was closed against. The override is per-card and only `Card.Form` reads it.
-	//
-	// **A Brace told to be a crush still defends**, and now matches on an attack axis — the legal
-	// weird thing the owner ruled in when runes got the field.
+	// **Everything but the element moves**, the attack/defend line included: a Brace told to be a
+	// crush stops shielding and hits. What the card keeps is its own — its element, its identity,
+	// its upgrade and any cost or amount an essence has already written onto it.
 	TargetForm
 )
 
@@ -347,7 +343,11 @@ func (s *Session) Apply(w Essence, i int) bool {
 		return true
 
 	case TargetForm:
-		card.FormOverride = w.Form
+		next, ok := combat.Counterpart(card.Concept, w.Form)
+		if !ok {
+			return false
+		}
+		card.Concept = next
 		s.deck[i] = card
 		return true
 
@@ -391,6 +391,9 @@ func (s *Session) CanApply(w Essence, i int) bool {
 		return ok
 	case TargetDemote:
 		_, ok := combat.NeighborWrapping(card.Concept, -1)
+		return ok
+	case TargetForm:
+		_, ok := combat.Counterpart(card.Concept, w.Form)
 		return ok
 	default:
 		return true

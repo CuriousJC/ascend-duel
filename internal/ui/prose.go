@@ -174,28 +174,6 @@ func CategoryInk(c combat.Category) string {
 // does not describe them. What changed is that the description is now a function of the rule
 // rather than a lookup beside it, which is the only version that can cover a deck written in JSON.
 
-// AttackVerb is what a form is called on a card face. **The player's three forms are told apart by
-// it** — nine attack cards on one ladder, and a card naming no form would leave the corner mark
-// carrying the distinction alone. An enemy card belongs to no form and simply hits.
-//
-// **It is the form's name rather than a verb, in capitals** *(owner's call, 2026-09-07)*. It read
-// "Slashes for 1x DMG" until then, wrapped by the measurer into three ragged lines — the word, the
-// stray "for", then the figure — which spent the whole text column on a sentence to say two facts.
-// The card now writes the two facts as two lines and nothing else, and the form is written the way
-// the ladder and the hand names write it: as a label, not as something the card is doing.
-func AttackVerb(f combat.Form) string {
-	switch f {
-	case combat.FormStab:
-		return "STAB"
-	case combat.FormSlash:
-		return "SLASH"
-	case combat.FormCrush:
-		return "CRUSH"
-	default:
-		return "HITS"
-	}
-}
-
 // multiplierText writes a damage multiplier the way a card says it: 0.5x, 1x, 1.5x, 2x.
 //
 // **A multiplier rather than a word** — "0.5x" instead of "half" — because a multiplier is what

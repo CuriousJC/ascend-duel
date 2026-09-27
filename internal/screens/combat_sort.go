@@ -103,8 +103,12 @@ func (s *CombatScene) sortHand() []int {
 	for i := range order {
 		order[i] = i
 	}
+	var worn []combat.WornRelic
+	if s.fighter != nil {
+		worn = s.fighter.Duelist.WornRelics()
+	}
 	sort.SliceStable(order, func(i, j int) bool {
-		return ui.HandLess(mode, s.hand[order[i]].Card, s.hand[order[j]].Card)
+		return ui.HandLess(mode, s.hand[order[i]].Card, s.hand[order[j]].Card, worn)
 	})
 
 	sorted := make([]paletteCard, len(s.hand))

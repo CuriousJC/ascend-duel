@@ -726,9 +726,11 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 
 	case RuneForm:
 		for _, i := range s.positionsOf(ids) {
-			// **An override rather than a replacement**, so the card goes on being the card it
-			// was and only the axis it is counted on moves. See `combat.Card.FormOverride`.
-			s.deck[i].FormOverride = p.Form
+			// **The card becomes its counterpart on the new form's ladder**, keeping its element,
+			// its identity and its upgrade. See `combat.Counterpart`.
+			if next, ok := combat.Counterpart(s.deck[i].Concept, p.Form); ok {
+				s.deck[i].Concept = next
+			}
 		}
 		return true
 

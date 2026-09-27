@@ -13,5 +13,35 @@
       "earth": "The workshop has been dug underground. The walls and ceiling are packed earth and rough rock shored up with timber, roots poke through between the beams, and clusters of mushrooms grow in the corners and out of the rusting scrap heaps. The light is dim and green.",
       "arcane": "The tinkering has gone shamanistic. Voodoo fetishes, bone charms, feathered totems and strung beads hang among the gears, painted sigils cover the crates, and small cogs float a little off the benches in a faint violet light that comes from nowhere in particular."
     }
+  },
+  {
+    "Backdrop": "goblins-inner-bomber-studio",
+    "Name": "Bomber Studio",
+    "Tier": "inner",
+    "Art": "goblins-inner-bomber-studio",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A goblin bomb-maker's studio hall, with nobody in it: a broad floor of scuffed planks and patched flagstones, clear from the foreground to the far wall, under high rafters hung with chains and half-built casings. It is a mess. Bomb parts are scattered everywhere — round iron shells, fuse cord, powder kegs, cracked casings and loose timers — along with nails, shrapnel, broken glass and other sharp scrap heaped in buckets and spilled across the floor at the edges. Masses of unused wire lie in snarled tangles on the workbenches along both side walls and trail down onto the floor. Nothing is stored safely and everything looks like it could go off.",
+    "ElementDraw": {
+      "fire": "The studio runs hot. Lit fuses smoulder on the benches, braziers glow among the powder kegs, and the scrap is scorched and heat-blued. Sparks and embers drift in the air, and the whole hall is lit warm orange from below.",
+      "ice": "Everything is frozen over. Frost furs every shell and bench, icicles hang from the rafters, and snow has drifted in against the kegs. The wire tangles are stiff with rime, and the light is pale and blue.",
+      "lightning": "The bombs here are electrical: copper coils wound round the shells, crackling spark gaps, batteries and tangled cables running across the rafters. Small yellow arcs jump between the wire tangles, and every metal edge carries a faint hot-yellow halo.",
+      "earth": "The studio has been dug underground. The walls and ceiling are packed earth and rough rock shored up with timber, roots poke through between the beams, and clusters of mushrooms grow in the corners and out of the heaps of shrapnel. The light is dim and green.",
+      "arcane": "The bomb-making has gone shamanistic. Voodoo fetishes, bone charms, feathered totems and strung beads hang among the wires, painted sigils cover the shells and kegs, and loose nails float a little off the benches in a faint violet light that comes from nowhere in particular."
+    }
+  },
+  {
+    "Backdrop": "goblins-boss-throne-room",
+    "Name": "Throne Room",
+    "Tier": "boss",
+    "Art": "goblins-boss-throne-room",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A goblin king's throne room, with nobody in it: a broad floor of scuffed planks and patched flagstones, clear from the foreground to the far wall, under high rafters. A bronze throne stands centred against the far wall, dented and patched together from scrap. The two portals stand one on each side of the throne, flanking it. It is still a goblin's hall: heaps of garbage are piled up beside the throne and in the corners and along the walls — broken gears, bent pipe, cracked crates, rags, bones and scavenged junk of every kind.",
+    "ElementDraw": {
+      "fire": "The throne room runs hot. Braziers burn beside the throne, the garbage heaps smoulder, and the bronze glows dull red at its edges. Sparks and embers drift in the air, and the whole hall is lit warm orange from below.",
+      "ice": "Everything is frozen over. Frost furs the throne and the garbage heaps, icicles hang from the rafters, and snow has drifted in against the walls. The light is pale and blue.",
+      "lightning": "The throne room is wired up: copper coils wound round the throne's arms, crackling spark gaps and tangled cables running across the rafters. Small yellow arcs jump between the garbage heaps, and every metal edge carries a faint hot-yellow halo.",
+      "earth": "The throne room has been dug underground. The walls and ceiling are packed earth and rough rock shored up with timber, roots poke through between the beams, and clusters of mushrooms grow in the corners and out of the garbage heaps. The light is dim and green.",
+      "arcane": "The throne room has gone shamanistic. Voodoo fetishes, bone charms, feathered totems and strung beads hang from the throne and the rafters, painted sigils cover the walls, and bits of junk float a little off the garbage heaps in a faint violet light that comes from nowhere in particular."
+    }
   }
 ]

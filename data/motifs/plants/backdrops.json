@@ -1,0 +1,42 @@
+[
+  {
+    "Backdrop": "plants-outer-burning-forest",
+    "Name": "Burning Forest",
+    "Tier": "outer",
+    "Art": "plants-outer-burning-forest",
+    "Affinities": ["fire"],
+    "Draw": "A forest on fire, with nobody in it. Charred black trunks stand all around, flames lick up them into the leaves, and ash and soot cover the ground. At the far side, in place of a door, two trees have grown together into a small bent arch, barely taller than a person, burning along its edges."
+  },
+  {
+    "Backdrop": "plants-outer-tundra",
+    "Name": "Tundra",
+    "Tier": "outer",
+    "Art": "plants-outer-tundra",
+    "Affinities": ["ice"],
+    "Draw": "A broad tundra deep in winter, with nobody in it. Snow covers the ground with tufts of brown grass poking through, and a lone pine tree hangs with icicles. A small doorway stands in the background."
+  },
+  {
+    "Backdrop": "plants-outer-storm-field",
+    "Name": "Storm Field",
+    "Tier": "outer",
+    "Art": "plants-outer-storm-field",
+    "Affinities": ["lightning"],
+    "Draw": "An open grassland in a thunderstorm, with nobody in it, under dark storm clouds. At the far side a single tree has grown into the shape of a small doorway, and lightning is striking it."
+  },
+  {
+    "Backdrop": "plants-outer-moss-cavern",
+    "Name": "Moss Cavern",
+    "Tier": "outer",
+    "Art": "plants-outer-moss-cavern",
+    "Affinities": ["earth"],
+    "Draw": "A gloomy cavern, with nobody in it, lit a dim green by glowing moss on the walls and floor. In the background is a small carved opening, surrounded by more moss and clusters of mushrooms."
+  },
+  {
+    "Backdrop": "plants-outer-moonlit-swamp",
+    "Name": "Moonlit Swamp",
+    "Tier": "outer",
+    "Art": "plants-outer-moonlit-swamp",
+    "Affinities": ["arcane"],
+    "Draw": "An eerie swamp, with nobody in it, lit purple and bathed in moonlight. At the far side, in place of a door, stands a small crumbling stone arch, barely taller than a person, half-sunk and overgrown."
+  }
+]

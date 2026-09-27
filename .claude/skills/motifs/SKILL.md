@@ -1,6 +1,6 @@
 ---
 name: motifs
-description: The roster grammar - how a creature is written as data under data/motifs, the closed vocabularies a record draws on, what a realm is, how the growth curve reads a base stat line, and what the loader refuses. Load before adding a motif file, adding or changing a record, authoring creatures or bosses, touching data/journey.json, or wiring anything that picks an opponent. Also the motif analyzer: given a proposed record, which tier/element fights it fills, which are still short, whether the motif would still pass, and whether its bases sit where its neighbours do.
+description: The roster grammar - how a creature is written as data under data/motifs, the closed vocabularies a record draws on, what a realm is, how the growth curve reads a base stat line, and what the loader refuses. Load before adding a motif file, adding or changing a record, authoring creatures or bosses, touching data/journey.json, or wiring anything that picks an opponent. Also the motif analyzer: given a proposed record, which tier/element fights it fills, which are still short, whether the motif would still pass, and whether its bases sit where its neighbours do. And the completeness worklist: what each motif is still missing - briefs, creature art, rooms, room art - and what to author next.
 ---
 
 # Motifs
@@ -182,9 +182,15 @@ A motif's `backdrops.json` is a list of rooms, and a room is **one place drawn o
   An art family may not be shared with a creature or another room: the map is flat.
 - **`Draw` is the room and `ElementDraw` is what each element does to it**, and a room's brief is
   four layers the way a creature's is: the style and the tier's door live in
-  `docs/art/background_art_prompt.MD`, these two on the record. **The door is never on the record** —
-  small for outer, large for inner, two rainbow portals for the portal room, all three in the prompt.
+  `docs/art/background_art_prompt.MD`, these two on the record. **The door's size is never on the
+  record** — small for outer, large for inner, two rainbow portals for the portal room, all three in
+  the prompt. A record may say what its door *is* in this place (an arch of burning trees, a carved
+  opening in a cave wall) and where the portals stand, as long as it keeps the tier's scale.
   An `ElementDraw` key the room does not take as an affinity is refused.
+- **A room drawn in one element needs no `ElementDraw`.** When the five elements are five different
+  places rather than one place in five casts — `plants/backdrops.json` is the example — author five
+  rooms of one affinity each and put everything in `Draw`. The motif report owes an `ElementDraw`
+  only to a room with more than one affinity.
 - **`MotifData.BackdropFor(tier, element, seed, realm)`** is the pick, a hash over the candidates in
   file order — derived, never rolled. **Nothing refuses a motif with no rooms**: a fight with none
   draws `default-background`, which has no door, so a gap is visible in play and counted on the
@@ -264,6 +270,31 @@ Given a proposed record or a proposed motif, answer these in order.
 
 Report holes and duplicates as a list, not prose, and say plainly which of them block a launch and
 which are only worth knowing.
+
+## What each motif is missing, and what to do next
+
+**`go run ./tools/motifreport` is the worklist, and it is the answer to "what needs doing".** It
+prints one line per motif to stdout and writes `docs/sheets/motifreport/index.html`, with every
+gap listed per motif. Run it rather than reading the files, and quote what it prints — a count
+written down anywhere else is stale by the next authoring session.
+
+It scores four things, each off the loaded data and the files actually under `assets/motifs/`:
+
+| Score | What counts |
+|---|---|
+| briefs | the motif's `Draw` and five `ElementDraw`, its portal `Text` and five `ElementText`, every record's `Draw`, every room's `Draw`, and a room's `ElementDraw` per affinity when it has more than one |
+| creature art | one picture per record per affinity |
+| rooms | one per fight — a tier in an element, fifteen to a motif — that some backdrop covers |
+| room art | one per fight whose covering backdrop is painted |
+
+**Coverage is not on it because it cannot be short**: the loader refuses a motif with a hole, so a
+motif that launches has its creature grid filled. What can be short is everything a picture or a
+screen is made from.
+
+**Turning it into direction:** finish one motif before starting the next, so a realm is either
+whole or visibly not. Within a motif, briefs come before art, because the art is generated from
+them; rooms are three tiers, and the goblins are the worked example of all three. Name the motif
+and the specific gaps, and let the owner choose which to take.
 
 ## Adding a motif
 

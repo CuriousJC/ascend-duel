@@ -1,15 +1,24 @@
 package data
 
-// The roster: sixteen-odd motifs, each a file, each holding the creatures of one themed floor.
+// The roster: one directory per motif, each holding the creatures and the rooms of one themed
+// floor.
 //
 // **A floor is a motif and an element**, and it holds three fights — the outer chamber, the inner
 // chamber and the stairway. So a motif has to be able to field all three of those at whichever
 // element the floor took, which is the one thing this file checks that no other catalog loader
 // does: see MustCover.
 //
-// **The records of one motif live in one file, bosses included.** The coverage question is asked
-// of a motif, so a motif split across two files is a question neither half can answer and a
-// reader has to join by hand.
+// **A motif is a directory, `motifs/<motif>/`, and the directory name is the key.** Two files may
+// sit in it and nothing else:
+//
+//   - `motif.json`, required — the header and every creature record, bosses included. The coverage
+//     question is asked of a motif's creatures, so they stay in one file: a pool split across two is
+//     a question neither half can answer.
+//   - `backdrops.json`, optional — the rooms the motif's fights are drawn in front of. See
+//     backdrops.go. A motif with none draws the default backdrop in every room.
+//
+// Any other file is refused, so a misspelled `backdrop.json` fails the launch rather than
+// quietly authoring nothing.
 
 import (
 	"embed"
@@ -19,8 +28,14 @@ import (
 	"strings"
 )
 
-//go:embed motifs/*.json
+//go:embed motifs
 var motifsFS embed.FS
+
+// The two files a motif directory may hold. See the header of this file.
+const (
+	motifFile    = "motif.json"
+	backdropFile = "backdrops.json"
+)
 
 // The three fights a floor holds, outermost first.
 //
@@ -130,6 +145,10 @@ type MotifData struct {
 	ValidFloors [2]int `json:"ValidFloors"`
 
 	Records []MotifRecord `json:"Records"`
+
+	// Backdrops is the rooms this motif's fights are drawn in front of, read from the directory's
+	// backdrops.json rather than from this file — see backdrops.go.
+	Backdrops []Backdrop `json:"-"`
 }
 
 // MotifRecord is one creature: which room it can stand in, which elements it can be dealt as,
@@ -159,6 +178,13 @@ type MotifRecord struct {
 	// Draw is the subject paragraph an art generator is given for this record. Nothing in the
 	// game reads it.
 	Draw string `json:"Draw"`
+
+	// ElementDraw is this record's own direction for an element, and **where it is written it
+	// replaces the motif's** for that element rather than adding to it. It is for the creature the
+	// motif's generic line does not fit — a goblin that is burning where its kin are only scarred —
+	// and a creature that needs a specific version usually contradicts the generic one, so both at
+	// once would hand the generator an argument. Optional, and mostly absent. Ignored by the game.
+	ElementDraw map[string]string `json:"ElementDraw"`
 
 	// Affinities is which elements this record can be instantiated as — a non-empty subset of
 	// AffinityElements, no repeats.
@@ -321,29 +347,27 @@ func LoadMotifs() map[string]MotifData {
 	}
 
 	// Sorted, because embed.FS walks in its own order and every check below reports the first
-	// failure it finds — an unsorted walk would name a different file each launch.
-	names := make([]string, 0, len(entries))
+	// failure it finds — an unsorted walk would name a different directory each launch.
+	var dirs []string
 	for _, e := range entries {
-		if !e.IsDir() && strings.HasSuffix(e.Name(), ".json") {
-			names = append(names, e.Name())
+		if !e.IsDir() {
+			panic("motifs/" + e.Name() + ": a motif is a directory, and this is a loose file")
 		}
+		dirs = append(dirs, e.Name())
 	}
-	sort.Strings(names)
+	sort.Strings(dirs)
 
-	out := make(map[string]MotifData, len(names))
+	out := make(map[string]MotifData, len(dirs))
 	records := map[string]string{}
+	backdrops := map[string]string{}
+	arts := map[string]string{}
 
-	for _, name := range names {
-		file := path.Join("motifs", name)
-		raw, err := motifsFS.ReadFile(file)
-		if err != nil {
-			panic(file + ": " + err.Error())
-		}
-		m := parseOne[MotifData](raw, file)
+	for _, dir := range dirs {
+		m := loadMotifDir(dir)
+		file := path.Join("motifs", dir, motifFile)
 
-		checkMotif(m, file, name)
 		if _, clash := out[m.Motif]; clash {
-			panic(file + ": two files claim the motif " + m.Motif)
+			panic(file + ": two directories claim the motif " + m.Motif)
 		}
 		for _, r := range m.Records {
 			if where, clash := records[r.Record]; clash {
@@ -351,22 +375,89 @@ func LoadMotifs() map[string]MotifData {
 			}
 			records[r.Record] = file
 		}
+		for _, b := range m.Backdrops {
+			bfile := path.Join("motifs", dir, backdropFile)
+			if where, clash := backdrops[b.Backdrop]; clash {
+				panic(bfile + ": backdrop " + b.Backdrop + " is also in " + where)
+			}
+			backdrops[b.Backdrop] = bfile
+		}
+		claimArt(arts, m)
 		out[m.Motif] = m
 	}
 
 	if len(out) == 0 {
-		panic("motifs: no motif files, so no floor can be built")
+		panic("motifs: no motif directories, so no floor can be built")
 	}
 	return out
 }
 
-// checkMotif is everything refusable about one file.
-func checkMotif(m MotifData, file, name string) {
+// loadMotifDir reads one motif's directory: its motif.json, and its backdrops.json if there is
+// one, refusing any other file.
+func loadMotifDir(dir string) MotifData {
+	files, err := motifsFS.ReadDir(path.Join("motifs", dir))
+	if err != nil {
+		panic("motifs/" + dir + ": " + err.Error())
+	}
+	have := map[string]bool{}
+	for _, f := range files {
+		if f.IsDir() || (f.Name() != motifFile && f.Name() != backdropFile) {
+			panic(fmt.Sprintf("motifs/%s/%s: a motif directory holds %s and %s, and nothing else",
+				dir, f.Name(), motifFile, backdropFile))
+		}
+		have[f.Name()] = true
+	}
+	if !have[motifFile] {
+		panic("motifs/" + dir + ": no " + motifFile)
+	}
+
+	file := path.Join("motifs", dir, motifFile)
+	raw, err := motifsFS.ReadFile(file)
+	if err != nil {
+		panic(file + ": " + err.Error())
+	}
+	m := parseOne[MotifData](raw, file)
+	checkMotif(m, file, dir)
+
+	if have[backdropFile] {
+		file := path.Join("motifs", dir, backdropFile)
+		raw, err := motifsFS.ReadFile(file)
+		if err != nil {
+			panic(file + ": " + err.Error())
+		}
+		m.Backdrops = parseOne[[]Backdrop](raw, file)
+		for _, b := range m.Backdrops {
+			checkBackdrop(m, b, file)
+		}
+	}
+	return m
+}
+
+// claimArt refuses two art families that would name the same picture. Every creature and every
+// backdrop is keyed by filename stem in one flat map — see assets/embed.go — so a creature family
+// and a room family sharing a stem are one lookup with two answers.
+func claimArt(arts map[string]string, m MotifData) {
+	claim := func(art, who string) {
+		if other, clash := arts[art]; clash && other != who {
+			panic("motifs/" + m.Motif + ": " + who + " and " + other + " both draw the art family " + art)
+		}
+		arts[art] = who
+	}
+	for _, r := range m.Records {
+		claim(r.Art, r.Record)
+	}
+	for _, b := range m.Backdrops {
+		claim(b.Art, b.Backdrop)
+	}
+}
+
+// checkMotif is everything refusable about one motif.json.
+func checkMotif(m MotifData, file, dir string) {
 	if m.Motif == "" {
 		panic(file + ": the file names no motif")
 	}
-	if stem := strings.TrimSuffix(name, ".json"); stem != m.Motif {
-		panic(file + ": the file is named " + stem + " and the motif inside it is " + m.Motif)
+	if dir != m.Motif {
+		panic(file + ": the directory is named " + dir + " and the motif inside it is " + m.Motif)
 	}
 	if m.Name == "" {
 		panic(file + ": " + m.Motif + " has no name")
@@ -415,18 +506,12 @@ func checkRecord(m MotifData, r MotifRecord, file string) {
 		panic(where + " names no art family")
 	}
 
-	if len(r.Affinities) == 0 {
-		panic(where + " can be dealt as no element")
-	}
-	seen := map[string]bool{}
-	for _, a := range r.Affinities {
-		if _, ok := AffinityIndex(a); !ok {
-			panic(where + " names the affinity " + a + ", which is not an element")
+	checkAffinities(r.Affinities, where)
+	for element := range r.ElementDraw {
+		if !r.HasAffinity(element) {
+			panic(fmt.Sprintf("%s writes direction for %s, which it is never dealt as — it takes %s",
+				where, element, strings.Join(r.Affinities, ", ")))
 		}
-		if seen[a] {
-			panic(where + " names the affinity " + a + " twice")
-		}
-		seen[a] = true
 	}
 
 	if r.HP <= 0 || r.DMG <= 0 || r.Actions <= 0 {
@@ -451,13 +536,32 @@ func checkRecord(m MotifData, r MotifRecord, file string) {
 	}
 }
 
+// checkAffinities refuses an empty affinity list, a name that is not an element, and a repeat.
+// Shared by a creature and a backdrop, which take their floor's element the same way.
+func checkAffinities(affinities []string, where string) {
+	if len(affinities) == 0 {
+		panic(where + " can be dealt as no element")
+	}
+	seen := map[string]bool{}
+	for _, a := range affinities {
+		if _, ok := AffinityIndex(a); !ok {
+			panic(where + " names the affinity " + a + ", which is not an element")
+		}
+		if seen[a] {
+			panic(where + " names the affinity " + a + " twice")
+		}
+		seen[a] = true
+	}
+}
+
 // MaxCardCost is the most action points one card may ask for. The cost column on a card face is
 // tick marks stacked down a fixed band, so a fourth tick is a layout change rather than a bigger
 // number.
 const MaxCardCost = 3
 
 // Brief is the whole art direction for one record dealt as one element, in the order it is read:
-// what the motif shares, what the element does to this motif, and what this record is.
+// what the motif shares, what the element does to this motif, and what this record is. **A
+// record's own ElementDraw for the element replaces the motif's** — see MotifRecord.ElementDraw.
 //
 // **One function so a review sheet and a generated prompt cannot assemble it differently.** The
 // four layers a picture is briefed from are the prompt file under docs/art/, which is about no
@@ -467,13 +571,25 @@ const MaxCardCost = 3
 // than printed as a gap.
 func (m MotifData) Brief(r MotifRecord, element string) []string {
 	var out []string
-	for _, part := range []string{m.Draw, m.ElementDraw[element], r.Draw} {
-		if part != "" && part != DrawUnwritten {
+	for _, part := range []string{m.Draw, m.ElementDrawFor(r, element), r.Draw} {
+		if written(part) {
 			out = append(out, part)
 		}
 	}
 	return out
 }
+
+// ElementDrawFor is the element layer a record's brief takes: its own if it has written one for
+// the element, the motif's otherwise.
+func (m MotifData) ElementDrawFor(r MotifRecord, element string) string {
+	if own := r.ElementDraw[element]; written(own) {
+		return own
+	}
+	return m.ElementDraw[element]
+}
+
+// written reports whether a brief says anything: neither empty nor DrawUnwritten.
+func written(brief string) bool { return brief != "" && brief != DrawUnwritten }
 
 // DrawUnwritten is what an unwritten brief says. It is a value rather than an empty string so a
 // record that has been *looked at* and left reads differently from one nobody has reached, and

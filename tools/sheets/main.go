@@ -88,6 +88,15 @@ var sheets = []sheet{
 			"climb and where its coverage grid is checked.",
 	},
 	{
+		Dir:   "motifreport",
+		Tool:  "./tools/motifreport",
+		Title: "Motif report",
+		Blurb: "How full each motif is and what is still to do: briefs still TBD, creatures with no " +
+			"picture, and which of a floor's fifteen fights have a room of their own and which " +
+			"fall back to the default backdrop. **Draws no pictures** — the motif sheet is where a " +
+			"creature is looked at; this is the worklist beside it.",
+	},
+	{
 		Dir:   "handsheet",
 		Tool:  "./tools/handsheet",
 		Title: "Hand sheet",

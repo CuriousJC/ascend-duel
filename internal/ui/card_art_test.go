@@ -350,10 +350,18 @@ func TestEveryBackdropDrawsSomething(t *testing.T) {
 	if _, ok := images[data.DefaultBackgroundArt]; !ok {
 		t.Errorf("the default backdrop %q is not an embedded image", data.DefaultBackgroundArt)
 	}
-	records := data.LoadBackgrounds()
-	for _, key := range data.BackgroundOrder(records) {
-		if _, ok := images[records[key].ArtKey()]; !ok {
-			t.Errorf("%s draws %q, which is not an embedded image", key, records[key].ArtKey())
+	// An authored room with no picture yet is the normal state, so an absent one is not a
+	// failure. What is: a picture filed under a room's family for an element the room is never
+	// drawn in — art that ships and that nothing can ever show.
+	motifs := data.LoadMotifs()
+	for _, name := range data.MotifOrder(motifs) {
+		for _, b := range motifs[name].Backdrops {
+			for _, e := range data.AffinityElements {
+				key := b.Art + "-" + e
+				if _, ok := images[key]; ok && !b.HasAffinity(e) {
+					t.Errorf("%s is embedded, and %s is never drawn in %s", key, b.Backdrop, e)
+				}
+			}
 		}
 	}
 }

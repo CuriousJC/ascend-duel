@@ -12,21 +12,26 @@ player walked into is something they can plan against.
 
 That is the whole reason the roster is a directory rather than a file. The question asked of the
 catalog is never "is this creature good"; it is "can this motif fill a floor at every element",
-and a motif split across two files is a question neither half can answer.
+and a creature pool split across two files is a question neither half can answer — so a motif's
+creatures stay in one file, and its rooms sit beside them in a second.
 
 ## Where everything is
 
 | Thing | File |
 |---|---|
-| The roster | `data/motifs/<motif>.json`, one file per motif |
-| The structs, the loader, every refusal | `data/motifs_data.go` |
+| The roster | `data/motifs/<motif>/motif.json`, one directory per motif |
+| The rooms a motif's fights are drawn in | `data/motifs/<motif>/backdrops.json`, optional |
+| The structs, the loader, every refusal | `data/motifs_data.go`, and `data/backdrops.go` for the rooms |
+| The pictures | `assets/motifs/<motif>/creature/*.png` and `.../backdrop/*.jpg`, keyed by filename stem |
+| How full each motif is, and what is still TBD | `go run ./tools/motifreport` → `docs/sheets/motifreport/` |
 | The tower's height and its two growth rates | `data/tower.json`, `data/tower_data.go` |
 | The climb: which motif and element each floor takes | `internal/pyramid` |
 | A record's cards becoming a deck | `internal/decks/enemy.go` |
 | A record becoming a fighter | `internal/entities/combatant.go` |
 | The review page | `go run ./tools/motifsheet` |
-| The art brief for one picture | `go run ./tools/creatureprompt` |
+| The art brief for one picture | `go run ./tools/creatureprompt` (`-backdrop <key>` for a room) |
 | The style block every creature shares | `docs/art/creature_art_prompt.MD` |
+| The style and tier blocks every room shares | `docs/art/background_art_prompt.MD` |
 
 ## The file
 
@@ -44,7 +49,8 @@ and a motif split across two files is a question neither half can answer.
 }
 ```
 
-- **`Motif` is the key, and the filename has to match it.** It is also the art family and the name
+- **`Motif` is the key, and the directory name has to match it.** A motif directory holds
+  `motif.json` and optionally `backdrops.json`, and any other file is refused. It is also the art family and the name
   of the generator prompt this motif's pictures come from.
 - **`Draw` and `ElementDraw` are the shared half of the art brief** — see *A picture is four
   layers* below. Both are authored and ignored by everything that plays the game. An
@@ -83,6 +89,9 @@ and a motif split across two files is a question neither half can answer.
   right.
 - **`Affinities` is a non-empty subset of the five elements**, no repeats. `basic` is not one of
   them: a creature takes its floor's colour, and a floor has one.
+- **`ElementDraw` on a record is optional and replaces the motif's line for that element** where
+  it is written. It is for the one creature the motif's generic element direction does not fit.
+  `data.MotifData.ElementDrawFor` is the rule.
 - **`Cards` is authored per record.** Two creatures of one motif are two different fights, so they
   hold different cards rather than the same cards at different weights. **A card may not name its
   own elements** — the colour is the floor's — and costs run 1 to 3, because the cost column is
@@ -130,7 +139,7 @@ It is assembled instead, in this order:
 |---|---|---|
 | 1. style and composition | `docs/art/creature_art_prompt.MD` | canvas, framing, ground, light, rendering — true of every creature |
 | 2. the motif | `Draw` on the file header | the body plan: what makes a goblin a goblin |
-| 3. the element, for that motif | `ElementDraw` on the same header | what fire does *to a goblin* |
+| 3. the element, for that motif | `ElementDraw` on the same header — or on the record, which replaces it | what fire does *to a goblin* |
 | 4. the record | `Draw` on the record | this creature: what it is doing, what it carries |
 
 **Layer 3 is per motif rather than global, and that is the decision worth knowing.** An ice slime
@@ -141,7 +150,39 @@ for the whole roster would be right for one of them and wrong for the other.
 so a review sheet and a generated prompt cannot assemble them differently.
 `go run ./tools/creatureprompt` is the command; `-gaps` says what is still unwritten.
 
-**`goblins.json` is the worked example.** Copy its shape rather than inventing one.
+**`goblins/motif.json` is the worked example.** Copy its shape rather than inventing one.
+
+## The rooms
+
+A motif's `backdrops.json` is a list of rooms, and a room is **one place drawn once per element**:
+
+```json
+{
+  "Backdrop": "goblins-outer-tinker-studio",
+  "Name": "Tinker Studio",
+  "Tier": "outer",
+  "Art": "goblins-outer-tinker-studio",
+  "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+  "Draw": "A goblin tinker's studio hall, with nobody in it ...",
+  "ElementDraw": { "fire": "The workshop runs hot ...", "ice": "Everything is frozen over ..." }
+}
+```
+
+- **The key reads `<motif>-<tier>-<slug>`** and `Tier` is the creature's vocabulary — `boss` is the
+  stairway. The prefix is checked.
+- **The picture is `<Art>-<element>.jpg`**, one per affinity, under `assets/motifs/<motif>/backdrop/`,
+  and **`Art` must read `<motif>-<tier>-<slug>` like the key** — the door is painted in, so the
+  picture belongs to one tier; moving a room to another tier fails the launch until it is renamed.
+  An art family may not be shared with a creature or another room: the map is flat.
+- **`Draw` is the room and `ElementDraw` is what each element does to it**, and a room's brief is
+  four layers the way a creature's is: the style and the tier's door live in
+  `docs/art/background_art_prompt.MD`, these two on the record. **The door is never on the record** —
+  small for outer, large for inner, two rainbow portals for the stairway, all three in the prompt.
+  An `ElementDraw` key the room does not take as an affinity is refused.
+- **`MotifData.BackdropFor(tier, element, seed, floor)`** is the pick, a hash over the candidates in
+  file order — derived, never rolled. **Nothing refuses a motif with no rooms**: a fight with none
+  draws `default-background`, which has no door, so a gap is visible in play and counted on the
+  report.
 
 **The caveat every authored-and-ignored field carries applies, more gently than usual.** A brief
 can go out of date and no test fails — but it describes a *picture*, so it can only ever disagree
@@ -218,13 +259,15 @@ which are only worth knowing.
 
 ## Adding a motif
 
-1. Write `data/motifs/<motif>.json`. The filename is the key.
+1. Write `data/motifs/<motif>/motif.json`. The directory name is the key.
 2. `go test ./data/...` — the loader's refusals are the first thing to satisfy.
 3. `go run ./tools/motifsheet` and look at the page, including the coverage grid on the heading.
 4. Write the art direction: the header's `Draw`, the five `ElementDraw` blocks, and a `Draw` on
    each record. `go run ./tools/creatureprompt -gaps` says what is still missing.
 5. Check the art keys: each record needs one picture per affinity, and until they exist every one
-   of them draws the placeholder. Nothing fails; the sheet is where you see it.
+   of them draws the placeholder. Nothing fails; the report is where you see it.
+6. Write the rooms in `backdrops.json`, one per tier at least, and run `go run ./tools/motifreport`
+   — it says which of the fifteen fights still fall back to the default backdrop.
 
 **Do not regenerate every sheet out of habit.** `go run ./tools/motifsheet` rewrites 153 strips on
 its own; a full `go run ./tools/sheets` rewrites every binary under `docs/sheets/` and most of that

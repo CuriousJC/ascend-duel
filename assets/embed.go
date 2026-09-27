@@ -8,14 +8,16 @@ import (
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
+	"io/fs"
 	"log"
+	"path"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-// Files are grouped into directories by what they are for — `game/`, `enemy/`, `relic/`,
+// Files are grouped into directories by what they are for — `game/`, `motifs/`, `relic/`,
 // `effect/`, `upgrade/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
 // directory rename is a one-line edit per asset here and nothing anywhere else.
 //
@@ -32,21 +34,6 @@ var title_png []byte
 
 //go:embed game/title-easter-egg.png
 var titleEaster_png []byte
-
-// THE DUEL'S BACKDROPS
-//
-// The painted places a duel is fought in front of, at the screen's own 1920x1080. **A family**,
-// keyed by filename stem like the relics, so `background/default-background.jpg` is
-// `default-background` — which is what `data.BackgroundData.ArtKey` answers for a backdrop nobody has
-// painted yet. See data/backgrounds.json and docs/art/background_art_prompt.MD.
-//
-// **JPEG, not PNG**: a backdrop is opaque edge to edge and a painted scene is about a sixth the size
-// that way. The image/jpeg import below is what decodes one. Handed out as bytes and decoded when a
-// floor asks for one, because a decoded 1920x1080 picture is eight megabytes and a run only ever
-// shows a handful of them.
-//
-//go:embed background/*.jpg
-var backgroundArt embed.FS
 
 // BAR CELLS
 //
@@ -68,10 +55,10 @@ var barCellOver_png []byte
 //
 // The guide: the face on the tutorial's speech bubble. **A named one-off rather than a member of
 // the creature family**, because it is not an opponent — nothing places it on a floor and nothing
-// fights it, and filing it under `enemy/` would put it in the glob the roster is read against,
+// fights it, and filing it under `motifs/` would put it in the tree the roster is read against,
 // where a picture with no record behind it is a record somebody has lost.
 //
-// **It is the same figure as `enemy/default-enemy.png`**, rendered for a different canvas: a
+// **It is the same figure as `motifs/default-enemy.png`**, rendered for a different canvas: a
 // faceless human shape made of rainbow vapour, which is what both the guide and the not-yet-drawn
 // creature have in common — neither of them is anybody in particular. See
 // docs/art/guide_art_prompt.MD, which asks for the two renders together and says why one file
@@ -98,7 +85,7 @@ var gear_png []byte
 
 // FORM MARKS AND COST TICKS
 //
-// A *family* rather than four more named vars, on the terms `relic/` and `enemy/` are already
+// A *family* rather than four more named vars, on the terms `relic/` and `motifs/` are already
 // globbed: there is one mark per form per element and one tick per element, which is twenty-five
 // files today and a multiplication rather than a list. Keyed by filename stem, so
 // `form/formslash-fire.png` is `formslash-fire` and `form/tick-earth.png` is `tick-earth` —
@@ -149,33 +136,43 @@ var textureArt embed.FS
 //go:embed upgrade/wildcard.png
 var wildcardupgrade_png []byte
 
-// CREATURES
+// THE MOTIFS: every creature's picture and every duel's backdrop
 //
-// **One picture per record per element**, keyed by filename stem: `enemy/goblins-serf-fire.png`
-// is `goblins-serf-fire`, which is what `data.MotifRecord.ArtKey` builds out of the record's `Art`
-// field and the element the floor dealt it as. A fire goblin serf and an ice goblin serf are two
-// drawings of one creature.
+// **One directory per motif, mirroring `data/motifs/<motif>/`**, so what a motif has been drawn
+// is one folder to open: `motifs/goblins/creature/` and `motifs/goblins/backdrop/`. The two
+// placeholders sit at the top of the tree, `motifs/default-enemy.png` and
+// `motifs/default-background.jpg`, because they belong to no motif.
 //
-// **Embedded as a directory rather than one var each, which is a deliberate exception to the
+// **Keyed by filename stem, and the directory is not part of the key.**
+// `motifs/goblins/creature/goblins-serf-fire.png` is `goblins-serf-fire`, which is what
+// `data.MotifRecord.ArtKey` builds out of the record's `Art` field and the element the floor dealt
+// it as; `motifs/goblins/backdrop/goblins-outer-tinker-studio-fire.jpg` is `goblins-outer-tinker-studio-fire`,
+// which is what `data.Backdrop.ArtKey` builds the same way. So a file can be refiled without
+// touching a record, and two files anywhere in the tree sharing a stem are one lookup with two
+// answers — `embedTree` refuses that at load.
+//
+// **Embedded as a tree rather than one var each, which is a deliberate exception to the
 // three-edit rule** at the top of this file. That rule — the file, an //go:embed var, a map
 // entry — is right for a handful of named assets and absurd for a roster of this size: it would
 // be hundreds of lines no reviewer could check, drifting the first time a creature was renamed.
-// So the pictures are a *family*, globbed in and keyed by stem.
-//
 // The consequence, stated because it is the thing the rule was protecting: **a picture's key is
 // tied to its filename**, so renaming one means editing the `Art` field of the record that names
 // it.
 //
-// **`default-enemy.png` is the whole of the fallback**, and it is what nearly every record draws
-// today. A record whose own picture has not been generated yet falls back to it rather than
-// drawing a hole, so a blank face means art nobody has made rather than a name nobody spelled
-// right. One placeholder for every motif and both kinds of record: a per-motif placeholder is a
+// **A missing picture falls back to its placeholder**, so a blank face means art nobody has made
+// rather than a name nobody spelled right, and the plain backdrop in a duel means no backdrop
+// fits that room. One placeholder of each kind for every motif: a per-motif placeholder is a
 // picture somebody has to draw before the motif can be looked at.
+//
+// **A creature is a PNG and a backdrop is a JPEG.** A backdrop is opaque edge to edge at the
+// screen's own 1920x1080, and a painted scene is about a sixth the size that way; the image/jpeg
+// import above is what decodes one. Both are handed out as bytes and decoded by whoever draws
+// them, because a decoded 1920x1080 picture is eight megabytes and a run only shows a handful.
 //
 // Provenance: generated from the prompts under `docs/art/`, like everything else in `assets/`.
 //
-//go:embed enemy/*.png
-var portraits embed.FS
+//go:embed motifs
+var motifArt embed.FS
 
 // The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
 // `fire`, which is what `data/relics.json` writes in its Art field.
@@ -385,9 +382,8 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, otherArt, "other")
 	embedFamily(images, formArt, "form")
-	embedFamily(images, backgroundArt, "background")
 	embedFamily(images, textureArt, "texture")
-	embedFamily(images, portraits, "enemy")
+	embedTree(images, motifArt, "motifs")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.
@@ -417,8 +413,7 @@ func LoadImageData() map[string][]byte {
 }
 
 // embedFamily files every PNG in one embedded directory into images, keyed by filename stem —
-// `enemy/ogrewarlord-portrait.png` is `ogrewarlord-portrait`, which is what `data/enemies.json`
-// writes in its Portrait field, and `relic/fire.png` is `fire`.
+// `relic/fire.png` is `fire`, which is what `data/relics.json` writes in its Art field.
 //
 // **Four directories read the same way, so it is one function** *(2026-09-11)*. It was two
 // hand-written walks for the two portrait families; the relic and essence art joined them and a
@@ -438,6 +433,36 @@ func embedFamily(images map[string][]byte, fsys embed.FS, dir string) {
 			log.Fatalf("failed to read embedded %s/%s: %v", dir, e.Name(), err)
 		}
 		images[imageStem(e.Name())] = raw
+	}
+}
+
+// embedTree is embedFamily for a directory of directories: every picture anywhere under root,
+// keyed by filename stem, with the directories it sits in left out of the key. It is what lets
+// `assets/motifs/` mirror `data/motifs/` without a record having to know which folder its picture
+// was filed in.
+//
+// **Two files sharing a stem is fatal**, where embedFamily never has to ask: one flat directory
+// cannot hold two files of one name, and a tree can.
+func embedTree(images map[string][]byte, fsys embed.FS, root string) {
+	where := map[string]string{}
+	err := fs.WalkDir(fsys, root, func(p string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		raw, err := fsys.ReadFile(p)
+		if err != nil {
+			return err
+		}
+		key := imageStem(path.Base(p))
+		if other, clash := where[key]; clash {
+			log.Fatalf("embedded %s and %s are both the picture %q", other, p, key)
+		}
+		where[key] = p
+		images[key] = raw
+		return nil
+	})
+	if err != nil {
+		log.Fatalf("failed to read the embedded %s tree: %v", root, err)
 	}
 }
 

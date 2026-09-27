@@ -1,0 +1,1666 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — motif report</title>
+<style>
+  :root { --ground: #a8bcd4; --ink: #2c2822; --dim: #5a6472; --rule: #8fa3bd; --panel: #c6d5e6;
+          --pink: #c8508c; --ok: #3f7a4a; --warn: #9a6b12; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 24px 64px; background: var(--ground); color: var(--ink);
+         font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2 { font-size: 17px; margin: 0; font-weight: 600; }
+  h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim);
+       margin: 16px 0 6px; font-weight: 600; }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 80ch; margin: 8px 0 0; }
+  code, .key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .plate { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+           padding: 18px 20px; margin-top: 22px; }
+  .head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .pct { font-size: 22px; font-weight: 700; }
+  .pct.full { color: var(--ok); }
+  .facts { color: var(--dim); font-size: 12.5px; }
+  .bars { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 10px 22px; margin-top: 10px; }
+  .bar { font-size: 12px; }
+  .bar .track { height: 6px; background: #edf3fa; border-radius: 3px; overflow: hidden; margin-top: 3px; }
+  .bar .fill { height: 100%; background: var(--ok); }
+  .cols { display: flex; flex-wrap: wrap; gap: 34px; }
+  table { border-collapse: collapse; font-size: 12.5px; }
+  th { text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
+       color: var(--dim); border-bottom: 1px solid var(--rule); padding: 3px 12px 4px 0; }
+  td { padding: 3px 12px 3px 0; vertical-align: top; }
+  td.g { text-align: center; min-width: 58px; font-family: ui-monospace, monospace; font-size: 12px; border-radius: 4px; }
+  td.ok { background: #d6e8d4; } td.hole { background: #f1d0dc; color: var(--pink); font-weight: 600; }
+  td.brief { background: #f3e4c4; color: var(--warn); }
+  .pill { display: inline-block; font-size: 11px; padding: 0 6px; margin: 0 3px 2px 0; border-radius: 9px;
+          border: 1px solid var(--rule); background: #edf3fa; }
+  .pill.miss { border-color: var(--pink); color: var(--pink); background: #f7e3ea; }
+  .pill.spec::after { content: " ★"; }
+  .tbd { color: var(--pink); font-weight: 600; }
+  ul.todo { margin: 0; padding-left: 18px; font-size: 12.5px; columns: 2; column-gap: 34px; }
+  ul.todo li { break-inside: avoid; }
+  .kind { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); margin-right: 6px; }
+  .done { color: var(--ok); font-weight: 600; font-size: 12.5px; }
+</style>
+
+<div class="wrap">
+  <h1>Motif report</h1>
+  <p class="note">
+    How full each motif is, and everything still to write or to paint. Counted off
+    <code>data/motifs/</code> and the pictures under <code>assets/motifs/</code> — no pictures are
+    drawn here; the motif sheet is where a creature is looked at. A pill is one element of one
+    record: pink is no picture yet, ★ is direction written for that element on the record itself
+    (a creature's own override, a room's ElementDraw).
+  </p>
+  <p class="note">
+    <strong>Across the roster:</strong> 63% ·
+    briefs 280/280 · creature art 646/646 ·
+    fights with a room 5/270 · fights with a painted room 0/270.
+    A fight is one tier in one element, fifteen to a motif; one with no room draws the plain default backdrop.
+  </p>
+
+  <style>
+  .sheet-filters {
+    position: sticky; top: 0; z-index: 5;
+    margin: 14px 0 0; padding: 10px 12px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+    background: var(--panel, #c6d5e6);
+    border: 1px solid var(--rule, #8fa3bd); border-radius: 8px;
+  }
+  .sheet-facet { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .sheet-facet-label {
+    color: var(--dim, #5a6472); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em; margin-right: 2px;
+  }
+  .sheet-filters button {
+    font: inherit; font-size: 12.5px; line-height: 1;
+    padding: 5px 9px; border-radius: 999px; cursor: pointer;
+    color: var(--ink, #2c2822);
+    background: transparent;
+    border: 1px solid var(--rule, #8fa3bd);
+  }
+  .sheet-filters button:hover { background: rgba(255,255,255,.45); }
+  /* A chip that is down is filled rather than merely outlined: an outline shifting shade is the
+     one state change that does not survive being looked at quickly. */
+  .sheet-filters button[aria-pressed="true"] {
+    background: var(--ink, #2c2822); color: var(--panel, #c6d5e6);
+    border-color: var(--ink, #2c2822);
+  }
+  .sheet-filters button i {
+    font-style: normal; opacity: .6; margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sheet-filters-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .sheet-tally { color: var(--dim, #5a6472); font-size: 12px; font-variant-numeric: tabular-nums; }
+</style>
+<div class="sheet-filters" hidden>
+  <div class="sheet-facet"><span class="sheet-facet-label">still missing</span>
+    <button type="button" data-facet="missing" data-value="room" aria-pressed="false">room<i>18</i></button>
+    <button type="button" data-facet="missing" data-value="room-art" aria-pressed="false">room art<i>1</i></button>
+  </div>
+  <div class="sheet-filters-end">
+    <button type="button" class="sheet-clear" hidden>clear</button>
+    <span class="sheet-tally"></span>
+  </div>
+</div>
+<script>
+(function () {
+  function start() {
+    var bar = document.querySelector('.sheet-filters');
+    if (!bar) return;
+    bar.hidden = false;
+
+    var chips = Array.prototype.slice.call(bar.querySelectorAll('button[data-facet]'));
+    var clear = bar.querySelector('.sheet-clear');
+    var tally = bar.querySelector('.sheet-tally');
+    var items = Array.prototype.slice.call(document.querySelectorAll('.sheet-item'));
+    var groups = Array.prototype.slice.call(document.querySelectorAll('.sheet-group'));
+    var picked = {};
+
+    function tokens(el, key) {
+      var v = el.getAttribute('data-' + key);
+      if (v === null) return null;
+      return v.split(/\s+/).filter(Boolean);
+    }
+
+    function matches(el) {
+      for (var key in picked) {
+        var want = picked[key];
+        if (!want.length) continue;
+        var have = tokens(el, key);
+        if (have === null) continue;
+        var hit = false;
+        for (var i = 0; i < have.length; i++) {
+          if (want.indexOf(have[i]) !== -1) { hit = true; break; }
+        }
+        if (!hit) return false;
+      }
+      return true;
+    }
+
+    function apply() {
+      var shown = 0, any = false;
+      for (var key in picked) { if (picked[key].length) any = true; }
+
+      var open = [];
+      for (var g = 0; g < groups.length; g++) open.push(matches(groups[g]));
+
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        var owner = groups.indexOf(it.closest('.sheet-group'));
+        var ok = matches(it) && (owner === -1 || open[owner]);
+        it.hidden = !ok;
+        if (ok) shown++;
+      }
+
+      for (var g2 = 0; g2 < groups.length; g2++) {
+        var grp = groups[g2];
+        var held = grp.querySelector('.sheet-item');
+        var live = grp.querySelector('.sheet-item:not([hidden])');
+        grp.hidden = !open[g2] || (held !== null && live === null);
+      }
+
+      if (clear) clear.hidden = !any;
+      if (tally) tally.textContent = any ? 'showing ' + shown + ' of ' + items.length : '';
+    }
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var key = chip.getAttribute('data-facet');
+        var val = chip.getAttribute('data-value');
+        var list = picked[key] || (picked[key] = []);
+        var at = list.indexOf(val);
+        if (at === -1) { list.push(val); } else { list.splice(at, 1); }
+        chip.setAttribute('aria-pressed', at === -1 ? 'true' : 'false');
+        apply();
+      });
+    });
+
+    if (clear) {
+      clear.addEventListener('click', function () {
+        picked = {};
+        chips.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+        apply();
+      });
+    }
+
+    apply();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+</script>
+
+
+  
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Aliens <span class="key">aliens</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 5–8 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr><tr><td>inner chamber</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr><tr><td>stairway</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">aliens-outer-specimen</td><td>Specimen</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-outer-drone</td><td>Survey Drone</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-outer-husk</td><td>Seeded Husk</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-inner-abomination</td><td>Abomination</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-inner-watcher</td><td>The Watcher</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-inner-harvester</td><td>Harvester</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-boss-toxoid</td><td>Bio-Titan Toxoid the Flooded</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-boss-plagueborn</td><td>Bio-Titan Plagueborn the Spreading</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-boss-omega</td><td>Bio-Titan Omega the Last Word</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Animals <span class="key">animals</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 1–6 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>inner chamber</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">animals-outer-bat</td><td>Giant Bat</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">animals-outer-rat</td><td>Giant Rat</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">animals-outer-boar</td><td>Tusk Boar</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">animals-inner-wolf</td><td>Dire Wolf</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">animals-inner-hound</td><td>Rot Hound</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">animals-inner-bear</td><td>Cave Bear</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">animals-boss-alpha</td><td>The Grey Alpha of the Long Winter</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">animals-boss-behemoth</td><td>Doomsday Beast the Trampler</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">animals-boss-chimera</td><td>The Chimera Three-Throated</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Avians <span class="key">avians</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 2–7 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr><tr><td>inner chamber</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr><tr><td>stairway</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">avians-outer-crow</td><td>Carrion Crow</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-outer-harrier</td><td>Cliff Harrier</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-outer-ratite</td><td>Bone Ratite</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-inner-roc</td><td>Young Roc</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-inner-harpy</td><td>Harpy</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-inner-phoenix</td><td>Ember Phoenix</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-boss-skyfather</td><td>The Sky-Father of the High Draft</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-boss-greatroc</td><td>The Great Roc Who Blots The Sun</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-boss-corvid</td><td>The Corvid King Who Counts Debts</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Barbarians <span class="key">barbarians</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 2–7 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr><tr><td>inner chamber</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">barbarians-outer-raider</td><td>Steppe Raider</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">barbarians-outer-axeman</td><td>Axeman</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">barbarians-outer-shieldbreaker</td><td>Shieldbreaker</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">barbarians-inner-berserk</td><td>Berserker</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">barbarians-inner-hetman</td><td>Hetman</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">barbarians-inner-bonecaller</td><td>Bonecaller</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">barbarians-boss-khan</td><td>The Khan of Ten Winters</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">barbarians-boss-skullking</td><td>The Skull King Unburied</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">barbarians-boss-widow</td><td>The Red Widow Who Counts</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Big Cats <span class="key">big-cats</span></h2>
+      <span class="pct">65%</span>
+      <span class="facts">floors 1–4 · 13 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 19/19<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 37/37<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">4</td><td class="g ok">3</td><td class="g ok">3</td></tr><tr><td>inner chamber</td><td class="g ok">4</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">3</td></tr><tr><td>stairway</td><td class="g ok">1</td><td class="g ok">1</td><td class="g ok">1</td><td class="g ok">1</td><td class="g ok">1</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">big-cats-outer-tiger</td><td>Tiger</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">big-cats-outer-lion</td><td>Lion</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">big-cats-outer-cougar</td><td>Cougar</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">big-cats-outer-cheetah</td><td>Cheetah</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">big-cats-inner-sabertooth</td><td>Sabertooth</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">big-cats-inner-liger</td><td>Liger</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">big-cats-inner-lynx</td><td>Dire Lynx</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">big-cats-inner-panther</td><td>Cave Panther</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">big-cats-boss-ash</td><td>Ash the Burning</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span></td>
+      </tr><tr>
+        <td class="key">big-cats-boss-mouse</td><td>Mouse the Crooked</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span></td>
+      </tr><tr>
+        <td class="key">big-cats-boss-leah</td><td>Leah the Sneaky</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">lightning</span></td>
+      </tr><tr>
+        <td class="key">big-cats-boss-sasha</td><td>Sasha the Psycho</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">big-cats-boss-luna</td><td>Luna the Arcane</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Cat-people <span class="key">cat-people</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 2–7 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td></tr><tr><td>inner chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr><tr><td>stairway</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">cat-people-outer-prowler</td><td>Prowler</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">cat-people-outer-sneak</td><td>Alley Sneak</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">cat-people-outer-clawguard</td><td>Claw Guard</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">cat-people-inner-stalker</td><td>Night Stalker</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">cat-people-inner-duelist</td><td>Whisker Duelist</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">cat-people-inner-maneater</td><td>Maneater</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">cat-people-boss-matriarch</td><td>The Matriarch of Nine Litters</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">cat-people-boss-shadow</td><td>The Shadow Cat Never Seen</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">cat-people-boss-lion</td><td>The Bronze Lion Who Guards</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Draconics <span class="key">draconics</span></h2>
+      <span class="pct">61%</span>
+      <span class="facts">floors 5–8 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 33/33<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr><tr><td>inner chamber</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">1</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">draconics-outer-whelp</td><td>Drake Whelp</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">draconics-outer-basilisk</td><td>Basilisk</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">draconics-outer-wyvern</td><td>Wyvern</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">draconics-inner-broodmother</td><td>Brood Mother</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">draconics-inner-wyrm</td><td>Cave Wyrm</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">draconics-inner-drake</td><td>Storm Drake</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">draconics-boss-red</td><td>The Red Dragon Who Burns The Hall</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">draconics-boss-blue</td><td>The Blue Dragon of the Cold Peak</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">draconics-boss-serpent</td><td>The Serpent Prince Twice Crowned</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Dwarves <span class="key">dwarves</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 2–7 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>inner chamber</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">dwarves-outer-digger</td><td>Deep Digger</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">dwarves-outer-smith</td><td>Forge Smith</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">dwarves-outer-scout</td><td>Tunnel Scout</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">dwarves-inner-shieldman</td><td>Shield Dwarf</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">dwarves-inner-runesmith</td><td>Runesmith</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">dwarves-inner-thane</td><td>Thane</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">dwarves-boss-kingunder</td><td>The King Under of the Sealed Hall</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">dwarves-boss-forgefather</td><td>The Forge-Father Who Never Cools</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">dwarves-boss-deepwarden</td><td>The Deep Warden of the Low Road</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Elves <span class="key">elves</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 3–8 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>inner chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">elves-outer-scout</td><td>Wood Scout</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">elves-outer-blade</td><td>Glade Blade</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">elves-outer-warden</td><td>Thorn Warden</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">elves-inner-archer</td><td>Longbow Archer</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">elves-inner-dancer</td><td>Blade Dancer</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">elves-inner-singer</td><td>Moon Singer</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">elves-boss-queen</td><td>The Silver Queen of the Last Grove</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">elves-boss-skyhunter</td><td>The Skyhunter Who Never Misses</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">elves-boss-exile</td><td>The Exile Who Cut The Root</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room room-art">
+    <div class="head">
+      <h2>Goblins <span class="key">goblins</span></h2>
+      <span class="pct">71%</span>
+      <span class="facts">floors 1–6 · 9 creatures · 1 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 21/21<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 5/15<div class="track"><div class="fill" style="width: 33%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>inner chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g brief">0/1</td><td class="g brief">0/1</td><td class="g brief">0/1</td><td class="g brief">0/1</td><td class="g brief">0/1</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    
+    <table>
+      <tr><th>Backdrop</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">goblins-outer-tinker-studio</td><td>Tinker Studio</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill miss spec">fire</span><span class="pill miss spec">ice</span><span class="pill miss spec">lightning</span><span class="pill miss spec">earth</span><span class="pill miss spec">arcane</span></td>
+      </tr>
+    </table>
+    
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">goblins-outer-serf</td><td>Goblin Serf</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">goblins-outer-scrapper</td><td>Goblin Scrapper</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">goblins-outer-bomber</td><td>Goblin Bomber</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">goblins-inner-raider</td><td>Goblin Raider</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">goblins-inner-shaman</td><td>Goblin Shaman</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">goblins-inner-brute</td><td>Goblin Brute</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">goblins-boss-king</td><td>The Goblin King of the Low Crown</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">goblins-boss-warlord</td><td>Goblin Warlord the Banner-Taker</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">goblins-boss-tinker</td><td>The Goblin Tinker of Nine Fingers</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room art</span>goblins-outer-tinker-studio-fire.jpg</li><li><span class="kind">room art</span>goblins-outer-tinker-studio-ice.jpg</li><li><span class="kind">room art</span>goblins-outer-tinker-studio-lightning.jpg</li><li><span class="kind">room art</span>goblins-outer-tinker-studio-earth.jpg</li><li><span class="kind">room art</span>goblins-outer-tinker-studio-arcane.jpg</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Golems <span class="key">golems</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 4–8 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>inner chamber</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">golems-outer-copper</td><td>Copper Golem</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">golems-outer-amber</td><td>Amber Golem</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">golems-outer-wood</td><td>Wood Golem</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">golems-inner-iron</td><td>Iron Golem</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">golems-inner-quartz</td><td>Quartz Golem</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">golems-inner-bone</td><td>Bone Golem</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">golems-boss-colossus</td><td>The Colossus of the Fourth Gate</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">golems-boss-sentinel</td><td>The Sentinel the Standing Order</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">golems-boss-juggernaut</td><td>The Juggernaut That Does Not Stop</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Insects <span class="key">insects</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 1–5 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr><tr><td>inner chamber</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">insects-outer-dragonfly</td><td>Dragonfly</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">insects-outer-drone</td><td>Hive Drone</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">insects-outer-beetle</td><td>Iron Beetle</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">insects-inner-spider</td><td>Giant Spider</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">insects-inner-mantis</td><td>Blade Mantis</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">insects-inner-centipede</td><td>Gorge Centipede</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">insects-boss-broodmother</td><td>The Broodmother of the Thousand</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">insects-boss-hornet</td><td>Emperor Hornet the Spear</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">insects-boss-scarab</td><td>Tomb Scarab the Devourer</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Magic-users <span class="key">magic-users</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 4–8 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td></tr><tr><td>inner chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr><tr><td>stairway</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">magic-users-outer-apprentice</td><td>Apprentice</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">magic-users-outer-hedgewitch</td><td>Hedge Witch</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">magic-users-outer-warlock</td><td>Pact Warlock</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">magic-users-inner-hexwright</td><td>Hexwright</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">magic-users-inner-stormcaller</td><td>Stormcaller</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">magic-users-inner-pyrekeeper</td><td>Pyre-Keeper</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">magic-users-boss-archmage</td><td>The Archmage First of the Magi</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">magic-users-boss-voidtouched</td><td>The Voidtouched Who Opened It</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">magic-users-boss-discordant</td><td>The Discordant the Final Note</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Mutants <span class="key">mutants</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 3–8 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr><tr><td>inner chamber</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr><tr><td>stairway</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">mutants-outer-warped</td><td>Warped Mutant</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">mutants-outer-torch</td><td>Torch Mutant</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">mutants-outer-fist</td><td>Fist Mutant</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">mutants-inner-gun</td><td>Gun Mutant</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">mutants-inner-mega</td><td>Mega Mutant</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">mutants-inner-grafted</td><td>Grafted Mutant</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">mutants-boss-brute</td><td>The Mega Brute Nine Times Made</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">mutants-boss-amalgam</td><td>The Amalgam of Many Hands</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">mutants-boss-prototype</td><td>Prototype Omega the Last Draft</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Ogres <span class="key">ogres</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 4–8 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr><tr><td>inner chamber</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">ogres-outer-grunt</td><td>Ogre Grunt</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">ogres-outer-thrower</td><td>Rock Thrower</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">ogres-outer-warrior</td><td>Ogre Warrior</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">ogres-inner-ettin</td><td>Ettin</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">ogres-inner-warlord</td><td>Ogre Warlord</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">ogres-inner-troll</td><td>Bridge Troll</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">ogres-boss-hillking</td><td>The Hill King Who Sits Heavy</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">ogres-boss-stonecast</td><td>The Stonecast Unmoved</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">ogres-boss-gorger</td><td>The Gorger Never Full</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Plants <span class="key">plants</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 2–7 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td></tr><tr><td>inner chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr><tr><td>stairway</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">plants-outer-sapling</td><td>Hungry Sapling</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">plants-outer-pod</td><td>Spore Pod</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">plants-outer-bramble</td><td>Bramble Wall</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">plants-inner-creeper</td><td>Strangle Creeper</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">plants-inner-bloom</td><td>Corpse Bloom</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">plants-inner-flytrap</td><td>Titan Flytrap</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">plants-boss-heartwood</td><td>The Heartwood That Remembers</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">plants-boss-witchgrass</td><td>Witchgrass the Choking Field</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">plants-boss-mycelium</td><td>The Mycelium Beneath It All</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Slimes <span class="key">slimes</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 1–5 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr><tr><td>inner chamber</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td></tr><tr><td>stairway</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">slimes-outer-blob</td><td>Blob</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">slimes-outer-cube</td><td>Cube</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">slimes-outer-orb</td><td>Orb</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">slimes-inner-spire</td><td>Spire</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">slimes-inner-cluster</td><td>Cluster</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">slimes-inner-bouncer</td><td>Bouncer</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">slimes-boss-spitter</td><td>Spitter the Unbroken Sheen</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">slimes-boss-entropic</td><td>Entropic the Unmaking</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">slimes-boss-galaxy</td><td>Galaxy of the Long Fall</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+  <section class="plate sheet-item" data-missing="room">
+    <div class="head">
+      <h2>Vampires <span class="key">vampires</span></h2>
+      <span class="pct">62%</span>
+      <span class="facts">floors 4–8 · 9 creatures · 0 rooms</span>
+    </div>
+    <div class="bars">
+      <div class="bar">briefs 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h3>Creatures per fight</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td><td class="g ok">2</td></tr><tr><td>inner chamber</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td><td class="g ok">2</td></tr><tr><td>stairway</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">2</td><td class="g ok">3</td><td class="g ok">3</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Rooms per fight — painted / authored</h3>
+        <table>
+          <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
+          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>stairway</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Rooms</h3>
+    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+
+    <h3>Creatures</h3>
+    <table>
+      <tr><th>Record</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">vampires-outer-thrall</td><td>Blood Thrall</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">vampires-outer-consort</td><td>Pale Consort</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">vampires-outer-ghoul</td><td>Crypt Ghoul</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">vampires-inner-count</td><td>Lesser Count</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">vampires-inner-shade</td><td>Blood Shade</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">vampires-inner-flenser</td><td>The Flenser</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">vampires-boss-elder</td><td>The Elder Who Was First</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">ice</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">vampires-boss-palewatch</td><td>The Pale Watch of the Long Night</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">lightning</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">vampires-boss-crimson</td><td>The Crimson Bride Who Keeps Count</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill">fire</span><span class="pill">ice</span><span class="pill">earth</span><span class="pill">arcane</span></td>
+      </tr>
+    </table>
+
+    <h3>Still to do — 15</h3>
+    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
+    
+  </section>
+  
+</div>

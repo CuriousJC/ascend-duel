@@ -3,12 +3,18 @@
 //	go run ./tools/creatureprompt -record goblins-outer-bomber -element ice
 //	go run ./tools/creatureprompt -motif goblins            # every record, every element it takes
 //	go run ./tools/creatureprompt -gaps                     # what is still unwritten, roster-wide
+//	go run ./tools/creatureprompt -backdrop goblins-outer-tinker-studio -element fire
 //
 // **A picture is briefed from four layers and only one of them is in the prompt file.** The style
 // and composition block is `docs/art/creature_art_prompt.MD` and is true of every creature; the
 // other three are authored in the motif file — what the motif shares, what the element does to
 // *this* motif, and what this particular record is. Assembling them by hand for every record at
 // every element is where they would quietly stop agreeing, so one command does it.
+//
+// **A backdrop is briefed the same way from its own four layers**: the style and the tier's door
+// are both in `docs/art/background_art_prompt.MD`, and the room and what each element does to it
+// are on the record in the motif's `backdrops.json`. `-motif` prints a motif's rooms after its
+// creatures.
 //
 // **It prints and never writes a file.** What comes back from a generator is installed with the
 // `art-batch` procedure; this end of it is a thing to paste.
@@ -28,11 +34,23 @@ import (
 // creature shares and a copy here would be a second one to keep in step.
 const promptFile = "docs/art/creature_art_prompt.MD"
 
+// backdropPromptFile is the backdrop's style layer and its tier layer, one file for both.
+const backdropPromptFile = "docs/art/background_art_prompt.MD"
+
+// tierWords is what the tier section of the backdrop prompt calls each tier, so the brief names
+// the section to paste in the words the file heads it with.
+var tierWords = map[string]string{
+	data.TierOuter: "the outer chamber: one small door",
+	data.TierInner: "the inner chamber: one large door",
+	data.TierBoss:  "the stairway: two swirling portals",
+}
+
 func main() {
 	record := flag.String("record", "", "one record key, e.g. goblins-outer-bomber")
 	element := flag.String("element", "", "which element to brief it as; empty means all it can take")
 	motif := flag.String("motif", "", "every record of one motif")
 	gaps := flag.Bool("gaps", false, "list what is still unwritten instead of printing briefs")
+	backdrop := flag.String("backdrop", "", "one backdrop key, e.g. goblins-outer-tinker-studio")
 	flag.Parse()
 
 	motifs := data.LoadMotifs()
@@ -43,6 +61,13 @@ func main() {
 	}
 
 	switch {
+	case *backdrop != "":
+		b, ok := findBackdrop(motifs, *backdrop)
+		if !ok {
+			fmt.Fprintf(os.Stderr, "no backdrop %q in any motif directory\n", *backdrop)
+			os.Exit(1)
+		}
+		printBackdrop(b, *element)
 	case *record != "":
 		m, rec, ok := find(motifs, *record)
 		if !ok {
@@ -59,8 +84,11 @@ func main() {
 		for _, rec := range m.Records {
 			printRecord(m, rec, *element)
 		}
+		for _, b := range m.Backdrops {
+			printBackdrop(b, *element)
+		}
 	default:
-		fmt.Fprintln(os.Stderr, "name a -record or a -motif, or pass -gaps")
+		fmt.Fprintln(os.Stderr, "name a -record, a -backdrop or a -motif, or pass -gaps")
 		flag.Usage()
 		os.Exit(2)
 	}
@@ -76,6 +104,48 @@ func find(motifs map[string]data.MotifData, key string) (data.MotifData, data.Mo
 		}
 	}
 	return data.MotifData{}, data.MotifRecord{}, false
+}
+
+// findBackdrop is the backdrop with this key, in whichever motif holds it.
+func findBackdrop(motifs map[string]data.MotifData, key string) (data.Backdrop, bool) {
+	for _, name := range data.MotifOrder(motifs) {
+		for _, b := range motifs[name].Backdrops {
+			if b.Backdrop == key {
+				return b, true
+			}
+		}
+	}
+	return data.Backdrop{}, false
+}
+
+// printBackdrop writes one brief per element the room is drawn in, or one for the element asked
+// for. **The tier is printed in the brief itself**, because the prompt file asks the generator to
+// draw only the door the brief names — a brief that did not name one would get all three.
+func printBackdrop(b data.Backdrop, only string) {
+	elements := b.Affinities
+	if only != "" {
+		if !b.HasAffinity(only) {
+			fmt.Fprintf(os.Stderr, "%s is never drawn in %s — it takes %s\n",
+				b.Backdrop, only, strings.Join(b.Affinities, ", "))
+			os.Exit(1)
+		}
+		elements = []string{only}
+	}
+
+	for _, e := range elements {
+		fmt.Printf("=== %s — %s\n", b.ArtKey(e), b.Name)
+		fmt.Printf("Paste %s (the prompt and the %q tier section) first, then this.\n\n",
+			backdropPromptFile, b.Tier)
+
+		parts := b.Brief(e)
+		if len(parts) == 0 {
+			fmt.Printf("(nothing written yet: %s has no Draw and no ElementDraw for %s)\n\n", b.Backdrop, e)
+			continue
+		}
+		fmt.Printf("Tier: %s — %s. Element: %s.\n\n", b.Tier, tierWords[b.Tier], e)
+		fmt.Println(strings.Join(parts, "\n\n"))
+		fmt.Printf("\nName it %s.jpg.\n\n", b.ArtKey(e))
+	}
 }
 
 // printRecord writes one brief per element the record can be dealt as, or one for the element
@@ -134,6 +204,27 @@ func reportGaps(motifs map[string]data.MotifData) {
 		}
 		if len(missing) > 0 {
 			lines = append(lines, "  no element direction for "+strings.Join(missing, ", "))
+		}
+
+		var rooms []string
+		for _, b := range m.Backdrops {
+			var short []string
+			if b.Draw == "" || b.Draw == data.DrawUnwritten {
+				short = append(short, "no Draw")
+			}
+			for _, e := range b.Affinities {
+				if v := b.ElementDraw[e]; v == "" || v == data.DrawUnwritten {
+					short = append(short, "no "+e)
+				}
+			}
+			if len(short) > 0 {
+				rooms = append(rooms, b.Backdrop+" ("+strings.Join(short, ", ")+")")
+			}
+		}
+		if len(m.Backdrops) == 0 {
+			lines = append(lines, "  no backdrops")
+		} else if len(rooms) > 0 {
+			lines = append(lines, "  backdrops short of a brief: "+strings.Join(rooms, ", "))
 		}
 
 		var bare []string

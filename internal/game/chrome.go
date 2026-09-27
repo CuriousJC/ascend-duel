@@ -167,13 +167,17 @@ func settingsButtonRect(gs *state.GlobalState) image.Rectangle {
 // **The end-of-run splash is on that list for a different reason**: the run is gone by the time it
 // draws, so the ledger button would be dead anyway and the cog would be a door out of the one page
 // that has something to say. It has a Back to Title of its own.
+//
+// **The animation gallery is on it for Settings' reason**: the gallery's door is in the frame, and
+// a door into the room the player is standing in records that room as the one to go back to — so
+// Back would lead nowhere but the gallery again.
 func chromeShowing(gs *state.GlobalState) bool {
 	if gs.ModalOpen {
 		return false
 	}
 	switch gs.ActiveScreen {
 	case state.Settings, state.Achievements, state.Credits, state.RunOver, state.PostBattle,
-		state.Title, state.Goods, state.Crashed:
+		state.Title, state.Goods, state.Crashed, state.Animations:
 		return false
 	}
 	return true

@@ -54,7 +54,7 @@ only one spent during a fight, between the turns of a round. A **sealed good** i
 gamble: paid for and _then_ read, four stones or four essences inside and you keep one.
 
 Against all that, **creatures** sorted into floor bands, each with a deck of its own, and
-**bosses** guarding every stairway.
+**bosses** guarding every portal room.
 
 Every one of those is a file in [data/](data/), and they are still being authored.
 

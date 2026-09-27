@@ -33,13 +33,13 @@ const (
 )
 
 // roomVitae is what the room itself pays: **3 for a floor's outer room, 4 for its inner room, 5 for
-// the stairway that is its boss** *(owner's call, 2026-08-22)*. Flat for the whole climb — a floor-8
+// the portal room that is its boss** *(owner's call, 2026-08-22)*. Flat for the whole climb — a floor-8
 // boss pays the same 5 as floor 1's, because the scaling that makes a later fight worth more is the
 // life you keep, not the room you keep it in.
 var roomVitae = map[pyramid.Room]int{
-	pyramid.RoomOuter:    3,
-	pyramid.RoomInner:    4,
-	pyramid.RoomStairway: 5,
+	pyramid.RoomOuter:  3,
+	pyramid.RoomInner:  4,
+	pyramid.RoomPortal: 5,
 }
 
 // Spoils is one win's payout, split the way the screen reads it out.

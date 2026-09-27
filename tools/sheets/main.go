@@ -97,6 +97,15 @@ var sheets = []sheet{
 			"creature is looked at; this is the worklist beside it.",
 	},
 	{
+		Dir:   "backdropsheet",
+		Tool:  "./tools/backdropsheet",
+		Title: "Backdrop sheet",
+		Blurb: "Every room a motif's fights are drawn in front of, once per element, beside the " +
+			"brief it was painted from. A room is met in one element per floor, so this is the only " +
+			"place its pictures are seen together — and a picture still to paint is shown as the " +
+			"default backdrop the fight really draws.",
+	},
+	{
 		Dir:   "handsheet",
 		Tool:  "./tools/handsheet",
 		Title: "Hand sheet",

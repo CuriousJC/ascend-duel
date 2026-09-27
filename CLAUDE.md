@@ -177,6 +177,7 @@ go run ./tools/essencesheet    # every essence to PNGs + a page grouped by what 
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
 go run ./tools/motifsheet   # the roster motif by motif: card, stat line, deck, coverage grid
 go run ./tools/motifreport  # how full each motif is: briefs still TBD, missing art, rooms with no backdrop
+go run ./tools/backdropsheet  # every room once per element, beside its brief; unpainted ones as the default
 go run ./tools/creatureprompt -record goblins-outer-bomber -element ice   # the four-layer brief
 go run ./tools/creatureprompt -gaps      # which art briefs are still unwritten, roster-wide
 go run ./tools/creatureprompt -backdrop goblins-outer-tinker-studio -element fire   # a room's brief

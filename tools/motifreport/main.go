@@ -258,7 +258,7 @@ func grid(at func(ti, ai int) (string, string)) []gridRow {
 var tierLabel = map[string]string{
 	data.TierOuter: "outer chamber",
 	data.TierInner: "inner chamber",
-	data.TierBoss:  "stairway",
+	data.TierBoss:  "portal room",
 }
 
 func floors(m data.MotifData) string {

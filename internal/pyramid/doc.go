@@ -8,7 +8,7 @@
 // # A floor is a motif and an element
 //
 // The roster is data/motifs/<motif>/motif.json, one directory per motif, each holding the
-// creatures that can stand in a floor's outer chamber, its inner chamber and its stairway. A floor takes one whole motif
+// creatures that can stand in a floor's outer chamber, its inner chamber and its portal room. A floor takes one whole motif
 // and one element, and its three rooms are three records of that motif dealt as that element — so
 // a fire goblin floor is three goblins in fire, and what the player walked into is something they
 // can plan against.

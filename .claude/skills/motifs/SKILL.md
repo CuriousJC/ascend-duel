@@ -6,7 +6,7 @@ description: The roster grammar - how a creature is written as data under data/m
 # Motifs
 
 **A floor is a motif and an element.** The tower picks one whole motif and one of the five
-elements, and the floor's three rooms — outer chamber, inner chamber, stairway — are three records
+elements, and the floor's three rooms — outer chamber, inner chamber, portal room — are three records
 of that motif dealt as that element. So a fire goblin floor is three goblins in fire, and what the
 player walked into is something they can plan against.
 
@@ -24,6 +24,7 @@ creatures stay in one file, and its rooms sit beside them in a second.
 | The structs, the loader, every refusal | `data/motifs_data.go`, and `data/backdrops.go` for the rooms |
 | The pictures | `assets/motifs/<motif>/creature/*.png` and `.../backdrop/*.jpg`, keyed by filename stem |
 | How full each motif is, and what is still TBD | `go run ./tools/motifreport` → `docs/sheets/motifreport/` |
+| Every room's pictures, beside the brief each was painted from | `go run ./tools/backdropsheet` → `docs/sheets/backdropsheet/` |
 | The tower's height and its two growth rates | `data/tower.json`, `data/tower_data.go` |
 | The climb: which motif and element each floor takes | `internal/pyramid` |
 | A record's cards becoming a deck | `internal/decks/enemy.go` |
@@ -169,7 +170,7 @@ A motif's `backdrops.json` is a list of rooms, and a room is **one place drawn o
 ```
 
 - **The key reads `<motif>-<tier>-<slug>`** and `Tier` is the creature's vocabulary — `boss` is the
-  stairway. The prefix is checked.
+  portal room. The prefix is checked.
 - **The picture is `<Art>-<element>.jpg`**, one per affinity, under `assets/motifs/<motif>/backdrop/`,
   and **`Art` must read `<motif>-<tier>-<slug>` like the key** — the door is painted in, so the
   picture belongs to one tier; moving a room to another tier fails the launch until it is renamed.
@@ -177,7 +178,7 @@ A motif's `backdrops.json` is a list of rooms, and a room is **one place drawn o
 - **`Draw` is the room and `ElementDraw` is what each element does to it**, and a room's brief is
   four layers the way a creature's is: the style and the tier's door live in
   `docs/art/background_art_prompt.MD`, these two on the record. **The door is never on the record** —
-  small for outer, large for inner, two rainbow portals for the stairway, all three in the prompt.
+  small for outer, large for inner, two rainbow portals for the portal room, all three in the prompt.
   An `ElementDraw` key the room does not take as an affinity is refused.
 - **`MotifData.BackdropFor(tier, element, seed, floor)`** is the pick, a hash over the candidates in
   file order — derived, never rolled. **Nothing refuses a motif with no rooms**: a fight with none
@@ -191,13 +192,13 @@ with the art, never with the game. It is not the `CostTier` mistake.
 ## The coverage rule
 
 > For every motif, for every one of the five elements, **at least two records** can field the
-> outer chamber and **at least two** can field the inner. The stairway needs **one**.
+> outer chamber and **at least two** can field the inner. The portal room needs **one**.
 
 `data.MinCoverageFor(tier)` is the figure, and `LoadMotifs` **panics** on a hole — the floor
 generator will eventually present a choice and it must not be able to offer an impossible one.
 
 **The boss is one because a boss is a name.** A chamber is a room the climb fills and wants a pool
-to fill it from; a stairway is the creature a floor is remembered by, so it is authored for its
+to fill it from; a portal room is the creature a floor is remembered by, so it is authored for its
 element. That is what lets a motif field five bosses of one element each — and three bosses at
 four affinities is equally fine, and is what the rest of the roster does.
 

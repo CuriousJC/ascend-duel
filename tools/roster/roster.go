@@ -109,7 +109,7 @@ type Entry struct {
 	// on the card. Empty for every creature in the roster: a creature has no title.
 	Title string
 
-	// Family is the tier this record stands in — outer, inner or the stairway's boss — and Draw is
+	// Family is the tier this record stands in — outer, inner or the portal room's boss — and Draw is
 	// the subject paragraph an art generator would be given. **Draw is authored and ignored by
 	// everything that plays the game**, exactly as a relic's is.
 	Family string
@@ -164,7 +164,7 @@ var MotifPool = Pool{
 	Blurb: "The whole roster, motif by motif: every creature's card as the game draws it, its " +
 		"stat line, the colours it can be dealt as, and the deck it fights with. A floor takes " +
 		"one motif and one element and holds three fights, so the questions this page answers " +
-		"are whether a motif's outer, inner and stairway records read as a climb, and whether " +
+		"are whether a motif's outer, inner and portal records read as a climb, and whether " +
 		"every one of its fights can be dealt at least two ways.",
 	Entries: func() []Entry {
 		motifs := data.LoadMotifs()

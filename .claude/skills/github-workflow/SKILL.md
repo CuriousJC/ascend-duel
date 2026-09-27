@@ -112,6 +112,12 @@ on 2026-08-17, after a cleanup turned up nine stale remote branches and two stal
 every one of them a PR merged days earlier. Delete them — local and remote, in the same pass
 as the new branch — and report what went, rather than listing them and waiting.
 
+**`squirt-motifs-updates` is the one standing exception, and it is not rubbish.** It is
+KingSherman1820's long-lived branch, where he lands his work over time, so it will routinely
+hold commits `main` has not got and a closed PR or two. Leave it out of the sweep and out of
+the report: do not delete it, do not flag it, do not ask about it. It only becomes your
+concern when the owner names it.
+
 **This is the one deliberate exception to "stop before anything reaches the remote".** The
 general rule is about publishing *content*; deleting a branch whose content is already on
 `main` publishes nothing, and the proof below is what makes that true. Pushes, PRs and

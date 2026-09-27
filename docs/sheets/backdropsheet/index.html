@@ -1,0 +1,251 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — backdrop sheet</title>
+<style>
+  :root { --ground: #a8bcd4; --ink: #2c2822; --dim: #5a6472; --rule: #8fa3bd; --panel: #c6d5e6;
+          --pink: #c8508c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 24px 64px; background: var(--ground); color: var(--ink);
+         font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; }
+  .wrap { max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2 { font-size: 17px; margin: 0; font-weight: 600; }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 90ch; margin: 8px 0 0; }
+  code, .key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .room { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+          padding: 18px 20px; margin-top: 22px; }
+  .head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .facts { color: var(--dim); font-size: 12.5px; }
+  .draw { font-size: 13px; max-width: 110ch; margin: 8px 0 14px; }
+  .cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  figure { margin: 0; }
+  figure img { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 4px;
+               border: 1px solid var(--rule); }
+  figure.unpainted img { opacity: .45; border: 2px dashed var(--pink); }
+  figcaption { font-size: 12.5px; margin-top: 6px; }
+  .el { font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+  .miss { color: var(--pink); font-weight: 600; margin-left: 6px; }
+  .dir { color: var(--dim); font-size: 12px; margin-top: 3px; }
+  .tbd { color: var(--pink); font-weight: 600; }
+</style>
+
+<div class="wrap">
+  <h1>Backdrop sheet</h1>
+  <p class="note">
+    Every room a motif's fights are drawn in front of, once per element it is painted in, with the
+    brief it was painted from: the room's <code>Draw</code> on top and each element's
+    <code>ElementDraw</code> under its picture. A picture not painted yet is shown as the default
+    backdrop the fight really draws, dimmed and outlined in pink. Each picture links to the full
+    file under <code>assets/motifs/</code>.
+  </p>
+  <p class="note"><strong>No rooms authored:</strong>
+    Aliens, Animals, Avians, Barbarians, Big Cats, Cat-people, Draconics, Dwarves, Elves, Golems, Insects, Magic-users, Mutants, Ogres, Plants, Slimes, Vampires — every fight on these draws the default.</p>
+
+  <style>
+  .sheet-filters {
+    position: sticky; top: 0; z-index: 5;
+    margin: 14px 0 0; padding: 10px 12px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+    background: var(--panel, #c6d5e6);
+    border: 1px solid var(--rule, #8fa3bd); border-radius: 8px;
+  }
+  .sheet-facet { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .sheet-facet-label {
+    color: var(--dim, #5a6472); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em; margin-right: 2px;
+  }
+  .sheet-filters button {
+    font: inherit; font-size: 12.5px; line-height: 1;
+    padding: 5px 9px; border-radius: 999px; cursor: pointer;
+    color: var(--ink, #2c2822);
+    background: transparent;
+    border: 1px solid var(--rule, #8fa3bd);
+  }
+  .sheet-filters button:hover { background: rgba(255,255,255,.45); }
+  /* A chip that is down is filled rather than merely outlined: an outline shifting shade is the
+     one state change that does not survive being looked at quickly. */
+  .sheet-filters button[aria-pressed="true"] {
+    background: var(--ink, #2c2822); color: var(--panel, #c6d5e6);
+    border-color: var(--ink, #2c2822);
+  }
+  .sheet-filters button i {
+    font-style: normal; opacity: .6; margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sheet-filters-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .sheet-tally { color: var(--dim, #5a6472); font-size: 12px; font-variant-numeric: tabular-nums; }
+</style>
+<div class="sheet-filters" hidden>
+  <div class="sheet-facet"><span class="sheet-facet-label">motif</span>
+    <button type="button" data-facet="motif" data-value="goblins" aria-pressed="false">goblins<i>1</i></button>
+  </div>
+  <div class="sheet-facet"><span class="sheet-facet-label">room</span>
+    <button type="button" data-facet="tier" data-value="outer" aria-pressed="false">outer chamber<i>1</i></button>
+  </div>
+  <div class="sheet-facet"><span class="sheet-facet-label">element</span>
+    <button type="button" data-facet="element" data-value="fire" aria-pressed="false">fire<i>1</i></button>
+    <button type="button" data-facet="element" data-value="ice" aria-pressed="false">ice<i>1</i></button>
+    <button type="button" data-facet="element" data-value="lightning" aria-pressed="false">lightning<i>1</i></button>
+    <button type="button" data-facet="element" data-value="earth" aria-pressed="false">earth<i>1</i></button>
+    <button type="button" data-facet="element" data-value="arcane" aria-pressed="false">arcane<i>1</i></button>
+  </div>
+  <div class="sheet-facet"><span class="sheet-facet-label">picture</span>
+    <button type="button" data-facet="state" data-value="painted" aria-pressed="false">painted<i>5</i></button>
+  </div>
+  <div class="sheet-filters-end">
+    <button type="button" class="sheet-clear" hidden>clear</button>
+    <span class="sheet-tally"></span>
+  </div>
+</div>
+<script>
+(function () {
+  function start() {
+    var bar = document.querySelector('.sheet-filters');
+    if (!bar) return;
+    bar.hidden = false;
+
+    var chips = Array.prototype.slice.call(bar.querySelectorAll('button[data-facet]'));
+    var clear = bar.querySelector('.sheet-clear');
+    var tally = bar.querySelector('.sheet-tally');
+    var items = Array.prototype.slice.call(document.querySelectorAll('.sheet-item'));
+    var groups = Array.prototype.slice.call(document.querySelectorAll('.sheet-group'));
+    var picked = {};
+
+    function tokens(el, key) {
+      var v = el.getAttribute('data-' + key);
+      if (v === null) return null;
+      return v.split(/\s+/).filter(Boolean);
+    }
+
+    function matches(el) {
+      for (var key in picked) {
+        var want = picked[key];
+        if (!want.length) continue;
+        var have = tokens(el, key);
+        if (have === null) continue;
+        var hit = false;
+        for (var i = 0; i < have.length; i++) {
+          if (want.indexOf(have[i]) !== -1) { hit = true; break; }
+        }
+        if (!hit) return false;
+      }
+      return true;
+    }
+
+    function apply() {
+      var shown = 0, any = false;
+      for (var key in picked) { if (picked[key].length) any = true; }
+
+      var open = [];
+      for (var g = 0; g < groups.length; g++) open.push(matches(groups[g]));
+
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        var owner = groups.indexOf(it.closest('.sheet-group'));
+        var ok = matches(it) && (owner === -1 || open[owner]);
+        it.hidden = !ok;
+        if (ok) shown++;
+      }
+
+      for (var g2 = 0; g2 < groups.length; g2++) {
+        var grp = groups[g2];
+        var held = grp.querySelector('.sheet-item');
+        var live = grp.querySelector('.sheet-item:not([hidden])');
+        grp.hidden = !open[g2] || (held !== null && live === null);
+      }
+
+      if (clear) clear.hidden = !any;
+      if (tally) tally.textContent = any ? 'showing ' + shown + ' of ' + items.length : '';
+    }
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var key = chip.getAttribute('data-facet');
+        var val = chip.getAttribute('data-value');
+        var list = picked[key] || (picked[key] = []);
+        var at = list.indexOf(val);
+        if (at === -1) { list.push(val); } else { list.splice(at, 1); }
+        chip.setAttribute('aria-pressed', at === -1 ? 'true' : 'false');
+        apply();
+      });
+    });
+
+    if (clear) {
+      clear.addEventListener('click', function () {
+        picked = {};
+        chips.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+        apply();
+      });
+    }
+
+    apply();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+</script>
+
+
+  
+  <section class="room sheet-group" data-motif="goblins" data-tier="outer">
+    <div class="head">
+      <h2>Tinker Studio</h2>
+      <span class="key">goblins-outer-tinker-studio</span>
+      <span class="facts">Goblins · outer chamber · 5 elements</span>
+    </div>
+    <p class="draw">A goblin tinker&#39;s studio hall, with nobody in it: a broad floor of scuffed planks and patched flagstones, clear from the foreground to the far wall, under high rafters hung with pulleys, chains and half-finished contraptions. It is a mess. Gears, cogs, springs, bent rivets and loose bolts are strewn across the floor at the edges; workbenches along both side walls are buried in scavenged scrap, disassembled clockwork, lengths of pipe and tools nobody put back. Crates of salvage are stacked unevenly against the walls, and a crooked crane arm leans out over a heap of parts. Nothing matches and everything was something else first.</p>
+    <div class="cells">
+      
+      <figure class="sheet-item painted" data-element="fire" data-state="painted">
+        <a href="../../../assets/motifs/goblins/backdrop/goblins-outer-tinker-studio-fire.jpg"><img src="goblins-outer-tinker-studio-fire.jpg" alt="goblins-outer-tinker-studio-fire" loading="lazy"></a>
+        <figcaption>
+          <span class="el">fire</span> <span class="key">goblins-outer-tinker-studio-fire.jpg</span>
+          
+          <div class="dir">The workshop runs hot. Channels of molten metal glow along the base of the walls, crucibles of bright orange slag sit on the benches, and the scrap is scorched and heat-blued. Sparks and embers drift in the air, and the whole hall is lit warm orange from below.</div>
+        </figcaption>
+      </figure>
+      
+      <figure class="sheet-item painted" data-element="ice" data-state="painted">
+        <a href="../../../assets/motifs/goblins/backdrop/goblins-outer-tinker-studio-ice.jpg"><img src="goblins-outer-tinker-studio-ice.jpg" alt="goblins-outer-tinker-studio-ice" loading="lazy"></a>
+        <figcaption>
+          <span class="el">ice</span> <span class="key">goblins-outer-tinker-studio-ice.jpg</span>
+          
+          <div class="dir">Everything is frozen over. Frost furs every gear and bench, icicles hang from the rafters and the crane arm, and snow has drifted in against the crates. Arctic survey markers — striped poles, flagged stakes, frost-crusted measuring rods — are planted among the scrap, and the light is pale and blue.</div>
+        </figcaption>
+      </figure>
+      
+      <figure class="sheet-item painted" data-element="lightning" data-state="painted">
+        <a href="../../../assets/motifs/goblins/backdrop/goblins-outer-tinker-studio-lightning.jpg"><img src="goblins-outer-tinker-studio-lightning.jpg" alt="goblins-outer-tinker-studio-lightning" loading="lazy"></a>
+        <figcaption>
+          <span class="el">lightning</span> <span class="key">goblins-outer-tinker-studio-lightning.jpg</span>
+          
+          <div class="dir">The studio is full of electrical machines: copper coils, crackling spark gaps, wound dynamos and tangled cables running across the rafters. Small yellow arcs jump between the scrap heaps, and every metal edge carries a faint hot-yellow halo.</div>
+        </figcaption>
+      </figure>
+      
+      <figure class="sheet-item painted" data-element="earth" data-state="painted">
+        <a href="../../../assets/motifs/goblins/backdrop/goblins-outer-tinker-studio-earth.jpg"><img src="goblins-outer-tinker-studio-earth.jpg" alt="goblins-outer-tinker-studio-earth" loading="lazy"></a>
+        <figcaption>
+          <span class="el">earth</span> <span class="key">goblins-outer-tinker-studio-earth.jpg</span>
+          
+          <div class="dir">The workshop has been dug underground. The walls and ceiling are packed earth and rough rock shored up with timber, roots poke through between the beams, and clusters of mushrooms grow in the corners and out of the rusting scrap heaps. The light is dim and green.</div>
+        </figcaption>
+      </figure>
+      
+      <figure class="sheet-item painted" data-element="arcane" data-state="painted">
+        <a href="../../../assets/motifs/goblins/backdrop/goblins-outer-tinker-studio-arcane.jpg"><img src="goblins-outer-tinker-studio-arcane.jpg" alt="goblins-outer-tinker-studio-arcane" loading="lazy"></a>
+        <figcaption>
+          <span class="el">arcane</span> <span class="key">goblins-outer-tinker-studio-arcane.jpg</span>
+          
+          <div class="dir">The tinkering has gone shamanistic. Voodoo fetishes, bone charms, feathered totems and strung beads hang among the gears, painted sigils cover the crates, and small cogs float a little off the benches in a faint violet light that comes from nowhere in particular.</div>
+        </figcaption>
+      </figure>
+      
+    </div>
+  </section>
+  
+</div>

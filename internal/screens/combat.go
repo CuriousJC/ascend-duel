@@ -618,7 +618,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, s.enemyElement, enemySeed, decks.EnemyHandSize)
 
 	// **A fresh duel, but not a fresh body** *(owner's call, 2026-09-06)*. The wound the run is
-	// carrying comes with it into this room; only a stairway win clears it, and `WonFight` is
+	// carrying comes with it into this room; only a portal-room win clears it, and `WonFight` is
 	// where that happens. The opponent is always whole — a creature met in a room has not fought
 	// anybody. See session/life.go.
 	s.fighter.CurrentLife = s.fighter.MaxLife
@@ -838,7 +838,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		// the profile keeps one award apiece — see achieve.go, and data/achievements.json, where
 		// "defeat your first enemy" is a record rather than a line of Go.
 		//
-		// **The floor is read after WonFight**, so a win that climbed the stairs reports the floor
+		// **The floor is read after WonFight**, so a win that went through a portal reports the floor
 		// arrived at rather than the one left behind.
 		earnMoment(gs, achieve.DuelWon())
 		earnMoment(gs, achieve.FloorReached(gs.Run.Floor()))
@@ -2027,8 +2027,8 @@ func planLabel(cards []combat.Card) string {
 // ascent curve reads, which is the same counter the floor and room under the duelist card are
 // derived from.
 //
-// **One pool, one lookup.** A boss is a record whose tier says boss; it stands on a floor's
-// stairway because the climb puts it there, not because it came from somewhere else. So nothing
+// **One pool, one lookup.** A boss is a record whose tier says boss; it stands in a floor's
+// portal room because the climb puts it there, not because it came from somewhere else. So nothing
 // below this line has to know which room it was built for.
 //
 // **No sheet to look up** — the opponent is a card, so its picture is an art key that

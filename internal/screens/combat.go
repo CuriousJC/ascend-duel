@@ -224,8 +224,8 @@ type CombatScene struct {
 	// both happen after the opponent itself has been hydrated.
 	enemyElement string
 
-	// backdrop is the asset key of the place this fight is drawn in front of — one of the floor's
-	// element's backdrops, the same for every room on the floor. See data.BackdropFor.
+	// backdrop is the asset key of the place this fight is drawn in front of — one of the motif's
+	// rooms for this fight's tier and element. See data.MotifData.BackdropFor.
 	backdrop string
 
 	// The queued sets for the coming round. fighterActions is derived from the hand by
@@ -558,7 +558,10 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 		enemyElement = scenario.EnemyElement()
 	}
 	s.enemyElement = enemyElement
-	s.backdrop = data.BackdropFor(ui.Backgrounds(), enemyElement, gs.RunSeed, gs.Run.Floor())
+	// The room is read off whoever is standing in it, so a scenario's chosen opponent is fought in
+	// its own motif's room for its own tier rather than in the room the climb would have dealt.
+	motif, _ := data.MotifOf(gs.Motifs, enemyKey)
+	s.backdrop = motif.BackdropFor(gs.Records[enemyKey].Tier, enemyElement, gs.RunSeed, gs.Run.Floor())
 	s.enemy = enemyFromRecord(gs, enemyKey, enemyElement, s.fightIndex)
 
 	// **A scenario may also make the fight unkillable in both directions**, which is what a training

@@ -28,6 +28,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path"
@@ -56,7 +57,7 @@ var known = map[string]struct {
 	"rune":    {"Runes", "../runesheet/index.html", "Full-bleed card faces."},
 	"stone":   {"Stones", "../stonesheet/index.html", "Full-bleed card faces."},
 	"other":   {"Other cards", "../goodsheet/index.html", "Potions, sealed goods and the brand."},
-	"enemy":   {"Creatures and bosses", "../motifsheet/index.html", "One picture per record per element."},
+	"motifs":  {"Creatures and backdrops", "../motifreport/index.html", "One folder per motif: a picture per creature per element, and a backdrop per room per element."},
 	"damage":  {"Damage badges", "../badgesheet/index.html", "The numeral is drawn into the badge."},
 	"form":    {"Form marks and cost ticks", "../marksheet/index.html", "One per form per element, plus a neutral set."},
 	"upgrade": {"Upgrade art", "../upgradesheet/index.html", "The one rider that keeps a picture for its ink."},
@@ -132,7 +133,7 @@ func run(dir, assets string) error {
 	return nil
 }
 
-// categories reads assets/ one directory deep. A directory with no picture in it is left off
+// categories reads assets/ one directory deep for the headings, and everything under each. A directory with no picture in it is left off
 // rather than drawn empty, which is the stone sheet's rule for a rung nobody authored a stone for.
 func categories(assets string) ([]category, error) {
 	ents, err := os.ReadDir(assets)
@@ -166,17 +167,24 @@ func categories(assets string) ([]category, error) {
 	return out, nil
 }
 
+// pictures is every picture under dir, however deep — `motifs/` files a motif's pictures a folder
+// or two down. A file's Name is its path under dir, so the page can reach it; its Stem is the bare
+// filename, which is what the game keys it by wherever it is filed.
 func pictures(dir string) ([]file, error) {
-	ents, err := os.ReadDir(dir)
+	var out []file
+	err := filepath.WalkDir(dir, func(p string, e fs.DirEntry, err error) error {
+		if err != nil || e.IsDir() || !imageExt[strings.ToLower(filepath.Ext(e.Name()))] {
+			return err
+		}
+		rel, err := filepath.Rel(dir, p)
+		if err != nil {
+			return err
+		}
+		out = append(out, file{Name: filepath.ToSlash(rel), Stem: strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))})
+		return nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("reading %s: %w", dir, err)
-	}
-	var out []file
-	for _, e := range ents {
-		if e.IsDir() || !imageExt[strings.ToLower(filepath.Ext(e.Name()))] {
-			continue
-		}
-		out = append(out, file{Name: e.Name(), Stem: strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out, nil
@@ -191,7 +199,7 @@ type category struct {
 }
 
 type file struct {
-	Name string // the filename, which is what a data record's Art field writes
+	Name string // the path under its category directory — the bare filename for every flat one
 	Stem string
 	Src  string // where the page reaches it, relative to the page
 }

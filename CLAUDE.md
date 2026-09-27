@@ -102,7 +102,7 @@ skill that does not exist.
 | [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / essences, or writing a loader |
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
-| [`motifs`](.claude/skills/motifs/SKILL.md) | adding a motif file, adding or changing a record under `data/motifs/`, authoring creatures or bosses, touching `data/tower.json`, or wiring anything that picks an opponent |
+| [`motifs`](.claude/skills/motifs/SKILL.md) | adding a motif directory, adding or changing a creature or a backdrop under `data/motifs/`, authoring creatures, bosses or rooms, touching `data/tower.json`, or wiring anything that picks an opponent or a backdrop |
 | [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn relic |
 | [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
 | [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
@@ -176,8 +176,10 @@ go run ./tools/relicsheet -archive   # the relics out of the game, off data/arch
 go run ./tools/essencesheet    # every essence to PNGs + a page grouped by what it changes about a card
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
 go run ./tools/motifsheet   # the roster motif by motif: card, stat line, deck, coverage grid
+go run ./tools/motifreport  # how full each motif is: briefs still TBD, missing art, rooms with no backdrop
 go run ./tools/creatureprompt -record goblins-outer-bomber -element ice   # the four-layer brief
 go run ./tools/creatureprompt -gaps      # which art briefs are still unwritten, roster-wide
+go run ./tools/creatureprompt -backdrop goblins-outer-tinker-studio -element fire   # a room's brief
 go run ./tools/stonesheet   # every stone against the rungs it raises, walked by shape
 go run ./tools/runesheet # every rune: the line it prints against the rule that fires
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
@@ -2333,20 +2335,24 @@ bundle builds and plays silent.
 `data/*.json` writes them down; tying one to a path would mean a data migration every time a
 file was refiled. A named asset is three edits: the file, an `//go:embed` var, and a map entry.
 
-**The creature pictures are the exception, and they are a *family* rather than named
-assets.** There are far too many to name one at a time, so `//go:embed enemy/*.png` pulls the
-directory in as an `embed.FS` and `LoadImageData` walks it, keying each by filename stem.
-**There is one picture per record per element** — `enemy/goblins-serf-fire.png` is
-`goblins-serf-fire`, which is what `data.MotifRecord.ArtKey` builds out of the record's `Art`
-field and the element the floor dealt it as — so a fire goblin serf and an ice goblin serf are two
-drawings of one creature. **The consequence is exactly what the three-edit rule protects against:
+**The motif pictures are the exception, and they are a *tree* rather than named assets.**
+`assets/motifs/` mirrors `data/motifs/`: `assets/motifs/<motif>/creature/` holds the creatures and
+`assets/motifs/<motif>/backdrop/` the rooms, with the two placeholders at the top of the tree.
+`//go:embed motifs` pulls the whole tree in and `assets.embedTree` walks it, **keying each file by
+its filename stem with the folders left out** — so where a file is filed never reaches a record, and
+two files sharing a stem anywhere in the tree fail the launch. **There is one picture per record
+per element** — `goblins-serf-fire.png` is `goblins-serf-fire`, which is what
+`data.MotifRecord.ArtKey` builds out of the record's `Art` field and the element the floor dealt it
+as — so a fire goblin serf and an ice goblin serf are two drawings of one creature. A backdrop is
+the same shape as a JPEG: `data.Backdrop.ArtKey` builds `<Art>-<element>`. **The consequence is exactly what the three-edit rule protects against:
 a picture's key is tied to its filename**, so renaming one means editing the `Art` field of the
 record that names it. Reach for the glob only when a *set* of files is being added; a one-off
 asset still gets its own var.
 
-**`default-enemy.png` is the whole of the fallback**, and nearly every record draws it today. A
-record whose own picture has not been generated yet falls back to it rather than drawing a hole,
-so a blank face means art nobody has made rather than a name nobody spelled right.
+**`default-enemy.png` is the whole of the creature fallback**, and **`default-background.jpg` is the
+backdrop's**. A record whose own picture has not been generated yet falls back to it rather than
+drawing a hole, so a blank face means art nobody has made rather than a name nobody spelled right —
+and the default backdrop carries no door, so a fight drawn on it is one with no room of its own.
 `TestEveryOpponentHasSomethingToDraw` holds that the placeholder is embedded and
 `TestNoTwoRecordsDrawTheSamePicture` holds that no two records claim one key — the map is flat,
 and two records on one key is one lookup with two answers.

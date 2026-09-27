@@ -1,0 +1,17 @@
+[
+  {
+    "Backdrop": "goblins-outer-tinker-studio",
+    "Name": "Tinker Studio",
+    "Tier": "outer",
+    "Art": "goblins-outer-tinker-studio",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A goblin tinker's studio hall, with nobody in it: a broad floor of scuffed planks and patched flagstones, clear from the foreground to the far wall, under high rafters hung with pulleys, chains and half-finished contraptions. It is a mess. Gears, cogs, springs, bent rivets and loose bolts are strewn across the floor at the edges; workbenches along both side walls are buried in scavenged scrap, disassembled clockwork, lengths of pipe and tools nobody put back. Crates of salvage are stacked unevenly against the walls, and a crooked crane arm leans out over a heap of parts. Nothing matches and everything was something else first.",
+    "ElementDraw": {
+      "fire": "The workshop runs hot. Channels of molten metal glow along the base of the walls, crucibles of bright orange slag sit on the benches, and the scrap is scorched and heat-blued. Sparks and embers drift in the air, and the whole hall is lit warm orange from below.",
+      "ice": "Everything is frozen over. Frost furs every gear and bench, icicles hang from the rafters and the crane arm, and snow has drifted in against the crates. Arctic survey markers — striped poles, flagged stakes, frost-crusted measuring rods — are planted among the scrap, and the light is pale and blue.",
+      "lightning": "The studio is full of electrical machines: copper coils, crackling spark gaps, wound dynamos and tangled cables running across the rafters. Small yellow arcs jump between the scrap heaps, and every metal edge carries a faint hot-yellow halo.",
+      "earth": "The workshop has been dug underground. The walls and ceiling are packed earth and rough rock shored up with timber, roots poke through between the beams, and clusters of mushrooms grow in the corners and out of the rusting scrap heaps. The light is dim and green.",
+      "arcane": "The tinkering has gone shamanistic. Voodoo fetishes, bone charms, feathered totems and strung beads hang among the gears, painted sigils cover the crates, and small cogs float a little off the benches in a faint violet light that comes from nowhere in particular."
+    }
+  }
+]

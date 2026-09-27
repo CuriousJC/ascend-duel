@@ -6,7 +6,6 @@ import (
 	"image/color"
 	_ "image/jpeg"
 	"log"
-	"sync"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -135,9 +134,6 @@ func FillGround(screen *ebiten.Image) {
 	screen.DrawImage(groundStrip, op)
 }
 
-// Backgrounds is the backdrop catalog, loaded once.
-var Backgrounds = sync.OnceValue(data.LoadBackgrounds)
-
 // backdrops holds each backdrop decoded, by asset key. A run shows a handful of them and a decoded
 // one is eight megabytes, so one is decoded the first time a floor asks for it rather than at launch.
 var backdrops = map[string]*ebiten.Image{}
@@ -150,9 +146,12 @@ func Backdrop(gs *state.GlobalState, key string) *ebiten.Image {
 	}
 	raw := gs.ImageData[key]
 	if len(raw) == 0 {
+		// **An authored room with no picture yet is the normal state**, so the miss is logged
+		// once and remembered: this is asked every frame.
 		if key != data.DefaultBackgroundArt {
-			log.Printf("backdrop: no picture named %q", key)
-			return Backdrop(gs, data.DefaultBackgroundArt)
+			log.Printf("backdrop: no picture named %q, drawing the default", key)
+			backdrops[key] = Backdrop(gs, data.DefaultBackgroundArt)
+			return backdrops[key]
 		}
 		return nil
 	}

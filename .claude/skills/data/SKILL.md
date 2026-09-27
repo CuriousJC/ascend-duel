@@ -12,7 +12,8 @@ is what lets every layer above read it, and it **must never import upward**.
 | File | Loader | Holds |
 |---|---|---|
 | `duelists.json` | `LoadDuelists` | who the player can be: three stats and their card back |
-| `motifs/*.json` | `LoadMotifs` | the roster, one file per motif: the floors it may theme, and every creature that can stand in one of its three rooms |
+| `motifs/<motif>/motif.json` | `LoadMotifs` | the roster, one directory per motif: the floors it may theme, and every creature that can stand in one of its three rooms |
+| `motifs/<motif>/backdrops.json` | `LoadMotifs` | optional: the rooms that motif's fights are drawn in front of, one per record per tier, drawn once per element. `MotifData.BackdropFor` picks one off the run seed, the floor and the fight's tier — derived, never rolled — and a fight with none draws `default-background`. See the `motifs` skill |
 | `tower.json` | `LoadTower` | how tall the climb is and the two rates the ascent curve compounds at |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
 | `relics.json` | `LoadRelics` | the relics that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
@@ -24,7 +25,6 @@ is what lets every layer above read it, and it **must never import upward**.
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `potions.json` | `LoadPotions` | the three bottles the shop sells: which of the duelist's figures each moves, by how much, and what it costs |
 | `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
-| `backgrounds.json` | `LoadBackgrounds` | the painted places a duel is fought in front of: an element, an `Art` key and a `Draw` brief. A floor keeps one for all three rooms, picked by `BackdropFor` off the run seed and the floor — derived, never rolled — and an undrawn record or an element with none draws `default-background` |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 
@@ -138,9 +138,9 @@ card back. One struct would make every field optional and none of them mean anyt
 **`ValidFloors` is `[lowest, highest]`** against the planned 8-floor tower, so a Dragon is not
 on floor one. Nothing generates floors yet, so today it only sorts the fight order.
 
-**A portrait's key is its filename stem**, unlike every other asset: 96 of them come in through
-one `//go:embed enemy/*.png` glob, so renaming a file means editing the `Art` field of the record
-that names it. That is the price of not hand-maintaining two lines per picture that nobody could
+**A portrait's key is its filename stem**, unlike every other asset: they come in through one
+`//go:embed motifs` tree under `assets/motifs/`, so renaming a file means editing the `Art` field of
+the record that names it. That is the price of not hand-maintaining two lines per picture that nobody could
 review.
 
 ### Bosses

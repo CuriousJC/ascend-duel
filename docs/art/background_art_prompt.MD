@@ -1,22 +1,33 @@
-# Background art prompt
+# Backdrop art
 
-**One picture per record, and a record belongs to one element.** A duel is fought in front of a
-backdrop, and the floor's element decides which set of backdrops the fight draws from. So what is
-made here is the table the whole combat screen is laid on — a landscape scene at the screen's own
-size, with the cards, the panels and the type drawn over most of it.
+You are painting backdrops for a card game: the scene a duel is fought in front of, with the
+game's cards, panels and type laid over most of it. This file is how every backdrop is painted.
+It comes with a JSON list of **records**, and each record is one room.
 
-## A brief is two layers
+## Reading the records
 
-| layer                    | where it lives        | what it says                                                                 |
-| ------------------------ | --------------------- | ---------------------------------------------------------------------------- |
-| 1. style and composition | **this file**         | canvas, the map of what covers what, key, focus, rendering — true of every backdrop |
-| 2. the record            | `Draw` on the record  | this particular place: what it is, what is lying about                       |
+Each record has these fields:
 
-The record names its element, and the element picks the color word the picture is keyed in.
+| Field         | What it tells you                                                                  |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `Tier`        | which of three rooms this is — `outer`, `inner` or `boss`. It decides what stands at the far side; see **The far side says which room this is** below |
+| `Art`         | the start of every filename for this record                                        |
+| `Affinities`  | the elements this room is painted in — **one picture for each**                    |
+| `Draw`        | the room itself, true in every element: what the place is and what is lying about  |
+| `ElementDraw` | for each element, what that element does to this room                              |
+
+`Backdrop` and `Name` are labels; ignore them.
+
+**Paint one picture per element in `Affinities`.** Each picture is this file, plus the record's
+`Draw`, plus that element's paragraph from `ElementDraw`, keyed in that element's color from the
+table under **The color words**. Name it `<Art>-<element>.jpg` — a record with `"Art":
+"goblins-outer-tinker-studio"` and five elements is five files, from
+`goblins-outer-tinker-studio-fire.jpg` to `goblins-outer-tinker-studio-arcane.jpg`. The five do
+not have to share a layout; each is its own painting of the place the brief describes.
 
 ---
 
-## The prompt — layer 1
+## Every backdrop
 
 A painted **backdrop for a card game**: a single wide view of one place, seen at a distance and
 slightly out of focus, over which a game is laid. It is scenery rather than a subject — nothing in
@@ -48,6 +59,41 @@ brawl in a corner. Draw the room for that, and leave the fighters out.
   "study" a great library, a "forge" a foundry floor, a "cave" a cavern. Keep the character the
   brief asks for and give it the room a duel needs.
 
+### The far side says which room this is
+
+**Every backdrop carries one feature at the far side of the floor that names its tier**, and it is
+the only thing in the picture with a job. A player glancing up from a hand has to be able to tell
+which of a floor's three fights they are in, so the feature is **centred on the far wall or the far
+boundary, in the open middle** (see the table below), large enough to read at a glance and plainly
+the most important object in the place. Paint it in the room's own materials and the element's
+cast, so it belongs to the room rather than being pasted on.
+
+**Draw only the one for the record's `Tier`.** The other two must not appear.
+
+#### Tier `outer` — the outer chamber: one small door
+
+A single **small, ordinary door** in the far wall: plain, closed, about the height of a person,
+with nothing grand about it. It is the way further in, and it should read as modest — the room
+around it is bigger than it is. In an open-air place it is a small gate or a low doorway in a
+boundary wall.
+
+#### Tier `inner` — the inner chamber: one large door
+
+A single **large, imposing door** in the far wall: tall — two or three times the height of a
+person — heavy, double-leafed, closed, framed by a massive arch or lintel, reinforced with bands,
+studs or carving in the room's own style. It is plainly the way to something that matters. In an
+open-air place it is a great gate in a wall or a cliff.
+
+#### Tier `boss` — the stairway: two swirling portals
+
+**Two portals standing side by side** at the far side, a little apart from each other and both
+facing the viewer: each an upright oval or arch of **swirling rainbow light** — every hue of the
+spectrum turning in a slow spiral inside a frame of the room's own material. They are the way up
+to the next floor. **The rainbow is the one place the element's cast does not reach**: the swirl
+inside each portal keeps its full spectrum, and only the frames and the glow they throw onto the
+floor take the room's colors. There is no door and no stair drawn in a stairway backdrop other than
+these two.
+
 ### What covers what
 
 Most of the canvas ends up under something. Paint all of it — the picture is opaque to all four
@@ -65,8 +111,8 @@ Coordinates are pixels from the top-left of the 1920x1080 canvas.
 | the left edge                           | 0–230       | 330–1080   | a small card deck at the very bottom; otherwise open |
 
 **The open middle is the most-seen stretch of the picture**, and the natural home for the far
-distance of the scene — a far wall, windows, a sky, a vista. Let it be part of the place rather
-than a gap in it; it does not need to be empty or plain.
+distance of the scene — a far wall, windows, a sky, a vista — and for the tier's door or portals.
+Let it be part of the place rather than a gap in it; it does not need to be empty or plain.
 
 **Put the place's character at the edges, along the top and in the open middle.** The lower half
 is mostly hidden; let it be floor, ground, a table top or the foot of a wall, receding.
@@ -115,7 +161,7 @@ a floor — is fine; writing is not.
 
 ## The color words
 
-**The record's element picks one of these ramps, and a color word in a brief names one.** "Purple
+**Each picture's element picks one of these ramps, and a color word in a brief names one.** "Purple
 glassware" is glassware in arcane; "steel fittings" are fittings in the slash material. These are
 the game's own colors and the backdrop has to sit under cards drawn in them.
 
@@ -161,7 +207,9 @@ element colors on top of it stop reading.
    middle, deep and wide, with every piece of furniture pushed back to the edges?
 5. **Is the element unmistakable** from the overall cast, without a prop having to say it?
 6. **Is the place empty?** No person, creature, silhouette, statue or face anywhere in it.
-7. **Is it a JPEG, opaque to all four edges, exactly 1920x1080**, with no frame, vignette or reserved
+7. **Does the far side say the tier?** A small door for `outer`, a large door for `inner`, two
+   rainbow portals for `boss` — only that one, centred in the open middle, readable at a glance.
+8. **Is it a JPEG, opaque to all four edges, exactly 1920x1080**, with no frame, vignette or reserved
    patch anywhere?
 
-Name it `<Art>.jpg`, exactly as the brief says, and give me a link I can click to download it.
+Name each picture `<Art>-<element>.jpg`, one for every element in the record's `Affinities`, and give me a link I can click to download each.

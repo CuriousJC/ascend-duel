@@ -3242,8 +3242,16 @@ rooms are three records of that motif dealt as that element. A fire goblin floor
 in fire — so what the player walked into is something they can plan against, rather than three
 unrelated creatures who happen to share a corridor.
 
-- **A motif is a file**, `data/motifs/<motif>.json`, holding every creature that can stand in one
-  of its three rooms: outer chamber, inner chamber, stairway.
+- **A motif is a directory**, `data/motifs/<motif>/`: `motif.json` holds every creature that can
+  stand in one of its three rooms — outer chamber, inner chamber, stairway — and `backdrops.json`
+  holds the rooms themselves.
+- **Every fight is drawn in front of its motif's room for its tier, and the room says which tier it
+  is.** An outer chamber has a small door at the far side, an inner chamber a large one, and a
+  stairway two swirling rainbow portals, so a player can tell at a glance which of a floor's three
+  fights they are in. A room is one place drawn once per element — the same goblin tinker studio
+  molten in fire and frozen in ice. Which room a fight gets is derived from the run, the floor and
+  the tier, never rolled. **A fight with no room of its own is drawn on the plain default
+  backdrop**, which has no door, so the gap is visible rather than disguised.
 - **A motif is never fought twice in one run.** Each floor strikes its theme off before the next
   is rolled, so a climb is a tour of the roster rather than a shuffle of it.
 - **A motif carries the band of floors it may theme**, at the file level rather than per record: a

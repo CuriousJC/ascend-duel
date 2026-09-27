@@ -62,9 +62,9 @@ type catalog struct {
 
 // catalogs is every family that has art, keyed by the word the flag takes.
 //
-// **assets/enemy and assets/boss are deliberately absent.** Those are licensed creature
-// portraits rather than generated pictures — they arrive once, with a license, and are not a
-// thing anybody produces three candidate versions of. Add them the day that stops being true.
+// **assets/motifs is deliberately absent** — the creatures and the backdrops. A creature arrives
+// once rather than as three candidate versions, and a backdrop is not a card, which is what every
+// cell here draws. Add them the day either stops being true.
 var catalogs = map[string]*catalog{
 	"card":    {Name: "card", Dir: "assets/card", File: "data/card_art.json", Subjects: cardSubjects},
 	"relic":   {Name: "relic", Dir: "assets/relic", File: "data/relics.json", Subjects: relicSubjects},

@@ -243,11 +243,10 @@ func (s *CombatScene) resetDeck(run *session.Session) {
 	s.run = run
 	s.deck = s.deck[:0]
 	if run != nil {
-		// **FightDeck rather than Deck**: this is the `deck-built` moment, so a demoting relic steps
-		// what is dealt without touching what the run owns. The element flips are *not* here — they
-		// fire per card in drawHand — so this pile holds cards in the colors the run owns. See
-		// session.FightDeck and combat.MomentCardDrawn.
-		s.deck = append(s.deck, run.FightDeck()...)
+		// **The run's own cards, untouched**: every relic that changes what a card is dealt as fires
+		// per card in drawHand, so this pile holds cards as the run owns them. See
+		// combat.MomentCardDrawn.
+		s.deck = append(s.deck, run.Deck()...)
 	} else {
 		s.deck = append(s.deck, session.StartingDeck()...)
 	}
@@ -372,16 +371,14 @@ func (s *CombatScene) handTarget() int { return handSize }
 // when it runs dry. A hand can come up short only if every card the player owns is already
 // in it, which cannot happen with a deck larger than the hand.
 //
-// **This is the `card-drawn` moment** *(2026-08-24)*. A flip relic recolors a card here, one card
-// at a time on its way out of the pile, which is what its text has always said — "every earth card
-// is dealt as a fire card". It used to recolor the whole fight deck in one pass at `deck-built`;
-// the cards dealt are the same either way, since a flip is unconditional over an element.
+// **This is the `card-drawn` moment.** A flip or a demotion changes a card here, one card at a time
+// on its way out of the pile, which is what their text says — "every earth card is dealt as a fire
+// card", "every 2 AP card is dealt as its 1 AP version".
 //
-// **The invariant that makes it safe: the draw pile holds cards as the run owns them.** A flip
-// reads a card's original color, so a discarded ice-that-was-lightning card folded back into the
-// pile and drawn again would be read as ice — and a second flip keyed on ice would fire, chaining
-// two relics into a deck of one color, which is exactly what firing at `deck-built` prevented for
-// free. `restoreToDeck` is what pays for it now.
+// **The invariant that makes it safe: the draw pile holds cards as the run owns them.** The walk
+// reads a card as it enters, so a discarded Thrust-that-was-a-Skewer folded back into the pile and
+// drawn again would be read as a Thrust and demoted a second time. `restoreToDeck` is what stops
+// that.
 // **It reports the cards as the pile held them**, parallel to the cards it appended. The hand gets
 // the finished card, which is the one every rule reads; the deal gets the face the cascade starts
 // from, so a flip can be watched happening rather than having already happened. See
@@ -411,11 +408,11 @@ func (s *CombatScene) drawHand() []combat.Card {
 	return pile
 }
 
-// drawnAs is the card as it is dealt into the hand: the worn flips applied, or the card untouched
-// when the scene has no run behind it.
+// drawnAs is the card as it is dealt into the hand: the worn flips and demotions applied, or the card
+// untouched when the scene has no run behind it.
 //
-// **The card it is handed is a draw-pile card**, which the invariant above says is a card in the
-// color the run owns — so the flip reads the original, as combat.FlipElement requires.
+// **The card it is handed is a draw-pile card**, which the invariant above says is a card as the run
+// owns it — so the walk reads the original, as combat.DealSteps requires.
 func (s *CombatScene) drawnAs(c combat.Card) combat.Card {
 	if s.run == nil {
 		return c
@@ -423,14 +420,9 @@ func (s *CombatScene) drawnAs(c combat.Card) combat.Card {
 	return s.run.DrawnAs(c)
 }
 
-// restoreToDeck undoes a draw: a card going back into the draw pile is put back in the color the
-// run owns it in, so the next flip that reads it reads the original rather than the last flip's
-// answer.
-//
-// **It restores the color and nothing else.** The concept is deliberately left as it is: a
-// demotion is a `deck-built` rule, applied once as this pile was built, and a card that came out of
-// this pile as a 2 AP Thrust is a 2 AP Thrust for the whole fight. Only the flip fires per draw, so
-// only the flip has anything to undo.
+// restoreToDeck undoes a draw: a card going back into the draw pile is put back as the run owns it —
+// its color and its concept — so the next draw walks the worn rings over the original rather than
+// over the last draw's answer.
 //
 // **A card the run has never heard of is left alone.** That covers a scene dealt with no run and a
 // card whose original an essence has since eaten; drawing what is actually in hand is the honest
@@ -443,7 +435,7 @@ func (s *CombatScene) restoreToDeck(c combat.Card) combat.Card {
 	if !ok {
 		return c
 	}
-	c.Element = owned.Element
+	c.Element, c.Concept = owned.Element, owned.Concept
 	return c
 }
 

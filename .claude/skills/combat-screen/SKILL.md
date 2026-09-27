@@ -421,8 +421,8 @@ nothing.
   clicked while it is still wearing its pile face is the card the engine will score —
   `shownLife`'s division, applied to a card rather than to a bar. The exception is the sort, which
   really does reorder the row, on a hand with no round in flight.
-- **The flips chain now** *(owner's call)* — `combat.FlipSteps` is the walk, each ring reading what
-  the ring before it left. Two rings is two beats. See MECHANICS.md §The flip relics.
+- **The flips and demotions chain** *(owner's call)* — `combat.DealSteps` is the walk, each ring
+  reading what the ring before it left. Two rings is two beats. See MECHANICS.md §The flip relics.
 - **A ring that touches nothing in this hand is not a beat**, and the ring that *is* firing
   **toasts** — `relicToast`, which is the rattle, a tilt one way then the other, and the lit
   border, all three off one `travel`. The hits' own toast, on a second clock, since one is playback

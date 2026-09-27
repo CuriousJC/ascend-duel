@@ -31,7 +31,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // RunWatch remembers what the run was holding a frame ago.
@@ -139,9 +138,7 @@ func sameFace(a, b combat.Card) bool {
 // cardWords is what a card is called in a sentence about the deck.
 //
 // **Not the card's title**, which is set in capitals because a card face shouts and a line in the
-// account is prose. The form is named only when an essence has moved it, since that is the one thing
-// about an altered card the name would otherwise not say — the same gap that had an altered Crush
-// drawing a spear over the word CRUSH.
+// account is prose.
 func cardWords(c combat.Card) string {
 	name := c.Label()
 	if word := carddesc.ElementWord(c); word != "" {
@@ -149,9 +146,6 @@ func cardWords(c combat.Card) string {
 	}
 
 	var notes []string
-	if c.Form() != c.Spec().Form && c.Form() != combat.FormNone {
-		notes = append(notes, strings.ToLower(ui.AttackVerb(c.Form())))
-	}
 	// **The bare odds, not the odds under what is worn** *(2026-09-18)*. This line is written once
 	// and read back fights later, so a relic-scaled figure would be the chance that applied on the
 	// day rather than what the card is — the same reason a ledger span stores an ink *name* and not

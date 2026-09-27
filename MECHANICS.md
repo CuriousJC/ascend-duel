@@ -416,13 +416,11 @@ deck is half ice" from being confused with "my deck contains more ice cards".
   card and an aspect — `element`, `remove`, `duplicate`, `cost`, `amount`, `promote`, `demote`.
   After a `remove` the card is gone from every pile and the deck is genuinely smaller; after
   Exalt or Debase it is a different concept from then on. Nothing takes an essence back.
-- **A relic can rewrite the deck as a fight's deck is built** — the `deck-built` moment. Atrophy
-  steps every 3 AP attack one rung down its own form's ladder, so a Skewer is dealt as a Thrust for
-  the whole fight. It lasts as long as the relic is worn and no longer.
-- **A relic can also rewrite a card as it is dealt** — the `card-drawn` moment, which leaves even
-  the fight's deck alone. Frozen Lightning and Frozen Orb both `set-element` to ice, which is why a
-  run wearing the pair reads as zero lightning and zero arcane; take them off and the colors come
-  back. `card-cost` relics are the same shape applied to the price rather than the color.
+- **A relic can rewrite a card as it is dealt** — the `card-drawn` moment, which leaves the deck
+  the run owns alone. Atrophy steps every 3 AP attack one rung down its own form's ladder, so a
+  Skewer is dealt as a Thrust; Frozen Lightning and Frozen Orb both `set-element` to ice, which is
+  why a run wearing the pair reads as zero lightning and zero arcane. Take them off and the cards
+  come back. `card-cost` relics are the same shape applied to the price rather than the color.
 
 **The deck panel shows the *effective* deck** — what the run will actually be dealt, with every one
 of the three applied — which is the number to trust when reasoning about a live run, and is not the
@@ -1662,7 +1660,7 @@ relic that matches none of them is a new shape and needs its own argument.
 | **Enflamed / Frostbitten / Lithium / Granite / Unravelled** | `card-damage` + `attack-lands` | their color gains +0.1x DMG per landed hit of that color, and keeps it while worn |
 | **Echo** | `blow-formed` | the blow's first attack card lands three times: full, 2/3, 1/3 |
 | **Flurry / Rend / Aftershock** | `blow-formed` | every stab / slash / crush card lands **twice**, both at full DMG |
-| **Atrophy** | `deck-built` | every 3 AP attack is dealt as its 2 AP version |
+| **Atrophy** | `card-drawn` | every 3 AP attack is dealt as its 2 AP version |
 | **Onslaught** | `card-cost` + `fight-start` | every card 1 AP cheaper, and a quarter off your life — the drawback shape |
 | **Warm / Cold / Static / Dirty / Eerie** | `card-cost` | every card of that color costs 1 AP less — one per color |
 | **flip x20** | `card-drawn` | recolors a card of one color as another **as it is drawn** — one for each ordered pair; see below |
@@ -1757,9 +1755,10 @@ damage, the hand it forms, the card face — follows because the card genuinely 
 - **`Tier` is a new predicate and it reads the *declared* cost.** A discount relic cannot move a
   card out of Atrophy's reach, which would otherwise make two worn relics switch each other off
   in an order nobody chose.
-- **Two demoting relics do not chain.** `DemoteConcept` reads the card the run owns and takes the
-  deepest single step, exactly as flips read the original element. A relic wanting two rungs says
-  `Amount: 2`.
+- **Demotions chain, exactly as flips do** *(owner's call, 2026-09-27)*. A demotion and a flip are
+  one walk over the worn row — `combat.DealSteps` — and each ring reads the card the ring before it
+  left: the 3 AP demotion worn left of the 2 AP one deals a Skewer as a Jab, through Thrust, and a
+  flip in between recolors it on the way. Worn order decides, and the deal plays a beat per ring.
 - **Nothing measures it**, and this one is the most likely of the new relics to be badly priced:
   `tools/handodds` measures which hands a deck can reach, and Atrophy changes that deck.
 
@@ -1881,7 +1880,7 @@ rule may read that ID**; it is a handle for the screens.
   Fire Relic doubles fire cards and there are only so many, so Frostbite-and-friends is how a
   deck is bent toward the color a run has bought into. It is also how the *status* relics get
   fed.
-- **Flips compose, and the cascade is the point**. `combat.FlipSteps` is
+- **Flips compose, and the cascade is the point**. `combat.DealSteps` is
   the walk: each worn relic, in worn order, reads **what the flip before it left behind**. Frozen
   Lightning (lightning→ice) and Glacier (ice→earth) worn in that order deal a lightning card as
   earth, through ice, and a run wearing both holds no lightning and no ice at all.
@@ -1891,8 +1890,8 @@ rule may read that ID**; it is a handle for the screens.
   **What a player reads to keep track of it is the deck panel's alterations view**, which is the
   answer to "so what am I actually holding", and the deal on the combat screen, which plays a beat
   per ring so the cascade is watched rather than deduced — see `screens/combat_deal.go`.
-  **Worn order is load-bearing and the row cannot be reordered.** See `TestFlipsCompose` and
-  `TestFlipStepsNameEveryRingThatTouchedTheCard`.
+  **Worn order is load-bearing and the row cannot be reordered.** See `TestFlipsCompose`,
+  `TestDealStepsNameEveryRingThatTouchedTheCard` and `TestDemotionsAndFlipsChainInWornOrder`.
 - **A card may not take the cascade twice.** It chains *within* one draw and must not chain across
   two: a card that has been through the hand and the discard is wearing a color a relic made, so
   the draw pile holds cards as the run owns them and the discard is restored on its way back in.
@@ -2496,7 +2495,7 @@ separate grammars.
 ### A graft makes the left card the right card whole
 
 **"LEFT CARD BECOMES RIGHT CARD" is not a partial verb.** Everything the right card is travels:
-concept, element, form override, the essence-written cost and damage deltas, and the riders.
+concept, element, the essence-written cost and damage deltas, and the riders.
 Copying the concept alone would graft a fire Cut onto an ice Jab and produce an ice Cut — a card
 whose name says it became the right-hand card and whose color says it did not.
 
@@ -2790,11 +2789,15 @@ changed my card", and what separates them is what the *next* rune does.
   the middle of one, and the fight's piles were dealt before the copy existed — so a copy that went
   only into the run would not be playable until the *next* fight and would read as a dud. The copy
   is a new card with a new identity, arrives unselected, and `Session.Duplicated` is the handover.
-- **`form` is an override on the card, not a replacement of the concept.** A Brace told to be a
-  crush is still a Brace: it still shields, and it now counts as a crush when the hand is
-  matched. **A defend card is a legal target and that is the point** — it produces a card that
-  shields and matches on an attack axis, which nothing in the catalog does.
-  `combat.Card.FormOverride` is the field and `Card.Form` is the one chokepoint that reads it.
+- **`form` changes everything about the card except its element** *(owner's call, 2026-09-27)*.
+  The card becomes the concept on the new form's ladder at the same rung — a 2 AP slash told to be
+  a crush is a 2 AP crush, name, cost, picture and all. **It crosses the attack/defend line**: a
+  Block told to be a crush loses its shields and becomes a 2 AP crush attack in the same element,
+  and a Bash told to defend becomes a Block. **A rung the target ladder does not reach wraps round
+  it**, the way promote and demote wrap: the defenses stop at 3 AP, so a 4 AP attack told to
+  defend is a Flinch. What the card keeps is its own — its element, its identity, its upgrade, and
+  any cost or amount an essence already wrote onto it. The same rule serves the form essences.
+  `combat.Counterpart` is the walk.
 - **`stones` is the first thing in the game that rolls while it is being *spent*.** Every other
   draw decides what a shelf is offering and is a function of the fight; a run may carry three rock
   showers and spend all three in one fight, so the fight index alone would hand out the same three

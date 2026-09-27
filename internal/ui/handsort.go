@@ -31,7 +31,7 @@ type HandSort int
 
 const (
 	SortByCost HandSort = iota
-	SortByType
+	SortByForm
 	SortByElement
 )
 
@@ -67,8 +67,8 @@ const SortColumnGap = 12
 // **The labels are bare nouns** *(2026-09-04, owner's call)*. They were `$`, `T` and `E`, then
 // `Sort: Cost` and its two siblings — and the prefix went as soon as the three were one block,
 // because a block of three tabs is self-evidently one control and the word was then written three
-// times to say what the group is. `Form` is the axis the middle one actually sorts on; it was
-// called Type when the label was one letter.
+// times to say what the group is. `Form` is the axis the middle one sorts on: stab, slash, crush,
+// then defend.
 //
 // **They are set in capitals so the button draws them in the figure lettering** — the set is upper
 // case, and a label with a lower-case letter in it falls back to the font, which is how these three
@@ -81,7 +81,7 @@ var SortButtonSpecs = []struct {
 	Label string
 }{
 	{SortByCost, "COST"},
-	{SortByType, "FORM"},
+	{SortByForm, "FORM"},
 	{SortByElement, "ELEMENT"},
 }
 
@@ -168,18 +168,34 @@ func (t *SortTabs) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 // HandLess is the comparison each mode makes. Every one of them falls through to the same
 // secondary chain, so the modes differ only in what they put first.
-func HandLess(mode HandSort, a, b combat.Card) bool {
+//
+// **worn is the holder's relics, and cost is read through them** — `combat.CostWith`, the figure
+// the card's face prints and the AP bar charges. A card's own `Cost` is its printed cost before any
+// discount, so a row sorted on it puts a card showing 2 AP after one showing 3. Nil worn is a card
+// nobody is holding, which is its printed cost.
+func HandLess(mode HandSort, a, b combat.Card, worn []combat.WornRelic) bool {
 	switch mode {
-	case SortByType:
-		if ra, rb := categoryRank(a.Category()), categoryRank(b.Category()); ra != rb {
+	case SortByForm:
+		if ra, rb := formRank(a.Form()), formRank(b.Form()); ra != rb {
 			return ra < rb
 		}
 	case SortByElement:
-		if ra, rb := ElementRank(a.Element), ElementRank(b.Element); ra != rb {
+		if ra, rb := elementSortRank(a), elementSortRank(b); ra != rb {
 			return ra < rb
 		}
 	}
-	return costChainLess(a, b)
+	return costChainLess(a, b, worn)
+}
+
+// elementSortRank is where a card stands in the element sort: its element's rank, and **every
+// wildcard after all of them**. A wildcard counts as every element, so no one color's run of cards
+// is where it belongs; filed under the element it carries, it sits among the fires while its corner
+// mark says nothing about fire.
+func elementSortRank(c combat.Card) int {
+	if c.Wild(combat.AxisElement) {
+		return len(combat.AllElements) + 1
+	}
+	return ElementRank(c.Element)
 }
 
 // costChainLess is the default order, and the tail every other mode ends with: cheapest first,
@@ -190,8 +206,8 @@ func HandLess(mode HandSort, a, b combat.Card) bool {
 // for there is how much of a form they still hold; a hand is looked at to find what can be
 // afforded, so cost leads. Everything under that is the same order in both places, so scanning
 // a row of cards means the same thing wherever the row is.
-func costChainLess(a, b combat.Card) bool {
-	if ca, cb := a.Cost(), b.Cost(); ca != cb {
+func costChainLess(a, b combat.Card, worn []combat.WornRelic) bool {
+	if ca, cb := combat.CostWith(worn, a), combat.CostWith(worn, b); ca != cb {
 		return ca < cb
 	}
 	if ra, rb := formRank(a.Form()), formRank(b.Form()); ra != rb {
@@ -203,22 +219,6 @@ func costChainLess(a, b combat.Card) bool {
 	return ElementRank(a.Element) < ElementRank(b.Element)
 }
 
-// categoryRank is the order the type sort runs in: everything that attacks, then the plans.
-//
-// A function rather than the enum's own order, for the reason formRank is one — the enum is
-// grouped for the rules, and reading it here would tie how the hand is arranged to a rules
-// decision that has no reason to keep agreeing with it.
-func categoryRank(c combat.Category) int {
-	switch c {
-	case combat.CategoryAttack:
-		return 0
-	case combat.CategoryDefend:
-		return 1
-	default:
-		return 2
-	}
-}
-
 // ElementRank is the order the element sort runs in: fire, ice, lightning, earth, arcane, then the
 // colorless cards.
 //
@@ -226,7 +226,7 @@ func categoryRank(c combat.Category) int {
 // `combat.Basic` is the zero value because a card that names no element is a plain card — a
 // rules decision — but on screen the colorless cards are the plans, and the player is reading
 // the five colors to see what a mix is worth. So the run of colors leads and the drab tail
-// follows, which also puts the plans at the same end of the row as the type sort does.
+// follows, which also puts the plans at the same end of the row as the form sort does.
 func ElementRank(e combat.Element) int {
 	switch e {
 	case combat.Fire:
@@ -250,8 +250,8 @@ func (m HandSort) String() string {
 	switch m {
 	case SortByCost:
 		return "cost"
-	case SortByType:
-		return "type"
+	case SortByForm:
+		return "form"
 	case SortByElement:
 		return "element"
 	default:

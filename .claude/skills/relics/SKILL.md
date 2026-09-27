@@ -68,7 +68,7 @@ new one.
 
 ### `When` — the moments
 
-Every one has a seat that already exists. **Four of the eleven fire outside `internal/combat`**,
+Every one has a seat that already exists. **Several fire outside `internal/combat`**,
 which is what makes a relic a *run* concept rather than a combat one.
 
 | `When` | Package | Seat | Fires |
@@ -76,7 +76,6 @@ which is what makes a relic a *run* concept rather than a combat one.
 | `card-cost` | `combat` | `Card.Cost()` | per card, whenever a cost is asked for |
 | `card-damage` | `combat` | `Card.Damage()` | per card, inside each of its hits' card term |
 | `attack-lands` | `combat` | `throwHit` (hit.go) | **once per hit that connects**, matched against that hit's card |
-| `deck-built` | `session` | `session.FightDeck` | once, as the fight's draw pile is built out of the run's deck |
 | `card-drawn` | `screens` | `CombatScene.drawHand` | **per card, as it leaves the draw pile for the hand** |
 | `fight-start` | `session` | fight setup | once per fight |
 | `fight-won` | `session` | after the win | once per win |
@@ -86,25 +85,27 @@ which is what makes a relic a *run* concept rather than a combat one.
 | `turn-start` | `combat` | `playTurn` | once at the top of each of this duelist's own turns, **before the chill, the riders and both phases**. It has no card and no turn to read, so **a rule carrying any `If` is refused at registration** |
 | `essence-spent` | `session` | `Session.EssenceTargets` | as an essence is pointed at the deck — the reward offer, the shop's vial, one out of the satchel. **A question rather than an event**, the shape `prizes-dealt` has: it has no card and no turn, so **a rule carrying any `If` is refused at registration** |
 
-**Flips chain, in worn order, within one draw** *(owner's call, 2026-09-15)*. `combat.FlipSteps`
+**Flips and demotions chain, in worn order, within one draw** *(owner's call, 2026-09-15 and
+2026-09-27)*. They are one walk, `combat.DealSteps`, and it
 carries a running card through the worn list and each ring reads what the ring before it left, so a
 lightning card under Frozen Lightning worn left of Meltdown is dealt **fire** — two steps, and the
 screen gives each its own beat and its own relic toast. **Worn order decides the result**: swap
 those two and lightning stays lightning, because Meltdown reads the card before the other ring has
-touched it. `TestFlipsCompose` and `TestFlipStepsNameEveryRingThatTouchedTheCard` are the tripwires,
-and `session.AlteredAs` is the deck panel's preview of the same walk.
+touched it. `TestFlipsCompose`, `TestDealStepsNameEveryRingThatTouchedTheCard` and
+`TestDemotionsAndFlipsChainInWornOrder` are the tripwires, and `session.DrawnAs` is both the draw
+and the deck panel's preview of it.
 
 **What the cascade costs is that a card may only make one trip.** Every flip reads the *running*
 element, so a card handed back through `DrawnAs` would take a second cascade from wherever the first
-one left it — `screens.restoreToDeck` restores a discard to the color the run owns before folding it
+one left it — `screens.restoreToDeck` restores a discard to the card the run owns — color and concept — before folding it
 back into the draw pile, and the draw pile therefore holds cards as the run owns them.
 
 **`card-drawn` is the only moment a screen owns, and the invariant it costs is worth knowing**
-*(2026-08-24)*. A cascade runs once per card per draw, so **the draw pile has to hold cards in the
-colors the run owns**: `drawHand` restores a discarded card before folding it back in, and
+*(2026-08-24)*. A cascade runs once per card per draw, so **the draw pile has to hold cards as the
+run owns them**: `drawHand` restores a discarded card before folding it back in, and
 `session.DrawnAs` must never be handed a card that has already been drawn. Hand one back and it
-takes a second cascade from wherever the first left it, which is how a deck walks to one color over
-a long fight.
+takes a second cascade from wherever the first left it, which is how a deck walks to one color — or
+all the way down a ladder — over a long fight.
 
 **A drawn card does not remember what it was** *(owner's call, 2026-08-24)*. It carries the color it
 became and nothing else, so a later rule — a `card-damage` relic keyed on ice — matches the card in
@@ -170,7 +171,7 @@ not ignored.
 | `scale-damage` | `card-damage` | `Amount` percent | 200 is double |
 | `apply-status` | `attack-lands` | `Status` key | puts a status on the target |
 | `set-element` | `card-drawn` | `Element` | the flip: recolors a matching card as it is drawn |
-| `demote-card` | `deck-built` | `Amount` rungs | steps a matching attack **down its own form's ladder** — a 3 AP Skewer is dealt as a 2 AP Thrust. Walks `Neighbor`; a card with no rung below it is left alone |
+| `demote-card` | `card-drawn` | `Amount` rungs | steps a matching card **down its own form's ladder** — a 3 AP Skewer is dealt as a 2 AP Thrust. Walks `Neighbor`; a card with no rung below it is left alone |
 | `add-dmg` | `fight-start` | `Amount` | flat DMG for the fight |
 | `add-hp` | `fight-start` | `Amount` | flat HP for the fight |
 | `scale-hp` | `fight-start` | `Amount` percent | scales max life; **the one scaling verb meant to go below 100** — 75 takes a quarter off. Applied *after* every `add-hp`, and never below 1 life |
@@ -338,8 +339,8 @@ Reach for these first when an idea sounds too easy.
 | the status catalog and its lifecycle | `internal/combat/status.go`, `data/statuses.json` |
 | parsing `relics.json` into rules, and registering it | `internal/session/relic.go` |
 | what a run wears, and its accumulators | `session.Session` — `Wear`, `Worn`, `WornRelics`, `Grown` |
-| `deck-built` / `fight-start` / `fight-won` | `session.FightDeck`, `session.Equip`, `session.WonFight` |
-| `card-drawn` | `session.DrawnAs`, called per card by `screens.CombatScene.drawHand` |
+| `fight-start` / `fight-won` | `session.Equip`, `session.WonFight` |
+| `card-drawn` | `session.DrawnAs`, called per card by `screens.CombatScene.drawHand` — the flips and the demotions, one walk |
 | `prizes-dealt` | `session.Picks` and `session.PrizeVitae`, read by `postbattle.go` |
 | the row on screen | `internal/screens/combat_relics.go` — a lookup from worn key to record |
 | the whole catalog as pictures | `go run ./tools/relicsheet` — **grouped by rarity**, card, price, `Text` and rules side by side, and each tier's share of a shelf draw |

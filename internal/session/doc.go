@@ -51,12 +51,12 @@
 //   - tutorial.go, jump.go — the teaching run parked on the run it teaches, and putting a run
 //     somewhere it did not play its way to.
 //
-// # Four of the ten relic moments are answered here
+// # Three of the relic moments are answered here
 //
-// deck-built in FightDeck, fight-start in Equip, and fight-won in WonFight — which is also where
-// vitae propagates and where a growing relic takes its step. The fourth, card-drawn, is answered by
-// DrawnAs and *fired* by the combat screen, once per card as it deals one: the flip belongs to a run
-// and the draw pile belongs to a fight. The order matters and MECHANICS.md
+// fight-start in Equip, and fight-won in WonFight — which is also where vitae propagates and where
+// a growing relic takes its step. The third, card-drawn, is answered by DrawnAs and *fired* by the
+// combat screen, once per card as it deals one: the flips and demotions belong to a run and the draw
+// pile belongs to a fight. The order matters and MECHANICS.md
 // states it: propagation is interest on what the run walked out of the fight holding, not on what
 // the prize card is about to pay it.
 //

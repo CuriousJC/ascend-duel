@@ -10,7 +10,7 @@ import (
 // them not being.
 //
 // **The first version built the ring list in the order the cards happened to meet each relic**, on
-// the reasoning that `combat.FlipSteps` walks the worn row — true per card, and silent about the
+// the reasoning that `combat.DealSteps` walks the worn row — true per card, and silent about the
 // order across a hand. Deal an earth card before a lightning one and the third-worn relic takes
 // ring 0, so the row fires right to left.
 //
@@ -83,10 +83,7 @@ func TestTheCascadeFiresTheRingsInWornOrder(t *testing.T) {
 		combat.Earth: combat.Ice, combat.Fire: combat.Fire, combat.Lightning: combat.Ice,
 	}
 	for _, c := range pile {
-		got, ok := combat.FlipElement(gs.Run.WornRelics(), c)
-		if !ok {
-			got = c.Element
-		}
+		got := combat.DealtAs(gs.Run.WornRelics(), c).Element
 		if got != want[c.Element] {
 			t.Errorf("a %v card is dealt as %v, want %v", c.Element, got, want[c.Element])
 		}

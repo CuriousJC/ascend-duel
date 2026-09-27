@@ -71,9 +71,9 @@ type DeckContents struct {
 // OwnedContents is the panel between fights: the run's whole deck, none of it spent, priced by
 // the relics the player is wearing.
 //
-// **It reads `Session.Deck` rather than `FightDeck`**, which is the difference between what you
-// own and what a flip relic would deal you next fight. This panel answers the first question — it
-// is what an essence is about to edit and what a relic is being bought against.
+// **It reads `Session.Deck`**, what you own rather than what a flip or a demotion would deal you
+// next fight. This panel answers the first question — it is what an essence is about to edit and
+// what a relic is being bought against.
 func OwnedContents(gs *state.GlobalState) DeckContents {
 	d := DeckContents{Run: gs.Run}
 	if gs.Run != nil {
@@ -113,7 +113,7 @@ func (d DeckContents) faceOf(c combat.Card, unaltered bool) combat.Card {
 	if unaltered || d.Run == nil {
 		return owned
 	}
-	return d.Run.AlteredAs(owned)
+	return d.Run.DrawnAs(owned)
 }
 
 // DeckToggle is the deck panel behind a button: the shared modal chrome, plus the one thing this

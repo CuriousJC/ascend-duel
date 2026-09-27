@@ -21,6 +21,7 @@ package combat
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -334,33 +335,50 @@ func PlayerConcepts() []ConceptID {
 // deliberate: an essence that cheapened a Bash must not thereby turn it into a Jab.
 func (c Concept) Tier() int { return c.Cost }
 
-// Counterpart is the concept standing on another form's ladder at the same rung as this one —
-// a Slice asked for crush answers Bash, because both are the third rung of their form.
+// Counterpart is what a card becomes when it is told to be another form: the concept on that
+// form's ladder at the same rung — a Slice asked for crush answers Bash, because both are the 2 AP
+// rung of their form.
 //
-// **It is Neighbor's scan sideways instead of up**, over the same registry and by the same two
-// keys: the tier is the declared cost, so a card cheapened by an essence does not slide down a
-// ladder, and the verb has to match. A form with no ladder, or a rung that form does not reach,
-// reports false rather than guessing.
+// **It crosses the attack/defend line and the card becomes wholly the other thing.** A Brace told to
+// be a crush is a Thump: it loses its shields and hits. The concept is replaced, so the name, the
+// cost, the verb and the picture all follow; what a caller keeps is the card's own — its element,
+// its identity and whatever was done to that one card.
 //
-// **The verb match is what makes a defense answer nothing, and that is the rule rather than a gap**
-// *(owner's call, 2026-09-16)*. A Brace told to be a crush is still a Brace: it raises shields, and
-// the crush ladder is four attacks — so the nearest thing to draw would be a figure swinging a club
-// on a card that hits nobody. A defense keeps its own picture, and what changed about it is said by
-// the corner mark alone.
+// **A rung the target ladder does not reach wraps round it**, the way an essence's promote wraps:
+// the defenses stop at 3 AP, so a 4 AP Impale told to defend is a Flinch — the rung above Guard,
+// read round the ring. Nothing is refused, so a pick is never a card greyed out under the cursor.
 //
-// **Its one caller is the drawing** *(owner's call, 2026-09-16)*. A form override changes what a
-// card counts as and not what it is, so nothing about a round reads this; what it answers is which
-// picture a card told to be a crush should show, since the corner mark had gone over to the club
-// while the art still held a sabre.
+// **The rung is the declared cost**, like Neighbor's, so a card an essence cheapened does not slide
+// down the ladder on the way across. Asking for the form a card already has answers the card
+// itself: a wasted pick, and the player's to waste.
+//
+// A form with no ladder — `FormNone`, which every enemy card is — reports false.
 func Counterpart(id ConceptID, form Form) (ConceptID, bool) {
 	from := ConceptOf(id)
-	if form == FormNone || from.Form == FormNone || form == from.Form {
+	if form == FormNone || from.Form == FormNone {
 		return NoConcept, false
 	}
+	if form == from.Form {
+		return id, true
+	}
+
+	// The rungs the target form stands on, cheapest first, and the one this card lands on. A rung
+	// holding two concepts answers the first registered, so the choice is a fact about the catalog
+	// rather than about the order a map was walked.
+	var tiers []int
+	for other := range registry {
+		if c := registry[other]; c.Form == form && !slices.Contains(tiers, c.Tier()) {
+			tiers = append(tiers, c.Tier())
+		}
+	}
+	if len(tiers) == 0 {
+		return NoConcept, false
+	}
+	slices.Sort(tiers)
+	want := tiers[from.Tier()%len(tiers)]
 
 	for other := range registry {
-		c := registry[other]
-		if c.Form == form && c.Verb == from.Verb && c.Tier() == from.Tier() {
+		if c := registry[other]; c.Form == form && c.Tier() == want {
 			return ConceptID(other), true
 		}
 	}

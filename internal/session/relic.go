@@ -2,14 +2,14 @@ package session
 
 // Relics: the catalog, what the run is wearing, and the moments that fire outside combat.
 //
-// **`relics.json` is parsed here for the reason the essences are** — a relic belongs to a *run*. Three of
-// its ten moments are `deck-built`, `fight-start` and `fight-won`, none of which happen inside
+// **`relics.json` is parsed here for the reason the essences are** — a relic belongs to a *run*. Two
+// of its moments are `fight-start` and `fight-won`, neither of which happens inside
 // `internal/combat` at all, and the accumulator a growing relic carries has to survive a fight. This
 // package is what survives one.
 //
-// **A fourth, `card-drawn`, is fired by a screen and answered here.** The flip belongs to a run and
-// the draw pile belongs to a fight, so `DrawnAs` is what the combat screen calls once per card as it
-// deals one. See combat.MomentCardDrawn.
+// **A third, `card-drawn`, is fired by a screen and answered here.** The flips and demotions belong
+// to a run and the draw pile belongs to a fight, so `DrawnAs` is what the combat screen calls once
+// per card as it deals one. See combat.MomentCardDrawn.
 //
 // **What crosses the edge is a rules type, never a record.** `data.RelicData` holds an art key and a
 // long-press line; `combat.RegisterRelic` takes a key, a name and `[]combat.RelicRule`. So the engine
@@ -487,90 +487,29 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	return s.equipStones(d)
 }
 
-// FightDeck is the draw pile this fight opens with: every card the run owns, with every
-// `deck-built` rule applied.
-//
-// **It is the demotions and nothing else as of 2026-08-24.** The element flip used to be applied
-// here too and now fires per card at `card-drawn` — see combat.MomentCardDrawn for why. The cards
-// a fight ends up playing are unchanged; what changed is that this pile holds them in the colors
-// the run owns, and the flip lands on the way into the hand.
-//
-// **The stored deck is untouched.** Each card is read as the run owns it, so two demoting relics
-// land on their own sources rather than walking one card two rungs between them, and a relic bought
-// mid-run applies from the next fight without rewriting anything.
-//
-// **Identity survives**, which is what lets the screen put a drawn card back the way it found it
-// when the discard is reshuffled: a card here is the run's card with its concept possibly stepped
-// down, carrying the same ID.
-func (s *Session) FightDeck() []combat.Card {
-	deck := s.Deck()
-
-	worn := s.WornRelics()
-	if len(worn) == 0 {
-		return deck
-	}
-
-	for i, card := range deck {
-		if id, demoted := combat.DemoteConcept(worn, card); demoted {
-			deck[i].Concept = id
-		}
-	}
-	return deck
-}
-
-// AlteredAs is a card the run owns, shown as the relics will actually hand it over: the
-// `deck-built` demotion and the `card-drawn` flip, both read off the owned card.
-//
-// **It is a preview, and the only caller is the deck panel.** Nothing in a fight goes through it —
-// the demotion is applied once as the draw pile is built and the flip once as a card is drawn, each
-// at its own moment, by the code that owns that moment. This is what those two would produce, asked
-// ahead of time, so that a player can see the deck they are about to be dealt rather than the list
-// they happen to own.
-//
-// **The card handed in must be the run's own.** Both verbs read the card as the run owns it, so one
-// that has already been through a draw would be demoted twice and would take the flip cascade from
-// wherever its last trip through left it.
-func (s *Session) AlteredAs(c combat.Card) combat.Card {
-	worn := s.WornRelics()
-	if len(worn) == 0 {
-		return c
-	}
-
-	out := c
-	if id, demoted := combat.DemoteConcept(worn, c); demoted {
-		out.Concept = id
-	}
-	if e, flipped := combat.FlipElement(worn, c); flipped {
-		out.Element = e
-	}
-	return out
-}
-
-// DrawnAs is what a card is dealt as: the color the worn flips make it, or the card unchanged
-// when none of them match it.
+// DrawnAs is what a card is dealt as: every worn flip and demotion walked over it, or the card
+// unchanged when none of them match it.
 //
 // **It is the `card-drawn` moment, and the run is where it lives** because the fight's piles are a
-// screen's and the worn relics are the run's.
+// screen's and the worn relics are the run's. The deck panel asks it too, of a card the player owns,
+// to show the deck they are about to be dealt rather than the list they happen to hold.
 //
-// **The caller passes the card as the run owns it.** The flips chain within one call — see
-// combat.FlipSteps — so a card handed back after a trip through here would take a second cascade
-// from wherever the first one left it. screens.restoreToDeck is what keeps that from happening
-// when the discard is folded back into the draw pile.
+// **The caller passes the card as the run owns it.** The rings chain within one call — see
+// combat.DealSteps — so a card handed back after a trip through here would take a second walk from
+// wherever the first one left it. screens.restoreToDeck is what keeps that from happening when the
+// discard is folded back into the draw pile.
 func (s *Session) DrawnAs(c combat.Card) combat.Card {
-	if e, flipped := combat.FlipElement(s.WornRelics(), c); flipped {
-		c.Element = e
-	}
-	return c
+	return combat.DealtAs(s.WornRelics(), c)
 }
 
-// FlipStepsFor is the cascade a card goes through on its way into the hand: one entry per worn ring
-// that recolors it, in worn order.
+// DealStepsFor is the cascade a card goes through on its way into the hand: one entry per worn ring
+// that changes it, in worn order.
 //
 // **DrawnAs is the end of this walk and this is the whole of it**, which is what the combat screen's
 // deal needs — a card dealt under two rings changes twice, and a beat per ring is how the player
 // sees which relic did which. See screens/combat_deal.go.
-func (s *Session) FlipStepsFor(c combat.Card) []combat.FlipStep {
-	return combat.FlipSteps(s.WornRelics(), c)
+func (s *Session) DealStepsFor(c combat.Card) []combat.DealStep {
+	return combat.DealSteps(s.WornRelics(), c)
 }
 
 // Picks is how many prizes the post-battle screen offers, at the `prizes-dealt` moment. One, plus

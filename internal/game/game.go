@@ -202,6 +202,18 @@ func (g *Game) update() error {
 
 	scene := g.scene()
 
+	// One-shot init on entering a screen. Doing it here rather than inside each
+	// scene's Update means no scene has to remember the NewScreen dance.
+	//
+	// **Before any overlay takes the frame, never behind one.** Draw skips every frame while a screen
+	// is waiting for its Init, so an overlay that returned first would hold the Init off and be
+	// skipped along with everything else — a black window with an invisible toast waiting for a
+	// click. A win that earns an achievement raises the toast on the very tick it changes screen.
+	if g.GlobalState.NewScreen {
+		scene.Init(g.GlobalState)
+		g.GlobalState.NewScreen = false
+	}
+
 	// **The ledger owns the frame while it is up, and the scene is not updated at all.** It is a
 	// panel over every screen rather than one screen's dialog, so there is no scene to set
 	// state.ModalOpen and no scene that could be trusted to go inert for it. What that costs is
@@ -238,13 +250,6 @@ func (g *Game) update() error {
 		g.GlobalState.InputGated = false
 		g.ledger.Update(g.GlobalState)
 		return nil
-	}
-
-	// One-shot init on entering a screen. Doing it here rather than inside each
-	// scene's Update means no scene has to remember the NewScreen dance.
-	if g.GlobalState.NewScreen {
-		scene.Init(g.GlobalState)
-		g.GlobalState.NewScreen = false
 	}
 
 	// Cleared here and re-asserted by whichever scene actually has a dialog up, so a screen

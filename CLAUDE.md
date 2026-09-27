@@ -106,6 +106,7 @@ skill that does not exist.
 | [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn relic |
 | [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
 | [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
+| [`achievements`](.claude/skills/achievements/SKILL.md) | adding or changing an achievement, a moment, a counter or an unlock, adding any new kind of progress the profile keeps, or touching `internal/screens/achieve.go` — a chosen-seed run must progress nothing |
 | [`bug-hunter`](.claude/skills/bug-hunter/SKILL.md) | any bug the owner found while playing — before diagnosing it, before fixing it, and before authoring a scenario record to reproduce it |
 | [`audit`](.claude/skills/audit/SKILL.md) | the milestone pass — the owner asking for an audit, a refactor sweep or a health check — and before any refactor that crosses more than one package |
 
@@ -695,8 +696,10 @@ These apply everywhere, the combat screen included. The pointer vocabulary is:
   that does something no visible control does is forbidden**, and so is anything that makes the
   keyboard *required*: a shortcut is a faster way to reach a control a player could always have
   clicked. A player who never touches the keyboard misses nothing.
-- **One typed-text field in the whole game** — entering a seed to replay a run. Nothing
-  else anywhere accepts typed input.
+- **Nothing in the game accepts typed input.** Even a run code is entered by clicking: New Run
+  opens six wheels, one per character, each turned by an arrow above and below it —
+  `internal/ui/seeddialog.go`. A wheel only lands on a character `seeds.Code` emits, so there
+  is no code to refuse, and a focus ring can walk every arrow.
 
 **No right click, ever.** There is no context menu and no secondary action. Anything
 that feels like it wants one needs a different design. **A gamepad's spare face buttons are not a
@@ -939,9 +942,9 @@ changing cards where they stand, mid-fight.
   it.
 - **ebitenui was evaluated and declined.** Everything the game needs is a *game* widget,
   which is where general-purpose toolkits are weakest, and a toolkit is one more dependency
-  to carry. **The one trigger for revisiting is
-  the seed text field** — a text input with a caret, selection and clipboard is the single
-  widget genuinely cheaper to take than to build.
+  to carry. **The one trigger for revisiting is a text field** — a text input with a caret,
+  selection and clipboard is the single widget genuinely cheaper to take than to build, and the
+  game has none: the run code is entered on wheels.
 
 The action box is a *game* widget, not a UI widget: draggable action cards with live
 action-point validation. General-purpose toolkits are weakest at exactly that, so

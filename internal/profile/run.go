@@ -79,6 +79,11 @@ type RunSnapshot struct {
 	DMGBonus  int `json:"dmgBonus,omitempty"`
 	LifeBonus int `json:"lifeBonus,omitempty"`
 
+	// SeedChosen says the player entered this run's code rather than being dealt a rolled one. It is
+	// kept with the run because a chosen seed is a journey someone could have looked up in advance,
+	// and whatever the game decides to withhold from one has to still know after a resume.
+	SeedChosen bool `json:"seedChosen,omitempty"`
+
 	// RoundLimit is how many rounds a fight of this run gets before the clock kills the duelist.
 	//
 	// **Zero is not "no clock" here, it is an older save.** A snapshot written before the limit

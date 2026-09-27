@@ -157,31 +157,76 @@ func TestContinueIsDeadWithNothingToContinue(t *testing.T) {
 	}
 }
 
-// TestNewRunOnlyAsksWhenThereIsSomethingToLose is the courtesy half of the confirm. A player on a
-// clean install pressing New Run gets a run, not a question about a journey they have never taken.
-func TestNewRunOnlyAsksWhenThereIsSomethingToLose(t *testing.T) {
+// TestNewRunOnlyWarnsWhenThereIsSomethingToLose is the courtesy half of the new-run dialog. New Run
+// always opens it, because that is where the run code is chosen; a player on a clean install is not
+// told a journey they have never taken will be lost.
+func TestNewRunOnlyWarnsWhenThereIsSomethingToLose(t *testing.T) {
 	gs := saveState(t)
 	scene := &TitleScene{}
 	scene.Init(gs)
 
 	gs.Resumed = false
 	scene.startNewRun(gs)
-	if scene.confirm.IsOpen() {
-		t.Error("a run nobody has entered is not worth a dialog")
+	if !scene.newRun.IsOpen() {
+		t.Fatal("New Run must open the new-run dialog")
 	}
-	if gs.ActiveScreen != state.Combat {
-		t.Errorf("New Run with nothing to lose should start the run, got %v", gs.ActiveScreen)
+	if scene.newRun.Warns() {
+		t.Error("a run nobody has entered is not worth a warning")
 	}
 
 	scene.Init(gs)
-	gs.ActiveScreen = state.Title
 	gs.Resumed = true
 	scene.startNewRun(gs)
-	if !scene.confirm.IsOpen() {
-		t.Error("New Run over a resumed journey must ask first")
+	if !scene.newRun.Warns() {
+		t.Error("New Run over a resumed journey must say it will be lost")
 	}
 	if gs.ActiveScreen != state.Title {
-		t.Error("asking the question must not also answer it")
+		t.Error("opening the dialog must not also start the run")
+	}
+}
+
+// TestOnlyATurnedWheelIsAChosenSeed is what the run records as started on a code the player entered.
+// The rolled code is the ordinary new run, and so is a wheel turned and turned back; RANDOM is a
+// fresh roll and not a choice either.
+func TestOnlyATurnedWheelIsAChosenSeed(t *testing.T) {
+	gs := saveState(t)
+	scene := &TitleScene{}
+	scene.Init(gs)
+	scene.startNewRun(gs)
+	d := &scene.newRun
+
+	if d.Chosen() {
+		t.Error("the code the dialog opened on is not a chosen one")
+	}
+	d.Turn(3, 1)
+	if !d.Chosen() {
+		t.Error("a turned wheel is a chosen code")
+	}
+	d.Turn(3, -1)
+	if d.Chosen() {
+		t.Error("a wheel turned back to the rolled code is the rolled run")
+	}
+}
+
+// TestAChosenSeedIsTheRunsSeedAndSaysSo starts a run the way START does and reads back both halves:
+// the journey is on the code the wheels read, and the run knows it was chosen.
+func TestAChosenSeedIsTheRunsSeedAndSaysSo(t *testing.T) {
+	gs := saveState(t)
+	seed, err := seeds.Parse("M9079R")
+	if err != nil {
+		t.Fatal(err)
+	}
+	NewRunOn(gs, seed, true)
+	if gs.RunSeed != seed {
+		t.Errorf("the run started on %s, want M9079R", seeds.Code(gs.RunSeed))
+	}
+	if !gs.Run.SeedChosen() {
+		t.Error("a run started on a chosen code must say so")
+	}
+
+	NewRun(gs)
+	if gs.Run.SeedChosen() {
+		t.Error("a rolled run must not say its seed was chosen")
 	}
 }
 

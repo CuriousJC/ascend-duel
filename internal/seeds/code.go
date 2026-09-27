@@ -64,9 +64,10 @@ var Space = func() int64 {
 	return n
 }()
 
-// ErrBadCode is what Parse returns for anything that is not a code. One error rather than a set,
-// because the only caller that can act on it is a text field, and every reason it can fail comes
-// out as the same sentence to the player.
+// ErrBadCode is what Parse returns for anything that is not a code. One error rather than a set:
+// the codes Parse reads come off a save file, a pin or a script, and every reason one can fail is
+// the same fact about it. A player never meets it — the new-run dialog's wheels only land on
+// characters Code emits.
 var ErrBadCode = errors.New("seeds: a run code is six letters or digits, and has no I, L, O or U in it")
 
 // Normalize folds any int64 into the code space, so the clock — or any other wide number — names
@@ -96,6 +97,23 @@ func Code(runSeed int64) string {
 		runSeed /= Base
 	}
 	return string(out)
+}
+
+// Step turns one character of a code through the alphabet — delta places on, wrapping at either
+// end — and returns the code with that one character changed. It is what a wheel on the new-run
+// dialog does, so a code is entered by clicking rather than by typing: every character a click
+// reaches is one Code can emit, so a stepped code always parses. A position outside the code, or
+// a code that is not one, comes back unchanged.
+func Step(code string, pos, delta int) string {
+	if len(code) != CodeLen || pos < 0 || pos >= CodeLen {
+		return code
+	}
+	d := strings.IndexByte(alphabet, code[pos])
+	if d < 0 {
+		return code
+	}
+	d = int((int64(d) + int64(delta)%Base + Base) % Base)
+	return code[:pos] + string(alphabet[d]) + code[pos+1:]
 }
 
 // Parse reads a code back to a run seed. Case-insensitive; `O` folds to `0` and `I`/`L` fold to

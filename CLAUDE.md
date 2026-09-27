@@ -1828,9 +1828,10 @@ go and what may never happen to them.
   `advanceRun` at each phase transition, the achievement is awarded where a fight is won, and the
   tutorial is marked seen where the overlay ends. Persistence is deliberately not something a scene
   does.
-- **The climb is not saved — it is rebuilt from the run code.** True only while the fight order is a
-  function of the seed; `TestTheClimbIsRebuiltFromTheSeed` fails the day the room choice makes it a
-  decision, which is when it has to go into the snapshot.
+- **The climb's offers are rebuilt from the run code; its picks are saved.** What every floor
+  offers is a function of the seed, so it is not stored. Which portal the player walked through is a
+  choice, so `RunSnapshot.Portals` writes it down by motif key and a resume refuses one its floor
+  never offered — `TestThePortalsTakenSurviveAResume`.
 - **A run is snapshotted between phases, never inside a duel.** `session.Session` is snapshotted and
   is still not *replayable* — the replay story is a seed plus a choice log, because a deck edit is a
   choice. Resume wants state, replay wants a path; do not let a snapshot be used as a replay.
@@ -2244,13 +2245,17 @@ picking the active scene out of one registry. `internal/ui/scene.go` is the `Sce
 `screens.advance`; nothing names its successor.
 
 ```
-fight  →  reward  →  shop  →  choice  →  fight ...
+fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only after a portal room)
 ```
 
 - **`session.Phase` is the station** — see `internal/session/flow.go`, which holds the order.
 - **`screens.phaseScreens` is which scene draws it** — see `internal/screens/flow.go`. A phase with
   no scene registered is walked past rather than drawn blank, which is what lets the loop name
-  a station before it has a screen. The room choice is the one being walked past today.
+  a station before it has a screen.
+- **A station can also be walked past because it does not apply.** `session.Advance` skips the
+  portal unless `Session.PortalDue` — the room just won was a portal room and the floor ahead offers
+  a choice — so after an outer or an inner room the shop leads straight to the next fight. See
+  `internal/screens/portal.go` and MECHANICS.md §The portal.
 - **Adding a screen is therefore three edits**: a phase in `session/flow.go`, an entry in
   `screens/flow.go`, and an entry in the registry in `internal/game`. No existing scene changes.
 - **`screens.enterRun` is the same table read at the door**. Continue puts the player

@@ -61,7 +61,14 @@ type Session struct {
 	// Nil on a run built by New, which is a test's run; a real one comes from Start. See climb.go.
 	climb *pyramid.Pyramid
 
-	// phase is where in the loop the run is: the fight, the reward, the shop, the room choice.
+	// portals is the motif the run walked through at each portal, in floor order: the first entry is
+	// floor two, since floor one is entered without one. **A motif key, not an offer's position** —
+	// a floor's offers are distinct motifs, so the key names the offer and still means the same one
+	// in a file written by another build. An empty entry is a portal not yet taken, which reads as
+	// that floor's first offer. See climb.go.
+	portals []string
+
+	// phase is where in the loop the run is: the fight, the reward, the shop, the portal.
 	// See flow.go, which is the one place that moves it.
 	phase Phase
 

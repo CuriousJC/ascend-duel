@@ -9,6 +9,14 @@
     "earth": "green coloring with an rock crest",
     "arcane": "purple coloring with a purple gem crest"
   },
+  "Text": "Dragons and their kin: long necks, horns and wings. The small ones are the easy ones.",
+  "ElementText": {
+    "fire": "Red scales and fire in the throat.",
+    "ice": "Blue scales and breath that freezes.",
+    "lightning": "Yellow scales, and the storm answers when they call.",
+    "earth": "Green scales, and hides like mountainside.",
+    "arcane": "Purple scales set with gems. Old, clever and patient."
+  },
   "ValidFloors": [5, 8],
   "Records": [
     {

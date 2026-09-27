@@ -9,6 +9,14 @@
     "earth": "Moss and lichen have grown into the cloth, bark has thickened over the forearms, and root and green thread run through the hair. The wood of their weapons is still alive.",
     "arcane": "Violet light along every silver line and inside the eyes, and the outline of the figure is faintly doubled, as though it is standing slightly to one side of itself."
   },
+  "Text": "Tall, still and unhurried, their gear grown rather than forged. They have been waiting longer than you have been alive.",
+  "ElementText": {
+    "fire": "Autumn-burnt and smoking. Their bows are lit along the grain.",
+    "ice": "Rimed and bloodless, with breath like frost.",
+    "lightning": "Their hair floats, and lightning runs the length of every arrow.",
+    "earth": "Moss-grown and bark-skinned. Their weapons are still alive.",
+    "arcane": "Violet-eyed and faintly doubled, as if standing just beside themselves."
+  },
   "ValidFloors": [
     3,
     8

@@ -36,6 +36,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		Seed:       seeds.Code(runSeed),
 		Fight:      s.fight,
 		Phase:      s.phase.String(),
+		Portals:    s.Portals(),
 		Vitae:      s.vitae,
 		LifeLeft:   s.lifeLeft,
 		Hurt:       s.hurt,
@@ -315,6 +316,23 @@ func Resume(motifs map[string]data.MotifData, tower data.TowerData, snap *profil
 	}
 	s.climb = newClimb(motifs, tower, runSeed)
 	s.ledger = resumeLedger(snap.Ledger)
+
+	// **A portal naming a realm its floor never offered is refused**, on the terms a relic the
+	// catalog no longer holds is: a run resumed onto a different floor than the one it chose is a
+	// run the player would have to work out had changed.
+	for i, key := range snap.Portals {
+		if key == "" {
+			continue
+		}
+		floor, found := i+2, false
+		for _, f := range s.climb.ChoicesAt(floor) {
+			found = found || f.Motif == key
+		}
+		if !found {
+			return nil, 0, fmt.Errorf("floor %d was entered through %q, which this run code does not offer there", floor, key)
+		}
+	}
+	s.portals = append([]string(nil), snap.Portals...)
 
 	for _, key := range snap.Worn {
 		if !s.Wear(key) {

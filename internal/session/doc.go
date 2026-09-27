@@ -27,8 +27,8 @@
 //     caller holds it.
 //   - deck.go — the list a run opens with, read out of data/duelist_cards.json.
 //   - flow.go — where the run is in its loop, and the one place that moves it on.
-//   - climb.go — who stands in each room, over internal/pyramid. This is what the room choice will
-//     write to.
+//   - climb.go — who stands in each room, over internal/pyramid, and which portal the run walked
+//     through on each floor.
 //   - clock.go, life.go — the round limit, and what the climb does to the body between fights.
 //
 // What a choice between two fights can change — holdings.go is the collective noun:

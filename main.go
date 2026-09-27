@@ -405,6 +405,13 @@ func startScenarioAt(g *game.Game) {
 	case "shop":
 		gs.Run.SetPhase(session.PhaseShop)
 		gs.ActiveScreen = state.Shop
+	case "portal":
+		if !gs.Run.PortalDue() {
+			log.Fatalf("scenario %s: room %d is not in front of a portal — a portal opens onto the first room of floor two or above",
+				scenario.Name(), scenario.Fight())
+		}
+		gs.Run.SetPhase(session.PhasePortal)
+		gs.ActiveScreen = state.Portal
 	default:
 		gs.Run.SetPhase(session.PhaseFight)
 		gs.ActiveScreen = state.Combat

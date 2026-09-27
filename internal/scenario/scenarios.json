@@ -2571,5 +2571,16 @@
     "Fight": 3,
     "Vitae": 40,
     "Life": 30
+  },
+  {
+    "ScenarioRecord": "portal-choice",
+    "Note": "The portal a boss opens: two realms, each a motif in an element, and the one the duelist walks into. Opens after the floor 1 portal room, so the choice is floor 2. Each panel is the motif's Text and its ElementText for that element, straight off data/motifs/<motif>/motif.json, and a line nobody has written reads TBD. Pick one and the next fight is that realm's outer chamber. The seed is pinned, so the same two realms are offered every launch.",
+    "Relics": [],
+    "Hand": [],
+    "Seed": "00H602",
+    "Screen": "portal",
+    "Fight": 3,
+    "Vitae": 0,
+    "Life": 0
   }
 ]

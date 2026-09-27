@@ -3,8 +3,7 @@ package session
 import "testing"
 
 // The run's loop. It is arithmetic over a small list, so it is checkable without anything else
-// being built — which matters, because two of the four stations have no scene yet and the loop has
-// to be right before either arrives.
+// being built.
 
 func TestARunOpensOnTheFight(t *testing.T) {
 	// The first thing that happens in a run is a duel. A run that opened on the reward would be
@@ -18,11 +17,12 @@ func TestARunOpensOnTheFight(t *testing.T) {
 func TestTheLoopComesBackRoundToTheFight(t *testing.T) {
 	// **The whole point of a loop is that it closes.** Walking every station once has to land back
 	// where it started, or the run stops after one lap in whichever station forgot its successor —
-	// which is exactly the failure the hardcoded jumps could produce.
+	// which is exactly the failure the hardcoded jumps could produce. An ordinary room's lap has no
+	// portal in it, so it is one station shorter.
 	run := New(testDeck())
 	start := run.Phase()
 
-	for i := 0; i < PhaseCount; i++ {
+	for i := 0; i < PhaseCount-1; i++ {
 		run.Advance()
 	}
 	if run.Phase() != start {
@@ -30,10 +30,30 @@ func TestTheLoopComesBackRoundToTheFight(t *testing.T) {
 	}
 }
 
-func TestEveryStationIsVisitedExactlyOncePerLap(t *testing.T) {
+func TestThePortalIsWalkedPastAfterAnOrdinaryRoom(t *testing.T) {
+	// The portal is a choice of realm, and only a portal room opens one. Standing at it after an
+	// outer or an inner room would be a choice with nothing to choose.
+	motifs, tower := rosters(t)
+	run := Start(motifs, tower, 1)
+	for fight := 0; fight < 2; fight++ {
+		run.WonFight(50, 50)
+		run.Advance() // reward
+		run.Advance() // shop
+		run.Advance()
+		if run.Phase() != PhaseFight {
+			t.Fatalf("after room %d the shop led to %s, not the fight", fight, run.Phase())
+		}
+	}
+}
+
+func TestEveryStationIsVisitedExactlyOncePerPortalLap(t *testing.T) {
 	// A station left out of the order is a screen the player never sees; a station in it twice is
-	// one they see twice. Neither fails anywhere else.
-	run := New(testDeck())
+	// one they see twice. Neither fails anywhere else. The lap after a portal room is the one that
+	// stands at all four.
+	motifs, tower := rosters(t)
+	run := Start(motifs, tower, 1)
+	run.JumpTo(2, 0, 50, 50)
+	run.WonFight(50, 50)
 	seen := map[Phase]int{run.Phase(): 1}
 
 	for i := 0; i < PhaseCount-1; i++ {

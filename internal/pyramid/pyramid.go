@@ -17,12 +17,13 @@ import (
 // dealt as that element, so a fire goblin floor is three goblins in fire and the player can plan
 // against what they walked into.
 type Pyramid struct {
-	// choices is what each floor could have been, the taken theme first.
+	// choices is what each floor is offered as: one theme on floor one, where a run starts, and a
+	// portal's worth on every floor above it.
 	//
-	// **Rolled now although nothing offers them yet.** The room choice is a station the run loop
-	// already names, and a climb that rolled one theme per floor today would deal a different
-	// tower the day a second is offered — every written-down run code with it. Rolling the set
-	// and taking the first costs one draw per candidate and keeps the seed meaning what it means.
+	// **Every one is rolled up front and every one is spent.** A motif offered on a floor is struck
+	// from every floor above it whether or not the player walks through its portal, so what a floor
+	// offers is a function of the run code alone and never of an earlier pick. Which offer was taken
+	// is the run's — see internal/session — and this stays a pure function of the seed.
 	choices [][]Floor
 }
 
@@ -36,14 +37,6 @@ type Floor struct {
 	Rooms [FightsPerFloor]string
 }
 
-// ThemeChoices is how many themes a floor is rolled with.
-//
-// **Two, because a choice with one option is not one.** Only the first is fought today; the rest
-// are what the room-choice screen will offer. A floor with fewer motifs left than this gets what
-// there is rather than failing — a choice narrowing near the top of the tower is a tower running
-// out of kinds of monster, which is a content question rather than a broken run.
-const ThemeChoices = 2
-
 // New builds a run's climb from the loaded motifs, the tower's own shape, and a seeded source.
 //
 // It takes the source rather than reaching for one, so the caller owns which stream is being
@@ -51,10 +44,11 @@ const ThemeChoices = 2
 // fixed seed. Never `rand.Shuffle` — the package-level one draws from a global shared with every
 // other caller and would make a run unreproducible.
 //
-// **A motif is never fought twice in one run.** Each floor's taken theme is struck off before the
-// next floor is rolled, which is what makes a climb a tour of the roster rather than a shuffle of
-// it. Running out is a panic at build time rather than an empty room at play time — see
-// data.MustBeClimbable, which refuses a roster this could fail on long before a run starts.
+// **A motif is never offered twice in one run.** Each floor's offers are struck off before the next
+// floor is rolled, and **a draw is only kept if the floors above can still be filled without it** —
+// data.FillsSlots is asked after every pick, so a motif a later floor depends on is never spent on
+// an earlier one that had alternatives. data.MustBeClimbable refuses, at load, a roster where no
+// order of draws could work, so the panic below is unreachable on a loaded catalog.
 func New(motifs map[string]data.MotifData, tower data.TowerData, rng *rand.Rand) *Pyramid {
 	order := data.MotifOrder(motifs)
 	used := map[string]bool{}
@@ -67,22 +61,38 @@ func New(motifs map[string]data.MotifData, tower data.TowerData, rng *rand.Rand)
 				free = append(free, key)
 			}
 		}
-		if len(free) == 0 {
-			panic("pyramid: floor " + strconv.Itoa(floor) + " has no motif left to theme it")
-		}
 
-		// Shuffled rather than picked by index, so the candidates are a sample of what is left
-		// rather than the front of a sorted list.
+		// Shuffled rather than picked by index, so the offers are a sample of what is left rather
+		// than the front of a sorted list.
 		rng.Shuffle(len(free), func(i, j int) { free[i], free[j] = free[j], free[i] })
 
-		n := min(ThemeChoices, len(free))
-		set := make([]Floor, 0, n)
-		for _, key := range free[:n] {
-			set = append(set, rollFloor(motifs[key], rng))
+		want := data.OffersOn(floor)
+		var taken []string
+		for _, key := range free {
+			if len(taken) == want {
+				break
+			}
+			used[key] = true
+			// What is still owed: the rest of this floor's offers, then every floor above.
+			owed := data.ClimbSlots(floor+1, tower.Floors)
+			for range want - len(taken) - 1 {
+				owed = append(owed, floor)
+			}
+			if !data.FillsSlots(motifs, owed, used) {
+				delete(used, key)
+				continue
+			}
+			taken = append(taken, key)
+		}
+		if len(taken) < want {
+			panic("pyramid: floor " + strconv.Itoa(floor) + " cannot be offered " + strconv.Itoa(want) + " motifs of its own")
 		}
 
+		set := make([]Floor, 0, want)
+		for _, key := range taken {
+			set = append(set, rollFloor(motifs[key], rng))
+		}
 		p.choices = append(p.choices, set)
-		used[set[0].Motif] = true
 	}
 	return p
 }
@@ -108,7 +118,9 @@ func rollFloor(m data.MotifData, rng *rand.Rand) Floor {
 	return f
 }
 
-// FloorAt is the theme a floor is being fought at, counting floors from one.
+// FloorAt is a floor's first offer, counting floors from one: the theme floor one is fought at, and
+// what any floor is fought at until a pick says otherwise. The run's own answer, pick included, is
+// session.Session's — see internal/session/climb.go.
 //
 // **Past the top of the tower it wraps**, rather than the run stopping: the ascent curve has no
 // ceiling and neither does the climb. What wraps is which floors are met again, not how hard they
@@ -124,9 +136,8 @@ func (p *Pyramid) FloorAt(floor int) Floor {
 	return set[0]
 }
 
-// ChoicesAt is every theme a floor was rolled with, the taken one first.
-//
-// The room choice reads this. Nothing else should: what a floor *is* is FloorAt.
+// ChoicesAt is every theme a floor is offered as, in the order its portals stand. One on floor one,
+// data.PortalOffers above it.
 func (p *Pyramid) ChoicesAt(floor int) []Floor {
 	if len(p.choices) == 0 {
 		return nil
@@ -136,26 +147,6 @@ func (p *Pyramid) ChoicesAt(floor int) []Floor {
 	}
 	set := p.choices[(floor-1)%len(p.choices)]
 	return append([]Floor(nil), set...)
-}
-
-// EnemyAt is the record key of whoever stands in a given room.
-//
-// It returns the empty string only for an empty pyramid, which a loaded game cannot produce —
-// data's loader panics on an empty roster long before this.
-func (p *Pyramid) EnemyAt(fight int) string {
-	if fight < 0 {
-		fight = 0
-	}
-	return p.FloorAt(FloorOf(fight)).Rooms[RoomOf(fight)]
-}
-
-// ElementAt is the element whoever stands in a given room is dealt as. It is the floor's, because
-// a floor has one theme.
-func (p *Pyramid) ElementAt(fight int) string {
-	if fight < 0 {
-		fight = 0
-	}
-	return p.FloorAt(FloorOf(fight)).Element
 }
 
 // Floors is how many floors the climb was rolled for.

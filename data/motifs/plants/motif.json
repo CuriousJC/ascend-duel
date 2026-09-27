@@ -9,6 +9,14 @@
     "earth": "green coloring",
     "arcane": "purple coloring"
   },
+  "Text": "Growing things that grew teeth: thorns, stingers and jaws, and they are big enough to eat you.",
+  "ElementText": {
+    "fire": "Red leaves, burning sap and thorns like hot iron.",
+    "ice": "Blue leaves, frozen stems and a sting that numbs.",
+    "lightning": "Yellow leaves that crackle and spark.",
+    "earth": "Green and deep-rooted. The oldest kind.",
+    "arcane": "Purple leaves, and spores that make you see things."
+  },
   "ValidFloors": [2, 7],
   "Records": [
     {

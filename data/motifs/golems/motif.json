@@ -9,6 +9,14 @@
     "earth": "green glowing veins in the rock",
     "arcane": "purple glowing veins in the rock"
   },
+  "Text": "Made things that walk: stone, metal, bone and wood, with the power that moves them running through their veins.",
+  "ElementText": {
+    "fire": "Red veins glowing hot through the stone.",
+    "ice": "Blue veins, cold enough to crack rock.",
+    "lightning": "Yellow veins humming with current.",
+    "earth": "Green veins. The earth moves them.",
+    "arcane": "Purple veins. Nobody remembers who made them, or what for."
+  },
   "ValidFloors": [4, 8],
   "Records": [
     {

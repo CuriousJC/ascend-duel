@@ -2,10 +2,10 @@ package screens
 
 // The shop: **three relics on a shelf, five fingers, and one purse.**
 //
-// It is the second of the between-fight scenes — the essence, then this, then the room choice — and
-// like the first it is an ordinary scene in the registry rather than a mode of anything. Nothing
-// here names what comes next: the scene says it is finished and `advanceRun` decides where that
-// leads. See flow.go.
+// It is the second of the between-fight scenes — the essence, then this, then the portal after a
+// portal room — and like the first it is an ordinary scene in the registry rather than a mode of
+// anything. Nothing here names what comes next: the scene says it is finished and `advanceRun`
+// decides where that leads. See flow.go.
 //
 // **It is what makes thirteen of the seventeen relics reachable.** The grammar has been built since
 // 2026-08-17 and a run opened wearing three of them with no way to get a fourth, so most of the

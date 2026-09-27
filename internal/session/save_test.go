@@ -63,26 +63,76 @@ func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
 	}
 }
 
-// TestTheClimbIsRebuiltFromTheSeed is the test that has to fail the day the room-choice screen lets
-// a player pick what is ahead. The climb is deliberately not in the snapshot — see profile/run.go —
-// and that is only safe while it is a function of the run code and nothing else. If this ever goes
-// red, the answer is to write the climb into the snapshot, never to weaken the check.
-func TestTheClimbIsRebuiltFromTheSeed(t *testing.T) {
+// TestThePortalsTakenSurviveAResume holds the half of the climb that is a choice. What a floor
+// offers is rebuilt from the run code; which portal the player walked through is not derivable, so a
+// resume that lost it would put the player on a floor they did not choose.
+func TestThePortalsTakenSurviveAResume(t *testing.T) {
 	motifs, tower := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
 	s := Start(motifs, tower, seed)
+	for floor := 2; floor <= tower.Floors; floor++ {
+		s.fight = (floor - 1) * 3
+		if _, err := s.TakePortal(floor % 2); err != nil {
+			t.Fatal(err)
+		}
+	}
 	back, _, err := Resume(motifs, tower, s.Snapshot(seed))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	for fight := 0; fight < 30; fight++ {
+	for fight := 0; fight < tower.Floors*3; fight++ {
 		s.fight, back.fight = fight, fight
-		if s.Enemy() != back.Enemy() {
-			t.Fatalf("room %d has a different opponent after a resume: %q became %q",
-				fight, s.Enemy(), back.Enemy())
+		if s.Enemy() != back.Enemy() || s.Element() != back.Element() {
+			t.Fatalf("room %d changed after a resume: %s in %s became %s in %s",
+				fight, s.Enemy(), s.Element(), back.Enemy(), back.Element())
 		}
+	}
+}
+
+// TestAPortalDecidesTheFloor is the choice doing something: the second portal's realm is the one
+// fought, not the seed's first offer.
+func TestAPortalDecidesTheFloor(t *testing.T) {
+	motifs, tower := rosters(t)
+	s := Start(motifs, tower, 1)
+	s.fight = 3
+	if !s.PortalDue() {
+		t.Fatal("no portal is open at the first room of floor two")
+	}
+	offers := s.PortalOffers()
+	if _, err := s.TakePortal(1); err != nil {
+		t.Fatal(err)
+	}
+	if s.Motif() != offers[1].Motif || s.Element() != offers[1].Element {
+		t.Fatalf("walked through %s in %s and floor two is %s in %s",
+			offers[1].Motif, offers[1].Element, s.Motif(), s.Element())
+	}
+	if s.PortalDue() {
+		t.Fatal("the portal is still open after it was taken")
+	}
+}
+
+// TestAResumeRefusesARealmItWasNeverOffered is the save file lying: a floor entered through a motif
+// the run code never put there.
+func TestAResumeRefusesARealmItWasNeverOffered(t *testing.T) {
+	motifs, tower := rosters(t)
+	seed, _ := seeds.Parse(theSeed)
+	s := Start(motifs, tower, seed)
+	snap := s.Snapshot(seed)
+
+	offered := map[string]bool{}
+	for _, f := range s.climb.ChoicesAt(2) {
+		offered[f.Motif] = true
+	}
+	for _, key := range data.MotifOrder(motifs) {
+		if !offered[key] {
+			snap.Portals = []string{key}
+			break
+		}
+	}
+	if _, _, err := Resume(motifs, tower, snap); err == nil {
+		t.Fatalf("a run entering floor two through %s resumed", snap.Portals[0])
 	}
 }
 

@@ -9,6 +9,14 @@
     "earth": "slimes will have the games green color throughout their jelly bodies",
     "arcane": "slimes will have the games purple color throughout their jelly bodies"
   },
+  "Text": "Living jelly in every shape. They swallow what they touch.",
+  "ElementText": {
+    "fire": "Molten orange, bubbling hot.",
+    "ice": "Ice-blue and slow, colder than the grave.",
+    "lightning": "Yellow and fizzing with charge.",
+    "earth": "Green and thick with grit and mud.",
+    "arcane": "Purple, with something like stars moving inside."
+  },
   "ValidFloors": [1, 5],
   "Records": [
     {

@@ -9,6 +9,14 @@
     "earth": "The spell is green. Rough stone and crystal growing up the forearms and out of the staff head, dust hanging in the air, the robes dragged heavy by the weight of it.",
     "arcane": "The spell is violet. Script and sigils burning in the air around the hands, light leaking from the eyes and the mouth, and the edges of the robe not quite finished settling."
   },
+  "Text": "Ordinary people who learned extraordinary things: robes, staves, books, and hands that are never still.",
+  "ElementText": {
+    "fire": "Their spells are fire, thrown from open palms.",
+    "ice": "Their spells are frost, spreading from the fingertips.",
+    "lightning": "Their spells are lightning, jumping from hand to staff.",
+    "earth": "Their spells are stone, grown up out of the ground.",
+    "arcane": "Their spells are arcane, written in the air in burning script."
+  },
   "ValidFloors": [
     4,
     8

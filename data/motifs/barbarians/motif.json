@@ -9,6 +9,14 @@
     "earth": "Earth makes them heavier. Dried mud and dust caked over the skin in plates that crack at the joints, rough green stone worked into the straps and the beard rings, knuckles gone hard and mineral. Set low and dug in.",
     "arcane": "Arcane lights them from inside. The inked marks burn violet through the skin, light comes out of the mouth and from behind the eyes with no source in the picture, and the outline of the figure smears very slightly."
   },
+  "Text": "Big, scarred raiders from the cold country, carrying heavy iron sharpened thin. Nothing about them is polite.",
+  "ElementText": {
+    "fire": "They carry fire into battle: soot to the elbow, iron glowing at the edge.",
+    "ice": "The cold rides with them. Rime in the beard, breath like smoke.",
+    "lightning": "Charged to the hair, too fast and too bright-eyed to stop.",
+    "earth": "Caked in mud and stone. Heavier than they look, and harder.",
+    "arcane": "Their tattoos burn purple, and something speaks through them."
+  },
   "ValidFloors": [
     2,
     7

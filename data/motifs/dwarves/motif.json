@@ -9,6 +9,14 @@
     "earth": "Rock dust over everything, green stone grit packed into the beard, raw ore set into the plate and grown through the leather. The knuckles have gone to stone.",
     "arcane": "Violet runework burning along the metal and through the beard rings, and light coming out from under the helm rim and the brow with no source in the picture."
   },
+  "Text": "Short, broad and stubborn, wearing gear they made themselves. Every piece is riveted, clean and built to last.",
+  "ElementText": {
+    "fire": "Forge-hot. Soot in the beard and iron glowing at the edge.",
+    "ice": "Frost in the mail and down the beard. They have worked colder mines than this.",
+    "lightning": "Lightning runs their rivets, and their beards stand on end.",
+    "earth": "Rock dust and raw ore. Even their knuckles have turned to stone.",
+    "arcane": "Purple runes burn along their metal, and the old words are answering."
+  },
   "ValidFloors": [
     2,
     7

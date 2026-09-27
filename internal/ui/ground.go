@@ -16,9 +16,8 @@ import (
 // The table everything on a between-fight screen is drawn on.
 //
 // **These live here rather than on the combat screen because every scene stands on them.**
-// They were declared in combat.go, which meant the post-battle screen — and the shop and the
-// room choice after it — had to reach into the combat screen's own file to find out what
-// color the game is. The ground is not the combat screen's; it is the game's.
+// The ground is not the combat screen's; it is the game's, and the post-battle screen, the shop
+// and the portal all stand on it.
 //
 // Anything drawn on a surface of its own — a card, a panel, a button — takes that surface's
 // own colors instead. These two are only for what is painted straight onto the table.

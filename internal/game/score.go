@@ -74,11 +74,11 @@ const (
 
 var screenTunes = map[state.ActiveScreen]tune{
 	state.Title:      {track: music.Score},
-	state.Ascend:     {track: music.Score},
 	state.Combat:     {track: music.Score},
 	state.PostBattle: {track: music.Score},
 	state.Shop:       {track: darkFantasy01},
 	state.RunOver:    {track: music.Score},
+	state.Portal:     {track: music.Score},
 
 	// The screen a panic ends on. **The score rather than {keep: true}**, which would leave the
 	// shop's loop playing over a crash report — a destination like RunOver, not an overlay the

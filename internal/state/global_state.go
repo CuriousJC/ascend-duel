@@ -389,11 +389,10 @@ type ActiveScreen int
 
 const (
 	Title ActiveScreen = iota
-	Ascend
 	Combat
 
 	// PostBattle is the first of the between-fight scenes: one alteration to the deck, offered
-	// from a hand dealt off it. The shop follows it and a room choice is to come, and each is an
+	// from a hand dealt off it. The shop follows it and, after a portal room, the portal; each is an
 	// ordinary scene here rather than a mode of the combat screen.
 	PostBattle
 
@@ -454,14 +453,17 @@ const (
 	// **Not a station of a run**, like Settings and the menu screens — and unlike them it is a
 	// one-way door: there is nothing to go back to. Appended, because ActiveScreen is append-only.
 	Crashed
+
+	// Portal is the choice of realm after a portal room: two motifs, each in an element, and the
+	// one the player walks into. **A station of the run** — it is where session.PhasePortal is drawn
+	// — and appended, because ActiveScreen is append-only.
+	Portal
 )
 
 func (active ActiveScreen) String() string {
 	switch active {
 	case Title:
 		return "Title"
-	case Ascend:
-		return "Ascend"
 	case Combat:
 		return "Combat"
 	case PostBattle:
@@ -482,6 +484,8 @@ func (active ActiveScreen) String() string {
 		return "Goods"
 	case Crashed:
 		return "Crashed"
+	case Portal:
+		return "Portal"
 	default:
 		return "Unknown"
 	}

@@ -86,7 +86,9 @@ type record struct {
 	// exist.
 	EnemyElement string `json:"EnemyElement"`
 
-	// Screen is which scene to open on: `combat` (the default), `reward` or `shop`.
+	// Screen is which scene to open on: `combat` (the default), `reward`, `shop` or `portal`. A
+	// portal fixture's `Fight` has to be the first room of a floor above the first — the room a
+	// portal opens onto — or the launch fails, since nothing else stands in front of one.
 	//
 	// **It exists because a between-fights screen is otherwise a twenty-minute question**
 	// *(owner's call, 2026-08-22)*. Looking at the reward screen's narration or the shop's shelf
@@ -376,9 +378,9 @@ func check(r *record) error {
 			return fmt.Errorf("deck: %q: %v", c.Card, err)
 		}
 	}
-	if r.Screen != "" && r.Screen != screenCombat && r.Screen != screenReward && r.Screen != screenShop {
-		return fmt.Errorf("%q is not a screen (want %q, %q or %q)",
-			r.Screen, screenCombat, screenReward, screenShop)
+	if r.Screen != "" && r.Screen != screenCombat && r.Screen != screenReward && r.Screen != screenShop && r.Screen != screenPortal {
+		return fmt.Errorf("%q is not a screen (want %q, %q, %q or %q)",
+			r.Screen, screenCombat, screenReward, screenShop, screenPortal)
 	}
 	if r.Actions < 0 {
 		return fmt.Errorf("an action budget of %d is not a budget", r.Actions)
@@ -493,6 +495,7 @@ const (
 	screenCombat = "combat"
 	screenReward = "reward"
 	screenShop   = "shop"
+	screenPortal = "portal"
 )
 
 // Screen is which scene to open on, defaulting to the duel.

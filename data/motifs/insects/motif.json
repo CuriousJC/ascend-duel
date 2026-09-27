@@ -9,6 +9,14 @@
     "earth": "green coloring",
     "arcane": "purple coloring"
   },
+  "Text": "Bugs the size of dogs, and bigger. Stingers, mandibles and too many legs.",
+  "ElementText": {
+    "fire": "Red-shelled and burning at every stinger.",
+    "ice": "Blue-shelled, with a sting that freezes.",
+    "lightning": "Yellow-shelled, and their wings crackle.",
+    "earth": "Green-shelled and burrowing, hard as stone.",
+    "arcane": "Purple-shelled, and their buzzing gets inside your head."
+  },
   "ValidFloors": [1, 5],
   "Records": [
     {

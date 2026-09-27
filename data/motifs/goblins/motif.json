@@ -9,6 +9,14 @@
     "earth": "Earth makes a goblin heavier than it should be. Grit and dried mud cake the skin in plates that crack at the joints, small stones are set into the leather or grown through it, and the knuckles and brow have gone hard and mineral. The green darkens toward moss. It is dug in rather than poised — squat, low, and dusty.",
     "arcane": "Arcane goes wrong on a goblin. Something is mismeasured: an ear too long, a hand with a joint too many, a shadow falling the wrong way. A faint violet light comes from *inside* the mouth and behind the eyes rather than from any source in the picture, and the edges of the figure smear very slightly, as though it has not finished arriving."
   },
+  "Text": "Small, wiry and all face. They fight with whatever they found lying around, and they found a lot.",
+  "ElementText": {
+    "fire": "Singed, sooty and carrying fire in pots. They have not yet learned it burns.",
+    "ice": "Frost-bitten at the ears and nose, and bitter about it.",
+    "lightning": "Twitchy and crackling. Sparks jump between the scrap they are wearing.",
+    "earth": "Mud-caked and stone-studded, heavier than any goblin should be.",
+    "arcane": "Something about them is measured wrong, and it glows purple."
+  },
   "ValidFloors": [
     1,
     6

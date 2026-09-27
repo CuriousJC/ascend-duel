@@ -125,7 +125,7 @@
     "Name": "FIFTH FLOOR",
     "How": "Climb as far as the fifth floor.",
     "Said": [
-      "Four floors below you, and the stairs keep going.",
+      "Four realms behind you and more to come.",
       "Whatever you came in wearing, you are not wearing it now."
     ],
     "Trigger": { "Kind": "moment", "Moment": "floor-reached", "N": 5 }

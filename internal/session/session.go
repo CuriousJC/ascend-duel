@@ -71,7 +71,7 @@ type Session struct {
 	lifeLeft int
 
 	// hurt is how much life the run is down, carried from room to room and cleared only by a
-	// stairway win. **A wound rather than a life total**, because the ceiling it sits under is
+	// portal-room win. **A wound rather than a life total**, because the ceiling it sits under is
 	// rebuilt every fight and moved by whatever is worn. See life.go.
 	hurt int
 
@@ -82,7 +82,7 @@ type Session struct {
 	dmgBonus  int
 	lifeBonus int
 
-	// bossWins is how many stairway protectors the run has beaten. It is the run's max-life
+	// bossWins is how many portal protectors the run has beaten. It is the run's max-life
 	// multiplier, kept as a count rather than as a product. See life.go.
 	bossWins int
 
@@ -337,7 +337,7 @@ func (s *Session) Fight() int { return s.fight }
 // finished on — a tenth of it is part of the prize — and the three figures are frozen here and
 // handed over by the post-battle screen a sentence at a time. See spoils.go.
 // **It is also where the body is settled** *(owner's call, 2026-09-06)*. The wound the fight left
-// is carried into the next room, unless the room just won was the floor's stairway — a boss win
+// is carried into the next room, unless the room just won was the floor's portal room — a boss win
 // heals to full and raises the ceiling by a third, compounding. See life.go, and note that both
 // happen *before* the counter moves, on the same terms the payout does: they belong to the fight
 // that was won, not to the one about to be met.
@@ -351,7 +351,7 @@ func (s *Session) WonFight(lifeLeft, maxLife int) {
 	} else {
 		s.hurt = 0
 	}
-	if pyramid.RoomOf(s.fight) == pyramid.RoomStairway {
+	if pyramid.RoomOf(s.fight) == pyramid.RoomPortal {
 		s.bossWins++
 		s.hurt = 0
 	}

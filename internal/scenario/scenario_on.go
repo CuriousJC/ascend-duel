@@ -99,7 +99,7 @@ type record struct {
 	// think it is on, and leaving that screen would advance from the wrong station.
 	Screen string `json:"Screen"`
 
-	// Fight is which room the run has reached: 0 is floor 1's outer room, 2 its stairway. **It is
+	// Fight is which room the run has reached: 0 is floor 1's outer room, 2 its portal room. **It is
 	// what makes a jumped-in reward screen pay the right room award**, and what the enemy is scaled
 	// against.
 	Fight int `json:"Fight"`

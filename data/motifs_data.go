@@ -4,7 +4,7 @@ package data
 // floor.
 //
 // **A floor is a motif and an element**, and it holds three fights — the outer chamber, the inner
-// chamber and the stairway. So a motif has to be able to field all three of those at whichever
+// chamber and the portal room. So a motif has to be able to field all three of those at whichever
 // element the floor took, which is the one thing this file checks that no other catalog loader
 // does: see MustCover.
 //
@@ -92,10 +92,10 @@ func AffinityIndex(element string) (int, bool) {
 // comes up, and the room stops being a draw. What it costs is that a motif is six chamber records
 // rather than two; what it buys is that picking a floor is picking a pool.
 //
-// **One at the stairway, because a boss is a name.** The stairway is the fight a floor is
+// **One at the portal room, because a boss is a name.** The portal room is the fight a floor is
 // remembered by, so it is authored for its element rather than drawn from a pool of things that
 // would do — which is what lets a motif field five bosses of one element each. A chamber is a
-// room the climb fills; a stairway is a creature the climb arrives at.
+// room the climb fills; a portal room is a creature the climb arrives at.
 func MinCoverageFor(tier string) int {
 	if tier == TierBoss {
 		return 1

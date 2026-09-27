@@ -121,7 +121,7 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 		// *(2026-09-06)*. It was `LifeLeft`, and the two agree the moment a fight is won — WonFight
 		// sets the wound from exactly that subtraction — so nothing looked wrong until something
 		// changed one of them *between* fights. Two things now do: a Salve takes the wound down and
-		// a stairway win clears it outright, and both left this card drawing the number the player
+		// a portal-room win clears it outright, and both left this card drawing the number the player
 		// walked out of the last room with.
 		//
 		// **The ceiling is the fighter's**, so it already carries the potions, the boss bonus and

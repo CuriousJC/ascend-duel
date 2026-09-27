@@ -17,7 +17,7 @@ func TestAWoundIsCarriedIntoTheNextRoom(t *testing.T) {
 	}
 }
 
-// TestABossWinHealsToFullAndRaisesTheCeiling. The stairway is the only thing that takes a wound
+// TestABossWinHealsToFullAndRaisesTheCeiling. The portal room is the only thing that takes a wound
 // away, and it pays a third more body on top.
 func TestABossWinHealsToFullAndRaisesTheCeiling(t *testing.T) {
 	run := bare(t)
@@ -29,24 +29,24 @@ func TestABossWinHealsToFullAndRaisesTheCeiling(t *testing.T) {
 		t.Fatalf("two hard rooms left a wound of %d, want 90", run.Hurt())
 	}
 	if run.BossWins() != 0 {
-		t.Fatalf("an ordinary room counted as a stairway")
+		t.Fatalf("an ordinary room counted as a portal room")
 	}
 
-	// The stairway.
+	// The portal room.
 	run.WonFight(10, 100)
 
 	if run.Hurt() != 0 {
 		t.Errorf("a boss win left a wound of %d, want none", run.Hurt())
 	}
 	if run.BossWins() != 1 {
-		t.Errorf("beat one stairway and counted %d", run.BossWins())
+		t.Errorf("beat one portal room and counted %d", run.BossWins())
 	}
 	if got := run.scaleLifeForBosses(100); got != 133 {
 		t.Errorf("one boss raised a ceiling of 100 to %d, want 133", got)
 	}
 }
 
-// TestTheBossBonusCompounds. Owner's call, 2026-09-06: each stairway is a third more than the body
+// TestTheBossBonusCompounds. Owner's call, 2026-09-06: each portal room is a third more than the body
 // the run already had, not a third of the body it started with.
 //
 // **The rounding is down at every step**, which is why three bosses land on 234 rather than the 235

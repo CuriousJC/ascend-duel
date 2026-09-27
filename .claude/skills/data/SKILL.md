@@ -148,7 +148,7 @@ review.
 **A boss is a record whose `Tier` says `boss`, plus a `Title`.** It is not a separate catalog and
 not a separate file: a floor takes one whole motif, so a goblin floor ends on a goblin. Nothing
 downstream tells the two apart — `internal/decks`, `internal/entities` and `internal/cards` read
-one shape, and the climb is what puts a boss on a stairway.
+one shape, and the climb is what puts a boss in a portal room.
 
 **The full record grammar is the `motifs` skill**, which also holds the coverage rule this file's
 loader refuses a motif for.
@@ -237,7 +237,7 @@ every record under `data/motifs/` carries `Art` and `Draw`, and has no `Family` 
 *is* its motif, so a field repeating the name at the top of the file would say nothing.
 
 - **`Family` is the motif a record was authored beside**, and it is what its sheet groups by —
-  "Elemental essences", "Elemental marks", "Slimes", "Stairway keepers". It is **authored rather than
+  "Elemental essences", "Elemental marks", "Slimes", "Portal keepers". It is **authored rather than
   derived** for the argument `RelicData.Family` records: nearly every value is implied by the
   record's own rules, so a derived grouping would reproduce it almost exactly, and what an authored
   one buys is a name to read instead of a signature to decode. **It is not the `CostTier` mistake**,

@@ -1266,7 +1266,7 @@ func premul(c color.RGBA, a uint8) color.RGBA {
 // **Smoothly resampled, unlike everything else here.** The generated glyphs are pixel art
 // and must never be filtered; a relic is a photograph-like asset several times the size of
 // the box it lands in, and nearest-neighbor downsampling one of those drops every other
-// row and produces visible stair-stepping. CatmullRom is the expensive option and this
+// row and produces visible jagged steps. CatmullRom is the expensive option and this
 // runs once per distinct card, not per frame.
 func drawArt(dst *image.RGBA, s Spec, st Style) {
 	fitInto(dst, s.Art, image.Rect(

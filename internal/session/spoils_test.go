@@ -26,7 +26,7 @@ func TestAWinPaysInterestThenTheRoomAndTheLife(t *testing.T) {
 	}
 }
 
-// TestTheRoomIsWorthThreeFourFive. Outer, inner, stairway — and flat for the whole climb, so a
+// TestTheRoomIsWorthThreeFourFive. Outer, inner, portal — and flat for the whole climb, so a
 // floor-8 boss pays what floor 1's does.
 func TestTheRoomIsWorthThreeFourFive(t *testing.T) {
 	for _, tc := range []struct{ fight, want int }{
@@ -50,7 +50,7 @@ func TestSoulTakerPaysTheRoomFlat(t *testing.T) {
 	run.WonFight(0, 0)
 
 	if got := run.Spoils().FromRoom; got != 10 {
-		t.Errorf("a stairway paid %d wearing Soul Taker, want 10", got)
+		t.Errorf("a portal room paid %d wearing Soul Taker, want 10", got)
 	}
 }
 

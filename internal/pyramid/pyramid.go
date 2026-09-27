@@ -32,7 +32,7 @@ type Floor struct {
 	Motif   string
 	Element string
 
-	// Rooms is one record key per room, indexed by Room — outer, inner, stairway.
+	// Rooms is one record key per room, indexed by Room — outer, inner, portal.
 	Rooms [FightsPerFloor]string
 }
 
@@ -170,7 +170,7 @@ func FloorOf(fight int) int {
 	return fight/FightsPerFloor + 1
 }
 
-// FightsPerFloor is how many fights a floor holds — outer room, inner room, stairway — and the
+// FightsPerFloor is how many fights a floor holds — outer room, inner room, portal room — and the
 // third of them is its boss. See the tower section of MECHANICS.md.
 //
 // **It lives here rather than in `internal/screens`** because the combat screen names the room
@@ -187,7 +187,7 @@ func FirstFightOnFloor(floor int) int {
 	return (floor - 1) * FightsPerFloor
 }
 
-// Room is which of a floor's rooms a fight index is: outer, inner, or the stairway that is the
+// Room is which of a floor's rooms a fight index is: outer, inner, or the portal room that is the
 // floor's boss.
 //
 // **It is derived, never stored**, exactly as FloorOf is: the fight counter already says where the
@@ -195,12 +195,12 @@ func FirstFightOnFloor(floor int) int {
 type Room int
 
 const (
-	// RoomOuter is the first room of a floor, RoomInner the second, RoomStairway the third — and
+	// RoomOuter is the first room of a floor, RoomInner the second, RoomPortal the third — and
 	// the third is the boss. Ordinals are positions in a floor, so this is not append-only in the
 	// way an ID enum is; it is arithmetic on FightsPerFloor.
 	RoomOuter Room = iota
 	RoomInner
-	RoomStairway
+	RoomPortal
 )
 
 // RoomOf is which room of its floor a fight index falls in.

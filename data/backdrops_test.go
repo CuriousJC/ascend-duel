@@ -49,13 +49,13 @@ func TestABackdropIsTheTiersAndTheElements(t *testing.T) {
 			t.Fatalf("the inner fire room drew %q", got)
 		}
 	}
-	// No inner room is drawn in ice and no stairway at all: both are the default, which is the
+	// No inner room is drawn in ice and no portal room at all: both are the default, which is the
 	// visible signal that a fight has no backdrop of its own.
 	if got := m.BackdropFor(TierInner, "ice", 7, 1); got != DefaultBackgroundArt {
 		t.Errorf("an inner ice fight with no room drew %q", got)
 	}
 	if got := m.BackdropFor(TierBoss, "fire", 7, 1); got != DefaultBackgroundArt {
-		t.Errorf("a stairway with no room drew %q", got)
+		t.Errorf("a portal room with no backdrop drew %q", got)
 	}
 	if got := (MotifData{}).BackdropFor(TierOuter, "fire", 7, 1); got != DefaultBackgroundArt {
 		t.Errorf("a motif with no backdrops drew %q", got)

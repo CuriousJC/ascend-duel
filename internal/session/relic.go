@@ -416,7 +416,7 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	// documents below rather than a third rule. See life.go.
 	// **The potions go on before even that** *(owner's call, 2026-09-06)*. A potion changes the
 	// duelist themself rather than being something worn, so what it adds is part of the body the
-	// stairway bonus grows and the relics then scale — a Tonic bought on floor one is worth more by
+	// portal bonus grows and the relics then scale — a Tonic bought on floor one is worth more by
 	// floor four, exactly as the duelist's own record is. That is the one thing to move if the
 	// compounding turns out to be too much: dropping these two lines below the scaling makes a
 	// potion worth its face figure forever.

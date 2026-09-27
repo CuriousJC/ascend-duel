@@ -42,7 +42,7 @@ const backdropPromptFile = "docs/art/background_art_prompt.MD"
 var tierWords = map[string]string{
 	data.TierOuter: "the outer chamber: one small door",
 	data.TierInner: "the inner chamber: one large door",
-	data.TierBoss:  "the stairway: two swirling portals",
+	data.TierBoss:  "the portal room: two swirling portals",
 }
 
 func main() {

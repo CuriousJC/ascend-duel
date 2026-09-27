@@ -5,7 +5,7 @@ package session
 // A duel used to start at full life whatever the last one cost, so damage was a fact about one
 // round and never about the run. It is a fact about the *floor* now: a wound is carried out of a
 // room and into the next one, and the only thing that takes it away is beating the floor's
-// stairway protector. See MECHANICS.md §Life between fights.
+// portal protector. See MECHANICS.md §Life between fights.
 //
 // **The wound is stored, not the life left.** `MaxLife` is rebuilt from the record every visit and
 // then moved by whatever the run is wearing — a flat +25 here, a percentage there — so a stored
@@ -13,13 +13,13 @@ package session
 // sold. A wound is the same wound whatever ceiling it sits under, and its zero value is the honest
 // one: a run that has not been hurt yet is healthy, where a stored life of zero would be a corpse.
 //
-// **The boss bonus is a count, not a number.** `bossWins` is how many stairways the run has
+// **The boss bonus is a count, not a number.** `bossWins` is how many portal rooms the run has
 // climbed and the multiplier is derived from it, for the reason the floor is derived from the room
 // counter: a stored product is a second copy of the same fact, and it is the copy that goes stale.
 
 // bossLifePct is what beating a floor's boss does to the ceiling, as a percentage of what the
 // ceiling already was — so it compounds, floor on floor *(owner's call, 2026-09-06)*. A run that
-// climbs seven stairways is carrying about seven and a half times the body it started with, which
+// clears seven portal rooms is carrying about seven and a half times the body it started with, which
 // is the curve the ascent's own scaling is meant to be climbed against.
 const bossLifePct = 133
 
@@ -41,7 +41,7 @@ func (s *Session) LifeAtFightStart(maxLife int) int {
 // player as they actually are rather than as the record describes them.
 func (s *Session) Hurt() int { return s.hurt }
 
-// BossWins is how many stairway protectors the run has beaten.
+// BossWins is how many portal protectors the run has beaten.
 func (s *Session) BossWins() int { return s.bossWins }
 
 // scaleLifeForBosses raises a ceiling by what the run's beaten bosses are worth. It is applied to

@@ -11,7 +11,7 @@ nothing has built yet; inside a section, a rule is running code unless it says o
 ## A run, end to end
 
 The title screen starts a run or resumes the one on disk. A run climbs a tower of **eight floors
-of three rooms**, and every third room is a named stairway boss.
+of three rooms**, and every third room is a named portal boss.
 
 **A room is a duel.** Both duelists are cards facing each other across a table. Each round you
 are dealt a hand of eight from your deck and given an action-point budget; you queue up to five
@@ -30,7 +30,7 @@ that raises one rung of the hand ladder, a **potion** that changes the duelist, 
 alters cards mid-fight, or a **sealed good**, which is paid for and *then* opened. Then the next
 room.
 
-Wounds carry from room to room and only a stairway heals them, so a floor is an attrition budget.
+Wounds carry from room to room and only a portal room heals them, so a floor is an attrition budget.
 The run is written to disk between rooms and every run has a six-character code that replays it.
 
 ## Contents
@@ -1469,7 +1469,7 @@ than an ever-widening round.
 **Every fight lasts at most five rounds. A duelist still standing when the fifth ends dies.**
 
 The round above is bounded by cost and by count; this bounds the *duel*. It applies to every fight
-in the tower — the two ordinary rooms and the stairway protector alike, one number for all of
+in the tower — the two ordinary rooms and the portal protector alike, one number for all of
 them — and it is the reason a duel is a race rather than a siege.
 
 **What it is for.** Without it the correct play against anything dangerous is to stall: raise
@@ -2463,7 +2463,7 @@ event, since the log rebuilds a card from what an event carries.
 ### The between-fight chain
 
 Post-battle is the first of several scenes between one room and the next: **alteration**, then a
-**shop** where vitae is spent, then a **room or stairway choice** between two doors. Each is an
+**shop** where vitae is spent, then a **room or portal choice** between two doors. Each is an
 ordinary scene in the registry rather than a mode of the combat screen, and **`session.Phase` is
 what decides the order** — see `internal/session/flow.go` for the chain and
 `internal/screens/flow.go` for which scene draws each station. The room choice has no scene yet
@@ -3191,7 +3191,7 @@ screen as it narrates them. See `internal/session/spoils.go`.
 |---|---|
 | **Interest** | propagation, below — on the purse as it stood when the fight ended |
 | **The life you kept** | **a tenth of the life remaining, rounded down**: 65 left pays 6 |
-| **The room** | **3** outer, **4** inner, **5** stairway (the floor's boss), flat for the whole climb |
+| **The room** | **3** outer, **4** inner, **5** portal room (the floor's boss), flat for the whole climb |
 
 - **A share of the life *remaining*, not of the maximum.** It is a reward for fighting well rather
   than a rebate, and a relic that raises max life pays out more here indirectly — which is intended.
@@ -3243,11 +3243,11 @@ in fire — so what the player walked into is something they can plan against, r
 unrelated creatures who happen to share a corridor.
 
 - **A motif is a directory**, `data/motifs/<motif>/`: `motif.json` holds every creature that can
-  stand in one of its three rooms — outer chamber, inner chamber, stairway — and `backdrops.json`
+  stand in one of its three rooms — outer chamber, inner chamber, portal room — and `backdrops.json`
   holds the rooms themselves.
 - **Every fight is drawn in front of its motif's room for its tier, and the room says which tier it
   is.** An outer chamber has a small door at the far side, an inner chamber a large one, and a
-  stairway two swirling rainbow portals, so a player can tell at a glance which of a floor's three
+  portal room two swirling rainbow portals, so a player can tell at a glance which of a floor's three
   fights they are in. A room is one place drawn once per element — the same goblin tinker studio
   molten in fire and frozen in ice. Which room a fight gets is derived from the run, the floor and
   the tier, never rolled. **A fight with no room of its own is drawn on the plain default
@@ -3259,7 +3259,7 @@ unrelated creatures who happen to share a corridor.
   theme a floor at all.
 - **Every chamber of every motif can be dealt at least two ways.** For the outer and inner rooms
   and each of the five elements there are at least two records that fit, so a chamber is a pool
-  rather than a fixed set. **The stairway needs only one**, because a boss is a name rather than a
+  rather than a fixed set. **The portal room needs only one**, because a boss is a name rather than a
   room the climb fills: a motif may field one boss per element and each is the fight that floor is
   remembered by. The loader refuses a motif that cannot reach either figure — a floor the generator
   can offer and then fail to build is worse than one that never existed.
@@ -3271,7 +3271,7 @@ unrelated creatures who happen to share a corridor.
 - **A record carries one picture per element it can be dealt as.** A fire goblin serf and an ice
   goblin serf are two drawings of one creature.
 
-- **The stairway is the floor's third room and the boss is a record of the same motif.** It is a
+- **The portal room is the floor's third room and the boss is a record of the same motif.** It is a
   face the player can be told about, tiered above the two rooms below it and further along the
   ascent curve than either, but it is not a separate catalog: a goblin floor ends on a goblin.
 - `[?]` **A boss has no advantage of its own yet.** What separates it from the creatures below it
@@ -3287,7 +3287,7 @@ A creature's `HP` and `DMG` are **step-zero quantities** — what it is worth in
 of the tower, whatever floor it is actually met on — and the curve puts it where it stands:
 
 ```
-step = (floor - 1) * 3 + room          room: outer 0, inner 1, stairway 2
+step = (floor - 1) * 3 + room          room: outer 0, inner 1, portal 2
 ```
 
 - **Two rates, not one.** `data/tower.json` holds `HPGrowth` and `DMGGrowth` in basis points, so
@@ -3303,7 +3303,7 @@ step = (floor - 1) * 3 + room          room: outer 0, inner 1, stairway 2
   than a harder version of its own.
 - **Nothing caps it.** The tower has a configured height and the climb wraps past it; the curve
   keeps counting, which is what makes the endless tower a number rather than a rewrite.
-- **After fights 1 and 2: a choice of two doors.** After the boss: **a choice of stairwell.**
+- **After fights 1 and 2: a choice of two doors.** After the boss: **a choice of portal.**
   Captured as two concepts even though the mechanic is likely the same, because one is "next
   fight on this floor" and the other is "next floor" — a real difference to hang divergence on.
 - **Doors hint at what is behind them.** Cold coming off the door for an ice enemy, smoke for
@@ -3311,19 +3311,19 @@ step = (floor - 1) * 3 + room          room: outer 0, inner 1, stairway 2
 - **Generate both doors, always.** Rolling only the chosen one shifts every subsequent draw in
   the run.
 
-### Life between fights, and what a stairway is worth
+### Life between fights, and what a portal room is worth
 
 **A wound is carried from room to room, and only a boss takes it away.** A floor is an
 attrition budget of three rooms. Opening every duel at full life would make damage a fact about
 one round and never about the climb, and the only thing a bad fight would cost is the tenth of
 life-left the payout pays.
 
-- **Beating the floor's stairway protector heals to full**, and it is the only thing that does. No
+- **Beating the floor's portal protector heals to full**, and it is the only thing that does. No
   card, no relic and no room between fights returns life outside a duel. That is what makes the
   third room of a floor the one worth arriving at holding something back.
-- **It also raises the ceiling by a third, compounding.** Each stairway is 33% more body than the
+- **It also raises the ceiling by a third, compounding.** Each portal room is 33% more body than the
   run already had, not 33% of the body it started with — so a run standing on floor eight, seven
-  stairways up, is carrying about seven and a half times the life it opened with. The ascent curve
+  portal rooms up, is carrying about seven and a half times the life it opened with. The ascent curve
   grows the opponent by 10% a *room*, which is a little over twice that across the same climb, so
   the two are pulling in the same direction and the boss bonus is the player's half of it.
 - **The ceiling grows, the wound does not scale with it.** Forty points taken on floor two are
@@ -3352,7 +3352,7 @@ is the arithmetic, and `entities.NewEnemyFrom` takes the fight index so an unsca
 be built by accident.
 
 - **It compounds per *room*, not per floor.** A floor is three rooms, so a floor costs about a
-  third more than the one below it and the stairway boss is harder than the inner room beside it.
+  third more than the one below it and the portal boss is harder than the inner room beside it.
 - **HP and DMG only. `Actions` is left alone**, because it is the budget a *deck* is spent out of:
   growing it hands an opponent more cards rather than a harder version of its own. It stays a
   per-enemy dial, authored deliberately.
@@ -3375,7 +3375,7 @@ than from a figure written here.
 `[?]` Whether the curve should be flatter now that it stacks on the roster's own progression, or
 whether the roster should flatten instead and let the curve carry the climb.
 
-`[?]` What distinguishes one stairwell from another. `[?]` Whether the shop and the door choice
+`[?]` What distinguishes one portal from another. `[?]` Whether the shop and the door choice
 are one screen or two, and in which order.
 
 [ascend.go](internal/screens/ascend.go) is a stub whose comment already describes this.
@@ -3891,7 +3891,7 @@ every stat below is therefore a judgment.
 
 **Tower and rooms:**
 
-- `[?]` **What distinguishes one stairwell from another.**
+- `[?]` **What distinguishes one portal from another.**
 - `[?]` **Whether the shop and the door choice are one screen or two**, and in which order.
 - `[?]` **Whether a boss carries an affix by default**, and whether several bosses on one floor
   should differ in shape rather than only in name and picture.

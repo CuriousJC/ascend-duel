@@ -32,7 +32,7 @@ type Backdrop struct {
 	// Name is what a review page calls the place. Nothing in the game prints it.
 	Name string `json:"Name"`
 
-	// Tier is which of the floor's three rooms this is: outer, inner or boss. The stairway is
+	// Tier is which of the floor's three rooms this is: outer, inner or boss. The portal room is
 	// `boss`, the same word the creature standing on it carries.
 	Tier string `json:"Tier"`
 

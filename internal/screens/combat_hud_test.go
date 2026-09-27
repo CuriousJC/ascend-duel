@@ -121,8 +121,8 @@ func TestEveryRoomOnAFloorIsNamed(t *testing.T) {
 	// The floor turns over on the fight after the last room, and the first fight is the first
 	// room of floor one — an off-by-one here would name the boss room "Outer".
 	for fight, want := range map[int]string{
-		0: "Outer Room", 1: "Inner Room", 2: "Stairway",
-		3: "Outer Room", 5: "Stairway", 6: "Outer Room",
+		0: "Outer Room", 1: "Inner Room", 2: "Portal Room",
+		3: "Outer Room", 5: "Portal Room", 6: "Outer Room",
 	} {
 		if got := ui.TowerRoom(fight); got != want {
 			t.Errorf("fight %d is the %s, want the %s", fight, got, want)

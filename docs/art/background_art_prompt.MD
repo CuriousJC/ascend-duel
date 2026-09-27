@@ -22,8 +22,9 @@ Each record has these fields:
 `Draw`, plus that element's paragraph from `ElementDraw`, keyed in that element's color from the
 table under **The color words**. Name it `<Art>-<element>.jpg` — a record with `"Art":
 "goblins-outer-tinker-studio"` and five elements is five files, from
-`goblins-outer-tinker-studio-fire.jpg` to `goblins-outer-tinker-studio-arcane.jpg`. The five do
-not have to share a layout; each is its own painting of the place the brief describes.
+`goblins-outer-tinker-studio-fire.jpg` to `goblins-outer-tinker-studio-arcane.jpg`. **Generate
+each element separately** — never recolor one picture into another. The five do not have to share
+a layout; each is its own painting of the place the brief describes.
 
 ---
 
@@ -33,8 +34,11 @@ A painted **backdrop for a card game**: a single wide view of one place, seen at
 slightly out of focus, over which a game is laid. It is scenery rather than a subject — nothing in
 it is the point of the picture, and nobody is in it.
 
-Canvas: **exactly 1920x1080**, landscape 16:9, fully opaque, **delivered as a JPEG at quality 90** — not a PNG. Work at 3840x2160 if you can
-and reduce once to 1920x1080 on the way out.
+Canvas: **exactly 1920x1080**, landscape 16:9, fully opaque, **delivered as a JPEG at quality 90**
+(or the nearest your tools allow) — not a PNG. Work at 3840x2160 if you can. **Whatever the
+generator returns, normalize every final file** to that: convert a PNG to JPEG, flatten any
+transparency, and resize to exactly 1920x1080. If the aspect is not 16:9, crop evenly from the
+edges rather than squashing — and never crop into the tier's feature at the far side.
 
 ### The size of the place
 
@@ -47,10 +51,11 @@ brawl in a corner. Draw the room for that, and leave the fighters out.
   clearing, a plateau. Nothing stands in the middle of it — no table, no desk, no chest, no
   furniture of any kind in the fighting space.
 - **The furnishings live at the edges.** Shelves, benches, cauldrons, braziers, crates, trees and
-  rocks line the walls or the boundary and stand well back from the centre, so they frame the
-  floor rather than crowd it.
+  rocks line the side walls, the rafters, the far wall or the boundary and stand well back from the
+  centre, so they frame the floor rather than crowd it. However cluttered a brief says the place
+  is, the clutter stops short of the fighting lane.
 - **Scale it by the architecture.** Ceilings, where there are any, are high — two or three storeys,
-  vaulted, or open to the sky. Doorways and windows are tall and read as distant. An ordinary adult
+  vaulted, or open to the sky. Windows and arches are tall and read as distant. An ordinary adult
   standing at the far side of the floor would be no more than about a sixth of the picture's
   height.
 - **The viewpoint is well back and a little above standing height**, looking across the floor
@@ -68,7 +73,9 @@ boundary, in the open middle** (see the table below), large enough to read at a 
 the most important object in the place. Paint it in the room's own materials and the element's
 cast, so it belongs to the room rather than being pasted on.
 
-**Draw only the one for the record's `Tier`.** The other two must not appear.
+**Draw only the one for the record's `Tier`, exactly once.** The other two must not appear, and
+nothing else in the place may read as a way out: no second door, no side doorway, no gate, no
+portal, no flight of steps.
 
 #### Tier `outer` — the outer chamber: one small door
 
@@ -84,14 +91,14 @@ person — heavy, double-leafed, closed, framed by a massive arch or lintel, rei
 studs or carving in the room's own style. It is plainly the way to something that matters. In an
 open-air place it is a great gate in a wall or a cliff.
 
-#### Tier `boss` — the stairway: two swirling portals
+#### Tier `boss` — the portal room: two swirling portals
 
 **Two portals standing side by side** at the far side, a little apart from each other and both
 facing the viewer: each an upright oval or arch of **swirling rainbow light** — every hue of the
 spectrum turning in a slow spiral inside a frame of the room's own material. They are the way up
 to the next floor. **The rainbow is the one place the element's cast does not reach**: the swirl
 inside each portal keeps its full spectrum, and only the frames and the glow they throw onto the
-floor take the room's colors. There is no door and no stair drawn in a stairway backdrop other than
+floor take the room's colors. There is no door and no flight of steps drawn in a portal room backdrop other than
 these two.
 
 ### What covers what
@@ -208,8 +215,10 @@ element colors on top of it stop reading.
 5. **Is the element unmistakable** from the overall cast, without a prop having to say it?
 6. **Is the place empty?** No person, creature, silhouette, statue or face anywhere in it.
 7. **Does the far side say the tier?** A small door for `outer`, a large door for `inner`, two
-   rainbow portals for `boss` — only that one, centred in the open middle, readable at a glance.
-8. **Is it a JPEG, opaque to all four edges, exactly 1920x1080**, with no frame, vignette or reserved
-   patch anywhere?
+   rainbow portals for `boss` — only that one, centred in the open middle, readable at a glance,
+   and no other door, gate, portal or flight of steps anywhere.
+8. **Is it a JPEG, opaque to all four edges, exactly 1920x1080**, normalized as **Canvas** says,
+   with no frame, vignette or reserved patch anywhere?
 
-Name each picture `<Art>-<element>.jpg`, one for every element in the record's `Affinities`, and give me a link I can click to download each.
+**Hand back, for each record, one zip named `<Art>-backdrops.zip`** holding every one of its
+`<Art>-<element>.jpg` files, and a link to each file on its own as well.

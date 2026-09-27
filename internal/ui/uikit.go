@@ -110,7 +110,7 @@ func ShieldPipKey(e cards.Element) string {
 // TowerRoomNames is what each of a floor's three fights is called, in order. Indexed by the
 // fight's position within its floor, so it must stay fightsPerFloor long — the two are checked
 // against each other by TestEveryRoomOnAFloorIsNamed.
-var TowerRoomNames = [FightsPerFloor]string{"Outer Room", "Inner Room", "Stairway"}
+var TowerRoomNames = [FightsPerFloor]string{"Outer Room", "Inner Room", "Portal Room"}
 
 // TowerFloor is which floor a fight is on, counting from one.
 //

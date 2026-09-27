@@ -79,13 +79,13 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 // two lines under the duelist card.
 //
 // MECHANICS.md's tower is 8 floors x 3 fights with a choice of door after fights 1 and 2 and a
-// choice of stairwell after the boss, so a floor is three rooms deep and the third one is the
+// choice of portal after the boss, so a floor is three rooms deep and the third one is the
 // way up. That makes the position entirely a function of how far along the fight order the
 // player has got, which is why nothing is stored: `fightIndex` already says it, and it is the
 // same stand-in the enemy roster is walked with. `Session` owns both the moment it exists.
 //
-// **It says where you are, not what is coming.** Naming the third room Stairway is the only
-// thing on this screen that says a floor is about to end — the doors and the stairwell are the
+// **It says where you are, not what is coming.** Naming the third room Portal Room is the only
+// thing on this screen that says a floor is about to end — the doors and the portals are the
 // screen that does not exist yet.
 const (
 	// **towerLineGap is the drop from the duelist card's bottom edge to whatever hangs off it**,

@@ -15,7 +15,7 @@ package session
 // **Two of the three change the record and one changes the wound**, and that is the whole of the
 // mechanic. `+DMG` and `+max life` are stored on the run and added to the duelist's own figures in
 // `Equip`, *before* the boss bonus and before any relic — a potion is growth of the body, so a
-// percentage relic scales the boosted duelist, exactly as it scales one that has climbed a stairway.
+// percentage relic scales the boosted duelist, exactly as it scales one that has cleared a portal room.
 // Healing is not stored at all: it takes the wound down, which is the one number `life.go` keeps.
 //
 // **This file is where a record becomes something usable and where a bad one is refused**, the job

@@ -1,4 +1,4 @@
-# Contributing to Ascending Duel
+# Contributing to Duello
 
 Thanks for your interest. Please read this before opening a pull request — the
 licensing here is deliberately different from a typical open source project, and
@@ -6,7 +6,7 @@ it affects what you are agreeing to when you contribute.
 
 ## This project is source-available, not open source
 
-Ascending Duel is licensed under the
+Duello is licensed under the
 [PolyForm Noncommercial License 1.0.0](LICENSE). Anyone may read, build, modify and
 share the code for noncommercial purposes. **The right to sell the game, or anything
 derived from it, is reserved to the copyright holders.**
@@ -26,7 +26,7 @@ By opening a pull request against this repository, you agree that:
    Specifically, you grant Justin Crosby and KingSherman1820 a perpetual,
    worldwide, non-exclusive, royalty-free, irrevocable license to use, reproduce,
    modify, adapt, publish, distribute, sublicense, and **commercially exploit** your
-   contribution as part of Ascending Duel or any derivative of it, and to relicense
+   contribution as part of Duello or any derivative of it, and to relicense
    it under different terms — including selling the game.
 
 3. **You keep your copyright.** This is a license, not an assignment. You still own

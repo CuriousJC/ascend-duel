@@ -446,7 +446,7 @@ func TestTheSackAndItsRidersSurviveASnapshot(t *testing.T) {
 		t.Errorf("the sack was written as %v, wanted acquisition order", snap.Held)
 	}
 
-	back, _, err := Resume(nil, data.TowerData{}, snap)
+	back, _, err := Resume(nil, data.JourneyData{}, snap)
 	if err != nil {
 		t.Fatalf("the run would not resume: %v", err)
 	}
@@ -561,7 +561,7 @@ func TestThePouchSurvivesASnapshot(t *testing.T) {
 	run.ApplyRuneRolling(p, nil, rand.New(rand.NewSource(9)))
 	want := run.Carried()
 
-	back, _, err := Resume(nil, data.TowerData{}, run.Snapshot(0))
+	back, _, err := Resume(nil, data.JourneyData{}, run.Snapshot(0))
 	if err != nil {
 		t.Fatalf("a run carrying stones would not resume: %v", err)
 	}

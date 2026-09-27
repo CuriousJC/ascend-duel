@@ -7,7 +7,7 @@ package screens
 // its own comment. Three things changed and each was asked for:
 //
 //   - **The run, not the fight.** `session.Session` keeps the account, so it survives the fight
-//     that wrote it and answers "how did my whole climb go" as well as "what just happened".
+//     that wrote it and answers "how did my whole journey go" as well as "what just happened".
 //   - **A dragged scrollbar** *(owner's call)*, because the input vocabulary is clicks, drags and
 //     hover and a wheel would be a fourth verb. See models.Scrollbar.
 //   - **The arithmetic.** Every term of a blow, with the relic that priced it named beside it. See
@@ -180,7 +180,7 @@ func (p *LedgerPanel) Toggle() {
 	p.open = !p.open
 	if p.open {
 		// **Opened at the bottom**, on the newest lines. A run's account read from the top would
-		// open on the first room of the tower every time.
+		// open on the first room of the journey every time.
 		p.pinned = true
 		p.built = ledgerKey{}
 	}
@@ -467,5 +467,5 @@ func ledgerHeading(f session.LedgerFight, open bool) string {
 		outcome = fmt.Sprintf("lost in %d, %d dealt", f.RoundCount(), f.Dealt())
 	}
 
-	return fmt.Sprintf("%s  Fight %d - floor %d - %s - %s", marker, f.Number, f.Floor, f.Enemy, outcome)
+	return fmt.Sprintf("%s  Fight %d - realm %d - %s - %s", marker, f.Number, f.Realm, f.Enemy, outcome)
 }

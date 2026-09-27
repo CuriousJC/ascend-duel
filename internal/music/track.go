@@ -32,7 +32,7 @@ import (
 // rejects everywhere else — a run seed of zero is the run 000000 rather than "unset".
 //
 // It is not a loadable name: LoadTrack refuses it, so nothing can take the score's seat.
-const Score = "ascending"
+const Score = "duello"
 
 // tracks holds every loaded loop by name. Package state beside `player` and `level`, for the
 // reason `player` is: an audio.Player carries a finalizer that stops playback, so one the

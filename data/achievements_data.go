@@ -132,8 +132,8 @@ type TriggerData struct {
 	Moment string `json:"Moment,omitempty"`
 	Value  string `json:"Value,omitempty"`
 
-	// N is read by both `count` and `floor-reached`, and is a **threshold rather than an equality**
-	// in each: reaching floor six earns the floor-five row, exactly as at-least does on a clause.
+	// N is read by both `count` and `realm-reached`, and is a **threshold rather than an equality**
+	// in each: reaching realm six earns the realm-five row, exactly as at-least does on a clause.
 	N int `json:"N,omitempty"`
 }
 

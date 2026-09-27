@@ -2,7 +2,7 @@ package data
 
 import "testing"
 
-// TestEveryMotifCanFieldEveryFight is the promise the floor generator is built on: pick any
+// TestEveryMotifCanFieldEveryFight is the promise the realm generator is built on: pick any
 // motif and any element and each of the three rooms has as many records as its tier requires.
 //
 // LoadMotifs already panics on a hole, so this failing means the check was loosened rather than
@@ -20,16 +20,16 @@ func TestEveryMotifCanFieldEveryFight(t *testing.T) {
 	}
 }
 
-// TestTheTowerCanBeClimbed fails when the floor bands stop being able to give every floor a motif
-// of its own — which is a matching problem, not a per-floor one, and is why a roster can pass
-// "every floor has a candidate" and still be unbuildable.
-func TestTheTowerCanBeClimbed(t *testing.T) {
+// TestTheJourneyCanBeFilled fails when the realm bands stop being able to give every realm a motif
+// of its own — which is a matching problem, not a per-realm one, and is why a roster can pass
+// "every realm has a candidate" and still be unbuildable.
+func TestTheJourneyCanBeFilled(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
-			t.Fatalf("the shipped roster cannot climb the shipped tower: %v", r)
+			t.Fatalf("the shipped roster cannot fill the shipped journey: %v", r)
 		}
 	}()
-	MustBeClimbable(LoadMotifs(), LoadTower().Floors)
+	MustFillJourney(LoadMotifs(), LoadJourney().Realms)
 }
 
 // TestEveryRecordNamesItsOwnMotifAndTier holds the key format the coverage report trusts. A key

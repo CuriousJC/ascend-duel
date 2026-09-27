@@ -391,7 +391,7 @@ type TextSpan struct {
 // and the cost of that is charged here on purpose, exactly as a fifth cost tier is by
 // TestLeftColumnDoesNotCollide.
 //
-// **It went from three to five on 2026-09-15** *(owner's call)*, when the floor and the room moved
+// **It went from three to five on 2026-09-15** *(owner's call)*, when the realm and the room moved
 // off the ground under the card and onto the card itself. They are stat rows because that is what
 // they are — a label against a figure, saying something true about the duelist for the whole fight
 // — and the row the pitch had to give up to fit them was air the block was not using: three rows at

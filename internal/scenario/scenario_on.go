@@ -21,8 +21,8 @@ var scenariosJSON []byte
 // scenarioEnvVar names which scenario to plug in. **Unset takes the first in the file**, so the
 // common case — edit the top entry, relaunch — needs no environment at all.
 //
-//	ASCEND_DUEL_SCENARIO=echo-flurry go run -tags scenario .
-const scenarioEnvVar = "ASCEND_DUEL_SCENARIO"
+//	DUELLO_SCENARIO=echo-flurry go run -tags scenario .
+const scenarioEnvVar = "DUELLO_SCENARIO"
 
 // DummyLife and DummyRounds are what `Dummy` sets, and they are constants rather than fields
 // because a training dummy is one thing rather than a dial.
@@ -75,11 +75,11 @@ type record struct {
 	// one into a duel. That is what this plants.
 	Essences []string `json:"Essences"`
 
-	// Enemy is a record key from any file under data/motifs. **Empty means the climb's own**, so a
+	// Enemy is a record key from any file under data/motifs. **Empty means the journey's own**, so a
 	// scenario that is only about the hand does not have to pick a fight.
 	Enemy string `json:"Enemy"`
 
-	// EnemyElement is the colour to deal that opponent as. **Empty means the floor's own**, which
+	// EnemyElement is the colour to deal that opponent as. **Empty means the realm's own**, which
 	// is what a fixture wants unless the colour is the thing being looked at — a picture that has
 	// not been generated yet, say, or a deck whose ticks are the point. It is refused if the
 	// record cannot be dealt as it, so a fixture cannot quietly fight a creature that does not
@@ -87,7 +87,7 @@ type record struct {
 	EnemyElement string `json:"EnemyElement"`
 
 	// Screen is which scene to open on: `combat` (the default), `reward`, `shop` or `portal`. A
-	// portal fixture's `Fight` has to be the first room of a floor above the first — the room a
+	// portal fixture's `Fight` has to be the first room of a realm above the first — the room a
 	// portal opens onto — or the launch fails, since nothing else stands in front of one.
 	//
 	// **It exists because a between-fights screen is otherwise a twenty-minute question**
@@ -101,7 +101,7 @@ type record struct {
 	// think it is on, and leaving that screen would advance from the wrong station.
 	Screen string `json:"Screen"`
 
-	// Fight is which room the run has reached: 0 is floor 1's outer room, 2 its portal room. **It is
+	// Fight is which room the run has reached: 0 is realm 1's outer room, 2 its portal room. **It is
 	// what makes a jumped-in reward screen pay the right room award**, and what the enemy is scaled
 	// against.
 	Fight int `json:"Fight"`
@@ -142,8 +142,8 @@ type record struct {
 	//
 	// **It is not a creature in `data/enemies.json`, deliberately** *(owner's call, 2026-09-11)*.
 	// A training dummy is a fixture, and `data/` is the game's own catalog — loaded by every
-	// build, drawn on the roster sheet, and reachable by the climb's own roll. So this changes the
-	// *stats* of whichever opponent the fixture or the climb already named, which means the fight
+	// build, drawn on the roster sheet, and reachable by the journey's own roll. So this changes the
+	// *stats* of whichever opponent the fixture or the journey already named, which means the fight
 	// still has a real portrait, a real deck and a real set of blows to watch. What it does not
 	// have is an end.
 	//
@@ -163,7 +163,7 @@ type record struct {
 
 	// RoundLimit is how many rounds a fight of this run gets, overriding combat.DefaultRoundLimit.
 	//
-	// **Zero means the run's own**, which is the five every fight in the tower is on. It is here
+	// **Zero means the run's own**, which is the five every fight in the journey is on. It is here
 	// rather than only inside Dummy because the clock is a thing worth *looking at* on its own —
 	// a one-round fight is how the clock's own death is reached without playing four rounds first
 	// — and because `session.SetRoundLimit` refuses to stop the clock, so this cannot turn it off
@@ -172,7 +172,7 @@ type record struct {
 
 	// RelicSlots is how many relics the run may wear at once, overriding combat.DefaultRelicSlots.
 	//
-	// **Zero means the run's own**, which is the five every climb is on. It exists because the
+	// **Zero means the run's own**, which is the five every journey is on. It exists because the
 	// whole catalog is looked at five at a time otherwise, and a batch of new art or a new
 	// interaction is a batch: a sixth relic meant playing to a shop, selling one and buying
 	// another, per relic, forever.
@@ -456,11 +456,11 @@ func Hand() []combat.Card {
 	return out
 }
 
-// Enemy is the record key to fight instead of the climb's own, or empty for the climb's.
+// Enemy is the record key to fight instead of the journey's own, or empty for the journey's.
 func Enemy() string { return current.Enemy }
 
-// EnemyElement is the colour to deal the opponent as instead of the floor's, or empty for the
-// floor's own.
+// EnemyElement is the colour to deal the opponent as instead of the realm's, or empty for the
+// realm's own.
 func EnemyElement() string { return current.EnemyElement }
 
 // Teach reports whether this scenario starts the tutorial.

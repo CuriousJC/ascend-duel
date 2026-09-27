@@ -12,7 +12,7 @@ import "github.com/curiousjc/ascend-duel/internal/combat"
 // which of them happened.
 //
 // **It lives on the run rather than on the combat screen**, for the reason the ledger does: a
-// screen's state is thrown away by the next `Init`, and the interesting count is the whole climb's.
+// screen's state is thrown away by the next `Init`, and the interesting count is the whole journey's.
 //
 // **The rules never see it.** `combat.Duelist` carries stone counts because the resolver has to
 // read them; it carries no play counts, because a hand pays what it pays however often it has been

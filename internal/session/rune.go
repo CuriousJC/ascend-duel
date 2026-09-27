@@ -400,7 +400,7 @@ func resolveRune(r data.RuneData) (Rune, error) {
 			return Rune{}, fmt.Errorf("%s attaches a rider worth %d, which is nothing at all",
 				r.RuneRecord, n)
 		}
-		// **The two metals read their figure as a denominator, so it has a floor.** Below the
+		// **The two metals read their figure as a denominator, so it has a realm.** Below the
 		// number of outcomes there is no losing face left: a golden card on a d2 grants something
 		// every single time it is played, which is a different card entirely and is the mistake a
 		// number in a JSON file could make silently. See combat.LuckOutcomes.

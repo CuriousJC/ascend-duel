@@ -2,7 +2,7 @@ package achieve
 
 // The catalog: **the JSON records, parsed into something that can be asked a question.**
 //
-// Loaded at package init, so a malformed record fails the launch rather than mid-climb — the same
+// Loaded at package init, so a malformed record fails the launch rather than mid-journey — the same
 // exit `combat.RegisterConcept` and `session.loadStones` take, and for the same reason.
 
 import (
@@ -24,10 +24,10 @@ const (
 	// counts, on the same terms markTutorialSeen is written under.
 	MomentTutorialFinished = "tutorial-finished"
 
-	// MomentFloorReached is the climb arriving on a floor, carrying that floor in N. **A threshold
+	// MomentRealmReached is the journey arriving on a realm, carrying that realm in N. **A threshold
 	// rather than an equality** — a record asking for five is earned by six, so a player who
-	// somehow skipped the floor is not left with a hole in the page.
-	MomentFloorReached = "floor-reached"
+	// somehow skipped the realm is not left with a hole in the page.
+	MomentRealmReached = "realm-reached"
 
 	// MomentCardAltered is an essence having changed a card, carrying the resulting card's label in
 	// Value. **The label rather than the essence**, because what the player did is "made a Flinch" and
@@ -35,7 +35,7 @@ const (
 	MomentCardAltered = "card-altered"
 
 	// MomentShieldsRaised is the player standing behind a count of shields, carried in N. **A
-	// threshold rather than an equality**, like floor-reached, so eleven earns the row asking ten.
+	// threshold rather than an equality**, like realm-reached, so eleven earns the row asking ten.
 	//
 	// **It is a moment rather than a turn pattern, and that is the whole reason it exists**
 	// *(2026-09-09)*. A turn pattern reads the cards played; shields are what those cards *did*,
@@ -50,14 +50,14 @@ const (
 
 // moments is the same list, for validation and for the error message.
 var moments = []string{
-	MomentDuelWon, MomentTutorialFinished, MomentFloorReached, MomentCardAltered,
+	MomentDuelWon, MomentTutorialFinished, MomentRealmReached, MomentCardAltered,
 	MomentShieldsRaised,
 }
 
 // momentsCarryingN is the moments whose N is set by the raiser, and so may be asked for in a
 // record. **A moment carrying a field its raiser never sets is a condition that can never be met**,
 // which is the failure this whole file exists to refuse.
-var momentsCarryingN = []string{MomentFloorReached, MomentShieldsRaised}
+var momentsCarryingN = []string{MomentRealmReached, MomentShieldsRaised}
 
 // The two counter families. **A prefix rather than a bare name**, so a counter is self-describing
 // on disk and two axes cannot collide — `slash` is both a form and nothing like the concept
@@ -101,7 +101,7 @@ type trigger struct {
 	moment string
 	value  string
 
-	// count's threshold and floor-reached's floor.
+	// count's threshold and realm-reached's realm.
 	n int
 }
 

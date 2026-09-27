@@ -17,7 +17,7 @@
     "earth": "Caked in mud and stone. Heavier than they look, and harder.",
     "arcane": "Their tattoos burn purple, and something speaks through them."
   },
-  "ValidFloors": [
+  "ValidRealms": [
     2,
     7
   ],

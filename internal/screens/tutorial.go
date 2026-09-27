@@ -659,7 +659,7 @@ var waitingWords = map[tutorial.Condition]string{
 	tutorial.CondDuelPressed:  "press it",
 	tutorial.CondRoundDone:    "watching",
 	tutorial.CondShieldBroke:  "watching",
-	tutorial.CondPhaseFight:   "back to the tower",
+	tutorial.CondPhaseFight:   "back to the journey",
 	tutorial.CondPhaseReward:  "win the fight",
 	tutorial.CondPhaseShop:    "take your prize",
 	tutorial.CondLedgerOpened: "open the ledger",

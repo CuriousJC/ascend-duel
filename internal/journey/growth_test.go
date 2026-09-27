@@ -1,13 +1,13 @@
-package pyramid
+package journey
 
 import "testing"
 
-// The ascent curve: every room grows an opponent's HP and DMG by its own rate, compounding, so
+// The growth curve: every room grows an opponent's HP and DMG by its own rate, compounding, so
 // winning is what makes the next fight harder. See ScaleToFight.
 //
 // testGrowth is 10.00% a fight, written in basis points, and it is what the figures below were
-// computed against. It is a constant here rather than read from data/tower.json so that retuning
-// the tower does not rewrite this file's arithmetic.
+// computed against. It is a constant here rather than read from data/journey.json so that retuning
+// the journey does not rewrite this file's arithmetic.
 const testGrowth = 1000
 
 //
@@ -16,7 +16,7 @@ const testGrowth = 1000
 // the curve.
 
 func TestTheFirstFightIsTheBaseline(t *testing.T) {
-	// Floor 1's outer room is fight 0 and takes the record's own numbers. If this ever scales, a
+	// Realm 1's outer room is fight 0 and takes the record's own numbers. If this ever scales, a
 	// roster tuned by hand is being read through a multiplier nobody applied on purpose.
 	for _, base := range []int{0, 1, 5, 100, 400} {
 		if got := ScaleToFight(base, 0, testGrowth); got != base {
@@ -55,10 +55,10 @@ func TestTheCurveOnlyEverGrows(t *testing.T) {
 	}
 }
 
-func TestASmallStatStillClimbs(t *testing.T) {
+func TestASmallStatStillGrows(t *testing.T) {
 	// **This is the test that caught the first implementation.** Compounding the *stat* rather than
 	// the multiplier truncates `5 * 110 / 100` back to 5, so every stat below 10 was frozen for the
-	// whole ascent — and half the roster opens on DMG 5 or 6, which is exactly the band the curve
+	// whole journey — and half the roster opens on DMG 5 or 6, which is exactly the band the curve
 	// exists to lift. It looks correct on a 100 HP enemy and does nothing at all on a Giant Bat.
 	for _, base := range []int{1, 4, 5, 6, 9} {
 		if got := ScaleToFight(base, 8, testGrowth); got <= base {
@@ -73,18 +73,18 @@ func TestASmallStatStillClimbs(t *testing.T) {
 	}
 }
 
-func TestAFloorIsThreeRooms(t *testing.T) {
-	if FightsPerFloor != 3 {
-		t.Fatalf("a floor holds %d fights — the tower is 8 floors x 3", FightsPerFloor)
+func TestARealmIsThreeRooms(t *testing.T) {
+	if FightsPerRealm != 3 {
+		t.Fatalf("a realm holds %d fights — the journey is 8 realms x 3", FightsPerRealm)
 	}
-	for floor, want := range map[int]int{1: 0, 2: 3, 3: 6, 8: 21} {
-		if got := FirstFightOnFloor(floor); got != want {
-			t.Errorf("floor %d opens on fight %d, want %d", floor, got, want)
+	for realm, want := range map[int]int{1: 0, 2: 3, 3: 6, 8: 21} {
+		if got := FirstFightInRealm(realm); got != want {
+			t.Errorf("realm %d opens on fight %d, want %d", realm, got, want)
 		}
 	}
-	// Floors count from one, so anything below that is the first fight rather than a negative
-	// index into the ascent.
-	if got := FirstFightOnFloor(0); got != 0 {
-		t.Errorf("floor 0 mapped to fight %d, want 0", got)
+	// Realms count from one, so anything below that is the first fight rather than a negative
+	// index into the growth curve.
+	if got := FirstFightInRealm(0); got != 0 {
+		t.Errorf("realm 0 mapped to fight %d, want 0", got)
 	}
 }

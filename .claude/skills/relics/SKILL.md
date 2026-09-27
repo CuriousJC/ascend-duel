@@ -309,7 +309,7 @@ not — it carries a number that lives on the run:
 - **The accumulator lives on `Session`**, keyed by `RelicRecord`. It is the first relic state that
   has to survive a fight, and the first that will have to be **serialized** — which is why the
   record key is the identity and not an index.
-- **Uncapped, by decision** *(2026-08-17)*. +5 a fight reaches +100 by the top of the tower and
+- **Uncapped, by decision** *(2026-08-17)*. +5 a fight reaches +100 by the top of the journey and
   that is the intent, not an overflow.
 - **A growing relic holds exactly one numeric effect** *(2026-08-17, owner's call)*, so the
   accumulator has exactly one thing to feed and does not need to say which. A relic wanting two
@@ -493,7 +493,7 @@ The comparisons that actually carry weight:
 - **Whether it compounds.** Relics fire left to right and multiply, so two of a kind is a build.
   A verb that multiplies is worth more than one that adds, at the same number.
 - **Whether it grows.** An accumulator is uncapped by decision, so a growing relic is priced on
-  where it ends up at the top of the tower, not on fight one.
+  where it ends up at the top of the journey, not on fight one.
 - **Whether it takes something away.** A drawback is what `rare` is for — Onslaught's `scale-hp`
   below 100 is the shape.
 - **Whether it is dead in some runs.** A relic keyed on one element does nothing for a run that

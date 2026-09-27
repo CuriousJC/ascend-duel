@@ -32,10 +32,10 @@ func Stones() []string { return nil }
 // Essences is what the run should open carrying in its satchel. Nil here.
 func Essences() []string { return nil }
 
-// Enemy is the record key to fight instead of the climb's own. Empty here.
+// Enemy is the record key to fight instead of the journey's own. Empty here.
 func Enemy() string { return "" }
 
-// EnemyElement is the colour to deal the opponent as instead of the floor's. Empty here.
+// EnemyElement is the colour to deal the opponent as instead of the realm's. Empty here.
 func EnemyElement() string { return "" }
 
 // Teach reports whether this scenario starts the tutorial. Always false here.

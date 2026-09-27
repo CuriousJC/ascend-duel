@@ -200,7 +200,7 @@ func EssenceTip(w session.Essence, targets int) (string, []string) {
 // it.
 // **The element is the line under the name** *(owner's call)*, ahead of the figures. It is the one
 // thing about an opponent that nothing else on the screen says in words — the card states it in the
-// colour of its picture and in nothing else — and it is what the floor was themed on, so it belongs
+// colour of its picture and in nothing else — and it is what the realm was themed on, so it belongs
 // beside what the creature is called rather than among what it is worth. `TipLines` writes it in
 // that element's own colour, like every other element word in the game.
 //
@@ -288,7 +288,7 @@ func statusTexts() map[string]string {
 // **An essence has no tooltip** *(owner's call, 2026-09-05)*. The card's own face says what it does,
 // one word to a line, and a hover repeating that sentence beside it was the same words twice.
 
-// RoundTimerTip explains the bar under the tower place: what the cells are, and what happens when
+// RoundTimerTip explains the bar under the journey place: what the cells are, and what happens when
 // the last one lights.
 //
 // **The bar has no legend anywhere else**, which is the objection TODO.md already files against
@@ -302,6 +302,6 @@ func RoundTimerTip(spent, limit int) (string, []string) {
 		"",
 		fmt.Sprintf("Every duel lasts %d rounds.", limit),
 		"Still standing when the last one",
-		"ends, and the tower takes you.",
+		"ends, and the journey takes you.",
 	}
 }

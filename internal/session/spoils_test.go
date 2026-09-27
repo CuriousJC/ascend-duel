@@ -19,15 +19,15 @@ func TestAWinPaysInterestThenTheRoomAndTheLife(t *testing.T) {
 		t.Errorf("63 life left paid %d, want 6", got.FromLife)
 	}
 	if got.FromRoom != 3 {
-		t.Errorf("floor 1's outer room paid %d, want 3", got.FromRoom)
+		t.Errorf("realm 1's outer room paid %d, want 3", got.FromRoom)
 	}
 	if run.Vitae() != 20 {
 		t.Errorf("the purse moved to %d before anything was claimed", run.Vitae())
 	}
 }
 
-// TestTheRoomIsWorthThreeFourFive. Outer, inner, portal — and flat for the whole climb, so a
-// floor-8 boss pays what floor 1's does.
+// TestTheRoomIsWorthThreeFourFive. Outer, inner, portal — and flat for the whole journey, so a
+// realm-8 boss pays what realm 1's does.
 func TestTheRoomIsWorthThreeFourFive(t *testing.T) {
 	for _, tc := range []struct{ fight, want int }{
 		{0, 3}, {1, 4}, {2, 5}, {3, 3}, {4, 4}, {5, 5}, {21, 3}, {23, 5},

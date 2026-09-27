@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
-	"github.com/curiousjc/ascend-duel/internal/pyramid"
+	"github.com/curiousjc/ascend-duel/internal/journey"
 	"github.com/curiousjc/ascend-duel/internal/tutorial"
 )
 
@@ -12,7 +12,7 @@ import (
 // visit, which is exactly what "run-level state living on a scene" looks like.
 const startingVitae = 5
 
-// Session is one run: everything the player is carrying up the tower.
+// Session is one run: everything the player is carrying up the journey.
 //
 // **It is snapshotted, not replayed** *(owner's call, 2026-08-25)*. Two runs from the same seed may
 // end up holding different decks, because a deck edit is a *choice* rather than something derived
@@ -57,15 +57,15 @@ type Session struct {
 	// player can see. See relic.go.
 	worn []string
 
-	// climb is the run's fight order — who stands in each room, in the order they will be met.
-	// Nil on a run built by New, which is a test's run; a real one comes from Start. See climb.go.
-	climb *pyramid.Pyramid
+	// journey is the run's fight order — who stands in each room, in the order they will be met.
+	// Nil on a run built by New, which is a test's run; a real one comes from Start. See journey.go.
+	journey *journey.Journey
 
-	// portals is the motif the run walked through at each portal, in floor order: the first entry is
-	// floor two, since floor one is entered without one. **A motif key, not an offer's position** —
-	// a floor's offers are distinct motifs, so the key names the offer and still means the same one
+	// portals is the motif the run walked through at each portal, in realm order: the first entry is
+	// realm two, since realm one is entered without one. **A motif key, not an offer's position** —
+	// a realm's offers are distinct motifs, so the key names the offer and still means the same one
 	// in a file written by another build. An empty entry is a portal not yet taken, which reads as
-	// that floor's first offer. See climb.go.
+	// that realm's first offer. See journey.go.
 	portals []string
 
 	// phase is where in the loop the run is: the fight, the reward, the shop, the portal.
@@ -110,7 +110,7 @@ type Session struct {
 	// plays is how many times the run has formed each rung, keyed by hand key. **A tally, not an
 	// upgrade** *(owner's call, 2026-09-05)*: `stones` changes what a rung pays and this changes
 	// nothing at all. It is here rather than on the combat screen because a count belonging to one
-	// fight would be reset by the next `Init`, and it is the run's whole climb that is interesting.
+	// fight would be reset by the next `Init`, and it is the run's whole journey that is interesting.
 	plays map[string]int
 
 	// held is the sack: every rune the run is carrying, by record key, in the order they
@@ -329,7 +329,7 @@ func (s *Session) SpendVitae(n int) bool {
 // LifeLeft is the life the fighter walked out of the last fight with.
 func (s *Session) LifeLeft() int { return s.lifeLeft }
 
-// Fight is how far up the tower the run has got, zero-based.
+// Fight is how far up the journey the run has got, zero-based.
 func (s *Session) Fight() int { return s.fight }
 
 // WonFight advances to the next room. **Losing does not call this**, which is what makes a defeat
@@ -344,7 +344,7 @@ func (s *Session) Fight() int { return s.fight }
 // finished on — a tenth of it is part of the prize — and the three figures are frozen here and
 // handed over by the post-battle screen a sentence at a time. See spoils.go.
 // **It is also where the body is settled** *(owner's call, 2026-09-06)*. The wound the fight left
-// is carried into the next room, unless the room just won was the floor's portal room — a boss win
+// is carried into the next room, unless the room just won was the realm's portal room — a boss win
 // heals to full and raises the ceiling by a third, compounding. See life.go, and note that both
 // happen *before* the counter moves, on the same terms the payout does: they belong to the fight
 // that was won, not to the one about to be met.
@@ -358,7 +358,7 @@ func (s *Session) WonFight(lifeLeft, maxLife int) {
 	} else {
 		s.hurt = 0
 	}
-	if pyramid.RoomOf(s.fight) == pyramid.RoomPortal {
+	if journey.RoomOf(s.fight) == journey.RoomPortal {
 		s.bossWins++
 		s.hurt = 0
 	}

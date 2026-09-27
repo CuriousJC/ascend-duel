@@ -5,7 +5,7 @@ description: How randomness is implemented in this repo - the run seed, the sepa
 
 # Randomness and determinism
 
-Runs will eventually be **replayable from a seed**: the same tower, the same enemies, the same
+Runs will eventually be **replayable from a seed**: the same journey, the same enemies, the same
 rolls, so a player can retry a run and make different choices. Nothing replays yet — `Session`
 does not exist — but every roll written now either preserves that property or quietly destroys
 it, and the second kind is invisible until the day someone tries to replay something.
@@ -97,7 +97,7 @@ the salt table, so inserting one mid-list re-points every stream after it.
 
 | Stream | Scope | Used by | Sharing it would reroll |
 |---|---|---|---|
-| `seeds.EnemySelect` | run | `session.newClimb` → `pyramid.New`: every floor's offers, both realms behind every portal, and the creature in every room | the whole tower, on any change to loot or offers |
+| `seeds.EnemySelect` | run | `session.newJourney` → `journey.New`: every realm's offers, both realms behind every portal, and the creature in every room | the whole journey, on any change to loot or offers |
 | `seeds.CombatRoll` | run | `CombatScene.combatRNG`, injected into `ResolveRound` | every shock in the run, on any change to draw |
 | `seeds.PlayerDeck` | fight | `CombatScene.rng` | every cataloged hand in `internal/screens/seeds.go` |
 | `seeds.EnemyDeck` | fight | `decks.EnemyPile` | the player's opening hand, per the entry below |
@@ -126,10 +126,10 @@ fight just won. The essence menu is drawn from a *catalog* rather than from the 
 reward hand would make authoring an essence change which cards every fight offered. The shop's shelf is
 a third list on a third schedule, and the same argument separates it from both.
 
-**Tower layout draws no randomness.** It is fixed at 8 floors × 3 fights, endless later.
+**Journey layout draws no randomness.** It is fixed at 8 realms × 3 fights, endless later.
 
-**Enemy selection is shuffled within each floor band**, not across the roster, so a run opens
-on a different opponent without a floor-eight enemy ever being fight one.
+**Enemy selection is shuffled within each realm band**, not across the roster, so a run opens
+on a different opponent without a realm-eight enemy ever being fight one.
 
 **Per-fight streams are why a defeat and a retry deal that fight again** rather than dealing a
 new one — the same property the enemy roster has, and for the same reason: nothing re-rolls a
@@ -239,7 +239,7 @@ before it landed and both are now paid:
   the lightning source or the luck one, since a shuffle, a miss-roll and a gamble are three
   different concerns — and it changes `TestRoundIsDeterministic`.
 - **Do not pre-roll randomness into fixed-size slices.** A seeded `*rand.Rand` already is an
-  infinite deterministic list, and the planned endless tower gives no worst case to size an
+  infinite deterministic list, and the planned endless journey gives no worst case to size an
   array against. A reroll simply advances the cursor.
 - **Never let map iteration order affect an outcome.** Go deliberately randomizes it.
   the enemy roster is a map, and so is every catalog in `data/` — iterate a sorted key slice

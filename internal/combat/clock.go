@@ -12,7 +12,7 @@ package combat
 // handed to the screen as events to replay. A clock the presentation owned would be a clock that
 // ran at the speed of the animation.
 
-// DefaultRoundLimit is how many rounds a fight gets. **Five, for every fight in the tower** —
+// DefaultRoundLimit is how many rounds a fight gets. **Five, for every fight in the journey** —
 // the ordinary rooms and the portal protectors alike *(owner's call, 2026-09-06)*.
 //
 // **It is a default and not the rule.** Nothing in this package reads it: a duelist's own

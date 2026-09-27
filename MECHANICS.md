@@ -10,7 +10,7 @@ nothing has built yet; inside a section, a rule is running code unless it says o
 
 ## A run, end to end
 
-The title screen starts a run or resumes the one on disk. A run climbs a tower of **eight floors
+The title screen starts a run or resumes the one on disk. A run is a journey through **eight realms
 of three rooms**, and every third room is a named portal boss.
 
 **A room is a duel.** Both duelists are cards facing each other across a table. Each round you
@@ -30,7 +30,7 @@ that raises one rung of the hand ladder, a **potion** that changes the duelist, 
 alters cards mid-fight, or a **sealed good**, which is paid for and *then* opened. Then the next
 room.
 
-Wounds carry from room to room and only a portal room heals them, so a floor is an attrition budget.
+Wounds carry from room to room and only a portal room heals them, so a realm is an attrition budget.
 The run is written to disk between rooms and every run has a six-character code that replays it.
 
 ## Contents
@@ -51,7 +51,7 @@ The run is written to disk between rooms and every run has a six-character code 
 | [Runes](#runes--altering-the-deck-during-a-fight) | editing the deck inside a fight, and the riders a card can carry | built |
 | [Brands](#brands) | permanent changes to the chassis | **designed, not built** |
 | [Vitae](#vitae) | the currency and what a win pays | built |
-| [The tower](#the-tower) | eight floors, three rooms, the portal, the ascent curve | built except the door choice |
+| [The journey](#the-journey) | eight realms, three rooms, the portal, the growth curve | built except the door choice |
 | [Enemies](#enemies) | the roster, the planner, what a creature may do | built |
 | [The profile](#the-profile--what-survives-a-run) | what outlives a run, and the menus around it | built |
 | [Achievements](#achievements) | the three triggers and the closed vocabulary | built |
@@ -89,7 +89,7 @@ move with playtesting. A creature's are in its motif file under `data/motifs/`.
 
 **Three stats, and every one of them is the number it sounds like**: `DMG`,
 `Actions` and `HP` on `Duelist`, the player's straight out of `data/duelists.json` and a
-creature's out of its motif file under `data/motifs/`, grown by the ascent curve to the fight it is
+creature's out of its motif file under `data/motifs/`, grown by the growth curve to the fight it is
 met at. Life is HP. The action-point budget is `Actions`. Damage is
 `DMG × the card's own multiplier ÷ 100`.
 
@@ -110,12 +110,12 @@ hit that has already been blunted.
 future subtraction brings its own floor with it.
 
 `[?]` **Nothing has measured the roster against a hit per card.** Enemy HP and damage are tuned
-by hand, no simulation exists, and losing to a floor that cannot be beaten looks exactly like
+by hand, no simulation exists, and losing to a realm that cannot be beaten looks exactly like
 losing to bad draws — see *Enemies* below.
 
-`[?]` **How enemies scale up the tower.** Enemies are fully-specified records with no level
+`[?]` **How enemies scale through the realms.** Enemies are fully-specified records with no level
 term. A level multiplier — damage `level × 10`, speed `level × 5` — is the shape that has been
-suggested. Nothing scales with floor today.
+suggested. Nothing scales with realm today.
 
 ---
 
@@ -188,7 +188,7 @@ shift `minCardCost` took when a Hone could drive a card to free. **The duelist's
 is not part of that bound any more**; see §Shields.
 
 **`combat.Neighbor` walks this ladder too**, so an Exalt promotes a Brace and a Debase demotes a
-Guard. A free shield changes how many hits a run takes for the rest of the tower, and that is
+Guard. A free shield changes how many hits a run takes for the rest of the journey, and that is
 something a run is **allowed** to build toward: ten defenses shrunk to Flinches is five free
 shields a turn, and nothing takes the fifth away. `Neighbor` matches on the *verb* rather than
 being pinned to attacks, so the two ladders can never step onto each other.
@@ -266,7 +266,7 @@ identically to every hit in the turn, so none of them can reorder two. See `comb
 
 **This is a straight buff to shields, and it scales with how spiky a creature's deck is.** A
 swarm of identical small attacks is unaffected; a deck with one big card in it is now much
-easier to blunt. Nothing simulates a duel, so no test catches what that does to a floor.
+easier to blunt. Nothing simulates a duel, so no test catches what that does to a realm.
 
 #### A shield of the hit's own element banks an action point
 
@@ -404,7 +404,7 @@ nothing in the deck draws extra cards, and the only answer to a bad draw is the 
 
 **Every count on this page describes the deck a run opens with, and a run spends itself changing
 it**. This is the single easiest thing to forget when reasoning about
-hands, costs or reachability: the 55-card grid above is where the player *begins*, and by floor
+hands, costs or reachability: the 55-card grid above is where the player *begins*, and by realm
 three it may be a different deck in size, in color and in what it costs to play. A figure derived
 from the starting composition — a rung's odds, the cheapest way to build a hand, how many cards
 share an element — is a fact about round one of fight one and about nothing else.
@@ -655,7 +655,7 @@ else.
 
 ### A creature's own element
 
-**A creature is dealt one element with its floor, and it is that element's own.** It decides the
+**A creature is dealt one element with its realm, and it is that element's own.** It decides the
 creature's picture and the colour of every card in its deck, and it is a rule: **a hit of the
 creature's own element fizzles**. An ice Bash thrown at an ice goblin lands nothing at all — a 200
 damage ice hit is 0 — while the fire Bash beside it lands as it always did.
@@ -684,7 +684,7 @@ takes `FIZZLE` where a shock takes `MISS`. `combat.fizzles` is the rule and `Kin
 
 **An element does something only where a card's color meets a source of that color on its
 owner.** The player's source is a **relic**. An enemy's is an **elemental affix** — its own, or the
-floor's. Neither side gets statuses free; both get them at an intersection.
+realm's. Neither side gets statuses free; both get them at an intersection.
 
 What this buys is that `Duelist.Relics` turns out to be the general mechanism rather than the
 player's half of one: an affix sets flags in the same array. Nothing new is needed for it, and the
@@ -1164,7 +1164,7 @@ Not built.
 - **A hand cut short still pays out.** Nothing can interrupt the hand — it is read before any hit
   is thrown — so every hit carries its multiplier however the hits before it went.
 - **The bottom rung fires constantly and is priced as such.** The Pair is a near-certain hand
-  paying the identity, which is a floor rather than a reward. Whether the ladder should start
+  paying the identity, which is a realm rather than a reward. Whether the ladder should start
   higher is **answered by pricing instead** — a near-certain rung pays near the identity, so it
   costs nothing to leave in and it keeps the bottom of the ladder legible.
 - **Poker's ranking does not transfer to this deck, and the ladders are priced off measured
@@ -1175,7 +1175,7 @@ Not built.
 - **A turn's mismatched attacks sum**, rather than the biggest one landing alone, so a hand is
   worth more the dearer its cards are: at DMG 10 four Skewers are **400** where four Jabs are
   **100** and three Thumps are **30**. **Nothing on the enemy side is tuned against that** — the
-  ladder, the ascent curve and the roster are independent, and the ladder is one file.
+  ladder, the growth curve and the roster are independent, and the ladder is one file.
 
 ### The catalog's shape
 
@@ -1199,7 +1199,7 @@ below it — a rung under the identity would pay a player less for building more
 
 **A pair is certain rather than likely.** A hand of eight over four forms cannot avoid one, so
 `tools/handodds` scores it at 100% and the No Hand is essentially unreachable in round one. That
-is the right shape for a floor: the ladder starts where every turn already is.
+is the right shape for a realm: the ladder starts where every turn already is.
 
 `combat.Hand.Axes` is where the list lives and `combat.Hand.On` is how one reading is taken.
 
@@ -1358,7 +1358,7 @@ still no simulation of a duel to ask.
 
 Three things fall out of it and are worth keeping:
 
-- **A certain hand pays the identity.** The Pair is a 100% hand, so it is a floor rather than a
+- **A certain hand pays the identity.** The Pair is a 100% hand, so it is a realm rather than a
   reward — what it buys is the *sum of both cards*, which is already the whole of the change. It is
   the one rung priced under the curve on purpose; a rung the curve has nowhere to put is a rung
   nobody can aim at, and the honest thing is to charge nothing for it.
@@ -1469,7 +1469,7 @@ than an ever-widening round.
 **Every fight lasts at most five rounds. A duelist still standing when the fifth ends dies.**
 
 The round above is bounded by cost and by count; this bounds the *duel*. It applies to every fight
-in the tower — the two ordinary rooms and the portal protector alike, one number for all of
+in the journey — the two ordinary rooms and the portal protector alike, one number for all of
 them — and it is the reason a duel is a race rather than a siege.
 
 **What it is for.** Without it the correct play against anything dangerous is to stall: raise
@@ -1503,7 +1503,7 @@ resumes onto the default rather than onto no clock.
 **A relic may move it, and it moves the fight rather than the run.** `adjust-round-limit` names a
 signed number of rounds at `fight-start`, and `combat.RoundLimitFor` sums the worn set's deltas over
 the run's own number each time a fighter is put together — so selling the relic hands the rounds
-straight back, where a relic writing to the run would leave the whole climb moved. Hermes is the
+straight back, where a relic writing to the run would leave the whole journey moved. Hermes is the
 first record: every card 1 AP cheaper, every fight two rounds shorter.
 
 - **A delta, never a figure.** A relic naming three rounds outright could not be mixed with one
@@ -1519,15 +1519,15 @@ first record: every card 1 AP cheaper, every fight two rounds shorter.
 - **A fight already on no clock stays on none.** Creatures and every bare duelist in a test carry a
   zero, and a delta off an unlimited fight is still unlimited.
 
-**The player watches it fill.** A five-cell bar under the tower place, one cell per round spent,
+**The player watches it fill.** A five-cell bar under the journey place, one cell per round spent,
 with the last one taking the game's one red as it lights. It is a picture of the round counter and
 decides nothing — the clock is checked inside the resolved round, per the rule that presentation
 may never change an outcome. The tutorial names it before the first duel, because a timer that
 killed without having said so would be the worst kind of hidden rule.
 
 **The cost, stated rather than discovered.** A hard cap turns every fight into a damage check, and
-nothing in this repo simulates a duel — so a floor where creature HP has outrun what a run can
-build is unwinnable and no test goes red. That is the thing to watch as the tower scales, and it is
+nothing in this repo simulates a duel — so a realm where creature HP has outrun what a run can
+build is unwinnable and no test goes red. That is the thing to watch as the journey scales, and it is
 an argument for a headless duel simulator rather than against the clock.
 
 ---
@@ -1612,7 +1612,7 @@ the turn at the figure the relic opened with, which is the same relic paying for
 - **Growing relics hold state**, the first relic thing that does, and the first that must be
   **serialized**: an accumulator on `Session`, keyed by `RelicRecord`, which is why the record key
   is the identity rather than an index. **Uncapped, by decision** — a +5 HP relic is +100 by the
-  top of the tower and that is the intent. **One numeric effect per growing relic**, so the
+  top of the journey and that is the intent. **One numeric effect per growing relic**, so the
   accumulator never has to say which of two it feeds.
 - **Nothing measures any of this**, so **a relic's balance is unknown** — say so rather than
   guessing at a multiplier.
@@ -1732,7 +1732,7 @@ win, before the screen throws that duelist away.
 - **It is relic state that changes mid-fight**, which is the thing a mid-fight save would have to
   write down. A run is only ever snapshotted between phases, so nothing writes it.
 - **Uncapped, like every other accumulator.** +0.1x a hit across a long fight is a big number by
-  the top of the tower, and nothing measures it.
+  the top of the journey, and nothing measures it.
 
 ### Atrophy, and the ladder as a relic
 
@@ -3191,12 +3191,12 @@ screen as it narrates them. See `internal/session/spoils.go`.
 |---|---|
 | **Interest** | propagation, below — on the purse as it stood when the fight ended |
 | **The life you kept** | **a tenth of the life remaining, rounded down**: 65 left pays 6 |
-| **The room** | **3** outer, **4** inner, **5** portal room (the floor's boss), flat for the whole climb |
+| **The room** | **3** outer, **4** inner, **5** portal room (the realm's boss), flat for the whole journey |
 
 - **A share of the life *remaining*, not of the maximum.** It is a reward for fighting well rather
   than a rebate, and a relic that raises max life pays out more here indirectly — which is intended.
   A win on nine life pays nothing from this part.
-- **The room award does not scale with the floor.** What makes a later fight worth more is the life
+- **The room award does not scale with the realm.** What makes a later fight worth more is the life
   you manage to keep in it.
 - **Deciding and paying are separate.** The figures are frozen when the fight ends, so nothing
   about the payout depends on when the player clicks; `Session.Advance` claims whatever was never
@@ -3230,15 +3230,15 @@ faster.
 
 ---
 
-## The tower
+## The journey
 
-**8 floors × 3 fights.** Fixed layout, drawing no randomness — what is *in* it is random, the
+**8 realms × 3 fights.** Fixed layout, drawing no randomness — what is *in* it is random, the
 shape is not.
 
-### A floor is a motif and an element
+### A realm is a motif and an element
 
-**The tower picks one whole motif and one of the five elements per floor**, and the floor's three
-rooms are three records of that motif dealt as that element. A fire goblin floor is three goblins
+**The journey picks one whole motif and one of the five elements per realm**, and the realm's three
+rooms are three records of that motif dealt as that element. A fire goblin realm is three goblins
 in fire — so what the player walked into is something they can plan against, rather than three
 unrelated creatures who happen to share a corridor.
 
@@ -3247,72 +3247,72 @@ unrelated creatures who happen to share a corridor.
   holds the rooms themselves.
 - **Every fight is drawn in front of its motif's room for its tier, and the room says which tier it
   is.** An outer chamber has a small door at the far side, an inner chamber a large one, and a
-  portal room two swirling rainbow portals, so a player can tell at a glance which of a floor's three
+  portal room two swirling rainbow portals, so a player can tell at a glance which of a realm's three
   fights they are in. A room is one place drawn once per element — the same goblin tinker studio
-  molten in fire and frozen in ice. Which room a fight gets is derived from the run, the floor and
+  molten in fire and frozen in ice. Which room a fight gets is derived from the run, the realm and
   the tier, never rolled. **A fight with no room of its own is drawn on the plain default
   backdrop**, which has no door, so the gap is visible rather than disguised.
-- **A motif is never offered twice in one run.** Floor one is offered one realm and every floor
+- **A motif is never offered twice in one run.** Realm one is offered one motif and every realm
   above it two, one behind each portal, and **both are spent whichever the player walks through** —
-  a realm passed over on floor two never comes back. So a climb is a tour of the roster rather than
-  a shuffle of it, and what a run code offers never depends on what was picked before it. A climb
-  therefore needs one motif for floor one and two for every floor above it, all distinct and each
-  inside its own band; the loader refuses a roster that cannot supply that, and the climb is rolled
-  so that no draw spends a motif a later floor needs.
-- **A motif carries the band of floors it may theme**, at the file level rather than per record: a
-  motif whose creatures were valid on floors 1 to 3 and whose boss was valid on 4 to 6 could never
-  theme a floor at all.
+  a realm passed over on realm two never comes back. So a journey is a tour of the roster rather than
+  a shuffle of it, and what a run code offers never depends on what was picked before it. A journey
+  therefore needs one motif for realm one and two for every realm above it, all distinct and each
+  inside its own band; the loader refuses a roster that cannot supply that, and the journey is rolled
+  so that no draw spends a motif a later realm needs.
+- **A motif carries the band of realms it may theme**, at the file level rather than per record: a
+  motif whose creatures were valid on realms 1 to 3 and whose boss was valid on 4 to 6 could never
+  theme a realm at all.
 - **Every chamber of every motif can be dealt at least two ways.** For the outer and inner rooms
   and each of the five elements there are at least two records that fit, so a chamber is a pool
   rather than a fixed set. **The portal room needs only one**, because a boss is a name rather than a
-  room the climb fills: a motif may field one boss per element and each is the fight that floor is
-  remembered by. The loader refuses a motif that cannot reach either figure — a floor the generator
+  room the journey fills: a motif may field one boss per element and each is the fight that realm is
+  remembered by. The loader refuses a motif that cannot reach either figure — a realm the generator
   can offer and then fail to build is worse than one that never existed.
 - **A record is dealt as exactly one element and its whole deck takes it.** There is no element
   anywhere on a creature's card: the colour belongs to the creature, the way a duelist's Jab is a
   concept that ships in five colours. Today the element marks the attacks and picks the picture,
-  and `[?]` what else it should do — a status on hit, a resistance, something the floor does to the
+  and `[?]` what else it should do — a status on hit, a resistance, something the realm does to the
   *player* — is open.
 - **A record carries one picture per element it can be dealt as.** A fire goblin serf and an ice
   goblin serf are two drawings of one creature.
 
-- **The portal room is the floor's third room and the boss is a record of the same motif.** It is a
+- **The portal room is the realm's third room and the boss is a record of the same motif.** It is a
   face the player can be told about, tiered above the two rooms below it and further along the
-  ascent curve than either, but it is not a separate catalog: a goblin floor ends on a goblin.
+  growth curve than either, but it is not a separate catalog: a goblin realm ends on a goblin.
 - `[?]` **A boss has no advantage of its own yet.** What separates it from the creatures below it
   is its place on the curve and its own base stat line. One advantage per boss, drawn from a pool
   the record carries out of a closed vocabulary, is the decision still to make. See TODO.md.
 - `[?]` Whether an inner-chamber creature should differ from an outer one by anything other than
   its place on the curve.
 
-### The ascent curve
+### The growth curve
 
-**Every fight is harder than the one before it, and the step is the fight rather than the floor.**
+**Every fight is harder than the one before it, and the step is the fight rather than the realm.**
 A creature's `HP` and `DMG` are **step-zero quantities** — what it is worth in the very first room
-of the tower, whatever floor it is actually met on — and the curve puts it where it stands:
+of the journey, whatever realm it is actually met on — and the curve puts it where it stands:
 
 ```
-step = (floor - 1) * 3 + room          room: outer 0, inner 1, portal 2
+step = (realm - 1) * 3 + room          room: outer 0, inner 1, portal 2
 ```
 
-- **Two rates, not one.** `data/tower.json` holds `HPGrowth` and `DMGGrowth` in basis points, so
+- **Two rates, not one.** `data/journey.json` holds `HPGrowth` and `DMGGrowth` in basis points, so
   how fast a creature's life outruns the player's damage is a separate dial from how fast its
   blows outrun the player's life.
-- **Stepping per fight is what makes the ordering free.** A floor's boss is harder than its own
-  inner chamber, and the next floor's outer chamber is harder than that boss, with no constraint
+- **Stepping per fight is what makes the ordering free.** A realm's boss is harder than its own
+  inner chamber, and the next realm's outer chamber is harder than that boss, with no constraint
   between two separate numbers to get wrong.
 - **So a late-band creature is not written as a high stat line.** It is written as the multiple of
   its neighbours it is meant to be. That also keeps the ratio between two motifs fixed however the
   curve is retuned.
-- **`Actions` never scales.** Growing the budget would hand a high-floor creature more cards rather
+- **`Actions` never scales.** Growing the budget would hand a high-realm creature more cards rather
   than a harder version of its own.
-- **Nothing caps it.** The tower has a configured height and the climb wraps past it; the curve
-  keeps counting, which is what makes the endless tower a number rather than a rewrite.
+- **Nothing caps it.** The journey has a configured height and the journey wraps past it; the curve
+  keeps counting, which is what makes the endless journey a number rather than a rewrite.
 
 ### The portal
 
-**A floor's boss opens two portals, and the player walks through one.** Behind each is a realm — a
-motif in an element — and the one chosen is the next floor: its three rooms are that motif's
+**A realm's boss opens two portals, and the player walks through one.** Behind each is a realm — a
+motif in an element — and the one chosen is the next realm: its three rooms are that motif's
 records dealt as that element. The choice is made after the shop that follows the portal room, and
 it is the only way on: there is no Back and no Skip.
 
@@ -3321,15 +3321,15 @@ it is the only way on: there is no Back and no Skip.
   element, what the element does to them. Both are authored on the motif record and are what a
   player reads, where `Draw` and `ElementDraw` are what an artist reads. An unwritten line shows as
   TBD.
-- **Floor one is not chosen.** A run starts there rather than walking into it.
-- **What is offered is the seed's; what is taken is the run's.** Both realms on every floor are
+- **Realm one is not chosen.** A run starts there rather than walking into it.
+- **What is offered is the seed's; what is taken is the run's.** Both realms on every realm are
   rolled up front off the run code, and every offer is spent, so the same code always offers the
   same pairs whatever was picked. The picks are saved with the run and written to the journal, so a
   run code plus its picks is the whole path.
-- **Past the top of the tower the climb wraps onto floor one's single offer**, and a portal with one
+- **Past the top of the journey the journey wraps onto realm one's single offer**, and a portal with one
   realm behind it is walked past rather than shown.
-- **After fights 1 and 2: a choice of two doors** — "next fight on this floor", where the portal is
-  "next floor". Not built.
+- **After fights 1 and 2: a choice of two doors** — "next fight on this realm", where the portal is
+  "next realm". Not built.
 - **Doors hint at what is behind them.** Cold coming off the door for an ice enemy, smoke for
   fire — the shape of what is coming without its name.
 - **Generate every option, always.** Rolling only the chosen one shifts every subsequent draw in
@@ -3337,23 +3337,23 @@ it is the only way on: there is no Back and no Skip.
 
 ### Life between fights, and what a portal room is worth
 
-**A wound is carried from room to room, and only a boss takes it away.** A floor is an
+**A wound is carried from room to room, and only a boss takes it away.** A realm is an
 attrition budget of three rooms. Opening every duel at full life would make damage a fact about
-one round and never about the climb, and the only thing a bad fight would cost is the tenth of
+one round and never about the journey, and the only thing a bad fight would cost is the tenth of
 life-left the payout pays.
 
-- **Beating the floor's portal protector heals to full**, and it is the only thing that does. No
+- **Beating the realm's portal protector heals to full**, and it is the only thing that does. No
   card, no relic and no room between fights returns life outside a duel. That is what makes the
-  third room of a floor the one worth arriving at holding something back.
+  third room of a realm the one worth arriving at holding something back.
 - **It also raises the ceiling by a third, compounding.** Each portal room is 33% more body than the
-  run already had, not 33% of the body it started with — so a run standing on floor eight, seven
-  portal rooms up, is carrying about seven and a half times the life it opened with. The ascent curve
-  grows the opponent by 10% a *room*, which is a little over twice that across the same climb, so
+  run already had, not 33% of the body it started with — so a run standing on realm eight, seven
+  portal rooms up, is carrying about seven and a half times the life it opened with. The growth curve
+  grows the opponent by 10% a *room*, which is a little over twice that across the same journey, so
   the two are pulling in the same direction and the boss bonus is the player's half of it.
-- **The ceiling grows, the wound does not scale with it.** Forty points taken on floor two are
-  forty points on floor six — worth much less against a bigger body, which is deliberate: the
-  reward for climbing is that the early rooms of a floor stop being able to end you.
-- **A defeat ends the run**, so nothing carries a wound past the bottom of the tower. There is no
+- **The ceiling grows, the wound does not scale with it.** Forty points taken on realm two are
+  forty points on realm six — worth much less against a bigger body, which is deliberate: the
+  reward for going further is that the early rooms of a realm stop being able to end you.
+- **A defeat ends the run**, so nothing carries a wound past the bottom of the journey. There is no
   state where a run is alive and unable to start a fight; a wound deeper than the ceiling — only
   reachable by selling the relic that was holding the ceiling up — starts the fight on one life
   rather than on a corpse.
@@ -3367,15 +3367,15 @@ ceiling. The ceiling is rebuilt from the record every fight and then moved by wh
 a stored total would mean a different fraction of it the moment a relic changed hands, and a stored
 multiplier is a second copy of a fact the count already carries. See `internal/session/life.go`.
 
-### The ascent curve
+### The growth curve
 
 **Every room grows the opponent's HP and DMG by 10%, compounding**.
-Floor 1's outer room is the baseline and takes a record's stats unchanged; each fight after it is
-10% harder than the one before. `pyramid.AscentGrowthPct` is the number, `pyramid.ScaleToFight`
+Realm 1's outer room is the baseline and takes a record's stats unchanged; each fight after it is
+10% harder than the one before. `data/journey.json`'s `HPGrowth` and `DMGGrowth` are the numbers, `journey.ScaleToFight`
 is the arithmetic, and `entities.NewEnemyFrom` takes the fight index so an unscaled opponent cannot
 be built by accident.
 
-- **It compounds per *room*, not per floor.** A floor is three rooms, so a floor costs about a
+- **It compounds per *room*, not per realm.** A realm is three rooms, so a realm costs about a
   third more than the one below it and the portal boss is harder than the inner room beside it.
 - **HP and DMG only. `Actions` is left alone**, because it is the budget a *deck* is spent out of:
   growing it hands an opponent more cards rather than a harder version of its own. It stays a
@@ -3384,20 +3384,20 @@ be built by accident.
   `v = v * 110 / 100` once per room — freezes every stat below 10, because integer division
   truncates `5 * 110 / 100` straight back to 5. Half the roster opens on DMG 5 or 6, so the curve
   would have done nothing to exactly the band it was added for. A fixed-point multiplier truncated
-  once at the end is what fixes it, and `TestASmallStatStillClimbs` is what caught it.
+  once at the end is what fixes it, and `TestASmallStatStillGrows` is what caught it.
 - **No `math.Pow`.** A float power is not reliably identical across two machines and a stat feeds a
   duel meant to be replayable from a seed — the same rule that keeps `math/rand` out of the game.
 - **Nothing caps the fight index.** The fight order is the whole roster standing in for a
-  generator, so playing far enough asks for numbers the eight-floor tower never would.
+  generator, so playing far enough asks for numbers the eight-realm journey never would.
 
 **It doubles a curve that is already in the data, and that is deliberate but worth stating.**
-`ValidFloors` sorts the roster from the weakest floor-one creature to the strongest at the top,
-which is several times the climb on its own; the ascent curve multiplies on top of that. **What
-that costs a player is unmeasured** — read the floor bands off `go run ./tools/motifsheet` rather
+`ValidRealms` sorts the roster from the weakest realm-one creature to the strongest at the top,
+which is several times the journey on its own; the growth curve multiplies on top of that. **What
+that costs a player is unmeasured** — read the realm bands off `go run ./tools/motifsheet` rather
 than from a figure written here.
 
 `[?]` Whether the curve should be flatter now that it stacks on the roster's own progression, or
-whether the roster should flatten instead and let the curve carry the climb.
+whether the roster should flatten instead and let the curve carry the journey.
 
 `[?]` What distinguishes one portal from another. `[?]` Whether the shop and the door choice
 are one screen or two, and in which order.
@@ -3412,7 +3412,7 @@ creature, at that creature's own rungs, and **never fewer than three distinct co
 Slime oozes, engulfs and dissolves.
 
 **Two creatures of one motif hold different cards.** They are two different fights rather than one
-fight at two weights, which is what makes a floor's pool worth having.
+fight at two weights, which is what makes a realm's pool worth having.
 
 **Every creature deck is pure attack.** A creature raises no shields and blunts nothing, so its
 whole personality is which blows come round how often: four cheap copies of one card is a swarm,
@@ -3462,15 +3462,15 @@ what keeps a card a damage-maximizing pass would never reach from being dead con
 one is **variety**: a creature with three different attacks lands all three, and how spiky that
 set is decides how much one shield takes off the turn.
 
-### The deep tower is meant to need a build
+### The deep realms are meant to need a build
 
-Per-enemy decks, the roster's own HP curve and the 10% ascent curve compound, and none of them
-is absorbed by a retune — so the deep floors are out of reach of a duelist wearing nothing.
+Per-enemy decks, the roster's own HP curve and the 10% growth curve compound, and none of them
+is absorbed by a retune — so the deep realms are out of reach of a duelist wearing nothing.
 **That is the intent rather than a regression**: the
-player's ceiling is *supposed* to move and relics are how, so a bare fighter is not who those floors
+player's ceiling is *supposed* to move and relics are how, so a bare fighter is not who those realms
 are priced against and **the whole ascension is not expected to be winnable yet**.
 
-**A wall on a *shallow* floor is a different thing**, and is still a failure — the player has bought
+**A wall on a *shallow* realm is a different thing**, and is still a failure — the player has bought
 nothing by then.
 
 ### The count bound is the rules', not the screen's
@@ -3482,7 +3482,7 @@ selection does**. A cap enforced only by the screen is a cap the enemy ignores.
 
 ## The profile — what survives a run
 
-**A run dies; a profile does not.** The tower is the run — the deck, the purse, the worn relics, the
+**A run dies; a profile does not.** The journey is the run — the deck, the purse, the worn relics, the
 room you are in — and the profile is the thin layer that outlives it: whether the tutorial has been
 watched, what has been achieved, what has been unlocked, **and what the player has chosen about the
 program** — how loud the score is and how fast the game moves. Standard roguelike shape, and the
@@ -3521,12 +3521,12 @@ now: **New Run** or **Continue**.
   come and go between launches is one that has to be re-read every time.
 - **New Run asks first, and only when it would destroy something.** A player on a clean install gets
   a run; a player forty rooms up gets a question.
-- **A pinned seed is not rerolled by New Run.** A pin is a debugging session where the same tower in
+- **A pinned seed is not rerolled by New Run.** A pin is a debugging session where the same journey in
   the same order is the whole point, and a menu button must not undo what the source set. The
   tutorial still outranks both — a taught run is dealt the script's code, because the lesson
   promises the player the hand they are holding.
 
-**Abandon Run is how a climb ends early**, on the settings screen, below a rule, in the
+**Abandon Run is how a journey ends early**, on the settings screen, below a rule, in the
 destructive red, behind a confirm. Without it there is no way to give up — quitting means
 closing the window, and the next launch resumes exactly where it left off. It is filed under the
 program's screen rather than given a corner of its own because that is the one screen reachable
@@ -3534,14 +3534,14 @@ from everywhere, which is what a "give up" control has to be — and the placeme
 set so far apart from the two bars.
 
 **A death ends the run, and there is no retry.** A defeat that put the same opponent straight
-back up is not what a roguelike is. The duelist falling ends the climb exactly as giving up does
+back up is not what a roguelike is. The duelist falling ends the journey exactly as giving up does
 — same function, same deleted file, same trip back to the title — and the button in the DUEL!
 slot says **End Run** rather than offering a choice. The press is the player deciding they have
 looked long enough, not a decision about whether to die; the screen holds its last picture until
 they make it.
 
 **The run's ledger is readable on that screen before the button is pressed**, since it is chrome and
-the run still exists until the press. That is the account of the climb that just ended, which is the
+the run still exists until the press. That is the account of the journey that just ended, which is the
 one moment it is most worth having.
 
 ### The end-of-run splash
@@ -3550,19 +3550,19 @@ one moment it is most worth having.
 whether it ended in a death or was given up from the settings screen. Both are the same event and
 both land here; the only difference is the sentence at the top.
 
-What it shows: **floor reached, enemies defeated, damage dealt** — the three the run is judged on —
+What it shows: **realm reached, enemies defeated, damage dealt** — the three the run is judged on —
 then rooms entered, rounds fought and unspent vitae, quieter. And **the run code, in a box, at three
 times the size of anything else on the page.**
 
 **The seed is the reason the page earns its place.** Everything else is a number about a run that is
-over; the code is the one thing still useful afterwards — it deals the whole tower again, and it is
+over; the code is the one thing still useful afterwards — it deals the whole journey again, and it is
 how a run can be handed to somebody or named in a bug report. Before this it went to the log at
 launch and nowhere a player could ever see.
 
 **The code is also in the bottom-right corner of the settings screen**, quiet and captioned, drawn
 only while a run is in progress. The splash is a page you see once and only after the fact; the cog
 is on every screen, so that corner is where the answer is always two clicks away. Nothing is drawn
-there with no run standing, because the code would name a tower the next New Run is about to reroll.
+there with no run standing, because the code would name a journey the next New Run is about to reroll.
 
 **There is no "run it again" button, and there should not be.** The seed being on screen is what
 makes a run repeatable; a button that dealt it again would be a retry with a longer name.
@@ -3592,10 +3592,10 @@ its seed alone — a deck edit is a choice, so replay would need a seed plus a c
 resuming does not need the path, only the state. So the snapshot is state, and it may never be used
 as a replay. See the Randomness section below, which is unchanged by this.
 
-**The climb is half saved.** What every floor offers is a function of the run seed and is rebuilt
+**The journey is half saved.** What every realm offers is a function of the run seed and is rebuilt
 from the run code, so storing it would be a second answer to a question the seed already answers.
 Which portal the player walked through is a choice, so the snapshot writes it down — one motif key
-per portal, in floor order — and a resume refuses a key its floor never offered.
+per portal, in realm order — and a resume refuses a key its realm never offered.
 `TestThePortalsTakenSurviveAResume` holds it.
 
 **Nothing about the profile is ever fatal.** A missing file is a new player, a corrupt file is a
@@ -3663,7 +3663,7 @@ The list looks heterogeneous and is not. It is three families, and only one of t
   worth naming, not worth paying for.
 - **A lifetime count** — three hundred slashing cards, two hundred Bashes. A tally on the profile,
   not a predicate over anything the process is holding.
-- **A named moment** — a duel won, the tutorial finished, the fifth floor reached, a card altered
+- **A named moment** — a duel won, the tutorial finished, the fifth realm reached, a card altered
   into a Flinch, ten shields standing at once. The only family that costs a line of Go each, and
   deliberately the short one.
 
@@ -3673,7 +3673,7 @@ beside three attack forms — something no rung on the ladder can say, because a
 what its cards must *agree* on.
 
 **Thresholds are at-least, everywhere**. A five-element turn earns Spectrum as well
-as Elementalist, arriving on floor six earns the fifth-floor row, and standing behind eleven shields
+as Elementalist, arriving on realm six earns the fifth-realm row, and standing behind eleven shields
 earns the row that asked for ten. The alternative makes a player who jumped a step permanently miss
 it, which reads as a bug in the page.
 
@@ -3737,7 +3737,7 @@ and a single box would have to pick one name to put at the top.
 **Counters are held in memory and settled when a duel ends**. The alternative was a
 disk write per card played, against a file the rest of the game writes at a handful of named
 moments. What that costs is stated rather than discovered: a crash mid-duel loses that duel's
-tallies and nothing else. **A lost duel settles them too** — what a defeat costs is the climb, not
+tallies and nothing else. **A lost duel settles them too** — what a defeat costs is the journey, not
 the record of what was swung on the way up.
 
 **Counters are per concept and per form, and never per concept and element**. Five
@@ -3775,7 +3775,7 @@ depends on stored seeds yet**, which is why this is recorded rather than fixed; 
 settled before the save format lands, because a choice log replays through this.
 
 **Deck shuffles use a seed derived per encounter, not a running stream:**
-`hash(runSeed, floor, fightIndex)`.
+`hash(runSeed, realm, fightIndex)`.
 
 - Same run seed replays the same enemy deck.
 - Different encounters shuffle differently, even for the same enemy type.
@@ -3798,13 +3798,13 @@ What it is for is two questions at two scales, and the design answers both on on
   worth, which relic multiplied it and which relic bought the extra landing, and what the hand's
   multiplier did to it, and what became of it. The hand dialog acts this out while the hits land and
   then it is gone; the ledger is where it keeps.
-- **"How did my run go, and where did it go wrong?"** — every fight as one line: floor, opponent,
+- **"How did my run go, and where did it go wrong?"** — every fight as one line: realm, opponent,
   won or lost, in how many rounds, for how much damage. Clicking one opens it.
 
 The rules that hold it up:
 
 - **The fight in progress is expanded; every finished fight is folded to its heading.** A
-  thirty-fight climb is thousands of lines and a panel opening onto all of them is a scrollbar
+  thirty-fight journey is thousands of lines and a panel opening onto all of them is a scrollbar
   with nothing to aim at.
 - **A round is written down when it ends, never while it plays.** So the panel cannot show a round
   the player is still watching, which is the concealment rule it never needed to be given.
@@ -3815,7 +3815,7 @@ The rules that hold it up:
 - **It says nothing the events do not.** Every figure comes off the `KindHand` event, which is why
   those fields are on the event at all; the panel is a second *drawing* of one event and never a
   second arithmetic.
-- **It is saved with the run**, so "how did my whole climb go" survives a resume. It is the one
+- **It is saved with the run**, so "how did my whole journey go" survives a resume. It is the one
   part of a snapshot that is prose rather than state, and therefore the one part that may never
   fail a resume: an unrecognized voice draws plain rather than costing the player the run.
 - **It is reachable everywhere**, from a button beside the cog rather than from the combat screen.
@@ -3882,15 +3882,15 @@ Every `[?]` above, in one place. Each is a decision nobody has taken, not a thin
 written down.
 
 **Balance, and the reason all of it is open:** *nothing in this repo simulates a duel.* An
-unwinnable floor looks exactly like a run of bad draws, no test goes red, and every price and
+unwinnable realm looks exactly like a run of bad draws, no test goes red, and every price and
 every stat below is therefore a judgment.
 
 - `[?]` **Nothing has measured the roster against a hit per card.** Enemy HP and DMG are tuned
   by hand, and every flat bonus, status, drain and shock now scales with how many hits a turn
   throws.
-- `[?]` **How enemies scale up the tower.** Records carry no level term; the ascent curve is the
+- `[?]` **How enemies scale through the realms.** Records carry no level term; the growth curve is the
   only thing that scales one.
-- `[?]` **Whether the ascent curve should be flatter**, now that it compounds on top of the
+- `[?]` **Whether the growth curve should be flatter**, now that it compounds on top of the
   roster's own progression — or whether the roster should flatten and let the curve carry it.
 - `[?]` **Whether a Pair relic is priced right.** A turn satisfies every rung its cards reach, so
   the Pair family is near-unconditional while still being priced as a conditional one.
@@ -3911,11 +3911,11 @@ every stat below is therefore a judgment.
 - `[?]` **Enemy statuses are blocked on affixes, which do not exist.** Every creature card is
   authored `basic`, so the element system runs in one direction only.
 
-**Tower and rooms:**
+**Journey and rooms:**
 
 - `[?]` **What distinguishes one portal from another.**
 - `[?]` **Whether the shop and the door choice are one screen or two**, and in which order.
-- `[?]` **Whether a boss carries an affix by default**, and whether several bosses on one floor
+- `[?]` **Whether a boss carries an affix by default**, and whether several bosses on one realm
   should differ in shape rather than only in name and picture.
 - `[?]` **Whether a boss or an affix may give an enemy hands back.** The flag is per duelist, so
   nothing in the rules forbids it.

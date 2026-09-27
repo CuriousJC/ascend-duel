@@ -44,7 +44,7 @@ func TestTheClockSurvivesASnapshot(t *testing.T) {
 	s := New(nil)
 	s.SetRoundLimit(6)
 
-	back, _, err := Resume(nil, data.TowerData{}, s.Snapshot(0))
+	back, _, err := Resume(nil, data.JourneyData{}, s.Snapshot(0))
 	if err != nil {
 		t.Fatalf("resume: %v", err)
 	}
@@ -60,7 +60,7 @@ func TestAnOlderSaveResumesOntoTheDefaultClock(t *testing.T) {
 	snap := New(nil).Snapshot(0)
 	snap.RoundLimit = 0
 
-	back, _, err := Resume(nil, data.TowerData{}, snap)
+	back, _, err := Resume(nil, data.JourneyData{}, snap)
 	if err != nil {
 		t.Fatalf("resume: %v", err)
 	}

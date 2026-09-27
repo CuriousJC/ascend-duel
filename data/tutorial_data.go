@@ -55,7 +55,7 @@ type TutorialData struct {
 	// `TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` is what
 	// holds it.
 	//
-	// Empty means whoever the climb put there, which is a lesson that has stopped promising
+	// Empty means whoever the journey put there, which is a lesson that has stopped promising
 	// anything about the fight.
 	Enemy string `json:"Enemy"`
 

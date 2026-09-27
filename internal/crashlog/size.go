@@ -22,7 +22,7 @@ import (
 //
 // A screen of flat fills and card art encodes to a few hundred kilobytes, so the picture's ceiling
 // only ever catches something pathological. The document's is generous for the same reason: a run
-// that crashes on floor one carries almost nothing, and the number is here to bound the worst case
+// that crashes on realm one carries almost nothing, and the number is here to bound the worst case
 // rather than to trim the ordinary one.
 const (
 	maxReport = 1 << 20 // 1 MiB

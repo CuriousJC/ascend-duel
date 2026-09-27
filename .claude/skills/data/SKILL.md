@@ -12,9 +12,9 @@ is what lets every layer above read it, and it **must never import upward**.
 | File | Loader | Holds |
 |---|---|---|
 | `duelists.json` | `LoadDuelists` | who the player can be: three stats and their card back |
-| `motifs/<motif>/motif.json` | `LoadMotifs` | the roster, one directory per motif: the floors it may theme, what its portal says about it (`Text`, `ElementText`), and every creature that can stand in one of its three rooms |
-| `motifs/<motif>/backdrops.json` | `LoadMotifs` | optional: the rooms that motif's fights are drawn in front of, one per record per tier, drawn once per element. `MotifData.BackdropFor` picks one off the run seed, the floor and the fight's tier — derived, never rolled — and a fight with none draws `default-background`. See the `motifs` skill |
-| `tower.json` | `LoadTower` | how tall the climb is and the two rates the ascent curve compounds at |
+| `motifs/<motif>/motif.json` | `LoadMotifs` | the roster, one directory per motif: the realms it may theme, what its portal says about it (`Text`, `ElementText`), and every creature that can stand in one of its three rooms |
+| `motifs/<motif>/backdrops.json` | `LoadMotifs` | optional: the rooms that motif's fights are drawn in front of, one per record per tier, drawn once per element. `MotifData.BackdropFor` picks one off the run seed, the realm and the fight's tier — derived, never rolled — and a fight with none draws `default-background`. See the `motifs` skill |
+| `journey.json` | `LoadJourney` | how tall the journey is and the two rates the growth curve compounds at |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
 | `relics.json` | `LoadRelics` | the relics that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
 | `archive/relics.json` | `ParseRelics`, off disk | relics taken out of the game and kept: **not embedded**, read only by `tools/relicsheet -archive` and the test holding it to the grammar — see `data/archive.go` |
@@ -43,15 +43,15 @@ rules, but the record carries an art key and a relic belongs to a *run* — so `
 strings into `combat` types and calls `RegisterRelic`. Same shape as `decks` for enemy cards.
 
 **The test is who consumes a file, not whether it is data.** A card's cost and damage are rules
-by definition; a portrait key, an art key and a floor band are a screen's or a roster's
+by definition; a portrait key, an art key and a realm band are a screen's or a roster's
 business. A rule reaching for one of those would mean the rules had grown an opinion about
 pictures.
 
 **`internal/decks` exists for the one case that does not fit.** A creature's cards live in its
-motif file beside art keys and floor bands, so `internal/combat` reading that file directly would
+motif file beside art keys and realm bands, so `internal/combat` reading that file directly would
 cross the line above — and `data` may not import the rules to hand them over. `decks` sits between
 the two and is the only package allowed to turn a JSON card list into rules types. It registers
-every creature concept, and `EnemyCards(record, element)` is where a concept and the floor's colour
+every creature concept, and `EnemyCards(record, element)` is where a concept and the realm's colour
 become cards. **No Ebitengine in it, ever**, so a deck can be built headlessly.
 
 ## The loader pattern
@@ -92,9 +92,9 @@ enemies'. Eight fields:
   elements, the defenses included — a color is worth a hand axis and a relic discount even
   where nothing the card does is elemental.
 - **A creature card carries no element of its own, and no form.** The colour belongs to the
-  creature and comes from the floor: a record is dealt as one element and its whole deck takes it,
+  creature and comes from the realm: a record is dealt as one element and its whole deck takes it,
   the way a duelist's Jab is a concept that ships in five colours. A card naming its own elements
-  is **refused at load** — it would be a second answer to a question the floor already answers, and
+  is **refused at load** — it would be a second answer to a question the realm already answers, and
   the loader used to multiply `Copies` once per element listed, so `["fire","ice"]` on a four-copy
   card silently built eight. A form would be worse: it would claim a creature card forms hands, and
   hands are the player's axis.
@@ -132,11 +132,11 @@ written against a game where a turn landed several small blows.
 
 ### Duelists and enemies are separate files
 
-Their fields do not overlap — an enemy has a portrait, a deck and a floor band; a duelist has a
+Their fields do not overlap — an enemy has a portrait, a deck and a realm band; a duelist has a
 card back. One struct would make every field optional and none of them mean anything.
 
-**`ValidFloors` is `[lowest, highest]`** against the planned 8-floor tower, so a Dragon is not
-on floor one. Nothing generates floors yet, so today it only sorts the fight order.
+**`ValidRealms` is `[lowest, highest]`** against the planned 8-realm journey, so a Dragon is not
+on realm one. Nothing generates realms yet, so today it only sorts the fight order.
 
 **A portrait's key is its filename stem**, unlike every other asset: they come in through one
 `//go:embed motifs` tree under `assets/motifs/`, so renaming a file means editing the `Art` field of
@@ -146,24 +146,24 @@ review.
 ### Bosses
 
 **A boss is a record whose `Tier` says `boss`, plus a `Title`.** It is not a separate catalog and
-not a separate file: a floor takes one whole motif, so a goblin floor ends on a goblin. Nothing
+not a separate file: a realm takes one whole motif, so a goblin realm ends on a goblin. Nothing
 downstream tells the two apart — `internal/decks`, `internal/entities` and `internal/cards` read
-one shape, and the climb is what puts a boss in a portal room.
+one shape, and the journey is what puts a boss in a portal room.
 
 **The full record grammar is the `motifs` skill**, which also holds the coverage rule this file's
 loader refuses a motif for.
 
 **A separate file rather than an `IsBoss` column** *(2026-08-23)*: the two are placed by different
 rules, and a flag would let a record be both while making every selection read it before it could
-trust the floors.
+trust the realms.
 
 - **Its portrait key ends `-boss`**, and the files live in `assets/boss/`. Both portrait families
   are globbed into one flat map keyed by filename stem, so the suffix is the whole of what stops a
   boss called `Sentry` from colliding with a creature of the same name.
-- **Stats are pitched above the enemies of its own floor** — roughly 1.6x HP, and DMG above the
-  hardest hitter in every band that reaches the floor — and the deck is dearer than a roster deck:
+- **Stats are pitched above the enemies of its own realm** — roughly 1.6x HP, and DMG above the
+  hardest hitter in every band that reaches the realm — and the deck is dearer than a roster deck:
   60/120/250/300 against 50/100/200, and a 60% guard against 50%. `TestABossIsToughAgainstTheFloorItGuards`
-  in `internal/pyramid` fails on a boss the floor below it could out-hit.
+  in `internal/journey` fails on a boss the realm below it could out-hit.
 - **`Name` is the bare first name and `Title` is the rest** *(owner's call, 2026-08-24)* — `Jerry`
   and `the Toll-Taker`. They were one string, and the card could not hold it: `EnemyStyle` centers
   a name on one unwrapped line, so half the thirty rendered with a letter clipped off each end.

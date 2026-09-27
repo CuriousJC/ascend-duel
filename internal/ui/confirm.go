@@ -18,7 +18,7 @@ package ui
 //
 // **Cancel is the safe answer and it is on the left**, where the eye lands first, with the
 // destructive one at the right end of the row. Nothing here is destructive by accident: both
-// callers are throwing away a climb.
+// callers are throwing away a journey.
 
 import (
 	"image"

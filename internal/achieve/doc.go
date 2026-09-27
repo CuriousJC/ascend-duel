@@ -17,7 +17,7 @@
 //     could not be matched. This is where they went.
 //   - A **count** accumulates across every run the player has ever played, so it cannot be a
 //     predicate over anything the process is holding. It is a tally on the profile.
-//   - A **moment** is a named thing the code already reaches — a duel won, a floor climbed, a card
+//   - A **moment** is a named thing the code already reaches — a duel won, a realm reached, a card
 //     altered. Short, closed, and the only family that costs a line of Go each.
 //
 // **The tutorial's model deliberately does not transfer.** `internal/tutorial` publishes facts once

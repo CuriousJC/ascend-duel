@@ -380,14 +380,14 @@ func stubCombat() *CombatScene {
 
 // **A read step locks the screen, and this is the end-to-end version of it.** The unit test in
 // internal/tutorial pins that the Lock is derived correctly; this pins that the overlay actually
-// shields the game with it. The bug was visible on screen — Bob describing the tower while the
+// shields the game with it. The bug was visible on screen — Bob describing the journey while the
 // player queued two cards behind him — so it is worth checking at the layer where it was visible.
 func TestAReadStepShieldsTheWholeScreen(t *testing.T) {
 	parkTutorial(t)
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
-		{Key: "rooms", Text: "eight floors", Anchor: tutorial.AnchorTowerPlace,
+		{Key: "rooms", Text: "eight realms", Anchor: tutorial.AnchorJourneyPlace,
 			Lock: tutorial.LockAll, Until: tutorial.CondNext},
 	}})
 

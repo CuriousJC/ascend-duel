@@ -4,7 +4,7 @@ package game
 //
 // Every other choice in the game is a click with a function behind it, and that function is where
 // its journal line goes. These two are not: a screen change and a phase change happen from a dozen
-// places — a button, a run advancing, a crash, a scenario opening the game halfway up a tower — and
+// places — a button, a run advancing, a crash, a scenario opening the game partway through a journey — and
 // a call beside each is a list the next one gets left off.
 //
 // **So they are diffed rather than announced**, which is screens.RunWatch's rule and

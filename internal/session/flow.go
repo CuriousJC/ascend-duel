@@ -10,7 +10,7 @@ package session
 // finding and editing the two either side of it.
 //
 // **A phase belongs to the run, not to a screen.** It survives a fight the way the deck and the
-// purse do, it is what a save file would have to record, and it is the thing the tower's shape is
+// purse do, it is what a save file would have to record, and it is the thing the journey's shape is
 // read against. So it is here, and `internal/screens` maps a phase onto the scene that draws it —
 // see screens/flow.go. The mapping is deliberately that way round: this package must not know
 // that a screen exists.

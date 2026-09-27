@@ -3,8 +3,8 @@
 //
 //	go run ./tools/backdropsheet
 //
-// A room is met one fight at a time and only in the element the floor dealt, so seeing a room's
-// five pictures in a launched game is five floors of luck. The motif report counts which are
+// A room is met one fight at a time and only in the element the realm dealt, so seeing a room's
+// five pictures in a launched game is five realms of luck. The motif report counts which are
 // painted and draws none of them; this is where they are looked at.
 //
 // **A thumbnail is committed, never the picture.** A backdrop is a 1920x1080 JPEG and the sheet

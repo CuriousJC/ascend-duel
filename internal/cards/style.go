@@ -142,7 +142,7 @@ type Style struct {
 	// A horizontal rule between two stat rows, and the extra air it takes.
 	//
 	// **It exists because five rows are two kinds of thing** *(owner's call, 2026-09-15)*. DMG, AP
-	// and VITAE are what the duelist *is*; FLOOR and ROOM are where the run has got to. Stacked at
+	// and VITAE are what the duelist *is*; REALM and ROOM are where the run has got to. Stacked at
 	// one pitch they read as one list of five figures, which is the reading a rule breaks without
 	// a second type size or a heading — both of which the card has no room for and neither of
 	// which would survive a sixth row.
@@ -633,14 +633,14 @@ var EnemyStyle = Style{
 //	 57  AP                57..74
 //	 84  VITAE             84..101
 //	110  rule                        a hairline, centered in the gap
-//	129  FLOOR            129..146
+//	129  REALM            129..146
 //	156  ROOM             156..173
 //	207  health bar       207..225
 //	229  hit points       229..247   "42/60", centered
 //	247  shield pips      247..271   (Spec.Effects, a centered row)
 //	272  inside of the bottom border
 //
-// **The floor and the room are stat rows as of 2026-09-15** *(owner's call)*. They were two lines
+// **The realm and the room are stat rows as of 2026-09-15** *(owner's call)*. They were two lines
 // written on the ground *under* the card, which is the one place on the screen a fact about the
 // duelist was not on the duelist. Moving them up cost the row pitch — 38 to 27, and the figures
 // from 21.25 to 19 — and cost nothing else, because three rows at the old pitch finished 36 pixels
@@ -655,7 +655,7 @@ var EnemyStyle = Style{
 // keys on the whole spec, and two duelists would otherwise share one face.
 //
 // **The rule is what stops five rows reading as one list.** DMG, AP and VITAE are what the duelist
-// *is*; FLOOR and ROOM are where the run has got to. See Style.StatRuleAfter.
+// *is*; REALM and ROOM are where the run has got to. See Style.StatRuleAfter.
 //
 // **The shield row is the enemy's badge row, seat for seat** *(2026-08-31)*. It holds five, which
 // is `combat`'s cap on a duelist's shields for the same reason — a turn is five cards, so a sixth

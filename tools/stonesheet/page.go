@@ -17,7 +17,7 @@ import "html/template"
 // is worth having: the gap is the finding.
 var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — stone sheet</title>
+<title>Duello — stone sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};

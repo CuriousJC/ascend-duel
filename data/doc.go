@@ -8,7 +8,7 @@
 //
 // Who consumes a file decides who may read it, not whether it is data. internal/combat reads
 // exactly hands.json, duelist_cards.json and statuses.json, because those are rules. A portrait
-// key and a floor band are a screen's business, so enemies.json is not the engine's to open —
+// key and a realm band are a screen's business, so enemies.json is not the engine's to open —
 // which is why enemy cards are registered by internal/decks rather than handed over from here.
 // internal/decks exists for that one case, and bosses.json rides the same route.
 //

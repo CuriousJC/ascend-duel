@@ -17,7 +17,7 @@
     "earth": "Mountain cats, hard as the rock they stalk across.",
     "arcane": "Arcane symbols circle them. These cats know tricks."
   },
-  "ValidFloors": [1, 4],
+  "ValidRealms": [1, 4],
   "Records": [
     {
       "Record": "big-cats-outer-tiger",

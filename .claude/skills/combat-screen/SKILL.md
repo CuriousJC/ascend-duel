@@ -604,11 +604,11 @@ rider events arrive before anything on that turn has opened a row. Fixing it mea
 these `announce` their own line, which is a change to the log's shape rather than to this widget.
 See `internal/scenario`'s `signals` entry for looking at any of it.
 
-### The round timer under the tower place
+### The round timer under the journey place
 
 *`combat_hud.go`, 2026-09-06.* Every fight lasts five rounds and the duelist still standing at the
 end of the fifth dies — see MECHANICS.md §The round limit, and `internal/combat/clock.go`, which is
-what actually ends it. The screen draws a **five-cell bar under the two tower lines**, one cell per
+what actually ends it. The screen draws a **five-cell bar under the duelist card**, one cell per
 round, filled for the rounds already spent.
 
 - **The clock is a rule and this is a readout.** `s.round` is the count and the bar is a picture of
@@ -623,8 +623,8 @@ round, filled for the rounds already spent.
 - **The last cell takes `modalCloseColor`, and only once the fight reaches it.** There is no hue
   left to claim, so this is not claiming one: it is the existing meaning of the game's one red —
   "this ends something" — arriving at the moment it becomes true.
-- **There are 23 pixels between the tower lines and the table row and the bar spends 20.**
-  `TestTheRoundTimerFitsUnderTheTowerLines` is what holds that; the column is the duelist card's,
+- **There are 23 pixels between the journey lines and the table row and the bar spends 20.**
+  `TestTheRoundTimerFitsUnderTheDuelistCard` is what holds that; the column is the duelist card's,
   which is why the readout is a bar and not a sentence.
 - **It arrives with a tooltip**, which is deliberately unlike every other figure written straight
   onto the table — a timer that killed without having said what it was would be the worst kind of

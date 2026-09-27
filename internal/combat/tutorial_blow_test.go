@@ -11,7 +11,7 @@ import (
 //
 // The lesson `data/tutorial.json` teaches is four cards of one color — a Jab, a Brace, a Thrust
 // and a Bash, all lightning — swung at a GiantBat: an Elemental Four of a Kind against the
-// gentlest opponent on floor one. **One of the four is a shield**, which is the whole of the
+// gentlest opponent on realm one. **One of the four is a shield**, which is the whole of the
 // second lesson: it deals nothing, it counts toward the hand anyway, and it eats one of the
 // three attacks the bat swings back. That is why the taught round no longer ends the fight —
 // a creature that dies in one blow never gets a turn, and a shield that never blocks anything

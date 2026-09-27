@@ -42,7 +42,7 @@ const (
 	AnchorDuelButton
 	AnchorHandsButton
 	AnchorDeckStack
-	AnchorTowerPlace
+	AnchorJourneyPlace
 	AnchorMathBand
 
 	// The post-battle screen.
@@ -112,13 +112,13 @@ const (
 	// nothing on screen able to satisfy it. See the affordability test in `internal/screens`.
 	AnchorShopDMGPotion
 
-	// AnchorRoundTimer is the bar under the tower place: how many of the fight's rounds are gone.
+	// AnchorRoundTimer is the bar under the journey place: how many of the fight's rounds are gone.
 	//
 	// **It points at the readout, not at the rule.** The clock kills a duelist still standing at
 	// the end of the last round and there is nothing on screen to point at when it does — the death
 	// happens inside a resolved round — so the step that teaches it has to be able to name the bar
 	// while it is still empty. That is why this is an anchor of its own rather than the step
-	// borrowing `tower-place`: the two lines above the bar say where you are, and lighting them to
+	// borrowing `journey-place`: the two lines above the bar say where you are, and lighting them to
 	// talk about time would point at the wrong sentence.
 	AnchorRoundTimer
 
@@ -170,7 +170,7 @@ var anchorNames = map[Anchor]string{
 	AnchorDuelButton:        "duel-button",
 	AnchorHandsButton:       "hands-button",
 	AnchorDeckStack:         "deck-stack",
-	AnchorTowerPlace:        "tower-place",
+	AnchorJourneyPlace:      "journey-place",
 	AnchorMathBand:          "math-band",
 	AnchorRewardEssences:    "reward-essences",
 	AnchorBuildCard:         "build-card",
@@ -567,14 +567,14 @@ func ParseMatchAxis(s string) (MatchAxis, error) {
 // thing that makes it true have to travel together.
 //
 // **This package resolves neither of them.** A seed is `internal/seeds`' business and an opponent
-// is the climb's; both are strings here and `main` and `internal/session` are what act on them —
+// is the journey's; both are strings here and `main` and `internal/session` are what act on them —
 // the same line every other vocabulary in this file draws between naming a thing and being it.
 type Script struct {
 	// Seed is the run code the lesson is written against, or empty for a lesson that does not care
 	// what it is dealt.
 	Seed string
 
-	// Enemy is the record key the first room should stand, or empty for whoever the climb put there.
+	// Enemy is the record key the first room should stand, or empty for whoever the journey put there.
 	Enemy string
 
 	// Match is the axis [AnchorMatchingCards] counts on. Required by any script that uses that
@@ -733,7 +733,7 @@ func (r *Run) Current() (Step, bool) {
 //
 // **It does not stop answering when the script ends**, deliberately. A player who skips the lesson
 // mid-fight must not have the creature in front of them swapped out, and a defeat re-enters the
-// same room and should meet the same opponent — which is the rule everywhere else in the climb.
+// same room and should meet the same opponent — which is the rule everywhere else in the journey.
 func (r *Run) Enemy() string {
 	if r == nil {
 		return ""

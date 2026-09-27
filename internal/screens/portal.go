@@ -5,11 +5,11 @@ package screens
 // A portal room's boss opens two portals, and this is the station the run stands at after the shop
 // that follows it. Each portal is a panel — the realm's name, what the motif is, what the element
 // does to it — with a button under it, and taking one is the only way on. See
-// session.Session.TakePortal for what a pick does and internal/pyramid for where the offers come
+// session.Session.TakePortal for what a pick does and internal/journey for where the offers come
 // from.
 //
-// **There is no Back and no Skip.** The shop is done and the next floor has to be one of the two;
-// a screen that could be left without choosing would be a floor chosen by default.
+// **There is no Back and no Skip.** The shop is done and the next realm has to be one of the two;
+// a screen that could be left without choosing would be a realm chosen by default.
 //
 // **Every word on it comes off the motif record** — `Name`, `Text` and `ElementText` — so the
 // portal says what the catalog says, and an unwritten line shows as TBD rather than as a panel
@@ -21,8 +21,8 @@ import (
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/journal"
+	"github.com/curiousjc/ascend-duel/internal/journey"
 	"github.com/curiousjc/ascend-duel/internal/models"
-	"github.com/curiousjc/ascend-duel/internal/pyramid"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
@@ -111,7 +111,7 @@ func (s *PortalScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	sub.PrimaryAlign = text.AlignCenter
 	sub.SecondaryAlign = text.AlignCenter
 	sub.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 30))
-	text.Draw(screen, "FLOOR "+strconv.Itoa(gs.Run.Floor()),
+	text.Draw(screen, "REALM "+strconv.Itoa(gs.Run.Realm()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: portalSubSize}, sub)
 
 	offers := gs.Run.PortalOffers()
@@ -123,7 +123,7 @@ func (s *PortalScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 // drawPanel is one portal: the realm's name with its element in the element's color, then what the
 // motif is, then what the element does to it.
-func (s *PortalScene) drawPanel(gs *state.GlobalState, screen *ebiten.Image, i int, offer pyramid.Floor) {
+func (s *PortalScene) drawPanel(gs *state.GlobalState, screen *ebiten.Image, i int, offer journey.Realm) {
 	r := portalPanelRect(gs, i)
 	systems.BevelRect(screen, r.x, r.y, portalPanelW, portalPanelH, systems.PaneBevelWidth, portalPanel, false)
 

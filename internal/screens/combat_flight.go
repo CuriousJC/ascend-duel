@@ -44,7 +44,7 @@ const (
 	// **The pile stands in the duelist card's column, at the size of every other card**
 	// *(2026-09-04, owner's call)*. It was a half-size back in the bottom-right corner, which made
 	// it the one card on the screen drawn small — and it stood in the corner the enemy card, the
-	// sort column and DUEL! now line up on. Left-aligned under the duelist card and the floor
+	// sort column and DUEL! now line up on. Left-aligned under the duelist card and the realm
 	// caption, it is the bottom of a column that reads as one thing: who you are, where you are,
 	// what is left to draw.
 	//

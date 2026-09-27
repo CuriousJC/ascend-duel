@@ -5,18 +5,18 @@
   "Steps": [
     {
       "StepRecord": "hello",
-      "Text": "Welcome duelist. I am Bob. Many years ago a group of adventures tried climbing this pyramid but the pyramid corrupted them and they never seen again. So this is my warning to you. Let me show you one round of it so you will be prepared.",
+      "Text": "Welcome duelist. I am Bob. Many years ago a group of adventures tried journeying through these realms but the realms corrupted them and they never seen again. So this is my warning to you. Let me show you one round of it so you will be prepared.",
       "Until": "next"
     },
     {
       "StepRecord": "where-you-are",
-      "Text": "Eight floors, three rooms each.",
-      "Anchor": "tower-place",
+      "Text": "Eight realms, three rooms each.",
+      "Anchor": "journey-place",
       "Until": "next"
     },
     {
       "StepRecord": "the-clock",
-      "Text": "And that bar is your rope. Five rounds a fight, no more. Still standing when the last one burns out and the tower takes you - so every duel is a race, not a siege.",
+      "Text": "And that bar is your rope. Five rounds a fight, no more. Still standing when the last one burns out and the realm takes you - so every duel is a race, not a siege.",
       "Anchor": "round-timer",
       "Until": "next"
     },
@@ -28,7 +28,7 @@
     },
     {
       "StepRecord": "yourself",
-      "Text": "You. DMG is how hard your hits start out.  AP determines how much you can do.  Vitae I'll cover later.  Last is your life, drop to zero and you're done ascending.",
+      "Text": "You. DMG is how hard your hits start out.  AP determines how much you can do.  Vitae I'll cover later.  Last is your life, drop to zero and your journey is over.",
       "Anchor": "duelist-card",
       "Until": "next"
     },
@@ -88,7 +88,7 @@
     },
     {
       "StepRecord": "the-ledger",
-      "Text": "Every hit of this climb is written down here, figure by figure. Open it and see what that round actually cost.",
+      "Text": "Every hit of this journey is written down here, figure by figure. Open it and see what that round actually cost.",
       "Anchor": "ledger-button",
       "Until": "ledger-opened"
     },
@@ -100,7 +100,7 @@
     },
     {
       "StepRecord": "the-vitae",
-      "Text": "Dead. Its vitae is yours, the only coin in this tower.",
+      "Text": "Dead. Its vitae is yours, the only coin in these realms.",
       "Anchor": "build-card",
       "Until": "next"
     },
@@ -124,7 +124,7 @@
     },
     {
       "StepRecord": "buy-two-rings",
-      "Text": "Take two. Any two - they are yours for the rest of the climb.",
+      "Text": "Take two. Any two - they are yours for the rest of the journey.",
       "Anchor": "shop-shelf",
       "Until": "relics-worn",
       "Count": 2
@@ -155,7 +155,7 @@
     },
     {
       "StepRecord": "farewell",
-      "Text": "Go ahead, duelist, it's time to climb.",
+      "Text": "Go ahead, duelist, it's time to begin your journey.",
       "Until": "next"
     }
   ]

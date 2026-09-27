@@ -4,7 +4,7 @@
 // # Why it exists
 //
 // A relic is bought from a shelf of three, a hand is dealt from a shuffled deck, and an enemy is
-// whoever the climb put in the room. Every one of those is deliberate, and together they make
+// whoever the journey put in the room. Every one of those is deliberate, and together they make
 // "does Echo actually multiply Enflamed's growth" a question that takes twenty minutes of play to
 // ask once. The rules are unit-tested and the arithmetic is pinned; what is not pinned is what the
 // combination *looks like* on the screen, which is the one thing no test can answer.
@@ -15,7 +15,7 @@
 // # It is compiled out, and that is the point
 //
 //	go run -tags scenario .                                # the first scenario in the file
-//	ASCEND_DUEL_SCENARIO=echo-flurry go run -tags scenario .
+//	DUELLO_SCENARIO=echo-flurry go run -tags scenario .
 //	go run .                                               # nothing: every function is a zero value
 //
 // A build tag rather than a runtime flag, for the reason `internal/trace` and `internal/idle` are:

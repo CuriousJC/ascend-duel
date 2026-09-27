@@ -103,7 +103,7 @@ type Duelist struct {
 	Surge int
 
 	// Element is the duelist's own element, and **Basic means it has none** — which is the player,
-	// and every bare `Duelist{}`. A creature is dealt one with its floor.
+	// and every bare `Duelist{}`. A creature is dealt one with its realm.
 	//
 	// **A hit of the target's own element fizzles**: it lands nothing at all. See fizzles. The
 	// player has no element, so the rule runs one way by construction; the mirror of it is the
@@ -165,7 +165,7 @@ type Duelist struct {
 	Relics []WornRelic
 
 	// RelicSlots is how many of those seats this duelist may actually fill. **Zero means
-	// DefaultRelicSlots**, which is the five every duelist in the tower fights on — see
+	// DefaultRelicSlots**, which is the five every duelist in the journey fights on — see
 	// relicSlots(), where that reading lives, and session/relic.go, where a run hands its own
 	// number over. It is a separate field from the array's width because the width is a fact
 	// about keeping Duelist comparable and the cap is a rule a brand can move.

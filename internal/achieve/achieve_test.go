@@ -264,20 +264,20 @@ func TestPrismWantsOneShapeInEveryColor(t *testing.T) {
 	}
 }
 
-// TestFloorReachedIsAThreshold: a run that arrives on the sixth floor has reached the fifth.
-func TestFloorReachedIsAThreshold(t *testing.T) {
-	if got := Loaded().ByMoment(FloorReached(4)); len(got) != 0 {
-		t.Errorf("floor four earns nothing yet, got %v", got)
+// TestRealmReachedIsAThreshold: a run that arrives on the sixth realm has reached the fifth.
+func TestRealmReachedIsAThreshold(t *testing.T) {
+	if got := Loaded().ByMoment(RealmReached(4)); len(got) != 0 {
+		t.Errorf("realm four earns nothing yet, got %v", got)
 	}
-	for _, floor := range []int{5, 6, 30} {
+	for _, realm := range []int{5, 6, 30} {
 		found := false
-		for _, k := range Loaded().ByMoment(FloorReached(floor)) {
-			if k == "fifth-floor" {
+		for _, k := range Loaded().ByMoment(RealmReached(realm)) {
+			if k == "fifth-realm" {
 				found = true
 			}
 		}
 		if !found {
-			t.Errorf("reaching floor %d must earn the fifth floor", floor)
+			t.Errorf("reaching realm %d must earn the fifth realm", realm)
 		}
 	}
 }
@@ -405,8 +405,8 @@ func TestABadRecordIsRefused(t *testing.T) {
 		{"counter naming no card", data.TriggerData{
 			Kind: data.TriggerCount, Counter: "concept:Wibble", N: 5}},
 		{"moment naming nothing", data.TriggerData{Kind: data.TriggerMoment, Moment: "wibble"}},
-		{"floor with no floor", data.TriggerData{
-			Kind: data.TriggerMoment, Moment: MomentFloorReached}},
+		{"realm with no realm", data.TriggerData{
+			Kind: data.TriggerMoment, Moment: MomentRealmReached}},
 		{"card-altered with no card", data.TriggerData{
 			Kind: data.TriggerMoment, Moment: MomentCardAltered}},
 		{"a moment carrying a counter", data.TriggerData{
@@ -540,7 +540,7 @@ func TestAZeroCostClauseFiltersRatherThanMatchingEverything(t *testing.T) {
 	}
 }
 
-// **shields-raised is a threshold, like floor-reached.** Standing behind eleven earns the row that
+// **shields-raised is a threshold, like realm-reached.** Standing behind eleven earns the row that
 // asked for ten — a player who overshot should not be missing the step they went past.
 func TestTheShieldsMomentIsAThreshold(t *testing.T) {
 	earned := func(n int) bool {

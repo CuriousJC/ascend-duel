@@ -17,7 +17,7 @@
     "earth": "Rock dust and raw ore. Even their knuckles have turned to stone.",
     "arcane": "Purple runes burn along their metal, and the old words are answering."
   },
-  "ValidFloors": [
+  "ValidRealms": [
     2,
     7
   ],

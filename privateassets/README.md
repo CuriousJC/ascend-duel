@@ -31,7 +31,7 @@ They live in a private S3 bucket, one prefix per bundle version, and the version
 field in `audio/manifest.json`.
 
 ```powershell
-aws s3 sync "s3://$env:ASCEND_DUEL_SOUNDS_BUCKET/sounds/v1/" privateassets/audio/ --exclude "*" --include "*.ogg" --include "*.wav" --include "*.mp3"
+aws s3 sync "s3://$env:DUELLO_SOUNDS_BUCKET/sounds/v1/" privateassets/audio/ --exclude "*" --include "*.ogg" --include "*.wav" --include "*.mp3"
 go run ./tools/privateassets          # what is present, what matches, what is unrecorded
 ```
 
@@ -66,7 +66,7 @@ bytes that were delivered.
 
 ```powershell
 go run ./tools/privateassets -write   # rewrite audio/manifest.json from what is in that directory
-aws s3 sync privateassets/audio/ "s3://$env:ASCEND_DUEL_SOUNDS_BUCKET/sounds/v2/" --exclude "*" --include "*.ogg" --include "*.wav" --include "*.mp3"
+aws s3 sync privateassets/audio/ "s3://$env:DUELLO_SOUNDS_BUCKET/sounds/v2/" --exclude "*" --include "*.ogg" --include "*.wav" --include "*.mp3"
 ```
 
 **A bundle prefix is never overwritten in place.** Cut `v2` beside `v1` and move the `Bundle`

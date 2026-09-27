@@ -117,7 +117,7 @@ func (c Card) Cost() int {
 // *and* by count independently — `MaxActions` cards however cheap they are — so a free card is not
 // unbounded, it is bounded by the count instead. That is a real shift in what limits a turn and it
 // was taken with it in view (owner's call, 2026-08-17), not as an oversight about a number that
-// happened not to have a floor.
+// happened not to have a realm.
 const minCardCost = 0
 
 // Amount is the card's figure, read against its verb: a defense percentage, shields raised, or the

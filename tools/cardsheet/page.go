@@ -16,7 +16,7 @@ import "html/template"
 // actually sits on. A light page would flatter an off-white card enormously.
 var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — card sheet</title>
+<title>Duello — card sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};

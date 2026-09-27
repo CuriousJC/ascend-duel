@@ -12,21 +12,21 @@ import (
 // theSeed is a run code, because that is what a snapshot writes. Any valid one does.
 const theSeed = "00H602"
 
-func rosters(t *testing.T) (map[string]data.MotifData, data.TowerData) {
+func rosters(t *testing.T) (map[string]data.MotifData, data.JourneyData) {
 	t.Helper()
-	return data.LoadMotifs(), data.LoadTower()
+	return data.LoadMotifs(), data.LoadJourney()
 }
 
 // TestARunSurvivesBeingSavedAndResumed is the whole feature in one test: everything the player is
 // carrying comes back.
 func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
-	motifs, tower := rosters(t)
+	motifs, shape := rosters(t)
 	seed, err := seeds.Parse(theSeed)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	s := Start(motifs, tower, seed)
+	s := Start(motifs, shape, seed)
 	s.AddVitae(9)
 	s.WonFight(41, 41)
 	s.SetPhase(PhaseShop)
@@ -35,7 +35,7 @@ func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
 	}
 	s.SetElement(0, combat.Fire)
 
-	back, gotSeed, err := Resume(motifs, tower, s.Snapshot(seed))
+	back, gotSeed, err := Resume(motifs, shape, s.Snapshot(seed))
 	if err != nil {
 		t.Fatalf("a snapshot this build wrote must resume: %v", err)
 	}
@@ -63,26 +63,26 @@ func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
 	}
 }
 
-// TestThePortalsTakenSurviveAResume holds the half of the climb that is a choice. What a floor
+// TestThePortalsTakenSurviveAResume holds the half of the journey that is a choice. What a realm
 // offers is rebuilt from the run code; which portal the player walked through is not derivable, so a
-// resume that lost it would put the player on a floor they did not choose.
+// resume that lost it would put the player on a realm they did not choose.
 func TestThePortalsTakenSurviveAResume(t *testing.T) {
-	motifs, tower := rosters(t)
+	motifs, shape := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
-	s := Start(motifs, tower, seed)
-	for floor := 2; floor <= tower.Floors; floor++ {
-		s.fight = (floor - 1) * 3
-		if _, err := s.TakePortal(floor % 2); err != nil {
+	s := Start(motifs, shape, seed)
+	for realm := 2; realm <= shape.Realms; realm++ {
+		s.fight = (realm - 1) * 3
+		if _, err := s.TakePortal(realm % 2); err != nil {
 			t.Fatal(err)
 		}
 	}
-	back, _, err := Resume(motifs, tower, s.Snapshot(seed))
+	back, _, err := Resume(motifs, shape, s.Snapshot(seed))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	for fight := 0; fight < tower.Floors*3; fight++ {
+	for fight := 0; fight < shape.Realms*3; fight++ {
 		s.fight, back.fight = fight, fight
 		if s.Enemy() != back.Enemy() || s.Element() != back.Element() {
 			t.Fatalf("room %d changed after a resume: %s in %s became %s in %s",
@@ -91,21 +91,21 @@ func TestThePortalsTakenSurviveAResume(t *testing.T) {
 	}
 }
 
-// TestAPortalDecidesTheFloor is the choice doing something: the second portal's realm is the one
+// TestAPortalDecidesTheRealm is the choice doing something: the second portal's realm is the one
 // fought, not the seed's first offer.
-func TestAPortalDecidesTheFloor(t *testing.T) {
-	motifs, tower := rosters(t)
-	s := Start(motifs, tower, 1)
+func TestAPortalDecidesTheRealm(t *testing.T) {
+	motifs, shape := rosters(t)
+	s := Start(motifs, shape, 1)
 	s.fight = 3
 	if !s.PortalDue() {
-		t.Fatal("no portal is open at the first room of floor two")
+		t.Fatal("no portal is open at the first room of realm two")
 	}
 	offers := s.PortalOffers()
 	if _, err := s.TakePortal(1); err != nil {
 		t.Fatal(err)
 	}
 	if s.Motif() != offers[1].Motif || s.Element() != offers[1].Element {
-		t.Fatalf("walked through %s in %s and floor two is %s in %s",
+		t.Fatalf("walked through %s in %s and realm two is %s in %s",
 			offers[1].Motif, offers[1].Element, s.Motif(), s.Element())
 	}
 	if s.PortalDue() {
@@ -113,16 +113,16 @@ func TestAPortalDecidesTheFloor(t *testing.T) {
 	}
 }
 
-// TestAResumeRefusesARealmItWasNeverOffered is the save file lying: a floor entered through a motif
+// TestAResumeRefusesARealmItWasNeverOffered is the save file lying: a realm entered through a motif
 // the run code never put there.
 func TestAResumeRefusesARealmItWasNeverOffered(t *testing.T) {
-	motifs, tower := rosters(t)
+	motifs, shape := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
-	s := Start(motifs, tower, seed)
+	s := Start(motifs, shape, seed)
 	snap := s.Snapshot(seed)
 
 	offered := map[string]bool{}
-	for _, f := range s.climb.ChoicesAt(2) {
+	for _, f := range s.journey.ChoicesAt(2) {
 		offered[f.Motif] = true
 	}
 	for _, key := range data.MotifOrder(motifs) {
@@ -131,23 +131,23 @@ func TestAResumeRefusesARealmItWasNeverOffered(t *testing.T) {
 			break
 		}
 	}
-	if _, _, err := Resume(motifs, tower, snap); err == nil {
-		t.Fatalf("a run entering floor two through %s resumed", snap.Portals[0])
+	if _, _, err := Resume(motifs, shape, snap); err == nil {
+		t.Fatalf("a run entering realm two through %s resumed", snap.Portals[0])
 	}
 }
 
 // TestUnclaimedSpoilsSurvive keeps a run saved at the reward station honest: the payout is frozen by
 // WonFight and handed over a sentence at a time, so quitting mid-narration must not cost the rest.
 func TestUnclaimedSpoilsSurvive(t *testing.T) {
-	motifs, tower := rosters(t)
+	motifs, shape := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
-	s := Start(motifs, tower, seed)
+	s := Start(motifs, shape, seed)
 	s.WonFight(50, 50)
 	s.ClaimFromLife()
 	want := s.Spoils()
 
-	back, _, err := Resume(motifs, tower, s.Snapshot(seed))
+	back, _, err := Resume(motifs, shape, s.Snapshot(seed))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,14 +159,14 @@ func TestUnclaimedSpoilsSurvive(t *testing.T) {
 // TestTheIdentityCounterIsSavedRatherThanRecomputed: an essence removing the newest card takes the
 // highest id with it, and a counter derived from what survives would hand that number out twice.
 func TestTheIdentityCounterIsSavedRatherThanRecomputed(t *testing.T) {
-	motifs, tower := rosters(t)
+	motifs, shape := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
-	s := Start(motifs, tower, seed)
+	s := Start(motifs, shape, seed)
 	s.Remove(s.Size() - 1)
 	want := s.nextCardID
 
-	back, _, err := Resume(motifs, tower, s.Snapshot(seed))
+	back, _, err := Resume(motifs, shape, s.Snapshot(seed))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,9 +186,9 @@ func TestTheIdentityCounterIsSavedRatherThanRecomputed(t *testing.T) {
 // TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused: every name is resolved rather than
 // trusted, so a run that would resume quietly wrong does not resume at all.
 func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
-	motifs, tower := rosters(t)
+	motifs, shape := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
-	good := Start(motifs, tower, seed).Snapshot(seed)
+	good := Start(motifs, shape, seed).Snapshot(seed)
 
 	for _, tc := range []struct {
 		name string
@@ -206,7 +206,7 @@ func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
 			bent := *good
 			bent.Deck = append([]profile.CardSnapshot(nil), good.Deck...)
 			tc.bend(&bent)
-			if _, _, err := Resume(motifs, tower, &bent); err == nil {
+			if _, _, err := Resume(motifs, shape, &bent); err == nil {
 				t.Error("should be refused rather than resumed wrong")
 			}
 		})
@@ -216,18 +216,18 @@ func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
 // TestAResumedRunDoesNotPutTheStartingRelicsBackOn: Resume rebuilds a run exactly as it was, where
 // New and Start both dress a run that is beginning.
 func TestAResumedRunDoesNotPutTheStartingRelicsBackOn(t *testing.T) {
-	motifs, tower := rosters(t)
+	motifs, shape := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
 	before := StartingRelics
 	StartingRelics = []string{Relics()[0]}
 	defer func() { StartingRelics = before }()
 
-	s := Start(motifs, tower, seed)
+	s := Start(motifs, shape, seed)
 	snap := s.Snapshot(seed)
 	snap.Worn = nil
 
-	back, _, err := Resume(motifs, tower, snap)
+	back, _, err := Resume(motifs, shape, snap)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +271,7 @@ func TestTheRunsStonesSurviveBeingSavedAndResumed(t *testing.T) {
 
 	want, _ := s.HandMultiplier("pair")
 
-	back, _, err := Resume(nil, data.TowerData{}, s.Snapshot(0))
+	back, _, err := Resume(nil, data.JourneyData{}, s.Snapshot(0))
 	if err != nil {
 		t.Fatalf("the run would not resume: %v", err)
 	}
@@ -295,7 +295,7 @@ func TestASnapshotNamingARungThisBuildHasNotGotIsRefused(t *testing.T) {
 	snap := s.Snapshot(0)
 	snap.Stones = map[string]int{"no-such-rung": 1}
 
-	if _, _, err := Resume(nil, data.TowerData{}, snap); err == nil {
+	if _, _, err := Resume(nil, data.JourneyData{}, snap); err == nil {
 		t.Error("a run resumed holding stones on a rung that does not exist")
 	}
 }

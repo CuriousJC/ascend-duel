@@ -1,12 +1,12 @@
-# Ascending Duel
+# Duello
 
-Ascending Duel is a roguelike engine-building card game for dueling up a tower.
+Duello is a roguelike engine-building card game for dueling from realm to realm.
 
 The duelist draws eight cards and can play up to five cards within their AP budget. They can spend AP to defend first or they can attack. Cards played create a poker-like hand across the elements, attack type, or specifc attacks to get multipliers.
 
 A first-time player is taught the game by a short scripted tutorial on their opening
 fight, and a run is written to disk between rooms, so quitting and relaunching picks the
-climb back up.
+journey back up.
 
 ## Play it
 
@@ -19,9 +19,9 @@ Grab a build from [Releases](https://github.com/CuriousJC/ascend-duel/releases).
   release assets carry no file permissions, so a bare binary would arrive without its
   execute bit.
 
-Saves live in your platform's config directory — `%APPDATA%\ascend-duel` on Windows,
-`~/.config/ascend-duel` on Linux — never beside the executable. `profile.json` is you
-(tutorial seen, achievements); `run.json` is the climb in progress. Deleting either is
+Saves live in your platform's config directory — `%APPDATA%\duello` on Windows,
+`~/.config/duello` on Linux — never beside the executable. `profile.json` is you
+(tutorial seen, achievements); `run.json` is the journey in progress. Deleting either is
 safe: a missing file is a new player.
 
 Every run has a **six-character code** you can write down. The alphabet is Crockford
@@ -53,7 +53,7 @@ raises a rung, an **essence** eats a card, a **potion** changes the duelist, and
 only one spent during a fight, between the turns of a round. A **sealed good** is the shop's
 gamble: paid for and _then_ read, four stones or four essences inside and you keep one.
 
-Against all that, **creatures** sorted into floor bands, each with a deck of its own, and
+Against all that, **creatures** sorted into realm bands, each with a deck of its own, and
 **bosses** guarding every portal room.
 
 Every one of those is a file in [data/](data/), and they are still being authored.
@@ -79,7 +79,7 @@ player reads. Open [docs/sheets/index.html](docs/sheets/index.html).
 
 | File                               | What it holds                                                  |
 | ---------------------------------- | -------------------------------------------------------------- |
-| [MECHANICS.md](MECHANICS.md)       | what the game _is_ — elements, cards, hands, relics, the tower |
+| [MECHANICS.md](MECHANICS.md)       | what the game _is_ — elements, cards, hands, relics, the journey |
 | [TODO.md](TODO.md)                 | what to build next — open work only                            |
 | [ideas.md](ideas.md)               | the unfiltered inbox                                           |
 | [CLAUDE.md](CLAUDE.md)             | how the code is organized and the conventions it follows       |
@@ -87,7 +87,7 @@ player reads. Open [docs/sheets/index.html](docs/sheets/index.html).
 
 ## License
 
-Source-available, not open source. Ascending Duel is licensed under the
+Source-available, not open source. Duello is licensed under the
 [PolyForm Noncommercial License 1.0.0](LICENSE).
 
 You are free to read the source, build it, modify it, and share your changes for

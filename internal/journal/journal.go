@@ -53,7 +53,7 @@ type Journal struct {
 	//
 	// **Once a session, not once per failure.** A journal stops writing the moment it fails, so
 	// there is one failure per attempt — but a new run attempts again, and a broken directory would
-	// otherwise put a box in front of the player at the top of every climb. The first one has
+	// otherwise put a box in front of the player at the top of every journey. The first one has
 	// already said everything the second would.
 	told bool
 }
@@ -100,7 +100,7 @@ func (j *Journal) Begin(h Header) {
 // appended to it.
 //
 // **A Continue that cleared the file would throw away everything before the last launch**, which is
-// most of the run it is about. Two headers in one file is one climb played across two sessions, and
+// most of the run it is about. Two headers in one file is one journey played across two sessions, and
 // Resumed is what says so.
 func (j *Journal) Resume(h Header) {
 	if j == nil || j.store.Dir() == "" {

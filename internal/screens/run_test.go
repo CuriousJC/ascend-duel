@@ -47,16 +47,16 @@ func TestAbandoningARunLeavesNothingToResume(t *testing.T) {
 	}
 }
 
-// TestANewRunRollsANewTower is the seed rule: New Run means a new climb, so the seed has to move.
+// TestANewRunRollsANewJourney is the seed rule: New Run means a new journey, so the seed has to move.
 // **Unless it was pinned**, which the next test holds.
-func TestANewRunRollsANewTower(t *testing.T) {
+func TestANewRunRollsANewJourney(t *testing.T) {
 	gs := saveState(t)
 	before := gs.RunSeed
 
 	NewRun(gs)
 
 	if gs.RunSeed == before {
-		t.Error("a new run must not replay the tower the last one was on")
+		t.Error("a new run must not replay the journey the last one was on")
 	}
 	if gs.Run == nil {
 		t.Fatal("a new run must leave a run standing")
@@ -67,7 +67,7 @@ func TestANewRunRollsANewTower(t *testing.T) {
 }
 
 // TestAPinnedSeedSurvivesANewRun is why state.SeedPinned exists. A pin is a debugging session where
-// the same tower in the same order is the whole point, and a menu button must not undo from the
+// the same journey in the same order is the whole point, and a menu button must not undo from the
 // title screen what was set in main.
 func TestAPinnedSeedSurvivesANewRun(t *testing.T) {
 	gs := saveState(t)
@@ -89,7 +89,7 @@ func TestAPinnedSeedSurvivesANewRun(t *testing.T) {
 }
 
 // TestANewRunClearsTheOldSaveBeforeItStarts is the ordering that matters: a player who presses New
-// Run and then closes the window on the title screen must not come back to the climb they just gave
+// Run and then closes the window on the title screen must not come back to the journey they just gave
 // up on.
 func TestANewRunClearsTheOldSaveBeforeItStarts(t *testing.T) {
 	gs := saveState(t)
@@ -158,7 +158,7 @@ func TestContinueIsDeadWithNothingToContinue(t *testing.T) {
 }
 
 // TestNewRunOnlyAsksWhenThereIsSomethingToLose is the courtesy half of the confirm. A player on a
-// clean install pressing New Run gets a run, not a question about a climb they have never taken.
+// clean install pressing New Run gets a run, not a question about a journey they have never taken.
 func TestNewRunOnlyAsksWhenThereIsSomethingToLose(t *testing.T) {
 	gs := saveState(t)
 	scene := &TitleScene{}
@@ -178,7 +178,7 @@ func TestNewRunOnlyAsksWhenThereIsSomethingToLose(t *testing.T) {
 	gs.Resumed = true
 	scene.startNewRun(gs)
 	if !scene.confirm.IsOpen() {
-		t.Error("New Run over a resumed climb must ask first")
+		t.Error("New Run over a resumed journey must ask first")
 	}
 	if gs.ActiveScreen != state.Title {
 		t.Error("asking the question must not also answer it")
@@ -230,7 +230,7 @@ func TestAQuestionCancelsWithoutAnswering(t *testing.T) {
 }
 
 // TestAbandonIsDeadWithNoRunToGiveUp keeps the settings screen honest on the one screen it can be
-// opened from with no climb in progress: the title.
+// opened from with no journey in progress: the title.
 func TestAbandonIsDeadWithNoRunToGiveUp(t *testing.T) {
 	gs := saveState(t)
 	scene := &SettingsScene{}

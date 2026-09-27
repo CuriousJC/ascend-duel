@@ -17,7 +17,7 @@
     "earth": "Their spells are stone, grown up out of the ground.",
     "arcane": "Their spells are arcane, written in the air in burning script."
   },
-  "ValidFloors": [
+  "ValidRealms": [
     4,
     8
   ],

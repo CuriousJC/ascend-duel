@@ -4,12 +4,12 @@
 //	go run ./tools/motifsheet
 //
 // It exists because the roster is the least reviewable catalog in the game: a creature is met one
-// at a time, three rooms to a floor, and its whole personality is a deck the player only ever
-// sees the played half of. Whether one motif's three rooms read as a climb was a question
+// at a time, three rooms to a realm, and its whole personality is a deck the player only ever
+// sees the played half of. Whether one motif's three rooms read as a journey was a question
 // answered by reading JSON.
 //
 // **It also carries the coverage grid**, which is the one thing about a motif that cannot be seen
-// by looking at its records one at a time: a floor picks a motif and an element, so what has to
+// by looking at its records one at a time: a realm picks a motif and an element, so what has to
 // hold is that every element can field all three rooms at least twice over. The page prints that
 // grid per motif, out of the same function the loader refuses a file with.
 //

@@ -18,7 +18,7 @@ import "html/template"
 // from a gold card on the game's own blue.
 var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — upgrade sheet</title>
+<title>Duello — upgrade sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};

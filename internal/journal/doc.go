@@ -1,6 +1,6 @@
 // Package journal is what the player chose, in order, on its way to the disk.
 //
-// **It is the answer to "how do I get back to this?"** A run seed rebuilds the tower, the motifs,
+// **It is the answer to "how do I get back to this?"** A run seed rebuilds the journey, the motifs,
 // the elements and every shuffle, and it is still not enough: the deck changes with what the player
 // takes and spends, and the hands follow from the deck. Same seed and different choices is a
 // different fight two. This file is what closes that gap.
@@ -21,7 +21,7 @@
 // # One file, and the run it belongs to
 //
 // `journal.jsonl` in the profile's own directory, beside the two files internal/profile already
-// keeps and moved with them by ASCEND_DUEL_PROFILE. **Starting a run truncates it.** A run that
+// keeps and moved with them by DUELLO_PROFILE. **Starting a run truncates it.** A run that
 // ended without going wrong is a run nobody is going to ask about, so keeping it would be a
 // directory growing for no reader — and one fixed name means nothing has to sweep up after it.
 //

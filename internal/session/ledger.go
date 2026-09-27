@@ -5,7 +5,7 @@ package session
 // The fight log used to be `CombatScene.rounds` — this fight's events, thrown away by the next
 // `Init` — so the account of a run was something the player had to have been watching. The ledger
 // is the same record kept for the length of the run and read back from anywhere: what a blow came
-// to, which relic priced which term of it, and, at run scale, how a climb went and where it went
+// to, which relic priced which term of it, and, at run scale, how a journey went and where it went
 // wrong. *(owner's call, 2026-09-02)*
 //
 // **Records, not events, and that is the whole design decision.** `combat.Event` is a fat comparable
@@ -143,10 +143,10 @@ type LedgerRound struct {
 // shuffle, and folding the two would make the run's account claim a fight was won that was lost
 // first.
 type LedgerFight struct {
-	// Number is which duel of the run this was, 1-based, counting retries. Floor is where it was
+	// Number is which duel of the run this was, 1-based, counting retries. Realm is where it was
 	// fought and Enemy is who stood there.
 	Number int
-	Floor  int
+	Realm  int
 	Enemy  string
 
 	// Outcome is "won", "lost", or empty while it is still being fought.
@@ -194,13 +194,13 @@ func (s *Session) LedgerFights() []LedgerFight { return s.ledger.Fights }
 // **An unfought record is replaced rather than added to.** `CombatScene.Init` runs on entering the
 // screen and again on a retry, and a player who reached the room and left it without throwing a
 // round should not leave an empty heading in the run's account.
-func (s *Session) BeginFight(floor int, enemy string) {
+func (s *Session) BeginFight(realm int, enemy string) {
 	if n := len(s.ledger.Fights); n > 0 && len(s.ledger.Fights[n-1].Rounds) == 0 {
 		s.ledger.Fights = s.ledger.Fights[:n-1]
 	}
 	s.ledger.Fights = append(s.ledger.Fights, LedgerFight{
 		Number: len(s.ledger.Fights) + 1,
-		Floor:  floor,
+		Realm:  realm,
 		Enemy:  enemy,
 	})
 }
@@ -214,7 +214,7 @@ func (s *Session) BeginFight(floor int, enemy string) {
 // beat: one conversion per round rather than per frame.
 //
 // A round arriving with no fight open is dropped rather than opening one, because a record with no
-// enemy and no floor would be a heading the panel could not write.
+// enemy and no realm would be a heading the panel could not write.
 func (s *Session) RecordRound(recs []LedgerRecord, dealt int) {
 	n := len(s.ledger.Fights)
 	if n == 0 || len(recs) == 0 {

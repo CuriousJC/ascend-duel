@@ -5,7 +5,7 @@ repository.
 
 ## Project
 
-Ascending Duel — a roguelike where you duel your way up a tower, collecting relics and brands of
+Duello — a roguelike where you duel your way from realm to realm, collecting relics and brands of
 power. Written in Go with [Ebitengine v2](https://ebitengine.org/)
 (`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
 
@@ -23,7 +23,7 @@ Six streams, each with one job. Reach for the right one rather than searching al
 | **Unfiltered** | [ideas.md](ideas.md) | the inbox; entries get promoted into MECHANICS or TODO and struck from here |
 
 - **`MECHANICS.md` is the design record.** Decided unless marked `[?]`. It holds the element
-  set and their statuses, cards and types, hands, relics, brands, vitae, the tower, enemies,
+  set and their statuses, cards and types, hands, relics, brands, vitae, the journey, enemies,
   and the phase-based resolution experiment.
 - **`TODO.md` is open work only.** Completed entries are deleted rather than archived, so it
   says what is left, not what happened. Prefer `MECHANICS.md` for "what should this do".
@@ -102,7 +102,7 @@ skill that does not exist.
 | [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / essences, or writing a loader |
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
-| [`motifs`](.claude/skills/motifs/SKILL.md) | adding a motif directory, adding or changing a creature or a backdrop under `data/motifs/`, authoring creatures, bosses or rooms, touching `data/tower.json`, or wiring anything that picks an opponent or a backdrop |
+| [`motifs`](.claude/skills/motifs/SKILL.md) | adding a motif directory, adding or changing a creature or a backdrop under `data/motifs/`, authoring creatures, bosses or rooms, touching `data/journey.json`, or wiring anything that picks an opponent or a backdrop |
 | [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn relic |
 | [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
 | [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
@@ -167,7 +167,7 @@ go run -tags debugtrace .   # with internal/trace live: event log + trace/frame.
 go run -tags idleexit .     # closes itself after two minutes with nobody at the controls
 go run -tags demoplay .     # plays a scripted round by itself, writes demo/*.png, exits
 go run -tags scenario .     # a chosen set of relics, a chosen opening hand, a chosen enemy
-ASCEND_DUEL_SCENARIO=seven-term-sum go run -tags scenario .   # a named one
+DUELLO_SCENARIO=seven-term-sum go run -tags scenario .   # a named one
 go run ./tools/marksheet    # every form mark and cost tick as a matrix, at both drawn sizes
 go run ./tools/sheets       # regenerate every review sheet and the index that links them
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
@@ -206,11 +206,11 @@ go run ./tools/privateassets -require   # what a release runs: refuse a build mi
 third shared library under `tools/`. A sheet declares its facets, tags each record with
 `class="sheet-item"` and a `data-` attribute per facet, wraps each heading and its records in
 `class="sheet-group"`, and drops the bar in above the contents; values within a facet are an OR
-and facets are an AND. The motif sheet is cut on floor, room and element, and the relic sheet on
+and facets are an AND. The motif sheet is cut on realm, room and element, and the relic sheet on
 rarity and family. Two rules to keep:
 
 - **A facet's values are counted off the records, never typed into the tool.** A motif authored
-  onto a ninth floor puts a ninth chip up with nothing edited — the same reason nothing in this
+  onto a ninth realm puts a ninth chip up with nothing edited — the same reason nothing in this
   file writes down how many of anything there is.
 - **The page is complete before the script runs.** Filtering hides what is already in the file,
   so a sheet stays one static file with no build step and reads whole with scripting off. That is
@@ -305,7 +305,7 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
 - **A shield's element is a rule, and so is a creature's**. `Duelist.Shields` is a
   `combat.ShieldStack` — a count per element, fixed-width so a Duelist stays a value — and a
   shield eating a hit of its own element banks one action point into `Duelist.Surge` for its
-  owner's next turn only. A creature carries the floor's element in `Duelist.Element`, and a hit of
+  owner's next turn only. A creature carries the realm's element in `Duelist.Element`, and a hit of
   it **fizzles** (`combat.fizzles`, `KindFizzled`): it lands nothing, though the card still forms
   the hand. Wildcards never fizzle, and the duelist has no element, so the fizzle runs one way.
   See MECHANICS.md §A creature's own element.
@@ -355,7 +355,7 @@ MECHANICS.md §The round limit. Two things to know before touching it:
 - **The bar on the combat screen decides nothing.** It is a picture of `CombatScene.round`; the
   clock is checked inside the resolved round, per presentation-may-never-change-an-outcome. **What
   nothing catches is the balance**: a hard cap makes every fight a damage check and nothing here
-  simulates a duel, so a floor whose creatures have outrun what a run can build is unwinnable and
+  simulates a duel, so a realm whose creatures have outrun what a run can build is unwinnable and
   no test goes red.
 
 **Runes alter the deck *during* a fight, and they are the one mechanic allowed near a live
@@ -489,7 +489,7 @@ catalogs get reviewed.
 
 **Nothing simulates a duel.** An unwinnable enemy is invisible while playing, because losing slowly
 looks exactly like losing to bad draws — so a cost, a stat line or a planner can be changed today
-without anything catching what it did. `internal/combat`, `internal/decks` and `internal/pyramid`
+without anything catching what it did. `internal/combat`, `internal/decks` and `internal/journey`
 are all free of Ebitengine, which is what would let a headless simulation be written. Keep them
 that way.
 
@@ -731,7 +731,7 @@ pretended away. It is the only thing on that screen that touches `gs.Run`, and i
 
 **A death is the same event, so it is the same function.** `EndRunInDefeat` is `AbandonRun` under a
 second name, because the only difference between dying and giving up is which screen the player was
-standing on — and two paths from "this climb is finished" to "the file is gone" is one path that can
+standing on — and two paths from "this journey is finished" to "the file is gone" is one path that can
 be got wrong. **There is no retry**, because a roguelike where a death can be taken back is not
 one. `CombatScene.died` is the path and the button in the DUEL! slot reads `defeatButtonLabel`.
 
@@ -813,7 +813,7 @@ a bevelled face, a cached image repainted only when something visible changed.
 - **It is reached from the cog in the game's chrome, from any screen**, so it is the only screen
   that cannot name its successor: `state.ReturnScreen` is where Back goes, recorded by whoever
   opened it. **It never touches `session.Phase`** — settings is not a station of a run, so opening
-  it mid-climb is a look at a dialog rather than a decision.
+  it mid-journey is a look at a dialog rather than a decision.
 - **Adding it was the usual three edits minus one.** No `session.Phase` and no entry in
   `screens/flow.go`, because it is not part of the run loop; just the `ActiveScreen` and the
   registry in `internal/game`.
@@ -1038,7 +1038,7 @@ review and clunky in play. There is no zoom anywhere in the game.
 
 ### Audio is generated too, and for the same reason
 
-[internal/music](internal/music) plays the score. `assets/ascending.mid` is a **Standard
+[internal/music](internal/music) plays the score. `assets/sounds/duello.mid` is a **Standard
 MIDI File — a kilobyte of notes** — and `internal/music` synthesizes it to PCM once at
 startup. `main.go` starts it after assets load; it loops for the whole session across
 every screen. Editing the tune means editing the MIDI file. **Nothing is baked and there
@@ -1055,7 +1055,7 @@ package. Several things to know before touching any of it:
   one to put the score back, which is two edits per screen and one of them is the one that gets
   forgotten, leaving the shop's loop playing over a duel.
 - **Every screen is listed, including the ones that play the score.** `music.Score` is a name —
-  `"ascending"` — rather than the empty string, because the score plays on nearly every screen
+  `"duello"` — rather than the empty string, because the score plays on nearly every screen
   and was the one piece of music not written down anywhere near the decision about it. A zero
   value standing for a real thing is the pattern this project rejects everywhere else, and
   `TestEveryScreenNamesItsMusic` walks `state.ActiveScreen` so a new screen fails the suite
@@ -1410,8 +1410,8 @@ records, because a rune is the least readable record in `data/`: which of `Rider
 `Count` the rules read depends entirely on the target.
 
 **`tools/motifsheet` does it for the roster**. A creature is met one at a time, three rooms to a
-floor, and its whole personality is a deck the player only ever sees the played half of — so "do
-this motif's three rooms read as a climb" was a question answered by reading JSON. The page groups
+realm, and its whole personality is a deck the player only ever sees the played half of — so "do
+this motif's three rooms read as a journey" was a question answered by reading JSON. The page groups
 by motif, prints the motif's HP, DMG and AP spread and its tier mix in the heading, and draws every
 record as **one composite strip**: the opponent's own card as the combat screen draws it, then its
 deck, one card per concept with the copy count in the table under it.
@@ -1420,7 +1420,7 @@ deck, one card per concept with the copy count in the table under it.
   rewritten on every full run for the same pixels. This sheet is most of the committed weight; see
   the note above about regenerating only what changed.
 - **It carries the coverage grid**, which is the one thing about a motif that cannot be seen by
-  looking at its records one at a time: a floor picks a motif and an element, so what has to hold
+  looking at its records one at a time: a realm picks a motif and an element, so what has to hold
   is that every element can field all three rooms at least twice. It is drawn from
   `data.CoverageOf` — the same function the loader refuses a file with — so the page and the
   launch cannot disagree about it.
@@ -1689,7 +1689,7 @@ go run .                      # nothing: every trace function is empty
 
 ```powershell
 go run -tags idleexit .                       # closes itself after two minutes idle
-ASCEND_DUEL_IDLE_SECONDS=30 go run -tags idleexit .
+DUELLO_IDLE_SECONDS=30 go run -tags idleexit .
 go run .                                      # nothing: Tick is empty and always false
 ```
 
@@ -1714,13 +1714,13 @@ chosen enemy — and a chosen screen** into a launched game.
 
 ```powershell
 go run -tags scenario .                                        # the first entry in the file
-ASCEND_DUEL_SCENARIO=seven-term-sum go run -tags scenario .    # a named one
+DUELLO_SCENARIO=seven-term-sum go run -tags scenario .    # a named one
 go run .                                                       # nothing: every function is a zero value
 ```
 
 It exists because an interaction between relics is currently a twenty-minute question. A relic is
 bought from a shelf of three, a hand is dealt from a shuffled deck, and an enemy is whoever the
-climb put in the room — so "does Echo actually multiply Enflamed's growth" cannot be *looked at*
+journey put in the room — so "does Echo actually multiply Enflamed's growth" cannot be *looked at*
 without playing toward it. The rules are unit-tested; what no test can answer is what the
 combination looks like on screen. It is the relic-and-hand counterpart of `deckSeedName` and
 `session.StartingRelics`, which each do one axis of the same job.
@@ -1772,7 +1772,7 @@ combination looks like on screen. It is the relic-and-hand counterpart of `deckS
   with* rather than survived — every blow, every shield break, every status and every signal, for
   as long as it is interesting. **It is not a record under `data/motifs/`, deliberately**: a
   training dummy is a fixture and `data/` is the game's own catalog, loaded by every build, drawn
-  on the roster sheet and reachable by the climb's own roll. So it changes the *stats* of whichever
+  on the roster sheet and reachable by the journey's own roll. So it changes the *stats* of whichever
   opponent was already there, which means the fight keeps a real portrait, a real deck and a real
   set of blows. **The clock is 999 rather than off**, because `session.SetRoundLimit` refuses to
   stop the clock and the fixture goes the long way round rather than being given a back door into
@@ -1806,10 +1806,10 @@ in progress). See MECHANICS.md §The profile for what they mean; what matters he
 go and what may never happen to them.
 
 - **They live under `os.UserConfigDir()`, never beside the executable** — `%APPDATA%scend-duel` on
-  Windows, `~/.config/ascend-duel` on Linux. Steam installs into a tree a normal process cannot
+  Windows, `~/.config/duello` on Linux. Steam installs into a tree a normal process cannot
   write to, where a write either fails or is silently redirected into `%LOCALAPPDATA%\VirtualStore`,
   which is worse because it works in testing. A per-executable directory is also per-install rather
-  than per-user. `ASCEND_DUEL_PROFILE` overrides the **directory**, moving both files together.
+  than per-user. `DUELLO_PROFILE` overrides the **directory**, moving both files together.
 - **Nothing here may ever be fatal.** Missing, corrupt or unwritable are all "a new player, and this
   session is not recorded" — the same rule the audio device is under. A launch refused over a save
   file would be a worse bug than any it prevents.
@@ -1828,9 +1828,9 @@ go and what may never happen to them.
   `advanceRun` at each phase transition, the achievement is awarded where a fight is won, and the
   tutorial is marked seen where the overlay ends. Persistence is deliberately not something a scene
   does.
-- **The climb's offers are rebuilt from the run code; its picks are saved.** What every floor
+- **The journey's offers are rebuilt from the run code; its picks are saved.** What every realm
   offers is a function of the seed, so it is not stored. Which portal the player walked through is a
-  choice, so `RunSnapshot.Portals` writes it down by motif key and a resume refuses one its floor
+  choice, so `RunSnapshot.Portals` writes it down by motif key and a resume refuses one its realm
   never offered — `TestThePortalsTakenSurviveAResume`.
 - **A run is snapshotted between phases, never inside a duel.** `session.Session` is snapshotted and
   is still not *replayable* — the replay story is a seed plus a choice log, because a deck edit is a
@@ -1848,10 +1848,10 @@ player is meant to meet — so there is no build tag and it is in every binary.
 **It fires on its own**, off the profile: a player `profile.json` has not recorded as taught
 gets taught, on the first fight of a fresh run. `main.teachThisRun` is the whole trigger, and it
 declines for a resumed run and for a scenario — a lesson that opens by describing the hand you
-are holding cannot begin halfway up a tower. **A launch on a clean machine therefore opens into
+are holding cannot begin halfway through the realms. **A launch on a clean machine therefore opens into
 the tutorial**, which is a thing to know before wondering why Bob turned up. `"Teach": true` in
 a scenario still forces it whatever the profile says, and is the only way to see it a second
-time; the counterpart is `ASCEND_DUEL_PROFILE` pointed at an empty directory, which makes any
+time; the counterpart is `DUELLO_PROFILE` pointed at an empty directory, which makes any
 launch a new player's.
 
 - **The state machine is free of Ebitengine**, like `internal/combat` and for the same payoff: the
@@ -2065,7 +2065,7 @@ with nobody watching but the person it happened to.
 [internal/journal](internal/journal) is what the player chose, in order, on its way to the disk:
 `journal.jsonl` in the profile's own directory, one record per line, appended as it happens.
 
-**The run seed is not enough to get a run back.** It rebuilds the tower, the motifs, the elements
+**The run seed is not enough to get a run back.** It rebuilds the journey, the motifs, the elements
 and every shuffle, and the deck still changes with what the player takes and spends — and the hands
 follow from the deck. Same seed and different choices is a different fight two.
 
@@ -2082,14 +2082,14 @@ describe.
   relic key, a card's label and a seat — not a drag path and not a pointer position. **A card is
   named by identity**, `combat.Card.ID`, for the reason a rune's targets are: three piles hold
   copies of the same cards, so a position names a different card a moment later.
-- **One file, and starting a run truncates it.** A climb that ended without going wrong is one
+- **One file, and starting a run truncates it.** A journey that ended without going wrong is one
   nobody is going to ask about, and one fixed name means nothing has to sweep up after it. **What
   makes that safe is the copy a crash takes** — see above; without it the one run worth retracing is
   the one the next launch overwrites. **A resumed run appends rather than truncating**, and its
-  header says `resumed`, so two headers in one file is one climb played across two launches.
+  header says `resumed`, so two headers in one file is one journey played across two launches.
 - **A click has its line where its function is; a screen and a phase are diffed once a frame.** The
   first is where the choice actually is. The second two are reached from a dozen places — a button,
-  a run advancing, a crash, a scenario opening the game halfway up a tower — so a call beside each
+  a run advancing, a crash, a scenario opening the game halfway through the realms — so a call beside each
   is a list the next one gets left off. `game.journalWatch` is the diff, on `screens.RunWatch`'s
   argument.
 - **`CombatScene.choices` is the one stored handle**, taken at `Init`. Every other screen writes its
@@ -2152,20 +2152,20 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `data` `profile` `privateassets` | *nothing* |
 | `journal` | profile |
 | `scenario` | data, combat *(compiled out unless `-tags scenario`)* |
-| `pyramid` | data |
+| `journey` | data |
 | `combat` | data |
 | `tutorial` | data |
 | `achieve` | data, combat |
 | `carddesc` | combat |
 | `decks` | data, combat |
-| `entities` | data, combat, pyramid |
-| `session` | data, combat, pyramid, profile, seeds, tutorial |
+| `entities` | data, combat, journey |
+| `session` | data, combat, journey, profile, seeds, tutorial |
 | `crashlog` | profile, seeds, session |
 | `state` | data, session, journal |
 | `systems` | assets, models, state |
 | `cards` | systems |
 | `actions` | state |
-| `ui` | data, achieve, carddesc, cards, combat, crashlog, decks, entities, models, pyramid, session, state, systems |
+| `ui` | data, achieve, carddesc, cards, combat, crashlog, decks, entities, models, journey, session, state, systems |
 | `screens` | all of the above, plus `ui` and `scenario` |
 | `game` | screens, ui, state, systems, models, profile, crashlog, journal, music, idle, trace |
 | `main` | game, session, assets, data, music, profile, crashlog, journal, scenario, screens, seeds, state |
@@ -2174,7 +2174,7 @@ Six facts about it that are load-bearing:
 
 - **`data` is the bottom and must never import upward.** That is why creature concepts are
   registered by `internal/decks` rather than handed over by `data`: a creature's cards live in its
-  motif file beside art keys and floor bands, so the rules reading that file directly would cross
+  motif file beside art keys and realm bands, so the rules reading that file directly would cross
   the who-consumes-it line.
 - **`profile` imports nothing of ours, like `seeds`, and that is what makes saving possible at
   all.** It owns the two files on disk and knows nothing about a run: `session` converts itself to
@@ -2204,7 +2204,7 @@ Six facts about it that are load-bearing:
   own damage chain.
 - **`decks` sits above `combat` and `data` and below `screens`**, which is the whole reason it is
   a package: it is the one place allowed to turn a JSON card list into rules types, reachable
-  without importing a screen. `pyramid` exists for the same reason on the other axis — the climb is
+  without importing a screen. `journey` exists for the same reason on the other axis — the journey is
   arithmetic a headless caller needs and a screen must not own.
 - **`state` importing `session` is the one documented bend**, and it is what makes `state` reach
   `combat` transitively. The rule it bends was written to stop *screen* state leaking into global
@@ -2253,7 +2253,7 @@ fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only 
   no scene registered is walked past rather than drawn blank, which is what lets the loop name
   a station before it has a screen.
 - **A station can also be walked past because it does not apply.** `session.Advance` skips the
-  portal unless `Session.PortalDue` — the room just won was a portal room and the floor ahead offers
+  portal unless `Session.PortalDue` — the room just won was a portal room and the realm ahead offers
   a choice — so after an outer or an inner room the shop leads straight to the next fight. See
   `internal/screens/portal.go` and MECHANICS.md §The portal.
 - **Adding a screen is therefore three edits**: a phase in `session/flow.go`, an entry in
@@ -2348,7 +2348,7 @@ file was refiled. A named asset is three edits: the file, an `//go:embed` var, a
 its filename stem with the folders left out** — so where a file is filed never reaches a record, and
 two files sharing a stem anywhere in the tree fail the launch. **There is one picture per record
 per element** — `goblins-serf-fire.png` is `goblins-serf-fire`, which is what
-`data.MotifRecord.ArtKey` builds out of the record's `Art` field and the element the floor dealt it
+`data.MotifRecord.ArtKey` builds out of the record's `Art` field and the element the realm dealt it
 as — so a fire goblin serf and an ice goblin serf are two drawings of one creature. A backdrop is
 the same shape as a JPEG: `data.Backdrop.ArtKey` builds `<Art>-<element>`. **The consequence is exactly what the three-edit rule protects against:
 a picture's key is tied to its filename**, so renaming one means editing the `Art` field of the

@@ -9,7 +9,7 @@ package profile
 // state the player is in, not the path they took to it, and a snapshot is exactly that. See
 // MECHANICS.md, where the reversal is recorded.
 //
-// **The climb is half in here.** What every floor *offers* is rebuilt from the run code —
+// **The journey is half in here.** What every realm *offers* is rebuilt from the run code —
 // `session.Start` rolls it from `seeds.For(runSeed, EnemySelect)` — so storing it would be a second
 // answer to a question the seed already answers. Which portal the player walked through is a
 // choice, and choices are not derivable, so `Portals` is written down.
@@ -34,10 +34,10 @@ type RunSnapshot struct {
 	// Seed is the run code — six Crockford base32 characters, the spelling a player reads off the
 	// screen. **A code rather than the int64** because it is the one field of this file a person
 	// might type, and because `seeds.Parse` refuses a malformed one where a raw number would
-	// silently resume a different tower.
+	// silently resume a different journey.
 	Seed string `json:"seed"`
 
-	// Fight is how many rooms in the run has got, zero-based, and Floor is not stored: it is
+	// Fight is how many rooms in the run has got, zero-based, and Realm is not stored: it is
 	// arithmetic on this, and a second field saying the same thing is a second field to keep in
 	// step.
 	Fight int `json:"fight"`
@@ -45,10 +45,10 @@ type RunSnapshot struct {
 	// Phase is the station of the loop, by name — "fight", "reward", "shop", "portal".
 	Phase string `json:"phase"`
 
-	// Portals is the motif the run walked through at each portal, by motif key, in floor order from
-	// floor two. **A key rather than which of the two portals** — the offers are rebuilt from the
+	// Portals is the motif the run walked through at each portal, by motif key, in realm order from
+	// realm two. **A key rather than which of the two portals** — the offers are rebuilt from the
 	// seed, and a key still names the same realm if a later build lists them in another order. An
-	// empty entry is a floor entered without a choice, which is fought at its first offer.
+	// empty entry is a realm entered without a choice, which is fought at its first offer.
 	Portals []string `json:"portals,omitempty"`
 
 	// Vitae is the purse, and LifeLeft is what the fighter walked out of the last fight with. The
@@ -171,7 +171,7 @@ type RunSnapshot struct {
 // LedgerFightSnapshot is one duel of the run's account.
 type LedgerFightSnapshot struct {
 	Number int    `json:"number"`
-	Floor  int    `json:"floor"`
+	Realm  int    `json:"realm"`
 	Enemy  string `json:"enemy"`
 
 	// Outcome is "won", "lost", or empty for a fight still being fought when the run was saved —
@@ -297,7 +297,7 @@ type CardSnapshot struct {
 //
 // **A corrupt or future-versioned run is no run at all**, which is a harder line than the profile
 // takes and the right one: a profile half-read still names achievements worth keeping, where a run
-// half-read is a tower the player would resume into wrong. Losing it costs one run, and the profile
+// half-read is a journey the player would resume into wrong. Losing it costs one run, and the profile
 // beside it is untouched.
 func LoadRun(s Store) (*RunSnapshot, bool, error) {
 	var r RunSnapshot
@@ -321,7 +321,7 @@ func SaveRun(s Store, r *RunSnapshot) error {
 //
 // **Three callers, all of them a run that is over** *(2026-09-03)*: a death, the settings screen's
 // Abandon Run, and New Run replacing what was there. All three go through `screens.AbandonRun` or
-// its defeat twin, so there is one path from "this climb is finished" to "the file is gone".
+// its defeat twin, so there is one path from "this journey is finished" to "the file is gone".
 func DeleteRun(s Store) error { return s.remove(runFile) }
 
 // RiderSnapshot is one rule attached to one card.

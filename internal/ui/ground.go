@@ -134,7 +134,7 @@ func FillGround(screen *ebiten.Image) {
 }
 
 // backdrops holds each backdrop decoded, by asset key. A run shows a handful of them and a decoded
-// one is eight megabytes, so one is decoded the first time a floor asks for it rather than at launch.
+// one is eight megabytes, so one is decoded the first time a realm asks for it rather than at launch.
 var backdrops = map[string]*ebiten.Image{}
 
 // Backdrop is the picture an asset key names, decoded, or the default backdrop when the key names

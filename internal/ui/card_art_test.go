@@ -343,7 +343,7 @@ func TestEveryRelicDrawsSomething(t *testing.T) {
 }
 
 func TestEveryBackdropDrawsSomething(t *testing.T) {
-	// The backdrop half of TestEveryRelicDrawsSomething, plus the default itself: a floor whose
+	// The backdrop half of TestEveryRelicDrawsSomething, plus the default itself: a realm whose
 	// element has no backdrop draws the default, so a default that is not embedded is a duel on the
 	// bare gradient with nothing failing.
 	images := assets.LoadImageData()

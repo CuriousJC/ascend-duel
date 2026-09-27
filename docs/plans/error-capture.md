@@ -27,7 +27,7 @@ thing that can put a run back where it was.
 records through one translator, so a wording change reaches every ledger already on disk and a
 machine reading a crash file gets data rather than English.
 
-**The seed is not enough on its own.** It rebuilds the tower, the motifs, the elements and the
+**The seed is not enough on its own.** It rebuilds the journey, the motifs, the elements and the
 shuffles, but the deck changes with what the player takes and cuts and the hands follow from the
 deck. Same seed and different choices is a different fight two. The journal is what closes that gap.
 
@@ -84,8 +84,8 @@ identical.
 
 ## The files, and where they go
 
-All of them sit in the profile directory — `%APPDATA%\ascend-duel` or `~/.config/ascend-duel`, moved
-together by `ASCEND_DUEL_PROFILE` — never beside the executable, on the rule `internal/profile` is
+All of them sit in the profile directory — `%APPDATA%\duello` or `~/.config/duello`, moved
+together by `DUELLO_PROFILE` — never beside the executable, on the rule `internal/profile` is
 already under.
 
 | File | Written | Kept |

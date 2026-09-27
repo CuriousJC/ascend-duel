@@ -33,8 +33,8 @@ func TestTheLoopComesBackRoundToTheFight(t *testing.T) {
 func TestThePortalIsWalkedPastAfterAnOrdinaryRoom(t *testing.T) {
 	// The portal is a choice of realm, and only a portal room opens one. Standing at it after an
 	// outer or an inner room would be a choice with nothing to choose.
-	motifs, tower := rosters(t)
-	run := Start(motifs, tower, 1)
+	motifs, shape := rosters(t)
+	run := Start(motifs, shape, 1)
 	for fight := 0; fight < 2; fight++ {
 		run.WonFight(50, 50)
 		run.Advance() // reward
@@ -50,8 +50,8 @@ func TestEveryStationIsVisitedExactlyOncePerPortalLap(t *testing.T) {
 	// A station left out of the order is a screen the player never sees; a station in it twice is
 	// one they see twice. Neither fails anywhere else. The lap after a portal room is the one that
 	// stands at all four.
-	motifs, tower := rosters(t)
-	run := Start(motifs, tower, 1)
+	motifs, shape := rosters(t)
+	run := Start(motifs, shape, 1)
 	run.JumpTo(2, 0, 50, 50)
 	run.WonFight(50, 50)
 	seen := map[Phase]int{run.Phase(): 1}

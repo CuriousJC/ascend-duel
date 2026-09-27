@@ -12,7 +12,7 @@ import (
 // enemyConcepts is every record's cards as registered concepts, keyed by record, built once at
 // package init so a bad record fails on launch rather than mid-duel.
 //
-// **A concept, not a card.** A creature's colour is its floor's rather than its own, so the deck
+// **A concept, not a card.** A creature's colour is its realm's rather than its own, so the deck
 // it actually fights with is not known until a fight is built — see EnemyCards, which is the one
 // place a concept and an element become cards.
 var enemyConcepts = buildEnemyConcepts()
@@ -32,7 +32,7 @@ type conceptCopies struct {
 //
 // It panics on a bad record for the reason the player's deck builder does: a deck quietly missing
 // cards is a balance change nobody made, and a launch failure naming the record is cheaper to fix
-// than a creature that turns out to be harmless three floors in.
+// than a creature that turns out to be harmless three realms in.
 func buildEnemyConcepts() map[string][]conceptCopies {
 	motifs := data.LoadMotifs()
 
@@ -56,14 +56,14 @@ func buildEnemyConcepts() map[string][]conceptCopies {
 	return out
 }
 
-// EnemyCards is one opponent's deck as it is dealt on a given floor: its own concepts, every one
-// of them in the floor's element.
+// EnemyCards is one opponent's deck as it is dealt on a given realm: its own concepts, every one
+// of them in the realm's element.
 //
-// **The element is the floor's, not the card's.** A creature is instantiated as one element and
+// **The element is the realm's, not the card's.** A creature is instantiated as one element and
 // its whole deck takes it, the same way a duelist's Jab is a concept that ships in five colours —
 // so there is no element anywhere in data/motifs, and a card cannot carry one of its own.
 //
-// An unnamed element deals a basic deck, which is what a fixture with no floor behind it gets.
+// An unnamed element deals a basic deck, which is what a fixture with no realm behind it gets.
 // An unknown record hands back nothing rather than panicking — the roster is walked from the same
 // map, so a miss here means the caller invented a name.
 func EnemyCards(record, element string) []combat.Card {
@@ -135,7 +135,7 @@ type EnemyPile struct {
 	rng *rand.Rand
 }
 
-// NewEnemyPile shuffles one enemy's deck, dealt in the floor's element, and deals an opening hand.
+// NewEnemyPile shuffles one enemy's deck, dealt in the realm's element, and deals an opening hand.
 func NewEnemyPile(record, element string, seed int64, handSize int) *EnemyPile {
 	p := &EnemyPile{
 		draw:     EnemyCards(record, element),

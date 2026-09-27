@@ -158,7 +158,7 @@ func (s *ShopScene) drinkPotion(gs *state.GlobalState, key string) {
 
 // potionTip is what resting on one says. **It is the whole of what the card says** *(owner's call,
 // 2026-09-15)* — the face is a painted bottle and a price, so the figure, what it moves and when it
-// is drunk are all read here, by a player who on floor one has never seen a potion.
+// is drunk are all read here, by a player who on realm one has never seen a potion.
 func potionTip(p session.Potion) (string, []string) {
 	var what string
 	switch p.Effect {

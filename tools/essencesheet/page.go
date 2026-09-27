@@ -13,7 +13,7 @@ import "html/template"
 // card from a red border on the game's own blue.
 var tmpl = template.Must(template.New("essencesheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — essence sheet</title>
+<title>Duello — essence sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};

@@ -1464,7 +1464,7 @@ func TestTheBottomBlockFitsInsideTheCard(t *testing.T) {
 		name string
 		st   Style
 	}{{"duelist", DuelistStyle}, {"enemy", EnemyStyle}} {
-		// The badge row is the top of the block and the bar is its floor, and both cards carry
+		// The badge row is the top of the block and the bar is its realm, and both cards carry
 		// them at the same heights — that is what makes the two comparable across the table.
 		if badges := c.st.EffectTop + c.st.EffectSize; badges > c.st.HealthBarTop {
 			t.Errorf("%s: the badge row ends at y=%d, %dpx into the bar at y=%d",

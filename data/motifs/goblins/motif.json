@@ -17,7 +17,7 @@
     "earth": "Mud-caked and stone-studded, heavier than any goblin should be.",
     "arcane": "Something about them is measured wrong, and it glows purple."
   },
-  "ValidFloors": [
+  "ValidRealms": [
     1,
     6
   ],

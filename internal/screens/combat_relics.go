@@ -168,9 +168,9 @@ func (s *CombatScene) topRowPanes(gs *state.GlobalState) (relics, consumables im
 // the screen read as one column, at the cost of the hand overlapping itself a little more. See
 // cardBandWidth.
 //
-// **It starts at the duelist card's right edge again** *(2026-09-04, owner's call)*. The floor
+// **It starts at the duelist card's right edge again** *(2026-09-04, owner's call)*. The realm
 // and the room stood in a 166-pixel column here for a day; they are back under the card, and the
-// row — and therefore the hand — got the width back. See towerPlaceRect.
+// row — and therefore the hand — got the width back. See the tutorial's journey-place anchor.
 func relicRowSpan(gs *state.GlobalState) (left, right int) {
 	return ui.DuelistCardRect(gs).Max.X + relicPaneGap, ui.EnemyCardRect(gs).Min.X - relicPaneGap
 }
@@ -179,7 +179,7 @@ func relicRowSpan(gs *state.GlobalState) (left, right int) {
 // **deep enough to hold the rule and the fraction under it**.
 //
 // The fraction hanging off the bottom edge onto the bare ground would say the rule is the
-// panel's floor and the number is loose underneath it, which is backwards — the count belongs
+// panel's realm and the number is loose underneath it, which is backwards — the count belongs
 // to the row it counts.
 func (s *CombatScene) relicPaneBackRect(gs *state.GlobalState) image.Rectangle {
 	return relicPaneBackOf(s.relicPaneRect(gs))
@@ -766,7 +766,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 
 // relicCountRect is where the worn count stands: **hung off the bottom-right corner of the pane
 // the relics stand on** *(2026-09-04, owner's call)*. It spent a day in the caption column beside
-// the duelist card, which is where the floor and the room were; both have moved back under that
+// the duelist card, which is where the realm and the room were; both have moved back under that
 // card, and a count of the relics belongs against the relics.
 //
 // The rectangle spans the whole backing and the figure is drawn right-aligned in it, so the number

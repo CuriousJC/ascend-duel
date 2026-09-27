@@ -431,7 +431,7 @@ func TestAMovedWornRelicKeepsItsGrowth(t *testing.T) {
 
 func TestHermesShortensTheClockForTheFightAndGivesItBackWhenSold(t *testing.T) {
 	// The reason the delta is summed over the run's number rather than written into it: a relic
-	// that called SetRoundLimit would leave the climb two rounds short forever, and selling is the
+	// that called SetRoundLimit would leave the journey two rounds short forever, and selling is the
 	// only way a relic comes off.
 	run := wearing(t, "cost-three-rounds")
 

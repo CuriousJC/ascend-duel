@@ -17,7 +17,7 @@
     "earth": "Green and thick with grit and mud.",
     "arcane": "Purple, with something like stars moving inside."
   },
-  "ValidFloors": [1, 5],
+  "ValidRealms": [1, 5],
   "Records": [
     {
       "Record": "slimes-outer-blob",

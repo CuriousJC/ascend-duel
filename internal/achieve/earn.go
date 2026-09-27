@@ -21,7 +21,7 @@ type Moment struct {
 	// Value is a concept's label, on MomentCardAltered.
 	Value string
 
-	// N is the figure the moment carries: the floor on MomentFloorReached, the shield count on
+	// N is the figure the moment carries: the realm on MomentRealmReached, the shield count on
 	// MomentShieldsRaised.
 	N int
 }
@@ -29,7 +29,7 @@ type Moment struct {
 // The raisers, so a call site spells a moment once and cannot misspell it.
 func DuelWon() Moment               { return Moment{Name: MomentDuelWon} }
 func TutorialFinished() Moment      { return Moment{Name: MomentTutorialFinished} }
-func FloorReached(floor int) Moment { return Moment{Name: MomentFloorReached, N: floor} }
+func RealmReached(realm int) Moment { return Moment{Name: MomentRealmReached, N: realm} }
 func CardAltered(label string) Moment {
 	return Moment{Name: MomentCardAltered, Value: label}
 }
@@ -46,7 +46,7 @@ func (c *Catalog) ByMoment(m Moment) []string {
 			continue
 		}
 		switch m.Name {
-		case MomentFloorReached, MomentShieldsRaised:
+		case MomentRealmReached, MomentShieldsRaised:
 			// A threshold, not an equality. See the constants.
 			if m.N < t.n {
 				continue

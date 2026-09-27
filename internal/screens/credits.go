@@ -73,8 +73,8 @@ const (
 // credits is the page. **The version is not in here** — it is drawn separately at the bottom, from
 // `gs.Version`, because it is a fact about the build rather than a line somebody wrote.
 var credits = []creditsLine{
-	{"Ascending Duel", creditsHeading},
-	{"a roguelike duel up a tower", creditsQuiet},
+	{"Duello", creditsHeading},
+	{"a roguelike duel from realm to realm", creditsQuiet},
 	{"", creditsGap},
 
 	{"MADE BY", creditsHeading},

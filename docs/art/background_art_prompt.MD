@@ -68,7 +68,7 @@ brawl in a corner. Draw the room for that, and leave the fighters out.
 
 **Every backdrop carries one feature at the far side of the floor that names its tier**, and it is
 the only thing in the picture with a job. A player glancing up from a hand has to be able to tell
-which of a floor's three fights they are in, so the feature is **centred on the far wall or the far
+which of a realm's three fights they are in, so the feature is **centred on the far wall or the far
 boundary, in the open middle** (see the table below), large enough to read at a glance and plainly
 the most important object in the place. Paint it in the room's own materials and the element's
 cast, so it belongs to the room rather than being pasted on.
@@ -96,7 +96,7 @@ open-air place it is a great gate in a wall or a cliff.
 **Two portals standing side by side** at the far side, a little apart from each other and both
 facing the viewer: each an upright oval or arch of **swirling rainbow light** — every hue of the
 spectrum turning in a slow spiral inside a frame of the room's own material. They are the way up
-to the next floor. **The rainbow is the one place the element's cast does not reach**: the swirl
+to the next realm. **The rainbow is the one place the element's cast does not reach**: the swirl
 inside each portal keeps its full spectrum, and only the frames and the glow they throw onto the
 floor take the room's colors. There is no door and no flight of steps drawn in a portal room backdrop other than
 these two.

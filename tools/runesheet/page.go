@@ -14,7 +14,7 @@ import "html/template"
 // about this catalog the page has to say in words because no card can show it.
 var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — rune sheet</title>
+<title>Duello — rune sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};

@@ -21,7 +21,7 @@ type page struct {
 // quick on.
 var tmpl = template.Must(template.New("artsheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — all art</title>
+<title>Duello — all art</title>
 <style>
   :root { --ground: #a8bcd4; --ink: #2c2822; --dim: #5a6472; --rule: #8fa3bd; --panel: #c6d5e6; }
   * { box-sizing: border-box; }

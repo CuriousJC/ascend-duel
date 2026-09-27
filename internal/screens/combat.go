@@ -91,7 +91,7 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindVitae:       1,
 	// **Two beats, because a permanent bonus is the rarest thing that happens on this screen.**
 	// Everything else in a round is spent by the end of it; this one follows the player up the
-	// tower, and a grant that went past on the same beat as a shield pip would be the least
+	// journey, and a grant that went past on the same beat as a shield pip would be the least
 	// noticed of the most important. It is the round limit's argument at a different scale.
 	combat.KindGrantedDMG:  2,
 	combat.KindGrantedLife: 2,
@@ -219,7 +219,7 @@ type CombatScene struct {
 	fighter *entities.Combatant
 	enemy   *entities.Combatant
 
-	// enemyElement is the colour this fight's opponent was dealt as — the floor's theme. The
+	// enemyElement is the colour this fight's opponent was dealt as — the realm's theme. The
 	// scene keeps it because the deck is built from it and the card faces are drawn from it, and
 	// both happen after the opponent itself has been hydrated.
 	enemyElement string
@@ -397,7 +397,7 @@ type CombatScene struct {
 	// which is what the post-battle screen pays into.
 	discardsLeft int
 
-	// fightIndex is which room of the climb the player is in.
+	// fightIndex is which room of the journey the player is in.
 	//
 	// **The run owns this now** *(2026-08-17)* — `session.Session.Fight()` — because the
 	// post-battle screen seeds its offer from it and a number living on one scene is invisible to
@@ -543,25 +543,25 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.fightIndex = gs.Run.Fight()
 
 	// **A scenario may name who is standing in the room**, so an interaction can be looked at
-	// against a chosen enemy rather than whoever the climb dealt. Compiled out of every normal
+	// against a chosen enemy rather than whoever the journey dealt. Compiled out of every normal
 	// build; see internal/scenario.
 	enemyKey := gs.Run.Enemy()
 	if scenario.Active() && scenario.Enemy() != "" {
 		enemyKey = scenario.Enemy()
 	}
 
-	// **The element is the floor's theme**, so every card this opponent plays is one colour and
+	// **The element is the realm's theme**, so every card this opponent plays is one colour and
 	// its picture is the one drawn for that colour. A fixture naming its own opponent may name the
-	// colour too; without one it takes whichever the climb rolled for this floor.
+	// colour too; without one it takes whichever the journey rolled for this realm.
 	enemyElement := gs.Run.Element()
 	if scenario.Active() && scenario.EnemyElement() != "" {
 		enemyElement = scenario.EnemyElement()
 	}
 	s.enemyElement = enemyElement
 	// The room is read off whoever is standing in it, so a scenario's chosen opponent is fought in
-	// its own motif's room for its own tier rather than in the room the climb would have dealt.
+	// its own motif's room for its own tier rather than in the room the journey would have dealt.
 	motif, _ := data.MotifOf(gs.Motifs, enemyKey)
-	s.backdrop = motif.BackdropFor(gs.Records[enemyKey].Tier, enemyElement, gs.RunSeed, gs.Run.Floor())
+	s.backdrop = motif.BackdropFor(gs.Records[enemyKey].Tier, enemyElement, gs.RunSeed, gs.Run.Realm())
 	s.enemy = enemyFromRecord(gs, enemyKey, enemyElement, s.fightIndex)
 
 	// **A scenario may also make the fight unkillable in both directions**, which is what a training
@@ -756,7 +756,7 @@ func (s *CombatScene) duelSettled() bool {
 // 2026-09-03)*. A win goes to the post-battle scene, which offers one alteration to the deck and
 // sends the player back here for the next room — so the advance along the roster is the run's
 // (`WonFight`), not this screen's. **A defeat ends the run**: there is no retry, because a death
-// killing the climb is what makes a roguelike one. See EndRunInDefeat.
+// killing the journey is what makes a roguelike one. See EndRunInDefeat.
 // victoryPending reports a won fight winding down: settled, the enemy dead, and the screen holding
 // its last picture until the post-battle scene takes over on its own. It is what the button strip
 // and `Draw` read, so "the fight is over and there is nothing to press" is asked in one place.
@@ -774,7 +774,7 @@ func (s *CombatScene) victoryPending() bool {
 // Leaving on the frame the last figure arrives would throw that away, so the pause is kept and
 // only the press is dropped.
 //
-// **Next stays live and still works**, so the hold is a floor rather than a wait: a player who has
+// **Next stays live and still works**, so the hold is a realm rather than a wait: a player who has
 // seen enough presses on. And **the count stops while a dialog is up** — the fight log can be
 // opened on a won fight, and a screen that changed out from under an open panel would be reading
 // material snatched away.
@@ -808,7 +808,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	s.demoUpdate(gs)
 
 	// **A death ends the run and puts the player back on the title screen.** It goes through the
-	// same function the settings screen's Abandon Run does, because it is the same event — a climb
+	// same function the settings screen's Abandon Run does, because it is the same event — a journey
 	// that is over — and one path there is one place to get it wrong. See run.go.
 	// **Before either exit below**, because a turn that killed the enemy is still a turn: the
 	// killing blow is exactly the one most likely to be a Spectrum, and a drain that ran only on a
@@ -817,7 +817,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 
 	if s.died {
 		s.died = false
-		// **A lost duel still played its cards.** What a defeat costs is the climb, not the record
+		// **A lost duel still played its cards.** What a defeat costs is the journey, not the record
 		// of what was swung on the way up — so the tallies are settled here as well as on a win.
 		settleCounters(gs)
 		EndRunInDefeat(gs)
@@ -834,14 +834,14 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		gs.Run.AbsorbGrowth(s.fighter.Duelist)
 		gs.Run.WonFight(s.fighter.CurrentLife, s.fighter.MaxLife)
 
-		// **The duel-won moment, and the floor the run now stands on.** Both fire on every win and
+		// **The duel-won moment, and the realm the run now stands on.** Both fire on every win and
 		// the profile keeps one award apiece — see achieve.go, and data/achievements.json, where
 		// "defeat your first enemy" is a record rather than a line of Go.
 		//
-		// **The floor is read after WonFight**, so a win that went through a portal reports the floor
+		// **The realm is read after WonFight**, so a win that went through a portal reports the realm
 		// arrived at rather than the one left behind.
 		earnMoment(gs, achieve.DuelWon())
-		earnMoment(gs, achieve.FloorReached(gs.Run.Floor()))
+		earnMoment(gs, achieve.RealmReached(gs.Run.Realm()))
 
 		// **The end of the duel, which is where the lifetime tallies are settled.** See achieve.go
 		// for why they are held in memory until here.
@@ -2022,17 +2022,17 @@ func planLabel(cards []combat.Card) string {
 	return label
 }
 
-// enemyFromRecord hydrates an opponent out of global state, dealt as the floor's element and
-// **grown to the fight it is met at** — see pyramid.ScaleToFight. `fight` is the whole of what the
-// ascent curve reads, which is the same counter the floor and room under the duelist card are
+// enemyFromRecord hydrates an opponent out of global state, dealt as the realm's element and
+// **grown to the fight it is met at** — see journey.ScaleToFight. `fight` is the whole of what the
+// growth curve reads, which is the same counter the realm and room under the duelist card are
 // derived from.
 //
-// **One pool, one lookup.** A boss is a record whose tier says boss; it stands in a floor's
-// portal room because the climb puts it there, not because it came from somewhere else. So nothing
+// **One pool, one lookup.** A boss is a record whose tier says boss; it stands in a realm's
+// portal room because the journey puts it there, not because it came from somewhere else. So nothing
 // below this line has to know which room it was built for.
 //
 // **No sheet to look up** — the opponent is a card, so its picture is an art key that
 // internal/cards decodes when it draws one.
 func enemyFromRecord(gs *state.GlobalState, record, element string, fight int) *entities.Combatant {
-	return entities.NewEnemyFrom(gs.Records[record], element, fight, gs.Tower)
+	return entities.NewEnemyFrom(gs.Records[record], element, fight, gs.Journey)
 }

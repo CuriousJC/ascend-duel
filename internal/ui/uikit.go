@@ -5,8 +5,8 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/journey"
 	"github.com/curiousjc/ascend-duel/internal/models"
-	"github.com/curiousjc/ascend-duel/internal/pyramid"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
@@ -107,21 +107,21 @@ func ShieldPipKey(e cards.Element) string {
 	return "formdefend-neutral"
 }
 
-// TowerRoomNames is what each of a floor's three fights is called, in order. Indexed by the
-// fight's position within its floor, so it must stay fightsPerFloor long — the two are checked
-// against each other by TestEveryRoomOnAFloorIsNamed.
-var TowerRoomNames = [FightsPerFloor]string{"Outer Room", "Inner Room", "Portal Room"}
+// RoomNames is what each of a realm's three fights is called, in order. Indexed by the
+// fight's position within its realm, so it must stay fightsPerRealm long — the two are checked
+// against each other by TestEveryRoomInARealmIsNamed.
+var RoomNames = [FightsPerRealm]string{"Outer Room", "Inner Room", "Portal Room"}
 
-// TowerFloor is which floor a fight is on, counting from one.
+// JourneyRealm is which realm a fight is on, counting from one.
 //
-// **It is not capped at the tower's eight.** The fight order is every record in the roster —
+// **It is not capped at the journey's eight.** The fight order is every record in the roster —
 // 96 of them, scaffolding for a generator that does not exist — so playing far enough reads
-// Floor 9 and beyond. A clamp would be a screen quietly disagreeing with the counter it is
-// drawing; the honest fix is the tower, not a maximum here.
-func TowerFloor(fight int) int { return fight/FightsPerFloor + 1 }
+// Realm 9 and beyond. A clamp would be a screen quietly disagreeing with the counter it is
+// drawing; the honest fix is the journey, not a maximum here.
+func JourneyRealm(fight int) int { return fight/FightsPerRealm + 1 }
 
-// TowerRoom names which of its floor's fights this is.
-func TowerRoom(fight int) string { return TowerRoomNames[fight%FightsPerFloor] }
+// JourneyRoom names which of its realm's fights this is.
+func JourneyRoom(fight int) string { return RoomNames[fight%FightsPerRealm] }
 
 // BuildFighter is the player as a combatant, equipped with what they are wearing.
 //
@@ -137,12 +137,12 @@ func BuildFighter(gs *state.GlobalState) *entities.Combatant {
 	return c
 }
 
-// FightsPerFloor is how many fights a floor holds, and the third of them is its boss.
+// FightsPerRealm is how many fights a realm holds, and the third of them is its boss.
 //
-// **It is pyramid.FightsPerFloor rather than a 3 of a screen's own**, because the ascent curve
+// **It is journey.FightsPerRealm rather than a 3 of a screen's own**, because the growth curve
 // that grows an enemy per room reads the same number. Two copies would let the label and the
-// difficulty disagree about how deep a floor is.
-const FightsPerFloor = pyramid.FightsPerFloor
+// difficulty disagree about how deep a realm is.
+const FightsPerRealm = journey.FightsPerRealm
 
 // dragThreshold is how far the cursor has to travel with the button held before a press counts as
 // a drag rather than a click. Without it every click would jitter into a one-pixel reorder and

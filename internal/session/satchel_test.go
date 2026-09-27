@@ -154,7 +154,7 @@ func TestTheSatchelSurvivesASaveAndAResume(t *testing.T) {
 		t.Fatalf("the snapshot writes the satchel as %v", snap.Satchel)
 	}
 
-	back, _, err := Resume(nil, data.TowerData{}, snap)
+	back, _, err := Resume(nil, data.JourneyData{}, snap)
 	if err != nil {
 		t.Fatalf("a run carrying an essence would not resume: %v", err)
 	}

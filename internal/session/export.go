@@ -37,8 +37,8 @@ type LedgerExport struct {
 	// Exported is when the file was written, RFC 3339 with the machine's own offset.
 	Exported string `json:"exported"`
 
-	// Floor is how far the climb had got when the export was taken.
-	Floor int `json:"floor"`
+	// Realm is how far the journey had got when the export was taken.
+	Realm int `json:"realm"`
 
 	Fights []ExportFight `json:"fights"`
 }
@@ -46,7 +46,7 @@ type LedgerExport struct {
 // ExportFight is one duel.
 type ExportFight struct {
 	Number int    `json:"fight"`
-	Floor  int    `json:"floor"`
+	Realm  int    `json:"realm"`
 	Enemy  string `json:"enemy"`
 
 	// Outcome is "won", "lost", or "fighting" for the duel that was still being fought.
@@ -87,13 +87,13 @@ func (s *Session) ExportLedger(code string, at time.Time, words Worder) LedgerEx
 	out := LedgerExport{
 		Seed:     code,
 		Exported: at.Format(time.RFC3339),
-		Floor:    s.Floor(),
+		Realm:    s.Realm(),
 		Fights:   make([]ExportFight, 0, len(s.ledger.Fights)),
 	}
 	for _, f := range s.ledger.Fights {
 		rec := ExportFight{
 			Number:  f.Number,
-			Floor:   f.Floor,
+			Realm:   f.Realm,
 			Enemy:   f.Enemy,
 			Outcome: exportOutcome(f.Outcome),
 			Dealt:   f.Dealt(),

@@ -4,7 +4,7 @@
 // **It knows nothing about drawing and imports no Ebitengine**, which is the same rule
 // `internal/combat` and `internal/decks` hold and it is here for the same payoff: the script can
 // be walked end to end in a test, with no window and no duel, and a step whose condition can
-// never fire is caught by `go test` rather than by a player stuck on floor one.
+// never fire is caught by `go test` rather than by a player stuck on realm one.
 //
 // # The three vocabularies, and why all of them are closed
 //

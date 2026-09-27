@@ -211,12 +211,17 @@ func report(m data.MotifData, pictures map[string]bool) plate {
 		if !row.Brief {
 			p.Todo = append(p.Todo, todo{"brief", b.Backdrop + " Draw"})
 		}
+		// A room drawn in one element is briefed wholly by its Draw, so an ElementDraw there would
+		// repeat it; the per-element direction is owed only by a room drawn in several.
+		several := len(b.Affinities) > 1
 		for _, e := range b.Affinities {
 			have := pictures[b.ArtKey(e)]
 			dir := written(b.ElementDraw[e])
-			p.Score.Briefs.count(dir)
-			if !dir {
-				p.Todo = append(p.Todo, todo{"brief", b.Backdrop + " ElementDraw for " + e})
+			if several {
+				p.Score.Briefs.count(dir)
+				if !dir {
+					p.Todo = append(p.Todo, todo{"brief", b.Backdrop + " ElementDraw for " + e})
+				}
 			}
 			row.Elements = append(row.Elements, cell{Element: e, Pictured: have, Specific: dir})
 			if !have {

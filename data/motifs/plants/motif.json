@@ -17,7 +17,7 @@
     "earth": "Green and deep-rooted. The oldest kind.",
     "arcane": "Purple leaves, and spores that make you see things."
   },
-  "ValidFloors": [2, 7],
+  "ValidRealms": [2, 7],
   "Records": [
     {
       "Record": "plants-outer-sapling",

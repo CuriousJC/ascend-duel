@@ -19,7 +19,7 @@ reported the only proof that exists is a launched window. Build for that.
 1. **Read the report against the code** and say, in a sentence, which mechanism you think is
    implicated and where it lives. Do not fix anything yet.
 2. **Author a scenario record that isolates it** and put it first in
-   `internal/scenario/scenarios.json` — an unset `ASCEND_DUEL_SCENARIO` takes the first entry, so
+   `internal/scenario/scenarios.json` — an unset `DUELLO_SCENARIO` takes the first entry, so
    the launch command stays bare and the record is deleted at the end anyway.
 3. **Launch it** and tell the owner, in one sentence, what to do and what he should see go wrong.
    **Stop there and wait.** This is not a formality and it is not skippable: a confirmed repro is
@@ -76,11 +76,11 @@ the owner relaunches an hour later.
 ## Launching
 
 ```powershell
-$env:ASCEND_DUEL_PROFILE = "$env:TEMP\ascend-duel-bughunt"
+$env:DUELLO_PROFILE = "$env:TEMP\ascend-duel-bughunt"
 go run -tags scenario .
 ```
 
-**Set `ASCEND_DUEL_PROFILE` every time.** `saveRun` is not gated on the scenario and fires at every
+**Set `DUELLO_PROFILE` every time.** `saveRun` is not gated on the scenario and fires at every
 phase transition, so a fixture that advances a station writes over whatever run the owner has in
 progress. Pointing the directory somewhere throwaway is the whole guard, and it costs nothing —
 `BootRun` never resumes under a scenario and `tutorialForThisRun` answers no to a scenario, so an
@@ -119,7 +119,7 @@ where it was seen.
 ## The regression test
 
 **Write one when the fix lands in a package that does not link Ebitengine** — `combat`, `session`,
-`decks`, `pyramid`, `tutorial`, `achieve`, `data`, `profile`, `seeds`. Write it **failing first**,
+`decks`, `journey`, `tutorial`, `achieve`, `data`, `profile`, `seeds`. Write it **failing first**,
 so the fix is what turns it green rather than something asserted afterwards about code already
 changed.
 

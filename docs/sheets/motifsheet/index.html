@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — Motif sheet</title>
+<title>Duello — Motif sheet</title>
 <style>
   :root {
     --ground: #a8bcd4;
@@ -18,23 +18,23 @@
     font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
   }
   h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
-  h2.floor {
+  h2.realm {
     font-size: 15px; font-weight: 600;
     margin: 40px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
   }
-  h2.floor span {
+  h2.realm span {
     font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 12px;
   }
    
   details.motif > summary { list-style: none; cursor: pointer; }
   details.motif > summary::-webkit-details-marker { display: none; }
    
-  h2.floor::before {
+  h2.realm::before {
     content: "▾"; color: var(--dim); font-weight: 400;
     display: inline-block; width: 1em; margin-left: -1em;
   }
-  details.motif:not([open]) > summary h2.floor::before { content: "▸"; }
-  details.motif > summary:hover h2.floor { color: var(--dim); }
+  details.motif:not([open]) > summary h2.realm::before { content: "▸"; }
+  details.motif > summary:hover h2.realm { color: var(--dim); }
   .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
   .facts code { color: var(--ink); }
   .note { color: var(--dim); font-size: 12.5px; max-width: 74ch; margin: 12px 0 0; }
@@ -97,7 +97,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   portrait box <code>0</code> tall,
   name at <code>0pt</code>
 </p>
-<p class="note">The whole roster, motif by motif: every creature&#39;s card as the game draws it, its stat line, the colours it can be dealt as, and the deck it fights with. A floor takes one motif and one element and holds three fights, so the questions this page answers are whether a motif&#39;s outer, inner and portal records read as a climb, and whether every one of its fights can be dealt at least two ways.</p>
+<p class="note">The whole roster, motif by motif: every creature&#39;s card as the game draws it, its stat line, the colours it can be dealt as, and the deck it fights with. A realm takes one motif and one element and holds three fights, so the questions this page answers are whether a motif&#39;s outer, inner and portal records read as a journey, and whether every one of its fights can be dealt at least two ways.</p>
 <p class="note">
   Every card here is drawn by <code>internal/cards</code>, the same code the game blits, so this
   page cannot show a card the game would draw differently. The leftmost card on each strip is the
@@ -140,15 +140,15 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   .sheet-tally { color: var(--dim, #5a6472); font-size: 12px; font-variant-numeric: tabular-nums; }
 </style>
 <div class="sheet-filters" hidden>
-  <div class="sheet-facet"><span class="sheet-facet-label">floor</span>
-    <button type="button" data-facet="floor" data-value="1" aria-pressed="false">1<i>49</i></button>
-    <button type="button" data-facet="floor" data-value="2" aria-pressed="false">2<i>94</i></button>
-    <button type="button" data-facet="floor" data-value="3" aria-pressed="false">3<i>112</i></button>
-    <button type="button" data-facet="floor" data-value="4" aria-pressed="false">4<i>148</i></button>
-    <button type="button" data-facet="floor" data-value="5" aria-pressed="false">5<i>153</i></button>
-    <button type="button" data-facet="floor" data-value="6" aria-pressed="false">6<i>135</i></button>
-    <button type="button" data-facet="floor" data-value="7" aria-pressed="false">7<i>117</i></button>
-    <button type="button" data-facet="floor" data-value="8" aria-pressed="false">8<i>72</i></button>
+  <div class="sheet-facet"><span class="sheet-facet-label">realm</span>
+    <button type="button" data-facet="realm" data-value="1" aria-pressed="false">1<i>49</i></button>
+    <button type="button" data-facet="realm" data-value="2" aria-pressed="false">2<i>94</i></button>
+    <button type="button" data-facet="realm" data-value="3" aria-pressed="false">3<i>112</i></button>
+    <button type="button" data-facet="realm" data-value="4" aria-pressed="false">4<i>148</i></button>
+    <button type="button" data-facet="realm" data-value="5" aria-pressed="false">5<i>153</i></button>
+    <button type="button" data-facet="realm" data-value="6" aria-pressed="false">6<i>135</i></button>
+    <button type="button" data-facet="realm" data-value="7" aria-pressed="false">7<i>117</i></button>
+    <button type="button" data-facet="realm" data-value="8" aria-pressed="false">8<i>72</i></button>
   </div>
   <div class="sheet-facet"><span class="sheet-facet-label">room</span>
     <button type="button" data-facet="tier" data-value="outer" aria-pressed="false">outer<i>55</i></button>
@@ -261,11 +261,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
 
 
-<section class="sheet-group" data-motif="aliens" data-floor="5 6 7 8">
+<section class="sheet-group" data-motif="aliens" data-realm="5 6 7 8">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Aliens — Floors 5–8
+  <h2 class="realm">
+    Aliens — Realms 5–8
     <span>9 records · HP 155–415 · DMG 8–18 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -273,7 +273,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -936,11 +936,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="animals" data-floor="1 2 3 4 5 6">
+<section class="sheet-group" data-motif="animals" data-realm="1 2 3 4 5 6">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Animals — Floors 1–6
+  <h2 class="realm">
+    Animals — Realms 1–6
     <span>9 records · HP 80–285 · DMG 5–12 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -948,7 +948,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -1611,11 +1611,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="avians" data-floor="2 3 4 5 6 7">
+<section class="sheet-group" data-motif="avians" data-realm="2 3 4 5 6 7">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Avians — Floors 2–7
+  <h2 class="realm">
+    Avians — Realms 2–7
     <span>9 records · HP 95–330 · DMG 5–15 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -1623,7 +1623,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -2286,11 +2286,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="barbarians" data-floor="2 3 4 5 6 7">
+<section class="sheet-group" data-motif="barbarians" data-realm="2 3 4 5 6 7">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Barbarians — Floors 2–7
+  <h2 class="realm">
+    Barbarians — Realms 2–7
     <span>9 records · HP 115–310 · DMG 5–14 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -2298,7 +2298,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -2961,11 +2961,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="big-cats" data-floor="1 2 3 4">
+<section class="sheet-group" data-motif="big-cats" data-realm="1 2 3 4">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Big Cats — Floors 1–4
+  <h2 class="realm">
+    Big Cats — Realms 1–4
     <span>13 records · HP 80–260 · DMG 5–13 ·
       AP 4–6 · 4 outer, 4 inner, 5 boss</span>
   </h2>
@@ -2973,7 +2973,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -3855,11 +3855,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="cat-people" data-floor="2 3 4 5 6 7">
+<section class="sheet-group" data-motif="cat-people" data-realm="2 3 4 5 6 7">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Cat-people — Floors 2–7
+  <h2 class="realm">
+    Cat-people — Realms 2–7
     <span>9 records · HP 105–310 · DMG 5–15 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -3867,7 +3867,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -4530,11 +4530,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="draconics" data-floor="5 6 7 8">
+<section class="sheet-group" data-motif="draconics" data-realm="5 6 7 8">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Draconics — Floors 5–8
+  <h2 class="realm">
+    Draconics — Realms 5–8
     <span>9 records · HP 170–430 · DMG 9–19 ·
       AP 5–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -4542,7 +4542,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -5205,11 +5205,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="dwarves" data-floor="2 3 4 5 6 7">
+<section class="sheet-group" data-motif="dwarves" data-realm="2 3 4 5 6 7">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Dwarves — Floors 2–7
+  <h2 class="realm">
+    Dwarves — Realms 2–7
     <span>9 records · HP 110–320 · DMG 5–13 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -5217,7 +5217,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -5880,11 +5880,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="elves" data-floor="3 4 5 6 7 8">
+<section class="sheet-group" data-motif="elves" data-realm="3 4 5 6 7 8">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Elves — Floors 3–8
+  <h2 class="realm">
+    Elves — Realms 3–8
     <span>9 records · HP 110–305 · DMG 6–16 ·
       AP 5–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -5892,7 +5892,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -6555,11 +6555,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="goblins" data-floor="1 2 3 4 5 6">
+<section class="sheet-group" data-motif="goblins" data-realm="1 2 3 4 5 6">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Goblins — Floors 1–6
+  <h2 class="realm">
+    Goblins — Realms 1–6
     <span>9 records · HP 88–265 · DMG 4–12 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -6567,7 +6567,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -7230,11 +7230,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="golems" data-floor="4 5 6 7 8">
+<section class="sheet-group" data-motif="golems" data-realm="4 5 6 7 8">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Golems — Floors 4–8
+  <h2 class="realm">
+    Golems — Realms 4–8
     <span>9 records · HP 165–430 · DMG 6–16 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -7242,7 +7242,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -7905,11 +7905,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="insects" data-floor="1 2 3 4 5">
+<section class="sheet-group" data-motif="insects" data-realm="1 2 3 4 5">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Insects — Floors 1–5
+  <h2 class="realm">
+    Insects — Realms 1–5
     <span>9 records · HP 85–265 · DMG 4–12 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -7917,7 +7917,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -8580,11 +8580,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="magic-users" data-floor="4 5 6 7 8">
+<section class="sheet-group" data-motif="magic-users" data-realm="4 5 6 7 8">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Magic-users — Floors 4–8
+  <h2 class="realm">
+    Magic-users — Realms 4–8
     <span>9 records · HP 150–400 · DMG 8–17 ·
       AP 5–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -8592,7 +8592,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -9255,11 +9255,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="mutants" data-floor="3 4 5 6 7 8">
+<section class="sheet-group" data-motif="mutants" data-realm="3 4 5 6 7 8">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Mutants — Floors 3–8
+  <h2 class="realm">
+    Mutants — Realms 3–8
     <span>9 records · HP 115–320 · DMG 6–14 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -9267,7 +9267,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -9930,11 +9930,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="ogres" data-floor="4 5 6 7 8">
+<section class="sheet-group" data-motif="ogres" data-realm="4 5 6 7 8">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Ogres — Floors 4–8
+  <h2 class="realm">
+    Ogres — Realms 4–8
     <span>9 records · HP 160–420 · DMG 7–16 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -9942,7 +9942,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -10605,11 +10605,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="plants" data-floor="2 3 4 5 6 7">
+<section class="sheet-group" data-motif="plants" data-realm="2 3 4 5 6 7">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Plants — Floors 2–7
+  <h2 class="realm">
+    Plants — Realms 2–7
     <span>9 records · HP 110–300 · DMG 4–12 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -10617,7 +10617,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -11280,11 +11280,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="slimes" data-floor="1 2 3 4 5">
+<section class="sheet-group" data-motif="slimes" data-realm="1 2 3 4 5">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Slimes — Floors 1–5
+  <h2 class="realm">
+    Slimes — Realms 1–5
     <span>9 records · HP 95–260 · DMG 4–11 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -11292,7 +11292,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     
@@ -11955,11 +11955,11 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </details>
 </section>
 
-<section class="sheet-group" data-motif="vampires" data-floor="4 5 6 7 8">
+<section class="sheet-group" data-motif="vampires" data-realm="4 5 6 7 8">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
-    Vampires — Floors 4–8
+  <h2 class="realm">
+    Vampires — Realms 4–8
     <span>9 records · HP 155–410 · DMG 7–17 ·
       AP 4–6 · 3 outer, 3 inner, 3 boss</span>
   </h2>
@@ -11967,7 +11967,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     

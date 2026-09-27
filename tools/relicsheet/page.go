@@ -28,7 +28,7 @@ import "html/template"
 // authored line, and the rules — four things nothing else in the project shows together.
 var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — {{.Title}}</title>
+<title>Duello — {{.Title}}</title>
 <style>
   :root {
     --ground: {{.Ground}};
@@ -159,7 +159,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
 </p>
 <p class="note">
   The badge is drawn at <strong>Grown&nbsp;0</strong> &mdash; what a fresh copy wears, which is the
-  card the shelf shows. It is also the narrowest the figure gets: a run late in a climb reads
+  card the shelf shows. It is also the narrowest the figure gets: a run late in a journey reads
   <code>10.5</code> or <code>100</code>, so judge the size against those rather than against
   <code>1.0</code>. A relic with no badge is one that does not grow, which is most of the catalog.
   <strong>A decimal point means a multiplier and a bare number means a flat figure</strong>;

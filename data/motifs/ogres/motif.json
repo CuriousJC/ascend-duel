@@ -17,7 +17,7 @@
     "earth": "Half quarry: mud, stone and moss, grown right into the hide.",
     "arcane": "Purple light leaks from their mouths, and they will not hold still."
   },
-  "ValidFloors": [
+  "ValidRealms": [
     4,
     8
   ],

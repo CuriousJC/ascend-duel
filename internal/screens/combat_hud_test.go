@@ -111,26 +111,26 @@ func TestTheRelicRowSitsBelowTheCardsBesideIt(t *testing.T) {
 	}
 }
 
-func TestEveryRoomOnAFloorIsNamed(t *testing.T) {
-	// Three fights to a floor and three names for them: ui.TowerRoom indexes one array by the
-	// other's modulus, so a fourth fight per floor would panic rather than draw a blank line.
-	if len(ui.TowerRoomNames) != ui.FightsPerFloor {
-		t.Fatalf("%d room names for %d fights a floor", len(ui.TowerRoomNames), ui.FightsPerFloor)
+func TestEveryRoomInARealmIsNamed(t *testing.T) {
+	// Three fights to a realm and three names for them: ui.JourneyRoom indexes one array by the
+	// other's modulus, so a fourth fight per realm would panic rather than draw a blank line.
+	if len(ui.RoomNames) != ui.FightsPerRealm {
+		t.Fatalf("%d room names for %d fights a realm", len(ui.RoomNames), ui.FightsPerRealm)
 	}
 
-	// The floor turns over on the fight after the last room, and the first fight is the first
-	// room of floor one — an off-by-one here would name the boss room "Outer".
+	// The realm turns over on the fight after the last room, and the first fight is the first
+	// room of realm one — an off-by-one here would name the boss room "Outer".
 	for fight, want := range map[int]string{
 		0: "Outer Room", 1: "Inner Room", 2: "Portal Room",
 		3: "Outer Room", 5: "Portal Room", 6: "Outer Room",
 	} {
-		if got := ui.TowerRoom(fight); got != want {
+		if got := ui.JourneyRoom(fight); got != want {
 			t.Errorf("fight %d is the %s, want the %s", fight, got, want)
 		}
 	}
 	for fight, want := range map[int]int{0: 1, 2: 1, 3: 2, 5: 2, 6: 3, 23: 8} {
-		if got := ui.TowerFloor(fight); got != want {
-			t.Errorf("fight %d is on floor %d, want %d", fight, got, want)
+		if got := ui.JourneyRealm(fight); got != want {
+			t.Errorf("fight %d is on realm %d, want %d", fight, got, want)
 		}
 	}
 }

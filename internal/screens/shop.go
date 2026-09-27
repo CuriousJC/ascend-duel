@@ -1094,7 +1094,7 @@ func goodArt(gs *state.GlobalState, good session.Good) image.Image {
 
 // goodTip is what resting on one says. **It is the whole of what the card says** *(owner's call,
 // 2026-09-15)* — the face is a picture and a price now, so the count, the noun and what that noun
-// even is are all read here, by a player who on floor one has never seen a stone.
+// even is are all read here, by a player who on realm one has never seen a stone.
 //
 // **The prose is the record's and the figures are not** *(2026-09-14)*. The Tip lines say what a
 // stone or an essence or a rune *is*; how many are in the good and what it costs are computed from

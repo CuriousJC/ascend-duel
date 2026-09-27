@@ -285,7 +285,7 @@ const (
 	// DoScaleHP scales maximum life for the fight by Amount percent; 75 takes a quarter off.
 	//
 	// **A percentage where DoAddHP is flat**, and both exist on purpose: a flat +25 is worth less
-	// every floor as the duelist's own life grows, where a scaling stays worth the same. It is the
+	// every realm as the duelist's own life grows, where a scaling stays worth the same. It is the
 	// first verb written for a *drawback* — see the Onslaught relic — which is why it is the one
 	// scaling verb an author is expected to send below 100.
 	//

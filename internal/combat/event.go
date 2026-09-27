@@ -566,7 +566,7 @@ func (e Event) TermSplit(term int) (dmg, pct int, ok bool) {
 }
 
 // DMGRaise is what a rung relic, the cards kept back or the purse put into the DMG this blow was
-// swung at — the climb the duelist's own figure makes, which is what a screen animates. Zero when
+// swung at — the journey the duelist's own figure makes, which is what a screen animates. Zero when
 // nothing raised it.
 //
 // **Not HandBonus, HeldDMG or VitaeDMG**, which are the relics' raw figures before the riders

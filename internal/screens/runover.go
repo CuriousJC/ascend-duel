@@ -1,6 +1,6 @@
 package screens
 
-// **The splash a finished run ends on: what the climb came to, and the code that would deal it
+// **The splash a finished run ends on: what the journey came to, and the code that would deal it
 // again.**
 //
 // Before this, a death was an **End Run** button and then the title screen — the whole run gone with
@@ -135,7 +135,7 @@ func (s *RunOverScene) drawTotals(gs *state.GlobalState, screen *ebiten.Image, s
 		figure string
 		quiet  bool
 	}{
-		{"FLOOR REACHED", strconv.Itoa(sum.Floor), false},
+		{"REALM REACHED", strconv.Itoa(sum.Realm), false},
 		{"ENEMIES DEFEATED", strconv.Itoa(sum.Defeated), false},
 		{"DAMAGE DEALT", strconv.Itoa(sum.Dealt), false},
 		{"ROOMS ENTERED", strconv.Itoa(sum.Rooms), true},

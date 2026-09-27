@@ -1,17 +1,17 @@
 ---
 name: motifs
-description: The roster grammar - how a creature is written as data under data/motifs, the closed vocabularies a record draws on, what a floor is, how the ascent curve reads a base stat line, and what the loader refuses. Load before adding a motif file, adding or changing a record, authoring creatures or bosses, touching data/tower.json, or wiring anything that picks an opponent. Also the motif analyzer: given a proposed record, which tier/element fights it fills, which are still short, whether the motif would still pass, and whether its bases sit where its neighbours do.
+description: The roster grammar - how a creature is written as data under data/motifs, the closed vocabularies a record draws on, what a realm is, how the growth curve reads a base stat line, and what the loader refuses. Load before adding a motif file, adding or changing a record, authoring creatures or bosses, touching data/journey.json, or wiring anything that picks an opponent. Also the motif analyzer: given a proposed record, which tier/element fights it fills, which are still short, whether the motif would still pass, and whether its bases sit where its neighbours do.
 ---
 
 # Motifs
 
-**A floor is a motif and an element.** The tower picks one whole motif and one of the five
-elements, and the floor's three rooms — outer chamber, inner chamber, portal room — are three records
-of that motif dealt as that element. So a fire goblin floor is three goblins in fire, and what the
+**A realm is a motif and an element.** The journey picks one whole motif and one of the five
+elements, and the realm's three rooms — outer chamber, inner chamber, portal room — are three records
+of that motif dealt as that element. So a fire goblin realm is three goblins in fire, and what the
 player walked into is something they can plan against.
 
 That is the whole reason the roster is a directory rather than a file. The question asked of the
-catalog is never "is this creature good"; it is "can this motif fill a floor at every element",
+catalog is never "is this creature good"; it is "can this motif fill a realm at every element",
 and a creature pool split across two files is a question neither half can answer — so a motif's
 creatures stay in one file, and its rooms sit beside them in a second.
 
@@ -25,8 +25,8 @@ creatures stay in one file, and its rooms sit beside them in a second.
 | The pictures | `assets/motifs/<motif>/creature/*.png` and `.../backdrop/*.jpg`, keyed by filename stem |
 | How full each motif is, and what is still TBD | `go run ./tools/motifreport` → `docs/sheets/motifreport/` |
 | Every room's pictures, beside the brief each was painted from | `go run ./tools/backdropsheet` → `docs/sheets/backdropsheet/` |
-| The tower's height and its two growth rates | `data/tower.json`, `data/tower_data.go` |
-| The climb: which motif and element each floor takes | `internal/pyramid` |
+| The journey's height and its two growth rates | `data/journey.json`, `data/journey_data.go` |
+| The journey: which motif and element each realm takes | `internal/journey` |
 | A record's cards becoming a deck | `internal/decks/enemy.go` |
 | A record becoming a fighter | `internal/entities/combatant.go` |
 | The review page | `go run ./tools/motifsheet` |
@@ -45,7 +45,7 @@ creatures stay in one file, and its rooms sit beside them in a second.
     "fire": "Fire arrives as burn scarring and soot ...",
     "ice":  "Frost rides on a goblin rather than filling it ..."
   },
-  "ValidFloors": [1, 6],
+  "ValidRealms": [1, 6],
   "Records": [ ... ]
 }
 ```
@@ -61,9 +61,9 @@ creatures stay in one file, and its rooms sit beside them in a second.
   shape as `Draw` and `ElementDraw` and the same rules — an `ElementText` key that is not an element
   is refused, and an unwritten line shows on the portal as TBD and is counted by the motif report.
   **Keep them to a sentence or two**: a portal panel is 620 pixels of prose wide.
-- **`ValidFloors` is motif-level**, inclusive, `[0, 0]` for any floor. It is not per-record,
-  because a floor takes a whole motif: a motif whose outer creatures were valid on floors 1 to 3
-  and whose boss was valid on 4 to 6 could never theme a floor at all.
+- **`ValidRealms` is motif-level**, inclusive, `[0, 0]` for any realm. It is not per-record,
+  because a realm takes a whole motif: a motif whose outer creatures were valid on realms 1 to 3
+  and whose boss was valid on 4 to 6 could never theme a realm at all.
 
 ## The record
 
@@ -86,43 +86,43 @@ creatures stay in one file, and its rooms sit beside them in a second.
 
 - **`Record` must read `<motif>-<tier>-<slug>`**, and the prefix is checked rather than trusted. A
   key that disagrees with its own tier is a record the coverage report counts in the wrong column,
-  and the report is what the floor generator believes.
-- **`Tier` is closed**: `outer`, `inner`, `boss`. Its index is the last term of the ascent step.
+  and the report is what the realm generator believes.
+- **`Tier` is closed**: `outer`, `inner`, `boss`. Its index is the last term of the growth step.
 - **`Title` is boss-only** and is refused on a creature.
 - **`Art` is the picture family stem.** The face drawn is `<Art>-<element>.png`, so one record
   carries one picture per element it can be dealt as. A missing file falls back to
   `default-enemy`, so a blank face means art nobody has made rather than a name nobody spelled
   right.
 - **`Affinities` is a non-empty subset of the five elements**, no repeats. `basic` is not one of
-  them: a creature takes its floor's colour, and a floor has one.
+  them: a creature takes its realm's colour, and a realm has one.
 - **`ElementDraw` on a record is optional and replaces the motif's line for that element** where
   it is written. It is for the one creature the motif's generic element direction does not fit.
   `data.MotifData.ElementDrawFor` is the rule.
 - **`Cards` is authored per record.** Two creatures of one motif are two different fights, so they
   hold different cards rather than the same cards at different weights. **A card may not name its
-  own elements** — the colour is the floor's — and costs run 1 to 3, because the cost column is
+  own elements** — the colour is the realm's — and costs run 1 to 3, because the cost column is
   tick marks stacked down a fixed band.
 
 ## The bases are step-zero quantities
 
-`HP` and `DMG` say what a creature is worth **in the very first room of the tower**, whatever floor
-it is actually met on. `pyramid.ScaleToFight` puts it where it stands:
+`HP` and `DMG` say what a creature is worth **in the very first room of the journey**, whatever realm
+it is actually met on. `journey.ScaleToFight` puts it where it stands:
 
 ```
-step = (floor - 1) * FightsPerFloor + tierIndex      // outer 0, inner 1, boss 2
-HP   = base.HP  grown at tower.HPGrowth,  once per step
-DMG  = base.DMG grown at tower.DMGGrowth, once per step
+step = (realm - 1) * FightsPerRealm + tierIndex      // outer 0, inner 1, boss 2
+HP   = base.HP  grown at journey.HPGrowth,  once per step
+DMG  = base.DMG grown at journey.DMGGrowth, once per step
 ```
 
-**Stepping per fight rather than per floor** is what makes a floor's boss harder than its own
-inner chamber and the next floor's outer chamber harder than that boss, with no constraint between
+**Stepping per fight rather than per realm** is what makes a realm's boss harder than its own
+inner chamber and the next realm's outer chamber harder than that boss, with no constraint between
 two separate numbers to get wrong.
 
 So the two mistakes to watch for when authoring:
 
-- **Do not write a late-band creature as a high stat line.** A dragon banded to floors 5–8 is not
+- **Do not write a late-band creature as a high stat line.** A dragon banded to realms 5–8 is not
   "250 HP". It is "about 2.5x a goblin", and the curve does the rest. Author it against its debut
-  floor and the step multiplier lands on top of a number that already had the floor in it, so you
+  realm and the step multiplier lands on top of a number that already had the realm in it, so you
   get roughly double what you pictured.
 - **Do not write the tier into the base twice.** A boss record legitimately has a bigger base than
   an outer one, because it is a bigger creature — but it is also two steps further along, so the
@@ -132,7 +132,7 @@ So the two mistakes to watch for when authoring:
 safe and stays tunable: retuning `HPGrowth` moves everything by the same factor and never distorts
 the gaps you authored.
 
-`Actions` is authored and **never scaled**. Growing it would hand a high-floor creature more cards
+`Actions` is authored and **never scaled**. Growing it would hand a high-realm creature more cards
 rather than a harder version of its own.
 
 ## A picture is four layers
@@ -185,7 +185,7 @@ A motif's `backdrops.json` is a list of rooms, and a room is **one place drawn o
   `docs/art/background_art_prompt.MD`, these two on the record. **The door is never on the record** —
   small for outer, large for inner, two rainbow portals for the portal room, all three in the prompt.
   An `ElementDraw` key the room does not take as an affinity is refused.
-- **`MotifData.BackdropFor(tier, element, seed, floor)`** is the pick, a hash over the candidates in
+- **`MotifData.BackdropFor(tier, element, seed, realm)`** is the pick, a hash over the candidates in
   file order — derived, never rolled. **Nothing refuses a motif with no rooms**: a fight with none
   draws `default-background`, which has no door, so a gap is visible in play and counted on the
   report.
@@ -199,11 +199,11 @@ with the art, never with the game. It is not the `CostTier` mistake.
 > For every motif, for every one of the five elements, **at least two records** can field the
 > outer chamber and **at least two** can field the inner. The portal room needs **one**.
 
-`data.MinCoverageFor(tier)` is the figure, and `LoadMotifs` **panics** on a hole — the floor
+`data.MinCoverageFor(tier)` is the figure, and `LoadMotifs` **panics** on a hole — the realm
 generator will eventually present a choice and it must not be able to offer an impossible one.
 
-**The boss is one because a boss is a name.** A chamber is a room the climb fills and wants a pool
-to fill it from; a portal room is the creature a floor is remembered by, so it is authored for its
+**The boss is one because a boss is a name.** A chamber is a room the journey fills and wants a pool
+to fill it from; a portal room is the creature a realm is remembered by, so it is authored for its
 element. That is what lets a motif field five bosses of one element each — and three bosses at
 four affinities is equally fine, and is what the rest of the roster does.
 
@@ -225,18 +225,18 @@ Everything below is a panic at package init, in `data/motifs_data.go`:
 - a `Tier` outside the three, an affinity that is not an element, an empty or repeating affinity list
 - a title on a creature, a record with no art family, a non-positive stat
 - a record with no cards, a card with no copies, a cost outside 1..3, a card naming its own elements
-- an inverted floor band
-- **the tower cannot be offered without a repeat** — `data.MustBeClimbable`. Floor one is offered
-  one motif and every floor above it `data.PortalOffers`, one behind each portal, and **every offer is
-  spent** whichever the player takes, so the climb needs `data.ClimbSlots(1, Floors)` distinct motifs
-  each inside its own band. `data.FillsSlots` is the matching, and `internal/pyramid` asks it again
-  after every draw so a seeded roll never spends a motif a later floor needed.
+- an inverted realm band
+- **the journey cannot be offered without a repeat** — `data.MustFillJourney`. Realm one is offered
+  one motif and every realm above it `data.PortalOffers`, one behind each portal, and **every offer is
+  spent** whichever the player takes, so the journey needs `data.JourneySlots(1, Realms)` distinct motifs
+  each inside its own band. `data.FillsSlots` is the matching, and `internal/journey` asks it again
+  after every draw so a seeded roll never spends a motif a later realm needed.
 
 ## What a record may never do
 
-- **Carry an element on a card.** The colour is the floor's and the whole deck takes it.
+- **Carry an element on a card.** The colour is the realm's and the whole deck takes it.
 - **Raise a shield.** Only the player does; every creature deck is pure attack. See `CLAUDE.md`.
-- **Say what it is worth on the floor it debuts.** See above.
+- **Say what it is worth on the realm it debuts.** See above.
 - **Name a picture that exists.** Most do not yet, and the fallback is deliberate.
 
 ## The analyzer
@@ -252,15 +252,15 @@ Given a proposed record or a proposed motif, answer these in order.
    the two that get written wrong most often.
 4. **Where do its bases sit?** Compare against the other records of its own tier in the same
    motif, and against the same tier in a motif of a similar band. A base is a step-zero quantity —
-   if the proposal was reasoned from the floor it debuts on, say so and restate it as a multiple.
+   if the proposal was reasoned from the realm it debuts on, say so and restate it as a multiple.
 5. **Is its deck a shape the motif does not already have?** Three creatures in a tier that all
    deal the same copies at the same costs are one creature with three pictures. The three shapes
    in use are roughly swarm (many cheap), balanced, and heavy (few big); a fourth is welcome, a
    fourth copy of one of them is not.
-6. **Does the floor band still climb?** If the proposal is a whole motif, check that adding it
-   does not narrow another floor's options, and that `MustBeClimbable` still passes at
-   `tower.json`'s `Floors` — which, with two offers a floor above the first, is a much tighter
-   demand than one motif per floor. Retiring or narrowing a motif is where it bites.
+6. **Does the realm band still fill the journey?** If the proposal is a whole motif, check that adding it
+   does not narrow another realm's options, and that `MustFillJourney` still passes at
+   `journey.json`'s `Realms` — which, with two offers a realm above the first, is a much tighter
+   demand than one motif per realm. Retiring or narrowing a motif is where it bites.
 
 Report holes and duplicates as a list, not prose, and say plainly which of them block a launch and
 which are only worth knowing.

@@ -3,7 +3,7 @@ package screens
 // **The achievements screen: what has been earned, and what has not.**
 //
 // It is one of the screens reachable from the title menu rather than from the run loop, and it is
-// the program's rather than a climb's — like the settings screen, it never touches `session.Phase`
+// the program's rather than a journey's — like the settings screen, it never touches `session.Phase`
 // and puts the player back where they came from.
 //
 // **It shows locked entries as well as earned ones**, grayed, with the name and the line still

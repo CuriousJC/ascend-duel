@@ -7,7 +7,7 @@
 // "does this card read right", because a page quoting its own wording is the one place a mismatch
 // between the tooltip and the card is invisible.
 //
-// This is the same argument `internal/decks` and `internal/pyramid` are here for, one axis over: a
+// This is the same argument `internal/decks` and `internal/journey` are here for, one axis over: a
 // thing a headless caller needs and a screen must not own.
 //
 // # What belongs here and what does not

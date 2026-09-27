@@ -17,7 +17,7 @@
     "earth": "Green-shelled and burrowing, hard as stone.",
     "arcane": "Purple-shelled, and their buzzing gets inside your head."
   },
-  "ValidFloors": [1, 5],
+  "ValidRealms": [1, 5],
   "Records": [
     {
       "Record": "insects-outer-dragonfly",

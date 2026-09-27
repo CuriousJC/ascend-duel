@@ -59,7 +59,7 @@ func ledgerRun() *session.Session {
 }
 
 // **A finished fight is one line and the fight being fought is opened out.** That is the whole
-// shape of the panel at run scale: a thirty-fight climb has to be readable as a list of fights
+// shape of the panel at run scale: a thirty-fight journey has to be readable as a list of fights
 // before any one of them is opened.
 func TestPastFightsAreOneLineAndTheLiveOneIsOpen(t *testing.T) {
 	gs := testState()
@@ -147,7 +147,7 @@ func TestTheLedgerPanelHoldsEnoughRowsToBeWorthOpening(t *testing.T) {
 	n := ledgerCapacity(r)
 
 	// The panel has to hold a real fight, not a handful of lines: a dialog opened to read a round
-	// back is worthless if it holds less than a round. Twenty-five is a floor, not a target — it
+	// back is worthless if it holds less than a round. Twenty-five is a realm, not a target — it
 	// came down from thirty when the rows went to 20 point, which was the trade being made.
 	if n < 25 {
 		t.Errorf("the ledger holds only %d rows", n)

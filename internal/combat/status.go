@@ -296,7 +296,7 @@ func (s Status) Active() bool { return s.Rounds > 0 && s.Amount > 0 }
 // DMG changes mid-duel does not retroactively burn harder. Every other kind is flat, and passing the
 // attacker to all of them is what keeps "how much" one function rather than a special case.
 //
-// The floor is the same rule the cheapest attack card follows: a duelist under 10 DMG would
+// The realm is the same rule the cheapest attack card follows: a duelist under 10 DMG would
 // otherwise light a burn worth nothing at all, and a status that lands and does nothing is worse
 // than one that does not land.
 func statusAmount(spec StatusSpec, by Duelist) int {

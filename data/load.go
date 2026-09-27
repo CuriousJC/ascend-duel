@@ -121,7 +121,7 @@ func fileOrder[T any](raw []byte, file string, key func(T) string) []string {
 //
 // **By key rather than by name or element**: the key is the one field guaranteed unique, and a sort
 // on something that can tie is a sort that can still shuffle. A catalog wanting a different order —
-// the two rosters sort by floor — writes its own comparison and falls back to the key for the same
+// the two rosters sort by realm — writes its own comparison and falls back to the key for the same
 // reason.
 func sortedKeys[T any](m map[string]T) []string {
 	return slices.Sorted(maps.Keys(m))

@@ -99,7 +99,7 @@ func main() {
 	// top and the bottom, so the button strip and the deck pile were simply not on screen.
 	ebiten.SetWindowSize(windowSize())
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetWindowTitle("Ascending Duel " + version)
+	ebiten.SetWindowTitle("Duello " + version)
 	ebiten.SetWindowClosingHandled(true)
 
 	//Create our Game instance
@@ -178,8 +178,8 @@ func main() {
 	g.GlobalState.ImageData = assets.LoadImageData()
 	g.GlobalState.Motifs = data.LoadMotifs()
 	g.GlobalState.Records = data.MotifRecords(g.GlobalState.Motifs)
-	g.GlobalState.Tower = data.LoadTower()
-	data.MustBeClimbable(g.GlobalState.Motifs, g.GlobalState.Tower.Floors)
+	g.GlobalState.Journey = data.LoadJourney()
+	data.MustFillJourney(g.GlobalState.Motifs, g.GlobalState.Journey.Realms)
 	g.GlobalState.Duelists = data.LoadDuelists()
 	g.GlobalState.Relics = data.LoadRelics()
 
@@ -256,7 +256,7 @@ func main() {
 
 	// **Logged after the run is built, not before it.** A resumed run brings its own seed and a
 	// taught one brings the script's, so a code printed at the moment one was rolled would name a
-	// tower nobody is playing.
+	// journey nobody is playing.
 	log.Printf("run code %s", seeds.Code(g.GlobalState.RunSeed))
 
 	// **A scenario may also open the game somewhere other than the first duel** *(2026-08-22)*.
@@ -293,7 +293,7 @@ func main() {
 	//
 	// Not having a sound device is not a reason to refuse to run, so a failure here is
 	// reported and stepped over. Nothing below this line depends on it.
-	if err := music.Start(assets.LoadMusic()["ascending_mid"]); err != nil {
+	if err := music.Start(assets.LoadMusic()["duello_mid"]); err != nil {
 		// **Noted rather than told.** A machine with no audio device is a machine that plays the
 		// game in silence, which the volume bar on the settings screen already says out loud; a box
 		// in the player's way about it would be the game complaining about their hardware.
@@ -336,7 +336,7 @@ func main() {
 // reportLoadPanic catches a panic raised before the game loop is running.
 //
 // **The recovers in internal/game cover Update and Draw, and everything above is this one.** The
-// catalogs are loaded, validated and cross-checked before a window opens — data.MustBeClimbable is
+// catalogs are loaded, validated and cross-checked before a window opens — data.MustFillJourney is
 // a panic by design — so the one failure most likely to reach a player who has just downloaded an
 // exe is a failure with no frame to have happened in.
 //
@@ -407,7 +407,7 @@ func startScenarioAt(g *game.Game) {
 		gs.ActiveScreen = state.Shop
 	case "portal":
 		if !gs.Run.PortalDue() {
-			log.Fatalf("scenario %s: room %d is not in front of a portal — a portal opens onto the first room of floor two or above",
+			log.Fatalf("scenario %s: room %d is not in front of a portal — a portal opens onto the first room of realm two or above",
 				scenario.Name(), scenario.Fight())
 		}
 		gs.Run.SetPhase(session.PhasePortal)

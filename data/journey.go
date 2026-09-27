@@ -1,33 +1,33 @@
 package data
 
-// **How many motifs a climb spends, and whether a roster can pay for them.**
+// **How many motifs a journey spends, and whether a roster can pay for them.**
 //
-// A floor after the first is reached through a portal room, and its boss opens two portals: two
+// A realm after the first is reached through a portal room, and its boss opens two portals: two
 // motifs, each in an element, and the player walks through one. **Both are spent** — a motif offered
 // and passed over is never offered again in the run, so what a run code offers never depends on
-// what the player picked before. Floor one is where a run begins and is offered nothing.
+// what the player picked before. Realm one is where a run begins and is offered nothing.
 //
-// That makes the climb's demand a list of slots — one for floor one, two for every floor above it —
+// That makes the journey's demand a list of slots — one for realm one, two for every realm above it —
 // and the question every caller asks is whether the slots can each be given a distinct motif whose
-// band allows that floor. MustBeClimbable asks it of the whole tower at load; internal/pyramid asks
+// band allows that realm. MustFillJourney asks it of the whole journey at load; internal/journey asks
 // it of what is left after every draw, which is what stops a seeded roll from spending a motif a
-// later floor needed.
+// later realm needed.
 
 // PortalOffers is how many motifs a portal room opens onto.
 const PortalOffers = 2
 
-// OffersOn is how many motifs floor `floor` is offered through, counting floors from one. **Floor
+// OffersOn is how many motifs realm `realm` is offered through, counting realms from one. **Realm
 // one is offered one**: a run starts there rather than walking into it through a portal.
-func OffersOn(floor int) int {
-	if floor <= 1 {
+func OffersOn(realm int) int {
+	if realm <= 1 {
 		return 1
 	}
 	return PortalOffers
 }
 
-// ClimbSlots is the demand floors `from` to `to` make, one entry per motif to be offered, each entry
-// the floor it is offered on.
-func ClimbSlots(from, to int) []int {
+// JourneySlots is the demand realms `from` to `to` make, one entry per motif to be offered, each entry
+// the realm it is offered on.
+func JourneySlots(from, to int) []int {
 	var out []int
 	for f := max(from, 1); f <= to; f++ {
 		for range OffersOn(f) {
@@ -37,12 +37,12 @@ func ClimbSlots(from, to int) []int {
 	return out
 }
 
-// FillsSlots reports whether every slot — a floor number each — can be given its own motif, none of
-// them in `used`, each one allowed on its slot's floor.
+// FillsSlots reports whether every slot — a realm number each — can be given its own motif, none of
+// them in `used`, each one allowed on its slot's realm.
 //
 // **Bipartite matching by augmenting paths**, rather than a greedy walk: bands overlap in shapes a
-// fewest-choices-first rule gets wrong once a floor takes two. The roster is tens of motifs and the
-// tower tens of slots, so the textbook algorithm is instant. Motifs are walked in MotifOrder so the
+// fewest-choices-first rule gets wrong once a realm takes two. The roster is tens of motifs and the
+// journey tens of slots, so the textbook algorithm is instant. Motifs are walked in MotifOrder so the
 // answer never depends on map order.
 func FillsSlots(recs map[string]MotifData, slots []int, used map[string]bool) bool {
 	var keys []string
@@ -63,7 +63,7 @@ func FillsSlots(recs map[string]MotifData, slots []int, used map[string]bool) bo
 	var place func(slot int, seen []bool) bool
 	place = func(slot int, seen []bool) bool {
 		for k, key := range keys {
-			if seen[k] || !recs[key].AllowsFloor(slots[slot]) {
+			if seen[k] || !recs[key].AllowsRealm(slots[slot]) {
 				continue
 			}
 			seen[k] = true

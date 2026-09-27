@@ -61,7 +61,7 @@ type cell struct {
 
 var tmpl = template.Must(template.New("artcompare").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — {{.Catalog}} art, side by side</title>
+<title>Duello — {{.Catalog}} art, side by side</title>
 <style>
   :root {
     --ground: {{.Ground}};

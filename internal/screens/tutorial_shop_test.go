@@ -14,7 +14,7 @@ import (
 //
 // The shop steps gate on `relics-worn` and `dmg-bought` and lock the screen to the shelf and to the
 // Draught's seat. A player who cannot afford what the step demands has no legal click that
-// satisfies it and no way past — the tutorial simply stops, on the last screen before the climb
+// satisfies it and no way past — the tutorial simply stops, on the last screen before the journey
 // starts, which is the worst place in the game for it to happen.
 //
 // Nothing enforces it: a relic's rarity in `relics.json` decides its price, the shelf is a weighted

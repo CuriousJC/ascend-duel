@@ -37,19 +37,19 @@ import (
 // A resumed run is built and left standing until Continue is pressed.
 //
 // **A scenario never resumes.** A fixture describes a run it is putting together itself, and a
-// saved tower would be the one thing it could not override.
+// saved journey would be the one thing it could not override.
 func BootRun(gs *state.GlobalState) {
 	if !scenario.Active() {
 		if snap, ok, err := profile.LoadRun(gs.Store); err != nil {
 			log.Printf("saved run: %v — starting a new one", err)
 		} else if ok {
-			run, seed, err := session.Resume(gs.Motifs, gs.Tower, snap)
+			run, seed, err := session.Resume(gs.Motifs, gs.Journey, snap)
 			if err != nil {
 				log.Printf("saved run: %v — starting a new one", err)
 			} else {
 				// **The saved run's seed wins outright.** Everything random in a run derives from
-				// it, the climb included, so resuming under the seed rolled at the top of main
-				// would put a different tower under the same deck.
+				// it, the journey included, so resuming under the seed rolled at the top of main
+				// would put a different journey under the same deck.
 				gs.RunSeed = seed
 				gs.Resumed = true
 				gs.Run = run
@@ -66,12 +66,12 @@ func BootRun(gs *state.GlobalState) {
 	bootPastTheTitle(gs)
 }
 
-// beginJournal opens a journal for a run that is starting, and resumeJournal for one already being
-// climbed.
+// beginJournal opens a journal for a run that is starting, and resumeJournal for one already
+// under way.
 //
 // **The seed has to be settled before either is called.** A taught run is dealt the script's own
 // code and a resumed one brings its own, so a header written at the moment a seed was rolled would
-// name a tower nobody is playing — the same ordering main's own log line is under.
+// name a journey nobody is playing — the same ordering main's own log line is under.
 //
 // **They are two calls rather than one taking a flag** because they do opposite things to the file
 // on disk: starting a run truncates it and resuming one appends to it. See internal/journal.
@@ -137,7 +137,7 @@ func buildRun(gs *state.GlobalState) *session.Session {
 		gs.RunSeed = seed
 	}
 
-	run := session.Start(gs.Motifs, gs.Tower, gs.RunSeed)
+	run := session.Start(gs.Motifs, gs.Journey, gs.RunSeed)
 	if teaching {
 		run.Teach(script)
 		log.Printf("teaching this run: %d steps, seed %s, first room %s",
@@ -163,12 +163,12 @@ func tutorialForThisRun(gs *state.GlobalState) (tutorial.Script, bool) {
 // NewRun throws away whatever run was in progress and starts one from the beginning.
 //
 // **The seed is rerolled unless it was pinned** *(2026-09-03)*. A pinned seed is a debugging
-// session where the same tower in the same order is the whole point — fixedRunSeed, or a
+// session where the same journey in the same order is the whole point — fixedRunSeed, or a
 // scenario's own Seed — and a New Run that quietly rolled a different one would break the pin
-// from a button. Everything else gets a new tower, which is what "new run" means.
+// from a button. Everything else gets a new journey, which is what "new run" means.
 //
 // **The saved run is deleted before the new one is built**, so a game closed on the title screen
-// straight afterwards does not come back to the climb the player just abandoned.
+// straight afterwards does not come back to the journey the player just abandoned.
 func NewRun(gs *state.GlobalState) {
 	discardSavedRun(gs)
 
@@ -192,17 +192,17 @@ func ContinueRun(gs *state.GlobalState) {
 	enterRun(gs)
 }
 
-// AbandonRun gives the climb up from the settings screen, and EndRunInDefeat is what a death does.
+// AbandonRun gives the journey up from the settings screen, and EndRunInDefeat is what a death does.
 //
 // **They are the same event and they are one function** *(owner's call, 2026-09-03)*. There is no
 // retry — a death killing the run is what makes a roguelike one — and the only difference between
 // dying and walking away is which screen the player was standing on and which word the summary
-// prints. Two paths from "this climb is finished" to "the file is gone" is one path that can be got
+// prints. Two paths from "this journey is finished" to "the file is gone" is one path that can be got
 // wrong.
 func AbandonRun(gs *state.GlobalState)     { endRun(gs, session.EndedByChoice) }
 func EndRunInDefeat(gs *state.GlobalState) { endRun(gs, session.EndedInDefeat) }
 
-// endRun closes a climb: it is added up, the file goes, the run goes, and the player lands on the
+// endRun closes a journey: it is added up, the file goes, the run goes, and the player lands on the
 // splash that says what it came to.
 //
 // **The summary is taken before anything is destroyed**, which is the whole reason this is one
@@ -211,10 +211,10 @@ func EndRunInDefeat(gs *state.GlobalState) { endRun(gs, session.EndedInDefeat) }
 // with nothing to draw and nothing to say about it.
 //
 // **It leaves gs.Run nil rather than building a replacement**, which is the honest state to be in —
-// nothing is climbing. The frame's ledger button already goes dead with no run to account for, so
+// no journey is under way. The frame's ledger button already goes dead with no run to account for, so
 // nothing has to learn a new case.
 //
-// **The seed is not rerolled here.** NewRun does that at the moment a tower is actually built, so
+// **The seed is not rerolled here.** NewRun does that at the moment a journey is actually built, so
 // the code the summary prints is the code that dealt the run being summarized.
 func endRun(gs *state.GlobalState, ended string) {
 	if gs.Run != nil {

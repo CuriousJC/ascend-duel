@@ -13,7 +13,7 @@ package session
 // on when the player gets round to clicking, so the figures are frozen by WonFight and the screen
 // only chooses when to hand them over.
 
-import "github.com/curiousjc/ascend-duel/internal/pyramid"
+import "github.com/curiousjc/ascend-duel/internal/journey"
 
 // lifeShareDivisor turns life left into vitae: **a tenth of it, rounded down** *(owner's call,
 // 2026-08-22)*. Sixty life left is six vitae, and a win on four life is worth nothing from this
@@ -32,14 +32,14 @@ const (
 	PropagationPer = propagationPer
 )
 
-// roomVitae is what the room itself pays: **3 for a floor's outer room, 4 for its inner room, 5 for
-// the portal room that is its boss** *(owner's call, 2026-08-22)*. Flat for the whole climb — a floor-8
-// boss pays the same 5 as floor 1's, because the scaling that makes a later fight worth more is the
+// roomVitae is what the room itself pays: **3 for a realm's outer room, 4 for its inner room, 5 for
+// the portal room that is its boss** *(owner's call, 2026-08-22)*. Flat for the whole journey — a realm-8
+// boss pays the same 5 as realm 1's, because the scaling that makes a later fight worth more is the
 // life you keep, not the room you keep it in.
-var roomVitae = map[pyramid.Room]int{
-	pyramid.RoomOuter:  3,
-	pyramid.RoomInner:  4,
-	pyramid.RoomPortal: 5,
+var roomVitae = map[journey.Room]int{
+	journey.RoomOuter:  3,
+	journey.RoomInner:  4,
+	journey.RoomPortal: 5,
 }
 
 // Spoils is one win's payout, split the way the screen reads it out.
@@ -96,6 +96,6 @@ func (s *Session) spoilsFor(lifeLeft int) Spoils {
 	return Spoils{
 		Propagated: s.propagation(),
 		FromLife:   lifeLeft / lifeShareDivisor,
-		FromRoom:   s.PrizeVitae(roomVitae[pyramid.RoomOf(s.fight)]),
+		FromRoom:   s.PrizeVitae(roomVitae[journey.RoomOf(s.fight)]),
 	}
 }

@@ -294,9 +294,9 @@ func relicSpecs() ([]cards.Spec, error) {
 // `data/enemies.json`, but the life totals here are illustrative: the sheet draws what a
 // card *can* look like, not what any particular fight has reached.
 //
-// The keys are portrait filenames rather than hand-written asset names, because the 96
-// portraits are embedded as a glob. A renamed file breaks this list, and that is the
-// documented cost of not maintaining 192 lines of embed directives.
+// The keys are picture filename stems under assets/motifs/, one picture per record per element,
+// because the motif tree is embedded as a glob. A renamed file breaks this list, and that is the
+// documented cost of not maintaining an embed directive per picture.
 func enemySpecs() ([]cards.Spec, error) {
 	each := []struct {
 		name     string
@@ -308,11 +308,11 @@ func enemySpecs() ([]cards.Spec, error) {
 		// and off-center at one is the failure mode the sheet exists to catch by eye.
 		effects []string
 	}{
-		{"Giant Rat", "giantrat-portrait", 50, 50, nil},
-		{"Dragonfly", "dragonfly-portrait", 33, 60, []string{"fireeffect_png"}},
-		{"Ogre Warlord", "ogrewarlord-portrait", 4, 160, []string{
+		{"Giant Rat", "animals-rat-fire", 50, 50, nil},
+		{"Dragonfly", "insects-dragonfly-fire", 33, 60, []string{"fireeffect_png"}},
+		{"Ogre Warlord", "ogres-warlord-fire", 4, 160, []string{
 			"fireeffect_png", "frozeneffect_png"}},
-		{"Bio-Titan Omega", "biotitan-omega-portrait", 137, 200, []string{
+		{"Bio-Titan Omega", "aliens-omega-fire", 137, 200, []string{
 			"fireeffect_png", "frozeneffect_png", "thundereffect_png", "eartheffect_png",
 			"defaulteffect_png"}},
 	}

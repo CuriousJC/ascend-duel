@@ -17,7 +17,7 @@ package screens
 // nothing to lose and gets no dialog; a player forty rooms up gets the question. See confirm.go.
 //
 // **Achievements and Credits hang off here rather than off the run**, because neither is a station
-// of a climb: they read the profile and a list of names respectively, and both are things a player
+// of a journey: they read the profile and a list of names respectively, and both are things a player
 // looks at between runs. They are `actions` calls for the reason Settings is — each records where
 // the player came from, so Back works from anywhere.
 
@@ -28,7 +28,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/colorm"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 
 	"image/color"
@@ -129,11 +128,11 @@ func (s *TitleScene) menu() []*models.Button {
 	}
 }
 
-// startNewRun begins a new climb, asking first if that would throw one away.
+// startNewRun begins a new journey, asking first if that would throw one away.
 //
 // **The question is asked about the *saved* run rather than about whatever `gs.Run` happens to
 // hold.** A fresh launch has a run standing already — BootRun builds one so the first press of New
-// Run is instant — and asking "abandon your run?" about a tower nobody has entered would be a
+// Run is instant — and asking "abandon your run?" about a journey nobody has entered would be a
 // dialog that means nothing.
 func (s *TitleScene) startNewRun(gs *state.GlobalState) {
 	if gs.Run == nil || !gs.Resumed {
@@ -142,7 +141,7 @@ func (s *TitleScene) startNewRun(gs *state.GlobalState) {
 	}
 	s.confirm.Ask(
 		"START A NEW RUN?",
-		"The climb in progress will be lost. This cannot be undone.",
+		"The journey in progress will be lost. This cannot be undone.",
 		"NEW RUN",
 		func() { NewRun(gs) },
 	)
@@ -151,27 +150,15 @@ func (s *TitleScene) startNewRun(gs *state.GlobalState) {
 func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	ui.FillGround(screen)
 
-	//TITLE
-	//
-	var title *ebiten.Image
-	if gs.CountSecond > 9 && gs.CountSecond%10 == 0 {
-		title = gs.Assets["titleEaster_png"]
-	} else {
-		title = gs.Assets["title_png"]
-	}
+	// The logo, committed at the size it is drawn so nothing resamples it every frame.
+	title := gs.Assets["title_png"]
 	bounds := title.Bounds()
 	imageCenterX := float64(bounds.Dx()) / 2
 	imageCenterY := float64(bounds.Dy()) / 2
-	op := &colorm.DrawImageOptions{}
-	scaleFactor := 0.75
-	op.GeoM.Scale(scaleFactor, scaleFactor)
-	op.GeoM.Translate(float64(gs.PctX(50))-imageCenterX*scaleFactor, 150-imageCenterY*scaleFactor)
-	hue := float64(1)
-	saturation := float64(1)
-	value := float64(1)
-	var c colorm.ColorM
-	c.ChangeHSV(hue, saturation, value)
-	colorm.DrawImage(screen, title, c, op)
+	// Drawn as authored: the logo's colors are the art's, with no color matrix over them.
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(gs.PctX(50))-imageCenterX, titleLogoCenterY-imageCenterY)
+	screen.DrawImage(title, op)
 
 	//BUTTONS
 	//
@@ -196,6 +183,9 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 }
 
 // Where the build string sits on the title screen, and how loud it is.
+// titleLogoCenterY is where the logo is centered, clear of the menu below it.
+const titleLogoCenterY = 165
+
 const versionInset = 14
 
 var versionColor = color.RGBA{R: 60, G: 80, B: 78, A: 255}

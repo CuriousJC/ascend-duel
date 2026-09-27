@@ -59,17 +59,17 @@ func TestALostFightIsNotADefeatedEnemy(t *testing.T) {
 	}
 }
 
-// TestTheSummaryReportsTheDeepestFloorReached rather than the room the run stopped in. They are the
-// same today; the moment the climb lets a player go anywhere but up, the honest answer to "how far
+// TestTheSummaryReportsTheDeepestRealmReached rather than the room the run stopped in. They are the
+// same today; the moment the journey lets a player go anywhere but up, the honest answer to "how far
 // did you get" is the high-water mark.
 //
 // **Every fight here throws a round**, because BeginFight drops a preceding record that never did —
 // a room entered and left without a round is not a fight. See ledger.go.
-func TestTheSummaryReportsTheDeepestFloorReached(t *testing.T) {
+func TestTheSummaryReportsTheDeepestRealmReached(t *testing.T) {
 	s := New(testDeck())
 
 	for _, f := range []struct {
-		floor   int
+		realm   int
 		enemy   string
 		outcome string
 	}{
@@ -77,17 +77,17 @@ func TestTheSummaryReportsTheDeepestFloorReached(t *testing.T) {
 		{4, "Ogre", OutcomeWon},
 		{2, "Cave Troll", OutcomeLost},
 	} {
-		s.BeginFight(f.floor, f.enemy)
+		s.BeginFight(f.realm, f.enemy)
 		s.RecordRound([]LedgerRecord{noted(VoicePlain, "a round")}, 1)
 		s.EndFight(f.outcome)
 	}
 
-	if got := s.Summarize(0, EndedInDefeat); got.Floor != 4 {
-		t.Errorf("the run reached floor 4, the summary says %d", got.Floor)
+	if got := s.Summarize(0, EndedInDefeat); got.Realm != 4 {
+		t.Errorf("the run reached realm 4, the summary says %d", got.Realm)
 	}
 }
 
-// TestAnEmptyRunStillSummarizes is the case a player reaches by starting a climb and giving it up
+// TestAnEmptyRunStillSummarizes is the case a player reaches by starting a journey and giving it up
 // before fighting anything. **Zeroes rather than an error**, so the screen never has to decide what
 // to draw instead.
 func TestAnEmptyRunStillSummarizes(t *testing.T) {

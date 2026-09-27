@@ -40,7 +40,7 @@ structural question here.
 | Layer | Packages | What it is |
 |---|---|---|
 | **Bottom** | `data` `profile` `seeds` `models` `assets` `idle` `trace` `music` | import nothing of ours |
-| **Rules** | `combat` `pyramid` `tutorial` `achieve` `decks` `entities` `carddesc` | no Ebitengine, testable without a window |
+| **Rules** | `combat` `journey` `tutorial` `achieve` `decks` `entities` `carddesc` | no Ebitengine, testable without a window |
 | **Run** | `session` `state` | what outlives a fight |
 | **Drawing** | `systems` `cards` `actions` | no `*ebiten.Image` created in `cards`, which is what lets the sheets render |
 | **Screens** | `screens` | every scene, and the shared layer they all draw through |

@@ -61,7 +61,7 @@ token="$(curl -sSf \
 
 creds="$(aws sts assume-role-with-web-identity \
   --role-arn "$SOUNDS_ROLE_ARN" \
-  --role-session-name "ascend-duel-release" \
+  --role-session-name "duello-release" \
   --web-identity-token "$token" \
   --duration-seconds 900 \
   --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' \

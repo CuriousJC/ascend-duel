@@ -3,8 +3,8 @@ package data
 // The backdrops: **the painted place a duel is fought in front of**, authored per motif.
 //
 // A motif's backdrops live beside its creatures, in `motifs/<motif>/backdrops.json`, and a
-// backdrop belongs to one of the floor's three rooms by the same `Tier` a creature does. So a
-// goblin floor's outer chamber is fought in a goblin outer room, and the three rooms of one floor
+// backdrop belongs to one of the realm's three rooms by the same `Tier` a creature does. So a
+// goblin realm's outer chamber is fought in a goblin outer room, and the three rooms of one realm
 // are three different places — a player can tell at a glance which room they are standing in,
 // because the tier layer of docs/art/background_art_prompt.MD puts a different door in each.
 //
@@ -32,7 +32,7 @@ type Backdrop struct {
 	// Name is what a review page calls the place. Nothing in the game prints it.
 	Name string `json:"Name"`
 
-	// Tier is which of the floor's three rooms this is: outer, inner or boss. The portal room is
+	// Tier is which of the realm's three rooms this is: outer, inner or boss. The portal room is
 	// `boss`, the same word the creature standing on it carries.
 	Tier string `json:"Tier"`
 
@@ -101,14 +101,14 @@ const DefaultBackgroundArt = "default-background"
 // BackdropFor is the picture a fight is drawn in front of: one of this motif's backdrops for the
 // tier and the element, or the default when it has none.
 //
-// **The choice is derived from the run, the floor and the room, never rolled.** A run code always
+// **The choice is derived from the run, the realm and the room, never rolled.** A run code always
 // shows the same places, with no stream to advance, because a picture may never change an outcome
 // and so has nothing to share a cursor with. It is the crack pattern's rule: a presentation choice
 // that must be stable is a function of what it is about.
 //
 // **Candidates are walked in file order**, which is authored and fixed, so the hash lands on the
 // same room however the map above this was iterated.
-func (m MotifData) BackdropFor(tier, element string, runSeed int64, floor int) string {
+func (m MotifData) BackdropFor(tier, element string, runSeed int64, realm int) string {
 	var candidates []Backdrop
 	for _, b := range m.Backdrops {
 		if b.Tier == tier && b.HasAffinity(element) {
@@ -120,7 +120,7 @@ func (m MotifData) BackdropFor(tier, element string, runSeed int64, floor int) s
 	}
 
 	h := fnv.New64a()
-	h.Write([]byte(strconv.FormatInt(runSeed, 10) + "/" + strconv.Itoa(floor) + "/" + tier + "/" + element))
+	h.Write([]byte(strconv.FormatInt(runSeed, 10) + "/" + strconv.Itoa(realm) + "/" + tier + "/" + element))
 	return candidates[h.Sum64()%uint64(len(candidates))].ArtKey(element)
 }
 

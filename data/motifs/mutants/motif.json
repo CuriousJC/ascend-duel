@@ -17,7 +17,7 @@
     "earth": "The growths have turned to rock, and they drag the weight of it.",
     "arcane": "Something moves under the skin, and it glows purple."
   },
-  "ValidFloors": [
+  "ValidRealms": [
     3,
     8
   ],

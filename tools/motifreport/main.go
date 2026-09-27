@@ -114,7 +114,7 @@ func (t tally) Percent() int {
 }
 
 // score is the four things a motif is filled with. **Rooms is counted by fight, not by record**:
-// a floor holds fifteen fights across the three tiers and five elements, and what the owner is
+// a realm holds fifteen fights across the three tiers and five elements, and what the owner is
 // asking is how many of them are drawn in front of something other than the default.
 type score struct {
 	Briefs      tally // every Draw and ElementDraw a picture is briefed from, creatures and rooms
@@ -148,7 +148,7 @@ func written(s string) bool { return s != "" && s != data.DrawUnwritten }
 
 // report is one motif's plate.
 func report(m data.MotifData, pictures map[string]bool) plate {
-	p := plate{Motif: m.Motif, Name: m.Name, Floors: floors(m)}
+	p := plate{Motif: m.Motif, Name: m.Name, Realms: realms(m)}
 
 	// The motif's own two layers.
 	p.Score.Briefs.count(written(m.Draw))
@@ -276,14 +276,14 @@ var tierLabel = map[string]string{
 	data.TierBoss:  "portal room",
 }
 
-func floors(m data.MotifData) string {
-	if m.ValidFloors == [2]int{} {
-		return "any floor"
+func realms(m data.MotifData) string {
+	if m.ValidRealms == [2]int{} {
+		return "any realm"
 	}
-	if m.ValidFloors[0] == m.ValidFloors[1] {
-		return fmt.Sprintf("floor %d", m.ValidFloors[0])
+	if m.ValidRealms[0] == m.ValidRealms[1] {
+		return fmt.Sprintf("realm %d", m.ValidRealms[0])
 	}
-	return fmt.Sprintf("floors %d–%d", m.ValidFloors[0], m.ValidFloors[1])
+	return fmt.Sprintf("realms %d–%d", m.ValidRealms[0], m.ValidRealms[1])
 }
 
 // facets is one chip row, "missing", whose values are the kinds of work a motif still has — so

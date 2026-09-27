@@ -11,7 +11,7 @@ import (
 // quietly. A recorded track that fails to load is silent and obvious; a synthesizer
 // handed a file it half-understands plays something, and what it plays is wrong in a
 // way nobody notices until they go looking. So the shape of the real file is pinned
-// here, and every one of these numbers is a fact about assets/ascending.mid.
+// here, and every one of these numbers is a fact about assets/sounds/duello.mid.
 //
 // Nothing below opens an audio device — parsing and rendering are pure arithmetic over
 // byte slices, which is what keeps them testable at all. Only music.go touches
@@ -19,7 +19,7 @@ import (
 
 func score0(t *testing.T) *score {
 	t.Helper()
-	sc, err := parseSMF(assets.LoadMusic()["ascending_mid"])
+	sc, err := parseSMF(assets.LoadMusic()["duello_mid"])
 	if err != nil {
 		t.Fatalf("parsing the score: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestRenderIsDeterministic(t *testing.T) {
 }
 
 func TestRejectsWhatItCannotPlay(t *testing.T) {
-	valid := assets.LoadMusic()["ascending_mid"]
+	valid := assets.LoadMusic()["duello_mid"]
 
 	// A file the reader cannot understand has to be an error rather than a best guess.
 	// Silence with a log line is recoverable; a score with holes in it is not, because

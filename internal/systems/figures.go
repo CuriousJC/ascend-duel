@@ -39,10 +39,10 @@ import (
 const DefaultFigureSet = "v3"
 
 // FigureSetEnv names a figure set for one launch, so two sets are compared by relaunching rather
-// than by editing: `ASCEND_DUEL_FIGURES=v1 go run .`. **A set that does not exist falls back to
+// than by editing: `DUELLO_FIGURES=v1 go run .`. **A set that does not exist falls back to
 // DefaultFigureSet** with a line in the log, because a misspelled review knob must not cost the
 // game its numbers.
-const FigureSetEnv = "ASCEND_DUEL_FIGURES"
+const FigureSetEnv = "DUELLO_FIGURES"
 
 // FigureNeutral is the sheet a caller multiplies by an ink of its own. It is pure gray under a
 // black contour, so any ink comes through as itself and the outline stays black.

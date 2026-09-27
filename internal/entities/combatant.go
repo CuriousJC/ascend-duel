@@ -3,7 +3,7 @@ package entities
 import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
-	"github.com/curiousjc/ascend-duel/internal/pyramid"
+	"github.com/curiousjc/ascend-duel/internal/journey"
 )
 
 // Combatant is a duelist that can be drawn. The stats live in the embedded
@@ -46,7 +46,7 @@ type Combatant struct {
 	// Empty for an enemy: enemies do not have a deck the player ever sees the back of.
 	CardBack string
 
-	// Element is which element this opponent was dealt as, by name — the floor's theme. Empty for
+	// Element is which element this opponent was dealt as, by name — the realm's theme. Empty for
 	// the player, whose cards each carry their own.
 	//
 	// **A string rather than a combat.Element**, like CardBack: what this package carries is what
@@ -55,27 +55,27 @@ type Combatant struct {
 }
 
 // NewEnemyFrom builds an opponent from a motif record, dealt as one element and **grown to the
-// fight it is met at** — see pyramid.ScaleToFight. Fight 0 is the first room of the tower and
+// fight it is met at** — see journey.ScaleToFight. Fight 0 is the first room of the journey and
 // takes the record's bases unchanged.
 //
 // **The fight index is a parameter rather than something read later**, so an unscaled opponent
-// cannot be built by accident: every caller has to say where in the ascent this one stands.
+// cannot be built by accident: every caller has to say where on the growth curve this one stands.
 //
-// **The element is the floor's**, and it decides the picture this opponent wears, the colour of
+// **The element is the realm's**, and it decides the picture this opponent wears, the colour of
 // every card in its deck, and which of the player's hits fizzle on it — see combat.Duelist.Element.
 // A record carries a picture per element it can be dealt as, so a fire goblin and an ice goblin
 // are two drawings of one creature.
-func NewEnemyFrom(r data.MotifRecord, element string, fight int, tower data.TowerData) *Combatant {
+func NewEnemyFrom(r data.MotifRecord, element string, fight int, shape data.JourneyData) *Combatant {
 	c := &Combatant{
 		Duelist: combat.Duelist{
 			// **Two of the three stats climb and one does not.** HP and DMG are what the curve is
 			// made of, on their own growth rates; `Actions` is left alone because it is the budget
-			// a *deck* is spent out of, and growing it would hand a floor-eight opponent more cards
+			// a *deck* is spent out of, and growing it would hand a realm-eight opponent more cards
 			// rather than a harder version of its own. It is the dial to reach for on purpose, per
 			// record, not one to move by arithmetic.
-			DMG:     pyramid.ScaleToFight(r.DMG, fight, tower.DMGGrowth),
+			DMG:     journey.ScaleToFight(r.DMG, fight, shape.DMGGrowth),
 			Actions: r.Actions,
-			MaxLife: pyramid.ScaleToFight(r.HP, fight, tower.HPGrowth),
+			MaxLife: journey.ScaleToFight(r.HP, fight, shape.HPGrowth),
 
 			// **Enemies do not form hands.** Their cards resolve one at a time, in the order the
 			// planner chose them. It is set here because this is the one place an opponent is built
@@ -83,7 +83,7 @@ func NewEnemyFrom(r data.MotifRecord, element string, fight int, tower data.Towe
 			// mirror-image reason.
 			SoloAttacks: true,
 
-			// **The floor's element is the creature's own**, and a hit of it fizzles — see
+			// **The realm's element is the creature's own**, and a hit of it fizzles — see
 			// combat.fizzles. An element the rules cannot name leaves it Basic, which is no
 			// element; the deck builder refuses such a record long before a fight gets here.
 			Element: enemyElement(element),
@@ -97,7 +97,7 @@ func NewEnemyFrom(r data.MotifRecord, element string, fight int, tower data.Towe
 	return c
 }
 
-// enemyElement is the rules' element for the name a floor dealt, and Basic for one it cannot read.
+// enemyElement is the rules' element for the name a realm dealt, and Basic for one it cannot read.
 func enemyElement(name string) combat.Element {
 	e, _ := combat.ParseElement(name)
 	return e

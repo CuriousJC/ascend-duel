@@ -15,9 +15,9 @@ import (
 // tools/sheetfilter, which narrows what is already on the page — the whole roster is in the file
 // and readable with scripting off.
 //
-// **Grouped by floor rather than listed alphabetically**, for the reason the relic sheet groups by
-// rarity: the floor is the whole placement decision, so the review question is "does anything in
-// this band belong a floor deeper", which a flat list of ninety-six records cannot answer. Each
+// **Grouped by realm rather than listed alphabetically**, for the reason the relic sheet groups by
+// rarity: the realm is the whole placement decision, so the review question is "does anything in
+// this band belong a realm deeper", which a flat list of ninety-six records cannot answer. Each
 // heading carries the band's stat spread, so an outlier shows up as a number before it shows up as
 // a card.
 
@@ -60,7 +60,7 @@ type plate struct {
 	OtherLabels []string
 }
 
-// group is one floor's worth of the catalog, with the band's own spread beside it.
+// group is one realm's worth of the catalog, with the band's own spread beside it.
 //
 // **The spread is what makes the grouping worth having.** A band whose HP runs 120 to 900 is not a
 // band, it is two; and that is invisible while reading cards one at a time.
@@ -69,11 +69,11 @@ type group struct {
 	Order  int
 	Plates []plate
 
-	// Motif is the record key of the motif this section is, and Floors is its band as the floor
-	// chips match it. A floor is a fact about the motif rather than about one creature, so it is
+	// Motif is the record key of the motif this section is, and Realms is its band as the realm
+	// chips match it. A realm is a fact about the motif rather than about one creature, so it is
 	// the section that carries it and the section the chips cut.
 	Motif  string
-	Floors string
+	Realms string
 
 	MinHP, MaxHP   int
 	MinDMG, MaxDMG int
@@ -81,13 +81,13 @@ type group struct {
 
 	// Mix is the tier spread within the motif, written out on the heading — "3 outer, 3 inner,
 	// 3 boss". The stat spread says whether the motif is pitched right and this says whether it
-	// can fill a floor at all, which is the question the numbers cannot answer.
+	// can fill a realm at all, which is the question the numbers cannot answer.
 	Mix string
 
 	// Coverage is the motif's grid: how many records can field each room at each element.
 	//
 	// **It is the one thing about a motif that cannot be seen by reading its records one at a
-	// time.** A floor picks a motif and an element, so what has to hold is that every element can
+	// time.** A realm picks a motif and an element, so what has to hold is that every element can
 	// field all three rooms — and the loader refuses a file that cannot, out of this same
 	// function, so the page and the launch can never disagree about it.
 	Coverage []coverRow
@@ -100,7 +100,7 @@ type coverRow struct {
 }
 
 // coverCell is one (tier, element) fight: how many records can be dealt into it, and whether that
-// is fewer than a floor needs.
+// is fewer than a realm needs.
 type coverCell struct {
 	Count int
 	Short bool
@@ -116,7 +116,7 @@ type page struct {
 	Filters    template.HTML
 	Groups     []group
 
-	// SpanLo and SpanHi are the shallowest and deepest floor any motif reaches, which is what a
+	// SpanLo and SpanHi are the shallowest and deepest realm any motif reaches, which is what a
 	// motif written with no band is expanded against.
 	SpanLo, SpanHi int
 
@@ -127,23 +127,23 @@ type page struct {
 	CardWidth, Gap int
 }
 
-// add files one opponent under its floor, opening the section if it is the first.
+// add files one opponent under its realm, opening the section if it is the first.
 //
 // **Append rather than sort**, because the entries arrive in EnemyOrder / BossOrder — both of
-// which are floor-first — so the sections come out in floor order by construction. Sorting here
+// which are realm-first — so the sections come out in realm order by construction. Sorting here
 // would be a second opinion about an order the data package already owns.
 func (p *page) add(pl plate) {
 	i := len(p.Groups) - 1
 	// **Cut on the written band, not on the number it sorts by.** Two creatures can share a
-	// lowest floor and differ in their highest — 1–2 and 1–3 — and a section keyed on the sort
+	// lowest realm and differ in their highest — 1–2 and 1–3 — and a section keyed on the sort
 	// number would file both under whichever label arrived first, which is a page saying a
-	// creature reaches a floor it does not.
-	if i < 0 || p.Groups[i].Label != pl.Entry.Floors {
+	// creature reaches a realm it does not.
+	if i < 0 || p.Groups[i].Label != pl.Entry.Realms {
 		p.Groups = append(p.Groups, group{
-			Label:  pl.Entry.Floors,
+			Label:  pl.Entry.Realms,
 			Order:  pl.Entry.Group,
 			Motif:  pl.Entry.Motif,
-			Floors: floorTokens(pl.Entry.Band, p.SpanLo, p.SpanHi),
+			Realms: realmTokens(pl.Entry.Band, p.SpanLo, p.SpanHi),
 			MinHP:  pl.Entry.HP, MaxHP: pl.Entry.HP,
 			MinDMG: pl.Entry.DMG, MaxDMG: pl.Entry.DMG,
 			MinAP: pl.Entry.Actions, MaxAP: pl.Entry.Actions,
@@ -238,7 +238,7 @@ func stretch(lo, hi *int, v int) {
 // **The ground is the one the cards actually sit on**, not a page color chosen to flatter them.
 var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — {{.Title}}</title>
+<title>Duello — {{.Title}}</title>
 <style>
   :root {
     --ground: {{.Ground}};
@@ -256,11 +256,11 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
     font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
   }
   h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
-  h2.floor {
+  h2.realm {
     font-size: 15px; font-weight: 600;
     margin: 40px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
   }
-  h2.floor span {
+  h2.realm span {
     font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 12px;
   }
   /* A motif folds away. The page is one section per motif and a roster this deep is mostly
@@ -271,12 +271,12 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
   details.motif > summary::-webkit-details-marker { display: none; }
   /* The caret is drawn in the heading rather than left to the browser's marker, which would sit
      on its own line above a block-level h2 and read as a bullet rather than as a handle. */
-  h2.floor::before {
+  h2.realm::before {
     content: "▾"; color: var(--dim); font-weight: 400;
     display: inline-block; width: 1em; margin-left: -1em;
   }
-  details.motif:not([open]) > summary h2.floor::before { content: "▸"; }
-  details.motif > summary:hover h2.floor { color: var(--dim); }
+  details.motif:not([open]) > summary h2.realm::before { content: "▸"; }
+  details.motif > summary:hover h2.realm { color: var(--dim); }
   .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
   .facts code { color: var(--ink); }
   .note { color: var(--dim); font-size: 12.5px; max-width: 74ch; margin: 12px 0 0; }
@@ -360,10 +360,10 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 {{.Filters}}
 
 {{range .Groups}}
-<section class="sheet-group" data-motif="{{.Motif}}" data-floor="{{.Floors}}">
+<section class="sheet-group" data-motif="{{.Motif}}" data-realm="{{.Realms}}">
   <details class="motif" open>
   <summary>
-  <h2 class="floor">
+  <h2 class="realm">
     {{.Label}}
     <span>{{len .Plates}} records · HP {{.MinHP}}–{{.MaxHP}} · DMG {{.MinDMG}}–{{.MaxDMG}} ·
       AP {{.MinAP}}–{{.MaxAP}} · {{.Mix}}</span>
@@ -372,7 +372,7 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
   {{if .Coverage}}
   <table class="cover">
-    <caption>How many records can field each fight. A floor picks this motif and one element and
+    <caption>How many records can field each fight. A realm picks this motif and one element and
       holds three rooms, so every cell needs at least two.</caption>
     <tr><th></th><th>outer</th><th>inner</th><th>boss</th></tr>
     {{range .Coverage}}

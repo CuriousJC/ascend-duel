@@ -13,7 +13,7 @@ package session
 // conversion lives here and the file handling lives there, and profile goes on importing nothing of
 // ours. The same division `decks` draws between a JSON card list and a rules type.
 //
-// **What is *not* here is the climb.** It is rebuilt from the run code — see Resume, and the note
+// **What is *not* here is the journey.** It is rebuilt from the run code — see Resume, and the note
 // in profile/run.go about the day that stops being true.
 
 import (
@@ -108,7 +108,7 @@ func (s *Session) ledgerSnapshot() []profile.LedgerFightSnapshot {
 	for _, f := range s.ledger.Fights {
 		rec := profile.LedgerFightSnapshot{
 			Number:  f.Number,
-			Floor:   f.Floor,
+			Realm:   f.Realm,
 			Enemy:   f.Enemy,
 			Outcome: f.Outcome,
 			Dealt:   f.dealt,
@@ -211,7 +211,7 @@ func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 	for _, f := range snap {
 		rec := LedgerFight{
 			Number:  f.Number,
-			Floor:   f.Floor,
+			Realm:   f.Realm,
 			Enemy:   f.Enemy,
 			Outcome: f.Outcome,
 			dealt:   f.Dealt,
@@ -227,7 +227,7 @@ func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 
 // Resume rebuilds a run from a snapshot, and reports the run seed it was saved under.
 //
-// **The climb is rebuilt from the seed rather than restored**, which is what keeps the file small
+// **The journey is rebuilt from the seed rather than restored**, which is what keeps the file small
 // and keeps one answer to who stands in which room — see profile/run.go.
 //
 // **Every name is resolved rather than trusted**, exactly as a relic record is: a concept key, an
@@ -238,7 +238,7 @@ func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 // **A relic the catalog no longer holds is refused rather than dropped**, on the same grounds: a
 // run silently resuming without the relic it was wearing is a run the player would have to work out
 // had changed.
-func Resume(motifs map[string]data.MotifData, tower data.TowerData, snap *profile.RunSnapshot) (*Session, int64, error) {
+func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *profile.RunSnapshot) (*Session, int64, error) {
 	if snap == nil {
 		return nil, 0, fmt.Errorf("no run to resume")
 	}
@@ -314,22 +314,22 @@ func Resume(motifs map[string]data.MotifData, tower data.TowerData, snap *profil
 			FromRoom:   snap.Spoils.FromRoom,
 		},
 	}
-	s.climb = newClimb(motifs, tower, runSeed)
+	s.journey = newJourney(motifs, shape, runSeed)
 	s.ledger = resumeLedger(snap.Ledger)
 
-	// **A portal naming a realm its floor never offered is refused**, on the terms a relic the
-	// catalog no longer holds is: a run resumed onto a different floor than the one it chose is a
+	// **A portal naming a motif its realm never offered is refused**, on the terms a relic the
+	// catalog no longer holds is: a run resumed onto a different realm than the one it chose is a
 	// run the player would have to work out had changed.
 	for i, key := range snap.Portals {
 		if key == "" {
 			continue
 		}
-		floor, found := i+2, false
-		for _, f := range s.climb.ChoicesAt(floor) {
+		realm, found := i+2, false
+		for _, f := range s.journey.ChoicesAt(realm) {
 			found = found || f.Motif == key
 		}
 		if !found {
-			return nil, 0, fmt.Errorf("floor %d was entered through %q, which this run code does not offer there", floor, key)
+			return nil, 0, fmt.Errorf("realm %d was entered through %q, which this run code does not offer there", realm, key)
 		}
 	}
 	s.portals = append([]string(nil), snap.Portals...)

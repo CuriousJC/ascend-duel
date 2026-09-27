@@ -66,7 +66,7 @@ func TestThePlayTallySurvivesBeingSavedAndResumed(t *testing.T) {
 	s.RecordHandPlayed("pair")
 	s.RecordHandPlayed("form-three-of-a-kind")
 
-	back, _, err := Resume(nil, data.TowerData{}, s.Snapshot(0))
+	back, _, err := Resume(nil, data.JourneyData{}, s.Snapshot(0))
 	if err != nil {
 		t.Fatalf("the run would not resume: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestASnapshotTallyOnAMissingRungIsDropped(t *testing.T) {
 	snap := s.Snapshot(0)
 	snap.Plays["a-rung-that-was-cut"] = 7
 
-	back, _, err := Resume(nil, data.TowerData{}, snap)
+	back, _, err := Resume(nil, data.JourneyData{}, snap)
 	if err != nil {
 		t.Fatalf("a tally on a dropped rung should not refuse the resume: %v", err)
 	}

@@ -75,26 +75,26 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 	screen.DrawImage(img, op)
 }
 
-// Where in the tower this fight is: **the floor, and which of that floor's three rooms**, in
+// Where in the journey this fight is: **the realm, and which of that realm's three rooms**, in
 // two lines under the duelist card.
 //
-// MECHANICS.md's tower is 8 floors x 3 fights with a choice of door after fights 1 and 2 and a
-// choice of portal after the boss, so a floor is three rooms deep and the third one is the
+// MECHANICS.md's journey is 8 realms x 3 fights with a choice of door after fights 1 and 2 and a
+// choice of portal after the boss, so a realm is three rooms deep and the third one is the
 // way up. That makes the position entirely a function of how far along the fight order the
 // player has got, which is why nothing is stored: `fightIndex` already says it, and it is the
 // same stand-in the enemy roster is walked with. `Session` owns both the moment it exists.
 //
 // **It says where you are, not what is coming.** Naming the third room Portal Room is the only
-// thing on this screen that says a floor is about to end — the doors and the portals are the
+// thing on this screen that says a realm is about to end — the doors and the portals are the
 // screen that does not exist yet.
 const (
-	// **towerLineGap is the drop from the duelist card's bottom edge to whatever hangs off it**,
-	// which is the round timer and nothing else now. The floor and the room stood here — in a
+	// **cardLineGap is the drop from the duelist card's bottom edge to whatever hangs off it**,
+	// which is the round timer and nothing else now. The realm and the room stood here — in a
 	// column beside the card for a day, then back under it — and moved **onto** the card on
 	// 2026-09-15 *(owner's call)*: they are facts about the duelist, and the one place on this
 	// screen a fact about the duelist was not written on the duelist was the two lines below it.
 	// See cards.DuelistStyle, where they are stat rows now.
-	towerLineGap = 10
+	cardLineGap = 10
 )
 
 // The discards-left badge: a filled disc centered exactly on the Discard button's bottom-right
@@ -205,7 +205,7 @@ func (s *CombatScene) drawEnemyCard(gs *state.GlobalState, screen *ebiten.Image)
 // clock is checked inside the resolved round, exactly as the presentation-may-never-change-an-
 // outcome rule requires.
 //
-// **It is under the tower place because it is the same kind of fact.** Where you are and how long
+// **It is under the journey place because it is the same kind of fact.** Where you are and how long
 // you have got are both the frame around the fight rather than parts of it, and the left column is
 // already one thing: who you are, where you are, what is left to draw. It goes below the two lines
 // rather than beside them because the column is only 200 pixels wide.
@@ -215,9 +215,9 @@ func (s *CombatScene) drawEnemyCard(gs *state.GlobalState, screen *ebiten.Image)
 // left — rather than a proportion they have to convert. It is also what keeps the readout honest
 // at a limit a relic has moved: six cells is six rounds, with nothing to rescale.
 const (
-	// roundTimerGap is the drop from the tower lines to the bar, and roundTimerHeight is how tall
-	// it is. **There are 23 pixels between the tower lines and the table row** and these spend 20
-	// of them; a taller bar collides, which TestTheRoundTimerFitsUnderTheTowerLines is what says.
+	// roundTimerGap is the drop from the journey lines to the bar, and roundTimerHeight is how tall
+	// it is. **There are 23 pixels between the journey lines and the table row** and these spend 20
+	// of them; a taller bar collides, which TestTheRoundTimerFitsUnderTheDuelistCard is what says.
 	roundTimerGap    = 6
 	roundTimerHeight = 14
 
@@ -229,11 +229,11 @@ const (
 // roundTimerRect is the bar's whole footprint: the duelist card's column, hung straight off the
 // bottom of the card.
 //
-// **It used to hang off the floor-and-room lines, which are on the card now** — so the bar moved up
-// into the space they left rather than a gap being kept where they were. See towerLineGap.
+// **It hangs straight off the duelist card**, because the realm and the room are stat rows on the
+// card rather than lines under it. See cardLineGap.
 func (s *CombatScene) roundTimerRect(gs *state.GlobalState) image.Rectangle {
 	card := ui.DuelistCardRect(gs)
-	top := card.Max.Y + towerLineGap
+	top := card.Max.Y + cardLineGap
 	return image.Rect(card.Min.X, top, card.Max.X, top+roundTimerHeight)
 }
 

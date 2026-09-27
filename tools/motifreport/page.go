@@ -16,7 +16,7 @@ type page struct {
 
 // plate is one motif.
 type plate struct {
-	Motif, Name, Floors string
+	Motif, Name, Realms string
 	Score               score
 
 	CreatureGrid []gridRow
@@ -76,7 +76,7 @@ func (page) Elements() []string { return data.AffinityElements }
 
 var tmpl = template.Must(template.New("motifreport").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — motif report</title>
+<title>Duello — motif report</title>
 <style>
   :root { --ground: #a8bcd4; --ink: #2c2822; --dim: #5a6472; --rule: #8fa3bd; --panel: #c6d5e6;
           --pink: #c8508c; --ok: #3f7a4a; --warn: #9a6b12; }
@@ -143,7 +143,7 @@ var tmpl = template.Must(template.New("motifreport").Parse(`<!doctype html>
     <div class="head">
       <h2>{{.Name}} <span class="key">{{.Motif}}</span></h2>
       <span class="pct{{if eq .Score.Percent 100}} full{{end}}">{{.Score.Percent}}%</span>
-      <span class="facts">{{.Floors}} · {{len .Creatures}} creatures · {{len .Rooms}} rooms</span>
+      <span class="facts">{{.Realms}} · {{len .Creatures}} creatures · {{len .Rooms}} rooms</span>
     </div>
     <div class="bars">
       <div class="bar">briefs {{.Score.Briefs}}<div class="track"><div class="fill" style="width: {{.Score.Briefs.Percent}}%"></div></div></div>

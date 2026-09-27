@@ -25,7 +25,7 @@ func TestTheLedgerSurvivesASnapshot(t *testing.T) {
 		t.Fatalf("the resumed run has %d fights in its account, want 1", len(fights))
 	}
 	f := fights[0]
-	if f.Enemy != "Giant Bat" || f.Outcome != OutcomeWon || f.Floor != 1 {
+	if f.Enemy != "Giant Bat" || f.Outcome != OutcomeWon || f.Realm != 1 {
 		t.Errorf("the fight came back as %+v", f)
 	}
 	if f.Dealt() != 40 {

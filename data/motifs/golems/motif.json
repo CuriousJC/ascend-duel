@@ -17,7 +17,7 @@
     "earth": "Green veins. The earth moves them.",
     "arcane": "Purple veins. Nobody remembers who made them, or what for."
   },
-  "ValidFloors": [4, 8],
+  "ValidRealms": [4, 8],
   "Records": [
     {
       "Record": "golems-outer-copper",

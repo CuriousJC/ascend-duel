@@ -1,11 +1,11 @@
 package data
 
 // The roster: one directory per motif, each holding the creatures and the rooms of one themed
-// floor.
+// realm.
 //
-// **A floor is a motif and an element**, and it holds three fights — the outer chamber, the inner
+// **A realm is a motif and an element**, and it holds three fights — the outer chamber, the inner
 // chamber and the portal room. So a motif has to be able to field all three of those at whichever
-// element the floor took, which is the one thing this file checks that no other catalog loader
+// element the realm took, which is the one thing this file checks that no other catalog loader
 // does: see MustCover.
 //
 // **A motif is a directory, `motifs/<motif>/`, and the directory name is the key.** Two files may
@@ -37,11 +37,11 @@ const (
 	backdropFile = "backdrops.json"
 )
 
-// The three fights a floor holds, outermost first.
+// The three fights a realm holds, outermost first.
 //
 // **Written as names and indexed as ordinals.** A tier is a string in the JSON because a file
-// outlives the build that wrote it; it is an index in Go because the ascent curve is a function
-// of how far into the tower a fight stands, and the tier is the last term of that. TierIndex is
+// outlives the build that wrote it; it is an index in Go because the growth curve is a function
+// of how far into the journey a fight stands, and the tier is the last term of that. TierIndex is
 // the one crossing.
 const (
 	TierOuter = "outer"
@@ -50,10 +50,10 @@ const (
 )
 
 // TierOrder is the three tiers in the order they are fought. The index into this is the tier's
-// contribution to the ascent step, so it is the order that matters rather than the list.
+// contribution to the growth step, so it is the order that matters rather than the list.
 var TierOrder = []string{TierOuter, TierInner, TierBoss}
 
-// TierIndex is where a tier stands within its floor, and whether the name is one at all.
+// TierIndex is where a tier stands within its realm, and whether the name is one at all.
 func TierIndex(tier string) (int, bool) {
 	for i, t := range TierOrder {
 		if t == tier {
@@ -65,8 +65,8 @@ func TierIndex(tier string) (int, bool) {
 
 // AffinityElements is every element a creature can be instantiated as.
 //
-// **`basic` is deliberately absent.** A creature takes its floor's element, and a floor has one;
-// a creature with no element would be a floor with no theme. The player's deck still holds basic
+// **`basic` is deliberately absent.** A creature takes its realm's element, and a realm has one;
+// a creature with no element would be a realm with no theme. The player's deck still holds basic
 // cards — that is a different question about a different deck.
 //
 // **This is the five names written down a second time**, the first being combat.AllElements, and
@@ -87,15 +87,15 @@ func AffinityIndex(element string) (int, bool) {
 
 // MinCoverageFor is how many records must be able to field one (tier, element) fight.
 //
-// **Two in a chamber, so no floor is ever the same fight twice.** A motif that can field an ice
-// inner chamber with exactly one record deals that creature every time an ice floor of that motif
+// **Two in a chamber, so no realm is ever the same fight twice.** A motif that can field an ice
+// inner chamber with exactly one record deals that creature every time an ice realm of that motif
 // comes up, and the room stops being a draw. What it costs is that a motif is six chamber records
-// rather than two; what it buys is that picking a floor is picking a pool.
+// rather than two; what it buys is that picking a realm is picking a pool.
 //
-// **One at the portal room, because a boss is a name.** The portal room is the fight a floor is
+// **One at the portal room, because a boss is a name.** The portal room is the fight a realm is
 // remembered by, so it is authored for its element rather than drawn from a pool of things that
 // would do — which is what lets a motif field five bosses of one element each. A chamber is a
-// room the climb fills; a portal room is a creature the climb arrives at.
+// room the journey fills; a portal room is a creature the journey arrives at.
 func MinCoverageFor(tier string) int {
 	if tier == TierBoss {
 		return 1
@@ -103,7 +103,7 @@ func MinCoverageFor(tier string) int {
 	return 2
 }
 
-// MotifData is one themed floor's worth of creatures: the name, the band of floors it may theme,
+// MotifData is one themed realm's worth of creatures: the name, the band of realms it may theme,
 // and every record that can stand in one of its three rooms.
 type MotifData struct {
 	// Motif is the key, unique across every file, and it is also the art family and the name of
@@ -123,7 +123,7 @@ type MotifData struct {
 	//
 	// **It is here rather than on each record because it is true of all of them.** Written nine
 	// times it drifts; written nowhere, nine prompts each reinvent what a goblin looks like, which
-	// is how a floor's three rooms come to look unrelated.
+	// is how a realm's three rooms come to look unrelated.
 	Draw string `json:"Draw"`
 
 	// ElementDraw is how each element changes *this* motif, keyed by element name.
@@ -139,24 +139,24 @@ type MotifData struct {
 	// Text is what a player reads about this motif on the portal that offers it: what these
 	// creatures are, in a sentence or two. **The player's line, not the generator's** — Draw says
 	// what a goblin looks like to an artist, this says what a goblin is to somebody choosing whether
-	// to fight a floor of them.
+	// to fight a realm of them.
 	//
 	// **Unwritten is allowed and is visible**: empty or `TBD` draws as TBD on the portal and is
 	// counted by the motif report, the way an unwritten Draw is.
 	Text string `json:"Text"`
 
 	// ElementText is what the player reads about this motif in one element, keyed by element name —
-	// what fire does to a floor of goblins. The portal prints it under Text. A key that is not an
+	// what fire does to a realm of goblins. The portal prints it under Text. A key that is not an
 	// element is refused; a missing one is unwritten, on Text's terms.
 	ElementText map[string]string `json:"ElementText"`
 
-	// ValidFloors is the inclusive band of tower floors this motif may theme, as [low, high].
-	// A zero band means any floor.
+	// ValidRealms is the inclusive band of journey realms this motif may theme, as [low, high].
+	// A zero band means any realm.
 	//
-	// **It is motif-level rather than per-record** because a floor takes a whole motif: a motif
-	// whose outer creatures were valid on floors 1 to 3 and whose boss was valid on 4 to 6 could
-	// never theme a floor at all.
-	ValidFloors [2]int `json:"ValidFloors"`
+	// **It is motif-level rather than per-record** because a realm takes a whole motif: a motif
+	// whose outer creatures were valid on realms 1 to 3 and whose boss was valid on 4 to 6 could
+	// never theme a realm at all.
+	ValidRealms [2]int `json:"ValidRealms"`
 
 	Records []MotifRecord `json:"Records"`
 
@@ -166,19 +166,19 @@ type MotifData struct {
 }
 
 // MotifRecord is one creature: which room it can stand in, which elements it can be dealt as,
-// what it is worth at the bottom of the tower, and the cards it holds.
+// what it is worth at the bottom of the journey, and the cards it holds.
 type MotifRecord struct {
 	// Record is the key, unique across every motif file, and it must read
 	// `<motif>-<tier>-<slug>`. The prefix is checked rather than trusted: a key that disagrees
 	// with its own tier is a record the coverage report counts in the wrong column, and the
-	// report is what the floor generator trusts.
+	// report is what the realm generator trusts.
 	Record string `json:"Record"`
 
 	// Name is what the creature is called. It is drawn in the tooltip rather than on the card,
 	// because the card is a picture.
 	Name string `json:"Name"`
 
-	// Tier is which of the floor's three rooms this record can stand in.
+	// Tier is which of the realm's three rooms this record can stand in.
 	Tier string `json:"Tier"`
 
 	// Title is the boss's epithet — "the Toll-Taker". Empty on a creature, and refused on one.
@@ -203,16 +203,16 @@ type MotifRecord struct {
 	// Affinities is which elements this record can be instantiated as — a non-empty subset of
 	// AffinityElements, no repeats.
 	//
-	// **A record is dealt as exactly one of them**, chosen by the floor, and its whole deck takes
+	// **A record is dealt as exactly one of them**, chosen by the realm, and its whole deck takes
 	// that element. There is no element anywhere on a card: a card is a concept, and the colour
 	// belongs to the creature holding it.
 	Affinities []string `json:"Affinities"`
 
 	// HP and DMG are the bases, and they are **step-zero quantities** — what this creature is
-	// worth in floor one's outer chamber, whatever floor it is actually met on. The ascent curve
-	// puts it where it stands; see pyramid.ScaleToFight.
+	// worth in realm one's outer chamber, whatever realm it is actually met on. The growth curve
+	// puts it where it stands; see journey.ScaleToFight.
 	//
-	// So a creature that only appears high in the tower is not written as a high stat line. It is
+	// So a creature that only appears high in the journey is not written as a high stat line. It is
 	// written as the multiple of its neighbours it is meant to be, and the curve does the rest —
 	// which is also what keeps the ratio between two motifs fixed however the curve is retuned.
 	HP  int `json:"HP"`
@@ -228,13 +228,13 @@ type MotifRecord struct {
 	Cards []CardData `json:"Cards"`
 }
 
-// AllowsFloor reports whether this motif may theme a given floor. A zero band means every floor,
+// AllowsRealm reports whether this motif may theme a given realm. A zero band means every realm,
 // so a motif authored without one is placeable rather than unreachable.
-func (m MotifData) AllowsFloor(floor int) bool {
-	if m.ValidFloors == [2]int{} {
+func (m MotifData) AllowsRealm(realm int) bool {
+	if m.ValidRealms == [2]int{} {
 		return true
 	}
-	return floor >= m.ValidFloors[0] && floor <= m.ValidFloors[1]
+	return realm >= m.ValidRealms[0] && realm <= m.ValidRealms[1]
 }
 
 // Candidates is every record of one tier that can be dealt as one element, in file order.
@@ -285,8 +285,8 @@ const DefaultEnemyArt = "default-enemy"
 
 // Coverage is how many records can field each fight of a motif, as [tier][element].
 //
-// **It is the one report the floor generator trusts.** A floor picks a motif and an element and
-// then needs a record for each of the three rooms; a hole here is a floor that cannot be built,
+// **It is the one report the realm generator trusts.** A realm picks a motif and an element and
+// then needs a record for each of the three rooms; a hole here is a realm that cannot be built,
 // and the whole point of checking it at init is that the generator never has to ask.
 type Coverage struct {
 	Motif  string
@@ -347,12 +347,12 @@ func (c Coverage) Holes() []string {
 	return out
 }
 
-// LoadMotifs reads every file under motifs/ and refuses anything the floor generator could not
-// build a tower out of.
+// LoadMotifs reads every file under motifs/ and refuses anything the realm generator could not
+// build a journey out of.
 //
 // **Every check here is a panic**, like the rest of this package. A motif with a hole in its
-// coverage is not a record short — it is a floor the generator can offer and then fail to build,
-// and the failure would land in front of a player mid-climb rather than in front of whoever
+// coverage is not a record short — it is a realm the generator can offer and then fail to build,
+// and the failure would land in front of a player mid-journey rather than in front of whoever
 // authored the file.
 func LoadMotifs() map[string]MotifData {
 	entries, err := motifsFS.ReadDir("motifs")
@@ -401,7 +401,7 @@ func LoadMotifs() map[string]MotifData {
 	}
 
 	if len(out) == 0 {
-		panic("motifs: no motif directories, so no floor can be built")
+		panic("motifs: no motif directories, so no realm can be built")
 	}
 	return out
 }
@@ -476,8 +476,8 @@ func checkMotif(m MotifData, file, dir string) {
 	if m.Name == "" {
 		panic(file + ": " + m.Motif + " has no name")
 	}
-	if lo, hi := m.ValidFloors[0], m.ValidFloors[1]; lo < 0 || hi < 0 || (m.ValidFloors != [2]int{} && lo > hi) {
-		panic(fmt.Sprintf("%s: %s has the floor band %v, which is not a band", file, m.Motif, m.ValidFloors))
+	if lo, hi := m.ValidRealms[0], m.ValidRealms[1]; lo < 0 || hi < 0 || (m.ValidRealms != [2]int{} && lo > hi) {
+		panic(fmt.Sprintf("%s: %s has the realm band %v, which is not a band", file, m.Motif, m.ValidRealms))
 	}
 	if len(m.Records) == 0 {
 		panic(file + ": " + m.Motif + " has no records")
@@ -550,13 +550,13 @@ func checkRecord(m MotifData, r MotifRecord, file string) {
 			panic(fmt.Sprintf("%s: %s costs %d, and a card costs 1 to %d", where, c.Label, c.Cost, MaxCardCost))
 		}
 		if len(c.Elements) > 0 {
-			panic(where + ": " + c.Label + " names its own elements, and a creature's colour is the floor's")
+			panic(where + ": " + c.Label + " names its own elements, and a creature's colour is the realm's")
 		}
 	}
 }
 
 // checkAffinities refuses an empty affinity list, a name that is not an element, and a repeat.
-// Shared by a creature and a backdrop, which take their floor's element the same way.
+// Shared by a creature and a backdrop, which take their realm's element the same way.
 func checkAffinities(affinities []string, where string) {
 	if len(affinities) == 0 {
 		panic(where + " can be dealt as no element")
@@ -617,7 +617,7 @@ const DrawUnwritten = "TBD"
 
 // MotifOrder is every motif key, sorted.
 //
-// **Sorted because LoadMotifs returns a map and Go randomizes that order.** A tower is built by
+// **Sorted because LoadMotifs returns a map and Go randomizes that order.** A journey is built by
 // drawing motifs against a seeded stream, so an unsorted walk would make a run code deal a
 // different climb on every launch.
 func MotifOrder(recs map[string]MotifData) []string {
@@ -651,30 +651,30 @@ func MotifOf(recs map[string]MotifData, record string) (MotifData, bool) {
 	return MotifData{}, false
 }
 
-// MustBeClimbable refuses a roster that cannot offer every floor of the tower its portals.
+// MustFillJourney refuses a roster that cannot offer every realm of the journey its portals.
 //
-// A floor is offered through OffersOn motifs, and **every motif offered is spent** whichever one the
-// player walks through — so a climb needs one motif for floor one and two for every floor above it,
-// all distinct and each inside its own floor band. That is a matching problem rather than a
-// per-floor one: three motifs that each say `[1, 2]` satisfy "floor 1 has a motif" and "floor 2 has
-// a motif" while still leaving floor 3 empty. See FillsSlots, which is also what the climb is rolled
+// A realm is offered through OffersOn motifs, and **every motif offered is spent** whichever one the
+// player walks through — so a journey needs one motif for realm one and two for every realm above it,
+// all distinct and each inside its own realm band. That is a matching problem rather than a
+// per-realm one: three motifs that each say `[1, 2]` satisfy "realm 1 has a motif" and "realm 2 has
+// a motif" while still leaving realm 3 empty. See FillsSlots, which is also what the journey is rolled
 // against, so a roster this accepts is one no seed can run dry on.
-func MustBeClimbable(recs map[string]MotifData, floors int) {
-	if floors <= 0 {
+func MustFillJourney(recs map[string]MotifData, realms int) {
+	if realms <= 0 {
 		return
 	}
-	for f := 1; f <= floors; f++ {
+	for f := 1; f <= realms; f++ {
 		can := 0
 		for _, key := range MotifOrder(recs) {
-			if recs[key].AllowsFloor(f) {
+			if recs[key].AllowsRealm(f) {
 				can++
 			}
 		}
 		if can < OffersOn(f) {
-			panic(fmt.Sprintf("motifs: floor %d is offered through %d portals and only %d motifs may theme it", f, OffersOn(f), can))
+			panic(fmt.Sprintf("motifs: realm %d is offered through %d portals and only %d motifs may theme it", f, OffersOn(f), can))
 		}
 	}
-	if !FillsSlots(recs, ClimbSlots(1, floors), nil) {
-		panic(fmt.Sprintf("motifs: %d floors cannot each be offered motifs of their own — the bands overlap too little for the portals to be filled without a repeat", floors))
+	if !FillsSlots(recs, JourneySlots(1, realms), nil) {
+		panic(fmt.Sprintf("motifs: %d realms cannot each be offered motifs of their own — the bands overlap too little for the portals to be filled without a repeat", realms))
 	}
 }

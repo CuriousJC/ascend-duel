@@ -9,13 +9,13 @@
 // internal/cards from raw bytes. That is one of the two things standing between this package and
 // needing a window, and it is worth keeping.
 //
-// # Hydration is where the ascent is applied
+// # Hydration is where the growth curve is applied
 //
-// NewEnemyFrom takes a fight index and grows the record's HP and DMG through pyramid.ScaleToFight,
-// so an unscaled opponent cannot be built by accident: every caller has to say where in the climb
+// NewEnemyFrom takes a fight index and grows the record's HP and DMG through journey.ScaleToFight,
+// so an unscaled opponent cannot be built by accident: every caller has to say where in the journey
 // this one stands. Actions is deliberately left alone — it is the budget a deck is spent out of
 // rather than a measure of how hard one hits.
 //
-// The curve itself is not here. It moved to internal/pyramid, which is tower generation rather
+// The curve itself is not here. It is internal/journey's, which is journey generation rather
 // than hydration, and which a caller can read without needing this package at all.
 package entities

@@ -4,7 +4,7 @@
     "Name": "FIRST STEPS",
     "How": "Defeat your first enemy.",
     "Said": [
-      "One down. The tower does not notice, but you do.",
+      "One down. The realm does not notice, but you do.",
       "Everything above this is the same thing again, harder."
     ],
     "Trigger": { "Kind": "moment", "Moment": "duel-won" }
@@ -121,14 +121,14 @@
     }
   },
   {
-    "AchievementRecord": "fifth-floor",
-    "Name": "FIFTH FLOOR",
-    "How": "Climb as far as the fifth floor.",
+    "AchievementRecord": "fifth-realm",
+    "Name": "FIFTH REALM",
+    "How": "Journey as far as the fifth realm.",
     "Said": [
       "Four realms behind you and more to come.",
       "Whatever you came in wearing, you are not wearing it now."
     ],
-    "Trigger": { "Kind": "moment", "Moment": "floor-reached", "N": 5 }
+    "Trigger": { "Kind": "moment", "Moment": "realm-reached", "N": 5 }
   },
   {
     "AchievementRecord": "slash-300",
@@ -197,7 +197,7 @@
     "How": "Stand behind ten shields at once.",
     "Said": [
       "Ten of them, and a turn can only throw five.",
-      "Five more than anything in the tower can reach. You bought the ones nobody could take."
+      "Five more than anything on the journey can reach. You bought the ones nobody could take."
     ],
     "Trigger": { "Kind": "moment", "Moment": "shields-raised", "N": 10 }
   }

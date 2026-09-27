@@ -12,18 +12,17 @@ import (
 // edges move on their own — the card's off ui.TopRowTopPct, the table's off handTop — so the fit is
 // exactly the kind of thing that goes stale silently.
 //
-// **It used to sit under the floor-and-room lines**, which are stat rows on the card as of
-// 2026-09-15; the bar moved up into the space they left rather than a gap being kept where they
-// were.
+// **The realm and the room are stat rows on the card**, so nothing hangs between the card and the
+// bar: it sits one cardLineGap under the card's bottom edge.
 func TestTheRoundTimerFitsUnderTheDuelistCard(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
 	card, bar := ui.DuelistCardRect(gs), s.roundTimerRect(gs)
 
-	if bar.Min.Y != card.Max.Y+towerLineGap {
+	if bar.Min.Y != card.Max.Y+cardLineGap {
 		t.Errorf("the timer starts at y=%d, want %dpx under the card at y=%d",
-			bar.Min.Y, towerLineGap, card.Max.Y)
+			bar.Min.Y, cardLineGap, card.Max.Y)
 	}
 	if bar.Min.X != card.Min.X || bar.Max.X != card.Max.X {
 		t.Errorf("the timer runs x=%d..%d, want the duelist card's column %d..%d",
@@ -33,7 +32,7 @@ func TestTheRoundTimerFitsUnderTheDuelistCard(t *testing.T) {
 		t.Errorf("the timer reaches x=%d, into the relic row at x=%d", bar.Max.X, pane.Min.X)
 	}
 	// The whole top band has to finish above the table row, the relic count included — that
-	// assertion came here when the tower lines' own test went with the lines.
+	// assertion came here when the journey lines' own test went with the lines.
 	top := tableRowTop(gs)
 	if bar.Max.Y > top {
 		t.Errorf("the timer reaches y=%d, into the table row at y=%d", bar.Max.Y, top)

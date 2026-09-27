@@ -3,7 +3,7 @@ package screens
 // **The ledger's one other control: writing the account out to a file.**
 //
 // The panel is the run's account on screen and it is gone with the run — a defeat clears the
-// snapshot, and nothing survives a climb that can be read afterwards or pasted into a bug report.
+// snapshot, and nothing survives a journey that can be read afterwards or pasted into a bug report.
 // This writes what the panel is showing to a JSON file beside the profile, named for the run code
 // and the moment it was taken. See session/export.go for what goes in it and profile/store.go for
 // where it lands.

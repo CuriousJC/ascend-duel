@@ -72,29 +72,29 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       shelf now reads badly. See the tutorial section of `CLAUDE.md`, which carries the
       constraints a replacement seed has to satisfy.
 
-- [ ] **A curve tool: plug in bases, pick a motif, read the whole tower** *(owner asked for this
-      to be tracked)*. The ascent curve is two compounding growth rates in `data/tower.json` and a
+- [ ] **A curve tool: plug in bases, pick a motif, read the whole journey** *(owner asked for this
+      to be tracked)*. The growth curve is two compounding growth rates in `data/journey.json` and a
       per-record `HP`/`DMG` base in a motif file, and the only way to see what a number does today
-      is to play to the floor it lands on. What is wanted is a page that takes the bases and the
-      two rates and prints every fight in the tower — floors down the side, outer / inner / boss
-      across, `HP / DMG` in each cell — plus a few rows past floor 8 so the geometric wall is
+      is to play to the realm it lands on. What is wanted is a page that takes the bases and the
+      two rates and prints every fight in the journey — realms down the side, outer / inner / boss
+      across, `HP / DMG` in each cell — plus a few rows past realm 8 so the geometric wall is
       visible.
-      - **The arithmetic is `pyramid.ScaleToFight`**, which is fixed-point integer on purpose (see
-        `ascent.go`), so the tool must call it rather than reimplement it in floating point — two
+      - **The arithmetic is `journey.ScaleToFight`**, which is fixed-point integer on purpose (see
+        `growth.go`), so the tool must call it rather than reimplement it in floating point — two
         answers to one question is the stale-sheet failure.
-      - **The step is the fight, not the floor**: `step = (floor-1)*FightsPerFloor + room`, which
-        is what makes floor 2's outer room harder than floor 1's boss.
+      - **The step is the fight, not the realm**: `step = (realm-1)*FightsPerRealm + room`, which
+        is what makes realm 2's outer room harder than realm 1's boss.
       - **Picking a motif means reading its records' bases** and drawing one column per record, so
-        the page answers "what does a Goblin Bomber actually hit for on floor 5" rather than
+        the page answers "what does a Goblin Bomber actually hit for on realm 5" rather than
         "what does base 100 do".
-      - **Rows past floor 8 are the point, not a flourish** — the endless tower is where the two
-        rates have to be felt, and a table stopping at the summit says nothing about them.
+      - **Rows past realm 8 are the point, not a flourish** — the endless journey is where the two
+        rates have to be felt, and a table stopping at the last realm says nothing about them.
       - It belongs under `docs/sheets/` with the rest, built by a tool under `tools/`, and it is
         the one page there that is interactive: the bases and the rates are inputs, because the
         question is "what would happen if" rather than "what is".
 
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
-      note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
+      note-off to the nearest bar, which for `duello.mid` trims 60 ticks (about 62ms)
       of a drum tail past bar 13. That is inaudible and the tail is folded back over the
       start anyway, but the rounding is a *guess at intent*. If a future score wants a
       loop that is not its full length — an intro bar played once, say —
@@ -126,8 +126,8 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 ## Next — where the game actually starts
 
 - [ ] **Boss advantages** *(owner asked for this to be tracked)*. Every boss is the same boss
-      today: the tier puts it further up the ascent curve and nothing else separates it from the
-      creatures on its own floor. What is wanted is **one advantage per boss, drawn from a pool
+      today: the tier puts it further up the growth curve and nothing else separates it from the
+      creatures on its own realm. What is wanted is **one advantage per boss, drawn from a pool
       the record carries**, out of a closed vocabulary checked at package init — the shape
       `internal/achieve` is under, and for its reason: an advantage a file can assert into
       existence is a boss rule nothing implements.
@@ -156,13 +156,13 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 - [ ] **What an element does to a creature** *(owner asked for this to be tracked)*. A creature is
       instantiated as one element, and today that element picks the art and marks the attack cards
       and nothing else — a fire goblin and an ice goblin resolve identically. What it could carry:
-      a status applied on hit, a resistance, a weakness, or something the floor's element does to
+      a status applied on hit, a resistance, a weakness, or something the realm's element does to
       the **player** rather than to the creature.
       - **It needs its own argument in `MECHANICS.md`** before it is written, and a status applied
         by a creature is the first thing in the game to put one on the player.
 
 - [ ] **What makes an inner-chamber creature different from an outer one** *(owner asked for this
-      to be tracked)*, beyond its place on the ascent curve. The tier is a position today. Whether
+      to be tracked)*, beyond its place on the growth curve. The tier is a position today. Whether
       it should also be a shape — a deck rule, a budget, a behaviour — is open.
 
 ### Cards and piles — presentation
@@ -176,7 +176,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **Individual status badges.** Hovering the enemy card lists every status on it; hovering one
         badge does nothing, because `internal/cards` draws the row and no badge rectangle reaches
         the screen. A per-badge tooltip needs a geometry accessor from that package.
-      - **The AP bar, the discard count, the tower place** and the other figures written straight
+      - **The AP bar, the discard count, the journey place** and the other figures written straight
         onto the table. Each is a number with no legend anywhere.
 
 ## Later
@@ -193,7 +193,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         offers it.
 - [ ] **Don't pre-roll into a fixed array — keep a seeded stream per concern.** A
       `*rand.Rand` seeded once *is* an infinite deterministic list; a pre-generated slice
-      is just the first N entries of it, and N has to be guessed. The endless tower has
+      is just the first N entries of it, and N has to be guessed. The endless journey has
       no worst case to size against, so any N is eventually wrong.
       - **Rerolls advance the cursor**, which is exactly the intended behavior: reroll
         and you get the next offer down the list. No separate reroll stream needed.
@@ -210,7 +210,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       left is the read-only half. Deferred: the remaining fields are not crowding anything.
 - [ ] **What actually unlocks.** The profile exists and holds an `unlocks` set — `internal/profile`
       — and nothing writes to it. Undecided: cards for the starting deck, enemies in the pool,
-      floors, whole alternate decks. Worth answering alongside the loot loop, since an unlock and a
+      realms, whole alternate decks. Worth answering alongside the loot loop, since an unlock and a
       reward are the same object with different lifetimes.
       - **Hand discovery is the one already specified** — MECHANICS.md has hands discovered rather
         than given, and `profile.Profile.HandsDiscovered` is the field waiting for it. Gating the
@@ -226,21 +226,21 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         exposure.
       - Numbered slots picked from a list would dodge the text field entirely, at the cost of
         "Profile 2" meaning nothing to the player.
-- [ ] **The tower's ends.** The portal choice is built — see MECHANICS.md §The portal. What is
+- [ ] **The journey's ends.** The portal choice is built — see MECHANICS.md §The portal. What is
       left of the loop:
-      - **Floor 8 ends the run** for the first version — 7 portal choices, no offer at the
-        top. Today the climb wraps past the top instead.
-      - Portal choices steer **enemy affixes and behavior** — "this is a cold floor",
-        "this is a fire floor" — plus whatever other levers exist by then. The specific
+      - **Realm 8 ends the run** for the first version — 7 portal choices, no offer at the
+        top. Today the journey wraps past the top instead.
+      - Portal choices steer **enemy affixes and behavior** — "this is a cold realm",
+        "this is a fire realm" — plus whatever other levers exist by then. The specific
         options are undecided; the mechanism is the part that matters.
 - [ ] **Save format: seed plus choice log, not serialized state.** Falls out of seeding
       for free, and only stays free if nobody builds save/load the other way first.
       - A run is fully described by its seed and the ordered list of **every player
-        input**, which is more than the loot and floor picks:
+        input**, which is more than the loot and realm picks:
         - **The action set queued each round.** ~5 rounds x 24 fights, so this is the
           bulk of the log, not a footnote.
         - Which of the two loot offers was taken, per fight.
-        - Which of the two floor offers was taken, per floor.
+        - Which of the two realm offers was taken, per realm.
         - Every reroll — it is a decision *and* it advances a stream, so omitting it
           desyncs everything after it.
       - A few KB rather than a few dozen bytes, and it grows with duel length rather
@@ -268,9 +268,9 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - Caveat: this only holds while the rules are stable. A balance change invalidates
         old saves, so the format needs a rules-version stamp and a plan for what happens
         when it does not match.
-- [ ] **Endless tower (after the 8-floor version works).** Keep climbing until the curve
-      stops you, rather than a fixed summit. Scaling probably exponential.
-      - Design the floor loop so 8 is a *configured stop*, not a baked-in constant, or
+- [ ] **Endless journey (after the 8-realm version works).** Keep going until the curve
+      stops you, rather than a fixed last realm. Scaling probably exponential.
+      - Design the realm loop so 8 is a *configured stop*, not a baked-in constant, or
         this becomes a rewrite instead of a setting.
       - Exponential scaling wants a sanity check on integer range and on the health bar:
         the bar scales by `CurrentLife/MaxLife` so it copes, but a four-digit damage number
@@ -283,7 +283,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       wants to become a base statline, a scaling rule, and a pool of affixes to draw from.
       - `AvailableAffixes` already anticipates this and is still unread.
       - Affixes must compose. Two on one enemy is the normal case, not an edge case.
-      - Portal choices feed this directly: "a cold floor" biases which affixes appear.
+      - Portal choices feed this directly: "a cold realm" biases which affixes appear.
 ## Art still to generate
 
 *(owner asked for this to be tracked)*. **Two batches outstanding.** Every other catalog is
@@ -444,7 +444,7 @@ removed.
         field is.
       - **`LoadProfile`, `SaveProfile`, `LoadRun`, `SaveRun` and `DeleteRun` take the interface**,
         marshal and unmarshal exactly as they do now, and hand over complete bytes. Atomicity is an
-        implementation detail of the filesystem backend, which keeps `ASCEND_DUEL_PROFILE`,
+        implementation detail of the filesystem backend, which keeps `DUELLO_PROFILE`,
         `os.UserConfigDir`, lazy directory creation, filename validation, permissions, temp-file
         cleanup and the atomic rename.
       - **`main` constructs the desktop backend**; a screen never chooses storage. `GlobalState`

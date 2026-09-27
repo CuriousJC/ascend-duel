@@ -13,13 +13,13 @@ package session
 // for exactly this reason.
 //
 // **It lives here rather than in `internal/screens` because it is arithmetic, not a picture.** That
-// is the same line `internal/pyramid` sits on: a headless caller can ask what a run came to, and a
+// is the same line `internal/journey` sits on: a headless caller can ask what a run came to, and a
 // test can check the sums without a window.
 
 import "github.com/curiousjc/ascend-duel/internal/seeds"
 
 // How a run finished. **Two ways, and they are not the same fact** — a player who was killed and a
-// player who walked away both end a climb, and a summary that called them both "over" would be
+// player who walked away both end a journey, and a summary that called them both "over" would be
 // throwing away the only thing that distinguishes the two on the page.
 const (
 	// EndedInDefeat is the duelist falling. There is no retry; see MECHANICS.md.
@@ -43,15 +43,15 @@ type RunSummary struct {
 	// Ended is EndedInDefeat or EndedByChoice.
 	Ended string
 
-	// Floor is how far up the tower the run got, and Rooms is how many duels it entered.
+	// Realm is how far up the journey the run got, and Rooms is how many duels it entered.
 	//
 	// **Rooms counts every fight the account opened**, which is the number the player watched go
-	// by — not `Fight()`, which is an index into the climb and is one behind after a loss.
-	Floor int
+	// by — not `Fight()`, which is an index into the journey and is one behind after a loss.
+	Realm int
 	Rooms int
 
 	// Defeated is how many of those duels were won. **Not `Rooms - 1`**: a run can end in the room
-	// it was on without that room having been a loss, if it was given up mid-climb.
+	// it was on without that room having been a loss, if it was given up mid-journey.
 	Defeated int
 
 	// Dealt is what the player's blows came to across the whole run, and Rounds is how many rounds
@@ -70,13 +70,13 @@ type RunSummary struct {
 // everything from the run seed and never stores it, so the one caller that knows it hands it over.
 //
 // **A run with no fights in it summarizes to zeroes rather than refusing.** A player who starts a
-// climb and gives it up on the first screen has a real, if short, run — and a summary that returned
+// journey and gives it up on the first screen has a real, if short, run — and a summary that returned
 // an error would be a screen that has to decide what to draw instead.
 func (s *Session) Summarize(runSeed int64, ended string) RunSummary {
 	out := RunSummary{
 		Seed:  seeds.Code(runSeed),
 		Ended: ended,
-		Floor: s.Floor(),
+		Realm: s.Realm(),
 		Vitae: s.vitae,
 	}
 
@@ -88,12 +88,12 @@ func (s *Session) Summarize(runSeed int64, ended string) RunSummary {
 			out.Defeated++
 		}
 
-		// **The deepest floor the account saw, rather than the one the run is standing on.** They
+		// **The deepest realm the account saw, rather than the one the run is standing on.** They
 		// are the same on a death, and they are not on a run given up after a retreat — and if the
 		// climb ever lets a player go back down, the honest answer to "how far did you get" is the
 		// high-water mark rather than where they stopped.
-		if f.Floor > out.Floor {
-			out.Floor = f.Floor
+		if f.Realm > out.Realm {
+			out.Realm = f.Realm
 		}
 	}
 	return out

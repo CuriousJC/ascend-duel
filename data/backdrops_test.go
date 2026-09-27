@@ -20,7 +20,7 @@ func TestEveryBackdropLoads(t *testing.T) {
 	}
 }
 
-func TestABackdropIsTheSameForARunFloorAndRoom(t *testing.T) {
+func TestABackdropIsTheSameForARunRealmAndRoom(t *testing.T) {
 	m := MotifData{Motif: "m", Backdrops: []Backdrop{
 		{Backdrop: "m-outer-a", Tier: TierOuter, Art: "a", Affinities: []string{"fire"}},
 		{Backdrop: "m-outer-b", Tier: TierOuter, Art: "b", Affinities: []string{"fire"}},
@@ -30,7 +30,7 @@ func TestABackdropIsTheSameForARunFloorAndRoom(t *testing.T) {
 		first := m.BackdropFor(TierOuter, "fire", seed, 3)
 		for range 5 {
 			if got := m.BackdropFor(TierOuter, "fire", seed, 3); got != first {
-				t.Fatalf("seed %d floor 3 drew %q then %q", seed, first, got)
+				t.Fatalf("seed %d realm 3 drew %q then %q", seed, first, got)
 			}
 		}
 	}

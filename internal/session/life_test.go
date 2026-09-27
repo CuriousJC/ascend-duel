@@ -3,7 +3,7 @@ package session
 import "testing"
 
 // TestAWoundIsCarriedIntoTheNextRoom. The whole point of the change: a duel used to start at full
-// life whatever the last one cost, and damage is a fact about the floor now.
+// life whatever the last one cost, and damage is a fact about the realm now.
 func TestAWoundIsCarriedIntoTheNextRoom(t *testing.T) {
 	run := bare(t)
 
@@ -22,7 +22,7 @@ func TestAWoundIsCarriedIntoTheNextRoom(t *testing.T) {
 func TestABossWinHealsToFullAndRaisesTheCeiling(t *testing.T) {
 	run := bare(t)
 
-	// The outer and inner rooms of floor one, both survived badly.
+	// The outer and inner rooms of realm one, both survived badly.
 	run.WonFight(10, 100)
 	run.WonFight(10, 100)
 	if run.Hurt() != 90 {

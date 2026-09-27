@@ -185,9 +185,9 @@ type GlobalState struct {
 	ScreenHeight int
 
 	//Data
-	// Motifs is the whole roster, one entry per themed floor, each holding the creatures that
-	// can stand in its three rooms. **A floor takes one motif and one element**; see
-	// internal/pyramid.
+	// Motifs is the whole roster, one entry per themed realm, each holding the creatures that
+	// can stand in its three rooms. **A realm takes one motif and one element**; see
+	// internal/journey.
 	Motifs map[string]data.MotifData
 
 	// Records is every motif's creatures flattened by key, because a screen hydrating an opponent
@@ -195,9 +195,9 @@ type GlobalState struct {
 	// searched, since it is read on every entry to the combat screen.
 	Records map[string]data.MotifRecord
 
-	// Tower is how tall the climb is and how fast it steepens. It is read wherever a stat is
+	// Journey is how tall the journey is and how fast it steepens. It is read wherever a stat is
 	// grown to the fight it is met at, which is one place — entities.NewEnemyFrom.
-	Tower data.TowerData
+	Journey data.JourneyData
 
 	// **The player and the opponents do not share a struct.** A creature has affinities, a
 	// picture family and a tier; a duelist has a card back. See data/duelists_data.go.
@@ -208,7 +208,7 @@ type GlobalState struct {
 	// is not here: that is run state and belongs on Run, below — bought and sold in the shop.
 	Relics map[string]data.RelicData
 
-	// Run is what the player is carrying up the tower — the deck today, the worn relics and the
+	// Run is what the player is carrying up the journey — the deck today, the worn relics and the
 	// purse next. **Genuinely global**: the combat screen deals from it and the post-battle
 	// screen alters it, and it has to outlive a fight, which no scene does.
 	//
@@ -264,15 +264,15 @@ type GlobalState struct {
 
 	// Resumed is whether the run currently on Run came off the disk rather than being started
 	// fresh. **Two readers**: the tutorial's trigger, because a lesson that opens by describing the
-	// hand the player is holding cannot begin halfway up a tower; and the title screen's Continue,
-	// which is exactly the question "is there a climb to go back to".
+	// hand the player is holding cannot begin partway through a journey; and the title screen's Continue,
+	// which is exactly the question "is there a journey to go back to".
 	Resumed bool
 
 	// SeedPinned is whether RunSeed was chosen deliberately rather than rolled off the clock —
 	// `main.fixedRunSeed`, or a scenario's own code.
 	//
 	// **It exists so that New Run does not silently break a pin.** A pinned seed is a debugging
-	// session where the same tower in the same order is the whole point, and a menu button that
+	// session where the same journey in the same order is the whole point, and a menu button that
 	// rerolled it would undo from the title screen what was set in the source. See screens.NewRun.
 	//
 	// **The tutorial outranks it**, as it always has: a taught run is dealt the script's own code,

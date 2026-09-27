@@ -72,7 +72,7 @@ type plate struct {
 // launches, and a page that said so in prose would be a rule the reader has to remember rather
 // than a command they can paste.
 func (p plate) Command() string {
-	return "ASCEND_DUEL_SCENARIO=" + p.Record + " go run -tags scenario ."
+	return "DUELLO_SCENARIO=" + p.Record + " go run -tags scenario ."
 }
 
 type page struct {
@@ -91,7 +91,7 @@ type page struct {
 // scrolls inside its own box rather than stretching the page.
 var tmpl = template.Must(template.New("scenariosheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — scenario sheet</title>
+<title>Duello — scenario sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};

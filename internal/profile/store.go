@@ -21,16 +21,16 @@ import (
 //
 // **It overrides the directory rather than a file**, so one variable moves the profile and the run
 // together and they cannot be pointed at different places by accident. It exists for the reason
-// `ASCEND_DUEL_SCENARIO` and `ASCEND_DUEL_IDLE_SECONDS` do: without it, "start again as a new
+// `DUELLO_SCENARIO` and `DUELLO_IDLE_SECONDS` do: without it, "start again as a new
 // player" means going and finding a file under AppData by hand.
-const DirEnv = "ASCEND_DUEL_PROFILE"
+const DirEnv = "DUELLO_PROFILE"
 
 // dirName is the directory the game keeps its files in, under the platform's config root:
 //
-//	Windows   %APPDATA%\ascend-duel
-//	Linux     ~/.config/ascend-duel
-//	macOS     ~/Library/Application Support/ascend-duel
-const dirName = "ascend-duel"
+//	Windows   %APPDATA%\duello
+//	Linux     ~/.config/duello
+//	macOS     ~/Library/Application Support/duello
+const dirName = "duello"
 
 // Store is one directory holding one player's files.
 //
@@ -198,7 +198,7 @@ func (s Store) RemoveFile(name string) error {
 //
 // **It writes beside the profile rather than beside the executable**, on the rule the whole package
 // is under: the install tree is somewhere a shipped game cannot write, and a per-executable
-// directory is per-install rather than per-player. So an export lands wherever `ASCEND_DUEL_PROFILE`
+// directory is per-install rather than per-player. So an export lands wherever `DUELLO_PROFILE`
 // or the platform's config root put the two files the game already keeps.
 //
 // **The name is the caller's and is checked by checkName**, which is where the rule lives now that

@@ -93,7 +93,7 @@ a scale does not.
 
 **`stateful` is where the growing relics land**, and it is the payload that cannot be priced on
 fight one — an accumulator is uncapped by decision, so a stateful relic is priced on where it ends
-up at the top of the tower.
+up at the top of the journey.
 
 ### `scope` — how often the rule gets to matter
 

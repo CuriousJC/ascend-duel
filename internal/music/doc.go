@@ -1,6 +1,6 @@
 // Package music plays the game's score.
 //
-// The score ships as a Standard MIDI File — `assets/ascending.mid`, a kilobyte of
+// The score ships as a Standard MIDI File — `assets/sounds/duello.mid`, a kilobyte of
 // notes — and is synthesized to PCM once at startup by the pure-Go code in smf.go and
 // synth.go. Ebitengine cannot play MIDI; its audio package decodes MP3, Ogg Vorbis and
 // WAV and nothing else. The three ways past that were to convert the file to Ogg

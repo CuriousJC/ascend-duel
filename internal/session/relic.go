@@ -37,7 +37,7 @@ import (
 // **What that means for a launch, said plainly:** every element is inert until the first relic is
 // bought — an ice Bash is a plain Bash with a blue border — so the opening fights carry no
 // statuses at all. That is the intended shape of a run rather than an oversight, and it is the
-// thing to look at first if the early tower reads as flat.
+// thing to look at first if the early realms read as flat.
 //
 // **It stays as a list rather than being deleted**, because it is the relic counterpart of
 // `deckSeedName`: filling it in is how a relic gets onto a hand without playing to a shop, which is
@@ -416,8 +416,8 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	// documents below rather than a third rule. See life.go.
 	// **The potions go on before even that** *(owner's call, 2026-09-06)*. A potion changes the
 	// duelist themself rather than being something worn, so what it adds is part of the body the
-	// portal bonus grows and the relics then scale — a Tonic bought on floor one is worth more by
-	// floor four, exactly as the duelist's own record is. That is the one thing to move if the
+	// portal bonus grows and the relics then scale — a Tonic bought on realm one is worth more by
+	// realm four, exactly as the duelist's own record is. That is the one thing to move if the
 	// compounding turns out to be too much: dropping these two lines below the scaling makes a
 	// potion worth its face figure forever.
 	d.DMG += s.dmgBonus
@@ -471,7 +471,7 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	// **A relic may move it for the fight, and does so without writing to the run.** The run's own
 	// number is the base and the worn set's deltas are summed over the top of it each time a
 	// fighter is put together, so selling the relic gives the rounds straight back — where a relic
-	// that called SetRoundLimit would leave the clock moved for the rest of the climb. Same shape
+	// that called SetRoundLimit would leave the clock moved for the rest of the journey. Same shape
 	// as AddedHP and HPScale above. See combat.DoAdjustRoundLimit.
 	d.RoundLimit = combat.RoundLimitFor(worn, s.roundLimit)
 
@@ -575,7 +575,7 @@ const maxPropagation = 5
 
 // growRelics is the other half of `fight-won`: every growing relic's accumulator takes its step.
 //
-// **Uncapped, by decision** *(2026-08-17)* — +5 a fight reaches +100 by the top of the tower and that
+// **Uncapped, by decision** *(2026-08-17)* — +5 a fight reaches +100 by the top of the journey and that
 // is the intent, not an overflow.
 func (s *Session) growRelics() {
 	for _, key := range s.worn {

@@ -1,10 +1,10 @@
 package session
 
-// **What the climb does to the body between fights** *(owner's call, 2026-09-06).*
+// **What the journey does to the body between fights** *(owner's call, 2026-09-06).*
 //
 // A duel used to start at full life whatever the last one cost, so damage was a fact about one
-// round and never about the run. It is a fact about the *floor* now: a wound is carried out of a
-// room and into the next one, and the only thing that takes it away is beating the floor's
+// round and never about the run. It is a fact about the *realm* now: a wound is carried out of a
+// room and into the next one, and the only thing that takes it away is beating the realm's
 // portal protector. See MECHANICS.md §Life between fights.
 //
 // **The wound is stored, not the life left.** `MaxLife` is rebuilt from the record every visit and
@@ -14,13 +14,13 @@ package session
 // one: a run that has not been hurt yet is healthy, where a stored life of zero would be a corpse.
 //
 // **The boss bonus is a count, not a number.** `bossWins` is how many portal rooms the run has
-// climbed and the multiplier is derived from it, for the reason the floor is derived from the room
+// cleared and the multiplier is derived from it, for the reason the realm is derived from the room
 // counter: a stored product is a second copy of the same fact, and it is the copy that goes stale.
 
-// bossLifePct is what beating a floor's boss does to the ceiling, as a percentage of what the
-// ceiling already was — so it compounds, floor on floor *(owner's call, 2026-09-06)*. A run that
+// bossLifePct is what beating a realm's boss does to the ceiling, as a percentage of what the
+// ceiling already was — so it compounds, realm on realm *(owner's call, 2026-09-06)*. A run that
 // clears seven portal rooms is carrying about seven and a half times the body it started with, which
-// is the curve the ascent's own scaling is meant to be climbed against.
+// is the curve the growth curve's own scaling is meant to be played against.
 const bossLifePct = 133
 
 // LifeAtFightStart is the life a duelist walks into a room with, given the ceiling they are walking

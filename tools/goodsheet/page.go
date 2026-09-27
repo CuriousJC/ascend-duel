@@ -21,7 +21,7 @@ import "html/template"
 // the stone sheet's argument on the other axis: the gap is the finding.
 var tmpl = template.Must(template.New("goodsheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — sealed goods sheet</title>
+<title>Duello — sealed goods sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};

@@ -13,7 +13,7 @@ package screens
 //
 // **What it says is what a bug report needs to be able to repeat**: what happened, which run, and
 // where the file went. The stack is in the file rather than on the screen — a wall of frames in
-// front of somebody who has just lost a climb tells them nothing and reads as blame.
+// front of somebody who has just lost a journey tells them nothing and reads as blame.
 //
 // **There is no way back.** A crashed process is a process whose state is not trustworthy, and a
 // button returning to the title screen would be an invitation to play on inside it. The way out is

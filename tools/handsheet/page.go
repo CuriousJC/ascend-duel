@@ -19,7 +19,7 @@ import "html/template"
 // multiplier beside them. It is square-rooted, for the reason bar() in main.go gives.
 var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — hand sheet</title>
+<title>Duello — hand sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};

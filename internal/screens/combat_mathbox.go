@@ -151,7 +151,7 @@ const (
 	// mathBoldMinStep is the smallest faux-bold offset, in pixels. **Bold is the same run drawn
 	// again a step to the right** — the pane's own idiom, and for the pane's own reason: `text/v2`
 	// has no synthetic bold and kubasta ships one weight. The step is scaled off the type size
-	// above this floor, because a one-pixel thickening on an 80-point word is not visible at all.
+	// above this realm, because a one-pixel thickening on an 80-point word is not visible at all.
 	mathBoldMinStep  = 1
 	mathBoldSizeStep = 32 // one pixel of thickening per this many points
 
@@ -699,7 +699,7 @@ func hitOutcomes(log []combat.Event, at int) map[int]int {
 // raiseDMGSignal throws the figure a rung relic put into this turn's DMG, out of the relic and onto
 // the duelist card's DMG row.
 //
-// **The climb is what it is worth to this turn, not the relic's own number** — see
+// **The journey is what it is worth to this turn, not the relic's own number** — see
 // combat.Event.DMGRaise, which is the distance the riders left between the two figures.
 func (s *CombatScene) raiseDMGSignal(e combat.Event) {
 	raise := e.DMGRaise()

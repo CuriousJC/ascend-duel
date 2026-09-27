@@ -160,7 +160,7 @@ func TestTheLockIsDerivedFromTheCondition(t *testing.T) {
 func TestAReadStepLocksTheScreen(t *testing.T) {
 	parkTutorial(t)
 	s, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
-		{StepRecord: "rooms", Text: "eight floors", Until: "next", Anchor: "tower-place"},
+		{StepRecord: "rooms", Text: "eight realms", Until: "next", Anchor: "journey-place"},
 	}})
 	if err != nil {
 		t.Fatal(err)

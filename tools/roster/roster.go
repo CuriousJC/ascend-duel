@@ -20,9 +20,9 @@
 //
 // # What to look at
 //
-// **The stat line against the floor.** The whole roster is hand-assigned, so the review question
-// is whether floor 5's creatures are actually dearer than floor 4's — which an alphabetical list
-// of ninety-six records cannot answer and a page grouped by floor can.
+// **The stat line against the realm.** The whole roster is hand-assigned, so the review question
+// is whether realm 5's creatures are actually dearer than realm 4's — which an alphabetical list
+// of ninety-six records cannot answer and a page grouped by realm can.
 //
 // **The deck beside the stats.** An enemy's personality is what it holds; `Copies` is the
 // difficulty dial and it is sharper than it looks, since four copies of a 1 AP card in one turn
@@ -90,7 +90,7 @@ type Pool struct {
 	// Blurb is the paragraph under the heading, saying what this page is for.
 	Blurb string
 
-	// GroupLabel is what a section of the page is a group of — "floor band", "floor".
+	// GroupLabel is what a section of the page is a group of — "realm band", "realm".
 	GroupLabel string
 
 	// Entries reads the catalog, in the order the page should show it.
@@ -135,16 +135,16 @@ type Entry struct {
 	Actions int
 	HP      int
 
-	// Group is the sort key the page's sections are cut on, and Floors is how that section is
-	// written. A section is one motif, ordered by the floor its band opens on.
+	// Group is the sort key the page's sections are cut on, and Realms is how that section is
+	// written. A section is one motif, ordered by the realm its band opens on.
 	Group  int
-	Floors string
+	Realms string
 
-	// Band is the same band as a pair of floors, which is what the floor chips are matched
-	// against. Written out rather than parsed back off Floors, which is prose.
+	// Band is the same band as a pair of realms, which is what the realm chips are matched
+	// against. Written out rather than parsed back off Realms, which is prose.
 	Band [2]int
 
-	// Motif is which file this record came from, and Tier is which of a floor's three rooms it can
+	// Motif is which file this record came from, and Tier is which of a realm's three rooms it can
 	// stand in.
 	Motif string
 	Tier  string
@@ -154,17 +154,17 @@ type Entry struct {
 
 // MotifPool is every record in every motif file, motif by motif, shallowest band first.
 //
-// **Cut by motif rather than by floor**, because a motif is the unit a floor is built from: a
-// floor takes one whole motif and one element, so the question this page answers is whether one
-// motif's three rooms read as a climb and whether its creatures look like each other.
+// **Cut by motif rather than by realm**, because a motif is the unit a realm is built from: a
+// realm takes one whole motif and one element, so the question this page answers is whether one
+// motif's three rooms read as a journey and whether its creatures look like each other.
 var MotifPool = Pool{
 	Name:       "motif",
 	Title:      "Motif sheet",
 	GroupLabel: "motif",
 	Blurb: "The whole roster, motif by motif: every creature's card as the game draws it, its " +
-		"stat line, the colours it can be dealt as, and the deck it fights with. A floor takes " +
+		"stat line, the colours it can be dealt as, and the deck it fights with. A realm takes " +
 		"one motif and one element and holds three fights, so the questions this page answers " +
-		"are whether a motif's outer, inner and portal records read as a climb, and whether " +
+		"are whether a motif's outer, inner and portal records read as a journey, and whether " +
 		"every one of its fights can be dealt at least two ways.",
 	Entries: func() []Entry {
 		motifs := data.LoadMotifs()
@@ -186,8 +186,8 @@ var MotifPool = Pool{
 					Portrait: r.ArtKey(element), Portraits: portraits,
 					Element: element, Elements: r.Affinities,
 					DMG: r.DMG, Actions: r.Actions, HP: r.HP,
-					Group: m.ValidFloors[0], Floors: m.Name + " — " + floorBand(m.ValidFloors),
-					Band:  m.ValidFloors,
+					Group: m.ValidRealms[0], Realms: m.Name + " — " + realmBand(m.ValidRealms),
+					Band:  m.ValidRealms,
 					Motif: m.Motif, Tier: r.Tier,
 					Cards: r.Cards,
 				})
@@ -197,17 +197,17 @@ var MotifPool = Pool{
 	},
 }
 
-// floorBand writes a [2]int range the way the page reads it. A zero range means every floor —
-// see EnemyData.AllowsFloor, where a record written without the field is fightable rather than
-// unreachable — and the page has to say so rather than printing "Floors 0-0".
-func floorBand(f [2]int) string {
+// realmBand writes a [2]int range the way the page reads it. A zero range means every realm —
+// see EnemyData.AllowsRealm, where a record written without the field is fightable rather than
+// unreachable — and the page has to say so rather than printing "Realms 0-0".
+func realmBand(f [2]int) string {
 	switch {
 	case f == [2]int{}:
-		return "Any floor"
+		return "Any realm"
 	case f[0] == f[1]:
-		return "Floor " + strconv.Itoa(f[0])
+		return "Realm " + strconv.Itoa(f[0])
 	default:
-		return "Floors " + strconv.Itoa(f[0]) + "–" + strconv.Itoa(f[1])
+		return "Realms " + strconv.Itoa(f[0]) + "–" + strconv.Itoa(f[1])
 	}
 }
 
@@ -395,8 +395,8 @@ func anyDrawn(e Entry, list []string) bool {
 // elementRow composites the record's remaining colours into one picture, at the strip's own pitch
 // so the names the page prints under it land on the cards without measuring anything.
 //
-// **The cards only, never the deck.** A deck is the same cards whatever colour the floor deals
-// them — the element is the floor's and the whole pile takes it — so repeating it under every
+// **The cards only, never the deck.** A deck is the same cards whatever colour the realm deals
+// them — the element is the realm's and the whole pile takes it — so repeating it under every
 // colour would be four copies of one reading.
 func elementRow(f *cards.Faces, e Entry, list []string) (*image.RGBA, error) {
 	drawn := make([]*image.RGBA, 0, len(list))

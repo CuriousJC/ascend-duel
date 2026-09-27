@@ -12,18 +12,18 @@ import (
 // The three axes the roster is narrowed on, and the attributes the page tags with.
 //
 // **Every value is counted off the entries rather than listed here.** A motif authored onto a
-// ninth floor puts a ninth chip on the page with nothing edited, and an element no record can be
+// ninth realm puts a ninth chip on the page with nothing edited, and an element no record can be
 // dealt as is not offered — which is the same rule the coverage grid is under: the page reports
 // the catalog, it does not describe it.
 //
-// **Floor is a fact about the motif and the other two are facts about the record**, which is what
-// the group and item split in sheetfilter is for: the floor chips cut whole sections out, and tier
+// **Realm is a fact about the motif and the other two are facts about the record**, which is what
+// the group and item split in sheetfilter is for: the realm chips cut whole sections out, and tier
 // and element cut plates inside whatever sections are left.
 
 // facetsFor builds the chip bar's contents out of the catalog it is about to draw.
 func facetsFor(entries []Entry) []sheetfilter.Facet {
 	var out []sheetfilter.Facet
-	if f, ok := floorFacet(entries); ok {
+	if f, ok := realmFacet(entries); ok {
 		out = append(out, f)
 	}
 	if f, ok := tierFacet(entries); ok {
@@ -35,13 +35,13 @@ func facetsFor(entries []Entry) []sheetfilter.Facet {
 	return out
 }
 
-// floorFacet offers every floor any motif can theme, ascending, with the number of records that
+// realmFacet offers every realm any motif can theme, ascending, with the number of records that
 // can be met on it.
-func floorFacet(entries []Entry) (sheetfilter.Facet, bool) {
+func realmFacet(entries []Entry) (sheetfilter.Facet, bool) {
 	lo, hi := span(entries)
 	counts := map[int]int{}
 	for _, e := range entries {
-		for _, f := range floorsOf(e.Band, lo, hi) {
+		for _, f := range realmsOf(e.Band, lo, hi) {
 			counts[f]++
 		}
 	}
@@ -49,14 +49,14 @@ func floorFacet(entries []Entry) (sheetfilter.Facet, bool) {
 		return sheetfilter.Facet{}, false
 	}
 
-	floors := make([]int, 0, len(counts))
+	realms := make([]int, 0, len(counts))
 	for f := range counts {
-		floors = append(floors, f)
+		realms = append(realms, f)
 	}
-	sort.Ints(floors)
+	sort.Ints(realms)
 
-	f := sheetfilter.Facet{Key: "floor", Label: "floor"}
-	for _, n := range floors {
+	f := sheetfilter.Facet{Key: "realm", Label: "realm"}
+	for _, n := range realms {
 		f.Values = append(f.Values, sheetfilter.Value{
 			Value: strconv.Itoa(n), Label: strconv.Itoa(n), Count: counts[n],
 		})
@@ -64,7 +64,7 @@ func floorFacet(entries []Entry) (sheetfilter.Facet, bool) {
 	return f, true
 }
 
-// tierFacet offers the three rooms of a floor, in the order they are fought.
+// tierFacet offers the three rooms of a realm, in the order they are fought.
 func tierFacet(entries []Entry) (sheetfilter.Facet, bool) {
 	counts := map[string]int{}
 	for _, e := range entries {
@@ -104,13 +104,13 @@ func elementFacet(entries []Entry) (sheetfilter.Facet, bool) {
 	return f, len(f.Values) > 0
 }
 
-// floorsOf writes a band out as the floors in it, against the page's own span.
+// realmsOf writes a band out as the realms in it, against the page's own span.
 //
-// **A zero band is every floor the page knows about**, matching MotifData.AllowsFloor — a motif
+// **A zero band is every realm the page knows about**, matching MotifData.AllowsRealm — a motif
 // written without the field is fightable anywhere, so it has to answer every chip rather than
 // none. The span is the widest any authored band reaches, which is the only definition of "every
-// floor" a report on this catalog can have.
-func floorsOf(band [2]int, lo, hi int) []int {
+// realm" a report on this catalog can have.
+func realmsOf(band [2]int, lo, hi int) []int {
 	if band != [2]int{} {
 		lo, hi = band[0], band[1]
 	}
@@ -124,7 +124,7 @@ func floorsOf(band [2]int, lo, hi int) []int {
 	return out
 }
 
-// span is the lowest and highest floor any authored band reaches.
+// span is the lowest and highest realm any authored band reaches.
 func span(all []Entry) (lo, hi int) {
 	for _, e := range all {
 		if e.Band == [2]int{} {
@@ -140,11 +140,11 @@ func span(all []Entry) (lo, hi int) {
 	return lo, hi
 }
 
-// floorTokens is a band as the attribute the chips match against.
-func floorTokens(band [2]int, lo, hi int) string {
-	floors := floorsOf(band, lo, hi)
-	parts := make([]string, 0, len(floors))
-	for _, f := range floors {
+// realmTokens is a band as the attribute the chips match against.
+func realmTokens(band [2]int, lo, hi int) string {
+	realms := realmsOf(band, lo, hi)
+	parts := make([]string, 0, len(realms))
+	for _, f := range realms {
 		parts = append(parts, strconv.Itoa(f))
 	}
 	return strings.Join(parts, " ")

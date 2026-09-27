@@ -21,8 +21,8 @@ const defaultIdleSeconds = 120
 // idleEnvVar overrides the timeout, in whole seconds. Zero or negative disables closing
 // entirely, which is the escape hatch for a tagged build someone wants to sit and play.
 //
-//	ASCEND_DUEL_IDLE_SECONDS=30 go run -tags idleexit .
-const idleEnvVar = "ASCEND_DUEL_IDLE_SECONDS"
+//	DUELLO_IDLE_SECONDS=30 go run -tags idleexit .
+const idleEnvVar = "DUELLO_IDLE_SECONDS"
 
 var (
 	limit  = resolveLimit()

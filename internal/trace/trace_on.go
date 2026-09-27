@@ -23,7 +23,7 @@ const (
 	// slow — the point is to see the screen, not to film it.
 	frameEvery = 120
 
-	dirEnv     = "ASCEND_TRACE_DIR"
+	dirEnv     = "DUELLO_TRACE_DIR"
 	defaultDir = "trace"
 	frameName  = "frame.png"
 )

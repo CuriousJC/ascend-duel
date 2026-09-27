@@ -159,7 +159,7 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 			demo.shotEvery = demoShotFor * keyShotsPerRound
 		}
 		if demo.mode == demoShotsOff {
-			fmt.Println("demo: captures off (ASCEND_DUEL_DEMO_SHOTS=keys|all to write PNGs)")
+			fmt.Println("demo: captures off (DUELLO_DEMO_SHOTS=keys|all to write PNGs)")
 		} else {
 			demoClean()
 		}
@@ -288,8 +288,8 @@ func (s *CombatScene) demoPickRound() {
 // spacing, alignment.
 //
 //	go run -tags demoplay .                             # text report only
-//	ASCEND_DUEL_DEMO_SHOTS=keys go run -tags demoplay . # a handful of frames
-//	ASCEND_DUEL_DEMO_SHOTS=all  go run -tags demoplay . # one frame per event
+//	DUELLO_DEMO_SHOTS=keys go run -tags demoplay . # a handful of frames
+//	DUELLO_DEMO_SHOTS=all  go run -tags demoplay . # one frame per event
 type demoShotMode int
 
 const (
@@ -299,7 +299,7 @@ const (
 )
 
 func demoShotsWanted() demoShotMode {
-	switch os.Getenv("ASCEND_DUEL_DEMO_SHOTS") {
+	switch os.Getenv("DUELLO_DEMO_SHOTS") {
 	case "keys", "1", "true":
 		return demoShotsKeys
 	case "all":

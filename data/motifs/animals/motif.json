@@ -17,7 +17,7 @@
     "earth": "Mud-caked and root-bound, as though the ground itself is wearing them.",
     "arcane": "Purple magic soaks them through, and they glow with it."
   },
-  "ValidFloors": [
+  "ValidRealms": [
     1,
     6
   ],

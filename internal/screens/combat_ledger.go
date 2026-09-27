@@ -27,9 +27,9 @@ func (s *CombatScene) openLedgerFight(gs *state.GlobalState) {
 		return
 	}
 	s.ledgerWritten, s.ledgerClosed = false, false
-	// **`Floor()` is already the floor, counting from one.** It was `+1` for a few hours and made
-	// every heading name the floor above the one the fight was on.
-	gs.Run.BeginFight(gs.Run.Floor(), s.enemy.Name)
+	// **`Realm()` is already the realm, counting from one.** It was `+1` for a few hours and made
+	// every heading name the realm above the one the fight was on.
+	gs.Run.BeginFight(gs.Run.Realm(), s.enemy.Name)
 }
 
 // recordRound writes the round that has just been watched into the account, once.

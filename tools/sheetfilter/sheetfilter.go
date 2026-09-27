@@ -5,7 +5,7 @@
 //
 // Every page under docs/sheets/ shows a whole catalog, grouped on the one axis its review is
 // conducted along — relics by family, the roster by motif, stones by axis. That is the right
-// default and it is not the only question asked of a catalog: "what does floor 1 actually field"
+// default and it is not the only question asked of a catalog: "what does realm 1 actually field"
 // and "show me the rares together" are both questions about a slice, and the answer today is
 // scrolling past everything else.
 //
@@ -30,10 +30,10 @@
 //
 // An attribute holds a space-separated token list, so a record answering several values of one
 // facet — a creature dealt as four elements — carries all of them. **An element with no attribute
-// for a facet is not filtered by it**, which is what lets a group be cut on the floor band while
+// for a facet is not filtered by it**, which is what lets a group be cut on the realm band while
 // the plates inside it are cut on tier.
 //
-// Selected values within one facet are an OR and facets are an AND, which is what makes "floor 1,
+// Selected values within one facet are an OR and facets are an AND, which is what makes "realm 1,
 // boss, fire or ice" one reading. A group survives if it matches on its own attributes and still
 // holds a visible record.
 package sheetfilter
@@ -46,15 +46,15 @@ import (
 
 // Facet is one axis a page can be narrowed on.
 type Facet struct {
-	// Key is the attribute the page tags its elements with, without the `data-` — "floor" reads
-	// `data-floor`. Lowercase, no spaces.
+	// Key is the attribute the page tags its elements with, without the `data-` — "realm" reads
+	// `data-realm`. Lowercase, no spaces.
 	Key string
 
 	// Label is what the row of chips is called.
 	Label string
 
 	// Values are the chips, in the order they should be offered. That order is the page's to
-	// decide: a floor is ascending, a rarity is cheapest-first, and neither is alphabetical.
+	// decide: a realm is ascending, a rarity is cheapest-first, and neither is alphabetical.
 	Values []Value
 }
 

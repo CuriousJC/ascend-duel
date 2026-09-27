@@ -83,7 +83,7 @@ var sheets = []sheet{
 		Tool:  "./tools/motifsheet",
 		Title: "Motif sheet",
 		Blurb: "The whole roster, motif by motif: the card the game draws, the stat line, the " +
-			"colours each record can be dealt as, and the deck it fights with. A floor takes one " +
+			"colours each record can be dealt as, and the deck it fights with. A realm takes one " +
 			"motif and one element and holds three fights, so this is where a motif is read as a " +
 			"climb and where its coverage grid is checked.",
 	},
@@ -92,7 +92,7 @@ var sheets = []sheet{
 		Tool:  "./tools/motifreport",
 		Title: "Motif report",
 		Blurb: "How full each motif is and what is still to do: briefs still TBD, creatures with no " +
-			"picture, and which of a floor's fifteen fights have a room of their own and which " +
+			"picture, and which of a realm's fifteen fights have a room of their own and which " +
 			"fall back to the default backdrop. **Draws no pictures** — the motif sheet is where a " +
 			"creature is looked at; this is the worklist beside it.",
 	},
@@ -101,7 +101,7 @@ var sheets = []sheet{
 		Tool:  "./tools/backdropsheet",
 		Title: "Backdrop sheet",
 		Blurb: "Every room a motif's fights are drawn in front of, once per element, beside the " +
-			"brief it was painted from. A room is met in one element per floor, so this is the only " +
+			"brief it was painted from. A room is met in one element per realm, so this is the only " +
 			"place its pictures are seen together — and a picture still to paint is shown as the " +
 			"default backdrop the fight really draws.",
 	},
@@ -266,7 +266,7 @@ type index struct {
 // pixel of design on it is a pixel not spent on the sheets it points at.
 var tmpl = template.Must(template.New("index").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — review sheets</title>
+<title>Duello — review sheets</title>
 <style>
   :root { --ground: #a8bcd4; --ink: #2c2822; --dim: #5a6472; --rule: #8fa3bd; --panel: #c6d5e6; }
   * { box-sizing: border-box; }

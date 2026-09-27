@@ -3,10 +3,10 @@ package screens
 // The settings screen: how loud the score is, how fast the game moves, and the way back.
 //
 // **It is the program's screen, not a run's.** Every other scene in this package is a station of
-// a climb — a duel, a reward, a shop — and is reached by `advance` walking the run forward. This
+// a journey — a duel, a reward, a shop — and is reached by `advance` walking the run forward. This
 // one is reached from the cog in the game's chrome, from any screen, and it puts the player back
 // exactly where they were: see `state.ReturnScreen`. The run's phase is never touched, which is
-// what makes opening it mid-climb a look at a dialog rather than a decision.
+// what makes opening it mid-journey a look at a dialog rather than a decision.
 //
 // **Two controls today, and the third is expected.** Music and speed are the two things the game
 // already has; combat sounds are not built, so there is no bar for them — a slider setting a
@@ -18,7 +18,7 @@ package screens
 // under, and it is the reason a game-speed control is safe to offer at all.
 //
 // **Abandon Run is the one thing on this screen that is not a setting, and it is deliberate**
-// *(owner's call, 2026-09-03)*. The game had no way to give up a climb and start over — quitting
+// *(owner's call, 2026-09-03)*. The game had no way to give up a journey and start over — quitting
 // meant the window's X, and the next launch resumed exactly where it left off — and this is the
 // one screen reachable from everywhere, which is what a "give up" control has to be.
 //
@@ -27,7 +27,7 @@ package screens
 // than pretended away — the button stands below a rule, in the destructive red, with its own
 // confirm in front of it, so it reads as a different kind of thing from the two bars. It is also
 // the only thing on this screen that touches `gs.Run`, and it does so by calling `AbandonRun`
-// rather than by knowing anything about a climb. See run.go.
+// rather than by knowing anything about a journey. See run.go.
 
 import (
 	"fmt"
@@ -258,7 +258,7 @@ func (s *SettingsScene) toggleFullscreen(gs *state.GlobalState) {
 
 func (s *SettingsScene) Update(gs *state.GlobalState) error {
 	// **The question owns the screen while it is up**, exactly as it does on the title. A drag
-	// reaching a bar through the dialog would be a volume changed while being asked about a climb.
+	// reaching a bar through the dialog would be a volume changed while being asked about a journey.
 	if s.confirm.IsOpen() {
 		s.confirm.Update(gs)
 		return nil
@@ -280,7 +280,7 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 	s.full.Latched = Fullscreen()
 
 	// **Dead with no run to give up.** Settings is reachable from the title screen, where there may
-	// be no climb at all — and a control that works and does nothing is worse than one that says it
+	// be no journey at all — and a control that works and does nothing is worse than one that says it
 	// has nothing to do.
 	ui.SetEnabled(s.abandon, gs.Run != nil)
 	s.abandon.Text = abandonLabel(gs)
@@ -351,7 +351,7 @@ func abandonLabel(gs *state.GlobalState) string {
 }
 
 // askAbandon puts the question up. **There is no path from the button to AbandonRun that does not
-// go through here** — a climb is thrown away by this and by nothing else in the game, so a misclick
+// go through here** — a journey is thrown away by this and by nothing else in the game, so a misclick
 // on a screen the player opened to turn the music down must not be able to end their run.
 func (s *SettingsScene) askAbandon(gs *state.GlobalState) {
 	if gs.Run == nil {
@@ -359,7 +359,7 @@ func (s *SettingsScene) askAbandon(gs *state.GlobalState) {
 	}
 	s.confirm.Ask(
 		"ABANDON THIS RUN?",
-		"The climb will be lost. You will see what it came to first.",
+		"The journey will be lost. You will see what it came to first.",
 		settingsAbandonLabel,
 		func() { AbandonRun(gs) },
 	)

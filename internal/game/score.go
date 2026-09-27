@@ -38,7 +38,7 @@ package game
 // answer to "what plays where", and a screen answered by a zero value is a screen this page does
 // not mention — which is how the score came to be the music on nearly every screen and the one
 // piece not written down anywhere near the decision. A screen missing from the table still gets
-// the score rather than silence; that is a floor under a mistake, not a way to spell an
+// the score rather than silence; that is a realm under a mistake, not a way to spell an
 // intention.
 
 import (

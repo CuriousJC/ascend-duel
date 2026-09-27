@@ -1728,7 +1728,7 @@ func TestATermSplitsIntoTheDMGAndTheCardsMultiplier(t *testing.T) {
 	}
 }
 
-// **The climb the duelist's figure makes is what the relic was worth to this blow**, which is the
+// **The journey the duelist's figure makes is what the relic was worth to this blow**, which is the
 // figure the screen flies onto the card. With no relic there is no climb at all.
 func TestARungRelicRaisesTheDMGTheBlowIsSwungAt(t *testing.T) {
 	trips, _ := HandIDForKey("concept-three-of-a-kind")

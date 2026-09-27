@@ -17,7 +17,7 @@
     "earth": "Green scales, and hides like mountainside.",
     "arcane": "Purple scales set with gems. Old, clever and patient."
   },
-  "ValidFloors": [5, 8],
+  "ValidRealms": [5, 8],
   "Records": [
     {
       "Record": "draconics-outer-whelp",

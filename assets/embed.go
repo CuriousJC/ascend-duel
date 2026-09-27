@@ -32,9 +32,6 @@ import (
 //go:embed game/title.png
 var title_png []byte
 
-//go:embed game/title-easter-egg.png
-var titleEaster_png []byte
-
 // BAR CELLS
 //
 // The three states a resource bar's cell can be in — a point still to spend, a point spent, a
@@ -54,7 +51,7 @@ var barCellOver_png []byte
 // THE GUIDE
 //
 // The guide: the face on the tutorial's speech bubble. **A named one-off rather than a member of
-// the creature family**, because it is not an opponent — nothing places it on a floor and nothing
+// the creature family**, because it is not an opponent — nothing places it on a realm and nothing
 // fights it, and filing it under `motifs/` would put it in the tree the roster is read against,
 // where a picture with no record behind it is a record somebody has lost.
 //
@@ -145,7 +142,7 @@ var wildcardupgrade_png []byte
 //
 // **Keyed by filename stem, and the directory is not part of the key.**
 // `motifs/goblins/creature/goblins-serf-fire.png` is `goblins-serf-fire`, which is what
-// `data.MotifRecord.ArtKey` builds out of the record's `Art` field and the element the floor dealt
+// `data.MotifRecord.ArtKey` builds out of the record's `Art` field and the element the realm dealt
 // it as; `motifs/goblins/backdrop/goblins-outer-tinker-studio-fire.jpg` is `goblins-outer-tinker-studio-fire`,
 // which is what `data.Backdrop.ArtKey` builds the same way. So a file can be refiled without
 // touching a record, and two files anywhere in the tree sharing a stem are one lookup with two
@@ -297,8 +294,8 @@ var defaulteffect_png []byte
 // at startup. That is why a whole track is a kilobyte and why there is no soundfont
 // here whose license would have to be cleared before the game could be sold.
 //
-//go:embed sounds/ascending.mid
-var ascending_mid []byte
+//go:embed sounds/duello.mid
+var duello_mid []byte
 
 // FONTS
 //
@@ -316,7 +313,6 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets := make(map[string]*ebiten.Image)
 
 	assets["title_png"] = loadImage(title_png)
-	assets["titleEaster_png"] = loadImage(titleEaster_png)
 	assets["barCellEmpty_png"] = loadImage(barCellEmpty_png)
 	assets["barCellSpent_png"] = loadImage(barCellSpent_png)
 	assets["barCellOver_png"] = loadImage(barCellOver_png)
@@ -344,7 +340,7 @@ func LoadAssets() map[string]*ebiten.Image {
 func LoadMusic() map[string][]byte {
 	music := make(map[string][]byte)
 
-	music["ascending_mid"] = ascending_mid
+	music["duello_mid"] = duello_mid
 
 	return music
 }

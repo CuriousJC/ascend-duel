@@ -8,7 +8,7 @@ import "fmt"
 type Stream int
 
 const (
-	// EnemySelect is the order the tower's opponents are met in, shuffled within each floor
+	// EnemySelect is the order the journey's opponents are met in, shuffled within each realm
 	// band. Per run: rolled once per launch, so a defeat and a retry walk the same order.
 	EnemySelect Stream = iota
 

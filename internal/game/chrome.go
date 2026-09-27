@@ -5,7 +5,7 @@ package game
 // **There are two things in it, and the bar for a third is the same as it was for these.** A frame is easy to
 // grow by accident, and the bar for joining it is high: something that is true for the whole
 // session, on every screen, and owned by no scene. The settings qualify — the score is started
-// once in main and loops across the title, the tower, the duel and the credits, and the game's
+// once in main and loops across the title, the journey, the duel and the credits, and the game's
 // one clock is the same number on every screen — so the control that opens them does too.
 // Anything that belongs to a screen belongs to that screen.
 //

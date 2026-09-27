@@ -118,7 +118,7 @@ type Record struct {
 	Action string `json:"action,omitempty"`
 
 	// Screen is the scene being drawn and Phase the station the run stands at, both as words
-	// rather than as the append-only ordinals they are held as. Fight is which room of the climb.
+	// rather than as the append-only ordinals they are held as. Fight is which room of the journey.
 	Screen string `json:"screen,omitempty"`
 	Phase  string `json:"phase,omitempty"`
 	Fight  int    `json:"fight,omitempty"`
@@ -147,7 +147,7 @@ type Header struct {
 	UTC      string `json:"utc"`
 
 	// Resumed says this header opened a file that already had a run in it, which is the one thing
-	// a reader cannot work out from the records underneath: two headers in one file is a climb
+	// a reader cannot work out from the records underneath: two headers in one file is a journey
 	// played across two launches, not two runs.
 	Resumed bool `json:"resumed,omitempty"`
 }

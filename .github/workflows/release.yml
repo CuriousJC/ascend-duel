@@ -242,13 +242,13 @@ jobs:
         run: |
           go build -trimpath \
             -ldflags "-H=windowsgui -s -w -X main.version=${VERSION}" \
-            -o "ascend-duel-${VERSION}-windows-amd64.exe" .
-          ls -l ascend-duel-*.exe
+            -o "duello-${VERSION}-windows-amd64.exe" .
+          ls -l duello-*.exe
 
       - uses: actions/upload-artifact@v6
         with:
           name: windows
-          path: ascend-duel-*.exe
+          path: duello-*.exe
           if-no-files-found: error
 
   linux:
@@ -327,14 +327,14 @@ jobs:
         run: |
           go build -trimpath \
             -ldflags "-s -w -X main.version=${VERSION}" \
-            -o ascend-duel .
-          tar czf "ascend-duel-${VERSION}-linux-amd64.tar.gz" ascend-duel
-          ls -l ascend-duel-*.tar.gz
+            -o duello .
+          tar czf "duello-${VERSION}-linux-amd64.tar.gz" duello
+          ls -l duello-*.tar.gz
 
       - uses: actions/upload-artifact@v6
         with:
           name: linux
-          path: ascend-duel-*.tar.gz
+          path: duello-*.tar.gz
           if-no-files-found: error
 
   publish:

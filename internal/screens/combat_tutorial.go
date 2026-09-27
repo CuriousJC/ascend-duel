@@ -94,14 +94,14 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		return one(ui.EnemyCardRect(gs)), true
 	case tutorial.AnchorDuelistCard:
 		return one(ui.DuelistCardRect(gs)), true
-	case tutorial.AnchorTowerPlace:
-		// **The duelist card, since 2026-09-15**: the floor and the room are two of its stat rows
+	case tutorial.AnchorJourneyPlace:
+		// **The duelist card, since 2026-09-15**: the realm and the room are two of its stat rows
 		// now rather than two lines on the ground under it. The anchor keeps its name because an
 		// anchor names what the step is *asking for* — "where you are" — and that has not changed;
 		// what moved is where the answer is written. It lights the same rectangle AnchorDuelistCard
 		// does, and the two stay separate entries for that reason: they are different questions
 		// that currently share an answer, and a script merging them would have to be re-authored
-		// the day the floor gets a seat of its own again.
+		// the day the realm gets a seat of its own again.
 		return one(ui.DuelistCardRect(gs)), true
 	case tutorial.AnchorRoundTimer:
 		// **The whole bar rather than the cell about to light.** What the step is teaching is the

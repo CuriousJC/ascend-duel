@@ -54,7 +54,7 @@ func TestARunSurvivesARoundTrip(t *testing.T) {
 	}
 }
 
-// TestACorruptRunIsNoRun is the harder line the run takes than the profile: half a tower is worse
+// TestACorruptRunIsNoRun is the harder line the run takes than the profile: half a journey is worse
 // than none, and losing it costs one run rather than a career.
 func TestACorruptRunIsNoRun(t *testing.T) {
 	dir := t.TempDir()

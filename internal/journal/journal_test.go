@@ -80,7 +80,7 @@ func TestStartingARunTakesTheFileAndResumingOneKeepsIt(t *testing.T) {
 	j.Begin(Header{RunCode: "0009D4"})
 	j.Write(Record{Kind: KindDuel})
 
-	// **Resuming appends**, because the journal on disk belongs to the same climb and a Continue
+	// **Resuming appends**, because the journal on disk belongs to the same journey and a Continue
 	// that cleared it would throw away everything before this launch.
 	j.Resume(Header{RunCode: "0009D4"})
 	if got := len(kinds(t, dir)); got != 3 {
@@ -110,7 +110,7 @@ func TestAResumedHeaderSaysSoAndAFreshOneDoesNot(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Two headers in one file is one climb played across two launches, and this is the only thing
+	// Two headers in one file is one journey played across two launches, and this is the only thing
 	// that says which is which.
 	if first.Resumed || !second.Resumed {
 		t.Fatalf("headers read resumed=%v then %v, want false then true", first.Resumed, second.Resumed)

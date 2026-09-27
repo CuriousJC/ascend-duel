@@ -17,7 +17,7 @@
     "earth": "Green feathers and a crest of stone. They hit like falling rock.",
     "arcane": "Purple feathers and a crest of gems, and something older than birds behind their eyes."
   },
-  "ValidFloors": [2, 7],
+  "ValidRealms": [2, 7],
   "Records": [
     {
       "Record": "avians-outer-crow",

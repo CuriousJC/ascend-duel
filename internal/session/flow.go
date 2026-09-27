@@ -2,7 +2,8 @@ package session
 
 // **Where the run is in its loop, and the one place that moves it on.**
 //
-// The loop is: fight a duel, take a reward, visit the shop, choose the room ahead, fight again.
+// The loop is: fight a duel, take a reward, visit the shop, fight again — and after a portal room,
+// choose which realm comes next before the fight.
 // Every scene in it used to name its own successor — the combat screen set PostBattle, the
 // post-battle screen set Combat — which meant the shape of the game was four hardcoded jumps in
 // four files and nothing anywhere answered "where is this run". Inserting a fifth scene meant
@@ -34,12 +35,14 @@ const (
 	// phase leaving the scenes was for.
 	PhaseShop
 
-	// PhaseChoice is picking the room ahead, which shapes the opponent in it. Not built yet.
-	PhaseChoice
+	// PhasePortal is choosing which realm comes next: after a portal room is won, the two motifs
+	// its portals open onto. **It is a station of the loop that is only stood at after a portal
+	// room** — after an outer or an inner room, Advance walks straight past it. See PortalDue.
+	PhasePortal
 )
 
 // phaseNames is what each phase is called, for traces and for the day a run is written down.
-var phaseNames = [...]string{"fight", "reward", "shop", "choice"}
+var phaseNames = [...]string{"fight", "reward", "shop", "portal"}
 
 func (p Phase) String() string {
 	if p < 0 || int(p) >= len(phaseNames) {
@@ -53,7 +56,7 @@ func (p Phase) String() string {
 // **The loop is data rather than a switch** so that adding a station is one entry here — which is
 // the whole reason the phase left the screens. A scene that is not built yet still holds its place
 // in the order; what decides whether it is *shown* is whether `screens` has one registered for it.
-var order = []Phase{PhaseFight, PhaseReward, PhaseShop, PhaseChoice}
+var order = []Phase{PhaseFight, PhaseReward, PhaseShop, PhasePortal}
 
 // Phase is where the run is.
 func (s *Session) Phase() Phase { return s.phase }
@@ -77,13 +80,22 @@ func (s *Session) Advance() {
 		s.ClaimSpoils()
 	}
 
-	for i, p := range order {
-		if p == s.phase {
-			s.phase = order[(i+1)%len(order)]
-			return
+	s.phase = s.after(s.phase)
+	// **The portal is only stood at when one is open.** After an outer or an inner room there is no
+	// choice to make, so the loop goes straight on to the next fight.
+	if s.phase == PhasePortal && !s.PortalDue() {
+		s.phase = s.after(s.phase)
+	}
+}
+
+// after is the station that follows p in the loop.
+func (s *Session) after(p Phase) Phase {
+	for i, q := range order {
+		if q == p {
+			return order[(i+1)%len(order)]
 		}
 	}
-	s.phase = order[0]
+	return order[0]
 }
 
 // SetPhase puts the run at a named station. **For the title screen starting a run and for tests**

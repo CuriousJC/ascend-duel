@@ -9,6 +9,14 @@
     "earth": "covered in mud with rootlike structures in their body",
     "arcane": "magical energy suffusing their whole body and glowing purple"
   },
+  "Text": "Ordinary beasts grown far too large: rats, boars, wolves and bears big enough to bring down a grown duelist.",
+  "ElementText": {
+    "fire": "Fire trails from their feet and smoke from their jaws.",
+    "ice": "Spikes of ice have grown out through every joint.",
+    "lightning": "Sparks snap at their joints with every step.",
+    "earth": "Mud-caked and root-bound, as though the ground itself is wearing them.",
+    "arcane": "Purple magic soaks them through, and they glow with it."
+  },
   "ValidFloors": [
     1,
     6

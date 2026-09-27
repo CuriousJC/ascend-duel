@@ -12,7 +12,7 @@ package ui
 // computes nothing.
 //
 // **It is not the fight log's, either.** The log is one caller. A shop describing what a relic
-// does, and a room choice describing what an affix does, want the same vocabulary — which is
+// does, and a portal describing what a realm holds, want the same vocabulary — which is
 // why this is its own file rather than a section of combat_log.go.
 //
 // Split out of combat_panes.go on 2026-08-21, which held the prose and the pane widget together.

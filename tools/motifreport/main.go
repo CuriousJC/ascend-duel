@@ -163,6 +163,21 @@ func report(m data.MotifData, pictures map[string]bool) plate {
 		}
 	}
 
+	// The portal's two lines, which are what a player reads rather than what an artist is given —
+	// counted as briefs because an unwritten one is a gap on a screen, exactly as a missing Draw is
+	// a gap on a card.
+	p.Score.Briefs.count(written(m.Text))
+	if !written(m.Text) {
+		p.Todo = append(p.Todo, todo{"brief", "the motif's portal Text"})
+	}
+	for _, e := range data.AffinityElements {
+		ok := written(m.ElementText[e])
+		p.Score.Briefs.count(ok)
+		if !ok {
+			p.Todo = append(p.Todo, todo{"brief", "the motif's portal ElementText for " + e})
+		}
+	}
+
 	// The creatures.
 	cov := data.CoverageOf(m)
 	for _, r := range m.Records {

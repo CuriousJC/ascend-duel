@@ -7,10 +7,13 @@ package session
 // other screen. It is a run's property — it outlives a fight the way the deck and the purse do —
 // so it is here, and the arithmetic behind it is `internal/pyramid`.
 //
-// **This is what the room choice writes to.** The scene after the shop shapes what comes next; it
-// will do that through a method here rather than by reaching into another screen's state.
+// **The offers are the seed's and the pick is the run's.** What a floor offers comes out of the
+// pyramid, a pure function of the run code; which portal the player walked through is `portals`,
+// written by TakePortal and saved with the run. Every question about the floor the run is on goes
+// through floorTheme, so nothing can read the seed's first offer where the player picked the second.
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -43,12 +46,11 @@ func Start(motifs map[string]data.MotifData, tower data.TowerData, runSeed int64
 	return s
 }
 
-// newClimb is the fight order a run seed produces.
+// newClimb is what a run seed offers on every floor.
 //
-// **One function so a resumed run and a new one cannot roll it differently** *(2026-08-25)*. The
-// climb is not saved — it is rebuilt from the run code — which is only safe while there is exactly
-// one expression that turns a seed into an order. Two would be two towers that agree until one of
-// them is edited.
+// **One function so a resumed run and a new one cannot roll it differently.** The offers are not
+// saved — they are rebuilt from the run code — which is only safe while there is exactly one
+// expression that turns a seed into them. The picks are saved; see Snapshot.
 func newClimb(motifs map[string]data.MotifData, tower data.TowerData, runSeed int64) *pyramid.Pyramid {
 	return pyramid.New(motifs, tower, rand.New(rand.NewSource(seeds.For(runSeed, seeds.EnemySelect))))
 }
@@ -75,7 +77,7 @@ func (s *Session) Enemy() string {
 	if s.climb == nil {
 		return ""
 	}
-	return s.climb.EnemyAt(s.fight)
+	return s.floorTheme(s.Floor()).Rooms[pyramid.RoomOf(s.fight)]
 }
 
 // Floor is which floor of the tower the run is on, counting from one.
@@ -90,7 +92,7 @@ func (s *Session) Element() string {
 	if s.climb == nil {
 		return ""
 	}
-	return s.climb.ElementAt(s.fight)
+	return s.floorTheme(s.Floor()).Element
 }
 
 // Motif is which motif themes the floor the run is on. Empty on a run with no climb.
@@ -98,5 +100,70 @@ func (s *Session) Motif() string {
 	if s.climb == nil {
 		return ""
 	}
-	return s.climb.FloorAt(s.Floor()).Motif
+	return s.floorTheme(s.Floor()).Motif
 }
+
+// floorTheme is the theme a floor is fought at: the offer the player walked through, or the floor's
+// first offer where no portal was taken — floor one, and a run jumped past a portal by a fixture.
+func (s *Session) floorTheme(floor int) pyramid.Floor {
+	offers := s.climb.ChoicesAt(floor)
+	if i := floor - 2; i >= 0 && i < len(s.portals) && s.portals[i] != "" {
+		for _, f := range offers {
+			if f.Motif == s.portals[i] {
+				return f
+			}
+		}
+	}
+	if len(offers) == 0 {
+		return pyramid.Floor{}
+	}
+	return offers[0]
+}
+
+// PortalOffers is what the portals in front of the run open onto: the offers of the floor it is
+// about to enter. Nil on a run with no climb.
+func (s *Session) PortalOffers() []pyramid.Floor {
+	if s.climb == nil {
+		return nil
+	}
+	return s.climb.ChoicesAt(s.Floor())
+}
+
+// PortalDue reports whether the run is standing in front of an open portal: the room just won was a
+// portal room, so the run is at the first room of a floor above the first, and that floor offers
+// more than one realm and none has been taken yet.
+//
+// **More than one**, because a floor the tower wraps back onto past its top is floor one's single
+// offer again, and a choice of one is not a choice.
+func (s *Session) PortalDue() bool {
+	if s.climb == nil || s.fight == 0 || pyramid.RoomOf(s.fight) != pyramid.RoomOuter {
+		return false
+	}
+	if len(s.PortalOffers()) < 2 {
+		return false
+	}
+	i := s.Floor() - 2
+	return i < 0 || i >= len(s.portals) || s.portals[i] == ""
+}
+
+// TakePortal walks the run through one of the open portals, by its index in PortalOffers, and
+// reports the motif it chose. Once taken, the floor is fought at that theme and the choice is saved
+// with the run.
+func (s *Session) TakePortal(offer int) (string, error) {
+	offers := s.PortalOffers()
+	if offer < 0 || offer >= len(offers) {
+		return "", fmt.Errorf("portal %d: floor %d opens onto %d", offer, s.Floor(), len(offers))
+	}
+	i := s.Floor() - 2
+	if i < 0 {
+		return "", fmt.Errorf("floor %d is not entered through a portal", s.Floor())
+	}
+	for len(s.portals) <= i {
+		s.portals = append(s.portals, "")
+	}
+	s.portals[i] = offers[offer].Motif
+	return s.portals[i], nil
+}
+
+// Portals is the motif taken at each portal so far, in floor order from floor two. A copy.
+func (s *Session) Portals() []string { return append([]string(nil), s.portals...) }

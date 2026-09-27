@@ -12,7 +12,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | File | Loader | Holds |
 |---|---|---|
 | `duelists.json` | `LoadDuelists` | who the player can be: three stats and their card back |
-| `motifs/<motif>/motif.json` | `LoadMotifs` | the roster, one directory per motif: the floors it may theme, and every creature that can stand in one of its three rooms |
+| `motifs/<motif>/motif.json` | `LoadMotifs` | the roster, one directory per motif: the floors it may theme, what its portal says about it (`Text`, `ElementText`), and every creature that can stand in one of its three rooms |
 | `motifs/<motif>/backdrops.json` | `LoadMotifs` | optional: the rooms that motif's fights are drawn in front of, one per record per tier, drawn once per element. `MotifData.BackdropFor` picks one off the run seed, the floor and the fight's tier — derived, never rolled — and a fight with none draws `default-background`. See the `motifs` skill |
 | `tower.json` | `LoadTower` | how tall the climb is and the two rates the ascent curve compounds at |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |

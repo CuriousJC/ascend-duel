@@ -136,6 +136,20 @@ type MotifData struct {
 	// written yet, and the review sheet marks it rather than the launch failing over it.
 	ElementDraw map[string]string `json:"ElementDraw"`
 
+	// Text is what a player reads about this motif on the portal that offers it: what these
+	// creatures are, in a sentence or two. **The player's line, not the generator's** — Draw says
+	// what a goblin looks like to an artist, this says what a goblin is to somebody choosing whether
+	// to fight a floor of them.
+	//
+	// **Unwritten is allowed and is visible**: empty or `TBD` draws as TBD on the portal and is
+	// counted by the motif report, the way an unwritten Draw is.
+	Text string `json:"Text"`
+
+	// ElementText is what the player reads about this motif in one element, keyed by element name —
+	// what fire does to a floor of goblins. The portal prints it under Text. A key that is not an
+	// element is refused; a missing one is unwritten, on Text's terms.
+	ElementText map[string]string `json:"ElementText"`
+
 	// ValidFloors is the inclusive band of tower floors this motif may theme, as [low, high].
 	// A zero band means any floor.
 	//
@@ -473,6 +487,11 @@ func checkMotif(m MotifData, file, dir string) {
 			panic(file + ": " + m.Motif + " writes art direction for " + element + ", which is not an element")
 		}
 	}
+	for element := range m.ElementText {
+		if _, ok := AffinityIndex(element); !ok {
+			panic(file + ": " + m.Motif + " writes portal text for " + element + ", which is not an element")
+		}
+	}
 
 	for _, r := range m.Records {
 		checkRecord(m, r, file)
@@ -632,54 +651,30 @@ func MotifOf(recs map[string]MotifData, record string) (MotifData, bool) {
 	return MotifData{}, false
 }
 
-// MustBeClimbable refuses a roster that cannot give every floor of the tower a motif of its own.
+// MustBeClimbable refuses a roster that cannot offer every floor of the tower its portals.
 //
-// **A matching problem rather than a per-floor one**, and that is the whole reason it is a
-// function. Three motifs that each say `[1, 2]` satisfy "floor 1 has a motif" and "floor 2 has a
-// motif" while still leaving floor 3 empty — and a run never repeats a motif, so what has to
-// hold is that the floors can be given *distinct* ones. This walks the floors and takes the
-// motif with the fewest remaining choices first, which is exact for bands this shape.
+// A floor is offered through OffersOn motifs, and **every motif offered is spent** whichever one the
+// player walks through — so a climb needs one motif for floor one and two for every floor above it,
+// all distinct and each inside its own floor band. That is a matching problem rather than a
+// per-floor one: three motifs that each say `[1, 2]` satisfy "floor 1 has a motif" and "floor 2 has
+// a motif" while still leaving floor 3 empty. See FillsSlots, which is also what the climb is rolled
+// against, so a roster this accepts is one no seed can run dry on.
 func MustBeClimbable(recs map[string]MotifData, floors int) {
 	if floors <= 0 {
 		return
 	}
-
-	type slot struct {
-		floor      int
-		candidates []string
-	}
-	slots := make([]slot, 0, floors)
 	for f := 1; f <= floors; f++ {
-		var can []string
+		can := 0
 		for _, key := range MotifOrder(recs) {
 			if recs[key].AllowsFloor(f) {
-				can = append(can, key)
+				can++
 			}
 		}
-		if len(can) == 0 {
-			panic(fmt.Sprintf("motifs: no motif may theme floor %d", f))
+		if can < OffersOn(f) {
+			panic(fmt.Sprintf("motifs: floor %d is offered through %d portals and only %d motifs may theme it", f, OffersOn(f), can))
 		}
-		slots = append(slots, slot{floor: f, candidates: can})
 	}
-
-	// Fewest choices first, so a floor only one motif can theme takes it before a floor that
-	// could have had anything spends it.
-	sort.SliceStable(slots, func(i, j int) bool {
-		return len(slots[i].candidates) < len(slots[j].candidates)
-	})
-
-	taken := map[string]int{}
-	for _, s := range slots {
-		placed := false
-		for _, key := range s.candidates {
-			if _, used := taken[key]; !used {
-				taken[key] = s.floor
-				placed = true
-				break
-			}
-		}
-		if !placed {
-			panic(fmt.Sprintf("motifs: %d floors cannot each be given a motif of their own — floor %d has nothing left", floors, s.floor))
-		}
+	if !FillsSlots(recs, ClimbSlots(1, floors), nil) {
+		panic(fmt.Sprintf("motifs: %d floors cannot each be offered motifs of their own — the bands overlap too little for the portals to be filled without a repeat", floors))
 	}
 }

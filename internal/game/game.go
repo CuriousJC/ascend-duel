@@ -98,7 +98,6 @@ func NewGame() *Game {
 		GlobalState: state.NewGlobalState(),
 		scenes: map[state.ActiveScreen]ui.Scene{
 			state.Title:      &screens.TitleScene{},
-			state.Ascend:     &screens.AscendScene{},
 			state.Combat:     &screens.CombatScene{},
 			state.PostBattle: &screens.PostBattleScene{},
 			state.Shop:       &screens.ShopScene{},
@@ -129,6 +128,10 @@ func NewGame() *Game {
 			// shop's shelf and goes back there — so it is in the registry and not in
 			// screens/flow.go. See screens/goods.go.
 			state.Goods: &screens.GoodsScene{},
+
+			// **The choice of realm after a portal room.** A station of the run, so it is also in
+			// screens/flow.go against session.PhasePortal. See screens/portal.go.
+			state.Portal: &screens.PortalScene{},
 		},
 	}
 }

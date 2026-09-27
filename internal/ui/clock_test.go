@@ -28,8 +28,8 @@ var clockExceptions = map[string]string{
 func TestNoClockIsWrittenAsARawNumber(t *testing.T) {
 	// **This is what stops the game growing a second clock.** The between-fight screens had one
 	// until 2026-08-21: postbattle.go predated `beat` and carried 26 and 100, so turning the speed
-	// down would have sped up a duel and left the reward screen exactly as slow as it was. The
-	// shop and the room choice are the next two screens that could do it again.
+	// down would have sped up a duel and left the reward screen exactly as slow as it was. Every
+	// between-fight screen is a place it could happen again.
 	// **It reads internal/screens as well as this package** *(2026-09-17)*. The clock lives here
 	// and every scene that could invent a second one lives there, so a guard that only parsed its
 	// own directory would be pointed away from the thing it is guarding.

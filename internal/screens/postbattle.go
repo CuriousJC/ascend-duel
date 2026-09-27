@@ -2,10 +2,10 @@ package screens
 
 // The post-battle screen: **pick an essence, then pick the card it eats.**
 //
-// It is the first of the between-fight scenes — a shop and a room choice come after it — and all
-// of them are ordinary scenes in the registry rather than modes of the combat screen. That is
-// what keeps `CombatScene` from growing a fourth phase, and it is why the chain is wired as
-// screen changes: win → post-battle → combat.
+// It is the first of the between-fight scenes — the shop comes after it, and the portal after a
+// portal room — and all of them are ordinary scenes in the registry rather than modes of the
+// combat screen. That is what keeps `CombatScene` from growing a fourth phase, and it is why the
+// chain is wired as screen changes.
 //
 // **The payout and the offer are one screen** *(owner's call, 2026-09-18)*. The win is read out in
 // the first third of the width — interest, a tenth of the life you kept, what the room is worth,

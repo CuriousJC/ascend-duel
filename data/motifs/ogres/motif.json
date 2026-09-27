@@ -9,6 +9,14 @@
     "earth": "Mud-caked and stone-studded, green rock grown through the hide plates and moss packed into the folds. It reads as half quarry.",
     "arcane": "Violet light comes out of the mouth and the deep-set eyes, the tusks glow from inside, and the silhouette will not hold still."
   },
+  "Text": "Enormous, filthy and slow, swinging whatever was big enough: a tree, a boulder, a wagon wheel.",
+  "ElementText": {
+    "fire": "Blistered and sooty, and whatever they are swinging is on fire.",
+    "ice": "Frosted hide and breath like a snowstorm.",
+    "lightning": "Every scrap of iron on them sparks.",
+    "earth": "Half quarry: mud, stone and moss, grown right into the hide.",
+    "arcane": "Purple light leaks from their mouths, and they will not hold still."
+  },
   "ValidFloors": [
     4,
     8

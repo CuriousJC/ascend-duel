@@ -9,6 +9,14 @@
     "earth": "The garments have gone to rock. Green stone grows through the cloth in rough protrusions — slabs across the back, angular crystal pushing out of the harness, a fringe of broken mineral where a hem should be — and what fabric is left is dusty and dragged heavy by it. It stands lower than its siblings under the weight. The creature's own skin stays whatever it is; what is rocky and green is what it is wearing.",
     "arcane": "The garments are purple and lit from inside. Light leaks out of the weave and out of every gap in the harness, throwing violet up onto the underside of the eye stalks and the limbs above it, and the hanging panels glow at their edges as though something is behind them. It is the only light in the picture that is not the key light. The creature's own skin stays whatever it is; what is purple and glowing is what it is wearing."
   },
+  "Text": "Things from somewhere else, built wrong on purpose: eyes on stalks, too many limbs, and no face to read. They have come to take samples.",
+  "ElementText": {
+    "fire": "Their robes burn without being consumed, and they bring the heat of a world with no night.",
+    "ice": "Cold mist pours off them. Wherever they have been, the air is still freezing.",
+    "lightning": "Live current crawls through their harnesses and jumps to anything metal.",
+    "earth": "Their garments have turned to rock, and they move like something mined rather than born.",
+    "arcane": "They are lit from inside, and the light does not come from anything you know."
+  },
   "ValidFloors": [
     5,
     8

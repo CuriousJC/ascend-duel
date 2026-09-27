@@ -13,9 +13,11 @@
 // a fire goblin floor is three goblins in fire, and what the player walked into is something they
 // can plan against.
 //
-// **A motif is never fought twice in one run.** Each floor strikes its theme off before the next
-// is rolled. data.MustBeClimbable refuses a roster where that could run out, at load, so a run
-// never reaches a floor with nothing to put in it.
+// **A motif is never offered twice in one run.** Floor one is offered one theme and every floor
+// above it two, one per portal, and every offer is struck off before the next floor is rolled —
+// whichever the player walks through. data.MustBeClimbable refuses a roster where that could run
+// out, at load, and New checks what is left after every draw, so a run never reaches a floor with
+// nothing to put in it.
 //
 // # The curve is indexed by fight, not by floor
 //
@@ -28,11 +30,12 @@
 // authored as the multiple of its neighbours it is meant to be, and the curve does the rest. That
 // is also what keeps the ratio between two motifs fixed however the curve is retuned.
 //
-// # Choices are rolled before anything offers them
+// # The offers are the seed's; the pick is the run's
 //
-// Every floor is rolled with ThemeChoices themes and fights the first. The room choice is a
-// station the run loop already names, and a climb that rolled one theme per floor would deal a
-// different tower the day a second is offered — taking every written-down run code with it.
+// What each floor offers is a function of the run code alone — never of what the player picked on
+// an earlier floor, because every offer is spent either way. Which portal the player walked through
+// is held by internal/session and saved with the run, so a run code plus its picks is the whole
+// path.
 //
 // **No Ebitengine, ever**, and no randomness of its own: New takes the source it draws from, so
 // the caller owns which stream is being advanced. See the randomness skill.

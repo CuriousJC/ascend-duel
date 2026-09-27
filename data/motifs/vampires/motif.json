@@ -9,6 +9,14 @@
     "earth": "Grave soil still on the clothing and roots grown through the coat. The skin is dried dark and drawn like something dug up, in green-black.",
     "arcane": "Violet light behind the eyes and under the skin picking out the veins, the edges of the figure smearing, and nothing of it reflecting in anything."
   },
+  "Text": "Old, pale nobility that will not die, dressed for a century that is long gone. The lesser ones are hungrier.",
+  "ElementText": {
+    "fire": "Smouldering at the hems, as though the dawn has already found them.",
+    "ice": "Blue-white and glassy. Their breath does not fog, because they have none.",
+    "lightning": "Lightning runs their rings and chains, and their eyes glow yellow.",
+    "earth": "Grave soil still on their coats, and roots grown through them.",
+    "arcane": "Violet light in their veins, and no reflection anywhere."
+  },
   "ValidFloors": [
     4,
     8

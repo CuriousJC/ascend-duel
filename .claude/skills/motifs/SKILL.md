@@ -56,6 +56,11 @@ creatures stay in one file, and its rooms sit beside them in a second.
 - **`Draw` and `ElementDraw` are the shared half of the art brief** — see *A picture is four
   layers* below. Both are authored and ignored by everything that plays the game. An
   `ElementDraw` key that is not an element is refused; a missing one is not.
+- **`Text` and `ElementText` are what the player reads** — on the portal that offers the motif, the
+  realm's name and then these two: what the creatures are, and what the element does to them. Same
+  shape as `Draw` and `ElementDraw` and the same rules — an `ElementText` key that is not an element
+  is refused, and an unwritten line shows on the portal as TBD and is counted by the motif report.
+  **Keep them to a sentence or two**: a portal panel is 620 pixels of prose wide.
 - **`ValidFloors` is motif-level**, inclusive, `[0, 0]` for any floor. It is not per-record,
   because a floor takes a whole motif: a motif whose outer creatures were valid on floors 1 to 3
   and whose boss was valid on 4 to 6 could never theme a floor at all.
@@ -221,10 +226,11 @@ Everything below is a panic at package init, in `data/motifs_data.go`:
 - a title on a creature, a record with no art family, a non-positive stat
 - a record with no cards, a card with no copies, a cost outside 1..3, a card naming its own elements
 - an inverted floor band
-- **floors 1..N cannot each be given a *distinct* motif** — `data.MustBeClimbable`, a matching
-  check rather than a per-floor one. Three motifs that all say `[1, 2]` satisfy "floor 1 has a
-  candidate" and "floor 2 has a candidate" while still leaving floor 3 empty, and a run never
-  repeats a motif.
+- **the tower cannot be offered without a repeat** — `data.MustBeClimbable`. Floor one is offered
+  one motif and every floor above it `data.PortalOffers`, one behind each portal, and **every offer is
+  spent** whichever the player takes, so the climb needs `data.ClimbSlots(1, Floors)` distinct motifs
+  each inside its own band. `data.FillsSlots` is the matching, and `internal/pyramid` asks it again
+  after every draw so a seeded roll never spends a motif a later floor needed.
 
 ## What a record may never do
 
@@ -253,7 +259,8 @@ Given a proposed record or a proposed motif, answer these in order.
    fourth copy of one of them is not.
 6. **Does the floor band still climb?** If the proposal is a whole motif, check that adding it
    does not narrow another floor's options, and that `MustBeClimbable` still passes at
-   `tower.json`'s `Floors`.
+   `tower.json`'s `Floors` — which, with two offers a floor above the first, is a much tighter
+   demand than one motif per floor. Retiring or narrowing a motif is where it bites.
 
 Report holes and duplicates as a list, not prose, and say plainly which of them block a launch and
 which are only worth knowing.

@@ -9,6 +9,14 @@
     "earth": "Fur matted flat with dust and dried mud, rough green stone beads worked into the wraps, the claws blunted to dark mineral. Low and planted rather than poised.",
     "arcane": "Violet light behind the slit pupils and running the length of the tail, the markings in the fur lit from underneath, and the edges of the silhouette not quite settled."
   },
+  "Text": "Upright cats on lean, quick frames: whiskers, tails, and claws they are happy to use.",
+  "ElementText": {
+    "fire": "Their fur smoulders at the tips, and their claws are hot orange.",
+    "ice": "Frost on the whiskers and claws like blue glass.",
+    "lightning": "Charged fur, sparking claws and wide, wild eyes.",
+    "earth": "Dusty and planted, their claws blunted to stone. They do not give ground.",
+    "arcane": "Purple light runs down their tails, and they are never quite where they seem."
+  },
   "ValidFloors": [
     2,
     7

@@ -97,7 +97,7 @@ the salt table, so inserting one mid-list re-points every stream after it.
 
 | Stream | Scope | Used by | Sharing it would reroll |
 |---|---|---|---|
-| `seeds.EnemySelect` | run | `roster` (`internal/screens/combat.go`) | the whole tower, on any change to loot or offers |
+| `seeds.EnemySelect` | run | `session.newClimb` → `pyramid.New`: every floor's offers, both realms behind every portal, and the creature in every room | the whole tower, on any change to loot or offers |
 | `seeds.CombatRoll` | run | `CombatScene.combatRNG`, injected into `ResolveRound` | every shock in the run, on any change to draw |
 | `seeds.PlayerDeck` | fight | `CombatScene.rng` | every cataloged hand in `internal/screens/seeds.go` |
 | `seeds.EnemyDeck` | fight | `decks.EnemyPile` | the player's opening hand, per the entry below |
@@ -111,7 +111,6 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.PackOffer` | fight | `ShopScene.packRNG` (`internal/screens/shop_packs.go`) | which two of the three packs a visit puts up, on any change to the relic shelf |
 | `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to the shock roll |
 | Loot offers | — | **not built** | — |
-| Floor offers | — | **not built** | — |
 
 **`VialStock` is the sharpest case in the table** *(2026-08-27)*: it draws essences from the same
 catalog `EssenceOffer` does, at the same station of the loop, and it still gets its own stream. Two

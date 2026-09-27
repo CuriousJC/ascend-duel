@@ -226,24 +226,13 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         exposure.
       - Numbered slots picked from a list would dodge the text field entirely, at the cost of
         "Profile 2" meaning nothing to the player.
-- [ ] **Ascend / tower loop.** `ascend.go` is a bare `package screens`; `Ascend` and
-      `Credits` are empty cases in the scene registry. Structure decided:
-      - **8 floors, 3 fights each — 24 fights to the top.** The layout is fixed, not
-        generated. Only the enemies and the offers are random.
-      - **A binary loot choice after every fight.** Two options, pick one. **Built** as
-        `PhaseReward` — the essence and the card it eats.
-      - **A binary floor choice after the last fight on a floor**, on top of that fight's
-        loot choice. **`PhaseChoice` is the station and it has no screen**, so `advanceRun`
-        walks past it.
-      - **Floor 8 ends the run** for the first version — 7 floor choices, no offer at the
-        top.
-      - Floor choices steer **enemy affixes and behavior** — "this is a cold floor",
+- [ ] **The tower's ends.** The portal choice is built — see MECHANICS.md §The portal. What is
+      left of the loop:
+      - **Floor 8 ends the run** for the first version — 7 portal choices, no offer at the
+        top. Today the climb wraps past the top instead.
+      - Portal choices steer **enemy affixes and behavior** — "this is a cold floor",
         "this is a fire floor" — plus whatever other levers exist by then. The specific
         options are undecided; the mechanism is the part that matters.
-      - Run progress lives in `session.Session`, which already carries the fight index, the
-        purse and the worn relics. **The floor is what it does not have**: `fight` is a room count
-        and `pyramid` derives the floor from it, so a run that chooses its own floors needs one
-        stored rather than computed.
 - [ ] **Save format: seed plus choice log, not serialized state.** Falls out of seeding
       for free, and only stays free if nobody builds save/load the other way first.
       - A run is fully described by its seed and the ordered list of **every player
@@ -294,7 +283,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       wants to become a base statline, a scaling rule, and a pool of affixes to draw from.
       - `AvailableAffixes` already anticipates this and is still unread.
       - Affixes must compose. Two on one enemy is the normal case, not an edge case.
-      - Floor choices feed this directly: "a cold floor" biases which affixes appear.
+      - Portal choices feed this directly: "a cold floor" biases which affixes appear.
 ## Art still to generate
 
 *(owner asked for this to be tracked)*. **Two batches outstanding.** Every other catalog is

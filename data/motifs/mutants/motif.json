@@ -9,6 +9,14 @@
     "earth": "The growths have gone mineral. Green rock pushes out through the skin and the coveralls in slabs, and the whole figure is crusted and dragging under it.",
     "arcane": "Violet light under the skin showing the shape of what is in there, the extra limbs faintly transparent at the edges, the outline smeared."
   },
+  "Text": "Human bodies that went wrong and kept going: too much arm, too many joints, and scrap plate bolted on where the skin gave out.",
+  "ElementText": {
+    "fire": "Burned, and still burning.",
+    "ice": "Frostbitten black at the edges, steaming cold.",
+    "lightning": "Twitching, with lightning arcing between their grafts.",
+    "earth": "The growths have turned to rock, and they drag the weight of it.",
+    "arcane": "Something moves under the skin, and it glows purple."
+  },
   "ValidFloors": [
     3,
     8

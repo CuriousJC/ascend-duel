@@ -263,10 +263,9 @@ func discardSavedRun(gs *state.GlobalState) {
 
 // enterRun puts the game on whichever scene draws the run's current station.
 //
-// **The combat screen is the fallback**, for a phase with no scene of its own — the room choice is
-// in the loop and has none. A run saved at one would otherwise land the player on a screen that is
-// not there; advance walks past such a phase during play, and this is the same courtesy at the
-// door.
+// **The combat screen is the fallback**, for a phase with no scene of its own. A run saved at one
+// would otherwise land the player on a screen that is not there; advance walks past such a phase
+// during play, and this is the same courtesy at the door.
 func enterRun(gs *state.GlobalState) {
 	next := state.Combat
 	if s, ok := screenFor(gs.Run.Phase()); ok {

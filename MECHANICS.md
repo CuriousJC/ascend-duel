@@ -51,7 +51,7 @@ The run is written to disk between rooms and every run has a six-character code 
 | [Runes](#runes--altering-the-deck-during-a-fight) | editing the deck inside a fight, and the riders a card can carry | built |
 | [Brands](#brands) | permanent changes to the chassis | **designed, not built** |
 | [Vitae](#vitae) | the currency and what a win pays | built |
-| [The tower](#the-tower) | eight floors, three rooms, the ascent curve | built except the room choice |
+| [The tower](#the-tower) | eight floors, three rooms, the portal, the ascent curve | built except the door choice |
 | [Enemies](#enemies) | the roster, the planner, what a creature may do | built |
 | [The profile](#the-profile--what-survives-a-run) | what outlives a run, and the menus around it | built |
 | [Achievements](#achievements) | the three triggers and the closed vocabulary | built |
@@ -2463,11 +2463,11 @@ event, since the log rebuilds a card from what an event carries.
 ### The between-fight chain
 
 Post-battle is the first of several scenes between one room and the next: **alteration**, then a
-**shop** where vitae is spent, then a **room or portal choice** between two doors. Each is an
-ordinary scene in the registry rather than a mode of the combat screen, and **`session.Phase` is
-what decides the order** — see `internal/session/flow.go` for the chain and
-`internal/screens/flow.go` for which scene draws each station. The room choice has no scene yet
-and is walked past.
+**shop** where vitae is spent, and — after a portal room only — the **portal**, where the player
+chooses which realm comes next. Each is an ordinary scene in the registry rather than a mode of the
+combat screen, and **`session.Phase` is what decides the order** — see `internal/session/flow.go`
+for the chain and `internal/screens/flow.go` for which scene draws each station. After an outer or
+an inner room the loop walks past the portal and straight on to the next fight.
 
 ---
 
@@ -3252,8 +3252,13 @@ unrelated creatures who happen to share a corridor.
   molten in fire and frozen in ice. Which room a fight gets is derived from the run, the floor and
   the tier, never rolled. **A fight with no room of its own is drawn on the plain default
   backdrop**, which has no door, so the gap is visible rather than disguised.
-- **A motif is never fought twice in one run.** Each floor strikes its theme off before the next
-  is rolled, so a climb is a tour of the roster rather than a shuffle of it.
+- **A motif is never offered twice in one run.** Floor one is offered one realm and every floor
+  above it two, one behind each portal, and **both are spent whichever the player walks through** —
+  a realm passed over on floor two never comes back. So a climb is a tour of the roster rather than
+  a shuffle of it, and what a run code offers never depends on what was picked before it. A climb
+  therefore needs one motif for floor one and two for every floor above it, all distinct and each
+  inside its own band; the loader refuses a roster that cannot supply that, and the climb is rolled
+  so that no draw spends a motif a later floor needs.
 - **A motif carries the band of floors it may theme**, at the file level rather than per record: a
   motif whose creatures were valid on floors 1 to 3 and whose boss was valid on 4 to 6 could never
   theme a floor at all.
@@ -3303,12 +3308,31 @@ step = (floor - 1) * 3 + room          room: outer 0, inner 1, portal 2
   than a harder version of its own.
 - **Nothing caps it.** The tower has a configured height and the climb wraps past it; the curve
   keeps counting, which is what makes the endless tower a number rather than a rewrite.
-- **After fights 1 and 2: a choice of two doors.** After the boss: **a choice of portal.**
-  Captured as two concepts even though the mechanic is likely the same, because one is "next
-  fight on this floor" and the other is "next floor" — a real difference to hang divergence on.
+
+### The portal
+
+**A floor's boss opens two portals, and the player walks through one.** Behind each is a realm — a
+motif in an element — and the one chosen is the next floor: its three rooms are that motif's
+records dealt as that element. The choice is made after the shop that follows the portal room, and
+it is the only way on: there is no Back and no Skip.
+
+- **Each portal says what is behind it in words.** The realm's name — the element and the motif, so
+  *Fire Goblins* — then the motif's `Text`, what these creatures are, and its `ElementText` for that
+  element, what the element does to them. Both are authored on the motif record and are what a
+  player reads, where `Draw` and `ElementDraw` are what an artist reads. An unwritten line shows as
+  TBD.
+- **Floor one is not chosen.** A run starts there rather than walking into it.
+- **What is offered is the seed's; what is taken is the run's.** Both realms on every floor are
+  rolled up front off the run code, and every offer is spent, so the same code always offers the
+  same pairs whatever was picked. The picks are saved with the run and written to the journal, so a
+  run code plus its picks is the whole path.
+- **Past the top of the tower the climb wraps onto floor one's single offer**, and a portal with one
+  realm behind it is walked past rather than shown.
+- **After fights 1 and 2: a choice of two doors** — "next fight on this floor", where the portal is
+  "next floor". Not built.
 - **Doors hint at what is behind them.** Cold coming off the door for an ice enemy, smoke for
   fire — the shape of what is coming without its name.
-- **Generate both doors, always.** Rolling only the chosen one shifts every subsequent draw in
+- **Generate every option, always.** Rolling only the chosen one shifts every subsequent draw in
   the run.
 
 ### Life between fights, and what a portal room is worth
@@ -3377,8 +3401,6 @@ whether the roster should flatten instead and let the curve carry the climb.
 
 `[?]` What distinguishes one portal from another. `[?]` Whether the shop and the door choice
 are one screen or two, and in which order.
-
-[ascend.go](internal/screens/ascend.go) is a stub whose comment already describes this.
 
 ---
 
@@ -3570,11 +3592,11 @@ its seed alone — a deck edit is a choice, so replay would need a seed plus a c
 resuming does not need the path, only the state. So the snapshot is state, and it may never be used
 as a replay. See the Randomness section below, which is unchanged by this.
 
-**The climb is not saved; it is rebuilt from the run code.** The fight order is a function of
-the run seed, so storing the seed keeps one answer to "who stands in room four". **This stops
-being true the day the room-choice screen lets a player pick what is ahead**, at which point the
-climb becomes a choice and has to be written down. `TestTheClimbIsRebuiltFromTheSeed` is what
-fails on that day.
+**The climb is half saved.** What every floor offers is a function of the run seed and is rebuilt
+from the run code, so storing it would be a second answer to a question the seed already answers.
+Which portal the player walked through is a choice, so the snapshot writes it down — one motif key
+per portal, in floor order — and a resume refuses a key its floor never offered.
+`TestThePortalsTakenSurviveAResume` holds it.
 
 **Nothing about the profile is ever fatal.** A missing file is a new player, a corrupt file is a
 new player, an unwritable directory is a session whose progress is not recorded — the same rule

@@ -9,13 +9,10 @@ package profile
 // state the player is in, not the path they took to it, and a snapshot is exactly that. See
 // MECHANICS.md, where the reversal is recorded.
 //
-// **The climb is not in here, and that is deliberate.** `session.Start` builds the pyramid from
-// `seeds.For(runSeed, EnemySelect)`, so the run code rebuilds the same opponents in the same order.
-// Storing the seed rather than the order keeps the file small and, more importantly, keeps one
-// answer to "who is in room four". **The day the room-choice screen lets the player pick what is
-// ahead, the climb stops being derivable and has to be written down here** — session's round-trip
-// test is what should fail on that day rather than a player quietly resuming against different
-// enemies.
+// **The climb is half in here.** What every floor *offers* is rebuilt from the run code —
+// `session.Start` rolls it from `seeds.For(runSeed, EnemySelect)` — so storing it would be a second
+// answer to a question the seed already answers. Which portal the player walked through is a
+// choice, and choices are not derivable, so `Portals` is written down.
 //
 // **Everything is a name or a count.** A concept is its registry key, an element is its name, a
 // phase is its name, a relic is its record key. No ordinals — see doc.go.
@@ -45,8 +42,14 @@ type RunSnapshot struct {
 	// step.
 	Fight int `json:"fight"`
 
-	// Phase is the station of the loop, by name — "fight", "reward", "shop", "choice".
+	// Phase is the station of the loop, by name — "fight", "reward", "shop", "portal".
 	Phase string `json:"phase"`
+
+	// Portals is the motif the run walked through at each portal, by motif key, in floor order from
+	// floor two. **A key rather than which of the two portals** — the offers are rebuilt from the
+	// seed, and a key still names the same realm if a later build lists them in another order. An
+	// empty entry is a floor entered without a choice, which is fought at its first offer.
+	Portals []string `json:"portals,omitempty"`
 
 	// Vitae is the purse, and LifeLeft is what the fighter walked out of the last fight with. The
 	// reward screen draws the duelist card from LifeLeft, so a run resumed at the reward station

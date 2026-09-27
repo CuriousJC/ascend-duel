@@ -67,7 +67,7 @@
 //     eats; then three relics on a shelf, the sealed goods, the pouch and the hooded creature who
 //     greets you.
 //   - **The screens that are not stations of a run** — title.go, credits.go, settings*.go,
-//     achievements.go, runover.go, animations.go, ascend.go. None appears in flow.go, which is
+//     achievements.go, runover.go, animations.go. None appears in flow.go, which is
 //     what "not a station" means mechanically.
 //   - **The tutorial's half** — tutorial.go and the *_tutorial.go files. The state machine is
 //     internal/tutorial; what is here is Bob's bubble, the lit rectangle, and each scene

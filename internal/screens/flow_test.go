@@ -25,17 +25,17 @@ func TestEveryRegisteredPhaseNamesAScreenTheGameHas(t *testing.T) {
 func TestEveryBuiltStationHasAScene(t *testing.T) {
 	// The three stations that are built. This fails the day one is dropped from the table by
 	// accident, which would otherwise show up as the loop silently skipping a whole screen.
-	for _, p := range []session.Phase{session.PhaseFight, session.PhaseReward, session.PhaseShop} {
+	for _, p := range []session.Phase{session.PhaseFight, session.PhaseReward, session.PhaseShop, session.PhasePortal} {
 		if _, ok := screenFor(p); !ok {
 			t.Errorf("%s has no scene", p)
 		}
 	}
 }
 
-func TestAdvanceWalksPastAStationWithNoScene(t *testing.T) {
-	// **This is what lets the loop name the room choice before it exists.** From the shop, the
-	// next station has no scene, so advance has to keep walking and land on the fight rather than
-	// pointing the game at nothing. The shop was the other one until 2026-08-21.
+func TestAdvanceFromTheShopGoesToTheFightWhenNoPortalIsOpen(t *testing.T) {
+	// **The portal is only stood at after a portal room.** A run whose last room was anything else
+	// has no realm to choose, so the shop has to lead straight to the fight rather than to a portal
+	// screen with nothing on it.
 	gs := &state.GlobalState{Run: session.New(session.StartingDeck())}
 	gs.Run.SetPhase(session.PhaseShop)
 

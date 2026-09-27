@@ -9,6 +9,14 @@
     "earth": "green coloring with an rock crest",
     "arcane": "purple coloring with a purple gem crest"
   },
+  "Text": "Bird-folk who hunt from above with spears and bows. They travel light, so nothing slows the wings.",
+  "ElementText": {
+    "fire": "Red feathers and a crest of fire. Their spears are hot to the touch.",
+    "ice": "Blue feathers and a crest of ice. The wind off their wings is freezing.",
+    "lightning": "Yellow feathers and a crest of lightning. They strike like the storm they fly in.",
+    "earth": "Green feathers and a crest of stone. They hit like falling rock.",
+    "arcane": "Purple feathers and a crest of gems, and something older than birds behind their eyes."
+  },
   "ValidFloors": [2, 7],
   "Records": [
     {

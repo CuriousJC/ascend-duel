@@ -45,6 +45,10 @@ const (
 	KindSell = "sell"
 	KindGood = "good"
 	KindTake = "take"
+
+	// KindPortal is the realm walked into after a portal room: Key is the motif, Action the element
+	// it is dealt as, Seat which of the portals it stood behind and Fight the room it opens onto.
+	KindPortal = "portal"
 )
 
 // The actions a KindRun record can carry. **A word rather than a kind each**, because what a reader

@@ -9,6 +9,14 @@
     "earth": "They should be standing atop a mountain with several mountain peaks behind them. All of the mountains should be rocky ",
     "arcane": "It should be in front of a wizard's tower with a wizard's hat on its head. There should be arcane symbols floating around the cat."
   },
+  "Text": "Tigers, lions and worse: great cats with long teeth and the claws already out.",
+  "ElementText": {
+    "fire": "Flames rise from their paws, and their roar comes out as fire.",
+    "ice": "Ice forms around their paws and jaws. They hunt best in the snow.",
+    "lightning": "They run with the storm, and lightning follows them in.",
+    "earth": "Mountain cats, hard as the rock they stalk across.",
+    "arcane": "Arcane symbols circle them. These cats know tricks."
+  },
   "ValidFloors": [1, 4],
   "Records": [
     {

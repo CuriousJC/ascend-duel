@@ -13,8 +13,9 @@ package screens
 // "this exists" and "not for you yet", which is the same rule the settings screen's music bar is
 // under.
 //
-// **New Run asks first, and only when it would destroy something.** A fresh player pressing it has
-// nothing to lose and gets no dialog; a player forty rooms up gets the question. See confirm.go.
+// **New Run opens the new-run dialog**: six wheels holding a rolled run code, which START takes as
+// it is or after the player has turned them to a code of their own. With a journey in progress the
+// same dialog says it will be lost and START takes the destructive red. See ui/seeddialog.go.
 //
 // **Achievements and Credits hang off here rather than off the run**, because neither is a station
 // of a journey: they read the profile and a list of names respectively, and both are things a player
@@ -51,9 +52,9 @@ type TitleScene struct {
 	settingsButton     *models.Button
 	exitButton         *models.Button
 
-	// confirm is the "are you sure" in front of New Run, and it is only ever raised when a run is
-	// actually in progress.
-	confirm ui.ConfirmDialog
+	// newRun is the dialog New Run opens: the run code the journey starts on, and the warning when
+	// there is a journey in progress to lose.
+	newRun ui.SeedDialog
 }
 
 // Init builds the buttons on first entry and positions them every time.
@@ -87,7 +88,7 @@ func (s *TitleScene) Init(gs *state.GlobalState) {
 
 	// **The dialog does not survive a visit.** A scene's Init runs again every time it is entered,
 	// and arriving at the title with a question already up would be a dialog nobody asked.
-	s.confirm.Close()
+	s.newRun.Close()
 
 	// The percentage anchors the menu; the fixed steps space it. Giving each button its own
 	// percentage would let the spacing drift apart the next time the menu moves.
@@ -102,8 +103,8 @@ func (s *TitleScene) Init(gs *state.GlobalState) {
 func (s *TitleScene) Update(gs *state.GlobalState) error {
 	// **The question owns the screen while it is up.** The menu underneath is still where it was,
 	// and a click reaching New Run through the dialog asking about New Run would start two runs.
-	if s.confirm.IsOpen() {
-		s.confirm.Update(gs)
+	if s.newRun.IsOpen() {
+		s.newRun.Update(gs)
 		return nil
 	}
 
@@ -128,22 +129,18 @@ func (s *TitleScene) menu() []*models.Button {
 	}
 }
 
-// startNewRun begins a new journey, asking first if that would throw one away.
+// startNewRun opens the new-run dialog.
 //
-// **The question is asked about the *saved* run rather than about whatever `gs.Run` happens to
-// hold.** A fresh launch has a run standing already — BootRun builds one so the first press of New
-// Run is instant — and asking "abandon your run?" about a journey nobody has entered would be a
-// dialog that means nothing.
+// **The warning is about the *saved* run rather than about whatever gs.Run happens to hold.** A
+// fresh launch has a run standing already — BootRun builds one so the first press of New Run is
+// instant — and warning "your journey will be lost" about a journey nobody has entered would be a
+// sentence that means nothing.
 func (s *TitleScene) startNewRun(gs *state.GlobalState) {
-	if gs.Run == nil || !gs.Resumed {
-		NewRun(gs)
-		return
-	}
-	s.confirm.Ask(
-		"START A NEW RUN?",
-		"The journey in progress will be lost. This cannot be undone.",
-		"NEW RUN",
-		func() { NewRun(gs) },
+	inProgress := gs.Run != nil && gs.Resumed
+	s.newRun.Open(
+		func() int64 { return RollSeed(gs) },
+		inProgress,
+		func(seed int64, chosen bool) { NewRunOn(gs, seed, chosen) },
 	)
 }
 
@@ -179,7 +176,7 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, versionOp)
 
 	// Over the menu it is asking about.
-	s.confirm.Draw(gs, screen)
+	s.newRun.Draw(gs, screen)
 }
 
 // Where the build string sits on the title screen, and how loud it is.

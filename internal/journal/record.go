@@ -58,9 +58,14 @@ const (
 // rather than a fourth constant here plus a reason beside it. The four words are already distinct
 // and one field saying which is one field to read; a run *ended* is never the thing worth knowing
 // on its own, since there is no retry and how it ended is the whole of the news.
+//
+// **RunStartedChosen is a run started on a code the player entered** rather than one the game
+// rolled, and it takes the place of RunStarted on that line, so the header of a journal says which
+// kind of journey follows.
 const (
-	RunStarted = "started"
-	RunResumed = "resumed"
+	RunStarted       = "started"
+	RunStartedChosen = "started-chosen"
+	RunResumed       = "resumed"
 )
 
 // What a KindStone or KindSell choice did with the thing it names. A stone in the pouch can be put

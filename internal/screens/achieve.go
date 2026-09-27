@@ -17,12 +17,30 @@ package screens
 // written for them, and it is called where a fight finishes. What that costs is stated rather than
 // discovered: a crash mid-duel loses that duel's tallies and nothing else. The alternative was a
 // disk write per card played.
+//
+// **A run on a chosen seed progresses nothing.** A chosen code is a journey that could have been
+// looked up in advance, so while one is under way no tally moves, no achievement is awarded and
+// nothing unlocks. `progresses` is the one question, and this file is the only place in the program
+// that writes run progress to the profile — `TestOnlyAchieveGoWritesProgress` holds that, so a new
+// kind of progress written anywhere else fails the suite rather than leaking past the gate. See the
+// `achievements` skill.
 
 import (
 	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
+
+// progresses reports whether what happens now may move the profile: there is a profile to move,
+// and the run under way was not started on a chosen seed. **Every write of run progress asks this
+// first** — a tally, an award, an unlock — and the new-run dialog's checkbox reports it before
+// START.
+func progresses(gs *state.GlobalState) bool {
+	if gs == nil || gs.Profile == nil {
+		return false
+	}
+	return gs.Run == nil || !gs.Run.SeedChosen()
+}
 
 // earnMoment records everything a named moment has earned.
 func earnMoment(gs *state.GlobalState, m achieve.Moment) {
@@ -44,7 +62,7 @@ func earnTurn(gs *state.GlobalState, turn []combat.Card) {
 // **It writes nothing.** See settleCounters, which is where the figures reach the disk and where
 // the count achievements are asked.
 func bumpCounters(gs *state.GlobalState, turn []combat.Card) {
-	if gs == nil || gs.Profile == nil {
+	if !progresses(gs) {
 		return
 	}
 	for name, n := range achieve.CountersFor(turn) {
@@ -61,7 +79,7 @@ func bumpCounters(gs *state.GlobalState, turn []combat.Card) {
 // **The save is here rather than in bumpCounters** and is the whole point of the split: this runs
 // once a duel where that runs once a turn.
 func settleCounters(gs *state.GlobalState) {
-	if gs == nil || gs.Profile == nil {
+	if !progresses(gs) {
 		return
 	}
 	earn(gs, achieve.Loaded().ByCounts(gs.Profile.Counters))
@@ -75,7 +93,7 @@ func settleCounters(gs *state.GlobalState) {
 // so a relic behind an achievement reads the unlock and never the award. Nothing carries one yet;
 // the bridge is here so that the day one does, it is a field in the JSON rather than a change here.
 func earn(gs *state.GlobalState, keys []string) {
-	if gs == nil || gs.Profile == nil || len(keys) == 0 {
+	if !progresses(gs) || len(keys) == 0 {
 		return
 	}
 	changed := false

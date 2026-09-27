@@ -77,9 +77,13 @@ func BootRun(gs *state.GlobalState) {
 // on disk: starting a run truncates it and resuming one appends to it. See internal/journal.
 func beginJournal(gs *state.GlobalState) {
 	gs.Journal.Begin(journalHeader(gs))
+	action := journal.RunStarted
+	if gs.Run != nil && gs.Run.SeedChosen() {
+		action = journal.RunStartedChosen
+	}
 	gs.Journal.Write(journal.Record{
 		Kind:   journal.KindRun,
-		Action: journal.RunStarted,
+		Action: action,
 		Key:    seeds.Code(gs.RunSeed),
 	})
 }
@@ -170,15 +174,33 @@ func tutorialForThisRun(gs *state.GlobalState) (tutorial.Script, bool) {
 // **The saved run is deleted before the new one is built**, so a game closed on the title screen
 // straight afterwards does not come back to the journey the player just abandoned.
 func NewRun(gs *state.GlobalState) {
+	NewRunOn(gs, RollSeed(gs), false)
+}
+
+// RollSeed is the code a new run would start on if nobody chose one: the pinned seed when there is
+// one, a fresh roll otherwise. The new-run dialog opens its wheels on it.
+func RollSeed(gs *state.GlobalState) int64 {
+	if gs.SeedPinned {
+		return gs.RunSeed
+	}
+	return seeds.Normalize(time.Now().UnixNano())
+}
+
+// NewRunOn starts a new run on the given seed. **chosen says the player entered the code** on the
+// new-run dialog rather than taking the one rolled for them, and it is recorded on the run and in
+// the journal — a chosen seed is a journey that could have been looked up in advance, which is
+// what the game withholds things from. See session.ChooseSeed.
+func NewRunOn(gs *state.GlobalState, seed int64, chosen bool) {
 	discardSavedRun(gs)
 
-	if !gs.SeedPinned {
-		gs.RunSeed = seeds.Normalize(time.Now().UnixNano())
-	}
+	gs.RunSeed = seed
 	gs.Resumed = false
 	gs.Run = buildRun(gs)
+	if chosen {
+		gs.Run.ChooseSeed()
+	}
 	beginJournal(gs)
-	log.Printf("new run %s", seeds.Code(gs.RunSeed))
+	log.Printf("new run %s (seed chosen: %v)", seeds.Code(gs.RunSeed), gs.Run.SeedChosen())
 
 	enterRun(gs)
 }

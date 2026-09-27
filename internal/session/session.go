@@ -170,7 +170,17 @@ type Session struct {
 	// reason roundLimit is a field: a brand that buys a sixth finger has one place to write. See
 	// relic.go, and Equip, which is where it reaches a fighter.
 	relicSlots int
+
+	// seedChosen says the player entered this run's code on the new-run dialog rather than taking
+	// the one rolled for them. **Read by nothing in the rules**: it is a fact about how the journey
+	// was started, and what reads it is the achievement award, which refuses everything on such a
+	// run. Saved with the run. See ChooseSeed.
+	seedChosen bool
 }
+
+// ChooseSeed marks this run as started on a code the player entered. SeedChosen reads it back.
+func (s *Session) ChooseSeed()      { s.seedChosen = true }
+func (s *Session) SeedChosen() bool { return s.seedChosen }
 
 // New starts a run from a deck list — `startingDeck`, in practice, expanded to one entry per
 // card. The slice is copied, so the caller's starting list cannot be edited by an essence.

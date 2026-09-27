@@ -128,3 +128,28 @@ func TestTheConfusableLettersFoldToTheDigitTheyLookLike(t *testing.T) {
 		}
 	}
 }
+
+func TestAWheelVisitsEveryCharacterAndComesBackRound(t *testing.T) {
+	code := "000000"
+	seen := map[int64]bool{}
+	for i := int64(0); i < Base; i++ {
+		n, err := Parse(code)
+		if err != nil {
+			t.Fatalf("a stepped code %q does not parse: %v", code, err)
+		}
+		seen[n] = true
+		code = Step(code, CodeLen-1, 1)
+	}
+	if code != "000000" {
+		t.Fatalf("a full turn of the last wheel ended on %q, want 000000", code)
+	}
+	if len(seen) != int(Base) {
+		t.Fatalf("a full turn visited %d codes, want %d", len(seen), Base)
+	}
+	if got := Step("000000", 0, -1); got != "Z00000" {
+		t.Fatalf("stepping the first wheel back from 0 = %q, want Z00000", got)
+	}
+	if got := Step("M9079R", 2, 0); got != "M9079R" {
+		t.Fatalf("a step of nothing changed the code to %q", got)
+	}
+}

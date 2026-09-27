@@ -70,10 +70,9 @@ type GlobalState struct {
 	// RunSeed is the number every random choice in a run derives from, set once by main and
 	// never re-rolled while the process lives.
 	//
-	// **It is the per-run seed the determinism rules have been writing against**, arriving
-	// early because the enemy order wanted it (2026-08-11). The rules say a run will one day
-	// be replayable from a seed typed into a field; this is that number, generated from the
-	// clock for now because there is no field to type it into and no Session to hold it.
+	// **It is the per-run seed the determinism rules have been writing against.** A new run
+	// takes it from the clock unless the player turns the new-run dialog's wheels to a code of
+	// their own — see screens.NewRunOn.
 	//
 	// **It is always in `seeds.Space` — a six-character Crockford base32 run code** *(2026-08-25)*, so every
 	// run can be written down and typed back. `main` folds the clock into that range with

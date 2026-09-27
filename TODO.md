@@ -181,16 +181,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Later
 
-- [ ] **Let a run seed be typed in.** A player can *read* a code — the run-over splash and the
-      settings screen both draw it — but cannot hand one back, so a run is reproducible and not
-      replayable.
-      - **This is the one typed-text field in the whole game**, per the input vocabulary, and it
-        is the trigger `internal/models/doc.go` names for revisiting the hand-rolled-UI decision:
-        a caret, a selection and a clipboard are the one widget cheaper to take than to build.
-      - **Everything under it is done.** `seeds.Parse` reads a code, `state.SeedPinned` says a
-        seed was chosen rather than rolled, and both card shuffles derive from `RunSeed` — so a
-        typed seed already reaches the cards. What is missing is the field and where New Run
-        offers it.
 - [ ] **Don't pre-roll into a fixed array — keep a seeded stream per concern.** A
       `*rand.Rand` seeded once *is* an infinite deterministic list; a pre-generated slice
       is just the first N entries of it, and N has to be guessed. The endless journey has
@@ -218,12 +208,11 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         one that added the file.
 - [ ] **Several profiles, and the second text screen.** Explicitly a later problem, split out
       so that "one profile for now" does not quietly become "one profile forever". Multiple
-      profiles need naming, naming needs typing, and typing makes the one-text-field rule in
-      `CLAUDE.md` into two.
+      profiles need naming, naming needs typing, and the game has no text field at all — a run
+      code is entered on wheels.
       - That is a rule change rather than a feature. Revisit the hand-rolled-UI decision at the
-        same time — see `internal/models/doc.go`, whose trigger for reaching for a toolkit is
-        precisely "the seed text field turns out to be painful", and a second field doubles the
-        exposure.
+        same time — see `internal/models/doc.go`, whose one trigger for reaching for a toolkit is
+        a text field.
       - Numbered slots picked from a list would dodge the text field entirely, at the cost of
         "Profile 2" meaning nothing to the player.
 - [ ] **The journey's ends.** The portal choice is built — see MECHANICS.md §The portal. What is

@@ -29,8 +29,8 @@
 //   - A screen's working state lives on its scene, never on GlobalState. If exactly one screen
 //     reads a field, it belongs to that screen. If it has to outlive a fight, it belongs to
 //     internal/session.
-//   - Clicks and drags only. No right click, no hotkeys, and one typed-text field in the whole
-//     game — the seed. Anything that wants a keyboard needs a different design.
+//   - Clicks and drags only. No right click, no hotkeys, and no typed text — even the run code is
+//     entered on wheels. Anything that wants a keyboard needs a different design.
 //   - Cards fly; they never appear. Anything that changes where it is on screen travels there.
 //   - **Nothing here may be reached from internal/ui.** That package draws for whoever asks and
 //     knows about no screen at all; a shared helper that needs a scene's geometry is a helper on

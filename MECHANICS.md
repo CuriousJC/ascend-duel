@@ -3598,6 +3598,15 @@ Which portal the player walked through is a choice, so the snapshot writes it do
 per portal, in realm order — and a resume refuses a key its realm never offered.
 `TestThePortalsTakenSurviveAResume` holds it.
 
+**A run knows whether its seed was chosen.** New Run opens on a rolled run code, and the player may
+turn its six wheels to a code of their own before starting; a run started on a code other than the
+one rolled is marked **seed chosen**, saved with the run and written to the journal's opening line.
+The dialog says so before START: an **Achievements enabled** box at its top is ticked while the
+wheels hold the rolled code, clears when a wheel is turned off it, and RANDOM ticks it again.
+A chosen seed is a journey that could have been looked up in advance, so **a run on one progresses
+nothing**: no lifetime tally moves, no achievement is awarded and nothing unlocks while it lasts.
+Whatever the profile keeps across runs is kept for rolled runs only.
+
 **Nothing about the profile is ever fatal.** A missing file is a new player, a corrupt file is a
 new player, an unwritable directory is a session whose progress is not recorded — the same rule
 the audio device is under. A game that refused to launch over a save file would be a worse bug

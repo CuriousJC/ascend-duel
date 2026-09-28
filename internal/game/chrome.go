@@ -37,8 +37,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-
-	"image/color"
 )
 
 // The settings button: a small square in the bottom-right corner of the screen, carrying a cog.
@@ -88,14 +86,14 @@ const (
 	animButtonLabel = "A"
 )
 
-// settingsButtonColor is the face at full strength: a flat slate, deliberately unlike any control
+// settingsButtonColor is the face at full strength: ButtonGray, deliberately unlike any control
 // that plays the game.
 //
-// DUEL! is crimson and Discard is yellow because they are choices inside a duel. This is not a
+// DUEL! is red and Discard is yellow because they are choices inside a duel. This is not a
 // move — it changes nothing about a run and never becomes unavailable for a game reason — so
 // it takes a color that says "this is the program, not the fight". Same argument as the relic
 // row's backing being gray rather than pink, and the settings screen's sliders share it.
-var settingsButtonColor = color.RGBA{R: 92, G: 96, B: 108, A: 255}
+var settingsButtonColor = ui.ButtonGray
 
 // openSettings goes to the settings screen, remembering where the player was.
 //

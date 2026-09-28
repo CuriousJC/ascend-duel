@@ -43,7 +43,7 @@ const (
 	// it. **Aligned on the gutter rather than centered as lines**, because a column of figures is
 	// read by scanning down it and centered rows put every number in a different place.
 	runOverRowHeight  = 40
-	runOverLabelSize  = 20
+	runOverLabelSize  = systems.TextMedium
 	runOverFigureSize = 26
 	runOverGutter     = 24
 
@@ -51,7 +51,7 @@ const (
 	runOverSeedBoxW    = 340
 	runOverSeedBoxH    = 96
 	runOverSeedSize    = 46
-	runOverSeedCapSize = 15
+	runOverSeedCapSize = systems.TextSmall
 	runOverSeedCaption = "SEED"
 )
 
@@ -81,7 +81,7 @@ type RunOverScene struct {
 // why positioning is not done in Draw.
 func (s *RunOverScene) Init(gs *state.GlobalState) {
 	if s.back == nil {
-		s.back = models.NewButton(420, 84, "BACK TO TITLE", func() { s.leave(gs) })
+		s.back = models.NewButton(420, ui.ButtonLarge, "BACK TO TITLE", func() { s.leave(gs) })
 		s.back.TextSize = 44
 	}
 	s.back.ScreenX, s.back.ScreenY = gs.PctX(50), gs.PctY(91)

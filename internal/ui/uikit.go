@@ -1,14 +1,13 @@
 package ui
 
 import (
-	"image/color"
-
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/journey"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
 // The handful of things the shared drawing layer needs that had come to live inside one screen.
@@ -37,11 +36,19 @@ func SetEnabled(b *models.Button, enabled bool) {
 	}
 }
 
+// ButtonRed and ButtonGray are the two faces most buttons take — see systems.ButtonRed for what
+// each means. A new button picks one of the two before it reaches for a third color, because a
+// third color is a third face to author.
+var (
+	ButtonRed  = systems.ButtonRed
+	ButtonGray = systems.ButtonGray
+)
+
 // panelBlue is the stroke around a dialog and the toast's dismiss button. It was the
 // action-point bar's own blue until 2026-09-10, when the bar's cells went red and the name
 // stopped describing what it does — every remaining caller is a panel edge, so it is named
 // for that rather than for the widget it used to belong to.
-var panelBlue = color.RGBA{R: 70, G: 130, B: 230, A: 255}
+var panelBlue = systems.ButtonBlue
 
 func Abs(n int) int {
 	if n < 0 {

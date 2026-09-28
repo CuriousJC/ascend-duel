@@ -39,7 +39,7 @@ import (
 // the sixth row ended 200 pixels below the bottom of the screen.
 const (
 	titleButtonWidth  = 460
-	titleButtonHeight = 84
+	titleButtonHeight = ui.ButtonLarge
 	titleRowGap       = 88
 )
 
@@ -55,6 +55,11 @@ type TitleScene struct {
 	// newRun is the dialog New Run opens: the run code the journey starts on, and the warning when
 	// there is a journey in progress to lose.
 	newRun ui.SeedDialog
+
+	// backdrops is the rooms behind the menu, chosen once a launch — see pickTitleBackdrops. Nil
+	// until the first Init, and kept through a return to the title so the picture does not change
+	// under a player who only went to the settings.
+	backdrops []string
 }
 
 // Init builds the buttons on first entry and positions them every time.
@@ -64,6 +69,9 @@ type TitleScene struct {
 // stale any frame Ebiten chooses to skip Draw. The internal resolution is fixed, so
 // these coordinates only need computing once per visit.
 func (s *TitleScene) Init(gs *state.GlobalState) {
+	if s.backdrops == nil {
+		s.backdrops = pickTitleBackdrops(gs)
+	}
 	if s.newRunButton == nil {
 		s.newRunButton = models.NewButton(titleButtonWidth, titleButtonHeight, "NEW RUN",
 			func() { s.startNewRun(gs) })
@@ -145,7 +153,7 @@ func (s *TitleScene) startNewRun(gs *state.GlobalState) {
 }
 
 func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	ui.FillGround(screen)
+	drawTitleBackdrops(gs, screen, s.backdrops)
 
 	// The logo, committed at the size it is drawn so nothing resamples it every frame.
 	title := gs.Assets["title_png"]
@@ -164,16 +172,23 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		systems.DrawButton(gs, screen, b)
 	}
 
-	// The build, bottom right. Small and dim on purpose — it is a thing to be *found* when
-	// someone is asked "which version are you on", not a thing to be read every time the
-	// title screen is looked at.
-	versionOp := &text.DrawOptions{}
-	versionOp.GeoM.Translate(float64(gs.PctX(100)-versionInset), float64(gs.PctY(100)-versionInset))
-	versionOp.PrimaryAlign = text.AlignEnd
-	versionOp.SecondaryAlign = text.AlignEnd
-	versionOp.ColorScale.ScaleWithColor(versionColor)
-	text.Draw(screen, gs.Version,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, versionOp)
+	// The build, bottom right. Small on purpose — it is a thing to be *found* when someone is asked
+	// "which version are you on", not a thing to be read every time the title screen is looked at.
+	// **In the prose glyphs, white under their outline**, because it sits on whichever painted room
+	// the launch drew and no one ink reads on all of them.
+	if systems.ProseCovers(gs.Version) {
+		w := systems.MeasureProse(gs.Version, versionCap)
+		systems.DrawProse(screen, gs.Version, color.RGBA{},
+			float64(gs.PctX(100)-versionInset)-w, float64(gs.PctY(100)-versionInset), versionCap)
+	} else {
+		versionOp := &text.DrawOptions{}
+		versionOp.GeoM.Translate(float64(gs.PctX(100)-versionInset), float64(gs.PctY(100)-versionInset))
+		versionOp.PrimaryAlign = text.AlignEnd
+		versionOp.SecondaryAlign = text.AlignEnd
+		versionOp.ColorScale.ScaleWithColor(versionColor)
+		text.Draw(screen, gs.Version,
+			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, versionOp)
+	}
 
 	// Over the menu it is asking about.
 	s.newRun.Draw(gs, screen)
@@ -184,5 +199,8 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 const titleLogoCenterY = 165
 
 const versionInset = 14
+
+// versionCap is the build string's capital height, the prose set's ten-pixel floor.
+const versionCap = 10
 
 var versionColor = color.RGBA{R: 60, G: 80, B: 78, A: 255}

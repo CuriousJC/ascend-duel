@@ -43,7 +43,7 @@ const (
 
 	// ledgerNoteSize is the line reporting what the last press did, written beside the button and
 	// small enough that a file name fits without reaching the centered title.
-	ledgerNoteSize = 16
+	ledgerNoteSize = systems.TextSmall
 
 	// ledgerNoteGap is the air between the button and that line.
 	ledgerNoteGap = 12

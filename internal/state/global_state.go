@@ -43,19 +43,14 @@ const (
 // and none of them were anyone else's business.
 type GlobalState struct {
 	//Global Game Stuff
-	// Two independent debug flags, because they answer different questions and are wanted
-	// at different times. DebugPlacement is about where things are drawn — the grid, the
-	// rulers, the scratch strings — and is safe to leave on while playing. DebugGameplay
-	// changes what the player is allowed to know, so leaving it on means not playing the
-	// real game. Neither may ever change an outcome; both are views.
-	DebugPlacement bool
-	DebugGameplay  bool
+	// DebugGameplay changes what the player is allowed to know, so leaving it on means not playing
+	// the real game. It may never change an outcome; it is a view.
+	DebugGameplay bool
 
 	// DebugAnimations opens the animation gallery's door: a square in the frame's bottom strip that
-	// is drawn only while this is on. **A third flag rather than a lodger on DebugPlacement**,
-	// which is the rule those two are already under — they answer different questions and are
-	// wanted at different times, and "where is this drawn" is not "what movements does the game
-	// have". Like both of them it is a *view*, set once in main.go, off by default, and it may
+	// is drawn only while this is on. **A second flag rather than a lodger on DebugGameplay**,
+	// because they answer different questions and are wanted at different times — "what may the
+	// player know" is not "what movements does the game have". Like both of them it is a *view*, set once in main.go, off by default, and it may
 	// never change an outcome. See screens.AnimationsScene.
 	DebugAnimations bool
 
@@ -89,14 +84,12 @@ type GlobalState struct {
 	// source from it — never a shared one — per the five-streams rule in CLAUDE.md.
 	RunSeed int64
 
-	Debug1, Debug2 string
-	ActiveScreen   ActiveScreen
-	NewScreen      bool
-	Count          int
-	CountSecond    int
-	MouseX         int
-	MouseY         int
-	ShouldClose    bool
+	ActiveScreen ActiveScreen
+	NewScreen    bool
+	Count        int
+	MouseX       int
+	MouseY       int
+	ShouldClose  bool
 
 	// ModalOpen is a scene declaring that it has a dialog up, so the game's own chrome —
 	// today just the mute button — stands down rather than sitting live on top of it.

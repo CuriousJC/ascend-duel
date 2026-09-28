@@ -123,8 +123,10 @@ func (d *SeedDialog) build() {
 		i := i
 		d.up[i] = models.NewButton(seedCellWidth, seedArrowHeight, "", func() { d.Turn(i, 1) })
 		d.up[i].BaseColor = confirmCancelColor
+		d.up[i].Bevelled = true
 		d.down[i] = models.NewButton(seedCellWidth, seedArrowHeight, "", func() { d.Turn(i, -1) })
 		d.down[i].BaseColor = confirmCancelColor
+		d.down[i].Bevelled = true
 	}
 	d.cancel = models.NewButton(seedButtonWidth, seedButtonHeight, "CANCEL", func() { d.Close() })
 	d.cancel.BaseColor = confirmCancelColor

@@ -39,7 +39,7 @@ const (
 	confirmHeight = 330
 
 	confirmTitleSize = 36
-	confirmBodySize  = 20
+	confirmBodySize  = systems.TextMedium
 
 	// Offsets down from the box's top edge.
 	confirmTitleTop = 74
@@ -47,14 +47,13 @@ const (
 
 	// The answer row: two buttons, centered as a pair, sitting off the bottom edge.
 	confirmButtonWidth  = 330
-	confirmButtonHeight = 74
+	confirmButtonHeight = ButtonLarge
 	confirmButtonGap    = 24
 	confirmButtonBottom = 56
 )
 
-// confirmCancelColor is the safe answer: the same flat slate the chrome and the settings sliders
-// take, which is this game's color for "the program, not the fight".
-var confirmCancelColor = color.RGBA{R: 92, G: 96, B: 108, A: 255}
+// confirmCancelColor is the safe answer, in ButtonGray: "the program, not the fight".
+var confirmCancelColor = ButtonGray
 
 // ConfirmDialog is a question with two answers.
 //

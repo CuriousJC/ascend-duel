@@ -44,7 +44,7 @@ const (
 	sliderLabelHeight = 26
 
 	// sliderTextSize is the point size of both strings.
-	sliderTextSize = 18
+	sliderTextSize = TextSmall
 )
 
 // defaultSliderColor is the filled part of the track for a slider that names no color. The same

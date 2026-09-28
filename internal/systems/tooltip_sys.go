@@ -23,7 +23,7 @@ import (
 const (
 	tipPad       = 24
 	tipTitleSize = 39
-	tipLineSize  = 32
+	tipLineSize  = TextLarge
 	tipLineGap   = 12
 
 	// tipGap is how far the panel sits from the thing it explains, and tipEdge how close it may come
@@ -82,6 +82,12 @@ func UpdateTooltip(gs *state.GlobalState, t *models.Tooltip) {
 // half off the screen.
 func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip) {
 	if !t.Showing() {
+		return
+	}
+
+	// **In the prose glyphs whenever every word is in the set**, and whole in the font otherwise.
+	if tipProseCovers(t) {
+		drawTooltipProse(screen, t, gs.ScreenWidth, gs.ScreenHeight)
 		return
 	}
 
@@ -154,9 +160,8 @@ func DrawRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFace, 
 // internal resolution. Zero is the font as drawn.
 //
 // **Synthesized rather than a second font file, because Kubasta has one weight.** It is a static
-// face with no variation axes — RobotoFlex is the only variable font embedded, and swapping the
-// panel's typeface to get a bolder one would make the tooltip the one place in the game set in a
-// different face. A second pass a fraction of a pixel to the side is the standard way to thicken
+// face with no variation axes, and swapping the panel's typeface to get a bolder one would make
+// the tooltip the one place in the game set in a different face. A second pass a fraction of a pixel to the side is the standard way to thicken
 // a single-weight face and it keeps the letterforms.
 //
 // **Horizontal only.** Offsetting vertically as well fills the counters of a and e at this size
@@ -231,8 +236,13 @@ func tipLayout(t *models.Tooltip, face, titleFace *text.GoTextFace) (title, body
 // tipPlace is where the panel goes: to the right of the anchor, flipping and clamping rather than
 // running off the screen.
 func tipPlace(gs *state.GlobalState, anchor image.Rectangle, w, h int) image.Point {
+	return tipPlaceIn(gs.ScreenWidth, gs.ScreenHeight, anchor, w, h)
+}
+
+// tipPlaceIn is tipPlace against a screen of a given size.
+func tipPlaceIn(screenW, screenH int, anchor image.Rectangle, w, h int) image.Point {
 	x := anchor.Max.X + tipGap
-	if x+w > gs.ScreenWidth-tipEdge {
+	if x+w > screenW-tipEdge {
 		x = anchor.Min.X - tipGap - w
 	}
 	if x < tipEdge {
@@ -242,8 +252,8 @@ func tipPlace(gs *state.GlobalState, anchor image.Rectangle, w, h int) image.Poi
 	// Top-aligned with the thing it explains, which reads as belonging to it; pushed up only when
 	// the panel would otherwise fall off the bottom.
 	y := anchor.Min.Y
-	if y+h > gs.ScreenHeight-tipEdge {
-		y = gs.ScreenHeight - tipEdge - h
+	if y+h > screenH-tipEdge {
+		y = screenH - tipEdge - h
 	}
 	if y < tipEdge {
 		y = tipEdge

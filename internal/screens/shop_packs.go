@@ -24,7 +24,6 @@ package screens
 
 import (
 	"fmt"
-	"image/color"
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -287,8 +286,8 @@ func paneName(p shopPane) string {
 	return "packs"
 }
 
-// initRerollButtons builds the two, once. **The crimson is not theirs** — a reroll is not a thing
-// that cannot be taken back, so it wears the Leave button's slate rather than the sell tab's red.
+// initRerollButtons builds the two, once. **The red is not theirs** — a reroll is not a thing
+// that cannot be taken back, so it wears the Leave button's gray rather than the sell tab's red.
 func (s *ShopScene) initRerollButtons() {
 	if s.relicReroll != nil {
 		return
@@ -298,7 +297,7 @@ func (s *ShopScene) initRerollButtons() {
 		b := models.NewButton(shopRerollWidth, shopRerollHeight, "", func() {
 			s.rerolling, s.rerollNow = p, true
 		})
-		b.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
+		b.BaseColor = ui.ButtonGray
 		b.TextSize = shopRerollText
 		return b
 	}

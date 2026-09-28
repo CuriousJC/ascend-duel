@@ -59,7 +59,7 @@ const (
 	noticeCalmTop  = 160
 
 	noticeButtonWidth  = 300
-	noticeButtonHeight = 68
+	noticeButtonHeight = ButtonMedium
 	noticeButtonBottom = 48
 
 	// noticeButtonLabel is the one answer. Not "OK", for the toast's reason: the box is not asking

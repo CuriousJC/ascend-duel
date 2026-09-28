@@ -241,16 +241,17 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	if s.leaveButton == nil {
 		s.leaveButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LEAVE",
 			func() { s.leaving = true })
-		s.leaveButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
+		s.leaveButton.BaseColor = ui.ButtonGray
 	}
 
 	if s.sellButton == nil {
 		s.sellButton = models.NewButton(sellTabWidth, sellTabHeight, "",
 			func() { s.selling = s.armed })
-		// **The color a control that commits something wears**, and the same crimson DUEL!
+		// **The color a control that commits something wears**, and the same red DUEL!
 		// takes. A sale is the only thing on this screen that cannot be taken back.
-		s.sellButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255}
+		s.sellButton.BaseColor = ui.ButtonRed
 		s.sellButton.TextSize = sellTabTextSize
+		s.sellButton.Bevelled = true
 	}
 
 	s.initRerollButtons()
@@ -742,8 +743,8 @@ func (s *ShopScene) wornSlot(gs *state.GlobalState, i, n int) image.Rectangle {
 func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	ui.FillGround(screen)
 
-	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}
-	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 26}
+	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}
+	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextLarge}
 
 	line := func(y int, face *text.GoTextFace, msg string, ink color.RGBA) {
 		op := &text.DrawOptions{}

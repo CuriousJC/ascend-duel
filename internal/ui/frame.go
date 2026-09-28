@@ -77,11 +77,25 @@ const (
 	TopRowTopPct = 2
 )
 
+// **Every button in the game is one of four heights**, and a new button takes one of these rather
+// than a figure of its own. The face is authored art stretched sideways and scaled to the height,
+// so its contour is a fixed share of the height: two buttons of nearby heights would carry two
+// line weights that read as two styles. A screen that wants a button a little bigger or smaller
+// takes the next tier and moves its layout.
+//
+// Widths are free — only the middle of the face stretches.
+const (
+	ButtonLarge  = 80 // the screen's own exits and choices: the title menu, BACK, a dialog's answers
+	ButtonMedium = 68 // the combat strip and the frame's dialogs
+	ButtonSmall  = 44 // the frame's corner controls, and the small buttons inside a panel
+	ButtonTiny   = 32 // a panel's close X and anything set in a panel's header
+)
+
 // The square controls along the bottom line, and the column above them.
 const (
 	// ChromeButtonSize is the square every corner control takes, and ChromeButtonInset is the air
 	// under it. ChromeButtonGap is the air between two of them.
-	ChromeButtonSize  = 44
+	ChromeButtonSize  = ButtonSmall
 	ChromeButtonInset = 10
 	ChromeButtonGap   = 10
 
@@ -89,7 +103,7 @@ const (
 	// in the column. **Sizes are the frame's and placement is the screen's** — ControlColumnSlot,
 	// which counts up from the action-point bar, stayed on the combat screen for exactly that
 	// reason.
-	ControlButtonHeight = 44
+	ControlButtonHeight = ButtonSmall
 	ControlButtonWidth  = 120
 	ControlButtonText   = 36
 )

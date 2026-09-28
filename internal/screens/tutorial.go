@@ -85,7 +85,7 @@ const (
 
 	tutorialPad      = 20
 	tutorialTextW    = 400
-	tutorialTextSize = 20
+	tutorialTextSize = systems.TextMedium
 
 	// tutorialLinePitch is the text size plus the gap that keeps two lines of Kubasta from
 	// touching. Prose rather than the cards' clipped register, so this is the one place in the
@@ -93,7 +93,7 @@ const (
 	tutorialLinePitch = 27
 
 	tutorialButtonW   = 110
-	tutorialButtonH   = 40
+	tutorialButtonH   = ui.ButtonSmall
 	tutorialButtonGap = 12
 
 	tutorialPanelW = tutorialPad*3 + tutorialCardW + tutorialTextW
@@ -310,13 +310,13 @@ func (t *tutorialOverlay) build() {
 	if t.next == nil {
 		t.next = models.NewButton(tutorialButtonW, tutorialButtonH, "NEXT",
 			func() { t.nextPressed = true })
-		t.next.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255}
+		t.next.BaseColor = ui.ButtonRed
 		t.next.TextSize = 36
 	}
 	if t.skip == nil {
 		t.skip = models.NewButton(tutorialButtonW, tutorialButtonH, "SKIP",
 			func() { t.skipPressed = true })
-		t.skip.BaseColor = ui.SortButtonColor
+		t.skip.BaseColor = ui.ButtonGray
 		t.skip.TextSize = 36
 	}
 }
@@ -634,7 +634,7 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 	// which is how it first shipped: "take them all" and "SKIP" in the same pixels.
 	//
 	// It is measured off the button rather than off the panel, so the two cannot drift apart.
-	hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 17}
+	hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(t.skip.ScreenX-tutorialButtonW/2-tutorialButtonGap),
 		float64(r.Max.Y-tutorialPad-tutorialButtonH/2-9))

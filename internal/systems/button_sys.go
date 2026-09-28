@@ -202,8 +202,14 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// darker** *(2026-08-24)*. Both of those states mean "in", which brightness alone cannot say
 	// on a ramp whose bright end already belongs to hover. Disabled stays flat on purpose: no
 	// light on it at all is what makes it read as unavailable before it reads as a button.
+	//
+	// **A button with an authored face wears it instead**, and the bevel below is the fallback for a
+	// color with no face and for a button that asks for the bevel — see button_face.go.
+	face := buttonFace(gs, button)
 	fill := buttonStateColor(button)
-	if button.State == models.ButtonStateDisabled {
+	if face != nil {
+		drawButtonFace(button, face)
+	} else if button.State == models.ButtonStateDisabled {
 		vector.FillRect(button.Image, 0, 0,
 			float32(button.Width), float32(button.Height), fill, false)
 	} else {
@@ -216,16 +222,18 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// A sunken face moves its label with it. One pixel, because the bevel it is following is
 	// three: a label that traveled the whole depth would read as a second animation rather than
 	// as the same surface going down.
-	nudge := 0.0
-	if button.State != models.ButtonStateDisabled && buttonSunken(button) {
-		nudge = 1
+	nudgeX, nudgeY := 0.0, 0.0
+	if face != nil {
+		nudgeY = faceLabelShift(button, face)
+	} else if button.State != models.ButtonStateDisabled && buttonSunken(button) {
+		nudgeX, nudgeY = 1, 1
 	}
 
 	// **A label the figure set covers is drawn from it**, white under its black contour, so a
 	// button reads in the same lettering as the figures flying over the table. A label with a
 	// lower-case letter in it is not covered and stays in the font.
 	if FigureCovers(button.Text) {
-		drawButtonFigure(button, nudge)
+		drawButtonFigure(button, nudgeX, nudgeY)
 		button.Painted = true
 		button.PaintedState = button.State
 		button.PaintedText = button.Text
@@ -236,7 +244,7 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 
 	centerButtonTextOp := &text.DrawOptions{}
 	centerButtonTextOp.GeoM.Translate(
-		float64(button.Width)/2+nudge, float64(button.Height)/2+nudge)
+		float64(button.Width)/2+nudgeX, float64(button.Height)/2+nudgeY)
 	centerButtonTextOp.PrimaryAlign = text.AlignCenter
 	centerButtonTextOp.SecondaryAlign = text.AlignCenter
 	text.Draw(button.Image, button.Text,
@@ -272,7 +280,7 @@ var buttonFigureDisabled = color.RGBA{R: 150, G: 150, B: 150, A: 255}
 // **It shrinks to fit rather than overflowing**: the lettering is wider than the font at the
 // same height, and a face is a fixed width, so a long label on a narrow button comes down in size
 // until it clears both sides.
-func drawButtonFigure(button *models.Button, nudge float64) {
+func drawButtonFigure(button *models.Button, nudgeX, nudgeY float64) {
 	height := textSizeOf(button) * buttonFigureShare
 	room := float64(button.Width - 2*buttonFigurePad)
 	if w := MeasureFigure(button.Text, height); w > room && w > 0 {
@@ -283,7 +291,7 @@ func drawButtonFigure(button *models.Button, nudge float64) {
 		ink = buttonFigureDisabled
 	}
 	DrawFigure(button.Image, button.Text, FigureNeutral, ink,
-		float64(button.Width)/2+nudge, float64(button.Height)/2+nudge, height, 1, 1)
+		float64(button.Width)/2+nudgeX, float64(button.Height)/2+nudgeY, height, 1, 1)
 }
 
 // defaultButtonTextSize is what a button that names no size draws its label at, which is

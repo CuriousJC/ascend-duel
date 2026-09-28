@@ -48,6 +48,34 @@ var barCellSpent_png []byte
 //go:embed bar/bar-cell-over.png
 var barCellOver_png []byte
 
+// BUTTON FACES
+//
+// The blank body of every button, one per color at rest plus the flat disabled face, drawn at
+// 512x128 and scaled by the caller to the button's height tier. **Like a bar cell, a face is two
+// end caps and a middle every column of which is identical**, so only the middle stretches; see
+// systems.DrawButton and docs/art/button_art_prompt.MD. Keyed `button-<color>`, the file's stem.
+//
+//go:embed button/button-red.png
+var buttonRed_png []byte
+
+//go:embed button/button-gray.png
+var buttonGray_png []byte
+
+//go:embed button/button-yellow.png
+var buttonYellow_png []byte
+
+//go:embed button/button-blue.png
+var buttonBlue_png []byte
+
+//go:embed button/button-pink.png
+var buttonPink_png []byte
+
+//go:embed button/button-olive.png
+var buttonOlive_png []byte
+
+//go:embed button/button-disabled.png
+var buttonDisabled_png []byte
+
 // THE GUIDE
 //
 // The guide: the face on the tutorial's speech bubble. **A named one-off rather than a member of
@@ -269,6 +297,19 @@ func FigureFile(set, name string) ([]byte, error) {
 	return figureArt.ReadFile("figure/" + set + "/" + name)
 }
 
+// The prose glyphs: the reading set — upper and lower case, digits and punctuation — for every line
+// of text longer than a label. One white sheet under a thin black outline, which the drawing
+// multiplies by an ink or a material, plus `prose-glyphs.json` for the cells and the advances. See
+// systems.DrawProse and docs/art/prose_art_prompt.MD.
+//
+//go:embed prose/prose-glyphs.png prose/prose-glyphs.json
+var proseArt embed.FS
+
+// ProseFile returns one file of the prose set.
+func ProseFile(name string) ([]byte, error) {
+	return proseArt.ReadFile("prose/" + name)
+}
+
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
 
@@ -299,12 +340,6 @@ var duello_mid []byte
 
 // FONTS
 //
-//go:embed game/FiraSans-Regular.ttf
-var firaSansRegular []byte
-
-//go:embed game/RobotoFlex.ttf
-var robotoFlexRegular []byte
-
 //go:embed game/Kubasta.ttf
 var kubasta []byte
 
@@ -316,6 +351,13 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["barCellEmpty_png"] = loadImage(barCellEmpty_png)
 	assets["barCellSpent_png"] = loadImage(barCellSpent_png)
 	assets["barCellOver_png"] = loadImage(barCellOver_png)
+	assets["button-red"] = loadImage(buttonRed_png)
+	assets["button-gray"] = loadImage(buttonGray_png)
+	assets["button-yellow"] = loadImage(buttonYellow_png)
+	assets["button-blue"] = loadImage(buttonBlue_png)
+	assets["button-pink"] = loadImage(buttonPink_png)
+	assets["button-olive"] = loadImage(buttonOlive_png)
+	assets["button-disabled"] = loadImage(buttonDisabled_png)
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)
@@ -349,8 +391,6 @@ func LoadMusic() map[string][]byte {
 func LoadFonts() map[string]*text.GoTextFaceSource {
 	fonts := make(map[string]*text.GoTextFaceSource)
 
-	fonts["firaSansRegular"] = loadFont(firaSansRegular)
-	fonts["robotoFlexRegular"] = loadFont(robotoFlexRegular)
 	fonts["kubasta"] = loadFont(kubasta)
 
 	return fonts
@@ -484,8 +524,6 @@ func imageStem(name string) string {
 func LoadFontData() map[string][]byte {
 	fonts := make(map[string][]byte)
 
-	fonts["firaSansRegular"] = firaSansRegular
-	fonts["robotoFlexRegular"] = robotoFlexRegular
 	fonts["kubasta"] = kubasta
 
 	return fonts

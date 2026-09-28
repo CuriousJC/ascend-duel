@@ -115,6 +115,20 @@ func DrawRuneCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	BlitCard(gs, screen, at, runeSpec(gs, p, enabled, selected), cards.EssenceStyle)
 }
 
+// DrawCantripCard draws a cantrip as the card it is carried as: `EssenceStyle`, full-bleed, with
+// nothing written on it — the rune's face, for the rune's reason. What it does is in the tooltip.
+func DrawCantripCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+	c session.Cantrip, enabled bool) {
+
+	BlitCard(gs, screen, at, cards.Spec{
+		Name:    c.Name,
+		Form:    cards.FormNone,
+		Element: cards.Basic,
+		Art:     Artwork(gs, c.Art),
+		Enabled: enabled,
+	}, cards.EssenceStyle)
+}
+
 // DrawStoneCard draws a stone as the card it is offered as. Same style as an essence — a picture with
 // its text under it — because they are the same kind of thing to a player: one card, taken out of
 // a set, that changes the run rather than being played in it.

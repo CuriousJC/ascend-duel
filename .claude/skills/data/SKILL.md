@@ -22,6 +22,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies every hit by |
 | `essences.json` | `LoadEssences` | the deck alterations offered between fights |
 | `runes.json` | `LoadRunes` | the deck alterations spent *during* a fight |
+| `cantrips.json` | `LoadCantrips` | the duelist alterations cast during a fight and lasting until it ends: an `Effect` and an `Amount`, the potion's shape |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `potions.json` | `LoadPotions` | the three bottles the shop sells: which of the duelist's figures each moves, by how much, and what it costs |
 | `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
@@ -296,7 +297,7 @@ the rules have never heard of a shop.
   `dmg`, `life` — is closed and lives in Go. See `internal/session/potion.go`.
 - **`goods.json` is what the shop sells sight-unseen**: a `Contains` naming which catalog is
   inside, a `Size` saying how many are drawn, and a `Price`. **`Contains` is the closed vocabulary**
-  — `stones`, `essences`, `runes` — and it is read twice over: it decides which stream the contents
+  — `stones`, `essences`, `runes`, `cantrips` — and it is read twice over: it decides which stream the contents
   are dealt from and what happens when one is chosen, *and* it is the noun the card's own face
   writes, so a face and a dialog cannot name different catalogs.
 - **One good per catalog**, refused at load. The contents are dealt from a stream salted per

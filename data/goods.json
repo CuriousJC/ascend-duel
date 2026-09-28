@@ -115,5 +115,44 @@
     "Title": "",
     "Hint": "",
     "Tip": ["a rune changes a card during a fight,", "spent between the turns"]
+  },
+  {
+    "GoodRecord": "bundle-scrolls-small",
+    "Name": "SMALL BUNDLE OF SCROLLS",
+    "Family": "Sealed goods",
+    "Art": "",
+    "Draw": "three rolled parchment scrolls tied together with a thin ochre ribbon",
+    "Contains": "cantrips",
+    "Size": 3,
+    "Price": 3,
+    "Title": "",
+    "Hint": "",
+    "Tip": ["a cantrip strengthens you for one fight,", "spent between the turns"]
+  },
+  {
+    "GoodRecord": "bundle-scrolls",
+    "Name": "BUNDLE OF SCROLLS",
+    "Family": "Sealed goods",
+    "Art": "",
+    "Draw": "four rolled parchment scrolls tied together with a red ribbon",
+    "Contains": "cantrips",
+    "Size": 4,
+    "Price": 5,
+    "Title": "",
+    "Hint": "",
+    "Tip": ["a cantrip strengthens you for one fight,", "spent between the turns"]
+  },
+  {
+    "GoodRecord": "bundle-scrolls-large",
+    "Name": "LARGE BUNDLE OF SCROLLS",
+    "Family": "Sealed goods",
+    "Art": "",
+    "Draw": "five rolled parchment scrolls bound together with a thick deep green ribbon",
+    "Contains": "cantrips",
+    "Size": 5,
+    "Price": 6,
+    "Title": "",
+    "Hint": "",
+    "Tip": ["a cantrip strengthens you for one fight,", "spent between the turns"]
   }
 ]

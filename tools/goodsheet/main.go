@@ -197,6 +197,7 @@ var allContents = []session.GoodContents{
 	session.ContentsStones,
 	session.ContentsEssences,
 	session.ContentsRunes,
+	session.ContentsCantrips,
 }
 
 // briefs is each good's Draw, keyed by record.
@@ -293,6 +294,8 @@ func goodArt(good session.Good) (image.Image, error) {
 			key = data.DefaultStoneArt
 		case session.ContentsRunes:
 			key = data.DefaultRuneArt
+		case session.ContentsCantrips:
+			key = data.DefaultCantripArt
 		default:
 			key = data.DefaultEssenceArt
 		}
@@ -328,6 +331,8 @@ func catalogSize(c session.GoodContents) int {
 		return len(session.Stones())
 	case session.ContentsRunes:
 		return len(session.Runes())
+	case session.ContentsCantrips:
+		return len(session.Cantrips())
 	default:
 		return len(session.Essences())
 	}

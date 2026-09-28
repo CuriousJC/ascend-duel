@@ -2260,5 +2260,18 @@
     "Fight": 3,
     "Vitae": 0,
     "Life": 0
+  },
+  {
+    "ScenarioRecord": "cantrips",
+    "Note": "Two Cantrips of Endurance and two of Might in the consumables pane, against a rat that can be beaten. Cast them between turns: Endurance doubles the life and the ceiling together, Might adds to DMG and turns the DMG row pink, and both stack. Win the fight and the post-battle screen shows the life the run kept - anything above the run's own ceiling comes back as the ceiling. Four is past the pane's cap of two on purpose; the corner reads 4/2.",
+    "Relics": [],
+    "Hand": [],
+    "Cantrips": [
+      "cantrip-endurance",
+      "cantrip-endurance",
+      "cantrip-might",
+      "cantrip-might"
+    ],
+    "Enemy": "animals-outer-rat"
   }
 ]

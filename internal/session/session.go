@@ -134,6 +134,10 @@ type Session struct {
 	// same essence are two cards to draw and two decisions to make. See essence.go.
 	satchel []string
 
+	// scrolls is the scroll case: the cantrips the run is carrying but has not cast, by record key,
+	// in the order they were acquired. The sack's shape, for the sack's argument. See cantrip.go.
+	scrolls []string
+
 	// granted is the stones the last rock-shower rune handed over, so the dialog can show what
 	// the player just got. **Not snapshotted**, for the reason duplicated is not: it is a handover
 	// between two calls a frame apart, and the stones themselves are already on their rungs in
@@ -232,9 +236,9 @@ func New(deck []combat.Card) *Session {
 				"and a relic named twice goes on once", key, len(StartingRelics), s.RelicSlots())
 		}
 	}
-	// **The sack goes past the cap on purpose** *(2026-09-06)*. `Hold` refuses a third rune because
-	// `MaxHeld` is a rule about *acquiring* one, and this is a fixture planting a sack rather than
-	// a run buying one — the same exception `internal/scenario`'s check() already writes down for a
+	// **The sack goes past the cap on purpose** *(2026-09-06)*. `Hold` refuses a third consumable
+	// because `MaxConsumables` is a rule about *acquiring* one, and this is a fixture planting a sack
+	// rather than a run buying one — the same exception `internal/scenario`'s check() already writes down for a
 	// hand longer than the game's own. Four fixtures exist to walk six runes through the dialog
 	// and trimming them to two would leave four Notes describing cards that are no longer there.
 	// The pane draws the first two seats and the count reads the honest number, so an over-full
@@ -257,6 +261,12 @@ func New(deck []combat.Card) *Session {
 	for _, key := range StartingEssences {
 		if !s.Stow(key) {
 			log.Fatalf("StartingEssences names %q, which is in no essence record", key)
+		}
+	}
+	// **And the scroll case**, past the cap for the sack's reason.
+	for _, key := range StartingCantrips {
+		if !s.holdCantrip(key) {
+			log.Fatalf("StartingCantrips names %q, which is in no cantrip record", key)
 		}
 	}
 	return s

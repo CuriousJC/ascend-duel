@@ -166,6 +166,12 @@ type LedgerFight struct {
 	// dealt is what the player's blows came to across the fight. Unexported and read through
 	// Dealt(), so nothing outside this package can add to a total the rounds do not support.
 	dealt int
+
+	// used is what the player has spent from the consumables pane since the last round was
+	// recorded, waiting to open the next one. **Unexported and not saved**: a consumable is spent
+	// while planning, so it belongs at the top of the round it was spent before, and a run is never
+	// resumed inside a fight.
+	used []LedgerRecord
 }
 
 // Dealt is what the player's blows came to across the whole fight, which is the figure a collapsed
@@ -221,8 +227,29 @@ func (s *Session) RecordRound(recs []LedgerRecord, dealt int) {
 		return
 	}
 	f := &s.ledger.Fights[n-1]
+
+	// **What was spent before the round opens it**, in the order it was spent: that is when it
+	// happened, and the round is the account's smallest heading.
+	if len(f.used) > 0 {
+		recs = append(append([]LedgerRecord(nil), f.used...), recs...)
+		f.used = nil
+	}
 	f.Rounds = append(f.Rounds, LedgerRound{Number: len(f.Rounds) + 1, Records: recs})
 	f.dealt += dealt
+}
+
+// RecordUse notes a consumable spent from the pane during the fight in progress.
+//
+// **It waits for the next round rather than being written as one**, on RecordRound's argument: a
+// round is recorded when it finishes, and what the player spent while planning it is the first
+// thing that round did. A use arriving with no fight open is dropped, on RecordRound's terms.
+func (s *Session) RecordUse(rec LedgerRecord) {
+	n := len(s.ledger.Fights)
+	if n == 0 {
+		return
+	}
+	rec.Kind = KindUsed
+	s.ledger.Fights[n-1].used = append(s.ledger.Fights[n-1].used, rec)
 }
 
 // EndFight closes the record with what became of the duel.

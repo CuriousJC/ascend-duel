@@ -54,6 +54,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		LastRune:   s.lastRune,
 		Pouch:      s.Carried(),
 		Satchel:    s.Stowed(),
+		Cantrips:   s.Scrolls(),
 		NextCardID: s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
 			Propagated: s.spoils.Propagated,
@@ -378,6 +379,15 @@ func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *prof
 	for _, key := range snap.Satchel {
 		if !s.Stow(key) {
 			return nil, 0, fmt.Errorf("essence %q is not one this build has", key)
+		}
+	}
+
+	// **A carried cantrip the catalog no longer holds is refused rather than dropped**, on the terms
+	// a rune is. It goes in past the pane's cap: MaxConsumables refuses a purchase, and a resumed run
+	// is not buying anything.
+	for _, key := range snap.Cantrips {
+		if !s.holdCantrip(key) {
+			return nil, 0, fmt.Errorf("cantrip %q is not one this build has", key)
 		}
 	}
 

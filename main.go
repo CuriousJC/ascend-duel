@@ -207,6 +207,7 @@ func main() {
 		session.StartingRunes = scenario.Runes()
 		session.StartingStones = scenario.Stones()
 		session.StartingEssences = scenario.Essences()
+		session.StartingCantrips = scenario.Cantrips()
 	}
 
 	// **The profile is opened before the run, because it can decide what the run is.** A run in

@@ -55,17 +55,24 @@ const ()
 // card the screen does. Nothing is drawn if it cannot be built — a missing font, most likely —
 // for the same reason drawCard does nothing.
 func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Image) {
-	img := ui.CardImage(gs,
-		ui.DuelistSpec(gs, s.fighter, s.sideName(combat.SideA),
-			s.shownDMG(combat.SideA, s.fighter.DMG),
-			s.shownVitae(gs.Run.Vitae()),
-			s.shownLife(combat.SideA, s.fighter.CurrentLife),
-			s.shownMaxLife(combat.SideA, s.fighter.MaxLife),
-			s.fighter.ActionPoints(),
-			s.fightIndex,
-			s.shownShields(combat.SideA, s.fighter.Shields.Count()),
-			s.shownShieldElements(combat.SideA)...),
-		cards.DuelistStyle)
+	spec := ui.DuelistSpec(gs, s.fighter, s.sideName(combat.SideA),
+		s.shownDMG(combat.SideA, s.fighter.DMG),
+		s.shownVitae(gs.Run.Vitae()),
+		s.shownLife(combat.SideA, s.fighter.CurrentLife),
+		s.shownMaxLife(combat.SideA, s.fighter.MaxLife),
+		s.fighter.ActionPoints(),
+		s.fightIndex,
+		s.shownShields(combat.SideA, s.fighter.Shields.Count()),
+		s.shownShieldElements(combat.SideA)...)
+
+	// **A DMG a cantrip has moved is written in the relic pink**, the ink the game already uses for
+	// "something you are carrying moved this figure" — so a Might reads on the card for the whole
+	// fight rather than as a number the player has to remember was 10.
+	if s.cantripDMG > 0 {
+		spec.Stats[0].ValueInk = cards.PickedInk
+	}
+
+	img := ui.CardImage(gs, spec, cards.DuelistStyle)
 	if img == nil {
 		return
 	}

@@ -156,3 +156,18 @@ func TestAHitsOutcomeAttachesToThatHitsLine(t *testing.T) {
 		t.Errorf("the total reads %q, and no outcome belongs to it", got)
 	}
 }
+
+// A consumable reads as the duelist doing something with it: a cantrip is cast and says what it
+// moved, and a rune is used on the cards it was aimed at.
+func TestAConsumableUsedReadsAsASentence(t *testing.T) {
+	got := lineText(LedgerLines([]session.LedgerRecord{
+		{Kind: session.KindUsed, Side: session.SideYou, Name: "Duelist", Note: "cantrip",
+			Subject: "Cantrip of Might", Into: "DMG 10 to 20"},
+		{Kind: session.KindUsed, Side: session.SideYou, Name: "Duelist", Note: "rune",
+			Subject: "Embermark", Into: "a jab and an ice bash"},
+	}))
+	want := "Duelist casts Cantrip of Might - DMG 10 to 20\nDuelist uses Embermark on a jab and an ice bash\n"
+	if got != want {
+		t.Errorf("the uses read as\n%s\nwant\n%s", got, want)
+	}
+}

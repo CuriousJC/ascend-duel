@@ -1003,12 +1003,12 @@ func goodAffordable(gs *state.GlobalState, key string) bool {
 // goodAvailable is whether a seat can be clicked at all: the purse covers it, and there is somewhere
 // to put what comes out.
 //
-// **Only the sack has the second question** *(2026-09-06)*. A stone is spent in the dialog that
-// opened the bag and an essence is spent in the dialog that opened the vial, so neither can hand the run
-// something it has no room for; a rune goes into a sack that now holds two — see
-// session.MaxHeld — and a full one would take five vitae for a card that `Hold` refuses. The seat
-// goes dim rather than the purchase failing afterwards, which is the same courtesy an unaffordable
-// good already gets.
+// **Only the carried packs have the second question** *(2026-09-06)*. A stone is spent in the dialog
+// that opened the bag and an essence is spent in the dialog that opened the vial, so neither can hand
+// the run something it has no room for; a rune and a cantrip go into the consumables pane, which
+// holds two of anything — see session.MaxConsumables — and a full one would take vitae for a card
+// that `Hold` refuses. The seat goes dim rather than the purchase failing afterwards, which is the
+// same courtesy an unaffordable good already gets.
 func goodAvailable(gs *state.GlobalState, key string) bool {
 	if !goodAffordable(gs, key) {
 		return false
@@ -1017,10 +1017,16 @@ func goodAvailable(gs *state.GlobalState, key string) bool {
 	if !ok {
 		return false
 	}
-	if good.Contains == session.ContentsRunes && gs.Run.HoldFull() {
+	if carried(good.Contains) && gs.Run.ConsumablesFull() {
 		return false
 	}
 	return true
+}
+
+// carried is whether what a good holds goes into the consumables pane rather than being spent in the
+// dialog that opened it.
+func carried(c session.GoodContents) bool {
+	return c == session.ContentsRunes || c == session.ContentsCantrips
 }
 
 // openGood pays for a sealed good and opens it.
@@ -1088,6 +1094,8 @@ func goodArt(gs *state.GlobalState, good session.Good) image.Image {
 		return ui.Artwork(gs, data.DefaultStoneArt)
 	case session.ContentsRunes:
 		return ui.Artwork(gs, data.DefaultRuneArt)
+	case session.ContentsCantrips:
+		return ui.Artwork(gs, data.DefaultCantripArt)
 	default:
 		return ui.Artwork(gs, data.DefaultEssenceArt)
 	}

@@ -44,6 +44,13 @@ const (
 	// than being applied on the spot — a rune goes into the sack and is spent between the turns of
 	// a fight.
 	ContentsRunes
+
+	// ContentsCantrips is the bundle of scrolls. **A cantrip is carried like a rune**, into the
+	// scroll case, and cast between the turns of a fight onto the fighter for the rest of it.
+	//
+	// **The one pack whose draw repeats** *(owner's call, 2026-09-28)*: the catalog is shorter than
+	// the smallest bundle, so a bundle is drawn with replacement rather than cut short.
+	ContentsCantrips
 )
 
 // Noun is the word the card's face and its tooltip write for what is inside — "4 stones, keep 1".
@@ -54,6 +61,8 @@ func (c GoodContents) Noun() string {
 		return "stones"
 	case ContentsRunes:
 		return "runes"
+	case ContentsCantrips:
+		return "cantrips"
 	default:
 		return "essences"
 	}
@@ -264,6 +273,8 @@ func parseGoodContents(word string) (GoodContents, error) {
 		return ContentsEssences, nil
 	case "runes":
 		return ContentsRunes, nil
+	case "cantrips":
+		return ContentsCantrips, nil
 	case "":
 		return 0, fmt.Errorf("no Contains, and a good is what is inside it")
 	default:

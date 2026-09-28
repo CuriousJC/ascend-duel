@@ -14,6 +14,17 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
+- [ ] **Check whether a mid-fight re-Equip stacks the run's bonuses a second time** *(owner asked
+      for this to be tracked; suspected from reading, not reproduced)*. `CombatScene.spendStone`,
+      and the rock-shower branch of `spendRune`, call `gs.Run.Equip(s.fighter.Duelist)` on a fighter
+      `Init` already equipped. `session.Equip` *adds* to what it is handed — `dmgBonus` and
+      `lifeBonus`, the boss scaling, the worn relics' `AddedDMG`/`AddedHP`/`HPScale` — so spending
+      a stone mid-fight may give a potion's DMG, a relic's DMG and the boss life bonus twice. The
+      intent is only to carry the new stone counts onto the duelist (`equipStones`). Confirm with a
+      scenario wearing a DMG relic and a stone in the pouch: note the DMG row, spend the stone,
+      read it again. If it moves, the fix is to apply only the stones mid-fight rather than the
+      whole Equip.
+
 - [ ] **Stand up the private-asset bucket and arm the release guard** *(owner asked for this to
       be tracked)*. **Nothing here is a repository change** — the workflow, the sync script and
       the guard are written, reviewed and turned off. Both release steps, the OIDC sync and

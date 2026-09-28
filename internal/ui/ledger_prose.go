@@ -215,6 +215,25 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 	case session.KindDefeated:
 		w.announce(voiceForSide(r.Target), r.Name+" falls")
 
+	case session.KindUsed:
+		// "Duelist casts Cantrip of Might - DMG 10 to 20", "Duelist uses Embermark on a jab and a
+		// bash". **The verb is marked like an act's** so a round's spending can be scanned for, and
+		// takes the row's own ink: a consumable is neither of the two verbs that own a color.
+		spans := []session.LedgerSpan{
+			{Text: r.Name + " "},
+			{Text: usedVerb(r.Note), Mark: true},
+			{Text: " " + r.Subject},
+		}
+		if r.Into != "" {
+			join := " - "
+			if r.Note == "rune" || r.Note == "essence" {
+				join = " on "
+			}
+			spans = append(spans, ElementSpans(join+r.Into)...)
+		}
+		w.rows = append(w.rows, session.LedgerLine{Voice: voiceForSide(r.Side), Spans: spans})
+		w.cur = -1
+
 	// ---- the working under a blow ----
 
 	case session.KindTerm:
@@ -532,6 +551,14 @@ func verbWord(verb string) string {
 		return "defends"
 	}
 	return "attacks"
+}
+
+// usedVerb is what the duelist does with a consumable: a cantrip is cast, everything else is used.
+func usedVerb(kind string) string {
+	if kind == "cantrip" {
+		return "casts"
+	}
+	return "uses"
 }
 
 // verbInkName is which ink that verb is written in, as the ledger names it.

@@ -412,8 +412,9 @@ func (s *Session) CanApply(w Essence, i int) bool {
 // is under — `ResolveRound` decides a whole round before a frame of it is drawn, so a card altered
 // during playback would show a face disagreeing with a blow already computed.
 //
-// **There is no cap, unlike the sack.** `MaxHeld` exists because the consumables pane draws `held/2`
-// and a fraction has to be a rule; the satchel is counted with the pouch, which has never had one.
+// **The satchel counts toward the pane's cap and never refuses against it.** `MaxConsumables` is a
+// rule about what a purchase may add; an essence reaches the satchel only by a fixture or a resumed
+// save, neither of which is a purchase.
 
 // StartingEssences is what a run opens carrying in its satchel, by record key.
 //

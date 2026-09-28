@@ -231,6 +231,13 @@ var essenceArt embed.FS
 //go:embed rune/*.png
 var runeArt embed.FS
 
+// The cantrip faces, a family of their own for the rune's reason:
+// `cantrip/default-cantrip.png` is a copy of the rune's placeholder rather than a share of it, so an
+// undrawn cantrip and an undrawn rune are two backlogs that can be cleared one at a time.
+//
+//go:embed cantrip/*.png
+var cantripArt embed.FS
+
 // The playing-card faces, one per card per element, globbed the same way — `card/jab-fire.png` is
 // the key `jab-fire`, which is what `data/card_art.json` writes in its Art field.
 //
@@ -408,11 +415,12 @@ func LoadFonts() map[string]*text.GoTextFaceSource {
 func LoadImageData() map[string][]byte {
 	images := make(map[string][]byte)
 
-	// The four families read out of an embedded directory rather than listed one by one. See
+	// The families read out of an embedded directory rather than listed one by one. See
 	// embedFamily, and the //go:embed lines above for what each key ends up being.
 	embedFamily(images, relicArt, "relic")
 	embedFamily(images, essenceArt, "essence")
 	embedFamily(images, runeArt, "rune")
+	embedFamily(images, cantripArt, "cantrip")
 	embedFamily(images, cardArt, "card")
 	embedFamily(images, damageArt, "damage")
 	embedFamily(images, stoneArtFS, "stone")

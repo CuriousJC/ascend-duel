@@ -137,7 +137,7 @@ func (n *ProblemNotice) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		op.PrimaryAlign = text.AlignCenter
 		op.SecondaryAlign = text.AlignCenter
 		op.ColorScale.ScaleWithColor(ink)
-		text.Draw(screen, s, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}, op)
+		systems.DrawText(screen, s, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}, op)
 	}
 
 	line(noticeEyebrow, noticeEyebrowSize, noticeEyebrowTop, noticeEyebrowInk)

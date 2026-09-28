@@ -103,7 +103,7 @@ func (s *PortalScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	head.PrimaryAlign = text.AlignCenter
 	head.SecondaryAlign = text.AlignCenter
 	head.ColorScale.ScaleWithColor(ui.GroundInk)
-	text.Draw(screen, "CHOOSE YOUR REALM",
+	systems.DrawText(screen, "CHOOSE YOUR REALM",
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: portalHeadSize}, head)
 
 	sub := &text.DrawOptions{}
@@ -111,7 +111,7 @@ func (s *PortalScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	sub.PrimaryAlign = text.AlignCenter
 	sub.SecondaryAlign = text.AlignCenter
 	sub.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 30))
-	text.Draw(screen, "REALM "+strconv.Itoa(gs.Run.Realm()),
+	systems.DrawText(screen, "REALM "+strconv.Itoa(gs.Run.Realm()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: portalSubSize}, sub)
 
 	offers := gs.Run.PortalOffers()
@@ -137,8 +137,8 @@ func (s *PortalScene) drawPanel(gs *state.GlobalState, screen *ebiten.Image, i i
 	width := float64(portalPanelW - 2*portalPad)
 
 	title := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: portalTitleSize}
-	for _, line := range systems.WrapRuns(ui.TipLine(strings.ToUpper(offer.Element+" "+name)), title, width) {
-		systems.DrawRuns(screen, line, title, x, y, portalProse)
+	for _, line := range systems.WrapLine(ui.TipLine(strings.ToUpper(offer.Element+" "+name)), title, width) {
+		systems.DrawLine(screen, line, title, x, y, portalProse)
 		y += portalTitleSize + 6
 	}
 	y += portalParaGap
@@ -146,8 +146,8 @@ func (s *PortalScene) drawPanel(gs *state.GlobalState, screen *ebiten.Image, i i
 	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: portalProseSize}
 	about, inElement := motif.PortalLines(offer.Element)
 	for _, para := range []string{about, inElement} {
-		for _, line := range systems.WrapRuns(ui.TipLine(para), prose, width) {
-			systems.DrawRuns(screen, line, prose, x, y, portalProse)
+		for _, line := range systems.WrapLine(ui.TipLine(para), prose, width) {
+			systems.DrawLine(screen, line, prose, x, y, portalProse)
 			y += portalLinePitch
 		}
 		y += portalParaGap

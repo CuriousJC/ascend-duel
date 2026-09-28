@@ -28,6 +28,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -84,7 +85,7 @@ func drawDeckPile(gs *state.GlobalState, screen *ebiten.Image) {
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(count.Min.X), float64(count.Min.Y))
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
-	text.Draw(screen, fmt.Sprintf("%d", gs.Run.Size()),
+	systems.DrawUI(screen, fmt.Sprintf("%d", gs.Run.Size()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)
 }
 

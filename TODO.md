@@ -276,8 +276,9 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 ## Interface art — moving text and chrome off the font and the drawing code
 
 *(owner asked for these to be tracked.)* The direction is in CLAUDE.md §Interface art is authored:
-provided art over drawing code. `systems.DrawProse` and the prose sheet in `assets/prose/` are in;
-the only line drawn with them so far is the title screen's build string.
+provided art over drawing code. `systems.DrawProse` and the prose sheet in `assets/prose/` are in,
+and the tooltip and the screens' and panels' prose are set in them through `systems.DrawText` and
+`systems.DrawLine`.
 
 - [ ] **Tighten the prose set's spacing.** The advances in `prose-glyphs.json` leave a gap of about
   the outline's width and read loose at the ten-pixel floor ("d e v"). Either a tracking factor in
@@ -285,25 +286,11 @@ the only line drawn with them so far is the title screen's build string.
 - [ ] **A fill-only prose mode for light surfaces.** Multiplied by near-black, the outline and the
   fill merge and a line on a card face comes out bold. Drawing the white as coverage (alpha from
   luminance) gives plain dark letters with no outline, off the same sheet.
-- [ ] **Set the three text tiers in capital heights.** `systems.TextSmall/Medium/Large` are
-  Kubasta point sizes today (16/20/26), and Kubasta's capital is 0.44 of its size — so Small is a
-  7-pixel capital, under the prose set's 10-pixel floor. Choose three capital heights (10/12/15 is
-  the obvious start) and accept that every screen's text grows a little; at the same capital
-  height the prose set runs about 13% narrower than Kubasta, which pays for part of it.
-- [ ] **Move the screens' and panels' prose onto the glyphs.** About 39 files still draw with
-  `text.Draw`: the toast, notice and confirm; the shop, reward, portal and tutorial narration;
-  achievements, credits, crash and run over; the ledger and its export; the hands and deck panels;
-  slider labels. Every one takes a tier, never a figure.
-- [ ] **Move the tooltip onto the glyphs.** Wrap with `MeasureProse` in `tooltip_wrap.go`; color a
-  span by multiplying the ink; set a form word by multiplying its material tile, which replaces the
-  font-mask path in `tooltip_texture.go`; drop the `PanelWeight` double pass.
-- [ ] **Move the card faces onto the glyphs.** `internal/cards` has no graphics context, so it needs
-  a plain-Go compositor over the sheet, as `systems.ArtMark` is for the marks. The fit tests —
-  `TestNoEffectTextWordIsWiderThanItsColumn`, `TestEveryCardTextFitsItsBand`,
-  `TestLeftColumnDoesNotCollide` — re-base on the glyph metrics, and every card sheet regenerates.
-- [ ] **Move headings and the loud figures onto the display glyphs.** The titles at 34–46pt and the
-  counts still set in the font (relic counts, the AP figure, the discard badge, the hand
-  multiplier) are display lettering, not prose.
+- [ ] **Name the three text tiers in capital heights.** `systems.TextSmall/Medium/Large` are still
+  Kubasta point sizes (16/20/26), and `systems.ProseCap` maps each to a capital height (10/12/14).
+  Once nothing sets a tier in the font, the tiers can be the capital heights themselves and the
+  mapping goes. Large is 14 rather than 15 because the reward screen's longest payout line
+  overruns its column at 15.
 - [ ] **Retire Kubasta** once nothing reads it; until then it is every glyph path's fallback.
 - [ ] **Art for the chrome still drawn in code**: the dialog and panel frames (a bevelled fill and a
   stroke), the seed wheel's slots, checkbox and arrows, the hand's sort buttons, the deck panel's

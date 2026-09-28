@@ -8,6 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
 // The offer's arithmetic, which needs no window — the same narrow exception the other tests in
@@ -309,7 +310,7 @@ func TestThePayoutsTypeFitsItsColumn(t *testing.T) {
 
 	mid, split := proseColumnMid(gs), gs.PctX(payoutColumnPct)
 	for _, line := range payoutLines(gs) {
-		w, _ := text.Measure(line.plain(), face, 0)
+		w := systems.MeasureText(line.plain(), face)
 		if left, right := mid-int(w)/2, mid+int(w)/2; left < 0 || right > split {
 			t.Errorf("%q runs %d..%d, outside a column of 0..%d", line.plain(), left, right, split)
 		}

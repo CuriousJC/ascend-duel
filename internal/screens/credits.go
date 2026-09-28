@@ -134,7 +134,7 @@ func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	heading.PrimaryAlign = text.AlignCenter
 	heading.SecondaryAlign = text.AlignCenter
 	heading.ColorScale.ScaleWithColor(ui.GroundInk)
-	text.Draw(screen, creditsTitle,
+	systems.DrawText(screen, creditsTitle,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: creditsTitleSize}, heading)
 
 	// **Everything is centered on one axis**, which is what makes a page of unequal-length lines
@@ -156,7 +156,7 @@ func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		op.PrimaryAlign = text.AlignCenter
 		op.SecondaryAlign = text.AlignCenter
 		op.ColorScale.ScaleWithColor(creditsInk(l.kind))
-		text.Draw(screen, l.text,
+		systems.DrawText(screen, l.text,
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: creditsSize(l.kind)}, op)
 
 		y += creditsLineHeight
@@ -169,7 +169,7 @@ func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	version.PrimaryAlign = text.AlignCenter
 	version.SecondaryAlign = text.AlignCenter
 	version.ColorScale.ScaleWithColor(creditsVersionColor)
-	text.Draw(screen, gs.Version,
+	systems.DrawText(screen, gs.Version,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, version)
 
 	systems.DrawButton(gs, screen, s.back)

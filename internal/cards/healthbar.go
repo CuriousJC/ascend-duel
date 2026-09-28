@@ -83,7 +83,7 @@ func drawHealth(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 	if err != nil {
 		return err
 	}
-	return drawTextHCentered(dst, f, st.HealthTextSize,
+	return drawTextHCenteredAs(uiLetters, dst, f, st.HealthTextSize,
 		fmt.Sprintf("%d/%d", life, s.MaxLife), st.Width, top, HealthTextInk)
 }
 

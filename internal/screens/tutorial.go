@@ -611,8 +611,8 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 	// **An authored break still forces a line and can only ever add one** — each is wrapped on its
 	// own — so `data/tutorial.json` can shape a paragraph without having to measure one.
 	for _, authored := range strings.Split(step.Text, "\n") {
-		for _, line := range systems.WrapRuns(ui.TipLine(authored), face, tutorialTextW) {
-			systems.DrawRuns(screen, line, face, x, y, tutorialText)
+		for _, line := range systems.WrapLine(ui.TipLine(authored), face, tutorialTextW) {
+			systems.DrawLine(screen, line, face, x, y, tutorialText)
 			y += tutorialLinePitch
 		}
 	}
@@ -640,7 +640,7 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 		float64(r.Max.Y-tutorialPad-tutorialButtonH/2-9))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(tutorialWaiting)
-	text.Draw(screen, waitingFor(step.Until), hint, op)
+	systems.DrawText(screen, waitingFor(step.Until), hint, op)
 }
 
 // waitingFor is what the bubble says in place of a Next button: the thing the player has to do

@@ -410,7 +410,7 @@ func animText(gs *state.GlobalState, screen *ebiten.Image, line string, x, y int
 	op.GeoM.Translate(float64(x), float64(y))
 	op.SecondaryAlign = text.AlignCenter
 	op.ColorScale.ScaleWithColor(ink)
-	text.Draw(screen, line, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}, op)
+	systems.DrawText(screen, line, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}, op)
 }
 
 // leave goes back to whichever screen opened this one, on the same terms Settings and Credits are

@@ -1019,7 +1019,8 @@ func TestStatRowsAreDrawnAsALabelLeftAndAFigureRight(t *testing.T) {
 		if right <= left {
 			t.Fatalf("stat row %d drew nothing", i)
 		}
-		if left != st.TextLeft {
+		// Within a pixel of it: a glyph's resampled edge can reach one column past its outline.
+		if d := left - st.TextLeft; d < -1 || d > 1 {
 			t.Errorf("stat row %d starts at x=%d, want the left margin at x=%d", i, left, st.TextLeft)
 		}
 		// Within a pixel of the right margin: the glyph's own bearing can leave one column

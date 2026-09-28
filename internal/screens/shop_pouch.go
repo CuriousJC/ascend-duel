@@ -302,7 +302,7 @@ func (s *ShopScene) drawPouchPanel(gs *state.GlobalState, screen *ebiten.Image) 
 	op.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+pouchPromptDrop))
 	op.PrimaryAlign = text.AlignCenter
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
-	text.Draw(screen, prompt, face, op)
+	systems.DrawText(screen, prompt, face, op)
 
 	for i, seat := range s.pouch.cardRects(gs) {
 		if i >= len(row) {

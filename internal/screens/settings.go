@@ -302,7 +302,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	op.PrimaryAlign = text.AlignCenter
 	op.SecondaryAlign = text.AlignCenter
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
-	text.Draw(screen, settingsTitle,
+	systems.DrawText(screen, settingsTitle,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: settingsTitleSize}, op)
 
 	systems.DrawSlider(gs, screen, s.music)
@@ -332,7 +332,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		note := &text.DrawOptions{}
 		note.GeoM.Translate(float64(r.Min.X), float64(r.Max.Y+8))
 		note.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 40))
-		text.Draw(screen, "no audio device on this machine",
+		systems.DrawText(screen, "no audio device on this machine",
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, note)
 	}
 

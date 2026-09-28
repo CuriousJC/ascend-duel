@@ -126,7 +126,7 @@ func (s *AchievementsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	heading.PrimaryAlign = text.AlignCenter
 	heading.SecondaryAlign = text.AlignCenter
 	heading.ColorScale.ScaleWithColor(ui.GroundInk)
-	text.Draw(screen, achievementsTitle,
+	systems.DrawText(screen, achievementsTitle,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementsTitleSize}, heading)
 
 	// **The tally is the one number worth having at the top**, because the whole reason to open
@@ -136,7 +136,7 @@ func (s *AchievementsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	tally.PrimaryAlign = text.AlignCenter
 	tally.SecondaryAlign = text.AlignCenter
 	tally.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 35))
-	text.Draw(screen, achievementTally(gs),
+	systems.DrawText(screen, achievementTally(gs),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementTallySize}, tally)
 
 	left := gs.PctX(50) - achievementRowWidth/2
@@ -181,14 +181,14 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 	name.GeoM.Translate(float64(x+achievementRowInset), float64(y+22))
 	name.SecondaryAlign = text.AlignCenter
 	name.ColorScale.ScaleWithColor(nameInk)
-	text.Draw(screen, a.Name,
+	systems.DrawText(screen, a.Name,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementNameSize}, name)
 
 	line := &text.DrawOptions{}
 	line.GeoM.Translate(float64(x+achievementRowInset), float64(y+54))
 	line.SecondaryAlign = text.AlignCenter
 	line.ColorScale.ScaleWithColor(lineInk)
-	text.Draw(screen, a.How,
+	systems.DrawText(screen, a.How,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementLineSize}, line)
 
 	// **Progress, but only where there is any.** A tally has a fraction and a moment does not, so a
@@ -205,7 +205,7 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 			prog.PrimaryAlign = text.AlignEnd
 			prog.SecondaryAlign = text.AlignCenter
 			prog.ColorScale.ScaleWithColor(lineInk)
-			text.Draw(screen, p,
+			systems.DrawText(screen, p,
 				&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementLineSize}, prog)
 		}
 	}

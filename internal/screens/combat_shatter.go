@@ -42,6 +42,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -253,16 +254,11 @@ const surgeNoteSize = 40
 // written rather than flown until the gesture is designed.
 func drawSurgeNote(gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle) {
 	const label = "+1 AP"
-	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: surgeNoteSize}
-	w, h := text.Measure(label, face, 0)
-	x := float64(at.Min.X+at.Max.X)/2 - w/2
-	y := float64(at.Min.Y+at.Max.Y)/2 - h/2
-	for _, step := range []float64{0, mathBoldStep(surgeNoteSize)} {
-		op := &text.DrawOptions{}
-		op.GeoM.Translate(x+step, y)
-		op.ColorScale.ScaleWithColor(apSpentColor)
-		text.Draw(screen, label, face, op)
-	}
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(at.Min.X+at.Max.X)/2, float64(at.Min.Y+at.Max.Y)/2)
+	op.PrimaryAlign, op.SecondaryAlign = text.AlignCenter, text.AlignCenter
+	op.ColorScale.ScaleWithColor(apSpentColor)
+	systems.DrawUI(screen, label, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: surgeNoteSize}, op)
 }
 
 // drawBreakPip is the shield mark on its way across the table, shrinking as it goes.

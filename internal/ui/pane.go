@@ -195,7 +195,7 @@ func drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image, p PanePlacement,
 		titleOp.GeoM.Translate(float64(x+w/2), float64(y+paneTitleInset))
 		titleOp.PrimaryAlign = text.AlignCenter
 		titleOp.ColorScale.ScaleWithColor(p.Ink)
-		text.Draw(screen, p.Title, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, titleOp)
+		systems.DrawText(screen, p.Title, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, titleOp)
 	}
 
 	return x, y, w, h
@@ -266,7 +266,7 @@ func DrawPane(gs *state.GlobalState, screen *ebiten.Image, p PanePlacement, r im
 			rowOp.GeoM.Translate(float64(x+contentW/2), float64(rowY))
 			rowOp.PrimaryAlign = text.AlignCenter
 			rowOp.ColorScale.ScaleWithColor(tint)
-			text.Draw(screen, row.Spans[0].Text, face, rowOp)
+			systems.DrawText(screen, row.Spans[0].Text, face, rowOp)
 			continue
 		}
 
@@ -308,14 +308,14 @@ func DrawPane(gs *state.GlobalState, screen *ebiten.Image, p PanePlacement, r im
 				op := &text.DrawOptions{}
 				op.GeoM.Translate(cursorX+dx, float64(rowY))
 				op.ColorScale.ScaleWithColor(tint)
-				text.Draw(screen, span.Text, face, op)
+				systems.DrawText(screen, span.Text, face, op)
 			}
 			at(0)
 			if bold {
 				at(1) // faux bold
 			}
 
-			wSpan, _ := text.Measure(span.Text, face, 0)
+			wSpan := systems.MeasureText(span.Text, face)
 
 			// **The mark is always bold *and* underlined.** That is what makes a verb read as the
 			// verb rather than as a word that happens to be colored — one mark would be ambiguous

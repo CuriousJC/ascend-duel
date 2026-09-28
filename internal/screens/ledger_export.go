@@ -135,5 +135,5 @@ func (e *ledgerExporter) draw(gs *state.GlobalState, screen *ebiten.Image, r ima
 		float64(r.Min.Y+ui.ModalCloseInset+(ui.ModalCloseSize-ledgerNoteSize)/2),
 	)
 	op.ColorScale.ScaleWithColor(ink)
-	text.Draw(screen, e.note, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ledgerNoteSize}, op)
+	systems.DrawText(screen, e.note, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ledgerNoteSize}, op)
 }

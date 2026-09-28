@@ -347,7 +347,7 @@ func TestTheVialsTwoRowsFitOnTheScreen(t *testing.T) {
 	g.open(gs, goodHolding(t, session.ContentsEssences))
 
 	essences := g.slot(gs, 0)
-	if hint := offerHintTop(gs); essences.Min.Y < hint {
+	if hint := goodsHintTop(gs); essences.Min.Y < hint {
 		t.Errorf("the essences start at %d, over the hint at %d", essences.Min.Y, hint)
 	}
 
@@ -370,7 +370,7 @@ func TestTheBagsRowClearsTheBuildBand(t *testing.T) {
 	g.open(gs, goodHolding(t, session.ContentsStones))
 
 	row := g.slot(gs, 0)
-	if hint := offerHintTop(gs); row.Min.Y < hint {
+	if hint := goodsHintTop(gs); row.Min.Y < hint {
 		t.Errorf("the stones start at %d, over the hint at %d", row.Min.Y, hint)
 	}
 	if row.Max.Y > gs.ScreenHeight {

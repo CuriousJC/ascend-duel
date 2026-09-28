@@ -82,6 +82,15 @@ const (
 	goodsSkipTextSize = 28
 )
 
+// goodsTypeDrop is how much lower than the reward screen's the good's title and hint sit, so the
+// type stands off the band above it.
+const goodsTypeDrop = 15
+
+// goodsTitleTop and goodsHintTop are where the good's two lines are written: the reward screen's
+// places, dropped by goodsTypeDrop.
+func goodsTitleTop(gs *state.GlobalState) int { return offerTitleTop(gs) + goodsTypeDrop }
+func goodsHintTop(gs *state.GlobalState) int  { return offerHintTop(gs) + goodsTypeDrop }
+
 // Init opens whatever the shop paid for.
 //
 // **Re-entered on every visit**, because each good is its own. A visit with nothing pending is a
@@ -168,15 +177,15 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		op.GeoM.Translate(float64(gs.PctX(50)), float64(y))
 		op.PrimaryAlign = text.AlignCenter
 		op.ColorScale.ScaleWithColor(ui.GroundInk)
-		text.Draw(screen, msg, face, op)
+		systems.DrawText(screen, msg, face, op)
 	}
 
 	// **Under the band rather than at the top of the screen**, the reward screen's rule: the type
 	// follows the band the next time the band moves, instead of being absolute pixels written
 	// against where it used to end.
-	line(offerTitleTop(gs), heading, s.title())
+	line(goodsTitleTop(gs), heading, s.title())
 	if s.stage != goodsShowing {
-		line(offerHintTop(gs), small, s.hint(gs))
+		line(goodsHintTop(gs), small, s.hint(gs))
 	}
 
 	s.drawCards(gs, screen)

@@ -167,7 +167,7 @@ func (s *CrashScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		op.PrimaryAlign = text.AlignCenter
 		op.SecondaryAlign = text.AlignCenter
 		op.ColorScale.ScaleWithColor(ink)
-		text.Draw(screen, str, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}, op)
+		systems.DrawText(screen, str, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}, op)
 	}
 
 	quiet := systems.ColorToward(ui.GroundInk, ui.ScreenGround, crashQuietPct)
@@ -184,7 +184,7 @@ func (s *CrashScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		label.PrimaryAlign = text.AlignEnd
 		label.SecondaryAlign = text.AlignCenter
 		label.ColorScale.ScaleWithColor(quiet)
-		text.Draw(screen, f.label,
+		systems.DrawText(screen, f.label,
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: crashQuietSize}, label)
 
 		value := &text.DrawOptions{}
@@ -192,7 +192,7 @@ func (s *CrashScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		value.PrimaryAlign = text.AlignStart
 		value.SecondaryAlign = text.AlignCenter
 		value.ColorScale.ScaleWithColor(ui.GroundInk)
-		text.Draw(screen, f.value,
+		systems.DrawText(screen, f.value,
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: crashBodySize}, value)
 
 		y += crashLineStep
@@ -202,7 +202,7 @@ func (s *CrashScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// the one value wide enough to need the whole width — see crashFolder.
 	if dir := crashFolder(gs); dir != "" {
 		face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: crashQuietSize}
-		width := func(str string) float64 { w, _ := text.Measure(str, face, 0); return w }
+		width := func(str string) float64 { return systems.MeasureText(str, face) }
 		line(elideMiddle(dir, float64(gs.PctX(crashFolderPct)), width),
 			crashQuietSize, y+crashFolderTop, quiet)
 	}

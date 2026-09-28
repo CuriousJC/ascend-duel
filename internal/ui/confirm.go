@@ -147,7 +147,7 @@ func (d *ConfirmDialog) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	title.GeoM.Translate(center, float64(box.Min.Y+confirmTitleTop))
 	title.PrimaryAlign = text.AlignCenter
 	title.SecondaryAlign = text.AlignCenter
-	text.Draw(screen, d.title,
+	systems.DrawText(screen, d.title,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: confirmTitleSize}, title)
 
 	body := &text.DrawOptions{}
@@ -155,7 +155,7 @@ func (d *ConfirmDialog) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	body.PrimaryAlign = text.AlignCenter
 	body.SecondaryAlign = text.AlignCenter
 	body.ColorScale.ScaleWithColor(color.RGBA{R: 198, G: 198, B: 208, A: 255})
-	text.Draw(screen, d.body,
+	systems.DrawText(screen, d.body,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: confirmBodySize}, body)
 
 	systems.DrawButton(gs, screen, d.No)

@@ -29,6 +29,7 @@ import (
 	"strconv"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -227,8 +228,7 @@ func (t *typewriter) visible(i int) ([]proseSpan, bool) {
 func drawProseLine(screen *ebiten.Image, face *text.GoTextFace, full string, spans []proseSpan,
 	centerX, y int) {
 
-	width, _ := text.Measure(full, face, 0)
-	x := float64(centerX) - width/2
+	x := float64(centerX) - systems.MeasureText(full, face)/2
 
 	for _, r := range spans {
 		op := &text.DrawOptions{}
@@ -238,10 +238,8 @@ func drawProseLine(screen *ebiten.Image, face *text.GoTextFace, full string, spa
 			ink = ui.GroundInk
 		}
 		op.ColorScale.ScaleWithColor(ink)
-		text.Draw(screen, r.text, face, op)
-
-		w, _ := text.Measure(r.text, face, 0)
-		x += w
+		systems.DrawText(screen, r.text, face, op)
+		x += systems.MeasureText(r.text, face)
 	}
 }
 
@@ -266,5 +264,5 @@ func (t *typewriter) drawVitaeFlight(gs *state.GlobalState, screen *ebiten.Image
 	op.PrimaryAlign = text.AlignCenter
 	op.SecondaryAlign = text.AlignCenter
 	op.ColorScale.ScaleWithColor(ui.VitaeInk)
-	text.Draw(screen, "+"+strconv.Itoa(t.flight.amount), face, op)
+	systems.DrawText(screen, "+"+strconv.Itoa(t.flight.amount), face, op)
 }

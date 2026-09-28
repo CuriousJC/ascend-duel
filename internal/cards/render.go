@@ -213,7 +213,7 @@ func drawBadge(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 		placeInk(dst, glyph, box, st.GlyphScale, glyphFade(s), st)
 	}
 
-	width, err := TextWidth(f, st.BadgeTextSize, s.Badge)
+	width, _, err := span(uiLetters, f, st.BadgeTextSize, s.Badge)
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func drawBadge(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 	// Sampling the center and inverting through counterInk is the relic badge's own rule, and it
 	// survives the art being redrawn — which a second named color would not.
 	ink := counterInk(sampleAt(dst, cx, cy))
-	return drawText(dst, f, st.BadgeTextSize, s.Badge, cx-width/2, cy-lineHeight/2, ink)
+	return drawTextAs(uiLetters, dst, f, st.BadgeTextSize, s.Badge, cx-width/2, cy-lineHeight/2, ink)
 }
 
 // drawShieldStack draws Spec.Shields shield marks in a column, climbing from the badge's own slot.
@@ -405,7 +405,7 @@ func drawCounter(dst *image.RGBA, s Spec, st Style, f *Faces, ink color.RGBA) er
 		roundedRect(dst, cx-r, cy-r, 2*r, 2*r, r, ink)
 	}
 
-	width, err := TextWidth(f, st.CounterSize, s.Counter)
+	width, _, err := span(uiLetters, f, st.CounterSize, s.Counter)
 	if err != nil {
 		return err
 	}
@@ -415,7 +415,7 @@ func drawCounter(dst *image.RGBA, s Spec, st Style, f *Faces, ink color.RGBA) er
 		x = b.Max.X - width
 	}
 
-	return drawText(dst, f, st.CounterSize, s.Counter, x, y, counterInk(ink))
+	return drawTextAs(uiLetters, dst, f, st.CounterSize, s.Counter, x, y, counterInk(ink))
 }
 
 // counterInk is the figure’s color on a disc of the color given: near-black on a light disc, the

@@ -261,7 +261,7 @@ func paintSliderText(gs *state.GlobalState, s *models.Slider) {
 		op.GeoM.Translate(0, float64(sliderLabelHeight)/2)
 		op.SecondaryAlign = text.AlignCenter
 		op.ColorScale.ScaleWithColor(ink)
-		text.Draw(s.Image, s.Label, face, op)
+		DrawText(s.Image, s.Label, face, op)
 	}
 	if s.Readout != "" {
 		op := &text.DrawOptions{}
@@ -269,6 +269,6 @@ func paintSliderText(gs *state.GlobalState, s *models.Slider) {
 		op.PrimaryAlign = text.AlignEnd
 		op.SecondaryAlign = text.AlignCenter
 		op.ColorScale.ScaleWithColor(ink)
-		text.Draw(s.Image, s.Readout, face, op)
+		DrawText(s.Image, s.Readout, face, op)
 	}
 }

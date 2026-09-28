@@ -1123,7 +1123,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		op.GeoM.Translate(float64(gs.PctX(50)), float64(y))
 		op.PrimaryAlign = text.AlignCenter
 		op.ColorScale.ScaleWithColor(ui.GroundInk)
-		text.Draw(screen, msg, face, op)
+		systems.DrawText(screen, msg, face, op)
 	}
 
 	// **Neither stage that offers a choice is titled** *(owner's call, 2026-09-05)*. The essences

@@ -118,7 +118,7 @@ func (s *RunOverScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	head.PrimaryAlign = text.AlignCenter
 	head.SecondaryAlign = text.AlignCenter
 	head.ColorScale.ScaleWithColor(ui.GroundInk)
-	text.Draw(screen, title,
+	systems.DrawText(screen, title,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverTitleSize}, head)
 
 	s.drawTotals(gs, screen, sum)
@@ -159,14 +159,14 @@ func (s *RunOverScene) drawTotals(gs *state.GlobalState, screen *ebiten.Image, s
 		label.PrimaryAlign = text.AlignEnd
 		label.SecondaryAlign = text.AlignCenter
 		label.ColorScale.ScaleWithColor(systems.ColorToward(ink, ui.ScreenGround, 22))
-		text.Draw(screen, r.label,
+		systems.DrawText(screen, r.label,
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverLabelSize}, label)
 
 		figure := &text.DrawOptions{}
 		figure.GeoM.Translate(float64(gutter+runOverGutter), float64(y))
 		figure.SecondaryAlign = text.AlignCenter
 		figure.ColorScale.ScaleWithColor(ink)
-		text.Draw(screen, r.figure,
+		systems.DrawUI(screen, r.figure,
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverFigureSize}, figure)
 
 		y += runOverRowHeight
@@ -192,7 +192,7 @@ func (s *RunOverScene) drawSeed(gs *state.GlobalState, screen *ebiten.Image, cod
 	cap.PrimaryAlign = text.AlignCenter
 	cap.SecondaryAlign = text.AlignCenter
 	cap.ColorScale.ScaleWithColor(runOverSeedCap)
-	text.Draw(screen, runOverSeedCaption,
+	systems.DrawText(screen, runOverSeedCaption,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverSeedCapSize}, cap)
 
 	seed := &text.DrawOptions{}
@@ -200,7 +200,7 @@ func (s *RunOverScene) drawSeed(gs *state.GlobalState, screen *ebiten.Image, cod
 	seed.PrimaryAlign = text.AlignCenter
 	seed.SecondaryAlign = text.AlignCenter
 	seed.ColorScale.ScaleWithColor(runOverSeedInk)
-	text.Draw(screen, code,
+	systems.DrawUI(screen, code,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverSeedSize}, seed)
 }
 

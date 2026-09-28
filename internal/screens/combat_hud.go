@@ -15,6 +15,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -161,7 +162,7 @@ func (s *CombatScene) drawDiscardsLeft(gs *state.GlobalState, screen *ebiten.Ima
 	op.PrimaryAlign = text.AlignCenter
 	op.SecondaryAlign = text.AlignCenter
 	op.ColorScale.ScaleWithColor(ink)
-	text.Draw(screen, fmt.Sprintf("%d", s.discardsLeft),
+	systems.DrawUI(screen, fmt.Sprintf("%d", s.discardsLeft),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: discardBadgeSize}, op)
 }
 

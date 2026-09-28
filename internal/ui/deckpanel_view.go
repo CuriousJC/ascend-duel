@@ -345,7 +345,7 @@ func (v *DeckView) drawBlockHead(gs *state.GlobalState, screen *ebiten.Image, fi
 	op.GeoM.Translate(float64(first.ScreenX-deckColumnWidth/2),
 		float64(first.ScreenY-deckColumnButtonHeight/2-deckColumnHeadDrop))
 	op.ColorScale.ScaleWithColor(deckColumnFadedInk)
-	text.Draw(screen, s, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckColumnHeadSize}, op)
+	systems.DrawText(screen, s, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckColumnHeadSize}, op)
 }
 
 // drawColumnRow draws one filter button and the three things on it: a form's mark where there is
@@ -370,7 +370,7 @@ func (v *DeckView) drawColumnRow(gs *state.GlobalState, screen *ebiten.Image, b 
 	op.GeoM.Translate(float64(left), float64(b.ScreenY))
 	op.SecondaryAlign = text.AlignCenter
 	op.ColorScale.ScaleWithColor(ink)
-	text.Draw(screen, name,
+	systems.DrawText(screen, name,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckColumnTextSize}, op)
 
 	// **A count of none is written and faded, never left blank** — a blank cell reads as a row that
@@ -385,7 +385,7 @@ func (v *DeckView) drawColumnRow(gs *state.GlobalState, screen *ebiten.Image, b 
 	fop.PrimaryAlign = text.AlignEnd
 	fop.SecondaryAlign = text.AlignCenter
 	fop.ColorScale.ScaleWithColor(figure)
-	text.Draw(screen, fmt.Sprintf("%d", n),
+	systems.DrawText(screen, fmt.Sprintf("%d", n),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckColumnTextSize}, fop)
 }
 

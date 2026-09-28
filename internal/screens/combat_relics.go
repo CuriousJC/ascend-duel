@@ -218,7 +218,7 @@ func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, row image.Rectan
 	op.GeoM.Translate(float64(back.Max.X), float64(top))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
-	text.Draw(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
+	systems.DrawUI(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 
 // relicSlotMaxGap is the most bare table ever left between two relic cards.
@@ -806,7 +806,7 @@ func (s *CombatScene) drawRelicCount(gs *state.GlobalState, screen *ebiten.Image
 	op.GeoM.Translate(float64(r.Max.X), float64(r.Min.Y))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
-	text.Draw(screen, fmt.Sprintf("%d/%d", worn, relicSlots(gs)),
+	systems.DrawUI(screen, fmt.Sprintf("%d/%d", worn, relicSlots(gs)),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 

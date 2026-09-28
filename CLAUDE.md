@@ -945,10 +945,30 @@ as two styles. A screen wanting a button a little bigger takes the next tier and
 
 **Every line of reading text is one of three sizes**, and the same rule holds: `systems.TextSmall`,
 `TextMedium` and `TextLarge` in `internal/systems/text_tiers.go` are the whole list for prose, and a
-new line takes a tier rather than a figure. Headings and the loud figures are display lettering and
-are not tiered there. **The prose glyphs are the reading set** — `assets/prose/`, drawn by
-`systems.DrawProse`, one white sheet under a thin black outline that every ink and every material
-multiplies — and moving a line onto them is tracked in TODO.md.
+new line takes a tier rather than a figure. Headings and the loud figures are not tiered there.
+
+**Every line of text is drawn from one of two glyph sheets, and the font is only a fallback.** The
+**prose** sheet (`assets/prose/`) is for what is read — narration, hints, dialog bodies, panel rows,
+tooltips, headings, the counts beside a pane. The **figure** sheet (`assets/figure/`) is the
+interface's own lettering — button labels, the hand's shout, the sum, the action-point readout, a
+run code, the seed wheels. Classify a new line as one or the other; "neither" is not an answer.
+
+- **`systems.DrawText` and `systems.DrawUI` take exactly what `text.Draw` takes**, so a line is put
+  on a sheet by renaming one call; `DrawLine`/`WrapLine` do it for a wrapped line of colored runs.
+  `ProseCap` turns a tier into a capital height, and a size off the tiers scales with them.
+- **A line the sheet does not cover falls back to Kubasta whole** — the prose set has no `$` or
+  `@`, and the figure set is capitals only — so no line is half one typeface and half the other.
+  A `text.Draw` behind a `ProseCovers`/`FigureCovers` branch is that fallback, not a line still to
+  move.
+- **A dark gray ink draws a sheet as it is, white under its outline**; any other ink multiplies
+  it. A dark gray multiplied in merges letter and outline into one shape and vanishes on a painted
+  backdrop; a dark *color* — arcane's purple — still multiplies, or the word would lose its color.
+  `systems.drawsSheetAsIs` is the rule.
+- **The card faces read the same sheets through `systems.GlyphSheet`**, which decodes them as plain
+  images and composites with `x/image/draw`, because `internal/cards` has no graphics context. It
+  shares the cells, advances and span arithmetic with the screen's drawing, so a word lays out the
+  same on a card and on the table. A card's names, stat rows and effect text are prose; its life
+  fraction, badge numeral and relic counter are figures.
 
 **A button's color picks its face**, in `internal/systems/button_face.go`:
 `systems.ButtonRed`, `ButtonGray`, `ButtonYellow`, `ButtonBlue`, `ButtonPink` and the default olive

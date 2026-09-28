@@ -124,7 +124,7 @@ func DrawModalFrame(gs *state.GlobalState, screen *ebiten.Image, head ModalHead)
 		title := &text.DrawOptions{}
 		title.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+modalTitleTop))
 		title.PrimaryAlign = text.AlignCenter
-		text.Draw(screen, head.Title, heading, title)
+		systems.DrawText(screen, head.Title, heading, title)
 	}
 	return r
 }

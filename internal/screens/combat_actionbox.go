@@ -8,6 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -722,29 +723,16 @@ func (s *CombatScene) drawAPFigure(gs *state.GlobalState, screen *ebiten.Image, 
 	// **The surge is named while it is in the budget**, so a figure one round bigger than the last
 	// says why. It is the placeholder for a readout of its own *(owner's call)*.
 	if s.fighter.Surge > 0 {
-		label = fmt.Sprintf("%s  (+%d surge)", label, s.fighter.Surge)
+		label = fmt.Sprintf("%s  (+%d SURGE)", label, s.fighter.Surge)
 	}
 	if spent > budget {
-		label = fmt.Sprintf("%s  +%d over", label, spent-budget)
+		label = fmt.Sprintf("%s  +%d OVER", label, spent-budget)
 		ink = apOverColor
 	}
-	// **The word is thickened rather than shadowed** *(owner's call, 2026-09-11)*. Amber at 18pt
-	// on the light table is the faintest figure on this screen — the ground went to a light slate
-	// blue on 2026-09-07 and the caption took the bar's colors on 2026-09-10, and neither
-	// decision was taken against the other. A shadow was tried first and does not help: it buys an
-	// edge on a stroke that is already too thin to read, where what the figure needs is more ink.
-	//
-	// **Faux bold, the pane's own two-pass idiom** — the same word drawn again a step right,
-	// because `text/v2` has no synthetic weight and kubasta ships one face. `mathBoldStep` is the
-	// shared step so this figure thickens by the same rule the sum and the log's live row do.
+	// **In the interface lettering**, a readout rather than a sentence, which is also what gives
+	// the amber on the light table enough weight to read.
 	op.ColorScale.ScaleWithColor(ink)
-	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: apFigureSize}
-	text.Draw(screen, label, face, op)
-
-	bold := &text.DrawOptions{}
-	bold.GeoM.Translate(float64(left)+mathBoldStep(apFigureSize), float64(barBottom+apFigureBelowBar))
-	bold.ColorScale.ScaleWithColor(ink)
-	text.Draw(screen, label, face, bold)
+	systems.DrawUI(screen, label, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: apFigureSize}, op)
 }
 
 // apFigureRight is where the figure's reserved column ends, and the left edge of the space the

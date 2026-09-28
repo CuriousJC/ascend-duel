@@ -268,7 +268,9 @@ func buttonSunken(button *models.Button) bool {
 // label would be set at in the font, so a button's TextSize keeps meaning what it meant.
 const buttonFigureShare = 0.6
 
-// buttonFigurePad is the room a figure label keeps from each side of the face before it shrinks.
+// buttonFigurePad is the room a figure label keeps from each side of the face before it shrinks —
+// or a quarter of the face's height, if that is less, so a small square button keeps room for its
+// label rather than shrinking it to a speck.
 const buttonFigurePad = 14
 
 // buttonFigureDisabled is what a disabled button's figure label is multiplied by: the fill goes
@@ -282,7 +284,7 @@ var buttonFigureDisabled = color.RGBA{R: 150, G: 150, B: 150, A: 255}
 // until it clears both sides.
 func drawButtonFigure(button *models.Button, nudgeX, nudgeY float64) {
 	height := textSizeOf(button) * buttonFigureShare
-	room := float64(button.Width - 2*buttonFigurePad)
+	room := float64(button.Width - 2*min(buttonFigurePad, button.Height/4))
 	if w := MeasureFigure(button.Text, height); w > room && w > 0 {
 		height *= room / w
 	}

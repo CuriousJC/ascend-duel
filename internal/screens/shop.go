@@ -751,7 +751,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		op.GeoM.Translate(float64(gs.PctX(50)), float64(y))
 		op.PrimaryAlign = text.AlignCenter
 		op.ColorScale.ScaleWithColor(ink)
-		text.Draw(screen, msg, face, op)
+		systems.DrawText(screen, msg, face, op)
 	}
 
 	// **The duelist card, then the worn row drawn by this screen** — the band's two halves, split
@@ -927,7 +927,7 @@ func (s *ShopScene) figure(gs *state.GlobalState, screen *ebiten.Image, at image
 	op.GeoM.Translate(float64(at.Min.X+cardWidth/2), float64(at.Max.Y+shopFigureGap))
 	op.PrimaryAlign = text.AlignCenter
 	op.ColorScale.ScaleWithColor(ink)
-	text.Draw(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: shopFigureSize}, op)
+	systems.DrawText(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: shopFigureSize}, op)
 }
 
 // hint is the line between the narration and the shelf, and **it is usually empty** *(2026-08-22)*.

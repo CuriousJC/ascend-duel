@@ -163,14 +163,14 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	eyebrow.PrimaryAlign = text.AlignCenter
 	eyebrow.SecondaryAlign = text.AlignCenter
 	eyebrow.ColorScale.ScaleWithColor(toastEyebrowInk)
-	text.Draw(screen, toastEyebrow,
+	systems.DrawText(screen, toastEyebrow,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: toastEyebrowSize}, eyebrow)
 
 	name := &text.DrawOptions{}
 	name.GeoM.Translate(center, float64(box.Min.Y+toastNameTop))
 	name.PrimaryAlign = text.AlignCenter
 	name.SecondaryAlign = text.AlignCenter
-	text.Draw(screen, a.Name,
+	systems.DrawText(screen, a.Name,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: toastNameSize}, name)
 
 	for i, line := range a.Said {
@@ -179,7 +179,7 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		said.PrimaryAlign = text.AlignCenter
 		said.SecondaryAlign = text.AlignCenter
 		said.ColorScale.ScaleWithColor(toastSaidInk)
-		text.Draw(screen, line,
+		systems.DrawText(screen, line,
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: toastSaidSize}, said)
 	}
 

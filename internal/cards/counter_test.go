@@ -111,33 +111,26 @@ func TestTheCounterIsADiscWithAFigureShowingThrough(t *testing.T) {
 		t.Errorf("the disc reads %v at its left edge, want the border %v", got, border)
 	}
 
-	// The figure’s color is a function of the disc it lands on, which is the whole of what
-	// counterInk decides.
-	figure := counterInk(border)
-
-	disc, surface := 0, 0
+	// The figure is set in the interface lettering, whose glyphs carry their own outline, so what
+	// the disc has to show is its own color and something that is not it.
+	disc, figure := 0, 0
 	for dy := -r; dy <= r; dy++ {
 		for dx := -r; dx <= r; dx++ {
 			if dx*dx+dy*dy > (r-1)*(r-1) {
 				continue
 			}
-			switch got := img.RGBAAt(cx+dx, cy+dy); {
-			case near(got, border):
+			if near(img.RGBAAt(cx+dx, cy+dy), border) {
 				disc++
-			case near(got, figure):
-				surface++
-			case between(got, figure, border):
-			default:
-				t.Fatalf("the badge painted %v at (%d,%d), which is neither the figure %v nor the border %v",
-					got, cx+dx, cy+dy, figure, border)
+			} else {
+				figure++
 			}
 		}
 	}
 	if disc == 0 {
 		t.Error("nothing inside the circle is the border color, so there is no disc")
 	}
-	if surface == 0 {
-		t.Error("nothing inside the circle is the figure’s ink, so the figure is not showing through")
+	if figure == 0 {
+		t.Error("everything inside the circle is the border color, so the figure is not showing through")
 	}
 }
 

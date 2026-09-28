@@ -9,6 +9,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
@@ -104,7 +105,7 @@ func TestEveryHandRowFitsItsColumn(t *testing.T) {
 
 	for _, row := range handsRows(shippingHands()) {
 		title := handsTitleText(row)
-		adv, _ := text.Measure(title, &text.GoTextFace{Source: src, Size: handsNameSize}, 0)
+		adv := systems.MeasureText(title, &text.GoTextFace{Source: src, Size: handsNameSize})
 		if int(adv) > width {
 			t.Errorf("%s: the title line is %dpx against a %dpx column", row.name, int(adv), width)
 		}
@@ -112,9 +113,8 @@ func TestEveryHandRowFitsItsColumn(t *testing.T) {
 		// The cards start at the column's left edge, the multiplier stands beside the last of them
 		// and the plays count is right-aligned at the column's right edge, so what has to fit
 		// across the band is all three and the air between them.
-		mult, _ := text.Measure(row.mult, &text.GoTextFace{Source: src, Size: handsMultSize}, 0)
-		tally, _ := text.Measure(handsTallyText(row),
-			&text.GoTextFace{Source: src, Size: handsTallySize}, 0)
+		mult := systems.MeasureUI(row.mult, &text.GoTextFace{Source: src, Size: handsMultSize})
+		tally := systems.MeasureText(handsTallyText(row), &text.GoTextFace{Source: src, Size: handsTallySize})
 		span := handsSetsWidth(row.sets) + handsMultGap + int(mult) + handsMultGap + int(tally)
 		if span > width {
 			t.Errorf("%s: %d sets, %q and %q come to %dpx against a %dpx column",
@@ -346,16 +346,14 @@ func TestEveryRungsNameAndTallyFitTheColumn(t *testing.T) {
 	// reach, and it is the width the layout has to survive.
 	// A deliberately loud pair of figures: three digits of plays and two of level is more than a
 	// run will reach, and it is the width the layout has to survive.
-	tally, _ := text.Measure(handsTallyText(handsRow{plays: 999}),
-		&text.GoTextFace{Source: src, Size: handsTallySize}, 0)
+	tally := systems.MeasureText(handsTallyText(handsRow{plays: 999}), &text.GoTextFace{Source: src, Size: handsTallySize})
 	for _, row := range handsRows(shippingHands()) {
-		title, _ := text.Measure(handsTitleText(handsRow{name: row.name, level: 99}),
-			&text.GoTextFace{Source: src, Size: handsNameSize}, 0)
+		title := systems.MeasureText(handsTitleText(handsRow{name: row.name, level: 99}), &text.GoTextFace{Source: src, Size: handsNameSize})
 		if int(title) > width {
 			t.Errorf("%s at a two-figure level is %dpx against a %dpx column",
 				row.name, int(title), width)
 		}
-		mult, _ := text.Measure(row.mult, &text.GoTextFace{Source: src, Size: handsMultSize}, 0)
+		mult := systems.MeasureUI(row.mult, &text.GoTextFace{Source: src, Size: handsMultSize})
 		span := handsSetsWidth(row.sets) + handsMultGap + int(mult) + handsMultGap + int(tally)
 		if span > width {
 			t.Errorf("%s: its examples and a three-figure tally come to %dpx against a %dpx column",
@@ -378,7 +376,7 @@ func TestTheWordBetweenTwoExamplesFitsTheGap(t *testing.T) {
 		if len(row.sets) < 2 {
 			continue
 		}
-		or, _ := text.Measure(handsOrWord, &text.GoTextFace{Source: src, Size: handsOrSize}, 0)
+		or := systems.MeasureText(handsOrWord, &text.GoTextFace{Source: src, Size: handsOrSize})
 		if int(or) > handsSetGap {
 			t.Errorf("%s: %q is %dpx in a %dpx gap between examples",
 				row.name, handsOrWord, int(or), handsSetGap)

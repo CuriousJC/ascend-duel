@@ -444,11 +444,10 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c HandsContents, r
 		op := &text.DrawOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
 		op.ColorScale.ScaleWithColor(ink)
-		text.Draw(screen, s, face(size), op)
+		systems.DrawText(screen, s, face(size), op)
 	}
 	widthOf := func(s string, size float64) int {
-		adv, _ := text.Measure(s, face(size), 0)
-		return int(adv)
+		return int(systems.MeasureText(s, face(size)))
 	}
 
 	title := handsTitleText(row)
@@ -494,8 +493,12 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c HandsContents, r
 	tally := handsTallyText(row)
 	write(left+handsSetsWidth(row.sets)+handsMultGap, cardsTop+handsMultDrop(handsTallySize),
 		handsTallySize, handsTallyInk, tally)
-	write(left+width-widthOf(row.mult, handsMultSize),
-		cardsTop+handsMultDrop(handsMultSize), handsMultSize, multInk, row.mult)
+	// **The multiplier is interface lettering, not prose** — the ladder's figure, set as the sum is.
+	mult := &text.DrawOptions{}
+	mult.GeoM.Translate(float64(left+width), float64(cardsTop+handsMultDrop(handsMultSize)))
+	mult.PrimaryAlign = text.AlignEnd
+	mult.ColorScale.ScaleWithColor(multInk)
+	systems.DrawUI(screen, row.mult, face(handsMultSize), mult)
 
 	rule := float32(top + handsRuleDrop)
 	vector.StrokeLine(screen, float32(left), rule, float32(left+width), rule, 1, handsRuleInk, false)

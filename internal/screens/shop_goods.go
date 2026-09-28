@@ -111,10 +111,12 @@ type goods struct {
 	good  session.Good
 	stage goodsStage
 
-	// stones, essences and runes are what was drawn, and only the one matching kind is filled.
+	// stones, essences, runes and cantrips are what was drawn, and only the one matching kind is
+	// filled.
 	stones   []session.Stone
 	essences []session.Essence
 	runes    []session.Rune
+	cantrips []session.Cantrip
 
 	// offer is the cards an essence may be aimed at, by index into the run's deck. **Only the vial
 	// fills it**, and it is dealt when the vial is opened rather than when an essence is picked — the
@@ -150,7 +152,7 @@ type goods struct {
 // bag.
 func (g *goods) open(gs *state.GlobalState, good session.Good) {
 	g.good, g.stage, g.selected = good, goodsPick, nil
-	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
+	g.stones, g.essences, g.runes, g.cantrips, g.offer = nil, nil, nil, nil, nil
 	g.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 
 	switch good.Contains {
@@ -161,6 +163,8 @@ func (g *goods) open(gs *state.GlobalState, good session.Good) {
 		g.offer = dealVialOffer(gs)
 	case session.ContentsRunes:
 		g.runes = dealSackRunes(gs, good.Record, good.Size)
+	case session.ContentsCantrips:
+		g.cantrips = dealScrolls(gs, good.Record, good.Size)
 	}
 }
 
@@ -170,7 +174,7 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 // close puts it away.
 func (g *goods) reset() {
 	g.good, g.stage, g.selected = session.Good{}, goodsClosed, nil
-	g.stones, g.essences, g.runes, g.offer = nil, nil, nil, nil
+	g.stones, g.essences, g.runes, g.cantrips, g.offer = nil, nil, nil, nil, nil
 	g.lands = nil
 	g.removes, g.copied, g.held = false, false, 0
 	g.arrival, g.arrivedFrom, g.applyNow = ui.Travel{}, image.Rectangle{}, nil
@@ -185,6 +189,8 @@ func (g *goods) count() int {
 		return len(g.stones)
 	case session.ContentsRunes:
 		return len(g.runes)
+	case session.ContentsCantrips:
+		return len(g.cantrips)
 	default:
 		return len(g.essences)
 	}
@@ -247,6 +253,31 @@ func dealSackRunes(gs *state.GlobalState, seat string, size int) []session.Rune 
 		all = all[:size]
 	}
 	return all
+}
+
+// dealScrolls is what a bundle of scrolls holds: its size in cantrips, **drawn with replacement**
+// *(owner's call, 2026-09-28)*.
+//
+// **Repeats are allowed, unlike every other pack.** The catalog is shorter than the smallest bundle,
+// so a draw without replacement would hand over a bundle short of its own size — a seat that says
+// "3 cantrips" and opens on two. Each seat is an independent pick off the sorted catalog, flat and
+// unweighted on the sack's argument. When the catalog outgrows the bundles this is the line to move
+// to the shuffle-and-cut the others use.
+//
+// **Its own stream** (`seeds.ScrollStock`), separate from the sack's — see internal/seeds.
+func dealScrolls(gs *state.GlobalState, seat string, size int) []session.Cantrip {
+	all := session.Cantrips()
+	if len(all) == 0 {
+		return nil
+	}
+	rng := rand.New(rand.NewSource(
+		seeds.ForFightSeat(gs.RunSeed, seeds.ScrollStock, gs.Run.Fight(), seat)))
+
+	out := make([]session.Cantrip, size)
+	for i := range out {
+		out[i] = all[rng.Intn(len(all))]
+	}
+	return out
 }
 
 // runeTipLines is what resting on a rune says: what it does, what it would fire, and when it can be
@@ -481,6 +512,9 @@ func (g *goods) hover(gs *state.GlobalState) {
 		case session.ContentsRunes:
 			p := g.runes[i]
 			g.tip.Point(g.slot(gs, i), ui.TipLine(p.Name), ui.TipLines(runeTipLines(gs, p)))
+		case session.ContentsCantrips:
+			c := g.cantrips[i]
+			g.tip.Point(g.slot(gs, i), ui.TipLine(c.Name), ui.TipLines(cantripTipLines(c)))
 		}
 		return
 	}
@@ -548,6 +582,17 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 			gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: p.Record, Seat: i})
 			trace.Logf("shop", "sack of runes: %s held, %d in the sack",
 				p.Record, gs.Run.HoldCount())
+		}
+		g.reset()
+
+	case session.ContentsCantrips:
+		// **A cantrip goes into the scroll case**, the rune's rule: it is cast between the turns of a
+		// fight, so nothing happens to the run here but the carrying.
+		c := g.cantrips[i]
+		if gs.Run.HoldCantrip(c.Record) {
+			gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: c.Record, Seat: i})
+			trace.Logf("shop", "bundle of scrolls: %s held, %d in the case",
+				c.Record, gs.Run.ScrollCount())
 		}
 		g.reset()
 	}
@@ -683,6 +728,8 @@ func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 			ui.DrawStoneCard(gs, screen, at, g.stones[i], true)
 		case session.ContentsRunes:
 			ui.DrawRuneCard(gs, screen, at, g.runes[i], true, false)
+		case session.ContentsCantrips:
+			ui.DrawCantripCard(gs, screen, at, g.cantrips[i], true)
 		default:
 			// **An essence is lit only for the cards that are selected.** With nothing selected the
 			// whole row is dim, which is what says the gesture starts underneath — the reward

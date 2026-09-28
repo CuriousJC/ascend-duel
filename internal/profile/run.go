@@ -142,6 +142,11 @@ type RunSnapshot struct {
 	// one carried into a duel to be aimed at a card in the hand.
 	Satchel []string `json:"satchel,omitempty"`
 
+	// Cantrips is the scroll case: the cantrips the run is carrying but has not cast, by record
+	// key, **in acquisition order**. A cantrip cast mid-fight is not written anywhere — what it did
+	// lasts only as long as the fight, and a run is never resumed inside one.
+	Cantrips []string `json:"cantrips,omitempty"`
+
 	// LastRune is the record key of the rune the run spent most recently, which is what a
 	// chimera copies. **A name, never an ordinal**, the rule every vocabulary in this file is
 	// under. Empty on a run that has spent none, which is what makes a chimera refuse.

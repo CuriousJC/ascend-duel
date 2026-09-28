@@ -66,6 +66,12 @@ const (
 	KindTimeUp      = "time-up"
 	KindDefeated    = "defeated"
 
+	// KindUsed is a consumable spent between the turns of a fight: a rune, a stone, an essence
+	// or a cantrip. **An announcement too**, since nothing is on the table when it happens. Subject
+	// is the consumable's name, Note which kind it is ("rune", "stone", "essence", "cantrip"), and
+	// Into what it was aimed at or what it did — already worded, on Subject's terms.
+	KindUsed = "used"
+
 	// The gap between two fights, as the run watcher saw it. **A verb each**, because what the
 	// block is for is saying what the player chose, and the verb is the thing being scanned for.
 	KindTook       = "took"
@@ -271,7 +277,7 @@ func RecordKinds() []string {
 		KindAct, KindBlow, KindTerm,
 		KindDamage, KindStatus, KindDrained, KindMissed, KindFizzled, KindBlocked,
 		KindRaised, KindLapsed, KindHeld, KindSilver,
-		KindChilled, KindRegenerated, KindTicked, KindTimeUp, KindDefeated,
+		KindChilled, KindRegenerated, KindTicked, KindTimeUp, KindDefeated, KindUsed,
 		KindTook, KindCut, KindChanged, KindWore, KindSold, KindSpent,
 		KindRaisedRung, KindGained, KindPaid,
 	}

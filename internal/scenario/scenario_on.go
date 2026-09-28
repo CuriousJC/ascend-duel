@@ -75,6 +75,10 @@ type record struct {
 	// one into a duel. That is what this plants.
 	Essences []string `json:"Essences"`
 
+	// Cantrips is what the run opens carrying in its scroll case, by record key, resolved by the
+	// caller on the terms Runes is under.
+	Cantrips []string `json:"Cantrips"`
+
 	// Enemy is a record key from any file under data/motifs. **Empty means the journey's own**, so a
 	// scenario that is only about the hand does not have to pick a fight.
 	Enemy string `json:"Enemy"`
@@ -444,6 +448,10 @@ func Stones() []string { return current.Stones }
 
 // Essences is what the run opens carrying in its satchel, by record key. The caller resolves them.
 func Essences() []string { return current.Essences }
+
+// Cantrips is what the run opens carrying in its scroll case, by record key. The caller resolves
+// them.
+func Cantrips() []string { return current.Cantrips }
 
 // Hand is the opening hand to deal, resolved into real cards.
 func Hand() []combat.Card {

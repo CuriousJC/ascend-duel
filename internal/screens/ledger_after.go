@@ -84,6 +84,7 @@ func afterRecords(gs *state.GlobalState, before, after session.Holdings) []sessi
 	out = append(out, keyRecords(gs, session.KindWore, session.KindSold, before.Relics, after.Relics)...)
 	out = append(out, keyRecords(gs, session.KindTook, session.KindSpent, before.Held, after.Held)...)
 	out = append(out, keyRecords(gs, session.KindTook, session.KindSpent, before.Pouch, after.Pouch)...)
+	out = append(out, keyRecords(gs, session.KindTook, session.KindSpent, before.Scrolls, after.Scrolls)...)
 	out = append(out, stoneRecords(before.Stones, after.Stones)...)
 	out = append(out, vitaeRecords(before.Vitae, after.Vitae)...)
 	return out
@@ -231,6 +232,9 @@ func goodsName(gs *state.GlobalState, key string) string {
 	}
 	if st, ok := session.StoneByKey(key); ok {
 		return st.Name
+	}
+	if c, ok := session.CantripByKey(key); ok {
+		return c.Name
 	}
 	return key
 }

@@ -1,0 +1,22 @@
+[
+  {
+    "CantripRecord": "cantrip-endurance",
+    "Name": "Cantrip of Endurance",
+    "Family": "The body",
+    "Art": "",
+    "Draw": "a rolled parchment scroll bound with a red cord, a faint red glow of a heartbeat pulsing through the paper",
+    "Effect": "scale-life",
+    "Amount": 200,
+    "Text": "DOUBLE YOUR LIFE\nFOR THIS FIGHT"
+  },
+  {
+    "CantripRecord": "cantrip-might",
+    "Name": "Cantrip of Might",
+    "Family": "The body",
+    "Art": "",
+    "Draw": "a rolled parchment scroll bound with an iron band, a clenched fist of orange light rising from its open end",
+    "Effect": "add-dmg",
+    "Amount": 10,
+    "Text": "+10 DMG\nFOR THIS FIGHT"
+  }
+]

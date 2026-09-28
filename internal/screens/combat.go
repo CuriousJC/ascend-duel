@@ -414,6 +414,14 @@ type CombatScene struct {
 	fightIndex int
 	died       bool
 
+	// cantripLife and cantripDMG are what this fight's cantrips have added to the fighter: the
+	// ceiling raised and the DMG added, summed over every cast. **Both are the fight's and die with
+	// it** — Init zeroes them, because the fighter is rebuilt from the run there and carries none of
+	// it. cantripLife is what the ceiling sheds when the run takes the fighter's life back (see
+	// session.ShedCantrips); cantripDMG is only ever read to color the DMG row.
+	cantripLife int
+	cantripDMG  int
+
 	// won is the other exit: the fight was won, so the run advances and the post-battle screen
 	// takes over. Same shape as died and for the same reason — raised by a button, consumed by
 	// Update with the global state in hand.
@@ -541,6 +549,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	// entered — see nextFight.
 	// The run says which room this is; the scene keeps a copy for the frame. See fightIndex.
 	s.fightIndex = gs.Run.Fight()
+	s.cantripLife, s.cantripDMG = 0, 0
 
 	// **A scenario may name who is standing in the room**, so an interaction can be looked at
 	// against a chosen enemy rather than whoever the journey dealt. Compiled out of every normal
@@ -832,7 +841,12 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		// **Before WonFight**, because a `grow-on-hit` relic grew the fighter's own copy during the
 		// duel and this is the last tick that copy exists.
 		gs.Run.AbsorbGrowth(s.fighter.Duelist)
-		gs.Run.WonFight(s.fighter.CurrentLife, s.fighter.MaxLife)
+
+		// **What a cantrip added comes off here, and a life above the ceiling is the ceiling**
+		// *(owner's call, 2026-09-28)*: the run is handed the body it would have had without the
+		// casts, and whatever they bought was a heal while it lasted. See session.ShedCantrips.
+		life, ceiling := session.ShedCantrips(s.fighter.CurrentLife, s.fighter.MaxLife, s.cantripLife)
+		gs.Run.WonFight(life, ceiling)
 
 		// **The duel-won moment, and the realm the run now stands on.** Both fire on every win and
 		// the profile keeps one award apiece — see achieve.go, and data/achievements.json, where

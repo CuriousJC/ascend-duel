@@ -522,36 +522,20 @@ func (s *Session) Held() []string {
 	return out
 }
 
-// MaxHeld is how many runes the run can carry at once.
-//
-// **Two, and it is a rule rather than a number the layout chose** — the same standing `MaxWornRelics`
-// has, and for the same reason: the top row draws the sack as `held/2` beside the relics' `worn/5`,
-// and a row saying two while the run carried a third is exactly the drift a displayed cap invites.
-//
-// **The sack was uncapped until 2026-09-06** *(owner's call)*. What that cost was not storage —
-// the dialog's row already tightened its pitch to hold any number — it was that a consumable with
-// no ceiling is one a rich run hoards rather than spends. A cap of two makes the third purchase a
-// decision about the two you are holding.
-const MaxHeld = 2
-
 // HoldCount is how many runes the run is carrying.
 func (s *Session) HoldCount() int { return len(s.held) }
-
-// HoldFull is whether the sack has no room. **Asked before a rune is paid for**, which is the
-// shop's business: see the sack seat, which goes unavailable rather than taking five vitae for a
-// rune that would be refused.
-func (s *Session) HoldFull() bool { return len(s.held) >= MaxHeld }
 
 // Hold puts a rune in the sack, and reports whether it went in.
 //
 // **A rune the catalog does not have is refused**, rather than held as a key nothing can
 // resolve — a sack carrying a name that means nothing is a slot the player cannot spend.
 //
-// **A full sack refuses too.** It is the last line of defense rather than the control the player
+// **A full consumables pane refuses too** — see MaxConsumables, which counts everything carried
+// rather than the sack alone. It is the last line of defense rather than the control the player
 // meets: a seat that could be bought and then silently dropped would be the purchase-for-nothing
 // this returns false to prevent, and the shop is where it is actually stopped.
 func (s *Session) Hold(key string) bool {
-	if s.HoldFull() {
+	if s.ConsumablesFull() {
 		return false
 	}
 	return s.hold(key)

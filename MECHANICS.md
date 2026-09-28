@@ -27,8 +27,8 @@ someone dies or when the **fifth round** ends, which kills whoever is still stan
 **Winning pays vitae and an essence.** An essence permanently edits one card of your deck. Vitae is
 spent in a shop on a **relic** — worn, five at a time, and each one bends a rule — or on a **stone**
 that raises one rung of the hand ladder, a **potion** that changes the duelist, a **rune** that
-alters cards mid-fight, or a **sealed good**, which is paid for and *then* opened. Then the next
-room.
+alters cards mid-fight, a **cantrip** that strengthens the duelist for one fight, or a **sealed
+good**, which is paid for and *then* opened. Then the next room.
 
 Wounds carry from room to room and only a portal room heals them, so a realm is an attrition budget.
 The run is written to disk between rooms and every run has a six-character code that replays it.
@@ -49,6 +49,7 @@ The run is written to disk between rooms and every run has a six-character code 
 | [Stones](#stones--altering-the-hand-ladder) | raising one hand shape, on every axis, for one run | built |
 | [Essences](#essences--altering-the-deck-between-fights) | editing the deck between fights | built |
 | [Runes](#runes--altering-the-deck-during-a-fight) | editing the deck inside a fight, and the riders a card can carry | built |
+| [Cantrips](#cantrips--altering-the-duelist-for-one-fight) | strengthening the duelist for the fight a cantrip is cast in | built |
 | [Brands](#brands) | permanent changes to the chassis | **designed, not built** |
 | [Vitae](#vitae) | the currency and what a win pays | built |
 | [The journey](#the-journey) | eight realms, three rooms, the portal, the growth curve | built except the door choice |
@@ -1943,13 +1944,13 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
 | Pane | Holds | Rerolls |
 |---|---|---|
 | relics | three off the catalog, drawn on rarity tickets without replacement | yes |
-| sealed packs | **two of the three** — a bag of rocks, a vial of essence, a sack of runes | yes |
+| sealed packs | **two, never two of one catalog** — a bag of rocks, a vial of essence, a sack of runes, a bundle of scrolls | yes |
 | potions | the whole of `data/potions.json`, the same vessels every visit | no — a reroll would offer what is already offered |
 | brand | one seat, **dim and unclickable**, because §Brands is unbuilt | no |
 
-- **Two packs out of three is what makes the pack pane a question.** All three on the shelf every
-  visit asks nothing: the only decision is what the purse can cover. Which two you meet is a roll
-  on `seeds.PackOffer`, and all three catalogs stay reachable across a run.
+- **Two packs of the catalog is what makes the pack pane a question.** Every pack on the shelf
+  every visit asks nothing: the only decision is what the purse can cover. Which two you meet is a
+  roll on `seeds.PackOffer`, and every catalog stays reachable across a run.
 - **A reroll is per pane and it escalates** — 2 vitae, then 4, then 8, doubling within a visit and
   starting again at the next shop. The relics and the packs each have their own button and their
   own count, so pressing one does not make the other dearer.
@@ -2013,11 +2014,13 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
   without replacement**, rather than a shuffle: each seat draws on rarity tickets and the drawn
   relic leaves the pool, so the shelf never offers the same relic twice.
 
-### The sealed packs: a bag of rocks, a vial of essence, a sack of runes
+### The sealed packs: a bag of rocks, a vial of essence, a sack of runes, a bundle of scrolls
 
-**All three take the same shape**: **5 vitae**, **four of something inside**, and the player keeps
+**All four take the same shape**: **5 vitae**, **four of something inside**, and the player keeps
 **exactly one of the four** — the other three are gone. Each draws on its own per-fight stream
-(`seeds.BagStock`, `seeds.VialStock`, `seeds.SackStock`), and a visit offers two of the three.
+(`seeds.BagStock`, `seeds.VialStock`, `seeds.SackStock`, `seeds.ScrollStock`), and a visit offers
+two of them. **The bundle of scrolls is the one that repeats**: it draws with replacement while the
+cantrip catalog is shorter than the smallest bundle — see §Cantrips.
 
 - **What is bought is the choice, not the thing.** A relic is read and then paid for; a good is paid
   for and then read. That is the whole design, and it is why neither card names its contents: the
@@ -2512,27 +2515,31 @@ whose name says it became the right-hand card and whose color says it did not.
   copies. Refusing any pair sharing a *concept* would make two colors of one card illegal, which
   is the pick a player reaching for this most obviously wants.
 
-### The sack holds two, and the top row says so
+### The consumables pane holds two, and the top row says so
 
-**A run carries at most two runes**, and the count is drawn where the worn relics' is: the top
-row of every screen that shows a build is now **two panes** — `worn/5` relics on the left, `held/2`
-runes on the right.
+**A run carries at most two consumables, of every kind together** *(owner's call, 2026-09-28)* —
+two runes, a rune and a cantrip, two cantrips. The count is drawn where the worn relics' is: the
+top row of every screen that shows a build is **two panes** — `worn/5` relics on the left,
+`held/2` consumables on the right. A run has a total of relics and a total of consumables, and which
+kinds fill the seats is the player's business.
 
 - **The cap came from the pane and not the other way round.** A row drawn as `n/2` has to be a rule
-  or it is a lie the first time a third rune arrives. `session.MaxHeld` is that rule, and it
-  reads the same way `combat.MaxWornRelics` does — one number, read by the screen rather than
-  restated in it.
+  or it is a lie the first time a third consumable arrives. `session.MaxConsumables` is that rule,
+  and `ConsumableCount` counts the sack, the satchel, the scroll case and the pouch together.
 - **What it buys is that the third purchase is a decision.** An uncapped consumable is one a rich
-  run hoards rather than spends; with two seats, a sack bought while both are full is a rune
+  run hoards rather than spends; with two seats, a pack bought while both are full is a consumable
   you have to spend one to make room for.
-- **The shop's sack seat goes dim when the sack is full**, rather than taking five vitae for a
-  rune that would be refused. It is the same courtesy an unaffordable good already gets, and it
-  is the control the player actually meets — `Hold` refusing is the belt behind it.
-- **Only the sack needs it.** A stone is spent in the dialog that opened the bag and an essence
-  in the dialog that opened the vial, so neither hands the run something it has no room for.
-- **The pane is where a rune is visible at all**, and it is on every screen that shows a build —
-  so what a run is carrying is readable on the screens where it decides what to carry, not only
-  mid-duel.
+- **The shop's sack and bundle seats go dim when the pane is full**, rather than taking vitae for a
+  consumable that would be refused. It is the same courtesy an unaffordable good already gets, and
+  it is the control the player actually meets — `Hold` and `HoldCantrip` refusing is the belt
+  behind it.
+- **It is a rule about purchases.** A stone is spent in the dialog that opened the bag and an
+  essence in the dialog that opened the vial, so neither is bought into the pane; a rock shower's
+  stones, a fixture's plantings and a resumed save all go in without asking, and the pane draws an
+  over-full row as the `3/2` it is.
+- **The pane is where a consumable is visible at all**, and it is on every screen that shows a
+  build — so what a run is carrying is readable on the screens where it decides what to carry, not
+  only mid-duel.
 - **The whole row packs at one pitch, and it overlaps**. The combat row spans 1443
   pixels between the two fighter cards; five relic seats and two consumable seats do not fit at full
   size there and no gutter arithmetic makes them. So the pitch is *solved* for the span rather than
@@ -2600,8 +2607,8 @@ computed.
 - **A copy joins the hand it was copied from.** `spawn` spent between fights only has to put the
   card in the deck; spent mid-duel it has to reach the hand or it reads as a dud. `ApplyTo` hands it
   over through `Session.Duplicated`, which is the duplicate rune's own handover.
-- **There is no cap.** `MaxHeld` is two because the pane draws `held/2` and a fraction has to be a
-  rule. The satchel is counted with the pouch, which has never had one.
+- **It counts toward the pane's cap and is never refused by it.** `MaxConsumables` refuses a
+  purchase, and nothing is bought into the satchel.
 - **Carried in acquisition order, and written down.** `RunSnapshot.Satchel` sits beside `Held` and
   `Pouch`; an essence the catalog no longer holds refuses a resume rather than being dropped, which
   is what a carried rune and a carried stone both do.
@@ -3130,8 +3137,8 @@ it is drawn.
 
 The sack takes the bag's and the vial's shape exactly, and differs in the one way that matters:
 **a stone and an essence are spent the moment they are chosen, and a rune goes into the sack to
-be spent later.** That is what `MaxHeld` is a cap on, and it is why the sack seat goes dim when
-the sack is full rather than taking five vitae for a rune that would be refused.
+be spent later.** That is what `MaxConsumables` is a cap on, and it is why the sack seat goes dim
+when the pane is full rather than taking five vitae for a rune that would be refused.
 
 ### Run-scoped, and saved
 
@@ -3139,6 +3146,62 @@ The sack and every rider are written into `run.json`, **by name and never by ord
 rule every other vocabulary in a snapshot is under. A rune the catalog no longer holds, or a
 rider the rules lack, is **refused on resume rather than dropped**: a run that came back one
 consumable lighter is a run the player would have to work out had changed.
+
+---
+
+## Cantrips — altering the duelist for one fight
+
+**A cantrip is a consumable cast onto the duelist, and it lasts the fight it is cast in.** A potion
+changes the duelist for the rest of the run and a rune changes a card; a cantrip changes the fighter
+standing in the room and is gone when the duel ends. `data/cantrips.json` is the catalog,
+`internal/session/cantrip.go` resolves it and holds the arithmetic, and
+`internal/screens/combat_rune.go`'s `castCantrip` is the cast.
+
+| | |
+|---|---|
+| Bought | the shop's **bundle of scrolls** — 3, 4 or 5 inside at 3, 5 or 6 vitae, keep 1, offered on visits where the pack roll puts it up |
+| Held | the **scroll case**, in the consumables pane, counted against the pane's cap of two |
+| Spent | on the combat screen, **between turns only** — click it; nothing is selected, and it is lit for the whole of planning |
+| Lasts | until the fight ends |
+
+**The record is the potion's shape**: an `Effect` from a closed vocabulary and an `Amount` read
+against it, plus the authored `Text` the tooltip says.
+
+| Effect | Amount | Does |
+|---|---|---|
+| `add-dmg` | a flat figure | adds it to the fighter's DMG |
+| `scale-life` | a percentage | scales the life ceiling **and the life under it** — 200 turns 30/60 into 60/120 |
+
+- **Each cast is contained by itself, and they stack.** A cast reads the fighter as it stands and
+  moves it, knowing nothing about any other cantrip: ten Mights are +100 DMG, and a second
+  Endurance doubles the doubled body.
+- **The run is never written to.** The fighter is rebuilt from the run at the top of every fight,
+  so what a cantrip added is simply not there in the next one. Nothing undoes it.
+- **Life is the one figure that crosses the seam, and above the ceiling is the ceiling** *(owner's
+  call, 2026-09-28)*. The wound a fight leaves is carried into the next room, so at a win the run
+  takes the fighter's life back against the ceiling it would have had without the casts:
+  `session.ShedCantrips` subtracts what they raised and clamps the life to what is left. Finishing
+  at 90/120 on a 60 body walks out at 60/60 — whatever the cantrip bought was a heal while it
+  lasted, never a debt afterwards. The spoils' tenth of the life left is read off the clamped figure.
+- **Between turns, like every consumable.** `ResolveRound` decides a round before a frame of it is
+  drawn, so a cast during playback would change a duelist whose round was already decided. A cast
+  on the last round is legal and nearly worthless, which is the player's call to make.
+- **A DMG a cantrip moved is written in the relic pink** on the duelist card for the rest of the
+  fight. The life fraction carries no mark; it is simply the bigger number.
+- **A bundle of scrolls draws with replacement** while the catalog is shorter than the smallest
+  bundle — a seat that says "3 cantrips" must open on three. `dealScrolls` is the line to move to
+  the other packs' shuffle-and-cut once the catalog outgrows the bundles. Its stream is
+  `seeds.ScrollStock`, its own.
+- **Every cast is in the run's account**, as is every rune, stone and essence spent from the pane:
+  a `used` record — "Duelist casts Cantrip of Might - DMG 10 to 20", "Duelist uses Embermark on a
+  jab" — held by `Session.RecordUse` and written at the top of the round it was spent before, since
+  a round is recorded when it finishes and the spending was the first thing that round did.
+- **`go run ./tools/cantripsheet` is the review page**: each cantrip's line against its effect, and
+  that effect cast onto the shipped duelist through `Cast`.
+- **Carried in acquisition order, and written down.** `RunSnapshot.Cantrips` sits beside `Held`; a
+  cantrip the catalog no longer holds refuses a resume. A cast is not saved, because a run is never
+  resumed inside a fight: a quit after a cast comes back to the top of the fight with the scroll
+  spent, which is the terms a spent rune is on.
 
 ---
 

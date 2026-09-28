@@ -627,36 +627,36 @@ func TestTwoShowersFromDifferentSourcesCanDifferAndOneSourceIsRepeatable(t *test
 	}
 }
 
-// The cap is a rule, not a label on a pane. **`MaxHeld` is what the top row draws as `held/2`** —
-// see internal/screens/consumables.go — and a sack that took a third would make that fraction a
-// lie on the one screen the player reads their build off.
+// The cap is a rule, not a label on a pane. **`MaxConsumables` is what the top row draws as
+// `held/2`** — see internal/screens/consumables.go — and a sack that took a third would make that
+// fraction a lie on the one screen the player reads their build off.
 func TestTheSackRefusesMoreThanItHolds(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 
 	filler := anyWithRider(t, combat.RiderHealOnPlay).Record
 	spare := anyWithTarget(t, RuneRemove).Record
 
-	for i := 0; i < MaxHeld; i++ {
+	for i := 0; i < MaxConsumables; i++ {
 		if !run.Hold(filler) {
-			t.Fatalf("the sack refused rune %d of %d", i+1, MaxHeld)
+			t.Fatalf("the sack refused rune %d of %d", i+1, MaxConsumables)
 		}
 	}
-	if !run.HoldFull() {
-		t.Errorf("a sack holding %d of %d does not report itself full", run.HoldCount(), MaxHeld)
+	if !run.ConsumablesFull() {
+		t.Errorf("a sack holding %d of %d does not report itself full", run.HoldCount(), MaxConsumables)
 	}
 	if run.Hold(spare) {
-		t.Errorf("a full sack took a %dth rune", MaxHeld+1)
+		t.Errorf("a full sack took a %dth rune", MaxConsumables+1)
 	}
-	if run.HoldCount() != MaxHeld {
-		t.Errorf("the sack holds %d, past the cap of %d", run.HoldCount(), MaxHeld)
+	if run.HoldCount() != MaxConsumables {
+		t.Errorf("the sack holds %d, past the cap of %d", run.HoldCount(), MaxConsumables)
 	}
 
 	// **Dropping one makes room again**, which is what makes the cap a bound on carrying rather
 	// than on ever acquiring.
-	if !run.Drop(0) || run.HoldFull() {
+	if !run.Drop(0) || run.ConsumablesFull() {
 		t.Errorf("a sack with one spent still reports itself full at %d", run.HoldCount())
 	}
-	if !run.Hold(spare) || run.HoldCount() != MaxHeld {
+	if !run.Hold(spare) || run.HoldCount() != MaxConsumables {
 		t.Errorf("the freed seat did not take a rune: %d held", run.HoldCount())
 	}
 }

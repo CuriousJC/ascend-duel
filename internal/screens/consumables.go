@@ -9,9 +9,9 @@ package screens
 // was visible was behind the `P` button, two clicks into a dialog that only exists mid-duel.
 //
 // **A cap is what makes a pane possible.** A row drawn as `n/2` has to be a rule or it is a lie the
-// first time a third rune arrives, so `session.MaxHeld` landed with this — see
-// internal/session/rune.go, and the shop's sack seat, which goes dim rather than selling a
-// rune there is no room for.
+// first time a third consumable arrives, so the cap is `session.MaxConsumables` — every kind the pane
+// holds counted together, see internal/session/consumable.go — and the shop's pack seats go dim
+// rather than selling a rune or a cantrip there is no room for.
 //
 // **It is the relics pane's twin and shares everything it can**: the same backing color, the same
 // eight pixels of padding, the same drop below the cards on either side, and the same count hung
@@ -25,6 +25,7 @@ package screens
 import (
 	"fmt"
 	"image"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -37,10 +38,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// maxHeld is how many runes can be carried at once, and it reads the run's rule rather than
-// declaring a second two. A pane saying `held/2` while the sack took a third is the drift that
+// maxHeld is how many consumables can be carried at once, and it reads the run's rule rather than
+// declaring a second two. A pane saying `held/2` while the run took a third is the drift that
 // indirection prevents.
-const maxHeld = session.MaxHeld
+const maxHeld = session.MaxConsumables
 
 // heldSlots is the sack's capacity — what the fraction on the pane's corner counts against, and
 // the consumables counterpart of relicSlots.
@@ -58,7 +59,7 @@ func heldSlots(gs *state.GlobalState) int {
 // being carried, if that is more** *(owner's call, 2026-09-17)*.
 //
 // **The sack can be over-full and the pane has to be able to say so.** `Session.hold` goes past
-// MaxHeld on purpose so a fixture can plant a sack rather than buy one — see session.Start — and a
+// MaxConsumables on purpose so a fixture can plant a sack rather than buy one — see session.Start — and a
 // pane pinned to the capacity drew two cards while the run carried fifty, which is the screen
 // hiding the thing the fixture exists to show. The row tightens to fit them, exactly as the relic
 // row does; the fraction on the corner still counts against the capacity, so an over-full sack
@@ -292,6 +293,8 @@ func drawConsumableCard(gs *state.GlobalState, screen *ebiten.Image, at image.Po
 		ui.DrawStoneCard(gs, screen, at, c.Stone, enabled)
 	case session.ConsumableEssence:
 		ui.DrawEssenceCard(gs, screen, at, c.Essence, enabled)
+	case session.ConsumableCantrip:
+		ui.DrawCantripCard(gs, screen, at, c.Cantrip, enabled)
 	}
 }
 
@@ -302,6 +305,8 @@ func consumableTipLines(gs *state.GlobalState, c session.Consumable, essenceTarg
 		return stoneTipLines(gs, c.Stone)
 	case session.ConsumableEssence:
 		return essenceTipLines(c.Essence, essenceTargets)
+	case session.ConsumableCantrip:
+		return cantripTipLines(c.Cantrip)
 	default:
 		return runeTipLines(gs, c.Rune)
 	}
@@ -316,4 +321,13 @@ func consumableTipLines(gs *state.GlobalState, c session.Consumable, essenceTarg
 func essenceTipLines(w session.Essence, targets int) []string {
 	_, lines := ui.EssenceTip(w, targets)
 	return append(lines, "spent between the turns of a fight")
+}
+
+// cantripTipLines is what a cantrip says: its authored line, and when it can be cast.
+//
+// **The "when" carries the half the card cannot say** — that it lasts one fight. The line is the
+// record's own and a break in it is the tooltip's own line, the treatment runeTipLines gives a rune.
+func cantripTipLines(c session.Cantrip) []string {
+	lines := strings.Split(c.Text, "\n")
+	return append(lines, "cast between the turns of a fight,", "and it lasts until the fight ends")
 }

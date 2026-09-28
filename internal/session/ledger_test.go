@@ -111,3 +111,24 @@ func TestTheOpenFightIsTheOneStillBeingFought(t *testing.T) {
 		t.Error("a settled fight is still reported as being fought")
 	}
 }
+
+// A consumable spent while planning opens the round it was spent before, in the order it was spent,
+// and does not leak into the round after.
+func TestAConsumableSpentOpensTheNextRound(t *testing.T) {
+	s := New(testDeck())
+	s.BeginFight(1, "Giant Bat")
+	s.RecordUse(LedgerRecord{Side: SideYou, Name: "Duelist", Note: "cantrip", Subject: "Cantrip of Might"})
+	s.RecordUse(LedgerRecord{Side: SideYou, Name: "Duelist", Note: "rune", Subject: "Embermark"})
+	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks with a fire strike")}, 10)
+	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks with a fire strike")}, 10)
+
+	rounds := s.LedgerFights()[0].Rounds
+	first := rounds[0].Records
+	if len(first) != 3 || first[0].Kind != KindUsed || first[0].Subject != "Cantrip of Might" ||
+		first[1].Kind != KindUsed || first[1].Subject != "Embermark" {
+		t.Fatalf("round one opened with %+v, want the two uses in order", first)
+	}
+	if second := rounds[1].Records; len(second) != 1 || second[0].Kind == KindUsed {
+		t.Errorf("round two carried a use it was not spent before: %+v", second)
+	}
+}

@@ -190,6 +190,15 @@ var sheets = []sheet{
 			"rule that fires. The least readable record in data/ — which fields the rules read " +
 			"depends entirely on the target — so this page is the review from the first record.",
 	},
+	{
+		Dir:   "cantripsheet",
+		Tool:  "./tools/cantripsheet",
+		Title: "Cantrip sheet",
+		Blurb: "Every cantrip, with the sentence it prints against the effect it resolves to, and " +
+			"that effect cast onto the shipped duelist at full life, at half and twice in a row " +
+			"through the game's own `Cast` — so what doubling your life does to 30 of 60 is read " +
+			"rather than assumed.",
+	},
 }
 
 func main() {

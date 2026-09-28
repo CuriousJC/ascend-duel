@@ -30,10 +30,12 @@ type Holdings struct {
 	// that was altered distinguishable from one that was cut and another taken.
 	Cards []combat.Card
 
-	// Relics is the worn row, Held the runes in hand, Pouch the stones not yet spent.
-	Relics []string
-	Held   []string
-	Pouch  []string
+	// Relics is the worn row, Held the runes in hand, Pouch the stones not yet spent, Scrolls the
+	// cantrips not yet cast.
+	Relics  []string
+	Held    []string
+	Pouch   []string
+	Scrolls []string
 
 	// Stones is how far each rung has been raised, by hand key.
 	Stones map[string]int
@@ -47,11 +49,12 @@ func (s *Session) Holdings() Holdings {
 		return Holdings{}
 	}
 	return Holdings{
-		Cards:  s.Deck(),
-		Relics: s.Worn(),
-		Held:   s.Held(),
-		Pouch:  s.Carried(),
-		Stones: s.StoneCounts(),
-		Vitae:  s.Vitae(),
+		Cards:   s.Deck(),
+		Relics:  s.Worn(),
+		Held:    s.Held(),
+		Pouch:   s.Carried(),
+		Scrolls: s.Scrolls(),
+		Stones:  s.StoneCounts(),
+		Vitae:   s.Vitae(),
 	}
 }

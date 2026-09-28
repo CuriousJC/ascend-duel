@@ -124,6 +124,14 @@ const (
 	// would make what a luck rune grants a function of how many rock showers the run had
 	// spent, which is a rule nobody designed.
 	LuckRoll
+
+	// ScrollStock is which cantrips a bundle of scrolls holds. Per fight, split per bundle by
+	// `ForFightSeat` exactly as the other three packs are.
+	//
+	// **Its own stream rather than SackStock's**, although both fill the same pane: sharing would
+	// make which cantrips a bundle holds a function of how many runes the sack drew, so authoring a
+	// rune would reroll every bundle of scrolls ever opened.
+	ScrollStock
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -161,6 +169,7 @@ var streams = [...]stream{
 	StoneShower:  {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
 	PackOffer:    {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
 	LuckRoll:     {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
+	ScrollStock:  {name: "scroll-stock", salt: 0x5EED_5C20, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

@@ -198,6 +198,7 @@ type record struct {
 	Runes          []string   `json:"Runes"`
 	Stones         []string   `json:"Stones"`
 	Essences       []string   `json:"Essences"`
+	Cantrips       []string   `json:"Cantrips"`
 	Enemy          string     `json:"Enemy"`
 	EnemyElement   string     `json:"EnemyElement"`
 	Screen         string     `json:"Screen"`
@@ -316,6 +317,17 @@ func wornSpecs(r record) section {
 				continue
 			}
 			s.specs = append(s.specs, goodSpec(w.Name))
+		}
+	}
+	if len(r.Cantrips) > 0 {
+		s.splits = append(s.splits, len(s.specs))
+		for _, key := range r.Cantrips {
+			c, ok := session.CantripByKey(key)
+			if !ok {
+				s.specs = append(s.specs, missingSpec(key))
+				continue
+			}
+			s.specs = append(s.specs, goodSpec(c.Name))
 		}
 	}
 	if len(r.Stones) > 0 {
@@ -507,6 +519,14 @@ func heldLines(r record) []named {
 			continue
 		}
 		out = append(out, named{Key: key, Name: w.Name, Text: oneLine(w.Text), Kind: "satchel"})
+	}
+	for _, key := range r.Cantrips {
+		c, ok := session.CantripByKey(key)
+		if !ok {
+			out = append(out, named{Key: key, Name: "-- no such cantrip --", Kind: "scroll case"})
+			continue
+		}
+		out = append(out, named{Key: key, Name: c.Name, Text: oneLine(c.Text), Kind: "scroll case"})
 	}
 	stones := data.LoadStones()
 	for _, key := range r.Stones {

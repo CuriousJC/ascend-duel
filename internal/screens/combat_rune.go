@@ -28,8 +28,10 @@ package screens
 // the row the targets are selected in.
 
 import (
+	"fmt"
 	"image"
 	"math/rand"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
@@ -205,11 +207,13 @@ func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
 	// **The hand as it stands, before any of this lands**, so the morphs are the difference between
 	// two hands and this file goes on knowing nothing about what any one essence does.
 	was, seats := s.handFaces(gs)
+	aimed := s.handCardWords(ids)
 
 	if !gs.Run.ApplyToAll(w, ids) {
 		return
 	}
 	gs.Run.DropStowed(i)
+	s.recordUse(gs, "essence", w.Name, aimed)
 
 	// **Written after the apply, not before it.** A refused spend is not a choice the player made
 	// — the pane draws it dim and the click does nothing — and a line for one would put a card in
@@ -258,6 +262,8 @@ func (s *CombatScene) spendConsumable(gs *state.GlobalState, seat int) {
 		s.spendStone(gs, c.At)
 	case session.ConsumableEssence:
 		s.spendEssence(gs, c.At)
+	case session.ConsumableCantrip:
+		s.castCantrip(gs, c.At)
 	default:
 		s.spendRune(gs, c.At)
 	}
@@ -270,9 +276,18 @@ func (s *CombatScene) spendConsumable(gs *state.GlobalState, seat int) {
 // run is saved because a rung raised and then lost to a crash is a consumable the player spent and
 // did not get.
 func (s *CombatScene) spendStone(gs *state.GlobalState, i int) {
-	if gs.Run == nil || !gs.Run.SpendCarried(i) {
+	if gs.Run == nil {
 		return
 	}
+	carried := gs.Run.Carried()
+	if i < 0 || i >= len(carried) {
+		return
+	}
+	stone, _ := session.StoneByKey(carried[i])
+	if !gs.Run.SpendCarried(i) {
+		return
+	}
+	s.recordUse(gs, "stone", stone.Name, "")
 
 	gs.Journal.Write(journal.Record{Kind: journal.KindStone, Action: journal.StoneUsed, Seat: i})
 
@@ -282,6 +297,93 @@ func (s *CombatScene) spendStone(gs *state.GlobalState, i int) {
 	// dud a mid-fight consumable must not be.
 	s.fighter.Duelist = gs.Run.Equip(s.fighter.Duelist)
 	saveRun(gs)
+}
+
+// castCantrip takes one out of the scroll case and casts it onto the fighter standing in the room.
+//
+// **The fighter moves and the run does not.** A cantrip lasts the fight, and the fighter is the
+// fight's: it is rebuilt from the run at the next Init with none of this on it, which is the whole
+// of how a cantrip ends. What the cast raised the ceiling by is tallied on the scene, because the
+// run takes the fighter's life back at the end of the fight and needs to know which part of the
+// ceiling was never the run's — see session.ShedCantrips.
+//
+// **It is gated on planning, like every consumable**, by the predicate the pane's lit state reads:
+// a cast mid-playback would change a duelist whose round was already decided. The next round reads
+// the cast fighter, since ResolveRound starts from s.fighter.
+//
+// **The run is saved** because the scroll left the case, on spendStone's argument. What the cast did
+// is not in the save, and does not have to be: a run is resumed at the top of a fight, never inside
+// one, so a resumed fight is a fresh fighter and a spent scroll — the same terms a spent rune is on.
+func (s *CombatScene) castCantrip(gs *state.GlobalState, i int) {
+	if gs.Run == nil {
+		return
+	}
+	scrolls := gs.Run.Scrolls()
+	if i < 0 || i >= len(scrolls) {
+		return
+	}
+	c, ok := session.CantripByKey(scrolls[i])
+	if !ok || !gs.Run.DropScroll(i) {
+		return
+	}
+
+	was := s.fighter.Duelist
+	s.fighter.Duelist = c.Cast(s.fighter.Duelist)
+	s.cantripLife += s.fighter.MaxLife - was.MaxLife
+	s.cantripDMG += s.fighter.DMG - was.DMG
+	s.recordUse(gs, "cantrip", c.Name, castWords(was, s.fighter.Duelist))
+
+	gs.Journal.Write(journal.Record{Kind: journal.KindCantrip, Key: c.Record, Seat: i})
+	saveRun(gs)
+}
+
+// recordUse puts a consumable the player spent into the run's account, to open the next round —
+// see session.RecordUse. **Every spend on this screen writes one**, after it has succeeded: a
+// refused spend is not a thing the player did.
+func (s *CombatScene) recordUse(gs *state.GlobalState, kind, name, into string) {
+	gs.Run.RecordUse(session.LedgerRecord{
+		Side:    session.SideYou,
+		Name:    s.sideName(combat.SideA),
+		Note:    kind,
+		Subject: name,
+		Into:    into,
+	})
+}
+
+// handCardWords is the cards a rune or an essence is aimed at, in the account's own words, read off
+// the hand **before** the consumable rewrites them — a line saying a jab became fire has to name the
+// jab, not the fire card it is now.
+func (s *CombatScene) handCardWords(ids []int) string {
+	var words []string
+	for _, id := range ids {
+		for _, pc := range s.hand {
+			if pc.Card.ID == id {
+				w := cardWords(pc.Card)
+				article := "a "
+				if w != "" && strings.ContainsAny(w[:1], "aeiouAEIOU") {
+					article = "an "
+				}
+				words = append(words, article+w)
+				break
+			}
+		}
+	}
+	return strings.Join(words, " and ")
+}
+
+// castWords is what a cantrip did, as the figures it moved: "DMG 10 to 20", "life 30/60 to 60/120".
+// **Read off the fighter before and after**, so the line cannot claim an effect the cast did not
+// have, and a new effect that moves either figure is worded with nothing added here.
+func castWords(was, now combat.Duelist) string {
+	var parts []string
+	if now.DMG != was.DMG {
+		parts = append(parts, fmt.Sprintf("DMG %d to %d", was.DMG, now.DMG))
+	}
+	if now.MaxLife != was.MaxLife || now.CurrentLife != was.CurrentLife {
+		parts = append(parts, fmt.Sprintf("life %d/%d to %d/%d",
+			was.CurrentLife, was.MaxLife, now.CurrentLife, now.MaxLife))
+	}
+	return strings.Join(parts, ", ")
 }
 
 func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
@@ -300,11 +402,13 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	// difference between this and the hand a few lines below, which is what lets the morphs be
 	// raised without this file knowing what any particular rune does. See raiseHandMorphs.
 	was, seats := s.handFaces(gs)
+	aimed := s.handCardWords(ids)
 
 	if !gs.Run.ApplyRuneRolling(p, ids, s.runeRNG(gs, p)) {
 		return
 	}
 	gs.Run.Drop(i)
+	s.recordUse(gs, "rune", p.Name, aimed)
 
 	// **The roll is not written down.** A rune that gambles takes its stream off the run seed and
 	// the cards it was aimed at, so a replay reaching this line with the same choices behind it
@@ -586,7 +690,8 @@ func runeRiderLine(k combat.RiderKind) string {
 // **A stone is spendable whenever anything is** *(owner's call, 2026-09-19)*. It names its own
 // rung, so there is nothing for it to be aimed at and nothing about the hand that can make it
 // illegal — where a rune goes dim until the cards it wants are selected, a stone is lit for the
-// whole of planning.
+// whole of planning. **A cantrip is the same**: it is cast onto the fighter, and nothing in the hand
+// can make that illegal.
 func (s *CombatScene) consumableSpendable(gs *state.GlobalState) func(session.Consumable) bool {
 	if !s.canSpendRunes(gs) {
 		return nil
@@ -594,7 +699,7 @@ func (s *CombatScene) consumableSpendable(gs *state.GlobalState) func(session.Co
 	ids := s.selectedCardIDs()
 	return func(c session.Consumable) bool {
 		switch c.Kind {
-		case session.ConsumableStone:
+		case session.ConsumableStone, session.ConsumableCantrip:
 			return true
 		case session.ConsumableEssence:
 			return s.essenceTarget(gs, c.Essence).satisfiedBy(ids)
@@ -629,7 +734,7 @@ func (s *CombatScene) updateConsumables(gs *state.GlobalState) {
 // sack order decides nothing at all, which is why this reorders the run and stops there where
 // CombatScene.moveRelic has a live duelist to keep in step as well. See Session.MoveRune.
 //
-// **It exists because a sack can hold more than it has seats.** `Session.hold` goes past MaxHeld on
+// **It exists because a sack can hold more than it has seats.** `Session.hold` goes past MaxConsumables on
 // purpose and the pane packs whatever it is given, so a run carrying fifty runes draws them as
 // slivers — and the only way to reach the one at the bottom of that stack was to spend everything
 // in front of it. Dragging brings it to the front.

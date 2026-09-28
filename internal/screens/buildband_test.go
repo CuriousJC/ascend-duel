@@ -253,7 +253,7 @@ func TestEachTopRowPaneKeepsItsOwnSize(t *testing.T) {
 	}
 
 	// **A full sack sits inside its pane without overlapping**, which is the case that was broken.
-	if pitch := relicSlotPitch(consumables, session.MaxHeld); pitch < cards.RelicStyle.Width {
+	if pitch := relicSlotPitch(consumables, session.MaxConsumables); pitch < cards.RelicStyle.Width {
 		t.Errorf("a full sack packs at %dpx for a %dpx card, so the runes overlap",
 			pitch, cards.RelicStyle.Width)
 	}

@@ -32,6 +32,9 @@ func Stones() []string { return nil }
 // Essences is what the run should open carrying in its satchel. Nil here.
 func Essences() []string { return nil }
 
+// Cantrips is what the run should open carrying in its scroll case. Nil here.
+func Cantrips() []string { return nil }
+
 // Enemy is the record key to fight instead of the journey's own. Empty here.
 func Enemy() string { return "" }
 

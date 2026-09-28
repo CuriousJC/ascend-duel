@@ -22,6 +22,7 @@ package ui
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
@@ -161,6 +162,14 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 	case session.KindHeld:
 		w.attach(0, fmt.Sprintf("kept back for %d vitae", r.Amount))
 
+	case session.KindReflected:
+		// **The relic names itself**, the drain's rule, so a second thorn relic cannot narrate as
+		// the first.
+		w.attach(r.Hit, fmt.Sprintf("%s returns %d", r.Relic, r.Amount))
+
+	case session.KindTithed:
+		w.attach(r.Hit, fmt.Sprintf("%s pays %d vitae", r.Relic, r.Amount))
+
 	case session.KindSilver:
 		// **Two riders pay vitae and they are different sentences.** A held card is paid for being
 		// kept back; a played silver card gambled and came up.
@@ -197,6 +206,12 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		// with nothing before it, so there is nothing to attach to.
 		w.announce(voiceForSide(r.Side),
 			fmt.Sprintf("%s restores %d - %s", r.Name, r.Amount, r.Relic))
+
+	case session.KindWarded:
+		// **A line of its own**, like a regeneration: the top of a turn has nothing to attach to.
+		w.announce(voiceForSide(r.Side),
+			fmt.Sprintf("%s raises %s - %s", r.Name,
+				strings.Replace(ShieldCount(r.Amount), " ", " "+r.Element+" ", 1), r.Relic))
 
 	case session.KindTicked:
 		// A tick belongs to nobody's card, so it opens its own line, and it carries the victim's

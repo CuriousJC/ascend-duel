@@ -130,6 +130,10 @@ func playTurn(
 	// Duelist.Surge.
 	actor.Surge = 0
 
+	// **A helm's shield goes up after the expiry**, or the turn arriving would take away the shield
+	// it had just been handed. See DoRaiseShield.
+	events, actor = wardAtTurnStart(events, side, actor, round)
+
 	// A chill comes off the front, which needs no tie-break and so is the only pick that is
 	// deterministic without inventing a rule.
 	//
@@ -256,14 +260,21 @@ func resolveDefend(
 	case VerbShield:
 		// Raised, not spent. Each one eats a whole incoming attack when the opponent swings — see
 		// blockedByShield, and Duelist.Shields for when they expire.
-		actor = actor.raiseShields(card.Element, card.Amount())
+		// **The shield's element, which is the card's unless a worn relic says otherwise** — the
+		// Prismatic Shield turns it to the opponent's. The card keeps its own for the hand it forms.
+		shield := card.Element
+		if ShieldsMatchFoe(actor.WornRelics()) && target.Element != Basic {
+			shield = target.Element
+		}
+		actor = actor.raiseShields(shield, card.Amount())
 		// **`Slot` names the card that raised them.** The defenses fire as one bundle and nothing
 		// lifts, so the event is the only thing that can say which card the pips come out of.
+		// **`Element` is the shields'**, which is what the pips land wearing.
 		events = append(events, Event{
 			Kind:    KindRaised,
 			Side:    side,
 			Action:  card.Concept,
-			Element: card.Element,
+			Element: shield,
 			Slot:    at,
 			Amount:  card.Amount(),
 			Life:    actor.Shields.Count(),
@@ -287,16 +298,41 @@ func expireDefenses(events []Event, side Side, d Duelist, round int) ([]Event, D
 	// **The announcement is for the shields alone**, because they are the only half of this the
 	// screen draws. A guard lapsing unspent has no readout to correct, and a beat with no picture
 	// is the thing the choreography table exists to refuse.
-	if d.Shields.Count() > 0 {
+	//
+	// **A kept shield does not lapse**, so what is announced is what went and `Life` is what is
+	// still standing — nothing for nearly every run. See DoKeepShields.
+	before := d.Shields.Count()
+	d = d.lapseShields()
+	if lapsed := before - d.Shields.Count(); lapsed > 0 {
 		events = append(events, Event{
 			Kind:   KindExpired,
 			Side:   side,
 			Target: side,
-			Amount: d.Shields.Count(),
+			Amount: lapsed,
+			Life:   d.Shields.Count(),
 			Round:  round,
 		})
 	}
-	return events, ClearDefenses(d)
+	return events, d
+}
+
+// wardAtTurnStart is every worn relic that raises shields firing, at the top of its wearer's own
+// turn — the helms. See DoRaiseShield.
+func wardAtTurnStart(events []Event, side Side, actor Duelist, round int) ([]Event, Duelist) {
+	for _, w := range actor.wardsFrom() {
+		actor = actor.raiseShields(w.Element, w.Count)
+		events = append(events, Event{
+			Kind:    KindWarded,
+			Side:    side,
+			Target:  side,
+			Relic:   w.Relic,
+			Element: w.Element,
+			Amount:  w.Count,
+			Life:    actor.Shields.Count(),
+			Round:   round,
+		})
+	}
+	return events, actor
 }
 
 // endRound ticks a burn and counts every status down one.
@@ -392,12 +428,16 @@ func healAtTurnStart(events []Event, side Side, actor Duelist, round int) ([]Eve
 // blocked hit never produces one. Ordering it after them would spend a shield on arithmetic nobody
 // sees.
 //
+// **Then the target's hit-blocked relics fire**, in worn order: a share of `would` sent back at the
+// actor, life, vitae. `would` is the hit as it would have landed — after weight and vulnerability —
+// which is what the target did not take. A thrower the share kills gets its KindDefeated here.
+//
 // `slot` is the card's seat in the turn and `hit` is which term of the hand this was; a solo
 // attacker has no hand and passes zero.
-func blockedByShield(events []Event, side Side, target Duelist, card Card, shield Element, slot, hit, round int) ([]Event, Duelist, bool) {
+func blockedByShield(events []Event, side Side, actor, target Duelist, card Card, shield Element, would, slot, hit, round int) ([]Event, Duelist, Duelist, bool) {
 	target, spent := target.spendShield(shield)
 	if !spent {
-		return events, target, false
+		return events, actor, target, false
 	}
 	surged := shield != Basic && shield == card.Element
 	if surged {
@@ -415,7 +455,56 @@ func blockedByShield(events []Event, side Side, target Duelist, card Card, shiel
 		Surged:  surged,
 		Round:   round,
 	})
-	return events, target, true
+
+	wearer := other(side)
+	for _, r := range target.blockRewardsFrom(card) {
+		if n := would * r.Reflect / 100; n > 0 && actor.Alive() {
+			actor.CurrentLife = reduce(actor.CurrentLife, n)
+			events = append(events, Event{
+				Kind:   KindReflected,
+				Side:   wearer,
+				Target: side,
+				Relic:  r.Relic,
+				Slot:   slot,
+				Hit:    hit,
+				Amount: n,
+				Life:   actor.CurrentLife,
+				Round:  round,
+			})
+			if !actor.Alive() {
+				events = append(events, Event{Kind: KindDefeated, Side: wearer, Target: side, Round: round})
+			}
+		}
+		if r.Heal > 0 {
+			before := target.CurrentLife
+			target.CurrentLife = restore(target.CurrentLife, r.Heal, target.MaxLife)
+			if gained := target.CurrentLife - before; gained > 0 {
+				events = append(events, Event{
+					Kind:   KindRegenerated,
+					Side:   wearer,
+					Target: wearer,
+					Relic:  r.Relic,
+					Amount: gained,
+					Life:   target.CurrentLife,
+					Round:  round,
+				})
+			}
+		}
+		if r.Vitae > 0 {
+			target.Vitae += r.Vitae
+			events = append(events, Event{
+				Kind:   KindTithed,
+				Side:   wearer,
+				Target: wearer,
+				Relic:  r.Relic,
+				Slot:   slot,
+				Hit:    hit,
+				Amount: r.Vitae,
+				Round:  round,
+			})
+		}
+	}
+	return events, actor, target, true
 }
 
 // resolveSoloAttacks is the attack phase of a duelist whose cards form no hands: **every attack
@@ -480,15 +569,19 @@ func resolveSoloAttacks(
 		// **One shield, one hit**, and the hits it eats were chosen before the turn began — the
 		// matching element first and then the heaviest, by shieldedSlots. Spending is here rather than up there because a missed
 		// hit spends nothing: the roll above continues before this line.
+		dmg := blunt(actor.CardDamage(slot.Card), actor.weight())
+		dmg = amplify(dmg, target.vulnerability())
+
 		if blocked := false; eaten[i] >= 0 {
-			events, target, blocked = blockedByShield(events, side, target, slot.Card, eaten[i], i, 0, round)
+			events, actor, target, blocked = blockedByShield(events, side, actor, target, slot.Card, eaten[i], dmg, i, 0, round)
 			if blocked {
+				// **A thorn can kill the thrower mid-turn**, and a corpse throws nothing more.
+				if !actor.Alive() {
+					return events, actor, target
+				}
 				continue
 			}
 		}
-
-		dmg := blunt(actor.CardDamage(slot.Card), actor.weight())
-		dmg = amplify(dmg, target.vulnerability())
 
 		target.CurrentLife = reduce(target.CurrentLife, dmg)
 		events = append(events, Event{
@@ -535,7 +628,7 @@ func resolveSoloAttacks(
 	// phase's rule too: a turn with no attacks in it returns before clearing, and expireDefenses
 	// takes them at the start of their owner's next turn instead.
 	if attacked {
-		target = ClearDefenses(target)
+		target = target.lapseShields()
 	}
 	return events, actor, target
 }

@@ -100,4 +100,4 @@ reflections, and any decoration in the middle stretch.
    contour?
 
 Name the three files exactly `bar-cell-empty.png`, `bar-cell-spent.png` and `bar-cell-over.png`,
-and give me a link I can click to download them.
+and give me a single zip file of everything so I can download it all at once — never a link per file.

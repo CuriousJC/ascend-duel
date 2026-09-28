@@ -2273,5 +2273,31 @@
       "cantrip-might"
     ],
     "Enemy": "animals-outer-rat"
+  },
+  {
+    "ScenarioRecord": "goblin-brute",
+    "Note": "A real fight against a goblin with a mixed row of relics on the ordinary deck, for playing rather than for testing one rule. Fire attacks burn and grow, crush attacks double and every Bash hits for 4x, and a pair pays 2x - so a status, a growth, a form bonus, a concept weapon and a hand multiplier are all live at once. No hand is plugged, so the deal and the flip cascade run as they would in a run, and it is not a dummy: the clock and both life totals are the game's own.",
+    "Relics": [
+      "status-burn",
+      "growth-fire",
+      "dmg-all-crush",
+      "basher",
+      "handmult-pair"
+    ],
+    "Enemy": "goblins-inner-brute"
+  },
+  {
+    "ScenarioRecord": "shield-relics",
+    "Note": "The shield relics on screen, against an earth goblin that cannot die. The Green Helm puts an earth shield up out of its ring every turn; the Prismatic Shield turns every Brace and Block to earth, so each block banks an action point; each block sends half the eaten hit back out of the Thorned Shield, heals 3 out of the Mending Shield and pays 1 vitae out of the Tithe Shield.",
+    "Relics": [
+      "green-helm",
+      "prismatic-shield",
+      "thorned-shield",
+      "mending-shield",
+      "tithe-shield"
+    ],
+    "Enemy": "goblins-inner-brute",
+    "EnemyElement": "earth",
+    "Dummy": true
   }
 ]

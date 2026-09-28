@@ -105,7 +105,7 @@ slate-blue ground, `#7EACE4`**, and under each one, using the attached letters, 
 `6 ¤  6 VITAE`, with the candidate in the place of the `¤`, so each is judged beside a number and
 beside the word it must not be confused with. Then the whole preview again at a third of its size.
 
-Two files. Give me a zipped file so I can download.
+Two files. Give me a single zip file of everything so I can download it all at once — never a link per file.
 
 ### Before you hand Round 1 back
 
@@ -179,7 +179,7 @@ by other colors at run time.
 `figure-vitae-preview.png`: all nine over `#7EACE4`, and under them, using the attached letters,
 the lines `6 ¤`, `+4 ¤` and `SELL FOR 3 ¤` in `vitae`, and `6 ¤  6 VITAE` in `neutral`.
 
-Eleven files. Give me a zipped file of everything so I can download.
+Eleven files. Give me a single zip file of everything so I can download it all at once — never a link per file.
 
 ### Before you hand Round 2 back
 

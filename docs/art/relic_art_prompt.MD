@@ -98,7 +98,8 @@ to carry on underneath.
 
 ## The subject
 
-The block pasted below this prompt is one record, in JSON.
+The block pasted below this prompt is one record in JSON, or a list of them. With a list, make
+one image per record, each on its own brief — nothing carries over from one record to the next.
 
 **Read `Draw` and nothing else as the subject.** A relic is an object and can be described from
 nothing, so `Draw` is the whole brief. Every other field — `Name`, `Text`, `Rules`, `Rarity`,
@@ -106,5 +107,5 @@ nothing, so `Draw` is the whole brief. Every other field — `Name`, `Text`, `Ru
 no caption, no rules text, no numbers anywhere in the image. If `Draw` is empty, stop and say so
 rather than inventing a subject.
 
-Name the image after the record's own key — the `RelicRecord` value — and give me a link I can
-click to download it.
+Name each image after its record's own key — the `RelicRecord` value, `thorned-shield.png` — and
+give me a single zip file of everything so I can download it all at once — never a link per file.

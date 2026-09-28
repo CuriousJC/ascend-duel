@@ -320,6 +320,102 @@
     ]
   },
   {
+    "RelicRecord": "flip-slash-to-crush",
+    "Name": "Blunted Orb",
+    "Family": "Form flips",
+    "Art": "flip-slash-to-crush",
+    "Draw": "a steel orb bristling with sharp blades, every blade wrapped and bound tight in heavy iron chains so that none of the edges are exposed",
+    "Text": "Every slash card is dealt as a crush card of the same cost.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "set-form", "Form": "crush" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "flip-stab-to-crush",
+    "Name": "Snapped Orb",
+    "Family": "Form flips",
+    "Art": "flip-stab-to-crush",
+    "Draw": "a steel orb whose spikes have all been sawed off into flat stumps, leaving a rough, lumpy, more nearly round ball",
+    "Text": "Every stab card is dealt as a crush card of the same cost.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "set-form", "Form": "crush" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "flip-crush-to-stab",
+    "Name": "Pointed Orb",
+    "Family": "Form flips",
+    "Art": "flip-crush-to-stab",
+    "Draw": "a heavy steel ball with sharp points welded all over its surface, the rough weld seams visible at the base of each point",
+    "Text": "Every crush card is dealt as a stab card of the same cost.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "set-form", "Form": "stab" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "flip-slash-to-stab",
+    "Name": "Chipped Orb",
+    "Family": "Form flips",
+    "Art": "flip-slash-to-stab",
+    "Draw": "an orb made of sharp blades whose edges have been carved and chipped away into narrow needle points",
+    "Text": "Every slash card is dealt as a stab card of the same cost.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "set-form", "Form": "stab" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "flip-stab-to-slash",
+    "Name": "Slashing Orb",
+    "Family": "Form flips",
+    "Art": "flip-stab-to-slash",
+    "Draw": "a steel ball covered in welded points, with extra strips of metal welded between neighboring points so they join into long cutting edges",
+    "Text": "Every stab card is dealt as a slash card of the same cost.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "set-form", "Form": "slash" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "flip-crush-to-slash",
+    "Name": "Razor Orb",
+    "Family": "Form flips",
+    "Art": "flip-crush-to-slash",
+    "Draw": "a solid steel orb with razor blades embedded deep in its surface, their sharp edges jutting out all around it",
+    "Text": "Every crush card is dealt as a slash card of the same cost.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "set-form", "Form": "slash" }]
+      }
+    ]
+  },
+  {
     "RelicRecord": "dmg-no-hand",
     "Name": "Singular Ring",
     "Family": "Jade rings",
@@ -2292,6 +2388,156 @@
       {
         "When": "essence-spent",
         "Then": [{ "Do": "adjust-essence-targets", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "prismatic-shield",
+    "Name": "Prismatic Shield",
+    "Family": "Shields",
+    "Art": "prismatic-shield",
+    "Draw": "a circular hoplite shield made of shimmering rainbow glass",
+    "Text": "Your shields take your foe's element.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "match-foe-shields" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "thorned-shield",
+    "Name": "Thorned Shield",
+    "Family": "Shields",
+    "Art": "thorned-shield",
+    "Draw": "a circular hoplite shield made of tangled thorny plants, with extra large thorns around the edge of the shield and a crimson gem embedded in the middle of the plant shield",
+    "Text": "A blocked hit deals half its damage back to whoever threw it.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "hit-blocked",
+        "Then": [{ "Do": "reflect-damage", "Amount": 50 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "mending-shield",
+    "Name": "Mending Shield",
+    "Family": "Shields",
+    "Art": "mending-shield",
+    "Draw": "a heavily scarred buckler shield with spear points jutting from two opposite sides and a cloudy pink gem embedded off-center",
+    "Text": "Restores 3 life for every hit a shield blocks.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "hit-blocked",
+        "Then": [{ "Do": "heal-on-block", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "tithe-shield",
+    "Name": "Tithe Shield",
+    "Family": "Shields",
+    "Art": "tithe-shield",
+    "Draw": "a blood-red metal kite shield",
+    "Text": "Pays 1 vitae for every hit a shield blocks.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "hit-blocked",
+        "Then": [{ "Do": "vitae-on-block", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "tower-shield",
+    "Name": "Tower Shield",
+    "Family": "Shields",
+    "Art": "tower-shield",
+    "Draw": "a big tower shield with jade embedded in it as vertical stripes running from top to bottom",
+    "Text": "One unspent shield stays up instead of lapsing.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "keep-shields", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "cloud-helm",
+    "Name": "Cloud Helm",
+    "Family": "Helms",
+    "Art": "cloud-helm",
+    "Draw": "a hoplite helmet formed from hardened storm clouds, with lightning crackling throughout the clouds",
+    "Text": "Raises one lightning shield at the start of your turn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "turn-start",
+        "Then": [{ "Do": "raise-shield", "Element": "lightning", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "green-helm",
+    "Name": "Green Helm",
+    "Family": "Helms",
+    "Art": "green-helm",
+    "Draw": "a skullcap made of tangled leaves and sticks",
+    "Text": "Raises one earth shield at the start of your turn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "turn-start",
+        "Then": [{ "Do": "raise-shield", "Element": "earth", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "burning-helm",
+    "Name": "Burning Helm",
+    "Family": "Helms",
+    "Art": "burning-helm",
+    "Draw": "a helm in the shape of a skull made of charred bone, with highlights of smoke rising from it",
+    "Text": "Raises one fire shield at the start of your turn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "turn-start",
+        "Then": [{ "Do": "raise-shield", "Element": "fire", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "arcane-helm",
+    "Name": "Arcane Helm",
+    "Family": "Helms",
+    "Art": "arcane-helm",
+    "Draw": "a closed great helm carved from faceted purple crystal",
+    "Text": "Raises one arcane shield at the start of your turn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "turn-start",
+        "Then": [{ "Do": "raise-shield", "Element": "arcane", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "ice-helm",
+    "Name": "Ice Helm",
+    "Family": "Helms",
+    "Art": "ice-helm",
+    "Draw": "a barbute helmet formed of fused icicles",
+    "Text": "Raises one ice shield at the start of your turn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "turn-start",
+        "Then": [{ "Do": "raise-shield", "Element": "ice", "Amount": 1 }]
       }
     ]
   }

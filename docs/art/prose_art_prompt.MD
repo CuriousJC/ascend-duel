@@ -173,7 +173,7 @@ Il1 O0 rn/m cl/d vv/w "Quoted," [bracketed] <tag> 50% & #7 · a_b \ c|d
 
 The preview is for looking at, not for use, so it is the one file with a background.
 
-Three files. Give me a zipped file of everything so I can download.
+Three files. Give me a single zip file of everything so I can download it all at once — never a link per file.
 
 ---
 

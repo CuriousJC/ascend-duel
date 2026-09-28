@@ -192,8 +192,8 @@ each card's figure once and recolor it five times.
 mist settles, a charged haze crackles, loam hangs heavy, witch-light glows from inside. The record's
 own brief says which. It never changes the weapon, the pose or the placement.
 
-Name the image after the record's own key — the `CardArtRecord` value, like `jab-fire` — and give
-me a link I can click to download it.
+Name each image after its record's own key — the `CardArtRecord` value, like `jab-fire` — and
+give me a single zip file of everything so I can download it all at once — never a link per file.
 
 ---
 

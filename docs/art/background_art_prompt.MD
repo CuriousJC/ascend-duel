@@ -221,4 +221,4 @@ element colors on top of it stop reading.
    with no frame, vignette or reserved patch anywhere?
 
 **Hand back, for each record, one zip named `<Art>-backdrops.zip`** holding every one of its
-`<Art>-<element>.jpg` files, and a link to each file on its own as well.
+`<Art>-<element>.jpg` files — never a link per file.

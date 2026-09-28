@@ -300,6 +300,29 @@ func (s ShieldStack) Count() int {
 	return n
 }
 
+// Keeping is this stack cut down to at most n shields, taken in element order — the order
+// shieldedHits spends leftovers in — so which shields survive is a function of the stack alone.
+func (s ShieldStack) Keeping(n int) ShieldStack {
+	var out ShieldStack
+	for _, e := range AllElements {
+		if n <= 0 {
+			break
+		}
+		take := min(s[e], n)
+		out[e] = take
+		n -= take
+	}
+	return out
+}
+
+// lapseShields is this duelist's shields going at one of the two moments they lapse — the turn
+// that swung at them ending, or their owner's next turn arriving — **less whatever a worn relic
+// keeps**. See DoKeepShields. With nothing kept it is ClearDefenses.
+func (d Duelist) lapseShields() Duelist {
+	d.Shields = d.Shields.Keeping(KeptShields(d.WornRelics()))
+	return d
+}
+
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
 const baseMaxActions = 5
 

@@ -89,6 +89,9 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindDrained:     1,
 	combat.KindRegenerated: 1,
 	combat.KindVitae:       1,
+	combat.KindWarded:      1,
+	combat.KindReflected:   1,
+	combat.KindTithed:      1,
 	// **Two beats, because a permanent bonus is the rarest thing that happens on this screen.**
 	// Everything else in a round is spent by the end of it; this one follows the player up the
 	// journey, and a grant that went past on the same beat as a shield pip would be the least
@@ -1369,7 +1372,15 @@ func eventLabel(e combat.Event) string {
 	case combat.KindBlocked:
 		return fmt.Sprintf("blocked     %v's %v shield eats %v, %d left, surged %v", e.Target, e.Element, combat.ConceptOf(e.Action).Label, e.Amount, e.Surged)
 	case combat.KindExpired:
-		return fmt.Sprintf("expired     %v loses %d unspent shields", e.Target, e.Amount)
+		return fmt.Sprintf("expired     %v loses %d unspent shields, %d kept", e.Target, e.Amount, e.Life)
+	case combat.KindWarded:
+		return fmt.Sprintf("warded      %v raises %d %v from %v, standing at %d",
+			e.Side, e.Amount, e.Element, combat.RelicOf(e.Relic).Name, e.Life)
+	case combat.KindReflected:
+		return fmt.Sprintf("reflected   %v's %v returns %d to %v, leaving %d",
+			e.Side, combat.RelicOf(e.Relic).Name, e.Amount, e.Target, e.Life)
+	case combat.KindTithed:
+		return fmt.Sprintf("tithed      %v's %v pays %d vitae", e.Side, combat.RelicOf(e.Relic).Name, e.Amount)
 	case combat.KindDamage:
 		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
 	case combat.KindHand:
@@ -1671,6 +1682,18 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 
 	// The shield row on the duelist card, moved on the beat rather than at adoption — the same
 	// division noteHit makes between the model and the drawing. See noteShields.
+	// **A helm's shields leave its ring**, so they fly from there rather than from a seat.
+	if e.Kind == combat.KindWarded {
+		s.noteWard(e)
+		return
+	}
+
+	// **A tithe moves no life**, so it is raised here and goes no further. See combat_drain.go.
+	if e.Kind == combat.KindTithed {
+		s.noteDrain(e, 0)
+		return
+	}
+
 	if e.Kind == combat.KindRaised || e.Kind == combat.KindBlocked || e.Kind == combat.KindExpired {
 		// **A raise whose pips have not flown flies them now, and the row waits for them.** A turn
 		// of nothing but defenses forms no hand, so there is no sum to leave with — see
@@ -1695,7 +1718,7 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// it here the drainer's bar would not move until the round was adopted — which is the rise
 	// arriving several beats after the reason for it. See combat_drain.go.
 	if e.Kind != combat.KindDamage && e.Kind != combat.KindBurned && e.Kind != combat.KindTimeUp &&
-		e.Kind != combat.KindDrained && e.Kind != combat.KindRegenerated {
+		e.Kind != combat.KindDrained && e.Kind != combat.KindRegenerated && e.Kind != combat.KindReflected {
 		return
 	}
 
@@ -1726,6 +1749,10 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// way and for the same reason: the bar it fills waits on it through shownLife.
 	if e.Kind == combat.KindDrained || e.Kind == combat.KindRegenerated {
 		s.noteDrain(e, before)
+	}
+	// **Thorns land like a blow**, out of the ring rather than out of a card or a line.
+	if e.Kind == combat.KindReflected {
+		s.noteReflect(e, before)
 	}
 }
 

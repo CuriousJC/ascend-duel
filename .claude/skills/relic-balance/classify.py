@@ -56,6 +56,15 @@ VERBS = {
     "adjust-round-limit":      (("tempo", "drawback"), "flat"),
     # enabler -- changes what you are holding so something else can fire
     "set-element":             (("enabler",), "enabler"),
+    "set-form":                (("enabler",), "enabler"),
+    # defense -- the shield relics: a free shield, a better shield, a shield that lasts
+    "raise-shield":            (("defense",), "flat"),
+    "match-foe-shields":       (("defense", "tempo"), "enabler"),
+    "keep-shields":            (("defense",), "flat"),
+    # paid per block: thorns are damage, the heal is sustain, the tithe is the purse
+    "reflect-damage":          (("offense", "defense"), "multiplicative"),
+    "heal-on-block":           (("defense",), "flat"),
+    "vitae-on-block":          (("economy",), "flat"),
     # enabler -- does nothing on its own; it widens what an essence reaches, so the value is
     # entirely in the deck the player goes on to build
     "adjust-essence-targets":  (("enabler",), "flat"),
@@ -85,6 +94,8 @@ SCOPES = {
     "card-damage":  "per-card",
     "card-drawn":   "per-card",
     "attack-lands": "per-blow",
+    # one per incoming hit a shield eats, which is the enemy's blow landing on nothing
+    "hit-blocked":  "per-blow",
     "blow-formed":  "per-blow",
     "turn-taken":   "per-turn",
     "turn-start":   "per-turn",

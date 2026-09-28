@@ -122,13 +122,27 @@ const (
 	//
 	// **Appended, because the enum is append-only.**
 	MomentEssenceSpent
+
+	// MomentHitBlocked fires once for every incoming hit one of this duelist's shields eats, in
+	// blockedByShield — the one place a shield is spent, whichever kind of attacker is swinging.
+	//
+	// **The wearer is the duelist who blocked, not the one who swung.** Every other moment in a
+	// fight is read off the actor; this one is read off the target, because a shield belongs to
+	// whoever raised it and the relic rewarding it is on the same hand.
+	//
+	// **Its card is the hit that was eaten**, so an `If` narrows it to blocks of a fire hit, or of a
+	// crush — the attacker's card rather than anything of the wearer's, since a shield has no card
+	// left to ask about by the time it is spent.
+	//
+	// **Appended, because the enum is append-only.**
+	MomentHitBlocked
 )
 
 // Moments is every moment in a fixed order, for anything that walks them.
 func Moments() []Moment {
 	return []Moment{MomentCardCost, MomentCardDamage, MomentAttackLands,
 		MomentFightStart, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken,
-		MomentCardDrawn, MomentTurnStart, MomentEssenceSpent}
+		MomentCardDrawn, MomentTurnStart, MomentEssenceSpent, MomentHitBlocked}
 }
 
 func (m Moment) String() string {
@@ -153,6 +167,8 @@ func (m Moment) String() string {
 		return "turn-start"
 	case MomentEssenceSpent:
 		return "essence-spent"
+	case MomentHitBlocked:
+		return "hit-blocked"
 	default:
 		return "card-cost"
 	}
@@ -175,7 +191,7 @@ func ParseMoment(name string) (Moment, bool) {
 func (m Moment) readsACard() bool {
 	switch m {
 	case MomentCardCost, MomentCardDamage, MomentAttackLands, MomentBlowFormed,
-		MomentTurnTaken, MomentCardDrawn:
+		MomentTurnTaken, MomentCardDrawn, MomentHitBlocked:
 		return true
 	case MomentTurnStart:
 		// **Nothing has been committed yet**, so there is no card and no turn to ask about. A
@@ -461,6 +477,98 @@ const (
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoAdjustEssenceTargets
+
+	// DoRaiseShield raises Amount shields of the effect's Element at the top of the wearer's own
+	// turn — the helms. **A shield like any other**: it eats the heaviest hit of its own element
+	// first, banks an action point when it does, and lapses at the top of the next turn, so a helm
+	// is one Brace of its color that is paid for by the relic rather than by the hand.
+	//
+	// **After the expiry, never before it**, or the shield the helm raised would be the one the
+	// turn arriving takes away. See wardAtTurnStart.
+	//
+	// **Basic is a legal element here**, unlike set-element: a plain shield eats the heaviest hit
+	// and matches nothing, which is a relic worth having rather than the absence of one.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoRaiseShield
+
+	// DoMatchFoeShields makes every shield the wearer's defend cards raise **take the opponent's
+	// element** — the Prismatic Shield. It names no quantity, like DoResetGrowth.
+	//
+	// **The shield changes and the card does not.** A defend card still carries its own element
+	// into the hand it forms, so what this buys is the matched block — the action point — and
+	// nothing about which hands a turn can make. Recoloring the card instead would have been a
+	// second relic's worth of help to the hand.
+	//
+	// **An opponent with no element leaves the shield as its card made it**, because there is
+	// nothing to match; every creature carries its realm's element, so that is a bare Duelist in a
+	// test and nobody the game fields.
+	//
+	// **A standing property read at the raise**, sitting at fight-start for DoAddDMGPerVitae's
+	// reason: the relic is put on at the door and asked about later. See ShieldsMatchFoe.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoMatchFoeShields
+
+	// DoKeepShields lets Amount unspent shields **outlast the moment they would lapse** — the
+	// Tower Shield. Shields go at two moments, the attacker's turn that swung at them and the top of
+	// their owner's next turn, and both keep this many; a kept shield stands until a hit eats it.
+	//
+	// **Which ones stay is a function of the stack alone**: element order, the same order
+	// shieldedHits spends leftovers in, so nothing about which is kept depends on when a shield
+	// went up. See ShieldStack.Keeping.
+	//
+	// **Two relics add**, like every other count. A standing property read at every lapse, sitting
+	// at fight-start for the reason DoMatchFoeShields does.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoKeepShields
+
+	// DoReflectDamage returns Amount percent of a blocked hit to the duelist who threw it — the
+	// Thorned Shield.
+	//
+	// **Of the hit that was eaten, as it would have landed**: after the attacker's weight and the
+	// wearer's vulnerability, which is the figure the wearer did not take. **Rounded down**, so a
+	// share of a small hit can come to nothing, and a share of nothing writes no beat.
+	//
+	// **Plain damage** *(owner's call)*: it drains nothing, lands no status and steps no growing
+	// relic, and the thrower's own shields do not eat it — it is not a hit, it is the hit coming
+	// back. A thrower it kills falls there and then, and the rest of their turn is not thrown.
+	//
+	// **Two relics add rather than compound**, like every other share of one figure.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoReflectDamage
+
+	// DoHealOnBlock restores Amount life to the wearer for every hit one of their shields eats —
+	// the Mending Shield. **Flat**, where DoHealShare is a share of the maximum: what is being paid
+	// for is the block, which is the same event whatever the hit was.
+	//
+	// **Capped at full life by `restore`**, and a heal that restored nothing writes no beat.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoHealOnBlock
+
+	// DoVitaeOnBlock pays the wearer Amount vitae for every hit one of their shields eats — the
+	// Tithe Shield. **It steps Duelist.Vitae** like every other payment inside a round, and the run
+	// is handed the difference when the duel settles; nothing sums the event.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoVitaeOnBlock
+
+	// DoSetForm turns a matching card into **its counterpart on another form's ladder** as it is
+	// drawn — the form orbs, the third verb at MomentCardDrawn beside the flip and the demotion. A
+	// 2 AP Slice under the slash-to-crush orb is dealt as a Bash, the 2 AP crush.
+	//
+	// **It walks Counterpart**, the lookup the form essence already uses, so the rung is the card's
+	// declared cost and the concept is replaced whole — name, cost, amount and picture — while the
+	// card keeps its element, its identity and its upgrade. A card this changes is a different
+	// concept only for the fight's deal; the run still owns the card it was.
+	//
+	// **It chains with the flips and demotions in worn order**, like every step of DealSteps.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoSetForm
 )
 
 // RelicVerbs is every verb in a fixed order.
@@ -470,7 +578,8 @@ func RelicVerbs() []RelicVerb {
 		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth,
 		DoAddHandDMG, DoAddDMGPerHeld, DoGrowPerCard, DoAddDMGPerVitae,
 		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls,
-		DoAdjustRoundLimit, DoAdjustEssenceTargets}
+		DoAdjustRoundLimit, DoAdjustEssenceTargets, DoRaiseShield, DoMatchFoeShields,
+		DoKeepShields, DoReflectDamage, DoHealOnBlock, DoVitaeOnBlock, DoSetForm}
 }
 
 func (v RelicVerb) String() string {
@@ -529,6 +638,20 @@ func (v RelicVerb) String() string {
 		return "adjust-round-limit"
 	case DoAdjustEssenceTargets:
 		return "adjust-essence-targets"
+	case DoRaiseShield:
+		return "raise-shield"
+	case DoMatchFoeShields:
+		return "match-foe-shields"
+	case DoKeepShields:
+		return "keep-shields"
+	case DoReflectDamage:
+		return "reflect-damage"
+	case DoHealOnBlock:
+		return "heal-on-block"
+	case DoVitaeOnBlock:
+		return "vitae-on-block"
+	case DoSetForm:
+		return "set-form"
 	default:
 		return "adjust-cost"
 	}
@@ -555,15 +678,16 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentCardDamage
 	case DoApplyStatus, DoGrowOnHit, DoDrainDamage:
 		return MomentAttackLands
-	case DoHealShare:
+	case DoHealShare, DoRaiseShield:
 		return MomentTurnStart
 	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard:
 		return MomentTurnTaken
 	case DoSetElement:
 		return MomentCardDrawn
-	case DoDemoteCard:
+	case DoDemoteCard, DoSetForm:
 		return MomentCardDrawn
-	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDMGPerVitae, DoScaleRolls, DoAdjustRoundLimit:
+	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDMGPerVitae, DoScaleRolls, DoAdjustRoundLimit,
+		DoMatchFoeShields, DoKeepShields:
 		return MomentFightStart
 	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDMGPerHeld, DoScaleHandDamage:
 		return MomentBlowFormed
@@ -571,6 +695,8 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentFightWon
 	case DoAdjustEssenceTargets:
 		return MomentEssenceSpent
+	case DoReflectDamage, DoHealOnBlock, DoVitaeOnBlock:
+		return MomentHitBlocked
 	default:
 		return MomentPrizesDealt
 	}
@@ -705,6 +831,9 @@ type RelicEffect struct {
 
 	// Element is what set-element recolors a card to.
 	Element Element
+
+	// Form is what set-form turns a card into: its Counterpart on that form's ladder.
+	Form Form
 }
 
 // RelicRule is one `When` / `If` / `Then`.
@@ -843,8 +972,21 @@ func checkEffect(key string, e RelicEffect) error {
 		if e.Element == Basic {
 			return fmt.Errorf("%s flips cards to basic, which is the absence of an element", key)
 		}
-	case DoResetGrowth:
-		// The one verb that names no quantity: it puts an accumulator to zero.
+	case DoSetForm:
+		// **A form with no ladder is the absence of a flip**, and FormNone is the zero value — so this
+		// also catches an effect that forgot to name a form.
+		if e.Form == FormNone {
+			return fmt.Errorf("%s turns cards into no form", key)
+		}
+	case DoResetGrowth, DoMatchFoeShields:
+		// The verbs that name no quantity: one puts an accumulator to zero, the other says which
+		// element a shield takes.
+	case DoRaiseShield:
+		// **Bounded like a card**: one relic raising more shields than one card may would be a
+		// defend card with no cost and a bigger number.
+		if e.Amount <= 0 || e.Amount > MaxShields {
+			return fmt.Errorf("%s raises %d shields, and one source raises 1..%d", key, e.Amount, MaxShields)
+		}
 	case DoAdjustCost, DoAdjustPicks, DoAdjustPrizeVitae, DoAdjustRoundLimit,
 		DoAdjustEssenceTargets:
 		// Signed on purpose: a discount is negative and a relic with a drawback is expressible.
@@ -1238,6 +1380,87 @@ func (d Duelist) healsFrom() []relicDrain {
 		}
 		if pct > 0 {
 			out = append(out, relicDrain{Relic: w.Relic, Pct: pct})
+		}
+	}
+	return out
+}
+
+// wardsFrom is every shield this duelist's relics raise at the top of a turn, in worn order — the
+// helms. One entry per effect rather than per relic, since a relic raising two colors is two raises.
+//
+// **No predicate is read**, for healsFrom's reason: the moment has none to read.
+func (d Duelist) wardsFrom() []relicWard {
+	var out []relicWard
+	for _, w := range d.WornRelics() {
+		for _, rule := range RelicOf(w.Relic).Rules {
+			if rule.When != MomentTurnStart {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do == DoRaiseShield {
+					out = append(out, relicWard{Relic: w.Relic, Element: e.Element, Count: e.Amount + w.Grown})
+				}
+			}
+		}
+	}
+	return out
+}
+
+// relicWard is one worn relic's shields for the turn: which ring, which element, how many.
+type relicWard struct {
+	Relic   RelicID
+	Element Element
+	Count   int
+}
+
+// ShieldsMatchFoe reports whether a worn set turns every shield its defend cards raise to the
+// opponent's element — the Prismatic Shield. See DoMatchFoeShields.
+func ShieldsMatchFoe(worn []WornRelic) bool {
+	for _, e := range RelicEffectsAt(worn, MomentFightStart, Card{}) {
+		if e.Do == DoMatchFoeShields {
+			return true
+		}
+	}
+	return false
+}
+
+// KeptShields is how many unspent shields a worn set keeps past the moment they would lapse — the
+// Tower Shield. Zero for nearly every run, which is every shield lapsing as it always has.
+func KeptShields(worn []WornRelic) int { return sumAmounts(worn, MomentFightStart, DoKeepShields) }
+
+// blockReward is what one worn relic does when one of its wearer's shields eats a hit: a share of
+// the hit sent back, life, and vitae. Any of the three may be zero.
+type blockReward struct {
+	Relic   RelicID
+	Reflect int // percent of the eaten hit returned to its thrower
+	Heal    int // flat life to the wearer
+	Vitae   int // flat vitae to the wearer
+}
+
+// blockRewardsFrom is every hit-blocked relic this duelist wears that matches the eaten hit's card,
+// one entry per relic in worn order — two relics are two figures flying out of two rings, which is
+// drainsFrom's argument.
+func (d Duelist) blockRewardsFrom(card Card) []blockReward {
+	var out []blockReward
+	for _, w := range d.WornRelics() {
+		r := blockReward{Relic: w.Relic}
+		for _, rule := range RelicOf(w.Relic).Rules {
+			if rule.When != MomentHitBlocked || !rule.If.Matches(card) {
+				continue
+			}
+			for _, e := range rule.Then {
+				switch e.Do {
+				case DoReflectDamage:
+					r.Reflect += e.Amount + w.Grown
+				case DoHealOnBlock:
+					r.Heal += e.Amount + w.Grown
+				case DoVitaeOnBlock:
+					r.Vitae += e.Amount + w.Grown
+				}
+			}
+		}
+		if r.Reflect > 0 || r.Heal > 0 || r.Vitae > 0 {
+			out = append(out, r)
 		}
 	}
 	return out
@@ -1973,6 +2196,10 @@ func DealSteps(worn []WornRelic, card Card) []DealStep {
 					next.Element = e.Element
 				case DoDemoteCard:
 					if id, ok := Neighbor(next.Concept, -e.Amount); ok {
+						next.Concept = id
+					}
+				case DoSetForm:
+					if id, ok := Counterpart(next.Concept, e.Form); ok {
 						next.Concept = id
 					}
 				}

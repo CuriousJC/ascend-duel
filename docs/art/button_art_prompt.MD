@@ -106,5 +106,5 @@ and any decoration in the middle stretch.
 6. **Is the ground fully transparent**, with no halo of near-white or near-black pixels round the
    contour?
 
-Name the seven files exactly as in the table, each ending `.png`, and give me a link I can click to
-download them.
+Name the seven files exactly as in the table, each ending `.png`, and
+give me a single zip file of everything so I can download it all at once — never a link per file.

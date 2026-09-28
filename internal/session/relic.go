@@ -299,6 +299,13 @@ func relicEffect(key string, in data.RelicEffectData) (combat.RelicEffect, error
 		}
 		out.Element = e
 	}
+	if in.Form != "" {
+		f, ok := combat.ParseForm(in.Form)
+		if !ok {
+			return out, fmt.Errorf("%s names form %q, which the rules do not have", key, in.Form)
+		}
+		out.Form = f
+	}
 	return out, nil
 }
 

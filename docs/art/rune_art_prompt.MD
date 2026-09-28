@@ -114,5 +114,5 @@ distinguishes two of a kind. Every other field — `Name`, `Text`, `Change`, `Ta
 no caption, no rules text, no numbers anywhere in the image. If `Draw` is empty, stop and say so
 rather than inventing a subject.
 
-Name the image after the record's own key — the `RuneRecord` value — and give me a link I can
-click to download it.
+Name each image after its record's own key — the `RuneRecord` value — and
+give me a single zip file of everything so I can download it all at once — never a link per file.

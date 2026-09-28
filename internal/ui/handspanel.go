@@ -86,6 +86,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -253,7 +254,7 @@ const (
 	// handsNameSize is the rung's own title, and **it is the dial the whole row is built off**:
 	// handsCardsTop is derived from it, so moving this moves the block that holds the cards rather
 	// than letting the title grow into them.
-	handsNameSize = 28
+	handsNameSize = systems.TextLarge
 
 	// handsMultSize is what forming the rung pays, and it is **the one figure written larger than
 	// the rung's own title**. It has been a shade over the title since the panel was built (20
@@ -278,7 +279,7 @@ const (
 	// leaves what separates them to be worked out, where the word says the rung takes whichever of
 	// them the turn happens to make. It is written under the title's size on purpose — it is the
 	// one thing in the band that is not a card, and at the title's size it would be read first.
-	handsOrSize = 20
+	handsOrSize = systems.TextMedium
 )
 
 // handsCardsTop is where a rung's tokens start, measured from its own top. **Derived from the

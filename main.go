@@ -113,16 +113,13 @@ func main() {
 	g.GlobalState.Version = version
 	defer reportLoadPanic(g)
 
-	// Both off: the screen is far enough along that the grid is now in the way of judging
-	// how it actually looks. Turn placement back on when moving things, and gameplay on to
-	// watch the opponent plan — remembering that what you see with it on is not what a
-	// player sees.
-	g.GlobalState.DebugPlacement = false
+	// Off. Turn it on to watch the opponent plan — remembering that what you see with it on is not
+	// what a player sees.
 	g.GlobalState.DebugGameplay = false
 
 	// The animation gallery's door. **On while the gallery is being built**, which is the one of
-	// the three that is not off today — it belongs off before this ships, on the same argument the
-	// other two are under. See screens.AnimationsScene, which is the shared vocabulary for talking
+	// the two that is not off today — it belongs off before this ships, on the same argument the
+	// other is under. See screens.AnimationsScene, which is the shared vocabulary for talking
 	// about one of the game's gestures.
 	g.GlobalState.DebugAnimations = true
 

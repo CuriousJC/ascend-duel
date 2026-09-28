@@ -57,8 +57,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-
-	"image/color"
 )
 
 // essencesOffered is how many alterations a win puts up.
@@ -123,7 +121,7 @@ const (
 	// lines. **The size is here rather than at the one call site that draws it** because the block
 	// is laid out from its *last* line up — see proseTop — so its height is arithmetic over both
 	// figures and neither may be written down twice.
-	proseTextSize = 26
+	proseTextSize = systems.TextLarge
 	proseLineGap  = 42
 
 	// proseLineHeight is how tall one line of that type actually is, which is what the block's
@@ -135,7 +133,7 @@ const (
 
 	offerButtonsPct   = 88
 	offerButtonWidth  = 400
-	offerButtonHeight = 76
+	offerButtonHeight = ui.ButtonLarge
 
 	// essenceRowGap is the air between the two essences, and between the second of them and the way
 	// out.
@@ -328,7 +326,7 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	if s.skipButton == nil {
 		s.skipButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LET THEM ESCAPE",
 			func() { s.skipping = true })
-		s.skipButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
+		s.skipButton.BaseColor = ui.ButtonGray
 	}
 
 	s.deck.InitAsPile()
@@ -1108,7 +1106,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	ui.FillGround(screen)
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}
-	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}
+	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}
 	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: proseTextSize}
 
 	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,

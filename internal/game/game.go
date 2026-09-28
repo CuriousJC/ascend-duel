@@ -2,9 +2,6 @@ package game
 
 import (
 	"errors"
-	"fmt"
-	"image/color"
-	"strconv"
 
 	"github.com/curiousjc/ascend-duel/internal/crashlog"
 	"github.com/curiousjc/ascend-duel/internal/idle"
@@ -14,9 +11,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // ErrClosing is returned from Update to stop the game loop on a deliberate quit.
@@ -168,9 +162,6 @@ func (g *Game) update() error {
 
 	// Counters
 	g.GlobalState.Count++
-	if g.GlobalState.Count%60 == 0 {
-		g.GlobalState.CountSecond++
-	}
 
 	// The tick every trace line is stamped with. Set once here rather than passed to each
 	// call, and it is the simulation counter rather than a clock, so a trace lines up with
@@ -331,12 +322,7 @@ func (g *Game) draw(screen *ebiten.Image) {
 	// the frame that is waiting to be read, so nothing may be drawn on top of it.
 	g.toast.Draw(g.GlobalState, screen)
 
-	// Debug Info will front-run everything and is drawn last on the screen
-	if g.GlobalState.DebugPlacement {
-		g.DrawDebugInfo(screen)
-	}
-
-	// Last of all, so a capture holds exactly what was on screen, debug overlay included.
+	// Last of all, so a capture holds exactly what was on screen.
 	trace.Frame(screen)
 }
 
@@ -348,92 +334,4 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	g.GlobalState.ScreenHeight = state.ScreenHeight
 
 	return state.ScreenWidth, state.ScreenHeight
-}
-
-// DrawDebugInfo is the final drawing and will place information on the screen at the specified row if requested
-func (g *Game) DrawDebugInfo(screen *ebiten.Image) {
-	debugYRow := 900
-	SecondTextOp := &text.DrawOptions{}
-	SecondTextOp.GeoM.Translate(0, float64(debugYRow))
-	SecondTextOp.LineSpacing = 30
-	if g.GlobalState.CountSecond%2 == 0 {
-		text.Draw(screen, "EVEN", &text.GoTextFace{Source: g.GlobalState.Fonts["firaSansRegular"], Size: 20}, SecondTextOp)
-	} else {
-		text.Draw(screen, "ODD", &text.GoTextFace{Source: g.GlobalState.Fonts["robotoFlexRegular"], Size: 20}, SecondTextOp)
-	}
-
-	UpdateCountOp := &text.DrawOptions{}
-	UpdateCountOp.GeoM.Translate(150, float64(debugYRow))
-	text.Draw(screen, strconv.Itoa(g.GlobalState.Count), &text.GoTextFace{Source: g.GlobalState.Fonts["firaSansRegular"], Size: 20}, UpdateCountOp)
-
-	UpdateSecondOp := &text.DrawOptions{}
-	UpdateSecondOp.GeoM.Translate(300, float64(debugYRow))
-	text.Draw(screen, strconv.Itoa(g.GlobalState.CountSecond), &text.GoTextFace{Source: g.GlobalState.Fonts["robotoFlexRegular"], Size: 20}, UpdateSecondOp)
-
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Mouse: %d, %d", g.GlobalState.MouseX, g.GlobalState.MouseY), 450, debugYRow)
-
-	//Global State Debug Messages
-	debugState := fmt.Sprintf("Debug1: %s \nDebug2: %s", g.GlobalState.Debug1, g.GlobalState.Debug2)
-	ebitenutil.DebugPrintAt(screen, debugState, 450, debugYRow+30)
-
-	g.drawLayoutGuides(screen)
-	g.drawPercentTicks(screen)
-}
-
-// drawLayoutGuides rules the screen at the halves, thirds and quarters. These were the
-// only positions the old cached layout fields could express; they survive as guides
-// because they are still the positions things get placed at most often.
-//
-// Thirds are exact division rather than PctY(33) — 33% of 960 is four pixels off the
-// real third, which is visible when eyeballing a sprite against the line.
-func (g *Game) drawLayoutGuides(screen *ebiten.Image) {
-	w := float32(g.GlobalState.ScreenWidth)
-	h := float32(g.GlobalState.ScreenHeight)
-
-	guideX := func(x float32, c color.Color) { vector.StrokeLine(screen, x, 0, x, h, 3, c, false) }
-	guideY := func(y float32, c color.Color) { vector.StrokeLine(screen, 0, y, w, y, 1, c, false) }
-
-	halves := color.RGBA{R: 50, G: 205, B: 50, A: 255}
-	guideY(h/2, halves)
-	guideX(w/2, halves)
-
-	thirds := color.RGBA{R: 255, G: 105, B: 180, A: 75}
-	guideY(h/3, thirds)
-	guideY(h/3*2, thirds)
-	guideX(w/3, thirds)
-	guideX(w/3*2, thirds)
-
-	quarters := color.RGBA{R: 50, G: 105, B: 180, A: 75}
-	guideY(h/4, quarters)
-	guideY(h/4*3, quarters)
-	guideX(w/4, quarters)
-	guideX(w/4*3, quarters)
-}
-
-// drawPercentTicks marks every 10% along the top and left edges, so a position can be
-// read off the screen while laying things out. Short ticks rather than full-width
-// rules, so they locate without obscuring what is being positioned.
-func (g *Game) drawPercentTicks(screen *ebiten.Image) {
-	const (
-		step      = 10 // percent between ticks
-		tickScale = 10 // tick length as a percent of the perpendicular dimension
-	)
-
-	tickColor := color.RGBA{R: 220, G: 220, B: 220, A: 140}
-	w := float32(g.GlobalState.ScreenWidth)
-	h := float32(g.GlobalState.ScreenHeight)
-	tickDown := h * tickScale / 100   // length of the ticks hanging off the top edge
-	tickAcross := w * tickScale / 100 // length of the ticks running off the left edge
-
-	for pct := step; pct < 100; pct += step {
-		// Along the top edge: vertical ticks marking X positions.
-		x := w * float32(pct) / 100
-		vector.StrokeLine(screen, x, 0, x, tickDown, 1, tickColor, false)
-		ebitenutil.DebugPrintAt(screen, strconv.Itoa(pct), int(x)+2, 2)
-
-		// Down the left edge: horizontal ticks marking Y positions.
-		y := h * float32(pct) / 100
-		vector.StrokeLine(screen, 0, y, tickAcross, y, 1, tickColor, false)
-		ebitenutil.DebugPrintAt(screen, strconv.Itoa(pct), 2, int(y)+2)
-	}
 }

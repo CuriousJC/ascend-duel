@@ -58,9 +58,9 @@ const (
 	creditsTitle     = "CREDITS"
 	creditsTitleSize = 40
 
-	creditsHeadingSize = 22
-	creditsBodySize    = 18
-	creditsQuietSize   = 15
+	creditsHeadingSize = systems.TextMedium
+	creditsBodySize    = systems.TextSmall
+	creditsQuietSize   = systems.TextSmall
 
 	// creditsLineHeight is the pitch of an ordinary line, and creditsHeadingTop the extra air a
 	// heading gets above it. Headings are separated by space rather than by a rule, because the
@@ -116,7 +116,7 @@ type CreditsScene struct {
 // why positioning is not done in Draw.
 func (s *CreditsScene) Init(gs *state.GlobalState) {
 	if s.back == nil {
-		s.back = models.NewButton(320, 80, "BACK", func() { s.leave(gs) })
+		s.back = models.NewButton(320, ui.ButtonLarge, "BACK", func() { s.leave(gs) })
 	}
 	s.back.ScreenX, s.back.ScreenY = gs.PctX(50), gs.PctY(91)
 }
@@ -170,7 +170,7 @@ func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	version.SecondaryAlign = text.AlignCenter
 	version.ColorScale.ScaleWithColor(creditsVersionColor)
 	text.Draw(screen, gs.Version,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, version)
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, version)
 
 	systems.DrawButton(gs, screen, s.back)
 }

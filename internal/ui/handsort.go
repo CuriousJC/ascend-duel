@@ -16,7 +16,6 @@ package ui
 
 import (
 	"image"
-	"image/color"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -85,14 +84,13 @@ var SortButtonSpecs = []struct {
 	{SortByElement, "ELEMENT"},
 }
 
-// SortButtonColor is a muted slate, quieter than either button on the combat screen's strip.
+// SortButtonColor is ButtonGray, quieter than either button on the combat screen's strip.
 //
-// **Deliberately not crimson or the Discard yellow**: those two commit a round and these three only
+// **Deliberately not the red or the Discard yellow**: those two commit a round and these three only
 // rearrange one — which is no longer the same as saying they change nothing, since 2026-08-26. They
-// are still the quieter control of the two kinds. The base is light enough to leave the latched
-// state somewhere to go — the active mode is drawn *darker* than the two beside it, so the
-// bright end of the ramp stays with hover and press.
-var SortButtonColor = color.RGBA{R: 110, G: 125, B: 155, A: 255}
+// are still the quieter control of the two kinds. The active mode is drawn *darker* than the two
+// beside it, so the bright end of the ramp stays with hover and press.
+var SortButtonColor = ButtonGray
 
 // SortTabs is the block of three as a widget: three models.Button, one latched, drawn touching so
 // the group reads as one control with three tabs rather than as three controls that happen to
@@ -122,6 +120,7 @@ func NewSortTabs(seat func(gs *state.GlobalState, i int) image.Rectangle, pick f
 		b := models.NewButton(ControlColumnWidth(), ControlButtonHeight, spec.Label,
 			func() { pick(mode) })
 		b.BaseColor = SortButtonColor
+		b.Bevelled = true
 		b.TextSize = ControlButtonText
 		t.buttons = append(t.buttons, b)
 	}

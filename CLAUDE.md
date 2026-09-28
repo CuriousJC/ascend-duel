@@ -936,6 +936,35 @@ changing cards where they stand, mid-fight.
   clickable. It is deliberately not in `combatTheater.running()`, which is the playback cursor's
   question.
 
+**Every button is one of four heights, and a new one takes a tier rather than a figure**.
+`ui.ButtonLarge` (80), `ui.ButtonMedium` (68), `ui.ButtonSmall` (44) and `ui.ButtonTiny` (32) in
+`internal/ui/frame.go` are the whole list; widths are free. The face is authored art —
+`docs/art/button_art_prompt.MD` — scaled to the height and stretched sideways, so its contour is a
+fixed share of the height, and two buttons a few pixels apart would carry two line weights that read
+as two styles. A screen wanting a button a little bigger takes the next tier and moves its layout.
+
+**Every line of reading text is one of three sizes**, and the same rule holds: `systems.TextSmall`,
+`TextMedium` and `TextLarge` in `internal/systems/text_tiers.go` are the whole list for prose, and a
+new line takes a tier rather than a figure. Headings and the loud figures are display lettering and
+are not tiered there. **The prose glyphs are the reading set** — `assets/prose/`, drawn by
+`systems.DrawProse`, one white sheet under a thin black outline that every ink and every material
+multiplies — and moving a line onto them is tracked in TODO.md.
+
+**A button's color picks its face**, in `internal/systems/button_face.go`:
+`systems.ButtonRed`, `ButtonGray`, `ButtonYellow`, `ButtonBlue`, `ButtonPink` and the default olive
+each name one file in `assets/button/`, and a disabled button wears the flat `button-disabled`.
+**Red commits or leaves; gray is the program rather than the fight** — a new button takes one of the
+two before it reaches for a third color, because a third color is a third face to author.
+
+- **The picture is the button at rest.** Hover brightens it; pressed sinks it into its own black
+  drop and the label goes down with it; latched sinks it and dims it. No state is a second file.
+- **Caps are drawn at whole pixels.** A cap scaled to a half pixel leaves a column both pieces
+  cover by half, which shows as a seam.
+- **`models.Button.Bevelled` keeps the drawn bevel** for the controls with no art yet — the seed
+  wheel's arrows, the hand's sort buttons, the deck panel's filter column, the shop's sell tabs,
+  the gallery rows — and a color with no face falls back to it too. Those buttons are outside the
+  height tiers until their art lands.
+
 - **No UI toolkit dependency.** Widgets are hand-rolled following the
   `models.Button` + `systems.UpdateButton`/`DrawButton` split. Add new widgets the same
   way: a plain struct in `models`, behavior in `systems`, owned by the scene that uses
@@ -951,6 +980,20 @@ action-point validation. General-purpose toolkits are weakest at exactly that, s
 hand-rolling costs little and buys full control.
 
 ### Interface art is authored, and there is no glyph generator
+
+**The direction is provided art, not drawing code.** The owner is working toward eliminating as
+much of the code-drawn interface as possible — bevels, flat fills, stroked shapes, gradients — and
+replacing each with an authored picture from a prompt under `docs/art/`. So:
+
+- **A new visual reaches for art first.** Before writing a `vector` call or a rasterizer for
+  something that will be seen, ask whether it should be a prompt and a file instead; if it could
+  be, say so and let the owner decide rather than drawing it.
+- **What is still drawn in code is the backlog, not the pattern.** The bevel, the panels, the ground
+  gradient and the stroked dividers are the parts not yet replaced; extending one of them is
+  building on something meant to go.
+- **The code's job is to lay art out** — scale it, stretch its middle, place it, and move or
+  brighten it for a state — and to fall back to the drawn version only where no art exists yet.
+  The bar cells and the button faces are the shape to copy.
 
 **Every mark the interface draws is a file, not code.** There is **one authored drawing per form
 per element, plus a neutral set, plus one cost tick per element** — a multiplication rather than
@@ -1542,9 +1585,13 @@ are two different colors.
 
 ### Color: name one color and scale it — and the light comes off that color too
 
+**A button with an authored face does not use any of this** — its light is in the picture and its
+states are the face's own; see the button tiers above. What follows governs everything still drawn
+in code, which is the backlog the authored art is replacing.
+
 **The rule governs widget *state*; the bevel is the surface's own light**. Those are
 different questions and separating them is what let bevelling land without every widget in the game
-being handed a palette: a button naming crimson and brightening toward it on press is state, and
+being handed a palette: a bevelled button brightening toward its color on press is state, and
 the lit top edge it has whatever state it is in is surface.
 
 **`systems.BevelEdges` derives both edges from the fill itself** — `ColorToward` toward white for
@@ -1553,7 +1600,7 @@ the shade. So a widget still names one color, everywhere, with no palette anywhe
 that ever needed a six-value one was a generated silhouette, whose light had to be drawn because
 it had no fill to compute light from, and there are no generated silhouettes left.
 
-- **`BevelFace` for a control, `BevelRect` for anything else**, and the depth differs on purpose:
+- **`BevelFace` for a control drawn without a face, `BevelRect` for anything else**, and the depth differs on purpose:
   `BevelWidth` is 3 for a button, `PaneBevelWidth` is 2 for a panel, which is the largest surface
   on screen and the one where a heavy bevel reads as chrome rather than as a surface.
 - **Sunken is a meaning, not a variant.** A pressed or latched button swaps its two edges, which
@@ -1595,10 +1642,11 @@ governs buttons, because a button paints its own dark face and its label is whit
 the ground its states are scaled against, not the screen. Text written directly on the table
 takes `screens.groundInk`.
 
-A widget names the color it wants at **full strength**, and its other states are
-scaled down from that with `systems.ColorAtStrength`. `models.Button.BaseColor` is the
-reference case: the button rests at 65%, hovers at 82% and reaches the named color at
-100%, so pressing it lights it up to exactly the color in the source.
+A code-drawn widget names the color it wants at **full strength**, and its other states are
+scaled down from that with `systems.ColorAtStrength`. A `Bevelled` button is the reference case:
+it rests at 65%, hovers at 82% and reaches the named color at 100%, so pressing it lights it up to
+exactly the color in the source. A button wearing a face names the same color to *pick* the face,
+and the face is authored at that color.
 
 - **Scale a color, never add to it.** Adding a fixed step to every channel walks a
   saturated color toward white — crimson hovering to a washed-out pink — and a channel
@@ -1608,14 +1656,11 @@ reference case: the button rests at 65%, hovers at 82% and reaches the named col
 - Disabled deliberately ignores the widget's color. A disabled control should read as
   unavailable first and as itself second.
 
-### Three debug flags, and they are not interchangeable
+### Two debug flags, and they are not interchangeable
 
-`DebugPlacement`, `DebugGameplay` and `DebugAnimations` answer different questions and are wanted
-at different times. Keep them separate.
+`DebugGameplay` and `DebugAnimations` answer different questions and are wanted at different
+times. Keep them separate.
 
-- **`DebugPlacement`** — the grid, the rulers, the `Debug1`/`Debug2` scratch strings. About
-  *where things are drawn*. Safe to leave on while playing, but off by default, so a change
-  that needs the guides has to turn it on deliberately.
 - **`DebugGameplay`** — perfect information, starting with the opponent's queued actions.
   About *what the player is allowed to know*. **Off by default**: with it on you are not
   playing the game, you are inspecting it, and it is easy to tune balance against a view no
@@ -1623,9 +1668,8 @@ at different times. Keep them separate.
   `combat-screen` skill.
 - **`DebugAnimations`** — the door to the **animation gallery**, a square marked
   `A` off the end of the frame's bottom strip that opens `screens.AnimationsScene`. About *what
-  movements the game has and what each one is called*. **A third flag rather than a lodger on
-  `DebugPlacement`**, which is the rule those two are already under: "where is this drawn" is not
-  "what gestures exist".
+  movements the game has and what each one is called*. **A second flag rather than a lodger on
+  `DebugGameplay`**: "what may the player know" is not "what gestures exist".
 
 **The gallery exists to give the gestures names.** There are a dozen distinct movements on the
 combat screen and each was reachable only by producing the situation it belongs to — a break needs a
@@ -1647,13 +1691,13 @@ implements it** beside it.
   is the only place a debug page is reachable from every screen. With the flag off the strip is
   exactly the two controls it was.
 
-None of the three may ever change an outcome. All are views, the same constraint that applies to
+Neither may ever change an outcome. All are views, the same constraint that applies to
 playback speed — `ResolveRound` never sees any of them.
 
-All three are set once in `main.go`; there is no runtime toggle, because a hotkey would need the
-keyboard and the input vocabulary does not have one. **`DebugPlacement` and `DebugGameplay` default
-to off, and `DebugAnimations` is on while the gallery is being built** — it belongs off before this
-ships, on the same argument the other two are under.
+Both are set once in `main.go`; there is no runtime toggle, because a hotkey would need the
+keyboard and the input vocabulary does not have one. **`DebugGameplay` defaults to off, and
+`DebugAnimations` is on while the gallery is being built** — it belongs off before this ships, on
+the same argument the other is under.
 
 ### `internal/trace` is a third thing, and it is compiled out
 

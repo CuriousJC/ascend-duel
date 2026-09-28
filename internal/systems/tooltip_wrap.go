@@ -39,6 +39,16 @@ const tipMaxW = 690
 // **A blank line comes back as itself.** Callers use one as a spacer between a status and the next,
 // and a wrapper that dropped it would close up the panel's only paragraph break.
 func WrapRuns(line models.TipLine, face *text.GoTextFace, max float64) []models.TipLine {
+	return wrapRuns(line, func(s string) float64 { return measureText(s, face) }, max)
+}
+
+// WrapProse is WrapRuns for a line set in the prose glyphs, capitals `capHeight` pixels tall.
+func WrapProse(line models.TipLine, capHeight, max float64) []models.TipLine {
+	return wrapRuns(line, func(s string) float64 { return proseAdvance(s, capHeight) }, max)
+}
+
+// wrapRuns is the one wrapper, over whatever measures a word.
+func wrapRuns(line models.TipLine, measure func(string) float64, max float64) []models.TipLine {
 	if len(line) == 0 {
 		return []models.TipLine{line}
 	}
@@ -63,13 +73,13 @@ func WrapRuns(line models.TipLine, face *text.GoTextFace, max float64) []models.
 			continue
 		}
 		for _, word := range splitKeepingSpaces(run.Text) {
-			w := measureText(word, face)
+			w := measure(word)
 			// **Only a word with something in front of it may start a line**, so a leading space
 			// never lands at the head of a wrapped line and a break never produces an empty one.
 			if width+w > max && len(cur) > 0 && strings.TrimSpace(word) != "" {
 				flush()
 				word = strings.TrimLeft(word, " ")
-				w = measureText(word, face)
+				w = measure(word)
 			}
 			cur = appendRun(cur, models.TextSpan{Text: word, Ink: run.Ink, Texture: run.Texture})
 			width += w

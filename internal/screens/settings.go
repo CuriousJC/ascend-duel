@@ -163,9 +163,9 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 			settingsFullscreenLabel, func() { s.toggleFullscreen(gs) })
 		s.full.TextSize = 40
 
-		s.back = models.NewButton(320, 80, "BACK", func() { s.leave(gs) })
+		s.back = models.NewButton(320, ui.ButtonLarge, "BACK", func() { s.leave(gs) })
 
-		s.abandon = models.NewButton(760, 76, settingsAbandonLabel, func() { s.askAbandon(gs) })
+		s.abandon = models.NewButton(760, ui.ButtonLarge, settingsAbandonLabel, func() { s.askAbandon(gs) })
 
 		// **The modal X's red, which is the only red in the game.** It is already the color of
 		// the one control that gets you out of somewhere, and this is the largest version of that
@@ -173,7 +173,7 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 		s.abandon.BaseColor = ui.ModalCloseColor
 		s.abandon.TextSize = 40
 
-		s.exit = models.NewButton(760, 76, settingsExitLabel, func() { actions.QuitGame(gs) })
+		s.exit = models.NewButton(760, ui.ButtonLarge, settingsExitLabel, func() { actions.QuitGame(gs) })
 		s.exit.TextSize = 40
 	}
 
@@ -333,7 +333,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		note.GeoM.Translate(float64(r.Min.X), float64(r.Max.Y+8))
 		note.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 40))
 		text.Draw(screen, "no audio device on this machine",
-			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, note)
+			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, note)
 	}
 
 	// Over the screen it is asking about.

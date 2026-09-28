@@ -33,7 +33,7 @@ import (
 // The page's shape.
 const (
 	portalHeadSize = 44
-	portalSubSize  = 22
+	portalSubSize  = systems.TextMedium
 
 	// The two panels stand side by side, centered, with the button inside the foot of each.
 	portalPanelW   = 700
@@ -43,12 +43,12 @@ const (
 	portalPad      = 40
 
 	portalTitleSize = 34
-	portalProseSize = 22
+	portalProseSize = systems.TextMedium
 	portalLinePitch = 31
 	portalParaGap   = 18
 
 	portalButtonW = 260
-	portalButtonH = 72
+	portalButtonH = ui.ButtonLarge
 )
 
 // portalPanel is a panel's face: the same dark surface and prose ink as the tooltips and Bob's

@@ -26,6 +26,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -74,7 +75,7 @@ const (
 	// The reroll button itself. **Narrower than the pane it hangs under**, so it reads as
 	// attached to that pane rather than as a row of its own — the sell tab's rule.
 	shopRerollWidth  = 240
-	shopRerollHeight = 40
+	shopRerollHeight = ui.ButtonSmall
 	shopRerollText   = 20
 )
 

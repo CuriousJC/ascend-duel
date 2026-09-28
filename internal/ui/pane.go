@@ -195,7 +195,7 @@ func drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image, p PanePlacement,
 		titleOp.GeoM.Translate(float64(x+w/2), float64(y+paneTitleInset))
 		titleOp.PrimaryAlign = text.AlignCenter
 		titleOp.ColorScale.ScaleWithColor(p.Ink)
-		text.Draw(screen, p.Title, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, titleOp)
+		text.Draw(screen, p.Title, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, titleOp)
 	}
 
 	return x, y, w, h

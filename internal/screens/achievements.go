@@ -50,14 +50,14 @@ const (
 	achievementRowGap    = 14
 	achievementRowWidth  = 640
 
-	achievementNameSize = 24
-	achievementLineSize = 17
+	achievementNameSize = systems.TextMedium
+	achievementLineSize = systems.TextSmall
 
 	// achievementRowInset is how far in from the row's left edge the words start.
 	achievementRowInset = 20
 
 	// achievementTallySize is the "1 of 11" under the heading.
-	achievementTallySize = 18
+	achievementTallySize = systems.TextSmall
 
 	// The rows are cut off at the top of the Back button. **A count of rows rather than a pixel
 	// height**, because that is what the scrollbar is told and a page that could show two and a
@@ -89,7 +89,7 @@ type AchievementsScene struct {
 // why positioning is not done in Draw.
 func (s *AchievementsScene) Init(gs *state.GlobalState) {
 	if s.back == nil {
-		s.back = models.NewButton(320, 80, "BACK", func() { s.leave(gs) })
+		s.back = models.NewButton(320, ui.ButtonLarge, "BACK", func() { s.leave(gs) })
 	}
 	s.back.ScreenX, s.back.ScreenY = gs.PctX(50), gs.PctY(88)
 

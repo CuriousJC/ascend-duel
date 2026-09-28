@@ -49,7 +49,7 @@ const (
 
 	// The panel's own prompt, on the rune dialog's numbers.
 	pouchPromptDrop = 40
-	pouchPromptSize = 24
+	pouchPromptSize = systems.TextMedium
 
 	// The two tabs that hang under an armed stone, side by side. **Narrower than the worn row's
 	// single sell tab, because there are two of them** — together they come to about its width.
@@ -128,14 +128,16 @@ func (t *pouchToggle) init() {
 	t.use = models.NewButton(pouchTabWidth, pouchTabHeight, "USE",
 		func() { t.doing = pouchUse })
 	// **Green, because spending a stone is what the panel is for.** The tab beside it wears the
-	// crimson every control on this screen that cannot be taken back wears.
+	// red every control on this screen that cannot be taken back wears.
 	t.use.BaseColor = color.RGBA{R: 46, G: 150, B: 70, A: 255}
 	t.use.TextSize = sellTabTextSize
+	t.use.Bevelled = true
 
 	t.sell = models.NewButton(pouchTabWidth, pouchTabHeight, "SELL",
 		func() { t.doing = pouchSell })
-	t.sell.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255}
+	t.sell.BaseColor = ui.ButtonRed
 	t.sell.TextSize = sellTabTextSize
+	t.sell.Bevelled = true
 }
 
 // cardRects is where the carried stones stand inside the panel. It reuses the rune dialog's

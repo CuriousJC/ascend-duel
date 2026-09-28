@@ -120,7 +120,7 @@ func DrawModalFrame(gs *state.GlobalState, screen *ebiten.Image, head ModalHead)
 	// **A panel with no title writes nothing at all up here**, rather than a blank line's worth of
 	// air. The body starts higher instead; see modalBareBodyTop.
 	if head.Title != "" {
-		heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 28}
+		heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextLarge}
 		title := &text.DrawOptions{}
 		title.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+modalTitleTop))
 		title.PrimaryAlign = text.AlignCenter
@@ -138,11 +138,11 @@ func DrawModalFrame(gs *state.GlobalState, screen *ebiten.Image, head ModalHead)
 // could not see. An X on the panel itself cannot go missing, and it is the one shape every player
 // already knows means "close".
 //
-// **Red, and the only red control in the game.** Nothing else that closes something is red, so the
-// color is not overloaded, and a dialog's exit is exactly the thing that should be the brightest
-// object on a covered screen.
+// **Red, the game's one red**, which is what every control that commits or leaves wears — see
+// ButtonRed. A dialog's exit is exactly the thing that should be the brightest object on a covered
+// screen.
 const (
-	ModalCloseSize  = 34
+	ModalCloseSize  = ButtonTiny
 	ModalCloseInset = 12
 	modalCloseLabel = "X"
 	modalCloseText  = 34
@@ -150,7 +150,7 @@ const (
 
 // ModalCloseColor is the face at full strength. It rests at 65% of this, like every button; see
 // the color rule in CLAUDE.md.
-var ModalCloseColor = color.RGBA{R: 208, G: 52, B: 58, A: 255}
+var ModalCloseColor = ButtonRed
 
 // ModalCloser is the X, and it belongs to whichever panel is up.
 //

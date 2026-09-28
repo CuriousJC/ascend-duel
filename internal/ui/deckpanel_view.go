@@ -61,7 +61,7 @@ const (
 	deckColumnBlockGap = 16
 	deckColumnHeadDrop = 24
 
-	deckColumnHeadSize = 15
+	deckColumnHeadSize = systems.TextSmall
 	deckColumnTextSize = 20
 	deckColumnMarkSize = 24
 
@@ -200,6 +200,7 @@ func (v *DeckView) build() {
 func (v *DeckView) columnButton(onClick func()) *models.Button {
 	b := models.NewButton(deckColumnWidth, deckColumnButtonHeight, "", onClick)
 	b.BaseColor = SortButtonColor
+	b.Bevelled = true
 	b.TextSize = deckColumnTextSize
 	return b
 }

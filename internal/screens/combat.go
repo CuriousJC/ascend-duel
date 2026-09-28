@@ -674,11 +674,11 @@ func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
 	// package needs to know this screen has buttons or what pressing them means.
 	if s.duelButton == nil {
 		s.duelButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DUEL!", s.startRound)
-		s.duelButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255} // crimson
+		s.duelButton.BaseColor = ui.ButtonRed
 	}
 	if s.discardButton == nil {
 		s.discardButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DISCARD", s.discardSelected)
-		s.discardButton.BaseColor = color.RGBA{R: 225, G: 200, B: 60, A: 255} // yellow
+		s.discardButton.BaseColor = systems.ButtonYellow
 	}
 	// **The bottom strip is one row of four things, spaced rather than placed** *(2026-08-11)*:
 	// the AP figure at the hand's left edge, the two buttons, and the deck pile at the right.

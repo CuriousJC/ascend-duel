@@ -24,7 +24,6 @@ package screens
 
 import (
 	"image"
-	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -79,7 +78,7 @@ type GoodsScene struct {
 const (
 	goodsSkipLabel    = "SKIP"
 	goodsSkipWidth    = 140
-	goodsSkipHeight   = 52
+	goodsSkipHeight   = ui.ButtonSmall
 	goodsSkipTextSize = 28
 )
 
@@ -93,7 +92,7 @@ func (s *GoodsScene) Init(gs *state.GlobalState) {
 		s.skipButton = models.NewButton(goodsSkipWidth, goodsSkipHeight, goodsSkipLabel,
 			func() { s.skipping = true })
 		s.skipButton.TextSize = goodsSkipTextSize
-		s.skipButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
+		s.skipButton.BaseColor = ui.ButtonGray
 	}
 	s.skipping = false
 
@@ -160,7 +159,7 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	drawDeckPile(gs, screen)
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}
-	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}
+	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}
 	line := func(y int, face *text.GoTextFace, msg string) {
 		if msg == "" {
 			return

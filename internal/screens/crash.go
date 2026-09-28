@@ -44,8 +44,8 @@ const (
 	// not apologize twice**; everything under it is facts.
 	crashApology = "The game hit a fault it could not carry on from."
 
-	crashBodySize  = 19
-	crashQuietSize = 15
+	crashBodySize  = systems.TextMedium
+	crashQuietSize = systems.TextSmall
 	crashLineStep  = 30
 
 	// crashLabelGap is how far right of center a value sits, with its label the same distance to
@@ -54,7 +54,7 @@ const (
 	crashLabelGap = 24
 
 	crashButtonWidth  = 320
-	crashButtonHeight = 80
+	crashButtonHeight = ui.ButtonLarge
 	crashButtonGap    = 32
 
 	crashQuitLabel   = "QUIT"
@@ -76,10 +76,10 @@ const (
 	crashFolderTop = 14
 )
 
-// crashRevealColor is the second button's face: the flat slate every control that is the program
-// rather than the fight takes. The quit is the modal red, because it is the way out and that is
+// crashRevealColor is the second button's face: ButtonGray, which every control that is the
+// program rather than the fight takes. The quit is the modal red, because it is the way out and that is
 // already what the one red in the game means.
-var crashRevealColor = color.RGBA{R: 92, G: 96, B: 108, A: 255}
+var crashRevealColor = ui.ButtonGray
 
 // CrashScene is the screen a panic ends on.
 type CrashScene struct {

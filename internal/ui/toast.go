@@ -47,7 +47,7 @@ const (
 	// Small and quiet: the player reads the name, and the eyebrow is what tells them why a box has
 	// appeared at all.
 	toastEyebrow     = "ACHIEVEMENT"
-	toastEyebrowSize = 16
+	toastEyebrowSize = systems.TextSmall
 	toastEyebrowTop  = 48
 
 	toastNameSize = 38
@@ -55,12 +55,12 @@ const (
 
 	// The commentary. **Every line at once**, so this is a stack rather than one string — see
 	// data.AchievementData.Said for why there is no picking.
-	toastSaidSize = 19
+	toastSaidSize = systems.TextMedium
 	toastSaidTop  = 156
 	toastSaidStep = 30
 
 	toastButtonWidth  = 300
-	toastButtonHeight = 68
+	toastButtonHeight = ButtonMedium
 	toastButtonBottom = 52
 
 	// toastButtonLabel is the one answer. **Not "OK"** — the box is not asking anything, and a

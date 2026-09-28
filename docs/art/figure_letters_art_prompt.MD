@@ -216,7 +216,7 @@ judged as words rather than as cells:
 
 The preview is for looking at, not for use, so it is the one file with a background.
 
-Eleven files. Give me a zipped file of everything so I can download
+Eleven files. Give me a single zip file of everything so I can download it all at once — never a link per file.
 
 ---
 

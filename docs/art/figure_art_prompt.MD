@@ -196,7 +196,7 @@ One file, `figure-glyphs.json`, describing all the sheets:
 `#7EACE4`**, which is the table the glyphs are mostly drawn on. The preview is for looking at, not
 for use, so it is the one file with a background.
 
-Ten files. Give me a zipped file of everything so I can download
+Ten files. Give me a single zip file of everything so I can download it all at once — never a link per file.
 
 ---
 

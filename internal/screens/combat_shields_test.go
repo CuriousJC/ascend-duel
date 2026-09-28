@@ -239,12 +239,15 @@ func TestADefenseLiftsNothing(t *testing.T) {
 	}
 }
 
-// **A pip keeps the color it flew in.** The flight is drawn in its card's element and the row it
-// joins has to agree, or the pip changes color on landing and says the journey meant nothing.
+// **A pip keeps the color it flew in.** The flight is drawn in the element the raise names — its
+// card's, unless a worn relic turned it — and the row it joins has to agree, or the pip changes
+// color on landing and says the journey meant nothing.
 func TestALandedPipKeepsItsColor(t *testing.T) {
 
 	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
-	s.noteShieldRaise(raised(2, 2))
+	fire := raised(2, 2)
+	fire.Element = combat.Fire
+	s.noteShieldRaise(fire)
 	for i := 0; i < shieldFlyTicks(); i++ {
 		s.Theater.Tick()
 	}

@@ -192,8 +192,8 @@ far.
 The practical way to get there: **draw each shape once — one spear, one scimitar, one club, one
 shield — then recolor each drawing five times.** Do not redraw it per color.
 
-Name each file `form<shape>-<name>.png` — `formcrush-fire.png`, `formdefend-arcane.png` — and give
-me a link I can click to download each one.
+Name each file `form<shape>-<name>.png` — `formcrush-fire.png`, `formdefend-arcane.png` — and
+give me a single zip file of everything so I can download it all at once — never a link per file.
 
 ---
 
@@ -279,8 +279,8 @@ everything but the hue.
 lighter gray along the top edge, darker gray along the bottom, the same near-black contour, no hue
 at all.
 
-Name each file `tick-<name>.png` — `tick-fire.png`, `tick-neutral.png` — and give me a link I can
-click to download each one.
+Name each file `tick-<name>.png` — `tick-fire.png`, `tick-neutral.png` — and
+give me a single zip file of everything so I can download it all at once — never a link per file.
 
 ---
 

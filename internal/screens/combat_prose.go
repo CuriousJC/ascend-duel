@@ -133,6 +133,30 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 				Amount: e.Amount, Relic: combat.RelicOf(e.Relic).Name,
 			})
 
+		case combat.KindWarded:
+			// **An entry of its own**, like a regeneration: it happens at the top of a turn with
+			// nothing before it to attach to.
+			add(session.LedgerRecord{
+				Kind: session.KindWarded, Side: sideWord(e.Side), Name: s.sideName(e.Side),
+				Amount: e.Amount, Relic: combat.RelicOf(e.Relic).Name, Element: ui.ElementName(e.Element),
+			})
+
+		case combat.KindReflected, combat.KindTithed:
+			// **They belong to the blocked hit's line**, since they are what the block did. The hit
+			// is the thrower's, which is the event's Target.
+			kind := session.KindReflected
+			if e.Kind == combat.KindTithed {
+				kind = session.KindTithed
+			}
+			thrower := e.Target
+			if e.Kind == combat.KindTithed {
+				thrower = e.Side.Other()
+			}
+			add(session.LedgerRecord{
+				Kind: kind, Side: sideWord(e.Side),
+				Relic: combat.RelicOf(e.Relic).Name, Amount: e.Amount, Hit: s.hitOf(e, thrower),
+			})
+
 		case combat.KindBurned:
 			// A tick belongs to nobody's card, so it opens its own entry, and it carries the
 			// victim's side because it is a thing happening *to* them — which is also the only side

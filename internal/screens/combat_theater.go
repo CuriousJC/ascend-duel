@@ -270,6 +270,18 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorNone, anchorTargetCard, gesturePop,
 		"nothing travels - the clock is not a blow, so the figure pops on the card whose bar it empties",
 	},
+	combat.KindWarded: {
+		anchorRelic, anchorActorCard, gestureFly,
+		"a helm's shield is made by the ring, so the pips leave the ring and join the row the way a defend card's leave the card",
+	},
+	combat.KindReflected: {
+		anchorRelic, anchorTargetCard, gestureFly,
+		"the thorns are the ring's, so the figure leaves the ring and lands in the thrower's bar like any blow",
+	},
+	combat.KindTithed: {
+		anchorRelic, anchorActorCard, gestureFly,
+		"a relic makes this vitae out of nothing, so it leaves the ring for the VITAE row, as a regeneration leaves it for the bar",
+	},
 	combat.KindRoundEnd: {
 		anchorNone, anchorNone, gestureNone,
 		"bookkeeping - the round boundary is a moment, not an event with a victim",
@@ -437,6 +449,15 @@ func (t *combatTheater) Tick() {
 	// both of them rewrite the hand. CombatScene.tickDeal and tickSettle drive them.
 
 	t.hits = ui.Advance(t.hits)
+	// **A tithe is paid into the VITAE row as it lands**, the signals' rule: the row is the drawing
+	// and the purse the model, and the two meet at the arrival.
+	for i := range t.drains {
+		d := &t.drains[i]
+		if d.vitae && !d.paid && d.arrived() && d.side >= 0 && int(d.side) < len(t.shown) {
+			t.shown[d.side].vitae += d.amount
+			d.paid = true
+		}
+	}
 	t.drains = ui.Advance(t.drains)
 	t.shields = ui.Advance(t.shields)
 

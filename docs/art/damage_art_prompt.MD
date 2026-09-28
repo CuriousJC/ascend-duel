@@ -205,7 +205,7 @@ Do not redraw per color.
 `damage-diamond-quarter-fire.png` · `damage-diamond-half-arcane.png` ·
 `damage-diamond-3-ice.png` · `damage-diamond-9-neutral.png`
 
-Sixty-six files. Give me a link I can click to download each one.
+Sixty-six files. Give me a single zip file of everything so I can download it all at once — never a link per file.
 
 ---
 

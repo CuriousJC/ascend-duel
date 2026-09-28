@@ -81,6 +81,11 @@ type drainFlight struct {
 	relic     combat.RelicID
 	fromRelic bool
 
+	// vitae says this is a relic's payment rather than life — the Tithe Shield. It flies from the
+	// ring to the VITAE row in vitae's own ink, holds no bar, and is paid into the row on arrival.
+	vitae bool
+	paid  bool
+
 	// held is the life the drainer's bar keeps showing until the figure arrives, read back out
 	// through shownLife. Same field, same job and the opposite direction to hitFlight's.
 	held int
@@ -102,7 +107,8 @@ func (d drainFlight) Done() bool { return d.t.Age >= drainFlyTicks()+drainHoldTi
 // source differs — two would be two clocks and two chances for the pair to drift apart.
 func (s *CombatScene) noteDrain(e combat.Event, held int) {
 	regen := e.Kind == combat.KindRegenerated
-	if e.Kind != combat.KindDrained && !regen {
+	tithe := e.Kind == combat.KindTithed
+	if e.Kind != combat.KindDrained && !regen && !tithe {
 		return
 	}
 	if e.Amount <= 0 {
@@ -113,7 +119,8 @@ func (s *CombatScene) noteDrain(e combat.Event, held int) {
 		amount:    e.Amount,
 		side:      e.Side,
 		relic:     e.Relic,
-		fromRelic: regen,
+		fromRelic: regen || tithe,
+		vitae:     tithe,
 		held:      held,
 		t:         ui.NewTravel(0, drainFlyTicks()+drainHoldTicks()),
 	})
@@ -127,6 +134,11 @@ func (s *CombatScene) drawDrains(gs *state.GlobalState, screen *ebiten.Image) {
 			continue
 		}
 		to := s.fighterCardMid(gs, d.side)
+		ink := drainInk()
+		if d.vitae {
+			to = s.signalTarget(gs, cardSignal{side: d.side, dest: signalVitae})
+			ink = ui.VitaeInk
+		}
 
 		p := ui.EaseOut(ui.Clamp01(float64(d.t.Age) / float64(drainFlyTicks())))
 		at := image.Pt(
@@ -135,7 +147,7 @@ func (s *CombatScene) drawDrains(gs *state.GlobalState, screen *ebiten.Image) {
 		)
 
 		scale := drainFromScale + (drainToScale-drainFromScale)*p
-		drawMathText(gs, screen, "+"+strconv.Itoa(d.amount), drainFigureSize, drainInk(),
+		drawMathText(gs, screen, "+"+strconv.Itoa(d.amount), drainFigureSize, ink,
 			at, scale, drainAlpha(d), false)
 	}
 }
@@ -160,7 +172,13 @@ func (s *CombatScene) drainOrigin(gs *state.GlobalState, d drainFlight) (image.P
 		return s.fighterCardMid(gs, other(d.side)), true
 	}
 
-	seat, ok := wornSeatOf(gs, d.relic)
+	return s.relicCenter(gs, d.relic)
+}
+
+// relicCenter is the middle of one worn relic's card in the row, or false for a relic the row is not
+// drawing — which raises nothing rather than something leaving the corner of the screen.
+func (s *CombatScene) relicCenter(gs *state.GlobalState, id combat.RelicID) (image.Point, bool) {
+	seat, ok := wornSeatOf(gs, id)
 	if !ok {
 		return image.Point{}, false
 	}
@@ -210,7 +228,7 @@ func other(s combat.Side) combat.Side {
 // **The earliest share still owed is the one that decides**, exactly as shownLife's walk does.
 func (s *CombatScene) shownDrain(side combat.Side) (int, bool) {
 	for _, d := range s.Theater.drains {
-		if d.side == side && !d.arrived() {
+		if d.side == side && !d.vitae && !d.arrived() {
 			return d.held, true
 		}
 	}

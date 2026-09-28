@@ -57,6 +57,12 @@ const (
 	KindHeld    = "held"
 	KindSilver  = "silver"
 
+	// KindReflected is a worn relic sending part of a blocked hit back at its thrower, and
+	// KindTithed one paying vitae for the block. Both attach to the hit the shield ate. Relic is the
+	// relic's name and Amount the figure.
+	KindReflected = "reflected"
+	KindTithed    = "tithed"
+
 	// The announcements. **Each opens a line of its own**, because there is nothing above them to
 	// attach to: they happen at the top of a turn, at the end of a round, or to a duelist rather
 	// than to a card.
@@ -65,6 +71,10 @@ const (
 	KindTicked      = "ticked"
 	KindTimeUp      = "time-up"
 	KindDefeated    = "defeated"
+
+	// KindWarded is a worn relic raising shields at the top of its wearer's turn — a helm. Relic
+	// is its name, Amount how many, Element their element.
+	KindWarded = "warded"
 
 	// KindUsed is a consumable spent between the turns of a fight: a rune, a stone, an essence
 	// or a cantrip. **An announcement too**, since nothing is on the table when it happens. Subject
@@ -276,8 +286,8 @@ func RecordKinds() []string {
 	return []string{
 		KindAct, KindBlow, KindTerm,
 		KindDamage, KindStatus, KindDrained, KindMissed, KindFizzled, KindBlocked,
-		KindRaised, KindLapsed, KindHeld, KindSilver,
-		KindChilled, KindRegenerated, KindTicked, KindTimeUp, KindDefeated, KindUsed,
+		KindRaised, KindLapsed, KindHeld, KindSilver, KindReflected, KindTithed,
+		KindChilled, KindRegenerated, KindWarded, KindTicked, KindTimeUp, KindDefeated, KindUsed,
 		KindTook, KindCut, KindChanged, KindWore, KindSold, KindSpent,
 		KindRaisedRung, KindGained, KindPaid,
 	}

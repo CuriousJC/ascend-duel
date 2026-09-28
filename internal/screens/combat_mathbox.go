@@ -688,7 +688,8 @@ func hitOutcomes(log []combat.Event, at int) map[int]int {
 			if _, seen := out[log[k].Hit]; !seen {
 				out[log[k].Hit] = k
 			}
-		case combat.KindDrained, combat.KindStatus, combat.KindDefeated:
+		case combat.KindDrained, combat.KindStatus, combat.KindDefeated,
+			combat.KindReflected, combat.KindRegenerated, combat.KindTithed:
 		default:
 			return out
 		}

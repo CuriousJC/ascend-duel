@@ -193,8 +193,12 @@ type RelicEffectData struct {
 	// Status is the record key `apply-status` applies — see statuses.json.
 	Status string `json:"Status,omitempty"`
 
-	// Element is what `set-element` recolors a matching card to.
+	// Element is what `set-element` recolors a matching card to, and the element `raise-shield`
+	// raises.
 	Element string `json:"Element,omitempty"`
+
+	// Form is what `set-form` turns a matching card into: its counterpart on that form's ladder.
+	Form string `json:"Form,omitempty"`
 }
 
 // DefaultRelicArt is the face a record with no Art of its own draws.

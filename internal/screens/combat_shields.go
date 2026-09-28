@@ -44,6 +44,11 @@ type shieldFlight struct {
 	side combat.Side
 	seat int
 
+	// relic is the ring a helm's pips leave, and fromRelic says to use it rather than the seat.
+	// **A bool beside the id**, because the zero RelicID is a real relic.
+	relic     combat.RelicID
+	fromRelic bool
+
 	// count is how many pips arrive, already capped.
 	count int
 
@@ -150,12 +155,34 @@ func (s *CombatScene) flyOneRaise(e combat.Event) bool {
 		return false
 	}
 
+	// **The raise names the shields' element**, which is the card's own unless a worn relic turned
+	// it — so the pip is read off the event rather than off the card it leaves.
 	s.flyShields(shieldFlight{
 		side: e.Side, seat: seat, count: count, standing: e.Life,
-		element: s.handCardElement(e.Side, seat),
-		ink:     s.handCardInk(e.Side, seat),
+		element: ui.ArtFor(e.Element),
+		ink:     cards.BorderOf(ui.ArtFor(e.Element)),
 	})
 	return true
+}
+
+// noteWard flies a helm's pips out of its ring and into the row. **It never records a seat**, since
+// the pips left no card, so nothing about the defend phase's bundle can mistake it for a raise.
+func (s *CombatScene) noteWard(e combat.Event) {
+	count := e.Amount
+	if room := ui.MaxShieldPips - (e.Life - e.Amount); count > room {
+		count = room
+	}
+	if count <= 0 {
+		s.row(e.Side).RaiseTo(e.Life, ui.ArtFor(e.Element))
+		return
+	}
+	s.Theater.shields = append(s.Theater.shields, shieldFlight{
+		side: e.Side, seat: -1, relic: e.Relic, fromRelic: true,
+		count: count, standing: e.Life,
+		element: ui.ArtFor(e.Element),
+		ink:     cards.BorderOf(ui.ArtFor(e.Element)),
+		t:       ui.NewTravel(0, shieldFlyTicks()+shieldHoldTicks()),
+	})
 }
 
 // raisesInPhase is the raise handed in plus every raise still to come in the same side's defend
@@ -284,7 +311,7 @@ func (s *CombatScene) noteShields(e combat.Event) {
 	case combat.KindRaised:
 		// **The raise names its own card**, so the shield any pip it adds should be wearing is that
 		// card's element. Nothing is lit during the defend phase, so the event is the only source.
-		s.row(e.Side).RaiseTo(e.Life, s.handCardElement(e.Side, e.Slot))
+		s.row(e.Side).RaiseTo(e.Life, ui.ArtFor(e.Element))
 	case combat.KindBlocked:
 		// **The block names the shield it spent**, so the pip that goes is one of that element.
 		// The count is squared up after it: a break staged ahead of the block has usually taken
@@ -297,8 +324,9 @@ func (s *CombatScene) noteShields(e combat.Event) {
 	case combat.KindExpired:
 		// **An expiry empties the row whatever it says.** Its `Amount` is the count read *before*
 		// the shields were cleared — how many lapsed, not how many are left — so a row taking it
-		// the way it takes a block's would keep drawing every shield that had just gone.
-		s.row(e.Target).Hold(0, cards.Basic)
+		// the way it takes a block's would keep drawing every shield that had just gone. **`Life` is
+		// what a worn relic kept standing**, and nothing for nearly every run.
+		s.row(e.Target).Hold(e.Life, cards.Basic)
 	}
 }
 
@@ -390,6 +418,9 @@ const shieldPipSize = 32
 // shieldOrigin is the seat the pips leave: the card being scored, exactly where its own figure
 // sets off from.
 func (s *CombatScene) shieldOrigin(gs *state.GlobalState, f shieldFlight) (image.Point, bool) {
+	if f.fromRelic {
+		return s.relicCenter(gs, f.relic)
+	}
 	seats := len(s.Theater.resolved)
 	if f.side == combat.SideB {
 		seats = len(s.Theater.enemyDealt)

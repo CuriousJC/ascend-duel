@@ -325,7 +325,9 @@ log it already holds.
 through the opponent's whole turn, gone before you act again. That is the schedule a raised guard is
 already on, and `expireDefenses` is the one function that says when. **An unspent shield lapses**,
 and is announced when it does — a stockpile carried through quiet rounds and cashed at a boss is
-the banking mechanic these cards replaced.
+the banking mechanic these cards replaced. **The one exception is a worn relic that keeps some**:
+see §The shield relics, where a kept shield stands until a hit eats it, and the cap on how many is
+the relic's figure rather than the player's patience.
 
 **One card raises at most five; a duelist holds as many as the turn can pay for.** The five is
 `MaxActions` — a card promising a sixth shield would be promising one its own turn can never see
@@ -1931,6 +1933,25 @@ screen, which is what makes a bought relic survive a fight.
 first duel is the only one fought with every element inert. That is a much shorter gap than the
 first pricing draft produced, and it is the deliberate consequence of a base relic being cheap.
 
+### The form orbs — one for every ordered pair of attack forms
+
+**The flip relics' idea on the form axis.** Each orb deals every card of one attack form as the
+card **on the same rung of another form's ladder** (`card-drawn` / `set-form`): under the
+slash-to-crush orb a 2 AP Slice is dealt as a Bash, the 2 AP crush. Three attack forms make six
+ordered pairs and six orbs; the defend ladder is not one of them, so no orb touches a shield.
+
+- **The rung is the declared cost** and the lookup is `combat.Counterpart`, the one the form
+  essence already aims with, so a card an essence cheapened does not slide down a ladder on the way
+  across. **The concept is replaced whole** — name, cost, damage and picture follow the new form —
+  and the card keeps its element, its identity and its upgrade.
+- **They chain with the element flips and the demotions, in worn order**, because all three are
+  steps of one walk, `combat.DealSteps`. A stab-to-slash orb worn left of a slash-to-crush orb deals
+  every stab as a crush, through slash; swap them and the crush orb reads the stab before it has
+  become anything. Everything the flip section says about worn order, about a card not taking the
+  cascade twice and about a drawn card not remembering what it was holds here unchanged.
+- **What an orb is for is the form relics**, as a flip is for the color relics: a run that bought
+  into crush can bend its slashes into it. It is also a way to feed a Form hand.
+
 ### The shop
 
 **Three relics on a shelf after every fight, and the row you are wearing under them.** Both rows
@@ -2162,17 +2183,52 @@ fired once per axis the blow satisfied: Quartered Rings paid 4x twice on four id
 and dealt 16x, against its own printed "Every Four of a Kind deals 4x DMG." `Hand` and `Hands`
 are the same predicate and a record setting both is refused at load.
 
-### The defensive half of the game has one relic, and no verb can reach it
+### The shield relics
 
-**Nothing in the vocabulary names a shield.** `CardDamage` returns zero immediately for a card
-that deals none, so a `card-damage` rule on a defend concept is a record that can never fire —
-which is why the defend concepts have no concept relic, and why **Braced** reaches shields
-sideways, through cost, rather than head on.
+**A shield relic changes a shield — where it comes from, what element it is, how long it lasts, or
+what a block pays — and never how much of a hit it stops.** A shield still eats one hit whole and
+nothing reduces a blow by arithmetic, so every relic here works on the count, the color, the
+timing or the payout. `CardDamage` returns zero for a card that deals none, so a `card-damage` rule
+on a defend concept can never fire; these reach shields through verbs of their own instead.
 
-`[?]` It is recorded as a **gap rather than a decision**: almost every relic in the catalog is
-about attacking, in a game whose one defensive mechanic — a shield eating a whole hit — is among
-its strongest. Filling it means a verb that raises, keeps or spends a shield, and that has not
-been designed.
+- **A helm raises one shield of its element at the top of the wearer's own turn** —
+  `turn-start` / `raise-shield`, one helm per element. **After the expiry**, or the turn arriving
+  would take away the shield it had just been handed. It is a shield like any other: it eats the
+  heaviest hit of its own element first, banks the matched block's action point, and lapses with
+  the rest. So a helm is a free Brace of its color every turn, and its worth depends entirely on
+  how often the realm is that color. The pips fly out of the ring rather than out of a card.
+- **The Prismatic Shield turns every shield a defend card raises to the opponent's element**
+  (`match-foe-shields`). **The shield changes and the card does not**: a defend card still carries
+  its own element into the hand it forms, so what the relic buys is the matched block's action
+  point on every block and nothing about which hands a turn can make. Recoloring the card instead —
+  what an element flip does — would have been a second relic's worth of help to the hand. It
+  reaches defend cards only; a shield an upgrade raises off an attack card keeps that card's color.
+- **The Tower Shield keeps one unspent shield past both of the moments shields lapse** — the
+  attacker's turn that swung at them ending, and the owner's next turn arriving (`keep-shields`).
+  A kept shield stands until a hit eats it. Which ones stay is a function of the stack alone,
+  taken in element order, so nothing about when a shield went up decides whether it survives.
+
+**Three more pay out on a block, at their own moment.** `hit-blocked` fires once for every
+incoming hit one of the wearer's shields eats, in `combat.blockedByShield` — the one place a shield
+is spent. **It is the one moment read off the target rather than the actor**, because a shield
+belongs to whoever raised it, and its `If` matches **the eaten hit's card**, the attacker's. Each
+relic is its own figure out of its own ring, in worn order.
+
+- **The Thorned Shield sends half the eaten hit back at whoever threw it** (`reflect-damage` 50).
+  Half of the hit **as it would have landed** — after the attacker's weight and the wearer's
+  vulnerability, the figure the wearer did not take — rounded down. **Plain damage**
+  *(owner's call)*: no status, no drain, no growing relic steps, and the thrower's own shields do
+  not eat it. **A thrower it kills falls there and then, and the rest of their turn is not
+  thrown** — the same door a killing blow uses.
+- **The Mending Shield restores flat life per block** (`heal-on-block`), capped at full. Flat
+  rather than a share, because what is being paid for is the block, which is the same event
+  whatever the hit was.
+- **The Tithe Shield pays vitae per block** (`vitae-on-block`), stepping the fight's purse like
+  every other payment inside a round; the run is paid the difference when the duel settles.
+
+**What these do to a realm is unmeasured.** A helm is worth a shield a turn against its own
+color and much less against any other, and the Thorned Shield turns every shield into damage;
+nothing simulates a duel, so no test says whether a run stacking them breaks a realm open.
 
 ## Stones — altering the hand ladder
 

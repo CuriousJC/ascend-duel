@@ -178,6 +178,28 @@ const (
 	// status that is not there.
 	KindFizzled
 
+	// KindWarded is a worn relic raising shields at the top of its wearer's own turn — a helm.
+	// Relic names which one, Element is the shields' element, Amount is how many it raised and Life
+	// is the count standing afterwards, KindRaised's split.
+	//
+	// **Its own kind rather than a KindRaised with a relic on it**, for KindRegenerated's reason: a
+	// raise's pips leave the card that raised them and a ward's leave the ring, and the choreography
+	// table is one entry per kind.
+	KindWarded
+
+	// KindReflected is a worn relic sending part of a blocked hit back at whoever threw it — the
+	// Thorned Shield. Side is the wearer, Target the thrower, Relic which ring, Amount the damage and
+	// Life what the thrower is left on. It follows the KindBlocked it answers.
+	//
+	// **Its own kind rather than a KindDamage.** A blow has a card behind it and this has a ring; a
+	// damage event with the wearer as its Side would read as the wearer having swung.
+	KindReflected
+
+	// KindTithed is a worn relic paying its wearer vitae for a block — the Tithe Shield. Side is the
+	// wearer, Relic which ring, Amount the vitae. **An announcement, not the payment**, exactly as
+	// KindVitae is: the rules step Duelist.Vitae and the run is paid the difference.
+	KindTithed
+
 	KindRoundEnd
 )
 
@@ -264,7 +286,8 @@ type Event struct {
 	// concepts. It is set on the two kinds that mean it and read on no others.
 	Status StatusID
 
-	// Relic is the worn relic behind the event, on KindStatus, KindDrained and KindRegenerated.
+	// Relic is the worn relic behind the event, on KindStatus, KindDrained, KindRegenerated,
+	// KindWarded, KindReflected and KindTithed.
 	//
 	// **It is here because a status has a cause the player can see** *(2026-08-18)*. The screen
 	// flies the word out of the relic that caused it, and there is no other honest way for it to

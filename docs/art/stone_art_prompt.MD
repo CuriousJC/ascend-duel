@@ -194,5 +194,5 @@ is never to be rendered: no title, no caption, no rules text, no numbers anywher
 table above is keyed on, so it tells you which row you are in; it is not a label to draw. If
 `Draw` is empty, stop and say so rather than inventing a subject.
 
-Name the image after the record's own key — the `StoneRecord` value — and give me a link I can
-click to download it.
+Name each image after its record's own key — the `StoneRecord` value — and
+give me a single zip file of everything so I can download it all at once — never a link per file.

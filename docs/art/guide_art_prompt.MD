@@ -135,4 +135,4 @@ carries on underneath whatever is drawn on top of it.
 6. **Is there a hard line anywhere between two colours?** There should not be. If there is, the
    bands are too distinct.
 
-Name them `guide.png` and `default-enemy.png` and give me links I can click to download them.
+Name them `guide.png` and `default-enemy.png` and give me a single zip file of everything so I can download it all at once — never a link per file.

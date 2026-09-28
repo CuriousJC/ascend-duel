@@ -64,4 +64,4 @@ and every kind of clutter. One cog, nothing else.
 3. **Is the background actually transparent** — not black, not white, not a dark square?
 4. **Is it genuinely hueless?** Hold it at arm's length: no part of it should read as warm or cool.
 
-Name it `gear.png` and give me a link I can click to download it.
+Name it `gear.png` and give me a single zip file of everything so I can download it all at once — never a link per file.

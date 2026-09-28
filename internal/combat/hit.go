@@ -237,7 +237,7 @@ func strike(
 		// **A hit after a death is not thrown.** Its arithmetic is on the hand event, and nothing
 		// in the log says it landed. **A hit of nothing is still thrown**: it can miss and land its
 		// card's statuses like any other, and it spends nothing of the target's.
-		if target.Alive() {
+		if target.Alive() && actor.Alive() {
 			thrown = thrown || figure > 0
 			hits, actor, target = throwHit(hits, side, targetSide, actor, target, card, l.seat, h, figure, eaten[h], round, rng)
 		}
@@ -257,7 +257,7 @@ func strike(
 	// **Every standing shield is spent on the turn it answered**, if anything that could hurt was
 	// swung at it.
 	if thrown {
-		target = ClearDefenses(target)
+		target = target.lapseShields()
 	}
 
 	actor.DMG = baseDMG
@@ -308,14 +308,14 @@ func throwHit(
 		}), actor, target
 	}
 
+	dmg := amplify(blunt(figure, actor.weight()), target.vulnerability())
+
 	if blocked := false; shield >= 0 {
-		hits, target, blocked = blockedByShield(hits, side, target, card, shield, seat, hit, round)
+		hits, actor, target, blocked = blockedByShield(hits, side, actor, target, card, shield, dmg, seat, hit, round)
 		if blocked {
 			return hits, actor, target
 		}
 	}
-
-	dmg := amplify(blunt(figure, actor.weight()), target.vulnerability())
 	target.CurrentLife = reduce(target.CurrentLife, dmg)
 	hits = append(hits, Event{
 		Kind:    KindDamage,

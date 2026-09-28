@@ -144,5 +144,5 @@ or washed out far enough that the element stops being readable. A color word not
    should not be.
 8. **Is there a contour** all the way round, thick enough to survive the reduction?
 
-Name it `<Art>-<element>.png`, exactly as the brief says, and give me a link I can click to
-download it. give me a bundled zip of all the files.
+Name it `<Art>-<element>.png`, exactly as the brief says, and
+give me a single zip file of everything so I can download it all at once — never a link per file.

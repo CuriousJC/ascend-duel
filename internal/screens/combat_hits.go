@@ -102,6 +102,11 @@ type hitFlight struct {
 	// starts and never moves under it.
 	from image.Point
 
+	// relic is the ring a reflected blow leaves, and fromRelic says to use it — the Thorned
+	// Shield's figure comes out of no card and no line. **Recomputed each frame**, like a seat.
+	relic     combat.RelicID
+	fromRelic bool
+
 	// held is the life the target's bar keeps showing until the figure arrives. It is read back
 	// out through `shownLife`, which is why the flight can hold the drawing without anything else
 	// on the screen holding a stale life total.
@@ -159,6 +164,24 @@ func (s *CombatScene) noteHit(e combat.Event, held int) {
 //   - **A hit that was never thrown fades where it stands**: the target fell to an earlier one.
 //
 // **It decides nothing.** Every figure and every verdict is the resolver's.
+// noteReflect raises the figure for a relic sending part of a blocked hit back — out of the ring,
+// into the thrower's card, with the bar waiting on it exactly as it waits on a blow.
+func (s *CombatScene) noteReflect(e combat.Event, held int) {
+	if e.Kind != combat.KindReflected || e.Amount <= 0 {
+		return
+	}
+	s.Theater.hits = append(s.Theater.hits, hitFlight{
+		amount:    e.Amount,
+		side:      e.Side,
+		target:    e.Target,
+		seat:      -1,
+		relic:     e.Relic,
+		fromRelic: true,
+		held:      held,
+		t:         ui.NewTravel(0, hitFlyTicks()+hitHoldTicks()),
+	})
+}
+
 func (s *CombatScene) throwColumn(c int) {
 	box := &s.Theater.mathBox
 	col := &box.columns[c]
@@ -313,6 +336,9 @@ func hitAlpha(h hitFlight) float32 {
 
 // hitOrigin is where a figure sets off from — `anchorBlow`, resolved to a point.
 func (s *CombatScene) hitOrigin(gs *state.GlobalState, h hitFlight) (image.Point, bool) {
+	if h.fromRelic {
+		return s.relicCenter(gs, h.relic)
+	}
 	if h.seat < 0 {
 		return h.from, true
 	}

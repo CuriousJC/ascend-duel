@@ -416,7 +416,7 @@ share an element — is a fact about round one of fight one and about nothing el
 deck is half ice" from being confused with "my deck contains more ice cards".
 
 - **An essence edits the run's deck itself, permanently.** A won fight offers two; each names a
-  card and an aspect — `element`, `remove`, `duplicate`, `cost`, `amount`, `promote`, `demote`.
+  card and an aspect — see §The grammar: a target and a new value.
   After a `remove` the card is gone from every pile and the deck is genuinely smaller; after
   Exalt or Debase it is a different concept from then on. Nothing takes an essence back.
 - **A relic can rewrite a card as it is dealt** — the `card-drawn` moment, which leaves the deck
@@ -2444,6 +2444,8 @@ An essence record is the card language pointed at a card that already exists —
 | `amount` | a percentage | scales one card's figure, whatever that figure is |
 | `promote` | — | one rung up its form's ladder: Thump → Bash → Smash |
 | `demote` | — | one rung down: cheaper and weaker |
+| `form` | a form | turns one card into its counterpart on that form's ladder |
+| `wild` | an axis: `element` or `form` | makes one card a wildcard on that axis when a hand is formed, replacing its upgrade |
 
 **The vocabulary is closed**, the same posture the card verbs take: a new target is a Go change
 plus one place applying it, never something a JSON file can assert into existence. A bad record —
@@ -3080,13 +3082,27 @@ panel that trains the player not to read it.
 
 ### The wildcard
 
-`RiderWildElement` makes one card count as **every element at once** when a hand is formed. It is
-attached by the **Motley** rune and it is the eighth rider kind.
+**Two wildcards, one per axis, and they share every rule below.**
 
-**The card keeps its own element and everything else goes on reading it.** A wild fire Bash is
-still a fire Bash: it lands a burn, it sits in the fire row of the deck panel, and `Blow.Elements`
-reports fire for it. One question changes — what it counts as on the element axis — and the answer
-is "whatever the hand needs".
+| Rider | Counts as | Rune | Essence | Word |
+|---|---|---|---|---|
+| `RiderWildElement` | every element | Prismatic | Prismatic Essence (`wild`, `element`) | CHROMATIC |
+| `RiderWildForm` | stab, slash or crush — and its own form | Versatile | Versatile Essence (`wild`, `form`) | VERSATILE |
+
+Each is attached by its rune during a fight or by its essence between fights, and each takes the
+card's one upgrade seat, so either replaces whatever upgrade the card already carried.
+`combat.WildAxisOf` is the one table pairing a rider with the axis it widens; `Card.Wild` and
+`Card.WildFits` read it, and so does the `wild` essence target, whose `Value` names the axis.
+
+**The form wildcard joins the attack forms and nothing else.** Defend is not an attack form, so a
+versatile Jab cannot make up a defend pair — and a versatile Brace still counts as the defend it is,
+beside the three attack forms. `Card.WildFits` is the whole of that rule.
+
+**The card keeps its own element and form, and everything else goes on reading them.** A wild fire
+Bash is still a fire Bash: it lands a burn, it sits in the fire row of the deck panel, and
+`Blow.Elements` reports fire for it; a versatile Jab still wears the stab mark and is still what a
+relic naming stab counts. One question changes — what it counts as on its axis while the hand is
+formed — and the answer is "whatever the hand needs".
 
 **It is the first rider read while the hand is *matched* rather than while the turn resolves.**
 Every other rider fires after the hand is already decided; this one is inside `matchCountOf`, which
@@ -3094,9 +3110,10 @@ is what made it a change to the matcher rather than another case in `playRiders`
 
 Four rules, and each is a thing that is easy to get wrong:
 
-- **Element only.** `Card.Wild` takes an axis and answers for one. A wildcard that widened the
-  concept or form axes as well would make the whole ladder a single rung, so a wildcard on another
-  axis is a *new rider kind* rather than a widening of this one.
+- **One axis each.** `Card.Wild` takes an axis and answers for one. A wildcard that widened
+  several axes at once would make the whole ladder a single rung, so a wildcard on another axis is
+  a *new rider kind* rather than a widening of an existing one — and nothing widens the concept
+  axis.
 - **It tops a group up; it never seeds one.** A tally is a candidate if its own members plus the
   unspent wildcards can reach the group's size, and the ranking is on its *own* members — so a
   wildcard joins whichever element already has the most of itself, which is the reading a player
@@ -3108,12 +3125,12 @@ Four rules, and each is a thing that is easy to get wrong:
 
 **It carries no amount, and the vocabulary says so.** `RiderKind.CarriesAmount` is what
 `internal/session` asks before demanding a figure off a rider rune's record, so a `Value` on a
-Motley is refused rather than being a number nothing reads.
+Prismatic or Versatile rune is refused rather than being a number nothing reads.
 
-**This is a balance lever and it was taken as one.** One wildcard turns any three-of-an-element
-into a four, and the elemental rungs are high on the ladder — so what a run pays for a Motley is
-the number to watch, and that number is the rune's place in `data/runes.json` rather than
-anything in the rules.
+**This is a balance lever and it was taken as one.** One wildcard turns any three of a kind on its
+axis into a four, and those rungs are high on the ladder — so how often a run is offered one is
+the number to watch, and that number is the rune's place in `data/runes.json` and the essence's in
+`data/essences.json` rather than anything in the rules.
 
 ### An upgrade is painted on the card, and where is still open
 

@@ -674,6 +674,8 @@ func runeRiderLine(k combat.RiderKind) string {
 		return "multiplies every hit of the hand it makes"
 	case combat.RiderWildElement:
 		return "counts as every element"
+	case combat.RiderWildForm:
+		return "counts as any attack form"
 	case combat.RiderGolden:
 		return "gambles for DMG or life"
 	case combat.RiderSilver:

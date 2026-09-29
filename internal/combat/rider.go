@@ -130,6 +130,18 @@ const (
 	// the one it closes with, so a silver card steps `Duelist.Vitae` and announces a KindVitae like
 	// any other payment. Gold moves two figures the purse mechanism knows nothing about.
 	RiderSilver
+
+	// RiderWildForm is RiderWildElement on the form axis: this card counts as **any attack form** —
+	// stab, slash or crush — when a hand is formed. It carries no amount.
+	//
+	// **Attack forms only, and the card's own form besides.** Defend is not one of the values it
+	// joins, so a versatile Jab can make up a slash pair and cannot make up a defend pair; a
+	// versatile Brace still counts as the defend it is, and as the three attack forms beside it.
+	// See WildFits, which is the whole of that rule.
+	//
+	// **Everything that is not the matcher still reads the card's own form**, exactly as a wild
+	// element still burns: the corner mark, the form sort, a relic naming a form.
+	RiderWildForm
 )
 
 // RiderKinds is every kind in a fixed order, for anything that walks them.
@@ -145,6 +157,7 @@ func RiderKinds() []RiderKind {
 		RiderWildElement,
 		RiderGolden,
 		RiderSilver,
+		RiderWildForm,
 	}
 }
 
@@ -170,6 +183,8 @@ func (k RiderKind) String() string {
 		return "golden"
 	case RiderSilver:
 		return "silver"
+	case RiderWildForm:
+		return "wild-form"
 	default:
 		return "none"
 	}
@@ -356,30 +371,64 @@ func blowDMG(base int, held []Card) int {
 
 // CarriesAmount reports whether this kind's Amount means anything.
 //
-// **Almost every rider is a kind plus a figure**, and the one that is not is RiderWildElement:
-// what it does has no quantity, so a value of zero is correct rather than missing. It exists so
+// **Almost every rider is a kind plus a figure**, and the ones that are not are the wildcards —
+// RiderWildElement and RiderWildForm: what they do has no quantity, so a value of zero is correct
+// rather than missing. It exists so
 // `internal/session` can refuse a rider rune with no figure *except* for the kinds that never
 // had one — the alternative was a magic number in the catalog, which is a record that lies about
 // itself so a check can pass.
 func (k RiderKind) CarriesAmount() bool {
-	return k != RiderWildElement && k != RiderNone
+	return k != RiderNone && WildAxisOf(k) < 0
 }
 
-// Wild reports whether this card counts as every value on the given axis.
+// WildAxisOf is the axis a wildcard rider widens, or -1 for a rider that is not a wildcard.
 //
-// **Element only, today**, and the axis is taken rather than assumed so that a form or concept
-// wildcard is a new rider kind here and not a silent widening of this one. A wildcard that matched
-// on every axis would make the whole ladder one rung.
-func (c Card) Wild(a Axis) bool {
-	if a != AxisElement {
-		return false
+// **The one table of wildcards**, so a card asking whether it is wild, the matcher asking what it
+// may join and a rune asking whether it needs a figure all read the same pairing.
+func WildAxisOf(k RiderKind) Axis {
+	switch k {
+	case RiderWildElement:
+		return AxisElement
+	case RiderWildForm:
+		return AxisForm
+	default:
+		return -1
 	}
+}
+
+// Wild reports whether this card counts as more than its own value on the given axis.
+//
+// **One rider kind per axis** — RiderWildElement, RiderWildForm — so a wildcard on a further axis
+// is a new rider kind here and not a silent widening of one of these. A wildcard that matched on
+// every axis would make the whole ladder one rung, and nothing widens the concept axis.
+func (c Card) Wild(a Axis) bool {
 	for _, r := range c.Riders {
-		if r.Kind == RiderWildElement {
+		if r.Kind != RiderNone && WildAxisOf(r.Kind) == a {
 			return true
 		}
 	}
 	return false
+}
+
+// WildFits reports whether this wildcard may join a group of value v on axis a.
+//
+// **A wild element joins every element; a wild form joins the three attack forms and its own.**
+// Defend is not an attack form, so a versatile attack card cannot make up a defend group — and a
+// versatile Brace, whose own form is defend, still can. A card that is not wild on the axis fits
+// nothing here: its own value is `MatchValue`'s question, not this one.
+func (c Card) WildFits(a Axis, v int) bool {
+	if !c.Wild(a) {
+		return false
+	}
+	if a != AxisForm {
+		return true
+	}
+	switch Form(v) {
+	case FormStab, FormSlash, FormCrush:
+		return true
+	}
+	own, counts := MatchValue(c, AxisForm)
+	return counts && own == v
 }
 
 // playRidden is a card's figure after its own played riders: the flat DMG first, then the

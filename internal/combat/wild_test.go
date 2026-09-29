@@ -120,19 +120,19 @@ func TestAWildcardIsSpentOnce(t *testing.T) {
 	t.Fatal("one wildcard filled two groups of a full house")
 }
 
-// **The rider carries no amount, and the vocabulary says so.** It is the one kind whose Amount is
-// meaningless, and internal/session refuses a value-less rider rune for every other kind.
-func TestTheWildcardRiderCarriesNoAmount(t *testing.T) {
-	if RiderWildElement.CarriesAmount() {
-		t.Error("the wildcard rider claims to carry an amount")
-	}
+// **The wildcard riders carry no amount, and the vocabulary says so.** They are the kinds whose
+// Amount is meaningless, and internal/session refuses a value-less rider rune for every other kind.
+func TestTheWildcardRidersCarryNoAmount(t *testing.T) {
 	for _, k := range RiderKinds() {
-		if k == RiderWildElement {
-			continue
+		wildcard := WildAxisOf(k) >= 0
+		if k.CarriesAmount() == wildcard {
+			t.Errorf("%v: CarriesAmount is %v, and every rider but the wildcards is a kind plus a "+
+				"figure", k, k.CarriesAmount())
 		}
-		if !k.CarriesAmount() {
-			t.Errorf("%v claims to carry no amount, and every rider but the wildcard is a "+
-				"kind plus a figure", k)
+	}
+	for _, k := range []RiderKind{RiderWildElement, RiderWildForm} {
+		if WildAxisOf(k) < 0 {
+			t.Errorf("%v is not in the wildcard table", k)
 		}
 	}
 }
@@ -140,9 +140,60 @@ func TestTheWildcardRiderCarriesNoAmount(t *testing.T) {
 // **It is in the vocabulary both ways round**, so a rune record can name it and a run
 // snapshot can write it down.
 func TestTheWildcardRiderRoundTripsItsName(t *testing.T) {
-	got, ok := ParseRiderKind(RiderWildElement.String())
-	if !ok || got != RiderWildElement {
-		t.Fatalf("ParseRiderKind(%q) is (%v, %v), want the wildcard",
-			RiderWildElement.String(), got, ok)
+	for _, k := range []RiderKind{RiderWildElement, RiderWildForm} {
+		got, ok := ParseRiderKind(k.String())
+		if !ok || got != k {
+			t.Fatalf("ParseRiderKind(%q) is (%v, %v), want %v", k.String(), got, ok, k)
+		}
+	}
+}
+
+// versatile is a card carrying the form wildcard.
+func versatile(id ConceptID, e Element) Card {
+	return Of(id, e).SetRider(Rider{Kind: RiderWildForm})
+}
+
+// **A form wildcard tops a form group up.** Two slashes and a versatile stab are a form Three of a
+// Kind — the element wildcard's mechanic on the other axis.
+func TestAVersatileCardCompletesAFormGroup(t *testing.T) {
+	want, ok := handByKey("form-three-of-a-kind")
+	if !ok {
+		t.Skip("the catalog has no form three of a kind")
+	}
+	turn := []Card{Of(Cut, Fire), Of(Slice, Ice), versatile(Jab, Earth)}
+	cards, _, ok2 := matchCountOf(slots(turn), want.On(AxisForm))
+	if !ok2 || len(cards) != 3 {
+		t.Fatalf("two slashes and a versatile stab made (%v, %v), want all three", cards, ok2)
+	}
+}
+
+// **Attack forms only.** A versatile attack card cannot make up a defend group — defend is not an
+// attack form — and a versatile Brace still counts as the defend it is.
+func TestAVersatileCardJoinsOnlyAttackFormsAndItsOwn(t *testing.T) {
+	pair, ok := handByKey("pair")
+	if !ok {
+		t.Fatal("the catalog has no pair")
+	}
+	on := pair.On(AxisForm)
+
+	if _, _, ok := matchCountOf(slots([]Card{Of(Brace, Fire), versatile(Jab, Ice)}), on); ok {
+		t.Error("a versatile Jab made up a defend pair")
+	}
+	if _, _, ok := matchCountOf(slots([]Card{Of(Brace, Fire), versatile(Block, Ice)}), on); !ok {
+		t.Error("a versatile Block no longer counts as defend")
+	}
+	if _, _, ok := matchCountOf(slots([]Card{Of(Thump, Fire), versatile(Block, Ice)}), on); !ok {
+		t.Error("a versatile Block does not count as crush")
+	}
+}
+
+// **Form only.** The versatile card widens the form axis and no other, and it is not an element
+// wildcard.
+func TestAVersatileCardIsFormOnly(t *testing.T) {
+	c := versatile(Slice, Ice)
+	for _, a := range AllAxes {
+		if got, want := c.Wild(a), a == AxisForm; got != want {
+			t.Errorf("Wild(%v) is %v, want %v", a, got, want)
+		}
 	}
 }

@@ -596,7 +596,7 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 			// candidate if its own members plus the wilds still unspent can reach g, and the
 			// ranking below is on its *own* members - so a wildcard joins whichever value already
 			// had the most of itself, which is the reading a player would make looking at the row.
-			take, ok := fill(tallies[j].members, wilds, g)
+			take, ok := fill(tallies[j].members, fitting(turn, wilds, h.Match, tallies[j].value), g)
 			if !ok {
 				continue
 			}
@@ -741,6 +741,21 @@ func fill(members, wilds []int, g int) ([]int, bool) {
 	// group holding both would otherwise report a lead that is not its earliest card.
 	sort.Ints(out)
 	return out, true
+}
+
+// fitting is the wildcards still unspent that may join a group of value v on this axis.
+//
+// **Every wild element fits every element; a wild form fits only the attack forms and its own** —
+// see Card.WildFits. Filtered per group rather than once, because which wilds are eligible depends
+// on which value the group is.
+func fitting(turn []Slot, wilds []int, a Axis, v int) []int {
+	var out []int
+	for _, w := range wilds {
+		if turn[w].Card.WildFits(a, v) {
+			out = append(out, w)
+		}
+	}
+	return out
 }
 
 // spend removes from wilds every index the group actually took. The group's cards are a mix of

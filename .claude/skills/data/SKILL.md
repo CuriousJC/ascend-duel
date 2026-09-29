@@ -218,9 +218,9 @@ value nothing reads is somebody expecting a mechanic the game does not have.
 **It carries `Family`, `Art` and `Draw`, and the engine reads none of them** *(2026-09-12)* — see
 the shared section below.
 
-**Seven targets**: `element`, `remove`, `duplicate`, `cost`, `amount`, `promote`, `demote`. The
-vocabulary is closed the way the card verbs are — a new one is a Go change plus one place applying
-it, never something a file can assert into existence.
+**The targets are `session.EssenceTargets`**, and which ones take a `Value` is `resolveEssence`.
+The vocabulary is closed the way the card verbs are — a new one is a Go change plus one place
+applying it, never something a file can assert into existence.
 
 **`cost` and `amount` are per-card**, carried on `combat.Card` as `CostDelta` and `AmountPct`, and
 their bounds live in `Card.Cost()` and `Card.Amount()`. **Form and label are still
@@ -458,10 +458,10 @@ to a registry that grows.
 
 The data is about to grow three ways at once, which is why this was carved out of `CLAUDE.md`:
 
-- **More relics.** The grammar is built and seventeen are authored; growing the *vocabulary* — a new
+- **More relics.** The grammar is built; growing the *vocabulary* — a new
   moment or a new effect verb — is a Go change, and is meant to be. Buying and selling landed on
   2026-08-21, so a new record needs a `Rarity` as well as its rules.
-- **More essences.** `essences.json` exists and spans seven targets. Growing it is one record each;
+- **More essences.** Growing `essences.json` is one record each;
   growing the *target vocabulary* is not, and MECHANICS.md says why. `go run ./tools/essencesheet` is
   what the catalog is read on.
 - **Brands** — permanent for the run, altering the container where relics alter the contents. The

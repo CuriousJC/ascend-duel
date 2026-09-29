@@ -790,7 +790,7 @@ func TestEveryRiderSaysWhenItHappens(t *testing.T) {
 	for _, k := range combat.RiderKinds() {
 		// The wildcard has no moment — it is something the card permanently is — and the two metals
 		// write nothing on the face at all; see TestEveryRiderKindIsOnTheFace.
-		if k == combat.RiderWildElement || k == combat.RiderGolden || k == combat.RiderSilver {
+		if combat.WildAxisOf(k) >= 0 || k == combat.RiderGolden || k == combat.RiderSilver {
 			continue
 		}
 		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 5})

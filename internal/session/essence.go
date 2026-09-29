@@ -77,12 +77,18 @@ const (
 	// crush stops shielding and hits. What the card keeps is its own — its element, its identity,
 	// its upgrade and any cost or amount an essence has already written onto it.
 	TargetForm
+
+	// TargetWild makes one card a wildcard on the axis its Value names — `element` writes
+	// combat.RiderWildElement (the Prismatic rune's rider), `form` writes combat.RiderWildForm (the
+	// Versatile rune's) — between fights instead of during one. **It takes the card's one upgrade
+	// seat**, so whatever upgrade the card carried is gone, exactly as it is for the rune.
+	TargetWild
 )
 
 // EssenceTargets is every target in a fixed order, for anything that walks them.
 func EssenceTargets() []EssenceTarget {
 	return []EssenceTarget{TargetElement, TargetRemove, TargetDuplicate,
-		TargetCost, TargetAmount, TargetPromote, TargetDemote, TargetForm}
+		TargetCost, TargetAmount, TargetPromote, TargetDemote, TargetForm, TargetWild}
 }
 
 func (t EssenceTarget) String() string {
@@ -101,6 +107,8 @@ func (t EssenceTarget) String() string {
 		return "demote"
 	case TargetForm:
 		return "form"
+	case TargetWild:
+		return "wild"
 	default:
 		return "element"
 	}
@@ -144,6 +152,9 @@ type Essence struct {
 
 	// Form is the axis a card is told to count on, and is only meaningful for TargetForm.
 	Form combat.Form
+
+	// Wild is the wildcard rider a TargetWild essence writes, and is only meaningful for that target.
+	Wild combat.RiderKind
 
 	// Number is the value read against a numeric target: a signed delta for `cost`, a percentage
 	// for `amount`. Meaningless for the rest, which are refused if they carry one.
@@ -271,6 +282,19 @@ func resolveEssence(r data.EssenceData) (Essence, error) {
 		return w, nil
 	}
 
+	if target == TargetWild {
+		// The value is an axis, and the wildcard table in internal/combat says which rider widens
+		// it — so a wildcard on a third axis is a rider kind there, not a case here.
+		for _, k := range combat.RiderKinds() {
+			if a := combat.WildAxisOf(k); a >= 0 && a.String() == r.Value {
+				w.Wild = k
+				return w, nil
+			}
+		}
+		return Essence{}, fmt.Errorf("%s makes a card wild on %q, and no wildcard widens that axis",
+			r.EssenceRecord, r.Value)
+	}
+
 	if target == TargetElement {
 		e, ok := combat.ParseElement(r.Value)
 		if !ok {
@@ -362,6 +386,10 @@ func (s *Session) Apply(w Essence, i int) bool {
 		}
 		card.Concept = next
 		s.deck[i] = card
+		return true
+
+	case TargetWild:
+		s.deck[i] = card.SetRider(combat.Rider{Kind: w.Wild})
 		return true
 
 	default:

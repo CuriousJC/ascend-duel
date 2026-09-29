@@ -784,7 +784,7 @@
   },
   {
     "ScenarioRecord": "wildcards",
-    "Note": "A deck the wildcard rune has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Brace - and the other half is ordinary, in four colors that agree with nothing. Watch two things: the wash over the whole card, which is where an upgrade is said as of 2026-09-09, and the hand line, which names an elemental rung off a set of cards that share no color at all. Note the form mark stays hueless on a wild card and keeps its element on every other upgrade. A Motley is in the sack too, for spending on a card that is not wild yet.",
+    "Note": "A deck the wildcard rune has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Brace - and the other half is ordinary, in four colors that agree with nothing. Watch two things: the wash over the whole card, which is where an upgrade is said as of 2026-09-09, and the hand line, which names an elemental rung off a set of cards that share no color at all. Note the form mark stays hueless on a wild card and keeps its element on every other upgrade. A Prismatic is in the sack too, for spending on a card that is not wild yet.",
     "Relics": [],
     "Deck": [
       {
@@ -933,7 +933,7 @@
   },
   {
     "ScenarioRecord": "metal-chromatic",
-    "Note": "A silver card and a chromatic one in the same hand, which neither the metals nor the wildcards entry can give you: the question is how the two upgrades read against each other on one table. The silver Cut writes nothing about its metal on the face at all - the sheen is what names it - where the wild Jab carries the five-band wash, keeps its form mark hueless, and says ANY ELEMENT. Both explain themselves in the tooltip and both are titled in their own ink: CHROMATIC letter by letter across the five bands, SILVER in one lifted gray over the odds it gambles at. Hover both, and check the silver card is identifiable without the hover. A gold Thrust and two plain cards are beside them so a sheen has something to be a sheen against. A Motley and a Silver are in the sack for putting either upgrade onto a card that has neither.",
+    "Note": "A silver card and a chromatic one in the same hand, which neither the metals nor the wildcards entry can give you: the question is how the two upgrades read against each other on one table. The silver Cut writes nothing about its metal on the face at all - the sheen is what names it - where the wild Jab carries the five-band wash, keeps its form mark hueless, and says ANY ELEMENT. Both explain themselves in the tooltip and both are titled in their own ink: CHROMATIC letter by letter across the five bands, SILVER in one lifted gray over the odds it gambles at. Hover both, and check the silver card is identifiable without the hover. A gold Thrust and two plain cards are beside them so a sheen has something to be a sheen against. A Prismatic and a Silver are in the sack for putting either upgrade onto a card that has neither.",
     "Relics": [],
     "Deck": [
       {
@@ -1346,7 +1346,7 @@
   },
   {
     "ScenarioRecord": "held-back-riders",
-    "Note": "The four riders that pay for a card you do NOT play, plus the two that pay for one you do. Attach Patience or Spite or Tithe to a card, then leave that card in the hand and press DUEL! - every hit gets bigger, or the fight log says 'kept back for 3 vitae', on every turn you go on holding it. Hunger is the opposite question: it only pays if its card is one of the cards the hand was formed from, which a turn can play a card without doing. Aegis puts a Jab in the shield business. It is here because none of this is on a card face yet - the tooltip prose is the only readout, so the way to check the arithmetic is to hold the card and watch the hits.",
+    "Note": "The four riders that pay for a card you do NOT play, plus the two that pay for one you do. Attach Brutality or Ferocity or Tithe to a card, then leave that card in the hand and press DUEL! - every hit gets bigger, or the fight log says 'kept back for 3 vitae', on every turn you go on holding it. Ruin is the opposite question: it only pays if its card is one of the cards the hand was formed from, which a turn can play a card without doing. Aegis puts a Jab in the shield business. It is here because none of this is on a card face yet - the tooltip prose is the only readout, so the way to check the arithmetic is to hold the card and watch the hits.",
     "Relics": [],
     "Hand": [],
     "Runes": [
@@ -1678,7 +1678,7 @@
   },
   {
     "ScenarioRecord": "four-rings-four-runes",
-    "Note": "A full top row: four rings worn and four runes in the sack, which is the row every between-turns gesture is made from and is otherwise two shops and a won fight away. Two of the rings are flips into fire, so the deal cascade plays two beats over every hand and each ring toasts as its own colours change; the third multiplies fire and the fourth multiplies a Pair, so both toast into the hits when the hand pays. The four runes are one of each shape a hand's morph can take - Embermark recolours two cards where they stand, Mimic copies one, Unmake eats two, and Hunger writes an upgrade onto one - so select the cards first and click the rune second, and watch the row change under the cursor. The sack holds four against a capacity of two on purpose: an over-full sack reads as the 4/2 it is and the pane tightens to draw all four, which is the thing a fixture can show and a bought sack cannot. It is a dummy at 12 AP, so any hand is payable and nothing here ends.",
+    "Note": "A full top row: four rings worn and four runes in the sack, which is the row every between-turns gesture is made from and is otherwise two shops and a won fight away. Two of the rings are flips into fire, so the deal cascade plays two beats over every hand and each ring toasts as its own colours change; the third multiplies fire and the fourth multiplies a Pair, so both toast into the hits when the hand pays. The four runes are one of each shape a hand's morph can take - Embermark recolours two cards where they stand, Mimic copies one, Unmake eats two, and Ruin writes an upgrade onto one - so select the cards first and click the rune second, and watch the row change under the cursor. The sack holds four against a capacity of two on purpose: an over-full sack reads as the 4/2 it is and the pane tightens to draw all four, which is the thing a fixture can show and a bought sack cannot. It is a dummy at 12 AP, so any hand is payable and nothing here ends.",
     "Relics": [
       "flip-earth-to-fire",
       "flip-lightning-to-fire",

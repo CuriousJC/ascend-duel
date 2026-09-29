@@ -4,7 +4,7 @@
     "Name": "Essence of Removal",
     "Family": "Dissolve and multiply",
     "Art": "dissolve",
-    "Draw": "a flaming sword that is fading away into a pixelation effect like tis' going to disappear",
+    "Draw": "a golden axe wreathed in fire, crumbling into dust from the bottom up, with a wisp of essence drifting off one side",
     "Target": "remove",
     "Text": "DESTROY CARD"
   },
@@ -79,10 +79,10 @@
   },
   {
     "EssenceRecord": "add-dmg",
-    "Name": "Essence of Pain",
+    "Name": "Essence of Savagery",
     "Family": "Card strength",
     "Art": "add-dmg",
-    "Draw": "a variegated spear fading into nothing",
+    "Draw": "a stylized boar drawn in variegated lines fading into nothing",
     "Target": "amount",
     "Value": "150",
     "Text": "CARD GAINS DMG +1/2"
@@ -92,7 +92,7 @@
     "Name": "Essence of Strength",
     "Family": "Card strength",
     "Art": "add-ap",
-    "Draw": "a variegated axe fading into nothing",
+    "Draw": "a stylized lion drawn in variegated lines fading into nothing",
     "Target": "promote",
     "Text": "CARD GAINS STRENGTH +1 AP"
   },
@@ -101,7 +101,7 @@
     "Name": "Essence of Weakness",
     "Family": "Card strength",
     "Art": "demote",
-    "Draw": "a variegated and broken sword fading into nothing",
+    "Draw": "a stylized mouse seen from the side, drawn in variegated lines fading into nothing",
     "Target": "demote",
     "Text": "CARD LOSES STRENGTH -1 AP"
   },
@@ -110,7 +110,7 @@
     "Name": "Essence of Crushing",
     "Family": "Form essences",
     "Art": "change-crush",
-    "Draw": "a jade axe fading into nothing",
+    "Draw": "a jade club fading into nothing",
     "Target": "form",
     "Value": "crush",
     "Text": "CARD BECOMES CRUSH"
@@ -144,5 +144,25 @@
     "Target": "form",
     "Value": "defend",
     "Text": "CARD BECOMES DEFEND"
+  },
+  {
+    "EssenceRecord": "wildcard",
+    "Name": "Prismatic Essence",
+    "Family": "Wildcards",
+    "Art": "wildcard",
+    "Draw": "a rainbow gem fading out of existence from the side",
+    "Target": "wild",
+    "Value": "element",
+    "Text": "CARD IS\nEVERY ELEMENT"
+  },
+  {
+    "EssenceRecord": "versatile",
+    "Name": "Versatile Essence",
+    "Family": "Wildcards",
+    "Art": "versatile",
+    "Draw": "a battle axe with a spike on the back of its head fading into nothing.  the sharp end is made of steel, the spike is made of ivory, and the handle and haft are made of granite",
+    "Target": "wild",
+    "Value": "form",
+    "Text": "CARD IS\nANY FORM"
   }
 ]

@@ -308,8 +308,8 @@ type mathItem struct {
 	cardTerm bool
 	handMult bool
 
-	// cardRider marks a figure one of the card's own riders put on its hit — a Goad's +10, a
-	// Hunger's x2. It flies out of the card like the card's term does, but keeps the rider's tint
+	// cardRider marks a figure one of the card's own riders put on its hit — a Might's +10, a
+	// Ruin's x2. It flies out of the card like the card's term does, but keeps the rider's tint
 	// the script gave it: the rider is what produced it, not the card's element.
 	cardRider bool
 
@@ -843,7 +843,7 @@ func termItems(e combat.Event, i int) []mathItem {
 // order the engine applies them in.
 //
 // **A played card's rider is a step in its own hit's working** *(owner's call, 2026-09-26)*. It
-// used to be folded into the DMG every line starts from, so a Hunger doubled the whole turn and no
+// used to be folded into the DMG every line starts from, so a Ruin doubled the whole turn and no
 // line said so; it prices only its own card now, and the row is where the player sees it.
 func playRiderItems(e combat.Event, i int) []mathItem {
 	var out []mathItem

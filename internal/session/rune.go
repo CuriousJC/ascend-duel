@@ -97,7 +97,7 @@ const (
 	// idempotent, which is most of the catalog.
 	//
 	// **A chimera never becomes the thing to copy.** `lastRune` records the *resolved* record,
-	// so a chimera behind a Goad leaves Goad behind it, and two chimeras in a row both fire Goad
+	// so a chimera behind a Might leaves Might behind it, and two chimeras in a row both fire Might
 	// rather than the second one copying the first into nothing.
 	RuneChimera
 )

@@ -283,6 +283,7 @@ var UpgradeForRider = map[combat.RiderKind]systems.Upgrade{
 	combat.RiderDamageInHand: systems.UpgradeHeldDamage,
 	combat.RiderScaleInHand:  systems.UpgradeHeldScale,
 	combat.RiderVitaeInHand:  systems.UpgradeHeldVitae,
+	combat.RiderWildForm:     systems.UpgradeVersatile,
 }
 
 // BoostInk is what a figure a relic has changed is written in. **The relic pink** — `cards.Relic` is

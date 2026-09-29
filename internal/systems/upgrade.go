@@ -100,6 +100,11 @@ const (
 
 	// UpgradeHeldVitae is a card that pays vitae for as long as it is not played.
 	UpgradeHeldVitae
+
+	// UpgradeVersatile is a card that counts as any attack form at once — the wildcard on the form
+	// axis. A flat placeholder tint like the other flat ones; it leaves the form mark alone, since
+	// the mark still says the form the card is.
+	UpgradeVersatile
 )
 
 // Upgrades is every visible upgrade in a fixed order, for anything that walks them —
@@ -112,6 +117,7 @@ func Upgrades() []Upgrade {
 		UpgradeWild, UpgradeGolden, UpgradeSilver,
 		UpgradeHeal, UpgradeShield, UpgradeDamage, UpgradeCombo,
 		UpgradeHeldDamage, UpgradeHeldScale, UpgradeHeldVitae,
+		UpgradeVersatile,
 	}
 }
 
@@ -137,6 +143,8 @@ func (u Upgrade) String() string {
 		return "held-scale"
 	case UpgradeHeldVitae:
 		return "held-vitae"
+	case UpgradeVersatile:
+		return "versatile"
 	default:
 		return "none"
 	}
@@ -229,6 +237,9 @@ var upgradeTint = map[Upgrade]color.RGBA{
 	UpgradeHeldDamage: {R: 92, G: 140, B: 148, A: 255},
 	UpgradeHeldScale:  {R: 108, G: 154, B: 128, A: 255},
 	UpgradeHeldVitae:  {R: 128, G: 148, B: 176, A: 255},
+
+	// The form wildcard. A placeholder green, like the flat tints above.
+	UpgradeVersatile: {R: 46, G: 139, B: 107, A: 255},
 }
 
 // upgradeSheen is the two metals, which are a *gradient* rather than a flat color.

@@ -38,15 +38,26 @@ the split is defensible — but it should be stated rather than left to be redis
 
 ### Shape is the form
 
-| Form | Weapon shape | Gemstone |
+| Form | Weapon shape | Material |
 |---|---|---|
-| stab | spear, needle, foil, point | marble |
-| slash | scimitar, sickle, blade, edge | malachite |
-| crush | mace, club, hammer, weight | moonstone |
+| stab | spear, needle, foil, point | ivory |
+| slash | scimitar, sickle, blade, edge | steel |
+| crush | mace, club, hammer, weight | granite |
 
-`repeat-stab` / `repeat-slash` / `repeat-crush` and `growth-stab` / `growth-slash` /
-`growth-crush` use the three stones and agree with each other. The form statuses and the
-form weapons use the three shapes.
+The three materials are the form ramps in `docs/art/palette.json` and the color words every art
+prompt carries — **ivory is stab, steel is slash, granite is crush** — and they are the same three
+the form words are set in on a dark panel (`assets/texture/`). `repeat-stab` / `repeat-slash` /
+`repeat-crush` and `growth-stab` / `growth-slash` / `growth-crush` use them and agree with each
+other. The form statuses and the form weapons use the three shapes.
+
+**Defend is turtle shell.** It is not a form material and has no ramp in `palette.json` — blue
+already belongs to the defend verb — but a picture that has to say "defend" in a material, as the
+Wardstave rune does, uses shell, and the shield-on-play rune (Aegis) is a turtle for the same reason.
+
+**The form wildcard is all three materials in one object** — a card that counts as any attack
+form. The Versatile Essence is a battle axe with a steel blade, an ivory spike and a granite haft:
+each material in the part of the weapon that does its form's work. The Versatile rune is the three
+materials creeping across a card in bands, the way the Prismatic rune is the five element colors.
 
 ### The form statuses are the cleanest thing in the catalog
 
@@ -181,7 +192,7 @@ Twenty-one records have no `Draw`. Under the language above, most of them write 
 
 | Record | What the language implies |
 |---|---|
-| `whetted` / `hefted` / `tapered` | robes, as the elemental discounts are — but in the form's stone rather than an element's color: malachite green, moonstone gray, marble white |
+| `whetted` / `hefted` / `tapered` | robes, as the elemental discounts are — but in the form's material rather than an element's color: steel, granite, ivory |
 | `weight-of-the-earth` / `struck-by-lightning` / `sharp-as-ice` | the form-status pattern exactly: the form's weapon shape in the element's color |
 | `swarm` / `crown` | a rung is a material, so a swarm of the 1 AP material and a crown of the 3 AP one |
 | `demotion-one` / `-two` / `-three` | already rings with an eroding line; the line's color should be the rung it erodes **to** |
@@ -190,7 +201,7 @@ Twenty-one records have no `Draw`. Under the language above, most of them write 
 | `onslaught` / `braced` | a discount is a robe, and these are discounts on everything |
 | `might` / `bulwark` / `heart` | `bulwark` is already a gold armband; the other two should match it as gold worn on the body rather than on a hand |
 | `rampant` / `fire-of-life` | vitae, which has no material yet |
-| `dual-wield` | two of the form stones, one of each |
+| `dual-wield` | two of the form materials, one of each |
 | `banker` / `soul-taker` / `hungry` | `banker` is already a gold band with red gems; spoils are about the purse, and gold is the obvious metal if it stops being the status band |
 
 **Two things the language does not cover at all: shields, and vitae.** Both need a material

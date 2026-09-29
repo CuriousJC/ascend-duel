@@ -255,6 +255,7 @@ var riderDraws = map[combat.RiderKind]riderDrawing{
 	combat.RiderScaleInHand:  {why: "it scales every hit, and a hit's line is where a multiplier is read"},
 	combat.RiderScaleInCombo: {why: "the same, for a card that made the hand"},
 	combat.RiderWildElement:  {why: "it is read while the hand is matched rather than while the turn resolves - what it does is the rung's name"},
+	combat.RiderWildForm:     {why: "the same, on the form axis"},
 }
 
 // noteSignal parks one rider event, and reports whether it took it.

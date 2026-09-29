@@ -76,6 +76,9 @@ func FormLine(c combat.Card, cost int) string {
 // form without re-deriving it. The coloring itself needs nobody to ask — every tooltip line goes
 // through `cards.SplitForms`, which matches whole words, so STAB comes out in marble for free.
 func FormWord(c combat.Card) string {
+	if c.Wild(combat.AxisForm) {
+		return Versatile
+	}
 	if f := c.Form(); f != combat.FormNone {
 		return upper(f.String())
 	}
@@ -89,6 +92,11 @@ func FormWord(c combat.Card) string {
 // the one thing the word exists to deny, so it takes the panel's own ink and the *word* is the
 // signal.
 const Chromatic = "CHROMATIC"
+
+// Versatile is what a card counting as any attack form is called — Chromatic's word on the form
+// axis, and for the same reason: the panel says what the card counts as rather than the one form
+// it carries, which the corner mark already shows.
+const Versatile = "VERSATILE"
 
 // ElementWord is what goes in front of a card's name, or empty for a card with nothing to say about
 // color.
@@ -188,6 +196,8 @@ func RiderLines(c combat.Card, rolls int) []string {
 			out = append(out, Multiplier(r.Amount)+" DMG ON PLAY")
 		case combat.RiderWildElement:
 			out = append(out, "COUNTS AS EVERY ELEMENT")
+		case combat.RiderWildForm:
+			out = append(out, "COUNTS AS ANY ATTACK FORM")
 		case combat.RiderGolden:
 			// **The metal is named first and the odds are the fine print under it** *(owner's call,
 			// 2026-09-09)*. The panel opens with what the card *is* — the same line its face carries,
@@ -341,6 +351,9 @@ func FaceLines(c combat.Card) []string {
 			// one is something the card permanently *is*, and a timing word over it would be
 			// answering a question the card does not raise.
 			out = append(out, "ANY ELEMENT")
+		case combat.RiderWildForm:
+			// No heading, for the element wildcard's reason: it has no moment.
+			out = append(out, "ANY FORM")
 		case combat.RiderGolden, combat.RiderSilver:
 			// **The metals say nothing on the face, and they are the only two that may**
 			// *(owner's call, 2026-09-09)*. Every other upgrade is a placeholder tint standing on a

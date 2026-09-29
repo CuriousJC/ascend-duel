@@ -359,3 +359,49 @@ func TestAFormEssenceMakesTheCardTheOtherFormsCard(t *testing.T) {
 		t.Errorf("it lost what was its own: %+v became %+v", was, got)
 	}
 }
+
+// TestTheWildEssenceMakesAWildcard. The Prismatic Essence writes the Prismatic rune's rider, so it
+// takes the card's one upgrade seat: a golden card made wild is no longer golden, and keeps its
+// element and its identity.
+func TestTheWildEssenceMakesAWildcard(t *testing.T) {
+	w, ok := EssenceByKey("wildcard")
+	if !ok || w.Target != TargetWild {
+		t.Fatal("no wildcard essence")
+	}
+	gold := combat.Rider{Kind: combat.RiderGolden}
+	run := New([]combat.Card{combat.Card{Concept: combat.Jab, Element: combat.Fire}.SetRider(gold)})
+	was, _ := run.Card(0)
+
+	if !run.Apply(w, 0) {
+		t.Fatal("Apply refused a valid index")
+	}
+	got, _ := run.Card(0)
+
+	if !got.Wild(combat.AxisElement) {
+		t.Error("the card is not wild on the element axis")
+	}
+	if got.Rider().Kind != combat.RiderWildElement {
+		t.Errorf("the upgrade seat holds %v, want the wildcard", got.Rider().Kind)
+	}
+	if got.Element != was.Element || got.ID != was.ID || got.Concept != was.Concept {
+		t.Errorf("it lost what was its own: %+v became %+v", was, got)
+	}
+}
+
+// TestTheVersatileEssenceMakesAFormWildcard. The same target on the form axis writes the Versatile
+// rune's rider, and the card is not an element wildcard.
+func TestTheVersatileEssenceMakesAFormWildcard(t *testing.T) {
+	w, ok := EssenceByKey("versatile")
+	if !ok || w.Target != TargetWild {
+		t.Fatal("no versatile essence")
+	}
+	run := New([]combat.Card{{Concept: combat.Jab, Element: combat.Fire}})
+	if !run.Apply(w, 0) {
+		t.Fatal("Apply refused a valid index")
+	}
+	got, _ := run.Card(0)
+	if !got.Wild(combat.AxisForm) || got.Wild(combat.AxisElement) {
+		t.Errorf("the card is wild on form=%v element=%v, want form only",
+			got.Wild(combat.AxisForm), got.Wild(combat.AxisElement))
+	}
+}

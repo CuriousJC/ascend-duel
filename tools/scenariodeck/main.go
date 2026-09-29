@@ -60,7 +60,7 @@ func main() {
 	names := flag.String("card", "", "card labels to include, comma separated: Jab,Cut")
 	elements := flag.String("elements", "", "elements to deal across, comma separated (default: all five)")
 	cost := flag.String("cost", "", "action-point band, as N or LOW-HIGH: 1, or 1-2")
-	riders := flag.String("riders", "", "riders every generated card carries: golden:5, wild-element")
+	riders := flag.String("riders", "", "riders every generated card carries: golden:5, wild-element, wild-form")
 	size := flag.Int("size", 40, "how many cards the deck should hold")
 	perLine := flag.Bool("split", false, "one line per card instead of one line per card-and-color")
 	flag.Parse()

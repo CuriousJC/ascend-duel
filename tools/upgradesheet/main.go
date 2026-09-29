@@ -317,6 +317,7 @@ var riderUpgrade = map[combat.RiderKind]systems.Upgrade{
 	combat.RiderDamageInHand: systems.UpgradeHeldDamage,
 	combat.RiderScaleInHand:  systems.UpgradeHeldScale,
 	combat.RiderVitaeInHand:  systems.UpgradeHeldVitae,
+	combat.RiderWildForm:     systems.UpgradeVersatile,
 }
 
 // grantsFor names every rune in the catalog that attaches this upgrade's rider, or an empty

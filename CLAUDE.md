@@ -5,7 +5,7 @@ repository.
 
 ## Project
 
-Duello — a roguelike where you duel your way from realm to realm, collecting relics and brands of
+Duello — a roguelike where you duel your way from realm to realm, collecting relics and tonics of
 power. Written in Go with [Ebitengine v2](https://ebitengine.org/)
 (`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
 
@@ -23,7 +23,7 @@ Six streams, each with one job. Reach for the right one rather than searching al
 | **Unfiltered** | [ideas.md](ideas.md) | the inbox; entries get promoted into MECHANICS or TODO and struck from here |
 
 - **`MECHANICS.md` is the design record.** Decided unless marked `[?]`. It holds the element
-  set and their statuses, cards and types, hands, relics, brands, vitae, the journey, enemies,
+  set and their statuses, cards and types, hands, relics, tonics, vitae, the journey, enemies,
   and the phase-based resolution experiment.
 - **`TODO.md` is open work only.** Completed entries are deleted rather than archived, so it
   says what is left, not what happened. Prefer `MECHANICS.md` for "what should this do".
@@ -185,6 +185,7 @@ go run ./tools/creatureprompt -backdrop goblins-outer-tinker-studio -element fir
 go run ./tools/stonesheet   # every stone against the rungs it raises, walked by shape
 go run ./tools/runesheet # every rune: the line it prints against the rule that fires
 go run ./tools/cantripsheet  # every cantrip: its line, its effect, and that effect cast onto the duelist
+go run ./tools/tonicsheet    # every tonic: its rule, its tooltip, and the realm-by-realm offer for sample runs
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/goodsheet     # every sealed good beside the offer it actually makes
 go run ./tools/badgesheet    # every damage badge: eleven values by six colors, in all three outlines
@@ -194,7 +195,8 @@ go run ./tools/relicart      # files generated relic art: reduce, commit, set "A
 go run ./tools/relicart -kind essence       # the same, for data/essences.json and assets/essence
 go run ./tools/relicart -kind rune   # the same, for data/runes.json and assets/rune
 go run ./tools/relicart -kind stone  # the same, for data/stones.json and assets/stone
-go run ./tools/relicart -kind other  # the potions and the sealed goods together, into assets/other
+go run ./tools/relicart -kind cantrip  # the same, for data/cantrips.json and assets/cantrip
+go run ./tools/relicart -kind other  # the potions, the tonics and the sealed goods together, into assets/other
 go run ./tools/artcompare   # one catalog's art, every candidate batch side by side, as real cards
 go run ./tools/artcompare -catalog relic    # the same for relics; card, essence, rune, stone, other
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
@@ -235,8 +237,8 @@ catalog's records once per **set** of pictures and puts them side by side, so a 
 batch is judged record by record rather than all at once — and it takes any number of sets,
 because a generator produces options rather than an answer. Every cell is `cards.Render` at the
 catalog's own style, so what is compared is the card as it will be dealt, type over picture;
-clicking the one to keep builds the copy list at the top of the page. Six catalogs: `card`,
-`relic`, `essence`, `rune`, `stone`, `other`.
+clicking the one to keep builds the copy list at the top of the page. Seven catalogs: `card`,
+`relic`, `essence`, `rune`, `stone`, `cantrip`, `other`.
 
 **`artreview/` is gitignored and is the whole of its working directory.** A batch dropped in
 `artreview/<catalog>-<label>/` is found as the set `<label>`, the installed `assets/` directory is
@@ -348,7 +350,7 @@ still standing at the end of the last round dies, through the same door a killin
 five; **zero is no clock at all**, which is what every creature and every bare `Duelist{}` in a
 test carries — a default of five in the rules would have put the whole existing suite on a
 timer. The run owns the number (`session.Session.RoundLimit`, carried to the fighter by `Equip`,
-saved with the run) so a relic or a brand that buys a sixth round has one field to write. See
+saved with the run) so a relic or a tonic that moves the round count has one base to read over. See
 MECHANICS.md §The round limit. Two things to know before touching it:
 
 - **It is read last, after every other way a round can end.** A win on round five is a win and a
@@ -1353,8 +1355,8 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   essence card prints across the lower half of its picture. `docs/art/rune_art_prompt.MD` is not a
   prompt but the closed list of rune body plans, pasted into the essence one.
   **`docs/art/stone_art_prompt.MD` and `docs/art/other_card_art_prompt.MD` cover the rest of
-  `EssenceStyle`** — the stones, and then the potions, the three sealed goods and the placeholder
-  brand. Both share the style and composition blocks verbatim, and both say the object is
+  `EssenceStyle`** — the stones, and then the potions, the tonics and the three sealed
+  goods. Both share the style and composition blocks verbatim, and both say the object is
   **whole** where the essence prompt says it is coming apart. **A stone's material is a rule
   rather than a record's own idea**, which is what earns it a file: the stones are one silica
   ladder that ascends in finish, topped by the one gem. A new

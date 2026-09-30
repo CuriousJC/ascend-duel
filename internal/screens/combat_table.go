@@ -102,7 +102,7 @@ func tableHalfWidth(gs *state.GlobalState) int {
 //
 // **Side by side until they do not fit, then overlapped — the same shape as handPitch**, and
 // the derived form matters for the same reason: the cap on how many actions a round holds is
-// a rule that a relic or a brand is expected to raise, so a pitch that only worked for five
+// a rule that a relic or a tonic is expected to raise, so a pitch that only worked for five
 // would put a rendering bug behind a balance change.
 //
 // **The group gap is taken out of the room before the pitch is worked out**, which is what makes

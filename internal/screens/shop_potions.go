@@ -1,6 +1,6 @@
 package screens
 
-// The potions pane, and the brand seat beside it.
+// The potions pane, and the tonic seat beside it.
 //
 // **A potion is the one thing in the shop that changes the duelist** *(owner's call, 2026-09-06)*.
 // A relic is worn, a stone raises a rung, an essence eats a card, a rune waits in a sack; a potion
@@ -16,13 +16,11 @@ package screens
 // **A potion is bought with one click and no confirm**, the shelf's rule rather than the worn row's:
 // the price is on the card, the purse cannot go into debt, and there is nothing a confirmation
 // would protect. What it does is immediate and visible on the duelist card two hundred pixels
-// above — a Salve moves the life fraction, a Draught the DMG line, a Tonic both.
+// above — a Salve moves the life fraction, a Draught the DMG line, an Elixir both.
 //
-// **The brand is a placeholder and cannot be clicked** *(owner's call, 2026-09-06)*. The seat, the
-// pane and the layout land now; the mechanic is still only MECHANICS.md §Brands, and a card that
-// took vitae and recorded something nothing reads would be worse than one that cannot be bought.
-// It draws dim, it says what a brand is, and its price is written so the pane can be judged at the
-// size it will actually be.
+// **The tonic seat holds the realm's one tonic** — see internal/session/tonic.go. It is bought on
+// the potions' terms, one click and no confirm, and once it is drunk the seat stands empty until the
+// run walks through a portal into the next realm.
 
 import (
 	"fmt"
@@ -42,27 +40,30 @@ import (
 // remember between visits.
 func shopPotions() []session.Potion { return session.Potions() }
 
-// The brand's placeholder face. **Its own words rather than a real record**, because there is no
-// `brands.json` — see MECHANICS.md §Brands, which is the whole of what exists.
-const (
-	brandName  = "SIXTH FINGER"
-	brandLine  = "WEAR SIX RELICS\nnever comes off"
-	brandPrice = 12
+// shopPrice is what the shop charges for something listed at base, through every discount the run
+// has drunk. A scene with no run charges the list price.
+func shopPrice(gs *state.GlobalState, base int) int {
+	if gs.Run == nil {
+		return base
+	}
+	return gs.Run.Price(base)
+}
 
-	// brandArtKey is the placeholder picture: the relic catalog's own fallback. **A relic's
-	// default rather than a drawing of its own**, on the argument the sack already borrowed the
-	// essence's: a placeholder something else already wears is better than a blank face, and it will
-	// be replaced by a key on a record the day brands become one.
-	brandArtKey = "default-relic"
-)
+// shopTonic is the tonic on offer in the seat, if there is one.
+func shopTonic(gs *state.GlobalState) (session.Tonic, bool) {
+	if gs.Run == nil {
+		return session.Tonic{}, false
+	}
+	return gs.Run.TonicOnOffer()
+}
 
-// potionSeat and brandSeat are where a card in either pane is drawn and clicked.
+// potionSeat and tonicSeat are where a card in either pane is drawn and clicked.
 func potionSeat(gs *state.GlobalState, i int) image.Rectangle {
 	return shopSeatRect(gs, shopPanePotions, i)
 }
 
-func brandSeat(gs *state.GlobalState) image.Rectangle {
-	return shopSeatRect(gs, shopPaneBrand, 0)
+func tonicSeat(gs *state.GlobalState) image.Rectangle {
+	return shopSeatRect(gs, shopPaneTonic, 0)
 }
 
 // drawPotions puts the three vessels up with their prices under them, on the shelf's terms: one
@@ -78,18 +79,24 @@ func (s *ShopScene) drawPotions(gs *state.GlobalState, screen *ebiten.Image) {
 
 		lit := gs.Run != nil && gs.Run.CanDrink(p.Record)
 		ui.BlitCard(gs, screen, at.Min, potionSpec(gs, p, lit), cards.EssenceStyle)
-		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", p.Price), lit)
+		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", shopPrice(gs, p.Price)), lit)
 	}
 }
 
-// drawBrand puts the one seat up. **Always dim**, because nothing can be done with it yet and a lit
-// card is a card that says click me.
-func (s *ShopScene) drawBrand(gs *state.GlobalState, screen *ebiten.Image) {
-	drawShopPaneBack(gs, screen, shopPaneBrand)
+// drawTonic puts the realm's tonic up, or leaves the pane bare when there is none — nothing left to
+// offer, or this realm's already drunk. **The pane is drawn either way**, so the row keeps its shape
+// and an empty seat reads as an empty seat.
+func (s *ShopScene) drawTonic(gs *state.GlobalState, screen *ebiten.Image) {
+	drawShopPaneBack(gs, screen, shopPaneTonic)
 
-	at := brandSeat(gs)
-	ui.BlitCard(gs, screen, at.Min, brandSpec(gs), cards.EssenceStyle)
-	s.figure(gs, screen, at, fmt.Sprintf("%d vitae", brandPrice), false)
+	t, ok := shopTonic(gs)
+	if !ok {
+		return
+	}
+	at := tonicSeat(gs)
+	lit := gs.Run.CanDrinkTonic(t.Record)
+	ui.BlitCard(gs, screen, at.Min, tonicSpec(gs, t, lit), cards.EssenceStyle)
+	s.figure(gs, screen, at, fmt.Sprintf("%d vitae", shopPrice(gs, t.Price)), lit)
 }
 
 // potionSpec is a potion drawn as a card.
@@ -99,9 +106,7 @@ func (s *ShopScene) drawBrand(gs *state.GlobalState, screen *ebiten.Image) {
 // a sealed good's are. The hue wheel is full and a fourth kind of shelf card cannot have one.
 //
 // **The picture comes off the record** *(2026-09-14)*, through `data.PotionData.ArtKey` — the shape
-// the relics, essences and runes are already in. It was `brandArtKey` until then, which was not a
-// fallback so much as the *relic* catalog's default sitting on a bottle: three shelf cards drawing a
-// ring, and nothing saying they were undrawn rather than misfiled.
+// the relics, essences and runes are already in.
 //
 // **The picture is now the whole card** *(owner's call, 2026-09-15)*. It carried "HEAL 15 / LIFE"
 // on a scrim across the lower half until then, which is the one thing potionTip already says at
@@ -119,20 +124,27 @@ func potionSpec(gs *state.GlobalState, p session.Potion, enabled bool) cards.Spe
 	}
 }
 
-// brandSpec is the placeholder brand as a card. It says what a brand *is* — the container/contents
-// axis MECHANICS.md draws — rather than naming a rule the game can resolve, because it cannot
-// resolve one yet.
-func brandSpec(gs *state.GlobalState) cards.Spec {
+// tonicSpec is a tonic drawn as a card, on a potion's terms: basic, the picture as the whole face,
+// and what it does in the tooltip.
+func tonicSpec(gs *state.GlobalState, t session.Tonic, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:       brandName,
-		Form:       cards.FormNone,
-		Cost:       0,
-		Element:    ui.ArtFor(combat.Basic),
-		Art:        ui.Artwork(gs, brandArtKey),
-		Text:       brandLine,
-		Highlights: cards.ElementHighlights(brandLine),
-		Enabled:    false,
+		Name:    t.Name,
+		Form:    cards.FormNone,
+		Cost:    0,
+		Element: ui.ArtFor(combat.Basic),
+		Art:     ui.Artwork(gs, t.Art),
+		Enabled: enabled,
 	}
+}
+
+// drinkTonic pays for the realm's tonic and drinks it. The seat empties until the next realm,
+// because the run no longer has it on offer.
+func (s *ShopScene) drinkTonic(gs *state.GlobalState, key string) {
+	if gs.Run == nil || !gs.Run.DrinkTonic(key) {
+		return
+	}
+	s.tip.Forget()
+	gs.Journal.Write(journal.Record{Kind: journal.KindTonic, Key: key})
 }
 
 // drinkPotion pays for one and applies it.
@@ -159,7 +171,9 @@ func (s *ShopScene) drinkPotion(gs *state.GlobalState, key string) {
 // potionTip is what resting on one says. **It is the whole of what the card says** *(owner's call,
 // 2026-09-15)* — the face is a painted bottle and a price, so the figure, what it moves and when it
 // is drunk are all read here, by a player who on realm one has never seen a potion.
-func potionTip(p session.Potion) (string, []string) {
+//
+// price is what the shop charges for it, discounts included.
+func potionTip(p session.Potion, price int) (string, []string) {
 	var what string
 	switch p.Effect {
 	case session.PotionHeal:
@@ -169,15 +183,27 @@ func potionTip(p session.Potion) (string, []string) {
 	default:
 		what = fmt.Sprintf("raises your max life by %d for the rest of the run", p.Amount)
 	}
-	return p.Name, []string{what, "drunk on the spot", fmt.Sprintf("%d vitae", p.Price)}
+	return p.Name, []string{what, "drunk on the spot", fmt.Sprintf("%d vitae", price)}
 }
 
-// brandTip says what the seat is for, and that it is not ready. **It says so plainly** rather than
-// leaving a dim card the player keeps clicking.
-func brandTip() (string, []string) {
-	return brandName, []string{
-		"a brand alters the duelist, not the cards",
-		"and never comes off",
-		"not yet buyable",
+// tonicTip is what resting on the tonic says: what it changes, that it lasts the whole run, and its
+// price. **The whole of what the card says**, as a potion's tip is.
+func tonicTip(t session.Tonic, price int) (string, []string) {
+	var what []string
+	switch t.Effect {
+	case session.TonicDiscount:
+		what = []string{fmt.Sprintf("everything in the shop costs %d%% less", t.Amount), "and at least 1 vitae less"}
+	case session.TonicCostCut:
+		what = []string{fmt.Sprintf("your cards cost %d AP less", t.Amount), "but never less than 1 AP"}
+	case session.TonicPressure:
+		what = []string{"every fight is 1 round shorter", fmt.Sprintf("and every vitae you earn is x%d", t.Amount)}
+	case session.TonicHandSize:
+		what = []string{fmt.Sprintf("%d more card in every hand", t.Amount)}
+	case session.TonicDiscards:
+		what = []string{fmt.Sprintf("%d more discard every round", t.Amount)}
+	case session.TonicRelicSlots:
+		what = []string{fmt.Sprintf("wear %d more relic", t.Amount)}
 	}
+	what = append(what, "for the rest of the run")
+	return t.Name, append(what, fmt.Sprintf("%d vitae", price))
 }

@@ -199,6 +199,15 @@ var sheets = []sheet{
 			"through the game's own `Cast` — so what doubling your life does to 30 of 60 is read " +
 			"rather than assumed.",
 	},
+	{
+		Dir:   "tonicsheet",
+		Tool:  "./tools/tonicsheet",
+		Title: "Tonic sheet",
+		Blurb: "Every tonic, with the rule it resolves to against the tooltip the shop shows, what a " +
+			"discount actually charges, and a handful of run codes walked through every realm " +
+			"buying everything and buying nothing — so which realm offers what, and when a tonic " +
+			"with a requirement comes back, is read off the page.",
+	},
 }
 
 func main() {

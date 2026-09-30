@@ -33,29 +33,31 @@ import (
 // for the two to drift apart.
 func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 	out := &profile.RunSnapshot{
-		Seed:       seeds.Code(runSeed),
-		Fight:      s.fight,
-		Phase:      s.phase.String(),
-		Portals:    s.Portals(),
-		Vitae:      s.vitae,
-		LifeLeft:   s.lifeLeft,
-		Hurt:       s.hurt,
-		BossWins:   s.bossWins,
-		DMGBonus:   s.dmgBonus,
-		LifeBonus:  s.lifeBonus,
-		SeedChosen: s.seedChosen,
-		RoundLimit: s.roundLimit,
-		RelicSlots: s.relicSlots,
-		Worn:       s.Worn(),
-		Grown:      map[string]int{},
-		Stones:     s.StoneCounts(),
-		Plays:      s.PlayCounts(),
-		Held:       s.Held(),
-		LastRune:   s.lastRune,
-		Pouch:      s.Carried(),
-		Satchel:    s.Stowed(),
-		Cantrips:   s.Scrolls(),
-		NextCardID: s.nextCardID,
+		Seed:        seeds.Code(runSeed),
+		Fight:       s.fight,
+		Phase:       s.phase.String(),
+		Portals:     s.Portals(),
+		Vitae:       s.vitae,
+		LifeLeft:    s.lifeLeft,
+		Hurt:        s.hurt,
+		BossWins:    s.bossWins,
+		DMGBonus:    s.dmgBonus,
+		LifeBonus:   s.lifeBonus,
+		SeedChosen:  s.seedChosen,
+		RoundLimit:  s.roundLimit,
+		RelicSlots:  s.relicSlots,
+		Tonics:      s.DrunkTonics(),
+		TonicOffers: append([]string(nil), s.tonicOffers...),
+		Worn:        s.Worn(),
+		Grown:       map[string]int{},
+		Stones:      s.StoneCounts(),
+		Plays:       s.PlayCounts(),
+		Held:        s.Held(),
+		LastRune:    s.lastRune,
+		Pouch:       s.Carried(),
+		Satchel:     s.Stowed(),
+		Cantrips:    s.Scrolls(),
+		NextCardID:  s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
 			Propagated: s.spoils.Propagated,
 			FromLife:   s.spoils.FromLife,
@@ -318,7 +320,14 @@ func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *prof
 		},
 	}
 	s.journey = newJourney(motifs, shape, runSeed)
+	s.tonicOrder = newTonicOrder(runSeed)
 	s.ledger = resumeLedger(snap.Ledger)
+
+	// **The tonics go back before the relics**, because a tonic can widen the hand the relics are
+	// worn on, and Wear refuses a relic past the cap.
+	if err := s.resumeTonics(snap.Tonics, snap.TonicOffers); err != nil {
+		return nil, 0, err
+	}
 
 	// **A portal naming a motif its realm never offered is refused**, on the terms a relic the
 	// catalog no longer holds is: a run resumed onto a different realm than the one it chose is a

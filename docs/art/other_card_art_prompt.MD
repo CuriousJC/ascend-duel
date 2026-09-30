@@ -50,16 +50,16 @@ scheme -> subtle background texture.
 to sit beside cards drawn in them, so the word means this range here rather than whatever the
 generator would otherwise reach for.
 
-| Word | Ramp | dark | core | light |
-|---|---|---|---|---|
-| orange | fire | `#9E2F13` | `#F06A24` | `#FFB24A` |
-| yellow | lightning | `#A98200` | `#F2D13D` | `#FFF38A` |
-| green | earth | `#285E35` | `#4E9B57` | `#8BCB78` |
-| blue | ice | `#245A86` | `#4E9ED6` | `#A8DDF4` |
-| purple | arcane | `#4C2A78` | `#8A5BC7` | `#C8A4F2` |
-| cream, ivory | ivory | `#9B8B68` | `#DCCFAE` | `#FFF3D2` |
-| cool gray, steel | steel | `#59636B` | `#9DA8B0` | `#D8DEE2` |
-| dark gray, granite | granite | `#3C3E41` | `#6B6D70` | `#A1A3A6` |
+| Word               | Ramp      | dark      | core      | light     |
+| ------------------ | --------- | --------- | --------- | --------- |
+| orange             | fire      | `#9E2F13` | `#F06A24` | `#FFB24A` |
+| yellow             | lightning | `#A98200` | `#F2D13D` | `#FFF38A` |
+| green              | earth     | `#285E35` | `#4E9B57` | `#8BCB78` |
+| blue               | ice       | `#245A86` | `#4E9ED6` | `#A8DDF4` |
+| purple             | arcane    | `#4C2A78` | `#8A5BC7` | `#C8A4F2` |
+| cream, ivory       | ivory     | `#9B8B68` | `#DCCFAE` | `#FFF3D2` |
+| cool gray, steel   | steel     | `#59636B` | `#9DA8B0` | `#D8DEE2` |
+| dark gray, granite | granite   | `#3C3E41` | `#6B6D70` | `#A1A3A6` |
 
 The element name and the color word are the same instruction — `arcane` and "purple" both mean
 that row, and so do `ivory` and "cream". The last three rows are the game's three form materials:
@@ -82,7 +82,7 @@ gold, copper, bone) is an ordinary word and carries no ramp.
 ## The object is whole
 
 The object is **solid, finished and intact**. Nothing here is dissolving, fading, coming apart or
-being unmade. A potion is a stoppered vessel and a sealed good is sealed. Draw them as objects
+being unmade. A potion or a tonic is a stoppered vessel and a sealed good is sealed. Draw them as objects
 that would still be there tomorrow.
 
 Wear is allowed and unmaking is not: a chipped edge, a scuffed facet, a worn stopper or a
@@ -113,16 +113,14 @@ half carrying the recognition should be the upper one.
 ## The subject
 
 The block pasted below this prompt is one record, in JSON. Its key field is `PotionRecord` for a
-potion and `GoodRecord` for a sealed good.
+potion, `TonicRecord` for a tonic, `CantripRecord` for a cantrip and `GoodRecord` for a sealed
+good.
 
 **A sealed good is the vessel and never its contents.** The bag, the vial and the sack each hold
 four of a catalog the player cannot read before paying, so the picture is a closed container — a
 cinched sack, a stoppered vial, a tied pouch — with what is inside suggested by the shape pressing
 against it and never drawn loose beside it. A picture that showed the four would be saying the one
 thing the mechanic exists not to say.
-
-The placeholder brand has no record of its own, so its subject is written out by hand instead of
-pasted.
 
 **Read `Draw` and nothing else as the subject.** Every other field — `Name`, `Text`, `Effect`,
 `Amount`, `Price`, `Size`, `Contains`, `Family` and the rest — is context for what the card does and is

@@ -1,0 +1,73 @@
+[
+  {
+    "TonicRecord": "jewellers-tonic",
+    "Name": "Jeweller's Tonic",
+    "Family": "Tonics",
+    "Art": "jewellers-tonic",
+    "Draw": "a small cut-crystal phial of clear golden liquid, a jeweller's loupe hung from its neck on a fine chain, flecks of gold dust suspended in the draught",
+    "Effect": "discount",
+    "Amount": 10,
+    "Price": 10
+  },
+  {
+    "TonicRecord": "athletes-tonic",
+    "Name": "Athlete's Tonic",
+    "Family": "Tonics",
+    "Art": "athletes-tonic",
+    "Draw": "a lean leather-wrapped flask of bright green liquid, a laurel sprig tied round its neck with a strip of linen",
+    "Effect": "cost-cut",
+    "Amount": 1,
+    "Price": 10
+  },
+  {
+    "TonicRecord": "olympians-tonic",
+    "Name": "Olympian's Tonic",
+    "Family": "Tonics",
+    "Art": "olympians-tonic",
+    "Draw": "a tall amphora-shaped bottle of shining green-gold liquid, a golden laurel wreath circling its shoulders",
+    "Effect": "cost-cut",
+    "Amount": 1,
+    "Requires": "athletes-tonic",
+    "Price": 10
+  },
+  {
+    "TonicRecord": "pressure-tonic",
+    "Name": "Pressure Tonic",
+    "Family": "Tonics",
+    "Art": "pressure-tonic",
+    "Draw": "a thick-walled iron-banded bottle of churning dark red liquid, its cork wired down hard against the pressure inside",
+    "Effect": "pressure",
+    "Amount": 3,
+    "Price": 10
+  },
+  {
+    "TonicRecord": "jugglers-tonic",
+    "Name": "Juggler's Tonic",
+    "Family": "Tonics",
+    "Art": "jugglers-tonic",
+    "Draw": "a round-bellied bottle of swirling orange and blue liquid, three small coloured balls painted in a ring about its glass",
+    "Effect": "hand-size",
+    "Amount": 1,
+    "Price": 10
+  },
+  {
+    "TonicRecord": "sifters-tonic",
+    "Name": "Sifter's Tonic",
+    "Family": "Tonics",
+    "Art": "sifters-tonic",
+    "Draw": "a squat clay bottle of cloudy grey-blue liquid, a tiny brass sieve fixed over its mouth in place of a stopper",
+    "Effect": "discards",
+    "Amount": 1,
+    "Price": 10
+  },
+  {
+    "TonicRecord": "collectors-tonic",
+    "Name": "Collector's Tonic",
+    "Family": "Tonics",
+    "Art": "collectors-tonic",
+    "Draw": "a slender violet bottle of glittering pink liquid, a single silver ring slipped over its long neck",
+    "Effect": "relic-slots",
+    "Amount": 1,
+    "Price": 10
+  }
+]

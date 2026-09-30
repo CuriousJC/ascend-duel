@@ -206,7 +206,9 @@ func elementSortRank(c combat.Card) int {
 // afforded, so cost leads. Everything under that is the same order in both places, so scanning
 // a row of cards means the same thing wherever the row is.
 func costChainLess(a, b combat.Card, worn []combat.WornRelic) bool {
-	if ca, cb := combat.CostWith(worn, a), combat.CostWith(worn, b); ca != cb {
+	// **The run's flat cut is left out**, and the order is still the face's: a cut never reorders
+	// two cards, it can only tie them at its floor, and a tie then falls to the price before it.
+	if ca, cb := combat.CostWith(worn, 0, a), combat.CostWith(worn, 0, b); ca != cb {
 		return ca < cb
 	}
 	if ra, rb := formRank(a.Form()), formRank(b.Form()); ra != rb {

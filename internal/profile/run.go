@@ -100,6 +100,15 @@ type RunSnapshot struct {
 	// resumed onto zero fingers would be a run that had quietly lost every relic it had bought.
 	RelicSlots int `json:"relicSlots,omitempty"`
 
+	// Tonics is every tonic the run has drunk, by record key, in the order it drank them. The
+	// round limit and relic slots above are the run's base figures; what a tonic adds is read off
+	// this list, never written into them.
+	Tonics []string `json:"tonics,omitempty"`
+
+	// TonicOffers is which tonic each realm offered, by record key, first realm first. An empty
+	// entry is a realm with nothing on offer.
+	TonicOffers []string `json:"tonicOffers,omitempty"`
+
 	// Worn is the relics, by record key, **in worn order** — which is a rule and not a presentation
 	// detail, since relics fire left to right and compound. A list rather than a set for that
 	// reason.

@@ -52,14 +52,14 @@ func TestTheThreePotionsMoveWhatTheySay(t *testing.T) {
 	}
 
 	draught, _ := PotionByKey("dmg-buff")
-	tonic, _ := PotionByKey("hp-buff")
-	if !s.Drink(draught.Record) || !s.Drink(tonic.Record) {
+	elixir, _ := PotionByKey("hp-buff")
+	if !s.Drink(draught.Record) || !s.Drink(elixir.Record) {
 		t.Fatal("could not drink the two boosts")
 	}
 	if s.DMGBonus() != draught.Amount {
 		t.Errorf("DMG bonus reads %d, wanted %d", s.DMGBonus(), draught.Amount)
 	}
-	if s.LifeBonus() != tonic.Amount {
-		t.Errorf("life bonus reads %d, wanted %d", s.LifeBonus(), tonic.Amount)
+	if s.LifeBonus() != elixir.Amount {
+		t.Errorf("life bonus reads %d, wanted %d", s.LifeBonus(), elixir.Amount)
 	}
 }

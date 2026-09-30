@@ -41,7 +41,7 @@ func SellValue(key string) int { return relicSells[key] }
 // things itself — this is the question, not the guard.
 func (s *Session) CanBuy(key string) bool {
 	price, ok := relicPrices[key]
-	if !ok || price > s.vitae {
+	if !ok || s.Price(price) > s.vitae {
 		return false
 	}
 	return s.canWear(key)
@@ -80,7 +80,7 @@ func (s *Session) Buy(key string) bool {
 		return false
 	}
 	price, ok := relicPrices[key]
-	if !ok || !s.SpendVitae(price) {
+	if !ok || !s.SpendVitae(s.Price(price)) {
 		return false
 	}
 	return s.Wear(key)

@@ -257,7 +257,7 @@ func TestADiscountRelicExplainsThePrice(t *testing.T) {
 	}
 
 	h := wearing(t, 12, "discount-fire")
-	h.cost = combat.CostWith(h.worn, fire)
+	h.cost = combat.CostWith(h.worn, 0, fire)
 
 	_, lines := CardTip(fire, h)
 	joined := strings.Join(lines, " | ")

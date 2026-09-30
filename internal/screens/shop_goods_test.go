@@ -205,7 +205,7 @@ func TestAGoodSaysTheSameThingEverywhere(t *testing.T) {
 			t.Errorf("%s opens a dialog with no title or no hint", good.Record)
 		}
 
-		title, lines := goodTip(good)
+		title, lines := goodTip(good, good.Price)
 		if title != good.Name {
 			t.Errorf("%s is headed %q on the shelf and %q in its tooltip", good.Record, good.Name, title)
 		}

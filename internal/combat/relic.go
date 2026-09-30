@@ -1044,7 +1044,7 @@ func RelicKeys() []string {
 // relic array, and it is gone — how many relics could *conceptually* be worn is unbounded now, and
 // how many actually are is this, or whatever the run is carrying. See Duelist.Relics.
 //
-// **Five, until brands expand it** — see
+// **Five, until a tonic expands it** — see
 // MECHANICS.md, where the cap is deliberately never displayed and surfaces when a sixth is bought.
 //
 // It is what a run opens on, in the way DefaultRoundLimit is: `session.Session` carries the number
@@ -1210,7 +1210,7 @@ func (d Duelist) relicEffects(m Moment, card Card) []RelicEffect {
 // **The relics are read here rather than on the card**, because a cost is a property of the *pairing*:
 // the same Bash costs 3 to a duelist wearing the crush discount and 4 to one who is not. `Card.Cost`
 // is still the card's own figure and is what a contact sheet or a deck panel draws.
-func (d Duelist) CardCost(c Card) int { return CostWith(d.WornRelics(), c) }
+func (d Duelist) CardCost(c Card) int { return CostWith(d.WornRelics(), d.CostCut, c) }
 
 // CostWith is CardCost for a caller that has a worn set and no duelist — the post-battle screen
 // drawing a card out of the run deck, which has to print the price the fight will actually charge.
@@ -1218,7 +1218,10 @@ func (d Duelist) CardCost(c Card) int { return CostWith(d.WornRelics(), c) }
 // **A card face and the AP bar must never disagree**, which is the whole reason a cost is asked of
 // the wearer rather than of the card: three dashes on a card the budget charges two for is a screen
 // contradicting the engine.
-func CostWith(worn []WornRelic, c Card) int {
+//
+// **cut is the run's flat discount, and it comes off last** — after every relic — and never takes a
+// card below cutFloor. A card the relics already made cheaper than that keeps its price.
+func CostWith(worn []WornRelic, cut int, c Card) int {
 	cost := c.Cost()
 	for _, e := range RelicEffectsAt(worn, MomentCardCost, c) {
 		cost += e.Amount
@@ -1226,8 +1229,19 @@ func CostWith(worn []WornRelic, c Card) int {
 	if cost < minCardCost {
 		cost = minCardCost
 	}
+	if cut > 0 && cost > cutFloor {
+		cost -= cut
+		if cost < cutFloor {
+			cost = cutFloor
+		}
+	}
 	return cost
 }
+
+// cutFloor is the lowest a run's flat discount can take a card: one action point. A cheapening
+// essence can still reach zero — see minCardCost — but a discount on every card at once that made
+// the cheap ones free would take the count bound's place as the only thing limiting a turn.
+const cutFloor = 1
 
 // CostOf totals the action-point cost of a queued set, for this duelist.
 func (d Duelist) CostOf(cards []Card) int {

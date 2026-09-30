@@ -492,7 +492,7 @@ func TestPropagationScalesAndCompounds(t *testing.T) {
 }
 
 func TestARelicIsOnlyWornOnceTheHandIsNotFull(t *testing.T) {
-	// Five worn at once, until brands expand it. RelicSlots is the cap and Wearing is where it
+	// Five worn at once, until a tonic expands it. RelicSlots is the cap and Wearing is where it
 	// bites; a sixth is dropped rather than overwriting the fifth.
 	//
 	// **The array is no longer the cap**, which is the thing this test now has to say twice: a

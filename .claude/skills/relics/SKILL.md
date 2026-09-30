@@ -337,7 +337,7 @@ Reach for these first when an idea sounds too easy.
 - **A relic may not change what a *concept* is.** Cost and amount are per-card
   (`Card.CostDelta`, `Card.AmountPct`); form and label are concept-wide, so a relic targeting
   one of those would change every copy in the deck. Same bound an essence has.
-- **Five worn at once**, until brands expand it.
+- **Five worn at once**, until a tonic expands it.
 
 ## Where the code is — it is built *(2026-08-17)*
 

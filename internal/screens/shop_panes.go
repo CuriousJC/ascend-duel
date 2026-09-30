@@ -3,13 +3,13 @@ package screens
 // The shop's four panes, and the one rhythm they pack at.
 //
 // **The shelf is four panes on one line since 2026-09-06** *(owner's call)*: the sealed packs, the
-// relics, the potions and the brand, left to right, each standing on the pane the top row already
+// relics, the potions and the tonic, left to right, each standing on the pane the top row already
 // draws — a flat fill one step off the ground, eight pixels of padding, no border and no title. It
 // was one flat row of six seats told apart by the labels under them, and the panes are what let a
 // fourth kind of thing join the shelf without a fifth label to read.
 //
 // **There are no labels at all now** *(owner's call)*. The cards say what they are: a relic borders
-// pink, a pack is a crate and says what is inside it, a potion is a flask, and the brand stands
+// pink, a pack is a crate and says what is inside it, a potion is a flask, and the tonic stands
 // alone. A caption under each pane would be the fourth thing on screen naming what the picture
 // already names.
 //
@@ -38,7 +38,7 @@ const (
 	shopPanePacks shopPane = iota
 	shopPaneRelics
 	shopPanePotions
-	shopPaneBrand
+	shopPaneTonic
 )
 
 // shopPaneOrder is the four in standing order, for anything that walks them.
@@ -47,12 +47,12 @@ const (
 // than a range over the enum: the constants are identities and this is a layout, and the two are
 // free to disagree. Everything that lays the row out walks this, so moving a pane is one edit here.
 //
-// The brand stands first and the packs last. The brand is a placeholder that buys nothing yet, so
-// it takes the end of the row nearest the deck pile in the corner, where it is least in the way;
-// the packs are the widest and loudest pane and take the end furthest from it. Neither of the two
+// The tonic stands first and the packs last. The tonic is one seat and is empty for most of a
+// realm, so it takes the end of the row nearest the deck pile in the corner, where it is least in
+// the way; the packs are the widest and loudest pane and take the end furthest from it. Neither of the two
 // on the left reroll, so nothing hangs beneath them into that corner.
 func shopPaneOrder() []shopPane {
-	return []shopPane{shopPaneBrand, shopPanePotions, shopPaneRelics, shopPanePacks}
+	return []shopPane{shopPaneTonic, shopPanePotions, shopPaneRelics, shopPanePacks}
 }
 
 const (

@@ -93,9 +93,12 @@ func (s *Session) spoilsFor(lifeLeft int) Spoils {
 	if lifeLeft < 0 {
 		lifeLeft = 0
 	}
+	// **Every part is multiplied here, where it is decided**, rather than as it is paid, so the
+	// figure the reward screen reads out is the figure that lands in the purse.
+	f := s.VitaeFactor()
 	return Spoils{
-		Propagated: s.propagation(),
-		FromLife:   lifeLeft / lifeShareDivisor,
-		FromRoom:   s.PrizeVitae(roomVitae[journey.RoomOf(s.fight)]),
+		Propagated: s.propagation() * f,
+		FromLife:   lifeLeft / lifeShareDivisor * f,
+		FromRoom:   s.PrizeVitae(roomVitae[journey.RoomOf(s.fight)]) * f,
 	}
 }

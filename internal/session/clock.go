@@ -6,15 +6,22 @@ package session
 // dies. `internal/combat` owns what happens; this owns *how many*, because it is a number that
 // belongs to the run rather than to any one duel.
 //
-// **It is a field rather than a constant read at the point of use.** Nothing moves it today, and
-// the reason it can be moved is the whole point: a relic or a brand that buys the player a sixth
-// round has one place to write, and every fight of the run is on the new number from the moment it
-// is worn. See combat.DefaultRoundLimit, which is what a run opens at.
+// **It is a field rather than a constant read at the point of use**, so the run has a base to read
+// its tonics over — a Pressure tonic takes a round off it — and every fight of the run is on the new
+// number from the moment it is drunk. A relic moves it for the fight only, in Equip. See
+// combat.DefaultRoundLimit, which is what a run opens at.
 
 import "github.com/curiousjc/ascend-duel/internal/combat"
 
-// RoundLimit is how many rounds a fight of this run gets.
-func (s *Session) RoundLimit() int { return s.roundLimit }
+// RoundLimit is how many rounds a fight of this run gets: the run's own number, moved by every
+// tonic that moves it, and never below one.
+func (s *Session) RoundLimit() int {
+	n := s.roundLimit + s.tonicRounds()
+	if n < 1 {
+		n = 1
+	}
+	return n
+}
 
 // SetRoundLimit moves the clock, and refuses to stop it.
 //

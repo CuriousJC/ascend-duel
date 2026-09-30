@@ -24,7 +24,8 @@ is what lets every layer above read it, and it **must never import upward**.
 | `runes.json` | `LoadRunes` | the deck alterations spent *during* a fight |
 | `cantrips.json` | `LoadCantrips` | the duelist alterations cast during a fight and lasting until it ends: an `Effect` and an `Amount`, the potion's shape |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
-| `potions.json` | `LoadPotions` | the three bottles the shop sells: which of the duelist's figures each moves, by how much, and what it costs |
+| `potions.json` | `LoadPotions` | the bottles the shop sells every visit: which of the duelist's figures each moves, by how much, and what it costs |
+| `tonics.json` | `LoadTonics` | the run-long rule changes the shop offers one per realm: an `Effect`, an `Amount`, an optional `Requires`, and a `Price` — see `internal/session/tonic.go` |
 | `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
@@ -464,7 +465,7 @@ The data is about to grow three ways at once, which is why this was carved out o
 - **More essences.** Growing `essences.json` is one record each;
   growing the *target vocabulary* is not, and MECHANICS.md says why. `go run ./tools/essencesheet` is
   what the catalog is read on.
-- **Brands** — permanent for the run, altering the container where relics alter the contents. The
-  mechanic is decided in `MECHANICS.md`; there is no `brands.json` and no acquisition.
+- **More tonics.** Growing `tonics.json` is one record each when it reuses an effect; a new effect
+  is a Go change in `internal/session/tonic.go` plus the one place the rule it moves is read.
 
 Each is a new file or a new field asking the same question at step 1 above.

@@ -160,7 +160,7 @@ func (s *CombatScene) shuffleSeeds(gs *state.GlobalState) (player, enemy int64) 
 // It moved because it is a **rule**: a round is bounded by cost and by count independently,
 // and the opponent's planner has to obey the count exactly as the player's selection does.
 // A cap enforced only by the screen was a cap the enemy could ignore. Being a method on
-// Duelist also gives a relic or a brand raising it somewhere to bite, which MECHANICS.md
+// Duelist also gives a relic or a tonic raising it somewhere to bite, which MECHANICS.md
 // asks for.
 //
 // The cap replaced the action-point budget as the gate on selection, and that is the whole
@@ -608,7 +608,6 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 
 	s.died = false
 	s.victoryHeld = 0
-	s.discardsLeft = discardsPerRound
 
 	// A fresh deck every visit rather than continuing a run that has been abandoned, and a
 	// fresh *shuffle* per fight — the seeds come from the run seed unless deckSeed pins them.
@@ -617,6 +616,9 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.combatRNG = rand.New(rand.NewSource(seeds.For(gs.RunSeed, seeds.CombatRoll)))
 	s.luckRNG = rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.LuckRoll, fightIndex(gs.Run))))
 	s.resetDeck(gs.Run)
+
+	// **After resetDeck**, which is what hands the scene this run: a tonic can widen the round.
+	s.discardsLeft = s.roundDiscards()
 
 	// The queue starts empty every visit and is derived from what is selected in hand.
 	// DUEL! is disabled until something is in it.

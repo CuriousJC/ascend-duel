@@ -272,6 +272,10 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.drunk = map[string]bool{}
 	s.offered = dealPacks(s.packRNG)
 	s.shelf = dealShelf(gs, s.stockRNG)
+
+	// **The realm's tonic is settled at its first shop** and every later shop in the realm shows
+	// the same one, or an empty seat once it is drunk. See session/tonic.go.
+	gs.Run.OfferTonic()
 	s.prose.setLines(shopkeeperLines())
 	// **The same places the combat screen uses** *(owner's call, 2026-09-06)*. HANDS is a rung of
 	// the control column and the two square panels stand on the bottom line beside the frame's cog,
@@ -472,7 +476,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return s.shelfSlot(gs, i)
 	}); i >= 0 {
 		if record, ok := gs.Relics[s.shelf[i].key]; ok {
-			title, lines := ui.ShopRelicTip(record)
+			title, lines := ui.ShopRelicTip(record, gs.Run)
 			s.tip.Point(s.shelfSlot(gs, i), ui.TipLine(title), ui.TipLines(lines))
 		}
 		return
@@ -485,7 +489,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return s.goodSlot(gs, s.offered[i])
 	}); i >= 0 {
 		good, _ := session.GoodByKey(s.offered[i])
-		title, lines := goodTip(good)
+		title, lines := goodTip(good, shopPrice(gs, good.Price))
 		s.tip.Point(s.goodSlot(gs, s.offered[i]), ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
@@ -497,17 +501,17 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		}
 		return potionSeat(gs, i)
 	}); i >= 0 {
-		title, lines := potionTip(potions[i])
+		title, lines := potionTip(potions[i], shopPrice(gs, potions[i].Price))
 		s.tip.Point(potionSeat(gs, i), ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 
-	// **The brand explains itself even though it cannot be bought**, which is the whole reason it
-	// has a tooltip: a dim card with no explanation is one the player keeps clicking.
-	if seat := brandSeat(gs); at.In(seat) {
-		title, lines := brandTip()
-		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
-		return
+	if t, ok := shopTonic(gs); ok {
+		if seat := tonicSeat(gs); at.In(seat) {
+			title, lines := tonicTip(t, shopPrice(gs, t.Price))
+			s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+			return
+		}
 	}
 
 	hoverBuildRelics(gs, at, &s.tip)
@@ -556,8 +560,8 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 	}
 
 	// **The potions are the shelf's rule, not the worn row's**: one click buys and drinks, because
-	// the price is on the card and a purse cannot go into debt. The brand is not in this list at
-	// all — it is a placeholder and a click on it does nothing. See shop_potions.go.
+	// the price is on the card and a purse cannot go into debt. The tonic is the same, one seat
+	// over. See shop_potions.go.
 	clickable := shopPotions()
 	if i := ui.HoveredSeat(at, len(clickable), func(i int) image.Rectangle {
 		if s.drunk[clickable[i].Record] {
@@ -567,6 +571,11 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 	}); i >= 0 {
 		s.armed = ""
 		s.drinkPotion(gs, clickable[i].Record)
+		return
+	}
+	if t, ok := shopTonic(gs); ok && at.In(tonicSeat(gs)) {
+		s.armed = ""
+		s.drinkTonic(gs, t.Record)
 		return
 	}
 
@@ -677,6 +686,7 @@ func (s *ShopScene) buy(gs *state.GlobalState, i int) {
 	s.tip.Forget()
 
 	price, _ := session.RelicPrice(key)
+	price = gs.Run.Price(price)
 	gs.Journal.Write(journal.Record{Kind: journal.KindBuy, Key: key, Amount: price, Seat: i})
 	trace.Logf("shop", "bought %s for %d, %d vitae left, wearing %d",
 		key, price, gs.Run.Vitae(), len(gs.Run.Worn()))
@@ -785,7 +795,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawGoods(gs, screen)
 	s.drawShelf(gs, screen)
 	s.drawPotions(gs, screen)
-	s.drawBrand(gs, screen)
+	s.drawTonic(gs, screen)
 	s.drawRerollButtons(gs, screen)
 	drawDeckPile(gs, screen)
 
@@ -827,6 +837,7 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
 		}
 		affordable := gs.Run.CanBuy(item.key)
 		price, _ := session.RelicPrice(item.key)
+		price = shopPrice(gs, price)
 
 		// **No badge on the shelf**, whatever the relic is: an accumulator belongs to a worn relic,
 		// and a shelf relic is one nobody has ever put on. A relic the run once wore and sold has
@@ -1050,7 +1061,7 @@ func (s *ShopScene) openGood(gs *state.GlobalState, key string) {
 
 	// **Buying the good and taking what is inside it are two lines**, because they are two
 	// choices: the good is paid for before its contents are seen. See goods.take for the second.
-	gs.Journal.Write(journal.Record{Kind: journal.KindGood, Key: key, Amount: good.Price})
+	gs.Journal.Write(journal.Record{Kind: journal.KindGood, Key: key, Amount: gs.Run.Price(good.Price)})
 
 	openGoods(gs, key)
 
@@ -1072,7 +1083,7 @@ func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image) {
 
 		lit := goodAvailable(gs, key)
 		ui.DrawGoodCard(gs, screen, at.Min, good.Name, goodArt(gs, good), lit)
-		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", good.Price), lit)
+		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", shopPrice(gs, good.Price)), lit)
 	}
 }
 
@@ -1110,9 +1121,11 @@ func goodArt(gs *state.GlobalState, good session.Good) image.Image {
 // the same fields the face and the purse read, so a tooltip cannot quote a price the shop does not
 // charge. It also gave the sack a tooltip of its own — it fell through to the vial's until the
 // catalog landed.
-func goodTip(good session.Good) (string, []string) {
+//
+// price is what the shop charges for it, discounts included.
+func goodTip(good session.Good, price int) (string, []string) {
 	lines := make([]string, 0, len(good.Tip)+2)
 	lines = append(lines, fmt.Sprintf("%d %s, and you keep one", good.Size, good.Contains.Noun()))
 	lines = append(lines, good.Tip...)
-	return good.Name, append(lines, fmt.Sprintf("%d vitae", good.Price))
+	return good.Name, append(lines, fmt.Sprintf("%d vitae", price))
 }

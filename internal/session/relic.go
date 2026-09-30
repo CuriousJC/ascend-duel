@@ -54,15 +54,19 @@ var StartingRelics []string
 // the first one goes on.
 //
 // **Zero is the shipped value and means five.** It is a debug seat like the two lists around it —
-// what moves this in a real run is a brand, through SetRelicSlots.
+// what moves this in a real run is a tonic, read over the top of it by RelicSlots.
 var StartingRelicSlots int
 
 // RelicSlots is how many relics this run may wear at once.
+//
+// **The run's base plus every relic-slot tonic it has drunk.** The tonics are read here rather than
+// written into the base, so the save holds the base and a resume cannot add a tonic twice.
 func (s *Session) RelicSlots() int {
-	if s.relicSlots <= 0 {
-		return combat.DefaultRelicSlots
+	n := s.relicSlots
+	if n <= 0 {
+		n = combat.DefaultRelicSlots
 	}
-	return s.relicSlots
+	return n + s.tonicTotal(TonicRelicSlots)
 }
 
 // SetRelicSlots moves the cap, and refuses to close the hand entirely.
@@ -423,7 +427,7 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	// documents below rather than a third rule. See life.go.
 	// **The potions go on before even that** *(owner's call, 2026-09-06)*. A potion changes the
 	// duelist themself rather than being something worn, so what it adds is part of the body the
-	// portal bonus grows and the relics then scale — a Tonic bought on realm one is worth more by
+	// portal bonus grows and the relics then scale — an Elixir bought on realm one is worth more by
 	// realm four, exactly as the duelist's own record is. That is the one thing to move if the
 	// compounding turns out to be too much: dropping these two lines below the scaling makes a
 	// potion worth its face figure forever.
@@ -480,12 +484,18 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	// fighter is put together, so selling the relic gives the rounds straight back — where a relic
 	// that called SetRoundLimit would leave the clock moved for the rest of the journey. Same shape
 	// as AddedHP and HPScale above. See combat.DoAdjustRoundLimit.
-	d.RoundLimit = combat.RoundLimitFor(worn, s.roundLimit)
+	d.RoundLimit = combat.RoundLimitFor(worn, s.RoundLimit())
 
 	// **The finger count goes over with it, and for the same reason.** A fighter equipped without
 	// it carries a zero, which the rules read as the default — so this is not load-bearing today
 	// and becomes load-bearing the moment anything moves it. See RelicSlots below.
-	d.RelicSlots = s.relicSlots
+	d.RelicSlots = s.RelicSlots()
+
+	// **The tonics that bend the rules inside a fight go over with the rest.** A cost cut comes off
+	// every card after the relics have had their say, and a vitae multiple scales every vitae the
+	// round pays. See tonic.go.
+	d.CostCut = s.CostCut()
+	d.VitaeFactor = s.VitaeFactor()
 
 	// **The stones go on last, and they touch nothing above.** Relics move DMG, life and what a card
 	// costs; a stone moves a rung of the hand ladder, which is read at the moment a blow is scored
@@ -546,7 +556,9 @@ func (s *Session) PrizeVitae(base int) int {
 
 // CardCost is what one card costs the run as it stands, discounts included. The post-battle screen
 // draws deck cards and has no duelist to ask.
-func (s *Session) CardCost(c combat.Card) int { return combat.CostWith(s.WornRelics(), c) }
+func (s *Session) CardCost(c combat.Card) int {
+	return combat.CostWith(s.WornRelics(), s.CostCut(), c)
+}
 
 // propagation is vitae earning interest: **+1 for every 5 held, capped at +5**, then scaled by every
 // relic that scales it.

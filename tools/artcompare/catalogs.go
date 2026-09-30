@@ -70,8 +70,9 @@ var catalogs = map[string]*catalog{
 	"relic":   {Name: "relic", Dir: "assets/relic", File: "data/relics.json", Subjects: relicSubjects},
 	"essence": {Name: "essence", Dir: "assets/essence", File: "data/essences.json", Subjects: essenceSubjects},
 	"rune":    {Name: "rune", Dir: "assets/rune", File: "data/runes.json", Subjects: runeSubjects},
+	"cantrip": {Name: "cantrip", Dir: "assets/cantrip", File: "data/cantrips.json", Subjects: cantripSubjects},
 	"stone":   {Name: "stone", Dir: "assets/stone", File: "data/stones.json", Subjects: stoneSubjects},
-	"other":   {Name: "other", Dir: "assets/other", File: "data/potions.json and data/goods.json", Subjects: otherSubjects},
+	"other":   {Name: "other", Dir: "assets/other", File: "data/potions.json, data/tonics.json and data/goods.json", Subjects: otherSubjects},
 }
 
 // catalogNames is the flag's vocabulary, sorted, for the usage line and the error message.
@@ -197,6 +198,28 @@ func essenceSubjects() ([]subject, error) {
 	return out, nil
 }
 
+// cantripSubjects is the cantrip catalog as the consumables pane draws it: a name and a picture,
+// with the line it says left to the tooltip.
+func cantripSubjects() ([]subject, error) {
+	cantrips := data.LoadCantrips()
+	var out []subject
+	for _, key := range data.CantripFileOrder() {
+		rec, ok := cantrips[key]
+		if !ok {
+			return nil, fmt.Errorf("cantrips.json: %s is in the file order and not in the catalog", key)
+		}
+		out = append(out, subject{
+			Key: key, Stem: rec.Art, Group: rec.Family,
+			Caption: rec.Name,
+			Spec: cards.Spec{
+				Name: rec.Name, Element: cards.Basic, Enabled: true,
+			},
+			Style: cards.EssenceStyle,
+		})
+	}
+	return out, nil
+}
+
 func runeSubjects() ([]subject, error) {
 	runes := data.LoadRunes()
 	var out []subject
@@ -245,8 +268,9 @@ func stoneSubjects() ([]subject, error) {
 	return out, nil
 }
 
-// otherSubjects is the catch-all family in assets/other: the potions and the sealed goods, which
-// share a directory because they share a prompt and are too few to be catalogs of their own.
+// otherSubjects is the catch-all family in assets/other: the potions, the tonics and the sealed
+// goods, which share a directory because they share a prompt and are too few to be catalogs of
+// their own.
 //
 // **Neither carries a Text the card prints**, so these draw as a picture and a name. That is what
 // the shop shows, and it is why the group headings say which file a row came from.
@@ -255,6 +279,16 @@ func otherSubjects() ([]subject, error) {
 	for _, rec := range data.LoadPotions() {
 		out = append(out, subject{
 			Key: rec.PotionRecord, Stem: rec.Art, Group: "Potions — " + rec.Family,
+			Caption: fmt.Sprintf("%s · %d vitae", rec.Name, rec.Price),
+			Spec: cards.Spec{
+				Name: rec.Name, Element: cards.Basic, Enabled: true,
+			},
+			Style: cards.EssenceStyle,
+		})
+	}
+	for _, rec := range data.LoadTonics() {
+		out = append(out, subject{
+			Key: rec.TonicRecord, Stem: rec.Art, Group: "Tonics — " + rec.Family,
 			Caption: fmt.Sprintf("%s · %d vitae", rec.Name, rec.Price),
 			Spec: cards.Spec{
 				Name: rec.Name, Element: cards.Basic, Enabled: true,

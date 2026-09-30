@@ -404,7 +404,7 @@ func dealEssences(gs *state.GlobalState) []session.Essence {
 // duel would change what winning it was worth.
 //
 // **The offer is the hand size**, which is `handSize` today and becomes a value on the duelist
-// the day a brand can widen it. Both readers take the same number rather than each declaring one.
+// the day a tonic can widen it. Both readers take the same number rather than each declaring one.
 func dealOffer(gs *state.GlobalState) []int {
 	if gs.Run == nil || gs.Run.Size() == 0 {
 		return nil

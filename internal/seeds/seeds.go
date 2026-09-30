@@ -132,6 +132,14 @@ const (
 	// make which cantrips a bundle holds a function of how many runes the sack drew, so authoring a
 	// rune would reroll every bundle of scrolls ever opened.
 	ScrollStock
+
+	// TonicOrder is the order the run walks the tonic catalog in, one offer per realm. Per run:
+	// the order is shuffled once and each realm takes the next tonic it allows.
+	//
+	// **Its own stream rather than ShopStock's**, although both fill the shop: sharing would make
+	// which tonic a realm offers a function of how many relic draws the shelf had made before it,
+	// so authoring a relic would reroll every tonic a run is offered.
+	TonicOrder
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -170,6 +178,7 @@ var streams = [...]stream{
 	PackOffer:    {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
 	LuckRoll:     {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
 	ScrollStock:  {name: "scroll-stock", salt: 0x5EED_5C20, perFight: true},
+	TonicOrder:   {name: "tonic-order", salt: 0x5EED_70C1},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

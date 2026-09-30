@@ -164,16 +164,30 @@ type Session struct {
 
 	// roundLimit is how many rounds a fight of this run gets before the clock kills the duelist.
 	// **The run's number, not the rules'** — `combat.DefaultRoundLimit` is what a run opens at and
-	// this is what it is actually on, so a relic or a brand that buys a sixth round has one field to
-	// move rather than a constant it cannot reach. See clock.go, and Equip, which is where it
-	// reaches a fighter.
+	// this is the run's base. **A tonic does not write it** — RoundLimit reads the drunk tonics over
+	// the top — so the save holds the base and a resume cannot apply one twice. See clock.go, and
+	// Equip, which is where it reaches a fighter.
 	roundLimit int
 
 	// relicSlots is how many relics this run may wear at once. **The run's number, not the rules'** —
 	// `combat.DefaultRelicSlots` is what a run opens at and this is what it is actually on, for the
-	// reason roundLimit is a field: a brand that buys a sixth finger has one place to write. See
+	// reason roundLimit is a field, and a tonic is read over the top of it the same way. See
 	// relic.go, and Equip, which is where it reaches a fighter.
 	relicSlots int
+
+	// tonicOrder is the order this run walks the tonic catalog in, shuffled off the run seed.
+	// **Not saved**: it is rebuilt from the run code, as the journey is. Nil on a run built by New,
+	// which is offered no tonics. See tonic.go.
+	tonicOrder []string
+
+	// drunkTonics is every tonic the run has drunk, by record key, in the order it drank them. Every
+	// tonic's effect is read off this list rather than written into the figures it moves. Saved.
+	drunkTonics []string
+
+	// tonicOffers is which tonic each realm offered, by record key, indexed by realm less one. An
+	// empty entry is a realm that had nothing to offer or has not reached its shop. Saved, since
+	// what a realm offered depends on what the run had drunk by then.
+	tonicOffers []string
 
 	// seedChosen says the player entered this run's code on the new-run dialog rather than taking
 	// the one rolled for them. **Read by nothing in the rules**: it is a fact about how the journey

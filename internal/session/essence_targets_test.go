@@ -34,7 +34,7 @@ func TestTheNecklaceAddsACardAndTwoOfThemAddTwo(t *testing.T) {
 	}
 
 	// A second copy cannot be bought — a relic already worn is refused — so the summing is checked
-	// against the rules directly, which is where a brand or a duplicate would arrive.
+	// against the rules directly, which is where a tonic or a duplicate would arrive.
 	id, ok := combat.RelicByKey("essence-targets")
 	if !ok {
 		t.Fatal("no relic called essence-targets")

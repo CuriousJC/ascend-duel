@@ -75,7 +75,7 @@ go run ./tools/relicart -kind relic
 ```
 
 Its inbox is `.scratch/to-process-<kind>-art/` and its kinds are `relic`, `essence`, `rune`,
-`stone`, `card` and `other`. A stem naming no record is refused rather than filed.
+`stone`, `cantrip`, `card` and `other`. A stem naming no record is refused rather than filed.
 
 The installed art is always the set `current`, so installing first is what makes the page a
 comparison of *the game as it now stands* against what it was.
@@ -88,7 +88,7 @@ go run ./tools/artcompare -catalog relic
 go run ./tools/artcompare -catalog relic -set warm=artreview\relic-warm -set cool=artreview\relic-cool
 ```
 
-- Catalogs: `card`, `relic`, `essence`, `rune`, `stone`, `other`. Enemy and boss portraits are
+- Catalogs: `card`, `relic`, `essence`, `rune`, `stone`, `cantrip`, `other`. Enemy and boss portraits are
   **not** in the table — licensed creature art arrives once and nobody generates three of it.
 - Any number of sets. `artreview/<catalog>-<label>/` is discovered as `<label>`; `-set label=dir`
   replaces discovery outright.

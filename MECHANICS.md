@@ -50,7 +50,7 @@ The run is written to disk between rooms and every run has a six-character code 
 | [Essences](#essences--altering-the-deck-between-fights) | editing the deck between fights | built |
 | [Runes](#runes--altering-the-deck-during-a-fight) | editing the deck inside a fight, and the riders a card can carry | built |
 | [Cantrips](#cantrips--altering-the-duelist-for-one-fight) | strengthening the duelist for the fight a cantrip is cast in | built |
-| [Brands](#brands) | permanent changes to the chassis | **designed, not built** |
+| [Tonics](#tonics) | permanent changes to the chassis, one offered per realm | built |
 | [Vitae](#vitae) | the currency and what a win pays | built |
 | [The journey](#the-journey) | eight realms, three rooms, the portal, the growth curve | built except the door choice |
 | [Enemies](#enemies) | the roster, the planner, what a creature may do | built |
@@ -68,7 +68,7 @@ The run is written to disk between rooms and every run has a six-character code 
 **The primary thrust of the game is building a deck and an engine that bend the rules in a
 way that lets the player win.**
 
-Relics and brands are rule-modifiers first and stat-boosters second — more actions, cheaper
+Relics and tonics are rule-modifiers first and stat-boosters second — more actions, cheaper
 cards, free cards, and stats too, since a stat is just another rule to bend. Every constant
 below is a candidate for something to bend.
 
@@ -1454,9 +1454,9 @@ and a cap enforced only by the screen was a cap the enemy ignored.
 - **A growable cap would dilute every shape as it grew.** A Four of a Kind is an all-in commitment
   at a cap of five and routine at a cap of seven. The hands would quietly get cheaper every time
   capacity went up, which is the opposite of a reward for building toward them.
-- **It is a method anyway, and should be.** Relics and brands need somewhere to bite for
+- **It is a method anyway, and should be.** Relics and tonics need somewhere to bite for
   everything *else* they do, and a method that reads the duelist costs nothing. This particular
-  lever is simply off the table: **no relic, brand or hand raises `MaxActions`.**
+  lever is simply off the table: **no relic, tonic or hand raises `MaxActions`.**
 
 A card that wanted to buy capacity could therefore only buy *points*, never slots — anything
 reaching for six- and seven-card hands is the dilution above and is refused.
@@ -1538,7 +1538,7 @@ an argument for a headless duel simulator rather than against the clock.
 ## Relics
 
 - **Bought after every fight, with vitae.** *(see The shop, below)*
-- **Five at once**, until brands expand capacity.
+- **Five at once**, and a Collector's Tonic makes it six — see §Tonics.
 - **The cap is never displayed.** It surfaces naturally when you try to buy a sixth.
 - **No relic changes how many cards can be played.** `MaxActions` is frozen at five — see *A
   round is bounded twice*. A relic may make five cards cheaper, never make it six.
@@ -1967,7 +1967,7 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
 | relics | three off the catalog, drawn on rarity tickets without replacement | yes |
 | sealed packs | **two, never two of one catalog** — a bag of rocks, a vial of essence, a sack of runes, a bundle of scrolls | yes |
 | potions | the whole of `data/potions.json`, the same vessels every visit | no — a reroll would offer what is already offered |
-| brand | one seat, **dim and unclickable**, because §Brands is unbuilt | no |
+| tonic | one seat: the realm's one tonic, and empty once it is drunk — see §Tonics | no |
 
 - **Two packs of the catalog is what makes the pack pane a question.** Every pack on the shelf
   every visit asks nothing: the only decision is what the purse can cover. Which two you meet is a
@@ -3278,32 +3278,60 @@ against it, plus the authored `Text` the tooltip says.
 
 ---
 
-## Brands
+## Tonics
 
-**Nothing implements brands.** There is no `data/brands.json`, no loader and no screen; what
-follows is the decided shape, and it is the one section of this file that describes a mechanic
-the game does not have.
-
-**Brands alter the container; relics alter the contents.** That is the axis, and it is what tells
+**Tonics alter the container; relics alter the contents.** That is the axis, and it is what tells
 you which of the two a new power belongs to:
 
-| | Brands | Relics |
+| | Tonics | Relics |
 |---|---|---|
-| What they touch | the chassis — hand size, total discards per round, relic slots | the cards — elements, costs, and the stats that feed them |
-| Removable | **never.** You brand yourself and you do not take it off | freely; five equipped, swap as you like |
+| What they touch | the chassis — prices, what every card costs, the round limit, hand size, discards per round, relic slots | the cards — elements, costs, and the stats that feed them |
+| Removable | **never.** Drunk once and kept for the run | freely; five equipped, swap as you like |
 | Scope | **for the run** | for the run, but re-chosen after every fight |
 
-- **"Permanent" means for the run, not across runs.** A brand is a commitment made *inside* a
-  run that cannot be undone, which is a different thing from meta-progression. Hand *discovery*
-  is the profile-scoped mechanic; brands are not.
-- **A brand may not grant actions.** The action cap is permanently five and nothing raises it —
-  see *A round is bounded twice*. Growing the **hand** is the nearest legal thing, and it is a
-  container change, so it fits the axis.
-- `[?]` Everything else is open — capacity and rule-bending, with the above as the test for what
-  counts.
+`data/tonics.json` is the catalog, `internal/session/tonic.go` validates it and applies it, and the
+shop's left-hand seat is where one is bought. A potion changes the duelist's body and is on the
+shelf every visit; a tonic changes the run's rules and is offered **once per realm**.
 
-Like relics, they have **concrete definitions that never really change**, which makes them a fit
-for the `data/` pattern: JSON beside a small Go loader.
+| Tonic | Does |
+|---|---|
+| Jeweller's | every price in the shop — relics, packs, potions, rerolls, tonics — is 10% less, rounded up so the cut is at least 1 vitae, and never below a price of 1 |
+| Athlete's | every player card costs 1 AP less, never below 1 |
+| Olympian's | 1 AP less again; **offered only once Athlete's has been drunk** |
+| Pressure | every fight is one round shorter, and every vitae the run earns is tripled |
+| Juggler's | one more card in every hand |
+| Sifter's | one more discard every round |
+| Collector's | one more relic slot |
+
+- **One seat, one tonic per realm.** The catalog is shuffled once off the run seed
+  (`seeds.TonicOrder`, per run) and each realm takes the first tonic in that order the run may
+  still be offered. The realm's first shop settles it and every later shop in the realm shows the
+  same one. **Bought, the seat stands empty until the portal**; eight realms is eight tonics at most.
+- **Offered once, ever.** A tonic bought is never offered again, and neither is one passed over —
+  a realm whose tonic was not bought has spent it.
+- **A tonic the run is not yet allowed is skipped, not spent.** `Requires` names a tonic that has to
+  have been drunk first, and a skipped one stays in the order, so a later realm offers it once it is
+  allowed. The order is a permutation of the catalog rather than a list of fixed length, so a run
+  simply stops being offered tonics once every one has been — it cannot run off the end.
+- **Every price is 10 vitae**, before the Jeweller's cut.
+- **"Permanent" means for the run, not across runs.** A tonic is a commitment made *inside* a run
+  that cannot be undone, which is a different thing from meta-progression.
+- **A tonic may not grant actions.** The action cap is permanently five cards and nothing raises
+  it — see *A round is bounded twice*. Making cards cheaper is the nearest legal thing: it spends
+  the budget further without adding a sixth card.
+- **The cost cut stops at 1 AP** *(owner's call, 2026-09-30)*. With Athlete's and Olympian's both
+  drunk nearly the whole deck costs 1, so the action budget stops binding and every turn is five
+  cards — accepted as the late-run power it is. The floor keeps a card from going free under a
+  tonic; a card an essence has already made free stays free.
+- **The cut is the last thing off a card's cost**, after every relic — `combat.CostWith` — so the
+  face, the AP bar and the planner read one figure. The hand ladder is priced against a 6 AP turn
+  with no cut, so `tools/handodds` describes a run that has drunk neither.
+- **Pressure's triple lands where the vitae is decided**: each part of a win's payout, a rune that
+  pays vitae, and every vitae a fight pays through `Duelist.Earned`. Selling is a trade, not
+  earnings, and pays face value.
+- **What a run saves is the list it drank and the list it was offered**, and every effect is read
+  off the first rather than written into the figure it moves. The run's round limit and relic
+  slots stay the base, so a resume cannot apply a tonic twice.
 
 ---
 
@@ -3841,9 +3869,9 @@ ones" without also saying "any".
 ### Two of them are unreachable today, and that is deliberate
 
 **Godslayer is five 4 AP cards against a six AP budget** — twenty points out of six. Nothing in the
-game grants AP on that scale, so it cannot be earned until something does; a brand is the likeliest
-door, since brands alter the container. It is written now because the *pattern* is what a brand
-would have to be judged against.
+game grants AP on that scale — the two cost tonics together bring it to ten against six — so it
+cannot be earned until something does. It is written now because the *pattern* is what a future
+tonic would have to be judged against.
 
 **This is the one place the reachability rule below is knowingly bent**, and it is bent in the half
 that is safe: `TestEveryShippedAchievementIsReachable` proves the pattern is satisfiable by some
@@ -4049,8 +4077,6 @@ every stat below is therefore a judgment.
   shield.
 - `[?]` **Where a run acquires a *carried* essence** — a shop seat, a sealed good, a reward that
   offers keep-or-spend. Only a fixture puts one in the satchel today.
-- `[?]` **Brands are designed and unbuilt**, beyond the container/contents axis and the rule that
-  none of them may grant actions.
 - `[?]` **Long press is unbuilt**, and it is the whole of the touchscreen and controller story for
   the reveal hover already gives.
 - `[?]` **Enemy statuses are blocked on affixes, which do not exist.** Every creature card is

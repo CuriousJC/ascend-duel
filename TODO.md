@@ -111,12 +111,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       loop that is not its full length — an intro bar played once, say —
       `audio.NewInfiniteLoopWithIntro` already supports it and the loop point would need
       to come from the file (a marker meta-event) rather than from arithmetic.
-- [ ] **Brands need a data file and a way to be acquired.** The mechanic is already decided —
-      see `MECHANICS.md`'s Brands section: they alter the container where relics alter the
-      contents, they are permanent *for the run*, and nothing takes one off. What does not
-      exist is any of it in code: no `brands.json`, no acquisition, no seat on the duelist.
-      `session.Session` is where a worn brand would live, beside the worn relics.
-
 - [ ] **Rename "blow" now that a turn is a hit per card** *(owner asked for this to be tracked)*.
       `combat.Blow`, `blowFor`/`BlowFor`, `blowDMG`, `previewBlow` and `anchorBlow` all name the
       formed hand and its scoring set, which no longer lands as one figure. **The Go identifiers are

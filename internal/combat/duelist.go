@@ -67,6 +67,16 @@ type Duelist struct {
 	// The copy is rebuilt on the next Equip, so it can only ever drift inside one fight.
 	Vitae int
 
+	// VitaeFactor multiplies every vitae this duelist earns inside a fight — a tithe, a silver
+	// card, a card held in hand. **Zero means one**, so every creature and every bare `Duelist{}`
+	// earns at face value. The run hands its own figure over through Equip; see Earned.
+	VitaeFactor int
+
+	// CostCut is how many action points come off every card this duelist plays, after the relics
+	// have had their say. **It never takes a card below one** — a card already at zero stays at
+	// zero, and a card at one is not made free. See CostWith.
+	CostCut int
+
 	// Shields is how many incoming attacks this duelist can still eat outright, **counted by the
 	// element of the card that raised them** — see ShieldStack. It is what the player's defend cards
 	// buy: Brace for one and Block for two. Guard is a third rung the file still declares at zero
@@ -168,7 +178,7 @@ type Duelist struct {
 	// DefaultRelicSlots**, which is the five every duelist in the journey fights on — see
 	// relicSlots(), where that reading lives, and session/relic.go, where a run hands its own
 	// number over. It is a separate field from the array's width because the width is a fact
-	// about keeping Duelist comparable and the cap is a rule a brand can move.
+	// about keeping Duelist comparable and the cap is a rule a tonic can move.
 	RelicSlots int
 
 	// SoloAttacks makes this duelist's attack cards resolve **one at a time, in the order they
@@ -224,12 +234,20 @@ type Duelist struct {
 	//
 	// **It is a property of the duelist rather than an argument to ResolveRound** for the reason
 	// HandStones is one: the run's opinion reaches a fight through Equip, which is the same seat
-	// the relics and the stones arrive in, and a relic or a brand that moves the limit later moves
+	// the relics and the stones arrive in, and a relic or a tonic that moves the limit later moves
 	// this field rather than a signature every caller and test would have to grow.
 	//
 	// **The engine has no idea which side is a person**, so both sides are asked about their own
 	// clock rather than the player's being read off SideA. Nothing sets it for a creature.
 	RoundLimit int
+}
+
+// Earned is what n vitae earned inside a fight is worth to this duelist, through VitaeFactor.
+func (d Duelist) Earned(n int) int {
+	if n <= 0 || d.VitaeFactor <= 1 {
+		return n
+	}
+	return n * d.VitaeFactor
 }
 
 // Alive reports whether this duelist can still fight.
@@ -342,7 +360,7 @@ const MaxEchoLandings = 5
 // It is a method rather than the bare constant it used to be, and it lives here rather than
 // on the screen where `maxSelected` used to. Both were deliberate: it is a **rule**, so the
 // opponent's planner has to obey it exactly as the player's selection does, and making it a
-// function of the duelist is what gives a relic or a brand raising the cap somewhere to bite
+// function of the duelist is what gives a relic or a tonic raising the cap somewhere to bite
 // without touching a single call site. See MECHANICS.md.
 func (d Duelist) MaxActions() int { return baseMaxActions }
 
@@ -351,7 +369,7 @@ func (d Duelist) MaxActions() int { return baseMaxActions }
 // against it for a whole fight and read the surge as a one-turn bonus on top.
 //
 // **It stays a method rather than becoming a field read**, for the reason MaxActions is one: a
-// relic or a brand raising a budget wants somewhere to bite that is not every call site.
+// relic or a tonic raising a budget wants somewhere to bite that is not every call site.
 //
 // **No status touches it.** A chill is a card off the front of the turn instead — see playTurn.
 func (d Duelist) ActionPoints() int { return d.Actions + d.Surge }

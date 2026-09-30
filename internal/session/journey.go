@@ -42,6 +42,7 @@ func Start(motifs map[string]data.MotifData, shape data.JourneyData, runSeed int
 	}
 	s := New(deck)
 	s.journey = newJourney(motifs, shape, runSeed)
+	s.tonicOrder = newTonicOrder(runSeed)
 	return s
 }
 

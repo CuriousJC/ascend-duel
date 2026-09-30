@@ -1,0 +1,273 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Duello — tonic sheet</title>
+<style>
+  :root {
+    --ground: #a8bcd4;
+    --ink: #2c2822;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
+    --pink: #c8508c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--dim); font-weight: 600;
+    margin: 44px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  }
+  .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+  .facts code { color: var(--ink); }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 68ch; margin: 12px 0 0; }
+  .plates { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 22px; }
+  .plate {
+    display: flex; gap: 18px; align-items: flex-start;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 16px; width: 520px;
+  }
+  img { display: block; image-rendering: pixelated; }
+  .about { min-width: 0; }
+  .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .record { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
+  .tip { margin: 2px 0 0; font-size: 13px; }
+  .tip:first-of-type { margin-top: 10px; }
+  .rule {
+    margin: 10px 0 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; color: var(--dim);
+  }
+  .art { margin: 10px 0 0; font-size: 11.5px; color: var(--dim); }
+  .art.missing { color: var(--pink); }
+  .draw {
+    margin: 10px 0 0; font-size: 12.5px; color: var(--dim);
+    border-left: 2px solid var(--rule); padding-left: 9px;
+  }
+  .draw.missing { color: var(--pink); border-left-color: var(--pink); }
+  ul.effects { list-style: none; padding: 0; margin: 14px 0 0; }
+  li.effect {
+    font-size: 12.5px; color: var(--dim); padding: 5px 0 5px 10px;
+    border-left: 3px solid var(--rule); margin-bottom: 3px;
+  }
+  li.effect strong { color: var(--ink); margin-right: 6px; font-family: ui-monospace, monospace; }
+  li.effect.empty { opacity: .62; }
+  table { border-collapse: collapse; margin-top: 16px; font-size: 12.5px; }
+  th, td { text-align: left; padding: 5px 14px 5px 0; border-bottom: 1px solid var(--rule); }
+  th { color: var(--dim); font-weight: 600; }
+  td.code { font-family: ui-monospace, monospace; }
+</style>
+
+<h1>Tonic sheet</h1>
+<p class="facts">
+  7 tonics, 0 of them drawing the default face, 0 with no subject
+  paragraph written. One is offered per realm across 8 realms. Shown at 1:1.
+</p>
+<p class="note">
+  Regenerate with <code>go run ./tools/tonicsheet</code> and refresh. Every card is drawn by
+  <code>internal/cards</code>, the code the game blits, and every word beside it is read out of
+  <code>data/tonics.json</code> through <code>internal/session</code>'s own validation.
+</p>
+<p class="note">
+  <strong>A tonic changes the run's rules for the rest of the run, and is offered once.</strong>
+  The run code shuffles the catalog; each realm offers the first tonic in that order the run may
+  still have. Bought or passed over, it is never offered again; one whose requirement has not been
+  drunk is skipped and comes back later. See MECHANICS.md §Tonics.
+</p>
+<p class="note">
+  <strong>The subject paragraph is the art brief.</strong> The quoted block is <code>Draw</code>;
+  nothing in the game reads it. A tonic with no subject and no art is the backlog — both lines go
+  pink.
+</p>
+
+<h2>What the catalog does</h2>
+<ul class="effects">
+
+  <li class="effect"><strong>discount</strong>
+    1 tonics</li>
+
+  <li class="effect"><strong>cost-cut</strong>
+    2 tonics</li>
+
+  <li class="effect"><strong>pressure</strong>
+    1 tonics</li>
+
+  <li class="effect"><strong>hand-size</strong>
+    1 tonics</li>
+
+  <li class="effect"><strong>discards</strong>
+    1 tonics</li>
+
+  <li class="effect"><strong>relic-slots</strong>
+    1 tonics</li>
+
+</ul>
+
+<h2>The catalog</h2>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="tonic-jewellers-tonic.png" width="200" height="280" alt="Jeweller&#39;s Tonic">
+      <div class="about">
+        <p class="name">Jeweller&#39;s Tonic</p>
+        <div class="record">jewellers-tonic</div>
+        <p class="tip">everything in the shop costs 10% less</p><p class="tip">and at least 1 vitae less</p>
+        <p class="rule">discount 10, 10 vitae</p>
+        
+          <p class="draw">a small cut-crystal phial of clear golden liquid, a jeweller&#39;s loupe hung from its neck on a fine chain, flecks of gold dust suspended in the draught</p>
+        
+        
+          <p class="art">art: <code>jewellers-tonic</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="tonic-athletes-tonic.png" width="200" height="280" alt="Athlete&#39;s Tonic">
+      <div class="about">
+        <p class="name">Athlete&#39;s Tonic</p>
+        <div class="record">athletes-tonic</div>
+        <p class="tip">your cards cost 1 AP less</p><p class="tip">but never less than 1 AP</p>
+        <p class="rule">cost-cut 1, 10 vitae</p>
+        
+          <p class="draw">a lean leather-wrapped flask of bright green liquid, a laurel sprig tied round its neck with a strip of linen</p>
+        
+        
+          <p class="art">art: <code>athletes-tonic</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="tonic-olympians-tonic.png" width="200" height="280" alt="Olympian&#39;s Tonic">
+      <div class="about">
+        <p class="name">Olympian&#39;s Tonic</p>
+        <div class="record">olympians-tonic</div>
+        <p class="tip">your cards cost 1 AP less</p><p class="tip">but never less than 1 AP</p>
+        <p class="rule">cost-cut 1, requires athletes-tonic, 10 vitae</p>
+        
+          <p class="draw">a tall amphora-shaped bottle of shining green-gold liquid, a golden laurel wreath circling its shoulders</p>
+        
+        
+          <p class="art">art: <code>olympians-tonic</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="tonic-pressure-tonic.png" width="200" height="280" alt="Pressure Tonic">
+      <div class="about">
+        <p class="name">Pressure Tonic</p>
+        <div class="record">pressure-tonic</div>
+        <p class="tip">every fight is 1 round shorter</p><p class="tip">and every vitae you earn is x3</p>
+        <p class="rule">pressure 3, 10 vitae</p>
+        
+          <p class="draw">a thick-walled iron-banded bottle of churning dark red liquid, its cork wired down hard against the pressure inside</p>
+        
+        
+          <p class="art">art: <code>pressure-tonic</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="tonic-jugglers-tonic.png" width="200" height="280" alt="Juggler&#39;s Tonic">
+      <div class="about">
+        <p class="name">Juggler&#39;s Tonic</p>
+        <div class="record">jugglers-tonic</div>
+        <p class="tip">1 more card in every hand</p>
+        <p class="rule">hand-size 1, 10 vitae</p>
+        
+          <p class="draw">a round-bellied bottle of swirling orange and blue liquid, three small coloured balls painted in a ring about its glass</p>
+        
+        
+          <p class="art">art: <code>jugglers-tonic</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="tonic-sifters-tonic.png" width="200" height="280" alt="Sifter&#39;s Tonic">
+      <div class="about">
+        <p class="name">Sifter&#39;s Tonic</p>
+        <div class="record">sifters-tonic</div>
+        <p class="tip">1 more discard every round</p>
+        <p class="rule">discards 1, 10 vitae</p>
+        
+          <p class="draw">a squat clay bottle of cloudy grey-blue liquid, a tiny brass sieve fixed over its mouth in place of a stopper</p>
+        
+        
+          <p class="art">art: <code>sifters-tonic</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="tonic-collectors-tonic.png" width="200" height="280" alt="Collector&#39;s Tonic">
+      <div class="about">
+        <p class="name">Collector&#39;s Tonic</p>
+        <div class="record">collectors-tonic</div>
+        <p class="tip">wear 1 more relic</p>
+        <p class="rule">relic-slots 1, 10 vitae</p>
+        
+          <p class="draw">a slender violet bottle of glittering pink liquid, a single silver ring slipped over its long neck</p>
+        
+        
+          <p class="art">art: <code>collectors-tonic</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h2>What a discount charges</h2>
+<p class="note">
+  The share of the list price, rounded up so it is always at least one vitae, and never below a
+  price of one — <code>session.DiscountCut</code>, the arithmetic the shop charges with.
+</p>
+<table>
+  <tr><th>tonic</th><th>item</th><th>list</th><th>paid</th></tr>
+  
+  <tr><td>Jeweller&#39;s Tonic</td><td>common relic</td><td>3</td><td>2</td></tr>
+  
+  <tr><td>Jeweller&#39;s Tonic</td><td>uncommon relic</td><td>5</td><td>4</td></tr>
+  
+  <tr><td>Jeweller&#39;s Tonic</td><td>rare relic</td><td>7</td><td>6</td></tr>
+  
+  <tr><td>Jeweller&#39;s Tonic</td><td>sealed pack</td><td>5</td><td>4</td></tr>
+  
+  <tr><td>Jeweller&#39;s Tonic</td><td>first reroll</td><td>2</td><td>1</td></tr>
+  
+  <tr><td>Jeweller&#39;s Tonic</td><td>second reroll</td><td>4</td><td>3</td></tr>
+  
+  <tr><td>Jeweller&#39;s Tonic</td><td>tonic</td><td>10</td><td>9</td></tr>
+  
+</table>
+
+<h2>What a run is offered</h2>
+<p class="note">
+  Each sample run code walked through every fight, through the shop's own <code>OfferTonic</code>
+  and <code>DrinkTonic</code>: once buying every tonic offered, once buying none. A dash is a realm
+  with nothing left to offer. Buying nothing is what holds a tonic with a requirement back for good.
+</p>
+<table>
+  <tr><th>run code</th><th>buys</th><th>realm 1</th><th>realm 2</th><th>realm 3</th><th>realm 4</th><th>realm 5</th><th>realm 6</th><th>realm 7</th><th>realm 8</th></tr>
+  
+  <tr><td class="code">000000</td><td>every one</td><td>Collector&#39;s Tonic</td><td>Pressure Tonic</td><td>Sifter&#39;s Tonic</td><td>Athlete&#39;s Tonic</td><td>Juggler&#39;s Tonic</td><td>Jeweller&#39;s Tonic</td><td>Olympian&#39;s Tonic</td><td>—</td></tr>
+  <tr><td class="code">000000</td><td>none</td><td>Collector&#39;s Tonic</td><td>Pressure Tonic</td><td>Sifter&#39;s Tonic</td><td>Athlete&#39;s Tonic</td><td>Juggler&#39;s Tonic</td><td>Jeweller&#39;s Tonic</td><td>—</td><td>—</td></tr>
+  
+  <tr><td class="code">00H602</td><td>every one</td><td>Pressure Tonic</td><td>Jeweller&#39;s Tonic</td><td>Athlete&#39;s Tonic</td><td>Olympian&#39;s Tonic</td><td>Collector&#39;s Tonic</td><td>Juggler&#39;s Tonic</td><td>Sifter&#39;s Tonic</td><td>—</td></tr>
+  <tr><td class="code">00H602</td><td>none</td><td>Pressure Tonic</td><td>Jeweller&#39;s Tonic</td><td>Athlete&#39;s Tonic</td><td>Collector&#39;s Tonic</td><td>Juggler&#39;s Tonic</td><td>Sifter&#39;s Tonic</td><td>—</td><td>—</td></tr>
+  
+  <tr><td class="code">7YVCSR</td><td>every one</td><td>Collector&#39;s Tonic</td><td>Jeweller&#39;s Tonic</td><td>Athlete&#39;s Tonic</td><td>Olympian&#39;s Tonic</td><td>Juggler&#39;s Tonic</td><td>Sifter&#39;s Tonic</td><td>Pressure Tonic</td><td>—</td></tr>
+  <tr><td class="code">7YVCSR</td><td>none</td><td>Collector&#39;s Tonic</td><td>Jeweller&#39;s Tonic</td><td>Athlete&#39;s Tonic</td><td>Juggler&#39;s Tonic</td><td>Sifter&#39;s Tonic</td><td>Pressure Tonic</td><td>—</td><td>—</td></tr>
+  
+  <tr><td class="code">K4R7N2</td><td>every one</td><td>Juggler&#39;s Tonic</td><td>Sifter&#39;s Tonic</td><td>Pressure Tonic</td><td>Jeweller&#39;s Tonic</td><td>Collector&#39;s Tonic</td><td>Athlete&#39;s Tonic</td><td>Olympian&#39;s Tonic</td><td>—</td></tr>
+  <tr><td class="code">K4R7N2</td><td>none</td><td>Juggler&#39;s Tonic</td><td>Sifter&#39;s Tonic</td><td>Pressure Tonic</td><td>Jeweller&#39;s Tonic</td><td>Collector&#39;s Tonic</td><td>Athlete&#39;s Tonic</td><td>—</td><td>—</td></tr>
+  
+</table>

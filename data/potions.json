@@ -21,10 +21,10 @@
   },
   {
     "PotionRecord": "hp-buff",
-    "Name": "Tonic",
+    "Name": "Elixir",
     "Family": "Potions",
     "Art": "hp-buff",
-    "Draw": "a tall slender bottle of pale pink thick tonic, a faceted glass stopper seated in its mouth",
+    "Draw": "a tall slender bottle of pale pink thick elixir, a faceted glass stopper seated in its mouth",
     "Effect": "life",
     "Amount": 10,
     "Price": 6

@@ -86,6 +86,11 @@ var catalogs = map[string]catalog{
 		out:     filepath.Join("assets", "essence"),
 		sources: []source{{json: "data/essences.json", key: "EssenceRecord"}},
 	},
+	"cantrip": {
+		inbox:   filepath.Join(".scratch", "to-process-cantrip-art"),
+		out:     filepath.Join("assets", "cantrip"),
+		sources: []source{{json: "data/cantrips.json", key: "CantripRecord"}},
+	},
 	"rune": {
 		inbox:   filepath.Join(".scratch", "to-process-rune-art"),
 		out:     filepath.Join("assets", "rune"),
@@ -106,6 +111,7 @@ var catalogs = map[string]catalog{
 		out:   filepath.Join("assets", "other"),
 		sources: []source{
 			{json: "data/potions.json", key: "PotionRecord"},
+			{json: "data/tonics.json", key: "TonicRecord"},
 			{json: "data/goods.json", key: "GoodRecord"},
 		},
 	},

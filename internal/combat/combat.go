@@ -491,7 +491,8 @@ func blockedByShield(events []Event, side Side, actor, target Duelist, card Card
 			}
 		}
 		if r.Vitae > 0 {
-			target.Vitae += r.Vitae
+			paid := target.Earned(r.Vitae)
+			target.Vitae += paid
 			events = append(events, Event{
 				Kind:   KindTithed,
 				Side:   wearer,
@@ -499,7 +500,7 @@ func blockedByShield(events []Event, side Side, actor, target Duelist, card Card
 				Relic:  r.Relic,
 				Slot:   slot,
 				Hit:    hit,
-				Amount: r.Vitae,
+				Amount: paid,
 				Round:  round,
 			})
 		}
@@ -711,7 +712,7 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 		// **Silver needs no grant event**, because vitae already has a way out of a resolved round:
 		// the purse the duel closes with, less the one it opened with. See KindVitae.
 		if odds := slot.Card.SilverOdds(); odds > 0 {
-			if paid := rollSilver(odds, actor.rollScale(), luck); paid > 0 {
+			if paid := actor.Earned(rollSilver(odds, actor.rollScale(), luck)); paid > 0 {
 				actor.Vitae += paid
 				events = append(events, Event{
 					Kind:    KindVitae,
@@ -759,7 +760,7 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 	// **One event per card rather than one for the turn**, because the feed names the card that
 	// paid and a single summed line would name none of them.
 	for _, c := range held {
-		paid := c.VitaeInHand()
+		paid := actor.Earned(c.VitaeInHand())
 		if paid <= 0 {
 			continue
 		}

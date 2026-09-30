@@ -158,7 +158,7 @@ func (s *Session) CanAffordGood(key string) bool {
 	if !ok {
 		return false
 	}
-	return s.vitae >= g.Price
+	return s.vitae >= s.Price(g.Price)
 }
 
 // BuyGood pays for a sealed good and reports whether it could.
@@ -172,7 +172,7 @@ func (s *Session) BuyGood(key string) bool {
 	if !ok {
 		return false
 	}
-	return s.SpendVitae(g.Price)
+	return s.SpendVitae(s.Price(g.Price))
 }
 
 func loadGoods() []Good {

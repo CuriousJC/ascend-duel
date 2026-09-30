@@ -163,11 +163,15 @@ func relicTitle(record data.RelicData) string {
 	return record.Name + " (" + strings.ToUpper(string(record.Rarity)) + ")"
 }
 
-// ShopRelicTip is relicTip with the price under it, for a relic on the shelf.
-func ShopRelicTip(record data.RelicData) (string, []string) {
+// ShopRelicTip is relicTip with the price under it, for a relic on the shelf. **run is who is
+// buying**, so the price quoted is the one charged; nil quotes the list price.
+func ShopRelicTip(record data.RelicData, run *session.Session) (string, []string) {
 	title, lines := RelicTip(record)
 
 	if price, ok := session.RelicPrice(record.RelicRecord); ok {
+		if run != nil {
+			price = run.Price(price)
+		}
 		lines = append(lines, fmt.Sprintf("%d vitae, sells back for %d",
 			price, session.SellValue(record.RelicRecord)))
 	}

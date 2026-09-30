@@ -56,7 +56,7 @@ var known = map[string]struct {
 	"essence": {"Essences", "../essencesheet/index.html", "Full-bleed card faces."},
 	"rune":    {"Runes", "../runesheet/index.html", "Full-bleed card faces."},
 	"stone":   {"Stones", "../stonesheet/index.html", "Full-bleed card faces."},
-	"other":   {"Other cards", "../goodsheet/index.html", "Potions, sealed goods and the brand."},
+	"other":   {"Other cards", "../goodsheet/index.html", "Potions, tonics and sealed goods."},
 	"motifs":  {"Creatures and backdrops", "../motifreport/index.html", "One folder per motif: a picture per creature per element, and a backdrop per room per element."},
 	"damage":  {"Damage badges", "../badgesheet/index.html", "The numeral is drawn into the badge."},
 	"form":    {"Form marks and cost ticks", "../marksheet/index.html", "One per form per element, plus a neutral set."},

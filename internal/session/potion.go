@@ -166,7 +166,7 @@ func parsePotionEffect(name string) (PotionEffect, error) {
 // card rather than swallow a click.
 func (s *Session) CanDrink(key string) bool {
 	p, ok := PotionByKey(key)
-	return ok && s.vitae >= p.Price
+	return ok && s.vitae >= s.Price(p.Price)
 }
 
 // Drink pays for a potion and applies it, and reports whether it could.
@@ -178,7 +178,7 @@ func (s *Session) CanDrink(key string) bool {
 // figures that have no ceiling of their own.
 func (s *Session) Drink(key string) bool {
 	p, ok := PotionByKey(key)
-	if !ok || !s.SpendVitae(p.Price) {
+	if !ok || !s.SpendVitae(s.Price(p.Price)) {
 		return false
 	}
 

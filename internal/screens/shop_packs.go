@@ -15,8 +15,8 @@ package screens
 // **Rerolls are per pane and they escalate** *(owner's call, 2026-09-06)*: 2 vitae, then 4, then 8,
 // doubling within a visit and starting again at the next shop. The relics and the packs each have
 // their own button and their own count, so pressing one does not make the other dearer. The potions
-// and the brand have no button at all — the potion pane is the whole catalog every visit, so a
-// reroll would offer what is already offered, and the brand is one seat.
+// and the tonic have no button at all — the potion pane is the whole catalog every visit, so a
+// reroll would offer what is already offered, and the tonic is the realm's one offer.
 //
 // **A reroll advances the visit's cursor rather than seeding a second stream.** The scene holds the
 // two `*rand.Rand`s from Init and every deal draws from them, which is what keeps a replayed run
@@ -41,9 +41,8 @@ const packsOffered = 2
 
 // rerollBase is what the first reroll of a pane costs, and every one after it doubles.
 //
-// **A placeholder in the same sense the brand's price is** — it was 2 on the design canvas and
-// nothing has been tuned against it. The doubling is the shape of the decision; the 2 is a number
-// to move.
+// **A placeholder** — it was 2 on the design canvas and nothing has been tuned against it. The
+// doubling is the shape of the decision; the 2 is a number to move.
 const rerollBase = 2
 
 // rerollPrice is what the next reroll of a pane costs: the base doubled once per reroll already
@@ -249,7 +248,7 @@ func (s *ShopScene) canReroll(gs *state.GlobalState, p shopPane) bool {
 	if gs.Run == nil || !rerollable(p) || !s.paneHasSomethingToReroll(gs, p) {
 		return false
 	}
-	return gs.Run.Vitae() >= s.rerollPrice(p)
+	return gs.Run.Vitae() >= gs.Run.Price(s.rerollPrice(p))
 }
 
 // reroll pays for a redraw and takes it.
@@ -260,7 +259,7 @@ func (s *ShopScene) reroll(gs *state.GlobalState, p shopPane) {
 	if !s.canReroll(gs, p) {
 		return
 	}
-	price := s.rerollPrice(p)
+	price := gs.Run.Price(s.rerollPrice(p))
 	if !gs.Run.SpendVitae(price) {
 		return
 	}
@@ -276,7 +275,7 @@ func (s *ShopScene) reroll(gs *state.GlobalState, p shopPane) {
 	s.tip.Forget()
 
 	trace.Logf("shop", "rerolled %s for %d, next costs %d, %d vitae left",
-		paneName(p), price, s.rerollPrice(p), gs.Run.Vitae())
+		paneName(p), price, gs.Run.Price(s.rerollPrice(p)), gs.Run.Vitae())
 }
 
 func paneName(p shopPane) string {
@@ -317,7 +316,7 @@ func (s *ShopScene) updateRerollButtons(gs *state.GlobalState) {
 		b := s.rerollButton(p)
 		at := shopRerollRect(gs, p)
 		b.ScreenX, b.ScreenY = (at.Min.X+at.Max.X)/2, (at.Min.Y+at.Max.Y)/2
-		b.Text = fmt.Sprintf("REROLL %d", s.rerollPrice(p))
+		b.Text = fmt.Sprintf("REROLL %d", shopPrice(gs, s.rerollPrice(p)))
 		ui.SetEnabled(b, s.canReroll(gs, p))
 		systems.UpdateButton(gs, b)
 	}

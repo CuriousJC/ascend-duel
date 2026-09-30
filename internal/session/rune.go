@@ -653,7 +653,7 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 
 	switch p.Target {
 	case RuneVitae:
-		s.AddVitae(p.Number)
+		s.earn(p.Number)
 		return true
 
 	case RuneRemove:

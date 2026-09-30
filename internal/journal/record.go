@@ -39,6 +39,7 @@ const (
 	KindStone   = "stone"
 	KindCantrip = "cantrip"
 	KindPotion  = "potion"
+	KindTonic   = "tonic"
 
 	// The shop. KindGood is a sealed good paid for and KindTake is the one thing taken out of it,
 	// which is two choices and two lines: the good is bought before its contents are seen.

@@ -46,7 +46,7 @@ import (
 // by two. See handTarget, which is what the refill actually reads; this is what it widens from.
 // Eight is left alone deliberately: `discardsPerRound` and now Plan are the levers meant to
 // answer draw variance, and moving all three at once would leave no way to tell which did the
-// work. A brand growing hand size is the recorded permanent version.
+// work. A tonic growing hand size is the permanent version, read through handTarget.
 const handSize = 8
 
 // deckSize is how many cards the player owns right now, counting all three piles.
@@ -365,7 +365,23 @@ func (s *CombatScene) shuffleDeck() {
 // nothing widens a hand any more. It stays a function rather than becoming `handSize` at every
 // call site because "how many cards does a refill draw to" is a question with one answer and one
 // place to change it, and the relic grammar has a seat for a card-drawn moment already.
-func (s *CombatScene) handTarget() int { return handSize }
+//
+// **It is the run's figure**, which is handSize plus every hand-size tonic the run has drunk.
+func (s *CombatScene) handTarget() int {
+	if s.run == nil {
+		return handSize
+	}
+	return s.run.HandSize(handSize)
+}
+
+// roundDiscards is how many discards a round of this fight allows: discardsPerRound plus every
+// discards tonic the run has drunk.
+func (s *CombatScene) roundDiscards() int {
+	if s.run == nil {
+		return discardsPerRound
+	}
+	return s.run.Discards(discardsPerRound)
+}
 
 // drawHand fills the hand up to handTarget, reshuffling the discard back into the draw pile
 // when it runs dry. A hand can come up short only if every card the player owns is already
@@ -455,7 +471,7 @@ func (s *CombatScene) restoreToDeck(c combat.Card) combat.Card {
 // something the round boundary was going to do anyway.
 func (s *CombatScene) endRoundHand() {
 	s.spendSelected()
-	s.discardsLeft = discardsPerRound
+	s.discardsLeft = s.roundDiscards()
 }
 
 // fightContents is the deck as a fight sees it: what is left to draw, what is spoken for, and the

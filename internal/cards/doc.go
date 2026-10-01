@@ -42,8 +42,8 @@
 // # Three ways to say something on a card, and they are not interchangeable
 //
 // The **face** is what the card *is*: name, cost ticks, form mark, effect text. An **upgrade** is
-// what the run has permanently made it, and it says so by taking the left column over rather than
-// by covering anything — see upgrade.go. A **mark** is the card's *situation*, drawn over the
+// what the run has permanently made it, and it says so with a strip down each side of the face,
+// under everything written on it — see edge.go. A **mark** is the card's *situation*, drawn over the
 // finished face, and it covers things because that is the point — see mark.go.
 //
 // The distinction that keeps costing thought: an upgrade travels with the card everywhere it is

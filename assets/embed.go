@@ -124,20 +124,25 @@ var gear_png []byte
 //go:embed form/*.png
 var formArt embed.FS
 
-// UPGRADE ART
+// UPGRADE INKS
 //
-// The color a *visible upgrade* paints a card's left column from. A card the run has altered
-// used to look exactly like one it had not — sixteen runes attach seven kinds of rider and
-// the only place any of them was visible was the tooltip prose — and this is the first of them
-// that says so on the face.
+// The color a *visible upgrade* is named in where it is written rather than drawn: CHROMATIC in a
+// tooltip title is set letter by letter across this file's five bands. **It is a color source, not
+// a picture** — nothing blits it; `internal/systems` decodes it and `internal/cards` samples it.
+// Authored at 32x32, `systems.UpgradeInkSize`.
 //
-// **It is a color source, not a picture.** Nothing blits this file: `internal/systems` decodes
-// it and `internal/cards` samples it to paint the form mark and the cost ticks, exactly where the
-// element's own color would otherwise go. So it is authored at the form marks' 32x32, the box it
-// has to cover, rather than at the 64 the drawn glyphs use.
+//go:embed upgrade/wildcard.png
+var wildcardupgrade_png []byte
+
+// CARD EDGES
 //
-// **Its own group rather than `form/`**, because more visible upgrades are coming and the next
-// one will have nothing to do with the form mark.
+// The strip an upgraded card draws down each side of its face — `data/edges.json` names one per
+// upgrade, keyed by filename stem like the relic art, and `internal/cards` stretches it to the
+// strip and mirrors it for the right edge. **Every stem starts `edge-`**, because the image map is
+// flat and `golden` or `wild` alone would be one rename away from colliding with another family.
+//
+//go:embed edge/*.png
+var edgeArt embed.FS
 
 // MATERIAL TEXTURES
 //
@@ -157,9 +162,6 @@ var formArt embed.FS
 //
 //go:embed texture/*.png
 var textureArt embed.FS
-
-//go:embed upgrade/wildcard.png
-var wildcardupgrade_png []byte
 
 // THE MOTIFS: every creature's picture and every duel's backdrop
 //
@@ -427,6 +429,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, otherArt, "other")
 	embedFamily(images, formArt, "form")
 	embedFamily(images, textureArt, "texture")
+	embedFamily(images, edgeArt, "edge")
 	embedTree(images, motifArt, "motifs")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
@@ -449,8 +452,8 @@ func LoadImageData() map[string][]byte {
 	// The four form marks, for the same reason again: internal/cards draws them into a card
 	// and has no graphics context.
 
-	// The upgrade inks, for the same reason: internal/cards samples them into a card face and
-	// has no graphics context.
+	// The upgrade ink, for the same reason: internal/cards samples it to color a word and has no
+	// graphics context.
 	images["wildcardupgrade_png"] = wildcardupgrade_png
 
 	return images

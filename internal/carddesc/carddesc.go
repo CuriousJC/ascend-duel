@@ -203,7 +203,7 @@ func RiderLines(c combat.Card, rolls int) []string {
 			// 2026-09-09)*. The panel opens with what the card *is* — the same line its face carries,
 			// in the same color — and only then says what that costs and pays. Two rate lines
 			// arriving with nothing over them read as arithmetic about a card whose name the player
-			// has to work out from the wash.
+			// has to work out from its edge.
 			//
 			// The odds are the record's; the payouts are combat's constants. Both are read rather
 			// than written out, so a retune moves these lines with the rule.
@@ -326,7 +326,7 @@ func upper(s string) string {
 //
 // **Total over combat.RiderKinds(), like RiderLines.** A rider with no face line is a rune the
 // player spent that the card does not mention — the same failure as a rider with no drawing, and
-// the one the wash on its own cannot fix: a color is what carries across a row of eight cards, and
+// the one the edge on its own cannot fix: an edge is what carries across a row of eight cards, and
 // the words are what answers "what does that mean" without a hover.
 func FaceLines(c combat.Card) []string {
 	var out []string
@@ -357,16 +357,14 @@ func FaceLines(c combat.Card) []string {
 		case combat.RiderGolden, combat.RiderSilver:
 			// **The metals say nothing on the face, and they are the only two that may**
 			// *(owner's call, 2026-09-09)*. Every other upgrade is a placeholder tint standing on a
-			// full wheel, so its color cannot be relied on to name it and the words are what a
-			// player learns it from — see systems.upgradeTint. Gold and silver are the exception in
-			// exactly that respect: systems.upgradeSheen is not a placeholder, because gold and
-			// silver are what the mechanic is *called*, and a sheen running across a card is
-			// something nothing else on the table does. A card whose picture already says GOLD does
-			// not need the word.
+			// full wheel, and every upgrade without an edge of its own draws the default strip, so the
+			// words are what a player learns those from. Gold and silver are the exception: they are
+			// what the mechanic is *called*, and a card whose own edge already says GOLD does not
+			// need the word — see data/edges.json.
 			//
 			// **The whole gamble is the tooltip's**, where there is room for a sentence — see
 			// RiderLines, which names the metal and then prints the odds under it. This is the one
-			// place the face is deliberately quieter than the panel, and the sheen is what pays
+			// place the face is deliberately quieter than the panel, and the edge is what pays
 			// for it.
 		}
 	}

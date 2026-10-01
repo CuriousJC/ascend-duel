@@ -56,7 +56,7 @@ func TestNoTwoRidersShareAnUpgrade(t *testing.T) {
 }
 
 // **An unridden card carries no upgrade**, which is what makes the common case the zero value and
-// what stops every plain card in the deck being washed in something.
+// what stops every plain card in the deck drawing an edge.
 func TestAnUnriddenCardHasNoUpgrade(t *testing.T) {
 	if got := upgradeOf(combat.Plain(combat.Bash)); got != systems.UpgradeNone {
 		t.Errorf("a plain card draws as %s", got)

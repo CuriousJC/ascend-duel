@@ -4,8 +4,8 @@ package cards
 //
 // This is the third way something can be said on a card and it is deliberately unlike the other
 // two. The *face* — name, cost ticks, form mark, text — is what the card is. An *upgrade* is what
-// the run has permanently made it, and it works by taking the left column over rather than by
-// covering anything up (see upgrade.go). A **mark** sits on top of the whole face and is about the
+// the run has permanently made it, and it is a strip down the face's edges laid under everything
+// written on the card (see edge.go). A **mark** sits on top of the whole face and is about the
 // card's situation rather than its identity: this one was stopped, this one was eaten, this one is
 // being altered.
 //
@@ -292,25 +292,6 @@ const highlightWash = 30
 // washInside pulls every pixel of the card toward one color, leaving the transparent corners
 // alone. It is dimInside against an arbitrary ink rather than against the card surface.
 func washInside(dst *image.RGBA, w, h, radius int, ink color.RGBA, pct int) {
-	washInsideFrom(dst, w, h, radius, pct, func(int, int) color.RGBA { return ink })
-}
-
-// washInsideFrom is washInside with the color asked for per pixel, which is what an upgrade's ink
-// needs: the wildcard's is five bands running down the card and every other one is flat.
-//
-// **One traversal for both**, so an upgraded card and a marked one cannot disagree about which
-// pixels are inside the rounded silhouette. See upgrade.go, which is the other caller.
-func washInsideFrom(dst *image.RGBA, w, h, radius, pct int, at func(x, y int) color.RGBA) {
-	washRegionFrom(dst, w, h, radius, pct, at, nil)
-}
-
-// washRegionFrom is washInsideFrom narrowed to part of the card: a pixel is painted only if it is
-// inside the rounded silhouette *and* `in` says so. A nil `in` is the whole card.
-//
-// **The silhouette test is still made first and separately**, so a region predicate cannot reach
-// the transparent corners however loosely it is written — see upgrade.go, whose border predicate is
-// "not the face" and would otherwise square the card off.
-func washRegionFrom(dst *image.RGBA, w, h, radius, pct int, at func(x, y int) color.RGBA, in func(x, y int) bool) {
 	if pct <= 0 {
 		return
 	}
@@ -320,14 +301,10 @@ func washRegionFrom(dst *image.RGBA, w, h, radius, pct int, at func(x, y int) co
 			if !insideRounded(w, h, radius, x, y) {
 				continue
 			}
-			if in != nil && !in(x, y) {
-				continue
-			}
 			i := dst.PixOffset(b.Min.X+x, b.Min.Y+y)
 			if dst.Pix[i+3] == 0 {
 				continue
 			}
-			ink := at(x, y)
 			dst.Pix[i+0] = towardByte(dst.Pix[i+0], ink.R, pct)
 			dst.Pix[i+1] = towardByte(dst.Pix[i+1], ink.G, pct)
 			dst.Pix[i+2] = towardByte(dst.Pix[i+2], ink.B, pct)

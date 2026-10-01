@@ -94,6 +94,10 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		drawArtBleed(img, s, st)
 	}
 
+	// **An upgrade is the card's ground, so it goes down before anything is written on it** — see
+	// edge.go. The column and the text sit on top of the strip.
+	drawEdges(img, s, st)
+
 	if st.ShowName {
 		draw := drawText
 		if st.NameCentered {
@@ -123,10 +127,9 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	// the border's neutral gray would have made the corner the only colored mark on an
 	// otherwise monochrome column. Same state treatment as the border, different base color.
 	//
-	// **An upgrade no longer touches the column** *(owner's call, 2026-09-09)*. It took the mark
-	// and the ticks over while the wildcard was the only one there was; now that there are ten and
-	// nine of them say nothing about the element, an upgrade washes the whole card instead — see
-	// upgrade.go. The column goes back to stating one thing, which is the element.
+	// **An upgrade never touches the column.** Nine of the upgrades say nothing about the element,
+	// so the column states one thing, which is the element; the upgrade is the strip down the
+	// card's edges — see edge.go.
 	drawDashes(img, s, st)
 
 	if err := drawEffectText(img, s, st, f, ink); err != nil {
@@ -148,13 +151,9 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		return nil, err
 	}
 
-	// **Both go on last, over everything including the border, and the order is fixed.** An upgrade
-	// is what the card permanently is, so it belongs in the face; a mark is what has happened to it,
-	// so it sits on top of a finished face rather than being woven into one — see mark.go.
-	//
-	// **The upgrade goes down before the mark, and the two are different things.** A shattered gold
-	// card is gold *and* broken, in that order.
-	drawUpgrade(img, s, st)
+	// **The mark goes on last, over everything including the border.** A mark is what has happened
+	// to the card, so it sits on top of a finished face rather than being woven into one — see
+	// mark.go. The upgrade went in with the ground, so a shattered gold card is gold *and* broken.
 	drawMark(img, s.Mark, s.Name, st.Width, st.Height, st.CornerRadius)
 	return img, nil
 }

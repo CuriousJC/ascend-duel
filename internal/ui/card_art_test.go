@@ -702,14 +702,13 @@ func TestNoOpponentCardWritesItsOwnName(t *testing.T) {
 }
 
 // **Every rider is on the face, not only in the tooltip** *(2026-09-09)*. A card the player spent a
-// rune on carries a wash whatever the rider is, and the wash is what carries across a row of
+// rune on carries an edge whatever the rider is, and the edge is what carries across a row of
 // eight cards — but it is not what answers "what does that mean". Six of the ten riders said
 // nothing at all until this test existed.
 //
 // **The two metals are the exception and are named here rather than skipped by a rule**
-// *(owner's call, 2026-09-09)*. Their wash is a sheen rather than a placeholder tint, and gold and
-// silver are what the mechanic is called — so the picture names them and a word would be the same
-// fact twice. A third silent rider has to be argued for by editing this list.
+// *(owner's call, 2026-09-09)*. Gold and silver are what the mechanic is called, so the card's edge
+// names them and a word would be the same fact twice. A third silent rider has to be argued for by editing this list.
 func TestEveryRiderKindIsOnTheFace(t *testing.T) {
 	silent := map[combat.RiderKind]bool{combat.RiderGolden: true, combat.RiderSilver: true}
 
@@ -717,7 +716,7 @@ func TestEveryRiderKindIsOnTheFace(t *testing.T) {
 		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 5})
 		switch got := riderText(c); {
 		case silent[k] && got != "":
-			t.Errorf("rider %s writes %q on the face, and its sheen is what names it", k, got)
+			t.Errorf("rider %s writes %q on the face, and its edge is what names it", k, got)
 		case !silent[k] && got == "":
 			t.Errorf("rider %s adds nothing to the card's face", k)
 		}
@@ -728,9 +727,9 @@ func TestEveryRiderKindIsOnTheFace(t *testing.T) {
 }
 
 // **A metal explains itself in the tooltip: named first, then the odds.** The face says nothing at
-// all about a metal — its sheen is what names it — so the panel is the whole explanation, and it
+// all about a metal — its edge is what names it — so the panel is the whole explanation, and it
 // opens by saying which metal rather than with two rate lines about a card the player has to
-// identify from the wash.
+// identify from its edge.
 func TestAMetalStillExplainsItselfInTheTooltip(t *testing.T) {
 	for _, metal := range []struct {
 		kind combat.RiderKind
@@ -756,8 +755,8 @@ func TestAMetalStillExplainsItselfInTheTooltip(t *testing.T) {
 	}
 }
 
-// **The name is written in the metal's own color**, sampled out of the sheen the card is washed in
-// rather than written down anywhere — so a repaint of the ink moves the word with it. Lifted for the
+// **The name is written in the metal's own color**, sampled out of the metal's ink rather than
+// written down anywhere — so a repaint of the ink moves the word with it. Lifted for the
 // dark panel; see cards.WashLight.
 func TestAMetalsNameIsLitInTheTooltip(t *testing.T) {
 	for _, metal := range []struct {

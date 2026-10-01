@@ -10,25 +10,20 @@
 // visible was the tooltip prose. That is a hand of altered cards the player cannot read. See
 // TODO.md, which is where the owner asked for it to be tracked.
 //
-// Every rider draws as of 2026-09-09, and there are ten of them — so the review question is not
-// "does this one look right" but "do these read as a *set*, and can a player tell two of them apart
-// at 162 pixels". A page per upgrade could never answer that, which is the relic sheet's argument.
-//
-// **Eight of the ten colors are placeholders standing on a full wheel**, which is exactly what
-// this page is for: `systems.upgradeTint` is one line each, so retuning them is a change to that
-// map, a re-run of this, and a look.
+// Every rider draws, so the review question is not "does this one look right" but "do these read as
+// a *set*". A page per upgrade could never answer that, which is the relic sheet's argument.
 //
 // # What to look at
 //
-// **Which of the three styles to draw.** `cards.UpgradeStyle` is the border, the whole card, or the
-// face without the border, and every upgrade is drawn in all three — the same review knob
-// `TintMode` was, for the same reason: "does a gold border say enough" is not a question anybody
-// wins by arguing. The game draws whichever `cards.DefaultUpgradeStyle` names, and the page says
-// which that is.
+// **The edge strip each upgrade draws.** `data/edges.json` names a strip of art per upgrade, plus
+// a default for every upgrade without one, and its `Width`, `Inset` and `Opacity` are the draw
+// properties — the page prints them beside each plate, so tuning them is an edit to that file, a
+// re-run of this, and a look.
 //
-// **Whether ten upgrades are ten distinguishable cards.** They are one flat tint each, bar the two
-// metals' sheen and the wildcard's bands — and the card underneath has to stay readable, because an
-// upgrade is on it for the rest of the run rather than for one step of a tutorial.
+// **The stacked rows.** The strip exists for the deck panel, which overlaps every card over the
+// one before it so only the left edge shows. The page draws every upgrade as that panel does — the
+// half-size card at the panel's resting pitch and again packed tight — because a strip that reads
+// on one card standing alone and vanishes in a pile has missed its one job.
 //
 // **The tooltip each upgrade produces, printed beside the card.** Those are the *same strings the
 // game shows* — `internal/carddesc` is windowless precisely so this page can call it rather than
@@ -42,14 +37,13 @@
 // **The plain card in every row.** An upgrade is only legible against what an ordinary card looks
 // like, and the ordinary card is what the player has fifty-five of.
 //
-// **All four form marks.** The marks have different margins and different amounts of interior
-// detail — a shield is wide-shouldered where a spear is thin and vertical — so an ink that is
-// projected across the ink bounds lands differently on each. A mode that works on the sword and
-// mud on the shield is a mode that does not work.
+// **All four form marks.** The marks sit in the left column the strip runs under, and have
+// different margins — a shield is wide-shouldered where a spear is thin — so a strip that crowds
+// one may clear another.
 //
 // **The three card states.** An upgraded card has to fade with the rest of its row when it cannot
-// be afforded, exactly as an ordinary one does. That is one switch in `Spec.atState` and a wash
-// applied after it, and this is where it is visible.
+// be afforded, exactly as an ordinary one does; the strip walks the same distance toward the
+// surface the cost ticks do, and this is where it is visible.
 //
 // **Which rune grants it.** An upgrade nobody can acquire is invisible in the other
 // direction, so the page names the rider and the record that attaches it, and says so loudly when
@@ -73,6 +67,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
 	"image/png"
 	"log"
 	"os"
@@ -140,46 +137,52 @@ func run(dir string) error {
 	}
 
 	page := page{
-		Ground:    ground,
-		Zoom:      zoom,
-		Style:     styleFacts(cards.Hand),
-		WashPct:   systems.UpgradeWashPct,
-		BorderPct: systems.UpgradeBorderPct,
-		InkSize:   systems.UpgradeInkSize,
-		Default:   cards.DefaultUpgradeStyle.String(),
+		Ground: ground,
+		Zoom:   zoom,
+		Style:  styleFacts(cards.Hand),
 	}
 
 	// The control row: the same four cards with no upgrade at all. It goes first because every
 	// judgment below it is a comparison against this.
-	plain, err := renderRow(dir, faces, systems.UpgradeNone, cards.DefaultUpgradeStyle, "plain")
+	plain, err := renderRow(dir, faces, systems.UpgradeNone, "plain")
 	if err != nil {
 		return err
 	}
 	page.Plain = plain
 
+	// The deck panel's view: every upgrade stacked as the panel stacks a row, at its resting
+	// pitch and packed tight.
+	for _, pitch := range []int{stackPitch, stackTight} {
+		c, err := writeStack(dir, faces, pitch)
+		if err != nil {
+			return err
+		}
+		page.Stacks = append(page.Stacks, c)
+	}
+
 	for _, u := range systems.Upgrades() {
+		e, _ := cards.EdgeOf(u)
 		p := plate{
-			Upgrade: u.String(),
-			Riders:  ridersFor(u),
-			Grants:  grantsFor(u),
-			Tip:     tipFor(u),
+			Upgrade:  u.String(),
+			Edge:     e.EdgeRecord,
+			Art:      e.ArtKey(),
+			Undrawn:  e.Art == "",
+			Width:    e.Width,
+			Inset:    e.Inset,
+			Opacity:  e.Opacity,
+			FadeFrom: e.FadeFrom,
+			FadeTo:   e.FadeTo,
+			Riders:   ridersFor(u),
+			Grants:   grantsFor(u),
+			Tip:      tipFor(u),
 		}
 
-		for _, style := range cards.UpgradeStyles() {
-			row, err := renderRow(dir, faces, u, style, u.String()+"-"+style.String())
-			if err != nil {
-				return err
-			}
-			p.Styles = append(p.Styles, styleRow{
-				Style:   style.String(),
-				Default: style == cards.DefaultUpgradeStyle,
-				Cells:   row,
-			})
+		row, err := renderRow(dir, faces, u, u.String())
+		if err != nil {
+			return err
 		}
+		p.Cells = row
 
-		// The three card states, in the style the game draws only. Which style is chosen has
-		// nothing to do with whether state works — that is one switch in Spec.atState — so nine
-		// cards here would be nine pictures of one fact.
 		for _, st := range []struct {
 			name              string
 			label             string
@@ -190,7 +193,7 @@ func run(dir string) error {
 			{"disabled", "more AP than the turn has left", false, false},
 		} {
 			d := demoCards[0]
-			spec := specFor(d.Form, d.Name, d.Element, u, cards.DefaultUpgradeStyle)
+			spec := specFor(d.Form, d.Name, d.Element, u)
 			spec.Enabled, spec.Selected = st.enabled, st.selected
 			c, err := write(dir, faces, spec, u.String()+"-state-"+st.name+".png", st.label)
 			if err != nil {
@@ -213,24 +216,23 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s — %d upgrades, %d styles, %d forms\n",
-		out, len(page.Plates), len(cards.UpgradeStyles()), len(demoCards))
+	fmt.Printf("wrote %s — %d upgrades, %d forms\n", out, len(page.Plates), len(demoCards))
 	for _, p := range page.Plates {
 		grants := p.Grants
 		if grants == "" {
 			grants = "NOTHING GRANTS IT"
 		}
-		fmt.Printf("  %-8s %-14s %s\n", p.Upgrade, p.Riders, grants)
+		fmt.Printf("  %-11s edge %-8s %-14s %s\n", p.Upgrade, p.Edge, p.Riders, grants)
 	}
 	return nil
 }
 
-// renderRow draws the four demonstration cards for one upgrade in one style.
-func renderRow(dir string, f *cards.Faces, u systems.Upgrade, style cards.UpgradeStyle, tag string) ([]cell, error) {
+// renderRow draws the four demonstration cards for one upgrade.
+func renderRow(dir string, f *cards.Faces, u systems.Upgrade, tag string) ([]cell, error) {
 	out := make([]cell, 0, len(demoCards))
 	for _, d := range demoCards {
 		name := tag + "-" + d.Form.String() + ".png"
-		c, err := write(dir, f, specFor(d.Form, d.Name, d.Element, u, style), name, d.Name)
+		c, err := write(dir, f, specFor(d.Form, d.Name, d.Element, u), name, d.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -245,18 +247,73 @@ func renderRow(dir string, f *cards.Faces, u systems.Upgrade, style cards.Upgrad
 // **The text is what a card carrying this upgrade actually prints**, taken from the same place the
 // game takes it rather than written out here — a sheet quoting its own wording would be the one
 // place a mismatch between the face and the rules is invisible.
-func specFor(form cards.Form, name string, e cards.Element, u systems.Upgrade, style cards.UpgradeStyle) cards.Spec {
+func specFor(form cards.Form, name string, e cards.Element, u systems.Upgrade) cards.Spec {
 	return cards.Spec{
-		Name:         name,
-		Form:         form,
-		Cost:         demoCost,
-		Element:      e,
-		Upgrade:      u,
-		UpgradeStyle: style,
-		Text:         textFor(u),
-		Highlights:   cards.ElementHighlights(textFor(u)),
-		Enabled:      true,
+		Name:       name,
+		Form:       form,
+		Cost:       demoCost,
+		Element:    e,
+		Upgrade:    u,
+		Text:       textFor(u),
+		Highlights: cards.ElementHighlights(textFor(u)),
+		Enabled:    true,
 	}
+}
+
+// The two pitches the stacked rows are drawn at. **stackPitch is the deck panel's resting
+// `deckStackPitch`, restated** — `internal/ui` links Ebitengine and a command-line tool cannot
+// reach it — and stackTight is a row that has had to tighten, which is where only the strip and a
+// sliver of the left column show.
+const (
+	stackPitch = 75
+	stackTight = 30
+)
+
+// writeStack draws the plain card and then every upgrade as one deck-panel row: the half-size card,
+// each overlapping the one before it at pitch, the last drawn on top — the panel's own order, so
+// what shows of each card is its left edge.
+func writeStack(dir string, f *cards.Faces, pitch int) (cell, error) {
+	ups := append([]systems.Upgrade{systems.UpgradeNone}, systems.Upgrades()...)
+	st := cards.Mini
+	w := pitch*(len(ups)-1) + st.Width
+	img := image.NewRGBA(image.Rect(0, 0, w, st.Height))
+	draw.Draw(img, img.Bounds(), &image.Uniform{C: groundRGBA()}, image.Point{}, draw.Src)
+
+	d := demoCards[0]
+	for i, u := range ups {
+		face, err := cards.Render(specFor(d.Form, d.Name, d.Element, u), st, f)
+		if err != nil {
+			return cell{}, fmt.Errorf("rendering the stack: %w", err)
+		}
+		at := image.Rect(i*pitch, 0, i*pitch+st.Width, st.Height)
+		draw.Draw(img, at, face, image.Point{}, draw.Over)
+	}
+
+	name := fmt.Sprintf("stack-%d.png", pitch)
+	out, err := os.Create(filepath.Join(dir, name))
+	if err != nil {
+		return cell{}, fmt.Errorf("creating %s: %w", name, err)
+	}
+	defer out.Close()
+	if err := png.Encode(out, img); err != nil {
+		return cell{}, fmt.Errorf("encoding %s: %w", name, err)
+	}
+
+	label := "none"
+	for _, u := range ups[1:] {
+		label += " · " + u.String()
+	}
+	return cell{
+		File: name, Label: label, Note: fmt.Sprintf("%dpx pitch", pitch),
+		Width: w, Height: st.Height,
+	}, nil
+}
+
+// groundRGBA is ground as a color, for a picture rather than a stylesheet.
+func groundRGBA() color.RGBA {
+	var r, g, b uint8
+	fmt.Sscanf(ground, "#%02x%02x%02x", &r, &g, &b)
+	return color.RGBA{R: r, G: g, B: b, A: 255}
 }
 
 // textFor is the text an upgraded card carries under its name, exactly as the game prints it.
@@ -486,31 +543,29 @@ type tip struct {
 	Lines [][]tipRun
 }
 
-// styleRow is one way of painting an upgrade onto a card, across every form mark.
-type styleRow struct {
-	Style   string
-	Default bool
-	Cells   []cell
-}
-
-// plate is one upgrade: how it is acquired, how it looks in each style, and how it states.
+// plate is one upgrade: how it is acquired, the edge it draws, how it looks and how it states.
 type plate struct {
-	Upgrade string
-	Riders  string
-	Grants  string
-	Tip     tip
-	Styles  []styleRow
-	States  []cell
+	Upgrade  string
+	Edge     string
+	Art      string
+	Undrawn  bool
+	Width    int
+	Inset    int
+	Opacity  int
+	FadeFrom int
+	FadeTo   int
+	Riders   string
+	Grants   string
+	Tip      tip
+	Cells    []cell
+	States   []cell
 }
 
 type page struct {
-	Ground    string
-	Zoom      int
-	InkSize   int
-	WashPct   int
-	BorderPct int
-	Default   string
-	Style     map[string]int
-	Plain     []cell
-	Plates    []plate
+	Ground string
+	Zoom   int
+	Style  map[string]int
+	Plain  []cell
+	Stacks []cell
+	Plates []plate
 }

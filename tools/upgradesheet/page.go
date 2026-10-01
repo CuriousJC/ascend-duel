@@ -2,8 +2,8 @@ package main
 
 import "html/template"
 
-// The page. One static file, no JavaScript, no build step: the loop is "change a style or a tint,
-// re-run the tool, refresh the tab", the same loop every other tool here has.
+// The page. One static file, no JavaScript, no build step: the loop is "change an edge record or
+// its art, re-run the tool, refresh the tab", the same loop every other tool here has.
 //
 // **Images are shown at their natural size first with image-rendering: pixelated.** A card's rim is
 // one pixel thick and a browser that scales it resamples that rim into a blur, which makes the
@@ -91,31 +91,32 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   marks. The card is <code>cards.Hand</code>, {{index .Style "width"}}×{{index .Style "height"}};
   the form mark's box is <code>{{index .Style "formSize"}}px</code> at
   ({{index .Style "dashLeft"}},{{index .Style "formTop"}}); the ticks are
-  {{index .Style "dashWidth"}}×{{index .Style "dashHeight"}}. Every ink is
-  {{.InkSize}}×{{.InkSize}}; a washed card goes <code>{{.WashPct}}%</code> of the way toward it and a
-  washed border <code>{{.BorderPct}}%</code>. The game draws <code>{{.Default}}</code>.
+  {{index .Style "dashWidth"}}×{{index .Style "dashHeight"}}.
 </p>
 <p class="note">
   A card has a form, an element and an action — and then <strong>one upgrade</strong>. A second
-  upgrade replaces the first outright. <code>Spec.Element</code> is still what the card <em>is</em>,
-  and the left column still states it; the wildcard is the one upgrade that takes the hue off the
-  form mark, because it is the one whose subject is that the card counts as every element at once.
+  upgrade replaces the first outright. An upgrade is drawn as <strong>a strip down each side of the
+  face</strong>: the art <code>data/edges.json</code> names for it, stretched to the face's height,
+  on the left edge and mirrored on the right, under everything written on the card. An upgrade with
+  no record of its own draws <code>default</code>. Each plate prints its record's
+  <code>Width</code>, <code>Inset</code> and <code>Opacity</code>, measured on the hand card; tune
+  them in the file and re-run.
 </p>
+
+<h2>Stacked, as the deck panel stacks them</h2>
 <p class="note">
-  <strong>Three styles, and the question is which one to keep.</strong> <code>border</code> paints
-  the 3px ring and leaves the face alone — the border was freed up in August when the element moved
-  off it, and what is left in that slot is the card's <em>state</em>, which is a wash away from
-  neutral rather than a hue. <code>wash</code> takes the whole card, border included: nobody misses
-  a gold card, and nothing on the face is unaffected. <code>wash-face</code> is the middle answer.
-  Read them against the plain row above, and against a whole hand rather than one card — five loud
-  cards in a row is the failure mode the border style exists to avoid.
+  The plain card, then every upgrade in order, at half size, each drawn over the one before it — so
+  what shows of each is its left edge. The first row is the panel's resting pitch; the second is a
+  row that has had to tighten. <strong>This is the view the strip is for.</strong>
 </p>
-<p class="note">
-  <strong>Eight of these colors are placeholders.</strong> Hue is spent — five elements, the relic
-  pink, the two verbs, the two duelists, the ground — so what is here is picked to be told apart
-  rather than to mean anything. Gold and silver are the exception: they are metals, and they are
-  what the mechanic is called. Retune the rest in <code>systems.upgradeTint</code> and re-run.
-</p>
+{{range .Stacks}}
+<div class="row">
+  <div class="cardbox">
+    <img src="{{.File}}" width="{{.Width}}" height="{{.Height}}" alt="{{.Label}}">
+    <div class="cap">{{.Note}} · {{.Label}}</div>
+  </div>
+</div>
+{{end}}
 
 <p class="note">
   Each upgrade below carries the <strong>tooltip a card wearing it actually shows</strong>, built by
@@ -144,6 +145,8 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
 {{range .Plates}}
 <h3 class="group">{{.Upgrade}}</h3>
 <p class="grants">
+  Edge: <code>{{.Edge}}</code> — art <code>{{.Art}}</code>{{if .Undrawn}} <span class="alarm">(undrawn: the default picture at this record's properties)</span>{{end}}, width {{.Width}}, inset {{.Inset}},
+  opacity {{.Opacity}}%, fading from {{.FadeFrom}} to {{.FadeTo}}.
   Rider: <code>{{.Riders}}</code>.
   {{if .Grants}}Granted by {{.Grants}}.{{else}}<span class="alarm">Nothing in data/runes.json grants it — this upgrade cannot be acquired.</span>{{end}}
 </p>
@@ -152,8 +155,6 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   {{range .Tip.Lines}}<div>{{range .}}<span{{if .Ink}} style="color:{{.Ink}}"{{end}}>{{.Text}}</span>{{end}}</div>{{end}}
 </div>
 
-{{range .Styles}}
-<h4><code>{{.Style}}</code>{{if .Default}}<span class="tag">the game draws this</span>{{end}}</h4>
 <div class="row">
   {{range .Cells}}
   <div class="cardbox">
@@ -162,31 +163,26 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   </div>
   {{end}}
 </div>
-{{end}}
 
 <h4>enlarged, {{$.Zoom}}×</h4>
 <p class="note">
-  The same files, blown up nearest-neighbor, one row per style in the same order. Read it
-  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
-  that does not work.
+  The same files, blown up nearest-neighbor. Read it <em>after</em> the row above, never instead
+  of it — a strip that only works at 3× is a strip that does not work.
 </p>
-{{range $s := .Styles}}
 <div class="row">
-  {{range $s.Cells}}
+  {{range .Cells}}
   <div class="cardbox">
     <img class="big" src="{{.File}}" alt="{{.Label}}">
-    <div class="cap">{{$.Zoom}}× · {{$s.Style}} · {{.Note}}</div>
+    <div class="cap">{{$.Zoom}}× · {{.Note}}</div>
   </div>
   {{end}}
 </div>
-{{end}}
 
 <h4>states</h4>
 <p class="note">
-  In the style the game draws. The upgrade goes on after the state coloring, so a card that cannot
-  be afforded has to still read as unavailable through it and a queued one has to still read as
-  queued — which is the sharpest test of the border style, since state is what the border was
-  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+  The strip fades with the card, the same distance toward the same surface the cost ticks walk, so
+  a card that cannot be afforded still reads as unavailable and a queued one as queued. A row where
+  the three look the same is a bug, not a matter of taste.
 </p>
 <div class="row">
   {{range .States}}

@@ -27,7 +27,7 @@ package screens
 // # Why the color is not a color of its own
 //
 // **A signal is drawn in the tint of the rider that threw it** — `upgradeForRider` into
-// `systems.UpgradeTint`, the same table the card's own face is washed with. The wheel is full, so a
+// `systems.UpgradeTint`, the same table the upgrade's word is colored from. The wheel is full, so a
 // firework in a hue of its own would be claiming one; and more usefully, the burst on the card is
 // then the same color as the card, so the two read as one object rather than as a card and an
 // effect that happened near it.
@@ -477,7 +477,7 @@ func (t *combatTheater) shownFor(side combat.Side) signalShown {
 
 // signalInk is what a signal is drawn in, sparks and figure alike: **the color of the rider that
 // threw it**, asked for rather than restated — `upgradeForRider` into `systems.UpgradeTint`, the
-// same table the card's own face is washed with. A color of its own would be a second vocabulary
+// same table the upgrade's word is colored from. A color of its own would be a second vocabulary
 // for something the card already says, and the wheel has no room left to spend on one.
 //
 // So a gold card throws gold sparks, a silver card silver ones, and the heal its rose. **One card,

@@ -199,7 +199,7 @@ func multiplierText(amount int) string {
 //
 // **The wording is `carddesc.FaceLines` and not this function's** *(2026-09-09)*. It said four of
 // the ten riders and was silent about the other six — a card the player had spent a rune on
-// that carried a wash and no words — and `tools/upgradesheet` kept a hand-written snapshot of it
+// that carried a color and no words — and `tools/upgradesheet` kept a hand-written snapshot of it
 // because `internal/screens` links Ebitengine. Moving it down to the windowless package fixes both:
 // the face is total over `combat.RiderKinds()`, and the sheet prints the game's own strings rather
 // than a copy that can drift.

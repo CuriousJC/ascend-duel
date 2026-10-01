@@ -27,6 +27,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `potions.json` | `LoadPotions` | the bottles the shop sells every visit: which of the duelist's figures each moves, by how much, and what it costs |
 | `tonics.json` | `LoadTonics` | the run-long rule changes the shop offers one per realm: an `Effect`, an `Amount`, an optional `Requires`, and a `Price` — see `internal/session/tonic.go` |
 | `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
+| `edges.json` | `LoadEdges` | the strip an upgraded card draws down each side of its face: one record per upgrade with its own picture, plus `default`, each an `Art` key, a `Draw` brief and six draw properties — `Width`, `Inset`, `Opacity`, `FadeFrom`, `FadeTo` on the hand card, and `Sides`, `left` or `both`. Keys are checked against `systems.Upgrade` names in `internal/cards`, which `data` cannot import |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 

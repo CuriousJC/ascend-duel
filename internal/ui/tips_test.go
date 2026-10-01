@@ -407,7 +407,7 @@ func TestTheElementInATitleIsColored(t *testing.T) {
 // **CHROMATIC takes no *single* element's color, and that is still the rule** *(owner's call,
 // 2026-09-09)*. The wheel has no hue left for "all of them" and a word written in one of the five
 // would be claiming the one thing it exists to deny — so it is written in all five at once, sampled
-// out of the wildcard's own wash. What this holds is the half that did not change: no letter of it
+// out of the wildcard's own ink. What this holds is the half that did not change: no letter of it
 // is an element's ink, and the card's *element* is not what the title is colored by.
 func TestChromaticTakesNoElementColor(t *testing.T) {
 	title := TipLine(carddesc.Title(

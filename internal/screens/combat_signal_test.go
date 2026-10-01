@@ -314,8 +314,8 @@ func TestEverySignalRiderIsAccountedFor(t *testing.T) {
 	}
 }
 
-// **A signal takes the color of the rider that threw it**, out of the same table the card's own
-// face is washed with — so a gold card throws gold and a silver one silver, sparks and figure alike.
+// **A signal takes the color of the rider that threw it**, out of the same table the upgrade's word
+// is colored from — so a gold card throws gold and a silver one silver, sparks and figure alike.
 //
 // **The vitae-in-hand rider is the exception, and it is the game's**: `vitaeInk` is the crimson
 // vitae is written in everywhere it is written. Silver is deliberately not swept up in it — what

@@ -1009,7 +1009,7 @@
   },
   {
     "ScenarioRecord": "upgrades",
-    "Note": "Every upgrade except the two metals, one to a card, filling the opening hand: heal, shield, damage-on-play, scale-in-combo, damage-in-hand, scale-in-hand, vitae-in-hand and the wildcard, in that order left to right. It exists to answer one question - are ten upgrades ten cards a player can tell apart at a glance, in a row, on the table rather than on a sheet. Eight of the colors are placeholders standing on a wheel that has no room left, so what to look for is the pairs that collide: the heal's rose against the relic pink, and the three cool held ones against each other. Note the wildcard is the only card whose form mark goes hueless. Run the metals scenario for gold and silver.",
+    "Note": "Every upgrade except the two metals, one to a card, filling the opening hand: heal, shield, damage-on-play, scale-in-combo, damage-in-hand, scale-in-hand, vitae-in-hand and the wildcard, in that order left to right. It exists to answer one question - are the upgrades cards a player can tell apart at a glance, in a row, on the table rather than on a sheet. Each is a strip down both edges from data/edges.json; one without its own picture yet draws the default pewter at its own width, so what to look for is whether the edges and widths separate the played four from the held three, and the heal's rose against the relic pink once it is drawn. Note the wildcard is the only card whose form mark goes hueless. Run the metals scenario for gold and silver.",
     "Relics": [],
     "Deck": [
       {

@@ -301,11 +301,10 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
   multiplier over the whole turn and cannot reorder two hits, so projecting the pipeline per hit
   would be a second resolver agreeing with the first. **The screen draws it as a broken window** —
   `cards.MarkShattered` for the settled mark, `internal/screens/combat_shatter.go` for the pip
-  crossing the table and the crack opening. **A mark is not an upgrade, and the drawing does not
-  tell them apart** — both cover the whole face, so what separates them is ownership: an upgrade
-  is what a card permanently *is* and is painted into the face, a mark is the card's situation
-  and is painted over the top of it. `Render` fixes that order. See MECHANICS.md §Shields and
-  §An upgrade washes the whole card.
+  crossing the table and the crack opening. **A mark is not an upgrade**: an upgrade is what a
+  card permanently *is* and is painted into the face as a strip down its edges, a mark is the
+  card's situation and is painted over the top of it. `Render` fixes that order. See MECHANICS.md
+  §Shields and §An upgrade is painted on the card, as its edges.
 - **A shield's element is a rule, and so is a creature's**. `Duelist.Shields` is a
   `combat.ShieldStack` — a count per element, fixed-width so a Duelist stays a value — and a
   shield eating a hit of its own element banks one action point into `Duelist.Surge` for its
@@ -385,12 +384,14 @@ of it:
 - **`combat.Card.Riders` is a fixed array** because a card must stay comparable — the screen's
   face cache and `TestRoundIsDeterministic` both depend on it, exactly as `Duelist.Relics` does. A
   seat is also what makes "no upgrade" the zero value rather than a case.
-- **The card goes gold and the border does not.** `cards.UpgradeStyle` is `wash-face` /
-  `border` / `wash` and `DefaultUpgradeStyle` is **`wash-face`** — everything inside the border
-  ring washed, the ring left alone. **The border is already saying the card's state**, so an
-  upgrade over it would be a second thing in the one place the card says the first; it also keeps
-  the card's outline against the table. `tools/upgradesheet` draws all three, as a review knob,
-  because how loud an upgrade should be is still open.
+- **An upgrade is the card's edges, and the border is not.** `data/edges.json` names a strip of
+  art per upgrade plus a `default` fallback; `internal/cards/edge.go` lays it down the left of the
+  face just inside the border ring — mirrored on the right too where a record asks — and under
+  everything written on the card. **The left edge is the one that matters** — the deck panel's stacked rows show only
+  that side — and **the border is already saying the card's state**, so the strip stays off it.
+  `Width`, `Inset`, `Opacity`, `FadeFrom`, `FadeTo` and `Sides` are the record's draw properties; `tools/upgradesheet` draws every
+  upgrade alone and stacked as the deck panel stacks them. The prompt is
+  `docs/art/edge_art_prompt.MD`.
 - **Every rider draws, and none of them touches the left column.** `systems.Upgrade` is the
   presentation vocabulary — one entry per rider kind — `internal/screens.upgradeForRider` is the
   total table where a rider becomes one, and neither `internal/cards` nor `internal/systems`

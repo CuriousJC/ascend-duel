@@ -443,8 +443,8 @@ type Spec struct {
 	// owns the wrapping. See rarityBorders.
 	Rarity data.Rarity
 
-	// Upgrade is the one alteration the run has permanently made to this card, and it washes the
-	// whole finished face — the border included. UpgradeNone — the zero value — is every ordinary
+	// Upgrade is the one alteration the run has permanently made to this card, drawn as a strip
+	// down each side of the face — see edge.go. UpgradeNone — the zero value — is every ordinary
 	// card, which is almost all of them.
 	//
 	// **One, never several** *(owner's call, 2026-09-09)*. A card has a form, an element and an
@@ -461,19 +461,12 @@ type Spec struct {
 	// separation one field up.
 	Upgrade systems.Upgrade
 
-	// UpgradeStyle is where the upgrade is painted: the border, the whole card, or the face
-	// without the border. **The zero value is the style the game uses**, so a caller that never
-	// thinks about it gets the right picture; `tools/upgradesheet` is the only thing that sets it,
-	// and it sets all three. See upgrade.go, which is where the choice is argued.
-	UpgradeStyle UpgradeStyle
-
 	// Mark is something that has happened to this card, drawn over the finished face — the first
 	// is a shatter, an attack a shield ate. **MarkNone, the zero value, is every ordinary card.**
 	//
-	// **It is not an Upgrade and the difference is what it is about.** Both cover the whole face
-	// now, so the drawing no longer tells them apart — what does is ownership: an upgrade is what
-	// the card permanently *is* and goes into the face, and a mark is the card's situation and goes
-	// on top of it. A shattered Nip is an ordinary Nip again next round; a gold one is gold for the
+	// **It is not an Upgrade and the difference is what it is about**: an upgrade is what the card
+	// permanently *is* and goes into the face, and a mark is the card's situation and goes on top
+	// of it. A shattered Nip is an ordinary Nip again next round; a gold one is gold for the
 	// rest of the run. drawMark is applied second, so both read on a card carrying both.
 	//
 	// **A plain value, because Spec has to stay comparable** — internal/screens keys its face

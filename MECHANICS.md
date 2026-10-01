@@ -3132,71 +3132,65 @@ axis into a four, and those rungs are high on the ladder — so how often a run 
 the number to watch, and that number is the rune's place in `data/runes.json` and the essence's in
 `data/essences.json` rather than anything in the rules.
 
-### An upgrade is painted on the card, and where is still open
+### An upgrade is painted on the card, as its edges
 
-**A card has a form, an element and an action, and then one upgrade.** There are ten of them, one
-per rider kind, and every one draws: a card the run has altered says so from across the table.
+**A card has a form, an element and an action, and then one upgrade.** There is one per rider kind,
+and every one draws: a card the run has altered says so from across the table.
 
-**The card goes gold and the border does not**. `wash-face` is what
-`cards.DefaultUpgradeStyle` names: every pixel inside the border ring is pulled toward the
-upgrade's ink and the ring itself is left exactly as it was.
+**An upgrade is a strip of authored art down the left edge of the face.** `data/edges.json` holds
+one record per upgrade plus `default`, which an upgrade with no record draws. A record with no
+`Art` yet draws the default picture at its own draw properties. The strip is stretched to the
+face's full height, mirrored onto the right edge only where a record's `Sides` is `both`, and goes
+down **under everything written on the card**, so the form mark, the cost ticks and the text sit on
+top of it. `internal/cards/edge.go` is the drawing.
 
-**What settled it is that the border is already saying something.** It carries the card's *state* —
-resting, selected, unaffordable, being dragged — in a wash away from the neutral gray, so an upgrade
-painted over it would be a second thing in the one place the card says the first. Keeping them apart
-is what lets a queued gold card read as queued *and* gold rather than as one of the two winning. It
-also keeps the card's outline against the table, which is what tells eight cards in a row apart
-before any of them is read.
+**The left edge is the one that has to work.** The deck panel overlaps every card over the one
+before it, so a stacked row shows each card's left side and nothing else — and the strip is what
+lets a gold card be picked out of a pile. A strip wider than the margin left of the column is
+allowed: when the cards are packed tight part of it is hidden, and what it covers on a card standing
+alone is the card's ground, never what the card says.
 
-**Two other answers are kept as a review knob**, drawn by `go run ./tools/upgradesheet` beside the
-default: `border` paints the 3px ring and nothing else — the quietest answer, at the cost of the
-state signal it would be sharing the ring with — and `wash` takes the whole card including the
-border, which nobody misses and nothing on the face escapes. It is the shape `TintMode` had, for the
-same reason: how loud an upgrade should be is not a question anybody wins by arguing.
+**It sits inside the border ring, not on it**, at the default inset. The ring carries the card's
+*state* — resting, selected, unaffordable, being dragged — so an upgrade painted over it would be a
+second thing in the one place the card says the first, and the ring is also what keeps the card's
+outline against the table. **It is the same picture at rest and selected** — a selected card lifts
+out of the row, and that is the whole of what selection says — and **only an unaffordable card
+fades it**, so an unaffordable gold card reads as unaffordable first.
 
-- **A relic card is the one card this must never touch**, and it does not: a relic carries no rider,
-  so its pink is never washed.
-- **`UpgradeBorderPct` is 80 rather than 100**, for the `border` style, so a fifth of the state
-  color still shows through the ink.
+**`Width`, `Inset`, `Opacity`, `FadeFrom`, `FadeTo` and `Sides` are the record's draw properties**,
+measured on the hand card and scaled with it. The strip is a third of the card wide and fades out
+across its inner half, so it reaches into the face and dissolves there rather than ending at a
+line. The fade is a property rather than part of the art so it can be tuned, and the deck panel's
+half-size card draws a half-width strip. They are tuned beside
+the art in `data/edges.json` and judged on `go run ./tools/upgradesheet`, which draws every upgrade
+alone, in its three states, and stacked as the deck panel stacks a row. The art comes from
+`docs/art/edge_art_prompt.MD` with the record's `Draw` pasted after it.
 
-**It never takes the left column.** That column states the element, and nine of the ten upgrades
-have nothing to do with the element — a left column in gold is the element slot saying something
-that is not about the element.
-
+- **A relic card is the one card this must never touch**, and it does not: a relic carries no rider.
+- **It never takes the left column.** That column states the element, and almost no upgrade has
+  anything to do with the element.
 - **`systems.Upgrade` is the vocabulary** and it is *presentation*: something visible has happened
-  to this card, and here is what to paint it with. `internal/screens` is where a rider becomes one,
-  on exactly the terms `Spec.TextInk` is where a relic becomes a color — neither `internal/cards`
-  nor `internal/systems` learns what a rider is.
-- **An upgrade is painted into the face; a mark is painted over it.** Under the `wash` style
-  both cover the whole card, so the drawing does not tell them apart — what does is ownership.
-  An upgrade is what the card permanently *is*; a `cards.Mark` is the card's situation. A
-  shattered gold card reads as gold and broken, in that order, and the order is fixed in
-  `Render` so one pair of facts draws one way.
-- **Every upgrade is an ink, and nine of the ten are one flat color.** The tenth is the wildcard,
-  whose wash is the five element colors in bands — and a vocabulary where one entry is a picture
-  and nine are colors would be two mechanisms with a `switch` between them. An ink holds both: the
-  authored PNG for the one that needs a picture, a generated square for the rest, and one sampling
-  path that never asks which it got.
+  to this card. `internal/screens` is where a rider becomes one, on exactly the terms `Spec.TextInk`
+  is where a relic becomes a color — neither `internal/cards` nor `internal/systems` learns what a
+  rider is.
+- **An upgrade is painted into the face; a mark is painted over it.** An upgrade is what the card
+  permanently *is*; a `cards.Mark` is the card's situation. A shattered gold card reads as gold and
+  broken, in that order, and the order is fixed in `Render`.
+- **The width says how much the upgrade is the card.** The metals and the two wildcards take the
+  full third; the four that fire when the card is played are narrower; the three that pay while the
+  card is *held* are narrowest and slightly translucent. The draw properties are the record's, so
+  this is a starting point to tune against the art rather than a rule.
+- **A new upgrade arrives undrawn**: its record is written with an empty `Art` and draws the
+  default pewter at its own width until its picture lands, so it is told apart by the line its card
+  prints — see §The card says what the card carries.
 - **The wildcard is the one upgrade that leaves the form mark hueless.** The left column exists to
   state the element; a wildcard's element is still what the card *is*, but what it *counts as* is
   every element at once, so a column stating one of them states the less useful half of the truth.
-  Every other upgrade leaves the element's tint alone, because none of them is about the element.
-- **Eight of the ten colors are placeholders and they are standing on a full wheel**. Hue is
-  spent — five elements, the relic pink, the two verbs, the two duelists, the ground — so what
-  is there is picked to be *told apart* rather than to mean anything. Gold and silver are the
-  exception: they are metals, and they are what the mechanic is called. `go run
-  ./tools/upgradesheet` is the page to retune them against.
-- **The wash is 55% of the way toward the ink, and the two metals are a *sheen* rather than a
-  flat color.** Both of those are the card's own surface pushing back: it is a pale warm
-  neutral, so a gentle wash of gold moves the hue a little and the lightness not at all, and the
-  card comes out as warm paper. 22, 34 and 40 were all tried and all read as cream. What makes
-  metal read as metal is a light running across it, so gold and silver are generated as a
-  diagonal band — dark shoulders, a bright crest — through the same ink mechanism the wildcard's
-  picture uses.
-- **The eight flat placeholders are loud at that strength**, which is the right direction for a
-  placeholder to be wrong in. One of them — the heal's rose — sits close to the relic pink, which is
-  exactly the kind of collision the "hue is spent" note predicts and the reason these are marked
-  temporary rather than settled.
+  Its edge is the five element colors.
+- **Every upgrade also has an ink** — `systems.UpgradeInk` — which is what a word naming it and a
+  signal it throws are colored from: GOLD in gold, CHROMATIC across the five, a fired rider's spark
+  in its own tint. **Most of those tints are placeholders on a full wheel**; gold and silver are the
+  exception, being what the mechanic is called.
 
 ### Targets come out of the hand *(taken while building it, and the one most worth revisiting)*
 

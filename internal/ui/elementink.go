@@ -51,13 +51,13 @@ func TipLine(line string) models.TipLine {
 }
 
 // chromatic is one line cut into its colored segments — the element words first, then CHROMATIC
-// into the wildcard's own wash.
+// into the wildcard's own ink.
 //
 // **The two passes are in that order and cannot be swapped.** `SplitWash` only touches a segment
 // nothing has colored, so running the element vocabulary first is what lets a word be an element
 // or the wildcard and never both.
 //
-// **The wash cut is `internal/cards`' and not this file's**, because `tools/upgradesheet` prints
+// **The ink cut is `internal/cards`' and not this file's**, because `tools/upgradesheet` prints
 // this same title and cannot import a package that links Ebitengine — the argument `ElementSpans`
 // already exists for, and the one that put the tooltip's wording in `internal/carddesc`.
 func chromatic(line string) []cards.Segment {

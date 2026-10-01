@@ -74,7 +74,7 @@ const (
 	// **Narrower than the card it hangs off**, so it reads as attached to that relic rather than as
 	// a row of its own.
 	sellTabWidth    = 200
-	sellTabHeight   = 30
+	sellTabHeight   = ui.ButtonTiny
 	sellTabTextSize = 26
 )
 
@@ -251,7 +251,6 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 		// takes. A sale is the only thing on this screen that cannot be taken back.
 		s.sellButton.BaseColor = ui.ButtonRed
 		s.sellButton.TextSize = sellTabTextSize
-		s.sellButton.Bevelled = true
 	}
 
 	s.initRerollButtons()

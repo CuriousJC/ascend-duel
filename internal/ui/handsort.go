@@ -120,7 +120,6 @@ func NewSortTabs(seat func(gs *state.GlobalState, i int) image.Rectangle, pick f
 		b := models.NewButton(ControlColumnWidth(), ControlButtonHeight, spec.Label,
 			func() { pick(mode) })
 		b.BaseColor = SortButtonColor
-		b.Bevelled = true
 		b.TextSize = ControlButtonText
 		t.buttons = append(t.buttons, b)
 	}

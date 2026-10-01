@@ -318,9 +318,8 @@ func (s *AnimationsScene) Init(gs *state.GlobalState) {
 		s.back = models.NewButton(220, ui.ButtonMedium, "BACK", func() { s.leave(gs) })
 		for i := range animGestures {
 			i := i
-			b := models.NewButton(280, animRowHeight-6, animGestures[i].name, func() { s.pick(gs, i) })
+			b := models.NewButton(280, ui.ButtonTiny, animGestures[i].name, func() { s.pick(gs, i) })
 			b.TextSize = animNameSize
-			b.Bevelled = true
 			s.rows = append(s.rows, b)
 		}
 	}

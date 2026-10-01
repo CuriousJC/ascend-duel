@@ -984,10 +984,11 @@ two before it reaches for a third color, because a third color is a third face t
   drop and the label goes down with it; latched sinks it and dims it. No state is a second file.
 - **Caps are drawn at whole pixels.** A cap scaled to a half pixel leaves a column both pieces
   cover by half, which shows as a seam.
-- **`models.Button.Bevelled` keeps the drawn bevel** for the controls with no art yet — the seed
-  wheel's arrows, the hand's sort buttons, the deck panel's filter column, the shop's sell tabs,
-  the gallery rows — and a color with no face falls back to it too. Those buttons are outside the
-  height tiers until their art lands.
+- **Every button wears a face and sits on a height tier**; there is no opting out. A color with
+  no face falls back to the drawn bevel, which is the one place the bevel still draws a button.
+  **An icon on a button is a figure glyph**, set as the button's label like a word — the seed
+  wheel's arrows are `▲` and `▼` (`docs/art/figure_arrows_art_prompt.MD`), the last row of the
+  figure sheet.
 
 - **No UI toolkit dependency.** Widgets are hand-rolled following the
   `models.Button` + `systems.UpdateButton`/`DrawButton` split. Add new widgets the same
@@ -1667,7 +1668,7 @@ the ground its states are scaled against, not the screen. Text written directly 
 takes `screens.groundInk`.
 
 A code-drawn widget names the color it wants at **full strength**, and its other states are
-scaled down from that with `systems.ColorAtStrength`. A `Bevelled` button is the reference case:
+scaled down from that with `systems.ColorAtStrength`. A faceless button is the reference case:
 it rests at 65%, hovers at 82% and reaches the named color at 100%, so pressing it lights it up to
 exactly the color in the source. A button wearing a face names the same color to *pick* the face,
 and the face is authored at that color.

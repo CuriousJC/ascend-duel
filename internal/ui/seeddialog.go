@@ -121,12 +121,10 @@ func (d *SeedDialog) Warns() bool { return d.warn }
 func (d *SeedDialog) build() {
 	for i := 0; i < seeds.CodeLen; i++ {
 		i := i
-		d.up[i] = models.NewButton(seedCellWidth, seedArrowHeight, "", func() { d.Turn(i, 1) })
+		d.up[i] = models.NewButton(seedCellWidth, seedArrowHeight, seedArrowUp, func() { d.Turn(i, 1) })
 		d.up[i].BaseColor = confirmCancelColor
-		d.up[i].Bevelled = true
-		d.down[i] = models.NewButton(seedCellWidth, seedArrowHeight, "", func() { d.Turn(i, -1) })
+		d.down[i] = models.NewButton(seedCellWidth, seedArrowHeight, seedArrowDown, func() { d.Turn(i, -1) })
 		d.down[i].BaseColor = confirmCancelColor
-		d.down[i].Bevelled = true
 	}
 	d.cancel = models.NewButton(seedButtonWidth, seedButtonHeight, "CANCEL", func() { d.Close() })
 	d.cancel.BaseColor = confirmCancelColor
@@ -229,8 +227,6 @@ func (d *SeedDialog) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 		systems.DrawButton(gs, screen, d.up[i])
 		systems.DrawButton(gs, screen, d.down[i])
-		drawChevron(screen, d.up[i], true)
-		drawChevron(screen, d.down[i], false)
 	}
 
 	systems.DrawButton(gs, screen, d.cancel)
@@ -284,26 +280,12 @@ func lettering(gs *state.GlobalState, screen *ebiten.Image, str string, cx, cy, 
 	text.Draw(screen, str, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: height * 1.4}, op)
 }
 
-// drawChevron puts a solid triangle on an arrow button, pointing up or down. **A stand-in until
-// there is arrow art**, drawn in the button labels' near-white so it reads as the button's label.
-func drawChevron(screen *ebiten.Image, b *models.Button, up bool) {
-	const half, rise = 14, 10
-	cx, cy := float32(b.ScreenX), float32(b.ScreenY)
-	tip, base := cy-rise, cy+rise
-	if !up {
-		tip, base = base, tip
-	}
-	var p vector.Path
-	p.MoveTo(cx, tip)
-	p.LineTo(cx+half, base)
-	p.LineTo(cx-half, base)
-	p.Close()
-	ink := color.RGBA{R: 235, G: 235, B: 240, A: 255}
-	if b.State == models.ButtonStateDisabled {
-		ink = color.RGBA{R: 110, G: 110, B: 110, A: 255}
-	}
-	vector.FillPath(screen, &p, &vector.FillOptions{}, &vector.DrawPathOptions{AntiAlias: true, ColorScale: colorScale(ink)})
-}
+// The arrows a wheel is turned by, as figure glyphs: a label like any other button's, so they take
+// the figure sheet's contour and ink and sink with the face when pressed.
+const (
+	seedArrowUp   = "▲"
+	seedArrowDown = "▼"
+)
 
 func colorScale(c color.RGBA) ebiten.ColorScale {
 	var s ebiten.ColorScale

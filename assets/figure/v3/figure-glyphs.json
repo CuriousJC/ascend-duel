@@ -2,7 +2,7 @@
   "cellWidth": 160,
   "cellHeight": 160,
   "columns": 9,
-  "rows": 6,
+  "rows": 7,
   "baseline": 144,
   "digitHeight": 112,
   "glyphs": {
@@ -482,6 +482,24 @@
       "left": 14,
       "right": 146,
       "advance": 125
+    },
+    "▲": {
+      "x": 0,
+      "y": 960,
+      "w": 160,
+      "h": 160,
+      "left": 30,
+      "right": 130,
+      "advance": 93
+    },
+    "▼": {
+      "x": 160,
+      "y": 960,
+      "w": 160,
+      "h": 160,
+      "left": 30,
+      "right": 130,
+      "advance": 93
     }
   },
   "sheets": {

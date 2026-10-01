@@ -58,12 +58,9 @@ const (
 	faceLatchedScale = 0.7
 )
 
-// buttonFace is the picture a button wears, or nil for a button drawn with the bevel: one that
-// asked for it, a color with no face, or a face that failed to load.
+// buttonFace is the picture a button wears, or nil for a button drawn with the bevel: a color
+// with no face, or a face that failed to load.
 func buttonFace(gs *state.GlobalState, button *models.Button) *ebiten.Image {
-	if button.Bevelled {
-		return nil
-	}
 	if button.State == models.ButtonStateDisabled {
 		return gs.Assets[disabledButtonFace]
 	}

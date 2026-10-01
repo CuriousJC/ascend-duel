@@ -53,7 +53,7 @@ const (
 	// deckRowLabelWidth, which was the same idea for the labels this column took over.
 	deckColumnGutter = 26
 
-	deckColumnButtonHeight = 34
+	deckColumnButtonHeight = ButtonTiny
 	deckColumnButtonPitch  = 38
 
 	// deckColumnBlockGap is the air between two blocks of buttons, and deckColumnHeadDrop is how
@@ -200,7 +200,6 @@ func (v *DeckView) build() {
 func (v *DeckView) columnButton(onClick func()) *models.Button {
 	b := models.NewButton(deckColumnWidth, deckColumnButtonHeight, "", onClick)
 	b.BaseColor = SortButtonColor
-	b.Bevelled = true
 	b.TextSize = deckColumnTextSize
 	return b
 }

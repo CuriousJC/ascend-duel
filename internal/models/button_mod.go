@@ -59,12 +59,6 @@ type Button struct {
 	// first and as active second.
 	Latched bool
 
-	// Bevelled keeps the drawn bevel rather than the authored face its color would wear. It is for
-	// the controls the face art does not cover yet — the seed wheel's arrows, the hand's sort
-	// buttons, the deck panel's filter column — and a button that sets it is outside the height
-	// tiers as well.
-	Bevelled bool
-
 	// What Image currently holds, so DrawButton can repaint it only when something
 	// visible has changed rather than every frame.
 	//

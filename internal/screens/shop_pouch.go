@@ -54,7 +54,7 @@ const (
 	// The two tabs that hang under an armed stone, side by side. **Narrower than the worn row's
 	// single sell tab, because there are two of them** — together they come to about its width.
 	pouchTabWidth  = 170
-	pouchTabHeight = 30
+	pouchTabHeight = ui.ButtonTiny
 	pouchTabGap    = 8
 
 	// How far under the card the tabs hang. The shelf's own figure gap.
@@ -131,13 +131,11 @@ func (t *pouchToggle) init() {
 	// red every control on this screen that cannot be taken back wears.
 	t.use.BaseColor = color.RGBA{R: 46, G: 150, B: 70, A: 255}
 	t.use.TextSize = sellTabTextSize
-	t.use.Bevelled = true
 
 	t.sell = models.NewButton(pouchTabWidth, pouchTabHeight, "SELL",
 		func() { t.doing = pouchSell })
 	t.sell.BaseColor = ui.ButtonRed
 	t.sell.TextSize = sellTabTextSize
-	t.sell.Bevelled = true
 }
 
 // cardRects is where the carried stones stand inside the panel. It reuses the rune dialog's

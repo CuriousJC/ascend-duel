@@ -19,6 +19,8 @@ func TestTheNewRunDialogIsSetInFiguresThatFit(t *testing.T) {
 		{"ACHIEVEMENTS ENABLED", seedCheckHeight},
 		{"START ON THIS CODE, OR TURN THE WHEELS TO CHOOSE ONE.", seedLineHeight},
 		{"THE JOURNEY IN PROGRESS WILL BE LOST.", seedLineHeight},
+		// The arrows are the wheel buttons' labels, so a missing glyph is a blank button.
+		{seedArrowUp + seedArrowDown, seedCharHeight},
 	}
 	for _, l := range lines {
 		if !systems.FigureCovers(l.str) {

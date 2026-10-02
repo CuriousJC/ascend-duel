@@ -61,6 +61,38 @@ func (s *Session) ConsumableCount() int {
 // for a consumable that would be refused.
 func (s *Session) ConsumablesFull() bool { return s.ConsumableCount() >= MaxConsumables }
 
+// ConsumableSalePrice is what one carried thing fetches when the shop buys it back, whatever kind
+// it is.
+//
+// **One figure for every kind.** A sealed good of four costs 5 and one of the four is kept, so a
+// sale at 2 is a loss against what the thing cost to find — the relic rule, where selling never
+// pays back the purchase. A record that should be worth more is a multiplier on that record in its
+// own catalog, read over this base, rather than a second constant here.
+const ConsumableSalePrice = 2
+
+// SellConsumable takes one carried thing out of whichever list holds it and pays
+// ConsumableSalePrice. It reports whether it was there.
+//
+// **By the entry's own position in its own list**, `At`, because every list may hold two of one
+// record and a sale must not be ambiguous about which — the rule spending is under.
+func (s *Session) SellConsumable(c Consumable) bool {
+	var dropped bool
+	switch c.Kind {
+	case ConsumableRune:
+		dropped = s.Drop(c.At)
+	case ConsumableEssence:
+		dropped = s.DropStowed(c.At)
+	case ConsumableCantrip:
+		dropped = s.DropScroll(c.At)
+	case ConsumableStone:
+		return s.SellCarried(c.At)
+	}
+	if dropped {
+		s.AddVitae(ConsumableSalePrice)
+	}
+	return dropped
+}
+
 // Consumable is one carried thing, ready to be drawn in a seat and spent out of it.
 type Consumable struct {
 	Kind ConsumableKind

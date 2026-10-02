@@ -161,22 +161,14 @@ func TestTheFourPanesFitOnOneRow(t *testing.T) {
 	}
 }
 
-// **The band's relic row is the shop's worn row now**, so what has to be checked is that the sell
-// figure hung under a relic clears the narration that starts below the band — the collision the old
-// two-row layout could not have, and the one the title and hint were silently losing to before
-// this screen had a band at all.
-func TestTheSellFiguresClearTheNarration(t *testing.T) {
+// **The band's relic row is the shop's worn row**, so every length of it has to stay on the screen.
+func TestTheWornRowFitsTheScreen(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	var shop ShopScene
 	for n := 1; n <= combat.DefaultRelicSlots; n++ {
-		seat := shop.wornSlot(gs, n-1, n)
-		if seat.Max.X > gs.ScreenWidth {
+		if seat := shop.wornSlot(gs, n-1, n); seat.Max.X > gs.ScreenWidth {
 			t.Errorf("a worn row of %d runs to %d", n, seat.Max.X)
-		}
-		if bottom := seat.Max.Y + shopFigureGap + shopFigureSize; bottom >= shopProseTop {
-			t.Errorf("a sell figure ends at %d and the narration starts at %d",
-				bottom, shopProseTop)
 		}
 	}
 }
@@ -201,44 +193,68 @@ func TestClickingAWornRelicOnlyArmsIt(t *testing.T) {
 	before := gs.Run.Worn()
 
 	var shop ShopScene
-	shop.arm(before[0])
+	shop.arm(relicSale(before[0]))
 
 	if got := gs.Run.Worn(); len(got) != len(before) {
 		t.Errorf("arming sold a relic: wearing %v, was %v", got, before)
 	}
-	if shop.armed != before[0] {
-		t.Errorf("armed %q, want %q", shop.armed, before[0])
+	if shop.armed != relicSale(before[0]) {
+		t.Errorf("armed %+v, want %q", shop.armed, before[0])
 	}
 
 	// The same relic again puts the question away, rather than a second click confirming it.
-	shop.arm(before[0])
-	if shop.armed != "" {
-		t.Errorf("a second click left %q armed", shop.armed)
+	shop.arm(relicSale(before[0]))
+	if shop.armed.any() {
+		t.Errorf("a second click left %+v armed", shop.armed)
 	}
 	if got := gs.Run.Worn(); len(got) != len(before) {
 		t.Errorf("a second click sold a relic: wearing %v", got)
 	}
 }
 
-// The tab hangs in the seat the sell figure was written in, so it has to clear the narration under
-// the band exactly as that figure does.
+// The tab hangs under the armed relic or carried card, so it has to clear the narration under the
+// band whichever pane it is in.
 func TestTheSellTabClearsTheNarration(t *testing.T) {
 	gs := shopState(t)
+	if !gs.Run.Hold(session.Runes()[0].Record) {
+		t.Fatal("the run would not carry a rune")
+	}
 
+	for _, sale := range []shopSale{relicSale(gs.Run.Worn()[0]), heldSale(0)} {
+		var shop ShopScene
+		shop.armed = sale
+
+		seat, ok := shop.armedSeat(gs)
+		if !ok {
+			t.Fatalf("%+v is armed and has no seat", sale)
+		}
+		tab := shop.sellTabRect(gs)
+		if tab.Max.Y >= shopProseTop {
+			t.Errorf("%+v: the tab ends at %d and the narration starts at %d",
+				sale, tab.Max.Y, shopProseTop)
+		}
+		if tab.Min.Y < seat.Max.Y {
+			t.Errorf("%+v: the tab starts at %d, above the bottom of its card at %d",
+				sale, tab.Min.Y, seat.Max.Y)
+		}
+		if wide := seat.Dx(); tab.Dx() > wide {
+			t.Errorf("%+v: the tab is %d wide against a %d-wide card", sale, tab.Dx(), wide)
+		}
+	}
+}
+
+// **The row has one tab**: arming a carried card puts a relic's question away, and the other way
+// round, so two tabs can never stand at once.
+func TestArmingOneSaleDropsTheOther(t *testing.T) {
 	var shop ShopScene
-	shop.armed = gs.Run.Worn()[0]
-
-	tab := shop.sellTabRect(gs)
-	if tab.Max.Y >= shopProseTop {
-		t.Errorf("the tab ends at %d and the narration starts at %d", tab.Max.Y, shopProseTop)
+	shop.arm(relicSale("dmg-all-slash"))
+	shop.arm(heldSale(1))
+	if shop.armed != heldSale(1) {
+		t.Errorf("armed %+v after arming a carried card", shop.armed)
 	}
-
-	seat, _ := shop.wornSeatOf(gs, shop.armed)
-	if tab.Min.Y < seat.Max.Y {
-		t.Errorf("the tab starts at %d, above the bottom of its relic at %d", tab.Min.Y, seat.Max.Y)
-	}
-	if wide := seat.Dx(); tab.Dx() > wide {
-		t.Errorf("the tab is %d wide against a %d-wide relic", tab.Dx(), wide)
+	shop.arm(relicSale("dmg-all-slash"))
+	if shop.armed != relicSale("dmg-all-slash") {
+		t.Errorf("armed %+v after arming a relic", shop.armed)
 	}
 }
 

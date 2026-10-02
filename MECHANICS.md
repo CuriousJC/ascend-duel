@@ -2299,7 +2299,7 @@ it raises, which is what makes a stone a consumable rather than a prize.
 | | |
 |---|---|
 | Held | in the run's **pouch**, uncapped, across fights and across a save |
-| Spent | from the **consumables pane**, on the combat screen, beside the runes. The shop's `S` panel also uses one, and sells one for `StoneSalePrice` |
+| Spent | from the **consumables pane**, on the combat screen, beside the runes. The shop's `S` panel also uses one, and sells one for `ConsumableSalePrice` |
 | Arrives from | the shop's shelf. **A bag of rocks and a rock shower both apply what they draw on the spot** |
 
 **A stone that arrives already decided is applied where it lands.** The bag of rocks is a pick
@@ -2320,10 +2320,7 @@ chore in front of a decision that has already been made. What the pouch is for i
 - **Only the runes reorder.** The row is the sack then the pouch, so a seat past the last rune is
   not a sack position; a drag across the join would reorder by a number meaning something else. A
   stone has nothing to be before or after.
-- **Selling pays 5, which is what a whole bag costs.** Deliberately generous rather than tuned:
-  selling exists so a rung you will never build is worth something, and a price that made selling
-  pointless would leave the pouch full of rocks nobody wants. One number, `StoneSalePrice`, and the
-  obvious thing to move first if the pouch turns out to be a vitae fountain.
+- **Selling pays what any consumable pays** — see §Selling a consumable.
 - **Selling is the shop's and nowhere else's**, because selling is a trade and the shop is the only
   screen that trades. Using is on both, since a rung is worth raising in front of the hand that
   wants it and also worth raising while shopping for the next one.
@@ -2609,10 +2606,29 @@ kinds fill the seats is the player's business.
   closes up rather than shrinking a card, because a smaller relic is a different drawing.
   **The shop and the reward screen pay nothing**: there is no opponent card, the span is 1662, and
   the pitch hits its cap at 229 before it hits the span, so nothing overlaps there.
+- **The shop buys back anything in the pane** — see §Selling a consumable.
 - **A fixture may still plant more than two.** `session.StartingRunes` goes past the cap on
   purpose, exactly as a scenario's hand may be longer than the game's own — four fixtures walk six
   runes through the dialog. The pane draws the first two seats and the count reports the honest
   number, so an over-full sack looks like what it is.
+
+### Selling a consumable
+
+**The shop buys back anything in the consumables pane — a rune, an essence, a cantrip or a stone —
+for one price, `session.ConsumableSalePrice`, which is 2.** It is the worn relics' gesture: a click on a carried
+card arms a `SELL FOR 2?` tab under it, a click on the tab sells, and a click on the armed card
+again puts it away. Only one thing on the top row is armed at a time, relic or consumable, and
+nothing is written under either until it is armed — the tab is where the price is read.
+
+- **One price for every kind.** A pack of four costs 5 and one of the four is kept, so 2 is a loss
+  against what the thing cost to find — the relic rule, where a sale never pays back the purchase.
+  **A record worth more takes a multiplier on its own record, read over this base**, rather than a
+  second constant beside it. No catalog carries one yet.
+- **Selling is what frees a seat.** The pane holds two and a full pane dims the shop's carried
+  packs, so a sale is how a run makes room for the pack it wants without spending something it does
+  not.
+- **The shop's and nowhere else's**, for the stones' reason: selling is a trade and the shop is the
+  only screen that trades.
 
 ### Select the cards, then click the consumable
 

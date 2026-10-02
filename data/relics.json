@@ -421,13 +421,13 @@
     "Family": "Jade rings",
     "Art": "dmg-no-hand",
     "Draw": "jade ring without a gem",
-    "Text": "+2 duelist DMG\nwhen No Hand is PLAYED.",
+    "Text": "+5 duelist DMG\nwhen No Hand is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "no-hand" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 2 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 5 }]
       }
     ]
   },
@@ -437,13 +437,13 @@
     "Family": "Jade rings",
     "Art": "dmg-pair-hand",
     "Draw": "jade ring with two diamonds",
-    "Text": "+2 duelist DMG\nwhen a Pair is PLAYED.",
+    "Text": "+5 duelist DMG\nwhen a Pair is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "pair" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 2 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 5 }]
       }
     ]
   },
@@ -453,7 +453,7 @@
     "Family": "Jade rings",
     "Art": "dmg-two-pair-hand",
     "Draw": "jade ring with two diamonds and two black gems",
-    "Text": "+4 duelist DMG\nwhen any Two Pair is PLAYED.",
+    "Text": "+10 duelist DMG\nwhen any Two Pair is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -461,7 +461,7 @@
         "If": {
           "Hands": ["concept-two-pair", "form-two-pair", "element-two-pair"]
         },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 4 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 10 }]
       }
     ]
   },
@@ -471,7 +471,7 @@
     "Family": "Jade rings",
     "Art": "dmg-three-of-a-kind-hand",
     "Draw": "jade ring with three diamonds",
-    "Text": "+5 duelist DMG\nwhen any Three of a Kind is PLAYED.",
+    "Text": "+12 duelist DMG\nwhen any Three of a Kind is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -483,7 +483,7 @@
             "element-three-of-a-kind"
           ]
         },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 5 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 12 }]
       }
     ]
   },
@@ -493,7 +493,7 @@
     "Family": "Jade rings",
     "Art": "dmg-full-house-hand",
     "Draw": "jade ring with three diamonds and two black gems",
-    "Text": "+8 duelist DMG\nwhen any Full House is PLAYED.",
+    "Text": "+15 duelist DMG\nwhen any Full House is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -505,7 +505,7 @@
             "element-full-house"
           ]
         },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 8 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 15 }]
       }
     ]
   },
@@ -515,7 +515,7 @@
     "Family": "Jade rings",
     "Art": "dmg-four-of-a-kind-hand",
     "Draw": "jade ring with four diamonds",
-    "Text": "+10 duelist DMG\nwhen any Four of a Kind is PLAYED.",
+    "Text": "+15 duelist DMG\nwhen any Four of a Kind is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -527,7 +527,7 @@
             "element-four-of-a-kind"
           ]
         },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 10 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 15 }]
       }
     ]
   },
@@ -537,7 +537,7 @@
     "Family": "Jade rings",
     "Art": "dmg-five-of-a-kind-hand",
     "Draw": "jade ring with five diamonds",
-    "Text": "+16 duelist DMG\nwhen any Five of a Kind is PLAYED.",
+    "Text": "+20 duelist DMG\nwhen any Five of a Kind is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -549,7 +549,7 @@
             "element-five-of-a-kind"
           ]
         },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 16 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 20 }]
       }
     ]
   },
@@ -559,13 +559,13 @@
     "Family": "Jade rings",
     "Art": "dmg-elementalist-hand",
     "Draw": "jade ring with five gems, one each of orange, blue, yellow, green and purple",
-    "Text": "+10 duelist DMG\nwhen an Elementalist is PLAYED.",
+    "Text": "+15 duelist DMG\nwhen an Elementalist is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Hand": "element-elementalist" },
-        "Then": [{ "Do": "add-hand-dmg", "Amount": 10 }]
+        "Then": [{ "Do": "add-hand-dmg", "Amount": 15 }]
       }
     ]
   },
@@ -1085,13 +1085,13 @@
     "Family": "Elements held",
     "Art": "jar-fire",
     "Draw": "a jar with burning coals inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per UNPLAYED\nfire card.",
+    "Text": "+2 DMG per UNPLAYED\nfire card.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "fire" },
-        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 2 }]
       }
     ]
   },
@@ -1101,13 +1101,13 @@
     "Family": "Elements held",
     "Art": "jar-ice",
     "Draw": "a jar with large shards of ice inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per UNPLAYED\nice card.",
+    "Text": "+2 DMG per UNPLAYED\nice card.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "ice" },
-        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 2 }]
       }
     ]
   },
@@ -1117,13 +1117,13 @@
     "Family": "Elements held",
     "Art": "jar-lightning",
     "Draw": "a jar with a small lightning bolts inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per UNPLAYED\nlightning card.",
+    "Text": "+2 DMG per UNPLAYED\nlightning card.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "lightning" },
-        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 2 }]
       }
     ]
   },
@@ -1133,13 +1133,13 @@
     "Family": "Elements held",
     "Art": "jar-earth",
     "Draw": "a jar with a small rocks inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per UNPLAYED\nearth card.",
+    "Text": "+2 DMG per UNPLAYED\nearth card.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "earth" },
-        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 2 }]
       }
     ]
   },
@@ -1149,13 +1149,13 @@
     "Family": "Elements held",
     "Art": "jar-arcane",
     "Draw": "a jar with a small glowing orbs inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per UNPLAYED\narcane card.",
+    "Text": "+2 DMG per UNPLAYED\narcane card.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Element": "arcane" },
-        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 2 }]
       }
     ]
   },
@@ -1632,13 +1632,13 @@
     "Family": "Forms held",
     "Art": "jar-stab",
     "Draw": "a jar with ivory needles, the jar is made of clear glass with an indigo lid",
-    "Text": "+5 DMG per UNPLAYED\nstab card.",
+    "Text": "+2 DMG per UNPLAYED\nstab card.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Form": "stab" },
-        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 2 }]
       }
     ]
   },
@@ -1648,13 +1648,13 @@
     "Family": "Forms held",
     "Art": "jar-slash",
     "Draw": "a jar with steel razor blades inside, the jar is made of clear glass with an indigo lid",
-    "Text": "+5 DMG per UNPLAYED\nslash card.",
+    "Text": "+2 DMG per UNPLAYED\nslash card.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Form": "slash" },
-        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 2 }]
       }
     ]
   },
@@ -1664,13 +1664,13 @@
     "Family": "Forms held",
     "Art": "jar-crush",
     "Draw": "a jar with chunks of granite, the jar is made of clear glass with an indigo lid",
-    "Text": "+5 DMG per UNPLAYED\ncrush card.",
+    "Text": "+2 DMG per UNPLAYED\ncrush card.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
         "If": { "Form": "crush" },
-        "Then": [{ "Do": "add-dmg-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "add-dmg-per-held", "Amount": 2 }]
       }
     ]
   },

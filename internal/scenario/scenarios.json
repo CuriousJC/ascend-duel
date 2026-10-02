@@ -1382,7 +1382,7 @@
   },
   {
     "ScenarioRecord": "rock-shower",
-    "Note": "Three rock showers in the sack. Each one needs no target, so it is taken on the click, and the panel stays up showing the three stones it just handed over - they go into the run's POUCH, not onto the ladder. Win the fight and the shop's S button is where they are spent: Use puts one on its rung, Sell pays 5. For the shop half on its own without the fight, see stones-in-the-pouch.",
+    "Note": "Three rock showers in the sack. Each one needs no target, so it is taken on the click, and the panel stays up showing the three stones it just handed over - they go into the run's POUCH, not onto the ladder. Win the fight and the shop's S button is where they are spent: Use puts one on its rung, Sell pays 2. For the shop half on its own without the fight, see stones-in-the-pouch.",
     "Relics": [],
     "Hand": [],
     "Runes": [
@@ -1398,7 +1398,7 @@
   },
   {
     "ScenarioRecord": "stones-in-the-pouch",
-    "Note": "Opens on the shop carrying five stones, which is the other half of the rock shower. The S button in the corner beside D and C is the pouch; click a stone to arm it and two tabs hang under it - green Use puts it on its rung for the rest of the run, crimson Sell pays 5 vitae. The hands panel next door is where to check a Use actually moved the rung. It is here because a carried stone is otherwise a rune bought, a fight won and a shower spent away.",
+    "Note": "Opens on the shop carrying five stones, which is the other half of the rock shower. The S button in the corner beside D and C is the pouch; click a stone to arm it and two tabs hang under it - green Use puts it on its rung for the rest of the run, crimson Sell pays 2 vitae. The hands panel next door is where to check a Use actually moved the rung. It is here because a carried stone is otherwise a rune bought, a fight won and a shower spent away.",
     "Relics": [],
     "Hand": [],
     "Runes": [],

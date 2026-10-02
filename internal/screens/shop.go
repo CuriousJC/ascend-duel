@@ -29,7 +29,6 @@ import (
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
-	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
@@ -53,12 +52,9 @@ const shelfSize = 3
 // Where the two rows sit. Percentages anchor the groups; offsets inside a group stay in pixels,
 // per CLAUDE.md.
 const (
-	// The narration clears the band, whose relic row can now carry a sell price under it. The
-	// reward screen's own prose starts at 296 against a band with nothing under the relics.
-	// **360 since 2026-09-04**, from 310. The band above it is a card tall and the card grew by a
-	// sixth, so the sell figure under a worn relic — and the confirm tab that replaces it — now
-	// reach further down than the narration used to start. TestTheSellFiguresClearTheNarration and
-	// TestTheSellTabClearsTheNarration are what hold the gap.
+	// The narration clears the band, whose row can carry a confirm tab under an armed relic or
+	// carried card. The reward screen's own prose starts at 296 against a band with nothing under
+	// it. TestTheSellTabClearsTheNarration is what holds the gap.
 	shopProseTop = 360
 
 	// shopHintTop is the line between the narration and the shelf. **It is not a title** — the
@@ -66,13 +62,12 @@ const (
 	// and it is written only when it has something the duelist card does not already say.
 	shopHintTop = 444
 
-	// The figure under a card: what it costs on the shelf, what it pays back in the row.
+	// The figure under a card on the shelf: what it costs. The gap is also where a sell tab hangs.
 	shopFigureGap  = 10
 	shopFigureSize = 22
 
-	// The confirm tab that hangs under an armed relic, in the seat the sell figure was written in.
-	// **Narrower than the card it hangs off**, so it reads as attached to that relic rather than as
-	// a row of its own.
+	// The confirm tab that hangs under an armed relic or carried card. **Narrower than the card it
+	// hangs off**, so it reads as attached to that card rather than as a row of its own.
 	sellTabWidth    = 200
 	sellTabHeight   = ui.ButtonTiny
 	sellTabTextSize = 26
@@ -108,16 +103,17 @@ type ShopScene struct {
 	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
 	tut tutorialOverlay
 
-	// armed is the worn relic a confirm tab is hanging under, by record key, and empty for none.
+	// armed is the worn relic or carried card a confirm tab is hanging under, and the zero value
+	// for none. See shop_sell.go.
 	//
 	// **Selling is the one thing on this screen that asks twice** *(owner's call, 2026-08-22)*.
 	// Buying does not and should not: it is refused when it cannot be afforded, the price is on
 	// the card, and a run cannot go into debt — so there is nothing a confirmation would protect.
-	// A sale is the opposite. The relic is *already yours*, the row it sits in is the row the whole
-	// screen invites you to read, and a click meant for a tooltip took a relic off your hand for
-	// less than it cost. It is also not symmetric to undo: a growing relic's accumulator goes with
-	// it, and buying it back starts that over.
-	armed string
+	// A sale is the opposite. The thing is *already yours*, the row it sits in is the row the whole
+	// screen invites you to read, and a click meant for a tooltip took it off your hand for less
+	// than it cost. It is also not symmetric to undo: a growing relic's accumulator goes with it,
+	// and buying it back starts that over.
+	armed shopSale
 
 	// relicDrag is the press in progress over the worn row. **A press there is now two gestures
 	// sharing one button**: a click still arms the sell tab, and a press that travels reorders the
@@ -127,11 +123,11 @@ type ShopScene struct {
 
 	// selling is the tab's request, consumed by Update, for the reason `leaving` is: a button's
 	// OnClick reaches no global state and a sale needs the run.
-	selling string
+	selling bool
 
-	// sellButton is the tab itself — **one button moved under whichever relic is armed**, not one
-	// per finger. Only one can be armed, so a second button would be a second thing to keep in
-	// step with the row's own re-centering.
+	// sellButton is the tab itself — **one button moved under whichever thing is armed**, not one
+	// per seat. Only one can be armed, so a second button would be a second thing to keep in step
+	// with the row's own re-centering.
 	sellButton *models.Button
 
 	// leaving is the button's request, consumed by Update. A button's OnClick reaches no global
@@ -229,7 +225,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 		if now := (shopVisit{seed: gs.RunSeed, fight: gs.Run.Fight()}); now == s.visit {
 			// **Only the widgets are rebuilt.** Everything a visit accumulates — the shelf, what
 			// has been opened, what has been drunk, both streams — is the visit's and stays.
-			s.armed, s.selling = "", ""
+			s.armed, s.selling = shopSale{}, false
 			s.leaving = false
 			s.from, s.move = nil, ui.Travel{}
 			s.tip.Forget()
@@ -246,7 +242,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 
 	if s.sellButton == nil {
 		s.sellButton = models.NewButton(sellTabWidth, sellTabHeight, "",
-			func() { s.selling = s.armed })
+			func() { s.selling = true })
 		// **The color a control that commits something wears**, and the same red DUEL!
 		// takes. A sale is the only thing on this screen that cannot be taken back.
 		s.sellButton.BaseColor = ui.ButtonRed
@@ -256,7 +252,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.initRerollButtons()
 	s.pouch.init()
 
-	s.armed, s.selling = "", ""
+	s.armed, s.selling = shopSale{}, false
 	s.leaving = false
 	s.from, s.move = nil, ui.Travel{}
 	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
@@ -426,10 +422,10 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
-	if s.selling != "" {
-		key := s.selling
-		s.selling, s.armed = "", ""
-		s.sell(gs, key)
+	if s.selling {
+		sale := s.armed
+		s.selling, s.armed = false, shopSale{}
+		s.sellArmed(gs, sale)
 		return nil
 	}
 
@@ -545,7 +541,7 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		}
 		return s.shelfSlot(gs, i)
 	}); i >= 0 {
-		s.armed = ""
+		s.armed = shopSale{}
 		s.buy(gs, i)
 		return
 	}
@@ -553,7 +549,7 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 	if i := ui.HoveredSeat(at, len(s.offered), func(i int) image.Rectangle {
 		return s.goodSlot(gs, s.offered[i])
 	}); i >= 0 {
-		s.armed = ""
+		s.armed = shopSale{}
 		s.openGood(gs, s.offered[i])
 		return
 	}
@@ -568,12 +564,12 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		}
 		return potionSeat(gs, i)
 	}); i >= 0 {
-		s.armed = ""
+		s.armed = shopSale{}
 		s.drinkPotion(gs, clickable[i].Record)
 		return
 	}
 	if t, ok := shopTonic(gs); ok && at.In(tonicSeat(gs)) {
-		s.armed = ""
+		s.armed = shopSale{}
 		s.drinkTonic(gs, t.Record)
 		return
 	}
@@ -595,46 +591,18 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		return
 	}
 
+	// **A carried card arms on the press**, unlike a relic: the consumables pane is not reorderable
+	// here, so there is no drag for the release to tell it apart from. See shop_sell.go.
+	if i := heldAt(gs, at); i >= 0 {
+		s.arm(heldSale(i))
+		return
+	}
+
 	// A press anywhere else drops the question — except on the tab itself, which is not a click
 	// this screen handles: its own release is what answers.
-	if s.armed != "" && !at.In(s.sellTabRect(gs)) {
-		s.armed = ""
+	if s.armed.any() && !at.In(s.sellTabRect(gs)) {
+		s.armed = shopSale{}
 	}
-}
-
-// arm puts the question under one relic, or takes it away again if that relic is already asking it.
-//
-// **Pulled out of `click` so it can be tested**: the press needs a cursor and a window, and what
-// is worth pinning is that arming a relic changes nothing about the run.
-func (s *ShopScene) arm(key string) {
-	if s.armed == key {
-		s.armed = ""
-		return
-	}
-	s.armed = key
-}
-
-// updateSellTab positions the tab under whichever relic is armed and runs it.
-//
-// **It disarms a relic that is no longer worn**, which is what stops a tab surviving the sale it
-// asked about — or a scenario arriving with a key the run does not hold.
-func (s *ShopScene) updateSellTab(gs *state.GlobalState) {
-	if s.armed == "" {
-		return
-	}
-
-	if _, ok := s.wornSeatOf(gs, s.armed); !ok {
-		s.armed = ""
-		return
-	}
-
-	// The label carries the figure, so the tab is the whole question — the sell figure it replaces
-	// said the same number and asked nothing.
-	s.sellButton.Text = fmt.Sprintf("SELL FOR %d?", session.SellValue(s.armed))
-	tab := s.sellTabRect(gs)
-	s.sellButton.ScreenX = (tab.Min.X + tab.Max.X) / 2
-	s.sellButton.ScreenY = (tab.Min.Y + tab.Max.Y) / 2
-	systems.UpdateButton(gs, s.sellButton)
 }
 
 // wornSeatOf is where one worn relic is sitting, by key.
@@ -646,18 +614,6 @@ func (s *ShopScene) wornSeatOf(gs *state.GlobalState, key string) (image.Rectang
 		}
 	}
 	return image.Rectangle{}, false
-}
-
-// sellTabRect is where the confirm tab hangs: **the seat the sell figure is written in**, centered
-// under the armed relic. One rectangle, drawn in and hit-tested against.
-func (s *ShopScene) sellTabRect(gs *state.GlobalState) image.Rectangle {
-	seat, ok := s.wornSeatOf(gs, s.armed)
-	if !ok {
-		return image.Rectangle{}
-	}
-	left := (seat.Min.X+seat.Max.X)/2 - sellTabWidth/2
-	top := seat.Max.Y + shopFigureGap
-	return image.Rect(left, top, left+sellTabWidth, top+sellTabHeight)
 }
 
 // buy takes a relic off the shelf and puts it on the hand.
@@ -764,20 +720,19 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	// **The duelist card, then the worn row drawn by this screen** — the band's two halves, split
-	// because a relic here carries a price and moves when the row re-centers. See buildband.go.
+	// because a relic here can be sold and moves when the row re-centers. See buildband.go.
 	drawBuildCard(gs, screen, gs.Run.Vitae())
-	// **The pane, without its fraction** *(2026-09-06)*. Every relic in this row carries a sell
-	// figure under it and the count hangs off the same corner on the same line, so with five worn
-	// the `5/5 relics` and the last `sell +3` are two numbers in one place. The pane is what was
-	// missing here; the fraction is already said by a row you can count.
+	// **The pane, without its fraction.** The sell tab hangs off the same corner on the same line
+	// as the count would, and the fraction is already said by a row you can count.
 	drawRelicPaneBack(screen, buildRelicRect(gs))
-	s.drawWorn(gs, screen, small)
+	s.drawWorn(gs, screen)
 
 	// **The runes the run is carrying, in the pane the fight draws them in** *(2026-09-06)*.
-	// The shop draws the band's two halves itself, because a relic here carries a price — and the
+	// The shop draws the band's two halves itself, because a relic here can be sold — and the
 	// consumables pane went missing in the split, so a run walked into a shop and its sack
 	// vanished. nil: a rune is carried on this screen, not spent. See buildband.go.
 	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, nil, s.tip.Showing())
+	s.drawSellTab(gs, screen)
 
 	s.drawProse(gs, screen, prose)
 
@@ -846,13 +801,15 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 }
 
-// drawWorn draws the hand: what the run is wearing, in worn order, with what each would pay back.
+// drawWorn draws the hand: what the run is wearing, in worn order.
 //
 // **Worn order is a rule and not a presentation detail** — relics fire left to right and compound —
 // so the row is the firing order, and selling out of the middle changes it. That is a real cost of
 // letting a relic come off, and it is visible here rather than hidden.
-func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
-	face *text.GoTextFace) {
+//
+// **No figure under a worn relic.** What one sells for is written on the tab a click puts under it,
+// the same tab a carried card gets — see shop_sell.go.
+func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image) {
 
 	worn := gs.Run.Worn()
 	counters := runCounters(gs)
@@ -873,29 +830,8 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 		}
 
 		ui.DrawRelicCard(gs, screen, at, record, counters[key], true, false)
-
-		// **The price is only offered once the shopkeeper has finished speaking**, like everything
-		// else on this screen — a sell figure under a relic during the greeting would be an offer
-		// standing before it was made.
-		//
-		// **An armed relic shows the tab in that seat instead of the figure**, rather than both:
-		// the tab carries the same number and asks the question the figure only stated, so
-		// drawing the pair would be the price said twice with one of them clickable.
-		if !s.prose.finished() {
-			continue
-		}
-		if s.armed == key {
-			systems.DrawButton(gs, screen, s.sellButton)
-			continue
-		}
-		// **The figure follows the card, not the seat**, so a relic still sliding to its new
-		// finger keeps its price under it.
-		flown := image.Rectangle{Min: at,
-			Max: at.Add(image.Pt(cards.RelicStyle.Width, cards.RelicStyle.Height))}
-		s.figure(gs, screen, flown, fmt.Sprintf("sell +%d", session.SellValue(key)), true)
 	}
 
-	// Last, so the relic riding the cursor rides over the sell figures too.
 	drawDraggedRelic(gs, screen, &s.relicDrag, counters)
 }
 
@@ -910,7 +846,7 @@ func (s *ShopScene) updateRelicRow(gs *state.GlobalState) {
 	worn := gs.Run.Worn()
 	row := buildRelicRow(gs, func(i int) {
 		if i >= 0 && i < len(worn) {
-			s.arm(worn[i])
+			s.arm(relicSale(worn[i]))
 		}
 	})
 

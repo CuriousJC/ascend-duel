@@ -543,8 +543,8 @@ func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
 	if !run.SellCarried(0) {
 		t.Fatal("a carried stone would not be sold")
 	}
-	if got := run.Vitae(); got != purse+StoneSalePrice {
-		t.Errorf("selling a stone paid %d, wanted %d", got-purse, StoneSalePrice)
+	if got := run.Vitae(); got != purse+ConsumableSalePrice {
+		t.Errorf("selling a stone paid %d, wanted %d", got-purse, ConsumableSalePrice)
 	}
 	for _, hand := range sold.Hands() {
 		if got := run.StonesOn(hand); got != 0 {
@@ -708,5 +708,39 @@ func TestARockShowersStonesAreHandedOverOnceAndOnlyOnce(t *testing.T) {
 	}
 	if n := len(run.Granted()); n != 0 {
 		t.Errorf("a graft drew no stones and handed over %d", n)
+	}
+}
+
+func TestEveryCarriedKindSellsForOnePrice(t *testing.T) {
+	run := runWith(combat.Plain(combat.Bash))
+	if !run.hold(Runes()[0].Record) || !run.Stow(Essences()[0].Record) ||
+		!run.holdCantrip(Cantrips()[0].Record) || !run.Carry(Stones()[0].Record) {
+		t.Fatal("the run would not carry one of each kind")
+	}
+
+	for run.ConsumableCount() > 0 {
+		c := run.Consumables()[0]
+		purse := run.Vitae()
+		before := run.ConsumableCount()
+		if !run.SellConsumable(c) {
+			t.Fatalf("a carried %s would not be sold", c.Name())
+		}
+		if got := run.Vitae() - purse; got != ConsumableSalePrice {
+			t.Errorf("selling %s paid %d, want %d", c.Name(), got, ConsumableSalePrice)
+		}
+		if got := run.ConsumableCount(); got != before-1 {
+			t.Errorf("selling %s left %d carried, want %d", c.Name(), got, before-1)
+		}
+	}
+}
+
+func TestSellingWhatIsNotCarriedPaysNothing(t *testing.T) {
+	run := runWith(combat.Plain(combat.Bash))
+	purse := run.Vitae()
+	if run.SellConsumable(Consumable{Kind: ConsumableRune, At: 0}) {
+		t.Error("an empty sack sold a rune")
+	}
+	if run.Vitae() != purse {
+		t.Errorf("a refused sale moved the purse by %d", run.Vitae()-purse)
 	}
 }

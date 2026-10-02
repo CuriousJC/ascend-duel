@@ -156,16 +156,6 @@ func resolveStone(r data.StoneData) (Stone, error) {
 	return Stone{Record: r.StoneRecord, Name: r.Name, Text: r.Text, Shape: shape, Art: r.ArtKey()}, nil
 }
 
-// StoneSalePrice is what one carried stone fetches when it is sold.
-//
-// **Five, which is what a whole bag of rocks costs** — the bag is 5 vitae for four stones of which
-// one is kept, so a stone sold back at 5 pays for the next bag outright. That is deliberately
-// generous rather than tuned: selling exists so a rung you will never build is worth something,
-// and a price that made selling pointless would leave the pouch full of rocks nobody wants. It is
-// one number in one place, and it is the obvious thing to move first if the pouch turns out to be
-// a vitae fountain.
-const StoneSalePrice = 5
-
 // UseStone puts a stone on every rung of its shape, for the rest of the run, and reports whether
 // the catalog held it.
 //
@@ -312,7 +302,7 @@ func (s *Session) SellCarried(i int) bool {
 		return false
 	}
 	s.pouch = append(s.pouch[:i], s.pouch[i+1:]...)
-	s.AddVitae(StoneSalePrice)
+	s.AddVitae(ConsumableSalePrice)
 	return true
 }
 

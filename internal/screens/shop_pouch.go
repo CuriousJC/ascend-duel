@@ -195,7 +195,7 @@ func (s *ShopScene) updatePouch(gs *state.GlobalState) bool {
 
 	if s.pouch.IsOpen() && s.pouch.armed >= 0 {
 		use, sell := s.pouch.tabRects(gs)
-		s.pouch.sell.Text = fmt.Sprintf("Sell %d", session.StoneSalePrice)
+		s.pouch.sell.Text = fmt.Sprintf("Sell %d", session.ConsumableSalePrice)
 		s.pouch.use.ScreenX, s.pouch.use.ScreenY = midOf(use)
 		s.pouch.sell.ScreenX, s.pouch.sell.ScreenY = midOf(sell)
 		systems.UpdateButton(gs, s.pouch.use)
@@ -266,10 +266,10 @@ func (s *ShopScene) takeStone(gs *state.GlobalState, what pouchAction, i int) {
 				Action: journal.StoneSold,
 				Key:    st.Record,
 				Seat:   i,
-				Amount: session.StoneSalePrice,
+				Amount: session.ConsumableSalePrice,
 			})
 			trace.Logf("shop", "sold stone %s for %d, %d vitae in hand, %d left in the pouch",
-				st.Record, session.StoneSalePrice, gs.Run.Vitae(), gs.Run.CarryCount())
+				st.Record, session.ConsumableSalePrice, gs.Run.Vitae(), gs.Run.CarryCount())
 		}
 	}
 	s.tip.Forget()

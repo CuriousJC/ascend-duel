@@ -271,7 +271,7 @@ func (s *ShopScene) reroll(gs *state.GlobalState, p shopPane) {
 	case shopPanePacks:
 		s.rerollPacks(gs)
 	}
-	s.armed = ""
+	s.armed = shopSale{}
 	s.tip.Forget()
 
 	trace.Logf("shop", "rerolled %s for %d, next costs %d, %d vitae left",

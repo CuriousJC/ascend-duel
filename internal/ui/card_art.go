@@ -171,15 +171,13 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // queued card out of the player's discounts.
 func CardSpec(c combat.Card, h held, enabled, selected bool) cards.Spec {
 	return cards.Spec{
-		Name:       c.Label(),
-		Form:       form(c.Form()),
-		Cost:       h.cost,
-		Element:    ArtFor(c.Element),
-		Text:       riderText(c),
-		Highlights: cards.ElementHighlights(riderText(c)),
-		Upgrade:    upgradeOf(c),
-		Enabled:    enabled,
-		Selected:   selected,
+		Name:     c.Label(),
+		Form:     form(c.Form()),
+		Cost:     h.cost,
+		Element:  ArtFor(c.Element),
+		Upgrade:  upgradeOf(c),
+		Enabled:  enabled,
+		Selected: selected,
 
 		Badge:    cardBadge(c),
 		BadgePct: cardBadgePct(c),
@@ -604,6 +602,9 @@ func DuelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 		Life:    life,
 		MaxLife: maxLife,
 		Enabled: true,
+
+		// The lines the win's life payout is cut on — see session.LifeThirds.
+		LifeMarks: session.LifeThirds,
 	}
 	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(dmg)}
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(ap)}

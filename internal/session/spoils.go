@@ -15,22 +15,43 @@ package session
 
 import "github.com/curiousjc/ascend-duel/internal/journey"
 
-// lifeShareDivisor turns life left into vitae: **a tenth of it, rounded down** *(owner's call,
-// 2026-08-22)*. Sixty life left is six vitae, and a win on four life is worth nothing from this
-// half of the payout.
+// lifeVitae is what the life a fighter walked out with pays, by where it sits against the ceiling
+// it was measured under: **1 in the bottom third, 2 in the middle third, 3 in the top third, and 5
+// for a win on full health**.
 //
-// **It is a share of the life remaining, not of the maximum**, which is what makes it a reward for
-// fighting well rather than a rebate. A relic that raises max life pays out more here indirectly,
-// and that is intended.
-const lifeShareDivisor = 10
+// **A fighter sitting exactly on a line takes the higher tier**, so 20 of 60 pays 2 and 40 of 60
+// pays 3 — which is what the floor of `life*LifeThirds/max` gives, with no third ever rounded.
+// Full health is its own tier rather than the top of the third below it, because a win that took
+// nothing is the one the payout most wants to name.
+//
+// **The thirds are of the ceiling at the end of the fight**, relics and all, so a relic that raises
+// max life moves the lines with it.
+//
+// A zero or negative ceiling pays the bottom tier rather than dividing by it.
+func lifeVitae(lifeLeft, maxLife int) int {
+	switch {
+	case maxLife <= 0 || lifeLeft <= 0:
+		return lifeTierVitae[0]
+	case lifeLeft >= maxLife:
+		return lifeFullVitae
+	}
+	return lifeTierVitae[lifeLeft*LifeThirds/maxLife]
+}
 
-// LifeSharePer and PropagationPer are the two rates the reward screen names in words. They are
-// exported so the sentence reads the rule rather than repeating it: a screen printing "for each 10"
-// beside a figure computed from a different number would be a lie nothing fails on.
-const (
-	LifeSharePer   = lifeShareDivisor
-	PropagationPer = propagationPer
-)
+// LifeThirds is how many equal tiers the life payout cuts a ceiling into. **It is exported for the
+// health bar**, which marks the lines between them: a bar marked in quarters beside a payout cut in
+// thirds would be a picture nothing fails on.
+const LifeThirds = 3
+
+// lifeTierVitae is the bottom, middle and top third, and lifeFullVitae is a win on full health.
+var lifeTierVitae = [LifeThirds]int{1, 2, 3}
+
+const lifeFullVitae = 5
+
+// PropagationPer is the rate the reward screen names in words. It is exported so the sentence
+// reads the rule rather than repeating it: a screen printing "for each 10" beside a figure computed
+// from a different number would be a lie nothing fails on.
+const PropagationPer = propagationPer
 
 // roomVitae is what the room itself pays: **3 for a realm's outer room, 4 for its inner room, 5 for
 // the portal room that is its boss** *(owner's call, 2026-08-22)*. Flat for the whole journey — a realm-8
@@ -52,7 +73,7 @@ type Spoils struct {
 	// the fight holding, never on what the fight is about to pay it.
 	Propagated int
 
-	// FromLife is a tenth of the life the fighter finished on.
+	// FromLife is what the life the fighter finished on pays — see lifeVitae.
 	FromLife int
 
 	// FromRoom is what the room pays, relics included.
@@ -87,9 +108,9 @@ func (s *Session) claim(part *int) int {
 	return n
 }
 
-// spoilsFor is what a win in this room, ending on this much life, is worth — **before any of it is
+// spoilsFor is what a win in this room, ending on this much life of this ceiling, is worth — **before any of it is
 // added**, which is what keeps the interest honest.
-func (s *Session) spoilsFor(lifeLeft int) Spoils {
+func (s *Session) spoilsFor(lifeLeft, maxLife int) Spoils {
 	if lifeLeft < 0 {
 		lifeLeft = 0
 	}
@@ -98,7 +119,7 @@ func (s *Session) spoilsFor(lifeLeft int) Spoils {
 	f := s.VitaeFactor()
 	return Spoils{
 		Propagated: s.propagation() * f,
-		FromLife:   lifeLeft / lifeShareDivisor * f,
+		FromLife:   lifeVitae(lifeLeft, maxLife) * f,
 		FromRoom:   s.PrizeVitae(roomVitae[journey.RoomOf(s.fight)]) * f,
 	}
 }

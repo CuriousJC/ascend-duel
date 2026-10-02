@@ -8,7 +8,7 @@ package screens
 // chain is wired as screen changes.
 //
 // **The payout and the offer are one screen** *(owner's call, 2026-09-18)*. The win is read out in
-// the first third of the width — interest, a tenth of the life you kept, what the room is worth,
+// the first third of the width — interest, what the life you kept is worth, what the room is worth,
 // each figure flying to the duelist card as its sentence lands — and the essences and the way out
 // stand in the two thirds beside it. It was a narration the player clicked past before anything was
 // offered, so the two halves of "you won" were two screens with a click between them.

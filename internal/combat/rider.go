@@ -91,10 +91,10 @@ const (
 	// RiderWildElement makes this card count as **every** element at once when a hand is formed.
 	// It carries no amount.
 	//
-	// **The card keeps its own element and everything else keeps reading it.** A wild fire Bash
-	// is still a fire Bash: it lands a burn, it is drawn from the fire row of the deck panel,
-	// and `Blow.Elements` reports fire for it. What changes is one question — what it counts as on
-	// the element axis — and it answers that with "whatever you need".
+	// **The card keeps its own element and the drawing keeps reading it.** A wild fire Bash is
+	// still drawn from the fire row of the deck panel, and `Blow.Elements` reports fire for it. What
+	// changes is what it counts as on the element axis — for a hand and for a relic's predicate
+	// alike, see RelicCondition.Matches — and it answers that with "whatever you need".
 	//
 	// **It is the first rider that is read while the hand is *matched* rather than while the turn
 	// is resolved**, which is why `matchCountOf` had to learn about it: every other rider fires
@@ -139,8 +139,8 @@ const (
 	// versatile Brace still counts as the defend it is, and as the three attack forms beside it.
 	// See WildFits, which is the whole of that rule.
 	//
-	// **Everything that is not the matcher still reads the card's own form**, exactly as a wild
-	// element still burns: the corner mark, the form sort, a relic naming a form.
+	// **The drawing still reads the card's own form** — the corner mark, the form sort — while a
+	// relic naming a form counts it as the matcher does: see RelicCondition.Matches.
 	RiderWildForm
 )
 

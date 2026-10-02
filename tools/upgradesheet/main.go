@@ -15,14 +15,12 @@
 //
 // # What to look at
 //
-// **The edge strip each upgrade draws.** `data/edges.json` names a strip of art per upgrade, plus
-// a default for every upgrade without one, and its `Width`, `Inset` and `Opacity` are the draw
-// properties — the page prints them beside each plate, so tuning them is an edit to that file, a
-// re-run of this, and a look.
+// **The art each upgrade lays over the face.** `data/upgrade_art.json` names a picture per upgrade,
+// plus a default for every upgrade without one, and the page prints which beside each plate.
 //
-// **The stacked rows.** The strip exists for the deck panel, which overlaps every card over the
+// **The stacked rows.** The art has to read in the deck panel, which overlaps every card over the
 // one before it so only the left edge shows. The page draws every upgrade as that panel does — the
-// half-size card at the panel's resting pitch and again packed tight — because a strip that reads
+// half-size card at the panel's resting pitch and again packed tight — because art that reads
 // on one card standing alone and vanishes in a pile has missed its one job.
 //
 // **The tooltip each upgrade produces, printed beside the card.** Those are the *same strings the
@@ -37,12 +35,12 @@
 // **The plain card in every row.** An upgrade is only legible against what an ordinary card looks
 // like, and the ordinary card is what the player has fifty-five of.
 //
-// **All four form marks.** The marks sit in the left column the strip runs under, and have
-// different margins — a shield is wide-shouldered where a spear is thin — so a strip that crowds
+// **All four form marks.** The marks sit in the left column the art runs under, and have
+// different margins — a shield is wide-shouldered where a spear is thin — so art that crowds
 // one may clear another.
 //
 // **The three card states.** An upgraded card has to fade with the rest of its row when it cannot
-// be afforded, exactly as an ordinary one does; the strip walks the same distance toward the
+// be afforded, exactly as an ordinary one does; the art walks the same distance toward the
 // surface the cost ticks do, and this is where it is visible.
 //
 // **Which rune grants it.** An upgrade nobody can acquire is invisible in the other
@@ -161,20 +159,15 @@ func run(dir string) error {
 	}
 
 	for _, u := range systems.Upgrades() {
-		e, _ := cards.EdgeOf(u)
+		e, _ := cards.UpgradeArtOf(u)
 		p := plate{
-			Upgrade:  u.String(),
-			Edge:     e.EdgeRecord,
-			Art:      e.ArtKey(),
-			Undrawn:  e.Art == "",
-			Width:    e.Width,
-			Inset:    e.Inset,
-			Opacity:  e.Opacity,
-			FadeFrom: e.FadeFrom,
-			FadeTo:   e.FadeTo,
-			Riders:   ridersFor(u),
-			Grants:   grantsFor(u),
-			Tip:      tipFor(u),
+			Upgrade: u.String(),
+			Record:  e.UpgradeArtRecord,
+			Art:     e.ArtKey(),
+			Undrawn: e.Art == "",
+			Riders:  ridersFor(u),
+			Grants:  grantsFor(u),
+			Tip:     tipFor(u),
 		}
 
 		row, err := renderRow(dir, faces, u, u.String())
@@ -222,7 +215,7 @@ func run(dir string) error {
 		if grants == "" {
 			grants = "NOTHING GRANTS IT"
 		}
-		fmt.Printf("  %-11s edge %-8s %-14s %s\n", p.Upgrade, p.Edge, p.Riders, grants)
+		fmt.Printf("  %-11s art %-8s %-14s %s\n", p.Upgrade, p.Record, p.Riders, grants)
 	}
 	return nil
 }
@@ -244,25 +237,22 @@ func renderRow(dir string, f *cards.Faces, u systems.Upgrade, tag string) ([]cel
 
 // specFor is one demonstration card.
 //
-// **The text is what a card carrying this upgrade actually prints**, taken from the same place the
-// game takes it rather than written out here — a sheet quoting its own wording would be the one
-// place a mismatch between the face and the rules is invisible.
+// **It carries no text**, because a hand card's face carries none: the upgrade is the art, and
+// the words are the tooltip's.
 func specFor(form cards.Form, name string, e cards.Element, u systems.Upgrade) cards.Spec {
 	return cards.Spec{
-		Name:       name,
-		Form:       form,
-		Cost:       demoCost,
-		Element:    e,
-		Upgrade:    u,
-		Text:       textFor(u),
-		Highlights: cards.ElementHighlights(textFor(u)),
-		Enabled:    true,
+		Name:    name,
+		Form:    form,
+		Cost:    demoCost,
+		Element: e,
+		Upgrade: u,
+		Enabled: true,
 	}
 }
 
 // The two pitches the stacked rows are drawn at. **stackPitch is the deck panel's resting
 // `deckStackPitch`, restated** — `internal/ui` links Ebitengine and a command-line tool cannot
-// reach it — and stackTight is a row that has had to tighten, which is where only the strip and a
+// reach it — and stackTight is a row that has had to tighten, which is where only the left edge and a
 // sliver of the left column show.
 const (
 	stackPitch = 75
@@ -314,23 +304,6 @@ func groundRGBA() color.RGBA {
 	var r, g, b uint8
 	fmt.Sscanf(ground, "#%02x%02x%02x", &r, &g, &b)
 	return color.RGBA{R: r, G: g, B: b, A: 255}
-}
-
-// textFor is the text an upgraded card carries under its name, exactly as the game prints it.
-//
-// **It was a hand-written snapshot of `screens.riderText` and no longer is** *(2026-09-09)*. The
-// wording moved down into `internal/carddesc`, which is windowless precisely so a command-line tool
-// can reach it — the same trade the tooltip block already makes on this page. What that removes is
-// the one line on the sheet that could disagree with the card it is a picture of.
-//
-// The demonstration card is the row's own: the same fire Skewer `tipFor` builds, so the face and the
-// tooltip beside it are two readings of one card rather than two cards.
-func textFor(u systems.Upgrade) string {
-	out := "2x DMG"
-	for _, line := range carddesc.FaceLines(demoRidden(u)) {
-		out += "\n" + line
-	}
-	return out
 }
 
 // demoRidden is the demonstration card carrying this upgrade's rider, or a bare one for an upgrade
@@ -543,22 +516,17 @@ type tip struct {
 	Lines [][]tipRun
 }
 
-// plate is one upgrade: how it is acquired, the edge it draws, how it looks and how it states.
+// plate is one upgrade: how it is acquired, the art it draws, how it looks and how it states.
 type plate struct {
-	Upgrade  string
-	Edge     string
-	Art      string
-	Undrawn  bool
-	Width    int
-	Inset    int
-	Opacity  int
-	FadeFrom int
-	FadeTo   int
-	Riders   string
-	Grants   string
-	Tip      tip
-	Cells    []cell
-	States   []cell
+	Upgrade string
+	Record  string
+	Art     string
+	Undrawn bool
+	Riders  string
+	Grants  string
+	Tip     tip
+	Cells   []cell
+	States  []cell
 }
 
 type page struct {

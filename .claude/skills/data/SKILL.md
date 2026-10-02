@@ -27,7 +27,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `potions.json` | `LoadPotions` | the bottles the shop sells every visit: which of the duelist's figures each moves, by how much, and what it costs |
 | `tonics.json` | `LoadTonics` | the run-long rule changes the shop offers one per realm: an `Effect`, an `Amount`, an optional `Requires`, and a `Price` — see `internal/session/tonic.go` |
 | `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
-| `edges.json` | `LoadEdges` | the strip an upgraded card draws down each side of its face: one record per upgrade with its own picture, plus `default`, each an `Art` key, a `Draw` brief and six draw properties — `Width`, `Inset`, `Opacity`, `FadeFrom`, `FadeTo` on the hand card, and `Sides`, `left` or `both`. Keys are checked against `systems.Upgrade` names in `internal/cards`, which `data` cannot import |
+| `upgrade_art.json` | `LoadUpgradeArt` | the art an upgraded card wears over its face: one record per upgrade plus `default`, each an `Art` stem under `assets/upgrade-art/` and a `Draw` brief — the `card_art.json` shape. Keys are checked against `systems.Upgrade` names in `internal/cards`, which `data` cannot import |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 
@@ -257,7 +257,7 @@ every record under `data/motifs/` carries `Art` and `Draw`, and has no `Family` 
   the backlog each sheet marks in pink. **Every enemy and boss `Draw` reads `TBD`**:
   those portraits are licensed art rather than generated pictures, so the field is a seat rather
   than a backlog.
-- **`go run ./tools/relicart -kind relic|essence|rune|stone|other`** files a generated picture into
+- **`go run ./tools/relicart -kind relic|essence|rune|stone|cantrip|card|upgrade|other`** files a generated picture into
   any of them: reduce to the card's size, commit under the family's asset directory, write `Art` on
   the record. **`other` is the one kind spanning two files** — the potions and the sealed goods
   share a prompt and an inbox, and the tool writes each record's `Art` back into whichever of

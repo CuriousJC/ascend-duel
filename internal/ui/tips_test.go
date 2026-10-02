@@ -200,7 +200,7 @@ func TestTheTooltipReadsTheWayItWasSpecified(t *testing.T) {
 	// and the figure a Jab prints is the holder's DMG times the card's own 50% — so the duelist
 	// that example describes hits for 10.
 	title, lines := CardTip(jab, held{cost: jab.Cost(), dmg: 10})
-	want := []string{"STAB, 1 AP", "5 DMG", "+10 HEAL ON PLAY"}
+	want := []string{"STAB, 1 AP", "5 DMG", "+10 HEAL WHEN PLAYED"}
 	if title != "FIRE JAB" || !equal(lines, want) {
 		t.Errorf("a fire Jab with a Leech reads %q %v, want %q %v", title, lines, "FIRE JAB", want)
 	}
@@ -210,7 +210,7 @@ func TestTheTooltipReadsTheWayItWasSpecified(t *testing.T) {
 	ward = ward.SetRider(combat.Rider{Kind: combat.RiderVitaeInHand, Amount: 3})
 
 	title, lines = CardTip(ward, held{cost: ward.Cost()})
-	want = []string{"DEFEND, 1 AP", "1 SHIELD", "+3 VITAE IN HAND"}
+	want = []string{"DEFEND, 1 AP", "1 SHIELD", "+3 VITAE WHEN UNPLAYED"}
 	if title != "ICE BRACE" || !equal(lines, want) {
 		t.Errorf("an ice Brace with a Brood reads %q %v, want %q %v", title, lines, "ICE BRACE", want)
 	}

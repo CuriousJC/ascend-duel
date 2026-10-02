@@ -7,8 +7,8 @@ package systems
 // three. An **upgrade** is the fourth thing, and a card carries exactly one: see
 // `combat.MaxCardRiders`.
 //
-// **The card draws an upgrade as a strip down each side of its face**, authored art named per
-// upgrade in `data/edges.json` — see `internal/cards/edge.go`. What this file holds is the rest of
+// **The card draws an upgrade as its face**, authored art named per upgrade in
+// `data/upgrade_art.json` — see `internal/cards/upgrade_art.go`. What this file holds is the rest of
 // an upgrade's presentation: its name, and the ink a word or a signal naming it is colored from.
 //
 // # Why every upgrade is an ink and not a color

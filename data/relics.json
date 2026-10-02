@@ -421,7 +421,7 @@
     "Family": "Jade rings",
     "Art": "dmg-no-hand",
     "Draw": "jade ring without a gem",
-    "Text": "Plus 2 duelist DMG\non No Hand played.",
+    "Text": "+2 duelist DMG\nwhen No Hand is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -437,7 +437,7 @@
     "Family": "Jade rings",
     "Art": "dmg-pair-hand",
     "Draw": "jade ring with two diamonds",
-    "Text": "Plus 2 duelist DMG\non Pair played.",
+    "Text": "+2 duelist DMG\nwhen a Pair is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -453,7 +453,7 @@
     "Family": "Jade rings",
     "Art": "dmg-two-pair-hand",
     "Draw": "jade ring with two diamonds and two black gems",
-    "Text": "Plus 4 duelist DMG\non any Two Pair played.",
+    "Text": "+4 duelist DMG\nwhen any Two Pair is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -471,7 +471,7 @@
     "Family": "Jade rings",
     "Art": "dmg-three-of-a-kind-hand",
     "Draw": "jade ring with three diamonds",
-    "Text": "Plus 5 duelist DMG\non any Three of a Kind played.",
+    "Text": "+5 duelist DMG\nwhen any Three of a Kind is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -493,7 +493,7 @@
     "Family": "Jade rings",
     "Art": "dmg-full-house-hand",
     "Draw": "jade ring with three diamonds and two black gems",
-    "Text": "Plus 8 duelist DMG\non any Full House played.",
+    "Text": "+8 duelist DMG\nwhen any Full House is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -515,7 +515,7 @@
     "Family": "Jade rings",
     "Art": "dmg-four-of-a-kind-hand",
     "Draw": "jade ring with four diamonds",
-    "Text": "Plus 10 duelist DMG\non any Four of a Kind played.",
+    "Text": "+10 duelist DMG\nwhen any Four of a Kind is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -537,7 +537,7 @@
     "Family": "Jade rings",
     "Art": "dmg-five-of-a-kind-hand",
     "Draw": "jade ring with five diamonds",
-    "Text": "Plus 16 duelist DMG\non any Five of a Kind played.",
+    "Text": "+16 duelist DMG\nwhen any Five of a Kind is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -559,7 +559,7 @@
     "Family": "Jade rings",
     "Art": "dmg-elementalist-hand",
     "Draw": "jade ring with five gems, one each of orange, blue, yellow, green and purple",
-    "Text": "Plus 10 duelist DMG\non Elementalist played.",
+    "Text": "+10 duelist DMG\nwhen an Elementalist is PLAYED.",
     "Rarity": "common",
     "Rules": [
       {
@@ -845,7 +845,7 @@
     "Family": "Weapons",
     "Art": "stick",
     "Draw": "a sharpened stick",
-    "Text": "Every Poke deals 4x DMG.",
+    "Text": "Every Poke (0 AP stab) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -861,7 +861,7 @@
     "Family": "Weapons",
     "Art": "old-dagger",
     "Draw": "a rusty dagger",
-    "Text": "Every Jab deals 4x DMG.",
+    "Text": "Every Jab (1 AP stab) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -877,7 +877,7 @@
     "Family": "Weapons",
     "Art": "epee",
     "Draw": "an epee with an oversized guard to differentiate from a foil",
-    "Text": "Every Thrust deals 4x DMG.",
+    "Text": "Every Thrust (2 AP stab) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -893,7 +893,7 @@
     "Family": "Weapons",
     "Art": "skewer-spear",
     "Draw": "a wood spear with a copper tip that is longer like a sword tip",
-    "Text": "Every Skewer deals 4x DMG.",
+    "Text": "Every Skewer (3 AP stab) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -909,7 +909,7 @@
     "Family": "Weapons",
     "Art": "lance",
     "Draw": "A long obsidian lance with a silver hilt",
-    "Text": "Every Impale deals 4x DMG.",
+    "Text": "Every Impale (4 AP stab) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -925,7 +925,7 @@
     "Family": "Weapons",
     "Art": "bread-knife",
     "Draw": "a bread knife",
-    "Text": "Every Nick deals 4x DMG.",
+    "Text": "Every Nick (0 AP slash) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -941,7 +941,7 @@
     "Family": "Weapons",
     "Art": "hunting-knife",
     "Draw": "an extra large hunting knife",
-    "Text": "Every Cut deals 4x DMG.",
+    "Text": "Every Cut (1 AP slash) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -957,7 +957,7 @@
     "Family": "Weapons",
     "Art": "katana-blade",
     "Draw": "a silver edge katana with wavy damascus steel pattern",
-    "Text": "Every Slice card\ndeals 4x DMG.",
+    "Text": "Every Slice (2 AP slash) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -973,7 +973,7 @@
     "Family": "Weapons",
     "Art": "cleaver",
     "Draw": "large cleaver with a silver blade and a copper handle",
-    "Text": "Every Cleave deals 4x DMG.",
+    "Text": "Every Cleave (3 AP slash) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -989,7 +989,7 @@
     "Family": "Weapons",
     "Art": "headsman",
     "Draw": "Black steel executioner axe with a silver handle",
-    "Text": "Every Sever deals 4x DMG.",
+    "Text": "Every Sever (4 AP slash) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1005,7 +1005,7 @@
     "Family": "Weapons",
     "Art": "spoon",
     "Draw": "a wooden spoon",
-    "Text": "Every Tap deals 4x DMG.",
+    "Text": "Every Tap (0 AP crush) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1021,7 +1021,7 @@
     "Family": "Weapons",
     "Art": "brass-knuckles",
     "Draw": "a set of solid brass knuckles with four finger holes, scrollwork and a small star engraved along the front bar",
-    "Text": "Every Thump deals 4x DMG.",
+    "Text": "Every Thump (1 AP crush) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1037,7 +1037,7 @@
     "Family": "Weapons",
     "Art": "basher",
     "Draw": "a mechanic hammer with a copper handle and a silver head",
-    "Text": "Every Bash deals 4x DMG.",
+    "Text": "Every Bash (2 AP crush) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1053,7 +1053,7 @@
     "Family": "Weapons",
     "Art": "warhammer",
     "Draw": "A silver warhammer with a black steel handle",
-    "Text": "Every Smash deals 4x DMG.",
+    "Text": "Every Smash (3 AP crush) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1069,7 +1069,7 @@
     "Family": "Weapons",
     "Art": "stone-maul",
     "Draw": "a large stone maul with a wooden handle",
-    "Text": "Every Pulverize deals 4x DMG.",
+    "Text": "Every Pulverize (4 AP crush) deals 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1085,7 +1085,7 @@
     "Family": "Elements held",
     "Art": "jar-fire",
     "Draw": "a jar with burning coals inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per fire card\nkept in hand.",
+    "Text": "+5 DMG per UNPLAYED\nfire card.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1101,7 +1101,7 @@
     "Family": "Elements held",
     "Art": "jar-ice",
     "Draw": "a jar with large shards of ice inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per ice card\nkept in hand.",
+    "Text": "+5 DMG per UNPLAYED\nice card.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1117,7 +1117,7 @@
     "Family": "Elements held",
     "Art": "jar-lightning",
     "Draw": "a jar with a small lightning bolts inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per lightning card\nkept in hand.",
+    "Text": "+5 DMG per UNPLAYED\nlightning card.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1133,7 +1133,7 @@
     "Family": "Elements held",
     "Art": "jar-earth",
     "Draw": "a jar with a small rocks inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per earth card\nkept in hand.",
+    "Text": "+5 DMG per UNPLAYED\nearth card.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1149,7 +1149,7 @@
     "Family": "Elements held",
     "Art": "jar-arcane",
     "Draw": "a jar with a small glowing orbs inside, the jar is made of clear glass with a copper lid",
-    "Text": "+5 DMG per arcane card\nkept in hand.",
+    "Text": "+5 DMG per UNPLAYED\narcane card.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1632,7 +1632,7 @@
     "Family": "Forms held",
     "Art": "jar-stab",
     "Draw": "a jar with ivory needles, the jar is made of clear glass with an indigo lid",
-    "Text": "+5 DMG per stab card\nkept in hand.",
+    "Text": "+5 DMG per UNPLAYED\nstab card.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1648,7 +1648,7 @@
     "Family": "Forms held",
     "Art": "jar-slash",
     "Draw": "a jar with steel razor blades inside, the jar is made of clear glass with an indigo lid",
-    "Text": "+5 DMG per slash card\nkept in hand.",
+    "Text": "+5 DMG per UNPLAYED\nslash card.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1664,7 +1664,7 @@
     "Family": "Forms held",
     "Art": "jar-crush",
     "Draw": "a jar with chunks of granite, the jar is made of clear glass with an indigo lid",
-    "Text": "+5 DMG per crush card\nkept in hand.",
+    "Text": "+5 DMG per UNPLAYED\ncrush card.",
     "Rarity": "common",
     "Rules": [
       {
@@ -2063,7 +2063,7 @@
     "Family": "Shield streaks",
     "Art": "dmg-shield-use",
     "Draw": "a tower shield with an embedded rainbow gem in the center",
-    "Text": "Every card gains 0.2x DMG\nfor each shield card\nyou play. Grows while worn.",
+    "Text": "Every card gains 0.2x DMG\nfor each shield card\nPLAYED. Grows while worn.",
     "Rarity": "rare",
     "Rules": [
       {

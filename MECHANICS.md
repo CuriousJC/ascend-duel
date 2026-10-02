@@ -30,7 +30,8 @@ that raises one rung of the hand ladder, a **potion** that changes the duelist, 
 alters cards mid-fight, a **cantrip** that strengthens the duelist for one fight, or a **sealed
 good**, which is paid for and *then* opened. Then the next room.
 
-Wounds carry from room to room and only a portal room heals them, so a realm is an attrition budget.
+Wounds carry from room to room and nothing between fights heals them, so the journey is an attrition
+budget: life comes back only through what the player spends on it.
 The run is written to disk between rooms and every run has a six-character code that replays it.
 
 ## Contents
@@ -1683,7 +1684,7 @@ where a weight blunts a quarter and a chill takes one card, so its tier is the t
 if the arcane build turns out to dominate. Nothing in the repo measures what a relic does to a duel,
 so the price is judgment — see the relics skill.
 
-### Momentum — a streak that belongs to the duel
+### Momentum — a streak that carries between fights
 
 **Every card gains +0.2x DMG for each turn played without a defend card, and a defend card wipes
 it.**
@@ -1701,9 +1702,11 @@ predicate at all, so the streak is worth the same on every card in the hand.
   building. The streak is about not *defending*, not about swinging.
 - **A duelist who falls mid-turn never reaches it**, since `playTurn` returns early on a death — a
   streak is a fact about turns taken and a corpse takes none.
-- **The streak does not survive the fight**, and that needed a rule: `combat.KeepsGrowth` reports
-  false for any relic holding a `reset-growth`, and `Session.AbsorbGrowth` skips it. Otherwise one
-  good duel would bank a permanent bonus that a single defend card had once wiped.
+- **The streak survives the fight** *(owner's call)*: it carries from duel to duel for as long as
+  no defend card is played, so a run that never defends grows every card all the way up the
+  journey. `Session.AbsorbGrowth` reads it back **outright** rather than keeping the larger figure,
+  because a wipe is the figure going down — `combat.Resets` is what says a relic can. Selling it
+  forfeits the streak, like any growing relic.
 - **What it prices is taking a hit**, which is the question it puts to the player on every turn:
   swing into the next blow, or spend the turn defending and lose the streak. Whether 0.2x a turn
   is enough to make a player eat an attack is unmeasured, like every other relic.
@@ -2372,7 +2375,7 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
 | | |
 |---|---|
 | When | after a won fight, before the next room |
-| Beside it | the win **reading itself out** in the first third of the width: interest, a tenth of the life kept, what the room pays |
+| Beside it | the win **reading itself out** in the first third of the width: interest, which third of the life was kept, what the room pays |
 | Offered | **two cards**: two essences from `data/essences.json`, in the two thirds beside the payout |
 | Then | a hand dealt fresh off the whole run deck, at the combat hand size |
 | Then | a **morph**: the card before and after, side by side, nothing committed |
@@ -3031,14 +3034,14 @@ hand and the discard, and fires only when that card is played.
 
 ### The card says what the card carries
 
-Effect text reads the card, so an upgraded card prints an extra line — `+10 LIFE`, `GOLD` — under
-its own. **It is not written in the relic pink**: that color means "a relic did this" everywhere
-else, and a rune is not a relic.
+**A hand card's face carries no words but its name.** An upgraded card says so in its art, and what
+the upgrade does is the tooltip's — `+10 HEAL ON PLAY`, the odds on a metal, every figure. A face
+is a picture: the form is the corner mark, the element its color and the cost ticks under it, the
+multiplier the badge, and the upgrade the face itself.
 
-**Every rider is visible in three places**: the line on the face, the wash over the card, and
-the tooltip. None is redundant with the others — the color carries at a glance across
-a row of eight, the face's line answers "what does that mean" without a hover, and the tooltip
-carries the figures neither has room for. See §An upgrade is painted on the card, and §The tooltip.
+**Every rider is visible in two places**: the art on the card, which carries at a glance across a
+row of eight, and the tooltip, which says what that means. See §An upgrade is painted on the card,
+and §The tooltip.
 
 ### The tooltip is a stat block first
 
@@ -3098,11 +3101,17 @@ card's one upgrade seat, so either replaces whatever upgrade the card already ca
 versatile Jab cannot make up a defend pair — and a versatile Brace still counts as the defend it is,
 beside the three attack forms. `Card.WildFits` is the whole of that rule.
 
-**The card keeps its own element and form, and everything else goes on reading them.** A wild fire
-Bash is still a fire Bash: it lands a burn, it sits in the fire row of the deck panel, and
-`Blow.Elements` reports fire for it; a versatile Jab still wears the stab mark and is still what a
-relic naming stab counts. One question changes — what it counts as on its axis while the hand is
-formed — and the answer is "whatever the hand needs".
+**The card keeps its own element and form, and the drawing goes on reading them.** A wild fire
+Bash is still a fire Bash on the table: it sits in the fire row of the deck panel and
+`Blow.Elements` reports fire for it; a versatile Jab still wears the stab mark.
+
+**Relics count a wildcard the way a hand does** *(owner's call)*. A rule naming an element matches a
+card that counts as every element, and a rule naming stab, slash or crush matches a card that counts
+as any attack form — `RelicCondition.Matches` asks `Card.WildFits`, the matcher's own answer. So a
+versatile Jab feeds the Jar of Razors, and a chromatic card is multiplied by every element relic
+worn, discounted by every element discount, lands every status an element relic applies, and is
+touched by every flip ring it is dealt under. **That is the largest balance lever on a wildcard**,
+and what a run pays for one is in `data/runes.json`. Basic is not an element a wildcard joins.
 
 **It is the first rider read while the hand is *matched* rather than while the turn resolves.**
 Every other rider fires after the hand is already decided; this one is inside `matchCountOf`, which
@@ -3132,23 +3141,22 @@ axis into a four, and those rungs are high on the ladder — so how often a run 
 the number to watch, and that number is the rune's place in `data/runes.json` and the essence's in
 `data/essences.json` rather than anything in the rules.
 
-### An upgrade is painted on the card, as its edges
+### An upgrade is painted on the card, as its face
 
 **A card has a form, an element and an action, and then one upgrade.** There is one per rider kind,
 and every one draws: a card the run has altered says so from across the table.
 
-**An upgrade is a strip of authored art down the left edge of the face.** `data/edges.json` holds
-one record per upgrade plus `default`, which an upgrade with no record draws. A record with no
-`Art` yet draws the default picture at its own draw properties. The strip is stretched to the
-face's full height, mirrored onto the right edge only where a record's `Sides` is `both`, and goes
-down **under everything written on the card**, so the form mark, the cost ticks and the text sit on
-top of it. `internal/cards/edge.go` is the drawing.
+**An upgrade is authored art covering the whole face.** `data/upgrade_art.json` holds one record per
+upgrade plus `default`, which an upgrade with no record draws. The picture is laid over the face
+inside the border ring, clipped to the card's rounded corners, and goes down **under everything
+drawn on the card** — the form mark, the cost ticks, the badge and the name sit on top of it. The
+face carries no other words, so the art is the whole of what the card says about its upgrade.
+`internal/cards/upgrade_art.go` is the drawing, and the card's own figure is lifted off its ground to
+sit on top of it — see `internal/cards/matte.go`.
 
-**The left edge is the one that has to work.** The deck panel overlaps every card over the one
-before it, so a stacked row shows each card's left side and nothing else — and the strip is what
-lets a gold card be picked out of a pile. A strip wider than the margin left of the column is
-allowed: when the cards are packed tight part of it is hidden, and what it covers on a card standing
-alone is the card's ground, never what the card says.
+**The left edge still has to read on its own.** The deck panel overlaps every card over the one
+before it, so a stacked row shows each card's left side and nothing else — and that sliver is what
+lets a gold card be picked out of a pile.
 
 **It sits inside the border ring, not on it**, at the default inset. The ring carries the card's
 *state* — resting, selected, unaffordable, being dragged — so an upgrade painted over it would be a
@@ -3158,17 +3166,15 @@ out of the row, and that is the whole of what selection says — and **only an u
 fades it**, so an unaffordable gold card reads as unaffordable first.
 
 **`Width`, `Inset`, `Opacity`, `FadeFrom`, `FadeTo` and `Sides` are the record's draw properties**,
-measured on the hand card and scaled with it. The strip is a third of the card wide and fades out
-across its inner half, so it reaches into the face and dissolves there rather than ending at a
-line. The fade is a property rather than part of the art so it can be tuned, and the deck panel's
-half-size card draws a half-width strip. They are tuned beside
-the art in `data/edges.json` and judged on `go run ./tools/upgradesheet`, which draws every upgrade
-alone, in its three states, and stacked as the deck panel stacks a row. The art comes from
-`docs/art/edge_art_prompt.MD` with the record's `Draw` pasted after it.
+measured on the hand card and scaled with it, and every record sets them to cover the face at full
+opacity with no fade. They are judged beside the art on `go run ./tools/upgradesheet`, which draws
+every upgrade alone, in its three states, and stacked as the deck panel stacks a row. The art comes
+from `docs/art/upgrade_art_prompt.MD` with the record's `Draw` pasted after it, and is committed at the
+card's own 200x280 like every other card picture.
 
 - **A relic card is the one card this must never touch**, and it does not: a relic carries no rider.
-- **It never takes the left column.** That column states the element, and almost no upgrade has
-  anything to do with the element.
+- **The left column is drawn over it.** That column states the element, and almost no upgrade has
+  anything to do with the element, so the form mark and the ticks stay the element's on every face.
 - **`systems.Upgrade` is the vocabulary** and it is *presentation*: something visible has happened
   to this card. `internal/screens` is where a rider becomes one, on exactly the terms `Spec.TextInk`
   is where a relic becomes a color — neither `internal/cards` nor `internal/systems` learns what a
@@ -3176,17 +3182,12 @@ alone, in its three states, and stacked as the deck panel stacks a row. The art 
 - **An upgrade is painted into the face; a mark is painted over it.** An upgrade is what the card
   permanently *is*; a `cards.Mark` is the card's situation. A shattered gold card reads as gold and
   broken, in that order, and the order is fixed in `Render`.
-- **The width says how much the upgrade is the card.** The metals and the two wildcards take the
-  full third; the four that fire when the card is played are narrower; the three that pay while the
-  card is *held* are narrowest and slightly translucent. The draw properties are the record's, so
-  this is a starting point to tune against the art rather than a rule.
 - **A new upgrade arrives undrawn**: its record is written with an empty `Art` and draws the
-  default pewter at its own width until its picture lands, so it is told apart by the line its card
-  prints — see §The card says what the card carries.
+  default pewter until its picture lands, so until then it is told apart only in the tooltip.
 - **The wildcard is the one upgrade that leaves the form mark hueless.** The left column exists to
   state the element; a wildcard's element is still what the card *is*, but what it *counts as* is
   every element at once, so a column stating one of them states the less useful half of the truth.
-  Its edge is the five element colors.
+  Its face is the five element colors.
 - **Every upgrade also has an ink** — `systems.UpgradeInk` — which is what a word naming it and a
   signal it throws are colored from: GOLD in gold, CHROMATIC across the five, a fired rider's spark
   in its own tint. **Most of those tints are placeholders on a full wheel**; gold and silver are the
@@ -3249,7 +3250,7 @@ against it, plus the authored `Text` the tooltip says.
   takes the fighter's life back against the ceiling it would have had without the casts:
   `session.ShedCantrips` subtracts what they raised and clamps the life to what is left. Finishing
   at 90/120 on a 60 body walks out at 60/60 — whatever the cantrip bought was a heal while it
-  lasted, never a debt afterwards. The spoils' tenth of the life left is read off the clamped figure.
+  lasted, never a debt afterwards. The spoils' life tier is read off the clamped figure.
 - **Between turns, like every consumable.** `ResolveRound` decides a round before a frame of it is
   drawn, so a cast during playback would change a duelist whose round was already decided. A cast
   on the last round is legal and nearly worthless, which is the player's call to make.
@@ -3348,12 +3349,16 @@ screen as it narrates them. See `internal/session/spoils.go`.
 | Part | Figure |
 |---|---|
 | **Interest** | propagation, below — on the purse as it stood when the fight ended |
-| **The life you kept** | **a tenth of the life remaining, rounded down**: 65 left pays 6 |
+| **The life you kept** | **by thirds of the ceiling**: 1 in the bottom third, 2 in the middle, 3 in the top, **5 on full health** |
 | **The room** | **3** outer, **4** inner, **5** portal room (the realm's boss), flat for the whole journey |
 
-- **A share of the life *remaining*, not of the maximum.** It is a reward for fighting well rather
-  than a rebate, and a relic that raises max life pays out more here indirectly — which is intended.
-  A win on nine life pays nothing from this part.
+- **The thirds are of the ceiling the fight ended under**, relics and all, so a relic that raises max
+  life moves the lines with it. **A fighter sitting exactly on a line takes the tier above it**: 20 of
+  60 pays 2 and 40 of 60 pays 3. Every win pays at least 1 from this part.
+- **Full health is its own tier**, not the top of the third below it. A win that took nothing is the
+  one the payout most wants to name.
+- **The duelist's health bar is marked at the two lines**, so where a fight is about to land in the
+  payout is something the player can see rather than work out.
 - **The room award does not scale with the realm.** What makes a later fight worth more is the life
   you manage to keep in it.
 - **Deciding and paying are separate.** The figures are frozen when the fight ends, so nothing
@@ -3495,35 +3500,32 @@ it is the only way on: there is no Back and no Skip.
 
 ### Life between fights, and what a portal room is worth
 
-**A wound is carried from room to room, and only a boss takes it away.** A realm is an
-attrition budget of three rooms. Opening every duel at full life would make damage a fact about
-one round and never about the journey, and the only thing a bad fight would cost is the tenth of
-life-left the payout pays.
+**A wound is carried from room to room, and nothing between fights takes it away.** Not a won
+room and not a portal room. Opening every duel at full life would make damage a fact about one
+round and never about the journey, and the only thing a bad fight would cost is a lower tier of the
+life payout.
 
-- **Beating the realm's portal protector heals to full**, and it is the only thing that does. No
-  card, no relic and no room between fights returns life outside a duel. That is what makes the
-  third room of a realm the one worth arriving at holding something back.
-- **It also raises the ceiling by a third, compounding.** Each portal room is 33% more body than the
-  run already had, not 33% of the body it started with — so a run standing on realm eight, seven
-  portal rooms up, is carrying about seven and a half times the life it opened with. The growth curve
-  grows the opponent by 10% a *room*, which is a little over twice that across the same journey, so
-  the two are pulling in the same direction and the boss bonus is the player's half of it.
-- **The ceiling grows, the wound does not scale with it.** Forty points taken on realm two are
-  forty points on realm six — worth much less against a bigger body, which is deliberate: the
-  reward for going further is that the early rooms of a realm stop being able to end you.
+- **Life comes back only through what the player spends on it**: a potion bought in the shop, a card
+  that heals, a relic that restores. Every point of life the run gets back is one it paid for.
+- **Beating the realm's portal protector raises the ceiling by a flat 25**, once per portal room
+  cleared, so a run standing on realm eight, seven portal rooms up, carries 175 more body than it
+  opened with. Flat rather than a share, so the step is the same on every realm.
+- **The wound stays the same size, so the raise is also a heal of exactly 25.** The ceiling rises
+  and the wound under it does not: a fighter who leaves a portal room on 10 of 100 walks into the
+  next realm on 35 of 125.
+- **The wound does not scale with the ceiling.** Forty points taken on realm two are forty points on
+  realm six — worth less against a bigger body.
 - **A defeat ends the run**, so nothing carries a wound past the bottom of the journey. There is no
   state where a run is alive and unable to start a fight; a wound deeper than the ceiling — only
   reachable by selling the relic that was holding the ceiling up — starts the fight on one life
   rather than on a corpse.
-- **The rounding is down at every step.** A ceiling is a whole number of hit points, so 100 becomes
-  133, then 176, then 234 rather than the 235 the arithmetic in the round would give.
 - **The opponent is always whole.** A creature met in a room has not fought anybody; only the
   player carries anything between fights.
 
 `session.Session` stores **the wound and the count of bosses beaten**, not a life total and a
 ceiling. The ceiling is rebuilt from the record every fight and then moved by whatever is worn, so
 a stored total would mean a different fraction of it the moment a relic changed hands, and a stored
-multiplier is a second copy of a fact the count already carries. See `internal/session/life.go`.
+bonus is a second copy of a fact the count already carries. See `internal/session/life.go`.
 
 ### The growth curve
 

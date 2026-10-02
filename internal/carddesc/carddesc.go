@@ -167,7 +167,11 @@ func EffectLine(c combat.Card, dmg, scale int) string {
 	return ""
 }
 
-// RiderLines is what the card's upgrade adds, one line each — `+10 HEAL ON PLAY`.
+// RiderLines is what the card's upgrade adds, one line each — `+10 HEAL WHEN PLAYED`.
+//
+// **Every rider that happens at a moment says which one in two words: WHEN PLAYED, or WHEN UNPLAYED**
+// for one that pays while the card sits in the hand a turn did not play. The relics that read the
+// same moment — the jars, the rung relics — use the same two words, so one vocabulary covers both.
 //
 // **Total over `combat.RiderKinds()`, and TestEveryRiderKindHasTipLines holds it that way.** A rider
 // with no line is a rune the player spent whose effect the tooltip does not mention, which is
@@ -181,19 +185,19 @@ func RiderLines(c combat.Card, rolls int) []string {
 	for _, r := range c.RiderList() {
 		switch r.Kind {
 		case combat.RiderHealOnPlay:
-			out = append(out, plus(r.Amount)+" HEAL ON PLAY")
+			out = append(out, plus(r.Amount)+" HEAL WHEN PLAYED")
 		case combat.RiderShieldOnPlay:
-			out = append(out, plus(r.Amount)+" SHIELD ON PLAY")
+			out = append(out, plus(r.Amount)+" SHIELD WHEN PLAYED")
 		case combat.RiderDamageOnPlay:
-			out = append(out, plus(r.Amount)+" DMG ON PLAY")
+			out = append(out, plus(r.Amount)+" DMG WHEN PLAYED")
 		case combat.RiderDamageInHand:
-			out = append(out, plus(r.Amount)+" DMG IN HAND")
+			out = append(out, plus(r.Amount)+" DMG WHEN UNPLAYED")
 		case combat.RiderScaleInHand:
-			out = append(out, Multiplier(r.Amount)+" DMG IN HAND")
+			out = append(out, Multiplier(r.Amount)+" DMG WHEN UNPLAYED")
 		case combat.RiderVitaeInHand:
-			out = append(out, plus(r.Amount)+" VITAE IN HAND")
+			out = append(out, plus(r.Amount)+" VITAE WHEN UNPLAYED")
 		case combat.RiderScaleInCombo:
-			out = append(out, Multiplier(r.Amount)+" DMG ON PLAY")
+			out = append(out, Multiplier(r.Amount)+" DMG WHEN PLAYED")
 		case combat.RiderWildElement:
 			out = append(out, "COUNTS AS EVERY ELEMENT")
 		case combat.RiderWildForm:
@@ -209,11 +213,11 @@ func RiderLines(c combat.Card, rolls int) []string {
 			// than written out, so a retune moves these lines with the rule.
 			odds := Odds(r.Amount, rolls, 2)
 			out = append(out, Gold+" CARD",
-				odds+" ON PLAY: "+plus(combat.LuckDMG)+" DMG",
-				odds+" ON PLAY: "+plus(combat.LuckLife)+" MAX LIFE")
+				odds+" WHEN PLAYED: "+plus(combat.LuckDMG)+" DMG",
+				odds+" WHEN PLAYED: "+plus(combat.LuckLife)+" MAX LIFE")
 		case combat.RiderSilver:
 			out = append(out, Silver+" CARD",
-				Odds(r.Amount, rolls, 1)+" ON PLAY: "+plus(combat.SilverVitae)+" VITAE")
+				Odds(r.Amount, rolls, 1)+" WHEN PLAYED: "+plus(combat.SilverVitae)+" VITAE")
 		}
 	}
 	return out
@@ -302,104 +306,6 @@ func upper(s string) string {
 	return string(out)
 }
 
-// FaceLines is what the card's upgrade says on the card itself, one authored line each.
-//
-// **It is the column version of RiderLines, and both live here on purpose.** The tooltip sets
-// sentences in a panel; the face sets labels in a 128-pixel column under the card's own verb, so
-// the two cannot share one string — `+10 HEAL ON PLAY` is a sentence and `ON PLAY` over `+10 LIFE`
-// is a column. What keeping them in one file buys is that the difference is *readable*: the two
-// functions sit a screen apart and a wording that has drifted shows as two lines that no longer
-// say the same thing, instead of as a disagreement between a screen and a panel nobody diffs.
-//
-// **The timing is the heading and the payload sits under it** *(2026-09-09)*. The face already
-// carries a figure — `DMG 2X` — so a rider's own figure pressed straight underneath is two numbers
-// running together with the thing that separates them arriving last. A heading first makes the
-// upgrade read as a new clause, and it puts the word the player is actually learning — whether this
-// happens when the card is *played* or while it is merely *held* — at the top of the block.
-//
-// **What a caller controls is the order, not the breaks.** `cards.WrapText` has set the face one
-// word to a line since 2026-09-05 — a figure joined to its unit and nothing else — so a heading of
-// two words is two lines whatever this returns, and there is no way to buy it back. The budget is
-// what that costs: the band holds seven lines, the card's own verb takes two, and the longest
-// upgrade here — `IF IT SCORES` over `DMG 1.5X` — takes four. Gold and silver are the reason the
-// odds are not on the face; see below.
-//
-// **Total over combat.RiderKinds(), like RiderLines.** A rider with no face line is a rune the
-// player spent that the card does not mention — the same failure as a rider with no drawing, and
-// the one the edge on its own cannot fix: an edge is what carries across a row of eight cards, and
-// the words are what answers "what does that mean" without a hover.
-func FaceLines(c combat.Card) []string {
-	var out []string
-	for _, r := range c.RiderList() {
-		switch r.Kind {
-		case combat.RiderHealOnPlay:
-			out = append(out, onPlay, plus(r.Amount)+" LIFE")
-		case combat.RiderShieldOnPlay:
-			out = append(out, onPlay, plus(r.Amount)+" "+shieldWord(r.Amount))
-		case combat.RiderDamageOnPlay:
-			out = append(out, onPlay, plus(r.Amount)+" DMG")
-		case combat.RiderDamageInHand:
-			out = append(out, inHand, plus(r.Amount)+" DMG")
-		case combat.RiderScaleInHand:
-			out = append(out, inHand, FaceMultiplier(r.Amount)+" DMG")
-		case combat.RiderVitaeInHand:
-			out = append(out, inHand, plus(r.Amount)+" VITAE")
-		case combat.RiderScaleInCombo:
-			out = append(out, onPlay, FaceMultiplier(r.Amount)+" DMG")
-		case combat.RiderWildElement:
-			// **No heading, because there is no moment.** Every other rider happens at a time; this
-			// one is something the card permanently *is*, and a timing word over it would be
-			// answering a question the card does not raise.
-			out = append(out, "ANY ELEMENT")
-		case combat.RiderWildForm:
-			// No heading, for the element wildcard's reason: it has no moment.
-			out = append(out, "ANY FORM")
-		case combat.RiderGolden, combat.RiderSilver:
-			// **The metals say nothing on the face, and they are the only two that may**
-			// *(owner's call, 2026-09-09)*. Every other upgrade is a placeholder tint standing on a
-			// full wheel, and every upgrade without an edge of its own draws the default strip, so the
-			// words are what a player learns those from. Gold and silver are the exception: they are
-			// what the mechanic is *called*, and a card whose own edge already says GOLD does not
-			// need the word — see data/edges.json.
-			//
-			// **The whole gamble is the tooltip's**, where there is room for a sentence — see
-			// RiderLines, which names the metal and then prints the odds under it. This is the one
-			// place the face is deliberately quieter than the panel, and the edge is what pays
-			// for it.
-		}
-	}
-	return out
-}
-
-// The two headings a face may carry. **Constants rather than literals** so the set is countable:
-// a third moment is a line here, which is where the question "does the player already know this
-// word" gets asked, rather than a string typed into one case. It is the register the rest of the
-// face is already in — HITS, CUTS, SHIELD — so it does not read as another voice.
-const (
-	onPlay = "ON PLAY"
-	inHand = "IN HAND"
-)
-
-// FaceMultiplier is Multiplier in the case the card faces are set in — 200 as `2x`.
-//
-// **Lower case, and that is not a style preference.** `cards.WrapText` keeps a figure on its unit's
-// line, and `isFigure` reads a trailing `x` and not a trailing `X` — so `2X DMG` breaks into two
-// lines where `2x DMG` stays as one. The card's own multiplier has always been written this way;
-// this is the upgrade's line joining it rather than a second convention.
-func FaceMultiplier(amount int) string {
-	return lower(Multiplier(amount))
-}
-
-func lower(s string) string {
-	out := []byte(s)
-	for i := range out {
-		if out[i] >= 'A' && out[i] <= 'Z' {
-			out[i] += 'a' - 'A'
-		}
-	}
-	return string(out)
-}
-
 // Gold and Silver are what the two gambling upgrades are called, on a card and in a panel alike.
 //
 // **Constants because two packages have to agree on the string.** `internal/screens` colors the
@@ -409,10 +315,3 @@ const (
 	Gold   = "GOLD"
 	Silver = "SILVER"
 )
-
-func shieldWord(n int) string {
-	if n == 1 || n == -1 {
-		return "SHIELD"
-	}
-	return "SHIELDS"
-}

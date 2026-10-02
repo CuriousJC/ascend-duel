@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
-	"github.com/curiousjc/ascend-duel/internal/carddesc"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -187,32 +186,6 @@ func multiplierText(amount int) string {
 		return fmt.Sprintf("%d.%dx", whole, frac/10)
 	}
 	return fmt.Sprintf("%d.%02dx", whole, frac)
-}
-
-// riderText is the lines a card's upgrade adds under its own, one authored line each.
-//
-// **The face has to say what a rune did to a card.** CLAUDE.md's rule about an altered card
-// printing what it actually does is the whole reason effect text reads the card rather than the
-// concept, and a rider is the largest thing a card can carry that the concept knows nothing about.
-// An extra line is the cheapest honest answer: the band holds seven lines at this pitch, the card's
-// own verb takes two, and no rider writes more than three.
-//
-// **The wording is `carddesc.FaceLines` and not this function's** *(2026-09-09)*. It said four of
-// the ten riders and was silent about the other six — a card the player had spent a rune on
-// that carried a color and no words — and `tools/upgradesheet` kept a hand-written snapshot of it
-// because `internal/screens` links Ebitengine. Moving it down to the windowless package fixes both:
-// the face is total over `combat.RiderKinds()`, and the sheet prints the game's own strings rather
-// than a copy that can drift.
-//
-// **It is not written in the relic pink.** That color means "a relic did this" everywhere else on
-// screen, and a rune is not a relic; borrowing it would say something untrue about where the
-// figure came from.
-func riderText(card combat.Card) string {
-	out := ""
-	for _, line := range carddesc.FaceLines(card) {
-		out += "\n" + line
-	}
-	return out
 }
 
 // ElementSpans cuts a clause into spans so the word naming an element is written in that element's

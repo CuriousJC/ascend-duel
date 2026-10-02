@@ -4,8 +4,8 @@ package cards
 //
 // This is the third way something can be said on a card and it is deliberately unlike the other
 // two. The *face* — name, cost ticks, form mark, text — is what the card is. An *upgrade* is what
-// the run has permanently made it, and it is a strip down the face's edges laid under everything
-// written on the card (see edge.go). A **mark** sits on top of the whole face and is about the
+// the run has permanently made it, and it is art covering the face, laid under everything drawn
+// on the card (see upgrade_art.go). A **mark** sits on top of the whole face and is about the
 // card's situation rather than its identity: this one was stopped, this one was eaten, this one is
 // being altered.
 //

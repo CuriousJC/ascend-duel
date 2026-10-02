@@ -151,7 +151,7 @@
     "Rider": "vitae-in-hand",
     "Value": "3",
     "Count": 1,
-    "Text": "3 VITAE CARD IN HAND"
+    "Text": "+3 VITAE WHEN UNPLAYED"
   },
   {
     "RuneRecord": "change-wildcard",
@@ -188,7 +188,7 @@
     "Rider": "shield-on-play",
     "Value": "1",
     "Count": 1,
-    "Text": "1 SHIELD ON PLAY"
+    "Text": "1 SHIELD WHEN PLAYED"
   },
   {
     "RuneRecord": "play-dmg",
@@ -201,7 +201,7 @@
     "Rider": "damage-on-play",
     "Value": "10",
     "Count": 1,
-    "Text": "+10 DMG ON PLAY"
+    "Text": "+10 DMG WHEN PLAYED"
   },
   {
     "RuneRecord": "play-dmgx",
@@ -214,7 +214,7 @@
     "Rider": "scale-in-combo",
     "Value": "200",
     "Count": 1,
-    "Text": "2X DMG ON PLAY"
+    "Text": "2X DMG WHEN PLAYED"
   },
   {
     "RuneRecord": "play-drain",
@@ -227,7 +227,7 @@
     "Rider": "heal-on-play",
     "Value": "10",
     "Count": 1,
-    "Text": "+10 HEAL ON PLAY"
+    "Text": "+10 HEAL WHEN PLAYED"
   },
   {
     "RuneRecord": "held-dmgx",
@@ -240,7 +240,7 @@
     "Rider": "scale-in-hand",
     "Value": "200",
     "Count": 1,
-    "Text": "2X DMG CARD IN HAND"
+    "Text": "2X DMG WHEN UNPLAYED"
   },
   {
     "RuneRecord": "held-dmg",
@@ -253,7 +253,7 @@
     "Rider": "damage-in-hand",
     "Value": "10",
     "Count": 1,
-    "Text": "+10 DMG CARD IN HAND"
+    "Text": "+10 DMG WHEN UNPLAYED"
   },
   {
     "RuneRecord": "two-stones",
@@ -290,7 +290,7 @@
     "Rider": "golden",
     "Value": "5",
     "Count": 1,
-    "Text": "CARD IS GOLD\n1 IN 5 ON PLAY:\n+1 DMG OR\n+5 LIFE"
+    "Text": "CARD IS GOLD\n1 IN 5 WHEN PLAYED:\n+1 DMG OR\n+5 LIFE"
   },
   {
     "RuneRecord": "switch-silver",
@@ -303,7 +303,7 @@
     "Rider": "silver",
     "Value": "5",
     "Count": 1,
-    "Text": "CARD IS SILVER\n1 IN 5 ON PLAY:\n+10 VITAE"
+    "Text": "CARD IS SILVER\n1 IN 5 WHEN PLAYED:\n+10 VITAE"
   },
   {
     "RuneRecord": "repeat-card",

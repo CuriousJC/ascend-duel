@@ -1,9 +1,13 @@
 package cards
 
 import (
+	"bytes"
 	"image"
+	"image/color"
+	_ "image/png"
 	"testing"
 
+	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 )
@@ -44,56 +48,35 @@ func same(a, b *image.RGBA, box image.Rectangle) bool {
 	return true
 }
 
-// strips is where an edge record draws on the hand card, left then right, kept clear of the
-// rounded corners so a pass is the strip and not a rounding at the curve.
-func strips(e data.EdgeData) (left, right image.Rectangle) {
-	st := Hand
-	top, bottom := st.CornerRadius+2, st.Height-st.CornerRadius-2
-	left = image.Rect(e.Inset, top, e.Inset+e.Width, bottom)
-	right = image.Rect(st.Width-e.Inset-e.Width, top, st.Width-e.Inset, bottom)
-	return left, right
+// face is the hand card's face inside the border ring, kept clear of the rounded corners so a pass
+// is the art and not a rounding at the curve.
+func face() image.Rectangle {
+	return image.Rect(Hand.BorderWidth, Hand.CornerRadius+2, Hand.Width-Hand.BorderWidth, Hand.Height-Hand.CornerRadius-2)
 }
 
-// **An upgrade draws on the edges its record names and nowhere else.** The strip is the whole of
-// how an upgrade is drawn, so the rest of the face is the plain card's, pixel for pixel — a change
-// there is a wash creeping back.
-func TestAnUpgradeDrawsOnItsEdgesAndNowhereElse(t *testing.T) {
+// **An upgrade is the whole face.** Its art covers the card inside the border ring, so every part
+// of the face — the left edge a stacked row shows, the middle and the right — differs from the
+// plain card's.
+func TestAnUpgradeCoversTheFace(t *testing.T) {
 	plain := renderOrFail(t, upgradeSpec(systems.UpgradeNone))
+	top, bottom := Hand.CornerRadius+2, Hand.Height-Hand.CornerRadius-2
+	third := Hand.Width / 3
 	for _, u := range systems.Upgrades() {
-		e, ok := EdgeOf(u)
-		if !ok {
-			t.Fatalf("%s has no edge", u)
-		}
 		card := renderOrFail(t, upgradeSpec(u))
-		left, right := strips(e)
-		if same(plain, card, left) {
-			t.Errorf("%s: the left edge is the plain card's", u)
-		}
-		both := e.Sides == data.EdgeBoth
-		if same(plain, card, right) == both {
-			t.Errorf("%s: the right edge changed=%v, and its record says Sides %q", u, !both, e.Sides)
-		}
-		// Below the form mark, which the wildcard draws hueless on purpose.
-		end := Hand.Width
-		if both {
-			end = right.Min.X
-		}
-		between := image.Rect(left.Max.X, Hand.FormTop+Hand.FormSize, end, Hand.Height)
-		if !same(plain, card, between) {
-			t.Errorf("%s: the face beside the strips changed", u)
+		for i, name := range []string{"left", "middle", "right"} {
+			band := image.Rect(i*third+Hand.BorderWidth, top, (i+1)*third-Hand.BorderWidth, bottom)
+			if same(plain, card, band) {
+				t.Errorf("%s: the %s of the face is the plain card's", u, name)
+			}
 		}
 	}
 }
 
-// **At an inset of the border width or more, the ring is left alone**, because the ring is the
-// card's state. A record that sets a smaller inset has asked for the ring and is not checked.
-func TestAnInsetStripLeavesTheBorderAlone(t *testing.T) {
+// **The ring is left alone**, because the ring is the card's state.
+func TestAnUpgradeLeavesTheBorderAlone(t *testing.T) {
 	plain := renderOrFail(t, upgradeSpec(systems.UpgradeNone))
 	ring := image.Rect(0, Hand.Height/2, Hand.BorderWidth, Hand.Height/2+20)
 	for _, u := range systems.Upgrades() {
-		if e, _ := EdgeOf(u); e.Inset < Hand.BorderWidth {
-			continue
-		}
 		if !same(plain, renderOrFail(t, upgradeSpec(u)), ring) {
 			t.Errorf("%s paints the border ring", u)
 		}
@@ -109,16 +92,17 @@ func TestAnUpgradeLeavesTheCornersAlone(t *testing.T) {
 	}
 }
 
-// **Every edge record draws art that exists.** A key naming no file draws nothing, which is a
-// card that looks unaltered — the one failure the strip exists to prevent. An empty Art is an
+// **Every upgrade record draws art that exists.** A key naming no file draws nothing, which is a
+// card that looks unaltered — the one failure the art exists to prevent. An empty Art is an
 // undrawn record and draws the default, so the default has to be there too.
-func TestEveryEdgeRecordHasItsArt(t *testing.T) {
-	if systems.ArtMark(data.DefaultEdgeArt, 1, 1) == nil {
-		t.Fatalf("the default edge art %q is not in the assets", data.DefaultEdgeArt)
+func TestEveryUpgradeRecordHasItsArt(t *testing.T) {
+	def := data.UpgradeArtData{}.ArtKey()
+	if systems.ArtMark(def, 1, 1) == nil {
+		t.Fatalf("the default upgrade art %q is not in the assets", def)
 	}
-	for k, e := range data.LoadEdges() {
+	for k, e := range data.LoadUpgradeArt() {
 		if systems.ArtMark(e.ArtKey(), 1, 1) == nil {
-			t.Errorf("edge %q names art %q, which is not in the assets", k, e.ArtKey())
+			t.Errorf("upgrade %q names art %q, which is not in the assets", k, e.ArtKey())
 		}
 	}
 }
@@ -126,11 +110,11 @@ func TestEveryEdgeRecordHasItsArt(t *testing.T) {
 // **An upgrade with its own picture draws a different card from the default and from each
 // other.** An undrawn record shares the default picture, deliberately — that is what the fallback
 // means — so only the ones drawn are held apart.
-func TestOwnEdgesAreTheirOwn(t *testing.T) {
+func TestOwnUpgradeArtIsItsOwn(t *testing.T) {
 	whole := image.Rect(0, 0, Hand.Width, Hand.Height)
 	seen := map[string]*image.RGBA{}
 	for _, u := range systems.Upgrades() {
-		e, _ := EdgeOf(u)
+		e, _ := UpgradeArtOf(u)
 		if _, ok := seen[e.ArtKey()]; !ok {
 			seen[e.ArtKey()] = renderOrFail(t, upgradeSpec(u))
 		}
@@ -138,15 +122,15 @@ func TestOwnEdgesAreTheirOwn(t *testing.T) {
 	for a, ia := range seen {
 		for b, ib := range seen {
 			if a < b && same(ia, ib, whole) {
-				t.Errorf("edges %s and %s draw the same card", a, b)
+				t.Errorf("upgrades %s and %s draw the same card", a, b)
 			}
 		}
 	}
 }
 
-// **The strip scales with the card**, so the deck panel's half-size card is the hand card smaller
+// **The art scales with the card**, so the deck panel's half-size card is the hand card smaller
 // rather than a second design — and it still draws.
-func TestTheMiniCardDrawsTheStrip(t *testing.T) {
+func TestTheMiniCardDrawsTheUpgrade(t *testing.T) {
 	plain, err := Render(upgradeSpec(systems.UpgradeNone), Mini, faces(t))
 	if err != nil {
 		t.Fatal(err)
@@ -155,8 +139,7 @@ func TestTheMiniCardDrawsTheStrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e, _ := EdgeOf(systems.UpgradeGolden)
-	left := image.Rect(e.Inset/2, Mini.Height/3, e.Inset/2+e.Width/2, 2*Mini.Height/3)
+	left := image.Rect(Mini.BorderWidth, Mini.Height/3, Mini.Width/3, 2*Mini.Height/3)
 	if same(plain, gold, left) {
 		t.Error("the half-size gold card's left edge is the plain card's")
 	}
@@ -173,34 +156,32 @@ func TestOnlyTheWildcardTakesTheHueOffTheFormMark(t *testing.T) {
 }
 
 // **An upgraded card still states.** A disabled one has to read as unavailable whatever has been
-// done to it — and the strip has to fade with it, or the gold reads louder than the card.
+// done to it — and the art has to fade with it, or the gold reads louder than the card.
 func TestAnUpgradedCardStillStates(t *testing.T) {
 	rest := upgradeSpec(systems.UpgradeGolden)
 	dim := rest
 	dim.Enabled = false
 
-	e, _ := EdgeOf(systems.UpgradeGolden)
-	left, _ := strips(e)
+	left := face()
 	if same(renderOrFail(t, rest), renderOrFail(t, dim), left) {
-		t.Error("the gold strip looks the same afforded and unafforded")
+		t.Error("the gold art looks the same afforded and unafforded")
 	}
 }
 
-// **Selecting a card does not change its strip.** The card lifts out of the row, and that is what
-// says it was picked; the strip brightening on the click would be the card changing under the
+// **Selecting a card does not change its art.** The card lifts out of the row, and that is what
+// says it was picked; the art brightening on the click would be the card changing under the
 // cursor.
-func TestTheStripIsTheSameAtRestAndSelected(t *testing.T) {
+func TestTheUpgradeArtIsTheSameAtRestAndSelected(t *testing.T) {
 	rest := upgradeSpec(systems.UpgradeGolden)
 	picked := rest
 	picked.Selected = true
 
-	e, _ := EdgeOf(systems.UpgradeGolden)
-	left, _ := strips(e)
+	left := face()
 	// Under the cost ticks, above the badge and left of the text, which all state the selection
-	// themselves: the bare strip and nothing else.
+	// themselves: the bare art and nothing else.
 	inner := image.Rect(left.Min.X, Hand.Height*2/5, Hand.TextColumnLeft, Hand.BadgeTop)
 	if !same(renderOrFail(t, rest), renderOrFail(t, picked), inner) {
-		t.Error("the gold strip changes when the card is selected")
+		t.Error("the gold art changes when the card is selected")
 	}
 }
 
@@ -227,17 +208,17 @@ func TestEveryUpgradeHasAnInk(t *testing.T) {
 	}
 }
 
-// **UpgradeNone has no ink and draws no edge.**
+// **UpgradeNone has no ink and draws no art.**
 func TestNoUpgradeHasNoInkAndNoEdge(t *testing.T) {
 	if systems.UpgradeInk(systems.UpgradeNone) != nil {
 		t.Error("UpgradeNone returned an ink")
 	}
-	if _, ok := EdgeOf(systems.UpgradeNone); ok {
-		t.Error("UpgradeNone returned an edge")
+	if _, ok := UpgradeArtOf(systems.UpgradeNone); ok {
+		t.Error("UpgradeNone returned upgrade art")
 	}
 }
 
-// **Every upgrade's name round-trips**, since edges.json keys its records by these names.
+// **Every upgrade's name round-trips**, since upgrade_art.json keys its records by these names.
 func TestEveryUpgradeNameParsesBack(t *testing.T) {
 	for _, u := range systems.Upgrades() {
 		got, ok := systems.ParseUpgrade(u.String())
@@ -247,5 +228,45 @@ func TestEveryUpgradeNameParsesBack(t *testing.T) {
 	}
 	if _, ok := systems.ParseUpgrade("no-such-upgrade"); ok {
 		t.Error("an unknown upgrade name resolved to something")
+	}
+}
+
+// **Upgrade art is committed at the card's own size**, like every other card picture: the
+// generator's output is reduced once by tools/relicart and nothing resamples it at draw time but
+// the half-size card's single averaging step.
+func TestEveryUpgradeArtIsTheCardsOwnSize(t *testing.T) {
+	images := assets.LoadImageData()
+	for k, a := range data.LoadUpgradeArt() {
+		raw := images[a.ArtKey()]
+		if len(raw) == 0 {
+			continue // TestEveryUpgradeRecordHasItsArt reports a missing file
+		}
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))
+		if err != nil {
+			t.Errorf("%s: %v", k, err)
+			continue
+		}
+		if cfg.Width != Hand.Width || cfg.Height != Hand.Height {
+			t.Errorf("%s is %dx%d, want the card's %dx%d", k, cfg.Width, cfg.Height, Hand.Width, Hand.Height)
+		}
+	}
+}
+
+// **A figure authored on a transparent ground is drawn as it is over an upgrade**, not matted:
+// the matte measures a ground off the picture's outer ring, and a transparent ring would read
+// every pixel as ground. A figure that vanished would leave the card plain upgrade art.
+func TestATransparentFigureSurvivesAnUpgrade(t *testing.T) {
+	fig := image.NewNRGBA(image.Rect(0, 0, Hand.Width, Hand.Height))
+	for y := 100; y < 180; y++ {
+		for x := 80; x < 140; x++ {
+			fig.SetNRGBA(x, y, color.NRGBA{R: 30, G: 40, B: 200, A: 255})
+		}
+	}
+	s := upgradeSpec(systems.UpgradeGolden)
+	bare := renderOrFail(t, s)
+	s.Art = fig
+	with := renderOrFail(t, s)
+	if same(bare, with, image.Rect(90, 110, 130, 170)) {
+		t.Error("a transparent figure drew nothing over the gold face")
 	}
 }

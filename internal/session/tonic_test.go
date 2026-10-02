@@ -178,7 +178,7 @@ func TestPressureShortensTheFightAndTriplesTheEarnings(t *testing.T) {
 
 	plain := New(testDeck())
 	plain.fight, s.fight = 1, 1
-	if got, want := s.spoilsFor(60), plain.spoilsFor(60); got.FromLife != 3*want.FromLife ||
+	if got, want := s.spoilsFor(60, 100), plain.spoilsFor(60, 100); got.FromLife != 3*want.FromLife ||
 		got.FromRoom != 3*want.FromRoom {
 		t.Errorf("a win paid %+v under pressure against %+v without", got, want)
 	}

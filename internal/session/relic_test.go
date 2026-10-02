@@ -475,3 +475,28 @@ func TestTheClockRelicsMixRatherThanOneWinning(t *testing.T) {
 		}
 	}
 }
+
+// TestMomentumCarriesBetweenFights. The streak is banked on a win like any growing relic, and a
+// defend card's wipe is banked too: a resetting relic is read back outright, so a fight that ended
+// on a wiped streak opens the next one at zero rather than at the larger figure the run held.
+func TestMomentumCarriesBetweenFights(t *testing.T) {
+	run := wearing(t, "dmg-no-shield")
+	body := combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100}
+
+	d := run.Equip(body)
+	d.Relics[0].Grown = 60
+	run.AbsorbGrowth(d)
+	if got := run.Grown("dmg-no-shield"); got != 60 {
+		t.Fatalf("a fight ending on a streak of 60 left the run at %d", got)
+	}
+	if got := run.Equip(body).WornRelics()[0].Grown; got != 60 {
+		t.Errorf("the next fight opens Momentum at %d, want 60", got)
+	}
+
+	wiped := run.Equip(body)
+	wiped.Relics[0].Grown = 0
+	run.AbsorbGrowth(wiped)
+	if got := run.Grown("dmg-no-shield"); got != 0 {
+		t.Errorf("a fight ending on a wiped streak left the run at %d, want 0", got)
+	}
+}

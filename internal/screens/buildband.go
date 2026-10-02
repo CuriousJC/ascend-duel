@@ -89,7 +89,7 @@ func buildBandBottom(gs *state.GlobalState) int {
 // they are wearing.
 //
 // **Life is the run's `LifeLeft`, not a full bar.** The fight is over and the card still says what
-// it cost — a win on nine life reads as one, and it is also the figure the payout was a tenth of.
+// it cost — a win on nine life reads as one, and it is also the figure the payout was cut in thirds by.
 //
 // The AP figure is the duelist's own budget, which is now simply the stat — nothing adds to it any
 // more. No shields either: nothing is standing between fights.

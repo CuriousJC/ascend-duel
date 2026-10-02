@@ -46,6 +46,6 @@ func (s *Session) JumpTo(fight, vitae, lifeLeft, maxLife int) {
 	}
 	was := s.fight
 	s.fight = behind
-	s.spoils = s.spoilsFor(lifeLeft)
+	s.spoils = s.spoilsFor(lifeLeft, maxLife)
 	s.fight = was
 }

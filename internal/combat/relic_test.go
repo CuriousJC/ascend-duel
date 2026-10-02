@@ -921,9 +921,9 @@ func TestMomentumBuildsAcrossTurnsAndADefenseWipesIt(t *testing.T) {
 	}
 }
 
-func TestARelicThatResetsItselfDoesNotBankItsGrowth(t *testing.T) {
-	// The other half of Momentum: a streak belongs to the duel it was built in. KeepsGrowth is what
-	// the run reads, and getting it wrong would turn one good fight into a permanent bonus.
+func TestARelicThatCanResetSaysSo(t *testing.T) {
+	// The other half of Momentum: a streak carries between fights, and Resets is what tells the run
+	// to read a wiped streak back as zero rather than keeping the larger figure.
 	momentum := relic(t, "momentum-keeps",
 		RelicRule{When: MomentTurnTaken, Then: []RelicEffect{{Do: DoGrowOnTurn, Amount: 20}}},
 		RelicRule{
@@ -934,11 +934,11 @@ func TestARelicThatResetsItselfDoesNotBankItsGrowth(t *testing.T) {
 	heart := relic(t, "heart-keeps",
 		RelicRule{When: MomentFightWon, Then: []RelicEffect{{Do: DoGrowOnWin, Amount: 5}}})
 
-	if KeepsGrowth(momentum) {
-		t.Error("a relic holding a reset is banked between fights")
+	if !Resets(momentum) {
+		t.Error("a relic holding a reset does not say it can reset")
 	}
-	if !KeepsGrowth(heart) {
-		t.Error("a relic with no reset is not banked between fights")
+	if Resets(heart) {
+		t.Error("a relic with no reset says it can reset")
 	}
 }
 
@@ -1821,5 +1821,43 @@ func TestARelicMayNotMoveTheClockByNothing(t *testing.T) {
 		Then: []RelicEffect{{Do: DoAdjustRoundLimit, Amount: 0}},
 	}}); err == nil {
 		t.Fatal("a relic moving the clock by 0 rounds registered")
+	}
+}
+
+// **A relic counts a wildcard the way a hand does.** A versatile card matches a rule naming any
+// attack form and a chromatic one a rule naming any element — but a versatile card is not a
+// defend card, and nothing joins Basic.
+func TestARelicCountsAWildcard(t *testing.T) {
+	slash := RelicCondition{Form: FormSlash, HasForm: true}
+	jab := Of(Jab, Fire)
+	if slash.Matches(jab) {
+		t.Fatal("a plain Jab matched a slash rule")
+	}
+	if !slash.Matches(jab.SetRider(Rider{Kind: RiderWildForm})) {
+		t.Error("a versatile Jab did not match a slash rule")
+	}
+	defend := RelicCondition{Form: FormDefend, HasForm: true}
+	if defend.Matches(jab.SetRider(Rider{Kind: RiderWildForm})) {
+		t.Error("a versatile Jab matched a defend rule")
+	}
+
+	ice := RelicCondition{Element: Ice, HasElement: true}
+	if ice.Matches(jab) {
+		t.Fatal("a fire Jab matched an ice rule")
+	}
+	if !ice.Matches(jab.SetRider(Rider{Kind: RiderWildElement})) {
+		t.Error("a chromatic Jab did not match an ice rule")
+	}
+	// **Each wildcard is its own axis.** A form wildcard does not make a fire card an ice card, and
+	// an element wildcard does not make a stab card a slash card.
+	if ice.Matches(jab.SetRider(Rider{Kind: RiderWildForm})) {
+		t.Error("a versatile fire Jab matched an ice rule")
+	}
+	if slash.Matches(jab.SetRider(Rider{Kind: RiderWildElement})) {
+		t.Error("a chromatic Jab matched a slash rule")
+	}
+	basic := RelicCondition{Element: Basic, HasElement: true}
+	if basic.Matches(jab.SetRider(Rider{Kind: RiderWildElement})) {
+		t.Error("a chromatic Jab matched a basic rule")
 	}
 }

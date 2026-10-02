@@ -48,6 +48,16 @@ var barCellSpent_png []byte
 //go:embed bar/bar-cell-over.png
 var barCellOver_png []byte
 
+// HEALTH BAR
+//
+// The whole bar directory again, as a family, for the health bar: its trough, its fill and the
+// marker laid across it are drawn *into* a fighter card by internal/cards, which has no graphics
+// context — so they go through LoadImageData as bytes, keyed by stem (`health-bar-trough`). See
+// docs/art/health_bar_art_prompt.MD.
+//
+//go:embed bar/*.png
+var barArt embed.FS
+
 // BUTTON FACES
 //
 // The blank body of every button, one per color at rest plus the flat disabled face, drawn at
@@ -134,15 +144,16 @@ var formArt embed.FS
 //go:embed upgrade/wildcard.png
 var wildcardupgrade_png []byte
 
-// CARD EDGES
+// UPGRADE ART
 //
-// The strip an upgraded card draws down each side of its face — `data/edges.json` names one per
-// upgrade, keyed by filename stem like the relic art, and `internal/cards` stretches it to the
-// strip and mirrors it for the right edge. **Every stem starts `edge-`**, because the image map is
-// flat and `golden` or `wild` alone would be one rename away from colliding with another family.
+// The picture an upgraded card wears over its face — `data/upgrade_art.json` names one per upgrade,
+// and `internal/cards` lays it over the face inside the border ring. Committed at the card's own
+// 200x280 like the playing cards' art. **Keyed `upgrade-<stem>`** rather than by the bare stem every
+// other family uses, because an upgrade's name — `versatile`, `held-vitae` — is also an essence's or
+// a rune's, and the map is flat. See embedPrefixed.
 //
-//go:embed edge/*.png
-var edgeArt embed.FS
+//go:embed upgrade-art/*.png
+var upgradeArt embed.FS
 
 // MATERIAL TEXTURES
 //
@@ -429,7 +440,8 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, otherArt, "other")
 	embedFamily(images, formArt, "form")
 	embedFamily(images, textureArt, "texture")
-	embedFamily(images, edgeArt, "edge")
+	embedPrefixed(images, upgradeArt, "upgrade-art", "upgrade-")
+	embedFamily(images, barArt, "bar")
 	embedTree(images, motifArt, "motifs")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
@@ -480,6 +492,18 @@ func embedFamily(images map[string][]byte, fsys embed.FS, dir string) {
 			log.Fatalf("failed to read embedded %s/%s: %v", dir, e.Name(), err)
 		}
 		images[imageStem(e.Name())] = raw
+	}
+}
+
+// embedPrefixed is embedFamily with a prefix on every key: `upgrade-art/golden.png` under the
+// prefix `upgrade-` is `upgrade-golden`. **The file is still named for its record**, so a picture
+// is filed by the record's key exactly as every other family's is; the prefix only keeps the flat
+// map from colliding with a family whose records share a name.
+func embedPrefixed(images map[string][]byte, fsys embed.FS, dir, prefix string) {
+	family := map[string][]byte{}
+	embedFamily(family, fsys, dir)
+	for k, raw := range family {
+		images[prefix+k] = raw
 	}
 }
 

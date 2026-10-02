@@ -4,7 +4,7 @@ package screens
 //
 // The screen used to open with everything already true: three cards on a table and a purse that had
 // silently changed while the fight was ending. What a win actually *is* — interest on what you were
-// carrying, a tenth of the life you kept, and what the room itself pays — was arithmetic nobody
+// carrying, which third of your life you kept, and what the room itself pays — was arithmetic nobody
 // ever saw happen.
 //
 // So the payout is narrated *(owner's call, 2026-08-22)*. The block types out at the game's own

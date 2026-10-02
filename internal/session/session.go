@@ -375,16 +375,16 @@ func (s *Session) Fight() int { return s.fight }
 // win is about to pay it.
 //
 // **It decides the payout and pays none of it** *(2026-08-22)*. `lifeLeft` is what the fighter
-// finished on — a tenth of it is part of the prize — and the three figures are frozen here and
-// handed over by the post-battle screen a sentence at a time. See spoils.go.
-// **It is also where the body is settled** *(owner's call, 2026-09-06)*. The wound the fight left
-// is carried into the next room, unless the room just won was the realm's portal room — a boss win
-// heals to full and raises the ceiling by a third, compounding. See life.go, and note that both
-// happen *before* the counter moves, on the same terms the payout does: they belong to the fight
-// that was won, not to the one about to be met.
+// finished on, and where it sits against `maxLife` is part of the prize — and the three figures are
+// frozen here and handed over by the post-battle screen a sentence at a time. See spoils.go.
+// **It is also where the body is settled.** The wound the fight left is carried into the next room
+// whatever room it was; a portal room heals nothing and raises the ceiling by a flat amount, which
+// lifts the life under it by the same. See life.go, and note that both happen *before* the counter
+// moves, on the same terms the payout does: they belong to the fight that was won, not to the one
+// about to be met.
 func (s *Session) WonFight(lifeLeft, maxLife int) {
 	s.lifeLeft = lifeLeft
-	s.spoils = s.spoilsFor(lifeLeft)
+	s.spoils = s.spoilsFor(lifeLeft, maxLife)
 	s.growRelics()
 
 	if hurt := maxLife - lifeLeft; hurt > 0 {
@@ -394,7 +394,6 @@ func (s *Session) WonFight(lifeLeft, maxLife int) {
 	}
 	if journey.RoomOf(s.fight) == journey.RoomPortal {
 		s.bossWins++
-		s.hurt = 0
 	}
 
 	s.fight++

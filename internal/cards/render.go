@@ -87,16 +87,25 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		drawArtBleed(img, s, st)
 		drawScrims(img, s, st)
 		ink = onScrim(s)
-	} else if st.ArtUnder && s.Art != nil {
-		// **The same cover-and-clip, and deliberately no scrim and no ink switch.** See
-		// Style.ArtUnder: a playing card carries five pieces of near-black type, so the art is
-		// what has to stay light rather than the type what has to be given a ground.
-		drawArtBleed(img, s, st)
 	}
 
 	// **An upgrade is the card's ground, so it goes down before anything is written on it** — see
-	// edge.go. The column and the text sit on top of the strip.
-	drawEdges(img, s, st)
+	// upgrade_art.go. The figure and the column sit on top of it.
+	drawUpgradeArt(img, s, st)
+
+	if st.ArtUnder && s.Art != nil {
+		// **The same cover-and-clip, and deliberately no scrim and no ink switch.** See
+		// Style.ArtUnder: a playing card carries five pieces of near-black type, so the art is
+		// what has to stay light rather than the type what has to be given a ground.
+		//
+		// **Over an upgrade the figure is lifted off its own ground**, or the opaque picture would
+		// paint the upgrade out — see matte.go. A plain card draws the picture as it is.
+		art := s
+		if _, upgraded := UpgradeArtOf(s.Upgrade); upgraded && opaque(s.Art) {
+			art.Art = matteOf(s.Art)
+		}
+		drawArtBleed(img, art, st)
+	}
 
 	if st.ShowName {
 		draw := drawText
@@ -128,8 +137,8 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	// otherwise monochrome column. Same state treatment as the border, different base color.
 	//
 	// **An upgrade never touches the column.** Nine of the upgrades say nothing about the element,
-	// so the column states one thing, which is the element; the upgrade is the strip down the
-	// card's edges — see edge.go.
+	// so the column states one thing, which is the element; the upgrade is the art under it — see
+	// upgrade_art.go.
 	drawDashes(img, s, st)
 
 	if err := drawEffectText(img, s, st, f, ink); err != nil {

@@ -15,8 +15,8 @@ func TestAWinPaysInterestThenTheRoomAndTheLife(t *testing.T) {
 	if got.Propagated != 4 {
 		t.Errorf("a purse of 20 earned %d, want 4", got.Propagated)
 	}
-	if got.FromLife != 6 {
-		t.Errorf("63 life left paid %d, want 6", got.FromLife)
+	if got.FromLife != 5 {
+		t.Errorf("a win on full health paid %d, want 5", got.FromLife)
 	}
 	if got.FromRoom != 3 {
 		t.Errorf("realm 1's outer room paid %d, want 3", got.FromRoom)
@@ -54,15 +54,23 @@ func TestSoulTakerPaysTheRoomFlat(t *testing.T) {
 	}
 }
 
-// TestLifeLeftIsATenthRoundedDown. A win on nine life is worth nothing from this half of the
-// payout, which is the honest reading of "a tenth" and the owner's call.
-func TestLifeLeftIsATenthRoundedDown(t *testing.T) {
-	for _, tc := range []struct{ life, want int }{{0, 0}, {9, 0}, {10, 1}, {65, 6}, {100, 10}} {
+// TestLifeLeftPaysByThirds. 1, 2 and 3 for the bottom, middle and top third of the ceiling, 5 for
+// full health — and a fighter sitting exactly on a line takes the tier above it.
+func TestLifeLeftPaysByThirds(t *testing.T) {
+	for _, tc := range []struct{ life, max, want int }{
+		{0, 60, 1}, {1, 60, 1}, {19, 60, 1},
+		{20, 60, 2}, {39, 60, 2},
+		{40, 60, 3}, {59, 60, 3},
+		{60, 60, 5},
+		// A ceiling that does not divide by three: the lines are 33.3 and 66.7.
+		{33, 100, 1}, {34, 100, 2}, {66, 100, 2}, {67, 100, 3}, {99, 100, 3}, {100, 100, 5},
+		{5, 0, 1},
+	} {
 		run := bare(t)
-		run.WonFight(tc.life, tc.life)
+		run.WonFight(tc.life, tc.max)
 
 		if got := run.Spoils().FromLife; got != tc.want {
-			t.Errorf("%d life left paid %d, want %d", tc.life, got, tc.want)
+			t.Errorf("%d life left of %d paid %d, want %d", tc.life, tc.max, got, tc.want)
 		}
 	}
 }

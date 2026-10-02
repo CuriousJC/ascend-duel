@@ -302,9 +302,9 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
   would be a second resolver agreeing with the first. **The screen draws it as a broken window** —
   `cards.MarkShattered` for the settled mark, `internal/screens/combat_shatter.go` for the pip
   crossing the table and the crack opening. **A mark is not an upgrade**: an upgrade is what a
-  card permanently *is* and is painted into the face as a strip down its edges, a mark is the
-  card's situation and is painted over the top of it. `Render` fixes that order. See MECHANICS.md
-  §Shields and §An upgrade is painted on the card, as its edges.
+  card permanently *is* and is painted as the face itself, a mark is the card's situation and is
+  painted over the top of it. `Render` fixes that order. See MECHANICS.md §Shields and §An upgrade
+  is painted on the card, as its face.
 - **A shield's element is a rule, and so is a creature's**. `Duelist.Shields` is a
   `combat.ShieldStack` — a count per element, fixed-width so a Duelist stays a value — and a
   shield eating a hit of its own element banks one action point into `Duelist.Surge` for its
@@ -384,14 +384,19 @@ of it:
 - **`combat.Card.Riders` is a fixed array** because a card must stay comparable — the screen's
   face cache and `TestRoundIsDeterministic` both depend on it, exactly as `Duelist.Relics` does. A
   seat is also what makes "no upgrade" the zero value rather than a case.
-- **An upgrade is the card's edges, and the border is not.** `data/edges.json` names a strip of
-  art per upgrade plus a `default` fallback; `internal/cards/edge.go` lays it down the left of the
-  face just inside the border ring — mirrored on the right too where a record asks — and under
-  everything written on the card. **The left edge is the one that matters** — the deck panel's stacked rows show only
-  that side — and **the border is already saying the card's state**, so the strip stays off it.
-  `Width`, `Inset`, `Opacity`, `FadeFrom`, `FadeTo` and `Sides` are the record's draw properties; `tools/upgradesheet` draws every
-  upgrade alone and stacked as the deck panel stacks them. The prompt is
-  `docs/art/edge_art_prompt.MD`.
+- **An upgrade is the card's whole face, and the border is not.** `data/upgrade_art.json` names a
+  picture per upgrade plus a `default` fallback, committed under `assets/upgrade-art/` at the
+  card's own 200x280 like every other card picture and filed by `go run ./tools/relicart -kind
+  upgrade`; `internal/cards/upgrade_art.go` lays it over the face just inside the border ring and
+  under the figure, the form mark, the ticks, the badge and the name. **The face carries no words
+  but the name**, so the art is what says the card was altered and the tooltip is what says how.
+  **The figure is lifted off its own ground over an upgrade** (`internal/cards/matte.go`), because
+  the playing-card pictures are painted on an opaque off-white. **The left edge still has to read
+  on its own** — the deck panel's stacked rows show only that side — and **the border is already
+  saying the card's state**, so the art stays off it. The asset keys are `upgrade-<record>`, because
+  an upgrade's name is also an essence's or a rune's and the image map is flat. `tools/upgradesheet`
+  draws every upgrade alone and stacked as the deck panel stacks them. The prompt is
+  `docs/art/upgrade_art_prompt.MD`.
 - **Every rider draws, and none of them touches the left column.** `systems.Upgrade` is the
   presentation vocabulary — one entry per rider kind — `internal/screens.upgradeForRider` is the
   total table where a rider becomes one, and neither `internal/cards` nor `internal/systems`

@@ -17,47 +17,40 @@ func TestAWoundIsCarriedIntoTheNextRoom(t *testing.T) {
 	}
 }
 
-// TestABossWinHealsToFullAndRaisesTheCeiling. The portal room is the only thing that takes a wound
-// away, and it pays a third more body on top.
-func TestABossWinHealsToFullAndRaisesTheCeiling(t *testing.T) {
+// TestABossWinKeepsTheWoundAndRaisesTheCeiling. Nothing between fights heals, the portal room
+// included: it raises the ceiling by a flat amount and the wound stays the size it was, so the life
+// under the ceiling rises by exactly that amount.
+func TestABossWinKeepsTheWoundAndRaisesTheCeiling(t *testing.T) {
 	run := bare(t)
 
-	// The outer and inner rooms of realm one, both survived badly.
+	// The outer and inner rooms of realm one, then the portal room, all survived badly.
 	run.WonFight(10, 100)
 	run.WonFight(10, 100)
+	run.WonFight(10, 100)
+
 	if run.Hurt() != 90 {
-		t.Fatalf("two hard rooms left a wound of %d, want 90", run.Hurt())
-	}
-	if run.BossWins() != 0 {
-		t.Fatalf("an ordinary room counted as a portal room")
-	}
-
-	// The portal room.
-	run.WonFight(10, 100)
-
-	if run.Hurt() != 0 {
-		t.Errorf("a boss win left a wound of %d, want none", run.Hurt())
+		t.Errorf("a boss win left a wound of %d, want the 90 it was walked out with", run.Hurt())
 	}
 	if run.BossWins() != 1 {
 		t.Errorf("beat one portal room and counted %d", run.BossWins())
 	}
-	if got := run.scaleLifeForBosses(100); got != 133 {
-		t.Errorf("one boss raised a ceiling of 100 to %d, want 133", got)
+	ceiling := run.raiseLifeForBosses(100)
+	if ceiling != 100+bossLifeBonus {
+		t.Errorf("one boss raised a ceiling of 100 to %d, want %d", ceiling, 100+bossLifeBonus)
+	}
+	if got := run.LifeAtFightStart(ceiling); got != 10+bossLifeBonus {
+		t.Errorf("walked into realm two on %d, want %d", got, 10+bossLifeBonus)
 	}
 }
 
-// TestTheBossBonusCompounds. Owner's call, 2026-09-06: each portal room is a third more than the body
-// the run already had, not a third of the body it started with.
-//
-// **The rounding is down at every step**, which is why three bosses land on 234 rather than the 235
-// the arithmetic in the round would give: 100 to 133 to 176 to 234. A ceiling is a whole number of
-// hit points and a run is never handed a fraction of one.
-func TestTheBossBonusCompounds(t *testing.T) {
+// TestTheBossBonusIsFlat. Each portal room adds the same step to the body, so three bosses are
+// three steps rather than a compounding share.
+func TestTheBossBonusIsFlat(t *testing.T) {
 	run := bare(t)
 	run.bossWins = 3
 
-	if got := run.scaleLifeForBosses(100); got != 234 {
-		t.Errorf("three bosses raised a ceiling of 100 to %d, want 234", got)
+	if got := run.raiseLifeForBosses(100); got != 100+3*bossLifeBonus {
+		t.Errorf("three bosses raised a ceiling of 100 to %d, want %d", got, 100+3*bossLifeBonus)
 	}
 }
 

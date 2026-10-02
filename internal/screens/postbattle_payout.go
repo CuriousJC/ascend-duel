@@ -23,7 +23,7 @@ import (
 //
 // **Each line that names a figure claims it**, and the claim is what the flight to the duelist card
 // is paying in — see typewriter.tick. The three parts are read out in the order the run decided
-// them: interest on what you were carrying, a tenth of the life you kept, then what the room pays.
+// them: interest on what you were carrying, the third of your life you kept, then what the room pays.
 //
 // **The total is computed here and not read off the purse**, because the purse is still climbing
 // while the line is typed. It is the figure the three claims are about to add up to, which is what
@@ -53,7 +53,7 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 
 	lines = append(lines, proseLine{
 		spans: []proseSpan{
-			{text: fmt.Sprintf("Health proliferates for each %d -- ", session.LifeSharePer)},
+			{text: "Health kept -- "},
 			{text: fmt.Sprintf("+%d", spoils.FromLife), ink: ui.VitaeInk},
 		},
 		pays: func(gs *state.GlobalState) int { return gs.Run.ClaimFromLife() },

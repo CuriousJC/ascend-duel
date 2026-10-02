@@ -443,8 +443,8 @@ type Spec struct {
 	// owns the wrapping. See rarityBorders.
 	Rarity data.Rarity
 
-	// Upgrade is the one alteration the run has permanently made to this card, drawn as a strip
-	// down each side of the face — see edge.go. UpgradeNone — the zero value — is every ordinary
+	// Upgrade is the one alteration the run has permanently made to this card, drawn as art
+	// covering the face — see upgrade_art.go. UpgradeNone — the zero value — is every ordinary
 	// card, which is almost all of them.
 	//
 	// **One, never several** *(owner's call, 2026-09-09)*. A card has a form, an element and an
@@ -568,6 +568,12 @@ type Spec struct {
 	// not per frame — and it is what keeps the whole card in one place: the contact sheet
 	// draws a wounded enemy without the tool having to reimplement a bar.
 	Life, MaxLife int
+
+	// LifeMarks cuts the health bar into this many equal parts and marks each line between them.
+	// **Zero or one draws no marks**, which is every card but the duelist's: the duelist's bar is
+	// marked at the lines the win's life payout is cut on, so where a fight is about to land in the
+	// payout is on the bar rather than in the player's arithmetic.
+	LifeMarks int
 
 	// Badge is the MOCKUP figure in the bottom-left corner — an attack's damage multiplier, or the
 	// number of shields a defend card raises. **Empty draws none**, which is every card the mockup

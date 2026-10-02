@@ -111,7 +111,7 @@ type record struct {
 	Fight int `json:"Fight"`
 
 	// Vitae is the purse to arrive with, and Life the life the last fight is treated as having
-	// ended on — a tenth of which is part of what the reward screen pays out. **Zero means the
+	// ended on — which third of the ceiling it sits in is part of what the reward screen pays out. **Zero means the
 	// run's own**: a fresh purse, and full life.
 	Vitae int `json:"Vitae"`
 	Life  int `json:"Life"`

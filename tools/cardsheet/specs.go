@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
 // titled capitalises a rarity for the caption and the filename. **Hand-rolled rather than
@@ -365,6 +366,7 @@ func duelistSpecs() []cards.Spec {
 		spec := cards.Spec{
 			Name: d.name, Element: cards.Basic,
 			Life: d.life, MaxLife: d.of, Enabled: true,
+			LifeMarks: session.LifeThirds,
 		}
 		spec.Stats[0] = cards.StatLine{Label: "DMG", Value: fmt.Sprintf("%d", d.dmg)}
 		spec.Stats[1] = cards.StatLine{Label: "AP", Value: fmt.Sprintf("%d", d.ap)}

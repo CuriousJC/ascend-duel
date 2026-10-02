@@ -75,7 +75,8 @@ go run ./tools/relicart -kind relic
 ```
 
 Its inbox is `.scratch/to-process-<kind>-art/` and its kinds are `relic`, `essence`, `rune`,
-`stone`, `cantrip`, `card` and `other`. A stem naming no record is refused rather than filed.
+`stone`, `cantrip`, `card`, `upgrade` and `other`. **A flat magenta ground is keyed out on the way
+in** — the fallback the card prompt asks for from a generator that cannot write transparency. A stem naming no record is refused rather than filed.
 
 The installed art is always the set `current`, so installing first is what makes the page a
 comparison of *the game as it now stands* against what it was.

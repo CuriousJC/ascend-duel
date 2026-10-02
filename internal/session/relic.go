@@ -391,19 +391,20 @@ func (s *Session) WornRelics() []combat.WornRelic {
 // never wore the relic — a test, a screen that rebuilt its fighter — must not be able to wind a
 // run's accumulator backwards.
 //
-// **A relic that resets itself keeps nothing** — see combat.KeepsGrowth. Momentum's streak is a fact
-// about the turns of one duel, and banking it would make it a permanent bonus that one defend card
-// had once wiped.
+// **A relic that can reset is the exception and is taken outright** — see combat.Resets. Momentum's
+// streak carries from fight to fight until a defend card wipes it, and a wipe is the figure going
+// down: taking the larger would keep a streak the player had already lost. Only a relic the duelist
+// was wearing is read at all, so the guard above still holds for it.
 //
 // **It is called on a win and not on a defeat**, which needs no rule of its own: a lost fight ends
 // the run.
 func (s *Session) AbsorbGrowth(d combat.Duelist) {
 	for _, w := range d.WornRelics() {
 		key, ok := relicKeys[w.Relic]
-		if !ok || !combat.KeepsGrowth(w.Relic) {
+		if !ok {
 			continue
 		}
-		if w.Grown > s.grown[key] {
+		if combat.Resets(w.Relic) || w.Grown > s.grown[key] {
 			s.grown[key] = w.Grown
 		}
 	}
@@ -421,22 +422,18 @@ func (s *Session) Grown(key string) int { return s.grown[key] }
 // stops paying. HP raises the ceiling and fills it, because a fight starts at full life; a duelist
 // arriving hurt keeps the wound and gains the headroom.
 func (s *Session) Equip(d combat.Duelist) combat.Duelist {
-	// **The boss bonus goes on first, before any relic** *(2026-09-06)*. It is growth of the
-	// duelist's own body rather than something worn, so a flat +25 stays worth 25 on top of it and
-	// a percentage relic scales the grown figure — which is the ordering this function already
-	// documents below rather than a third rule. See life.go.
-	// **The potions go on before even that** *(owner's call, 2026-09-06)*. A potion changes the
-	// duelist themself rather than being something worn, so what it adds is part of the body the
-	// portal bonus grows and the relics then scale — an Elixir bought on realm one is worth more by
-	// realm four, exactly as the duelist's own record is. That is the one thing to move if the
-	// compounding turns out to be too much: dropping these two lines below the scaling makes a
-	// potion worth its face figure forever.
+	// **The boss bonus goes on before any relic**. It is growth of the duelist's own body rather
+	// than something worn, so a percentage relic scales the grown figure — the ordering this
+	// function already documents below rather than a third rule. See life.go.
+	// **The potions go on with it**, since a potion changes the duelist themself rather than being
+	// something worn: the relics scale what the potions added too. The boss bonus is flat, so the
+	// two add and neither grows the other.
 	d.DMG += s.dmgBonus
 	d.MaxLife += s.lifeBonus
 	d.CurrentLife += s.lifeBonus
 
-	d.MaxLife = s.scaleLifeForBosses(d.MaxLife)
-	d.CurrentLife = s.scaleLifeForBosses(d.CurrentLife)
+	d.MaxLife = s.raiseLifeForBosses(d.MaxLife)
+	d.CurrentLife = s.raiseLifeForBosses(d.CurrentLife)
 
 	worn := s.WornRelics()
 	for _, w := range worn {

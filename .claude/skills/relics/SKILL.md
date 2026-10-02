@@ -305,10 +305,11 @@ not — it carries a number that lives on the run:
   its card bounces and lights on that beat. `combat.CardScaleBySeat` is the only place those figures
   are worked out. **Cost is the exception** and stays on the face, because a discount does not move
   with the queue and the face must agree with the AP bar.
-- **A relic that can reset itself keeps nothing between fights** *(2026-08-22)*. `combat.KeepsGrowth`
-  is the question and `Session.AbsorbGrowth` is what asks it: Momentum's streak is a fact about the
-  turns of one duel, and banking it would make a good fight a permanent bonus that one defend card had
-  once wiped. Heart, the stat relics and the Enflamed family hold no reset and are banked.
+- **A relic that can reset carries its streak between fights too** *(owner's call)*. Every
+  accumulator is banked on a win; `combat.Resets` is the question `Session.AbsorbGrowth` asks to
+  read a resetting relic back **outright** rather than keeping the larger figure, because a reset
+  going down is as real as a step going up. Momentum grows across the whole run until a defend card
+  wipes it.
 - **A turn-wide predicate is matched with *any*, which is how a negation is avoided.** Momentum is
   "grow every turn" plus "reset on a turn holding a defend card" — two positive rules where one rule
   would have needed a `not`. Reach for that shape before proposing negation into the grammar.

@@ -160,7 +160,7 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		w.attach(0, ShieldCount(r.Amount)+" up")
 
 	case session.KindHeld:
-		w.attach(0, fmt.Sprintf("kept back for %d vitae", r.Amount))
+		w.attach(0, fmt.Sprintf("unplayed for %d vitae", r.Amount))
 
 	case session.KindReflected:
 		// **The relic names itself**, the drain's rule, so a second thorn relic cannot narrate as

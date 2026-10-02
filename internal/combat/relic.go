@@ -274,8 +274,8 @@ const (
 	// DoResetGrowth puts this relic's accumulator back to zero at the end of a matching turn. It is
 	// the only verb that takes an Amount of nothing, because it names no quantity.
 	//
-	// **A relic that can reset is a relic whose growth belongs to the fight**, not to the run — see
-	// KeepsGrowth, which is what stops a streak being banked between fights.
+	// **A relic that can reset carries its streak from fight to fight**, and a reset is what ends it —
+	// see Resets, which is what tells the run to take the figure back as it stands, zero included.
 	DoResetGrowth
 
 	// DoGrowOnHit adds Amount to **this relic's own accumulator** every blow that lands with a
@@ -800,11 +800,19 @@ func (c RelicCondition) onHand(satisfied []HandID) bool {
 
 // Matches reports whether a card satisfies every predicate that is set. **Every one, not any** — two
 // predicates on one rule narrow it, which is what a "fire slash" relic would want.
+//
+// **A wildcard counts for a relic exactly as it counts for a hand** *(owner's call)*. A card that
+// counts as every element matches a rule naming any element, and one that counts as any attack form
+// matches a rule naming stab, slash or crush — `WildFits` is the one answer to what a wildcard may
+// join, read here and by the matcher alike. So a Versatile Jab feeds the Jar of Razors, and a
+// Chromatic card is struck by every element relic, discounted by every element discount and touched
+// by every flip ring it is dealt under. Basic is not an element a wildcard joins, here or in a hand.
 func (c RelicCondition) Matches(card Card) bool {
-	if c.HasElement && card.Element != c.Element {
+	if c.HasElement && card.Element != c.Element &&
+		(c.Element == Basic || !card.WildFits(AxisElement, int(c.Element))) {
 		return false
 	}
-	if c.HasForm && card.Form() != c.Form {
+	if c.HasForm && card.Form() != c.Form && !card.WildFits(AxisForm, int(c.Form)) {
 		return false
 	}
 	if c.HasConcept && card.Concept != c.Concept {
@@ -2008,21 +2016,22 @@ func anyMatches(c RelicCondition, cards []Card) bool {
 	return false
 }
 
-// KeepsGrowth reports whether a relic's accumulator belongs to the **run** rather than to one fight.
+// Resets reports whether a relic's accumulator can go back to zero — a rule carrying
+// `reset-growth`.
 //
-// **A relic that can reset itself does not keep anything** *(2026-08-22)*: Momentum's streak is a
-// fact about the turns of one duel, and banking it between fights would make it a permanent bonus
-// that a single defend card once wiped. Heart, the growing stat relics and the Enflamed family hold no
-// reset and are kept.
-func KeepsGrowth(id RelicID) bool {
+// **Its streak still belongs to the run** *(owner's call)*: Momentum carries from fight to fight for
+// as long as no defend card is played, so the figure a fight ends on — zero after a reset — is the
+// one the next fight opens with. What this changes is how the run reads the figure back: outright,
+// because a reset going down is as real as a step going up.
+func Resets(id RelicID) bool {
 	for _, rule := range RelicOf(id).Rules {
 		for _, e := range rule.Then {
 			if e.Do == DoResetGrowth {
-				return false
+				return true
 			}
 		}
 	}
-	return true
+	return false
 }
 
 // GrowOnLanding is the attacker after **one hit of one card** has connected.
@@ -2242,8 +2251,8 @@ func DealtAs(worn []WornRelic, card Card) Card {
 // Grows reports whether a relic holds an accumulator at all — a rule with any of the three growth
 // verbs on it.
 //
-// **It is the question a badge asks**, and it is deliberately separate from KeepsGrowth: that one
-// says whether the number survives the fight, this one says whether there is a number.
+// **It is the question a badge asks**, and it is deliberately separate from Resets: that one
+// says whether the number can fall back to zero, this one says whether there is a number.
 func Grows(id RelicID) bool {
 	for _, rule := range RelicOf(id).Rules {
 		for _, e := range rule.Then {

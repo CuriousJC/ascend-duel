@@ -2,7 +2,7 @@ package main
 
 import "html/template"
 
-// The page. One static file, no JavaScript, no build step: the loop is "change an edge record or
+// The page. One static file, no JavaScript, no build step: the loop is "change an upgrade art record or
 // its art, re-run the tool, refresh the tab", the same loop every other tool here has.
 //
 // **Images are shown at their natural size first with image-rendering: pixelated.** A card's rim is
@@ -95,19 +95,16 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
 </p>
 <p class="note">
   A card has a form, an element and an action — and then <strong>one upgrade</strong>. A second
-  upgrade replaces the first outright. An upgrade is drawn as <strong>a strip down each side of the
-  face</strong>: the art <code>data/edges.json</code> names for it, stretched to the face's height,
-  on the left edge and mirrored on the right, under everything written on the card. An upgrade with
-  no record of its own draws <code>default</code>. Each plate prints its record's
-  <code>Width</code>, <code>Inset</code> and <code>Opacity</code>, measured on the hand card; tune
-  them in the file and re-run.
+  upgrade replaces the first outright. An upgrade is drawn as <strong>art covering the face</strong>
+  inside the border ring: the picture <code>data/upgrade_art.json</code> names for it, under
+  everything drawn on the card. An upgrade with no record of its own draws <code>default</code>.
 </p>
 
 <h2>Stacked, as the deck panel stacks them</h2>
 <p class="note">
   The plain card, then every upgrade in order, at half size, each drawn over the one before it — so
   what shows of each is its left edge. The first row is the panel's resting pitch; the second is a
-  row that has had to tighten. <strong>This is the view the strip is for.</strong>
+  row that has had to tighten. <strong>The left edge is what has to read here.</strong>
 </p>
 {{range .Stacks}}
 <div class="row">
@@ -145,8 +142,7 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
 {{range .Plates}}
 <h3 class="group">{{.Upgrade}}</h3>
 <p class="grants">
-  Edge: <code>{{.Edge}}</code> — art <code>{{.Art}}</code>{{if .Undrawn}} <span class="alarm">(undrawn: the default picture at this record's properties)</span>{{end}}, width {{.Width}}, inset {{.Inset}},
-  opacity {{.Opacity}}%, fading from {{.FadeFrom}} to {{.FadeTo}}.
+  Record: <code>{{.Record}}</code> — art <code>{{.Art}}</code>{{if .Undrawn}} <span class="alarm">(undrawn: the default picture)</span>{{end}}.
   Rider: <code>{{.Riders}}</code>.
   {{if .Grants}}Granted by {{.Grants}}.{{else}}<span class="alarm">Nothing in data/runes.json grants it — this upgrade cannot be acquired.</span>{{end}}
 </p>

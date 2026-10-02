@@ -1,0 +1,62 @@
+[
+  {
+    "UpgradeArtRecord": "default",
+    "Art": "default",
+    "Draw": "A sheet of brushed pewter: a cool mid-gray metal with a fine vertical grain, faint darker scuffs and a thin bright highlight catching the raised grain. Understated — it marks the card as altered without saying how."
+  },
+  {
+    "UpgradeArtRecord": "golden",
+    "Art": "golden",
+    "Draw": "A sheet of burnished gold leaf: warm deep yellow metal with a raised, slightly rounded surface, bright near-white highlights running across the crests, dark amber in the hollows, and small irregular flecks and cracks where the leaf has been laid by hand. It should read unmistakably as real gold."
+  },
+  {
+    "UpgradeArtRecord": "silver",
+    "Art": "silver",
+    "Draw": "A sheet of polished sterling silver: cool, bright, white metal with a near-mirror finish, dark blue-gray tarnish gathered in the low spots, crisp near-white highlights, and faint fine scratches and small hammered dimples across it. It should read unmistakably as silver rather than steel or pewter — brighter, whiter and more reflective."
+  },
+  {
+    "UpgradeArtRecord": "wild",
+    "Art": "wild",
+    "Draw": "Wet watercolor running through five colors from top to bottom — orange, yellow, green, blue, purple, in that order, each roughly a fifth of the height — where each color bleeds into the next in soft, wavy, uneven tide-lines rather than straight joins, with pigment pooling darker at the wavy edges and granulating slightly. Luminous and saturated, as though painted over a thin gilded base that glints through the paler patches."
+  },
+  {
+    "UpgradeArtRecord": "versatile",
+    "Art": "versatile",
+    "Draw": "Three materials running from top to bottom — ivory, then steel, then granite, each roughly a third of the height — where each gives way to the next in soft, wavy, uneven seams rather than straight joins, as though the surface were cast from all three at once. The ivory is smooth warm cream bone, the steel is brushed cool gray metal, the granite is speckled dark gray stone."
+  },
+  {
+    "UpgradeArtRecord": "heal",
+    "Art": "heal",
+    "Draw": "A sheet of rose quartz: translucent soft rose stone, polished smooth and faintly lit from within, with milky cloudy veins drifting across it and deeper rose in its depths. Gentle and warm; it should read as a living, mending stone rather than as metal."
+  },
+  {
+    "UpgradeArtRecord": "shield",
+    "Art": "shield",
+    "Draw": "A sheet of hammered bronze: warm dark brown-gold metal, thick and heavy, its surface covered in overlapping round hammer marks like the face of a shield, with rows of small domed rivets running down it, and a dull, battle-worn sheen."
+  },
+  {
+    "UpgradeArtRecord": "damage",
+    "Art": "damage",
+    "Draw": "A sheet of raw red copper: hot red-gold metal with a rough, freshly struck surface, scorched near-black patches, and glowing ember-red cracks and nicks running across it, as if it has just been pulled from the forge."
+  },
+  {
+    "UpgradeArtRecord": "combo",
+    "Art": "combo",
+    "Draw": "Deep garnet enamel set in dark gold: glossy wine-red vitreous enamel filling cells divided at irregular intervals by thin gold cloisonné wires that branch and link into one another like the links of a chain."
+  },
+  {
+    "UpgradeArtRecord": "held-damage",
+    "Art": "held-damage",
+    "Draw": "A sheet of verdigris-crusted bronze: a dull blue-green patina over dark metal, matte and still, with the bare dark bronze showing through in worn patches. It should feel dormant — strength being held back rather than spent."
+  },
+  {
+    "UpgradeArtRecord": "held-scale",
+    "Art": "held-scale",
+    "Draw": "Carved jade: dense, matte, pale sea-green stone with darker mottled clouds, carved with a shallow repeating ridge pattern of overlapping scales across it. Quiet and heavy; it should feel like something kept rather than used."
+  },
+  {
+    "UpgradeArtRecord": "held-vitae",
+    "Art": "held-vitae",
+    "Draw": "A sheet of dark blued steel: deep slate-blue heat-tempered metal with a faint oily iridescence, quiet and cold, set with lines of tiny crimson garnet beads running down it, like drops of blood held in reserve."
+  }
+]

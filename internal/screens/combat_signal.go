@@ -251,7 +251,7 @@ var riderDraws = map[combat.RiderKind]riderDrawing{
 		why: "the pips are the drawing, and they already fly out of the card with its figure"},
 
 	combat.RiderDamageOnPlay: {why: "it moves the duelist's DMG for every hit, so every hit is already bigger"},
-	combat.RiderDamageInHand: {why: "the same, for a card the turn kept back"},
+	combat.RiderDamageInHand: {why: "the same, for a card the turn left unplayed"},
 	combat.RiderScaleInHand:  {why: "it scales every hit, and a hit's line is where a multiplier is read"},
 	combat.RiderScaleInCombo: {why: "the same, for a card that made the hand"},
 	combat.RiderWildElement:  {why: "it is read while the hand is matched rather than while the turn resolves - what it does is the rung's name"},

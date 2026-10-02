@@ -119,7 +119,7 @@ func handDMGRecords(e combat.Event, relics []combat.WornRelic) []session.LedgerR
 			Kind:   session.KindTerm,
 			Role:   session.RoleDMG,
 			Relic:  relicNames(relics, e.HeldDMGSeats),
-			Note:   cardCount(e.HeldDMGCards) + " kept back",
+			Note:   cardCount(e.HeldDMGCards) + " unplayed",
 			Amount: e.HeldDMG,
 		})
 	}

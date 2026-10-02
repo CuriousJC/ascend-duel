@@ -230,10 +230,10 @@ func ruleLine(p session.Rune) string {
 		// number is odds, which is why this is a case here and not a widening of the line below.
 		switch p.Rider {
 		case combat.RiderGolden:
-			return fmt.Sprintf("upgrade: 1 in %d on play: +%d DMG; 1 in %d: +%d max life; else nothing",
+			return fmt.Sprintf("upgrade: 1 in %d when played: +%d DMG; 1 in %d: +%d max life; else nothing",
 				p.Number, combat.LuckDMG, p.Number, combat.LuckLife)
 		case combat.RiderSilver:
-			return fmt.Sprintf("upgrade: 1 in %d on play: +%d vitae; else nothing",
+			return fmt.Sprintf("upgrade: 1 in %d when played: +%d vitae; else nothing",
 				p.Number, combat.SilverVitae)
 		}
 		return fmt.Sprintf("upgrade: rider %s, value %d", p.Rider, p.Number)

@@ -97,17 +97,6 @@ func TestEveryFormHasItsOwnMark(t *testing.T) {
 	}
 }
 
-// plainText is the type on a plain card's face, which is nothing.
-//
-// **A face says what a card does in pictures**: the form is the corner mark, the element is its
-// color and the cost ticks under it, and the multiplier is the badge in the bottom-left. The only
-// words a face is ever set with are an upgrade's, and those are held to the band by
-// TestEveryUpgradedCardTextFitsItsBand. What the two tests below hold is the floor — that a card
-// carrying no upgrade asks the band for nothing.
-func plainText(a combat.ConceptID) string {
-	return riderText(combat.Plain(a))
-}
-
 func TestEveryConceptSaysWhatItDoes(t *testing.T) {
 	// **A card has to say what it does somewhere on its face**, and what it says it with is a
 	// picture: the multiplier is a drawn badge and a defense stacks one shield per shield it
@@ -139,69 +128,6 @@ func TestAnAttacksMultiplierIsOnItsFace(t *testing.T) {
 		}
 		if cardBadge(card) == "" || cardBadgePct(card) == 0 {
 			t.Errorf("%v is an attack with no multiplier on its badge", combat.ConceptOf(a).Key)
-		}
-	}
-}
-
-func TestEveryCardTextFitsItsBand(t *testing.T) {
-	// **The wording is here and the band is in internal/cards, so neither package can check
-	// this alone.** Render draws every line it wraps to rather than clamping, so an overlong
-	// string runs off the bottom of the card — this is what fails first.
-	//
-	// It needs the real font because wrapping is measured, which is also why it is worth
-	// having: "Negate 1 attack, deal 0.5x damage back" fits in three lines or four depending on
-	// a comma, and nobody can tell by looking at the string.
-	ttf := assets.LoadFontData()["kubasta"]
-	if len(ttf) == 0 {
-		t.Fatal("no kubasta font data embedded")
-	}
-	f, err := cards.NewFaces(ttf)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	st := cards.Hand
-	width := st.Width - st.TextColumnLeft - st.TextInset
-
-	for _, a := range combat.AllConcepts() {
-		lines, err := cards.WrapText(f, st.TextSize, plainText(a), width)
-		if err != nil {
-			t.Fatalf("%v: %v", a, err)
-		}
-		if len(lines) > st.TextLines() {
-			t.Errorf("%v's text wraps to %d lines and the band holds %d: %q",
-				combat.ConceptOf(a).Key, len(lines), st.TextLines(), plainText(a))
-		}
-	}
-}
-
-func TestNoEffectTextWordIsWiderThanItsColumn(t *testing.T) {
-	// **Wrapping breaks on spaces only**, so a single word wider than the column is not
-	// wrapped, it overruns — silently, and only on the one card that has it. The column is
-	// ~100px at 18pt, which is around a dozen characters, so this is a real constraint on the
-	// wording rather than a theoretical one.
-	ttf := assets.LoadFontData()["kubasta"]
-	if len(ttf) == 0 {
-		t.Fatal("no kubasta font data embedded")
-	}
-	f, err := cards.NewFaces(ttf)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	st := cards.Hand
-	width := st.Width - st.TextColumnLeft - st.TextInset
-
-	for _, a := range combat.AllConcepts() {
-		for _, word := range strings.Fields(plainText(a)) {
-			w, err := cards.TextWidth(f, st.TextSize, word)
-			if err != nil {
-				t.Fatalf("%v: %v", a, err)
-			}
-			if w > width {
-				t.Errorf("%v: %q is %dpx, wider than the %dpx column — it will run off the card",
-					a, word, w, width)
-			}
 		}
 	}
 }
@@ -701,31 +627,6 @@ func TestNoOpponentCardWritesItsOwnName(t *testing.T) {
 	}
 }
 
-// **Every rider is on the face, not only in the tooltip** *(2026-09-09)*. A card the player spent a
-// rune on carries an edge whatever the rider is, and the edge is what carries across a row of
-// eight cards — but it is not what answers "what does that mean". Six of the ten riders said
-// nothing at all until this test existed.
-//
-// **The two metals are the exception and are named here rather than skipped by a rule**
-// *(owner's call, 2026-09-09)*. Gold and silver are what the mechanic is called, so the card's edge
-// names them and a word would be the same fact twice. A third silent rider has to be argued for by editing this list.
-func TestEveryRiderKindIsOnTheFace(t *testing.T) {
-	silent := map[combat.RiderKind]bool{combat.RiderGolden: true, combat.RiderSilver: true}
-
-	for _, k := range combat.RiderKinds() {
-		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 5})
-		switch got := riderText(c); {
-		case silent[k] && got != "":
-			t.Errorf("rider %s writes %q on the face, and its edge is what names it", k, got)
-		case !silent[k] && got == "":
-			t.Errorf("rider %s adds nothing to the card's face", k)
-		}
-	}
-	if got := riderText(combat.Plain(combat.Bash)); got != "" {
-		t.Errorf("an unridden card claimed an upgrade on its face: %q", got)
-	}
-}
-
 // **A metal explains itself in the tooltip: named first, then the odds.** The face says nothing at
 // all about a metal — its edge is what names it — so the panel is the whole explanation, and it
 // opens by saying which metal rather than with two rate lines about a card the player has to
@@ -748,7 +649,7 @@ func TestAMetalStillExplainsItselfInTheTooltip(t *testing.T) {
 			t.Errorf("%s opens with %q, want %q", metal.kind, lines[0], metal.word+" CARD")
 		}
 		for _, line := range lines[1:] {
-			if !strings.Contains(line, "1 IN 5") || !strings.Contains(line, "ON PLAY") {
+			if !strings.Contains(line, "1 IN 5") || !strings.Contains(line, "WHEN PLAYED") {
 				t.Errorf("%s's tooltip line %q is neither the odds nor the moment", metal.kind, line)
 			}
 		}
@@ -777,97 +678,6 @@ func TestAMetalsNameIsLitInTheTooltip(t *testing.T) {
 		}
 		if lit != metal.word {
 			t.Errorf("%s's name line lights %q, want %q: %v", metal.kind, lit, metal.word, spans)
-		}
-	}
-}
-
-// **Every rider says *when*, except the one that has no when.** What the player has to learn off an
-// upgraded card is whether it happens as the card is played or while it merely sits in the hand,
-// and that is exactly the thing a figure alone cannot say. A wildcard is the deliberate exception:
-// it is something the card permanently is.
-func TestEveryRiderSaysWhenItHappens(t *testing.T) {
-	for _, k := range combat.RiderKinds() {
-		// The wildcard has no moment — it is something the card permanently is — and the two metals
-		// write nothing on the face at all; see TestEveryRiderKindIsOnTheFace.
-		if combat.WildAxisOf(k) >= 0 || k == combat.RiderGolden || k == combat.RiderSilver {
-			continue
-		}
-		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 5})
-		lines := carddesc.FaceLines(c)
-		if len(lines) == 0 {
-			t.Errorf("rider %s has no face lines", k)
-			continue
-		}
-		switch lines[0] {
-		case "ON PLAY", "IN HAND":
-		default:
-			t.Errorf("rider %s opens with %q, which is not a moment the player can read", k, lines[0])
-		}
-	}
-}
-
-// **An upgraded card's whole face still fits the band**, which is what the plain concepts are held
-// to above. A rider adds lines to a card that already carries two, so this is the case that runs
-// out of room first — and it runs out silently, by drawing off the bottom edge.
-func TestEveryUpgradedCardTextFitsItsBand(t *testing.T) {
-	ttf := assets.LoadFontData()["kubasta"]
-	if len(ttf) == 0 {
-		t.Fatal("no kubasta font data embedded")
-	}
-	f, err := cards.NewFaces(ttf)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	st := cards.Hand
-	width := st.Width - st.TextColumnLeft - st.TextInset
-
-	for _, a := range combat.AllConcepts() {
-		for _, k := range combat.RiderKinds() {
-			// **A two-digit amount, because the figure is part of the measure.** A rider drawn at 5
-			// and shipped at 25 is a card that passed this test and overruns in play.
-			c := combat.Plain(a).SetRider(combat.Rider{Kind: k, Amount: 25})
-			text := riderText(c)
-			lines, err := cards.WrapText(f, st.TextSize, text, width)
-			if err != nil {
-				t.Fatalf("%v + %v: %v", a, k, err)
-			}
-			if len(lines) > st.TextLines() {
-				t.Errorf("%v carrying %v wraps to %d lines and the band holds %d: %q",
-					combat.ConceptOf(a).Key, k, len(lines), st.TextLines(), text)
-			}
-		}
-	}
-}
-
-// **No word an upgrade writes is wider than the column.** Wrapping breaks on spaces only, so a long
-// word overruns rather than wrapping — and the upgrade vocabulary is where the long words are:
-// SHIELDS, ELEMENT, SCORES.
-func TestNoUpgradeWordIsWiderThanItsColumn(t *testing.T) {
-	ttf := assets.LoadFontData()["kubasta"]
-	if len(ttf) == 0 {
-		t.Fatal("no kubasta font data embedded")
-	}
-	f, err := cards.NewFaces(ttf)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	st := cards.Hand
-	width := st.Width - st.TextColumnLeft - st.TextInset
-
-	for _, k := range combat.RiderKinds() {
-		c := combat.Plain(combat.Bash).SetRider(combat.Rider{Kind: k, Amount: 25})
-		for _, line := range carddesc.FaceLines(c) {
-			for _, word := range strings.Fields(line) {
-				w, err := cards.TextWidth(f, st.TextSize, word)
-				if err != nil {
-					t.Fatalf("%v: %v", k, err)
-				}
-				if w > width {
-					t.Errorf("%v writes %q, %d wide in a %d column", k, word, w, width)
-				}
-			}
 		}
 	}
 }
@@ -1033,6 +843,22 @@ func TestEveryBleedingCardArtIsOpaque(t *testing.T) {
 			t.Errorf("%s draws %s with %.1f%% of its pixels not opaque — a bleeding card's art is "+
 				"the whole face, so regenerate it against a ground rather than on transparency",
 				what, key, 100*float64(soft)/float64(b.Dx()*b.Dy()))
+		}
+	}
+}
+
+// **A hand card's face carries no words but its name.** The upgrade is the face's art, and what it
+// does is the tooltip's — so a card carrying any rider, or none, asks the text band for nothing.
+func TestNoCardFaceCarriesText(t *testing.T) {
+	for _, a := range combat.AllConcepts() {
+		cards := []combat.Card{combat.Plain(a)}
+		for _, k := range combat.RiderKinds() {
+			cards = append(cards, combat.Plain(a).SetRider(combat.Rider{Kind: k, Amount: 25}))
+		}
+		for _, c := range cards {
+			if spec := CardSpec(c, held{cost: 1}, true, false); spec.Text != "" {
+				t.Errorf("%v carrying %v writes %q on its face", combat.ConceptOf(a).Key, c.Rider().Kind, spec.Text)
+			}
 		}
 	}
 }

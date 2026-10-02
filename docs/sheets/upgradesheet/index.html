@@ -76,19 +76,16 @@
 </p>
 <p class="note">
   A card has a form, an element and an action — and then <strong>one upgrade</strong>. A second
-  upgrade replaces the first outright. An upgrade is drawn as <strong>a strip down each side of the
-  face</strong>: the art <code>data/edges.json</code> names for it, stretched to the face's height,
-  on the left edge and mirrored on the right, under everything written on the card. An upgrade with
-  no record of its own draws <code>default</code>. Each plate prints its record's
-  <code>Width</code>, <code>Inset</code> and <code>Opacity</code>, measured on the hand card; tune
-  them in the file and re-run.
+  upgrade replaces the first outright. An upgrade is drawn as <strong>art covering the face</strong>
+  inside the border ring: the picture <code>data/upgrade_art.json</code> names for it, under
+  everything drawn on the card. An upgrade with no record of its own draws <code>default</code>.
 </p>
 
 <h2>Stacked, as the deck panel stacks them</h2>
 <p class="note">
   The plain card, then every upgrade in order, at half size, each drawn over the one before it — so
   what shows of each is its left edge. The first row is the panel's resting pitch; the second is a
-  row that has had to tighten. <strong>This is the view the strip is for.</strong>
+  row that has had to tighten. <strong>The left edge is what has to read here.</strong>
 </p>
 
 <div class="row">
@@ -148,8 +145,7 @@
 
 <h3 class="group">wild</h3>
 <p class="grants">
-  Edge: <code>wild</code> — art <code>edge-wild</code>, width 62, inset 4,
-  opacity 100%, fading from 29 to 62.
+  Record: <code>wild</code> — art <code>upgrade-wild</code>.
   Rider: <code>wild-element</code>.
   Granted by Prismatic (change-wildcard).
 </p>
@@ -238,8 +234,7 @@
 
 <h3 class="group">golden</h3>
 <p class="grants">
-  Edge: <code>golden</code> — art <code>edge-golden</code>, width 62, inset 4,
-  opacity 100%, fading from 29 to 62.
+  Record: <code>golden</code> — art <code>upgrade-golden</code>.
   Rider: <code>golden</code>.
   Granted by Golden (switch-gold).
 </p>
@@ -328,8 +323,7 @@
 
 <h3 class="group">silver</h3>
 <p class="grants">
-  Edge: <code>silver</code> — art <code>edge-silver</code>, width 62, inset 4,
-  opacity 100%, fading from 29 to 62.
+  Record: <code>silver</code> — art <code>upgrade-silver</code>.
   Rider: <code>silver</code>.
   Granted by Silver (switch-silver).
 </p>
@@ -418,8 +412,7 @@
 
 <h3 class="group">heal</h3>
 <p class="grants">
-  Edge: <code>heal</code> — art <code>edge-heal</code>, width 52, inset 4,
-  opacity 100%, fading from 22 to 52.
+  Record: <code>heal</code> — art <code>upgrade-heal</code>.
   Rider: <code>heal-on-play</code>.
   Granted by Siphon (play-drain).
 </p>
@@ -508,8 +501,7 @@
 
 <h3 class="group">shield</h3>
 <p class="grants">
-  Edge: <code>shield</code> — art <code>edge-shield</code>, width 52, inset 4,
-  opacity 100%, fading from 22 to 52.
+  Record: <code>shield</code> — art <code>upgrade-shield</code>.
   Rider: <code>shield-on-play</code>.
   Granted by Aegis (played-shield).
 </p>
@@ -598,8 +590,7 @@
 
 <h3 class="group">damage</h3>
 <p class="grants">
-  Edge: <code>damage</code> — art <code>edge-damage</code>, width 52, inset 4,
-  opacity 100%, fading from 22 to 52.
+  Record: <code>damage</code> — art <code>upgrade-damage</code>.
   Rider: <code>damage-on-play</code>.
   Granted by Might (play-dmg).
 </p>
@@ -688,8 +679,7 @@
 
 <h3 class="group">combo</h3>
 <p class="grants">
-  Edge: <code>combo</code> — art <code>edge-combo</code>, width 52, inset 4,
-  opacity 100%, fading from 22 to 52.
+  Record: <code>combo</code> — art <code>upgrade-combo</code>.
   Rider: <code>scale-in-combo</code>.
   Granted by Ruin (play-dmgx).
 </p>
@@ -778,8 +768,7 @@
 
 <h3 class="group">held-damage</h3>
 <p class="grants">
-  Edge: <code>held-damage</code> — art <code>edge-held-damage</code>, width 44, inset 4,
-  opacity 90%, fading from 14 to 44.
+  Record: <code>held-damage</code> — art <code>upgrade-held-damage</code>.
   Rider: <code>damage-in-hand</code>.
   Granted by Ferocity (held-dmg).
 </p>
@@ -868,8 +857,7 @@
 
 <h3 class="group">held-scale</h3>
 <p class="grants">
-  Edge: <code>held-scale</code> — art <code>edge-held-scale</code>, width 44, inset 4,
-  opacity 90%, fading from 14 to 44.
+  Record: <code>held-scale</code> — art <code>upgrade-held-scale</code>.
   Rider: <code>scale-in-hand</code>.
   Granted by Brutality (held-dmgx).
 </p>
@@ -958,8 +946,7 @@
 
 <h3 class="group">held-vitae</h3>
 <p class="grants">
-  Edge: <code>held-vitae</code> — art <code>edge-held-vitae</code>, width 44, inset 4,
-  opacity 90%, fading from 14 to 44.
+  Record: <code>held-vitae</code> — art <code>upgrade-held-vitae</code>.
   Rider: <code>vitae-in-hand</code>.
   Granted by Tithe (held-vitae).
 </p>
@@ -1048,8 +1035,7 @@
 
 <h3 class="group">versatile</h3>
 <p class="grants">
-  Edge: <code>versatile</code> — art <code>edge-versatile</code>, width 62, inset 4,
-  opacity 100%, fading from 29 to 62.
+  Record: <code>versatile</code> — art <code>upgrade-versatile</code>.
   Rider: <code>wild-form</code>.
   Granted by Versatile (change-versatile).
 </p>

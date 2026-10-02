@@ -56,7 +56,7 @@ type Combatant struct {
 
 // NewEnemyFrom builds an opponent from a motif record, dealt as one element and **grown to the
 // fight it is met at** — see journey.ScaleToFight. Fight 0 is the first room of the journey and
-// takes the record's bases unchanged.
+// takes the record's bases ungrown, set at the journey's HPScale and DMGScale.
 //
 // **The fight index is a parameter rather than something read later**, so an unscaled opponent
 // cannot be built by accident: every caller has to say where on the growth curve this one stands.
@@ -73,9 +73,9 @@ func NewEnemyFrom(r data.MotifRecord, element string, fight int, shape data.Jour
 			// a *deck* is spent out of, and growing it would hand a realm-eight opponent more cards
 			// rather than a harder version of its own. It is the dial to reach for on purpose, per
 			// record, not one to move by arithmetic.
-			DMG:     journey.ScaleToFight(r.DMG, fight, shape.DMGGrowth),
+			DMG:     journey.ScaleToFight(r.DMG, fight, shape.DMGGrowth, shape.DMGScale),
 			Actions: r.Actions,
-			MaxLife: journey.ScaleToFight(r.HP, fight, shape.HPGrowth),
+			MaxLife: journey.ScaleToFight(r.HP, fight, shape.HPGrowth, shape.HPScale),
 
 			// **Enemies do not form hands.** Their cards resolve one at a time, in the order the
 			// planner chose them. It is set here because this is the one place an opponent is built

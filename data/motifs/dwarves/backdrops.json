@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "dwarves-outer-hill-stones",
+    "Name": "Hill Stones",
+    "Tier": "outer",
+    "Art": "dwarves-outer-hill-stones",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A broad grassy saddle between rolling hills, with nobody in it: a stretch of short turf and bare rock, clear from the foreground to the far side, with hill after hill rising behind into the distance. Weathered boulders, cairns of stacked stones and the mouths of old mine adits cut into the hillsides line the edges, with a few abandoned dwarven tools — a pick, a cart on a short run of rail, a coil of rope — left beside them. At the far side stands the room's door: two small standing stones capped with a third laid across them, a squat stone doorway barely taller than a person, cut square and carved with plain dwarven bands.",
+    "ElementDraw": {
+      "fire": "The hills are volcanic. Lava seeps from fissures in the slopes and runs in glowing orange channels along the edges, the rock is scorched black, and smoke and embers drift across the sky. The standing stones are black volcanic rock with orange glowing seams. The scene is lit warm orange from below.",
+      "ice": "The hills are deep in winter. Snow covers the slopes, ice coats the boulders and cairns, and icicles hang from the mine mouths. The standing stones are grey granite furred with frost. The light is pale and blue.",
+      "lightning": "A storm breaks over the hills. Balls of yellow lightning drift and hover above the slopes, lightning forks down onto the far hilltops, and small arcs crawl over the standing stones, which are dark basalt studded with iron. The light is hot yellow.",
+      "earth": "The hills are green and wild. Thick grass, ferns, heather and broad-leaved shrubs cover the slopes and spill over the boulders, and moss covers the standing stones. The light is soft and green.",
+      "arcane": "The hills are inscribed. Glowing purple runes are carved everywhere across the boulders, the cairns and the standing stones, and the whole scene is lit violet by their light under a dark sky."
+    }
+  },
+  {
+    "Backdrop": "dwarves-inner-hill-gate",
+    "Name": "Hill Gate",
+    "Tier": "inner",
+    "Art": "dwarves-inner-hill-gate",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A broad valley floor among steep hills, with nobody in it: a stretch of short turf and bare rock, clear from the foreground to the far side, with high hills rising all around. Weathered boulders, cairns of stacked stones and the mouths of old mine adits cut into the hillsides line the edges, with abandoned dwarven tools, ore carts and stacked timber props left beside them. At the far side stands the room's door: two enormous standing stones capped with a third laid across them, a towering stone doorway many times the height of a person and filling much of the far side, cut square and carved deep with dwarven knotwork and bands.",
+    "ElementDraw": {
+      "fire": "The hills are volcanic. Lava seeps from fissures in the slopes and runs in glowing orange channels along the edges, the rock is scorched black, and smoke and embers drift across the sky. The great standing stones are black volcanic rock with orange glowing seams. The scene is lit warm orange from below.",
+      "ice": "The hills are deep in winter. Snow covers the slopes, ice coats the boulders and cairns, and icicles hang from the mine mouths and fringe the great lintel stone. The standing stones are grey granite furred with frost. The light is pale and blue.",
+      "lightning": "A storm breaks over the hills. Balls of yellow lightning drift and hover above the valley, lightning forks down onto the hilltops, and arcs crawl over the great standing stones, which are dark basalt studded with iron. The light is hot yellow.",
+      "earth": "The hills are green and wild. Thick grass, ferns, heather and broad-leaved shrubs cover the slopes and spill over the boulders, and moss and creepers cover the great standing stones. The light is soft and green.",
+      "arcane": "The hills are inscribed. Glowing purple runes are carved everywhere across the boulders and the cairns, and in dense bands down the great standing stones, and the whole valley is lit violet by their light under a dark sky."
+    }
+  },
+  {
+    "Backdrop": "dwarves-boss-stone-throne",
+    "Name": "Stone Throne",
+    "Tier": "boss",
+    "Art": "dwarves-boss-stone-throne",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A high flat hilltop, with nobody on it: a broad stretch of short turf and laid stone, clear from the foreground to the far side, with rolling hills falling away into the distance behind. A giant stone throne stands centred at the far side, carved square and massive from a single outcrop of rock, its back rising far above head height, with deep-cut dwarven knotwork and bands along its arms and back. Cairns and weathered boulders stand around the edges. The two portals stand one on each side of the throne, flanking it, each framed by a pair of standing stones capped with a third laid across them.",
+    "ElementDraw": {
+      "fire": "The hilltop is volcanic. Lava runs in glowing orange channels along its edges, the throne and the standing stones are black volcanic rock with orange glowing seams, and smoke and embers drift across the sky. The scene is lit warm orange from below.",
+      "ice": "The hilltop is deep in winter. Snow covers the ground and drifts against the throne, ice coats the boulders and the standing stones, and icicles hang from the throne's arms. The throne is grey granite furred with frost. The light is pale and blue.",
+      "lightning": "A storm breaks over the hilltop. Balls of yellow lightning drift and hover around the throne, arcs crawl along its carved bands, and lightning forks down onto the far hills. The throne and the standing stones are dark basalt studded with iron. The light is hot yellow.",
+      "earth": "The hilltop is green and wild. Thick grass, heather and broad-leaved shrubs grow around the throne's foot, and moss and creepers cover the throne and the standing stones. The light is soft and green.",
+      "arcane": "The hilltop is inscribed. Glowing purple runes are carved everywhere across the throne, the standing stones and the boulders, and the whole scene is lit violet by their light under a dark sky."
+    }
+  }
+]

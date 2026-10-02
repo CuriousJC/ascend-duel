@@ -115,4 +115,4 @@ no caption, no rules text, no numbers anywhere in the image. If `Draw` is empty,
 rather than inventing a subject.
 
 Name each image after its record's own key — the `RuneRecord` value — and
-give me a single zip file of everything so I can download it all at once — never a link per file.
+give me the file itself if there is only one, and a single zip file of everything if there is more than one, so I can download it all at once — never a link per file.

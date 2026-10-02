@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "aliens-outer-research-deck",
+    "Name": "Research Deck",
+    "Tier": "outer",
+    "Art": "aliens-outer-research-deck",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A space station's research deck, with nobody in it: a broad floor of riveted metal deck plating, clear from the foreground to the far wall, under a high ceiling of exposed girders and ducting. Long light bars run along the ceiling and down the walls, with glowing strips set into the floor at its edges and banks of small indicator lights on the wall panels. A couple of lab tables stand against the side walls, well back from the open floor, each holding an experiment. In the far wall, in place of a door, is a small closed airlock hatch, about the height of a person.",
+    "ElementDraw": {
+      "fire": "Every light bar, floor strip and indicator glows orange, and the deck is lit warm orange. On the lab tables, bunsen burners roar with tall orange flames under glass flasks and coiled tubing.",
+      "ice": "Every light bar, floor strip and indicator glows pale blue, and the deck is lit cold blue. On the lab tables, blocks of ice hang suspended in the air between pairs of metal columns, frost creeping across the tabletops beneath them.",
+      "lightning": "Every light bar, floor strip and indicator glows yellow, and the deck is lit hot yellow. On the lab tables, pairs of small metal coil towers stand apart with bright yellow lightning arcing between them.",
+      "earth": "Every light bar, floor strip and indicator glows green, and the deck is lit soft green. On the lab tables, bonsai trees grow in shallow specimen trays under grow lamps, their roots trailing over the edges.",
+      "arcane": "Every light bar, floor strip and indicator glows purple, and the deck is lit violet. On the lab tables, purple spheres float a little above their cradles, turning slowly and glowing from within."
+    }
+  },
+  {
+    "Backdrop": "aliens-inner-containment-deck",
+    "Name": "Containment Deck",
+    "Tier": "inner",
+    "Art": "aliens-inner-containment-deck",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A space station's containment deck, with nobody in it: a broad floor of riveted metal deck plating, clear from the foreground to the far wall, under a high ceiling of exposed girders and ducting. Long light bars run along the ceiling and down the walls, with glowing strips set into the floor at its edges and banks of small indicator lights on the wall panels. A couple of lab tables stand against the side walls, well back from the open floor, each holding an experiment. The far wall is dominated by a great closed blast door, many times the height of a person and filling much of the far side: two massive armoured leaves sealed together down the middle, banded with heavy plating and ringed by a thick frame of lights.",
+    "ElementDraw": {
+      "fire": "Every light bar, floor strip and indicator glows orange, and the deck is lit warm orange. On the lab tables, bunsen burners roar with tall orange flames under glass flasks and coiled tubing, and the blast door's frame glows like hot metal.",
+      "ice": "Every light bar, floor strip and indicator glows pale blue, and the deck is lit cold blue. On the lab tables, blocks of ice hang suspended in the air between pairs of metal columns, and frost has crept across the blast door's seams.",
+      "lightning": "Every light bar, floor strip and indicator glows yellow, and the deck is lit hot yellow. On the lab tables, pairs of small metal coil towers stand apart with bright yellow lightning arcing between them, and small arcs crawl along the blast door's frame.",
+      "earth": "Every light bar, floor strip and indicator glows green, and the deck is lit soft green. On the lab tables, bonsai trees grow in shallow specimen trays under grow lamps, and moss has crept into the seams of the blast door.",
+      "arcane": "Every light bar, floor strip and indicator glows purple, and the deck is lit violet. On the lab tables, purple spheres float a little above their cradles, turning slowly and glowing from within, and faint violet sigils shimmer across the blast door."
+    }
+  },
+  {
+    "Backdrop": "aliens-boss-engine-chamber",
+    "Name": "Engine Chamber",
+    "Tier": "boss",
+    "Art": "aliens-boss-engine-chamber",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "The heart of an alien space station, with nobody in it: a broad floor of riveted metal deck plating, clear from the foreground to the far wall, under a vaulted ceiling of girders and ducting lined with light bars. A huge, strange machine stands centred against the far wall, plainly alien and half organic: ribbed, glistening, vein-like conduits and fleshy pods grown through and around metal housings, pulsing slowly with light. The two portals stand one on each side of the machine, flanking it.",
+    "ElementDraw": {
+      "fire": "The machine runs hot. Its pods glow orange from within like embers, its conduits pulse with molten orange light, and heat shimmer rises from its vents. Every light bar glows orange, and the chamber is lit warm orange.",
+      "ice": "The machine runs cold. Its pods are glassy and pale blue, its conduits are rimed with frost, and icy vapour spills from its vents across the floor. Every light bar glows pale blue, and the chamber is lit cold blue.",
+      "lightning": "The machine crackles. Its pods glow hot yellow, bright yellow arcs leap between its conduits and coils, and every metal edge carries a faint yellow halo. Every light bar glows yellow, and the chamber is lit hot yellow.",
+      "earth": "The machine has grown wild. Its pods are green and leafy, roots and vines twist through its conduits and housings, and moss covers its lower half. Every light bar glows green, and the chamber is lit soft green.",
+      "arcane": "The machine is uncanny. Its pods glow deep purple, its conduits pulse with violet light, and small fragments drift and orbit around it in the air. Every light bar glows purple, and the chamber is lit violet."
+    }
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "avians-outer-canyon-roost",
+    "Name": "Canyon Roost",
+    "Tier": "outer",
+    "Art": "avians-outer-canyon-roost",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "The floor of a great canyon, with nobody in it: a broad, flat stretch of open ground, clear from the foreground to the far cliff. Towering canyon cliffs rise on every side and fill most of the picture, sheer and layered, climbing out of sight toward a narrow strip of sky. The cliff faces are riddled with roosting holes and ledges, and great nests of woven sticks, feathers and debris cluster around them at every height, all of them empty. In the far cliff face, in place of a door, is a single small crack in the rock, barely taller than a person.",
+    "ElementDraw": {
+      "fire": "The canyon is volcanic. Lava seeps from fissures in the cliff faces and runs in glowing orange channels along the base of the walls, the rock is scorched black, and smoke and embers drift up past the nests. The canyon is lit warm orange from below.",
+      "ice": "The canyon is frozen. Ice coats the rocks and ledges, icicles hang from the roosting holes, and snow lies in the nests and along the base of the cliffs. The light is pale and blue.",
+      "lightning": "The canyon is stormy. Balls of yellow lightning drift and hover in the air between the cliff faces, crackling around the ledges and nests, under a dark storm sky. The light is hot yellow.",
+      "earth": "The canyon is overgrown with jungle. Thick green vines, ferns, broad leaves and hanging creepers cover the cliff faces and spill out of the nests, and lush greenery lines the base of the walls. The light is soft green.",
+      "arcane": "The canyon is inscribed. Glowing purple symbols are carved everywhere across the cliff faces, around the roosting holes and along the ledges, and the whole canyon is lit violet by their light."
+    }
+  },
+  {
+    "Backdrop": "avians-inner-canyon-rift",
+    "Name": "Canyon Rift",
+    "Tier": "inner",
+    "Art": "avians-inner-canyon-rift",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "The floor of a great canyon, with nobody in it: a broad, flat stretch of open ground, clear from the foreground to the far cliff. Towering canyon cliffs rise on every side and fill most of the picture, sheer and layered, climbing out of sight toward a narrow strip of sky. The cliff faces are riddled with roosting holes and ledges, and great nests of woven sticks, feathers and debris cluster around them at every height, all of them empty. In the far cliff face, in place of a door, is a great crack splitting the rock, many times the height of a person and filling much of the far side, its edges jagged and its depths in shadow.",
+    "ElementDraw": {
+      "fire": "The canyon is volcanic. Lava seeps from fissures in the cliff faces and runs in glowing orange channels along the base of the walls, the great crack glows from deep within, the rock is scorched black, and smoke and embers drift up past the nests. The canyon is lit warm orange from below.",
+      "ice": "The canyon is frozen. Ice coats the rocks and ledges, icicles hang from the roosting holes and fringe the edges of the great crack, and snow lies in the nests and along the base of the cliffs. The light is pale and blue.",
+      "lightning": "The canyon is stormy. Balls of yellow lightning drift and hover in the air between the cliff faces, crackling around the ledges, the nests and the mouth of the great crack, under a dark storm sky. The light is hot yellow.",
+      "earth": "The canyon is overgrown with jungle. Thick green vines, ferns, broad leaves and hanging creepers cover the cliff faces, spill out of the nests and hang across the edges of the great crack, and lush greenery lines the base of the walls. The light is soft green.",
+      "arcane": "The canyon is inscribed. Glowing purple symbols are carved everywhere across the cliff faces, around the roosting holes and in a dense band around the great crack, and the whole canyon is lit violet by their light."
+    }
+  },
+  {
+    "Backdrop": "avians-boss-statue-court",
+    "Name": "Statue Court",
+    "Tier": "boss",
+    "Art": "avians-boss-statue-court",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A high open court on a mountaintop, with nobody in it: a broad, flat paved floor, clear from the foreground to the far side, open to the sky with distant peaks beyond. A giant statue stands centred at the far side: a stylized birdman, upright on two legs, with a bird's head and beak and great wings half spread, not any particular kind of bird. It is plainly a statue — carved or built, never alive. The two portals stand one on each side of the statue, flanking it.",
+    "ElementDraw": {
+      "fire": "The statue is carved from black volcanic rock and it is burning: flames lick along its wings and shoulders, and its cracks glow orange from within. Embers drift across the court, and the scene is lit warm orange.",
+      "ice": "The statue is an ice sculpture, clear and glassy, light passing through its wings and catching on every carved feather. Frost covers the paving and snow drifts at the statue's base. The light is pale and blue.",
+      "lightning": "The statue is carved from dark basalt, its columnar grain running down its body and wings, with yellow lightning crackling over its edges and the storm sky behind it. The light is hot yellow.",
+      "earth": "The statue is a great tangled figure of sticks, twigs and roots woven together into the birdman's shape, its wings made of interlaced branches with green leaves sprouting from them. Moss and grass grow up from its base. The light is soft green.",
+      "arcane": "The statue is carved from white marble shot through with glowing purple veins, polished smooth, its wings carved feather by feather. The court is lit violet by the light of its veins."
+    }
+  }
+]

@@ -193,7 +193,7 @@ mist settles, a charged haze crackles, loam hangs heavy, witch-light glows from 
 own brief says which. It never changes the weapon, the pose or the placement.
 
 Name each image after its record's own key — the `CardArtRecord` value, like `jab-fire` — and
-give me a single zip file of everything so I can download it all at once — never a link per file.
+give me the file itself if there is only one, and a single zip file of everything if there is more than one, so I can download it all at once — never a link per file.
 
 ---
 

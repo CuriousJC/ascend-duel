@@ -1,0 +1,97 @@
+[
+  {
+    "Backdrop": "barbarians-outer-ash-camp",
+    "Name": "Ash Camp",
+    "Tier": "outer",
+    "Art": "barbarians-outer-ash-camp",
+    "Affinities": ["fire"],
+    "Draw": "A barbarian war camp on volcanic badlands, with nobody in it: a broad stretch of trampled black ash and cinder, clear from the foreground to the far side. Hide tents and lean-tos stand along the edges, with weapon racks of notched axes and spears, smouldering fire pits ringed with stones, and furs hung to dry on poles. Lava seeps from fissures in the black rock at the edges of the camp and runs in glowing orange channels, and smoke and embers drift across the sky. At the far side, a palisade of sharpened stakes closes the camp, and in it is a single small, low gate of lashed timber, barely taller than a person. The camp is lit warm orange from below."
+  },
+  {
+    "Backdrop": "barbarians-outer-fjord-camp",
+    "Name": "Fjord Camp",
+    "Tier": "outer",
+    "Art": "barbarians-outer-fjord-camp",
+    "Affinities": ["ice"],
+    "Draw": "A barbarian camp on the frozen shore of a fjord, with nobody in it: a broad stretch of packed snow and ice, clear from the foreground to the far side. Longboats are hauled up on the shore at the edges, their prows carved and rimed with frost, and hide tents, drying racks and stacked barrels stand beside them. Ice coats the rocks, icicles hang from the boats and the tent poles, and grey cliffs rise beyond under a pale sky. At the far side stands a low timber hut half buried in snow, with a single small closed door, about the height of a person. The light is pale and blue."
+  },
+  {
+    "Backdrop": "barbarians-outer-storm-steppe",
+    "Name": "Storm Steppe",
+    "Tier": "outer",
+    "Art": "barbarians-outer-storm-steppe",
+    "Affinities": ["lightning"],
+    "Draw": "A barbarian raiding camp on an open steppe in a thunderstorm, with nobody in it: a broad stretch of flattened grass, clear from the foreground to the far side, under dark storm clouds. Round felt tents, hitching posts with empty saddles, and poles hung with horsetail banners stand along the edges. Balls of yellow lightning drift and hover in the air above the camp, and lightning forks down onto the far plain. At the far side, a low wall of piled stones closes the camp, and in it is a single small doorway hung with a hide flap, barely taller than a person. The light is hot yellow."
+  },
+  {
+    "Backdrop": "barbarians-outer-jungle-camp",
+    "Name": "Jungle Camp",
+    "Tier": "outer",
+    "Art": "barbarians-outer-jungle-camp",
+    "Affinities": ["earth"],
+    "Draw": "A barbarian camp in a jungle clearing, with nobody in it: a broad stretch of trampled earth, clear from the foreground to the far side. Thick green vines, ferns, broad leaves and hanging creepers crowd in around the edges, and hide shelters are lashed between the great trunks, with carved totem poles, weapon racks and cold fire pits beside them. At the far side rises a low earthen mound covered in moss, and in it is a single small doorway framed with rough timbers, barely taller than a person. The light falls through the canopy dappled and green."
+  },
+  {
+    "Backdrop": "barbarians-outer-barrow-field",
+    "Name": "Barrow Field",
+    "Tier": "outer",
+    "Art": "barbarians-outer-barrow-field",
+    "Affinities": ["arcane"],
+    "Draw": "A barbarian burial ground on open moorland at night, with nobody in it: a broad stretch of short dark grass, clear from the foreground to the far side, bathed in moonlight. Grassy burial mounds and tall standing runestones stand around the edges, and glowing purple symbols are carved everywhere across the stones. At the far side, set into the largest mound, is a single small closed stone door, barely taller than a person, ringed with more glowing carvings. The whole field is lit violet by their light."
+  },
+  {
+    "Backdrop": "barbarians-inner-ash-fortress",
+    "Name": "Ash Fortress",
+    "Tier": "inner",
+    "Art": "barbarians-inner-ash-fortress",
+    "Affinities": ["fire"],
+    "Draw": "The yard of a barbarian fortress on volcanic badlands, with nobody in it: a broad stretch of trampled black ash and cinder, clear from the foreground to the far wall. Hide tents, weapon racks of notched axes and spears, and smouldering fire pits stand along the edges, and lava seeps from fissures in the black rock and runs in glowing orange channels at the base of the walls. The far side is a towering wall of black stone and sharpened timber, and in it is a great closed gate, many times the height of a person and filling much of the far side: two massive leaves of scorched timber banded with iron, under a lintel hung with horns. Smoke and embers drift across the sky, and the yard is lit warm orange from below."
+  },
+  {
+    "Backdrop": "barbarians-inner-glacier-hold",
+    "Name": "Glacier Hold",
+    "Tier": "inner",
+    "Art": "barbarians-inner-glacier-hold",
+    "Affinities": ["ice"],
+    "Draw": "The yard of a barbarian hold beneath a glacier, with nobody in it: a broad stretch of packed snow and ice, clear from the foreground to the far side. Longboats on rollers, hide tents, drying racks and stacked barrels stand along the edges, rimed with frost and hung with icicles. The far side is a towering wall of blue glacier ice, and cut into it is a great closed gate, many times the height of a person and filling much of the far side: two massive leaves of frost-blackened timber banded with iron, framed by carved beams and fringed with icicles. The light is pale and blue."
+  },
+  {
+    "Backdrop": "barbarians-inner-storm-crag",
+    "Name": "Storm Crag",
+    "Tier": "inner",
+    "Art": "barbarians-inner-storm-crag",
+    "Affinities": ["lightning"],
+    "Draw": "The yard of a barbarian stronghold on a rocky crag in a thunderstorm, with nobody in it: a broad stretch of flattened grass and bare rock, clear from the foreground to the far side, under dark storm clouds. Round felt tents, hitching posts and poles hung with horsetail banners stand along the edges. The far side is a towering stockade of lashed logs topped with iron spikes, and in it is a great closed gate, many times the height of a person and filling much of the far side: two massive leaves of lashed logs bound with iron. Balls of yellow lightning drift above the yard, and lightning strikes the iron spikes along the stockade. The light is hot yellow."
+  },
+  {
+    "Backdrop": "barbarians-inner-jungle-stockade",
+    "Name": "Jungle Stockade",
+    "Tier": "inner",
+    "Art": "barbarians-inner-jungle-stockade",
+    "Affinities": ["earth"],
+    "Draw": "The yard of a barbarian stockade deep in a jungle, with nobody in it: a broad stretch of trampled earth, clear from the foreground to the far side. Hide shelters, carved totem poles and weapon racks stand along the edges, and thick green vines, ferns and hanging creepers crowd in over the walls. The far side is a towering wall of whole tree trunks lashed together, and in it is a great closed gate, many times the height of a person and filling much of the far side: two massive leaves of rough-hewn trunks, overgrown with moss and vines. The light falls through the canopy dappled and green."
+  },
+  {
+    "Backdrop": "barbarians-inner-great-barrow",
+    "Name": "Great Barrow",
+    "Tier": "inner",
+    "Art": "barbarians-inner-great-barrow",
+    "Affinities": ["arcane"],
+    "Draw": "The foot of a great barbarian burial mound on open moorland at night, with nobody in it: a broad stretch of short dark grass, clear from the foreground to the far side, bathed in moonlight. Tall standing runestones stand around the edges, and glowing purple symbols are carved everywhere across them. The far side is the face of an enormous barrow hill, and set into it is a great closed stone door, many times the height of a person and filling much of the far side: two massive slabs under a heavy lintel stone, covered in dense glowing carvings. The whole field is lit violet by their light."
+  },
+  {
+    "Backdrop": "barbarians-boss-skull-throne",
+    "Name": "Skull Throne",
+    "Tier": "boss",
+    "Art": "barbarians-boss-skull-throne",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A barbarian chieftain's court in the open air, with nobody in it: a broad stretch of trampled ground, clear from the foreground to the far side. A massive, crude throne stands centred at the far side, built of heavy timber and rough stone and draped in furs, and decorated all over with animal skulls — bear, elk, ram, wolf — with great horns and antlers rising from its back. Weapon racks, banners of hide and trophy poles hung with more skulls stand along the edges. The two portals stand one on each side of the throne, flanking it, each framed by a rough arch of heavy unworked stone.",
+    "ElementDraw": {
+      "fire": "The court is on volcanic badlands. Lava runs in glowing orange channels along its edges, braziers burn beside the throne, the skulls are blackened with soot, and smoke and embers drift across the sky. The court is lit warm orange from below.",
+      "ice": "The court is on a frozen fjord shore. Snow covers the ground, frost furs the throne and its skulls, icicles hang from the antlers and the stone arches, and grey cliffs rise behind. The light is pale and blue.",
+      "lightning": "The court is on a storm-swept steppe under dark clouds. Balls of yellow lightning drift above the throne, arcs crawl between the horns and antlers, and lightning forks down onto the plain behind. The light is hot yellow.",
+      "earth": "The court is in a jungle clearing. Thick green vines, ferns and creepers crowd in around the edges and climb the throne and the stone arches, and moss grows over the skulls. The light falls through the canopy dappled and green.",
+      "arcane": "The court is on a moonlit moor among standing runestones. Glowing purple symbols are carved across the stones, the throne and the stone arches, and a faint violet light shines from the skulls' eye sockets. The court is lit violet."
+    }
+  }
+]

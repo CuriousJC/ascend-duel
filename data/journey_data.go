@@ -37,6 +37,20 @@ type JourneyData struct {
 	// journey.ScaleToFight, which is the arithmetic and is integer on purpose.
 	HPGrowth  int `json:"HPGrowth"`
 	DMGGrowth int `json:"DMGGrowth"`
+
+	// HPScale and DMGScale set every creature's HP and DMG at a share of what its record and the
+	// curve make it, in the same basis points — 10000 is the roster as authored, 8000 is four fifths
+	// of it.
+	//
+	// **This is the difficulty dial over the whole roster**, and it is the one to reach for before
+	// editing records: a record's base keeps its ratio to every other base, so the motifs stay tuned
+	// against each other while the game as a whole gets easier or harder. It is applied inside
+	// journey.ScaleToFight, before the single truncation, so a small DMG is not rounded twice.
+	//
+	// **Truncation bites hardest at the bottom of the curve**: a DMG 6 base at 8000 is 4.8 and opens
+	// the journey at 4. The cut evens out to the dial's figure as the curve lifts the numbers.
+	HPScale  int `json:"HPScale"`
+	DMGScale int `json:"DMGScale"`
 }
 
 // LoadJourney reads the journey's numbers, refusing any that would stop the journey being a journey.
@@ -50,6 +64,9 @@ func LoadJourney() JourneyData {
 	}
 	if t.HPGrowth < 0 || t.DMGGrowth < 0 {
 		panic("journey.json: a growth rate below zero makes the journey easier as it goes")
+	}
+	if t.HPScale <= 0 || t.DMGScale <= 0 {
+		panic("journey.json: HPScale and DMGScale must be above zero — 10000 is the roster as authored")
 	}
 	return t
 }

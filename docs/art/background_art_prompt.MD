@@ -101,6 +101,14 @@ inside each portal keeps its full spectrum, and only the frames and the glow the
 floor take the room's colors. There is no door and no flight of steps drawn in a portal room backdrop other than
 these two.
 
+**Two rainbow portals are a requirement of every portal room, whatever the record says.** Never
+one, never three, never a door or a gate in their place. **Every portal is that rainbow, always**:
+the full spectrum, red through violet, swirling in a slow bright spiral. Never a portal in a
+single color, never one tinted toward the element, never a dark, empty, smoky or mirror-like
+opening — the frame may be any material the record names, and what fills it is always the
+rainbow. When the record names a centrepiece — a
+throne, a tree, an altar — the two portals stand one on each side of it, flanking it.
+
 ### What covers what
 
 Most of the canvas ends up under something. Paint all of it — the picture is opaque to all four
@@ -154,6 +162,10 @@ opponent is drawn on a card in the top-right corner and is the only living thing
 anything alive in the backdrop competes with it. Say who lives here with what they left behind —
 a book left open, a cauldron still steaming, a cloak over a chair — never with the people
 themselves. **If a brief names a person, draw their belongings and leave them out.**
+
+**The one exception is a statue the record names as the room's centrepiece** — a carved or built
+figure standing between a portal room's two portals. Paint it, and paint it plainly as a made thing
+in its material, never as alive. Anywhere else, no statue.
 
 ### Reserve nothing
 
@@ -213,12 +225,14 @@ element colors on top of it stop reading.
 4. **Could two people fight a duel on this floor?** Is there a wide, clear, open space in the
    middle, deep and wide, with every piece of furniture pushed back to the edges?
 5. **Is the element unmistakable** from the overall cast, without a prop having to say it?
-6. **Is the place empty?** No person, creature, silhouette, statue or face anywhere in it.
+6. **Is the place empty?** No person, creature, silhouette, statue or face anywhere in it, except a
+   centrepiece statue the record names.
 7. **Does the far side say the tier?** A small door for `outer`, a large door for `inner`, two
-   rainbow portals for `boss` — only that one, centred in the open middle, readable at a glance,
+   rainbow portals for `boss`, each filled with the full swirling spectrum whatever the element — only that one, centred in the open middle, readable at a glance,
    and no other door, gate, portal or flight of steps anywhere.
 8. **Is it a JPEG, opaque to all four edges, exactly 1920x1080**, normalized as **Canvas** says,
    with no frame, vignette or reserved patch anywhere?
 
-**Hand back, for each record, one zip named `<Art>-backdrops.zip`** holding every one of its
-`<Art>-<element>.jpg` files — never a link per file.
+**Hand back one zip for the whole batch, named `backdrops.zip`**, holding every
+`<Art>-<element>.jpg` file from every record, flat with no folders inside — never a zip per record
+and never a link per file. **A batch of one picture comes back as the bare `.jpg`**, with no zip.

@@ -193,7 +193,7 @@ The practical way to get there: **draw each shape once — one spear, one scimit
 shield — then recolor each drawing five times.** Do not redraw it per color.
 
 Name each file `form<shape>-<name>.png` — `formcrush-fire.png`, `formdefend-arcane.png` — and
-give me a single zip file of everything so I can download it all at once — never a link per file.
+give me the file itself if there is only one, and a single zip file of everything if there is more than one, so I can download it all at once — never a link per file.
 
 ---
 
@@ -280,7 +280,7 @@ lighter gray along the top edge, darker gray along the bottom, the same near-bla
 at all.
 
 Name each file `tick-<name>.png` — `tick-fire.png`, `tick-neutral.png` — and
-give me a single zip file of everything so I can download it all at once — never a link per file.
+give me the file itself if there is only one, and a single zip file of everything if there is more than one, so I can download it all at once — never a link per file.
 
 ---
 

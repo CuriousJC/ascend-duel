@@ -53,9 +53,9 @@
     (a creature's own override, a room's ElementDraw).
   </p>
   <p class="note">
-    <strong>Across the roster:</strong> 68% ·
-    briefs 405/405 · creature art 646/646 ·
-    fights with a room 20/270 · fights with a painted room 20/270.
+    <strong>Across the roster:</strong> 82% ·
+    briefs 522/522 · creature art 646/646 ·
+    fights with a room 120/270 · fights with a painted room 120/270.
     A fight is one tier in one element, fifteen to a motif; one with no room draws the plain default backdrop.
   </p>
 
@@ -95,7 +95,7 @@
 </style>
 <div class="sheet-filters" hidden>
   <div class="sheet-facet"><span class="sheet-facet-label">still missing</span>
-    <button type="button" data-facet="missing" data-value="room" aria-pressed="false">room<i>17</i></button>
+    <button type="button" data-facet="missing" data-value="room" aria-pressed="false">room<i>10</i></button>
   </div>
   <div class="sheet-filters-end">
     <button type="button" class="sheet-clear" hidden>clear</button>
@@ -197,17 +197,17 @@
 
   
   
-  <section class="plate sheet-item" data-missing="room">
+  <section class="plate sheet-item" data-missing="">
     <div class="head">
       <h2>Aliens <span class="key">aliens</span></h2>
-      <span class="pct">65%</span>
-      <span class="facts">realms 5–8 · 9 creatures · 0 rooms</span>
+      <span class="pct full">100%</span>
+      <span class="facts">realms 5–8 · 9 creatures · 3 rooms</span>
     </div>
     <div class="bars">
-      <div class="bar">briefs 21/21<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">briefs 39/39<div class="track"><div class="fill" style="width: 100%"></div></div></div>
       <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
-      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
-      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">fights with a room 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">rooms painted 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
     </div>
 
     <div class="cols">
@@ -222,13 +222,30 @@
         <h3>Rooms per fight — painted / authored</h3>
         <table>
           <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
-          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>portal room</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+          <tr><td>outer chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>inner chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>portal room</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr>
         </table>
       </div>
     </div>
 
     <h3>Rooms</h3>
-    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+    
+    <table>
+      <tr><th>Backdrop</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">aliens-outer-research-deck</td><td>Research Deck</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-inner-containment-deck</td><td>Containment Deck</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">aliens-boss-engine-chamber</td><td>Engine Chamber</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr>
+    </table>
+    
 
     <h3>Creatures</h3>
     <table>
@@ -272,9 +289,8 @@
       </tr>
     </table>
 
-    <h3>Still to do — 15</h3>
-    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
-    
+    <h3>Still to do — 0</h3>
+    <p class="done">Nothing — this motif is full.</p>
   </section>
   
   <section class="plate sheet-item" data-missing="room">
@@ -357,17 +373,17 @@
     
   </section>
   
-  <section class="plate sheet-item" data-missing="room">
+  <section class="plate sheet-item" data-missing="">
     <div class="head">
       <h2>Avians <span class="key">avians</span></h2>
-      <span class="pct">65%</span>
-      <span class="facts">realms 2–7 · 9 creatures · 0 rooms</span>
+      <span class="pct full">100%</span>
+      <span class="facts">realms 2–7 · 9 creatures · 3 rooms</span>
     </div>
     <div class="bars">
-      <div class="bar">briefs 21/21<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">briefs 39/39<div class="track"><div class="fill" style="width: 100%"></div></div></div>
       <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
-      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
-      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">fights with a room 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">rooms painted 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
     </div>
 
     <div class="cols">
@@ -382,13 +398,30 @@
         <h3>Rooms per fight — painted / authored</h3>
         <table>
           <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
-          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>portal room</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+          <tr><td>outer chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>inner chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>portal room</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr>
         </table>
       </div>
     </div>
 
     <h3>Rooms</h3>
-    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+    
+    <table>
+      <tr><th>Backdrop</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">avians-outer-canyon-roost</td><td>Canyon Roost</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-inner-canyon-rift</td><td>Canyon Rift</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">avians-boss-statue-court</td><td>Statue Court</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr>
+    </table>
+    
 
     <h3>Creatures</h3>
     <table>
@@ -432,22 +465,21 @@
       </tr>
     </table>
 
-    <h3>Still to do — 15</h3>
-    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
-    
+    <h3>Still to do — 0</h3>
+    <p class="done">Nothing — this motif is full.</p>
   </section>
   
-  <section class="plate sheet-item" data-missing="room">
+  <section class="plate sheet-item" data-missing="">
     <div class="head">
       <h2>Barbarians <span class="key">barbarians</span></h2>
-      <span class="pct">65%</span>
-      <span class="facts">realms 2–7 · 9 creatures · 0 rooms</span>
+      <span class="pct full">100%</span>
+      <span class="facts">realms 2–7 · 9 creatures · 11 rooms</span>
     </div>
     <div class="bars">
-      <div class="bar">briefs 21/21<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">briefs 37/37<div class="track"><div class="fill" style="width: 100%"></div></div></div>
       <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
-      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
-      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">fights with a room 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">rooms painted 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
     </div>
 
     <div class="cols">
@@ -462,13 +494,62 @@
         <h3>Rooms per fight — painted / authored</h3>
         <table>
           <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
-          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>portal room</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+          <tr><td>outer chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>inner chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>portal room</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr>
         </table>
       </div>
     </div>
 
     <h3>Rooms</h3>
-    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+    
+    <table>
+      <tr><th>Backdrop</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">barbarians-outer-ash-camp</td><td>Ash Camp</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">fire</span></td>
+      </tr><tr>
+        <td class="key">barbarians-outer-fjord-camp</td><td>Fjord Camp</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">ice</span></td>
+      </tr><tr>
+        <td class="key">barbarians-outer-storm-steppe</td><td>Storm Steppe</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">lightning</span></td>
+      </tr><tr>
+        <td class="key">barbarians-outer-jungle-camp</td><td>Jungle Camp</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">barbarians-outer-barrow-field</td><td>Barrow Field</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">barbarians-inner-ash-fortress</td><td>Ash Fortress</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span></td>
+      </tr><tr>
+        <td class="key">barbarians-inner-glacier-hold</td><td>Glacier Hold</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span></td>
+      </tr><tr>
+        <td class="key">barbarians-inner-storm-crag</td><td>Storm Crag</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">lightning</span></td>
+      </tr><tr>
+        <td class="key">barbarians-inner-jungle-stockade</td><td>Jungle Stockade</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">barbarians-inner-great-barrow</td><td>Great Barrow</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">barbarians-boss-skull-throne</td><td>Skull Throne</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr>
+    </table>
+    
 
     <h3>Creatures</h3>
     <table>
@@ -512,9 +593,8 @@
       </tr>
     </table>
 
-    <h3>Still to do — 15</h3>
-    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
-    
+    <h3>Still to do — 0</h3>
+    <p class="done">Nothing — this motif is full.</p>
   </section>
   
   <section class="plate sheet-item" data-missing="room">
@@ -773,17 +853,17 @@
     
   </section>
   
-  <section class="plate sheet-item" data-missing="room">
+  <section class="plate sheet-item" data-missing="">
     <div class="head">
       <h2>Dwarves <span class="key">dwarves</span></h2>
-      <span class="pct">65%</span>
-      <span class="facts">realms 2–7 · 9 creatures · 0 rooms</span>
+      <span class="pct full">100%</span>
+      <span class="facts">realms 2–7 · 9 creatures · 3 rooms</span>
     </div>
     <div class="bars">
-      <div class="bar">briefs 21/21<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">briefs 39/39<div class="track"><div class="fill" style="width: 100%"></div></div></div>
       <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
-      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
-      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">fights with a room 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">rooms painted 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
     </div>
 
     <div class="cols">
@@ -798,13 +878,30 @@
         <h3>Rooms per fight — painted / authored</h3>
         <table>
           <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
-          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>portal room</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+          <tr><td>outer chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>inner chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>portal room</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr>
         </table>
       </div>
     </div>
 
     <h3>Rooms</h3>
-    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+    
+    <table>
+      <tr><th>Backdrop</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">dwarves-outer-hill-stones</td><td>Hill Stones</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">dwarves-inner-hill-gate</td><td>Hill Gate</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">dwarves-boss-stone-throne</td><td>Stone Throne</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr>
+    </table>
+    
 
     <h3>Creatures</h3>
     <table>
@@ -848,22 +945,21 @@
       </tr>
     </table>
 
-    <h3>Still to do — 15</h3>
-    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
-    
+    <h3>Still to do — 0</h3>
+    <p class="done">Nothing — this motif is full.</p>
   </section>
   
-  <section class="plate sheet-item" data-missing="room">
+  <section class="plate sheet-item" data-missing="">
     <div class="head">
       <h2>Elves <span class="key">elves</span></h2>
-      <span class="pct">65%</span>
-      <span class="facts">realms 3–8 · 9 creatures · 0 rooms</span>
+      <span class="pct full">100%</span>
+      <span class="facts">realms 3–8 · 9 creatures · 3 rooms</span>
     </div>
     <div class="bars">
-      <div class="bar">briefs 21/21<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">briefs 39/39<div class="track"><div class="fill" style="width: 100%"></div></div></div>
       <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
-      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
-      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">fights with a room 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">rooms painted 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
     </div>
 
     <div class="cols">
@@ -878,13 +974,30 @@
         <h3>Rooms per fight — painted / authored</h3>
         <table>
           <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
-          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>portal room</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+          <tr><td>outer chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>inner chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>portal room</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr>
         </table>
       </div>
     </div>
 
     <h3>Rooms</h3>
-    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+    
+    <table>
+      <tr><th>Backdrop</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">elves-outer-forest-arch</td><td>Forest Arch</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">elves-inner-forest-gate</td><td>Forest Gate</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">elves-boss-living-throne</td><td>Living Throne</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr>
+    </table>
+    
 
     <h3>Creatures</h3>
     <table>
@@ -928,9 +1041,8 @@
       </tr>
     </table>
 
-    <h3>Still to do — 15</h3>
-    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
-    
+    <h3>Still to do — 0</h3>
+    <p class="done">Nothing — this motif is full.</p>
   </section>
   
   <section class="plate sheet-item" data-missing="">
@@ -1429,17 +1541,17 @@
     
   </section>
   
-  <section class="plate sheet-item" data-missing="room">
+  <section class="plate sheet-item" data-missing="">
     <div class="head">
       <h2>Plants <span class="key">plants</span></h2>
-      <span class="pct">78%</span>
-      <span class="facts">realms 2–7 · 9 creatures · 5 rooms</span>
+      <span class="pct full">100%</span>
+      <span class="facts">realms 2–7 · 9 creatures · 11 rooms</span>
     </div>
     <div class="bars">
-      <div class="bar">briefs 26/26<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">briefs 37/37<div class="track"><div class="fill" style="width: 100%"></div></div></div>
       <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
-      <div class="bar">fights with a room 5/15<div class="track"><div class="fill" style="width: 33%"></div></div></div>
-      <div class="bar">rooms painted 5/15<div class="track"><div class="fill" style="width: 33%"></div></div></div>
+      <div class="bar">fights with a room 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">rooms painted 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
     </div>
 
     <div class="cols">
@@ -1454,7 +1566,7 @@
         <h3>Rooms per fight — painted / authored</h3>
         <table>
           <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
-          <tr><td>outer chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>portal room</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+          <tr><td>outer chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>inner chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>portal room</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr>
         </table>
       </div>
     </div>
@@ -1483,6 +1595,30 @@
         <td class="key">plants-outer-moonlit-swamp</td><td>Moonlit Swamp</td><td>outer</td>
         <td>written</td>
         <td><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">plants-inner-burning-forest</td><td>Burning Forest Gate</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">fire</span></td>
+      </tr><tr>
+        <td class="key">plants-inner-tundra</td><td>Tundra Gate</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">ice</span></td>
+      </tr><tr>
+        <td class="key">plants-inner-storm-field</td><td>Storm Field Gate</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">lightning</span></td>
+      </tr><tr>
+        <td class="key">plants-inner-moss-cavern</td><td>Moss Cavern Gate</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">earth</span></td>
+      </tr><tr>
+        <td class="key">plants-inner-moonlit-swamp</td><td>Moonlit Swamp Gate</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill">arcane</span></td>
+      </tr><tr>
+        <td class="key">plants-boss-world-tree</td><td>World Tree</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
       </tr>
     </table>
     
@@ -1529,9 +1665,8 @@
       </tr>
     </table>
 
-    <h3>Still to do — 10</h3>
-    <ul class="todo"><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
-    
+    <h3>Still to do — 0</h3>
+    <p class="done">Nothing — this motif is full.</p>
   </section>
   
   <section class="plate sheet-item" data-missing="room">
@@ -1614,17 +1749,17 @@
     
   </section>
   
-  <section class="plate sheet-item" data-missing="room">
+  <section class="plate sheet-item" data-missing="">
     <div class="head">
       <h2>Vampires <span class="key">vampires</span></h2>
-      <span class="pct">65%</span>
-      <span class="facts">realms 4–8 · 9 creatures · 0 rooms</span>
+      <span class="pct full">100%</span>
+      <span class="facts">realms 4–8 · 9 creatures · 3 rooms</span>
     </div>
     <div class="bars">
-      <div class="bar">briefs 21/21<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">briefs 39/39<div class="track"><div class="fill" style="width: 100%"></div></div></div>
       <div class="bar">creature art 36/36<div class="track"><div class="fill" style="width: 100%"></div></div></div>
-      <div class="bar">fights with a room 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
-      <div class="bar">rooms painted 0/15<div class="track"><div class="fill" style="width: 0%"></div></div></div>
+      <div class="bar">fights with a room 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
+      <div class="bar">rooms painted 15/15<div class="track"><div class="fill" style="width: 100%"></div></div></div>
     </div>
 
     <div class="cols">
@@ -1639,13 +1774,30 @@
         <h3>Rooms per fight — painted / authored</h3>
         <table>
           <tr><th></th><th>fire</th><th>ice</th><th>lightning</th><th>earth</th><th>arcane</th></tr>
-          <tr><td>outer chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>inner chamber</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr><tr><td>portal room</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td><td class="g hole">—</td></tr>
+          <tr><td>outer chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>inner chamber</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr><tr><td>portal room</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td><td class="g ok">1/1</td></tr>
         </table>
       </div>
     </div>
 
     <h3>Rooms</h3>
-    <p class="note">None authored — every fight on this motif draws the default backdrop.</p>
+    
+    <table>
+      <tr><th>Backdrop</th><th>Name</th><th>Tier</th><th>Draw</th><th>Elements</th></tr>
+      <tr>
+        <td class="key">vampires-outer-graveyard-gate</td><td>Graveyard Gate</td><td>outer</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">vampires-inner-great-hall</td><td>Great Hall</td><td>inner</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr><tr>
+        <td class="key">vampires-boss-blood-altar</td><td>Blood Altar</td><td>boss</td>
+        <td>written</td>
+        <td><span class="pill spec">fire</span><span class="pill spec">ice</span><span class="pill spec">lightning</span><span class="pill spec">earth</span><span class="pill spec">arcane</span></td>
+      </tr>
+    </table>
+    
 
     <h3>Creatures</h3>
     <table>
@@ -1689,9 +1841,8 @@
       </tr>
     </table>
 
-    <h3>Still to do — 15</h3>
-    <ul class="todo"><li><span class="kind">room</span>no outer room in fire — the fight draws the default</li><li><span class="kind">room</span>no outer room in ice — the fight draws the default</li><li><span class="kind">room</span>no outer room in lightning — the fight draws the default</li><li><span class="kind">room</span>no outer room in earth — the fight draws the default</li><li><span class="kind">room</span>no outer room in arcane — the fight draws the default</li><li><span class="kind">room</span>no inner room in fire — the fight draws the default</li><li><span class="kind">room</span>no inner room in ice — the fight draws the default</li><li><span class="kind">room</span>no inner room in lightning — the fight draws the default</li><li><span class="kind">room</span>no inner room in earth — the fight draws the default</li><li><span class="kind">room</span>no inner room in arcane — the fight draws the default</li><li><span class="kind">room</span>no boss room in fire — the fight draws the default</li><li><span class="kind">room</span>no boss room in ice — the fight draws the default</li><li><span class="kind">room</span>no boss room in lightning — the fight draws the default</li><li><span class="kind">room</span>no boss room in earth — the fight draws the default</li><li><span class="kind">room</span>no boss room in arcane — the fight draws the default</li></ul>
-    
+    <h3>Still to do — 0</h3>
+    <p class="done">Nothing — this motif is full.</p>
   </section>
   
 </div>

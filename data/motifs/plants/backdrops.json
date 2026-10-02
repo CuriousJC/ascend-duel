@@ -38,5 +38,60 @@
     "Art": "plants-outer-moonlit-swamp",
     "Affinities": ["arcane"],
     "Draw": "An eerie swamp, with nobody in it, lit purple and bathed in moonlight. At the far side, in place of a door, stands a small crumbling stone arch, barely taller than a person, half-sunk and overgrown."
+  },
+  {
+    "Backdrop": "plants-inner-burning-forest",
+    "Name": "Burning Forest Gate",
+    "Tier": "inner",
+    "Art": "plants-inner-burning-forest",
+    "Affinities": ["fire"],
+    "Draw": "A forest on fire, with nobody in it. Charred black trunks stand all around, flames lick up them into the leaves, and ash and soot cover the ground. At the far side, in place of a door, two enormous trees have grown together into a great towering arch, many times the height of a person and filling much of the far side, its two halves closed across it like a heavy double gate of woven trunks, burning along its edges."
+  },
+  {
+    "Backdrop": "plants-inner-tundra",
+    "Name": "Tundra Gate",
+    "Tier": "inner",
+    "Art": "plants-inner-tundra",
+    "Affinities": ["ice"],
+    "Draw": "A broad tundra deep in winter, with nobody in it. Snow covers the ground with tufts of brown grass poking through, and a lone pine tree hangs with icicles. In the background stands a great closed gate, many times the height of a person and filling much of the far side: two heavy leaves of frost-blackened timber under a massive lintel, hung with icicles and half-buried in drifted snow."
+  },
+  {
+    "Backdrop": "plants-inner-storm-field",
+    "Name": "Storm Field Gate",
+    "Tier": "inner",
+    "Art": "plants-inner-storm-field",
+    "Affinities": ["lightning"],
+    "Draw": "An open grassland in a thunderstorm, with nobody in it, under dark storm clouds. At the far side a single colossal tree has grown into the shape of a great closed doorway, many times the height of a person and filling much of the far side, its trunk split into a towering arch with two heavy leaves of gnarled wood closed across it, and lightning is striking it."
+  },
+  {
+    "Backdrop": "plants-inner-moss-cavern",
+    "Name": "Moss Cavern Gate",
+    "Tier": "inner",
+    "Art": "plants-inner-moss-cavern",
+    "Affinities": ["earth"],
+    "Draw": "A gloomy cavern, with nobody in it, lit a dim green by glowing moss on the walls and floor. In the background a great carved opening rises many times the height of a person and fills much of the far wall, closed by two massive leaves of root-bound stone and surrounded by more moss and clusters of mushrooms."
+  },
+  {
+    "Backdrop": "plants-inner-moonlit-swamp",
+    "Name": "Moonlit Swamp Gate",
+    "Tier": "inner",
+    "Art": "plants-inner-moonlit-swamp",
+    "Affinities": ["arcane"],
+    "Draw": "An eerie swamp, with nobody in it, lit purple and bathed in moonlight. At the far side, in place of a door, stands a great crumbling stone arch, many times the height of a person and filling much of the far side, half-sunk and overgrown, closed by two heavy leaves of moss-covered stone."
+  },
+  {
+    "Backdrop": "plants-boss-world-tree",
+    "Name": "World Tree",
+    "Tier": "boss",
+    "Art": "plants-boss-world-tree",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A vast open clearing, with nobody in it, clear from the foreground to the far side. At the centre of the far side rises a massive world tree, its trunk wider than a house and its crown spreading across the whole top of the picture, its great roots running out along the ground to either side and stopping short of the open floor. The two portals stand one on each side of the trunk, flanking it.",
+    "ElementDraw": {
+      "fire": "The world tree burns without being consumed. Its leaves are flames, a whole crown of them flickering orange and gold, its bark is charred black with embers glowing in the cracks, and ash covers the ground. Sparks drift down from the crown, and the clearing is lit warm orange.",
+      "ice": "The world tree is made of glassy ice: a translucent trunk and branches, clear and pale blue, with light passing through them. Its leaves are frozen snowflakes, large and crystalline, hanging from every branch. Snow covers the ground, and the light is pale and blue.",
+      "lightning": "The world tree is black, its trunk and branches dark as soot, and its leaves are bright yellow. Lightning dances around them all, small arcs jumping from leaf to leaf and branch to branch, under a dark storm sky, and every edge carries a faint hot-yellow halo.",
+      "earth": "The world tree is an ordinary living tree grown to an impossible size: rough brown bark, and large broad green leaves in a dense crown. Moss and ferns grow among its roots, and the light falls through the leaves dappled and green.",
+      "arcane": "The world tree's leaves are purple, and on each leaf is a single large open eye. The bark is dark and veined with faint violet light, and the clearing is lit purple, as if by moonlight through the crown."
+    }
   }
 ]

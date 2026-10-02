@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "elves-outer-forest-arch",
+    "Name": "Forest Arch",
+    "Tier": "outer",
+    "Art": "elves-outer-forest-arch",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A broad glade deep in an ancient forest, with nobody in it: a stretch of soft open ground, clear from the foreground to the far side, ringed by enormous old trees whose trunks rise out of sight and whose canopy closes over the top of the picture. Ferns, fallen logs, slender elven lanterns hung from low branches and a few graceful benches of shaped living wood stand along the edges. At the far side stands the room's door: a single small natural arch, barely taller than a person, standing alone at the edge of the trees.",
+    "ElementDraw": {
+      "fire": "The forest is burning low. The great trunks are charred black with embers glowing in their bark, ash covers the ground, and sparks drift down from the canopy. The arch is black volcanic rock with glowing orange seams. The glade is lit warm orange from below.",
+      "ice": "The forest is frozen. Frost furs every trunk and fern, icicles hang from the branches, and snow lies over the glade. The arch is clear glassy ice. The light is pale and blue.",
+      "lightning": "A storm breaks over the forest. Balls of yellow lightning drift and hover between the great trunks, and lightning flickers through the canopy above. The arch is a blackened, lightning-split trunk bent over into a curve, its splits glowing yellow. The light is hot yellow.",
+      "earth": "The forest is lush and green. Thick moss, ferns, broad leaves and hanging creepers cover everything. The arch is two living saplings grown together overhead, in leaf. The light falls through the canopy dappled and green.",
+      "arcane": "The forest is enchanted. Glowing purple symbols are carved into the bark of the great trunks, and faint violet motes drift through the air. The arch is pale violet crystal grown up out of the ground. The glade is lit violet."
+    }
+  },
+  {
+    "Backdrop": "elves-inner-forest-gate",
+    "Name": "Forest Gate",
+    "Tier": "inner",
+    "Art": "elves-inner-forest-gate",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A vast glade deep in an ancient forest, with nobody in it: a stretch of soft open ground, clear from the foreground to the far side, ringed by enormous old trees whose trunks rise out of sight and whose canopy closes over the top of the picture. Ferns, fallen logs, slender elven lanterns hung from low branches and graceful benches of shaped living wood stand along the edges. At the far side stands the room's door: a single great natural arch, many times the height of a person and filling much of the far side, rising between the trees.",
+    "ElementDraw": {
+      "fire": "The forest is burning low. The great trunks are charred black with embers glowing in their bark, ash covers the ground, and sparks drift down from the canopy. The great arch is black volcanic rock with glowing orange seams. The glade is lit warm orange from below.",
+      "ice": "The forest is frozen. Frost furs every trunk and fern, icicles hang from the branches, and snow lies over the glade. The great arch is clear glassy ice, light passing through it. The light is pale and blue.",
+      "lightning": "A storm breaks over the forest. Balls of yellow lightning drift and hover between the great trunks, and lightning flickers through the canopy above. The great arch is two blackened, lightning-split trunks bent together overhead, their splits glowing yellow and arcs crawling along them. The light is hot yellow.",
+      "earth": "The forest is lush and green. Thick moss, ferns, broad leaves and hanging creepers cover everything. The great arch is two ancient living trees grown together overhead, their crowns in full leaf. The light falls through the canopy dappled and green.",
+      "arcane": "The forest is enchanted. Glowing purple symbols are carved into the bark of the great trunks, and faint violet motes drift through the air. The great arch is pale violet crystal grown up out of the ground, glowing from within. The glade is lit violet."
+    }
+  },
+  {
+    "Backdrop": "elves-boss-living-throne",
+    "Name": "Living Throne",
+    "Tier": "boss",
+    "Art": "elves-boss-living-throne",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "The heart of an ancient forest, with nobody in it: a broad glade of soft open ground, clear from the foreground to the far side, ringed by the oldest and largest trees in the forest, their canopy closing high overhead. A throne stands centred at the far side, grown rather than built: living trunks, branches and vines woven together into a tall, graceful seat with a high back that rises into a crown of leaves and blossoms. The two portals stand one on each side of the throne, flanking it, each framed by a natural arch.",
+    "ElementDraw": {
+      "fire": "The throne is grown of black, smouldering thorn vines bearing flame-orange blossoms, and its crown of leaves burns without being consumed. The portal arches are black volcanic rock with glowing orange seams, ash covers the ground, and sparks drift down. The glade is lit warm orange from below.",
+      "ice": "The throne is grown of frost-white birch, its leaves frozen glassy and edged with rime, and icicles hang from its arms. The portal arches are clear glassy ice, and snow lies over the glade. The light is pale and blue.",
+      "lightning": "The throne is grown of black branches bearing bright yellow blossoms, and small arcs of lightning crackle between them. The portal arches are blackened, lightning-split trunks glowing yellow along their splits, and balls of yellow lightning drift above the glade. The light is hot yellow.",
+      "earth": "The throne is grown of living oak roots and twisting vines, thick with moss, ferns and green leaves and dotted with flowers. The portal arches are living trees grown together overhead, in leaf. The light falls through the canopy dappled and green.",
+      "arcane": "The throne is grown of dark vines with purple leaves and glowing violet flowers, faint motes of light rising from it. The portal arches are pale violet crystal grown up out of the ground, and glowing purple symbols are carved into the great trunks around the glade. The glade is lit violet."
+    }
+  }
+]

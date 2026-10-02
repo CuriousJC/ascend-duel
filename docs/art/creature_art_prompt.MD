@@ -145,4 +145,4 @@ or washed out far enough that the element stops being readable. A color word not
 8. **Is there a contour** all the way round, thick enough to survive the reduction?
 
 Name it `<Art>-<element>.png`, exactly as the brief says, and
-give me a single zip file of everything so I can download it all at once — never a link per file.
+give me the file itself if there is only one, and a single zip file of everything if there is more than one, so I can download it all at once — never a link per file.

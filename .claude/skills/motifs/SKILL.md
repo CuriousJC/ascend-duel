@@ -187,6 +187,10 @@ A motif's `backdrops.json` is a list of rooms, and a room is **one place drawn o
   the prompt. A record may say what its door *is* in this place (an arch of burning trees, a carved
   opening in a cave wall) and where the portals stand, as long as it keeps the tier's scale.
   An `ElementDraw` key the room does not take as an affinity is refused.
+- **A portal room has two rainbow portals, always.** It is a requirement, not a style: a `boss`
+  room's `Draw` that names a single door, one portal or none is wrong, and nothing in the loader
+  can catch it. Give the room a centrepiece and say the two portals flank it — the goblins'
+  throne, the plants' world tree.
 - **A room drawn in one element needs no `ElementDraw`.** When the five elements are five different
   places rather than one place in five casts — `plants/backdrops.json` is the example — author five
   rooms of one affinity each and put everything in `Draw`. The motif report owes an `ElementDraw`

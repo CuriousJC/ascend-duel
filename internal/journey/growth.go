@@ -28,7 +28,12 @@ const (
 const BasisPoints = 10_000
 
 // ScaleToFight grows one base stat to the fight it is met at, at a given growth rate in basis
-// points. Fight 0 is realm 1's outer room and is the base, unscaled.
+// points, and then sets it at scaleBP of that — BasisPoints is the stat as authored, 8000 is four
+// fifths of it. Fight 0 is realm 1's outer room, where the base is only scaled, not grown.
+//
+// **The scale starts the multiplier rather than being applied to the result**, so the stat is
+// truncated once rather than twice. It is the difficulty dial over the whole roster: every record's
+// base keeps its authored ratio to every other, and the curve's shape is untouched.
 //
 // **The step is the fight, not the realm**, which is what makes a realm's boss harder than its own
 // inner chamber and the next realm's outer chamber harder than that boss. A creature's base says
@@ -48,12 +53,9 @@ const BasisPoints = 10_000
 // curve does not, so a player who keeps going keeps meeting bigger numbers. That is the endless
 // journey, and capping here would be the hydration layer quietly disagreeing with the counter it was
 // handed.
-func ScaleToFight(base, fight, growthBP int) int {
-	if growthBP <= 0 {
-		return base
-	}
-	mul := growthScale
-	for i := 0; i < fight && mul < growthMaxScale; i++ {
+func ScaleToFight(base, fight, growthBP, scaleBP int) int {
+	mul := growthScale / BasisPoints * scaleBP
+	for i := 0; growthBP > 0 && i < fight && mul < growthMaxScale; i++ {
 		mul = mul * (BasisPoints + growthBP) / BasisPoints
 	}
 	return base * mul / growthScale

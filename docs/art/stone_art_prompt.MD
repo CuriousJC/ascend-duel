@@ -195,4 +195,4 @@ table above is keyed on, so it tells you which row you are in; it is not a label
 `Draw` is empty, stop and say so rather than inventing a subject.
 
 Name each image after its record's own key — the `StoneRecord` value — and
-give me a single zip file of everything so I can download it all at once — never a link per file.
+give me the file itself if there is only one, and a single zip file of everything if there is more than one, so I can download it all at once — never a link per file.

@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "vampires-outer-graveyard-gate",
+    "Name": "Graveyard Gate",
+    "Tier": "outer",
+    "Art": "vampires-outer-graveyard-gate",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "An old gothic graveyard at night, with nobody in it: a broad flagstone path and open ground, clear from the foreground to the far side, under a heavy sky. Leaning gravestones, stone crosses, iron-railed tombs and bare twisted trees stand along the edges, and the dark spires and pointed windows of a great manor rise far behind. At the far side, a tall wall of black stone closes the graveyard, and in it is a single small gothic gate, barely taller than a person: a pointed arch of carved stone with a closed gate of black wrought iron, its bars twisting into thorned tracery.",
+    "ElementDraw": {
+      "fire": "The graveyard is burning low. Embers glow in the cracks between the flagstones, the bare trees are charred black and smouldering, and candles and lanterns flicker on the tombs. The wrought iron of the gate glows dull orange at its tips, and the whole scene is lit warm orange from below.",
+      "ice": "The graveyard is frozen. Frost furs every gravestone and cross, icicles hang from the iron railings and the bare branches, and a cold mist lies low over the ground. The wrought-iron gate is rimed white, and the light is pale and blue under a cold moon.",
+      "lightning": "A storm breaks over the graveyard. Lightning forks down behind the manor's spires, small yellow arcs crawl along the iron railings and up the bars of the gate, and every metal edge carries a faint hot-yellow halo. The light is hot yellow.",
+      "earth": "The graveyard is overgrown. Roots heave the gravestones out of true, ivy and dark moss smother the tombs and the wall, and fresh grave soil lies turned and heaped at the edges. Ivy has woven itself through the bars of the gate. The light is dim and green.",
+      "arcane": "The graveyard is haunted. Faint purple light seeps from the cracks in the tombs, glowing violet sigils are traced across the gravestones and around the arch of the gate, and a violet mist drifts between the crosses. The whole scene is lit violet."
+    }
+  },
+  {
+    "Backdrop": "vampires-inner-great-hall",
+    "Name": "Great Hall",
+    "Tier": "inner",
+    "Art": "vampires-inner-great-hall",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "The great hall of a gothic castle, with nobody in it: a broad floor of black and grey stone flags, clear from the foreground to the far wall, under a soaring ribbed vault held up by clustered pillars. Tall pointed windows of dark stained glass run along both side walls, iron candelabra and heavy chandeliers hang and stand at the edges, and long velvet drapes, faded and decades out of date, hang beside the windows. The far wall is dominated by a great closed gothic door, many times the height of a person and filling much of the far side: two massive leaves of black oak bound in iron, set in a towering pointed arch carved with thorned tracery and pinnacles.",
+    "ElementDraw": {
+      "fire": "The hall is lit by fire. Every candle and chandelier burns high, braziers glow at the foot of the pillars, the drapes are scorched at their hems, and the iron bands of the great door glow dull orange. The stained glass burns amber, and the hall is lit warm orange from below.",
+      "ice": "The hall is frozen. Frost furs the pillars and the great door, icicles hang from the chandeliers and the ribs of the vault, the candles are out, and cold blue moonlight falls through the frosted windows. A low mist lies over the floor, and the light is pale and blue.",
+      "lightning": "A storm rages outside. Lightning flashes through the tall windows, small yellow arcs crawl along the iron candelabra and the bands of the great door, and every metal edge carries a faint hot-yellow halo. The light is hot yellow.",
+      "earth": "The hall has been taken back by the grave. Roots have broken up through the flagstones and climb the pillars, ivy and dark moss creep over the walls and the great door, and grave soil lies heaped against the walls. The light is dim and green.",
+      "arcane": "The hall is bewitched. The candles burn with violet flames, glowing purple sigils are traced across the floor's edges and around the arch of the great door, and the stained glass glows violet from within. The whole hall is lit violet."
+    }
+  },
+  {
+    "Backdrop": "vampires-boss-blood-altar",
+    "Name": "Blood Altar",
+    "Tier": "boss",
+    "Art": "vampires-boss-blood-altar",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "The chapel at the heart of a gothic castle, with nobody in it: a broad floor of black stone flags, clear from the foreground to the far side, under a soaring ribbed vault. Tall pointed windows of dark stained glass and clustered pillars line the side walls, with iron candelabra standing at their feet. A massive dark altar stands centred at the far side, carved from black stone, heavy and plain, its face and top covered in lines of glowing script in an unreadable, ornate hand. The two portals stand one on each side of the altar, flanking it, each framed by a pointed gothic arch of carved black stone.",
+    "ElementDraw": {
+      "fire": "The script on the altar glows orange like embers in a cooling fire. Candles burn on the altar and the candelabra, the stone around the script is scorched, and the chapel is lit warm orange from below.",
+      "ice": "The script on the altar glows pale blue, as if cut into ice. Frost furs the altar and the pillars, icicles hang from the vault, and a cold mist spills off the altar across the floor. The light is pale and blue.",
+      "lightning": "The script on the altar glows hot yellow and crackles, small arcs leaping between its lines and up to the iron candelabra. Lightning flashes through the windows, and the light is hot yellow.",
+      "earth": "The script on the altar glows green, like phosphorescence in a grave. Roots have grown up around the altar's base and through the flagstones, and moss creeps over the pillars. The light is dim and green.",
+      "arcane": "The script on the altar glows violet and seems to shift on the stone, a faint purple haze rising from it. Violet flames burn on the candelabra, and the chapel is lit violet."
+    }
+  }
+]

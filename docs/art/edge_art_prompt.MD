@@ -45,6 +45,10 @@ dark lip -> calm, even right half -> top-to-bottom variation.
 The subject — what the band is made of — is the record's own `Draw` in `data/edges.json`, pasted
 after this block.
 
+Name each image after its record's own key, ending `.png`, and give me the file itself if there is
+only one, and a single zip file of everything if there is more than one, so I can download it all
+at once — never a link per file.
+
 ## The color words
 
 **A color word in the brief names one of these ramps**, the game's own colors, which the band has

@@ -86,6 +86,10 @@ type landing struct {
 	seat  int
 	nth   int
 	shape LandingShape
+
+	// rungs is every rung the blow satisfied that this card is one of the cards forming — what a
+	// repeat narrowed by `Hand` reads. See RungsOf.
+	rungs []HandID
 }
 
 // landingsOf lays a turn out as the hits it will throw, in turn order and each card's landings
@@ -100,10 +104,11 @@ type landing struct {
 func landingsOf(blow Blow, turn []Slot, worn []WornRelic) []landing {
 	var out []landing
 	lead := leadSlot(blow, turn)
+	rungs := RungsOf(turn, blow.Satisfied)
 	for i, slot := range turn {
-		shape := LandingsOf(worn, slot.Card, i == lead)
+		shape := LandingsOf(worn, slot.Card, i == lead, rungs[i])
 		for n := 0; n < shape.Count(); n++ {
-			out = append(out, landing{seat: i, nth: n, shape: shape})
+			out = append(out, landing{seat: i, nth: n, shape: shape, rungs: rungs[i]})
 		}
 	}
 	return out
@@ -226,7 +231,7 @@ func strike(
 			if l.nth > 0 {
 				// **Only the extra landings are attributed to a relic.** The card's own first
 				// landing is the card being played, which needed no relic to seat it.
-				e.HandLanding[at] = LandingSeats(worn, card, l.seat == leadSlot(blow, turn))
+				e.HandLanding[at] = LandingSeats(worn, card, l.seat == leadSlot(blow, turn), l.rungs)
 			} else {
 				e.HandLanding[at] = make([]bool, len(worn))
 			}

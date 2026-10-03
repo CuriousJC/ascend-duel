@@ -100,6 +100,19 @@ type RelicData struct {
 	// — and it is one rule of the shop.
 	Rarity Rarity `json:"Rarity"`
 
+	// Unlock is the unlock key a player's profile must hold before a shelf may offer this relic.
+	// **Empty means the relic is in the default pool** — on every shelf from a player's first run.
+	//
+	// **It names an unlock, never an achievement.** An achievement is a record and changes nothing;
+	// an achievement *grants* unlock keys through its own `Unlocks`, and this field reads one of
+	// them. Two key spaces, so an achievement can be reworded or retired without stranding the
+	// relics it opened. A key that no achievement grants is refused at load — a relic behind it
+	// could never be offered, and nothing else would notice.
+	//
+	// **It gates the offer and nothing else.** A run that already wears a locked relic — a scenario
+	// or `session.StartingRelics` — keeps it and it fires as it always does.
+	Unlock string `json:"Unlock,omitempty"`
+
 	// Rules is what wearing this relic actually does. **A list, forced by the growing stat relics**,
 	// which accumulate at one moment and apply at another; it generalizes to any relic wanting two.
 	Rules []RelicRuleData `json:"Rules"`
@@ -158,6 +171,8 @@ type RelicIfData struct {
 	// **A key rather than the id, for the reason a concept is a label**: `HandID` is a number in a
 	// file that outlives the build that wrote it. Meaningful at `blow-formed` and refused anywhere
 	// else, and refused alongside any card predicate — a hand is a fact about the whole blow.
+	// **Under `repeat-card` it narrows to the rung's own cards**: only a card that is one of the
+	// cards forming the rung lands again.
 	Hand string `json:"Hand,omitempty"`
 
 	// Hands names several rungs at once, and the rule fires when the blow satisfied **any** of

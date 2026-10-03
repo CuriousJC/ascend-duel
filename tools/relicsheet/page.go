@@ -87,6 +87,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
   .record { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
   .price { margin: 10px 0 0; font-size: 12.5px; }
+  .locked { margin: 6px 0 0; font-size: 12.5px; font-weight: 600; color: #b0306a; }
   /* The tier, on the relic rather than only on the shelf list and the family heading. A
      family is nearly always one rarity throughout, which is exactly what makes a mixed one
      worth reading card by card — and the price beside it is the tier's price, so the two
@@ -206,11 +207,27 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
   the only pricing dial there is — a relic is rebalanced by moving it between these three, never
   by writing a number — and the share is the tier's tickets over the whole catalog's.
 </p>
+<p class="note">
+  <strong>Two shelves, because a relic can be locked.</strong> A relic carrying an
+  <code>Unlock</code> is offered only to a run started by a player whose profile holds that key,
+  and an achievement's <code>Unlocks</code> is what grants it. The first list is a player holding
+  every unlock; the second is a new player's shelf, with the {{.Locked}} locked relics out of the
+  draw &mdash; and the shares move, since every tier's tickets are over a smaller catalog. The
+  <em>pool</em> chips below narrow the catalog the same way.
+</p>
+<h3>Every relic unlocked</h3>
 <ul class="shelf">
 {{range .Tiers}}
   <li class="tier {{.Rarity}}"><strong>{{.Rarity}}</strong>
     {{.Count}} relics &middot; {{.Price}} vitae, sells for {{.Sell}} &middot;
     weight {{.Weight}} each &middot; {{.Share}}% of a shelf draw</li>
+{{end}}
+</ul>
+<h3>A new player's shelf</h3>
+<ul class="shelf">
+{{range .DefaultTiers}}
+  <li class="tier {{.Rarity}}"><strong>{{.Rarity}}</strong>
+    {{.Count}} relics &middot; {{.Share}}% of a shelf draw</li>
 {{end}}
 </ul>
 {{end}}
@@ -235,7 +252,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
 </h3>
 <div class="plates">
   {{range .Relics}}
-    <div class="plate sheet-item" data-rarity="{{.Rarity}}">
+    <div class="plate sheet-item" data-rarity="{{.Rarity}}" data-pool="{{.PoolValue}}">
       <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}"
            alt="{{.Name}}">
       <div class="about">
@@ -246,6 +263,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
         {{else}}
           <p class="price"><span class="rarity {{.Rarity}}">{{.Rarity}}</span>{{.Price}} vitae, sells back for {{.Sell}}</p>
         {{end}}
+        {{if .Unlock}}<p class="locked">locked behind <code>{{.Unlock}}</code>{{if .Opener}} &mdash; {{.Opener}}{{end}}</p>{{end}}
         {{if .Problem}}<p class="art missing">would not load: {{.Problem}}</p>{{end}}
         <p class="text">{{.Text}}</p>
         {{if .Draw}}

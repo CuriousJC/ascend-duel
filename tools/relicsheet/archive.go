@@ -83,6 +83,8 @@ func runArchive(dir string) error {
 			Draw:    record.Draw,
 			Default: record.Art == "",
 			Rules:   ruleLines(record),
+			Unlock:  record.Unlock,
+			Opener:  unlockOpeners()[record.Unlock],
 		}
 		if err := session.CheckRelicRecord(record); err != nil {
 			p.Problem = err.Error()
@@ -101,7 +103,7 @@ func runArchive(dir string) error {
 		return err
 	}
 	page.Families = groupByFamily(plates)
-	page.Filters = sheetfilter.Bar(relicFacets(groupByRarity(plates), page.Families))
+	page.Filters = sheetfilter.Bar(relicFacets(groupByRarity(plates), page.Families, plates))
 
 	out := filepath.Join(dir, "index.html")
 	f, err := os.Create(out)

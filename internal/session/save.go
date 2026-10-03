@@ -44,6 +44,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		DMGBonus:    s.dmgBonus,
 		LifeBonus:   s.lifeBonus,
 		SeedChosen:  s.seedChosen,
+		Unlocks:     s.Unlocks(),
 		RoundLimit:  s.roundLimit,
 		RelicSlots:  s.relicSlots,
 		Tonics:      s.DrunkTonics(),
@@ -318,6 +319,9 @@ func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *prof
 			FromLife:   snap.Spoils.FromLife,
 			FromRoom:   snap.Spoils.FromRoom,
 		},
+	}
+	if snap.Unlocks != nil {
+		s.TakeUnlocks(snap.Unlocks)
 	}
 	s.journey = newJourney(motifs, shape, runSeed)
 	s.tonicOrder = newTonicOrder(runSeed)

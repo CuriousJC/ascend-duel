@@ -53,6 +53,9 @@ func BootRun(gs *state.GlobalState) {
 				gs.RunSeed = seed
 				gs.Resumed = true
 				gs.Run = run
+				if !run.UnlocksTaken() {
+					run.TakeUnlocks(playerUnlocks(gs))
+				}
 				resumeJournal(gs)
 				log.Printf("resuming run %s at room %d, %s", snap.Seed, snap.Fight, snap.Phase)
 				bootPastTheTitle(gs)
@@ -142,12 +145,23 @@ func buildRun(gs *state.GlobalState) *session.Session {
 	}
 
 	run := session.Start(gs.Motifs, gs.Journey, gs.RunSeed)
+	run.TakeUnlocks(playerUnlocks(gs))
 	if teaching {
 		run.Teach(script)
 		log.Printf("teaching this run: %d steps, seed %s, first room %s",
 			script.Len(), script.Seed, script.Enemy)
 	}
 	return run
+}
+
+// playerUnlocks is the unlock keys the profile holds, for a run to take as it starts. **Every run
+// takes them, a chosen seed's included** — what a chosen seed withholds is progress, not the pool.
+// No profile is a new player, who holds none.
+func playerUnlocks(gs *state.GlobalState) []string {
+	if gs.Profile == nil {
+		return nil
+	}
+	return gs.Profile.Unlocks
 }
 
 // tutorialForThisRun is the script to teach and whether to teach it.

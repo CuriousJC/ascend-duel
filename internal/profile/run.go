@@ -84,6 +84,15 @@ type RunSnapshot struct {
 	// and whatever the game decides to withhold from one has to still know after a resume.
 	SeedChosen bool `json:"seedChosen,omitempty"`
 
+	// Unlocks is the player's unlock keys as they stood when the run started — what decides which
+	// locked relics its shelves may offer. **Kept with the run** so that one earned partway through
+	// opens the next run rather than this one, across a quit and a resume as well.
+	//
+	// **No omitempty, and absent is not empty.** A run started with no unlocks writes `[]`; a save
+	// from before runs carried them has no field at all, reads as nil, and is handed the profile's
+	// set as it resumes.
+	Unlocks []string `json:"unlocks"`
+
 	// RoundLimit is how many rounds a fight of this run gets before the clock kills the duelist.
 	//
 	// **Zero is not "no clock" here, it is an older save.** A snapshot written before the limit

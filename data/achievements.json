@@ -200,5 +200,60 @@
       "Five more than anything on the journey can reach. You bought the ones nobody could take."
     ],
     "Trigger": { "Kind": "moment", "Moment": "shields-raised", "N": 10 }
+  },
+  {
+    "AchievementRecord": "monochrome",
+    "Name": "MONOCHROME",
+    "How": "Form an Elemental Five of a Kind.",
+    "Said": [
+      "Five cards, one color, one blow.",
+      "The shop has heard. It will have something for a hand like that."
+    ],
+    "Unlocks": [ "element-five-relics" ],
+    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "element-five-of-a-kind" }
+  },
+  {
+    "AchievementRecord": "quintet",
+    "Name": "QUINTET",
+    "How": "Form a Form Five of a Kind.",
+    "Said": [
+      "Five blades that all agree on how to cut.",
+      "The shop has heard. It keeps a ring for hands like that."
+    ],
+    "Unlocks": [ "form-five-relics" ],
+    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "form-five-of-a-kind" }
+  },
+  {
+    "AchievementRecord": "multiplicity",
+    "Name": "MULTIPLICITY",
+    "How": "Form a Card Five of a Kind.",
+    "Said": [
+      "The same card, five times over. The deck was never meant to hold that many.",
+      "Something rare has been waiting on the shelf for exactly this."
+    ],
+    "Unlocks": [ "card-five-relics" ],
+    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "concept-five-of-a-kind" }
+  },
+  {
+    "AchievementRecord": "saturated",
+    "Name": "SATURATED",
+    "How": "Form an Elemental Four of a Kind.",
+    "Said": [
+      "Four cards in one color, and the blow comes out the same shade.",
+      "The shop has heard. It keeps a ring that hits twice for a hand like that."
+    ],
+    "Unlocks": [ "element-four-relics" ],
+    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "element-four-of-a-kind" }
+  },
+  {
+    "AchievementRecord": "quadruplicate",
+    "Name": "QUADRUPLICATE",
+    "How": "Form a Card Four of a Kind.",
+    "Said": [
+      "The same card four times in one hand. The shuffle did not do that on its own.",
+      "Something rare has been waiting on the shelf for exactly this."
+    ],
+    "Unlocks": [ "card-four-relics" ],
+    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "concept-four-of-a-kind" }
   }
 ]

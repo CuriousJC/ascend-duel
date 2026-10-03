@@ -539,6 +539,7 @@
     "Draw": "jade ring with five diamonds",
     "Text": "+20 duelist DMG\nwhen any Five of a Kind is PLAYED.",
     "Rarity": "common",
+    "Unlock": "form-five-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1320,6 +1321,40 @@
     ]
   },
   {
+    "RelicRecord": "repeat-element-four",
+    "Name": "Deep Hue Ring",
+    "Family": "Elemental repeats",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every card in an Elemental Four of a Kind lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Unlock": "element-four-relics",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-four-of-a-kind" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "repeat-element-five",
+    "Name": "Unbroken Hue Ring",
+    "Family": "Elemental repeats",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every card in an Elemental Five of a Kind lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Unlock": "element-five-relics",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-five-of-a-kind" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
     "RelicRecord": "growth-fire",
     "Name": "Weight of the Flame",
     "Family": "Elemental growth",
@@ -1590,6 +1625,7 @@
     "Draw": "an amulet on a platinum chain with 4 pearl interlocked rings in a square pattern",
     "Text": "Every Four of a Kind\ndeals 4x DMG.",
     "Rarity": "rare",
+    "Unlock": "card-four-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1612,6 +1648,7 @@
     "Draw": "an amulet on a platinum chain with 3 pearl interlocked rings in a row and 2 interlocked pearl rings under 3",
     "Text": "Every Five of a Kind\ndeals 5x DMG.",
     "Rarity": "rare",
+    "Unlock": "card-five-relics",
     "Rules": [
       {
         "When": "blow-formed",

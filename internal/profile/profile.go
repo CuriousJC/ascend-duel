@@ -58,9 +58,9 @@ type Profile struct {
 	Achievements []string `json:"achievements"`
 
 	// Unlocks is what the player has opened up, by key, sorted. **An unlock is an input to the
-	// rules**, unlike an achievement: it gates something. Nothing writes to it yet — see TODO.md,
-	// where what actually unlocks is still undecided — and it is here so that the file's shape is
-	// settled before players have one on disk.
+	// rules**, unlike an achievement: it gates something — a relic carrying the key in its `Unlock`
+	// is offered only to a run started holding it. Written when an achievement granting it is
+	// earned, and re-derived from the awards at every launch; see internal/screens/achieve.go.
 	Unlocks []string `json:"unlocks"`
 
 	// HandsDiscovered is which rungs of the hand ladder have been found, by hand key, sorted.

@@ -65,6 +65,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/assets"
@@ -115,6 +116,7 @@ func run(dir string) error {
 	}
 
 	records := data.LoadRelics()
+	openers := unlockOpeners()
 	var plates []plate
 	page := page{
 		Ground: ground,
@@ -169,6 +171,8 @@ func run(dir string) error {
 			Counter: spec.Counter,
 			Default: record.Art == "",
 			Rules:   ruleLines(record),
+			Unlock:  record.Unlock,
+			Opener:  openers[record.Unlock],
 		})
 		if record.Art == "" {
 			page.Undrawn++
@@ -183,8 +187,10 @@ func run(dir string) error {
 	}
 	page.Title = "Relic sheet"
 	page.Tiers = groupByRarity(plates)
+	page.DefaultTiers = groupByRarity(defaultPool(plates))
+	page.Locked = len(plates) - len(defaultPool(plates))
 	page.Families = groupByFamily(plates)
-	page.Filters = sheetfilter.Bar(relicFacets(page.Tiers, page.Families))
+	page.Filters = sheetfilter.Bar(relicFacets(page.Tiers, page.Families, plates))
 
 	// The three states a relic card is drawn in, on one relic so the card underneath is
 	// provably the same one. **Not "not owned"** — a relic the run has neither bought nor been
@@ -217,9 +223,14 @@ func run(dir string) error {
 	fmt.Printf("wrote %s and %d PNGs — %d of %d relics have art of their own and %d a subject\n",
 		out, len(plates)+len(page.States), page.Count-page.Undrawn, page.Count,
 		page.Count-page.Unwritten)
+	fmt.Printf("  every relic unlocked:\n")
 	for _, t := range page.Tiers {
-		fmt.Printf("  %-9s %2d relics at %d vitae, sells for %d — %s%% of a shelf draw\n",
+		fmt.Printf("    %-9s %2d relics at %d vitae, sells for %d — %s%% of a shelf draw\n",
 			t.Rarity, t.Count, t.Price, t.Sell, t.Share)
+	}
+	fmt.Printf("  a new player's shelf, %d relics behind an unlock:\n", page.Locked)
+	for _, t := range page.DefaultTiers {
+		fmt.Printf("    %-9s %2d relics — %s%% of a shelf draw\n", t.Rarity, t.Count, t.Share)
 	}
 	return nil
 }
@@ -530,6 +541,11 @@ type plate struct {
 	Default bool
 	Rules   []string
 
+	// Unlock is the unlock key the relic is behind, empty for the default pool, and Opener is what
+	// a player does to open it: every achievement granting that key, by name and How.
+	Unlock string
+	Opener string
+
 	// Problem is why an archived relic would not load if it were moved back, and empty for every
 	// relic that would. The live catalog never sets it: a live relic that would not load stops
 	// the tool at registration.
@@ -567,7 +583,42 @@ type family struct {
 	Key string
 }
 
-// relicFacets is the chip bar: the two axes a relic is looked up on.
+// unlockOpeners is, for every unlock key, the achievements that grant it, name and How, written
+// for a plate. Several achievements may grant one key, and any of them opens it.
+func unlockOpeners() map[string]string {
+	out := map[string]string{}
+	for _, a := range data.LoadAchievements() {
+		for _, u := range a.Unlocks {
+			line := a.Name + " — " + a.How
+			if out[u] != "" {
+				line = out[u] + " or " + line
+			}
+			out[u] = line
+		}
+	}
+	return out
+}
+
+// defaultPool is the plates a new player's shelf can offer: every relic behind no unlock.
+func defaultPool(plates []plate) []plate {
+	var out []plate
+	for _, p := range plates {
+		if p.Unlock == "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// PoolValue is a plate's token on the pool facet: `default`, or the unlock key it is behind.
+func (p plate) PoolValue() string {
+	if p.Unlock == "" {
+		return "default"
+	}
+	return p.Unlock
+}
+
+// relicFacets is the chip bar: the three axes a relic is looked up on.
 //
 // **Rarity is the pricing dial and family is the motif**, which are the two questions the page's
 // own grouping can only answer one of at a time — it is cut by family, so "every rare together"
@@ -575,7 +626,11 @@ type family struct {
 //
 // **Both lists are counted off the plates**, so a new family or a retuned rarity moves the bar
 // with nothing edited here.
-func relicFacets(tiers []tier, families []family) []sheetfilter.Facet {
+//
+// **Pool is the default-against-unlocked review**: `default` alone is what a new player's shelf can
+// offer, and each unlock key is a chip of its own, so the page reads the catalog as a first run
+// sees it and as a player holding everything sees it. Counted off the plates like the other two.
+func relicFacets(tiers []tier, families []family, plates []plate) []sheetfilter.Facet {
 	rarity := sheetfilter.Facet{Key: "rarity", Label: "rarity"}
 	for _, t := range tiers {
 		if t.Count == 0 {
@@ -591,7 +646,34 @@ func relicFacets(tiers []tier, families []family) []sheetfilter.Facet {
 			sheetfilter.Value{Value: f.Key, Label: f.Name, Count: f.Count})
 	}
 
+	pool := sheetfilter.Facet{Key: "pool", Label: "pool"}
+	counts := map[string]int{}
+	var order []string
+	for _, p := range plates {
+		v := p.PoolValue()
+		if counts[v] == 0 {
+			order = append(order, v)
+		}
+		counts[v]++
+	}
+	sort.Slice(order, func(i, j int) bool {
+		return order[i] == "default" || (order[j] != "default" && order[i] < order[j])
+	})
+	if len(order) > 1 {
+		for _, v := range order {
+			label := v
+			if v != "default" {
+				label = "behind " + v
+			}
+			pool.Values = append(pool.Values,
+				sheetfilter.Value{Value: v, Label: label, Count: counts[v]})
+		}
+	}
+
 	var out []sheetfilter.Facet
+	if len(pool.Values) > 0 {
+		out = append(out, pool)
+	}
 	if len(rarity.Values) > 0 {
 		out = append(out, rarity)
 	}
@@ -632,6 +714,11 @@ type page struct {
 	Broken    int
 	Tiers     []tier
 	Families  []family
-	Filters   template.HTML
-	States    []cell
+
+	// DefaultTiers is Tiers over the default pool alone, the shelf a new player is dealt from,
+	// and Locked is how many relics are behind an unlock.
+	DefaultTiers []tier
+	Locked       int
+	Filters      template.HTML
+	States       []cell
 }

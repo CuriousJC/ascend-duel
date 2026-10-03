@@ -299,6 +299,33 @@ func TestCardAlteredMatchesOnTheResultingCard(t *testing.T) {
 	}
 }
 
+// TestHandFormedMatchesOnTheRungItNamed: a hand-formed record lands on its own rung and no other,
+// read off the catalog rather than naming a record, so it holds for every hand achievement authored.
+func TestHandFormedMatchesOnTheRungItNamed(t *testing.T) {
+	for _, a := range Loaded().list {
+		if a.trigger.kind != data.TriggerMoment || a.trigger.moment != MomentHandFormed {
+			continue
+		}
+		if !contains(Loaded().ByMoment(HandFormed(a.trigger.value)), a.Key) {
+			t.Errorf("forming %s must earn %s", a.trigger.value, a.Key)
+		}
+		for _, h := range combat.Hands() {
+			if h.Key != a.trigger.value && contains(Loaded().ByMoment(HandFormed(h.Key)), a.Key) {
+				t.Errorf("forming %s earned %s, which asks for %s", h.Key, a.Key, a.trigger.value)
+			}
+		}
+	}
+}
+
+func contains(keys []string, key string) bool {
+	for _, k := range keys {
+		if k == key {
+			return true
+		}
+	}
+	return false
+}
+
 // TestCountersNameBothAxes: a played turn adds to the form tally and the concept tally, because the
 // two questions a player asks are different ones.
 func TestCountersNameBothAxes(t *testing.T) {
@@ -409,6 +436,12 @@ func TestABadRecordIsRefused(t *testing.T) {
 			Kind: data.TriggerMoment, Moment: MomentRealmReached}},
 		{"card-altered with no card", data.TriggerData{
 			Kind: data.TriggerMoment, Moment: MomentCardAltered}},
+		{"hand-formed with no rung", data.TriggerData{
+			Kind: data.TriggerMoment, Moment: MomentHandFormed}},
+		{"hand-formed naming no rung", data.TriggerData{
+			Kind: data.TriggerMoment, Moment: MomentHandFormed, Value: "wibble-of-a-kind"}},
+		{"a moment carrying a value it never sets", data.TriggerData{
+			Kind: data.TriggerMoment, Moment: MomentDuelWon, Value: "pair"}},
 		{"a moment carrying a counter", data.TriggerData{
 			Kind: data.TriggerMoment, Moment: MomentDuelWon, Counter: "form:slash"}},
 		{"a clause with no mode", data.TriggerData{

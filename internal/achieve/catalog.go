@@ -46,12 +46,21 @@ const (
 	// screens.recordShieldsRaised, which is written under the same rule payHeldVitae and
 	// recordHandsPlayed are.
 	MomentShieldsRaised = "shields-raised"
+
+	// MomentHandFormed is the player's blow being scored on a rung of the hand ladder, carrying
+	// that rung's `hands.json` key in Value.
+	//
+	// **The rung the ladder named, not every rung the turn satisfied.** Five fire cards satisfy
+	// the elemental five, every smaller elemental rung and the Pair; what the player saw — the
+	// banner, the hand row, the play count — is the one that paid, and "you formed it" means
+	// that one. Read off the resolved event log like recordHandsPlayed, never off the playback.
+	MomentHandFormed = "hand-formed"
 )
 
 // moments is the same list, for validation and for the error message.
 var moments = []string{
 	MomentDuelWon, MomentTutorialFinished, MomentRealmReached, MomentCardAltered,
-	MomentShieldsRaised,
+	MomentShieldsRaised, MomentHandFormed,
 }
 
 // momentsCarryingN is the moments whose N is set by the raiser, and so may be asked for in a
@@ -80,8 +89,8 @@ type Achievement struct {
 	// Said is every line shown when it lands, in order, all at once.
 	Said []string
 
-	// Unlocks is what earning it opens up. Empty on every record today — see the field's own note
-	// in data/achievements_data.go for why the two key spaces stay apart.
+	// Unlocks is what earning it opens up, by unlock key — see the field's own note in
+	// data/achievements_data.go for why the two key spaces stay apart.
 	Unlocks []string
 
 	trigger trigger
@@ -234,7 +243,7 @@ func parseTrigger(t data.TriggerData) (trigger, error) {
 		if !known(moments, t.Moment) {
 			return trigger{}, fmt.Errorf("no moment named %q; the game raises %v", t.Moment, moments)
 		}
-		// **N belongs to the moments that carry one**, and Value to card-altered. A moment carrying
+		// **N belongs to the moments that carry one**, and Value to card-altered and hand-formed. A moment carrying
 		// a field its raiser never sets is a condition that can never be met.
 		carriesN := known(momentsCarryingN, t.Moment)
 		if t.N != 0 && !carriesN {
@@ -243,8 +252,17 @@ func parseTrigger(t data.TriggerData) (trigger, error) {
 		if carriesN && t.N < 1 {
 			return trigger{}, fmt.Errorf("moment %q needs its figure in N", t.Moment)
 		}
-		if t.Value != "" && t.Moment != MomentCardAltered {
+		carriesValue := t.Moment == MomentCardAltered || t.Moment == MomentHandFormed
+		if t.Value != "" && !carriesValue {
 			return trigger{}, fmt.Errorf("moment %q carries no Value", t.Moment)
+		}
+		if t.Moment == MomentHandFormed {
+			// **A rung's key, checked against the ladder** — a misspelled one is a row nothing
+			// can ever light.
+			if _, ok := combat.HandIDForKey(t.Value); !ok {
+				return trigger{}, fmt.Errorf("moment %q needs a hands.json key in Value; %q is none",
+					t.Moment, t.Value)
+			}
 		}
 		if t.Moment == MomentCardAltered && t.Value == "" {
 			return trigger{}, fmt.Errorf("card-altered needs the card's label in Value")

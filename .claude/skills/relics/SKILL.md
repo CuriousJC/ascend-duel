@@ -1,6 +1,6 @@
 ---
 name: relics
-description: The relic grammar - how a relic is written as data, the closed vocabularies it draws on, where each moment fires in the code, and what a relic may never do. Load before designing or discussing a new relic, adding an entry to relics.json or statuses.json, adding a moment or an effect verb, or wiring anything that reads a worn relic. Also the relic analyzer: given a proposed relic, whether it duplicates one that exists, which siblings it implies across the element/form/concept/tier axes, what it costs to build against the current grammar, and a best guess at its rarity.
+description: The relic grammar - how a relic is written as data, the closed vocabularies it draws on, where each moment fires in the code, and what a relic may never do. Load before designing or discussing a new relic, adding an entry to relics.json or statuses.json, adding a moment or an effect verb, or wiring anything that reads a worn relic. Also the relic analyzer: given a proposed relic, whether it duplicates one that exists, which siblings it implies across the element/form/concept/tier axes, what it costs to build against the current grammar, and a best guess at its rarity and whether it should be locked behind an achievement.
 ---
 
 # Relics
@@ -50,6 +50,9 @@ costs if it does not.
   shelf offers it. There is no `Price` field; see the shop section below.
 - **`When`** — which moment wakes the rule. Closed; one Go seat each.
 - **`If`** — what has to be true. Optional; **a rule with no `If` always fires**.
+- **`Unlock`** — optional: an unlock key some achievement grants. A relic carrying one is kept off
+  every shelf until the player's profile holds that key; empty is the default pool. See *Should it
+  be locked?* below and MECHANICS.md §Unlocks.
 - **`Rarity`'s third tier is where a drawback belongs.** Onslaught takes something away, and
   `scale-hp` below 100 is how it says so.
 - **`Then`** — a list, so one rule can do two things. That is what buys a lightning relic that
@@ -185,7 +188,7 @@ not ignored.
 | `scale-propagation` | `fight-won` | `Amount` percent | scales vitae propagation, *after* its cap |
 | `adjust-picks` | `prizes-dealt` | `Amount` delta | more post-battle choices |
 | `adjust-prize-vitae` | `prizes-dealt` | `Amount` flat | the vitae card pays more |
-| `repeat-card` | `blow-formed` | `Amount` landings | every **matching** card lands Amount times, each at **full** damage — the form repeat relics |
+| `repeat-card` | `blow-formed` | `Amount` landings | every **matching** card lands Amount times, each at **full** damage — the form repeat relics. **Under a `Hand` predicate, matching is membership**: only the cards that formed that rung repeat, so four fire cards and an ice one under an Elemental Four repeat the fire four — `combat.RungsOf`. The Hue rings |
 | `add-hand-dmg` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one turn** when the turn satisfied the named rung, so every hit grows by its card's own multiplier — *not* a term of its own, and already inside every figure a hit prints |
 | `add-dmg-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one blow, for every card still in hand** matching the rule's card predicate — the jars. Folded in beside `add-hand-dmg`'s raise, so every hit grows by its card's own multiplier. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
 | `drain-damage` | `attack-lands` | `Amount` percent | restores that share of each hit that **landed** to whoever threw it — after weight, vulnerability, the shield and the miss, so a hit that was eaten drains nothing. **Once per matching hit**: the predicate asks about that hit's card |
@@ -397,6 +400,10 @@ The questions to put to an idea, in order:
    post-battle screen, and two of them nearly do the same job.
 6. **What does it cost the player, and does anything price it?** Nothing in the repo measures what
    a relic does to a duel, so every price is judgment. Say that rather than guessing at a number.
+7. **Should it be locked?** Ask this of every new relic, out loud, and let the owner answer. A relic
+   that only pays off once the player has *done* something — formed a rung, reached a realm,
+   stood behind a wall of shields — is a candidate to sit behind the achievement for that deed. See
+   *Should it be locked?* below.
 
 **Do not grow the vocabulary ahead of the relics.** A moment or a verb with no relic behind it is
 `CostTier` again — see the `data` skill. Ship the rows that have an entry.
@@ -404,7 +411,7 @@ The questions to put to an idea, in order:
 ## Analysing a proposed relic
 
 **The six questions above are the design conversation; this is the report.** Run it when a relic is
-proposed — by the owner, or by you before authoring one — and answer all four parts even when one
+proposed — by the owner, or by you before authoring one — and answer all five parts even when one
 of them is "nothing to say". A relic that turns out to be The Sickle with a different name is the finding
 this exists to catch, and it is only ever caught by looking.
 
@@ -510,6 +517,24 @@ are 10 / 4 / 1, so a tier's share is taken over the whole catalog — which mean
 common devalues every rare in the game**: a batch of commons can hold rare's share flat even while
 rares are being added. `go run ./tools/relicsheet` prints the three shares — read them after any
 batch, not just after a rarity change.
+
+### 5. Should it be locked?
+
+**Ask it every time, and say what you would lock it behind.** The test is whether a player who has
+never done the thing the relic builds on can judge it on the shelf:
+
+- **It pays on a deed a new player has not yet seen** — a five-of-a-kind rung, the Elementalist, ten
+  shields, a 4 AP card. Lock it behind the achievement for that deed, existing or proposed.
+- **It is the default answer to a whole axis** — the color relics, the form relics, the weapons.
+  Leave it in the default pool: a first run needs something to build on.
+- **It is a stronger sibling of an unlocked relic** — Four of a Kind beside Three of a Kind. A
+  candidate, but say what the default pool keeps so the family still reads.
+
+**Then name the achievement and the key.** An existing achievement that matches is better than a
+new one; if a new one is wanted, it is an achievement proposal and goes through the `achievements`
+skill. The key is named for what it opens — `element-five-relics` — so several achievements can
+grant it and the relics never move. **Report what locking does to the shelf**: the new player's
+shares that `go run ./tools/relicsheet` prints beside the full catalog's.
 
 ### Authoring, once the analysis is agreed
 

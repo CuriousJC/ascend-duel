@@ -301,8 +301,9 @@ func shelfKeys(items []shelfItem) []string {
 	return out
 }
 
-// dealShelf picks which relics are for sale: three weighted draws from everything the run is not
-// wearing.
+// dealShelf picks which relics are for sale: three weighted draws from everything the run may be
+// offered and is not wearing. **May be offered** is session.OfferableRelics — a relic behind an
+// unlock the run was not started holding is never on the shelf.
 //
 // **Rarity is the weight** *(owner's call, 2026-08-22)*. A common relic holds ten tickets to a
 // rare one's, so a rare relic is something a run mostly does not see rather than something it sees
@@ -329,7 +330,7 @@ func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
 	}
 
 	var pool []string
-	for _, key := range session.Relics() {
+	for _, key := range gs.Run.OfferableRelics() {
 		if !worn[key] {
 			pool = append(pool, key)
 		}

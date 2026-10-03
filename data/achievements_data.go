@@ -163,7 +163,9 @@ type AchievementData struct {
 	// So a relic behind an achievement reads the *unlock*, and this field is the bridge — two keys
 	// rather than one, which is what lets an achievement be retired without orphaning a relic.
 	//
-	// Nothing is behind an achievement yet, so every record ships without one.
+	// **Every key here must be read by something** — a relic's `Unlock` today — and every relic's
+	// `Unlock` must be granted here; `internal/session` refuses either half at load. Several
+	// achievements may grant one key, and the first of them earned opens it.
 	Unlocks []string `json:"Unlocks,omitempty"`
 
 	Trigger TriggerData `json:"Trigger"`

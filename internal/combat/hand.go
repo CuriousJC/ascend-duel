@@ -513,6 +513,53 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, []HandID, bool) {
 	return bestCards, best, bestLead, satisfied, found
 }
 
+// RungsOf is, for each card of the turn, every satisfied rung that card is one of the cards forming,
+// in the order `satisfied` lists them.
+//
+// **It is what a repeat narrowed by `Hand` reads**, because a rung is a fact about some of the
+// turn's cards rather than all of them: four fire cards and a fifth of another color satisfy the
+// Elemental Four of a Kind, and the fifth card is not one of the four. The cards are the matcher's
+// own reading of each rung on each of its axes, so nothing here re-decides what a rung is.
+//
+// **The No Hand is every card.** It is the fallback for a turn that formed nothing and is matched by
+// which card hits hardest rather than by counting, so it has no members to count; a relic naming it
+// is a relic about the whole of a turn that built nothing.
+func RungsOf(turn []Slot, satisfied []HandID) [][]HandID {
+	out := make([][]HandID, len(turn))
+	for _, id := range satisfied {
+		h, ok := HandByID(id)
+		if !ok {
+			continue
+		}
+		in := make([]bool, len(turn))
+		if h.Cards() < 2 {
+			for i := range in {
+				in[i] = true
+			}
+		}
+		for _, axis := range h.axes() {
+			if h.Cards() < 2 {
+				break
+			}
+			cards, _, ok := matchCountOf(turn, h.On(axis))
+			if !ok {
+				continue
+			}
+			for _, i := range cards {
+				if i >= 0 && i < len(in) {
+					in[i] = true
+				}
+			}
+		}
+		for i := range in {
+			if in[i] {
+				out[i] = append(out[i], id)
+			}
+		}
+	}
+	return out
+}
+
 // matchCountOf reads the turn as a set: how many cards carry each value on the hand's own axis,
 // and whether that satisfies its groups. A card with no value on that axis — a formless or
 // colorless one — is skipped rather than tallied under a zero everything else would join.

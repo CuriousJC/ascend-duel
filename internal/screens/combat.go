@@ -264,6 +264,11 @@ type CombatScene struct {
 	// round something spends them. See achieve.MomentShieldsRaised.
 	shieldPeak int
 
+	// handsFormed is the rung each of the player's blows in the last resolved round was scored on,
+	// by hands.json key, stashed beside playedTurn and drained on the same tick into
+	// achieve.MomentHandFormed.
+	handsFormed []string
+
 	// run is the run these piles were dealt out of, or nil for the callers that deal a hand
 	// without one — `OpeningHand`, `tools/seeds` and the flight tests.
 	//
@@ -1149,6 +1154,7 @@ func (s *CombatScene) recordHandsPlayed(log []combat.Event) {
 			continue
 		}
 		s.run.RecordHandPlayed(h.Key)
+		s.handsFormed = append(s.handsFormed, h.Key)
 	}
 }
 
@@ -1186,6 +1192,11 @@ func (s *CombatScene) noteShieldsRaised(log []combat.Event) {
 // **The tallies are bumped in memory and the counters are not asked here** — that is
 // settleCounters, at the end of the duel. See achieve.go.
 func (s *CombatScene) drainTurn(gs *state.GlobalState) {
+	for _, key := range s.handsFormed {
+		earnMoment(gs, achieve.HandFormed(key))
+	}
+	s.handsFormed = s.handsFormed[:0]
+
 	if len(s.playedTurn) == 0 {
 		return
 	}

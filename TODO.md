@@ -203,9 +203,9 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       `Layout`. **The `Session` third of this already landed** — `internal/session` holds the deck,
       the fight index, the purse, the worn relics in worn order, and the run's phase — so what is
       left is the read-only half. Deferred: the remaining fields are not crowding anything.
-- [ ] **What actually unlocks.** The profile exists and holds an `unlocks` set — `internal/profile`
-      — and nothing writes to it. Undecided: cards for the starting deck, enemies in the pool,
-      realms, whole alternate decks. Worth answering alongside the loot loop, since an unlock and a
+- [ ] **What else unlocks.** Relics do — an achievement grants an unlock key and a relic carrying
+      it in `Unlock` stays off the shelf until the player holds it; see MECHANICS.md §Unlocks.
+      Undecided: cards for the starting deck, enemies in the pool, realms, whole alternate decks. Worth answering alongside the loot loop, since an unlock and a
       reward are the same object with different lifetimes.
       - **Hand discovery is the one already specified** — MECHANICS.md has hands discovered rather
         than given, and `profile.Profile.HandsDiscovered` is the field waiting for it. Gating the

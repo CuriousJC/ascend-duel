@@ -90,8 +90,9 @@ func settleCounters(gs *state.GlobalState) {
 //
 // **An unlock is a second key on a second list** *(owner's call, 2026-09-06)*. `profile.go` draws
 // the line — an achievement is a record and changes nothing, an unlock is an input to the rules —
-// so a relic behind an achievement reads the unlock and never the award. Nothing carries one yet;
-// the bridge is here so that the day one does, it is a field in the JSON rather than a change here.
+// so a relic behind an achievement reads the unlock and never the award. The unlock lands on the
+// profile here and reaches a shelf on the next run, which takes the set as it starts — see
+// internal/session/unlock.go.
 func earn(gs *state.GlobalState, keys []string) {
 	if !progresses(gs) || len(keys) == 0 {
 		return
@@ -107,6 +108,35 @@ func earn(gs *state.GlobalState, keys []string) {
 		if a, ok := achieve.Loaded().Find(key); ok {
 			for _, u := range a.Unlocks {
 				gs.Profile.Unlock(u)
+			}
+		}
+	}
+	if changed {
+		saveProfile(gs)
+	}
+}
+
+// ReconcileUnlocks grants every unlock the achievements already on the profile carry, and saves if
+// that opened anything.
+//
+// **Called once at launch, before the run is built**, so a profile that earned an achievement
+// before it carried an unlock — or before unlocks existed at all — holds what the catalog now says
+// it opened. Unlocks are derived from awards, so re-deriving them is idempotent and grants nothing
+// a player has not earned. It moves no tally and awards nothing, but it is a write to the profile,
+// so it lives here behind the same gate.
+func ReconcileUnlocks(gs *state.GlobalState) {
+	if !progresses(gs) {
+		return
+	}
+	changed := false
+	for _, key := range gs.Profile.Achievements {
+		a, ok := achieve.Loaded().Find(key)
+		if !ok {
+			continue
+		}
+		for _, u := range a.Unlocks {
+			if gs.Profile.Unlock(u) {
+				changed = true
 			}
 		}
 	}

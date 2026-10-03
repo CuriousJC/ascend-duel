@@ -194,6 +194,11 @@ type Session struct {
 	// was started, and what reads it is the achievement award, which refuses everything on such a
 	// run. Saved with the run. See ChooseSeed.
 	seedChosen bool
+
+	// unlocks is the player's unlock keys as they stood when the run started, sorted — what decides
+	// which locked relics this run may be offered. **nil means not yet handed one**, which only a
+	// save from before runs carried them can be. See unlock.go.
+	unlocks []string
 }
 
 // ChooseSeed marks this run as started on a code the player entered. SeedChosen reads it back.

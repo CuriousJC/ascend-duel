@@ -55,6 +55,36 @@ How it is held, and what it means for anything new:
 settings, and `TutorialSeen`. The journal and the ledger still record a chosen-seed run in full —
 they are records of what happened, not rewards for it.
 
+## Unlocks — what an achievement opens
+
+An achievement changes nothing; **an unlock key it grants is what changes the game**. Today the
+only thing that reads one is a relic: a record carrying `"Unlock": "<key>"` in `data/relics.json`
+is kept off every shelf until the player's profile holds that key. See MECHANICS.md §Unlocks.
+
+| Piece | Where |
+|---|---|
+| the grant | `Unlocks` on the achievement record |
+| the gate | `Unlock` on the relic record |
+| both directions checked at load, the run's copy of the set, the offer filter | `internal/session/unlock.go` |
+| the write to the profile, and the launch-time backfill | `earn` and `ReconcileUnlocks` in `internal/screens/achieve.go` |
+| the shelf and the reroll reading it | `session.Session.OfferableRelics`, in `internal/screens/shop.go` and `shop_packs.go` |
+| the review | `go run ./tools/relicsheet` — the *pool* chips, and a new player's shelf shares beside the full catalog's |
+
+- **Name the key for what it opens, not for the deed** — `element-five-relics`, not `monochrome`.
+  The achievement can be reworded, retired or joined by a second achievement granting the same key;
+  the relics behind it should not have to move.
+- **A key granted by nothing, or granted and read by nothing, fails the launch.** Add the relic's
+  `Unlock` and the achievement's `Unlocks` in the same change.
+- **A run takes the set when it starts and saves it.** An unlock earned mid-run opens on the next
+  run; a chosen-seed run reads the profile's set like any other and still earns nothing.
+- **Unlocks are re-derived from awards at every launch**, so adding an unlock to an achievement that
+  players already hold opens it for them on their next launch. Nothing extra to write.
+- **A hand-shaped gate is the `hand-formed` moment** with the rung's `hands.json` key in `Value` —
+  the rung the ladder *named*, not every rung the turn satisfied.
+- **A family that climbs a ladder unlocks up it.** The Four and Five of a Kind relics are the worked
+  example: the common is the easiest axis's reward (or default), the uncommon the elemental rung's,
+  the rare the card rung's — harder hand, rarer relic. MECHANICS.md §Unlocks has the table.
+
 ## Adding an achievement
 
 1. Write the record in `data/achievements.json` against the vocabulary `internal/achieve` validates;
@@ -70,3 +100,6 @@ they are records of what happened, not rewards for it.
 
 - **Can it be earned on a chosen-seed run?** No, and nothing about the record can change that. If a
   proposal only makes sense as a reward for a particular seed, it is not an achievement.
+- **Should it open something?** If a relic, or a family of them, only pays off once the player has
+  done what this achievement asks, the achievement is the natural key for it — say which relics and
+  let the owner decide.

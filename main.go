@@ -238,6 +238,10 @@ func main() {
 	// can compute a duration in it. See internal/screens/settings.go.
 	screens.ApplySettings(prof.Settings)
 
+	// **Unlocks are re-derived from the awards before the run takes them**, so an achievement that
+	// opens something it did not open when it was earned opens it now. See screens.ReconcileUnlocks.
+	screens.ReconcileUnlocks(g.GlobalState)
+
 	// **The journal is opened before the run, because BootRun is what writes its first line.** It
 	// touches no file here — a journal that made its file at startup would leave one behind for
 	// every player who launched the game and never played — so this is a store and a sentence.

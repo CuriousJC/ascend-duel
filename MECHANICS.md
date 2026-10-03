@@ -1797,6 +1797,11 @@ every flat bonus, its own shock roll, its own statuses, a shield to eat it. The 
 verb at this moment and it is the one that does *not* diminish — an echo is a card ringing on, a
 repeat is the card played again.
 
+**A repeat can be narrowed by a rung instead of a card, and then only the rung's own cards repeat.**
+The Hue rings repeat every card of an Elemental Four or Five of a Kind; four fire cards and an ice
+one are an Elemental Four, and the ice card lands once. Membership is the matcher's own reading of
+each rung the blow satisfied — `combat.RungsOf` — so nothing decides twice what a rung is.
+
 - **They deal what the form weapons deal on the card, and more once anything flat is in
   play.** Two full-strength landings and one doubled landing are the same card term; what the
   repeat buys is **two hits instead of one**, and a hit is now what pays — a flat bonus joins each,
@@ -3818,11 +3823,49 @@ line `internal/profile` has drawn since it was written: an *unlock* is an input 
 something in the rules reads it; an achievement is a note. **A relic behind an achievement
 therefore reads the unlock, never the award** — the record *grants* an unlock key, which is two
 keys rather than one, and that is what lets an achievement be reworded or retired without
-orphaning the thing it opened. Nothing is gated on one yet; the bridge is a field on the record
-so the day one is, it is a line of JSON.
+orphaning the thing it opened. See §Unlocks, below.
 
 **The catalog is `data/achievements.json`**, and it is a loader rather than a Go table because a
 record has to say *what earns it* — a name and a sentence would not have needed one.
+
+### Unlocks — a relic the shelf keeps back until you have earned it
+
+**A relic may be locked, and a locked relic is never offered until the player has done the thing
+it builds on.** A Five of a Kind relic on the shelf of a player who has never formed a five is a
+relic they cannot yet judge; behind the hand, it arrives as the reward for having found it.
+
+- **The relic names an unlock key, and an achievement grants it.** `Unlock` on a relic record,
+  `Unlocks` on an achievement record. Several achievements may grant one key, and the first earned
+  opens it. A relic with no `Unlock` is in the **default pool** — on every shelf from the first run.
+- **Both directions are refused at load.** A relic behind a key no achievement grants could never
+  be offered; an achievement granting a key nothing reads opens nothing. Either is a launch failure.
+- **An unlock gates the offer and nothing else.** It keeps a relic off the shelf and out of every
+  draw that reaches the relic catalog; a relic already worn — by a scenario, or by
+  `session.StartingRelics` — fires as it always does.
+- **A run's pool is fixed when it starts** *(owner's call, 2026-10-03)*. The run takes the
+  profile's unlocks as it begins and saves them, so an unlock earned partway through a run opens the
+  relic on the next one. A retried fight walks into the same shop, and a resumed run deals what it
+  would have dealt.
+- **A chosen seed reads the profile like any other run** *(owner's call, 2026-10-03)*. A code is
+  "this journey, given your unlocks" rather than one shop for everybody. It still earns nothing.
+- **Unlocks are derived from awards, and re-derived at every launch** *(owner's call,
+  2026-10-03)*. A profile holding an achievement holds what that achievement grants, including an
+  unlock added to the record after the award was earned.
+- **The Four and Five of a Kind relics unlock up the ladder** *(owner's call, 2026-10-03)* —
+  the harder the hand, the rarer the relic it opens:
+
+  | Rung | Four of a Kind | Five of a Kind |
+  |---|---|---|
+  | common: +DMG ring | default | QUINTET — form a Form Five |
+  | uncommon: Hue ring, every card of the rung lands twice | SATURATED — form an Elemental Four | MONOCHROME — form an Elemental Five |
+  | rare: hand multiplier | QUADRUPLICATE — form a Card Four | MULTIPLICITY — form a Card Five |
+
+  Measured on round one of a relicless deck, a Form Five is about one turn in seven hundred and a
+  Card Five one in sixteen thousand, so the rare Five relic is effectively a late-profile reward.
+- **Locking a relic is a catalog change, and it moves the shelf shares.** A new player's shelf is
+  drawn from the default pool alone, so every tier's tickets are over a smaller catalog.
+  `go run ./tools/relicsheet` prints both sets of shares and its *pool* chips read the catalog
+  either way.
 
 ### Three kinds of trigger, because there are three kinds of achievement
 
@@ -3837,8 +3880,13 @@ The list looks heterogeneous and is not. It is three families, and only one of t
 - **A lifetime count** — three hundred slashing cards, two hundred Bashes. A tally on the profile,
   not a predicate over anything the process is holding.
 - **A named moment** — a duel won, the tutorial finished, the fifth realm reached, a card altered
-  into a Flinch, ten shields standing at once. The only family that costs a line of Go each, and
-  deliberately the short one.
+  into a Flinch, ten shields standing at once, a rung of the hand ladder formed. The only family
+  that costs a line of Go each, and deliberately the short one.
+
+**`hand-formed` is the rung the ladder named, not every rung the turn satisfied.** Five fire cards
+satisfy the Elemental Five of a Kind, every smaller elemental rung and the Pair; what the player
+saw on the banner is the one that paid, and "you formed it" means that one. It is read off the
+resolved event log, like the play counts.
 
 **The turn family reads the turn, not the hand.** A hand counts the cards that scored it and leaves
 the rest out; these are about what was played together, which is why Arsenal can ask for a defense

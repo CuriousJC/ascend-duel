@@ -234,7 +234,7 @@ func (s *ShopScene) unwornRelicExists(gs *state.GlobalState) bool {
 	for _, key := range gs.Run.Worn() {
 		worn[key] = true
 	}
-	for _, key := range session.Relics() {
+	for _, key := range gs.Run.OfferableRelics() {
 		if !worn[key] {
 			return true
 		}

@@ -18,7 +18,8 @@ import (
 type Moment struct {
 	Name string
 
-	// Value is a concept's label, on MomentCardAltered.
+	// Value is a concept's label on MomentCardAltered, and a rung's hands.json key on
+	// MomentHandFormed.
 	Value string
 
 	// N is the figure the moment carries: the realm on MomentRealmReached, the shield count on
@@ -33,6 +34,9 @@ func RealmReached(realm int) Moment { return Moment{Name: MomentRealmReached, N:
 func CardAltered(label string) Moment {
 	return Moment{Name: MomentCardAltered, Value: label}
 }
+
+// HandFormed is the rung the player's blow was scored on, by its hands.json key.
+func HandFormed(key string) Moment { return Moment{Name: MomentHandFormed, Value: key} }
 
 // ShieldsRaised is the count a duelist ended up standing behind.
 func ShieldsRaised(n int) Moment { return Moment{Name: MomentShieldsRaised, N: n} }
@@ -51,7 +55,7 @@ func (c *Catalog) ByMoment(m Moment) []string {
 			if m.N < t.n {
 				continue
 			}
-		case MomentCardAltered:
+		case MomentCardAltered, MomentHandFormed:
 			if m.Value != t.value {
 				continue
 			}

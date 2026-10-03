@@ -173,6 +173,10 @@ fire. `Element` is the field that carries it — parsed in `internal/session` wi
 `combat.ParseElement`, because `internal/combat` may not read this file. A name the rules do not
 have is logged rather than dropped.
 
+**`Unlock` keeps a relic off the shelf until the player has earned it.** Empty is the default pool;
+a key is an unlock some achievement's `Unlocks` grants, and a key nobody grants panics at load. It
+gates the offer only — see MECHANICS.md §Unlocks and the `relics` skill's question on it.
+
 **What is worn is on the run, not in the file.** A run opens wearing nothing and
 buys its relics in the shop, so every element is inert until the first one is bought.
 `session.StartingRelics` is the debug seat for putting one on without playing to a shop — the relic
@@ -325,7 +329,9 @@ every file here answers.
   is locked; `Said` is what the game says once it happened. Every `Said` line is shown at once —
   picking one would be a roll, and a roll owes its own stream.
 - **`Unlocks` is the bridge to the rules, and the achievement itself never gates anything.** Two key
-  spaces, kept apart by `internal/profile`. Nothing ships with one yet.
+  spaces, kept apart by `internal/profile`. A relic's `Unlock` reads one of the keys; every key
+  granted must be read by some relic and every relic's `Unlock` must be granted, both refused at
+  load in `internal/session/unlock.go`.
 - **A misspelled word fails the launch**, including a counter naming no form and no player concept.
   That check matters more here than anywhere else in `data/`: an achievement that can never land is
   indistinguishable from one nobody has earned, and nothing else in the game would ever notice.

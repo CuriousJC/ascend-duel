@@ -1560,9 +1560,10 @@ func (d Duelist) rollScale() int { return RollScale(d.WornRelics()) }
 // as a rule.
 //
 // `lead` says whether this is the blow's first attack card, which is the only thing the `Lead`
-// predicate reads.
-func LandingAmounts(worn []WornRelic, card Card, lead bool, damage int) []int {
-	shape := LandingsOf(worn, card, lead)
+// predicate reads, and `rungs` is every rung of the blow this card helped form, which is what a
+// `Hand` predicate reads — see RungsOf.
+func LandingAmounts(worn []WornRelic, card Card, lead bool, rungs []HandID, damage int) []int {
+	shape := LandingsOf(worn, card, lead, rungs)
 
 	out := make([]int, 0, shape.Count())
 	for j := 0; j < shape.Count(); j++ {
@@ -1611,7 +1612,7 @@ func (s LandingShape) Amount(j, damage int) int {
 //
 // **Every contributing seat, not one.** Extra landings add across relics, so two echo relics are both
 // the reason and both shake.
-func LandingSeats(worn []WornRelic, card Card, lead bool) []bool {
+func LandingSeats(worn []WornRelic, card Card, lead bool, rungs []HandID) []bool {
 	out := make([]bool, len(worn))
 
 	for seat, w := range worn {
@@ -1620,6 +1621,9 @@ func LandingSeats(worn []WornRelic, card Card, lead bool) []bool {
 				continue
 			}
 			if rule.If.Lead && !lead {
+				continue
+			}
+			if !rule.If.onHand(rungs) {
 				continue
 			}
 			for _, e := range rule.Then {
@@ -1833,7 +1837,7 @@ func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
 //
 // `lead` says whether this is the blow's first attack card, which is the only thing the `Lead`
 // predicate reads.
-func LandingsOf(worn []WornRelic, card Card, lead bool) LandingShape {
+func LandingsOf(worn []WornRelic, card Card, lead bool, rungs []HandID) LandingShape {
 	copies, echoes := 0, 0
 	for _, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1841,6 +1845,12 @@ func LandingsOf(worn []WornRelic, card Card, lead bool) LandingShape {
 				continue
 			}
 			if rule.If.Lead && !lead {
+				continue
+			}
+			// **A rung narrows a repeat to the cards that formed it.** Four fire cards and a fifth
+			// of another color are an Elemental Four of a Kind, and the fifth card is not in it —
+			// so it is asked of the rungs this card is one of, never of the blow as a whole.
+			if !rule.If.onHand(rungs) {
 				continue
 			}
 			for _, e := range rule.Then {

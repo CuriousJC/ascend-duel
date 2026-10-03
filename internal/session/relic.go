@@ -155,8 +155,8 @@ func registerRelics() (map[string]combat.RelicID, map[string]int, map[string]int
 //
 // **It is for the archive**: a record in `data/archive/relics.json` is out of the game and never
 // registered, and this is what keeps it one that would load if it were moved back. Every word is
-// resolved as registerRelics resolves it, the rules go through `combat.CheckRelic`, and the rarity
-// has to be one of the three.
+// resolved as registerRelics resolves it, the rules go through `combat.CheckRelic`, the rarity
+// has to be one of the three, and an `Unlock` has to be one some achievement grants.
 func CheckRelicRecord(r data.RelicData) error {
 	rules, err := relicRules(r)
 	if err != nil {
@@ -169,7 +169,7 @@ func CheckRelicRecord(r data.RelicData) error {
 		return fmt.Errorf("%s has rarity %q, which is not one of common, uncommon or rare",
 			r.RelicRecord, r.Rarity)
 	}
-	return nil
+	return checkUnlock(r)
 }
 
 // Relics is every registered record key, sorted. For a tool or a screen that wants the catalog

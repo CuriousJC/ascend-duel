@@ -70,4 +70,29 @@
 //
 // **internal/combat may never import it**, for internal/trace's reason: the rules package stays
 // free of everything, which is what makes it testable without a window.
+//
+// # How it is wired
+//
+//   - **A card is named by identity**, `combat.Card.ID`, for the reason a rune's targets are: three piles
+//     hold copies of the same cards, so a position names a different card a moment later.
+//   - **A rune's gamble is not written down.** The roll comes off the run seed, so a replay reaching that
+//     line with the same choices behind it rolls the same thing.
+//   - **A resumed run's header says `resumed`**, so two headers in one file is one journey played across
+//     two launches.
+//   - **A click has its line where its function is; a screen and a phase are diffed once a frame.** The
+//     first is where the choice actually is. The second two are reached from a dozen places — a button, a
+//     run advancing, a crash, a scenario opening the game halfway through the realms — so a call beside
+//     each is a list the next one gets left off. `game.journalWatch` is the diff, on `screens.RunWatch`'s
+//     argument.
+//   - **`CombatScene.choices` is the one stored handle**, taken at `Init`. Every other screen writes its
+//     lines from a method already holding a `gs`; the hand row's click handlers are reached from a button
+//     or a drag with nothing but the scene in hand.
+//   - **Every method is safe on a nil receiver**, which is what lets a scene write a line without asking
+//     whether there is a journal — a test scene and a review tool both run without one.
+//   - **A journal that cannot be written gives up and is a `Tell` once**, not once per click: a box per
+//     click is a queue the player has to fight their way out of to keep playing. **The wording lives in
+//     `main`** rather than here, because `crashlog` has to be able to name the journal file and only one
+//     of the two may point at the other.
+//   - **The record is compact rather than indented**, unlike every other write in `internal/profile`:
+//     one record per line is what makes the file appendable without parsing what is above it.
 package journal

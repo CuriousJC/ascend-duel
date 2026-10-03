@@ -136,10 +136,10 @@ or weaker way to build one.
 
 **The middle three rungs are the deck; the two ends ship at zero copies**. A run opens holding
 1/2/3 AP cards and can never buy anything else, so the only way to hold a Poke or an Impale is a
-**Debase** or a **Exalt** essence walking a card off the end of the three. They are real
+**Essence of Weakness** or an **Essence of Strength** walking a card off the end of the three. They are real
 registered concepts all the same, because `combat.Neighbor` derives the ladder from the
 registry, and a rung that does not exist is a rung an essence cannot step onto — without the
-ends, Debase is dead on every 1 AP card and Exalt on every 3 AP one.
+ends, Weakness is dead on every 1 AP card and Strength on every 3 AP one.
 
 | Form | 0 AP · 0.25× | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 2× | 4 AP · 4× |
 |---|---|---|---|---|---|
@@ -170,7 +170,7 @@ starting deck** — the zero-copy rungs are in the file and not in the pile. **N
 player's deck is drab**: every card ships in one of the five elements, the defenses included.
 
 **A 0 AP card is bounded by the count rather than the cost**, which is the shift `minCardCost`
-already took deliberately when a Hone could drive a card to free: a turn is capped at
+already took deliberately when an Essence of Ease could drive a card to free: a turn is capped at
 `MaxActions` cards however cheap they are. **A 4 AP card pays 5x, 1.67× a Skewer for 1.33× the
 price**, so it is the one rung that pays more per AP than the rung below it, and it buys a single
 figure a five-card turn cannot otherwise reach — which is why it is an essence's prize rather than
@@ -186,10 +186,10 @@ on it would make the top card the only one worth holding.
 eats a whole hit, so there is no fraction of one to fall to: where Poke is a Jab at a quarter
 of the damage, Flinch is a Brace at none of the cost. What bounds it is the count — a turn plays
 at most `MaxActions` cards however cheap they are — rather than the budget, which is the same
-shift `minCardCost` took when a Hone could drive a card to free. **The duelist's own shield cap
-is not part of that bound any more**; see §Shields.
+shift `minCardCost` took when an Essence of Ease could drive a card to free. **A duelist's shield count is
+not capped at all**; see §Shields.
 
-**`combat.Neighbor` walks this ladder too**, so an Exalt promotes a Brace and a Debase demotes a
+**`combat.Neighbor` walks this ladder too**, so an Essence of Strength promotes a Brace and an Essence of Weakness demotes a
 Guard. A free shield changes how many hits a run takes for the rest of the journey, and that is
 something a run is **allowed** to build toward: ten defenses shrunk to Flinches is five free
 shields a turn, and nothing takes the fifth away. `Neighbor` matches on the *verb* rather than
@@ -202,8 +202,8 @@ rung; it is one constant. **It is not a term in the damage formula** — a hand'
 applies to the cards' own hits, never to a reference swing added on top, so `DMG` reaches a hit
 only through its card.
 
-**The opponent has two cards of its own and they belong to no form** — `Attack` (2 AP, `DMG`)
-and `Heavy` (3 AP, `DMG × 2`), priced against the player's tiers. `FormNone` is a real answer
+**A creature's cards belong to no form** — each creature authors its own deck under
+`data/motifs/`, and every card in it is `FormNone`. That is a real answer
 rather than a fallthrough: forms are the *player's* deck axis, and an enemy card claiming to be
 a crush would be claiming membership of a deck the player can build hands against. They draw
 with a blank corner.
@@ -419,10 +419,10 @@ deck is half ice" from being confused with "my deck contains more ice cards".
 - **An essence edits the run's deck itself, permanently.** A won fight offers two; each names a
   card and an aspect — see §The grammar: a target and a new value.
   After a `remove` the card is gone from every pile and the deck is genuinely smaller; after
-  Exalt or Debase it is a different concept from then on. Nothing takes an essence back.
+  Strength or Weakness it is a different concept from then on. Nothing takes an essence back.
 - **A relic can rewrite a card as it is dealt** — the `card-drawn` moment, which leaves the deck
   the run owns alone. Atrophy steps every 3 AP attack one rung down its own form's ladder, so a
-  Skewer is dealt as a Thrust; Frozen Lightning and Frozen Orb both `set-element` to ice, which is
+  Skewer is dealt as a Thrust; the lightning-to-ice and arcane-to-ice orbs both `set-element` to ice, which is
   why a run wearing the pair reads as zero lightning and zero arcane. Take them off and the cards
   come back. `card-cost` relics are the same shape applied to the price rather than the color.
 
@@ -602,7 +602,7 @@ One collision is live: **the player's green swatch sits near earth's green**. "G
 gray is them" is a screen-wide rule and an element breaks it. What holds it together for now is
 that the two are never seen side by side — a swatch is a square in a pane row, a border is the
 edge of a card — so the fix is deferred rather than done. Either the sides stop being
-color-coded or earth takes a green far enough from `playerSwatch` to read as a different idea.
+color-coded or earth takes a green far enough from `ui.PlayerSwatch` to read as a different idea.
 
 ### Statuses
 
@@ -761,7 +761,7 @@ DMG, frozen when it lands — which is a different axis from the card and does n
 after the one that applied it.** **How long is authored per record** — `Rounds` in
 `data/statuses.json`, read into `combat.Status.Rounds` — and every status in the file writes 2
 today. **It cannot be 1**, and that is a rule rather than a preference: side B acts second, so a
-status B applied would expire before it ever bit anything. `RegisterStatus` refuses a record that
+status B applied would expire before it ever bit anything. `registerStatus` refuses a record that
 lasts no rounds at all; the floor of 2 is not enforced, so an author setting 1 gets a status that
 never fires.
 
@@ -799,8 +799,8 @@ expected damage is the same and a turn wiped out entirely becomes rare. *(Owner'
 
 **What it costs, accepted rather than argued away:**
 
-- `internal/combat` is no longer pure integer arithmetic. It takes an injected `*rand.Rand` on
-  `ResolveRound` — never a package global, per the determinism rules — and a nil source means
+- `internal/combat` is not pure integer arithmetic. It takes injected sources on `ResolveRound` —
+  `combat.Sources`, never a package global, per the determinism rules — and a nil source means
   "no rolls", which is how tests and previews stay exact.
 - The stream advances **per hit**, so a change early in a duel reshuffles every roll after it —
   and so does any change to how many hits a turn throws, an echo relic included. That cost is real
@@ -924,7 +924,7 @@ number on a card would report a distinction the resolver does not make. `Actions
 never buys priority.
 
 **Order within a category is queue order, and two things read it**.
-`groupsOf` fills largest-count-first and breaks a tie by whose first card was played first, so the
+`matchCountOf` fills largest-count-first and breaks a tie by whose first card was played first, so the
 lead card — the one that names the hand and carries its element — is chosen by where the player put
 it. And **a growing relic steps between the hits of a turn**, so the order the attacks are queued
 in decides what each of them is worth: the first fire hit is counted bare, steps the relic, and the
@@ -1652,25 +1652,25 @@ relic that matches none of them is a new shape and needs its own argument.
 | Shape | Moment | Does |
 |---|---|---|
 | **Burning / Chilling / Shocking / Weighted / Weakening** | `attack-lands` | the five colors' status relics — one per color, and the thing that arms an element at all |
-| **Fire / Ice / Lightning / Earth / Arcane** | `card-damage` | doubles every card of that color — *element* multipliers, where Keen/Heavy/Needle are form ones |
+| **Fire / Ice / Lightning / Earth / Arcane** | `card-damage` | doubles every card of that color — *element* multipliers, where the form weapons are form ones |
 | **Storm** | `attack-lands` | lightning shocks *and* chills |
-| **Keen / Heavy / Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn |
-| **Striker** | `card-damage` | doubles every Bash — a concept relic, 5 cards where a form covers 15, and priced accordingly |
+| **The Sickle / The Club / The Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn — the form weapons |
+| **The Basher** | `card-damage` | multiplies every Bash — a concept relic, 5 cards where a form covers 15, and priced accordingly |
 | **Banker** | `fight-won` | a second +1 vitae per 5 held, on top of propagation |
 | **Soul Taker** | `prizes-dealt` | the vitae prize card pays +10 rather than +5. A **flat** +5, not a scaling |
 | **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
-| **stat relics** | `fight-start` | +10 DMG, +25 HP — and growing variants that gain per fight |
+| **Might / Bulwark / The Heart** | `fight-start` | +10 DMG, +25 HP — and The Heart, which grows per fight |
 | **Momentum** | `card-damage` + `turn-taken` | every card gains +0.2x DMG per turn with no defend card in it; a defend card wipes the streak |
-| **Enflamed / Frostbitten / Lithium / Granite / Unravelled** | `card-damage` + `attack-lands` | their color gains +0.1x DMG per landed hit of that color, and keeps it while worn |
+| **Weight of the Flame / Ice / Light / Earth / Power** | `card-damage` + `attack-lands` | their color gains +0.1x DMG per landed hit of that color, and keeps it while worn |
 | **Echo** | `blow-formed` | the blow's first attack card lands three times: full, 2/3, 1/3 |
-| **Flurry / Rend / Aftershock** | `blow-formed` | every stab / slash / crush card lands **twice**, both at full DMG |
-| **Atrophy** | `card-drawn` | every 3 AP attack is dealt as its 2 AP version |
+| **Twisted Points / Edges / Weights** | `blow-formed` | every stab / slash / crush card lands **twice**, both at full DMG |
+| **Atrophy Ring** | `card-drawn` | every 3 AP attack is dealt as its 2 AP version |
 | **Onslaught** | `card-cost` + `fight-start` | every card 1 AP cheaper, and a quarter off your life — the drawback shape |
-| **Warm / Cold / Static / Dirty / Eerie** | `card-cost` | every card of that color costs 1 AP less — one per color |
+| **Warm / Cold / Static / Dirty / Eerie Robe** | `card-cost` | every card of that color costs 1 AP less — one per color |
 | **flip x20** | `card-drawn` | recolors a card of one color as another **as it is drawn** — one for each ordered pair; see below |
 
 **A concept relic and a form relic are not the same object** and must not be priced as one.
-Striker covers 5 cards, Keen covers 15.
+The Basher covers 5 cards, The Sickle covers 15.
 
 **A color is worth about a dozen relics, not one**, and that is the number to expect when one is
 proposed. Four are the color's own seats in families that already exist — the damage relic, the
@@ -1711,13 +1711,13 @@ predicate at all, so the streak is worth the same on every card in the hand.
   swing into the next blow, or spend the turn defending and lose the streak. Whether 0.2x a turn
   is enough to make a player eat an attack is unmeasured, like every other relic.
 
-### The Enflamed family — growth inside a fight
+### The Weight relics — growth inside a fight
 
-**Enflamed (fire), Frostbitten (ice), Lithium (lightning), Granite (earth)**: their color gains
+**Weight of the Flame, the Ice, the Light, the Earth and the Power** — one per color: their color gains
 **+0.1x DMG every time an attack of that color lands**, and keeps it for as long as the relic is
 worn. Uncommon.
 
-**They are the accumulator that moves during a fight.** Heart and the growing stat relics step
+**They are the accumulator that moves during a fight.** The Heart steps
 once per win, at `fight-won` — the `grow-on-win` verb; these step at `attack-lands`, so the
 second fire attack of a duel is already stronger than the first. That needed a second verb —
 `grow-on-hit` — because a verb belongs to exactly one moment, and it needed a way home: combat
@@ -1727,7 +1727,7 @@ win, before the screen throws that duelist away.
 - **Once per hit.** Two fire cards in a hand are two steps, and a fire card that Echo lands three
   times is three — it counts **hits** rather than cards. **That is the combination it exists for**:
   the relics that multiply landings and the relics that grow per hit are meant to compound into a
-  build, not to politely ignore each other. Echo plus Enflamed is +0.3x off one card.
+  build, not to politely ignore each other. Echo plus Weight of the Flame is +0.3x off one fire card.
 - **A hit is paid for after it lands, never during**. The first fire hit of a fight lands at the
   relic's opening strength and the second at the stepped one; a relic that strengthened the hit
   that grew it would mean the first attack of a fight already wearing its own bonus.
@@ -1770,7 +1770,7 @@ damage, the hand it forms, the card face — follows because the card genuinely 
 
 ### Echo, and a hit per landing
 
-**The Echo Ring makes the turn's first attack card land three times — full DMG, two thirds, one
+**Echo makes the turn's first attack card land three times — full DMG, two thirds, one
 third.** Uncommon.
 
 **Each landing is a hit of its own.** The lead card is seated again behind itself at a smaller
@@ -1792,12 +1792,12 @@ every flat bonus, its own shock roll, its own statuses, a shield to eat it. The 
 - **Two echo relics add landings rather than multiplying**: three and three is five, not nine.
 - **Nothing measures it**, like every other relic.
 
-**Flurry, Rend and Aftershock repeat a whole form**: every stab / slash
+**Twisted Points, Twisted Edges and Twisted Weights repeat a whole form**: every stab / slash
 / crush card of the turn lands **twice, both at full damage**, uncommon. `repeat-card` is the second
 verb at this moment and it is the one that does *not* diminish — an echo is a card ringing on, a
 repeat is the card played again.
 
-- **They deal what Keen, Heavy and Needle deal on the card, and more once anything flat is in
+- **They deal what the form weapons deal on the card, and more once anything flat is in
   play.** Two full-strength landings and one doubled landing are the same card term; what the
   repeat buys is **two hits instead of one**, and a hit is now what pays — a flat bonus joins each,
   a status lands on each, a drain takes a share of each and a growing relic steps on each. What
@@ -1814,9 +1814,9 @@ repeat is the card played again.
 
 ### The discount relics — one per color
 
-**Warm, Cold, Static, Dirty and Eerie**: every card of one color costs **1 AP less**, at
+**The Warm, Cold, Static, Dirty and Eerie Robes**: every card of one color costs **1 AP less**, at
 `card-cost`, one relic per color. Each is named for the *color it warms* rather than for the
-discount, which is what lets the family cover the whole set without repeating a word.
+discount.
 
 **They are the third thing a color relic can be**, after the damage doubler and the status
 relic, and the one that changes what a turn can hold rather than what it does: a 6 AP budget
@@ -1834,11 +1834,11 @@ what makes the second and third worth buying.
 
 | Relic | Element | What wearing it does |
 |---|---|---|
-| Burning Ring | fire | your fire attacks BURN: a share of your DMG at the end of each round |
-| Chilling Ring | ice | your ice attacks CHILL: one card off the front of each of their turns |
-| Shocking Ring | lightning | your lightning attacks SHOCK: a chance their attack misses |
-| Weighted Ring | earth | your earth attacks WEIGH: they deal less damage |
-| Weakening Ring | arcane | your arcane attacks WEAKEN: they take more damage from everything |
+| Burning | fire | your fire attacks BURN: a share of your DMG at the end of each round |
+| Chilling | ice | your ice attacks CHILL: one card off the front of each of their turns |
+| Shocking | lightning | your lightning attacks SHOCK: a chance their attack misses |
+| Weighted | earth | your earth attacks WEIGH: they deal less damage |
+| Weakening | arcane | your arcane attacks WEAKEN: they take more damage from everything |
 
 The figures are `data/statuses.json`'s, not this table's.
 
@@ -1846,26 +1846,17 @@ The figures are `data/statuses.json`'s, not this table's.
 
 **One relic for every ordered pair of colors**, each `card-drawn` / one color in / another color
 out. **It is a cross-product, so it grows quadratically**: five colors is twenty relics and a
-sixth would be thirty. That is the cost line to read before proposing one. The names are
-thematic rather than mechanical — "Permafrost" says earth into ice without saying either word —
-which is a deliberate cost: the *card* has to be read to know what it does, and the tooltip is
-what says it.
+sixth would be thirty. That is the cost line to read before proposing one. **The name says
+both ends**: the first word is the color a card is dealt as and the second the color it was, so the
+Burning Frozen Orb deals ice as fire.
 
 | dealt as → | from fire | from ice | from lightning | from earth | from arcane |
 |---|---|---|---|---|---|
-| **fire** | — | Meltdown | Firestorm | Magma | Burning Orb |
-| **ice** | Frostbite | — | Frozen Lightning | Permafrost | Frozen Orb |
-| **lightning** | Heat Lightning | Thundersnow | — | Dust Storm | Charged Orb |
-| **earth** | Obsidian | Glacier | Fulgurite | — | Stone Orb |
-| **arcane** | Burning Mana | Frozen Mana | Electrified Mana | Enchanted Earth | — |
-
-**The arcane names follow a convention the other twelve do not.** Everything *out of* arcane is
-an **Orb** and everything *into* it is a **Mana**, each
-qualified by the color at the other end of the flip — Burning Orb is arcane dealt as fire, Burning
-Mana is fire dealt as arcane. Enchanted Earth is the one that breaks the second half of the
-pattern, because "Earthen Mana" says the direction backwards. That half-convention is deliberate:
-sixteen thematic one-off names is more than a player can hold, and a name that says which way the
-flip runs is worth more than another eight inventions.
+| **fire** | — | Burning Frozen Orb | Burning Charged Orb | Burning Stone Orb | Burning Arcane Orb |
+| **ice** | Frozen Fire Orb | — | Frozen Charged Orb | Frozen Stone Orb | Frozen Arcane Orb |
+| **lightning** | Charged Fire Orb | Charged Frozen Orb | — | Charged Stone Orb | Charged Arcane Orb |
+| **earth** | Muddy Fire Orb | Muddy Frozen Orb | Muddy Charged Orb | — | Muddy Arcane Orb |
+| **arcane** | Enchanted Fire Orb | Enchanted Frozen Orb | Enchanted Charged Orb | Enchanted Stone Orb | — |
 
 **They fire as a card is drawn, not as the deck is built**. Every one of
 them is worded "every X card is dealt as a Y card", and the dealing is the draw. The cards a fight
@@ -1883,12 +1874,13 @@ carries an ID, so the deck panel can show either face of a card wherever it is s
 rule may read that ID**; it is a handle for the screens.
 
 - **A flip is what makes a color relic worth wearing**, which is the whole point of the pair:
-  Fire Relic doubles fire cards and there are only so many, so Frostbite-and-friends is how a
+  the Fire relic doubles fire cards and there are only so many, so the orbs dealing other colors as
+  fire are how a
   deck is bent toward the color a run has bought into. It is also how the *status* relics get
   fed.
 - **Flips compose, and the cascade is the point**. `combat.DealSteps` is
-  the walk: each worn relic, in worn order, reads **what the flip before it left behind**. Frozen
-  Lightning (lightning→ice) and Glacier (ice→earth) worn in that order deal a lightning card as
+  the walk: each worn relic, in worn order, reads **what the flip before it left behind**. The Frozen
+  Charged Orb (lightning→ice) and the Muddy Frozen Orb (ice→earth) worn in that order deal a lightning card as
   earth, through ice, and a run wearing both holds no lightning and no ice at all.
   **Funnelling a deck is the intent rather than the hazard**: two relics that each claim to touch
   one color can walk a whole deck into one, and a build that takes two uncommons and the right
@@ -1903,8 +1895,8 @@ rule may read that ID**; it is a handle for the screens.
   the draw pile holds cards as the run owns them and the discard is restored on its way back in.
   `screens.restoreToDeck` is what pays for that, and
   `TestARedrawnCardDoesNotTakeTheCascadeTwice` is the tripwire.
-- **Two flips naming the same source is still last-worn-wins**. Frostbite and Heat Lightning
-  both claim fire; the later relic in the row takes it, by the same rule that orders every other
+- **Two flips naming the same source is still last-worn-wins**. The Frozen Fire Orb and the Charged
+  Fire Orb both claim fire; the later relic in the row takes it, by the same rule that orders every other
   multiplicative effect. Under the cascade that is the *same* rule read one step at a time — the
   first ring recolors the card and the second is then looking at a card of a different color, so
   "last wins" and "each reads the one before" only differ when the two name the same source.
@@ -1915,7 +1907,7 @@ rule may read that ID**; it is a handle for the screens.
   a price.
 
 **Every color is two relics.** **Fire, Ice, Lightning, Earth and Arcane** are `card-damage`
-doublers on their color — *element* multipliers, where Keen, Heavy and Needle multiply a form —
+doublers on their color — *element* multipliers, where the form weapons multiply a form —
 and **Burning, Chilling, Shocking, Weighted, Weakening** are the status relics beside them, a tier
 dearer. So a color offers cheap damage or a dearer, rarer status, and every record key matches the
 element name the rules use.
@@ -2026,7 +2018,7 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
 - **A sold relic's accumulator resets to zero.** `Session.grown` is keyed by record precisely so a
   relic taken off and put back on is the *same relic*; the decision is that it is not the same
   *number*. The growth is what wearing it through fights paid for, so selling forfeits it. It is
-  what stops a Heart Ring being parked in the shop between fights.
+  what stops The Heart being parked in the shop between fights.
 - **What is already worn is off the shelf**, rather than shown and refused: a seat spent saying
   nothing.
 - **Selling out of the middle of the row changes the firing order**, since relics fire left to
@@ -2040,19 +2032,19 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
 
 ### The sealed packs: a bag of rocks, a vial of essence, a sack of runes, a bundle of scrolls
 
-**All four take the same shape**: **5 vitae**, **four of something inside**, and the player keeps
-**exactly one of the four** — the other three are gone. Each draws on its own per-fight stream
+**All four take the same shape**: **something inside**, and the player keeps **exactly one** — the
+rest are gone. Each comes in three sizes, three, four or five inside, and the bigger one costs more. Each draws on its own per-fight stream
 (`seeds.BagStock`, `seeds.VialStock`, `seeds.SackStock`, `seeds.ScrollStock`), and a visit offers
 two of them. **The bundle of scrolls is the one that repeats**: it draws with replacement while the
 cantrip catalog is shorter than the smallest bundle — see §Cantrips.
 
 - **What is bought is the choice, not the thing.** A relic is read and then paid for; a good is paid
   for and then read. That is the whole design, and it is why neither card names its contents: the
-  face says the shape of the offer ("4 stones, keep 1") and nothing about which four.
-- **A bag holds four stones; a vial holds four essences.** See the stones section below. The
-  vial is the reward screen's mechanic bought rather than won — pick one of four, then pick the
-  card it eats — and what five vitae buys over the free offer of two is twice the choice, at the
-  shop rather than at the end of a fight.
+  face says the shape of the offer ("4 stones, keep 1") and nothing about which ones.
+- **A bag holds stones; a vial holds essences.** See the stones section below. The vial is the
+  reward screen's mechanic bought rather than won — pick one of several, then pick the card it
+  eats — and what the vitae buys over the free offer of two is more of the choice, at the shop
+  rather than at the end of a fight.
 - **One of whichever two are offered, per visit, restocked next fight.** It bounds what a rich
   run does in one stop and keeps the shop a short offer rather than a vending machine, which is
   the argument the three-ring shelf is already under.
@@ -2086,14 +2078,14 @@ and a proposal landing in a full one is a sibling.
 
 | Family | Tier | What it is |
 |---|---|---|
-| **concept relics** | common | one per attack card, `scale-damage 200` — Striker's shape, five cards wide |
-| **form cost relics** | rare | the form counterparts of Warm's color family |
+| **concept relics** | common | one per attack card, `scale-damage` on one concept — The Basher's shape, five cards wide |
+| **form cost relics** | rare | the form counterparts of the Robes' color family |
 | **form status / growth** | uncommon | a status relic and a growing relic per attack form |
 | **tier relics** | rare / uncommon | demote a whole tier, or pay for holding one |
 | **rung relics, flat** | common | one per rung, `add-hand-dmg`, the bonus derived from the rung's multiplier |
 | **rung relics, multiplying** | uncommon / rare | `scale-hand-damage` on one rung; **the top two rungs are rare**, because 4x on a Four of a Kind makes every hit twentyfold |
 | **double-status** | rare | one per unordered status pair, triggered by an element holding one of the two |
-| **element repeats** | uncommon | the color half of Flurry / Rend / Aftershock |
+| **element repeats** | uncommon | the color half of the Twisted form repeats |
 | **held-card relics** | common | DMG per matching card **kept back**, one per color and one per form |
 
 **Four tier rules, and the reasoning is worth more than the assignments:**
@@ -2479,7 +2471,7 @@ scratch before adding one.
 - **`amount` compounds rather than replaces** — 150% twice is 225% — so a second essence on the same
   card is worth taking.
 - **A ladder is a ring**. The top rung promoted lands on the bottom and
-  the bottom demoted lands on the top, so there is no card an Exalt or a Debase cannot reach.
+  the bottom demoted lands on the top, so there is no card Strength or Weakness cannot reach.
   `combat.NeighborWrapping` is the essence's door and `combat.Neighbor` — which stops at both ends —
   is still what a relic demoting a card as it is dealt reads: a relic aimed at nothing, and a wrap
   there would turn one that weakens a hand into one that hands it the top rung.
@@ -2701,8 +2693,8 @@ decision about the build — which rung to raise, which rune to carry, which ess
 which cards — and a panel covering the screen to ask that was covering the answer.
 
 - **The deck panel is on every between-fights screen**, not just the shop: the reward screen
-  aims an essence at a card off a deck of fifty-odd while showing eight of them, which was the place
-  the deck mattered most and could not be read. `deckpile.go` is the pile all three draw, and each
+  aims an essence at a card off the whole deck while showing eight of them, so it is the place the
+  deck matters most. `deckpile.go` is the pile all three draw, and each
   screen owns its own toggle and its own click.
 - **The ways out are taking a card or pressing SKIP**, which takes nothing and forfeits what the
   good cost — the reward screen's LET THEM ESCAPE on the same terms. The chrome stands down, as it
@@ -3026,9 +3018,9 @@ hand and the discard, and fires only when that card is played.
   round and stepped as the round pays; the combat screen then hands the run the **difference**. It
   reads that off the **resolved duelist**, not off the playback, so how fast a round is drawn cannot
   change what the player is paid. `KindVitae` is still emitted, but it is the feed's line rather
-  than the payment — summing those events to move a purse is the old way and would now double-pay.
-  The rules got a purse because a relic wanted to read one: see Rampant, which raises the duelist's DMG per vitae
-  held and would otherwise price a turn-three hit at turn-one rates.
+  than the payment — summing those events to move a purse double-pays. The rules hold a purse
+  because a relic reads one: The Rampant raises the duelist's DMG per vitae held, and would
+  otherwise price a turn-three hit at turn-one rates.
 
 - **The vocabulary is a Go enum in `internal/combat`, not a data record.** Everything else a
   rune does happens to the run; a rider is the one thing read while a round resolves, and that
@@ -3181,10 +3173,8 @@ outline against the table. **It is the same picture at rest and selected** — a
 out of the row, and that is the whole of what selection says — and **only an unaffordable card
 fades it**, so an unaffordable gold card reads as unaffordable first.
 
-**`Width`, `Inset`, `Opacity`, `FadeFrom`, `FadeTo` and `Sides` are the record's draw properties**,
-measured on the hand card and scaled with it, and every record sets them to cover the face at full
-opacity with no fade. They are judged beside the art on `go run ./tools/upgradesheet`, which draws
-every upgrade alone, in its three states, and stacked as the deck panel stacks a row. The art comes
+**The art is judged on `go run ./tools/upgradesheet`**, which draws every upgrade alone, in its
+three states, and stacked as the deck panel stacks a row. The art comes
 from `docs/art/upgrade_art_prompt.MD` with the record's `Draw` pasted after it, and is committed at the
 card's own 200x280 like every other card picture.
 
@@ -3558,9 +3548,9 @@ be built by accident.
   per-enemy dial, authored deliberately.
 - **Integer arithmetic, and the multiplier compounds rather than the stat.** The obvious version —
   `v = v * 110 / 100` once per room — freezes every stat below 10, because integer division
-  truncates `5 * 110 / 100` straight back to 5. Half the roster opens on DMG 5 or 6, so the curve
-  would have done nothing to exactly the band it was added for. A fixed-point multiplier truncated
-  once at the end is what fixes it, and `TestASmallStatStillGrows` is what caught it.
+  truncates `5 * 110 / 100` straight back to 5. Low stats are common in the roster, so that curve
+  would do nothing to exactly the band it exists for. A fixed-point multiplier truncated once at the
+  end is the rule, and `TestASmallStatStillGrows` holds it.
 - **No `math.Pow`.** A float power is not reliably identical across two machines and a stat feeds a
   duel meant to be replayable from a seed — the same rule that keeps `math/rand` out of the game.
 - **Nothing caps the fight index.** The fight order is the whole roster standing in for a
@@ -3688,10 +3678,8 @@ rather than discovered: quitting mid-duel loses that duel and resumes at the top
 
 ### The title screen, and giving up
 
-**The game boots to a menu again, and the menu is where a run is decided.** It booted straight into
-a duel for as long as the combat screen was the thing under construction, and a run existed before
-anybody had been asked anything — which was fine until there was a question worth asking. There is
-now: **New Run** or **Continue**.
+**The game boots to a menu, and the menu is where a run is decided**: **New Run** or **Continue**.
+A run that starts before the player is asked is a run they cannot decline.
 
 - **Continue is dead when there is nothing to continue**, rather than absent. A menu whose entries
   come and go between launches is one that has to be re-read every time.
@@ -3732,8 +3720,8 @@ times the size of anything else on the page.**
 
 **The seed is the reason the page earns its place.** Everything else is a number about a run that is
 over; the code is the one thing still useful afterwards — it deals the whole journey again, and it is
-how a run can be handed to somebody or named in a bug report. Before this it went to the log at
-launch and nowhere a player could ever see.
+how a run can be handed to somebody or named in a bug report, so it has to be somewhere a player
+can read it rather than only in the launch log.
 
 **The code is also in the bottom-right corner of the settings screen**, quiet and captioned, drawn
 only while a run is in progress. The splash is a page you see once and only after the fact; the cog
@@ -3871,8 +3859,8 @@ or demoting — which makes "five 4 AP attacks of one card" a statement about a 
 *built*, and the reason those two achievements are worth naming at all.
 
 **It reads `Card.Cost()` and not the concept's figure.** An essence's `CostDelta` is part of
-what the turn cost, so five Skewers an Exalt pushed to 4 AP count and five Impales a Hone made
-cheap do not. The achievement is about what was paid.
+what the turn cost, so five Impales an Essence of Ease made cheap do
+not count at the price they were printed at. The achievement is about what was paid.
 
 **Zero is a filter and not an absence**, which is why the field is a pointer in the JSON struct —
 the free rung is exactly the thing Tiny But Fierce is about, and an int could not say "the free
@@ -3892,11 +3880,10 @@ nothing about the budget, and the test now says so out loud.
 
 **Tiny But Fierce is reachable, and is the pair to it.** Five Pokes cost nothing at all, and five
 cards is exactly `MaxActions` — so it is the turn that hits the *count* bound rather than the
-budget, which is the shift Flinch and `minCardCost` both made. Getting there is five Shrinks over a
-run, which is a long grind and not a special case.
+budget, which is the shift Flinch and `minCardCost` both made. Getting there is five Essences of Weakness
+over a run, which is a long grind and not a special case.
 
-**Invulnerable needed the duelist shield cap lifted** — see §Shields, where the clamp that made ten
-impossible came off on the same day.
+**Invulnerable relies on a duelist's shield count being uncapped** — see §Shields.
 
 ### What a record says, and what it says twice
 
@@ -3926,7 +3913,7 @@ tallies and nothing else. **A lost duel settles them too** — what a defeat cos
 the record of what was swung on the way up.
 
 **Counters are per concept and per form, and never per concept and element**. Five
-colors of twelve concepts is sixty tallies to say what twelve say. Both axes are counted because
+colors of every concept is five tallies to say what one says. Both axes are counted because
 the two questions are genuinely different: "how many slashing cards" is the form and "how many
 Bashes" is the concept.
 
@@ -4046,7 +4033,7 @@ Two kinds, and the distinction matters because there is no Escape key and no rig
 - **Transient** — flashes over a frozen screen, takes no input, dismisses itself. The **HAND**
   splash. Needs no exit affordance precisely because it accepts nothing.
 
-**The freeze is already built.** `dwellFor` decides how long each event holds the screen, so a
+**The freeze is already built.** `eventDwell` decides how long each event holds the screen, so a
 `KindHand` event with a splash-length dwell gets a frozen screen for free and the splash draws
 while the playback cursor rests there. Presentation-only, so it cannot touch the outcome, and
 splash length joins the pacing constants destined to become the game-speed setting.
@@ -4105,11 +4092,7 @@ every stat below is therefore a judgment.
 
 **Determinism and color:**
 
-- `[?]` **The shock roll is conditional**, against a written rule that it should be
-  unconditional — the stream only advances when lightning is in play, so a balance tweak moves
-  every later roll. Settle it before the save format depends on a stored seed.
-- `[?]` **Earth's green sits next to the player's green swatch.** One of the two schemes has to
-  give; what holds it off is that a border and a swatch are never seen side by side.
+
+
 - `[?]` **Eight of the ten upgrade inks are placeholders** on a wheel with no hue left to claim.
-- `[?]` **The relic art is pixel art and the other catalogs are not.** Closing it means
-  regenerating one side or the other.
+

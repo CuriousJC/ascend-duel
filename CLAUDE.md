@@ -97,7 +97,6 @@ skill that does not exist.
 
 | Skill | Load it before |
 |---|---|
-| [`caveman`](.claude/skills/caveman/SKILL.md) | **every session, at the start** — see below; it is on by default in this repo |
 | [`github-workflow`](.claude/skills/github-workflow/SKILL.md) | any `git` or `gh` command — branching, committing, pushing, opening or merging a PR, cleaning up after one, or when a merge is refused |
 | [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / essences, or writing a loader |
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
@@ -112,27 +111,6 @@ skill that does not exist.
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
 went wrong once and should not have to be rediscovered.
-
-## Caveman mode is on in this repo
-
-**Load the `caveman` skill at the start of every session and stay in it.** It compresses
-replies in the terminal and nothing else.
-
-- **It never touches anything persisted** — code, comments, commit messages, PR bodies,
-  `MECHANICS.md`, `TODO.md`, this file. The skill's own Boundaries section says so and it is
-  the reason this is safe: the design record keeps its longhand reasoning. Compression
-  applies to what is typed back into the terminal.
-- **It does not override the instructions that say to argue.** Raising a structural
-  objection, saying where a claim came from, and saying plainly when something is unverified
-  all still happen — in fewer words, not fewer times. **If terseness is eating the
-  reasoning rather than the padding, say so** rather than quietly writing shorter.
-- **It drops out by itself for security warnings, irreversible actions and genuine
-  ambiguity**, and should also drop for design discussion, where the argument is the point.
-- Default level is **full**. Ask for `lite` or `ultra` in words; the `/caveman` switcher is
-  a hook that is deliberately not installed. See
-  [.claude/skills/caveman/README.md](.claude/skills/caveman/README.md) for what else was
-  left out and the honest token arithmetic.
-- **"stop caveman" or "normal mode" turns it off for a session** without editing anything.
 
 ## Licensing and IP — read before adding dependencies
 
@@ -334,7 +312,7 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
   five is `combat.MaxShields` = `MaxActions`, refused at `RegisterConcept` and clamped in
   `Card.Amount`. **`Duelist.raiseShields` does not clamp the total** — three Guards in a turn is
   nine shields and is meant to be, because what bounds a turn is the action budget. **The pip row
-  is a separate number in a separate package**: `screens.maxShieldPips` is `cards.MaxEffects`,
+  is a separate number in a separate package**: `ui.MaxShieldPips` is `cards.MaxEffects`,
   being what the bottom band fits — so a duelist behind ten draws a full row and the true count is
   on the engine. A row that can say a big number has not been designed.
 - **The dealt defenses are Brace and Block; Flinch and Guard ship at zero copies**, so the deck
@@ -353,8 +331,8 @@ saved with the run) so a relic or a tonic that moves the round count has one bas
 MECHANICS.md §The round limit. Two things to know before touching it:
 
 - **It is read last, after every other way a round can end.** A win on round five is a win and a
-  death to the final blow is a death to the blow — `combat.FightOver` is the guard, and the first
-  version of this killed the winner.
+  death to the final blow is a death to the blow — `combat.FightOver` is the guard; checking
+  the clock first kills the winner.
 - **The bar on the combat screen decides nothing.** It is a picture of `CombatScene.round`; the
   clock is checked inside the resolved round, per presentation-may-never-change-an-outcome. **What
   nothing catches is the balance**: a hard cap makes every fight a damage check and nothing here
@@ -398,7 +376,7 @@ of it:
   draws every upgrade alone and stacked as the deck panel stacks them. The prompt is
   `docs/art/upgrade_art_prompt.MD`.
 - **Every rider draws, and none of them touches the left column.** `systems.Upgrade` is the
-  presentation vocabulary — one entry per rider kind — `internal/screens.upgradeForRider` is the
+  presentation vocabulary — one entry per rider kind — `ui.UpgradeForRider` is the
   total table where a rider becomes one, and neither `internal/cards` nor `internal/systems`
   learns what a rider is. The left column states the element and almost no upgrade is about the
   element, so a left column in gold would be the element slot saying something else. **Most of
@@ -442,16 +420,15 @@ table and the rule that turned it into multipliers.
 **Re-run `tools/seeds` after touching `data/duelist_cards.json`, `startingDeck` or `handSize`.**
 A seed is a fact about one particular deck; change the deck and every cataloged number silently
 deals something else. The tool re-checks the catalog before it searches and says which entries
-no longer match — a change to the deck size has invalidated every entry at once before. A demo
+no longer match — a change to the deck size invalidates every entry at once. A demo
 testing a Three of a Kind against a hand with two Bashes in it is worse than no demo, because it
 passes.
 
 **A rarer hand needs a bigger search, and the impossible ones are worth re-checking.** Whether a
 hand is dealable at all is arithmetic over the *current* deck — how many copies of a concept there
 are, the hand size, the action budget — and all three have moved. **Do that arithmetic against
-`data/duelist_cards.json` before concluding a hand cannot be dealt**: a hand wanting five copies of
-a concept was impossible until an element grew one to five cards, and the note here saying so was
-true for nine days. A hand the tool reports as unfindable usually means the search was too short,
+`data/duelist_cards.json` before concluding a hand cannot be dealt**: the deck moves, so an
+"impossible" read off an older deck is not evidence. A hand the tool reports as unfindable usually means the search was too short,
 but not always.
 
 **Four build tags, and they compose.** Each selects a different file in its package, so one
@@ -481,8 +458,7 @@ git commit -s                                   # sign-off, per CONTRIBUTING.md
 Tests live in `internal/combat` — the only package that can be tested without a
 window, by design. Keep it that way: rules go in `combat`, not in screens.
 
-**"Needs no window" is not the same as "needs no display server", and CI found the difference
-the hard way.** On Linux, `ebiten/internal/ui` calls `glfw.Init()` from a package `init()`, so
+**"Needs no window" is not the same as "needs no display server".** On Linux, `ebiten/internal/ui` calls `glfw.Init()` from a package `init()`, so
 *linking* Ebitengine into a test binary is enough to panic on a missing `DISPLAY` — before a
 single test function runs. Four of the tested packages link it: `internal/screens` and
 `internal/models` directly, and `internal/cards` and `internal/music` because their tests import
@@ -698,7 +674,7 @@ These apply everywhere, the combat screen included. The pointer vocabulary is:
   `systems.DrawTooltip` are the widget; the wording is `internal/ui/tips.go`.
 - **Long press** — the same reveal, for a touchscreen or a controller, where there is no cursor to
   rest. **Not built**, and it is the only reason hover did not simply replace it: see MECHANICS.md
-  §Hover and long press, where the record of hover being *rejected* was reversed.
+  §Hover and long press.
 - **A key may be a shortcut for a button that is on the screen, and nothing else**. Escape
   presses the settings cog — `internal/game/chrome.go` — and it is live exactly when that button
   is, gated on the same `chromeShowing` predicate and the same `gs.InputGated` shield. **A key
@@ -808,7 +784,7 @@ than a drift.
   page — a whole deck, a ladder, a run's account. A dialog that covers the screen to ask six
   words reads as something having gone wrong, and it hides the thing being asked about.
 - **It stays in the family**: same scrim, same bevelled panel, same pink stroke, and the
-  destructive answer takes `modalCloseColor` — the only red in the game. It does **not** borrow
+  destructive answer takes `ui.ModalCloseColor` — the only red in the game. It does **not** borrow
   the X: an X means "put this away", and a question with one has three answers where it should
   have two.
 - **The callbacks are rebound every frame**, because one dialog serves two callers and a callback
@@ -826,7 +802,7 @@ a bevelled face, a cached image repainted only when something visible changed.
   that cannot name its successor: `state.ReturnScreen` is where Back goes, recorded by whoever
   opened it. **It never touches `session.Phase`** — settings is not a station of a run, so opening
   it mid-journey is a look at a dialog rather than a decision.
-- **Adding it was the usual three edits minus one.** No `session.Phase` and no entry in
+- **Adding it is the usual three edits minus one.** No `session.Phase` and no entry in
   `screens/flow.go`, because it is not part of the run loop; just the `ActiveScreen` and the
   registry in `internal/game`.
 - **A slider is 0..1 and knows nothing about what it is setting.** The scene maps that onto the
@@ -838,7 +814,7 @@ a bevelled face, a cached image repainted only when something visible changed.
   past the control's own right edge, so a full-width bar can never be turned all the way up —
   `TestBothEndsOfTheTravelAreReachable`.
 - **`models.Slider.Ink` exists because the game has two grounds.** The near-white default is for a
-  dark screen; this one is painted on `screenGround` and passes `groundInk`. Same reason
+  dark screen; this one is painted on `ui.ScreenGround` and passes `ui.GroundInk`. Same reason
   `ColorToward` exists beside `ColorAtStrength`.
 - **The sounds bar is deliberately absent.** There is no sound system yet, and a slider setting a
   number nothing reads is a control that lies about what it does.
@@ -1044,16 +1020,15 @@ the page it is all reviewed on.
   form and every element answers a key, with anything that is not one of the five elements
   answering the neutral drawing — so a blank corner means a missing file rather than a card with no
   element. A key naming nothing comes back nil and draws nothing, which is the honest failure.
-- **Nothing is tinted.** The hue is in the drawing. `cards.tintInk` is gone and so is the shield
-  pip's multiply; `shieldFlight` and `shieldRow` carry a `cards.Element` where they carried a
-  `color.RGBA`, which is what lets a pip draw the shield its card was showing.
+- **Nothing is tinted.** The hue is in the drawing. `shieldFlight` and `shieldRow` carry
+  a `cards.Element`, which is what lets a pip draw the shield its card was showing.
 - **A card's corner carries a drawn form mark** — a spear, a scimitar, a club and a shield for
   stab, slash, crush and defend, from `assets/form/`. `MarkArtKey` answers `""` for `FormNone`, so
   a relic and both fighter cards leave the slot empty.
 - **Art is committed at 256x256** (640x256 for a tick) and the game reduces it to the 32 and the 16
   it draws at — one averaging step from a rich source rather than two from a thin one, which is
-  what keeps the near-black contour alive at card size. A batch delivered at 64 arrived with no
-  contour left at all and it was invisible by eye.
+  what keeps the near-black contour alive at card size. Art delivered at 64 loses the contour
+  entirely, and that is invisible by eye.
 
 - **The card is 162x224, and it is a column and a paragraph.** The form mark sits in a 32px
   box at (10,8) — **inside the card, not hanging off the corner**, because a mark carrying
@@ -1070,8 +1045,8 @@ the page it is all reviewed on.
   matrix it is chosen on. `cards.Spec` still has no `Damage` field: the badge says what the
   *card* multiplies by, never what the wielder would deal with it.
 - **A card's picture is a function of the card *and who is holding it*.** A slash in the hands
-  of someone wearing Keen must not read "2x DMG" and deal four times their DMG — the card's
-  multiplier and the relic's scaling are applied in different places. `screens.held` is the
+  of someone wearing The Sickle must not read "2x DMG" and deal four times their DMG — the card's
+  multiplier and the relic's scaling are applied in different places. `ui.HeldBy` is the
   pairing — cost, DMG and worn relics, traveling together — and **the figure a relic has moved
   is written in the relic pink**, via `Spec.TextInk` and `Spec.TextHighlight`, which colors that
   run of the line and not the sentence around it: a pink verb would say the relic changed the
@@ -1105,177 +1080,12 @@ and enlarged. The damage badges have their own matrix, `go run ./tools/badgeshee
 silhouettes along a row and five hues down a column, so the two failures are a form that cannot be
 told from its neighbour and an element that cannot be told from its neighbour — and neither is
 visible one drawing at a time. It prints, under every cell, the ink's drawn size, the opaque pixel
-count and **what share of those pixels are near-black**: that last figure is the contour, and a
-batch arrived with it at zero once and was invisible by eye at review size.
+count and **what share of those pixels are near-black**: that last figure is the contour, and
+a batch with it at zero looks fine by eye at review size.
 
 **Actual size before enlarged, always.** The rule the old sheet established and the one thing this
 page inherits wholesale: reviewing only the blown-up row is how a mark comes to look acceptable in
 review and clunky in play. There is no zoom anywhere in the game.
-
-### Audio is generated too, and for the same reason
-
-[internal/music](internal/music) plays the score. `assets/sounds/duello.mid` is a **Standard
-MIDI File — a kilobyte of notes** — and `internal/music` synthesizes it to PCM once at
-startup. `main.go` starts it after assets load; it loops for the whole session across
-every screen. Editing the tune means editing the MIDI file. **Nothing is baked and there
-is no build step.**
-
-**Beside the score, `internal/music` holds named tracks** — recorded WAV loops, loaded by `main`
-out of `privateassets/`. The score and a loop are the same kind of thing once they are in the
-package. Several things to know before touching any of it:
-
-- **Which screen plays what is `internal/game/score.go`, and no scene decides it.** One
-  `state.ActiveScreen` table, read **every frame** — `music.PlayTrack` does nothing when the
-  track is already sounding, so there is no previous screen to remember and no way for the table
-  and what is audible to drift. The alternative was a call in each scene's `Init` and a matching
-  one to put the score back, which is two edits per screen and one of them is the one that gets
-  forgotten, leaving the shop's loop playing over a duel.
-- **Every screen is listed, including the ones that play the score.** `music.Score` is a name —
-  `"duello"` — rather than the empty string, because the score plays on nearly every screen
-  and was the one piece of music not written down anywhere near the decision about it. A zero
-  value standing for a real thing is the pattern this project rejects everywhere else, and
-  `TestEveryScreenNamesItsMusic` walks `state.ActiveScreen` so a new screen fails the suite
-  rather than falling back quietly.
-- **A screen gives one of two answers**: it names a piece of music, or it **leaves whatever is
-  sounding alone**. Settings, Achievements, Credits, the debug gallery and an opened sealed good
-  are all reached *from* somewhere and go back to it, so they are transparent to the music the
-  way they are transparent to the run — a player who opens the volume bar to turn the shop's loop
-  up must not have the shop's loop stop to let them. **The seamless return falls out of it for
-  free**: coming back asks for a track that is already sounding, which `PlayTrack` ignores, so
-  the loop plays through the visit instead of starting over.
-- **It is deliberately not `chromeShowing`.** That predicate answers whether the frame draws its
-  own controls; its list is close enough to be tempting and wrong in three places — `Title` and
-  `PostBattle` stand the chrome down while naming their own music, and `RunOver` is a destination
-  rather than an overlay, so there is nothing to be transparent *to*. Two questions that agree
-  about five screens and disagree about three are two tables.
-- **One table rather than a map of tracks beside a set of exceptions**, because a screen written
-  into both would be a contradiction nothing catches.
-- **The score and a loop are the same kind of thing**, and `internal/music` never learns which is
-  which — `main` loads the loops out of `privateassets/` and the package holds named players.
-  Where a piece came from is a fact about who loaded it, not a property to be written on it.
-- **A track nothing was loaded under gets the score.** A clone with no bundle synced plays the
-  score everywhere rather than falling silent wherever a loop was named — the empty-
-  `privateassets` rule reaching the screen. `TestEveryNamedTrackIsInTheBundle` holds `score.go`
-  against the committed manifest (**the manifest, not the directory** — the WAVs are not in git,
-  so a test looking for files would fail on every clean clone) and *reports* a bundled loop no
-  screen plays, rather than failing on one.
-- **The score resumes and a track restarts.** The score runs for the whole session and dropping
-  back into it mid-phrase is what it is for — the same argument `SetLevel` is under. A track
-  belongs to a *place*, so arriving there starts it.
-- **`SetLevel` sets every player, not the one that is sounding.** A paused track keeps the volume
-  it was set to, so a level changed while a loop is up would otherwise be the level the score
-  came back at — the bar and the music disagreeing about the number the bar is the only control
-  for.
-
-**Normalize a bought loop on the way in, and never fix a quiet one with the ceiling.**
-`music.fullVolume` is 0.35 and caps the score and every track *together*, so raising it to
-rescue one loop makes the chiptune harsh. The score sits at **-1.7 dBFS peak, -14.7 dBFS RMS**;
-peak-normalize a track to **-1.0 dBFS** and the two land within a decibel or two, which is what
-stops a player reaching for the bar when the screen changes. The gain applied goes in the pack's
-`Note`, because it means the bytes that ship are not the bytes that were bought.
-
-**A track is decoded by its extension, and the size is the thing to watch.** `music.decoders` is
-the table — WAV, Ogg Vorbis and MP3, the three Ebitengine takes, and the same three
-`privateassets.Audio` hands over, which is why `LoadTrack` is given a *filename* rather than a
-name: a loader accepting less than the embed carries is a manifested sound that ships and is
-never heard. `sampleRate` is 44100 and the loops are 16-bit stereo at exactly that, so nothing is
-resampled — but a minute of WAV is about ten megabytes in the binary where the Ogg would be a few
-hundred kilobytes. **Convert on the way into `privateassets/audio/`, not in the loader**, and read
-the size against the catalog before adding a third loop.
-
-- **Ebitengine cannot play MIDI.** Its audio package decodes MP3, Ogg Vorbis and WAV,
-  and that is all. The three ways past that were converting to Ogg offline, embedding a
-  SoundFont plus a synthesizer, or generating the audio in Go.
-- **The third was chosen to keep the repository small.** A SoundFont is megabytes and a
-  rendered Ogg is a binary where a kilobyte of notes will do, and both put the tune somewhere
-  a diff cannot read. `oto` (first-party to Ebitengine) is the only dependency this added.
-- **What it costs is fidelity.** This is an oscillator, so the score sounds like a
-  chiptune. The current file is two synth basses and a drum part, so the distance is
-  short — **a score wanting strings or a piano would not survive the trip, and that is
-  the moment to revisit the decision rather than to keep bolting on oscillators.**
-- **`smf.go` and `synth.go` may not import Ebitengine**, exactly like `internal/combat`.
-  That is what makes them testable, and `music_test.go` pins the shape of the real file:
-  85 notes, three channels, a 13-bar loop, and a render that is byte-identical twice.
-  **Generated output fails quietly** — a synth handed a file it half-understands plays
-  something, and what it plays is wrong in a way nobody notices.
-- **No `math/rand`**, per the determinism rules. The drum noise is a 15-bit shift
-  register seeded from each note's start frame, so two renders cannot differ.
-- **Failing to open the audio device is logged, never fatal.** A machine with no sound
-  card still plays the game — and `music.Available()` reports it, so the volume bar on the
-  settings screen disables itself rather than silently doing nothing.
-- **There is no mute, only a level**. `SetLevel(0..1)` is the whole
-  control and zero is the only silence there is; the mute latch went because a latch and a bar
-  are two controls over one number that then have to be kept from disagreeing. The bar is on the
-  settings screen — a control, never a hotkey, since the input vocabulary has no keyboard.
-- **`fullVolume` is the ceiling the bar's 1 actually means**, and it is a third of the device's
-  range because this is background music under combat sounds that do not exist yet. "How loud is
-  the score allowed to get" stays one decision in `internal/music` rather than a figure typed
-  into a scene.
-- **Volume, not Pause.** Pausing would hold the score at the bar it was on, so coming back from
-  silence mid-duel would drop the player into a phrase they had already heard. A track that keeps
-  running underneath puts them wherever the music would have got to.
-- **The game boots silent for a new player** — a fresh `profile.Settings` has `MusicVolume: 0`,
-  and `main` applies the saved settings *before* `Start` opens the device, so a returning player
-  gets back the level they chose rather than a moment of the wrong one. Music that begins on its
-  own is the first thing a new player reaches for a control to stop.
-
-### The frame: the two controls that belong to no screen
-
-[internal/game/chrome.go](internal/game/chrome.go) draws the **settings button** — a 44px
-square in the bottom-left corner of every screen, carrying a generated cog — and, beside it, the
-**ledger button**: the run's account of itself, on every screen. See MECHANICS.md §The ledger,
-`internal/screens/ledger.go` for the panel and `internal/session/ledger.go` for what it holds.
-
-**The third thing in the frame is the achievement toast.** It is not a control — it is the game
-telling the player they did something, and waiting to be clicked out of. It qualifies on the
-same three tests and could not be a scene's for the ledger's reason plus one of its own: an
-achievement can land during a duel, on the post-battle screen, or on the transition between
-them. Like the ledger it takes the frame while it is up and the active scene is not updated at
-all. **Its queue is `state.EarnedThisSession`**, written wherever an award happens in
-`internal/screens` and drained one box at a time — a five-element turn earns three achievements
-together.
-
-**The ledger is chrome for the usual three reasons and one it does not share**: it is true for the
-whole run, wanted on every screen and owned by no scene — and unlike the settings it *could not*
-have been a screen, because leaving the combat screen and coming back re-runs `Init`, which deals a
-fresh duel. A ledger that navigated would destroy the fight it was opened to read about. While its
-panel is up, `internal/game` does not update the active scene at all; that freezes pacing and, like
-every other dialog, cannot change an outcome.
-
-**The cog opens the settings screen and nothing else.** The corner does not mute — there is no
-mute anywhere, only a level — and what it buys instead is one place for the game speed and the
-volume to live together.
-
-- **The third widget is `models.Scrollbar`**, built the way
-  `models.Button` and `models.Slider` are — a plain struct in `models`, behavior in `systems`. It
-  **counts rows, not pixels**, so a panel cannot land half a line off, and it is a drag because the
-  input vocabulary has no wheel and adding one would be a fourth verb rather than a widget.
-- **It is deliberately outside "scenes own their own widgets" rather than an exception to
-  it.** The score is started once in `main` and loops for the whole session across every
-  screen, and the game's one clock is the same number on every screen, so the control that
-  opens both belongs at the same level. The alternative was the same button on six scenes:
-  six placements to keep in step and six callbacks into one package.
-- **The bar for joining the frame is high, and the file says so.** Something true for the
-  whole session, on every screen, owned by no scene. A frame is easy to grow by accident.
-- **`state.ModalOpen` is what it cost.** A scene sets it while it has a dialog up and the
-  chrome neither updates nor draws — otherwise the button would sit live on top of the deck
-  overlay, whose whole design is that the control closing it is the only lit thing on
-  screen. **The frame clears the flag each tick and the scene re-asserts it**, so leaving a
-  screen with its overlay open cannot hide the chrome for the rest of the session.
-- **It also stands down on the settings screen itself**, which is the one screen where the corner
-  would be a door into the room the player is already standing in. `chromeShowing` is the one
-  predicate both halves ask; that screen carries its own Back button.
-- **Never disabled.** The mute button it replaced was, on a machine whose audio device would not
-  open. This one opens a screen, which always works — it is the *volume bar* on that screen that
-  goes dead, and it says why underneath itself rather than merely going gray.
-- **Square and iconic because the corner is 52 pixels wide** on the combat screen — the hand
-  band starts at x=52 and the action-point figure sits on its left edge, so a labeled
-  button does not fit beside them.
-- **The cog is `assets/game/gear.png`, and it has eight teeth: four on the axes, four on the
-  diagonals**. Four was tried first and read as a compass rose — at
-  32 pixels a gear is recognized by the *count* of its teeth before any one of them is legible,
-  and the hole in the middle is what makes it a cog rather than a flower. That is a constraint on
-  any replacement drawing, not a description of how this one was made.
 
 ### Cards: the left column carries the element, the border carries state
 
@@ -1298,7 +1108,7 @@ the element is said by **the left column — the form mark and the cost ticks un
   border toward the surface and `tickFade`/`tickFadeTarget` walk the drawn tick exactly as far,
   toward the same one. A second copy of that switch is how a selected card ends up with a lit
   border and resting ticks, and how a disabled card fades its ticks toward the wrong surface;
-  `TestTheTicksAndTheBorderShareOneState` fails on both and caught the second one.
+  `TestTheTicksAndTheBorderShareOneState` fails on both.
 - **Nothing in the left column is tinted.** Every form mark and every cost tick is authored in
   its element, so the hue is in the art: `MarkArtKey` and `TickArtKey` pick a drawing rather
   than a color.
@@ -1313,7 +1123,7 @@ the element is said by **the left column — the form mark and the cost ticks un
   toward whatever it actually sits on. Card state is expressed as distance to the surface.
 - **Cost is tick marks and the form is a corner mark**, not text and not a numeral. **A tick is
   16x4**, so four of them stack in 31 pixels and the cost column ends well up the face. Every
-  card in the game runs 1..3, the player's and every enemy's; a fourth tick grows the stack
+  card the game deals today costs 0 to 3, the player's and every enemy's; a fourth tick grows the stack
   further down the card and is a layout change, not just a bigger number.
   `TestLeftColumnDoesNotCollide` fails rather than rendering it. **A card declares its own
   cost now**, so nothing stops a data file writing 5 — which is a reason to
@@ -1368,14 +1178,6 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   rather than a record's own idea**, which is what earns it a file: the stones are one silica
   ladder that ascends in finish, topped by the one gem. A new
   `EssenceStyle` good starts in the catch-all and earns a file the same way.
-- **The relic catalog is pixel art and the other three are not**. The 137
-  pictures in `assets/relic/` were generated from a prompt asking for chunky blocks and sixteen
-  flat colors; the essences, runes and stones came from the smooth block every prompt carries
-  today, so a relic card and a stone card do not look like one game.
-  **`docs/art/relic_art_prompt_pixel_archived.MD` is the pixel prompt, kept live-shaped and
-  clearly marked not-live**, so the direction can still be reversed by regenerating rather than by
-  reconstructing a prompt from git. Closing this means regenerating one side or the other — 137
-  relics, or 58 of everything else — and it is the owner's call which.
 - **A prompt reserves nothing.** No title band, no counter disc, no corner kept clear. The card
   draws its counter over the bottom-right and its sentence on a scrim across the lower half, and
   both go on top of a picture that carries on underneath — so a prompt describing either produces
@@ -1385,17 +1187,15 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   measurements.** The picture is one object at about 80% of the width and 70% of the height,
   sitting slightly high on a near-black hue-tinted ground with barely perceptible noise; smooth
   material shading, anti-aliased edges, a near-black contour, light from the upper left. It is not
-  quantized pixel art and never was — the first prompt demanded 16 flat colors on a 40x56 block
-  grid, the generator ignored all of it, and the catalog is what came back. **A clause nothing in
+  quantized pixel art, and no catalog is. **A clause nothing in
   `assets/` satisfies is a clause to delete.** The one thing an essence prompt adds is the fading,
   plus a note that the half carrying the recognition should be the upper one since the sentence
   lands on the lower: a placement hint, not a band to leave empty.
 
 - **Six catalogs carry `Family` and `Draw`, and nothing that plays the game reads either** .
  `relics.json`, `essences.json`, `runes.json`, `potions.json` and `goods.json` carry `Art`
- beside them; every record under `data/motifs/` carries `Draw` and `Art`, with every `Draw`
- reading `TBD` — the roster's pictures are all still to be generated, so the field is
- a seat for briefs to be written into a motif at a time. **`Family` is the motif a record was
+ beside them; every record under `data/motifs/` carries `Draw` and `Art`, and a `Draw` is
+ the brief that record's pictures are generated from. **`Family` is the motif a record was
  authored beside** and is what its
  review sheet groups by; it is authored rather than derived for the relic catalog's reason, and
  it carries the same caveat — **it can go quietly out of date when a record is retuned and no
@@ -1412,7 +1212,7 @@ they split, and they split because one shared picture is a page where a drawn es
 rune are the same face.
 Same exception to the three-edit rule the enemy portraits take, and the same cost: a key is
 tied to its filename, so renaming a file means editing the JSON. `assets.embedFamily` is the one
-walk all four families go through. **Most relics still have no artwork and draw
+walk all four families go through. **A relic with no artwork draws
 `default-relic.png`** — `data.RelicData.ArtKey` is the fallback and `TestEveryRelicDrawsSomething`
 fails on a key naming no file, so a blank face means art nobody has painted rather than a name
 nobody spelled right.
@@ -1487,7 +1287,7 @@ records, because a rune is the least readable record in `data/`: which of `Rider
 
 **`tools/motifsheet` does it for the roster**. A creature is met one at a time, three rooms to a
 realm, and its whole personality is a deck the player only ever sees the played half of — so "do
-this motif's three rooms read as a journey" was a question answered by reading JSON. The page groups
+this motif's three rooms read as a journey" cannot be answered by playing. The page groups
 by motif, prints the motif's HP, DMG and AP spread and its tier mix in the heading, and draws every
 record as **one composite strip**: the opponent's own card as the combat screen draws it, then its
 deck, one card per concept with the copy count in the table under it.
@@ -1556,7 +1356,7 @@ entry. Four things to know before touching it:
   colored, because it cannot see `internal/cards` at all.
 - **The fight log colors through the ledger's *named* inks**, not through a stored color. A line is
   written once and read back three fights later, so a color baked into it would be the color the
-  build that wrote it happened to use — see `session.LedgerSpan.Ink` and `screens.elementInkNames`.
+  build that wrote it happened to use — see `session.LedgerSpan.Ink` and `ui.elementInkNames`.
 
 **Hue belongs to the elements, and the wheel is full**. Fire, ice, lightning, earth and arcane
 take five hues; pink is a relic and a pane's chrome; red and blue are the attack and defend
@@ -1564,8 +1364,8 @@ verbs; green and gray are the two duelists. **There is no unclaimed hue left**, 
 wanting to stand out is marked by *weight, case, a swatch or an underline* rather than by a
 color. **The ground itself takes blue**, which is a real collision with the defend verb and is
 accepted rather than solved: the table is a surface and a verb is a mark on it, so the two are
-never being compared, but it is why the AP bar's empty cells had to stop traveling 80% of the
-way to the ground and settle at 50 — see `combat_actionbox.go`. A *new* thing wanting blue has
+never being compared, but it is why the AP bar's empty cells travel only 50% of the way to the
+ground — see `combat_actionbox.go`. A *new* thing wanting blue has
 nowhere left to stand. **The hand's own name is the case that proves it**: the relic pink would
 put the two things that multiply a hit in one color in the same line, and deep purple collides
 with arcane — so it takes the ground's own ink and is *marked* instead. See
@@ -1626,9 +1426,7 @@ the lit top edge it has whatever state it is in is surface.
 
 **`systems.BevelEdges` derives both edges from the fill itself** — `ColorToward` toward white for
 the light, because a saturated color has nowhere to climb by scaling, and `ColorAtStrength` for
-the shade. So a widget still names one color, everywhere, with no palette anywhere: the one thing
-that ever needed a six-value one was a generated silhouette, whose light had to be drawn because
-it had no fill to compute light from, and there are no generated silhouettes left.
+the shade. So a widget names one color, everywhere, with no palette anywhere.
 
 - **`BevelFace` for a control drawn without a face, `BevelRect` for anything else**, and the depth differs on purpose:
   `BevelWidth` is 3 for a button, `PaneBevelWidth` is 2 for a panel, which is the largest surface
@@ -1650,27 +1448,27 @@ toward black, so on a light surface it makes things louder rather than quieter �
 section above. `systems.ColorToward` is the light-ground counterpart and the two are not
 interchangeable.
 
-**Every screen's ground is a light slate blue** (`screens.screenGround`), so `ColorAtStrength`
+**Every screen's ground is a light slate blue** (`ui.ScreenGround`), so `ColorAtStrength`
 is the exception rather than the default, and reaching for it to dim something drawn straight
 onto the table is a bug waiting to be seen.
 
 **Its lightness is what is load-bearing, not its hue**, and that is the sentence to read before
-changing it. `groundInk` is near-black and every dim on the table is
-`ColorToward(x, screenGround, pct)`; both are only correct on a light ground. **A darker ground
+changing it. `ui.GroundInk` is near-black and every dim on the table is
+`ColorToward(x, ui.ScreenGround, pct)`; both are only correct on a light ground. **A darker ground
 is not a color change, it is a re-tune of every figure on the table.**
 
-**The screen is painted by `screens.fillGround`, not by `screen.Fill`** — a subtle vertical
+**The screen is painted by `ui.FillGround`, not by `screen.Fill`** — a subtle vertical
 gradient, lighter at the top, lit from the same corner `systems.BevelEdges` lights every card and
-button from. **`screenGround` stays a single color anyway**: everything that dims toward the
+button from. **`ui.ScreenGround` stays a single color anyway**: everything that dims toward the
 ground needs one answer to "what color is the table", and a per-pixel one would make a figure's
 dimming depend on where it happened to be drawn. The gradient's two ends are derived from it.
 
 **A color that is "one step off the ground" must be derived, never written down.**
-`relicPaneBackColor` was a hand-picked tan and would have silently stopped being one step off
-anything the moment the ground moved; it is `ColorAtStrength(screenGround, 91)` now. It still
+`relicPaneBackColor` is `ColorAtStrength(ui.ScreenGround, 91)`, because a hand-picked color
+silently stops being one step off anything the moment the ground moves. It still
 governs buttons, because a button paints its own dark face and its label is white — that face is
 the ground its states are scaled against, not the screen. Text written directly on the table
-takes `screens.groundInk`.
+takes `ui.GroundInk`.
 
 A code-drawn widget names the color it wants at **full strength**, and its other states are
 scaled down from that with `systems.ColorAtStrength`. A faceless button is the reference case:
@@ -1702,9 +1500,9 @@ times. Keep them separate.
   `DebugGameplay`**: "what may the player know" is not "what gestures exist".
 
 **The gallery exists to give the gestures names.** There are a dozen distinct movements on the
-combat screen and each was reachable only by producing the situation it belongs to — a break needs a
+combat screen and each is reachable only by producing the situation it belongs to — a break needs a
 shield eating an attack, a toast needs a relic firing into a sum, the cascade needs two flip rings
-and a hand with the right colors in it. So "make the toast louder" was a sentence with no shared
+and a hand with the right colors in it. Without names, "make the toast louder" is a sentence with no shared
 referent. The page lists every gesture by name, plays it on a loop, and prints the **symbol that
 implements it** beside it.
 
@@ -1729,462 +1527,25 @@ keyboard and the input vocabulary does not have one. **`DebugGameplay` defaults 
 `DebugAnimations` is on while the gallery is being built** — it belongs off before this ships, on
 the same argument the other is under.
 
-### `internal/trace` is a third thing, and it is compiled out
+### Nine subsystems, each documented in its own package
 
-[internal/trace](internal/trace) writes a running account of what the game did — layout
-rectangles, resolved rounds, clicks and drags — and periodically captures the screen to
-`trace/frame.png`. It exists so a problem can be diagnosed from output rather than from
-someone describing what they saw, or taking screenshots by hand.
+Each of these keeps its whole story in its `doc.go` — `go doc ./internal/<name>` — and is read there
+before it is touched. What stays here is whether it ships and the rule a change most often breaks.
 
-```powershell
-go run -tags debugtrace .     # traced
-go run .                      # nothing: every trace function is empty
-```
+| Package | Ships | The rule to hold |
+|---|---|---|
+| `internal/music` | yes | Normalize a bought loop to -1.0 dBFS peak on the way in; never rescue a quiet one by raising `fullVolume`. A dead audio device is logged, never fatal. |
+| `internal/game` — the frame | yes | The bar for joining the frame is high: true for the whole session, on every screen, owned by no scene. Which music a screen plays is `score.go`, read every frame — no scene decides it. |
+| `internal/trace` | **no** — `-tags debugtrace` | Must stay deletable in one commit. Guard a call site that builds its arguments with `trace.Enabled()`. |
+| `internal/idle` | **no** — `-tags idleexit` | Gated on window focus, cursor movement included. |
+| `internal/scenario` | **no** — `-tags scenario` | It deliberately changes outcomes, which is why it may never ship; a misspelled key fails the launch. `tools/scenariosheet` is how the fixtures are found. |
+| `internal/profile` | yes | Nothing about a save file may fail a launch; a file from a newer build is read and never written over; write names, never ordinals. |
+| `internal/tutorial` | yes | It fires on its own for an untaught profile, so a clean machine opens into it. Its seed is held by tests that check each other — if one goes red the fix is a new seed, not a weaker check. |
+| `internal/crashlog` | yes | Nothing here may be fatal, and a report carries no path, machine name or user name. |
+| `internal/journal` | yes | Inputs, never outputs. Starting a run truncates it and a crash takes a copy. |
 
-- **A build tag, not a runtime flag, and that is the point.** The two debug flags above are
-  *views* a player could conceivably be given. This is instrumentation for whoever is
-  building the game and it must not be in a binary that ships. `go build .` carries none of
-  it — no strings, no PNG encoder, no file writes.
-- **It must stay deletable in one commit.** That property is what makes it acceptable in a
-  product that will be sold. If trace calls spread thinly through the screens, it is gone.
-- **`internal/combat` may never import it.** trace imports Ebitengine, and the rules package
-  not importing Ebitengine is exactly what makes it testable without a window. The *screen*
-  traces the event log `ResolveRound` hands back; combat itself stays clean.
-- **It may never change an outcome**, the same constraint as the debug flags and playback
-  speed. `ResolveRound` neither sees it nor calls it.
-- **Guard call sites that build their arguments** with `if trace.Enabled()`. The no-op
-  functions cost nothing, but Go still evaluates what is passed to them.
-- Lines carry the **simulation tick**, not a wall clock, so a trace lines up with a replay of
-  the same seed. Captures are throttled to one every two seconds: `ReadPixels` is a
-  GPU-to-CPU readback that stalls the frame it happens on.
-- The layout dump re-runs whenever the **hand size** changes, since the whole bottom band is
-  a function of that number. `tracedHand` watches it, so no call site has to remember.
-
-### `internal/idle` is a fourth thing, and it is compiled out too
-
-[internal/idle](internal/idle) closes the game after a stretch with nobody at the controls.
-
-```powershell
-go run -tags idleexit .                       # closes itself after two minutes idle
-DUELLO_IDLE_SECONDS=30 go run -tags idleexit .
-go run .                                      # nothing: Tick is empty and always false
-```
-
-It exists so the game can be **launched unattended** — started to check a change, left to run,
-and gone by itself rather than holding a window open for the rest of a session.
-
-- **A build tag for the same reason as trace**, and the same two-file `_on`/`_off` shape. A
-  game that quits on a player who steps away to make tea is a bug, so this must not be in a
-  binary that ships. It has to stay deletable in one commit.
-- **Everything is gated on window focus, cursor movement included.** That is the whole trick,
-  not a nicety: an unattended run sits in the background while whoever launched it does
-  something else, and a cursor crossing the desktop over an unfocused window would otherwise
-  read as someone playing. The one case it exists for would be the one case it never fired in.
-- It sets `ShouldClose` rather than returning `ErrClosing`, so the exit runs through the same
-  path as the window's close button and there is only one way the game ends.
-- **It may never change an outcome.** It closes a window; it does not touch a duel.
-
-### `internal/scenario` is a fifth thing, and it is compiled out too
-
-[internal/scenario](internal/scenario) plugs **a chosen set of relics, a chosen opening hand, a
-chosen enemy — and a chosen screen** into a launched game.
-
-```powershell
-go run -tags scenario .                                        # the first entry in the file
-DUELLO_SCENARIO=seven-term-sum go run -tags scenario .    # a named one
-go run .                                                       # nothing: every function is a zero value
-```
-
-It exists because an interaction between relics is currently a twenty-minute question. A relic is
-bought from a shelf of three, a hand is dealt from a shuffled deck, and an enemy is whoever the
-journey put in the room — so "does Echo actually multiply Enflamed's growth" cannot be *looked at*
-without playing toward it. The rules are unit-tested; what no test can answer is what the
-combination looks like on screen. It is the relic-and-hand counterpart of `deckSeedName` and
-`session.StartingRelics`, which each do one axis of the same job.
-
-- **`scenarios.json` lives beside the package, not in `data/`.** Everything in `data/` is the
-  game's own catalog, loaded by every build. A scenario describes a thing being *tested*, and
-  filing it with the cards would embed a debug fixture in a release binary.
-- **A build tag for the reason trace and idle have one**, and the same two-file `_on`/`_off`
-  shape. This hands the player a chosen hand and a chosen row of relics; it must not ship, and it
-  has to stay deletable in one commit. The `//go:embed` is in the `_on` file, so an untagged build
-  carries neither the fixture nor the reader.
-- **It deliberately changes outcomes, unlike everything else that is compiled out.** `trace`,
-  `idle`, the demo and both debug flags are views and may never alter a result. This is a
-  *fixture* — which is exactly the argument for the build tag rather than a runtime flag.
-- **Three call sites, each one guarded line**: `main` sets `session.StartingRelics`, `Init` picks
-  the enemy, `resetDeck` plugs the hand. Nothing else in the game knows the package exists.
-- **The hand is dealt over the shuffle rather than through it.** The draw pile is untouched, so
-  the second hand of the fight is a normal one and the fixture is only the opening.
-- **A misspelled relic, card or enemy fails the launch**, at package init, before a window opens.
-  A fixture that quietly tests something else is worse than a game that will not start.
-- **It also opens the game on a named screen**: `"Screen": "reward"`
-  or `"shop"`, with `Fight`, `Vitae` and `Life` saying what state to arrive in. A between-fights
-  screen was otherwise a twenty-minute question — the reward screen's narration and the shop's
-  shelf both needed a duel played to reach them, every time. It sets the run's *phase* and lets
-  `screens/flow.go` decide the scene, so the run never disagrees with what is on screen.
-  `reward-payout` and `shop-shelf` are the two entries.
-- **`"Essences"` plants the satchel**, beside `Runes` and `Stones`. An essence is
-  normally spent the instant it is taken, so a run *carrying* one into a duel is the one state no
-  amount of playing reaches — see MECHANICS.md §An essence can be carried into a fight, and the
-  `ladder-wrap` fixture.
-- **It can also pin the seed and replace the whole deck**. `"Seed"` is a six-character Crockford
-  base32 run code and outranks `fixedRunSeed`, and `"Deck"` sets the run's deck outright rather
-  than dealing over the shuffle the way `"Hand"` does — through `session.StartingDeckList`,
-  which is the deck counterpart of `StartingRelics`. The tutorial is what wanted both: a first
-  lesson has to be able to promise what the player is holding, and "these five all match, play
-  them all" stops being true the moment a refill deals a sixth card nobody mentioned.
-- **A deck line and a hand card may carry `"Riders"`**, by the names
-  `combat.RiderKind` writes, with a figure after a colon where the kind takes one —
-  `"damage-on-play:10"`, or the bare `"wild-element"` for the one that does not. It exists because
-  `Runes` is the right fixture for looking at the *dialog* and the wrong one for looking at what
-  an altered card does to a hand: getting there means playing a turn to spend the consumable and
-  then reading a hand that is already half spent. The `wildcards` entry is what wanted it.
-- **`"Teach": true` starts the tutorial on the run**, and is the only way to start it today — see
-  the tutorial section below.
-- **Every entry carries a `Note` saying what question it answers**, printed at startup. A fixture
-  whose purpose nobody remembers is a fixture that gets deleted.
-- **`"Dummy": true` is a fight that cannot end**. Both duelists get
-  `scenario.DummyLife` and the clock goes to `scenario.DummyRounds`, so a scenario can be *played
-  with* rather than survived — every blow, every shield break, every status and every signal, for
-  as long as it is interesting. **It is not a record under `data/motifs/`, deliberately**: a
-  training dummy is a fixture and `data/` is the game's own catalog, loaded by every build, drawn
-  on the roster sheet and reachable by the journey's own roll. So it changes the *stats* of whichever
-  opponent was already there, which means the fight keeps a real portrait, a real deck and a real
-  set of blows. **The clock is 999 rather than off**, because `session.SetRoundLimit` refuses to
-  stop the clock and the fixture goes the long way round rather than being given a back door into
-  the rules. `"RoundLimit": N` is the same dial on its own, for looking at the clock itself, and
-  `"Actions": N` widens the turn's budget — which is what makes a bench a place to pick the cards
-  you want rather than the cards six points can pay for. **It does not lift `combat.MaxActions`**,
-  the count bound: a turn is still five cards however cheap they are.
-- **`tools/scenariodeck` writes the `Deck` block, and that is deliberately a generator rather than
-  a filter vocabulary**. `-form slash -size 40`, `-elements fire,ice`,
-  `-cost 1-2`, `-riders golden:5`; it prints JSON to stdout and **never touches a file**. The
-  obvious alternative was `"DeckOf": {"Form": "slash", "Share": 50}` read at launch, and that is a
-  *second card-selection language* living in a debug fixture, which has to stay in step with
-  `data/duelist_cards.json` and with `internal/decks` — and being a debug fixture is exactly why
-  nobody would notice when it drifted. What lands in the file is the literal list the fixture
-  already supports, so `scenarios.json` stays a thing that can be read and checked. **The filters
-  are meant to be extended**: the next axis is one `flag.String` and one clause in `pick`.
-- **`tools/scenariosheet` is how the fixtures get found.** They are the fastest way to look at
-  anything in this game and were the least discoverable thing in the repo — the only ways to find
-  one were to read the JSON or to misspell a key. The page carries each fixture's Note against what
-  it actually plugs in, with the launch command ready to copy. **It reads the JSON off disk rather
-  than importing the package**, because importing it would mean building `tools/sheets` under
-  `-tags scenario`; the cost is a second view of the record struct and the tripwire is
-  `DisallowUnknownFields`, which fails the sheet loudly when a field is added to one and not the
-  other.
-
-### `internal/profile` is what survives a run, and it is the only thing that touches the disk
-
-[internal/profile](internal/profile) owns the two files the game writes: `profile.json` (the
-player — the tutorial watched, achievements, unlocks, and the settings) and `run.json` (the run
-in progress). See MECHANICS.md §The profile for what they mean; what matters here is where they
-go and what may never happen to them.
-
-- **They live under `os.UserConfigDir()`, never beside the executable** — `%APPDATA%scend-duel` on
-  Windows, `~/.config/duello` on Linux. Steam installs into a tree a normal process cannot
-  write to, where a write either fails or is silently redirected into `%LOCALAPPDATA%\VirtualStore`,
-  which is worse because it works in testing. A per-executable directory is also per-install rather
-  than per-user. `DUELLO_PROFILE` overrides the **directory**, moving both files together.
-- **Nothing here may ever be fatal.** Missing, corrupt or unwritable are all "a new player, and this
-  session is not recorded" — the same rule the audio device is under. A launch refused over a save
-  file would be a worse bug than any it prevents.
-- **A file from a newer build is read and never written over.** It is the one mistake that cannot
-  be repaired afterwards, so `LoadProfile` reports writability separately and the game respects it.
-  Unrecognized fields are carried through a save verbatim for the same reason.
-- **What is written down is a name, never a number.** `ConceptID`, `Element`, `StatusID`,
-  and `session.Phase` are all append-only ordinals indexing arrays and caches. A file
-  outlives the build that wrote it, so an ordinal in one will eventually mean something else. This
-  is where that rule stops being theoretical.
-- **A setting's zero value is not its default, and that is the one trap in the file.** An older
-  profile has no settings block at all, so both fields read as zero — and a speed of zero would
-  stop every clock in the game. `LoadProfile` normalizes and clamps; nothing about a save file may
-  ever fail a launch, so an out-of-range number is brought into range rather than rejected.
-- **The call sites are `internal/screens/save.go` and nothing else.** A run is saved by
-  `advanceRun` at each phase transition, the achievement is awarded where a fight is won, and the
-  tutorial is marked seen where the overlay ends. Persistence is deliberately not something a scene
-  does.
-- **The journey's offers are rebuilt from the run code; its picks are saved.** What every realm
-  offers is a function of the seed, so it is not stored. Which portal the player walked through is a
-  choice, so `RunSnapshot.Portals` writes it down by motif key and a resume refuses one its realm
-  never offered — `TestThePortalsTakenSurviveAResume`.
-- **A run is snapshotted between phases, never inside a duel.** `session.Session` is snapshotted and
-  is still not *replayable* — the replay story is a seed plus a choice log, because a deck edit is a
-  choice. Resume wants state, replay wants a path; do not let a snapshot be used as a replay.
-
-### The tutorial is a seventh thing, and it is *not* compiled out
-
-[internal/tutorial](internal/tutorial) is the teaching run: which step is up, what it points at,
-and what has to happen before it moves on. `data/tutorial.json` is the script and
-`internal/screens/tutorial.go` is Bob's bubble, the red square and the leader line to it.
-
-**It ships.** Unlike trace, idle, the demo and the scenario fixture, a tutorial is a feature the
-player is meant to meet — so there is no build tag and it is in every binary.
-
-**It fires on its own**, off the profile: a player `profile.json` has not recorded as taught
-gets taught, on the first fight of a fresh run. `main.teachThisRun` is the whole trigger, and it
-declines for a resumed run and for a scenario — a lesson that opens by describing the hand you
-are holding cannot begin halfway through the realms. **A launch on a clean machine therefore opens into
-the tutorial**, which is a thing to know before wondering why Bob turned up. `"Teach": true` in
-a scenario still forces it whatever the profile says, and is the only way to see it a second
-time; the counterpart is `DUELLO_PROFILE` pointed at an empty directory, which makes any
-launch a new player's.
-
-- **The state machine is free of Ebitengine**, like `internal/combat` and for the same payoff: the
-  whole script is walked end to end in a test rather than by playing to the end of it.
-- **A scene publishes `tutorial.Facts` once a frame; it does not fire events.** A condition is a
-  predicate over what is true now. The alternative — a `Did("duel-pressed")` call at every site
-  where something can happen — fails silently when one is forgotten, where a scene that forgets to
-  publish reports the zero value and stalls immediately.
-- **Three vocabularies, all closed and none defaulted**: anchors, conditions, and the lock derived
-  from the condition. See the `data` skill.
-- **A step waiting for NEXT holds the round where it is**.
-  `tutorial.Run.HoldsRound` is the predicate and `advancePlayback` is the one reader. It exists for
-  the shield step, which is the first in the lesson to land *inside* a playing round — a round has
-  three acts (the duelist swings, the shields break what they can reach, the creature swings with
-  what is left) and the middle one had no beat of its own, so the break appeared and the creature
-  was already answering. **Only a NEXT step holds**, which is what stops a step waiting on an
-  outcome from stopping the thing it is waiting for; `TestOnlyANextStepHoldsTheRound` is the
-  tripwire. It changes pacing and cannot change an outcome.
-- **A break lives inside its own round.** `seatEnemyCards` drops the marks, because that is the line
-  where a seat number stops meaning what it meant — the opponent's row is re-planned the moment a
-  round ends, so a mark left standing cracks whichever card the planner has just put in that seat.
-  Anything wanting to point at a break has to do it during the round, which is why the step above
-  holds one.
-- **An anchor names what the step is *asking for*, not what it is about**. `matching-cards` and
-  `matching-cards-left` are the same set minus what is already queued, and they exist as two
-  because the two steps using them say different things: "take the other three" asks, and "one
-  of those four is a Brace" describes. Sharing one anchor lit four cards under a sentence about
-  three — and since the anchor is the click gate, the card already taken was the one thing the
-  step invited you to click, which undoes the step before it.
-  `TestTheStepAsksOnlyForTheCardsStillToTake` is the tripwire. **The red comes off each card as
-  it is taken**, so the row says how much is left without a counter.
-- **A card is tinted, a control is framed**. An anchor naming cards gets
-  the scrim and no rectangle: the cards wear `cards.MarkHighlit`, which is the same red the frame
-  was. A frame outside a card is a thing on the screen *near* the card where a tinted card is the
-  card answering, and round a set of cards a frame is a lot of loose rectangles. `Anchor.NamesCards`
-  is the closed table saying which; `screens.marksFor` reads the same `gs.InputFocus` list the
-  spotlight is handed, so lit and clickable stay one set by construction rather than by agreement.
-- **The lit square and the one legal click are the same rectangle**, computed once. A lit hole the
-  player cannot click, or a clickable region that is not lit, would each be worse than no tutorial.
-- **An anchor may name several rectangles, and for a *set* of cards it must**.
-  `tutorialRects` and `state.InputFocus` are both lists because the two anchors naming a set —
-  `matching-cards` and `shattered-cards` — point at cards that need not be adjacent, and the
-  bounding box round them is the set *plus whatever is between two of them*. That was a live bug:
-  the tutorial matches on **element**, so the taught four are four different concepts, and under the
-  default cost-led sort they land at seats 0, 1, 2 and 4 with an arcane card at seat 3 — lit,
-  clickable, and worth 2 AP out of a 6 AP budget the taught set needs all of. Queue it and the
-  fourth taught card can never be paid for, so the lesson commits a Three of a Kind having just
-  promised a Four. **The old note claimed they were contiguous and it reasoned about the wrong
-  axis** — cards sharing a *concept* land together whichever key leads; cards sharing an *element*
-  do not. `TestTheMatchingCardsGateLightsOnlyTheTaughtCards` walks every seat of the real dealt hand
-  through `InputAllowed` and is the tripwire. The spotlight scrims the gaps between holes, so lit
-  and clickable stay the same area.
-- **The tutorial runs on the real deck, and `matching-cards` is what pays for that** . It was a
-fixture deck of exactly five Jabs, so the lesson's "take them all" step could wait on
-`hand-emptied` — a condition only a hand with nothing else in it can ever reach, since a real
-hand of eight against a five-card cap and a six-point budget leaves cards behind by the rules of
-the game. The anchor is the largest matching set in the hand and `matching-queued` is its
-condition; because the lock leaves only those cards clickable, the hand the player builds is the
-hand Bob just described. **It is the one anchor computed from the cards rather than from a
-layout** — `CombatScene.matchingCards` is the single answer both the square and the condition
-read.
-- **Which axis a set is counted on is authored, not assumed**.
-  `data/tutorial.json`'s `Match` is `concept`, `form` or `element`, and a script that points at a
-  matching set without naming one is **refused at load** — an axis that defaulted would be a lesson
-  pointing confidently at the wrong cards. The lesson matches on `element`.
-- **The script carries the run it needs: `Seed`, `Enemy` and `Match`.** **A promise and the
-  thing that makes it true belong in one file** — pinned from a scenario instead, the lesson
-  runs on whatever the clock rolled and describes a hand it has not dealt, because the profile
-  can start it with no fixture in sight. The scenario entry keeps only `"Teach": true`.
-- **The taught fight is two rounds, and the shield is why.** Run code `0019QS` deals `Jab Brace
-  Thrust Bash`, all arcane, for exactly 6 AP — an Elemental Four of a Kind dealing 69 into a
-  GiantBat's 80. **One of the four is a Brace**, which teaches the thing a
-  hand of pure attacks cannot: a defense carries an element and joins a hand like anything else,
-  bringing no damage with it. Because it brings none, the creature lives on 11, takes its turn —
-  Swoop, Drain, Nip — and **the Brace's one shield eats the Drain whole while the other two land**,
-  60 life down to 53. A creature that dies to the player's turn never swings, so a lesson about shields
-  cannot be taught in a round that kills. The player then reads the ledger and finishes it.
-  **The Drain is the bat's one big card**, which is what the heaviest-hit rule makes visible:
-  the shield saves ten rather than five, and the step that explains it has a broken card on the
-  table to point at.
-- **The other four cards are an arcane, an earth, a fire and an ice**, so there is no competing set,
-  and the first card dealt is one of the four — which the opening step needs, since it queues
-  `first-card` and a stray would break both the budget and the hand.
-- **Finding a replacement seed is `TestFindATutorialSeed`**, skipped unless `SEEDSEARCH=1` is
-set. Every test below ends "the fix is a new seed, not a weaker check", and the constraints live
-in four files that a candidate has to satisfy all at once. It is a test rather than a tool
-because the shop internals it deals from are unexported, and `tools/seeds` cannot answer this
-one — that tallies concepts and the tutorial matches on element. **It proposes and asserts
-nothing**: take a candidate, pin it, and let the four tests below confirm it. **Prefer a marked
-candidate**, which keeps the cards the steps name — a seed dealing a different four means
-re-authoring the lesson rather than changing one string. **Expect to re-run it whenever
-`relics.json` gains, loses or renames a record.** The shelf is a weighted draw over the
-catalog's sorted keys, so any of those three reshuffles what the taught seed lands on, and the
-shop step is the only part of the lesson a catalog edit can break silently. **That is the cost
-of drawing the taught shop rather than pinning it**, and pinning it is the fix to argue for if
-it keeps happening. A replacement seed is chosen to deal the identical four cards against the
-identical creature, so no step text has to change; the taught color does, and the lesson never
-names it.
-
-**Both halves of the promise are tested, and they check each other.**
-  `TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` proves the
-  rules resolve that turn to a wound — **it is two-sided**, failing if the hits start killing, if
-  it leaves more than half the creature standing, or if the taught set stops holding exactly one
-  shield. `TestTheTutorialsSeedDealsTheHandTheLessonDescribes` in `internal/screens` proves the seed
-  actually deals it — the set's size, that it is the only one that size, that the first card belongs
-  to it, that it is affordable, that it does *not* kill, and that its four cards are the four the
-  combat test writes out by hand. **If either goes red the answer is a new seed, not a weaker
-  check**; `go run ./tools/seeds` is the search.
-- **A third test holds the creature's half of it**.
-  `TestTheTutorialsShieldEatsTheCreaturesHeaviestBlow` in `internal/screens` plans the bat's turn
-  exactly as the screen does, resolves the whole round, and checks that one hit is blocked, that it
-  is the heaviest, that the heaviest is the *only* card that size — a creature whose deck flattened
-  out would make the lesson true and pointless — and that the step naming the card names the right
-  one. The two above are about the player's hits; this is about what comes back at them, which is
-  the half the shield steps describe.
-- **The ledger step is the one anchor naming a control the frame owns**. `state.LedgerOpens`
-  is a tally bumped by `internal/game` when the panel opens, published as a fact and read by
-  `ledger-opened` against a baseline — the same trick `round-done` uses, because the account is
-  reachable from every screen and an opening from three steps ago is not this step's. **It advances
-  one frame late on purpose**: the panel takes the whole frame and the scene beneath it is not
-  updated at all, so the step gives way when the player closes the account rather than while it is
-  covering Bob.
-- **`gs.InputGated` / `gs.InputFocus` is the shield**, and it gates on the *cursor* rather than per
-  widget — one predicate in `systems.UpdateButton` plus the handful of places in `internal/screens`
-  that read the mouse directly. A per-widget rule is a list a new widget is missing from.
-- **`internal/game` clears the gate every tick and the tutorial re-asserts it**, exactly as
-  `state.ModalOpen` works, so a screen left mid-step cannot leave the session unclickable.
-- **It is deliberately not a `modalToggle`.** Every other dialog takes one footprint and scrims the
-  whole screen; a thing whose job is to point at what is underneath cannot be the thing covering it.
-  That is a second dialog shape, decided on purpose.
-- **`TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` is the one
-  to keep.** The lesson promises a turn that wounds and does *not* kill, and four files tuned for
-  their own reasons can break that promise silently in either direction — the taught cards'
-  `Amount`, the ladder's multiplier, the duelist's `DMG`, the bat's `HP`.
-
-**The machinery refuses the mistakes it can detect** — an ungated action step, a click with nothing
-named to click, a lock disagreeing with its condition. **What it cannot check is whether an anchor
-shows the player how to satisfy the step's condition**, and that is where every bug in this feature
-so far has been: a step pointing at the shop shelf while waiting for the player to press *Leave*
-reads as a lock-up. Read each new step against its own condition.
-
-### `internal/crashlog` is an eighth thing, and it is *not* compiled out
-
-[internal/crashlog](internal/crashlog) writes a file when the game panics, and keeps a running note
-of the small failures that did not. **Unlike `trace`, `idle`, the demo and the scenario fixture it
-is in every binary**: the case it exists for is an exe on somebody else's machine going wrong once,
-with nobody watching but the person it happened to.
-
-- **A `recover()` at the top of `Game.Update` and `Game.Draw`, and one in `main`** for the panics
-  raised while the catalogs load. `internal/game/crash.go` is the handler.
-- **A crash is a whole screen, not a dialog** — `state.Crashed` and `screens.CrashScene`. A dialog
-  draws the scene underneath it, and the scene underneath is the one that has just panicked, which
-  is how one crash becomes two. The chrome stands down, the ledger is closed, the toast queue is
-  dropped, and the page draws with the ground, the fonts and two buttons. **There is no way back**:
-  a crashed process is one whose state is not trustworthy, so the way out is quitting.
-- **A second panic quits rather than writing a second report.** The only thing still running after
-  the first is the screen written to report it.
-- **The non-fatal notice is the other half**, and it is the confirm box's shape with one answer —
-  `ui.ProblemNotice`, chrome on the toast's terms. **It never raises during a duel**: it waits for
-  a phase boundary, because a box in front of a round in playback stops a fight to talk about a
-  file. It takes the modal red and says PROBLEM where the toast says ACHIEVEMENT, which is the
-  whole of the difference between the two.
-- **Two verbs, and which one a call site wants is a judgment about the player.** `crashlog.Note`
-  records and logs; `crashlog.Tell` does that and also queues a notice. "The score has no device"
-  is a Note; "this run is not being saved" is a Tell.
-- **It writes through `profile.Store`, never through `os`** — the storage-boundary rule — and the
-  report is named `crash-<utc>-<code>.json` so **the directory sorts by when**. A run code cannot
-  lead, because a pinned seed deals the same one every launch. **Pruning is not optional**: a
-  config directory that grows without bound is a bug that only shows up on the machine of the
-  player who plays most.
-- **The tiers are identity, the run snapshot, the ledger's records so far, and the recent
-  problems.** The third is the one the snapshot cannot give — a run is written to disk only at
-  phase boundaries, so a crash mid-duel has the room's start state and nothing since.
-- **The report carries no path, no machine name and no user name.** Platform and build version are
-  the whole of the environment, and `profile.Profile.InstallID` — sixteen random characters made
-  once — is the only thing in it that is about *whom*. That rule is here rather than in the sending
-  code deliberately: a field added now on the assumption that it stays local is a field that leaves
-  the machine the day a send button lands.
-- **Nothing here may ever be fatal and none of it may change an outcome.** Both rules the audio
-  device and `internal/trace` are already under.
-- **A report takes a copy of every file named beside it**, and today that is the journal.
-  `crashlog.Write` takes the names from its caller, so nothing in it learns what a journal is, and a
-  copy lands under the report's own base name with the companion's own extension. **A report is
-  counted by its own `.json` when pruning**, or the allowance would shrink the day a second
-  companion joined the first.
-- **The screenshot is not a companion**, because it is not a file the game was already writing: it
-  is bytes that exist only because a panic happened, so it is a parameter rather than a name in the
-  list and it goes through `profile.Store.WriteBytes` — the one write in that package handed a file
-  rather than a value. **Only a panic inside `Draw` has a picture**, since the image being drawn
-  into holds as much of the frame as got drawn before the fault; a panic in `Update` happens between
-  two frames and the report simply has no `screenshot` field. `game.shotOf` is the readback, on the
-  game goroutine because it is a GPU operation, and `crashlog.EncodeShot` is the encode and the
-  ceiling — the same split `internal/trace` makes.
-- **A report has a ceiling and sheds from the bottom.** `crashlog.Encode` marshals, and if the
-  document is over it drops the scene tier, then the problem ring, then the ledger a fight at a
-  time, oldest first, and names what went in `shed`. **The identity and the run snapshot are never
-  shed**, and the ledger goes a fight at a time rather than whole because a crash mid-duel has the
-  room's start state on disk and nothing since — the fight being played is the one tier the snapshot
-  cannot give. **It decides in memory and writes the file once**: a crash handler gets one chance at
-  the disk, and a file deleted and rewritten is a second chance for the rewrite to be the one that
-  fails.
-- **A screen describes itself through `ui.Reporter`, and it is optional** so a new screen is not
-  broken by not having one. **The method may read plain fields and nothing else** — the scene being
-  asked has just panicked, so a lookup or a layout or a rule read back off the run is a second crash
-  inside the first. `CombatScene.Report` is the one written, and what it carries is the shape of the
-  screen's four state machines rather than their contents: no cards, because the journal holds every
-  selection and the ledger holds what the engine made of them.
-
-### `internal/journal` is a ninth thing, and it is *not* compiled out
-
-[internal/journal](internal/journal) is what the player chose, in order, on its way to the disk:
-`journal.jsonl` in the profile's own directory, one record per line, appended as it happens.
-
-**The run seed is not enough to get a run back.** It rebuilds the journey, the motifs, the elements
-and every shuffle, and the deck still changes with what the player takes and spends — and the hands
-follow from the deck. Same seed and different choices is a different fight two.
-
-**It ships**, like the tutorial and `internal/crashlog` and unlike `trace`, `idle`, the demo and the
-scenario fixture: the case it exists for is a run on somebody else's machine that nobody can
-describe.
-
-- **Inputs, never outputs.** A `session.LedgerRecord` is what `ResolveRound` produced and cannot
-  re-drive it; a journal record is a click. A journal holding what the engine decided stops being a
-  way to retrace a run and becomes a second, worse ledger. **So nothing in this package knows what a
-  blow came to or who won**, and a rune's gamble is not written down — the roll comes off the run
-  seed, so a replay reaching that line with the same choices behind it rolls the same thing.
-- **Legible rather than exhaustive**, because replay is a person at a keyboard. A record names a
-  relic key, a card's label and a seat — not a drag path and not a pointer position. **A card is
-  named by identity**, `combat.Card.ID`, for the reason a rune's targets are: three piles hold
-  copies of the same cards, so a position names a different card a moment later.
-- **One file, and starting a run truncates it.** A journey that ended without going wrong is one
-  nobody is going to ask about, and one fixed name means nothing has to sweep up after it. **What
-  makes that safe is the copy a crash takes** — see above; without it the one run worth retracing is
-  the one the next launch overwrites. **A resumed run appends rather than truncating**, and its
-  header says `resumed`, so two headers in one file is one journey played across two launches.
-- **A click has its line where its function is; a screen and a phase are diffed once a frame.** The
-  first is where the choice actually is. The second two are reached from a dozen places — a button,
-  a run advancing, a crash, a scenario opening the game halfway through the realms — so a call beside each
-  is a list the next one gets left off. `game.journalWatch` is the diff, on `screens.RunWatch`'s
-  argument.
-- **`CombatScene.choices` is the one stored handle**, taken at `Init`. Every other screen writes its
-  lines from a method already holding a `gs`; the hand row's click handlers are reached from a
-  button or a drag with nothing but the scene in hand.
-- **Every method is safe on a nil receiver**, which is what lets a scene write a line without asking
-  whether there is a journal — a test scene and a review tool both run without one.
-- **A journal that cannot be written gives up and is a `Tell` once**, not once per click: a box per
-  click is a queue the player has to fight their way out of to keep playing. **The wording lives in
-  `main`** rather than in the package, because `crashlog` has to be able to name the journal file
-  and only one of the two may point at the other.
-- **`profile.Store.AppendLine` is the door**, and it is the one write in that package that is not a
-  whole document through a temp file and a rename. The audience is somebody reading the file after
-  the process writing it died, so what matters is that the line before the panic is already there.
-  It is compact rather than indented, unlike every other write: one record per line is what makes
-  the file appendable without parsing what is above it.
-- **Nothing here may ever be fatal and none of it may change an outcome**, and **`internal/combat`
-  may never import it** — the rules the whole of `internal/crashlog` is already under.
+Every one of them is under the rule playback speed is under — **it may never change an outcome**, the
+scenario fixture excepted by design — and **`internal/combat` may never import any of them**.
 
 ## Architecture — and how to navigate it
 
@@ -2216,8 +1577,8 @@ toolchain reached first. `doc.go` is the only file whose comment goes above the 
 
 ### The dependency graph
 
-**Generated from the real imports, not drawn from memory**. The picture that used
-to be here had two arrows the code contradicted. Regenerate it rather than patch it:
+**Generated from the real imports, not drawn from memory**, because a hand-drawn graph drifts
+from the code. Regenerate it rather than patch it:
 
 ```powershell
 go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
@@ -2265,8 +1626,8 @@ Six facts about it that are load-bearing:
 - **`crashlog` sits beside `session` and `combat` may never import it**, for `internal/trace`'s
   reason: the rules package stays free of everything, which is what makes it testable without a
   window. It is above `session` rather than beside `profile` because a crash report carries the
-  run's own account of itself, which is the one tier a snapshot on disk cannot give — see the
-  section below.
+  run's own account of itself, which is the one tier a snapshot on disk cannot give — see
+  `go doc ./internal/crashlog`.
 - **`privateassets` sits at the bottom beside `assets`, and `assets` may never import it.** The
   two are separate directories because what is in them is kept out of git separately, and the
   arrow that is *missing* is what keeps that true: a caller that wants a loop names
@@ -2289,10 +1650,9 @@ Six facts about it that are load-bearing:
 - **`cards` importing `systems` is the edge that surprises people.** A card draws generated
   glyphs, so the renderer needs the generator. Neither creates an `*ebiten.Image`, which is the
   property that actually matters — it is what lets `tools/cardsheet` render with no window.
-- **`internal/ui` is the drawing layer and it knows about no screen at all**. It came out of
-  `internal/screens`, which was two thirds of the Go in the repo in one package: what moved is
+- **`internal/ui` is the drawing layer and it knows about no screen at all**. It holds
   everything a scene draws *through* — the table, the clock, the movers, the card faces, the
-  panels belonging to no screen, the prose — and what stayed is the scenes. **The arrow only
+  panels belonging to no screen, the prose — and `internal/screens` holds the scenes. **The arrow only
   points one way, and that is checkable rather than a habit**:
   `.claude/skills/audit/tools/pkgsplit.go` reports every unexported name that would have to
   cross a proposed line in either direction, and a *back edge* — a shared file reaching into one
@@ -2319,7 +1679,7 @@ picking the active scene out of one registry. `internal/ui/scene.go` is the `Sce
 ### The run loop, in play
 
 **The run owns where it is, and one file moves it on.** A scene that has finished calls
-`screens.advance`; nothing names its successor.
+`screens.advanceRun`; nothing names its successor.
 
 ```
 fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only after a portal room)
@@ -2337,7 +1697,7 @@ fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only 
   `screens/flow.go`, and an entry in the registry in `internal/game`. No existing scene changes.
 - **`screens.enterRun` is the same table read at the door**. Continue puts the player
   on whichever scene draws the station the run was saved at, falling back to the combat screen for a
-  phase with no scene — the same courtesy `advance` extends during play.
+  phase with no scene — the same courtesy `advanceRun` extends during play.
 
 ### The three rules a change most often breaks
 
@@ -2366,8 +1726,7 @@ fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only 
 - **`internal/combat` holds the purse while a round resolves, and `KindVitae` is not the
   payment.** `Duelist.Vitae` is seeded from the run at the top of each round,
   stepped as the round pays, and the run is handed the **difference** — see `screens.payHeldVitae`.
-  Summing `KindVitae` events to move a purse is the old way and now double-pays. The rules got a
-  purse because a relic wanted to read one; the doc comments saying they have none are corrected.
+  Summing `KindVitae` events to move a purse double-pays.
 - **An achievement nobody can earn is invisible**, and that is what `internal/achieve` exists to
   refuse. Every word `data/achievements.json` may write — a trigger kind, a clause mode, an
   axis, a moment name, a counter name — is a closed vocabulary checked at package init, so a
@@ -2384,25 +1743,19 @@ fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only 
 
 ### Drawing idioms
 
-- Sprites are drawn via `colorm.DrawImage` so a `colorm.ColorM` can tint/hue-shift them; buttons
-  and shapes use `vector.DrawFilled*` into a scratch `ebiten.NewImage`.
+- Shapes use `vector.DrawFilled*` into a scratch `ebiten.NewImage`.
 - Positioning convention: translate by `-w/2, -h/2` first to center the origin, then translate
   to the target coordinate. Buttons store `ScreenX`/`ScreenY` as their *center*, and both
   `UpdateButton` (hit testing) and `DrawButton` re-derive the top-left from it.
-- **Rounded rectangles are done one way: `internal/cards/shape.go`, in plain Go**
-. There were two for a while — health bars drew an opaque mask and composited
-  it with `ebiten.BlendSourceIn`, which cards could never use, since that path takes an
-  `*ebiten.Image`, its body is `vector.DrawFilledCircle`, and `BlendSourceIn` is a GPU blend
-  mode, none of which exist without a graphics context. `internal/cards` must render without
-  one so the review tools can call it, so the window-free rasterizer is the one that survived:
-  the mask lost its last caller when both fighters became cards and their bars moved into
-  `internal/cards`. Corners are hard-edged there, because the glyphs on them are 1:1 pixel art.
+- **Rounded rectangles are done one way: `internal/cards/shape.go`, in plain Go**, because
+  `internal/cards` must render without a graphics context so the review tools can call it, and a
+  GPU blend mode does not exist there. Corners are hard-edged there, because the glyphs on them are 1:1 pixel art.
   **A new rounded shape goes in `shape.go` whatever is drawing it** — a GPU-side rasterizer
   would put the second silhouette back, and it is the one a review tool cannot reach.
 
 ## Art
 
-**`assets/` is grouped by what a file is for**: `game/` (fonts, title screens), `enemy/`,
+**`assets/` is grouped by what a file is for**: `game/` (fonts, title screens), `motifs/`,
 `relic/`, `effect/`, `upgrade/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
 refiling something is one line there and nothing anywhere else.
 
@@ -2446,7 +1799,7 @@ cost tens of megabytes of resident memory for pictures most runs never show.
 
 **`assets/effect/` is the status badges**, drawn as a centered row along the bottom of the enemy
 card by `internal/cards` — so they go through `LoadImageData` as bytes, exactly like the relic art
-and for the same reason. `screens.statusBadges` is the lookup and **it is read off each record's own
+and for the same reason. `ui.statusBadges` is the lookup and **it is read off each record's own
 `Badge` in `statuses.json`** rather than keyed by element — because a badge belongs to the
 *status*, so a status arriving by an affix or a boss rule draws the same picture whatever brought
 it. `default-effect.png` is the fallback.

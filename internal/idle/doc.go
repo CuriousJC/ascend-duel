@@ -15,4 +15,15 @@
 // what keeps it acceptable in a product that will be sold.
 //
 // It may never change an outcome. It closes the window; it does not touch a duel.
+//
+// # Working on it
+//
+// The idle window is two minutes, and DUELLO_IDLE_SECONDS shortens it for a quick check.
+//
+//   - **Everything is gated on window focus, cursor movement included.** That is the whole trick, not a
+//     nicety: an unattended run sits in the background while whoever launched it does something else,
+//     and a cursor crossing the desktop over an unfocused window would otherwise read as someone
+//     playing. The one case it exists for would be the one case it never fired in.
+//   - **It sets `ShouldClose` rather than returning `ErrClosing`**, so the exit runs through the same
+//     path as the window's close button and there is only one way the game ends.
 package idle

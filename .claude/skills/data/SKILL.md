@@ -28,6 +28,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `tonics.json` | `LoadTonics` | the run-long rule changes the shop offers one per realm: an `Effect`, an `Amount`, an optional `Requires`, and a `Price` — see `internal/session/tonic.go` |
 | `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
 | `upgrade_art.json` | `LoadUpgradeArt` | the art an upgraded card wears over its face: one record per upgrade plus `default`, each an `Art` stem under `assets/upgrade-art/` and a `Draw` brief — the `card_art.json` shape. Keys are checked against `systems.Upgrade` names in `internal/cards`, which `data` cannot import |
+| `screen_art.json` | `LoadScreenArt` | the backdrops behind every screen that is not a duel: one record per picture, the `Screens` it stands behind, a `Draw` brief pasted after `docs/art/screen_art_prompt.MD`, and optional `Anchors` — a card, a button or a painted place a brief positions something against, held to the layout by tests in `internal/screens`. Screen names are checked against `state.ActiveScreen` in `internal/state`, which `data` cannot import |
 | `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 

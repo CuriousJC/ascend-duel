@@ -165,6 +165,33 @@ func Backdrop(gs *state.GlobalState, key string) *ebiten.Image {
 	return img
 }
 
+// screenArt is which picture stands behind each screen, by `state.ActiveScreen.String`, off
+// `data/screen_art.json`. Built on first use, because it is asked every frame.
+var screenArt map[string]string
+
+// FillScreenBackdrop paints the active screen's own backdrop, or the plain ground when the screen
+// has none or its picture is not filed.
+//
+// **The fallback is the ground and not `data.DefaultBackgroundArt`**: that is a duel's room, and a
+// screen that follows a fight in any realm must not stand in front of one.
+func FillScreenBackdrop(gs *state.GlobalState, screen *ebiten.Image) {
+	if screenArt == nil {
+		screenArt = map[string]string{}
+		art := data.LoadScreenArt()
+		for _, key := range data.ScreenArtOrder(art) {
+			for _, name := range art[key].Screens {
+				screenArt[name] = art[key].Art
+			}
+		}
+	}
+	key, ok := screenArt[gs.ActiveScreen.String()]
+	if !ok || len(gs.ImageData[key]) == 0 {
+		FillGround(screen)
+		return
+	}
+	FillBackdrop(screen, Backdrop(gs, key))
+}
+
 // FillBackdrop paints a picture as the whole ground of a screen, scaled to cover it. A nil picture
 // falls back to FillGround, so a screen asking for a backdrop that was never loaded still has a
 // table to stand on.

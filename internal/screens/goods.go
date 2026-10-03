@@ -158,7 +158,7 @@ func (s *GoodsScene) Update(gs *state.GlobalState) error {
 
 // Draw puts the screen up: the build the good is being judged against, then the good itself.
 func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	ui.FillGround(screen)
+	ui.FillScreenBackdrop(gs, screen)
 	if gs.Run == nil {
 		return
 	}

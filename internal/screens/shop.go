@@ -707,7 +707,7 @@ func (s *ShopScene) wornSlot(gs *state.GlobalState, i, n int) image.Rectangle {
 }
 
 func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	ui.FillGround(screen)
+	ui.FillScreenBackdrop(gs, screen)
 
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}
 	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextLarge}

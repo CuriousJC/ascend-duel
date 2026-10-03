@@ -166,6 +166,10 @@ func settingsButtonRect(gs *state.GlobalState) image.Rectangle {
 // draws, so the ledger button would be dead anyway and the cog would be a door out of the one page
 // that has something to say. It has a Back to Title of its own.
 //
+// **The portal is on it because the screen is a choice that has to be made**: its two ENTER buttons
+// are the only way off it, and a cog or a ledger in the corner would be a third door. What the
+// choice is judged against — the build band and the deck — the portal screen draws itself.
+//
 // **The animation gallery is on it for Settings' reason**: the gallery's door is in the frame, and
 // a door into the room the player is standing in records that room as the one to go back to — so
 // Back would lead nowhere but the gallery again.
@@ -175,7 +179,7 @@ func chromeShowing(gs *state.GlobalState) bool {
 	}
 	switch gs.ActiveScreen {
 	case state.Settings, state.Achievements, state.Credits, state.RunOver, state.PostBattle,
-		state.Title, state.Goods, state.Crashed, state.Animations:
+		state.Title, state.Goods, state.Crashed, state.Animations, state.Portal:
 		return false
 	}
 	return true

@@ -1098,7 +1098,7 @@ func (s *PostBattleScene) chosenEssence() (session.Essence, bool) {
 }
 
 func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	ui.FillGround(screen)
+	ui.FillScreenBackdrop(gs, screen)
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}

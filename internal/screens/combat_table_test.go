@@ -78,7 +78,7 @@ func TestTheSplitIsTakenFromResolutionOrder(t *testing.T) {
 	// first and its plans second; a row that counted its own would be a second answer to a
 	// question already settled, and would drift the first time a card changed category.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Guard, combat.Bash, combat.Brace, combat.Jab),
+		enemyActions: combat.PlainCards(combat.Block, combat.Bash, combat.Brace, combat.Jab),
 	}
 	s.seatEnemyCards()
 

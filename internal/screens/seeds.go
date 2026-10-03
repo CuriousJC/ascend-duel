@@ -51,8 +51,8 @@ var seedCatalog = []namedSeed{
 	// like when they arrive together.
 	{"three-bashes", 51, "three or more Bashes: a Three of a Kind that can be clicked"},
 
-	// 2xThrust 1xCleave 5xBash. **The biggest hand the deck can deal**, and bigger than it was:
-	// with Guard gone the deck is 55 cards and this seed deals all five Bashes, which is the top of
+	// 2xThrust 1xCleave 5xBash. **The biggest hand the deck can deal**: the deck is 55 cards and
+	// this seed deals all five Bashes, which is the top of
 	// the ladder outright rather than the Four of a Kind the entry was named for. Ten AP against a
 	// six-point budget, so a bare duelist sees it and pays for part of it and a discount is what
 	// buys the rest, and it draws all five colors — five copies of a concept are five elements.
@@ -69,9 +69,8 @@ var seedCatalog = []namedSeed{
 	{"both-verbs", 1, "a defend card and an attack: both phases in one round"},
 
 	// 1xJab 2xThrust 1xSkewer 1xSlice 1xThump 1xBrace 1xBlock. It holds both defenses, which is what
-	// the demo wants: three shields in one turn and the pip row on the duelist card part-filled. **Brace and Block are the whole vocabulary now**
-	// *(2026-09-01)* — Guard was taken out of the deck, so the six-shield hand this seed was
-	// chosen for cannot be dealt by anything. Together they are 3 AP, half a round.
+	// the demo wants: three shields in one turn and the pip row on the duelist card part-filled. **Brace and Block are the whole vocabulary**.
+	// Together they are 3 AP, half a round.
 	{"all-shields", 2, "a Brace and a Block: the whole defend vocabulary in hand"},
 }
 

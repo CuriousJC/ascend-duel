@@ -29,10 +29,10 @@ const (
 	// somehow skipped the realm is not left with a hole in the page.
 	MomentRealmReached = "realm-reached"
 
-	// MomentCardAltered is an essence having changed a card, carrying the resulting card's label in
-	// Value. **The label rather than the essence**, because what the player did is "made a Flinch" and
-	// several essences can arrive at one — a demote from a Brace today, something else tomorrow.
-	MomentCardAltered = "card-altered"
+	// MomentLadderWrapped is an essence stepping a card off one end of its ladder and onto the
+	// other, carrying the direction in Value: `down` for the bottom rung demoted to the top, `up` for
+	// the top promoted to the bottom. See LadderWrapped, which is the one reading of it.
+	MomentLadderWrapped = "ladder-wrapped"
 
 	// MomentShieldsRaised is the player standing behind a count of shields, carried in N. **A
 	// threshold rather than an equality**, like realm-reached, so eleven earns the row asking ten.
@@ -59,7 +59,7 @@ const (
 
 // moments is the same list, for validation and for the error message.
 var moments = []string{
-	MomentDuelWon, MomentTutorialFinished, MomentRealmReached, MomentCardAltered,
+	MomentDuelWon, MomentTutorialFinished, MomentRealmReached, MomentLadderWrapped,
 	MomentShieldsRaised, MomentHandFormed,
 }
 
@@ -68,16 +68,21 @@ var moments = []string{
 // which is the failure this whole file exists to refuse.
 var momentsCarryingN = []string{MomentRealmReached, MomentShieldsRaised}
 
-// The two counter families. **A prefix rather than a bare name**, so a counter is self-describing
+// The three counter families. **A prefix rather than a bare name**, so a counter is self-describing
 // on disk and two axes cannot collide — `slash` is both a form and nothing like the concept
 // `Slash`, and a player who plays five hundred slashing cards has not played five hundred Slashes.
 //
 // **Per concept, never per concept-and-element** *(owner's call, 2026-09-06)*: five colors of
 // twelve concepts is sixty tallies to say what twelve say, and no achievement has wanted the
 // distinction.
+//
+// **An element tally counts the color a card was played as**, so a card a flip ring recolored counts
+// in its new color, and a wildcard counts once in every element — it was played as all five.
+// `basic` is no element and is never counted.
 const (
 	counterForm    = "form:"
 	counterConcept = "concept:"
+	counterElement = "element:"
 )
 
 // Achievement is one record with its trigger resolved.
@@ -121,10 +126,6 @@ type pattern struct{ clauses []clause }
 type clause struct {
 	// of is the category filter. `anyCategory` means the whole turn.
 	of category
-
-	// cost narrows the selection further, to cards of exactly this AP. Nil is no filter — see
-	// data.ClauseData.Cost for why zero could not have meant that.
-	cost *int
 
 	axis combat.Axis
 	mode string
@@ -243,7 +244,7 @@ func parseTrigger(t data.TriggerData) (trigger, error) {
 		if !known(moments, t.Moment) {
 			return trigger{}, fmt.Errorf("no moment named %q; the game raises %v", t.Moment, moments)
 		}
-		// **N belongs to the moments that carry one**, and Value to card-altered and hand-formed. A moment carrying
+		// **N belongs to the moments that carry one**, and Value to ladder-wrapped and hand-formed. A moment carrying
 		// a field its raiser never sets is a condition that can never be met.
 		carriesN := known(momentsCarryingN, t.Moment)
 		if t.N != 0 && !carriesN {
@@ -252,7 +253,7 @@ func parseTrigger(t data.TriggerData) (trigger, error) {
 		if carriesN && t.N < 1 {
 			return trigger{}, fmt.Errorf("moment %q needs its figure in N", t.Moment)
 		}
-		carriesValue := t.Moment == MomentCardAltered || t.Moment == MomentHandFormed
+		carriesValue := t.Moment == MomentLadderWrapped || t.Moment == MomentHandFormed
 		if t.Value != "" && !carriesValue {
 			return trigger{}, fmt.Errorf("moment %q carries no Value", t.Moment)
 		}
@@ -264,8 +265,9 @@ func parseTrigger(t data.TriggerData) (trigger, error) {
 					t.Moment, t.Value)
 			}
 		}
-		if t.Moment == MomentCardAltered && t.Value == "" {
-			return trigger{}, fmt.Errorf("card-altered needs the card's label in Value")
+		if t.Moment == MomentLadderWrapped && t.Value != WrapDown && t.Value != WrapUp {
+			return trigger{}, fmt.Errorf("moment %q needs %q or %q in Value, not %q",
+				t.Moment, WrapDown, WrapUp, t.Value)
 		}
 		return trigger{kind: t.Kind, moment: t.Moment, value: t.Value, n: t.N}, nil
 
@@ -294,13 +296,7 @@ func parsePattern(p data.PatternData) (pattern, error) {
 // second time — through `combat.ParseAxis`, so the two files cannot disagree about what `form`
 // means.
 func parseClause(c data.ClauseData) (clause, error) {
-	out := clause{mode: c.Mode, n: c.N, cost: c.Cost}
-
-	// **A negative cost matches nothing**, because Card.Cost is floored at zero. A record asking
-	// for one is a row that can never light up, which is the one failure mode this package is for.
-	if c.Cost != nil && *c.Cost < 0 {
-		return clause{}, fmt.Errorf("a cost filter of %d matches no card; costs are floored at 0", *c.Cost)
-	}
+	out := clause{mode: c.Mode, n: c.N}
 
 	switch c.Of {
 	case "":
@@ -369,8 +365,15 @@ func checkCounter(name string) error {
 		}
 		return nil
 
+	case len(name) > len(counterElement) && name[:len(counterElement)] == counterElement:
+		if e, ok := combat.ParseElement(name[len(counterElement):]); !ok || e == combat.Basic {
+			return fmt.Errorf("counter %q names no element", name)
+		}
+		return nil
+
 	default:
-		return fmt.Errorf("counter %q must start %q or %q", name, counterForm, counterConcept)
+		return fmt.Errorf("counter %q must start %q, %q or %q", name, counterForm, counterConcept,
+			counterElement)
 	}
 }
 

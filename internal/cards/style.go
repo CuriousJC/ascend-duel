@@ -698,7 +698,7 @@ var DuelistStyle = Style{
 	//
 	// The pip row draws nothing until shields are standing, and the space it holds is *reserved*
 	// rather than spare: taking it would mean a row of pips with nowhere to land the first time a
-	// Guard goes down.
+	// Block goes down.
 	HealthBarInset:  fighterBarInset,
 	HealthBarTop:    fighterBarTop,
 	HealthBarHeight: fighterBarHeight,

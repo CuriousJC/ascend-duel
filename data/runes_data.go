@@ -66,7 +66,7 @@ type RuneData struct {
 	//
 	// **A card has a form, an element and an action — and then one upgrade** *(owner's call,
 	// 2026-09-09)*. A `normal` rune moves one of the first three and leaves the upgrade alone:
-	// Embermark paints a card fire, Bulwark turns it into a Guard, and a gold card is still gold
+	// Embermark paints a card fire, Bulwark turns it into a Block, and a gold card is still gold
 	// afterwards. An `upgrade` rune writes the one upgrade slot, and whatever was in it is gone.
 	//
 	// **It is authored rather than derived, and the loader refuses a record that disagrees with its

@@ -63,7 +63,7 @@
 <div class="wrap">
   <h1>Scenario sheet</h1>
   <p class="note">
-    The 58 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
+    The 57 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
     that launches it. Compiled out of every build that is not <code>-tags scenario</code>, so none
     of this is reachable from a shipped binary.
   </p>
@@ -109,7 +109,7 @@
       <div class="record">card-full-house</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-bat · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">DUELLO_SCENARIO=card-full-house go run -tags scenario .</code>
-      <p class="blurb">The Card Full House, dealt on purpose: three Cuts and two Braces out of a hand of eight, which is 5 AP and pays 3.42x. It is the hand that says most about how the ladder is counted, because both halves of it are things a player has to be told. The rung matches on CONCEPT - data/hands.json writes match concept, groups [3, 2] - so the three Cuts are a set because they are Cuts, and the colors they happen to wear are worth nothing to it; recolor every card in this hand and the multiplier does not move. And the two Braces are DEFEND cards that join the hand like anything else: they carry a form and an element, they count toward the rung, and they bring no damage with them - so the hits are three 0.5x slashes each under a 3.42x multiplier, and the shields go up beside the hits rather than instead of them. The other three cards - a Flinch, a Jab and a Block - are there to be left behind, so the hand is a choice rather than the only five cards in the row. Giant Bat, 15 AP and a dummy, and it shares the shields fixture&#39;s deck so the refill behaves the same way. See DUELLO_SCENARIO=shields for the defences on their own.</p>
+      <p class="blurb">The Card Full House, dealt on purpose: three Cuts and two Braces out of a hand of eight, which is 5 AP and pays 3.42x. It is the hand that says most about how the ladder is counted, because both halves of it are things a player has to be told. The rung matches on CONCEPT - data/hands.json writes match concept, groups [3, 2] - so the three Cuts are a set because they are Cuts, and the colors they happen to wear are worth nothing to it; recolor every card in this hand and the multiplier does not move. And the two Braces are DEFEND cards that join the hand like anything else: they carry a form and an element, they count toward the rung, and they bring no damage with them - so the hits are three 0.5x slashes each under a 3.42x multiplier, and the shields go up beside the hits rather than instead of them. The other three cards - a Thrust, a Jab and a Block - are there to be left behind, so the hand is a choice rather than the only five cards in the row. Giant Bat, 15 AP and a dummy, and it shares the shields fixture&#39;s deck so the refill behaves the same way. See DUELLO_SCENARIO=shields for the defences on their own.</p>
 
       
         <div class="strip">
@@ -119,7 +119,7 @@
       
         <div class="strip">
           <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
-          <div class="scroll"><img src="card-full-house-deck.png" width="3840" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+          <div class="scroll"><img src="card-full-house-deck.png" width="2740" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
         </div>
       
 
@@ -129,13 +129,13 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Flinch</td><td>arcane</td><td>0</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>lightning</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td class="rider"></td></tr>
+            <tr><td>Thrust</td><td>arcane</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>lightning</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td class="rider"></td></tr>
           </table>
         
         
           <table>
-            <tr><th>Deck — 55 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Flinch</td><td>fire</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>ice</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>lightning</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>earth</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>arcane</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>arcane</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Guard</td><td>fire</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>ice</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>lightning</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>earth</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>arcane</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>arcane</td><td>1</td><td>2</td><td class="rider"></td></tr>
+            <tr><th>Deck — 35 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Brace</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>arcane</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>arcane</td><td>1</td><td>2</td><td class="rider"></td></tr>
           </table>
         
       </div>
@@ -145,7 +145,7 @@
       <div class="record">shields</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-bat · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">DUELLO_SCENARIO=shields go run -tags scenario .</code>
-      <p class="blurb">The shields, on their own: what a defend card raises, what one eats, and how the break is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is two thirds defend cards across all five colors - Flinch at 0 AP, Brace at 1, Block at 2, Guard at 3 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside the hits rather than instead of them. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature&#39;s HEAVIEST blow, not its first, and it decides that at the top of the creature&#39;s turn. Watch the beat between the two turns, where the blocked pips fly out of the duelist card into the card they kill and the crack opens across its face. The pip row along the bottom of the duelist card draws at most six - screens.maxShieldPips - so a turn that raises ten draws a full row and the true count is on the engine. Against a dummy, so it can be watched as many times as it takes rather than survived.</p>
+      <p class="blurb">The shields, on their own: what a defend card raises, what one eats, and how the break is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is mostly defend cards across all five colors - Brace at 1 AP and Block at 2 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside the hits rather than instead of them. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature&#39;s HEAVIEST blow, not its first, and it decides that at the top of the creature&#39;s turn. Watch the beat between the two turns, where the blocked pips fly out of the duelist card into the card they kill and the crack opens across its face. The pip row along the bottom of the duelist card draws at most six - screens.maxShieldPips - so a turn that raises ten draws a full row and the true count is on the engine. Against a dummy, so it can be watched as many times as it takes rather than survived.</p>
 
       
         <div class="strip">
@@ -155,7 +155,7 @@
       
         <div class="strip">
           <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
-          <div class="scroll"><img src="shields-deck.png" width="3840" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+          <div class="scroll"><img src="shields-deck.png" width="2740" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
         </div>
       
 
@@ -165,13 +165,13 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Brace</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Guard</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr>
+            <tr><td>Brace</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr>
           </table>
         
         
           <table>
-            <tr><th>Deck — 55 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Flinch</td><td>fire</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>ice</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>lightning</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>earth</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Flinch</td><td>arcane</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>arcane</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Guard</td><td>fire</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>ice</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>lightning</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>earth</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>arcane</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>arcane</td><td>1</td><td>2</td><td class="rider"></td></tr>
+            <tr><th>Deck — 35 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Brace</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>arcane</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>arcane</td><td>1</td><td>2</td><td class="rider"></td></tr>
           </table>
         
       </div>
@@ -191,7 +191,7 @@
       
         <div class="strip">
           <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
-          <div class="scroll"><img src="flip-cascade-deck.png" width="3620" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+          <div class="scroll"><img src="flip-cascade-deck.png" width="2300" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
         </div>
       
 
@@ -206,8 +206,8 @@
         
         
           <table>
-            <tr><th>Deck — 33 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Poke</td><td>lightning</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>ice</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>fire</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Skewer</td><td>lightning</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>ice</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>fire</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Impale</td><td>lightning</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Impale</td><td>ice</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Impale</td><td>fire</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Nick</td><td>lightning</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>ice</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>fire</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>ice</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>fire</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Sever</td><td>lightning</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>ice</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>fire</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Tap</td><td>lightning</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Tap</td><td>ice</td><td>1</td><td>0</td><td class="rider"></td></tr><tr><td>Tap</td><td>fire</td><td>1</td><td>0</td><td class="rider"></td></tr>
+            <tr><th>Deck — 21 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Skewer</td><td>lightning</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>ice</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>fire</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>1</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>ice</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>fire</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Thump</td><td>lightning</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Thump</td><td>ice</td><td>1</td><td>1</td><td class="rider"></td></tr><tr><td>Thump</td><td>fire</td><td>1</td><td>1</td><td class="rider"></td></tr>
           </table>
         
       </div>
@@ -310,7 +310,7 @@
       
         <div class="strip">
           <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
-          <div class="scroll"><img src="one-form-deck-deck.png" width="2740" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+          <div class="scroll"><img src="one-form-deck-deck.png" width="1640" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
         </div>
       
 
@@ -321,7 +321,7 @@
         
           <table>
             <tr><th>Deck — 40 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Nick</td><td>fire</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>ice</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>lightning</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>earth</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>arcane</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>arcane</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>fire</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>ice</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>earth</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>arcane</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Sever</td><td>fire</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>ice</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>lightning</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>earth</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>arcane</td><td>1</td><td>4</td><td class="rider"></td></tr>
+            <tr><td>Cut</td><td>fire</td><td>3</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>3</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>3</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>3</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>3</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>3</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>3</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>3</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>earth</td><td>3</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>arcane</td><td>3</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>fire</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>ice</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>earth</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>arcane</td><td>2</td><td>3</td><td class="rider"></td></tr>
           </table>
         
       </div>
@@ -639,7 +639,7 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Bash</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Skewer</td><td>basic</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>1</td><td class="rider"></td></tr>
+            <tr><td>Bash</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Skewer</td><td>basic</td><td>3</td><td class="rider"></td></tr><tr><td>Block</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>1</td><td class="rider"></td></tr>
           </table>
         
         
@@ -914,7 +914,7 @@
       <div class="record">achievement-toast</div>
       <div class="facts">opens on combat · room 0</div>
       <code class="cmd">DUELLO_SCENARIO=achievement-toast go run -tags scenario .</code>
-      <p class="blurb">Four cheap attacks across three forms and four elements, plus a defense: one turn that earns Spectrum, Weaponmaster and Arsenal at once, which is three toasts in a row and the only way to see the queue drain. Poke, Nick and Tap are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Arsenal cannot both land on one turn. The awards are written to the real profile; point DUELLO_PROFILE at an empty directory to see them land again.</p>
+      <p class="blurb">Four cheap attacks across three forms and four elements, plus a defense: one turn that earns Spectrum, Weaponmaster and Arsenal at once, which is three toasts in a row and the only way to see the queue drain. Jab, Cut and Thump are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Arsenal cannot both land on one turn. The awards are written to the real profile; point DUELLO_PROFILE at an empty directory to see them land again.</p>
 
       
         <div class="strip">
@@ -929,7 +929,7 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Poke</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>ice</td><td>0</td><td class="rider"></td></tr><tr><td>Tap</td><td>lightning</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>earth</td><td>0</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>1</td><td class="rider"></td></tr>
+            <tr><td>Jab</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Thump</td><td>lightning</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>1</td><td class="rider"></td></tr>
           </table>
         
         
@@ -1002,7 +1002,7 @@
       <div class="record">one-punch</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-bat · 30 AP a turn</div>
       <code class="cmd">DUELLO_SCENARIO=one-punch go run -tags scenario .</code>
-      <p class="blurb">An easy button: five Pulverizes in one element, a budget that pays for all of them, and the weakest creature in the game. Press DUEL! once and the fight is over, so the reward screen&#39;s essence offer is one click away.</p>
+      <p class="blurb">An easy button: five Smashes in one element, a budget that pays for all of them, and the weakest creature in the game. Press DUEL! once and the fight is over, so the reward screen&#39;s essence offer is one click away.</p>
 
       
         <div class="strip">
@@ -1017,7 +1017,7 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr>
+            <tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr>
           </table>
         
         
@@ -1028,7 +1028,7 @@
       <div class="record">the-heart</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-bat · 30 AP a turn</div>
       <code class="cmd">DUELLO_SCENARIO=the-heart go run -tags scenario .</code>
-      <p class="blurb">What a growing relic&#39;s counter looks like as it grows. The Heart is worn alone - &#43;5 HP now and 5 more for every fight won - so the disc in the corner of its card is the only figure on the pane that moves, and it starts at 5 rather than at nothing, which is the thing the badge is easiest to misread about. The deck is forty Pulverizes in one element and the budget pays for five of them, so a fight is one press of DUEL! and the counter can be watched across four or five wins in a couple of minutes: 5, 10, 15. Read it in three places - the relic pane during the fight, the shop&#39;s worn row between them, and the tooltip, which is where the figure is said in words. The Giant Bat is the opening room&#39;s own creature and the journey takes over from the second fight, so the opponents get real without the deck doing.</p>
+      <p class="blurb">What a growing relic&#39;s counter looks like as it grows. The Heart is worn alone - &#43;5 HP now and 5 more for every fight won - so the disc in the corner of its card is the only figure on the pane that moves, and it starts at 5 rather than at nothing, which is the thing the badge is easiest to misread about. The deck is forty Smashes in one element and the budget pays for five of them, so a fight is one press of DUEL! and the counter can be watched across four or five wins in a couple of minutes: 5, 10, 15. Read it in three places - the relic pane during the fight, the shop&#39;s worn row between them, and the tooltip, which is where the figure is said in words. The Giant Bat is the opening room&#39;s own creature and the journey takes over from the second fight, so the opponents get real without the deck doing.</p>
 
       
         <div class="strip">
@@ -1054,7 +1054,7 @@
         
           <table>
             <tr><th>Deck — 40 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Pulverize</td><td>fire</td><td>40</td><td>4</td><td class="rider"></td></tr>
+            <tr><td>Smash</td><td>fire</td><td>40</td><td>3</td><td class="rider"></td></tr>
           </table>
         
       </div>
@@ -1090,7 +1090,7 @@
       <div class="record">twenty-five-in-hand</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-bat · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">DUELLO_SCENARIO=twenty-five-in-hand go run -tags scenario .</code>
-      <p class="blurb">Twenty-five cards in the hand at once, which is three times what a fight ever deals and is here to answer one question: what does the row look like when handPitch runs out of room. There is no floor on the pitch - see combat_actionbox.go, where the deliberate choice is that a hand which has to be scrolled or truncated is worse than one which has to be hovered - so the row lands exactly on the band&#39;s width whatever is in it and the cards overlap until they are stripes of color. That is what makes the five elements the thing to look at: the border and the left column are what survive compression, and the effect text and the form mark are the first things to go. Five cards in each color and all four forms across them, with costs from 0 to 3, so the tick column varies down the row as well as across it. Note the hand refills to eight the moment a turn is played - handTarget reads handSize and nothing here widens it - so the twenty-five is the opening hand and one DUEL! ends it. Against a dummy at 15 AP so the row can be hovered, dragged and re-sorted for as long as it is interesting; press E and C to see the compressed row reorganise.</p>
+      <p class="blurb">Twenty-five cards in the hand at once, which is three times what a fight ever deals and is here to answer one question: what does the row look like when handPitch runs out of room. There is no floor on the pitch - see combat_actionbox.go, where the deliberate choice is that a hand which has to be scrolled or truncated is worse than one which has to be hovered - so the row lands exactly on the band&#39;s width whatever is in it and the cards overlap until they are stripes of color. That is what makes the five elements the thing to look at: the border and the left column are what survive compression, and the effect text and the form mark are the first things to go. Five cards in each color and all four forms across them, with costs from 1 to 3, so the tick column varies down the row as well as across it. Note the hand refills to eight the moment a turn is played - handTarget reads handSize and nothing here widens it - so the twenty-five is the opening hand and one DUEL! ends it. Against a dummy at 15 AP so the row can be hovered, dragged and re-sorted for as long as it is interesting; press E and C to see the compressed row reorganise.</p>
 
       
         <div class="strip">
@@ -1105,7 +1105,7 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Poke</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Tap</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Thump</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Flinch</td><td>ice</td><td>0</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Impale</td><td>arcane</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>arcane</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>arcane</td><td>4</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td class="rider"></td></tr>
+            <tr><td>Jab</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Thump</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Thump</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Skewer</td><td>arcane</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>arcane</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>arcane</td><td>3</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td class="rider"></td></tr>
           </table>
         
         
@@ -1219,7 +1219,7 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Poke</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Tap</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Thump</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Flinch</td><td>ice</td><td>0</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Impale</td><td>arcane</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>arcane</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>arcane</td><td>4</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td class="rider"></td></tr>
+            <tr><td>Jab</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Thump</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Thump</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Brace</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>3</td><td class="rider"></td></tr><tr><td>Skewer</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Skewer</td><td>arcane</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>arcane</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>arcane</td><td>3</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>1</td><td class="rider"></td></tr>
           </table>
         
         
@@ -1287,7 +1287,7 @@
       <div class="record">ten-rings-ten-runes</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-bat · 400 vitae · 30 AP a turn · 10 relic slots</div>
       <code class="cmd">DUELLO_SCENARIO=ten-rings-ten-runes go run -tags scenario .</code>
-      <p class="blurb">Ten rings on the fingers and ten runes in the sack, on a fight that can be won in one press. It is the fixture for what the worn row and the sack look like when both are full of things that do not match each other: ten different families, so no two rings are the same picture, and all three rarity borders on screen at once. The ten runes are one for every shape a rune can take, which is the set DUELLO_SCENARIO=ten-runes reads on its own. The hand is five Pulverizes in one element against the weakest creature in the game with a budget that pays for all of them, so DUEL! ends the fight and the reward screen and then the shop are each one click away - and the purse is set well past the dearest thing on a shelf, so the shop is a row to be looked at rather than a sum to be counted. Nothing here is tuned: ten relics firing into one sum is a picture of a laid-out screen rather than a balance question.</p>
+      <p class="blurb">Ten rings on the fingers and ten runes in the sack, on a fight that can be won in one press. It is the fixture for what the worn row and the sack look like when both are full of things that do not match each other: ten different families, so no two rings are the same picture, and all three rarity borders on screen at once. The ten runes are one for every shape a rune can take, which is the set DUELLO_SCENARIO=ten-runes reads on its own. The hand is five Smashes in one element against the weakest creature in the game with a budget that pays for all of them, so DUEL! ends the fight and the reward screen and then the shop are each one click away - and the purse is set well past the dearest thing on a shelf, so the shop is a row to be looked at rather than a sum to be counted. Nothing here is tuned: ten relics firing into one sum is a picture of a laid-out screen rather than a balance question.</p>
 
       
         <div class="strip">
@@ -1317,7 +1317,7 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Pulverize</td><td>fire</td><td>4</td><td class="rider"></td></tr>
+            <tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr>
           </table>
         
         
@@ -1354,7 +1354,7 @@
         
           <table>
             <tr><th>Deck — 40 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Bash</td><td>lightning</td><td>12</td><td>2</td><td class="rider"></td></tr><tr><td>Smash</td><td>lightning</td><td>8</td><td>3</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>8</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>4</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>4</td><td>1</td><td class="rider">golden:5</td></tr><tr><td>Poke</td><td>lightning</td><td>4</td><td>0</td><td class="rider">silver:5</td></tr>
+            <tr><td>Bash</td><td>lightning</td><td>12</td><td>2</td><td class="rider"></td></tr><tr><td>Smash</td><td>lightning</td><td>8</td><td>3</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>8</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>4</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>4</td><td>1</td><td class="rider">golden:5</td></tr><tr><td>Jab</td><td>lightning</td><td>4</td><td>1</td><td class="rider">silver:5</td></tr>
           </table>
         
       </div>
@@ -1518,7 +1518,7 @@
       <div class="record">ladder-wrap</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-rat · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">DUELLO_SCENARIO=ladder-wrap go run -tags scenario .</code>
-      <p class="blurb">Ten essences in the consumables pane - five Essence of Strength, five Essence of Weakness - carried into a duel rather than spent at a reward. Select one card in the hand, click an essence, and the card walks its own form&#39;s ladder a rung. The question it exists for is the two ends: the ladder is a ring, so demoting the Poke gives an Impale and promoting the Impale gives a Poke, and the same round trip runs on Flinch and Guard down the defend ladder. The eight cards are the two ends of the stab ladder, the two ends of the defend ladder, and four middles, which is what says a rung in the middle still just steps. Nothing goes dim for being pointless - an essence is lit whenever exactly one card is selected - so a wasted pick is the player&#39;s to make. Against a dummy at 15 AP, so the hand can be walked up and down for as long as it is interesting.</p>
+      <p class="blurb">Ten essences in the consumables pane - five Essence of Strength, five Essence of Weakness - carried into a duel rather than spent at a reward. Select one card in the hand, click an essence, and the card walks its own form&#39;s ladder a rung. The question it exists for is the two ends: the ladder is a ring, so demoting the Jab gives a Skewer and promoting the Skewer gives a Jab, and the same round trip runs on Brace and Block, the defend ladder&#39;s only two rungs. The eight cards are the two ends of the stab ladder, the two ends of the defend ladder, and four others, which is what says a rung in the middle still just steps. Nothing goes dim for being pointless - an essence is lit whenever exactly one card is selected - so a wasted pick is the player&#39;s to make. Against a dummy at 15 AP, so the hand can be walked up and down for as long as it is interesting.</p>
 
       
         <div class="strip">
@@ -1543,7 +1543,7 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Poke</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Impale</td><td>ice</td><td>4</td><td class="rider"></td></tr><tr><td>Flinch</td><td>earth</td><td>0</td><td class="rider"></td></tr><tr><td>Guard</td><td>arcane</td><td>3</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td class="rider"></td></tr>
+            <tr><td>Jab</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Skewer</td><td>ice</td><td>3</td><td class="rider"></td></tr><tr><td>Brace</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>arcane</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>1</td><td class="rider"></td></tr>
           </table>
         
         
@@ -1708,7 +1708,7 @@
       <div class="record">cost-shift</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-rat · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">DUELLO_SCENARIO=cost-shift go run -tags scenario .</code>
-      <p class="blurb">Two essences in the consumables pane - one Essence of Ease, one Essence of Strength - carried into a duel. Select one card, click an essence: Ease takes 1 AP off that card&#39;s cost and leaves it the same card, Strength promotes it a rung up its form&#39;s ladder, which costs 1 AP more. The hand runs from a 0 AP Poke to a 3 AP Smash, so Ease can be tried on a card already free (the cost floors at zero) and Strength on a cheap card and a dear one. Against a dummy at 15 AP, so the changed card can be played and the AP bar read for as long as it is interesting.</p>
+      <p class="blurb">Two essences in the consumables pane - one Essence of Ease, one Essence of Strength - carried into a duel. Select one card, click an essence: Ease takes 1 AP off that card&#39;s cost and leaves it the same card, Strength promotes it a rung up its form&#39;s ladder, which costs 1 AP more. The hand runs from 1 AP cards to a 3 AP Smash, so Ease can take a 1 AP card to free (the cost floors at zero) and Strength can be tried on a cheap card and a dear one - a 3 AP card promoted wraps round to the 1 AP card of its form. Against a dummy at 15 AP, so the changed card can be played and the AP bar read for as long as it is interesting.</p>
 
       
         <div class="strip">
@@ -1733,7 +1733,7 @@
         
           <table>
             <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Poke</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Smash</td><td>arcane</td><td>3</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td class="rider"></td></tr>
+            <tr><td>Thump</td><td>fire</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Smash</td><td>arcane</td><td>3</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td class="rider"></td></tr>
           </table>
         
         
@@ -1891,52 +1891,6 @@
           <table>
             <tr><th>Deck — 20 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
             <tr><td>Jab</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Skewer</td><td>earth</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cleave</td><td>arcane</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Thump</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Smash</td><td>lightning</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr>
-          </table>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <div class="record">headsman</div>
-      <div class="facts">opens on combat · room 0 · against animals-outer-bat · DUMMY -- nothing dies · 8 AP a turn</div>
-      <code class="cmd">DUELLO_SCENARIO=headsman go run -tags scenario .</code>
-      <p class="blurb">The Headsman worn alone: every Sever (4 AP slash) deals 4x DMG. Sever ships at zero copies, so the deck is built around it - four Severs among Cleaves, Slices and Cuts, two of them in the opening hand beside a plain Cleave and a Slice to compare against. Hover a Sever to read the relic&#39;s term in the arithmetic, play one and watch the toast. The fight is a dummy so it never ends, and the budget is 8 so two Severs fit in one turn.</p>
-
-      
-        <div class="strip">
-          <div class="cap">worn, in the sack, and in the pouch</div>
-          <div class="scroll"><img src="headsman-worn.png" width="228" height="308" alt="worn, in the sack, and in the pouch"></div>
-        </div>
-      
-        <div class="strip">
-          <div class="cap">the opening hand, dealt over the shuffle</div>
-          <div class="scroll"><img src="headsman-hand.png" width="870" height="140" alt="the opening hand, dealt over the shuffle"></div>
-        </div>
-      
-        <div class="strip">
-          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
-          <div class="scroll"><img src="headsman-deck.png" width="650" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
-        </div>
-      
-
-      <div class="cols">
-        
-          <table>
-            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">headsman</td><td>The Headsman</td><td class="said">Every Sever (4 AP slash) deals 4x DMG.</td></tr>
-          </table>
-        
-        
-        
-          <table>
-            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Sever</td><td>fire</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>ice</td><td>4</td><td class="rider"></td></tr><tr><td>Cleave</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Slice</td><td>arcane</td><td>2</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>arcane</td><td>2</td><td class="rider"></td></tr><tr><td>Block</td><td>fire</td><td>2</td><td class="rider"></td></tr>
-          </table>
-        
-        
-          <table>
-            <tr><th>Deck — 18 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
-            <tr><td>Sever</td><td>fire</td><td>2</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>ice</td><td>2</td><td>4</td><td class="rider"></td></tr><tr><td>Cleave</td><td>earth</td><td>4</td><td>3</td><td class="rider"></td></tr><tr><td>Slice</td><td>arcane</td><td>4</td><td>2</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>4</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr>
           </table>
         
       </div>

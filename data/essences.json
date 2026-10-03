@@ -94,7 +94,7 @@
     "Art": "add-ap",
     "Draw": "a stylized lion drawn in variegated lines fading into nothing",
     "Target": "promote",
-    "Text": "CARD GAINS STRENGTH +1 AP"
+    "Text": "CARD GAINS STRENGTH"
   },
   {
     "EssenceRecord": "demote",
@@ -103,7 +103,7 @@
     "Art": "demote",
     "Draw": "a stylized mouse seen from the side, drawn in variegated lines fading into nothing",
     "Target": "demote",
-    "Text": "CARD LOSES STRENGTH -1 AP"
+    "Text": "CARD LOSES STRENGTH"
   },
   {
     "EssenceRecord": "change-crush",

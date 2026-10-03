@@ -206,7 +206,7 @@ func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 func TestADefenseAppliesItsStatus(t *testing.T) {
 	// **Every card throws a hit, and a hit lands its card's statuses** *(owner's call)* — so a fire
 	// Brace burns like a fire Jab, for one rule rather than a special case for a verb.
-	for _, a := range []ConceptID{Block, Brace, Guard} {
+	for _, a := range []ConceptID{Block, Brace} {
 		attacker, target := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 		events, _, bAfter := resolve(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
@@ -495,9 +495,9 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
 
-	// B is shocked and swings a fire Bash; A is holding a Guard for it.
+	// B is shocked and swings a fire Bash; A is holding a Block for it.
 	events, _, bAfter := resolveWith(alwaysMisses(), a1, b1,
-		[]Card{Plain(Guard)}, []Card{Of(Bash, Fire)}, 2)
+		[]Card{Plain(Block)}, []Card{Of(Bash, Fire)}, 2)
 
 	if n := countKind(events, KindBlocked); n != 0 {
 		t.Error("a missed attack still spent the shield that was waiting for it")

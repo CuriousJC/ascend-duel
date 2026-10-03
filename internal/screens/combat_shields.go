@@ -36,9 +36,9 @@ import (
 
 // shieldFlight is a defend card's pips on their way to the card that will carry them.
 //
-// **It carries a count rather than one pip per flight.** Block raises two and Guard three, and
-// three objects crossing the same gap on the same beat would read as three cards having been
-// played rather than as one card worth three.
+// **It carries a count rather than one pip per flight.** Block raises two, and two objects
+// crossing the same gap on the same beat would read as two cards having been played rather than as
+// one card worth two.
 type shieldFlight struct {
 	// side is whose card the pips are landing on, and seat is the hand seat they set off from.
 	side combat.Side

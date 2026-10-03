@@ -42,7 +42,6 @@ import (
 	"math/rand"
 	"sort"
 
-	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -495,14 +494,10 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 				trace.Logf("postbattle", "%s, deck now %d", s.pendingWhat, gs.Run.Size())
 				s.applyNow = nil
 
-				// **The alteration is a moment, raised where the deck actually changes.** An essence
-				// that removed a card leaves nothing behind, so there is nothing to name and the
-				// moment is not raised — see achieve.MomentCardAltered, which carries the resulting
-				// card's label rather than the essence's, because several essences can arrive at one card.
+				// **A card walked round its ladder is a moment, raised where the deck actually
+				// changes.** An essence that removed a card leaves nothing behind to have wrapped.
 				if !s.removes {
-					for _, l := range s.lands {
-						earnMoment(gs, achieve.CardAltered(l.after.Label()))
-					}
+					earnLadderWraps(gs, s.lands)
 				}
 			}
 			if s.rearm(gs) {

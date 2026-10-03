@@ -158,5 +158,21 @@
         "Then": [{ "Do": "add-hand-dmg", "Amount": 14 }]
       }
     ]
+  },
+  {
+    "RelicRecord": "demotion-one",
+    "Name": "Whittling Ring",
+    "Family": "Tier demotions",
+    "Art": "demotion-one",
+    "Draw": "wooden ring with a line of red on one edge",
+    "Text": "Every 1 AP attack is dealt as its 0 AP version.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Tier": 1 },
+        "Then": [{ "Do": "demote-card", "Amount": 1 }]
+      }
+    ]
   }
 ]

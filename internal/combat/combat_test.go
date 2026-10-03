@@ -139,10 +139,10 @@ func TestATurnResolvesInCategoryOrder(t *testing.T) {
 	a := duelist(10, 5, 500)
 	b := duelist(10, 5, 500)
 
-	queued := PlainCards(Brace, Bash, Block, Guard, Smash)
+	queued := PlainCards(Brace, Bash, Block, Smash)
 	events, _, _ := resolve(a, b, queued, nil, 1)
 
-	want := PlainCards(Brace, Block, Guard, Bash, Smash)
+	want := PlainCards(Brace, Block, Bash, Smash)
 	if got := playedCards(events); !cardsEqual(got, want) {
 		t.Errorf("played %v, want %v", got, want)
 	}
@@ -191,7 +191,7 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 	// of B's turn if A's slots never follow it. Pin the block structure that relies on.
 	order := ResolutionOrder(
 		PlainCards(Brace, Bash, Block),
-		PlainCards(Guard, Smash, Brace))
+		PlainCards(Block, Smash, Brace))
 
 	seenB := false
 	for _, slot := range order {
@@ -269,7 +269,7 @@ func TestJabHitsForHalfButNeverZero(t *testing.T) {
 func TestADefenseHitsForNothing(t *testing.T) {
 	// **Every card throws a hit, and a defense's deals nothing of its own.** A defense is a wall, not
 	// a counter, so a turn made of defenses alone is a turn in which nobody is hurt.
-	for _, a := range []ConceptID{Block, Brace, Guard} {
+	for _, a := range []ConceptID{Block, Brace} {
 		events, _, bAfter := resolve(duelist(10, 5, 100), duelist(10, 5, 100),
 			PlainCards(a), nil, 1)
 
@@ -360,8 +360,8 @@ func TestCanAffordEnforcesTheBudget(t *testing.T) {
 	if !d.CanAfford(PlainCards(Smash, Thrust)) { // 3 + 2
 		t.Error("Smash + Thrust costs 5 and should fit a 5 AP budget")
 	}
-	if d.CanAfford(PlainCards(Guard, Skewer)) { // 3 + 3
-		t.Error("Guard + Skewer costs 6 and should not fit a 5 AP budget")
+	if d.CanAfford(PlainCards(Smash, Skewer)) { // 3 + 3
+		t.Error("Smash + Skewer costs 6 and should not fit a 5 AP budget")
 	}
 }
 
@@ -373,25 +373,17 @@ func TestCategoriesCoverEveryPlayerConcept(t *testing.T) {
 		Jab:    CategoryAttack,
 		Thrust: CategoryAttack,
 		Skewer: CategoryAttack,
-		Poke:   CategoryAttack,
-		Impale: CategoryAttack,
 
 		Cut:    CategoryAttack,
 		Slice:  CategoryAttack,
 		Cleave: CategoryAttack,
-		Nick:   CategoryAttack,
-		Sever:  CategoryAttack,
 
-		Thump:     CategoryAttack,
-		Bash:      CategoryAttack,
-		Smash:     CategoryAttack,
-		Tap:       CategoryAttack,
-		Pulverize: CategoryAttack,
+		Thump: CategoryAttack,
+		Bash:  CategoryAttack,
+		Smash: CategoryAttack,
 
-		Flinch: CategoryDefend,
-		Brace:  CategoryDefend,
-		Block:  CategoryDefend,
-		Guard:  CategoryDefend,
+		Brace: CategoryDefend,
+		Block: CategoryDefend,
 	}
 
 	got := PlayerConcepts()
@@ -478,7 +470,7 @@ func TestRoundIsDeterministic(t *testing.T) {
 	a := duelist(7, 5, 300)
 	b := duelist(9, 5, 300)
 
-	aPlan := PlainCards(Bash, Guard, Block)
+	aPlan := PlainCards(Bash, Brace, Block)
 	bPlan := PlainCards(Jab, Brace)
 
 	first, a1, b1 := resolve(a, b, aPlan, bPlan, 1)
@@ -518,7 +510,7 @@ func TestEmptyQueueIsAHarmlessRound(t *testing.T) {
 func stockHand() []Card {
 	var hand []Card
 	for i := 0; i < 6; i++ {
-		hand = append(hand, PlainCards(Block, Guard, Jab, Bash, Smash)...)
+		hand = append(hand, PlainCards(Block, Brace, Jab, Bash, Smash)...)
 	}
 	return hand
 }
@@ -532,9 +524,9 @@ func TestThePlannerNeverPlaysACardItWasNotDealt(t *testing.T) {
 		nil,
 		PlainCards(Jab),
 		PlainCards(Jab, Jab, Jab),
-		PlainCards(Guard, Block, Brace), // no attacks at all
-		PlainCards(Guard, Block),
-		PlainCards(Smash, Smash, Jab, Guard),
+		PlainCards(Block, Block, Brace), // no attacks at all
+		PlainCards(Brace, Block),
+		PlainCards(Smash, Smash, Jab, Block),
 	}
 
 	for _, hand := range hands {
@@ -562,7 +554,7 @@ func TestPlanningIsReproducible(t *testing.T) {
 	// The determinism rule, at the planner. Nothing here may consult a map's iteration order
 	// or a clock, so the same hand must plan the same round every time — which is what lets a
 	// seeded run be replayed and what the balance tool depends on.
-	hand := PlainCards(Smash, Jab, Bash, Guard, Jab, Block, Bash, Smash)
+	hand := PlainCards(Smash, Jab, Bash, Brace, Jab, Block, Bash, Smash)
 
 	d := duelist(10, 4, 100)
 	want := planKey(PlanFor(d, hand))
@@ -629,7 +621,7 @@ func TestThePlannerSpendsWhatTheAttacksDidNotWant(t *testing.T) {
 	// that only maximized damage would never raise a shield, so every defensive card authored into
 	// the roster would sit in a discard pile forever.
 	d := duelist(10, 5, 100) // 2 AP of attack, 3 left over
-	hand := PlainCards(Bash, Guard)
+	hand := PlainCards(Bash, Block)
 
 	plan := PlanFor(d, hand)
 
@@ -643,6 +635,6 @@ func TestThePlannerSpendsWhatTheAttacksDidNotWant(t *testing.T) {
 		}
 	}
 	if attacks != 1 || shields != 1 {
-		t.Errorf("planned %v, want the Bash and the Guard", planKey(plan))
+		t.Errorf("planned %v, want the Bash and the Block", planKey(plan))
 	}
 }

@@ -167,7 +167,7 @@ func TestTheWordingAtEveryReach(t *testing.T) {
 		{"change-fire", 2, "2 CARDS BECOME FIRE"},
 		{"change-fire", 3, "3 CARDS BECOME FIRE"},
 		{"add-dmg", 2, "2 CARDS GAIN DMG +1/2"},
-		{"demote", 2, "2 CARDS LOSE STRENGTH -1 AP"},
+		{"demote", 2, "2 CARDS LOSE STRENGTH"},
 		// A sentence about the doing: the count lands on what is being done to.
 		{"dissolve", 2, "DESTROY 2 CARDS"},
 		{"dissolve", 4, "DESTROY 4 CARDS"},

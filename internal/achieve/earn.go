@@ -18,8 +18,7 @@ import (
 type Moment struct {
 	Name string
 
-	// Value is a concept's label on MomentCardAltered, and a rung's hands.json key on
-	// MomentHandFormed.
+	// Value is a direction on MomentLadderWrapped, and a rung's hands.json key on MomentHandFormed.
 	Value string
 
 	// N is the figure the moment carries: the realm on MomentRealmReached, the shield count on
@@ -31,8 +30,34 @@ type Moment struct {
 func DuelWon() Moment               { return Moment{Name: MomentDuelWon} }
 func TutorialFinished() Moment      { return Moment{Name: MomentTutorialFinished} }
 func RealmReached(realm int) Moment { return Moment{Name: MomentRealmReached, N: realm} }
-func CardAltered(label string) Moment {
-	return Moment{Name: MomentCardAltered, Value: label}
+
+// The two directions a ladder-wrapped moment carries.
+const (
+	WrapDown = "down"
+	WrapUp   = "up"
+)
+
+// LadderWrapped is the moment a card's change raises when it went from one end of its own ladder
+// to the other — the bottom rung to the top is `down`, since only a demote arrives there, and the top
+// to the bottom is `up`. Anything else reports false.
+//
+// **It reads the two cards and not the essence**, because the cards are what the player sees and
+// they say the direction on their own: nothing but a demote takes a 1 AP Jab to a 3 AP Skewer.
+// **A ladder of two never wraps**, since its ends are also neighbors — Brace demoted to Block is
+// indistinguishable from Brace promoted — so the moment is about the three-rung attack ladders.
+func LadderWrapped(before, after combat.Card) (Moment, bool) {
+	rungs := combat.Ladder(before.Concept)
+	if len(rungs) < 3 {
+		return Moment{}, false
+	}
+	bottom, top := rungs[0], rungs[len(rungs)-1]
+	switch {
+	case before.Concept == bottom && after.Concept == top:
+		return Moment{Name: MomentLadderWrapped, Value: WrapDown}, true
+	case before.Concept == top && after.Concept == bottom:
+		return Moment{Name: MomentLadderWrapped, Value: WrapUp}, true
+	}
+	return Moment{}, false
 }
 
 // HandFormed is the rung the player's blow was scored on, by its hands.json key.
@@ -55,7 +80,7 @@ func (c *Catalog) ByMoment(m Moment) []string {
 			if m.N < t.n {
 				continue
 			}
-		case MomentCardAltered, MomentHandFormed:
+		case MomentLadderWrapped, MomentHandFormed:
 			if m.Value != t.value {
 				continue
 			}
@@ -121,7 +146,7 @@ func (p pattern) holds(turn []combat.Card) bool {
 
 // holds reports whether one clause is satisfied.
 func (c clause) holds(turn []combat.Card) bool {
-	cards := c.costs(c.of.filter(turn))
+	cards := c.of.filter(turn)
 
 	switch c.mode {
 	case data.ModeCount:
@@ -149,24 +174,6 @@ func (c clause) holds(turn []combat.Card) bool {
 	default:
 		return false
 	}
-}
-
-// costs narrows a selection to the cards of one AP, or leaves it alone when the clause named none.
-//
-// **`Card.Cost()` rather than the concept's figure**, so an essence's CostDelta is read — which is what
-// makes "five 4 AP attacks" true of five promoted Skewers and false of five Impales a Hone essence has
-// made cheap. See data.ClauseData.Cost.
-func (c clause) costs(cards []combat.Card) []combat.Card {
-	if c.cost == nil {
-		return cards
-	}
-	out := make([]combat.Card, 0, len(cards))
-	for _, card := range cards {
-		if card.Cost() == *c.cost {
-			out = append(out, card)
-		}
-	}
-	return out
 }
 
 // filter picks the cards a clause looks at.
@@ -226,6 +233,16 @@ func CountersFor(turn []combat.Card) map[string]int {
 		if f := c.Form(); f != combat.FormNone {
 			out[counterForm+f.String()]++
 		}
+		switch {
+		case c.Rider().Kind == combat.RiderWildElement:
+			for _, e := range combat.AllElements {
+				if e != combat.Basic {
+					out[counterElement+e.String()]++
+				}
+			}
+		case c.Element != combat.Basic:
+			out[counterElement+c.Element.String()]++
+		}
 	}
 	return out
 }
@@ -239,6 +256,8 @@ func CounterLabel(name string) string {
 		return name[len(counterForm):] + " cards"
 	case len(name) > len(counterConcept) && name[:len(counterConcept)] == counterConcept:
 		return name[len(counterConcept):]
+	case len(name) > len(counterElement) && name[:len(counterElement)] == counterElement:
+		return name[len(counterElement):] + " cards"
 	default:
 		return name
 	}

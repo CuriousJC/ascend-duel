@@ -423,6 +423,7 @@
     "Draw": "jade ring without a gem",
     "Text": "+5 duelist DMG\nwhen No Hand is PLAYED.",
     "Rarity": "common",
+    "Unlock": "no-hand-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -841,22 +842,6 @@
     ]
   },
   {
-    "RelicRecord": "stick",
-    "Name": "The Stick",
-    "Family": "Weapons",
-    "Art": "stick",
-    "Draw": "a sharpened stick",
-    "Text": "Every Poke (0 AP stab) deals 4x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Poke" },
-        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
-      }
-    ]
-  },
-  {
     "RelicRecord": "old-dagger",
     "Name": "The Old Dagger",
     "Family": "Weapons",
@@ -900,38 +885,6 @@
       {
         "When": "card-damage",
         "If": { "Concept": "Skewer" },
-        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "lance",
-    "Name": "The Lance",
-    "Family": "Weapons",
-    "Art": "lance",
-    "Draw": "A long obsidian lance with a silver hilt",
-    "Text": "Every Impale (4 AP stab) deals 4x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Impale" },
-        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "bread-knife",
-    "Name": "The Bread Knife",
-    "Family": "Weapons",
-    "Art": "bread-knife",
-    "Draw": "a bread knife",
-    "Text": "Every Nick (0 AP slash) deals 4x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Nick" },
         "Then": [{ "Do": "scale-damage", "Amount": 400 }]
       }
     ]
@@ -985,38 +938,6 @@
     ]
   },
   {
-    "RelicRecord": "headsman",
-    "Name": "The Headsman",
-    "Family": "Weapons",
-    "Art": "headsman",
-    "Draw": "Black steel executioner axe with a silver handle",
-    "Text": "Every Sever (4 AP slash) deals 4x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Sever" },
-        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "spoon",
-    "Name": "Grandma's Spoon",
-    "Family": "Weapons",
-    "Art": "spoon",
-    "Draw": "a wooden spoon",
-    "Text": "Every Tap (0 AP crush) deals 4x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Tap" },
-        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
-      }
-    ]
-  },
-  {
     "RelicRecord": "brass-knuckles",
     "Name": "The Knuckles",
     "Family": "Weapons",
@@ -1060,22 +981,6 @@
       {
         "When": "card-damage",
         "If": { "Concept": "Smash" },
-        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "stone-maul",
-    "Name": "The Maul",
-    "Family": "Weapons",
-    "Art": "stone-maul",
-    "Draw": "a large stone maul with a wooden handle",
-    "Text": "Every Pulverize (4 AP crush) deals 4x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Pulverize" },
         "Then": [{ "Do": "scale-damage", "Amount": 400 }]
       }
     ]
@@ -1248,6 +1153,7 @@
     "Draw": "a dual ring that's wrapped into a circle twice formed of burning copper",
     "Text": "Every fire card lands twice, both at full DMG.",
     "Rarity": "uncommon",
+    "Unlock": "fire-repeat-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1264,6 +1170,7 @@
     "Draw": "a dual ring that's wrapped into a circle twice formed of icy covered copper",
     "Text": "Every ice card lands twice, both at full DMG.",
     "Rarity": "uncommon",
+    "Unlock": "ice-repeat-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1280,6 +1187,7 @@
     "Draw": "a dual ring that's wrapped into a circle twice formed of sparking copper",
     "Text": "Every lightning card lands twice, both at full DMG.",
     "Rarity": "uncommon",
+    "Unlock": "lightning-repeat-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1296,6 +1204,7 @@
     "Draw": "a dual ring that's wrapped into a circle twice formed of rocky copper",
     "Text": "Every earth card lands twice, both at full DMG.",
     "Rarity": "uncommon",
+    "Unlock": "earth-repeat-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1312,6 +1221,7 @@
     "Draw": "a dual ring that's wrapped into a circle twice formed of purple lightning covered copper",
     "Text": "Every arcane card lands twice, both at full DMG.",
     "Rarity": "uncommon",
+    "Unlock": "arcane-repeat-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1322,10 +1232,10 @@
   },
   {
     "RelicRecord": "repeat-element-four",
-    "Name": "Deep Hue Ring",
+    "Name": "Twisted Prism",
     "Family": "Elemental repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "a double ring, a single band wrapped around into a circle twice, made of copper with strands of rainbow metal twisted through it",
     "Text": "Every card in an Elemental Four of a Kind lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Unlock": "element-four-relics",
@@ -1339,10 +1249,10 @@
   },
   {
     "RelicRecord": "repeat-element-five",
-    "Name": "Unbroken Hue Ring",
+    "Name": "The Rainbow Knot",
     "Family": "Elemental repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "an amulet, not a ring: a tangled knot of rainbow metal twisted into itself in an organic knot shape, hung on a platinum chain",
     "Text": "Every card in an Elemental Five of a Kind lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Unlock": "element-five-relics",
@@ -1815,6 +1725,7 @@
     "Draw": "a dual ivory ring that's wrapped into a circle twice.",
     "Text": "Every stab card lands twice, both at full DMG.",
     "Rarity": "uncommon",
+    "Unlock": "stab-repeat-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1831,6 +1742,7 @@
     "Draw": "a dual steel ring with sharp edges that's wrapped into a circle twice.",
     "Text": "Every slash card lands twice, both at full DMG.",
     "Rarity": "uncommon",
+    "Unlock": "slash-repeat-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1847,6 +1759,7 @@
     "Draw": "a dual granite ring that's wrapped into a circle twice.",
     "Text": "Every crush card lands twice, both at full DMG.",
     "Rarity": "uncommon",
+    "Unlock": "crush-repeat-relics",
     "Rules": [
       {
         "When": "blow-formed",
@@ -1951,26 +1864,10 @@
     ]
   },
   {
-    "RelicRecord": "demotion-one",
-    "Name": "Whittling Ring",
-    "Family": "Tier demotions",
-    "Art": "demotion-one",
-    "Draw": "wooden ring with a line of red on one edge",
-    "Text": "Every 1 AP attack is dealt as its 0 AP version.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Tier": 1 },
-        "Then": [{ "Do": "demote-card", "Amount": 1 }]
-      }
-    ]
-  },
-  {
     "RelicRecord": "discount-slash",
     "Name": "Whetted",
     "Family": "Form discounts",
-    "Art": "discount-slash",
+    "Art": "",
     "Draw": "top of a steel robe from the chest up with a hood",
     "Text": "Slash cards cost 1 AP less.",
     "Rarity": "rare",

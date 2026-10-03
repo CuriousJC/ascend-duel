@@ -101,7 +101,7 @@ var demoCards = []struct {
 	{cards.FormStab, "Skewer", cards.Fire},
 	{cards.FormSlash, "Cleave", cards.Ice},
 	{cards.FormCrush, "Smash", cards.Lightning},
-	{cards.FormDefend, "Guard", cards.Earth},
+	{cards.FormDefend, "Block", cards.Earth},
 }
 
 // demoCost is the cost every demonstration card is drawn at. See demoCards.

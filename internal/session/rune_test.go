@@ -167,7 +167,7 @@ func TestARiderRuneAttachesToTheCardItNames(t *testing.T) {
 func TestARemoveRuneEatsBothOfItsTargets(t *testing.T) {
 	// **The two-card case is the one essences never had**, and it is where an index-based
 	// implementation goes wrong: removing the first shifts the second.
-	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab), combat.Plain(combat.Poke))
+	run := runWith(combat.Plain(combat.Bash), combat.Plain(combat.Jab), combat.Plain(combat.Smash))
 	held := ids(run)
 
 	p := anyWithTarget(t, RuneRemove)

@@ -110,7 +110,7 @@ const (
 // upgrade**, which is a rider, and there is only ever one: writing it discards whatever was there.
 //
 // **The distinction is worth naming because it is invisible in the effect.** Bulwark turns a card
-// into a Guard and Golden makes it gold, and from the outside both are "a rune changed my
+// into a Block and Golden makes it gold, and from the outside both are "a rune changed my
 // card". What separates them is what the *next* rune does — the second normal change leaves the
 // first standing, and the second upgrade erases it — and a player who cannot tell which class a
 // card in the shop belongs to cannot plan two purchases ahead.

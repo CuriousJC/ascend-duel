@@ -24,8 +24,8 @@ const (
 	KindAction
 
 	// KindRaised is a defend card putting shields up. Action is the card, Amount is how many it
-	// raised, and Life carries the duelist's shield count afterwards, so a second Guard in the same
-	// turn reads as five rather than as three twice.
+	// raised, and Life carries the duelist's shield count afterwards, so a second Block in the same
+	// turn reads as four rather than as two twice.
 	//
 	KindRaised
 

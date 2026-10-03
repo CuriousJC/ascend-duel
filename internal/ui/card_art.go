@@ -639,7 +639,7 @@ func DuelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 }
 
 // shieldPip is the picture one standing shield is drawn as: the defend form's corner mark in that
-// shield's own element, the same file a Brace, a Block and a Guard carry.
+// shield's own element, the same file a Brace and a Block carry.
 //
 // **It goes through `artwork` rather than `systems.ArtMark`** because a pip is scaled into a
 // twenty-pixel badge box like every other thing in that row, and the badge row takes an

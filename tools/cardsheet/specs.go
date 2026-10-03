@@ -33,8 +33,8 @@ func titled(s string) string {
 // a fifth cost tier, a relic, a border color nothing uses. It is a drawing-board, not a
 // report.
 //
-// The cost of that is drift: the names and costs below are a snapshot of the nineteen
-// concepts as of 2026-09-06. If they stop matching the deck it makes the sheet a worse
+// The cost of that is drift: the names and costs below are a snapshot of the eleven
+// concepts. If they stop matching the deck it makes the sheet a worse
 // preview but never a wrong one, because every pixel still comes from cards.Render.
 
 // formNotes says what mark each form actually draws, for the caption. Worth spelling out on
@@ -47,7 +47,7 @@ var formNotes = map[cards.Form]string{
 	cards.FormDefend: `a shield, tinted by the card's element`,
 }
 
-// concept is one of the nineteen, with the cost, form, effect text and amount the rules give it.
+// concept is one of the eleven, with the cost, form, effect text and amount the rules give it.
 //
 // **The amount came back on 2026-09-16**, having been dropped when the damage badge was removed in
 // 2026-08-14. The badge returned, carrying the multiplier for an attack and a stack of shields for
@@ -70,52 +70,39 @@ type concept struct {
 	shield bool
 }
 
-// The nineteen concepts, in duelist_cards.json's order, which is grid order: three attack forms
-// of five tiers, then the defenses.
+// The eleven concepts, in duelist_cards.json's order, which is grid order: three attack forms
+// of three tiers, then the defenses.
 //
-// **Three forms by five tiers, and the tiers cost and hit the same in each** *(2026-08-24)*.
-// 0 AP is a quarter, 1 AP is half, 2 AP is one, 3 AP is two, 4 AP is four, in Stab and Slash and
-// Crush alike. So a form is *which* pair you are building rather than a stronger or weaker way to
-// build one, and the only thing separating Skewer from Cleave is what it pairs with.
+// **Three forms by three tiers, and the tiers cost and hit the same in each**. 1 AP is half, 2 AP
+// is one, 3 AP is three, in Stab and Slash and Crush alike. So a form is *which* pair you are
+// building rather than a stronger or weaker way to build one, and the only thing separating Skewer
+// from Cleave is what it pairs with.
 //
-// **The defenses are a four-rung ladder of their own** *(2026-09-06)*, Flinch through Guard, with
-// the shield count where the attacks have a damage multiplier — so an Exalt or a Debase walks it too.
-//
-// **The outer rungs ship at zero copies** — both ends of each attack form, and Flinch and Guard —
-// so they are on this sheet and not in any deck. This
-// is where they get looked at, and there are two specific things to look for: a 0 AP card draws an
-// empty cost column, and a 4 AP card is the only one that stacks four ticks.
+// **The defenses are a two-rung ladder of their own**, Brace and Block, with the shield count where
+// the attacks have a damage multiplier — so an Exalt or a Debase walks it too.
 //
 // **The effect text is a snapshot of `cardEffects` in internal/screens**, under the same rule
 // as the names and costs above it: the tool does not import the game so it can draw cards the
 // rules cannot deal. It is the longest strings here that matter — the sheet is where an
 // overlong line is *seen* rather than merely failing a test.
 var concepts = []concept{
-	{"Poke", cards.FormStab, 0, "", 25, false},
 	{"Jab", cards.FormStab, 1, "", 50, false},
 	{"Thrust", cards.FormStab, 2, "", 100, false},
 	{"Skewer", cards.FormStab, 3, "", 300, false},
-	{"Impale", cards.FormStab, 4, "", 400, false},
 
-	{"Nick", cards.FormSlash, 0, "", 25, false},
 	{"Cut", cards.FormSlash, 1, "", 50, false},
 	{"Slice", cards.FormSlash, 2, "", 100, false},
 	{"Cleave", cards.FormSlash, 3, "", 300, false},
-	{"Sever", cards.FormSlash, 4, "", 400, false},
 
-	{"Tap", cards.FormCrush, 0, "", 25, false},
 	{"Thump", cards.FormCrush, 1, "", 50, false},
 	{"Bash", cards.FormCrush, 2, "", 100, false},
 	{"Smash", cards.FormCrush, 3, "", 300, false},
-	{"Pulverize", cards.FormCrush, 4, "", 400, false},
 
-	{"Flinch", cards.FormDefend, 0, "", 1, true},
 	{"Brace", cards.FormDefend, 1, "", 1, true},
 	{"Block", cards.FormDefend, 2, "", 2, true},
-	{"Guard", cards.FormDefend, 3, "", 3, true},
 }
 
-// realCards is **all nineteen concepts at hand size**, one element after another so the row
+// realCards is **all eleven concepts at hand size**, one element after another so the row
 // also walks the border colors.
 //
 // **It was a spread of six until 2026-08-14**, chosen to break the layout: the longest name,
@@ -134,9 +121,7 @@ func realCards() []cards.Spec {
 	return out
 }
 
-// realDeckRow is one element's worth of the deck: every concept, which is a rung wider each end
-// than the overlay's row for that element holds when nothing has been drawn yet — the zero-copy
-// ends are on the sheet precisely because no deck starts with them.
+// realDeckRow is one element's worth of the deck: every concept, in that element.
 func realDeckRow(e cards.Element) []cards.Spec {
 	out := make([]cards.Spec, 0, len(concepts))
 	for _, c := range concepts {

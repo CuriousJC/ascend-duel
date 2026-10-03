@@ -45,13 +45,12 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )
 
-// minCost and maxCost are the action-point range the sheet sweeps. Costs run 0 to 4 in
-// internal/combat today — 0 both because a Hone can drive a card free and because the ladder
-// grew a 0 AP rung — and the sheet goes to that and no further, because a row of impossible cards
-// would be reviewing a card the game cannot deal.
+// minCost and maxCost are the action-point range the sheet sweeps. The ladder is 1 to 3 AP and an
+// Ease can drive a card free, so the sheet goes to that and no further, because a row of impossible
+// cards would be reviewing a card the game cannot deal.
 const (
 	minCost = 0
-	maxCost = 4
+	maxCost = 3
 )
 
 // deckStackPitch mirrors the constant of the same name in internal/screens: how far apart

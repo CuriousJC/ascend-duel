@@ -35,6 +35,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/journal"
@@ -208,11 +209,25 @@ func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
 	// two hands and this file goes on knowing nothing about what any one essence does.
 	was, seats := s.handFaces(gs)
 	aimed := s.handCardWords(ids)
+	before := make([]combat.Card, len(ids))
+	for k, id := range ids {
+		before[k], _ = gs.Run.CardByID(id)
+	}
 
 	if !gs.Run.ApplyToAll(w, ids) {
 		return
 	}
 	gs.Run.DropStowed(i)
+
+	// **The moment the reward screen and the vial raise**, read off the same two cards: what each
+	// named card was and what it is now. A removed card is no longer there and wrapped nothing.
+	for k, id := range ids {
+		if after, ok := gs.Run.CardByID(id); ok {
+			if m, ok := achieve.LadderWrapped(before[k], after); ok {
+				earnMoment(gs, m)
+			}
+		}
+	}
 	s.recordUse(gs, "essence", w.Name, aimed)
 
 	// **Written after the apply, not before it.** A refused spend is not a choice the player made

@@ -10,7 +10,7 @@ package combat
 // its element's status to whoever took the hit. Everything else about an element — its color,
 // its name on a card — stays presentation and stays in `internal/screens`.
 //
-// **Only attacks apply statuses** *(decided 2026-08-12)*. An ice Guard is an ice card for hand
+// **Only attacks apply statuses** *(decided 2026-08-12)*. An ice Block is an ice card for hand
 // and discount purposes and applies nothing. The alternative was every card applying its status,
 // which would make the 1-AP Jab and the 1-AP Brace equally good status delivery and turn the
 // defend phase into the status engine. The cost of the rule chosen: element is mechanically

@@ -99,7 +99,7 @@ func (s *RunOverScene) Update(gs *state.GlobalState) error {
 }
 
 func (s *RunOverScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	ui.FillGround(screen)
+	ui.FillScreenBackdrop(gs, screen)
 	if gs.Summary == nil {
 		return
 	}

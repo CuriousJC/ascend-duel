@@ -212,6 +212,22 @@ var textureArt embed.FS
 //go:embed motifs
 var motifArt embed.FS
 
+// THE SCREEN BACKDROPS: the picture behind every screen that is not a duel
+//
+// A JPEG at 1920x1080 for the motif backdrops' reason, keyed by filename stem —
+// `screen/screen-fog.jpg` is `screen-fog`, which is what `data/screen_art.json` writes in its Art
+// field. See docs/art/screen_art_prompt.MD.
+//
+//go:embed screen/*.jpg
+var screenArt embed.FS
+
+// THE PORTAL SWIRL: the round, rim-faded swirl the portal screen turns in place over each painted
+// portal, as the way through it. One transparent picture, rotated by the game rather than animated
+// in frames. See docs/art/portal_swirl_art_prompt.MD and systems.DrawSwirl.
+//
+//go:embed portal/*.png
+var portalArt embed.FS
+
 // The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
 // `fire`, which is what `data/relics.json` writes in its Art field.
 //
@@ -443,6 +459,8 @@ func LoadImageData() map[string][]byte {
 	embedPrefixed(images, upgradeArt, "upgrade-art", "upgrade-")
 	embedFamily(images, barArt, "bar")
 	embedTree(images, motifArt, "motifs")
+	embedFamily(images, screenArt, "screen")
+	embedFamily(images, portalArt, "portal")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.

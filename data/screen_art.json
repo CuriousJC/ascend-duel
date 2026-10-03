@@ -1,0 +1,86 @@
+[
+  {
+    "Backdrop": "screen-fog",
+    "Name": "Gray fog",
+    "Art": "screen-fog",
+    "Screens": [
+      "Shop",
+      "Goods",
+      "RunOver",
+      "Settings",
+      "Achievements",
+      "Credits"
+    ],
+    "Draw": "Slow, swirling gray fog filling the whole canvas: drifting banks and soft eddies of steel-gray mist, layered in depth so the nearer wisps are slightly lighter and softer than the ones behind them. The swirl is gentle and broad, large lazy curls a few hundred pixels across, never a tight spiral and never a vortex with a center that draws the eye. The picture is even across its whole width, with no side, corner or middle busier than another, because it stands behind several screens that each put their cards somewhere different. It belongs to no place: no ground, no horizon, no architecture, only fog."
+  },
+  {
+    "Backdrop": "screen-reward",
+    "Name": "Essence choice",
+    "Art": "screen-reward",
+    "Screens": [
+      "PostBattle"
+    ],
+    "Draw": "The same slow, swirling gray fog as the gray fog backdrop, and through it two upright columns of ephemeral light, one standing behind each essence card (the left essence and right essence anchors), as if each essence were held suspended in its own shaft of light falling from above. The light is mixed: pale and nearly white at the heart of each column, with faint threads of all five element colors drifting and interleaving through it like light through a prism, none of them leading. The columns are soft-edged and slightly unsteady, fraying into the fog at their sides, more a glow than a beam. They have no source drawn, no lamp, no opening, no crystal, and they stand on nothing: no floor, no plinth, no pool of light on a ground. Each column is centered on its card, vertical, runs from the top edge of the canvas to the bottom, and is brightest where its card stands. Its glow is wider than the card, spilling about 40 to 60 pixels past the card's left and right edges, so that it shows around the card rather than only behind it. The two cards are only 40 pixels apart, so the light dips back toward the fog in the gap between them and the two columns read as two shafts rather than one wide one. Nowhere else carries the light; the rest of the canvas is plain fog.",
+    "Anchors": [
+      {
+        "Name": "left essence",
+        "Kind": "card",
+        "X": 836,
+        "Y": 367,
+        "W": 200,
+        "H": 280
+      },
+      {
+        "Name": "right essence",
+        "Kind": "card",
+        "X": 1076,
+        "Y": 367,
+        "W": 200,
+        "H": 280
+      }
+    ]
+  },
+  {
+    "Backdrop": "screen-portal",
+    "Name": "Portal choice",
+    "Art": "screen-portal",
+    "Screens": [
+      "Portal"
+    ],
+    "Draw": "The same slow, swirling gray fog as the gray fog backdrop, and in it two portals standing side by side, one filling each portal anchor: the left portal and the right portal. Each is an upright oval of swirling rainbow light, every hue of the spectrum from red through violet turning in a slow bright spiral, the same rainbow as the portals at the far side of a boss's portal room. The portals have no frame of stone, metal or wood: their shape is given by the fog itself, which thickens and curls around each oval into a soft rim of brighter gray mist, as if the fog had parted to let the light through and is pressing in at the edges. The rainbow is strongest and most saturated at the heart of each portal, where the game turns a round swirl of its own over the painting (the left swirl and right swirl anchors), and softens toward the fog rim. The painted heart should be a swirl of the same rainbow, so the turning one sits in it without a seam. Each oval fills its anchor rectangle, centered on it, its widest point at the middle and its top and bottom curving in. The two portals are separate, with plain fog between them. Below the portals the canvas is plain fog. The rainbow is the one place the fog's gray does not reach: never a single-colored portal, never a dark, empty or mirror-like opening.",
+    "Anchors": [
+      {
+        "Name": "left portal",
+        "Kind": "place",
+        "X": 336,
+        "Y": 140,
+        "W": 392,
+        "H": 560
+      },
+      {
+        "Name": "right portal",
+        "Kind": "place",
+        "X": 1242,
+        "Y": 140,
+        "W": 392,
+        "H": 560
+      },
+      {
+        "Name": "left swirl",
+        "Kind": "button",
+        "X": 392,
+        "Y": 280,
+        "W": 280,
+        "H": 280
+      },
+      {
+        "Name": "right swirl",
+        "Kind": "button",
+        "X": 1298,
+        "Y": 280,
+        "W": 280,
+        "H": 280
+      }
+    ]
+  }
+]

@@ -119,7 +119,7 @@ func (s *AchievementsScene) Update(gs *state.GlobalState) error {
 }
 
 func (s *AchievementsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	ui.FillGround(screen)
+	ui.FillScreenBackdrop(gs, screen)
 
 	heading := &text.DrawOptions{}
 	heading.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(14)))

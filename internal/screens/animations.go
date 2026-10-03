@@ -3,7 +3,7 @@ package screens
 // The animation gallery: every gesture the game can make, by name, on a loop.
 //
 // **It exists to give the gestures names.** There are a dozen distinct movements on the combat
-// screen and they were previously reachable only by producing the situation each one belongs to —
+// screen and they were previously reachable only by producing the situation each one belongs to â€”
 // a break needs a shield eating an attack, a toast needs a relic firing into a sum, a cascade needs
 // two flip rings and a hand with the right colors in it. So "make the toast louder" was a sentence
 // with no shared referent, and the first minute of every conversation about one went on
@@ -11,7 +11,7 @@ package screens
 //
 // **It is a view and it is a debug view.** Nothing here touches a run, a duel or the profile;
 // every entry draws with the game's own functions rather than reproducing them, which is the rule
-// that matters — `docs/sheets/` is a picture of the catalogs and is worthless the moment it draws
+// that matters â€” `docs/sheets/` is a picture of the catalogs and is worthless the moment it draws
 // something the game does not. A gesture that had to be re-implemented here to be shown is a
 // gesture this page would eventually lie about, so the shared ones were split out of their callers
 // instead; see `outboundGeoM` and `drawDealtCard`.
@@ -19,26 +19,27 @@ package screens
 // # Why a screen and not a tool
 //
 // The sheets under `docs/sheets/` work because `internal/cards` renders without a graphics
-// context. **Motion needs a window and a clock**, so no tool can show one — a still frame of a
+// context. **Motion needs a window and a clock**, so no tool can show one â€” a still frame of a
 // dissolve is a picture of a card with holes in it. The scripted demo's PNGs have the same problem.
 //
 // # Why chrome and not the title menu
 //
 // It is reached from a square in the frame's bottom strip, drawn only while
-// `state.DebugAnimations` is on — the placement grid's arrangement, and the same argument:
+// `state.DebugAnimations` is on â€” the placement grid's arrangement, and the same argument:
 // instrumentation that must be deliberately turned on rather than found. A row on the title menu
 // would be a debug page a player can reach. **Off by default**, set once in `main.go`, no runtime
 // toggle, because the input vocabulary has no keyboard.
 //
 // # What it is not
 //
-// It is not a station of a run, so it has no `session.Phase` and no entry in `flow.go` — same
+// It is not a station of a run, so it has no `session.Phase` and no entry in `flow.go` â€” same
 // shape as Settings, Achievements and Credits. It records `gs.ReturnScreen`, so Back works from
 // wherever it was opened.
 
 import (
 	"image"
 	"image/color"
+	"math"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -90,7 +91,7 @@ var animStageInk = color.RGBA{R: 120, G: 108, B: 90, A: 255}
 //
 // **The name is the point of the struct.** `where` names the symbol so a conversation can move from
 // the picture to the code in one step, and `what` is the one line that says when the game makes
-// this movement — which is the half a picture cannot show.
+// this movement â€” which is the half a picture cannot show.
 type animGesture struct {
 	name  string
 	where string
@@ -101,7 +102,7 @@ type animGesture struct {
 	ticks func() int
 
 	// draw puts the gesture on the stage. `at` is the card-sized rectangle the gesture is centered
-	// on and `p` is 0..1 through it. **Raw progress, not eased** — the easing belongs to the
+	// on and `p` is 0..1 through it. **Raw progress, not eased** â€” the easing belongs to the
 	// gesture and several of them are deliberately not eased at all.
 	draw func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64)
 }
@@ -116,7 +117,7 @@ type AnimationsScene struct {
 	t  ui.Travel
 
 	// m is the morph the three morph entries drive. **Rebuilt when the loop restarts** rather than
-	// driven by a progress figure, because a morph owns its own clock — asking it to be a pure
+	// driven by a progress figure, because a morph owns its own clock â€” asking it to be a pure
 	// function of p would be a second implementation of the thing being reviewed.
 	m ui.Morph
 }
@@ -125,13 +126,13 @@ type AnimationsScene struct {
 // leaving.
 //
 // **Every entry calls the game's own drawing.** An entry that had to reproduce one would be the
-// stale-sheet failure — a picture of a gesture the game does not make — so a shared gesture gets
+// stale-sheet failure â€” a picture of a gesture the game does not make â€” so a shared gesture gets
 // split out of its caller rather than copied here.
 //
 // **`shake` and `toast` are one clock and three marks** *(2026-09-15)*, which is a question the page
 // was built to answer and then answered badly by listing them as peers. `shakeOffset` is the
 // sideways rattle; the toast is that rattle **plus a tilt and a lit border**, all three off the one
-// `travel` — see `relicToast`, which exists so a mark cannot reach one caller and not the other.
+// `travel` â€” see `relicToast`, which exists so a mark cannot reach one caller and not the other.
 // What differs is the wearer: a **card** paying into its line rattles and nothing else
 // (`drawPlayedCards`), a **relic** firing rattles, rocks and lights. They stay two entries because
 // the difference is exactly those two extra marks and the pair wants to be looked at side by side;
@@ -191,7 +192,7 @@ var animGestures = []animGesture{
 
 			// **Drawn exactly as the relic pane draws it**, including the branch: a relic at rest is
 			// blitted and a toasting one is flown. That is what makes the light visible at all here
-			// — the page shows the same card lit during the beat and unlit through the hold after
+			// â€” the page shows the same card lit during the beat and unlit through the hold after
 			// it, where a permanently-lit card had nothing to be brighter *than*.
 			toast := sumToast(animTravelAt(relicShakeTicks(), p))
 			if !toast.lit {
@@ -205,7 +206,7 @@ var animGestures = []animGesture{
 	{
 		name:  "cascade shake",
 		where: "dealShakeOffset, combat_deal.go",
-		what:  "The deal's own rattle — tighter and wider, because a whole row goes at once.",
+		what:  "The deal's own rattle â€” tighter and wider, because a whole row goes at once.",
 		ticks: dealRingTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			at.Min.X += dealShakeOffset(animTravelAt(dealRingTicks(), p))
@@ -224,7 +225,7 @@ var animGestures = []animGesture{
 	{
 		name:  "morph in",
 		where: "morphIn, cardmorph.go",
-		what:  "A card arriving out of nothing — a copy the run did not own a moment ago.",
+		what:  "A card arriving out of nothing â€” a copy the run did not own a moment ago.",
 		ticks: animMorphTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			ui.DrawMorph(gs, screen, at.Min, s.m)
@@ -259,6 +260,18 @@ var animGestures = []animGesture{
 				outboundGeoM(at.Min, ui.EaseIn(p)))
 		},
 	},
+	{
+		name:  "portal swirl",
+		where: "systems.DrawSwirl, portal.go",
+		what:  "The way through a portal: one picture turning in place over a smaller copy of itself turning back.",
+		ticks: systems.SwirlTurnTicks,
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			mid := image.Pt((at.Min.X+at.Max.X)/2, (at.Min.Y+at.Max.Y)/2)
+			swirl := &models.Swirl{ScreenX: mid.X, ScreenY: mid.Y, Radius: portalSwirlRadius,
+				Angle: p * 2 * math.Pi, InnerAngle: p * 2 * math.Pi * systems.SwirlInnerSpin}
+			systems.DrawSwirl(screen, swirl, portalSwirl(gs))
+		},
+	},
 }
 
 // The two cards the page is drawn with. **Two rather than one**, because a morph needs a card to
@@ -272,7 +285,7 @@ var (
 func animMorphTicks() int { return ui.MorphWaitTicks() + ui.MorphTicks() }
 
 // animFace is one of the page's cards as a finished face. **heldByRun, so a page opened with no run
-// still draws** — it prices the card at its own cost with nothing worn, which is what this page
+// still draws** â€” it prices the card at its own cost with nothing worn, which is what this page
 // wants anyway: a gesture, not a build.
 func animFace(gs *state.GlobalState, c combat.Card) cards.Spec {
 	return ui.CardSpec(c, ui.HeldByRun(gs, c), true, false)
@@ -284,7 +297,7 @@ func animBack(gs *state.GlobalState) cards.Spec {
 }
 
 // animRelic is a relic to toast. **Whichever the catalog answers first by sorted key**, so the page
-// needs no record named in it — a relic key written down here is a key that stops existing.
+// needs no record named in it â€” a relic key written down here is a key that stops existing.
 func animRelic(gs *state.GlobalState) (data.RelicData, bool) {
 	for _, key := range combat.RelicKeys() {
 		if r, ok := gs.Relics[key]; ok {

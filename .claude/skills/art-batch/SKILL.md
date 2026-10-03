@@ -33,7 +33,7 @@ Get-ChildItem <batch dir> | Measure-Object            # how many
 Get-ChildItem <batch dir> | Where-Object { $_.Length -eq 0 }   # the empty ones
 ```
 
-**A batch out of a generator can hold zero-byte and truncated files**, and it has. They are not a
+**A batch out of a generator can hold zero-byte and truncated files.** They are not a
 reason to stop; they are a reason not to copy them over good pictures. Name them in the reply.
 
 Check the names against the catalog and the sizes against what the family commits at — a relic,
@@ -89,8 +89,8 @@ go run ./tools/artcompare -catalog relic
 go run ./tools/artcompare -catalog relic -set warm=artreview\relic-warm -set cool=artreview\relic-cool
 ```
 
-- Catalogs: `card`, `relic`, `essence`, `rune`, `stone`, `cantrip`, `other`. Enemy and boss portraits are
-  **not** in the table — licensed creature art arrives once and nobody generates three of it.
+- Catalogs: `card`, `relic`, `essence`, `rune`, `stone`, `cantrip`, `other`. Creature, boss and backdrop
+  pictures are **not** in the table.
 - Any number of sets. `artreview/<catalog>-<label>/` is discovered as `<label>`; `-set label=dir`
   replaces discovery outright.
 - Output is `artreview/out-<catalog>/index.html`. **Open it for the owner** rather than describing
@@ -99,8 +99,7 @@ go run ./tools/artcompare -catalog relic -set warm=artreview\relic-warm -set coo
 Every cell is `cards.Render` at that catalog's own style, so the comparison is of the card as it
 will be dealt, type over picture. **Never preview the raw art instead**: a playing card's picture
 is drawn under five pieces of near-black type and an essence's under the sentence it prints, and
-art that reads well bare can lose all of it there. That is the same failure the old glyph sheet
-had when it previewed at a scale the game did not use.
+art that reads well bare can lose all of it there.
 
 ### 5. Apply the picks
 
@@ -172,8 +171,8 @@ is a report on the catalog that shipped, and this is a picture of a decision bei
 - **Adding a record to `data/` because a picture turned up for it.** A picture with no record is a
   file nobody draws; say so. Authoring the record is a catalog decision and belongs to the owner.
 - **Running `tools/sheets` out of habit.** See step 6.
-- **Leaving an orphan PNG behind.** `tools/relicsheet` writes a file per relic and never cleans
-  up, so a removed record leaves a picture in `docs/sheets/relicsheet/` that no page links.
+- **Leaving an orphan PNG behind.** `tools/relicsheet` deletes the PNG of every relic no longer on
+  its page, so re-run it — and `-archive` as well after moving a relic in or out.
 
 ## Options for a record that has no picture yet
 

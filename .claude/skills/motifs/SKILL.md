@@ -73,7 +73,7 @@ creatures stay in one file, and its rooms sit beside them in a second.
   "Name": "Goblin Bomber",
   "Tier": "outer",
   "Art": "goblins-bomber",
-  "Draw": "TBD",
+  "Draw": "Hunched over a satchel of lit fuses ...",
   "Affinities": ["fire", "ice", "lightning", "earth"],
   "HP": 100, "DMG": 5, "Actions": 5,
   "Cards": [
@@ -247,7 +247,6 @@ Everything below is a panic at package init, in `data/motifs_data.go`:
 - **Carry an element on a card.** The colour is the realm's and the whole deck takes it.
 - **Raise a shield.** Only the player does; every creature deck is pure attack. See `CLAUDE.md`.
 - **Say what it is worth on the realm it debuts.** See above.
-- **Name a picture that exists.** Most do not yet, and the fallback is deliberate.
 
 ## The analyzer
 
@@ -312,6 +311,6 @@ and the specific gaps, and let the owner choose which to take.
 6. Write the rooms in `backdrops.json`, one per tier at least, and run `go run ./tools/motifreport`
    — it says which of the fifteen fights still fall back to the default backdrop.
 
-**Do not regenerate every sheet out of habit.** `go run ./tools/motifsheet` rewrites 153 strips on
-its own; a full `go run ./tools/sheets` rewrites every binary under `docs/sheets/` and most of that
+**Do not regenerate every sheet out of habit.** `go run ./tools/motifsheet` rewrites a strip per
+record on its own; a full `go run ./tools/sheets` rewrites every binary under `docs/sheets/` and most of that
 weight is this page.

@@ -51,4 +51,45 @@
 //
 // **internal/combat may never import it**, for internal/trace's reason: the rules package stays
 // free of everything, which is what makes it testable without a window.
+//
+// # How it is wired
+//
+//   - **A `recover()` at the top of `Game.Update` and `Game.Draw`, and one in `main`** for the panics
+//     raised while the catalogs load. `internal/game/crash.go` is the handler.
+//   - **A crash is a whole screen, not a dialog** — `state.Crashed` and `screens.CrashScene`. A dialog
+//     draws the scene underneath it, and the scene underneath is the one that has just panicked, which is
+//     how one crash becomes two. The chrome stands down, the ledger is closed, the toast queue is
+//     dropped, and the page draws with the ground, the fonts and two buttons. **There is no way back**: a
+//     crashed process is one whose state is not trustworthy, so the way out is quitting.
+//   - **A second panic quits rather than writing a second report.** The only thing still running after
+//     the first is the screen written to report it.
+//   - **The non-fatal notice is the other half**: the confirm box's shape with one answer,
+//     `ui.ProblemNotice`, chrome on the toast's terms. **It never raises during a duel** — it waits for a
+//     phase boundary, because a box in front of a round in playback stops a fight to talk about a file.
+//     It takes the modal red and says PROBLEM where the toast says ACHIEVEMENT.
+//   - **Two verbs, and which one a call site wants is a judgment about the player.** `Note` records and
+//     logs; `Tell` does that and also queues a notice. "The score has no device" is a Note; "this run is
+//     not being saved" is a Tell.
+//   - **A report takes a copy of every file named beside it**, which is the journal. `Write` takes the
+//     names from its caller, so nothing here learns what a journal is, and a copy lands under the
+//     report's own base name with the companion's own extension. **A report is counted by its own
+//     `.json` when pruning**, or the allowance would shrink the day a second companion joined the first.
+//   - **The screenshot is not a companion**, because it is not a file the game was already writing: it
+//     is bytes that exist only because a panic happened, so it is a parameter rather than a name in the
+//     list and it goes through `profile.Store.WriteBytes`. **Only a panic inside `Draw` has a picture**,
+//     since the image being drawn into holds as much of the frame as got drawn before the fault; a panic
+//     in `Update` happens between two frames and the report has no `screenshot` field. `game.shotOf` is
+//     the readback, on the game goroutine because it is a GPU operation, and `EncodeShot` is the encode
+//     and the ceiling — the split `internal/trace` makes.
+//   - **A report has a ceiling and sheds from the bottom.** `Encode` marshals, and if the document is
+//     over it drops the scene tier, then the problem ring, then the ledger a fight at a time, oldest
+//     first, and names what went in `shed`. **The identity and the run snapshot are never shed.** **It
+//     decides in memory and writes the file once**: a crash handler gets one chance at the disk, and a
+//     file deleted and rewritten is a second chance for the rewrite to be the one that fails.
+//   - **A screen describes itself through `ui.Reporter`, and it is optional** so a new screen is not
+//     broken by not having one. **The method may read plain fields and nothing else** — the scene being
+//     asked has just panicked, so a lookup or a layout or a rule read back off the run is a second crash
+//     inside the first. `CombatScene.Report` carries the shape of the screen's state machines rather
+//     than their contents: no cards, because the journal holds every selection and the ledger holds what
+//     the engine made of them.
 package crashlog

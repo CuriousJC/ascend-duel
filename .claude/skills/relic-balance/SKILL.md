@@ -6,7 +6,7 @@ description: The relic taxonomy and the aggregate view of the catalog - what a r
 # Relic balance — the catalog as a shape
 
 **The `relics` skill answers "is this relic good".** This one answers "is the *catalog* good" —
-what the 137 records add up to, where the weight sits, and which of the empty cells are questions.
+what the records add up to, where the weight sits, and which of the empty cells are questions.
 
 **Nothing here is authored.** Every classification is derived from a relic's own rules by
 `classify.py`, and that is the decision the whole skill rests on *(owner's call, 2026-09-06)*: a
@@ -34,7 +34,7 @@ python .claude/skills/relic-balance/classify.py                    # every axis 
 python .claude/skills/relic-balance/classify.py --by category payload
 python .claude/skills/relic-balance/classify.py --by breadth scope
 python .claude/skills/relic-balance/classify.py --list defense     # the relics in a bucket
-python .claude/skills/relic-balance/classify.py --ring "Enflamed"  # one relic on every axis
+python .claude/skills/relic-balance/classify.py --ring "Weight of the Flame"  # one relic on every axis
 python .claude/skills/relic-balance/classify.py --shelf            # counts against what a player sees
 python .claude/skills/relic-balance/classify.py --holes            # a filled family with an empty sibling
 ```
@@ -43,7 +43,7 @@ python .claude/skills/relic-balance/classify.py --holes            # a filled fa
 `--list` searches every axis at once, so `--list rare`, `--list stateful` and `--list Element=fire`
 all work.
 
-**A relic is counted in every cell it occupies**, so a column sums to more than 137. That is the
+**A relic is counted in every cell it occupies**, so a column sums to more than the catalog's size. That is the
 many-to-many being visible rather than hidden, and the report says so on every table.
 
 ## The axes
@@ -74,7 +74,7 @@ verb. `STATUS_EFFECTS` maps the five effect *kinds*, not the five records, so a 
 classifies itself.
 
 **`grow-on-hit` is offense *and* growth**, which is the case that made many-to-many necessary. The
-Enflamed family both grows and swings; a taxonomy forcing a choice would have to lie about one.
+Weight relics both grow and swing; a taxonomy forcing a choice would have to lie about one.
 
 ### `payload` — flat or scaling, and what kind of scaling
 
@@ -108,8 +108,9 @@ axis most likely to be missed when pricing.
 
 `unconditional` / `element` / `form` / `concept` / `tier` / `hand` / `positional`.
 
-Already the pricing lever the `relics` skill names: **a form relic covers twelve cards, an element
-relic five, a concept relic four**. Same verb, three prices. Crossed with `rarity` this is the
+Already the pricing lever the `relics` skill names: **a form relic covers every card of a form,
+an element relic every card of a color, a concept relic one card in its colors**. Same verb, three
+prices. Crossed with `rarity` this is the
 sharpest balance question the tool answers — a rare keyed on one concept is a rare that does
 nothing in most runs.
 
@@ -126,17 +127,16 @@ and `go run ./tools/relicsheet` prints the same three figures on the catalog pag
 
 ## Reading the report
 
-**Counts are not shares, and `--shelf` prints both.** 91 of 137 relics are offense — 66% of the
-catalog — but the shelf draws on rarity tickets, so offense is 79% of a *seat*. Tempo is the
-opposite: 9.5% of the records and 2.0% of a seat, because twelve of its thirteen relics are rare.
+**Counts are not shares, and `--shelf` prints both.** The shelf draws on rarity tickets, so a
+category made mostly of commons is a bigger share of a *seat* than of the records, and a category
+made mostly of rares is a much smaller one.
 **Always say which of the two you are quoting**, and quote the share when the question is about
 what a run actually meets.
 
 **A hole is a question, never a finding.** `--holes` reports a filled family with an empty
 sibling, and roughly half of them are the grammar being right: defend takes no `scale-damage`
 because a defend card deals nothing. A category keyed on no card at all — economy reads the purse
-— is skipped rather than reported against every element, which was the first version and was pure
-noise.
+— is skipped rather than reported against every element, which would be pure noise.
 
 **Nothing in the repo measures what a relic does to a duel.** This counts records; it does not
 simulate. Every balance conclusion drawn from it is judgment standing on a count, and should be
@@ -148,8 +148,7 @@ said that way — the same caveat the `relics` skill puts on a suggested rarity.
 with the date in the name and the commands that produced it in the file. Read
 [docs/analysis/README.md](../../../docs/analysis/README.md) for the convention: a snapshot is
 *output*, never a source of truth, and it is superseded by a new dated file rather than edited in
-place. **There are none on disk today** — the 2026-09-06 snapshot was deleted on 2026-09-14 for the
-reason the next paragraph gives.
+place.
 
 **Do not write one on every run.** The tool is cheap and the file is a standing cost; a snapshot
 earns its place when it is going to be read and argued with, not as a log.

@@ -88,9 +88,7 @@ need to get that out there, even forcing through an update into main"* — and t
 authorization, not a figure of speech. `--admin` is allowed while it stands.
 
 **It is scoped to the window they said they would be away for, and it lapses the moment they
-are back.** Used once on 2026-08-06 to land #22 during an unattended overnight session, and
-revoked the next morning: *"we'll go back to me being aware of any pushes to main now that
-I'm back."*
+are back.**
 
 - **The default is always "open the PR and stop".** Assume no standing grant.
 - A grant requires the owner to be **explicit that they are unavailable**. "Go ahead and
@@ -107,9 +105,7 @@ commit, so the branch tip is never an ancestor of `main`. This is expected, not 
 investigate.
 
 **Two branches exist at a time: `main` and one feature branch. Everything else is rubbish,
-and clearing it out is a standing instruction rather than a question.** Stated by the owner
-on 2026-08-17, after a cleanup turned up nine stale remote branches and two stale local ones,
-every one of them a PR merged days earlier. Delete them — local and remote, in the same pass
+and clearing it out is a standing instruction rather than a question.** Delete them — local and remote, in the same pass
 as the new branch — and report what went, rather than listing them and waiting.
 
 **`squirt-motifs-updates` is the one standing exception, and it is not rubbish.** It is
@@ -161,19 +157,17 @@ already contained — so it went with the rest.
   path that should be ignored and one that should not.
 - **`git status --short` not listing an expected `??` entry means it is being ignored**, not
   that it does not exist. That is how the above was caught.
-- **Build tags select different files.** `internal/trace` has `trace_on.go` (`debugtrace`)
-  and `trace_off.go` (`!debugtrace`); `internal/idle` has the same shape on `idleexit`. One
-  configuration can compile while another does not. Vet and build **all** of them before
-  committing anything that touches either:
+- **Build tags select different files** — `debugtrace`, `idleexit`, `demoplay` and `scenario`
+  each pick an `_on`/`_off` pair, so one configuration can compile while another does not.
+  Vet and build **every** tag before committing anything that touches a tagged file:
 
   ```powershell
   go vet ./...; go vet -tags debugtrace ./...; go vet -tags idleexit ./...
-  go build ./...; go build -tags debugtrace ./...; go build -tags idleexit ./...
+  go vet -tags demoplay ./...; go vet -tags scenario ./...
   ```
 
-- **A stacked PR conflicts with `main` the moment the one below it is squashed.** Cost time
-  on 2026-08-07. Branch B was opened against branch A; A squash-merged into `main`; B
-  retargeted to `main` and immediately reported `CONFLICTING` on 22 files.
+- **A stacked PR conflicts with `main` the moment the one below it is squashed.** Branch B was opened against branch A; A squash-merged into `main`; B
+  retargeted to `main` reports `CONFLICTING` on every file both touched.
 
   Nothing is actually wrong. The squash is a *new* commit that is not an ancestor of B, so
   the merge base falls back to before A branched and git sees both sides editing the same

@@ -22,4 +22,16 @@
 //     without a window. The *screen* traces the event log combat hands back.
 //
 // Lines carry the simulation tick rather than a wall clock, so they line up with a replay.
+//
+// # Working on it
+//
+// It writes layout rectangles, resolved rounds, clicks and drags, and periodically captures the screen
+// to `trace/frame.png`.
+//
+//   - **Guard call sites that build their arguments** with `if trace.Enabled()`. The no-op functions
+//     cost nothing, but Go still evaluates what is passed to them.
+//   - **Captures are throttled to one every two seconds**: `ReadPixels` is a GPU-to-CPU readback that
+//     stalls the frame it happens on.
+//   - **The layout dump re-runs whenever the hand size changes**, since the whole bottom band is a
+//     function of that number. `tracedHand` watches it, so no call site has to remember.
 package trace

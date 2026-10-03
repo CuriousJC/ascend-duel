@@ -36,7 +36,7 @@ is what lets every layer above read it, and it **must never import upward**.
 **Three files are read by `internal/combat` itself**: `hands.json`, `duelist_cards.json` and
 `statuses.json`. The rest are consumed by `screens`, `decks`, `session` or `entities`.
 
-**`statuses.json` joined them on 2026-08-17** and passes the same test: how much a status is worth,
+**`statuses.json` passes the same test**: how much a status is worth,
 how long it lasts and which of four things it does are rules by definition — the engine cannot
 resolve a round without them, and its own tests could not run if a screen had to hand them over.
 Its `Badge` is the exception the engine ignores, exactly as it ignores a relic's `Art`.
@@ -75,43 +75,40 @@ that unmarshals it, and — for anything returning a map — a sorted `…Order`
 
 ## The card language
 
-**Every card in the game is written in one language** *(2026-08-16)* — the player's and all 96
-enemies'. Eight fields:
+**Every card in the game is written in one language** — the player's and every
+creature's. Seven fields:
 
-`Label` · `Verb` (attack / defend / shield) · `Amount`, read against the verb · `Cost` ·
-`Target` (opponent / self) · `Form` · `Elements` · `Copies`
+`Label` · `Verb` (attack / shield) · `Amount`, read against the verb · `Cost` · `Form` ·
+`Elements` · `Copies`
 
 - **`Elements` and `Copies` are two axes and neither substitutes for the other.** The player's
   attacks ship one per color; its defenses ship one per color too; an enemy — all `basic`
   — has only `Copies`, so that field carries its whole deck size.
 - **Deck size is a consequence of a file you can read**: 9 attacks × 5 colors plus 2 defenses × 5
-  colors = **55** *(Guard went to zero copies on 2026-09-01)*. That is the deck a run *starts*
+  colors = **55**. That is the deck a run *starts*
   with — see MECHANICS.md §The deck is a starting position, because essences and relics change it.
 - **There is no `Category` column.** Which phase a card is in falls out of the verb. Carrying both would
   let a file say a card is an attack that raises shields.
 - **`Copies` is the difficulty dial and it is sharper than it looks** — four copies of a 1 AP
-  card in one turn is a Four of a Kind at 5x. Four is also the ceiling of the hand ladder.
-- **No player card is drab** *(2026-08-25)*. Every card in the deck ships in one of the five
+  card in one turn is a Card Four of a Kind.
+- **No player card is drab**. Every card in the deck ships in one of the five
   elements, the defenses included — a color is worth a hand axis and a relic discount even
   where nothing the card does is elemental.
 - **A creature card carries no element of its own, and no form.** The colour belongs to the
   creature and comes from the realm: a record is dealt as one element and its whole deck takes it,
   the way a duelist's Jab is a concept that ships in five colours. A card naming its own elements
-  is **refused at load** — it would be a second answer to a question the realm already answers, and
-  the loader used to multiply `Copies` once per element listed, so `["fire","ice"]` on a four-copy
-  card silently built eight. A form would be worse: it would claim a creature card forms hands, and
+  is **refused at load** — it would be a second answer to a question the realm already answers. A
+  form would be worse: it would claim a creature card forms hands, and
   hands are the player's axis.
 
 ### Validation lives at registration, not in a cross-check
 
-**`combat.RegisterConcept` is the validation.** Cost, damage, category and form used to be
-switch statements over a closed `ActionKind` enum with a `CostTier` in the JSON that
-`data.CheckCostTiers` asserted against them. That held fourteen concepts and could not hold the
-~400 a per-enemy deck list produces, so the card became a record and both went.
+**`combat.RegisterConcept` is the validation**, and there is no cross-check against a tier
+declared in the JSON: a card is a record, and the rules are what refuse a bad one.
 
-What is checked now: a verb the vocabulary has, a cost that can be paid, an amount that does
-something, a defense under 100% (**nothing may stop a hit outright**), and a shield count no higher
-than the attacks one turn can throw. **A card does not say
+What is checked: a label, a verb the vocabulary has, a form the rules have, a cost that can be
+paid, an amount that does something, and a shield count no higher than the attacks one turn can
+throw. **A card does not say
 who it lands on** — the verb decides, an attack on the opponent and everything else on its own
 duelist, and there is no field to disagree with.
 
@@ -119,27 +116,24 @@ duelist, and there is no field to disagree with.
 or a catalog naming something the rules cannot resolve is the same failure and takes the same
 exit.
 
-**Concept IDs are registration-ordered and must never be serialized.** The player's twelve
+**Concept IDs are registration-ordered and must never be serialized.** The player's concepts
 register first; enemy concepts follow as their decks are built. That is deterministic for one
 build of one data set, which is a weaker promise than stability. Save formats name things.
 
 ## The records
 
-### Three stats, and every one is the number it sounds like *(2026-08-16)*
+### Three stats, and every one is the number it sounds like
 
-`DMG`, `Actions`, `HP`, on both the duelist and the enemy records. `Constitution` and `Speed`
-were conversions — `Con × 5` was life, `4 + Spd/10` was the action budget — so the roster was
-tuned in units nobody could act on, and twenty-four distinct Speeds produced three distinct
-budgets. **Every enemy's HP was doubled when the fields changed**, because the roster had been
-written against a game where a turn landed several small blows.
+`DMG`, `Actions`, `HP`, on both the duelist and the enemy records. **No stat is a conversion**:
+each field is the figure the game uses, so the roster is tuned in units a designer can act on.
 
 ### Duelists and enemies are separate files
 
 Their fields do not overlap — an enemy has a portrait, a deck and a realm band; a duelist has a
 card back. One struct would make every field optional and none of them mean anything.
 
-**`ValidRealms` is `[lowest, highest]`** against the planned 8-realm journey, so a Dragon is not
-on realm one. Nothing generates realms yet, so today it only sorts the fight order.
+**`ValidRealms` is `[lowest, highest]`** against the journey's realms (`journey.json`), so a
+Dragon is not on realm one.
 
 **A portrait's key is its filename stem**, unlike every other asset: they come in through one
 `//go:embed motifs` tree under `assets/motifs/`, so renaming a file means editing the `Art` field of
@@ -156,41 +150,30 @@ one shape, and the journey is what puts a boss in a portal room.
 **The full record grammar is the `motifs` skill**, which also holds the coverage rule this file's
 loader refuses a motif for.
 
-**A separate file rather than an `IsBoss` column** *(2026-08-23)*: the two are placed by different
-rules, and a flag would let a record be both while making every selection read it before it could
-trust the realms.
-
-- **Its portrait key ends `-boss`**, and the files live in `assets/boss/`. Both portrait families
-  are globbed into one flat map keyed by filename stem, so the suffix is the whole of what stops a
-  boss called `Sentry` from colliding with a creature of the same name.
+- **Its portraits live beside its motif's creatures**, under `assets/motifs/<motif>/creature/`,
+  keyed by its `Art` field like any other record; `TestNoTwoRecordsDrawTheSamePicture` is what
+  stops a boss and a creature claiming one key.
 - **Stats are pitched above the enemies of its own realm** — roughly 1.6x HP, and DMG above the
   hardest hitter in every band that reaches the realm — and the deck is dearer than a roster deck:
-  60/120/250/300 against 50/100/200, and a 60% guard against 50%. `TestABossIsToughAgainstTheFloorItGuards`
-  in `internal/journey` fails on a boss the realm below it could out-hit.
+  60/120/250/300 against 50/100/200, and a 60% guard against 50%.
 - **`Name` is the bare first name and `Title` is the rest** *(owner's call, 2026-08-24)* — `Jerry`
-  and `the Toll-Taker`. They were one string, and the card could not hold it: `EnemyStyle` centers
-  a name on one unwrapped line, so half the thirty rendered with a letter clipped off each end.
-  The card takes `Name`; `Title` is for a hover nothing has built yet, and **nothing in the game
-  reads it today**. `BossData.FullName()` joins them, so the hover and a review sheet cannot join
-  them differently. It is a stored field rather than a split at render time because no rule finds
-  the seam — `Bayaz, First of the Magi` breaks at a comma and `The Maw` has no title at all.
-  `TestEveryOpponentNameFitsItsCard` in `internal/screens` holds the pool against the card's width.
-  **The roster is not in that test yet**: five creatures are over the line and each belongs to a
-  family whose other members fit, so trimming a subset would read as a mistake — see the test's
-  comment.
+  and `the Toll-Taker`. `EnemyStyle` centers a name on one unwrapped line, so the card takes
+  `Name` alone. `MotifRecord.FullName()` joins the two, and every reader that wants the whole
+  name — `internal/entities`, the review tools — goes through it rather than joining them itself. It is a stored field rather than a split at
+  render time because no rule finds the seam — `Bayaz, First of the Magi` breaks at a comma and `The Maw` has no title at all.
 - **A record whose deck is empty panics** exactly as an enemy's does, and one whose record name
   collides with an enemy's panics too — the deck registry is keyed by record and would otherwise be
   ambiguous.
 
 ### Relics
 
-**A relic is what makes its element do anything** *(2026-08-16)*: an attack applies a status only
-if its owner wears that element's relic, so a bare fire Bash is a plain Bash with a red
-border. `Element` is the field that carries it — parsed in `internal/screens` with
+**A relic is what makes its element do anything**: an attack applies a status only
+if its owner wears that element's relic, so a bare fire Bash is a plain Bash that happens to be
+fire. `Element` is the field that carries it — parsed in `internal/session` with
 `combat.ParseElement`, because `internal/combat` may not read this file. A name the rules do not
 have is logged rather than dropped.
 
-**What is worn is on the run, not in the file.** A run opens wearing nothing *(2026-08-21)* and
+**What is worn is on the run, not in the file.** A run opens wearing nothing and
 buys its relics in the shop, so every element is inert until the first one is bought.
 `session.StartingRelics` is the debug seat for putting one on without playing to a shop — the relic
 counterpart of `deckSeedName`, and it ships empty.
@@ -199,10 +182,10 @@ counterpart of `deckSeedName`, and it ships empty.
 `LoadAssets` one, because a relic's picture is drawn *into* a card by `internal/cards`, which has
 no graphics context.
 
-**`Rarity` is the price and the odds at once** *(2026-08-22, replacing a per-ring `Price`)*. One of
+**`Rarity` is the price and the odds at once**. One of
 `common`, `uncommon` or `rare`; `data.Rarity` turns it into what the shop charges — 3, 5, 7 — and how
-many tickets the relic holds in the shelf draw — 10, 4, 1. Three tiers rather than seventeen numbers,
-because a per-ring price could only be judged one relic at a time. **What a relic sells back for is
+many tickets the relic holds in the shelf draw — 10, 4, 1. Three tiers rather than a number per
+relic, because a per-relic price can only be judged one relic at a time. **What a relic sells back for is
 deliberately not a field** — it is the tier's own figure, 1 / 2 / 3, computed in
 `internal/session/shop.go`. A record whose rarity is absent or misspelled **panics at load**, like
 every other word this file gets wrong.
@@ -217,7 +200,7 @@ value nothing reads is somebody expecting a mechanic the game does not have.
 **Parsed and validated in `internal/session`, not in `internal/combat`.** An essence acts on the
 *run's* deck, and the rules have no deck — the who-consumes-it test again.
 
-**It carries `Family`, `Art` and `Draw`, and the engine reads none of them** *(2026-09-12)* — see
+**It carries `Family`, `Art` and `Draw`, and the engine reads none of them** — see
 the shared section below.
 
 **The targets are `session.EssenceTargets`**, and which ones take a `Value` is `resolveEssence`.
@@ -234,9 +217,9 @@ That is the card language paying off, and it is the shape to reach for before ad
 
 ### The three fields no catalog's rules read
 
-**`Family`, `Art` and `Draw` are authored, ignored, and read only by a review sheet.** They landed
-on `relics.json` first and were taken to `essences.json` and `runes.json` on 2026-09-12;
-every record under `data/motifs/` carries `Art` and `Draw`, and has no `Family` — the file it is in
+**`Family`, `Art` and `Draw` are authored, ignored, and read only by a review sheet.** The shelf
+catalogs carry all three; every record under `data/motifs/` carries `Art` and `Draw`, and has no
+`Family` — the file it is in
 *is* its motif, so a field repeating the name at the top of the file would say nothing.
 
 - **`Family` is the motif a record was authored beside**, and it is what its sheet groups by —
@@ -254,9 +237,8 @@ every record under `data/motifs/` carries `Art` and `Draw`, and has no `Family` 
   *is* and what it is doing. The *generic* prompt is the one for that card's style —
   `docs/art/relic_art_prompt.MD` or `docs/art/essence_art_prompt.MD` — and is about no record at
   all. **Empty means nobody has written one**, which — read against an empty `Art` — is
-  the backlog each sheet marks in pink. **Every enemy and boss `Draw` reads `TBD`**:
-  those portraits are licensed art rather than generated pictures, so the field is a seat rather
-  than a backlog.
+  the backlog each sheet marks in pink. **Every enemy and boss `Draw`** is the
+  brief its portraits are generated from.
 - **`go run ./tools/relicart -kind relic|essence|rune|stone|cantrip|card|upgrade|other`** files a generated picture into
   any of them: reduce to the card's size, commit under the family's asset directory, write `Art` on
   the record. **`other` is the one kind spanning two files** — the potions and the sealed goods
@@ -302,8 +284,10 @@ the rules have never heard of a shop.
   — `stones`, `essences`, `runes`, `cantrips` — and it is read twice over: it decides which stream the contents
   are dealt from and what happens when one is chosen, *and* it is the noun the card's own face
   writes, so a face and a dialog cannot name different catalogs.
-- **One good per catalog**, refused at load. The contents are dealt from a stream salted per
-  catalog, so a second good holding stones would draw the identical four rocks.
+- **One good per catalog *per size*** *(owner's call, 2026-09-15)*, refused at load. Two goods
+  holding the same catalog at the same size are the same sealed object twice. Goods of different
+  sizes deal unrelated contents, because `seeds.ForFightSeat` splits the catalog's stream by the
+  good's own record.
 - **`Title` and `Hint` are the dialog's two lines, and blank is meaningful**: a blank Title becomes
   the good's Name and a blank Hint becomes "take one of the four, the rest are gone", with the
   figure the record's own `Size`. The vial authors both, because its dialog heads itself with an
@@ -352,12 +336,11 @@ every file here answers.
 a sequence like `duelist_cards.json`, since file order is play order and a map would put the run's
 first lesson wherever Go's hashing felt like it.
 
-- **`Seed`, `Enemy` and `Match` sit above the steps** *(2026-08-25)*. Bob promises four matching
-  cards and a turn that wounds without killing, and both are facts about one deal against one creature rather
-  than about the game. They were pinned by `internal/scenario` while a fixture was the only way to
-  start the lesson; the day the profile became a real trigger, the tutorial ran on whatever the clock
-  rolled and described a hand it had not dealt. **A promise and the thing that makes it true belong
-  in the same file.**
+- **`Seed`, `Enemy` and `Match` sit above the steps**. Bob promises four matching
+  cards and a turn that wounds without killing, and both are facts about one deal against one
+  creature rather than about the game. The profile can start the lesson with no fixture in sight,
+  so pinned anywhere else it runs on whatever the clock rolled and describes a hand it has not
+  dealt. **A promise and the thing that makes it true belong in the same file.**
 - **`Match` is a fourth closed vocabulary** — `concept`, `form` or `element`, the three axes a hand
   is scored on — and a script that points at a matching set without naming one is refused at load.
   The lit square and the condition that lets the player past it are the same cards, and which cards
@@ -370,19 +353,18 @@ first lesson wherever Go's hashing felt like it.
   would produce a step nothing can satisfy, and both look like a hung tutorial rather than a typo.
 - **How much of the screen a step locks is *not* a field.** It is derived from `Until`: a step
   that wants reading locks everything, one that wants a click locks all but its anchor, and one
-  waiting on an outcome locks nothing. It was a field for a few hours on 2026-08-25 and a step
-  about which room you are standing in used it to leave the screen live while the player queued
-  two cards nobody had mentioned. A field could only ever disagree with the condition.
-- **An anchor names the control, never the region around it.** `first-card` exists because `hand`
-  let a step that asked for one card accept five.
+  waiting on an outcome locks nothing. A field could only ever disagree with the condition — a
+  step leaving the screen live while the player queues cards nobody mentioned.
+- **An anchor names the control, never the region around it.** `first-card` exists because
+  pointing at the whole hand lets a step that asks for one card accept five.
 
 ### Hands
 
-`hands.json` is **one list of eighteen**: five poker rungs, Two Pair through Five of a Kind, on
+`hands.json` is **one list**: five poker rungs, Two Pair through Five of a Kind, on
 each of three axes; the merged **Pair**; the Elementalist; plus the one No Hand they fall back to.
 Each carries a key, an ID, a name, a `match`, `groups` and a percent `multiplier`. Exactly one applies, winning on its multiplier, ties going to the narrowest axis.
 
-**`match` is the axis, and it is required** *(2026-08-19)* — `concept` (copies of the same card),
+**`match` is the axis, and it is required** — `concept` (copies of the same card),
 `form` (stab/slash/crush/defend), `element`, or **`any`**.
 A missing or unknown one is refused at init rather than defaulted: an entry landing on the wrong
 axis by omission would be a balance change nobody made. `groups` counts distinct values **on that
@@ -403,8 +385,7 @@ axis; wanting one is a schema change, so argue it in MECHANICS.md first.
 **Keys carry the axis and the names are long**: `concept-two-pair` / `form-two-pair` /
 `element-two-pair`, drawn as *Card Two Pair*, *Form Two Pair*, *Elemental Two Pair*. **A merged rung
 names no axis** — the Pair is keyed `pair`. IDs are banded — 1 no hand, 10 the Pair, 11–15
-concept, 21–25 form, 31–38 element — so a new axis or rung lands without moving one, and the merge
-kept 10 and left every gap where it was.
+concept, 21–25 form, 31–38 element — so a new axis or rung lands without moving one.
 
 **Every rung needs a stone**, so a new hand is also a new record in `stones.json` — `loadStones`
 panics on a rung with none.
@@ -420,20 +401,18 @@ concept the deck does not ship, so their numbers are an extrapolation and a judg
 `ln(1/P)`. **Run `go run ./tools/handodds` before changing any of them**, and `-ap 8` for the rung
 the plain budget cannot reach.
 
-**A hand is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. There is no
+**A hand is a damage multiplier and nothing else** *(owner's call, 2026-08-17)*. There is no
 reward vocabulary to extend, no mix axis counting distinct colors, and no `scope` field — statuses
 come from elements and relics, and the matcher counts every card in the turn because that is what it
 does, not because an entry asked it to — what a card is worth to a hand is decided by the axis it is
 counted on. **Adding a rung is one entry in the JSON**;
 adding anything a hand can *buy* is a design decision, not a field.
 
-**The multiplier multiplies the hand's own cards, and `100` is the identity** *(2026-08-18)*. A
-blow is `(sum of the hand's cards) x multiplier / 100`, so `no-hand` carries `100` rather than the
-`0` it held while the percent applied to a separate swing added on top of the cards. **`0` is now an
-attack phase that deals nothing** and is refused for every hand; a multi-card hand at or below `100`
+**The multiplier multiplies the hand's own cards, and `100` is the identity**. A
+blow is `(sum of the hand's cards) x multiplier / 100`, so `no-hand` carries `100`. **`0` is
+an attack phase that deals nothing** and is refused for every hand; a multi-card hand below `100`
 is refused too, being one a player would be punished for building. Below `100` is legal for the
-No Hand alone and would be a penalty — deliberately allowed, because taking a lever out of the
-file is the opposite of what the narrowing was for.
+No Hand alone and would be a penalty — deliberately allowed, so the lever stays in the file.
 
 A malformed catalog panics at init — including a missing `no-hand` entry, since a hand the
 engine cannot name is the one failure this model produces. Two shape checks sit beside it: a hand
@@ -449,20 +428,17 @@ to a registry that grows.
 2. Four lines: `//go:embed`, the tagged struct, the `Load…`, and a sorted `…Order` if it returns
    a map.
 3. **Do not grow a rules vocabulary in JSON ahead of the rules.** The relic grammar is the worked
-   example of doing it the other way round *(2026-08-17)*: every moment, predicate and effect verb
+   example of doing it the other way round: every moment, predicate and effect verb
    in `relics.json` has a Go seat that refuses it at load if it is used wrongly, and a word the file
    invents does not exist. `CostTier` is what happens when a file declares something the rules also
    know.
 4. If the file describes a mechanic, the *design* goes in `MECHANICS.md`. This skill is the
    plumbing.
 
-## What is coming
+## Where the data grows
 
-The data is about to grow three ways at once, which is why this was carved out of `CLAUDE.md`:
-
-- **More relics.** The grammar is built; growing the *vocabulary* — a new
-  moment or a new effect verb — is a Go change, and is meant to be. Buying and selling landed on
-  2026-08-21, so a new record needs a `Rarity` as well as its rules.
+- **More relics.** Growing the *vocabulary* — a new moment or a new effect verb — is a Go change,
+  and is meant to be. A new record needs a `Rarity` as well as its rules.
 - **More essences.** Growing `essences.json` is one record each;
   growing the *target vocabulary* is not, and MECHANICS.md says why. `go run ./tools/essencesheet` is
   what the catalog is read on.

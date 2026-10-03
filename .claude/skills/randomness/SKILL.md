@@ -6,18 +6,15 @@ description: How randomness is implemented in this repo - the run seed, the sepa
 # Randomness and determinism
 
 Runs will eventually be **replayable from a seed**: the same journey, the same enemies, the same
-rolls, so a player can retry a run and make different choices. Nothing replays yet — `Session`
-does not exist — but every roll written now either preserves that property or quietly destroys
-it, and the second kind is invisible until the day someone tries to replay something.
+rolls, so a player can retry a run and make different choices. Nothing replays yet, but every roll
+written now either preserves that property or quietly destroys it, and the second kind is invisible until the day someone tries to replay something.
 
-**Combat is stochastic as of 2026-08-14.** Lightning rolls. That is exactly the case these
-rules were written to survive, so follow them rather than reading the first roll as permission
+**Combat is stochastic.** Lightning rolls. That is exactly the case these rules exist to survive, so follow them rather than reading the first roll as permission
 for the second.
 
-**`internal/combat` takes two sources as of 2026-09-09**, not one: `combat.Sources` is a struct
-with a `Roll` for the shock and a `Luck` for a gold or silver card's gamble. That is the shape the
-"the deck lives on the scene" note below already prescribed for a second roll in the rules — its
-**own** injected parameter, never the lightning source — and it is why `ResolveRound`'s last
+**`internal/combat` takes two sources**, not one: `combat.Sources` is a struct with a `Roll` for
+the shock and a `Luck` for a gold or silver card's gamble. Each roll in the rules is its **own**
+injected parameter, never the lightning source — which is why `ResolveRound`'s last
 argument is a struct rather than a `*rand.Rand`. The zero value rolls nothing.
 
 ## The three rules that are never bent
@@ -37,7 +34,7 @@ argument is a struct rather than a `*rand.Rand`. The zero value rolls nothing.
 ## The run seed
 
 **`GlobalState.RunSeed` is the root, and `main` sets it once** — from `fixedRunSeed` if that
-constant is non-zero, otherwise from the clock — and logs it, which is what lets a bug report
+constant is set, otherwise from the clock — and logs it, which is what lets a bug report
 name a run.
 
 **Reading the clock there is not a breach of "no `time.Now()` in game rules".** Choosing a
@@ -46,14 +43,14 @@ in `main`. Everything downstream derives from the number it picked.
 
 `fixedRunSeed` is the debugging toggle — empty rolls a new run, anything else pins one.
 
-### A seed is a six-character code *(2026-08-25)*
+### A seed is a six-character code
 
 `internal/seeds/code.go` is the only place the alphabet exists: **Crockford base32** — the ten
 digits and the twenty-six letters, less `I`, `L`, `O` and `U`. Six characters, so `seeds.Space`
 is 32^6 — 1,073,741,824 runs.
 
-- **`RunSeed` stays an `int64`** and every stream still derives from it by arithmetic. What
-  changed is its *range*: `main` folds the clock in with `seeds.Normalize` so every run is one
+- **`RunSeed` is an `int64`** and every stream derives from it by arithmetic. Its *range* is the
+  code space: `main` folds the clock in with `seeds.Normalize` so every run is one
   that can be written down, and logs `seeds.Code` rather than the number.
 - **Shrinking the seed space does not weaken the derivation.** Each stream XORs a salt spread
   across the full int64, so two adjacent codes do not produce neighboring shuffles.
@@ -62,8 +59,8 @@ is 32^6 — 1,073,741,824 runs.
 - **`Code` panics outside the space rather than folding.** Quietly rendering a number that will
   not round-trip is how a shared code comes to name a different run than the one it was copied
   from. `Normalize` is called at the one place a seed is chosen.
-- **Zero is `000000`, a real run, not "unset".** `main` carries its own `pinned` flag; anything
-  else that used a zero check is wrong now.
+- **Zero is `000000`, a real run, not "unset".** `main` carries its own `pinned` flag, and
+  nothing may test `RunSeed == 0` to mean "no seed".
 - **`fixedRunSeed` and a scenario's `Seed` are both code strings**, and one that is not a code
   is a `log.Fatalf` before the window opens — a pin nobody notices is off is worse than no pin.
 - **The four dropped characters are the point, and dropping them is only half of it.** `0`/`O`
@@ -104,17 +101,17 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.RewardHand` | fight | `dealOffer` (`internal/screens/postbattle.go`) | which cards a win offers you to alter |
 | `seeds.EssenceOffer` | fight | `dealEssences` (`internal/screens/postbattle.go`) | which alterations are offered, on any change to the reward hand |
 | `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which relics are for sale, on any change to the essence catalog |
-| `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which four stones a bag of rocks holds, on any change to the relic shelf |
-| `seeds.VialStock` | fight | `dealVialEssences` and `dealVialOffer` (`internal/screens/shop_goods.go`) | which four essences a vial holds, on any change to the free offer |
-| `seeds.SackStock` | fight | `dealSackRunes` (`internal/screens/shop_goods.go`) | which four runes a sack holds, on any change to the other two packs |
-| `seeds.StoneShower` | fight | `applyRuneRolling` (`internal/screens/combat_rune.go`), mixed with the run's placed-stone count | which stones a rock shower drops, on any change to the shop |
+| `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which stones a bag of rocks holds, on any change to the relic shelf |
+| `seeds.VialStock` | fight | `dealVialEssences` and `dealVialOffer` (`internal/screens/shop_goods.go`) | which essences a vial holds, on any change to the free offer |
+| `seeds.SackStock` | fight | `dealSackRunes` (`internal/screens/shop_goods.go`) | which runes a sack holds, on any change to the other two packs |
+| `seeds.StoneShower` | fight | `CombatScene.showerRNG` (`internal/screens/combat_rune.go`), mixed with the run's placed-stone count | which stones a rock shower drops, on any change to the shop |
 | `seeds.PackOffer` | fight | `ShopScene.packRNG` (`internal/screens/shop_packs.go`) | which two of the three packs a visit puts up, on any change to the relic shelf |
 | `seeds.ScrollStock` | fight | `dealScrolls` (`internal/screens/shop_goods.go`) | which cantrips a bundle of scrolls holds, on any change to the rune catalog |
 | `seeds.TonicOrder` | run | `newTonicOrder` (`internal/session/tonic.go`): one shuffle of the tonic catalog's sorted keys, walked a realm at a time | which tonic every realm offers, on any change to the relic shelf |
 | `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to the shock roll |
 | Loot offers | — | **not built** | — |
 
-**`VialStock` is the sharpest case in the table** *(2026-08-27)*: it draws essences from the same
+**`VialStock` is the sharpest case in the table**: it draws essences from the same
 catalog `EssenceOffer` does, at the same station of the loop, and it still gets its own stream. Two
 draws off one sequence would make the shop's four a *function* of the two the reward screen had
 already put up — so buying the vial could guarantee, or rule out, the pair the player had just turned
@@ -128,14 +125,15 @@ fight just won. The essence menu is drawn from a *catalog* rather than from the 
 reward hand would make authoring an essence change which cards every fight offered. The shop's shelf is
 a third list on a third schedule, and the same argument separates it from both.
 
-**Journey layout draws no randomness.** It is fixed at 8 realms × 3 fights, endless later.
+**The journey's shape draws no randomness** — its height comes from `journey.json`. What fills it
+comes off `EnemySelect`.
 
 **Enemy selection is shuffled within each realm band**, not across the roster, so a run opens
 on a different opponent without a realm-eight enemy ever being fight one.
 
 **Per-fight streams are why a defeat and a retry deal that fight again** rather than dealing a
-new one — the same property the enemy roster has, and for the same reason: nothing re-rolls a
-run until `Session` exists.
+new one — the same property the enemy roster has, and for the same reason: a fight's seed is a
+function of the run and the fight's index, and nothing else.
 
 ### The two card shuffles are separate, and that is the worked example
 
@@ -146,13 +144,12 @@ enemy deck was retuned**. A named hand has to stay a fact about the player's dec
 That is the shape of the argument to apply to any new stream: **ask what it would silently
 reroll.**
 
-### Why it is a package *(2026-08-17)*
+### Why it is a package
 
-The salts used to live in three packages — four in `internal/screens`, one in `internal/decks`,
-one in a tool — and `decks` held one **only** because a tool cannot import a screen.
-So no single place saw them all and **nothing could check that two consumers had not been given
-the same salt**. `TestEverySaltIsDistinct` is that check, and it could not be written before the
-package existed.
+**One package, so one place sees every salt.** `TestEverySaltIsDistinct` is the check that no two
+consumers were given the same salt, and it can only be written where every salt lives — salts
+spread across the screens, the decks and the tools could not be compared, since a tool cannot
+import a screen.
 
 `internal/seeds` imports nothing but the standard library and sits at the bottom of the graph
 beside `internal/state`, which is what lets the screens, the decks and the tools all reach it.
@@ -161,12 +158,11 @@ and are deliberately ignorant of where it came from.
 
 `fightStride` is internal to the package: a large odd number, mixed in as
 `(fightIndex+1) * fightStride`, so consecutive fights are not consecutive seeds and fight zero
-does not cancel the stride. The `+1` is in `ForFight` rather than at a call site, which is where
-it used to be forgotten.
+does not cancel the stride. The `+1` is in `ForFight` rather than at a call site, so no call site
+can forget it.
 
-**The salt values may be changed freely today and will not always be.** Nothing persists a run,
-so changing one changes nothing observable. That ends the day a save file or a shareable seed
-exists — which is the reason this package was built before those were.
+**The salt values may not be changed.** A saved run and a shared run code are both rebuilt from the
+seed through these salts, so changing one re-points every run anybody has written down or saved.
 
 ## The pins, and what each is for
 
@@ -175,7 +171,7 @@ off by default**, because a pinned game is not the game.
 
 | Pin | Default | Fixes |
 |---|---|---|
-| `fixedRunSeed` (`main.go`) | 0 — rolled from the clock | the whole run: enemies, shocks, both shuffles |
+| `fixedRunSeed` (`main.go`) | `""` — rolled from the clock | the whole run: enemies, shocks, both shuffles |
 | `deckSeedName` / `deckSeed` (`combat_deck.go`) | `""` — unpinned | the player's hand *and* the opponent's, together |
 | `seeds.EnemyDeckPin` | only while `deckSeed` pins the player's hand | the opponent's shuffle |
 | `hands.Seed` (`tools/hands`) | always | which hands the reachability sample deals, for both `handodds` and `handsheet` |
@@ -186,30 +182,28 @@ back to `seeds.EnemyDeckPin`, which lives in `internal/seeds/pins.go` — pins a
 stream table on purpose, because a pin sitting in it would read as a stream nobody salted.
 
 **A seed is an opening hand**, because the shuffle is deterministic — see
-`internal/screens/seeds.go` for the named catalog (a different file from this package, and
-older than it) and `go run ./tools/seeds` for re-checking it. Re-run that tool after touching
+`internal/screens/seeds.go` for the named catalog (a different file from this package) and `go run ./tools/seeds` for re-checking it. Re-run that tool after touching
 `data/duelist_cards.json`, `startingDeck` or `handSize`: a named hand is a fact about one
 particular deck, and changing the deck silently deals something else.
 
 ## Adding a roll — the argument comes before the code
 
 **Rewrite a random-sounding rule rather than let it in.** Lightning is the deliberate
-exception, not the precedent. **The gamble on a gold or silver card is the second one** *(2026-09-07, moved onto a card
-2026-09-09)* and it made its own argument in `MECHANICS.md` rather than appealing to lightning's: every other random-sounding
-rule had a deterministic rewrite at least as good, and a consumable whose whole subject is luck does
-not — a gamble that always pays is a purchase. Note what it still had to do: name the alternative it
-declined (two independent rolls), say what the roll costs, and take its own stream. It was taken because unreliability is what lightning *is*, and
-because the alternatives — breaking the hand, cutting the multiplier — were weighed and written
-down in `MECHANICS.md`.
+exception, not the precedent. **The gamble on a gold or silver card is the second one**, and it makes its own argument in
+`MECHANICS.md` rather than appealing to lightning's: every other random-sounding rule has a
+deterministic rewrite at least as good, and a card whose whole subject is luck does not — a gamble
+that always pays is a purchase. Note what it still has to do: name the alternative it declines (two
+independent rolls), say what the roll costs, and take its own stream. Lightning is the exception
+because unreliability is what lightning *is*, and because the alternatives — breaking the hand,
+cutting the multiplier — are weighed in `MECHANICS.md`.
 
 **Certainty is often the better game as well as the cheaper code.** It matches the rule hands
 otherwise follow: what you committed to cannot be silently undone. **A second roll needs the
 same argument made from scratch**, in `MECHANICS.md`, not an appeal to lightning.
 
-What a roll costs, using the one that exists as the measure — both of these were predicted
-before it landed and both are now paid:
+What a roll costs, using lightning as the measure:
 
-- **A single-sample verdict stopped meaning anything.** One duel winning half the time and one
+- **A single-sample verdict means nothing.** One duel winning half the time and one
   winning always read identically, so anything measuring balance has to report a distribution.
 - The stream advances per attack phase, so a change early in a duel reshuffles every roll
   after it.
@@ -244,8 +238,8 @@ before it landed and both are now paid:
   infinite deterministic list, and the planned endless journey gives no worst case to size an
   array against. A reroll simply advances the cursor.
 - **Never let map iteration order affect an outcome.** Go deliberately randomizes it.
-  the enemy roster is a map, and so is every catalog in `data/` — iterate a sorted key slice
-  (`data.EnemyOrder`, `data.RelicOrder`) whenever a choice depends on order.
+  The roster is a map, and so is every catalog in `data/` — iterate a sorted key slice
+  (`data.MotifOrder`, `data.RelicOrder`) whenever a choice depends on order.
 - **No `time.Now()` in game rules.** Wall-clock decisions cannot be replayed. Tick counters are
   fine; they are part of the simulation. The one exception is choosing the run seed, above.
 - **`internal/music` has no `math/rand` either.** Its drum noise is a 15-bit shift register

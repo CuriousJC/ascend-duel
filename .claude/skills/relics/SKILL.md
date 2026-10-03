@@ -39,10 +39,10 @@ costs if it does not.
 - **`Name`** — the full name, which is what a tooltip titles and what the shop says. **The card
   face never draws it**: a relic card is a full-bleed picture with no title, so a name has no width
   to fit and can be as long as it reads well.
-- **`Art`** — the assets key for the face. **Empty draws `default-relic.png`** via `RelicData.ArtKey`,
-  which is what most of the file does; a key naming no embedded image fails
+- **`Art`** — the assets key for the face. **Empty draws `default-relic.png`** via `RelicData.ArtKey`;
+  a key naming no embedded image fails
   `TestEveryRelicDrawsSomething` rather than drawing a blank.
-- **`Text`** — the line a player reads. **It is printed now** *(2026-08-21)*: the hover tooltip on
+- **`Text`** — the line a player reads. **It is printed**: the hover tooltip on
   every relic card, shelf and worn row alike, shows this and nothing generated from the rules. So a
   rule changed without its `Text` is a relic that lies to the player, and `TestEveryRelicHasSomethingToSay`
   only catches an empty one, not a stale one.
@@ -50,8 +50,8 @@ costs if it does not.
   shelf offers it. There is no `Price` field; see the shop section below.
 - **`When`** — which moment wakes the rule. Closed; one Go seat each.
 - **`If`** — what has to be true. Optional; **a rule with no `If` always fires**.
-- **`Rarity`'s third tier is where a drawback belongs.** Onslaught (2026-08-22) is the first relic
-  that takes something away, and `scale-hp` below 100 is how it says so.
+- **`Rarity`'s third tier is where a drawback belongs.** Onslaught takes something away, and
+  `scale-hp` below 100 is how it says so.
 - **`Then`** — a list, so one rule can do two things. That is what buys a lightning relic that
   shocks *and* chills with no new vocabulary at all.
 
@@ -60,9 +60,8 @@ stat relics below need exactly that, one rule to accumulate and one to apply.
 
 **`Do` is one word carrying both the operation and its subject** — `scale-damage`, not
 `{Op: scale, Of: damage}` *(owner's call, 2026-08-17)*. Splitting it into two crossing lists
-would buy a grid that is mostly meaningless cells, and `apply-status` sits on neither axis. This
-is the same argument that took the mixes out of `hands.json`; do not re-propose it without a
-new one.
+would buy a grid that is mostly meaningless cells, and `apply-status` sits on neither axis. Do not
+re-propose it without a new argument.
 
 ## The three vocabularies
 
@@ -89,10 +88,10 @@ which is what makes a relic a *run* concept rather than a combat one.
 **Flips and demotions chain, in worn order, within one draw** *(owner's call, 2026-09-15 and
 2026-09-27)*. They are one walk, `combat.DealSteps`, and it
 carries a running card through the worn list and each ring reads what the ring before it left, so a
-lightning card under Frozen Lightning worn left of Meltdown is dealt **fire** — two steps, and the
-screen gives each its own beat and its own relic toast. **Worn order decides the result**: swap
-those two and lightning stays lightning, because Meltdown reads the card before the other ring has
-touched it. `TestFlipsCompose`, `TestDealStepsNameEveryRingThatTouchedTheCard` and
+lightning card under the Frozen Charged Orb worn left of the Burning Frozen Orb is dealt **fire** —
+two steps, and the screen gives each its own beat and its own relic toast. **Worn order decides the
+result**: swap those two and lightning stays lightning, because the ice-to-fire orb reads the card
+before the other has touched it. `TestFlipsCompose`, `TestDealStepsNameEveryRingThatTouchedTheCard` and
 `TestDemotionsAndFlipsChainInWornOrder` are the tripwires, and `session.DrawnAs` is both the draw
 and the deck panel's preview of it.
 
@@ -101,8 +100,7 @@ element, so a card handed back through `DrawnAs` would take a second cascade fro
 one left it — `screens.restoreToDeck` restores a discard to the card the run owns — color and concept — before folding it
 back into the draw pile, and the draw pile therefore holds cards as the run owns them.
 
-**`card-drawn` is the only moment a screen owns, and the invariant it costs is worth knowing**
-*(2026-08-24)*. A cascade runs once per card per draw, so **the draw pile has to hold cards as the
+**`card-drawn` is the only moment a screen owns, and the invariant it costs is worth knowing.** A cascade runs once per card per draw, so **the draw pile has to hold cards as the
 run owns them**: `drawHand` restores a discarded card before folding it back in, and
 `session.DrawnAs` must never be handed a card that has already been drawn. Hand one back and it
 takes a second cascade from wherever the first left it, which is how a deck walks to one color — or
@@ -140,17 +138,17 @@ were bought in. Same reading an essence takes.
 **`Lead` is the first *positional* predicate, and more are expected** *(owner's call, 2026-08-22)*.
 Element, form and concept ask what a card **is**; `Lead` asks where it **sits in the turn**. When the
 next one of those arrives — last card, lone card, the card that formed the hand — it belongs here as
-a predicate rather than inside a verb. **A verb that names its own scope is the anti-pattern this
-replaced**: `echo-attack` meant "the lead card" until the form repeat relics needed the same
-arithmetic at a different scope, and one predicate covered both.
+a predicate rather than inside a verb. **A verb that names its own scope is the anti-pattern**: the
+lead card is a predicate rather than part of `echo-attack`, so the form repeat relics reuse the same
+arithmetic at a different scope.
 
-**`Hand` is the second predicate that is not about a card** *(2026-09-05)*, and it is asked of the
+**`Hand` is the second predicate that is not about a card**, and it is asked of the
 blow rather than of a card — `RelicCondition.Matches` does not read it, because "is this card part of
 the hand" is a different question with a different answer. `HandBonus` is the one caller. **A rule
 carrying both a `Hand` and a card predicate is refused at registration**: an element is a fact about
 one card and a rung is a fact about the whole blow, so the pair asks something nobody wrote down.
 
-**The rung relics are what it was added for** — one per entry in `hands.json`. Their bonus lands *inside* `Base`, after every
+**The rung relics use it** — one per entry in `hands.json`. Their bonus lands *inside* `Base`, after every
 card term and before the multiplier — so a rung's bonus is worth more on the rung that pays more,
 which is the whole reason a flat number can follow the ladder's shape. See `combat.HandBonus`,
 `TestTheHandBonusIsBaseDamageAndNotATerm` and `TestTheHandBonusScalesWithTheCardItRaises`.
@@ -159,7 +157,7 @@ which is the whole reason a flat number can follow the ladder's shape. See `comb
 is registration-ordered and must never be serialized — the label is what is stable.
 
 **A concept relic is a much narrower object than a form relic**, and pricing them the same is a
-mistake waiting to happen: Striker covers 4 cards where Keen covers 12.
+mistake waiting to happen: one covers a single card in its colors, the other every card of a form.
 
 ### `Then` — the effects
 
@@ -219,7 +217,7 @@ never assert a verb into existence.
 
 ## Statuses are their own collection
 
-**A status is data, and it is no longer the same thing as an element** *(owner's call,
+**A status is data, and it is not the same thing as an element** *(owner's call,
 2026-08-17)*. `statuses.json`:
 
 ```json
@@ -238,35 +236,32 @@ never assert a verb into existence.
 `damage-reduction`, `damage-amplification`. A status is a file entry; a *kind* of status is a Go
 change.
 
-**`damage-amplification` is the odd one and the shape to know before adding a sixth**
-*(2026-08-25)*. Every other kind modifies what its carrier *does*, so it is read off whoever is
+**`damage-amplification` is the odd one and the shape to know before adding a sixth.** Every other kind modifies what its carrier *does*, so it is read off whoever is
 acting; this one modifies what its carrier *takes*, so it is read off whoever is being acted upon —
 a second site in the damage pipeline, and it reaches the burn tick as well as the hit. It is also
 the only percentage with no natural ceiling, so `combat.maxAmplifyPct` caps it where the others are
 bounded by *nothing reduces a hit to zero*. WEAKENED is the one record.
 
-**Fully decoupled means fire does not burn on its own** — including for the five relics that ship.
-There is no default status per element. This is the 2026-08-16 position held rather than
-reversed: the statuses being free is what left relics with nothing to be, and giving a relic a
-second fire status later is only possible if the first one was never inherent.
+**Fully decoupled means fire does not burn on its own.** There is no default status per element:
+free statuses would leave relics with nothing to be, and giving a relic a second fire status is only
+possible if the first one is not inherent.
 
-**What decoupling cost, all of it paid on 2026-08-17:**
+**What decoupling costs:**
 
 - `Duelist.Statuses` is indexed by **status**, and its width is `combat.MaxStatuses` — an array
   width rather than a design cap, since a duelist must stay comparable. Registration refuses a
   record past it rather than dropping it.
 - `Duelist.Relics` is a fixed array of `WornRelic` plus a count, not a bool per element.
-- `cards.MaxEffects` is **5 because the file holds five statuses**, checked by
+- `cards.MaxEffects` **matches the number of statuses in the file**, checked by
   `TestTheCardHoldsAsManyEffectsAsThereAreStatuses`. The badge row fits six at the current pitch, so
-  the fifth cost exactly that one number on 2026-08-25 — **and the sixth is the last one that is
-  free.** A seventh is a redesign of the band.
-- The badge is read off each record's `Badge`; `card_art.go` no longer keys anything by element.
+  **a sixth status costs that one number, and a seventh is a redesign of the band.**
+- The badge is read off each record's `Badge`; nothing keys a badge by element.
 - `StatusID` is append-only, and it is the *file* that decides the order — inserting a record
   mid-file re-points every status a duelist is carrying.
 - **Queries are by effect kind and they sum**: two `lose-actions` statuses take two cards. Nothing
   applies two yet, but choosing between them silently would be a rule nobody wrote down.
 
-## Growing relics hold state, and they are the first thing that does
+## Growing relics hold state
 
 Every other relic is a pure function of its record. A relic that gains +5 HP after every fight is
 not — it carries a number that lives on the run:
@@ -282,12 +277,12 @@ not — it carries a number that lives on the run:
 }
 ```
 
-- **Both growth verbs name their moment** *(owner's call, 2026-08-22)*: `grow-on-win` and
-  `grow-on-hit`. `grow-on-win` was `grow` until the second one existed, and a verb whose name does
-  not say when it fires reads as the default while the other looks like the special case.
+- **Every growth verb names its moment** *(owner's call, 2026-08-22)*: `grow-on-win`,
+  `grow-on-turn`, `grow-on-hit`, `grow-per-card`. A verb whose name does not say when it fires reads
+  as the default while the others look like special cases.
 - **`grow-on-win` writes an accumulator on the worn relic**, and the relic's own effect amounts are read
   as `Amount + accumulator`. So this relic is +5 HP in fight one and +100 by fight twenty.
-- **`grow-on-hit` writes the same accumulator from inside a turn** — the Enflamed family, +0.1x to
+- **`grow-on-hit` writes the same accumulator from inside a turn** — the Weight relics, +0.1x to
   their color on **every matching hit that connects**. A hand with two fire cards is two steps and
   the second card is counted at the first one's step, so **the order the cards are queued in decides
   what they are worth**; a fire card an echo relic lands three times is three steps, each hit counted
@@ -299,8 +294,8 @@ not — it carries a number that lives on the run:
   rule: a defeat ends the run.
 - **No relic reaches a card's printed damage** *(owner's call, 2026-08-26)*. A face says what the card
   does — `1x DMG` — whatever is worn: a growing relic's multiplier depends on where in the turn the
-  card is counted, so no printed figure is right in every queue position, and the flat relics came off
-  with it rather than leaving half the arithmetic on the card and half in the sum. Every relic that
+  card is counted, so no printed figure is right in every queue position, and the flat relics stay off
+  too rather than leaving half the arithmetic on the card and half in the sum. Every relic that
   fires says its own multiplier beside the term it priced in the hand dialog, in firing order, and
   its card bounces and lights on that beat. `combat.CardScaleBySeat` is the only place those figures
   are worked out. **Cost is the exception** and stays on the face, because a discount does not move
@@ -315,12 +310,11 @@ not — it carries a number that lives on the run:
   would have needed a `not`. Reach for that shape before proposing negation into the grammar.
 - **A step never reads the accumulator it is stepping.** Both verbs take the effect's raw `Amount`,
   so growth is linear; `Amount + Grown` there would compound and no growing relic is meant to.
-- **The accumulator lives on `Session`**, keyed by `RelicRecord`. It is the first relic state that
-  has to survive a fight, and the first that will have to be **serialized** — which is why the
-  record key is the identity and not an index.
-- **Uncapped, by decision** *(2026-08-17)*. +5 a fight reaches +100 by the top of the journey and
+- **The accumulator lives on `Session`**, keyed by `RelicRecord`. It survives a fight and is
+  **serialized** with the run, which is why the record key is the identity and not an index.
+- **Uncapped, by decision**. +5 a fight reaches +100 by the top of the journey and
   that is the intent, not an overflow.
-- **A growing relic holds exactly one numeric effect** *(2026-08-17, owner's call)*, so the
+- **A growing relic holds exactly one numeric effect** *(owner's call, 2026-08-17)*, so the
   accumulator has exactly one thing to feed and does not need to say which. A relic wanting two
   growing numbers is outside the grammar; it needs a decision before it can be authored, not a
   second accumulator field written ahead of it.
@@ -340,7 +334,7 @@ Reach for these first when an idea sounds too easy.
   one of those would change every copy in the deck. Same bound an essence has.
 - **Five worn at once**, until a tonic expands it.
 
-## Where the code is — it is built *(2026-08-17)*
+## Where the code is
 
 | Piece | Where |
 |---|---|
@@ -352,7 +346,7 @@ Reach for these first when an idea sounds too easy.
 | `card-drawn` | `session.DrawnAs`, called per card by `screens.CombatScene.drawHand` — the flips and the demotions, one walk |
 | `prizes-dealt` | `session.Picks` and `session.PrizeVitae`, read by `postbattle.go` |
 | the row on screen | `internal/screens/combat_relics.go` — a lookup from worn key to record |
-| the whole catalog as pictures | `go run ./tools/relicsheet` — **grouped by rarity**, card, price, `Text` and rules side by side, and each tier's share of a shelf draw |
+| the whole catalog as pictures | `go run ./tools/relicsheet` — **grouped by family**, card, price, `Text` and rules side by side, and each tier's share of a shelf draw |
 
 **`relics.json` is parsed in `internal/session`**, which already parses essences and for the same
 reason: a relic belongs to a *run*. It hands `combat` rules types — `RegisterRelic(key, name,
@@ -367,7 +361,7 @@ wrong moment, a predicate the rules cannot resolve, or a status key that is in n
 comparable, so a worn relic is an ID and its accumulator and the rules themselves live in the
 registry. `WearsRelic` takes a `RelicID`.
 
-**Acquisition landed on 2026-08-21.** `internal/session/shop.go` holds the rules — `RelicPrice`,
+**Acquisition is the shop.** `internal/session/shop.go` holds the rules — `RelicPrice`,
 `SellValue`, `CanBuy`, `Buy`, `Sell` — and `internal/screens/shop.go` is the scene, reached through
 `session.PhaseShop`. **A run opens wearing nothing** *(owner's call, 2026-08-21)*, so every element
 is inert until the first relic is bought; `session.StartingRelics` is the debug seat for putting one
@@ -392,15 +386,15 @@ on without playing to a shop and ships empty.
 
 The questions to put to an idea, in order:
 
-1. **Which moment?** If none of the seven fits, that is the finding — say so rather than
+1. **Which moment?** If none of the moments in the table fits, that is the finding — say so rather than
    inventing one quietly. A new moment is a Go seat.
-2. **Does the `If` exist?** Element, form and concept are the three. Anything else is new
+2. **Does the `If` exist?** The predicates table is the whole list. Anything else is new
    vocabulary.
 3. **Does the `Then` exist?** If not, is it a new verb or a re-use? A new verb is one table row
    plus one place applying it.
 4. **Does it hold state?** If it grows, it needs the accumulator and it needs saving.
-5. **Does it collide with a relic that exists?** Banker, Soul Taker and Hungry all reached for the
-   post-battle screen and two of them nearly did the same job.
+5. **Does it collide with a relic that exists?** Banker, Soul Taker and Hungry all reach for the
+   post-battle screen, and two of them nearly do the same job.
 6. **What does it cost the player, and does anything price it?** Nothing in the repo measures what
    a relic does to a duel, so every price is judgment. Say that rather than guessing at a number.
 
@@ -411,7 +405,7 @@ The questions to put to an idea, in order:
 
 **The six questions above are the design conversation; this is the report.** Run it when a relic is
 proposed — by the owner, or by you before authoring one — and answer all four parts even when one
-of them is "nothing to say". A relic that turns out to be Keen with a different name is the finding
+of them is "nothing to say". A relic that turns out to be The Sickle with a different name is the finding
 this exists to catch, and it is only ever caught by looking.
 
 **Derive the axes, never remember them.** `python .claude/skills/relics/coverage.py` reads
@@ -440,10 +434,10 @@ Take the proposal's `(When, Do)` pair and read the grid at it. Three verdicts:
 - **A sibling** — same cell, different value on an axis. That is the healthy case and it is what
   section 2 is about.
 - **Overlapping** — a different cell that reaches the same outcome. This is the one the grid does
-  not catch on its own, so it has to be read for: Banker, Soul Taker and Hungry all landed on the
-  post-battle screen from three different moments, and two of them nearly did one job. Arcane Ring
-  and Unravelled Ring share `card-damage / scale-damage / Element=arcane` and are *not* a
-  duplicate — one is flat and one grows — which is the distinction to draw rather than to flag.
+  not catch on its own, so it has to be read for: Banker, Soul Taker and Hungry all land on the
+  post-battle screen from three different moments, and two of them nearly do one job. Two relics
+  sharing `card-damage / scale-damage / Element=arcane` are *not* a duplicate when one is flat and
+  one grows — which is the distinction to draw rather than to flag.
 
 **Read the archive too.** `data/archive/relics.json` holds relics taken out of the game, and
 `coverage.py` does not see it. A proposal matching an archived relic is a relic the owner has
@@ -456,15 +450,15 @@ about that cell, and roughly half the time the emptiness is the grammar being ri
 
 - **`repeat-card` has no defend relic, and must not.** A defend card deals no damage, so repeating
   one repeats nothing. The same goes for `scale-damage` on defend.
-- **Concept relics do not want filling out.** Striker covers four cards where Keen covers twelve;
-  eighteen concept relics would be eighteen near-dead records, and the grid will report seventeen
+- **Concept relics do not want filling out.** A concept relic covers far fewer cards than a form
+  relic, so one per concept would be a shelf of near-dead records, and the grid reports the rest as
   "missing" every single run. Read that line and move past it.
 - **`demote-card` on tiers other than 3** is a real question with a real answer — Atrophy steps a
   card down its own ladder, and a tier with nothing below it is a no-op.
 - **The element families are the ones that genuinely want to be complete.** Five hues, five cards
   of each concept, and a player building around a color who finds their color has no cost relic
-  has found a hole rather than a choice. `adjust-cost`, `scale-damage`, `grow-on-hit` and
-  `apply-status` are all complete across five today; the flip grid is complete at 5x4.
+  has found a hole rather than a choice. `coverage.py --gaps` says which of those families
+  are complete today.
 
 **Say what a proposed relic implies for its family**, and say whether the family should be filled
 now or is a note. Do not author four siblings because one was asked for — offer them.
@@ -481,7 +475,7 @@ Four verdicts, in ascending cost. Name the one and the specific term:
 | **refused** | it collides with *What a relic may never do* | say which rule, and offer the nearest thing that is legal |
 
 **Check the refusals before anything else** — they are where an easy-sounding relic most often
-dies. Raising `MaxActions`, reducing a hit to zero, chaining flips, changing what a concept is,
+dies. Raising `MaxActions`, reducing a hit to zero, changing what a concept is,
 a sixth worn relic, and a growing relic with two numeric effects are all already decided.
 
 **A verb used at the wrong moment is refused at load**, so "this verb exists" is not the same as
@@ -497,8 +491,9 @@ scratch.
 
 The comparisons that actually carry weight:
 
-- **Breadth of the predicate.** A form relic covers twelve cards, an element relic five, a concept
-  relic four. Same verb at three prices.
+- **Breadth of the predicate.** A form relic covers every card of a form, an element relic every
+  card of a color, a concept relic one card in its colors — `coverage.py` reads the counts off the
+  card file. Same verb at three prices.
 - **Whether it compounds.** Relics fire left to right and multiply, so two of a kind is a build.
   A verb that multiplies is worth more than one that adds, at the same number.
 - **Whether it grows.** An accumulator is uncapped by decision, so a growing relic is priced on
@@ -512,16 +507,15 @@ The comparisons that actually carry weight:
 
 **And say what the tier does to the shelf, because the weights make it counter-intuitive.** Tickets
 are 10 / 4 / 1, so a tier's share is taken over the whole catalog — which means **anything added to
-common devalues every rare in the game**. On 2026-09-05 the catalog went from 58 relics to 139 and
-rare grew from 4 relics to 26; its share of a shelf draw went 2.9% to 3.2%, because 57 commons had
-arrived underneath it. `go run ./tools/relicsheet` prints the three shares — read them after any
+common devalues every rare in the game**: a batch of commons can hold rare's share flat even while
+rares are being added. `go run ./tools/relicsheet` prints the three shares — read them after any
 batch, not just after a rarity change.
 
 ### Authoring, once the analysis is agreed
 
 The record goes in `data/relics.json` and nowhere else if the verdict was *expressible today*.
 Then: **regenerate the relic sheet alone** — `go run ./tools/relicsheet`, not `tools/sheets`, which
-rewrites 4.9 MB including 126 portraits nothing touched. `Text` is what the player reads and it is
+rewrites every sheet, the roster portraits nothing touched included. `Text` is what the player reads and it is
 printed verbatim, so a rule authored without its sentence is a relic that lies. `go test ./...`
 covers the art resolving and the record parsing; a bad word panics at load rather than being
 ignored.
@@ -541,27 +535,27 @@ way. Then regenerate both pages, `go run ./tools/relicsheet` and `go run ./tools
 - **An archived record is still held to the grammar** by `TestEveryArchivedRelicWouldLoad`. A new
   verb or moment that renames a word has to rename it in the archive too, or the suite goes red.
 
-## The relics that read the purse *(2026-09-05)*
+## The relics that read the purse
 
 **`internal/combat` holds the purse for the length of a round** — `Duelist.Vitae`, seeded from the
 run at the top of each round and stepped as the round pays. It is **re-read at every blow**, because
 vitae moves inside a fight: a card carrying `RiderVitaeInHand` pays one every turn it is held, and
 riders fire *before* the attack phase, so what a turn pays is already in the purse that turn's blow
-reads. **A figure resolved once at fight-start is the bug to avoid** — it was the first version of
-Rampant and it priced a turn-three blow at turn-one rates.
+reads. **A figure resolved once at fight-start is the bug to avoid** — it prices a turn-three blow at
+turn-one rates.
 
-- **Rampant** — `add-dmg-per-vitae` at `fight-start`, duelist DMG per vitae, raised before any card
+- **The Rampant** — `add-dmg-per-vitae` at `fight-start`, duelist DMG per vitae, raised before any card
   is scored — the rung relics' fold, not a flat term. Rare.
-- **Fire of Life** — `scale-damage-per-vitae` at `card-damage`, percentage points per vitae on a
+- **The Fire of Life** — `scale-damage-per-vitae` at `card-damage`, percentage points per vitae on a
   matching card. `Amount: 1` is +1% a vitae, which is a tenth of a multiplier per ten held.
 
 **Both verbs declare a rate and neither caches a product.** The run is paid the *difference* between
 the purse the duel opened with and the one it closes with; **never sum `KindVitae` events to move a
-purse**, which was the old way and now double-pays.
+purse**, which double-pays.
 
 ## The two vitae relics, and why they are not the same relic
 
-They reached for the same screen and nearly did the same job. Settled *(2026-08-17)*:
+They reach for the same screen, so the difference is worth stating:
 
 - **Banker doubles vitae propagation**, at `fight-won` — `scale-propagation`, 200. It scales a
   rule of the run, defined and capped in *Vitae* in `MECHANICS.md`.

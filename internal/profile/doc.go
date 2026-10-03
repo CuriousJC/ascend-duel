@@ -40,4 +40,28 @@
 // bottom of the graph so that `session` can save itself without anything below `session` learning
 // what a run is. The snapshot in run.go is plain data — `session` knows how to fill one in and how
 // to read one back, and this package knows how to put one on disk.
+//
+// # Working on it
+//
+// The directory is `os.UserConfigDir()` joined with `duello`. `DUELLO_PROFILE` overrides the
+// **directory**, moving both files together. See MECHANICS.md §The profile for what the files mean.
+//
+//   - **A file from a newer build is read and never written over.** It is the one mistake that cannot be
+//     repaired afterwards, so `LoadProfile` reports writability separately and the game respects it.
+//     Unrecognized fields are carried through a save verbatim for the same reason.
+//   - **A setting's zero value is not its default, and that is the one trap in the file.** An older
+//     profile has no settings block at all, so every field reads as zero — and a speed of zero would stop
+//     every clock in the game. `LoadProfile` normalizes and clamps: an out-of-range number is brought
+//     into range rather than rejected.
+//   - **The call sites are `internal/screens/save.go` and nothing else.** A run is saved by `advanceRun`
+//     at each phase transition, the achievement is awarded where a fight is won, and the tutorial is
+//     marked seen where the overlay ends. Persistence is deliberately not something a scene does.
+//   - **The journey's offers are rebuilt from the run code; its picks are saved.** What every realm
+//     offers is a function of the seed, so it is not stored. Which portal the player walked through is a
+//     choice, so `RunSnapshot.Portals` writes it down by motif key and a resume refuses one its realm
+//     never offered — `TestThePortalsTakenSurviveAResume`.
+//   - **A run is snapshotted between phases, never inside a duel**, and a snapshot is not a replay. The
+//     replay story is a seed plus a choice log, because a deck edit is a choice — see
+//     `internal/journal`. Resume wants state, replay wants a path; do not let a snapshot be used as a
+//     replay.
 package profile

@@ -9,9 +9,8 @@ description: The whole-project audit - the layout, the patterns the code is writ
 it is not a bug hunt. It is the thing to run when the game is at a resting point and the question is
 *what has gone quietly wrong while we were building*.
 
-**The failure it exists to catch is rot that nothing fails on.** Every check in here found something
-the first time it was run, and not one of those things broke a test, failed a vet, or showed up in a
-diff. That is the whole character of the problem: the compiler holds the code together and nothing
+**The failure it exists to catch is rot that nothing fails on.** What these checks find breaks no
+test, fails no vet, and shows up in no diff. That is the whole character of the problem: the compiler holds the code together and nothing
 at all holds the *prose* together, so the design record drifts away from the game one true-at-the-time
 sentence at a time.
 
@@ -34,8 +33,8 @@ Read this before reaching for an instrument; the instruments assume it.
 
 ### Shape, by weight
 
-Roughly two thirds of the Go in this repo is one package. That is the single fact that governs every
-structural question here.
+`internal/screens` is the heaviest package by a wide margin, and `internal/ui` is the drawing layer
+it draws through. That is the fact that governs most structural questions here.
 
 | Layer | Packages | What it is |
 |---|---|---|
@@ -43,7 +42,8 @@ structural question here.
 | **Rules** | `combat` `journey` `tutorial` `achieve` `decks` `entities` `carddesc` | no Ebitengine, testable without a window |
 | **Run** | `session` `state` | what outlives a fight |
 | **Drawing** | `systems` `cards` `actions` | no `*ebiten.Image` created in `cards`, which is what lets the sheets render |
-| **Screens** | `screens` | every scene, and the shared layer they all draw through |
+| **Shared drawing** | `ui` | the table, the clock, the movers, the card faces, the panels — everything a scene draws *through*; it may never reach into a scene |
+| **Screens** | `screens` | every scene |
 | **Frame** | `game` `main` | the loop and the two controls belonging to no scene |
 
 Regenerate the arrows rather than trusting a drawn picture:
@@ -100,8 +100,8 @@ session and nothing checks them.
 **A package's `doc.go` drifts further than any file comment, and the reason is structural.** The
 repo's own rule puts a file's header comment *below* its `package` clause and keeps `doc.go` as the
 only file whose comment sits above one. So an edit to `chrome.go` naturally updates the comment at
-the top of `chrome.go` and touches nothing in `game/doc.go` — which is still describing a mute
-button that became a settings cog, next to a ledger that arrived afterwards. **Every `doc.go` that
+the top of `chrome.go` and touches nothing in `game/doc.go`, which keeps describing whatever
+the package held when it was written. **Every `doc.go` that
 enumerates something is a list that will go out of date**: the files in a package, the moments in a
 grammar, the flags in a struct, the scenes in a registry.
 
@@ -127,7 +127,7 @@ cd .scratch\pkgsplit; go mod tidy; go build -o pkgsplit.exe .; cd ..\..
 
 ### 1. The baseline
 
-Nothing else is trustworthy until these are clean, and all three were clean the first time.
+Nothing else is trustworthy until these are clean.
 
 ```powershell
 gofmt -l .
@@ -139,7 +139,7 @@ go test ./...
 ### 2. Dead code — `staticcheck`
 
 The single highest-yield instrument, and the one that needs saying out loud because it is not
-installed by default and the stale copy on this machine crashed on Go 1.26.
+installed by default and an old install can crash on a newer Go — reinstall rather than trust it.
 
 ```powershell
 go install honnef.co/go/tools/cmd/staticcheck@latest
@@ -149,8 +149,8 @@ foreach ($t in "debugtrace","idleexit","demoplay","scenario") { staticcheck -tag
 
 **Run it under every build tag and delete only the intersection.** Each tag selects a different
 file, so a symbol can be live in one configuration and dead in another — and reading the five lists
-one after another is not the same as intersecting them. Doing this by eye cost two wrong deletions
-the first time, both live only in `combat_demo_on.go`:
+one after another is not the same as intersecting them. Done by eye, this deletes symbols that are
+live under one tag only, such as those in `combat_demo_on.go`:
 
 ```bash
 staticcheck ./... 2>&1 | grep U1000 | sed 's/ is unused.*//' | sort > /tmp/dead.txt
@@ -170,9 +170,9 @@ What it finds here, in order of how much it matters:
 - **`U1000` — unused.** Constants left behind when a layout moved, helpers whose last caller went.
   Delete them. **The exception to check before deleting is a `_test.go` helper**, which may be
   waiting for a test somebody meant to write; ask rather than assume.
-- **`SA4000` — identical expressions either side of an operator.** Both instances in this repo were
-  in tests, and both were deliberate — a comparability assertion written as `x != x`, and a
-  deliberate double call through `||`. Deliberate or not, a test that reads as a tautology is a test
+- **`SA4000` — identical expressions either side of an operator.** In this repo it turns up in
+  tests, deliberately — a comparability assertion written as `x != x`, or a double call through
+  `||`. Deliberate or not, a test that reads as a tautology is a test
   the next reader has to re-derive. Rewrite it so it states what it means; do not delete it.
 - **`SA1019` — deprecated.** Ebitengine renames things across minors. A block of these is a
   mechanical migration and should be done in one pass, not one call site at a time.
@@ -220,7 +220,7 @@ Take each enumeration in the doc and check it against the code:
 for f in $(find internal -name doc.go); do echo "### $f"; cat "$f"; done
 ```
 
-The questions that caught every drift found so far:
+The questions to ask:
 
 - Does the **file list** name files that exist, and does it miss files that arrived since?
 - Does a **count** in the prose — seven moments, four scenes, three flags, two debug views — still
@@ -264,8 +264,8 @@ Two numbers come back and they answer different questions:
   broken; the split merely makes the compiler say so. Run it on a partition you have no intention of
   executing, purely to read the back edges.
 
-**Zero back edges does not mean zero work, and here is what it misses.** All three of these were
-found by the compiler after the tool reported a clean cut, and all three cost an hour:
+**Zero back edges does not mean zero work, and here is what it misses.** Each of these survives a
+clean report and is found only by the compiler:
 
 - **It counts only unexported names.** A symbol already exported and used across the proposed line
   is invisible to it, because nothing would have to be renamed — but it is still a dependency, and
@@ -310,9 +310,9 @@ is an unbounded VRAM leak.
 
 ### 8. Tool duplication
 
-`CLAUDE.md` argues against a shared library under `tools/`, with `roster` and `hands` as the two
-reasoned exceptions. That argument was written when the sheets genuinely shared nothing. Re-check the
-premise rather than the conclusion:
+`CLAUDE.md` treats a shared library under `tools/` as an exception that has to argue for itself —
+`roster`, `hands` and `sheetfilter` each do. Re-check the premise that the rest share nothing,
+rather than the conclusion:
 
 ```bash
 grep -rhoE '^func [a-zA-Z][A-Za-z0-9]*' tools/*/*.go | sed 's/^func //' | sort | uniq -c | sort -rn | head -25

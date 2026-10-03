@@ -130,70 +130,48 @@ resolves and has two values; `combat.Form` says *what kind of card it is* and ha
 is the coarser and is derivable from the form — everything outside Defend is an attack — so the
 **form is what a card puts on its face** and what a hand is counted on.
 
-**The attack set is a 3x5 ladder: three forms by five cost tiers, filled**, and the tiers are
+**The attack set is a 3x3 ladder: three forms by three cost tiers, filled**, and the tiers are
 identical across the forms. A form is *which* pair you are building toward, never a stronger
 or weaker way to build one.
 
-**The middle three rungs are the deck; the two ends ship at zero copies**. A run opens holding
-1/2/3 AP cards and can never buy anything else, so the only way to hold a Poke or an Impale is a
-**Essence of Weakness** or an **Essence of Strength** walking a card off the end of the three. They are real
-registered concepts all the same, because `combat.Neighbor` derives the ladder from the
-registry, and a rung that does not exist is a rung an essence cannot step onto — without the
-ends, Weakness is dead on every 1 AP card and Strength on every 3 AP one.
+**Every rung is in the deck, and a ladder is a ring.** A run opens holding one of every concept in
+every color, and an Essence of Strength or Weakness walks a card one rung along its own ladder —
+**a 1 AP card demoted is the 3 AP card of its form, and a 3 AP card promoted is the 1 AP one**
+*(owner's call, 2026-10-03)*. `combat.NeighborWrapping` derives the ring from the registry, so a
+card in `duelist_cards.json` is a card a run can hold and nothing else is.
 
-| Form | 0 AP · 0.25× | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 2× | 4 AP · 4× |
-|---|---|---|---|---|---|
-| **stab** | Poke | Jab | Thrust | Skewer | Impale |
-| **slash** | Nick | Cut | Slash | Cleave | Sever |
-| **crush** | Tap | Thump | Bash | Smash | Pulverize |
+| Form | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 3× |
+|---|---|---|---|
+| **stab** | Jab | Thrust | Skewer |
+| **slash** | Cut | Slice | Cleave |
+| **crush** | Thump | Bash | Smash |
 
 | Form | Concept | AP | Effect |
 |---|---|---|---|
-| **stab** | Poke / Jab / Thrust / Skewer / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 3` / `DMG × 5` |
-| **slash** | Nick / Cut / Slash / Cleave / Sever | 0 / 1 / 2 / 3 / 4 | Slashes for the same five figures |
-| **crush** | Tap / Thump / Bash / Smash / Pulverize | 0 / 1 / 2 / 3 / 4 | Crushes for the same five figures |
-| **defend** | Flinch | 0 | Raises **1 shield** |
-| | Brace | 1 | Raises **1 shield** |
+| **stab** | Jab / Thrust / Skewer | 1 / 2 / 3 | Stabs for `DMG/2` (min 1) / `DMG` / `DMG × 3` |
+| **slash** | Cut / Slice / Cleave | 1 / 2 / 3 | Slashes for the same three figures |
+| **crush** | Thump / Bash / Smash | 1 / 2 / 3 | Crushes for the same three figures |
+| **defend** | Brace | 1 | Raises **1 shield** |
 | | Block | 2 | Raises **2 shields** |
-| | Guard | 3 | Raises **3 shields** |
 
 **The 3 AP attacks pay triple.** At double they would be a point dearer than the 2 AP card for
 exactly the same damage per point, which is no reason to play one; at triple they buy a figure the
 budget cannot reach by spending the same points on cheaper cards.
 
-**The defend ladder is four rungs and the dealt two are the middle**.
-`Flinch` at 0 AP and `Guard` at 3 AP ship at zero copies exactly as the outer attack rungs do, so
-the deck opens on Brace and Block and the two ends are somewhere an essence can walk a card to.
-
 **Nine attack concepts × five colors = 45 cards; two defenses × five colors = 10.** A **55-card
-starting deck** — the zero-copy rungs are in the file and not in the pile. **No card in the
-player's deck is drab**: every card ships in one of the five elements, the defenses included.
+starting deck**. **No card in the player's deck is drab**: every card ships in one of the five
+elements, the defenses included.
 
-**A 0 AP card is bounded by the count rather than the cost**, which is the shift `minCardCost`
-already took deliberately when an Essence of Ease could drive a card to free: a turn is capped at
-`MaxActions` cards however cheap they are. **A 4 AP card pays 5x, 1.67× a Skewer for 1.33× the
-price**, so it is the one rung that pays more per AP than the rung below it, and it buys a single
-figure a five-card turn cannot otherwise reach — which is why it is an essence's prize rather than
-something a run can stock.
+**The defenses are a ladder of two, Brace and Block.** **The price is the count**: one AP buys one
+shield, and that is the whole of the pricing decision. It is the flattest rung in the game on
+purpose — the attack tiers buy 0.5x, 1x and 3x, where the defend tiers buy one and two — because a
+shield is *a hit you do not take* rather than a figure, and a curve on it would make the top card
+the only one worth holding. **A duelist's shield count is not capped at all**; see §Shields.
 
-**The defenses sit on the same ladder the attacks do**, 0 through 3 AP. **The price is the count**:
-one AP buys one shield, and that is the whole of the pricing decision. It is the flattest rung in
-the game on purpose — the attack tiers buy 0.25x, 0.5x, 1x, 3x and 5x, where the defend tiers buy
-one, two and three — because a shield is *a hit you do not take* rather than a figure, and a curve
-on it would make the top card the only one worth holding.
-
-**Flinch raises a shield for nothing, and that is the floor rather than a mistake**. A shield
-eats a whole hit, so there is no fraction of one to fall to: where Poke is a Jab at a quarter
-of the damage, Flinch is a Brace at none of the cost. What bounds it is the count — a turn plays
-at most `MaxActions` cards however cheap they are — rather than the budget, which is the same
-shift `minCardCost` took when an Essence of Ease could drive a card to free. **A duelist's shield count is
-not capped at all**; see §Shields.
-
-**`combat.Neighbor` walks this ladder too**, so an Essence of Strength promotes a Brace and an Essence of Weakness demotes a
-Guard. A free shield changes how many hits a run takes for the rest of the journey, and that is
-something a run is **allowed** to build toward: ten defenses shrunk to Flinches is five free
-shields a turn, and nothing takes the fifth away. `Neighbor` matches on the *verb* rather than
-being pinned to attacks, so the two ladders can never step onto each other.
+**The essences walk the defend ladder too**, so Strength on a Brace is a Block and Weakness on a
+Brace wraps to a Block as well — on a ladder of two, both directions land on the other rung.
+`Neighbor` matches on the *verb* rather than being pinned to attacks, so the attack and defend
+ladders can never step onto each other.
 
 **`Bash` is the 1× reference the ladder is written against**, and that is why the crush form
 holds the name: `DMG` on the fighter card is `Bash.Damage(DMG)`, so the figure the player reads
@@ -228,8 +206,7 @@ card says its element. The border does not.
 
 **A shield eats one incoming hit, whole**. No damage and no partial
 figure: the hit lands nothing at all, and the feed says so in a line of its own because there is
-no damage line for it to hang off. Brace and Block raise one and two shields for one and two AP;
-Flinch and Guard are the ends of the ladder and ship at zero copies.
+no damage line for it to hang off. Brace and Block raise one and two shields for one and two AP.
 
 **The point is that the player decides how many hits they take.** A creature turn is a known
 number of attacks, so a shield turns "how much is this going to hurt" from an estimate into
@@ -1798,7 +1775,7 @@ verb at this moment and it is the one that does *not* diminish — an echo is a 
 repeat is the card played again.
 
 **A repeat can be narrowed by a rung instead of a card, and then only the rung's own cards repeat.**
-The Hue rings repeat every card of an Elemental Four or Five of a Kind; four fire cards and an ice
+The Twisted Prism and the Rainbow Knot repeat every card of an Elemental Four or Five of a Kind; four fire cards and an ice
 one are an Elemental Four, and the ice card lands once. Membership is the matcher's own reading of
 each rung the blow satisfied — `combat.RungsOf` — so nothing decides twice what a rung is.
 
@@ -2848,7 +2825,7 @@ upgrade, and writing it discards whatever was there** — `combat.MaxCardRiders`
 `Card.SetRider` replaces rather than stacks.
 
 **So a Siphon on a golden card leaves a card that heals and has forgotten it was ever gold**, and a
-Bulwark on that same card leaves a Guard that still heals. That is the whole distinction, and it is
+Bulwark on that same card leaves a Block that still heals. That is the whole distinction, and it is
 worth naming because it is **invisible in the effect**: Bulwark and Golden both read as "a rune
 changed my card", and what separates them is what the *next* rune does.
 
@@ -2875,8 +2852,8 @@ changed my card", and what separates them is what the *next* rune does.
   a crush is a 2 AP crush, name, cost, picture and all. **It crosses the attack/defend line**: a
   Block told to be a crush loses its shields and becomes a 2 AP crush attack in the same element,
   and a Bash told to defend becomes a Block. **A rung the target ladder does not reach wraps round
-  it**, the way promote and demote wrap: the defenses stop at 3 AP, so a 4 AP attack told to
-  defend is a Flinch. What the card keeps is its own — its element, its identity, its upgrade, and
+  it**, the way promote and demote wrap: the defenses stop at 2 AP, so a 3 AP attack told to
+  defend is a Brace. What the card keeps is its own — its element, its identity, its upgrade, and
   any cost or amount an essence already wrote onto it. The same rule serves the form essences.
   `combat.Counterpart` is the walk.
 - **`stones` is the first thing in the game that rolls while it is being *spent*.** Every other
@@ -2994,7 +2971,7 @@ hand and the discard, and fires only when that card is played.
 | Rider | Fires | Does |
 |---|---|---|
 | `heal-on-play` | as the card is played, **after a chill has taken what it takes** | restores life, capped at full |
-| `shield-on-play` | as the card is played | raises shields, through the same cap a Guard is under |
+| `shield-on-play` | as the card is played | raises shields, through the same cap a Block is under |
 | `damage-on-play` | the turn the card is played into | **adds to that card's own hit** |
 | `damage-in-hand` | every turn the card is **kept back** | adds to the duelist's DMG for every hit of that turn |
 | `scale-in-hand` | every turn the card is **kept back** | scales the duelist's DMG, as a percentage |
@@ -3857,11 +3834,15 @@ relic they cannot yet judge; behind the hand, it arrives as the reward for havin
   | Rung | Four of a Kind | Five of a Kind |
   |---|---|---|
   | common: +DMG ring | default | QUINTET — form a Form Five |
-  | uncommon: Hue ring, every card of the rung lands twice | SATURATED — form an Elemental Four | MONOCHROME — form an Elemental Five |
+  | uncommon: elemental repeat, every card of the rung lands twice (Twisted Prism / Rainbow Knot) | SATURATED — form an Elemental Four | MONOCHROME — form an Elemental Five |
   | rare: hand multiplier | QUADRUPLICATE — form a Card Four | MULTIPLICITY — form a Card Five |
 
   Measured on round one of a relicless deck, a Form Five is about one turn in seven hundred and a
   Card Five one in sixteen thousand, so the rare Five relic is effectively a late-profile reward.
+- **The repeat rings unlock on use** *(owner's call, 2026-10-03)*. Each form and each element
+  repeat ring opens after fifty cards of its form or its element have been played, across every run,
+  so a first run's shelf carries none of them and the opening fights are the plain ones. A card
+  counts in the element it was played as, and a wildcard counts once in each of the five.
 - **Locking a relic is a catalog change, and it moves the shelf shares.** A new player's shelf is
   drawn from the default pool alone, so every tier's tickets are over a smaller catalog.
   `go run ./tools/relicsheet` prints both sets of shares and its *pool* chips read the catalog
@@ -3873,15 +3854,20 @@ The list looks heterogeneous and is not. It is three families, and only one of t
 
 - **A turn shape** — what the player put on the table together. Spectrum (four elements at once),
   Elementalist (five), Weaponmaster (three attack forms), Arsenal (three attack forms and a
-  defense), Prism (one form or one card, in all five colors), and the two ends of the cost ladder
-  — Tiny But Fierce (five free attacks of one card) and Godslayer (five 4 AP ones).
+  defense), and Prism (one form or one card, in all five colors).
   **This family is pure grammar**, and it is where a shape the hand ladder cannot *price* belongs:
   worth naming, not worth paying for.
-- **A lifetime count** — three hundred slashing cards, two hundred Bashes. A tally on the profile,
+- **A lifetime count** — three hundred slashing cards, two hundred Bashes, fifty fire cards. Tallied
+  per form, per card and per element. A tally on the profile,
   not a predicate over anything the process is holding.
-- **A named moment** — a duel won, the tutorial finished, the fifth realm reached, a card altered
-  into a Flinch, ten shields standing at once, a rung of the hand ladder formed. The only family
+- **A named moment** — a duel won, the tutorial finished, the fifth realm reached, a card walked round the end of its ladder by an essence, ten shields standing at once, a rung of the hand ladder formed. The only family
   that costs a line of Go each, and deliberately the short one.
+
+**`ladder-wrapped` is read off the two cards, not the essence.** A Jab that comes out a Skewer can
+only have been demoted round the bottom of its ladder, and a Skewer that comes out a Jab promoted
+round the top, so the moment carries `down` or `up` and nothing about which essence did it. **A
+ladder of two never wraps**: Brace and Block are each other's neighbor in both directions, so the
+moment belongs to the three-rung attack ladders alone.
 
 **`hand-formed` is the rung the ladder named, not every rung the turn satisfied.** Five fire cards
 satisfy the Elemental Five of a Kind, every smaller elemental rung and the Pair; what the player
@@ -3897,39 +3883,6 @@ what its cards must *agree* on.
 as Elementalist, arriving on realm six earns the fifth-realm row, and standing behind eleven shields
 earns the row that asked for ten. The alternative makes a player who jumped a step permanently miss
 it, which reads as a bug in the page.
-
-### A clause may filter on cost
-
-**`Cost` narrows a clause's selection to cards of exactly that AP**, on top of `Of`, and it exists
-for the two ends of the promote ladder. Every attack ladder in `duelist_cards.json` runs five rungs
-from 0 AP to 4 AP with the two ends shipped at zero copies, so a run reaches them only by promoting
-or demoting — which makes "five 4 AP attacks of one card" a statement about a deck the player
-*built*, and the reason those two achievements are worth naming at all.
-
-**It reads `Card.Cost()` and not the concept's figure.** An essence's `CostDelta` is part of
-what the turn cost, so five Impales an Essence of Ease made cheap do
-not count at the price they were printed at. The achievement is about what was paid.
-
-**Zero is a filter and not an absence**, which is why the field is a pointer in the JSON struct —
-the free rung is exactly the thing Tiny But Fierce is about, and an int could not say "the free
-ones" without also saying "any".
-
-### Two of them are unreachable today, and that is deliberate
-
-**Godslayer is five 4 AP cards against a six AP budget** — twenty points out of six. Nothing in the
-game grants AP on that scale — the two cost tonics together bring it to ten against six — so it
-cannot be earned until something does. It is written now because the *pattern* is what a future
-tonic would have to be judged against.
-
-**This is the one place the reachability rule below is knowingly bent**, and it is bent in the half
-that is safe: `TestEveryShippedAchievementIsReachable` proves the pattern is satisfiable by some
-turn of five cards, which is what stops a row that no turn could ever match at any price. It says
-nothing about the budget, and the test now says so out loud.
-
-**Tiny But Fierce is reachable, and is the pair to it.** Five Pokes cost nothing at all, and five
-cards is exactly `MaxActions` — so it is the turn that hits the *count* bound rather than the
-budget, which is the shift Flinch and `minCardCost` both made. Getting there is five Essences of Weakness
-over a run, which is a long grind and not a special case.
 
 **Invulnerable relies on a duelist's shield count being uncapped** — see §Shields.
 

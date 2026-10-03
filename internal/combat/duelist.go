@@ -79,8 +79,7 @@ type Duelist struct {
 
 	// Shields is how many incoming attacks this duelist can still eat outright, **counted by the
 	// element of the card that raised them** — see ShieldStack. It is what the player's defend cards
-	// buy: Brace for one and Block for two. Guard is a third rung the file still declares at zero
-	// copies, so the rules can resolve a 3-shield card that nothing deals.
+	// buy: Brace for one and Block for two.
 	//
 	// **A count rather than a percentage, because an enemy turn is several attacks.** Every
 	// creature in the game is a solo attacker, so its turn resolves card by card with a figure

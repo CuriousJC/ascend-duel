@@ -44,7 +44,7 @@ const (
 	// **It is the one rider that gives an attack card a defense's job**, which is the point: a
 	// Jab that also puts a shield up is a card doing two things, and the whole reason the owner
 	// wanted it is that the game otherwise makes the player choose. It goes through
-	// `Duelist.raiseShields`, so the five-shield cap holds exactly as it does for a Guard.
+	// `Duelist.raiseShields`, so the five-shield cap holds exactly as it does for a Block.
 	RiderShieldOnPlay
 
 	// RiderDamageOnPlay adds to the duelist's own DMG for every hit of the turn this card is played into.

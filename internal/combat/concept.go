@@ -261,15 +261,12 @@ func registerPlayerConcepts() map[string]ConceptID {
 	return out
 }
 
-// The player's nineteen, named so the rules' own tests, the balance tool and the screen can say
+// The player's eleven, named so the rules' own tests, the balance tool and the screen can say
 // `combat.Bash` rather than looking a string up.
 //
-// **Eight of them ship at zero copies** — the 0 AP and 4 AP rung of each attack form *(2026-08-24)*,
-// and Flinch and Guard at the two ends of the defenses *(2026-09-06)*.
-// They are not in the starting deck and cannot be bought; the only way to hold one is a Debase or a
-// Exalt essence walking a card off the end of the rungs the deck does ship. They are registered concepts all the
-// same, because `Neighbor` derives the ladder from this registry and a rung that does not exist is
-// a rung an essence cannot step onto.
+// **Every one of them is a rung an essence can walk a card onto**, because `Neighbor` and
+// `NeighborWrapping` derive the ladder from this registry: three attack forms at 1/2/3 AP and a
+// defend ladder at 1/2. A card in the file is a card a run can hold.
 //
 // **They are resolved from the file rather than defining it.** Renaming a card in
 // `duelist_cards.json` fails here, at startup, with the name that went missing — which is the loud
@@ -279,35 +276,24 @@ func registerPlayerConcepts() map[string]ConceptID {
 // package-level variable after everything its initializer references.
 var (
 	// Stab.
-	Poke   = mustPlayer("Poke")
 	Jab    = mustPlayer("Jab")
 	Thrust = mustPlayer("Thrust")
 	Skewer = mustPlayer("Skewer")
-	Impale = mustPlayer("Impale")
 
 	// Slash.
-	Nick   = mustPlayer("Nick")
 	Cut    = mustPlayer("Cut")
 	Slice  = mustPlayer("Slice")
 	Cleave = mustPlayer("Cleave")
-	Sever  = mustPlayer("Sever")
 
 	// Crush.
-	Tap       = mustPlayer("Tap")
-	Thump     = mustPlayer("Thump")
-	Bash      = mustPlayer("Bash")
-	Smash     = mustPlayer("Smash")
-	Pulverize = mustPlayer("Pulverize")
+	Thump = mustPlayer("Thump")
+	Bash  = mustPlayer("Bash")
+	Smash = mustPlayer("Smash")
 
 	// Defend. A ladder like the three attack forms, with the shield count in place of the damage
-	// multiplier. **Flinch is the free rung and raises a shield anyway**, because a shield is a
-	// whole blow eaten and there is no fraction of one to fall to — so where Poke is a Jab for
-	// half the damage, Flinch is a Brace for none of the cost. That is the floor of the count
-	// rather than an oversight; it ships at zero copies for it.
-	Flinch = mustPlayer("Flinch")
-	Brace  = mustPlayer("Brace")
-	Block  = mustPlayer("Block")
-	Guard  = mustPlayer("Guard")
+	// multiplier.
+	Brace = mustPlayer("Brace")
+	Block = mustPlayer("Block")
 )
 
 func mustPlayer(label string) ConceptID {
@@ -345,11 +331,11 @@ func (c Concept) Tier() int { return c.Cost }
 // its identity and whatever was done to that one card.
 //
 // **A rung the target ladder does not reach wraps round it**, the way an essence's promote wraps:
-// the defenses stop at 3 AP, so a 4 AP Impale told to defend is a Flinch — the rung above Guard,
+// the defenses stop at 2 AP, so a 3 AP Skewer told to defend is a Brace — the rung above Block,
 // read round the ring. Nothing is refused, so a pick is never a card greyed out under the cursor.
 //
-// **The rung is the declared cost**, like Neighbor's, so a card an essence cheapened does not slide
-// down the ladder on the way across. Asking for the form a card already has answers the card
+// **The rung is the card's place on its own ladder, read off the declared cost**, like Neighbor's,
+// so a card an essence cheapened does not slide down the ladder on the way across. Asking for the form a card already has answers the card
 // itself: a wasted pick, and the player's to waste.
 //
 // A form with no ladder — `FormNone`, which every enemy card is — reports false.
@@ -362,20 +348,15 @@ func Counterpart(id ConceptID, form Form) (ConceptID, bool) {
 		return id, true
 	}
 
-	// The rungs the target form stands on, cheapest first, and the one this card lands on. A rung
-	// holding two concepts answers the first registered, so the choice is a fact about the catalog
-	// rather than about the order a map was walked.
-	var tiers []int
-	for other := range registry {
-		if c := registry[other]; c.Form == form && !slices.Contains(tiers, c.Tier()) {
-			tiers = append(tiers, c.Tier())
-		}
-	}
+	// The rungs each form stands on, cheapest first, and the one this card lands on: the same
+	// position on the target's ladder as it holds on its own. A rung holding two concepts answers
+	// the first registered, so the choice is a fact about the catalog rather than about the order a
+	// map was walked.
+	own, tiers := formTiers(from.Form), formTiers(form)
 	if len(tiers) == 0 {
 		return NoConcept, false
 	}
-	slices.Sort(tiers)
-	want := tiers[from.Tier()%len(tiers)]
+	want := tiers[slices.Index(own, from.Tier())%len(tiers)]
 
 	for other := range registry {
 		if c := registry[other]; c.Form == form && c.Tier() == want {
@@ -383,6 +364,18 @@ func Counterpart(id ConceptID, form Form) (ConceptID, bool) {
 		}
 	}
 	return NoConcept, false
+}
+
+// formTiers is every declared cost the form's concepts stand on, cheapest first.
+func formTiers(form Form) []int {
+	var tiers []int
+	for other := range registry {
+		if c := registry[other]; c.Form == form && !slices.Contains(tiers, c.Tier()) {
+			tiers = append(tiers, c.Tier())
+		}
+	}
+	slices.Sort(tiers)
+	return tiers
 }
 
 // Neighbor is the concept one rung up or down the same form's ladder, or false if there is
@@ -393,9 +386,9 @@ func Counterpart(id ConceptID, form Form) (ConceptID, bool) {
 // Slime's. The player's cards are the only ones with a form, which is exactly the set that has a
 // ladder to walk.
 //
-// **The verb is matched rather than required to be an attack** *(2026-09-06)*. The defenses are a
-// ladder too — Flinch, Brace, Block, Guard at 0/1/2/3 AP for 1/1/2/3 shields — so an Exalt or a Debase
-// reaches them the same way it reaches a Jab. Matching `from.Verb` rather than pinning `VerbAttack`
+// **The verb is matched rather than required to be an attack**. The defenses are a ladder too —
+// Brace and Block at 1/2 AP for 1/2 shields — so an Exalt or a Debase reaches them the same way it
+// reaches a Jab. Matching `from.Verb` rather than pinning `VerbAttack`
 // is what keeps the two ladders separate while there is only one registry: a defend card and an
 // attack card can never share a form, but reading the verb says so rather than relying on it.
 //

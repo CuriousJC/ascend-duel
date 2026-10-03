@@ -171,7 +171,7 @@ const maxShields = baseMaxActions
 const MaxShields = maxShields
 
 // Category is which phase this card resolves in, and it falls out of the verb: an attack resolves
-// in the attack phase and everything else in the defend phase. A fire Guard and a plain Guard are
+// in the attack phase and everything else in the defend phase. A fire Block and a plain Block are
 // both defenses — the element never moves a card between phases.
 func (c Card) Category() Category {
 	if c.Spec().Verb == VerbAttack {

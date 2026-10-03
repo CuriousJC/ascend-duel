@@ -11,10 +11,9 @@ package session
 // three plans in the same five = 60 cards, read out of data/duelist_cards.json. The deck's size is a
 // consequence of a file the designer can read and edit.
 //
-// **The file holds more concepts than the deck holds cards** *(2026-08-24)*. The 0 AP and 4 AP rung
-// of each attack form ship at `Copies: 0`, so they are registered with the rules — which is what
-// lets a Debase or an Exalt essence step a card onto them — and expand to nothing here. A zero-copy
-// record is a rung, not a card.
+// **Every concept in the file is a rung an essence can step a card onto**, so a record at
+// `Copies: 0` would be a rung no deck starts with — registered with the rules and expanded to nothing
+// here.
 
 import (
 	"github.com/curiousjc/ascend-duel/data"

@@ -20,14 +20,32 @@
     "Trigger": { "Kind": "moment", "Moment": "tutorial-finished" }
   },
   {
-    "AchievementRecord": "flinch",
-    "Name": "FLINCH",
-    "How": "Wear a defense all the way down to a Flinch.",
+    "AchievementRecord": "look-mom-no-hands",
+    "Name": "LOOK MOM, NO HANDS!",
+    "How": "Play a turn that forms No Hand.",
     "Said": [
-      "A guard worn down to a twitch, and it still costs nothing.",
-      "Free is a kind of strong, if you are counting cards rather than shields."
+      "Congrats...do you need to do the tutorial again?"
     ],
-    "Trigger": { "Kind": "moment", "Moment": "card-altered", "Value": "Flinch" }
+    "Unlocks": [ "no-hand-relics" ],
+    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "no-hand" }
+  },
+  {
+    "AchievementRecord": "mighty-mouse",
+    "Name": "MIGHTY MOUSE",
+    "How": "Weaken a 1 AP attack until it comes back round as its 3 AP card.",
+    "Said": [
+      "Smaller and smaller, until it was not small at all."
+    ],
+    "Trigger": { "Kind": "moment", "Moment": "ladder-wrapped", "Value": "down" }
+  },
+  {
+    "AchievementRecord": "quittin-roids",
+    "Name": "QUITTIN ROIDS",
+    "How": "Strengthen a 3 AP attack until it comes back round as its 1 AP card.",
+    "Said": [
+      "Bigger and bigger, and then all of it, gone."
+    ],
+    "Trigger": { "Kind": "moment", "Moment": "ladder-wrapped", "Value": "up" }
   },
   {
     "AchievementRecord": "spectrum",
@@ -131,6 +149,86 @@
     "Trigger": { "Kind": "moment", "Moment": "realm-reached", "N": 5 }
   },
   {
+    "AchievementRecord": "stab-50",
+    "Name": "NEEDLEWORK",
+    "How": "Play 50 stabbing cards.",
+    "Said": [
+      "Fifty holes, and every one of them where you meant it."
+    ],
+    "Unlocks": [ "stab-repeat-relics" ],
+    "Trigger": { "Kind": "count", "Counter": "form:stab", "N": 50 }
+  },
+  {
+    "AchievementRecord": "slash-50",
+    "Name": "WHITTLER",
+    "How": "Play 50 slashing cards.",
+    "Said": [
+      "Fifty cuts. The shavings are starting to pile up."
+    ],
+    "Unlocks": [ "slash-repeat-relics" ],
+    "Trigger": { "Kind": "count", "Counter": "form:slash", "N": 50 }
+  },
+  {
+    "AchievementRecord": "crush-50",
+    "Name": "TENDERIZER",
+    "How": "Play 50 crushing cards.",
+    "Said": [
+      "Fifty blows, and nothing on the other end is the shape it was."
+    ],
+    "Unlocks": [ "crush-repeat-relics" ],
+    "Trigger": { "Kind": "count", "Counter": "form:crush", "N": 50 }
+  },
+  {
+    "AchievementRecord": "fire-50",
+    "Name": "KINDLING",
+    "How": "Play 50 fire cards.",
+    "Said": [
+      "Fifty sparks. Something is going to catch."
+    ],
+    "Unlocks": [ "fire-repeat-relics" ],
+    "Trigger": { "Kind": "count", "Counter": "element:fire", "N": 50 }
+  },
+  {
+    "AchievementRecord": "ice-50",
+    "Name": "COLD SNAP",
+    "How": "Play 50 ice cards.",
+    "Said": [
+      "Fifty of them, and the room has not warmed since."
+    ],
+    "Unlocks": [ "ice-repeat-relics" ],
+    "Trigger": { "Kind": "count", "Counter": "element:ice", "N": 50 }
+  },
+  {
+    "AchievementRecord": "lightning-50",
+    "Name": "LIGHTNING ROD",
+    "How": "Play 50 lightning cards.",
+    "Said": [
+      "Fifty strikes in the same place. So much for the saying."
+    ],
+    "Unlocks": [ "lightning-repeat-relics" ],
+    "Trigger": { "Kind": "count", "Counter": "element:lightning", "N": 50 }
+  },
+  {
+    "AchievementRecord": "earth-50",
+    "Name": "BEDROCK",
+    "How": "Play 50 earth cards.",
+    "Said": [
+      "Fifty stones laid. It is starting to look like a foundation."
+    ],
+    "Unlocks": [ "earth-repeat-relics" ],
+    "Trigger": { "Kind": "count", "Counter": "element:earth", "N": 50 }
+  },
+  {
+    "AchievementRecord": "arcane-50",
+    "Name": "INITIATE",
+    "How": "Play 50 arcane cards.",
+    "Said": [
+      "Fifty workings, and the words have stopped feeling borrowed."
+    ],
+    "Unlocks": [ "arcane-repeat-relics" ],
+    "Trigger": { "Kind": "count", "Counter": "element:arcane", "N": 50 }
+  },
+  {
     "AchievementRecord": "slash-300",
     "Name": "THREE HUNDRED CUTS",
     "How": "Play 300 slashing cards.",
@@ -149,47 +247,6 @@
       "Nothing fancy has ever needed to be."
     ],
     "Trigger": { "Kind": "count", "Counter": "concept:Bash", "N": 200 }
-  },
-  {
-    "AchievementRecord": "tiny-but-fierce",
-    "Name": "TINY BUT FIERCE",
-    "How": "Play five free attacks of the same card in one turn.",
-    "Said": [
-      "Five of them, and the round cost you nothing at all.",
-      "A turn is bounded twice — by what you can pay and by how many cards you can put down. You found the second wall."
-    ],
-    "Trigger": {
-      "Kind": "turn",
-      "Patterns": [
-        {
-          "Clauses": [
-            { "Of": "attack", "Cost": 0, "Mode": "count", "N": 5 },
-            { "Of": "attack", "Cost": 0, "Axis": "concept", "Mode": "same" }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "AchievementRecord": "godslayer",
-    "Name": "GODSLAYER",
-    "How": "Play five 4 AP attacks of the same card in one turn.",
-    "Said": [
-      "Five of the heaviest thing the deck can become, in one breath.",
-      "Twenty points of action out of a budget that was never meant to stretch that far.",
-      "Whatever that was, it was not a duel."
-    ],
-    "Trigger": {
-      "Kind": "turn",
-      "Patterns": [
-        {
-          "Clauses": [
-            { "Of": "attack", "Cost": 4, "Mode": "count", "N": 5 },
-            { "Of": "attack", "Cost": 4, "Axis": "concept", "Mode": "same" }
-          ]
-        }
-      ]
-    }
   },
   {
     "AchievementRecord": "invulnerable",

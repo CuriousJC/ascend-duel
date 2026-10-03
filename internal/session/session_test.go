@@ -295,10 +295,10 @@ func TestTheLadderEssencesMoveOneRung(t *testing.T) {
 
 	// **The ends are joined, so no card is ever an illegal pick.** The bottom of the stab ladder
 	// demoted lands on its top rung, and the top promoted lands back on the bottom.
-	rungs := combat.Ladder(combat.Poke)
+	rungs := combat.Ladder(combat.Jab)
 	top := rungs[len(rungs)-1]
 
-	bottom := New([]combat.Card{{Concept: combat.Poke}})
+	bottom := New([]combat.Card{{Concept: combat.Jab}})
 	if !bottom.CanApply(Essence{Target: TargetDemote}, 0) {
 		t.Error("CanApply said the bottom rung could not be demoted")
 	}
@@ -313,8 +313,8 @@ func TestTheLadderEssencesMoveOneRung(t *testing.T) {
 	if !over.Apply(Essence{Target: TargetPromote}, 0) {
 		t.Fatal("promoting the top rung was refused")
 	}
-	if got, _ := over.Card(0); got.Concept != combat.Poke {
-		t.Errorf("promoting the top rung gave %v, want the bottom rung %v", got.Concept, combat.Poke)
+	if got, _ := over.Card(0); got.Concept != combat.Jab {
+		t.Errorf("promoting the top rung gave %v, want the bottom rung %v", got.Concept, combat.Jab)
 	}
 }
 

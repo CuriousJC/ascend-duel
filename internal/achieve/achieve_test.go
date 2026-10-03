@@ -74,9 +74,8 @@ func TestEveryShippedAchievementIsReachable(t *testing.T) {
 	// Every turn achievement in the file has to be satisfiable inside a turn of that size.
 	//
 	// **This checks the pattern, not the price.** A turn here is a set of cards with no budget in
-	// front of it, so a pattern that is expressible but unaffordable passes — godslayer is five
-	// 4 AP cards against a 6 AP budget and is deliberately out of reach today. What the test
-	// refuses is the other failure: a pattern no turn could satisfy at any price, which is a row
+	// front of it, so a pattern that is expressible but unaffordable passes. What the test refuses
+	// is the other failure: a pattern no turn could satisfy at any price, which is a row
 	// that looks identical to one nobody has earned yet.
 	//
 	// Four attack forms are not available at once — there are three — so this is three attack
@@ -94,33 +93,13 @@ func TestEveryShippedAchievementIsReachable(t *testing.T) {
 	prism := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Thrust", combat.Ice),
-		card("Poke", combat.Lightning),
+		card("Jab", combat.Lightning),
 		card("Skewer", combat.Earth),
-		card("Impale", combat.Arcane),
-	}
-
-	// Five of one concept at the bottom of the stab ladder, for tiny-but-fierce. `Poke` is the
-	// 0 AP rung `duelist_cards.json` ships with no copies — the deck reaches it by demoting Jabs.
-	free := []combat.Card{
-		card("Poke", combat.Fire),
-		card("Poke", combat.Ice),
-		card("Poke", combat.Lightning),
-		card("Poke", combat.Earth),
-		card("Poke", combat.Arcane),
-	}
-
-	// The same turn at the top of that ladder, for godslayer. Twenty AP, which no run can pay for
-	// today; see the note above about what this test does and does not check.
-	heaviest := []combat.Card{
-		card("Impale", combat.Fire),
-		card("Impale", combat.Ice),
-		card("Impale", combat.Lightning),
-		card("Impale", combat.Earth),
-		card("Impale", combat.Arcane),
+		card("Thrust", combat.Arcane),
 	}
 
 	reachable := map[string]bool{}
-	for _, turn := range [][]combat.Card{widest, prism, free, heaviest} {
+	for _, turn := range [][]combat.Card{widest, prism} {
 		for _, key := range Loaded().ByTurn(turn) {
 			reachable[key] = true
 		}
@@ -145,7 +124,7 @@ func TestSpectrumIsAtLeastFourElements(t *testing.T) {
 		card("Cut", combat.Ice),
 		card("Thump", combat.Lightning),
 		card("Thrust", combat.Earth),
-		card("Nick", combat.Arcane),
+		card("Slice", combat.Arcane),
 	}
 	earned := map[string]bool{}
 	for _, k := range Loaded().ByTurn(five) {
@@ -227,9 +206,9 @@ func TestPrismWantsOneShapeInEveryColor(t *testing.T) {
 	oneForm := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Thrust", combat.Ice),
-		card("Poke", combat.Lightning),
+		card("Jab", combat.Lightning),
 		card("Skewer", combat.Earth),
-		card("Impale", combat.Arcane),
+		card("Thrust", combat.Arcane),
 	}
 	oneCard := []combat.Card{
 		card("Bash", combat.Fire),
@@ -243,7 +222,7 @@ func TestPrismWantsOneShapeInEveryColor(t *testing.T) {
 		card("Cut", combat.Ice),
 		card("Thump", combat.Lightning),
 		card("Thrust", combat.Earth),
-		card("Nick", combat.Arcane),
+		card("Slice", combat.Arcane),
 	}
 
 	for _, turn := range [][]combat.Card{oneForm, oneCard} {
@@ -279,23 +258,6 @@ func TestRealmReachedIsAThreshold(t *testing.T) {
 		if !found {
 			t.Errorf("reaching realm %d must earn the fifth realm", realm)
 		}
-	}
-}
-
-// TestCardAlteredMatchesOnTheResultingCard, not on the essence. Several essences can arrive at a Flinch
-// and the achievement is about the card that came out.
-func TestCardAlteredMatchesOnTheResultingCard(t *testing.T) {
-	found := false
-	for _, k := range Loaded().ByMoment(CardAltered("Flinch")) {
-		if k == "flinch" {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("a card becoming a Flinch is the flinch achievement")
-	}
-	if got := Loaded().ByMoment(CardAltered("Brace")); len(got) != 0 {
-		t.Errorf("a Brace is not a Flinch, got %v", got)
 	}
 }
 
@@ -348,6 +310,26 @@ func TestCountersNameBothAxes(t *testing.T) {
 	if _, ok := got["form:none"]; ok {
 		t.Error("a counter must never name an absence")
 	}
+	if got["element:fire"] != 1 || got["element:ice"] != 1 || got["element:earth"] != 1 {
+		t.Errorf("each card counts once in its own element, got %v", got)
+	}
+}
+
+// TestAWildcardCountsInEveryElement. A wildcard is played as all five colors, so it is a use of
+// each; a basic card is no color and is a use of none.
+func TestAWildcardCountsInEveryElement(t *testing.T) {
+	wild := card("Jab", combat.Fire).SetRider(combat.Rider{Kind: combat.RiderWildElement})
+	got := CountersFor([]combat.Card{wild, card("Jab", combat.Basic)})
+	for _, e := range combat.AllElements {
+		name := "element:" + e.String()
+		want := 1
+		if e == combat.Basic {
+			want = 0
+		}
+		if got[name] != want {
+			t.Errorf("%s counted %d, want %d", name, got[name], want)
+		}
+	}
 }
 
 // TestAnEnemyCardCountsTowardNoForm, which is the same rule the hand matcher holds: FormNone and
@@ -364,8 +346,10 @@ func TestAnEnemyCardCountsTowardNoForm(t *testing.T) {
 // TestCountsAreAThresholdNotACrossing. ByCounts is asked once at the end of a duel against settled
 // figures, so it must report everything at or over its mark rather than what moved last.
 func TestCountsAreAThresholdNotACrossing(t *testing.T) {
-	if got := Loaded().ByCounts(map[string]int{"form:slash": 299}); len(got) != 0 {
-		t.Errorf("299 is not 300, got %v", got)
+	for _, k := range Loaded().ByCounts(map[string]int{"form:slash": 299}) {
+		if k == "slash-300" {
+			t.Error("299 is not 300")
+		}
 	}
 	for _, n := range []int{300, 301, 5000} {
 		found := false
@@ -431,11 +415,17 @@ func TestABadRecordIsRefused(t *testing.T) {
 			Kind: data.TriggerCount, Counter: "form:wibble", N: 5}},
 		{"counter naming no card", data.TriggerData{
 			Kind: data.TriggerCount, Counter: "concept:Wibble", N: 5}},
+		{"counter naming no element", data.TriggerData{
+			Kind: data.TriggerCount, Counter: "element:wibble", N: 5}},
+		{"counter naming the absence of an element", data.TriggerData{
+			Kind: data.TriggerCount, Counter: "element:basic", N: 5}},
 		{"moment naming nothing", data.TriggerData{Kind: data.TriggerMoment, Moment: "wibble"}},
 		{"realm with no realm", data.TriggerData{
 			Kind: data.TriggerMoment, Moment: MomentRealmReached}},
-		{"card-altered with no card", data.TriggerData{
-			Kind: data.TriggerMoment, Moment: MomentCardAltered}},
+		{"ladder-wrapped with no direction", data.TriggerData{
+			Kind: data.TriggerMoment, Moment: MomentLadderWrapped}},
+		{"ladder-wrapped naming no direction", data.TriggerData{
+			Kind: data.TriggerMoment, Moment: MomentLadderWrapped, Value: "sideways"}},
 		{"hand-formed with no rung", data.TriggerData{
 			Kind: data.TriggerMoment, Moment: MomentHandFormed}},
 		{"hand-formed naming no rung", data.TriggerData{
@@ -497,82 +487,6 @@ func TestAnAxisReadsTheSameWayTheHandMatcherDoes(t *testing.T) {
 	}
 }
 
-// **A cost clause reads the card's cost, not its concept's** *(2026-09-09)*. That is what makes
-// godslayer true of five promoted Skewers and false of five Impales a Hone essence has made cheap — the
-// achievement is about what the turn actually cost, and Card.Cost is where an essence's CostDelta lands.
-func TestACostClauseReadsTheCardRatherThanTheConcept(t *testing.T) {
-	turn := func(delta int) []combat.Card {
-		out := make([]combat.Card, 0, 5)
-		for _, e := range []combat.Element{
-			combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Arcane,
-		} {
-			c := card("Impale", e)
-			c.CostDelta = delta
-			out = append(out, c)
-		}
-		return out
-	}
-
-	earned := func(cards []combat.Card) bool {
-		for _, k := range Loaded().ByTurn(cards) {
-			if k == "godslayer" {
-				return true
-			}
-		}
-		return false
-	}
-
-	if !earned(turn(0)) {
-		t.Error("five plain Impales are five 4 AP attacks of one card and must earn godslayer")
-	}
-	if earned(turn(-1)) {
-		t.Error("five Impales an essence made 3 AP are not five 4 AP attacks")
-	}
-
-	// And the other direction: a Skewer an essence made dearer *is* a 4 AP attack.
-	lunges := make([]combat.Card, 0, 5)
-	for _, e := range []combat.Element{
-		combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Arcane,
-	} {
-		c := card("Skewer", e)
-		c.CostDelta = 1
-		lunges = append(lunges, c)
-	}
-	if !earned(lunges) {
-		t.Error("five Skewers an essence made 4 AP are five 4 AP attacks of one card")
-	}
-}
-
-// **Zero is a real cost filter and not an absent one**, which is the whole reason ClauseData.Cost is
-// a pointer. `duelist_cards.json` ships a 0 AP rung on every attack ladder, so "the free ones" is a
-// question the grammar has to be able to ask.
-func TestAZeroCostClauseFiltersRatherThanMatchingEverything(t *testing.T) {
-	free := []combat.Card{
-		card("Poke", combat.Fire), card("Poke", combat.Ice), card("Poke", combat.Lightning),
-		card("Poke", combat.Earth), card("Poke", combat.Arcane),
-	}
-	paid := []combat.Card{
-		card("Jab", combat.Fire), card("Jab", combat.Ice), card("Jab", combat.Lightning),
-		card("Jab", combat.Earth), card("Jab", combat.Arcane),
-	}
-
-	earned := func(cards []combat.Card) bool {
-		for _, k := range Loaded().ByTurn(cards) {
-			if k == "tiny-but-fierce" {
-				return true
-			}
-		}
-		return false
-	}
-
-	if !earned(free) {
-		t.Error("five Pokes are five free attacks of one card")
-	}
-	if earned(paid) {
-		t.Error("five 1 AP Jabs are not free; a zero cost filter must not match every card")
-	}
-}
-
 // **shields-raised is a threshold, like realm-reached.** Standing behind eleven earns the row that
 // asked for ten — a player who overshot should not be missing the step they went past.
 func TestTheShieldsMomentIsAThreshold(t *testing.T) {
@@ -593,5 +507,39 @@ func TestTheShieldsMomentIsAThreshold(t *testing.T) {
 	}
 	if !earned(11) {
 		t.Error("eleven shields must earn the row asking for ten")
+	}
+}
+
+// TestALadderWrapIsTheTwoEndsOfAThreeRungLadder. A Jab demoted to a Skewer and a Skewer promoted to
+// a Jab are the two wraps; a step along the ladder, a defense walking its two rungs and a card that
+// was removed are not.
+func TestALadderWrapIsTheTwoEndsOfAThreeRungLadder(t *testing.T) {
+	jab, thrust, skewer := card("Jab", combat.Fire), card("Thrust", combat.Fire), card("Skewer", combat.Fire)
+
+	if m, ok := LadderWrapped(jab, skewer); !ok || m.Value != WrapDown {
+		t.Errorf("a Jab demoted to a Skewer raised %+v, %v; want %q", m, ok, WrapDown)
+	}
+	if m, ok := LadderWrapped(skewer, jab); !ok || m.Value != WrapUp {
+		t.Errorf("a Skewer promoted to a Jab raised %+v, %v; want %q", m, ok, WrapUp)
+	}
+	for _, c := range [][2]combat.Card{
+		{jab, thrust}, {thrust, skewer}, {skewer, thrust},
+		{card("Brace", combat.Fire), card("Block", combat.Fire)},
+		{card("Block", combat.Fire), card("Brace", combat.Fire)},
+		{jab, {}},
+	} {
+		if m, ok := LadderWrapped(c[0], c[1]); ok {
+			t.Errorf("%v to %v raised %+v", c[0].Label(), c[1].Label(), m)
+		}
+	}
+
+	// Each direction is the achievement it names, and only that one.
+	down, _ := LadderWrapped(jab, skewer)
+	up, _ := LadderWrapped(skewer, jab)
+	if got := Loaded().ByMoment(down); len(got) != 1 || got[0] != "mighty-mouse" {
+		t.Errorf("a wrap down earned %v, want mighty-mouse", got)
+	}
+	if got := Loaded().ByMoment(up); len(got) != 1 || got[0] != "quittin-roids" {
+		t.Errorf("a wrap up earned %v, want quittin-roids", got)
 	}
 }

@@ -66,7 +66,7 @@ func TestFormSortRunsStabSlashCrushThenDefend(t *testing.T) {
 		combat.FormDefend}
 
 	hand := sortHandOf(ui.SortByForm,
-		card(combat.Guard, combat.Basic), // defend, 3
+		card(combat.Block, combat.Basic), // defend, 2
 		card(combat.Smash, combat.Ice),   // crush, 3
 		card(combat.Cut, combat.Fire),    // slash, 1
 		card(combat.Skewer, combat.Fire), // stab, 3

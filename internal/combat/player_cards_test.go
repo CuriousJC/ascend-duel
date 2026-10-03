@@ -32,7 +32,7 @@ func TestEachDefendCardRaisesItsOwnNumberOfShields(t *testing.T) {
 	for _, tc := range []struct {
 		card ConceptID
 		want int
-	}{{Brace, 1}, {Block, 2}, {Guard, 3}} {
+	}{{Brace, 1}, {Block, 2}} {
 		c := ConceptOf(tc.card)
 		if c.Amount != tc.want || c.Cost != tc.want {
 			t.Errorf("%s raises %d for %d AP, want %d for %d", c.Label, c.Amount, c.Cost, tc.want, tc.want)
@@ -101,9 +101,9 @@ func TestUnspentShieldsLapseBeforeTheirOwnerActsAgain(t *testing.T) {
 	b.SoloAttacks = true
 
 	// Round 1: A raises three and B swings at nothing, so all three survive the round.
-	_, a1, b1 := resolve(a, b, PlainCards(Guard), nil, 1)
+	_, a1, b1 := resolve(a, b, PlainCards(Block, Brace), nil, 1)
 	if a1.Shields.Count() != 3 {
-		t.Fatalf("A ended round 1 with %d shields, want the Guard's three standing", a1.Shields.Count())
+		t.Fatalf("A ended round 1 with %d shields, want the Block and the Brace's three standing", a1.Shields.Count())
 	}
 
 	// Round 2: they expire at the start of A's own turn, before anything in it resolves.
@@ -116,18 +116,17 @@ func TestUnspentShieldsLapseBeforeTheirOwnerActsAgain(t *testing.T) {
 	}
 }
 
-// **maxShields bounds one card and not a duelist** *(owner's call, 2026-09-09)*. Three Guards is
-// nine shields and is meant to be: what stops a turn raising them is the action budget, exactly as
-// it stops nine attacks. This test asserted the opposite for nine days — see Duelist.raiseShields
-// for why the argument behind the clamp did not hold.
+// **maxShields bounds one card and not a duelist** *(owner's call, 2026-09-09)*. Five Blocks is
+// ten shields and is meant to be: what stops a turn raising them is the action budget, exactly as
+// it stops ten attacks. See Duelist.raiseShields.
 func TestATurnMayRaiseMoreShieldsThanOneCardCan(t *testing.T) {
 	a := duelist(10, 12, 200)
 	b := duelist(10, 6, 200)
 
-	// Three Guards is nine shields' worth, paid for out of a budget that can afford it.
-	_, after, _ := resolve(a, b, PlainCards(Guard, Guard, Guard), nil, 1)
-	if after.Shields.Count() != 9 {
-		t.Errorf("three Guards left %d standing, want the nine they raised", after.Shields.Count())
+	// Five Blocks is ten shields' worth, paid for out of a budget that can afford it.
+	_, after, _ := resolve(a, b, PlainCards(Block, Block, Block, Block, Block), nil, 1)
+	if after.Shields.Count() != 10 {
+		t.Errorf("five Blocks left %d standing, want the ten they raised", after.Shields.Count())
 	}
 }
 
@@ -136,11 +135,11 @@ func TestATurnMayRaiseMoreShieldsThanOneCardCan(t *testing.T) {
 // scaled one past it — a card whose face promised a sixth shield would be promising something its
 // own turn can never see spent.
 func TestOneCardStillCannotRaisePastTheCap(t *testing.T) {
-	swollen := PlainCards(Guard)[0]
+	swollen := PlainCards(Block)[0]
 	swollen.AmountPct = 1000
 
 	if got := swollen.Amount(); got != maxShields {
-		t.Errorf("a Guard scaled ten times raises %d, want it held to %d", got, maxShields)
+		t.Errorf("a Block scaled ten times raises %d, want it held to %d", got, maxShields)
 	}
 }
 
@@ -162,9 +161,9 @@ func TestDefensesAreSpentWhetherOrNotTheyWereNeeded(t *testing.T) {
 	b := duelist(10, 4, 100)
 
 	// A raises two defenses into a turn with nothing to answer.
-	_, a1, b1 := resolve(a, b, PlainCards(Guard, Guard), nil, 1)
-	if a1.Shields.Count() != 6 {
-		t.Fatalf("A ended round 1 holding %d shields, want the 6 two Guards raise", a1.Shields.Count())
+	_, a1, b1 := resolve(a, b, PlainCards(Block, Block), nil, 1)
+	if a1.Shields.Count() != 4 {
+		t.Fatalf("A ended round 1 holding %d shields, want the 4 two Blocks raise", a1.Shields.Count())
 	}
 
 	// Round two: A queues nothing, so its own turn expires them before B swings.
@@ -197,11 +196,9 @@ func TestClearDefensesClearsEveryDefensiveField(t *testing.T) {
 	}
 }
 
-func TestTheAttackLadderIsThreeFormsByFiveTiers(t *testing.T) {
+func TestTheAttackLadderIsThreeFormsByThreeTiers(t *testing.T) {
 	// One concept per form per tier, and **the tiers are identical across the forms** — same
-	// cost, same damage. **Five rungs, not three** *(2026-08-24)*: the 0 AP and 4 AP ends ship at
-	// zero copies and exist only for an essence to walk a card onto, but they are rungs of the same
-	// ladder and have to match across the forms exactly as the dealt three do. That is the structural claim MECHANICS.md makes about the deck: a form
+	// cost, same damage. That is the structural claim MECHANICS.md makes about the deck: a form
 	// is which pair you are building, never a better or worse way to build one. It is also the
 	// thing that quietly breaks the first time somebody makes a Cleave hit harder than a Skewer.
 	//
@@ -217,8 +214,8 @@ func TestTheAttackLadderIsThreeFormsByFiveTiers(t *testing.T) {
 		if Plain(a).Category() != CategoryAttack || fam == FormNone {
 			continue
 		}
-		if ConceptOf(a).Cost < 0 || ConceptOf(a).Cost > 4 {
-			t.Errorf("%v costs %d, outside the 0-4 tiers the ladder is built on", a, ConceptOf(a).Cost)
+		if ConceptOf(a).Cost < 1 || ConceptOf(a).Cost > 3 {
+			t.Errorf("%v costs %d, outside the 1-3 tiers the ladder is built on", a, ConceptOf(a).Cost)
 		}
 		if tiers[fam] == nil {
 			tiers[fam] = map[int]ConceptID{}
@@ -230,13 +227,13 @@ func TestTheAttackLadderIsThreeFormsByFiveTiers(t *testing.T) {
 	}
 
 	for _, fam := range attackForms {
-		if len(tiers[fam]) != 5 {
-			t.Errorf("%v has %d of 5 tiers filled", fam, len(tiers[fam]))
+		if len(tiers[fam]) != 3 {
+			t.Errorf("%v has %d of 3 tiers filled", fam, len(tiers[fam]))
 		}
 	}
 
 	// Every form's rung deals what Stab's rung deals.
-	for tier := 0; tier <= 4; tier++ {
+	for tier := 1; tier <= 3; tier++ {
 		want, ok := tiers[FormStab][tier]
 		if !ok {
 			continue
@@ -354,8 +351,8 @@ func TestAEssencesBoundsHold(t *testing.T) {
 		t.Errorf("a card cheapened past zero costs %d, want 0", got)
 	}
 
-	// Nothing stops a blow outright, however many essences are stacked on a Guard.
-	wall := Card{Concept: Guard, AmountPct: 10000}
+	// Nothing stops a blow outright, however many essences are stacked on a Block.
+	wall := Card{Concept: Block, AmountPct: 10000}
 	if got := wall.Amount(); got >= 100 {
 		t.Errorf("a defense scaled up reduces by %d%%, and nothing may reach 100", got)
 	}
@@ -394,40 +391,30 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 		t.Errorf("demoting the promotion gave %v, want Jab", down)
 	}
 
-	// A Jab now demotes, because the ladder grew an end below it. That is the whole point of the
-	// zero-copy rungs: the essence reaches a card it used to be refused on.
-	if down, ok := Neighbor(Jab, -1); !ok || down != Poke {
-		t.Errorf("demoting a Jab gave %v, want Poke", down)
-	}
-
-	// Both ends still stop, one rung further out than they used to. A card at the top of its form
-	// cannot be promoted, and the screen asks before it offers so the player is never shown an essence
-	// that would do nothing.
-	if _, ok := Neighbor(Poke, -1); ok {
+	// Both ends stop: the plain Neighbor is the relic's door, and a relic that weakens a hand must
+	// never hand it the top rung. NeighborWrapping is the essence's door and joins them.
+	if _, ok := Neighbor(Jab, -1); ok {
 		t.Error("the bottom of a ladder was demoted")
 	}
-	if _, ok := Neighbor(Impale, 1); ok {
+	if _, ok := Neighbor(Skewer, 1); ok {
 		t.Error("the top of a ladder was promoted")
 	}
 
 	// The defenses are a ladder too, and Grow and Shrink walk it exactly as they walk an attack
-	// form. Block sits in the middle of Flinch / Brace / Block / Guard.
-	if up, ok := Neighbor(Block, 1); !ok || up != Guard {
-		t.Errorf("promoting a Block gave %v, want Guard", up)
+	// form: Brace below Block.
+	if up, ok := Neighbor(Brace, 1); !ok || up != Block {
+		t.Errorf("promoting a Brace gave %v, want Block", up)
 	}
-	if down, ok := Neighbor(Brace, -1); !ok || down != Flinch {
-		t.Errorf("demoting a Brace gave %v, want Flinch", down)
-	}
-	if _, ok := Neighbor(Flinch, -1); ok {
+	if _, ok := Neighbor(Brace, -1); ok {
 		t.Error("the bottom of the defend ladder was demoted")
 	}
-	if _, ok := Neighbor(Guard, 1); ok {
+	if _, ok := Neighbor(Block, 1); ok {
 		t.Error("the top of the defend ladder was promoted")
 	}
 
 	// The two ladders never meet: a defense promoted stays a defense, and an enemy card has no
 	// form and therefore no ladder at all.
-	if up, _ := Neighbor(Block, 1); ConceptOf(up).Verb != VerbShield {
+	if up, _ := Neighbor(Brace, 1); ConceptOf(up).Verb != VerbShield {
 		t.Error("promoting a defense produced an attack")
 	}
 }
@@ -436,7 +423,23 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 // ladder are joined rather than refusing the pick — and the plain Neighbor, which a relic reads,
 // still stops.
 func TestTheWrappingLadderJoinsItsTwoEnds(t *testing.T) {
-	for _, id := range []ConceptID{Poke, Flinch} {
+	// Every attack ladder is 1/2/3 AP and the defend ladder 1/2, so a 1 AP card demoted is the 3 AP
+	// card of its form and a Brace demoted is a Block.
+	for _, c := range []struct {
+		from ConceptID
+		step int
+		want ConceptID
+	}{
+		{Jab, -1, Skewer}, {Skewer, 1, Jab}, {Cut, -1, Cleave}, {Smash, 1, Thump},
+		{Brace, -1, Block}, {Block, 1, Brace},
+	} {
+		if got, ok := NeighborWrapping(c.from, c.step); !ok || got != c.want {
+			t.Errorf("stepping %v by %d gave %v, want %v",
+				ConceptOf(c.from).Label, c.step, ConceptOf(got).Label, ConceptOf(c.want).Label)
+		}
+	}
+
+	for _, id := range []ConceptID{Jab, Brace} {
 		rungs := Ladder(id)
 		if len(rungs) < 2 {
 			t.Fatalf("%v stands on a ladder of %d", ConceptOf(id).Label, len(rungs))
@@ -472,7 +475,7 @@ func TestTheWrappingLadderJoinsItsTwoEnds(t *testing.T) {
 
 	// The relic's door is unchanged: a card with no rung below it is left where it is, so a relic
 	// that weakens a hand can never hand it the top rung instead.
-	if _, ok := Neighbor(Poke, -1); ok {
+	if _, ok := Neighbor(Jab, -1); ok {
 		t.Error("the plain Neighbor demoted the bottom of a ladder")
 	}
 

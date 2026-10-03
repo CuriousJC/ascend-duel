@@ -101,7 +101,7 @@ func TestTheDamageLadderIsTheCardsMultiplier(t *testing.T) {
 }
 
 func TestADefenseDealsNothing(t *testing.T) {
-	for _, id := range []ConceptID{Block, Brace, Guard} {
+	for _, id := range []ConceptID{Block, Brace} {
 		if got := Plain(id).Damage(100); got != 0 {
 			t.Errorf("%v deals %d", ConceptOf(id).Label, got)
 		}
@@ -116,11 +116,12 @@ func TestACardTakesTheOtherFormsRung(t *testing.T) {
 		form Form
 		want ConceptID
 	}{
-		{Slice, FormCrush, Bash},     // 2 AP slash to the 2 AP crush
-		{Brace, FormCrush, Thump},    // a defense stops shielding and hits
-		{Bash, FormDefend, Block},    // and an attack starts shielding
-		{Impale, FormDefend, Flinch}, // the defenses stop at 3 AP, so 4 wraps to the bottom
-		{Slice, FormSlash, Slice},    // its own form is a wasted pick, not a refusal
+		{Slice, FormCrush, Bash},    // 2 AP slash to the 2 AP crush
+		{Brace, FormCrush, Thump},   // a defense stops shielding and hits
+		{Bash, FormDefend, Block},   // and an attack starts shielding
+		{Skewer, FormDefend, Brace}, // the defenses stop at 2 AP, so 3 wraps to the bottom
+		{Block, FormStab, Thrust},   // the bottom of each ladder is 1 AP, so rungs line up
+		{Slice, FormSlash, Slice},   // its own form is a wasted pick, not a refusal
 	}
 	for _, c := range cases {
 		got, ok := Counterpart(c.from, c.form)

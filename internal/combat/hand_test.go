@@ -770,7 +770,7 @@ func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 	a, b := wearing(duelist(10, 4, 20000), Ice), duelist(10, 4, 20000)
 	aPlan := []Card{Of(Bash, Ice), Of(Bash, Ice), Of(Bash, Ice)}
-	bPlan := PlainCards(Block, Jab, Bash, Guard)
+	bPlan := PlainCards(Block, Jab, Bash, Brace)
 
 	events, _, _ := resolve(a, b, aPlan, bPlan, 1)
 	order := ResolutionOrder(aPlan, bPlan)

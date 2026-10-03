@@ -27,396 +27,87 @@
   },
   {
     "ScenarioRecord": "card-full-house",
-    "Note": "The Card Full House, dealt on purpose: three Cuts and two Braces out of a hand of eight, which is 5 AP and pays 3.42x. It is the hand that says most about how the ladder is counted, because both halves of it are things a player has to be told. The rung matches on CONCEPT - data/hands.json writes match concept, groups [3, 2] - so the three Cuts are a set because they are Cuts, and the colors they happen to wear are worth nothing to it; recolor every card in this hand and the multiplier does not move. And the two Braces are DEFEND cards that join the hand like anything else: they carry a form and an element, they count toward the rung, and they bring no damage with them - so the hits are three 0.5x slashes each under a 3.42x multiplier, and the shields go up beside the hits rather than instead of them. The other three cards - a Flinch, a Jab and a Block - are there to be left behind, so the hand is a choice rather than the only five cards in the row. Giant Bat, 15 AP and a dummy, and it shares the shields fixture's deck so the refill behaves the same way. See DUELLO_SCENARIO=shields for the defences on their own.",
+    "Note": "The Card Full House, dealt on purpose: three Cuts and two Braces out of a hand of eight, which is 5 AP and pays 3.42x. It is the hand that says most about how the ladder is counted, because both halves of it are things a player has to be told. The rung matches on CONCEPT - data/hands.json writes match concept, groups [3, 2] - so the three Cuts are a set because they are Cuts, and the colors they happen to wear are worth nothing to it; recolor every card in this hand and the multiplier does not move. And the two Braces are DEFEND cards that join the hand like anything else: they carry a form and an element, they count toward the rung, and they bring no damage with them - so the hits are three 0.5x slashes each under a 3.42x multiplier, and the shields go up beside the hits rather than instead of them. The other three cards - a Thrust, a Jab and a Block - are there to be left behind, so the hand is a choice rather than the only five cards in the row. Giant Bat, 15 AP and a dummy, and it shares the shields fixture's deck so the refill behaves the same way. See DUELLO_SCENARIO=shields for the defences on their own.",
     "Relics": [],
     "Enemy": "animals-outer-bat",
     "Hand": [
-      {
-        "Card": "Flinch",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Jab",
-        "Element": "earth"
-      },
-      {
-        "Card": "Cut",
-        "Element": "ice"
-      },
-      {
-        "Card": "Cut",
-        "Element": "ice"
-      },
-      {
-        "Card": "Cut",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Brace",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Brace",
-        "Element": "earth"
-      },
-      {
-        "Card": "Block",
-        "Element": "earth"
-      }
+      { "Card": "Thrust", "Element": "arcane" },
+      { "Card": "Jab", "Element": "earth" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Cut", "Element": "arcane" },
+      { "Card": "Brace", "Element": "lightning" },
+      { "Card": "Brace", "Element": "earth" },
+      { "Card": "Block", "Element": "earth" }
     ],
     "Deck": [
-      {
-        "Card": "Flinch",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Flinch",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Flinch",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Flinch",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Flinch",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Jab",
-        "Element": "fire"
-      },
-      {
-        "Card": "Jab",
-        "Element": "ice"
-      },
-      {
-        "Card": "Jab",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Jab",
-        "Element": "earth"
-      },
-      {
-        "Card": "Jab",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Cut",
-        "Element": "fire"
-      },
-      {
-        "Card": "Cut",
-        "Element": "ice"
-      },
-      {
-        "Card": "Cut",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Cut",
-        "Element": "earth"
-      },
-      {
-        "Card": "Cut",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Bash",
-        "Element": "fire"
-      },
-      {
-        "Card": "Bash",
-        "Element": "ice"
-      },
-      {
-        "Card": "Bash",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Bash",
-        "Element": "earth"
-      },
-      {
-        "Card": "Bash",
-        "Element": "arcane"
-      }
+      { "Card": "Brace", "Element": "fire", "Copies": 2 },
+      { "Card": "Brace", "Element": "ice", "Copies": 2 },
+      { "Card": "Brace", "Element": "lightning", "Copies": 2 },
+      { "Card": "Brace", "Element": "earth", "Copies": 2 },
+      { "Card": "Brace", "Element": "arcane", "Copies": 2 },
+      { "Card": "Block", "Element": "fire", "Copies": 2 },
+      { "Card": "Block", "Element": "ice", "Copies": 2 },
+      { "Card": "Block", "Element": "lightning", "Copies": 2 },
+      { "Card": "Block", "Element": "earth", "Copies": 2 },
+      { "Card": "Block", "Element": "arcane", "Copies": 2 },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Jab", "Element": "ice" },
+      { "Card": "Jab", "Element": "lightning" },
+      { "Card": "Jab", "Element": "earth" },
+      { "Card": "Jab", "Element": "arcane" },
+      { "Card": "Cut", "Element": "fire" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Cut", "Element": "lightning" },
+      { "Card": "Cut", "Element": "earth" },
+      { "Card": "Cut", "Element": "arcane" },
+      { "Card": "Bash", "Element": "fire" },
+      { "Card": "Bash", "Element": "ice" },
+      { "Card": "Bash", "Element": "lightning" },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Bash", "Element": "arcane" }
     ],
     "Actions": 15,
     "Dummy": true
   },
   {
     "ScenarioRecord": "shields",
-    "Note": "The shields, on their own: what a defend card raises, what one eats, and how the break is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is two thirds defend cards across all five colors - Flinch at 0 AP, Brace at 1, Block at 2, Guard at 3 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside the hits rather than instead of them. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature's HEAVIEST blow, not its first, and it decides that at the top of the creature's turn. Watch the beat between the two turns, where the blocked pips fly out of the duelist card into the card they kill and the crack opens across its face. The pip row along the bottom of the duelist card draws at most six - screens.maxShieldPips - so a turn that raises ten draws a full row and the true count is on the engine. Against a dummy, so it can be watched as many times as it takes rather than survived.",
+    "Note": "The shields, on their own: what a defend card raises, what one eats, and how the break is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is mostly defend cards across all five colors - Brace at 1 AP and Block at 2 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside the hits rather than instead of them. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature's HEAVIEST blow, not its first, and it decides that at the top of the creature's turn. Watch the beat between the two turns, where the blocked pips fly out of the duelist card into the card they kill and the crack opens across its face. The pip row along the bottom of the duelist card draws at most six - screens.maxShieldPips - so a turn that raises ten draws a full row and the true count is on the engine. Against a dummy, so it can be watched as many times as it takes rather than survived.",
     "Relics": [],
     "Enemy": "animals-outer-bat",
     "Hand": [
-      {
-        "Card": "Brace",
-        "Element": "fire"
-      },
-      {
-        "Card": "Block",
-        "Element": "ice"
-      },
-      {
-        "Card": "Guard",
-        "Element": "earth"
-      },
-      {
-        "Card": "Bash",
-        "Element": "fire"
-      },
-      {
-        "Card": "Cut",
-        "Element": "ice"
-      }
+      { "Card": "Brace", "Element": "fire" },
+      { "Card": "Block", "Element": "ice" },
+      { "Card": "Block", "Element": "earth" },
+      { "Card": "Bash", "Element": "fire" },
+      { "Card": "Cut", "Element": "ice" }
     ],
     "Deck": [
-      {
-        "Card": "Flinch",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Flinch",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Flinch",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Flinch",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Flinch",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Brace",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Block",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Guard",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Jab",
-        "Element": "fire"
-      },
-      {
-        "Card": "Jab",
-        "Element": "ice"
-      },
-      {
-        "Card": "Jab",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Jab",
-        "Element": "earth"
-      },
-      {
-        "Card": "Jab",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Cut",
-        "Element": "fire"
-      },
-      {
-        "Card": "Cut",
-        "Element": "ice"
-      },
-      {
-        "Card": "Cut",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Cut",
-        "Element": "earth"
-      },
-      {
-        "Card": "Cut",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Bash",
-        "Element": "fire"
-      },
-      {
-        "Card": "Bash",
-        "Element": "ice"
-      },
-      {
-        "Card": "Bash",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Bash",
-        "Element": "earth"
-      },
-      {
-        "Card": "Bash",
-        "Element": "arcane"
-      }
+      { "Card": "Brace", "Element": "fire", "Copies": 2 },
+      { "Card": "Brace", "Element": "ice", "Copies": 2 },
+      { "Card": "Brace", "Element": "lightning", "Copies": 2 },
+      { "Card": "Brace", "Element": "earth", "Copies": 2 },
+      { "Card": "Brace", "Element": "arcane", "Copies": 2 },
+      { "Card": "Block", "Element": "fire", "Copies": 2 },
+      { "Card": "Block", "Element": "ice", "Copies": 2 },
+      { "Card": "Block", "Element": "lightning", "Copies": 2 },
+      { "Card": "Block", "Element": "earth", "Copies": 2 },
+      { "Card": "Block", "Element": "arcane", "Copies": 2 },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Jab", "Element": "ice" },
+      { "Card": "Jab", "Element": "lightning" },
+      { "Card": "Jab", "Element": "earth" },
+      { "Card": "Jab", "Element": "arcane" },
+      { "Card": "Cut", "Element": "fire" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Cut", "Element": "lightning" },
+      { "Card": "Cut", "Element": "earth" },
+      { "Card": "Cut", "Element": "arcane" },
+      { "Card": "Bash", "Element": "fire" },
+      { "Card": "Bash", "Element": "ice" },
+      { "Card": "Bash", "Element": "lightning" },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Bash", "Element": "arcane" }
     ],
     "Actions": 15,
     "Dummy": true
@@ -430,138 +121,27 @@
       "flip-earth-to-ice"
     ],
     "Deck": [
-      {
-        "Card": "Poke",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Poke",
-        "Element": "ice"
-      },
-      {
-        "Card": "Poke",
-        "Element": "fire"
-      },
-      {
-        "Card": "Jab",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Jab",
-        "Element": "ice"
-      },
-      {
-        "Card": "Jab",
-        "Element": "fire"
-      },
-      {
-        "Card": "Thrust",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Thrust",
-        "Element": "ice"
-      },
-      {
-        "Card": "Thrust",
-        "Element": "fire"
-      },
-      {
-        "Card": "Skewer",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Skewer",
-        "Element": "ice"
-      },
-      {
-        "Card": "Skewer",
-        "Element": "fire"
-      },
-      {
-        "Card": "Impale",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Impale",
-        "Element": "ice"
-      },
-      {
-        "Card": "Impale",
-        "Element": "fire"
-      },
-      {
-        "Card": "Nick",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Nick",
-        "Element": "ice"
-      },
-      {
-        "Card": "Nick",
-        "Element": "fire"
-      },
-      {
-        "Card": "Cut",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Cut",
-        "Element": "ice"
-      },
-      {
-        "Card": "Cut",
-        "Element": "fire"
-      },
-      {
-        "Card": "Slice",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Slice",
-        "Element": "ice"
-      },
-      {
-        "Card": "Slice",
-        "Element": "fire"
-      },
-      {
-        "Card": "Cleave",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Cleave",
-        "Element": "ice"
-      },
-      {
-        "Card": "Cleave",
-        "Element": "fire"
-      },
-      {
-        "Card": "Sever",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Sever",
-        "Element": "ice"
-      },
-      {
-        "Card": "Sever",
-        "Element": "fire"
-      },
-      {
-        "Card": "Tap",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Tap",
-        "Element": "ice"
-      },
-      {
-        "Card": "Tap",
-        "Element": "fire"
-      }
+      { "Card": "Jab", "Element": "lightning" },
+      { "Card": "Jab", "Element": "ice" },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Thrust", "Element": "lightning" },
+      { "Card": "Thrust", "Element": "ice" },
+      { "Card": "Thrust", "Element": "fire" },
+      { "Card": "Skewer", "Element": "lightning" },
+      { "Card": "Skewer", "Element": "ice" },
+      { "Card": "Skewer", "Element": "fire" },
+      { "Card": "Cut", "Element": "lightning" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Cut", "Element": "fire" },
+      { "Card": "Slice", "Element": "lightning" },
+      { "Card": "Slice", "Element": "ice" },
+      { "Card": "Slice", "Element": "fire" },
+      { "Card": "Cleave", "Element": "lightning" },
+      { "Card": "Cleave", "Element": "ice" },
+      { "Card": "Cleave", "Element": "fire" },
+      { "Card": "Thump", "Element": "lightning" },
+      { "Card": "Thump", "Element": "ice" },
+      { "Card": "Thump", "Element": "fire" }
     ],
     "Actions": 15,
     "Dummy": true
@@ -657,121 +237,21 @@
     "Note": "A deck of nothing but slashes, against a dummy that cannot die, so a form-axis hand can be built over and over without a fight ending. Written by go run ./tools/scenariodeck -form slash -size 40 and pasted in literally, which is the whole argument for a generator over a filter vocabulary: what is in the file is the list, so it can be read and checked. Every rung of the form ladder up to Five of a Kind is reachable every turn here, which is the deal a real deck almost never gives you - so it is the bench for a form-hand relic, a stone on a form rung, or just watching what a Form Full House looks like when it lands. Swap the -form for stab or crush, or take the dummy off, and it is a different bench.",
     "Relics": [],
     "Deck": [
-      {
-        "Card": "Nick",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Nick",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Nick",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Nick",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Nick",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Cut",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Cut",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Cut",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Cut",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Cut",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Slice",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Slice",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Slice",
-        "Element": "lightning",
-        "Copies": 2
-      },
-      {
-        "Card": "Slice",
-        "Element": "earth",
-        "Copies": 2
-      },
-      {
-        "Card": "Slice",
-        "Element": "arcane",
-        "Copies": 2
-      },
-      {
-        "Card": "Cleave",
-        "Element": "fire"
-      },
-      {
-        "Card": "Cleave",
-        "Element": "ice"
-      },
-      {
-        "Card": "Cleave",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Cleave",
-        "Element": "earth"
-      },
-      {
-        "Card": "Cleave",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Sever",
-        "Element": "fire"
-      },
-      {
-        "Card": "Sever",
-        "Element": "ice"
-      },
-      {
-        "Card": "Sever",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Sever",
-        "Element": "earth"
-      },
-      {
-        "Card": "Sever",
-        "Element": "arcane"
-      }
+      { "Card": "Cut", "Element": "fire", "Copies": 3 },
+      { "Card": "Cut", "Element": "ice", "Copies": 3 },
+      { "Card": "Cut", "Element": "lightning", "Copies": 3 },
+      { "Card": "Cut", "Element": "earth", "Copies": 3 },
+      { "Card": "Cut", "Element": "arcane", "Copies": 3 },
+      { "Card": "Slice", "Element": "fire", "Copies": 3 },
+      { "Card": "Slice", "Element": "ice", "Copies": 3 },
+      { "Card": "Slice", "Element": "lightning", "Copies": 3 },
+      { "Card": "Slice", "Element": "earth", "Copies": 3 },
+      { "Card": "Slice", "Element": "arcane", "Copies": 3 },
+      { "Card": "Cleave", "Element": "fire", "Copies": 2 },
+      { "Card": "Cleave", "Element": "ice", "Copies": 2 },
+      { "Card": "Cleave", "Element": "lightning", "Copies": 2 },
+      { "Card": "Cleave", "Element": "earth", "Copies": 2 },
+      { "Card": "Cleave", "Element": "arcane", "Copies": 2 }
     ],
     "Hand": [],
     "Dummy": true,
@@ -1198,26 +678,11 @@
       "hp-scale"
     ],
     "Hand": [
-      {
-        "Card": "Bash",
-        "Element": "fire"
-      },
-      {
-        "Card": "Jab",
-        "Element": "ice"
-      },
-      {
-        "Card": "Skewer",
-        "Element": "basic"
-      },
-      {
-        "Card": "Guard",
-        "Element": "fire"
-      },
-      {
-        "Card": "Brace",
-        "Element": "fire"
-      }
+      { "Card": "Bash", "Element": "fire" },
+      { "Card": "Jab", "Element": "ice" },
+      { "Card": "Skewer", "Element": "basic" },
+      { "Card": "Block", "Element": "fire" },
+      { "Card": "Brace", "Element": "fire" }
     ],
     "Enemy": "magic-users-boss-archmage",
     "Fight": 2
@@ -1417,29 +882,14 @@
   },
   {
     "ScenarioRecord": "achievement-toast",
-    "Note": "Four cheap attacks across three forms and four elements, plus a defense: one turn that earns Spectrum, Weaponmaster and Arsenal at once, which is three toasts in a row and the only way to see the queue drain. Poke, Nick and Tap are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Arsenal cannot both land on one turn. The awards are written to the real profile; point DUELLO_PROFILE at an empty directory to see them land again.",
+    "Note": "Four cheap attacks across three forms and four elements, plus a defense: one turn that earns Spectrum, Weaponmaster and Arsenal at once, which is three toasts in a row and the only way to see the queue drain. Jab, Cut and Thump are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Arsenal cannot both land on one turn. The awards are written to the real profile; point DUELLO_PROFILE at an empty directory to see them land again.",
     "Relics": [],
     "Hand": [
-      {
-        "Card": "Poke",
-        "Element": "fire"
-      },
-      {
-        "Card": "Nick",
-        "Element": "ice"
-      },
-      {
-        "Card": "Tap",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Poke",
-        "Element": "earth"
-      },
-      {
-        "Card": "Brace",
-        "Element": "arcane"
-      }
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Thump", "Element": "lightning" },
+      { "Card": "Jab", "Element": "earth" },
+      { "Card": "Brace", "Element": "arcane" }
     ],
     "Screen": "combat",
     "Fight": 0,
@@ -1553,29 +1003,14 @@
   },
   {
     "ScenarioRecord": "one-punch",
-    "Note": "An easy button: five Pulverizes in one element, a budget that pays for all of them, and the weakest creature in the game. Press DUEL! once and the fight is over, so the reward screen's essence offer is one click away.",
+    "Note": "An easy button: five Smashes in one element, a budget that pays for all of them, and the weakest creature in the game. Press DUEL! once and the fight is over, so the reward screen's essence offer is one click away.",
     "Relics": [],
     "Hand": [
-      {
-        "Card": "Pulverize",
-        "Element": "fire"
-      },
-      {
-        "Card": "Pulverize",
-        "Element": "fire"
-      },
-      {
-        "Card": "Pulverize",
-        "Element": "fire"
-      },
-      {
-        "Card": "Pulverize",
-        "Element": "fire"
-      },
-      {
-        "Card": "Pulverize",
-        "Element": "fire"
-      }
+      { "Card": "Smash", "Element": "fire" },
+      { "Card": "Smash", "Element": "fire" },
+      { "Card": "Smash", "Element": "fire" },
+      { "Card": "Smash", "Element": "fire" },
+      { "Card": "Smash", "Element": "fire" }
     ],
     "Enemy": "animals-outer-bat",
     "Screen": "combat",
@@ -1583,17 +1018,13 @@
   },
   {
     "ScenarioRecord": "the-heart",
-    "Note": "What a growing relic's counter looks like as it grows. The Heart is worn alone - +5 HP now and 5 more for every fight won - so the disc in the corner of its card is the only figure on the pane that moves, and it starts at 5 rather than at nothing, which is the thing the badge is easiest to misread about. The deck is forty Pulverizes in one element and the budget pays for five of them, so a fight is one press of DUEL! and the counter can be watched across four or five wins in a couple of minutes: 5, 10, 15. Read it in three places - the relic pane during the fight, the shop's worn row between them, and the tooltip, which is where the figure is said in words. The Giant Bat is the opening room's own creature and the journey takes over from the second fight, so the opponents get real without the deck doing.",
+    "Note": "What a growing relic's counter looks like as it grows. The Heart is worn alone - +5 HP now and 5 more for every fight won - so the disc in the corner of its card is the only figure on the pane that moves, and it starts at 5 rather than at nothing, which is the thing the badge is easiest to misread about. The deck is forty Smashes in one element and the budget pays for five of them, so a fight is one press of DUEL! and the counter can be watched across four or five wins in a couple of minutes: 5, 10, 15. Read it in three places - the relic pane during the fight, the shop's worn row between them, and the tooltip, which is where the figure is said in words. The Giant Bat is the opening room's own creature and the journey takes over from the second fight, so the opponents get real without the deck doing.",
     "Relics": [
       "hp-scale"
     ],
     "Hand": [],
     "Deck": [
-      {
-        "Card": "Pulverize",
-        "Element": "fire",
-        "Copies": 40
-      }
+      { "Card": "Smash", "Element": "fire", "Copies": 40 }
     ],
     "Enemy": "animals-outer-bat",
     "Screen": "combat",
@@ -1616,18 +1047,18 @@
   },
   {
     "ScenarioRecord": "twenty-five-in-hand",
-    "Note": "Twenty-five cards in the hand at once, which is three times what a fight ever deals and is here to answer one question: what does the row look like when handPitch runs out of room. There is no floor on the pitch - see combat_actionbox.go, where the deliberate choice is that a hand which has to be scrolled or truncated is worse than one which has to be hovered - so the row lands exactly on the band's width whatever is in it and the cards overlap until they are stripes of color. That is what makes the five elements the thing to look at: the border and the left column are what survive compression, and the effect text and the form mark are the first things to go. Five cards in each color and all four forms across them, with costs from 0 to 3, so the tick column varies down the row as well as across it. Note the hand refills to eight the moment a turn is played - handTarget reads handSize and nothing here widens it - so the twenty-five is the opening hand and one DUEL! ends it. Against a dummy at 15 AP so the row can be hovered, dragged and re-sorted for as long as it is interesting; press E and C to see the compressed row reorganise.",
+    "Note": "Twenty-five cards in the hand at once, which is three times what a fight ever deals and is here to answer one question: what does the row look like when handPitch runs out of room. There is no floor on the pitch - see combat_actionbox.go, where the deliberate choice is that a hand which has to be scrolled or truncated is worse than one which has to be hovered - so the row lands exactly on the band's width whatever is in it and the cards overlap until they are stripes of color. That is what makes the five elements the thing to look at: the border and the left column are what survive compression, and the effect text and the form mark are the first things to go. Five cards in each color and all four forms across them, with costs from 1 to 3, so the tick column varies down the row as well as across it. Note the hand refills to eight the moment a turn is played - handTarget reads handSize and nothing here widens it - so the twenty-five is the opening hand and one DUEL! ends it. Against a dummy at 15 AP so the row can be hovered, dragged and re-sorted for as long as it is interesting; press E and C to see the compressed row reorganise.",
     "Relics": [],
     "Hand": [
-      { "Card": "Poke", "Element": "fire" },
-      { "Card": "Nick", "Element": "fire" },
-      { "Card": "Tap", "Element": "fire" },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Cut", "Element": "fire" },
+      { "Card": "Thump", "Element": "fire" },
       { "Card": "Brace", "Element": "fire" },
       { "Card": "Thrust", "Element": "fire" },
       { "Card": "Jab", "Element": "ice" },
       { "Card": "Cut", "Element": "ice" },
       { "Card": "Thump", "Element": "ice" },
-      { "Card": "Flinch", "Element": "ice" },
+      { "Card": "Brace", "Element": "ice" },
       { "Card": "Slice", "Element": "ice" },
       { "Card": "Thrust", "Element": "lightning" },
       { "Card": "Slice", "Element": "lightning" },
@@ -1637,11 +1068,11 @@
       { "Card": "Skewer", "Element": "earth" },
       { "Card": "Cleave", "Element": "earth" },
       { "Card": "Smash", "Element": "earth" },
-      { "Card": "Guard", "Element": "earth" },
+      { "Card": "Block", "Element": "earth" },
       { "Card": "Bash", "Element": "earth" },
-      { "Card": "Impale", "Element": "arcane" },
-      { "Card": "Sever", "Element": "arcane" },
-      { "Card": "Pulverize", "Element": "arcane" },
+      { "Card": "Skewer", "Element": "arcane" },
+      { "Card": "Cleave", "Element": "arcane" },
+      { "Card": "Smash", "Element": "arcane" },
       { "Card": "Brace", "Element": "arcane" },
       { "Card": "Cut", "Element": "arcane" }
     ],
@@ -1734,15 +1165,15 @@
       "play-dmgx"
     ],
     "Hand": [
-      { "Card": "Poke", "Element": "fire" },
-      { "Card": "Nick", "Element": "fire" },
-      { "Card": "Tap", "Element": "fire" },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Cut", "Element": "fire" },
+      { "Card": "Thump", "Element": "fire" },
       { "Card": "Brace", "Element": "fire" },
       { "Card": "Thrust", "Element": "fire" },
       { "Card": "Jab", "Element": "ice" },
       { "Card": "Cut", "Element": "ice" },
       { "Card": "Thump", "Element": "ice" },
-      { "Card": "Flinch", "Element": "ice" },
+      { "Card": "Brace", "Element": "ice" },
       { "Card": "Slice", "Element": "ice" },
       { "Card": "Thrust", "Element": "lightning" },
       { "Card": "Slice", "Element": "lightning" },
@@ -1752,11 +1183,11 @@
       { "Card": "Skewer", "Element": "earth" },
       { "Card": "Cleave", "Element": "earth" },
       { "Card": "Smash", "Element": "earth" },
-      { "Card": "Guard", "Element": "earth" },
+      { "Card": "Block", "Element": "earth" },
       { "Card": "Bash", "Element": "earth" },
-      { "Card": "Impale", "Element": "arcane" },
-      { "Card": "Sever", "Element": "arcane" },
-      { "Card": "Pulverize", "Element": "arcane" },
+      { "Card": "Skewer", "Element": "arcane" },
+      { "Card": "Cleave", "Element": "arcane" },
+      { "Card": "Smash", "Element": "arcane" },
       { "Card": "Brace", "Element": "arcane" },
       { "Card": "Cut", "Element": "arcane" }
     ],
@@ -1836,7 +1267,7 @@
   },
   {
     "ScenarioRecord": "ten-rings-ten-runes",
-    "Note": "Ten rings on the fingers and ten runes in the sack, on a fight that can be won in one press. It is the fixture for what the worn row and the sack look like when both are full of things that do not match each other: ten different families, so no two rings are the same picture, and all three rarity borders on screen at once. The ten runes are one for every shape a rune can take, which is the set DUELLO_SCENARIO=ten-runes reads on its own. The hand is five Pulverizes in one element against the weakest creature in the game with a budget that pays for all of them, so DUEL! ends the fight and the reward screen and then the shop are each one click away - and the purse is set well past the dearest thing on a shelf, so the shop is a row to be looked at rather than a sum to be counted. Nothing here is tuned: ten relics firing into one sum is a picture of a laid-out screen rather than a balance question.",
+    "Note": "Ten rings on the fingers and ten runes in the sack, on a fight that can be won in one press. It is the fixture for what the worn row and the sack look like when both are full of things that do not match each other: ten different families, so no two rings are the same picture, and all three rarity borders on screen at once. The ten runes are one for every shape a rune can take, which is the set DUELLO_SCENARIO=ten-runes reads on its own. The hand is five Smashes in one element against the weakest creature in the game with a budget that pays for all of them, so DUEL! ends the fight and the reward screen and then the shop are each one click away - and the purse is set well past the dearest thing on a shelf, so the shop is a row to be looked at rather than a sum to be counted. Nothing here is tuned: ten relics firing into one sum is a picture of a laid-out screen rather than a balance question.",
     "Relics": [
       "dmgx-fire",
       "jar-ice",
@@ -1863,11 +1294,11 @@
       "add-vitae"
     ],
     "Hand": [
-      { "Card": "Pulverize", "Element": "fire" },
-      { "Card": "Pulverize", "Element": "fire" },
-      { "Card": "Pulverize", "Element": "fire" },
-      { "Card": "Pulverize", "Element": "fire" },
-      { "Card": "Pulverize", "Element": "fire" }
+      { "Card": "Smash", "Element": "fire" },
+      { "Card": "Smash", "Element": "fire" },
+      { "Card": "Smash", "Element": "fire" },
+      { "Card": "Smash", "Element": "fire" },
+      { "Card": "Smash", "Element": "fire" }
     ],
     "Enemy": "animals-outer-bat",
     "Screen": "combat",
@@ -1877,7 +1308,13 @@
   {
     "ScenarioRecord": "life-relics",
     "Note": "Two flips that chain and the two life relics, on a real duelist with a readable health bar. The deck is half lightning and half ice; Frozen Lightning is worn left of Meltdown, so a lightning card is dealt ice and then fire - two steps, two beats, a toast on each ring - while a native ice card takes the second step alone. That is combat.DealSteps carrying a running element through the worn list, and the worn order is what decides it: swap the two rings and lightning stays lightning, because Meltdown reads the card before Frozen Lightning has touched it. Vampiric Fang gives back 3/10 of every hit and The Tear restores 1/4 of maximum life at the top of each turn, so the two life gestures are side by side: a drain leaves the body it was taken out of, a regeneration leaves the ring that made it. It has NO Hand on purpose - a plugged hand is seated straight out of the run and never goes through drawHand, so it would show the cards unflipped and the cascade would not run at all. It is not a dummy for the same kind of reason: 999999 life each way makes both life figures land on a bar that cannot visibly move. The Rabbit's Foot is worn last, so every gold and silver card in the deck reads 2 IN 5 rather than 1 IN 5 on its tooltip and pays that often - and if anything shocks the duelist, their own miss chance reads 1/2 rather than 1/4, which is the drawback the relic is honest about. Round one heals nothing either way, since nothing in the game heals above full.",
-    "Relics": ["flip-lightning-to-ice", "flip-ice-to-fire", "drain-blow", "heal-turn-start", "scale-rolls"],
+    "Relics": [
+      "flip-lightning-to-ice",
+      "flip-ice-to-fire",
+      "drain-blow",
+      "heal-turn-start",
+      "scale-rolls"
+    ],
     "Enemy": "draconics-outer-basilisk",
     "RoundLimit": 20,
     "Deck": [
@@ -1886,7 +1323,7 @@
       { "Card": "Bash", "Element": "ice", "Copies": 8 },
       { "Card": "Jab", "Element": "ice", "Copies": 4 },
       { "Card": "Jab", "Element": "ice", "Copies": 4, "Riders": ["golden:5"] },
-      { "Card": "Poke", "Element": "lightning", "Copies": 4, "Riders": ["silver:5"] }
+      { "Card": "Jab", "Element": "lightning", "Copies": 4, "Riders": ["silver:5"] }
     ],
     "Actions": 10
   },
@@ -2075,7 +1512,7 @@
   },
   {
     "ScenarioRecord": "ladder-wrap",
-    "Note": "Ten essences in the consumables pane - five Essence of Strength, five Essence of Weakness - carried into a duel rather than spent at a reward. Select one card in the hand, click an essence, and the card walks its own form's ladder a rung. The question it exists for is the two ends: the ladder is a ring, so demoting the Poke gives an Impale and promoting the Impale gives a Poke, and the same round trip runs on Flinch and Guard down the defend ladder. The eight cards are the two ends of the stab ladder, the two ends of the defend ladder, and four middles, which is what says a rung in the middle still just steps. Nothing goes dim for being pointless - an essence is lit whenever exactly one card is selected - so a wasted pick is the player's to make. Against a dummy at 15 AP, so the hand can be walked up and down for as long as it is interesting.",
+    "Note": "Ten essences in the consumables pane - five Essence of Strength, five Essence of Weakness - carried into a duel rather than spent at a reward. Select one card in the hand, click an essence, and the card walks its own form's ladder a rung. The question it exists for is the two ends: the ladder is a ring, so demoting the Jab gives a Skewer and promoting the Skewer gives a Jab, and the same round trip runs on Brace and Block, the defend ladder's only two rungs. The eight cards are the two ends of the stab ladder, the two ends of the defend ladder, and four others, which is what says a rung in the middle still just steps. Nothing goes dim for being pointless - an essence is lit whenever exactly one card is selected - so a wasted pick is the player's to make. Against a dummy at 15 AP, so the hand can be walked up and down for as long as it is interesting.",
     "Relics": [],
     "Essences": [
       "add-ap",
@@ -2090,14 +1527,14 @@
       "demote"
     ],
     "Hand": [
-      { "Card": "Poke", "Element": "fire" },
-      { "Card": "Impale", "Element": "ice" },
-      { "Card": "Flinch", "Element": "earth" },
-      { "Card": "Guard", "Element": "arcane" },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Skewer", "Element": "ice" },
+      { "Card": "Brace", "Element": "earth" },
+      { "Card": "Block", "Element": "arcane" },
       { "Card": "Thrust", "Element": "lightning" },
       { "Card": "Slice", "Element": "fire" },
       { "Card": "Bash", "Element": "ice" },
-      { "Card": "Block", "Element": "earth" }
+      { "Card": "Cut", "Element": "earth" }
     ],
     "Enemy": "animals-outer-rat",
     "Dummy": true,
@@ -2224,11 +1661,14 @@
   },
   {
     "ScenarioRecord": "cost-shift",
-    "Note": "Two essences in the consumables pane - one Essence of Ease, one Essence of Strength - carried into a duel. Select one card, click an essence: Ease takes 1 AP off that card's cost and leaves it the same card, Strength promotes it a rung up its form's ladder, which costs 1 AP more. The hand runs from a 0 AP Poke to a 3 AP Smash, so Ease can be tried on a card already free (the cost floors at zero) and Strength on a cheap card and a dear one. Against a dummy at 15 AP, so the changed card can be played and the AP bar read for as long as it is interesting.",
+    "Note": "Two essences in the consumables pane - one Essence of Ease, one Essence of Strength - carried into a duel. Select one card, click an essence: Ease takes 1 AP off that card's cost and leaves it the same card, Strength promotes it a rung up its form's ladder, which costs 1 AP more. The hand runs from 1 AP cards to a 3 AP Smash, so Ease can take a 1 AP card to free (the cost floors at zero) and Strength can be tried on a cheap card and a dear one - a 3 AP card promoted wraps round to the 1 AP card of its form. Against a dummy at 15 AP, so the changed card can be played and the AP bar read for as long as it is interesting.",
     "Relics": [],
-    "Essences": ["remove-ap", "add-ap"],
+    "Essences": [
+      "remove-ap",
+      "add-ap"
+    ],
     "Hand": [
-      { "Card": "Poke", "Element": "fire" },
+      { "Card": "Thump", "Element": "fire" },
       { "Card": "Jab", "Element": "ice" },
       { "Card": "Thrust", "Element": "lightning" },
       { "Card": "Bash", "Element": "earth" },
@@ -2425,82 +1865,5 @@
     "Enemy": "animals-outer-bat",
     "Screen": "combat",
     "Dummy": true
-  },
-  {
-    "ScenarioRecord": "headsman",
-    "Note": "The Headsman worn alone: every Sever (4 AP slash) deals 4x DMG. Sever ships at zero copies, so the deck is built around it - four Severs among Cleaves, Slices and Cuts, two of them in the opening hand beside a plain Cleave and a Slice to compare against. Hover a Sever to read the relic's term in the arithmetic, play one and watch the toast. The fight is a dummy so it never ends, and the budget is 8 so two Severs fit in one turn.",
-    "Relics": [
-      "headsman"
-    ],
-    "Deck": [
-      {
-        "Card": "Sever",
-        "Element": "fire",
-        "Copies": 2
-      },
-      {
-        "Card": "Sever",
-        "Element": "ice",
-        "Copies": 2
-      },
-      {
-        "Card": "Cleave",
-        "Element": "earth",
-        "Copies": 4
-      },
-      {
-        "Card": "Slice",
-        "Element": "arcane",
-        "Copies": 4
-      },
-      {
-        "Card": "Cut",
-        "Element": "lightning",
-        "Copies": 4
-      },
-      {
-        "Card": "Block",
-        "Element": "fire",
-        "Copies": 2
-      }
-    ],
-    "Hand": [
-      {
-        "Card": "Sever",
-        "Element": "fire"
-      },
-      {
-        "Card": "Sever",
-        "Element": "ice"
-      },
-      {
-        "Card": "Cleave",
-        "Element": "earth"
-      },
-      {
-        "Card": "Slice",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Cut",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Cut",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Slice",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Block",
-        "Element": "fire"
-      }
-    ],
-    "Enemy": "animals-outer-bat",
-    "Screen": "combat",
-    "Dummy": true,
-    "Actions": 8
   }
 ]

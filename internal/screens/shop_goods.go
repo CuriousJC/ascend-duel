@@ -37,7 +37,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -671,12 +670,10 @@ func (g *goods) tickShowing(gs *state.GlobalState) {
 		g.applyNow(gs.Run)
 		trace.Logf("shop", "vial of essence applied, deck now %d", gs.Run.Size())
 
-		// **The same moment the post-battle screen raises**, because it is the same event: a card in
-		// the run's deck is now a different card. Skipped for a removal, which leaves nothing to name.
+		// **The same moment the post-battle screen raises**, because it is the same event. Skipped
+		// for a removal, which leaves nothing to have wrapped.
 		if !g.removes {
-			for _, l := range g.lands {
-				earnMoment(gs, achieve.CardAltered(l.after.Label()))
-			}
+			earnLadderWraps(gs, g.lands)
 		}
 	}
 	g.reset()

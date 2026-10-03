@@ -76,7 +76,7 @@ func TestTheSatchelCarriesEssencesIntoAFight(t *testing.T) {
 // piles, so a card in the hand is found by its identity and never by a deck position.
 func TestAnEssenceIsAimedByIdentityMidFight(t *testing.T) {
 	_, promote := anyWithEssenceTarget(t, TargetPromote)
-	run := runWith(combat.Plain(combat.Poke), combat.Plain(combat.Jab))
+	run := runWith(combat.Plain(combat.Smash), combat.Plain(combat.Jab))
 
 	second := ids(run)[1]
 	if !run.CanApplyTo(promote, second) {
@@ -102,7 +102,7 @@ func TestAnEssenceIsAimedByIdentityMidFight(t *testing.T) {
 	if got.Concept != up {
 		t.Errorf("the named card became %v, want %v", got.Concept, up)
 	}
-	if first, _ := run.Card(0); first.Concept != combat.Poke {
+	if first, _ := run.Card(0); first.Concept != combat.Smash {
 		t.Errorf("the card beside it became %v", first.Concept)
 	}
 }

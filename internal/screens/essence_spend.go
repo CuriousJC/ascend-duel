@@ -23,6 +23,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -180,5 +181,15 @@ func drawLandings(gs *state.GlobalState, screen *ebiten.Image, lands []essenceLa
 		// the morph in the seat beside it is the whole of what is happening.
 		ui.DrawCard(gs, screen, at, cards.Hand, l.before, ui.HeldByRun(gs, l.before), true, false)
 		ui.DrawMorph(gs, screen, seats[seat+1].Min, l.change)
+	}
+}
+
+// earnLadderWraps raises the ladder-wrapped moment for every landing that walked a card off one end
+// of its ladder and onto the other. See achieve.LadderWrapped.
+func earnLadderWraps(gs *state.GlobalState, lands []essenceLanding) {
+	for _, l := range lands {
+		if m, ok := achieve.LadderWrapped(l.before, l.after); ok {
+			earnMoment(gs, m)
+		}
 	}
 }

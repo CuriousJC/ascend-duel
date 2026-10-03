@@ -310,10 +310,10 @@ const DefaultBadgeShape = BadgeDiamond
 // glyph is rasterized separately at final size and arrives at 16 as a few unsupported strokes. So
 // the numeral belongs in the picture — but only for values somebody drew.
 //
-// **It runs from a quarter to nine**, which covers the whole player deck (25, 50, 100, 300, 400)
+// **It runs from a quarter to nine**, which covers the whole player deck (50, 100, 300)
 // and every creature (50, 100, 200) with room above for what a relic or an essence can push a card
 // to. It does **not** cover everything the rules can produce — the `add-dmg` essence scales a card
-// to 150%, so a Skewer reaches 4.5x and a Poke lands on 0.37x, and a boss deck carries 60, 120 and
+// to 150%, so a Skewer reaches 4.5x and a Jab lands on 0.75x, and a boss deck carries 60, 120 and
 // 250 — and that is what badgeFallbackArtKey is for.
 var BadgeValues = []int{25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900}
 

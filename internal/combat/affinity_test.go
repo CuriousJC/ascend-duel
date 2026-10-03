@@ -126,7 +126,7 @@ func TestAMatchedBlockBanksAnActionPointForTheNextTurnOnly(t *testing.T) {
 	a := duelist(10, 6, 5000)
 	goblin := creature(Ice, 10, 6, 5000)
 
-	events, a1, _ := resolve(a, goblin, []Card{Of(Guard, Ice)}, []Card{Of(Bash, Ice), Of(Bash, Ice), Of(Bash, Ice)}, 1)
+	events, a1, _ := resolve(a, goblin, []Card{Of(Block, Ice), Of(Brace, Ice)}, []Card{Of(Bash, Ice), Of(Bash, Ice), Of(Bash, Ice)}, 1)
 	surged := 0
 	for _, e := range events {
 		if e.Kind == KindBlocked && e.Surged {

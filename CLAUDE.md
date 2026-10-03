@@ -267,8 +267,8 @@ so the loader allows a multi-card rung *at* 100 and refuses one below it: what a
 that two cards are summed where a No Hand lands one. **`combat.Axis` is three values** — concept,
 form, element — and a hand can only say what its cards must *agree* on.
 
-**Shields are the whole of the defensive half.** The player's defend cards — `Flinch`, `Brace`,
-`Block` and `Guard` at 0/1/2/3 AP — raise that many shields, and **one shield eats one incoming
+**Shields are the whole of the defensive half.** The player's defend cards — `Brace` and
+`Block` at 1/2 AP — raise that many shields, and **one shield eats one incoming
 hit whole**. See MECHANICS.md §Shields. Six things to know before touching any of it:
 
 - **A shield eats its own element's heaviest hit first, then the heaviest of what is left — never
@@ -310,13 +310,13 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
   retuned and nothing fails when it does.
 - **One card raises at most five shields; a duelist holds as many as the turn paid for.** The
   five is `combat.MaxShields` = `MaxActions`, refused at `RegisterConcept` and clamped in
-  `Card.Amount`. **`Duelist.raiseShields` does not clamp the total** — three Guards in a turn is
-  nine shields and is meant to be, because what bounds a turn is the action budget. **The pip row
+  `Card.Amount`. **`Duelist.raiseShields` does not clamp the total** — five Blocks in a turn is
+  ten shields and is meant to be, because what bounds a turn is the action budget. **The pip row
   is a separate number in a separate package**: `ui.MaxShieldPips` is `cards.MaxEffects`,
   being what the bottom band fits — so a duelist behind ten draws a full row and the true count is
   on the engine. A row that can say a big number has not been designed.
-- **The dealt defenses are Brace and Block; Flinch and Guard ship at zero copies**, so the deck
-  holds 2 defend concepts × 5 elements and 55 cards in total. Moving that is a balance change:
+- **The defenses are Brace and Block**, so the deck holds 2 defend concepts × 5 elements and 55
+  cards in total. Moving that is a balance change:
   **re-run `tools/handodds` and `tools/seeds` after any edit here**, and read MECHANICS.md §The
   deck is a starting position before drawing a conclusion from either: they describe fight one
   of a relicless run and nothing else.

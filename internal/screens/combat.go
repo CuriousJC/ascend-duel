@@ -899,6 +899,8 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// of the deck and can change nothing about the round underneath — see deckView.
 	if s.showDeck {
 		s.DeckView.Update(gs, s.fightContents())
+	} else {
+		ui.WarmDeckPanel(gs, s.DeckView, s.fightContents())
 	}
 
 	// The X, run while either of the two older dialogs is up. The hands panel closes itself.

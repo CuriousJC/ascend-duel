@@ -309,12 +309,15 @@ type held struct {
 	dmg int
 
 	worn []combat.WornRelic
+
+	// vitae is the purse a per-vitae relic prices the card against.
+	vitae int
 }
 
 // HeldBy is the pairing for a card in a duelist's hands, which is what every call site inside a
 // fight has.
 func HeldBy(d combat.Duelist, c combat.Card) held {
-	return held{cost: d.CardCost(c), dmg: d.DMG, worn: ungrown(d.WornRelics())}
+	return held{cost: d.CardCost(c), dmg: d.DMG, worn: ungrown(d.WornRelics()), vitae: d.Vitae}
 }
 
 // ungrown is a worn set with every accumulator at zero.
@@ -348,7 +351,13 @@ func HeldByRun(gs *state.GlobalState, c combat.Card) held {
 	if gs.Run == nil {
 		return held{cost: c.Cost()}
 	}
-	return held{cost: gs.Run.CardCost(c), worn: ungrown(gs.Run.WornRelics())}
+	return held{cost: gs.Run.CardCost(c), worn: ungrown(gs.Run.WornRelics()), vitae: gs.Run.Vitae()}
+}
+
+// cardCached reports whether this spec's face is already rendered, without rendering it.
+func cardCached(spec cards.Spec, st cards.Style) bool {
+	_, ok := cardCache[cardKey{spec: spec, w: st.Width, h: st.Height}]
+	return ok
 }
 
 // CardImage returns the card for this spec, rendering and caching it on a miss.

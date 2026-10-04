@@ -222,7 +222,7 @@ func strike(
 			if card.Spec().Verb == VerbAttack {
 				e.HandCardPct[at] = l.shape.Amount(l.nth, card.Amount())
 			}
-			e.HandRelicScale[at] = CardScaleBySeat(worn, card)
+			e.HandRelicScale[at] = CardScaleBySeat(worn, card, actor.Vitae)
 			if add := card.DamageOnPlay(); add != 0 {
 				e.HandPlayAdd[at] = l.shape.Amount(l.nth, add)
 			}

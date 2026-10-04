@@ -253,8 +253,8 @@ func TestTheEssenceRowStaysOutOfThePayoutsColumn(t *testing.T) {
 }
 
 // **The payout ends on the edge the essences end on** *(owner's call, 2026-09-18)*, whatever the
-// script's length — a fight paying no interest is one sentence shorter, and a block hung from the
-// top of its column would float by exactly that sentence.
+// script's length — a block hung from the top of its column would float by however many sentences
+// the script is short of the longest.
 //
 // **And it still has to fit the band it is read in**, between the relics above and the cards below.
 // The wording is authored, so a longer script is a layout change and this is what says so.

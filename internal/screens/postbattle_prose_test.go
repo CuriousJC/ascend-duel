@@ -92,9 +92,9 @@ func TestALineIsTypedLeftToRight(t *testing.T) {
 	}
 }
 
-// TestNoInterestLineWithNoInterest. A sentence saying a purse swelled by nothing teaches the player
-// the screen is not reading their run.
-func TestNoInterestLineWithNoInterest(t *testing.T) {
+// The interest line is always read out, +0 included, so a purse too small to earn any still says
+// what holding more would have paid.
+func TestTheInterestLineIsThereWithNoInterest(t *testing.T) {
 	gs := &state.GlobalState{RunSeed: 1, Run: session.New(session.StartingDeck())}
 	for gs.Run.Vitae() > 0 {
 		gs.Run.SpendVitae(1)
@@ -102,10 +102,14 @@ func TestNoInterestLineWithNoInterest(t *testing.T) {
 	gs.Run.WonFight(50, 50)
 
 	for _, l := range payoutLines(gs) {
-		if strings.Contains(l.plain(), "resonates") {
-			t.Errorf("a run earning no interest was told %q", l.plain())
+		if strings.Contains(l.plain(), "proliferates") {
+			if !strings.HasSuffix(l.plain(), "+0") {
+				t.Errorf("a run earning no interest was told %q, want +0", l.plain())
+			}
+			return
 		}
 	}
+	t.Error("a run earning no interest was not told about interest at all")
 }
 
 func itoaTest(n int) string {

@@ -52,15 +52,10 @@ const shelfSize = 3
 // Where the two rows sit. Percentages anchor the groups; offsets inside a group stay in pixels,
 // per CLAUDE.md.
 const (
-	// The narration clears the band, whose row can carry a confirm tab under an armed relic or
-	// carried card. The reward screen's own prose starts at 296 against a band with nothing under
-	// it. TestTheSellTabClearsTheNarration is what holds the gap.
-	shopProseTop = 360
-
-	// shopHintTop is the line between the narration and the shelf. **It is not a title** — the
-	// creature's two sentences are the title, exactly as the payout's are on the reward screen —
-	// and it is written only when it has something the duelist card does not already say.
-	shopHintTop = 444
+	// shopHintTop is the line between the band and the shelf, written only when it has something
+	// the duelist card does not already say. **Clear of the band's row**, which can carry a confirm
+	// tab under an armed relic or carried card — TestTheSellTabClearsTheHint holds the gap.
+	shopHintTop = 372
 
 	// The figure under a card on the shelf: what it costs. The gap is also where a sell tab hangs.
 	shopFigureGap  = 10
@@ -103,8 +98,8 @@ type ShopScene struct {
 	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
 	tut tutorialOverlay
 
-	// armed is the worn relic or carried card a confirm tab is hanging under, and the zero value
-	// for none. See shop_sell.go.
+	// sellTab is the worn relic or carried card a confirm tab is hanging under, the tab itself and
+	// its request — `armed`, `sellButton` and `selling`. See shop_sell.go.
 	//
 	// **Selling is the one thing on this screen that asks twice** *(owner's call, 2026-08-22)*.
 	// Buying does not and should not: it is refused when it cannot be afforded, the price is on
@@ -113,22 +108,13 @@ type ShopScene struct {
 	// screen invites you to read, and a click meant for a tooltip took it off your hand for less
 	// than it cost. It is also not symmetric to undo: a growing relic's accumulator goes with it,
 	// and buying it back starts that over.
-	armed shopSale
+	sellTab
 
 	// relicDrag is the press in progress over the worn row. **A press there is now two gestures
 	// sharing one button**: a click still arms the sell tab, and a press that travels reorders the
 	// row instead. The threshold in carddrag.go is what tells them apart, and it is the same
 	// threshold the hand has used since the action box was built.
 	relicDrag ui.CardDrag
-
-	// selling is the tab's request, consumed by Update, for the reason `leaving` is: a button's
-	// OnClick reaches no global state and a sale needs the run.
-	selling bool
-
-	// sellButton is the tab itself — **one button moved under whichever thing is armed**, not one
-	// per seat. Only one can be armed, so a second button would be a second thing to keep in step
-	// with the row's own re-centering.
-	sellButton *models.Button
 
 	// leaving is the button's request, consumed by Update. A button's OnClick reaches no global
 	// state, and advancing the run needs it.
@@ -143,11 +129,6 @@ type ShopScene struct {
 	// which is what lets a flight survive the window being resized. See travel.go.
 	from map[string]image.Rectangle
 	move ui.Travel
-
-	// prose is the shopkeeper. **Nothing it says has a `pays`**, unlike the reward screen's
-	// payout — this is flavor rather than arithmetic, and the typewriter is reused for the
-	// cadence rather than for the claims.
-	prose typewriter
 
 	// deck is the D button in the corner and the panel behind it. A relic is bought against a deck,
 	// and until 2026-08-22 the deck could not be looked at from here. See deckpanel.go.
@@ -217,8 +198,7 @@ type ShopScene struct {
 //
 // **A visit is one deal, however many times the screen is entered** *(2026-09-19)*. Opening a
 // sealed good is a screen now, so coming back from one re-enters the shop — and a second deal would
-// restock the shelf, forget which goods had been opened, un-drink the potions and replay the
-// shopkeeper. `visit` is which visit the state on this scene belongs to, and a matching one is
+// restock the shelf, forget which goods had been opened and un-drink the potions. `visit` is which visit the state on this scene belongs to, and a matching one is
 // picked up rather than dealt again.
 func (s *ShopScene) Init(gs *state.GlobalState) {
 	if gs.Run != nil {
@@ -240,14 +220,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 		s.leaveButton.BaseColor = ui.ButtonGray
 	}
 
-	if s.sellButton == nil {
-		s.sellButton = models.NewButton(sellTabWidth, sellTabHeight, "",
-			func() { s.selling = true })
-		// **The color a control that commits something wears**, and the same red DUEL!
-		// takes. A sale is the only thing on this screen that cannot be taken back.
-		s.sellButton.BaseColor = ui.ButtonRed
-		s.sellButton.TextSize = sellTabTextSize
-	}
+	s.initSellTab()
 
 	s.initRerollButtons()
 	s.pouch.init()
@@ -271,7 +244,6 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	// **The realm's tonic is settled at its first shop** and every later shop in the realm shows
 	// the same one, or an empty seat once it is drunk. See session/tonic.go.
 	gs.Run.OfferTonic()
-	s.prose.setLines(shopkeeperLines())
 	// **The same places the combat screen uses** *(owner's call, 2026-09-06)*. HANDS is a rung of
 	// the control column and the two square panels stand on the bottom line beside the frame's cog,
 	// so the corner reads the same on every screen that has one — see controlcolumn.go, which is
@@ -390,25 +362,6 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
-	// **The greeting is the whole screen while it types.** A click skips it rather than buying
-	// something, which is the reward screen's rule for its payout and for the same reason: a
-	// sentence half-read while a relic is already being bought is two things at once.
-	//
-	// **It releases itself the moment it is complete**, which is where the two screens part
-	// *(2026-09-08)*. The payout is held for a second click because its figures are the thing the
-	// player came to read; a greeting is flavor in front of a shelf, so making it a gesture would
-	// be charging a click for a sentence nobody is studying.
-	if !s.prose.finished() {
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
-			s.prose.skip(gs)
-		}
-		s.prose.tick(gs, func(i int) image.Point { return shopProseLineAt(gs, i) })
-		if s.prose.filled() {
-			s.prose.release()
-		}
-		return nil
-	}
-
 	// While the deck panel is up the two rows are dead. See deckToggle.update, which counts the
 	// frame the panel closes on as a covered one.
 	s.deck.Block(s.hands.IsOpen() || s.pouch.IsOpen())
@@ -423,9 +376,7 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
-	if s.selling {
-		sale := s.armed
-		s.selling, s.armed = false, shopSale{}
+	if sale, ok := s.takeSale(); ok {
 		s.sellArmed(gs, sale)
 		return nil
 	}
@@ -592,29 +543,9 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		return
 	}
 
-	// **A carried card arms on the press**, unlike a relic: the consumables pane is not reorderable
-	// here, so there is no drag for the release to tell it apart from. See shop_sell.go.
-	if i := heldAt(gs, at); i >= 0 {
-		s.arm(heldSale(i))
-		return
-	}
-
-	// A press anywhere else drops the question — except on the tab itself, which is not a click
-	// this screen handles: its own release is what answers.
-	if s.armed.any() && !at.In(s.sellTabRect(gs)) {
-		s.armed = shopSale{}
-	}
-}
-
-// wornSeatOf is where one worn relic is sitting, by key.
-func (s *ShopScene) wornSeatOf(gs *state.GlobalState, key string) (image.Rectangle, bool) {
-	worn := gs.Run.Worn()
-	for i, k := range worn {
-		if k == key {
-			return s.wornSlot(gs, i, len(worn)), true
-		}
-	}
-	return image.Rectangle{}, false
+	// A carried card arms on the press, and a press anywhere else drops the question — except on
+	// the tab itself, whose own release is what answers. See sellTab.pressHeld.
+	s.pressHeld(gs, at)
 }
 
 // buy takes a relic off the shelf and puts it on the hand.
@@ -710,7 +641,6 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	ui.FillScreenBackdrop(gs, screen)
 
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}
-	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextLarge}
 
 	line := func(y int, face *text.GoTextFace, msg string, ink color.RGBA) {
 		op := &text.DrawOptions{}
@@ -733,15 +663,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// consumables pane went missing in the split, so a run walked into a shop and its sack
 	// vanished. nil: a rune is carried on this screen, not spent. See buildband.go.
 	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, nil, s.tip.Showing())
-	s.drawSellTab(gs, screen)
-
-	s.drawProse(gs, screen, prose)
-
-	// **Nothing else is on screen while the greeting types.** It is the reward screen's rule: the
-	// sentences are the whole of the screen until they are finished.
-	if !s.prose.finished() {
-		return
-	}
+	s.drawTab(gs, screen)
 
 	line(shopHintTop, small, s.hint(gs), ui.GroundInk)
 
@@ -841,8 +763,7 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image) {
 // **A click here arms the sell tab**, which is the one screen where a press on a relic means
 // something besides reordering it — see click, which no longer handles that row.
 //
-// **The row is dead while the shopkeeper is still speaking and under either panel**, exactly as
-// buying and selling are: the greeting is the whole screen while it runs.
+// **The row is dead under either panel**, exactly as buying and selling are.
 func (s *ShopScene) updateRelicRow(gs *state.GlobalState) {
 	worn := gs.Run.Worn()
 	row := buildRelicRow(gs, func(i int) {
@@ -947,27 +868,18 @@ func goodAffordable(gs *state.GlobalState, key string) bool {
 	return gs.Run.CanAffordGood(key)
 }
 
-// goodAvailable is whether a seat can be clicked at all: the purse covers it, and there is somewhere
-// to put what comes out.
+// goodAvailable is whether a seat can be clicked at all: the purse covers it.
 //
-// **Only the carried packs have the second question** *(2026-09-06)*. A stone is spent in the dialog
-// that opened the bag and an essence is spent in the dialog that opened the vial, so neither can hand
-// the run something it has no room for; a rune and a cantrip go into the consumables pane, which
-// holds two of anything — see session.MaxConsumables — and a full one would take vitae for a card
-// that `Hold` refuses. The seat goes dim rather than the purchase failing afterwards, which is the
-// same courtesy an unaffordable good already gets.
+// **A full consumables pane does not dim a carried good** *(owner's call, 2026-10-04)*. The sack
+// and the bundle open whatever the pane holds, so the player sees what is inside before deciding;
+// the goods screen then holds the cards back until a carried one is sold to make room, or the good
+// is skipped. See GoodsScene.roomFull.
 func goodAvailable(gs *state.GlobalState, key string) bool {
 	if !goodAffordable(gs, key) {
 		return false
 	}
-	good, ok := session.GoodByKey(key)
-	if !ok {
-		return false
-	}
-	if carried(good.Contains) && gs.Run.ConsumablesFull() {
-		return false
-	}
-	return true
+	_, ok := session.GoodByKey(key)
+	return ok
 }
 
 // carried is whether what a good holds goes into the consumables pane rather than being spent in the

@@ -15,8 +15,7 @@ package screens
 // **A click fills the block and a click leaves it** *(owner's call, 2026-09-08)*. The fill used to
 // be the exit as well, so the one gesture available to a player who wanted the payout *now* was the
 // gesture that took it off the screen. **The reward screen advances on nothing but a click**: it
-// holds the total for as long as the player wants it, where the shop releases itself the frame its
-// greeting is complete. Typing every line at once was tried in the same sitting and put back - the
+// holds the total for as long as the player wants it. Typing every line at once was tried in the same sitting and put back - the
 // lines arrive one at a time, at twice the old speed.
 //
 // **It may not change what a win is worth.** The amounts are frozen by `session.WonFight` before
@@ -94,7 +93,7 @@ type typewriter struct {
 	flying bool
 
 	// released is whether the block has given the screen back. **Only a caller sets it**
-	// *(owner's call, 2026-09-08)* - see release, and the two screens that answer it differently.
+	// *(owner's call, 2026-09-08)* - see release.
 	released bool
 }
 
@@ -114,8 +113,7 @@ func (t *typewriter) setLines(lines []proseLine) {
 //
 // **It is not the same question as finished**, and the split is the whole of the 2026-09-08 change:
 // a block can be complete and still be holding the screen. The reward screen holds it there until a
-// second click, because the figures are what the player came to read; the shop releases the moment
-// it is filled, because a greeting is flavor standing in front of a shelf.
+// second click, because the figures are what the player came to read.
 func (t *typewriter) filled() bool {
 	return t.line >= len(t.lines) && !t.flying
 }

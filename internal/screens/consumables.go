@@ -180,7 +180,9 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		// is what makes select-then-apply readable: the player never has to be told whether the
 		// cards they have selected are the right ones, because the rune that wants them is the
 		// one that is not dim. See consumableTarget.satisfiedBy.
-		drawConsumableCard(gs, screen, at.Min, held[i], canSpend(spendable, held[i]), false)
+		if spec, st, ok := consumableFace(gs, held[i], canSpend(spendable, held[i]), false); ok {
+			ui.DrawFloatingCard(gs, screen, at.Min, i, spec, st)
+		}
 	}
 
 	// **The card under the cursor is drawn last, so it is drawn whole** *(owner's call,
@@ -283,19 +285,28 @@ func heldConsumables(gs *state.GlobalState) []session.Consumable {
 func drawConsumableCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	c session.Consumable, enabled, selected bool) {
 
+	if spec, st, ok := consumableFace(gs, c, enabled, selected); ok {
+		ui.BlitCard(gs, screen, at, spec, st)
+	}
+}
+
+// consumableFace is a consumable's face and the style it is drawn at, for a caller that floats it
+// rather than blitting it. False for a kind with no case.
+func consumableFace(gs *state.GlobalState, c session.Consumable, enabled, selected bool) (cards.Spec, cards.Style, bool) {
 	switch c.Kind {
 	case session.ConsumableRune:
-		ui.DrawRuneCard(gs, screen, at, c.Rune, enabled, selected)
+		return ui.RuneSpec(gs, c.Rune, enabled, selected), cards.EssenceStyle, true
 	case session.ConsumableStone:
 		// **A stone is never drawn selected**, because there is nothing to select it *for*: a rune
 		// is aimed at cards and a stone names its own rung. The flag is taken anyway so every kind
 		// answers one signature.
-		ui.DrawStoneCard(gs, screen, at, c.Stone, enabled)
+		return ui.StoneSpec(gs, c.Stone, enabled), cards.EssenceStyle, true
 	case session.ConsumableEssence:
-		ui.DrawEssenceCard(gs, screen, at, c.Essence, enabled)
+		return ui.EssenceSpec(gs, c.Essence, enabled), cards.EssenceStyle, true
 	case session.ConsumableCantrip:
-		ui.DrawCantripCard(gs, screen, at, c.Cantrip, enabled)
+		return ui.CantripSpec(gs, c.Cantrip, enabled), cards.EssenceStyle, true
 	}
+	return cards.Spec{}, cards.Style{}, false
 }
 
 // consumableTipLines is what the pane says about one carried thing.

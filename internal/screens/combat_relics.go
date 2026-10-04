@@ -737,7 +737,8 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		// other card on this screen is under: a turn puts the card off the pixel grid, and that is
 		// the one time a card is filtered.
 		if !toast.lit {
-			ui.DrawRelicCard(gs, screen, at, relic, counters[relic.RelicRecord], true, false)
+			ui.DrawFloatingCard(gs, screen, at, i,
+				ui.RelicSpec(gs, relic, counters[relic.RelicRecord], true, false), cards.RelicStyle)
 			continue
 		}
 		ui.DrawFlyingCard(gs, screen,

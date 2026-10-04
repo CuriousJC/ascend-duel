@@ -45,6 +45,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
@@ -80,7 +81,7 @@ const (
 	animListTopPct   = 20
 	animStageLeftPct = 34
 	animStageTopPct  = 24
-	animNotesTopPct  = 76
+	animNotesTopPct  = 84
 )
 
 // animStageInk is the caption under the stage: the symbol that implements the gesture, which is
@@ -261,6 +262,15 @@ var animGestures = []animGesture{
 		},
 	},
 	{
+		name:  "float",
+		where: "ui.FloatSchemes, float.go",
+		what:  "Idle motion on resting cards: three schemes side by side, on the real cards. Pick one.",
+		ticks: func() int { return ui.Beat(8, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawFloatComparison(gs, screen, at.Min)
+		},
+	},
+	{
 		name:  "portal swirl",
 		where: "systems.DrawSwirl, portal.go",
 		what:  "The way through a portal: one picture turning in place over a smaller copy of itself turning back.",
@@ -431,4 +441,51 @@ func animText(gs *state.GlobalState, screen *ebiten.Image, line string, x, y int
 func (s *AnimationsScene) leave(gs *state.GlobalState) {
 	gs.ActiveScreen = gs.ReturnScreen
 	gs.NewScreen = true
+}
+
+// The float comparison's shape: three columns, each a band row over a hand row, overlapping at the
+// pitch a full row overlaps at.
+const (
+	floatColumnWidth = 420
+	floatPitch       = 100
+	floatRowGap      = 300
+	floatLabelSize   = 24
+)
+
+// drawFloatComparison draws every scheme in `ui.FloatSchemes` as a column: two relics and a rune as
+// the band carries them, and three dealt cards under them. **Every column draws the same cards in the
+// same seats**, so the only thing that differs across the page is the motion.
+func drawFloatComparison(gs *state.GlobalState, screen *ebiten.Image, origin image.Point) {
+	var band []func(geo ebiten.GeoM)
+	for _, key := range combat.RelicKeys() {
+		if len(band) == 2 {
+			break
+		}
+		if r, ok := gs.Relics[key]; ok {
+			spec := ui.RelicSpec(gs, r, "", true, false)
+			band = append(band, func(geo ebiten.GeoM) { ui.DrawFlyingCard(gs, screen, spec, cards.RelicStyle, geo) })
+		}
+	}
+	if runes := session.Runes(); len(runes) > 0 {
+		spec := ui.RuneSpec(gs, runes[0], true, false)
+		band = append(band, func(geo ebiten.GeoM) { ui.DrawFlyingCard(gs, screen, spec, cards.EssenceStyle, geo) })
+	}
+	hand := []cards.Spec{
+		animFace(gs, animCardA),
+		animFace(gs, animCardB),
+		animFace(gs, combat.Card{Concept: combat.Bash, Element: combat.Earth}),
+	}
+
+	for col, f := range ui.FloatSchemes {
+		x := origin.X + col*floatColumnWidth
+		animText(gs, screen, f.Name, x, origin.Y-28, floatLabelSize, ui.GroundInk)
+		for i, draw := range band {
+			draw(f.GeoAt(image.Pt(x+i*floatPitch, origin.Y), cardWidth, cardHeight, gs.Count, i))
+		}
+		for i, spec := range hand {
+			ui.DrawFlyingCard(gs, screen, spec, cards.Hand,
+				f.GeoAt(image.Pt(x+i*floatPitch, origin.Y+floatRowGap), cardWidth, cardHeight, gs.Count, i))
+		}
+		animText(gs, screen, f.What, x, origin.Y+floatRowGap+cardHeight+22, animNoteSize, animStageInk)
+	}
 }

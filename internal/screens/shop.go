@@ -29,6 +29,7 @@ import (
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
@@ -709,12 +710,12 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image) {
 			continue
 		}
 		seat := s.wornSlot(gs, i, len(worn))
-		at := seat.Min
 		if was, moving := s.from[key]; moving && !s.move.Done() {
-			at = ui.FlyingTo(was, seat, s.move)
+			ui.DrawRelicCard(gs, screen, ui.FlyingTo(was, seat, s.move), record, counters[key], true, false)
+			continue
 		}
-
-		ui.DrawRelicCard(gs, screen, at, record, counters[key], true, false)
+		ui.DrawFloatingCard(gs, screen, seat.Min, i,
+			ui.RelicSpec(gs, record, counters[key], true, false), cards.RelicStyle)
 	}
 }
 

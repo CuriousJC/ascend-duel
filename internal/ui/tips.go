@@ -38,11 +38,12 @@ import (
 // **A proportion of the game's one speed**, like everything else timed in this game — see clock.go,
 // so the game-speed setting will move this with everything else when it exists.
 //
-// **A beat and a half, about six tenths of a second** *(owner's call, 2026-08-21)*. It was half a
-// beat and fired the moment the cursor touched anything, which does not read as asking a question:
-// a panel that appears before you have decided to want it is a flicker following the mouse around.
-// The point of a dwell is that resting is deliberate where crossing is not.
-func TipDwell() int { return Beat(3, 2) }
+// **Three quarters of a beat, about three tenths of a second** *(owner's call)*. Long enough that a
+// cursor crossing a row does not strobe a panel per card, short enough that resting reads as asking.
+// It is also what raises the card under the cursor, so the two arrive together. Do not take it to
+// half a beat or under: a panel that appears before you have decided to want it is a flicker
+// following the mouse around.
+func TipDwell() int { return Beat(3, 4) }
 
 // CardTip explains one card: what it is, what it costs, what it is worth, and what its upgrade
 // adds — then, only when something has moved one of those figures, where that came from.

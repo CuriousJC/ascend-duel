@@ -44,8 +44,6 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/ui"
 
-	"github.com/curiousjc/ascend-duel/internal/cards"
-	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
@@ -200,10 +198,16 @@ type PostBattleScene struct {
 	prizes []prize
 	chosen int
 
-	// offer is the hand, as indices into the run deck. **Dealt fresh off the whole deck**,
-	// ignoring whatever the fight left in the piles: a reward is about what you own, not about
-	// what you happened to draw.
-	offer []int
+	// dealtRow is the hand an essence is aimed at: `offer` as indices into the run deck, `selected`
+	// as row slots, and the sort and the drag over them — the row every screen dealing the player's
+	// cards shares. See dealtrow.go. **Dealt fresh off the whole deck**, ignoring whatever the fight
+	// left in the piles: a reward is about what you own, not about what you happened to draw.
+	//
+	// **`selected` is a set rather than one index, because an essence may take more than one card**
+	// *(owner's call, 2026-09-19)*. One is the mechanic and a relic scales it — see
+	// essence_targets.go — so what asks whether the selection is enough is consumableTarget, exactly
+	// as it does for a rune naming two cards on the combat screen.
+	dealtRow
 
 	stage stage
 
@@ -225,10 +229,8 @@ type PostBattleScene struct {
 	// the sealed good carry — see deckpile.go.
 	deck ui.DeckToggle
 
-	// relicDrag is the press in progress over the worn relic row in the build band. **The row is
-	// reorderable here like everywhere else** — worn order is a rule, and between fights is when a
-	// player is thinking about their build.
-	relicDrag ui.CardDrag
+	// band is the top third's input, the same on every screen that shows it — see band.go.
+	band bandControls
 
 	// **Skipping is a button again** *(2026-08-22)*, after the vitae card that replaced it was
 	// removed. It takes neither essence and pays nothing extra — the win has already paid — so it is
@@ -237,18 +239,6 @@ type PostBattleScene struct {
 
 	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
 	tut tutorialOverlay
-
-	// selected is which offered cards are picked out, as row slots.
-	//
-	// **A set rather than one index, because an essence may take more than one card** *(owner's
-	// call, 2026-09-19)*. One is the mechanic and a relic scales it — see essence_targets.go — so
-	// what asks whether the selection is enough is consumableTarget, exactly as it does for a rune
-	// naming two cards on the combat screen.
-	//
-	// **It is the offer row's counterpart of the hand's `selected` flag**, and it stays a different
-	// shape: the hand's selection is also the round's queue, where this is only the cards an
-	// essence is about to eat.
-	selected []int
 
 	// lands is what the essence did to each card it was pointed at: the seat each one flew out of,
 	// the face it had, the face it became, and the change between them.
@@ -294,23 +284,6 @@ type PostBattleScene struct {
 	// what one of the offered deck cards is worth.
 	tip models.Tooltip
 
-	// How the offer row is arranged, and the block of tabs that chooses it — the same widget the
-	// combat screen's hand carries *(owner's call, 2026-09-05)*. **Eight overlapping cards are
-	// eight overlapping cards wherever they are dealt**, so the row an essence is pointed at is read
-	// the same way a hand is.
-	//
-	// **sortMode is the working copy of `gs.HandSort`**, exactly as CombatScene's is: the button
-	// callback moves this, and Update writes it back. So a player who arranges by element in a
-	// duel meets an offer already arranged by element.
-	sortMode ui.HandSort
-	sortTabs *ui.SortTabs
-
-	// slides is the offer row rearranging itself, on the shared mover — see cardslide.go. **The
-	// same widget behaves the same way on both screens** *(owner's call, 2026-09-05)*: a card that
-	// changes where it is on screen travels there, and a sort that re-laid this row out instantly
-	// while sliding the hand would be two controls wearing one set of labels.
-	slides []ui.CardSlide
-
 	// picksLeft is how many prizes this visit still owes the player, from `session.Picks` — the
 	// `prizes-dealt` moment, which the Hungry relic is what moves off 1.
 	//
@@ -322,6 +295,7 @@ type PostBattleScene struct {
 
 // Init deals both offers. **Re-entered on every visit**, because each fight earns its own.
 func (s *PostBattleScene) Init(gs *state.GlobalState) {
+	s.band.init()
 	if s.skipButton == nil {
 		s.skipButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LET THEM ESCAPE",
 			func() { s.skipping = true })
@@ -340,16 +314,10 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	s.flyEssencesIn()
 	s.prose.setLines(payoutLines(gs))
 	s.skipping = false
-	s.offer = dealOffer(gs)
+	s.initRow(gs, offerRowTop)
+	s.deal(gs, dealOffer(gs))
 	s.picksLeft = gs.Run.Picks()
 	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
-
-	s.sortMode = ui.HandSortOf(gs)
-	if s.sortTabs == nil {
-		s.sortTabs = ui.NewSortTabs(s.sortTabRect, s.setSort)
-	}
-	s.slides = nil
-	s.sortOffer(gs)
 
 	s.place(gs)
 
@@ -472,7 +440,9 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	// over them: a drag started behind an open deck panel would be a card moving where the player
 	// cannot see it. It runs before the stage branches below, because the settled stage returns
 	// early and the row is still on screen through it.
-	s.updateRelicRow(gs)
+	if s.band.update(gs, bandHooks{live: true, forget: s.tip.Forget}) {
+		return nil
+	}
 
 	// The settled stage is a held picture rather than a choice: the card that was won is on
 	// screen, and when the hold runs out the screen leaves by itself.
@@ -534,11 +504,7 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		// block hangs off the offer row's right edge, and a second pick re-deals that row against a
 		// deck an essence may have shortened. A block placed once would then stand beside a row that
 		// had moved out from under it.
-		s.sortTabs.Place(gs)
-		s.sortTabs.Update(gs, true)
-		ui.SetHandSort(gs, s.sortMode)
-		s.sortOffer(gs)
-		s.slides = ui.Advance(s.slides)
+		s.update(gs, true, func(i int) { s.selectOffered(gs, i) })
 	}
 
 	s.hover(gs)
@@ -619,13 +585,6 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 	// **The card row is asked next**, because it is the row a click is most often meant for and
 	// the two do not overlap. Selecting is free and reversible; clicking an essence spends the pick.
 	// **Both go through ui.HoveredSeat**, so a click lands on the card the tooltip just described.
-	if i := ui.HoveredSeat(at, len(s.offer), func(i int) image.Rectangle {
-		return s.offerSlot(gs, i)
-	}); i >= 0 {
-		s.selectOffered(gs, i)
-		return
-	}
-
 	if i := ui.HoveredSeat(at, len(s.prizes), func(i int) image.Rectangle {
 		return s.essenceSlot(gs, i)
 	}); i >= 0 {
@@ -680,16 +639,6 @@ func (s *PostBattleScene) selectOffered(gs *state.GlobalState, i int) {
 	}
 	s.selected = append(s.selected, i)
 	s.tip.Forget()
-}
-
-// isSelected reports whether this row slot is one of the picked cards.
-func (s *PostBattleScene) isSelected(i int) bool {
-	for _, sel := range s.selected {
-		if sel == i {
-			return true
-		}
-	}
-	return false
 }
 
 // targets is how many cards an essence takes on this screen — one, whatever the relics make of it,
@@ -806,7 +755,7 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 	s.lands = nil
 	s.arrival, s.arrivedFrom = ui.Travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
-	s.offer = dealOffer(gs)
+	s.deal(gs, dealOffer(gs))
 	s.place(gs)
 
 	trace.Logf("postbattle", "another pick: %d left, %d cards", s.picksLeft, gs.Run.Size())
@@ -962,123 +911,17 @@ func (s *PostBattleScene) offerRow(gs *state.GlobalState) image.Rectangle {
 // eight is not centered where a row of seven is, so a card leaving one and landing in the other has
 // to be able to ask about both. Same reason a cardSlide carries a count at each end.
 func offerRowOf(gs *state.GlobalState, n int) image.Rectangle {
-	width := (n-1)*handPitch(gs, n) + cardWidth
-	left := gs.PctX(50) - width/2
-	top := gs.PctY(offerRowPct)
-	return image.Rect(left, top, left+width, top+cardHeight)
+	r := dealtRow{top: offerRowTop}
+	return r.rowOf(gs, n)
 }
 
-// offerSlot is where one offered card is drawn, and the rectangle it is clicked in.
-//
-// **A selected card lifts out of the row**, the hand's own gesture — see cardSlot, which does the
-// same thing for the same reason. It was the card's `Selected` border alone until 2026-09-06, and
-// that was not enough to see: with the essences lit by the selection, the screen said a card had been
-// picked and did not say which one.
-//
-// **The lift is in this function rather than in the drawing**, so the protruding part of a card is
-// clickable rather than merely visible — the drawn-here-clicked-there bug every row in this game is
-// shaped to avoid.
+// offerRowTop is where this screen deals its row.
+func offerRowTop(gs *state.GlobalState) int { return gs.PctY(offerRowPct) }
+
+// offerSlot is where one offered card is drawn, and the rectangle it is clicked in — the shared row's
+// seat, lifted when it is picked. See dealtRow.slot.
 func (s *PostBattleScene) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
-	at := s.offerSeat(gs, i, len(s.offer))
-	if s.isSelected(i) {
-		at.Y -= offerSelectedNudge
-	}
-	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight)
-}
-
-// offerSeat is that seat as a point, for a stated row size — the counterpart of the combat
-// screen's slotAt, and what the shared mover is handed.
-func (s *PostBattleScene) offerSeat(gs *state.GlobalState, i, count int) image.Point {
-	row := offerRowOf(gs, count)
-	return image.Pt(row.Min.X+i*handPitch(gs, count), row.Min.Y)
-}
-
-// sortTabRect is the i'th tab of the sort block: one block, no air in it, its top edge on the
-// offer row's top edge.
-//
-// **It hangs off the cards, not off a column of its own**, which is the rule the combat screen's
-// block follows — see sortTabRect there. This screen has no control column, and the row is centered
-// rather than banded, so the anchor is the row's own right edge and sortColumnGap is the same air
-// the hand leaves.
-func (s *PostBattleScene) sortTabRect(gs *state.GlobalState, i int) image.Rectangle {
-	row := s.offerRow(gs)
-	left := row.Max.X + ui.SortColumnGap
-	top := row.Min.Y + i*ui.ControlButtonHeight
-	return image.Rect(left, top, left+ui.ControlColumnWidth(), top+ui.ControlButtonHeight)
-}
-
-// setSort is the press on a tab. **It records the mode and nothing else** — the row is rearranged
-// by sortOffer on the same tick, which is where the global state a sort needs is available; a
-// button's OnClick reaches none on any screen in this package.
-func (s *PostBattleScene) setSort(mode ui.HandSort) { s.sortMode = mode }
-
-// sortOffer arranges the offer row and sends every card that moved sliding to its new place.
-//
-// **The row is a list of deck indices rather than of cards**, so it sorts a permutation and
-// rebuilds — which is also what makes the slides possible at all, for the reason sortHand does it:
-// two identical cards cannot be told apart after the fact by looking at them, and a card sliding
-// has to know where it set off from.
-//
-// **Stable, over the deck order dealOffer left it in**, so two identical cards keep their
-// positions in the deck as the tie-break and pressing the same tab twice cannot shuffle them.
-//
-// **The cards have already moved by the time the slides exist**, exactly as on the combat screen:
-// s.offer is in its new order the instant this returns, and every slide is a ghost of a card that
-// is already where it is going.
-//
-// **It runs every tick while the row is up**, not only on a press, which is what makes it right
-// after a re-deal for a second pick — the same reason the combat screen re-sorts on every refill.
-// A stable sort over an already-sorted list is a walk of eight items that raises nothing.
-func (s *PostBattleScene) sortOffer(gs *state.GlobalState) {
-	if gs.Run == nil {
-		return
-	}
-
-	card := func(deckIndex int) (combat.Card, bool) { return gs.Run.Card(deckIndex) }
-	worn := gs.Run.WornRelics()
-
-	order := make([]int, len(s.offer))
-	for i := range order {
-		order[i] = i
-	}
-	sort.SliceStable(order, func(i, j int) bool {
-		a, aok := card(s.offer[order[i]])
-		b, bok := card(s.offer[order[j]])
-		if !aok || !bok {
-			// A deck index the run cannot resolve should not exist here — the offer is dealt off
-			// the deck between fights — but ordering by index rather than panicking keeps a row
-			// the player can still read if one ever does.
-			return s.offer[order[i]] < s.offer[order[j]]
-		}
-		return ui.HandLess(s.sortMode, a, b, worn)
-	})
-
-	sorted := make([]int, len(s.offer))
-	for to, from := range order {
-		sorted[to] = s.offer[from]
-	}
-	s.offer = sorted
-
-	// Nothing in this row stands proud of it: there is no selection on this screen, so the lift
-	// every slide carries is zero.
-	s.slides = ui.SlidesFor(s.slides, order, func(i int) combat.Card {
-		c, _ := card(s.offer[i])
-		return c
-	}, func(int) int { return 0 }, func(int) int { return 0 })
-}
-
-// drawSlides draws the offered cards moving within their row, on the shared mover.
-//
-// **A sliding card is drawn usable**, whatever the essence could do to it. The dimming says "this one
-// cannot be picked", which is a fact about a card sitting in a seat waiting to be clicked; a card
-// in flight is not being offered yet, and re-deriving it mid-slide would make the row flicker as
-// cards crossed each other.
-func (s *PostBattleScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
-	ui.DrawCardSlides(gs, screen, s.slides,
-		func(gs *state.GlobalState, i, count int) image.Point { return s.offerSeat(gs, i, count) },
-		func(sl ui.CardSlide) cards.Spec {
-			return ui.CardSpec(sl.Card, ui.HeldByRun(gs, sl.Card), true, false)
-		})
+	return s.slot(gs, i)
 }
 
 func (s *PostBattleScene) chosenPrize() (prize, bool) {
@@ -1106,7 +949,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,
 	// and what an essence is about to change.
-	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.relicDrag, s.tip.Showing())
+	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.band, s.tip.Showing())
 	drawDeckPile(gs, screen)
 
 	// **The narration stays up for the whole visit, in its own column** — the payout is what the
@@ -1131,6 +974,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	defer systems.DrawTooltip(gs, screen, &s.tip)
+	defer drawBandOverlay(gs, screen, &s.band)
 
 	switch s.stage {
 	case settled:
@@ -1145,26 +989,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	if s.stage == choosing {
-		for i, deckIndex := range s.offer {
-			card, ok := gs.Run.Card(deckIndex)
-			if !ok {
-				continue
-			}
-			// A seat a card is still sliding into is left empty until it lands — the same rule
-			// the hand follows, and for the same reason: the list is already in its new order,
-			// so what is suppressed is a second drawing of a card that is on screen elsewhere.
-			if ui.SlideInto(s.slides, i) {
-				continue
-			}
-			// **Every card is selectable and the essences are what go dim** *(2026-09-06)*. The row
-			// used to dim a card the chosen essence could not change, which was the same rule read in
-			// the other direction — with the card picked first there is no essence yet to ask, so the
-			// legality lands on the prize row instead. See essenceSpendable.
-			ui.DrawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, ui.HeldByRun(gs, card),
-				true, s.isSelected(i))
-		}
-		s.drawSlides(gs, screen)
-		s.sortTabs.Draw(gs, screen)
+		s.dealtRow.draw(gs, screen)
 	}
 
 	// The deck panel covers the screen, so nothing of this one may be drawn on top of it.
@@ -1275,20 +1100,4 @@ func (s *PostBattleScene) hint(gs *state.GlobalState) string {
 		return fmt.Sprintf("%s - %d cards in your deck, %d vitae in hand",
 			take, gs.Run.Size(), gs.Run.Vitae())
 	}
-}
-
-// updateRelicRow runs the drag over the worn row in the build band.
-//
-// **A click on a relic does nothing here**, as on the combat screen: this screen's clicks belong to
-// the essences it is offering, and a relic that did something on a press would be a second meaning for
-// the gesture that reorders it.
-func (s *PostBattleScene) updateRelicRow(gs *state.GlobalState) {
-	row := buildRelicRow(gs, nil)
-
-	if !gs.CursorAllowed() {
-		s.relicDrag.Cancel(row)
-		return
-	}
-
-	s.relicDrag.Update(gs, row)
 }

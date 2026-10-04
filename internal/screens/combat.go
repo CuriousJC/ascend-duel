@@ -315,15 +315,16 @@ type CombatScene struct {
 	drag   ui.CardDrag
 	lifted paletteCard
 
-	// The press in progress over the worn relic row. **Its own controller rather than the hand's**,
-	// because the two rows are live at once and under different conditions: the hand is dead while
-	// a round resolves and the relic row is not.
-	relicDrag ui.CardDrag
+	// band is the top third's input, the same on every screen that shows it — the worn row and the
+	// consumables pane drag, and a click on either arms a sale, or for a carried card USE and SELL.
+	// **Its own controllers rather than the hand's**, because the rows are live at once and under
+	// different conditions: the hand is dead while a round resolves and the band's drags are not.
+	// See band.go.
+	band bandControls
 
-	// The press in progress over the sack. **A third controller for the third draggable row**, for
-	// the reason the relic row has its own: all three are live at once and under different
-	// conditions, and one controller would make a press on any of them cancel the others.
-	runeDrag ui.CardDrag
+	// cast is every cantrip cast this fight, in order, so a refit can put them back on a duelist
+	// rebuilt from the run. See refit.
+	cast []session.Cantrip
 
 	// relicShake is each worn seat's shake and cardShake each played card's. **One is started when a
 	// figure of the hand dialog sets off**, which the box reports once per item — see
@@ -546,6 +547,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	// The run says which room this is; the scene keeps a copy for the frame. See fightIndex.
 	s.fightIndex = gs.Run.Fight()
 	s.cantripLife, s.cantripDMG = 0, 0
+	s.cast = nil
 
 	// **A scenario may name who is standing in the room**, so an interaction can be looked at
 	// against a chosen enemy rather than whoever the journey dealt. Compiled out of every normal
@@ -617,8 +619,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	// DUEL! is disabled until something is in it.
 	s.fighterActions = nil
 	s.drag = ui.CardDrag{}
-	s.relicDrag = ui.CardDrag{}
-	s.runeDrag = ui.CardDrag{}
+	s.band.init()
 	s.relicShake, s.cardShake = nil, nil
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
@@ -914,7 +915,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	s.hands.Block(s.showDeck)
 	s.hands.Update(gs)
 
-	s.updateConsumables(gs)
+	s.updateBand(gs)
 	s.updateStoneFlights()
 
 	// Tell the frame a dialog is up, so the game's own chrome stands down rather than sitting
@@ -928,7 +929,6 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		s.updateActionBox(gs)
 	}
 
-	s.updateRelicRow(gs)
 	s.tickShakes(gs)
 
 	// The hand arriving: the deal, the flip cascade, the sort. **Driven from here rather than from
@@ -1807,9 +1807,8 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// combat_relics.go.
 	s.drawRelicPane(gs, screen)
 	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.consumableSpendable(gs),
-		func(i int) bool { return s.runeDrag.Dragging() && i == s.runeDrag.Origin() },
-		s.tip.Showing())
-	s.drawDraggedRune(gs, screen)
+		s.band.heldSkip, s.tip.Showing())
+	s.band.drawHeldGhost(gs, screen, s.consumableSpendable(gs))
 
 	s.drawEnemyCard(gs, screen)
 	// **Nothing is drawn in the DUEL! slot on a won fight.** The screen is holding its last
@@ -1926,6 +1925,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **Over every overlay, because it explains what is on top.** The deck panel's cards are the
 	// last thing drawn before this and they are the thing being asked about.
+	s.band.sale.drawTab(gs, screen)
 	systems.DrawTooltip(gs, screen, &s.tip)
 
 	// **Bob goes over all of it, and the spotlight with him.** The scrim dims what is already on

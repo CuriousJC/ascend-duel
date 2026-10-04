@@ -26,7 +26,6 @@ import (
 	"image"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -63,21 +62,15 @@ type GoodsScene struct {
 	// shop and the fight use**, so a player who has learned to click the pile has learned it here.
 	deck ui.DeckToggle
 
-	// relicDrag is the press in progress over the worn relic row. **The row is reorderable here
-	// like everywhere else** — worn order is a rule, and a screen where a relic is being chosen is
-	// a screen where the order it fires in is worth thinking about.
-	relicDrag ui.CardDrag
-
 	// skipButton leaves without taking anything, and skipping is its request, consumed by Update —
 	// a button's OnClick reaches no global state, and leaving the screen needs it.
 	skipButton *models.Button
 	skipping   bool
 
-	// sale is the shop's own sell tab over the consumables pane *(owner's call, 2026-10-04)*: a
-	// carried card is armed by a click and sold by the tab under it, as many times as the player
-	// likes. It is what makes room when a sack is opened over a full pane — the cards are held back
-	// until there is somewhere to put one. No relic is sold here, so it has no relic seat.
-	sale sellTab
+	// band is the top third's input, the same on every screen that shows it: the worn row and the
+	// consumables pane drag, and a click on either arms the sale. A sack opened over a full pane is
+	// the case it matters most for here — the cards are held back until a carried one is sold.
+	band bandControls
 }
 
 // The skip button: its face, and a size about a third of the shop's LEAVE.
@@ -118,11 +111,9 @@ func (s *GoodsScene) Init(gs *state.GlobalState) {
 		s.skipButton.BaseColor = ui.ButtonGray
 	}
 	s.skipping = false
-	s.sale.initSellTab()
-	s.sale.carriedOnly = true
+	s.band.init()
 
 	s.deck.InitAsPile()
-	s.relicDrag = ui.CardDrag{}
 
 	good, ok := session.GoodByKey(gs.PendingGood)
 	gs.PendingGood = ""
@@ -146,11 +137,13 @@ func (s *GoodsScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
-	s.updateRelicRow(gs)
-
-	// **The sell tab runs before the cards**, so a press on the tab or on the pane is spent here and
-	// never reaches the row underneath.
-	if s.updateSale(gs) {
+	// **The band runs before the cards**, so a press on a relic, a carried card or a tab is spent
+	// there and never reaches the row underneath. Live only while the cards are up: once one is
+	// taken there is nothing left to make room for.
+	if s.band.update(gs, bandHooks{
+		live:   s.stage == goodsPick,
+		forget: s.tip.Forget,
+	}) {
 		return nil
 	}
 
@@ -189,8 +182,10 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// is drawn in its parts so the pane can keep the seat a carried card is flying into empty until
 	// it lands.
 	drawBuildCard(gs, screen, gs.Run.Vitae())
-	drawBuildRelics(gs, screen, &s.relicDrag)
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, s.landingSeat, s.tip.Showing())
+	drawGuideCard(gs, screen)
+	drawBuildRelics(gs, screen, &s.band.relicDrag)
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil,
+		func(i int) bool { return s.landingSeat(i) || s.band.heldSkip(i) }, s.tip.Showing())
 	drawDeckPile(gs, screen)
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}
@@ -217,8 +212,8 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawCards(gs, screen)
 	if s.stage == goodsPick {
 		systems.DrawButton(gs, screen, s.skipButton)
-		s.sale.drawTab(gs, screen)
 	}
+	drawBandOverlay(gs, screen, &s.band)
 	systems.DrawTooltip(gs, screen, &s.tip)
 
 	// Last, and over everything: the panel covers the screen, so nothing of this one may be drawn
@@ -235,7 +230,7 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 func (s *GoodsScene) skipSeat(gs *state.GlobalState) image.Rectangle {
 	row := s.slot(gs, 0)
 	if s.good.Contains == session.ContentsEssences {
-		right, bottom := gs.PctX(buildBandRightPct), row.Max.Y
+		right, bottom := buildOpponentRect(gs).Max.X, row.Max.Y
 		return image.Rect(right-goodsSkipWidth, bottom-goodsSkipHeight, right, bottom)
 	}
 	left, top := gs.PctX(50)-goodsSkipWidth/2, row.Max.Y+goodsSkipGap
@@ -249,43 +244,6 @@ func (s *GoodsScene) typeLift(gs *state.GlobalState) int {
 		return 0
 	}
 	return (s.slot(gs, 0).Min.Y - goodsTitleTop(gs)) * goodsTypeLiftPct / 100
-}
-
-// updateSale runs the sell tab over the consumables pane, and reports whether it spent the frame's
-// press: **the shop's sale, through the shop's widget**, so a carried card sells here exactly as it
-// sells there. A press on a carried card arms the tab under it, a press on the armed card puts it
-// away, and the tab's own release sells. Only while the cards are up — once one is taken there is
-// nothing to make room for.
-func (s *GoodsScene) updateSale(gs *state.GlobalState) bool {
-	if s.stage != goodsPick {
-		s.sale.armed = shopSale{}
-		return false
-	}
-	if sale, ok := s.sale.takeSale(); ok {
-		if sellCarried(gs, sale.seat) {
-			s.tip.Forget()
-		}
-		return true
-	}
-	s.sale.updateSellTab(gs)
-
-	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) || !gs.CursorAllowed() {
-		return false
-	}
-	return s.sale.pressHeld(gs, image.Pt(gs.MouseX, gs.MouseY))
-}
-
-// updateRelicRow runs the drag over the worn row in the build band.
-//
-// **A click on a relic does nothing here**, as on the reward screen and in a fight: this screen's
-// clicks belong to the good it has opened.
-func (s *GoodsScene) updateRelicRow(gs *state.GlobalState) {
-	row := buildRelicRow(gs, nil)
-	if !gs.CursorAllowed() {
-		s.relicDrag.Cancel(row)
-		return
-	}
-	s.relicDrag.Update(gs, row)
 }
 
 // leaveGoods puts the player back on the shop they bought the good from.

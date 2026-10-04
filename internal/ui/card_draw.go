@@ -135,6 +135,12 @@ func CantripSpec(gs *state.GlobalState, c session.Cantrip, enabled bool) cards.S
 	}
 }
 
+// EssenceSpec is an essence's face, for a caller that draws it under a transform rather than
+// blitting it into a seat.
+func EssenceSpec(gs *state.GlobalState, w session.Essence, enabled bool) cards.Spec {
+	return essenceSpec(gs, w, enabled)
+}
+
 // RuneSpec is a rune's face, for a caller that draws it under a transform — a flight — rather than
 // blitting it into a seat.
 func RuneSpec(gs *state.GlobalState, p session.Rune, enabled, selected bool) cards.Spec {

@@ -155,8 +155,7 @@ func (s *CombatScene) consumablePaneRect(gs *state.GlobalState) image.Rectangle 
 // corner, so the pane ends where the cards do. That is 44 pixels the top band gives back, which is
 // what let the card grow to its present height — see Hand in internal/cards/style.go.
 func (s *CombatScene) topRowPanes(gs *state.GlobalState) (relics, consumables image.Rectangle) {
-	left, right := relicRowSpan(gs)
-	return topRowPanes(left, right, ui.DuelistCardRect(gs).Min.Y+relicPaneTopDrop)
+	return buildTopRowPanes(gs)
 }
 
 // relicRowSpan is the horizontal extent of the relic row: where it starts after the duelist card
@@ -716,7 +715,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		// **The seat a dragged relic left is drawn empty rather than closed up**, which is the
 		// hand's rule too: the row keeps its width and its pitch while a card is up, so nothing
 		// slides sideways under the cursor mid-drag.
-		if s.relicDrag.Dragging() && i == s.relicDrag.Origin() {
+		if s.band.relicDrag.Dragging() && i == s.band.relicDrag.Origin() {
 			continue
 		}
 
@@ -738,7 +737,8 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		// other card on this screen is under: a turn puts the card off the pixel grid, and that is
 		// the one time a card is filtered.
 		if !toast.lit {
-			ui.DrawRelicCard(gs, screen, at, relic, counters[relic.RelicRecord], true, false)
+			ui.DrawFloatingCard(gs, screen, at, i,
+				ui.RelicSpec(gs, relic, counters[relic.RelicRecord], true, false), cards.RelicStyle)
 			continue
 		}
 		ui.DrawFlyingCard(gs, screen,
@@ -754,14 +754,14 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 
 	// **The raised card, over the row it stands in** — after the row and before the dragged card,
 	// which still outranks everything.
-	if raised >= 0 && raised < len(worn) && !(s.relicDrag.Dragging() && raised == s.relicDrag.Origin()) {
+	if raised >= 0 && raised < len(worn) && !(s.band.relicDrag.Dragging() && raised == s.band.relicDrag.Origin()) {
 		relic := worn[raised]
 		ui.DrawRelicCard(gs, screen, relicSlotAt(r, raised, len(worn)), relic,
 			counters[relic.RelicRecord], true, false)
 	}
 
 	// Last, so the relic riding the cursor is over the rule and the fraction as well as the row.
-	drawDraggedRelic(gs, screen, &s.relicDrag, counters)
+	drawDraggedRelic(gs, screen, &s.band.relicDrag, counters)
 }
 
 // relicCountRect is where the worn count stands: **hung off the bottom-right corner of the pane
@@ -810,33 +810,10 @@ func (s *CombatScene) drawRelicCount(gs *state.GlobalState, screen *ebiten.Image
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 
-// updateRelicRow runs the drag over the worn row. Called every tick from Update.
-//
-// **The row is live while a round resolves, unlike the hand** *(owner's call, 2026-08-26)*. The
-// hand goes dead there because a queue being replayed is not a queue you may edit; the relic row has
-// no such reason. A round is decided in full by `combat.ResolveRound` before a frame of it is
-// drawn, so a reorder made while it plays back cannot reach it — it lands on the next one, which is
-// exactly what the player is told by watching the row move.
-//
-// **The one thing it must not leave behind is a disagreement.** See moveRelic.
-func (s *CombatScene) updateRelicRow(gs *state.GlobalState) {
-	row := s.relicRow(gs)
-
-	// A modal covering the screen, or a tutorial step holding input elsewhere, takes the row with
-	// it — canceling rather than returning, for the reason the action box cancels.
-	if s.modalUp() || !gs.CursorAllowed() {
-		s.relicDrag.Cancel(row)
-		return
-	}
-
-	s.relicDrag.Update(gs, row)
-}
-
 // relicRow is this screen's worn row, addressed by the shared drag.
 //
-// **A click on a relic does nothing here.** The shop is where a relic is bought and sold; on the
-// combat screen the row is a thing you read and now a thing you can reorder, and a click that did
-// something would be a third meaning for the same press.
+// **It is the geometry the band's drag runs on**, which is what lets the drain and the hover read
+// the same seats; the click and the move belong to the band — see updateBand.
 func (s *CombatScene) relicRow(gs *state.GlobalState) relicRow {
 	return relicRow{
 		rect: s.relicPaneRect(gs),

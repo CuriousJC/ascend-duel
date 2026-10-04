@@ -33,8 +33,6 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/hajimehoshi/ebiten/v2"
-
 	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -309,8 +307,8 @@ func (s *CombatScene) spendStone(gs *state.GlobalState, i int) {
 	// **The fighter is re-equipped where they stand**, because the stone counts ride on the
 	// duelist — see combat.Duelist.HandStones — and the fighter was built from the run at Init.
 	// Without this the raised rung would not be read until the next fight, which is exactly the
-	// dud a mid-fight consumable must not be.
-	s.fighter.Duelist = gs.Run.Equip(s.fighter.Duelist)
+	// dud a mid-fight consumable must not be. See refit.
+	s.refit(gs)
 	saveRun(gs)
 }
 
@@ -344,6 +342,7 @@ func (s *CombatScene) castCantrip(gs *state.GlobalState, i int) {
 
 	was := s.fighter.Duelist
 	s.fighter.Duelist = c.Cast(s.fighter.Duelist)
+	s.cast = append(s.cast, c)
 	s.cantripLife += s.fighter.MaxLife - was.MaxLife
 	s.cantripDMG += s.fighter.DMG - was.DMG
 	s.recordUse(gs, "cantrip", c.Name, castWords(was, s.fighter.Duelist))
@@ -473,8 +472,8 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	if shown := gs.Run.Granted(); len(shown) > 0 {
 		// **The rungs are raised on the fighter standing there**, for spendStone's reason: a shower
 		// applies its stones on arrival, and the counts ride on the duelist the screen built at
-		// Init.
-		s.fighter.Duelist = gs.Run.Equip(s.fighter.Duelist)
+		// Init. See refit.
+		s.refit(gs)
 		s.flyStonesToDuelist(gs, i, shown)
 	}
 
@@ -726,24 +725,6 @@ func (s *CombatScene) consumableSpendable(gs *state.GlobalState) func(session.Co
 	}
 }
 
-// updateConsumables runs the click on the consumables pane. Called every tick from Update.
-//
-// **The gate is the same predicate the card's own lit state reads**, so a card that is drawn dim
-// cannot be clicked and a card that is lit always works. Two predicates here is how a control comes
-// to look available and do nothing.
-func (s *CombatScene) updateConsumables(gs *state.GlobalState) {
-	row := s.consumableRow(gs)
-
-	// A modal covering the screen, or a tutorial step holding input elsewhere, takes the row with
-	// it — canceling rather than returning, exactly as the worn relic row does.
-	if s.modalUp() || !gs.CursorAllowed() {
-		s.runeDrag.Cancel(row)
-		return
-	}
-
-	s.runeDrag.Update(gs, row)
-}
-
 // consumableRow is the sack as a draggable row of cards, addressed by the shared drag — the same
 // controller the worn relics and the dealt hand use *(owner's call, 2026-09-17)*.
 //
@@ -818,51 +799,4 @@ func (r consumableRow) RowClick(i int) {
 	if r.click != nil {
 		r.click(i)
 	}
-}
-
-// consumableRow builds this screen's sack row.
-func (s *CombatScene) consumableRow(gs *state.GlobalState) consumableRow {
-	return consumableRow{
-		rect:  s.consumablePaneRect(gs),
-		held:  len(heldConsumables(gs)),
-		seats: consumableSeats(gs),
-		click: func(i int) {
-			if s.canSpendRunes(gs) {
-				s.spendConsumable(gs, i)
-			}
-		},
-		// **Only the runes reorder, and only among themselves** *(owner's call, 2026-09-19)*. The
-		// row is the sack then the pouch, so a seat index is not a sack index past the last rune —
-		// dragging across the join would reorder by a number that means something else. A rune is
-		// ordered because a rune is *aimed* and the player reads the row left to right; a stone
-		// names its own rung and has nothing to be before or after.
-		move: func(from, to int) {
-			if gs.Run == nil {
-				return
-			}
-			runes := len(heldRunes(gs))
-			if from >= runes || to >= runes {
-				return
-			}
-			if gs.Run.MoveRune(from, to) {
-				saveRun(gs)
-			}
-		},
-	}
-}
-
-// drawDraggedRune draws the rune riding the cursor, over everything else on the row.
-//
-// **Drawn from the run rather than from anything the drag is carrying**, which is what keeps the
-// card under the cursor and the card in the sack the same card. drawDraggedRelic's rule.
-func (s *CombatScene) drawDraggedRune(gs *state.GlobalState, screen *ebiten.Image) {
-	if !s.runeDrag.Dragging() {
-		return
-	}
-	held := heldConsumables(gs)
-	if s.runeDrag.Origin() >= len(held) {
-		return
-	}
-	c := held[s.runeDrag.Origin()]
-	drawConsumableCard(gs, screen, s.runeDrag.At(gs), c, canSpend(s.consumableSpendable(gs), c), true)
 }

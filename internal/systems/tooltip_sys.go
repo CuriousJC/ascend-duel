@@ -76,10 +76,8 @@ func UpdateTooltip(gs *state.GlobalState, t *models.Tooltip) {
 // DrawTooltip puts the panel on screen, beside whatever it is about. It draws nothing until the
 // dwell is served.
 //
-// **Beside the anchor rather than under the cursor**, so the panel never covers the card it is
-// explaining and does not slide about as the hand moves inside one card. It goes to the right, and
-// flips to the left when there is no room; the same on the vertical, clamped so a panel is never
-// half off the screen.
+// **Off the anchor rather than under the cursor**, so the panel never covers the card it is
+// explaining and does not slide about as the hand moves inside one card. See tipPlaceIn for where.
 func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip) {
 	if !t.Showing() {
 		return
@@ -233,14 +231,37 @@ func tipLayout(t *models.Tooltip, face, titleFace *text.GoTextFace) (title, body
 	return title, body, int(widest) + tipPad*2, h + tipPad*2
 }
 
-// tipPlace is where the panel goes: to the right of the anchor, flipping and clamping rather than
-// running off the screen.
+// tipPlace is where the panel goes: above the anchor, flipping and clamping rather than running off
+// the screen.
 func tipPlace(gs *state.GlobalState, anchor image.Rectangle, w, h int) image.Point {
 	return tipPlaceIn(gs.ScreenWidth, gs.ScreenHeight, anchor, w, h)
 }
 
 // tipPlaceIn is tipPlace against a screen of a given size.
+//
+// **Above the anchor and centered on it** *(owner's call)*, so the panel reads as the card's own
+// caption. A card too near the top for that — the band's relics and consumables, the two fighter
+// cards — takes it underneath instead, and a panel too tall for either side falls back to beside.
 func tipPlaceIn(screenW, screenH int, anchor image.Rectangle, w, h int) image.Point {
+	x := (anchor.Min.X+anchor.Max.X)/2 - w/2
+	if x+w > screenW-tipEdge {
+		x = screenW - tipEdge - w
+	}
+	if x < tipEdge {
+		x = tipEdge
+	}
+	if y := anchor.Min.Y - tipGap - h; y >= tipEdge {
+		return image.Pt(x, y)
+	}
+	if y := anchor.Max.Y + tipGap; y+h <= screenH-tipEdge {
+		return image.Pt(x, y)
+	}
+	return tipBeside(screenW, screenH, anchor, w, h)
+}
+
+// tipBeside is the fallback for a panel that fits neither above nor below its anchor: to the right,
+// flipping to the left when there is no room, clamped on the vertical.
+func tipBeside(screenW, screenH int, anchor image.Rectangle, w, h int) image.Point {
 	x := anchor.Max.X + tipGap
 	if x+w > screenW-tipEdge {
 		x = anchor.Min.X - tipGap - w

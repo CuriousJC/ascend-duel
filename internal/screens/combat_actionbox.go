@@ -611,9 +611,9 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// **A card the tutorial is pointing at wears the mark rather than a frame** — see
 		// marksFor, which reads the same focus list the spotlight is handed, so what is lit and
 		// what is clickable cannot come apart.
-		ui.DrawMarkedCard(gs, screen, seat.Min, cards.Hand,
-			c.Card, ui.HeldBy(s.fighter.Duelist, c.Card), enabled, c.selected,
-			ui.MarksFor(gs, seat))
+		spec := ui.CardSpec(c.Card, ui.HeldBy(s.fighter.Duelist, c.Card), enabled, c.selected)
+		spec.Mark = ui.MarksFor(gs, seat)
+		ui.DrawFloatingCard(gs, screen, seat.Min, i, spec, cards.Hand)
 	}
 
 	// **The raised card, over the row.** It answers the same four suppressions the loop does, so a

@@ -179,7 +179,8 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardD
 			continue
 		}
 		at := relicSlotAt(row, i, len(worn))
-		ui.DrawRelicCard(gs, screen, at, record, counters[record.RelicRecord], true, false)
+		ui.DrawFloatingCard(gs, screen, at, i,
+			ui.RelicSpec(gs, record, counters[record.RelicRecord], true, false), cards.RelicStyle)
 	}
 	// The relic riding the cursor is the band's overlay, drawn over everything — see
 	// drawBandOverlay.

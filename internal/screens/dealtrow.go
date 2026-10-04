@@ -217,8 +217,8 @@ func (r *dealtRow) draw(gs *state.GlobalState, screen *ebiten.Image) {
 		if !ok || ui.SlideInto(r.slides, i) || (r.drag.Dragging() && i == r.drag.Origin()) {
 			continue
 		}
-		ui.DrawCard(gs, screen, r.slot(gs, i).Min, cards.Hand, card, ui.HeldByRun(gs, card),
-			true, r.isSelected(i))
+		ui.DrawFloatingCard(gs, screen, r.slot(gs, i).Min, i,
+			ui.CardSpec(card, ui.HeldByRun(gs, card), true, r.isSelected(i)), cards.Hand)
 	}
 	ui.DrawCardSlides(gs, screen, r.slides,
 		func(gs *state.GlobalState, i, count int) image.Point {

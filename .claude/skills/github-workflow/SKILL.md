@@ -114,6 +114,10 @@ hold commits `main` has not got and a closed PR or two. Leave it out of the swee
 the report: do not delete it, do not flag it, do not ask about it. It only becomes your
 concern when the owner names it.
 
+**`secondary-work` is exempt on the same terms.** It is the branch of the second clone the owner
+runs beside this one — see the `secondary` skill — and it is reused across PRs, so it will often
+be behind `main` or hold work this copy cannot see. Leave it out of the sweep and the report.
+
 **This is the one deliberate exception to "stop before anything reaches the remote".** The
 general rule is about publishing *content*; deleting a branch whose content is already on
 `main` publishes nothing, and the proof below is what makes that true. Pushes, PRs and

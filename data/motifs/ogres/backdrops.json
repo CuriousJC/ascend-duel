@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "ogres-outer-cookfire-yard",
+    "Name": "Cookfire Yard",
+    "Tier": "outer",
+    "Art": "ogres-outer-cookfire-yard",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "An ogre camp's yard, with nobody in it: a broad stretch of trampled mud and flattened ground, clear from the foreground to the far side, closed in by a crude wall of piled boulders chinked with timber. Everything here is built too big and from whatever was found. Cauldrons large enough to bathe in hang over cold fire pits on tripods of whole tree trunks, a spit made from a wagon axle spans one of them, and heaps of gnawed bones lie beside it. Along the edges stand broken wagons, stacked wheels and barrels, a hand-cranked windlass made from a cart wheel and rope, and lean-to sheds roofed with sheets of hammered scrap iron. At the far side, in the boulder wall, is a single small door of rough planks banded with bent iron, barely taller than a person.",
+    "ElementDraw": {
+      "fire": "The camp sits on volcanic slopes. Lava seeps from fissures beyond the wall and glows in orange channels at its foot, the cauldrons are boiling over coals, the scrap-iron roofs are heat-blued, and smoke and embers drift across the sky. The yard is lit warm orange from below.",
+      "ice": "The camp sits in a frozen mountain pass. Snow is trampled to grey slush across the yard and drifts against the boulder wall, the cauldrons are frozen solid, icicles hang from the scrap-iron roofs, and grey peaks rise behind. The light is pale and blue.",
+      "lightning": "The camp sits on a bare storm-swept hilltop under dark clouds. Bent iron poles are lashed upright along the wall like crude lightning rods, small yellow arcs crawl along the scrap-iron roofs and the wagon tyres, and lightning forks down onto the hills behind. The light is hot yellow.",
+      "earth": "The camp sits in a bog at the edge of a dark forest. The mud is deep and green with standing water, moss and creepers climb the boulder wall, mushrooms grow out of the bone heaps, and great trees loom beyond. The light is dim and green.",
+      "arcane": "The camp is squatted inside the ruins of an older fortress that ogres did not build. Broken carved columns stand among the wagons, glowing purple runes run along the old stonework under the ogres' crude repairs, and a huge moon hangs overhead. The yard is lit violet."
+    }
+  },
+  {
+    "Backdrop": "ogres-inner-smithy-hall",
+    "Name": "Smithy Hall",
+    "Tier": "inner",
+    "Art": "ogres-inner-smithy-hall",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "An ogre longhouse smithy, with nobody in it: a broad floor of packed earth and rough flagstones, clear from the foreground to the far wall, under a high roof of whole tree trunks laid as rafters and patched with sheets of hammered scrap iron. A huge crude forge of piled stone stands against one side wall with a bellows made from a whole cowhide, and boulders worn flat on top serve as anvils beside it. Racks of tree-trunk clubs, flattened iron mauls and wagon-axle spears lean along the walls, a hoist of rope and a wagon wheel hangs from the rafters, and heaps of scrap — pots, hinges, cart tyres, armour beaten flat — are piled in the corners. In the far wall is a great closed door, many times the height of a person and filling much of the far wall: two massive leaves of rough timber banded and studded with hammered scrap iron, under a lintel of a single huge log.",
+    "ElementDraw": {
+      "fire": "The forge is roaring. Molten slag glows in a trench along the base of the walls, the boulder anvils are cherry-red where iron was beaten on them, sparks rise into the rafters, and the scrap is scorched and heat-blued. The hall is lit warm orange from below.",
+      "ice": "The smithy has gone cold. The forge is dead and frosted over, icicles hang from the rafters and the hoist, snow has blown in through gaps in the scrap-iron roof and drifted along the walls, and the clubs in their racks are rimed white. The light is pale and blue.",
+      "lightning": "The smithy is struck by the storm. Iron rods driven up through the roof carry small yellow arcs down into the scrap heaps, the hoist chain crackles, and every metal edge carries a faint hot-yellow halo. Rain and lightning show through the gaps overhead. The light is hot yellow.",
+      "earth": "The smithy is half sunk into a hillside. Roots push through the walls between the logs, moss grows over the cold forge, mushrooms sprout from the rotting rafters, and the floor is soft dark earth. The light is dim and green.",
+      "arcane": "The smithy is built into the shell of an old ruined hall. Carved stone pillars hold up the ogres' log rafters, glowing purple runes run along the old masonry, and the scrap on the anvils floats a little off the stone in a faint violet light. The hall is lit violet."
+    }
+  },
+  {
+    "Backdrop": "ogres-boss-boulder-throne",
+    "Name": "Boulder Throne",
+    "Tier": "boss",
+    "Art": "ogres-boss-boulder-throne",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "An ogre chief's feasting ground, with nobody in it: a broad stretch of trampled earth, clear from the foreground to the far side, ringed by a wall of piled boulders. A massive throne stands centred at the far side, built of stacked boulders bound with heavy chains, an upturned wagon bed for its back and two cart wheels for its arms, with a great iron cauldron at its foot. Feast tables of split tree trunks, heaps of bones and stacked barrels stand along the edges. The two portals stand one on each side of the throne, flanking it, each framed by an arch of lashed tree trunks bound with bands of hammered scrap iron.",
+    "ElementDraw": {
+      "fire": "The ground is on volcanic slopes. Lava runs in glowing orange channels along its edges, the cauldron boils over coals, the throne's chains glow dull red, and smoke and embers drift across the sky. The ground is lit warm orange from below.",
+      "ice": "The ground is in a frozen mountain pass. Snow covers it and drifts against the throne, the cauldron is frozen solid, icicles hang from the wagon bed and the chains, and grey peaks rise behind. The light is pale and blue.",
+      "lightning": "The ground is a bare hilltop under a dark storm sky. Small yellow arcs crawl along the throne's chains and the iron bands of the portal arches, and lightning forks down onto the hills behind. The light is hot yellow.",
+      "earth": "The ground is in a bog at the edge of a dark forest. Moss and creepers climb the throne and the portal arches, the mud is green with standing water, and great trees loom beyond. The light is dim and green.",
+      "arcane": "The ground is the courtyard of an old ruined fortress. Broken carved columns stand around the edges, glowing purple runes run across the old flagstones and the boulders of the throne, and a huge moon hangs overhead. The ground is lit violet."
+    }
+  }
+]

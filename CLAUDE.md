@@ -108,6 +108,7 @@ skill that does not exist.
 | [`achievements`](.claude/skills/achievements/SKILL.md) | adding or changing an achievement, a moment, a counter or an unlock, adding any new kind of progress the profile keeps, or touching `internal/screens/achieve.go` — a chosen-seed run must progress nothing |
 | [`bug-hunter`](.claude/skills/bug-hunter/SKILL.md) | any bug the owner found while playing — before diagnosing it, before fixing it, and before authoring a scenario record to reproduce it |
 | [`audit`](.claude/skills/audit/SKILL.md) | the milestone pass — the owner asking for an audit, a refactor sweep or a health check — and before any refactor that crosses more than one package |
+| [`secondary`](.claude/skills/secondary/SKILL.md) | the owner saying you are the secondary copy — and then before refreshing from main, checking for conflicts, or opening a PR from `secondary-work` |
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
 went wrong once and should not have to be rediscovered.

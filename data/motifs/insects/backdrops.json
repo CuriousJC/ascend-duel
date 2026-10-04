@@ -1,0 +1,97 @@
+[
+  {
+    "Backdrop": "insects-outer-termite-savanna",
+    "Name": "Termite Savanna",
+    "Tier": "outer",
+    "Art": "insects-outer-termite-savanna",
+    "Affinities": ["fire"],
+    "Draw": "A scorched savanna, with nobody in it: a broad stretch of baked red earth and dry grass, clear from the foreground to the far side. Termite mounds as tall as towers rise around the edges, their sides ridged and pocked with small vents, heat shimmering off them and orange light glowing from inside. Shed wings and empty husks lie in drifts at their feet. At the far side, in the base of the largest mound, is a single small opening, barely taller than a person. Heat haze, smoke and embers drift across the sky, and the savanna is lit warm orange."
+  },
+  {
+    "Backdrop": "insects-outer-frost-webs",
+    "Name": "Frost Webs",
+    "Tier": "outer",
+    "Art": "insects-outer-frost-webs",
+    "Affinities": ["ice"],
+    "Draw": "A frozen forest glade, with nobody in it: a broad stretch of snow, clear from the foreground to the far side. Bare black trees stand around the edges, and between them hang enormous spider webs, every strand rimed with frost so the webs glitter like lace. Bundles wrapped in silk hang from the branches, and icicles drip from the strands. At the far side, between two trees, is a single small doorway of webbing frozen stiff, barely taller than a person. The light is pale and blue."
+  },
+  {
+    "Backdrop": "insects-outer-storm-marsh",
+    "Name": "Storm Marsh",
+    "Tier": "outer",
+    "Art": "insects-outer-storm-marsh",
+    "Affinities": ["lightning"],
+    "Draw": "A reed marsh in a thunderstorm, with nobody in it: a broad stretch of flattened reeds and shallow water, clear from the foreground to the far side, under dark storm clouds. Tall reeds and cattails crowd the edges, and empty husks shed by something enormous cling to the stems, split open down the back. At the far side, in a low bank of dried mud, is a single small opening, barely taller than a person, and lightning is striking the reeds beside it. The light is hot yellow."
+  },
+  {
+    "Backdrop": "insects-outer-beetle-warren",
+    "Name": "Beetle Warren",
+    "Tier": "outer",
+    "Art": "insects-outer-beetle-warren",
+    "Affinities": ["earth"],
+    "Draw": "A vast chamber dug deep underground, with nobody in it: a broad floor of packed earth, clear from the foreground to the far wall, under a high rough ceiling hung with roots. The walls are gouged all over with the marks of mandibles, and balls of rolled dung the size of boulders sit along the edges among heaps of loose soil and shed carapace. In the far wall is a single small opening, barely taller than a person, framed with packed clay. The light is dim and green, from glowing moss on the walls."
+  },
+  {
+    "Backdrop": "insects-outer-paper-hive",
+    "Name": "Paper Hive",
+    "Tier": "outer",
+    "Art": "insects-outer-paper-hive",
+    "Affinities": ["arcane"],
+    "Draw": "The inside of an enormous wasp nest, with nobody in it: a broad floor of layered grey paper, clear from the foreground to the far wall, under a high domed ceiling of the same papery layers. The walls are lined with hexagonal comb, every cell empty, and torn scraps of paper and dropped wings lie at the edges. Purple light glows from deep inside the comb. In the far wall is a single small hexagonal opening, barely taller than a person. The whole nest is lit violet."
+  },
+  {
+    "Backdrop": "insects-inner-termite-savanna",
+    "Name": "Termite Spire",
+    "Tier": "inner",
+    "Art": "insects-inner-termite-savanna",
+    "Affinities": ["fire"],
+    "Draw": "A scorched savanna, with nobody in it: a broad stretch of baked red earth and dry grass, clear from the foreground to the far side. Termite mounds as tall as towers rise around the edges, their sides ridged and pocked with small vents, heat shimmering off them and orange light glowing from inside, and shed wings lie in drifts at their feet. At the far side rises a vast termite spire, and in its base is a great opening, many times the height of a person and filling much of the far side, closed by two massive leaves of hardened red clay like a heavy double gate, orange light glowing at its seams. Heat haze, smoke and embers drift across the sky, and the savanna is lit warm orange."
+  },
+  {
+    "Backdrop": "insects-inner-frost-webs",
+    "Name": "Frost Web Gate",
+    "Tier": "inner",
+    "Art": "insects-inner-frost-webs",
+    "Affinities": ["ice"],
+    "Draw": "A frozen forest glade, with nobody in it: a broad stretch of snow, clear from the foreground to the far side. Bare black trees stand around the edges, and between them hang enormous spider webs, every strand rimed with frost so the webs glitter like lace, with bundles wrapped in silk hanging from the branches. At the far side two enormous trees stand close together, and between them is a great gate of webbing, many times the height of a person and filling much of the far side, two thick frozen sheets of silk closed across it like a heavy double gate, glittering with frost. The light is pale and blue."
+  },
+  {
+    "Backdrop": "insects-inner-storm-marsh",
+    "Name": "Storm Marsh Gate",
+    "Tier": "inner",
+    "Art": "insects-inner-storm-marsh",
+    "Affinities": ["lightning"],
+    "Draw": "A reed marsh in a thunderstorm, with nobody in it: a broad stretch of flattened reeds and shallow water, clear from the foreground to the far side, under dark storm clouds. Tall reeds and cattails crowd the edges, and empty husks shed by something enormous cling to the stems. The far side is a towering wall of woven reeds and dried mud, built up like a nest, and in it is a great closed gate, many times the height of a person and filling much of the far side: two massive leaves of bound reed, with lightning striking the wall above it. The light is hot yellow."
+  },
+  {
+    "Backdrop": "insects-inner-beetle-warren",
+    "Name": "Beetle Warren Gate",
+    "Tier": "inner",
+    "Art": "insects-inner-beetle-warren",
+    "Affinities": ["earth"],
+    "Draw": "A vast chamber dug deep underground, with nobody in it: a broad floor of packed earth, clear from the foreground to the far wall, under a high rough ceiling hung with roots. The walls are gouged all over with the marks of mandibles, and balls of rolled dung the size of boulders sit along the edges among heaps of loose soil. In the far wall a great opening rises many times the height of a person and fills much of the far wall, closed by two massive plates of shed beetle shell set into the clay like a heavy double gate. The light is dim and green, from glowing moss on the walls."
+  },
+  {
+    "Backdrop": "insects-inner-paper-hive",
+    "Name": "Paper Hive Gate",
+    "Tier": "inner",
+    "Art": "insects-inner-paper-hive",
+    "Affinities": ["arcane"],
+    "Draw": "The inside of an enormous wasp nest, with nobody in it: a broad floor of layered grey paper, clear from the foreground to the far wall, under a high domed ceiling of the same papery layers. The walls are lined with hexagonal comb, every cell empty, with purple light glowing from deep inside it. In the far wall is a great hexagonal opening, many times the height of a person and filling much of the far wall, closed by two massive leaves of layered paper like a heavy double gate, purple light glowing at its seams. The whole nest is lit violet."
+  },
+  {
+    "Backdrop": "insects-boss-brood-chamber",
+    "Name": "Brood Chamber",
+    "Tier": "boss",
+    "Art": "insects-boss-brood-chamber",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "The heart of a colossal hive, with nobody in it: a broad, flat floor, clear from the foreground to the far wall, under a vaulted ceiling of hexagonal comb rising out of sight. At the centre of the far side stands a great column of comb, many times the height of a person, running from floor to ceiling, every cell packed with pale glossy eggs. Its foot spreads out to either side and stops short of the open floor. The two portals stand one on each side of the column, flanking it, each framed by an arch of comb.",
+    "ElementDraw": {
+      "fire": "The hive runs hot. The wax of the comb is softening and glowing amber-orange, slow drips of molten wax run down the column, and the eggs glow from within like embers. Heat shimmers in the air, and the chamber is lit warm orange from below.",
+      "ice": "The hive is frozen. Frost furs every cell, the eggs are sealed in clear ice, and icicles hang from the vaulted comb overhead. The light is pale and blue.",
+      "lightning": "The hive crackles. Small yellow arcs jump from cell to cell across the column and the vaulted comb, the eggs flicker with light inside, and a tear in the ceiling shows a dark storm sky. The light is hot yellow.",
+      "earth": "The hive is built of mud and clay rather than wax, deep underground. Roots break through the vaulted comb overhead, moss grows in the empty cells at the edges, and the eggs are half-buried in soft earth. The light is dim and green.",
+      "arcane": "The eggs glow purple from within, each one a small lamp, and faint violet patterns ripple across the comb like something thinking. The chamber is lit violet."
+    }
+  }
+]

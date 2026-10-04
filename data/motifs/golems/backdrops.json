@@ -1,0 +1,97 @@
+[
+  {
+    "Backdrop": "golems-outer-volcano-quarry",
+    "Name": "Volcano Quarry",
+    "Tier": "outer",
+    "Art": "golems-outer-volcano-quarry",
+    "Affinities": ["fire"],
+    "Draw": "A quarry terrace cut into the flank of a volcano, with nobody in it: a broad flat floor of black rock, clear from the foreground to the far side, with the mountain rising steep behind under a smoky sky. Veins of glowing orange run through the black rock of the quarry walls like seams of molten ore. Dwarven quarry works line the edges: timber cranes with chains, rough-cut blocks stacked on wooden sledges, abandoned picks and chisels, and steps cut square into the rock. At the far side, cut into the quarry face, is a single small square doorway, barely taller than a person, framed with plain carved dwarven bands. Smoke and embers drift across the sky, and the quarry is lit warm orange from below."
+  },
+  {
+    "Backdrop": "golems-outer-glacier-pass",
+    "Name": "Glacier Pass",
+    "Tier": "outer",
+    "Art": "golems-outer-glacier-pass",
+    "Affinities": ["ice"],
+    "Draw": "A high mountain pass beside a glacier, with nobody in it: a broad flat stretch of packed snow and bare grey rock, clear from the foreground to the far side, with snow peaks rising all around. Veins of glowing pale blue run through the rock of the mountainsides and into the glacier's ice. Old dwarven waystones carved with plain bands stand along the edges of the pass, half-buried in snow, beside a toppled ore cart. At the far side, cut into the mountainside, is a single small square doorway, barely taller than a person, fringed with icicles. The light is pale and blue."
+  },
+  {
+    "Backdrop": "golems-outer-storm-peak",
+    "Name": "Storm Peak",
+    "Tier": "outer",
+    "Art": "golems-outer-storm-peak",
+    "Affinities": ["lightning"],
+    "Draw": "A broad flat ledge near a mountain summit in a thunderstorm, with nobody in it: bare dark basalt, clear from the foreground to the far side, under black storm clouds. Veins of glowing yellow run through the basalt like seams of ore. Tall dwarven lightning rods of iron and copper stand along the edges of the ledge, anchored in carved stone sockets and wired to each other with heavy cable, and lightning is striking them. At the far side, cut into the peak, is a single small square doorway, barely taller than a person, banded with iron. The light is hot yellow."
+  },
+  {
+    "Backdrop": "golems-outer-moss-gorge",
+    "Name": "Moss Gorge",
+    "Tier": "outer",
+    "Art": "golems-outer-moss-gorge",
+    "Affinities": ["earth"],
+    "Draw": "The floor of a deep mountain gorge, with nobody in it: a broad flat stretch of turf and stone, clear from the foreground to the far side, between sheer rock walls that climb out of sight. Veins of glowing green run through the rock walls, and moss, ferns and hanging creepers cover them. An old dwarven mine rail runs along one edge on timber sleepers, with a rusted cart standing on it, and a thin waterfall falls down the far wall into a pool at its side. At the far side, cut into the gorge wall, is a single small square doorway, barely taller than a person, overgrown with moss. The light is dim and green."
+  },
+  {
+    "Backdrop": "golems-outer-crystal-ridge",
+    "Name": "Crystal Ridge",
+    "Tier": "outer",
+    "Art": "golems-outer-crystal-ridge",
+    "Affinities": ["arcane"],
+    "Draw": "A broad flat mountain ridge at night, with nobody on it: a stretch of bare rock and short grass, clear from the foreground to the far side, under a starry sky with peaks falling away on either side. Veins of glowing purple run through the rock, and clusters of purple crystal break out of it along the edges. Tall carved dwarven obelisks stand at the edges of the ridge, cut with plain bands that glow faintly violet. At the far side, cut into a rock outcrop, is a single small square doorway, barely taller than a person, ringed with crystal. The whole ridge is lit violet."
+  },
+  {
+    "Backdrop": "golems-inner-magma-forge",
+    "Name": "Magma Forge",
+    "Tier": "inner",
+    "Art": "golems-inner-magma-forge",
+    "Affinities": ["fire"],
+    "Draw": "A vast cavern forge deep under a volcano, with nobody in it: a broad flat floor of black stone, clear from the foreground to the far wall, under a cavern roof lost in smoke. Veins of glowing orange run through the cavern walls, and a river of lava flows in a carved channel along one side. Dwarven forge works line the edges: anvils the size of wagons, great hoists of chain and timber, crucibles on iron frames, and stacked plates of cast stone and metal waiting to be fitted. In the far wall is a great closed dwarven gate, many times the height of a person and filling much of the far wall: two massive leaves of black stone carved deep with dwarven knotwork, under a heavy square lintel, its seams glowing orange. The cavern is lit warm orange from below."
+  },
+  {
+    "Backdrop": "golems-inner-ice-cavern",
+    "Name": "Ice Cavern",
+    "Tier": "inner",
+    "Art": "golems-inner-ice-cavern",
+    "Affinities": ["ice"],
+    "Draw": "A vast cavern of ice and rock inside a glacier, with nobody in it: a broad flat floor of frozen lake, clear from the foreground to the far wall, under a vaulted roof of blue ice hung with icicles. Veins of glowing pale blue run through the rock and the ice of the walls. Old dwarven work stands frozen at the edges: carved pillars holding up the roof, a toppled ore cart, and chains hanging from iron rings set in the rock. In the far wall is a great closed dwarven gate, many times the height of a person and filling much of the far wall: two massive leaves of grey granite carved deep with dwarven knotwork, under a heavy square lintel furred with frost. The light is pale and blue."
+  },
+  {
+    "Backdrop": "golems-inner-lodestone-cavern",
+    "Name": "Lodestone Cavern",
+    "Tier": "inner",
+    "Art": "golems-inner-lodestone-cavern",
+    "Affinities": ["lightning"],
+    "Draw": "A vast cavern of dark basalt, with nobody in it: a broad flat floor of stone, clear from the foreground to the far wall, under a high roof of columnar basalt. Veins of glowing yellow run through the rock and crackle with small arcs. Dwarven copper conduits run along the walls between carved pillars, feeding great copper coils that stand at the edges, and lumps of lodestone hang in iron cradles. In the far wall is a great closed dwarven gate, many times the height of a person and filling much of the far wall: two massive leaves of dark basalt banded with copper and carved deep with dwarven knotwork, with arcs running along its bands. The light is hot yellow."
+  },
+  {
+    "Backdrop": "golems-inner-root-grotto",
+    "Name": "Root Grotto",
+    "Tier": "inner",
+    "Art": "golems-inner-root-grotto",
+    "Affinities": ["earth"],
+    "Draw": "A vast grotto deep under a mountain, with nobody in it: a broad flat floor of packed earth and stone, clear from the foreground to the far wall, under a high cavern roof. Veins of glowing green run through the rock walls, great roots from the forest far above break through the roof and hang down into the cavern, and moss and pale ferns grow across the stone. Old dwarven mine works stand along the edges: timber props, rails, rusted carts and a waterwheel turned by an underground stream. In the far wall is a great closed dwarven gate, many times the height of a person and filling much of the far wall: two massive leaves of carved stone wound about with roots and moss. The light is dim and green."
+  },
+  {
+    "Backdrop": "golems-inner-geode-hall",
+    "Name": "Geode Hall",
+    "Tier": "inner",
+    "Art": "golems-inner-geode-hall",
+    "Affinities": ["arcane"],
+    "Draw": "A vast cavern inside a giant geode, with nobody in it: a broad flat floor of smoothed stone laid by dwarves, clear from the foreground to the far wall, under a vaulted roof lined everywhere with great clusters of purple crystal. Veins of glowing purple run through the rock between the crystals. Carved dwarven pillars stand along the edges, cut with plain bands that glow faintly violet. In the far wall is a great closed dwarven gate, many times the height of a person and filling much of the far wall: two massive leaves of dark stone inlaid with crystal and carved deep with dwarven knotwork. The whole hall is lit violet."
+  },
+  {
+    "Backdrop": "golems-boss-makers-hall",
+    "Name": "Maker's Hall",
+    "Tier": "boss",
+    "Art": "golems-boss-makers-hall",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A great dwarven hall carved into the heart of a mountain, with nobody in it: a broad flat floor of laid stone, clear from the foreground to the far wall, under a high vaulted roof held up by massive carved pillars. This is where golems are made. At the centre of the far side stands a colossal empty assembly cradle, many times the height of a person: a frame of carved stone and iron scaffolding hung with chains and hooks, built to hold a giant body while it is put together, with nothing in it. Glowing veins run out of the walls and across the floor in carved channels, all converging on the cradle. Stacked plates of stone and metal and great carving tools stand along the edges. The two portals stand one on each side of the cradle, flanking it, each framed by a carved dwarven arch of square stone deep with knotwork.",
+    "ElementDraw": {
+      "fire": "The hall is cut from black volcanic rock. The veins and the channels in the floor glow orange like running magma, the cradle's iron is heated red where they meet it, and embers drift up into the vault. The hall is lit warm orange from below.",
+      "ice": "The hall is cut from grey granite furred with frost. The veins and the channels in the floor glow pale blue, icicles hang from the cradle's chains and the vault, and snow has drifted in along the walls. The light is pale and blue.",
+      "lightning": "The hall is cut from dark basalt banded with copper. The veins and the channels in the floor glow yellow and crackle with small arcs, which jump from the channels up the cradle's chains. The light is hot yellow.",
+      "earth": "The hall is cut from green-veined stone. The veins and the channels in the floor glow green, roots break through the vault and wind down the pillars, and moss grows over the stacked plates. The light is dim and green.",
+      "arcane": "The hall is cut from dark stone shot through with purple crystal. The veins and the channels in the floor glow purple, the carved bands on the pillars glow violet, and the cradle's chains hang a little slack, as if something light were lifting them. The hall is lit violet."
+    }
+  }
+]

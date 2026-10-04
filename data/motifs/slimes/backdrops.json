@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "slimes-outer-dripping-culvert",
+    "Name": "Dripping Culvert",
+    "Tier": "outer",
+    "Art": "slimes-outer-dripping-culvert",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A slime-soaked culvert hall, with nobody in it: a broad floor of wet stone flags, clear from the foreground to the far wall, under a high arched ceiling of old brick and pipework. Thin streams of clear jelly drip from the ceiling and run in channels along the edges of the floor, leaving the centre open and slick. Buckets, broken grates, rusted tools and half-dissolved crates sit against the side walls, all filmed with slime. At the far side, set into the brickwork above a shallow drain, is a single small closed maintenance door of swollen wood and rusted iron, about the height of a person.",
+    "ElementDraw": {
+      "fire": "The culvert is hot and bubbling. Orange slime boils in the side channels, steam rises from the wet stones, and the rusted grates glow dull red where the ooze touches them. The small door is scorched and sweating sap.",
+      "ice": "The culvert is frozen over. Blue slime has set into glassy sheets over the stones, icicles hang from the pipes, and the side channels are clogged with translucent frozen jelly. Frost rims the small door and the air is cold blue.",
+      "lightning": "The culvert crackles with charge. Yellow sparks skitter across puddles of slime, pipe joints glow in hot halos, and little arcs jump between rusted tools at the edges. The small door's hinges spit yellow light.",
+      "earth": "The culvert is choked with green muck. Moss, roots and fungus grow out of the brickwork, grit and pebbles float suspended in the slime, and the side channels crawl with mud-thick ooze. The light is dim and green.",
+      "arcane": "The culvert is full of purple, starry slime. The puddles hold tiny bright motes like night skies, droplets hang in the air longer than they should, and faint violet rings spread through the ooze without anything touching it."
+    }
+  },
+  {
+    "Backdrop": "slimes-inner-vat-chamber",
+    "Name": "Vat Chamber",
+    "Tier": "inner",
+    "Art": "slimes-inner-vat-chamber",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A slime vat chamber, with nobody in it: a broad floor of stained tile and stone, clear from the foreground to the far wall, under a high ceiling crowded with pipes, chains and dripping valves. Huge glass vats and open settling tanks stand along both side walls, pushed back from the fighting lane, filled with layers of translucent jelly. Hoses sag between them, and the floor edges are littered with funnels, cracked beakers, paddles and buckets sealed under slime. The far wall is dominated by a great closed double hatch of riveted iron and thick glass, many times the height of a person, its seams gummed shut.",
+    "ElementDraw": {
+      "fire": "The vats hold molten orange slime. Bubbles rise and burst against the glass, valves vent steam, and the tile floor glows where hot ooze has spilled. The great hatch is heat-blued around its seams.",
+      "ice": "The vats hold pale blue gel frozen into cloudy layers. Frost feathers across the glass, icicles hang from the hoses, and frozen spills make smooth shelves over the floor edges. The great hatch is sealed with thick rime.",
+      "lightning": "The vats pulse with yellow charge. Coils are clamped to the glass, sparks race through the slime in branching paths, and arcs jump from tank to tank above the open floor. The great hatch flickers with electrical halos.",
+      "earth": "The vats hold green, mineral-heavy sludge. Roots have forced through cracks in the tile, mushrooms cluster around the tank bases, and gravel hangs suspended in the slime like seeds in jelly. The great hatch is stained with moss.",
+      "arcane": "The vats hold purple slime full of drifting stars. Some droplets float upward instead of falling, beakers orbit slowly over the benches at the edges, and violet ripples cross the great hatch's glass panes."
+    }
+  },
+  {
+    "Backdrop": "slimes-boss-gelatin-core",
+    "Name": "Gelatin Core",
+    "Tier": "boss",
+    "Art": "slimes-boss-gelatin-core",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "The core of a slime colony, with nobody in it: a broad circular floor of stone and tile, clear from the foreground to the far side, under a vast domed ceiling webbed with pipes and hanging translucent strands. At the centre of the far side rises a huge clear gelatinous mass held inside a cracked iron ring, pulsing slowly and shedding droplets into troughs that run along the walls. The two portals stand one on each side of the mass, flanking it. Around the edges are half-dissolved barrels, measuring rods, broken drains and low tanks of quivering ooze.",
+    "ElementDraw": {
+      "fire": "The gelatin core glows orange like molten glass. Heat shimmer rises from it, the troughs bubble and steam, and scorched iron bands glow at the edges. The portal frames are hot dark metal lit from below.",
+      "ice": "The gelatin core is blue and frozen nearly solid, with trapped bubbles and cloudy layers inside it. Frost spreads over the iron ring and the troughs hold sluggish ice. The portal frames are rimed and cold.",
+      "lightning": "The gelatin core flashes yellow from within. Branching arcs leap through the mass and snap to the iron ring, making the hanging strands twitch. The portal frames carry a bright electric halo.",
+      "earth": "The gelatin core is green and heavy with silt, pebbles and tiny roots suspended inside it. Moss grows on the iron ring, fungus crowds the troughs, and the whole dome is lit in a damp green cast.",
+      "arcane": "The gelatin core is purple and deep, like a little galaxy trapped in jelly. Bright motes spiral around a dark hollow inside the mass, droplets orbit in slow loops, and the portal frames shine violet around their rainbow swirls."
+    }
+  }
+]

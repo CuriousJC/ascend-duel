@@ -237,83 +237,28 @@ func Forms() []Form {
 // the screen, and so a pure-white glyph Specular still has somewhere to go.
 var Surface = color.RGBA{R: 240, G: 239, B: 234, A: 255}
 
-// The back of a card: a dark face with a pale mark centered on it, and nothing else. It
-// says "a card, and you may not see which" — the draw pile is shuffled, so a back that
-// carried an element or a category would leak the very thing the shuffle protects.
+// The back of a card: the deck's own picture inside a hairline rim, or a plain dark face for a
+// deck with no picture yet. It says "a card, and you may not see which" — the draw pile is
+// shuffled, so a back that carried an element or a category would leak the very thing the shuffle
+// protects. **What a back may say is whose deck it is**, which is what Spec.Art carries on one.
 //
-// BackSurface is near-black rather than pure black for the same reason Surface is
-// off-white rather than white: a card has to read as an object on the screen and not as a
-// hole cut in it. BackInk is pure white, the one place on a card that color is spent on
-// nothing but contrast.
+// BackSurface is near-black rather than pure black for the same reason Surface is off-white rather
+// than white: a card has to read as an object on the screen and not as a hole cut in it. It is the
+// whole face of an undrawn back, and the ground a drawn one is composited over.
+//
 // BackRim is a thin neutral edge around the back.
 //
 // **It is what makes a pile read as a pile.** Three backs offset by a few pixels are three
 // near-black shapes on a dark screen, and without an edge they merge into one card with a
-// lopsided corner — which is exactly how the first version drew, and the reason this exists.
+// lopsided corner.
 //
 // Neutral rather than the element color, which keeps the rule the back is built on: the
 // border is where a card says which card it is, so a back may have an edge but never a
 // *colored* one.
 var (
 	BackSurface = color.RGBA{R: 14, G: 14, B: 18, A: 255}
-	BackInk     = color.RGBA{R: 255, G: 255, B: 255, A: 255}
 	BackRim     = color.RGBA{R: 96, G: 98, B: 108, A: 255}
 )
-
-// BackMark is which shape a card back carries: **whose deck this is**, not what the card is.
-//
-// **Named designs drawn in code rather than a recolor or a picture** *(2026-08-11)*. A
-// recolor would have been one data field and nearly invisible on a near-black card at the
-// draw pile's 44 pixels. A silhouette is what reads at that size and what can be generated
-// without a file per duelist.
-//
-// The cost is deliberate and worth stating: **adding a back is a code change**, not a data
-// one. `data/duelists.json` can only choose among what is drawn here.
-//
-// **Append, never insert.** The screen's card cache keys on the Spec, so these ordinals are
-// part of a cache key — the same hazard combat.ConceptID carries.
-type BackMark int
-
-const (
-	// MarkTriangle is the zero value and what every card had before backs were named, so a
-	// Spec that says nothing about its back draws what the game shipped with.
-	MarkTriangle BackMark = iota
-	MarkDiamond
-	MarkChevron
-)
-
-var backMarkNames = [...]string{
-	MarkTriangle: "triangle",
-	MarkDiamond:  "diamond",
-	MarkChevron:  "chevron",
-}
-
-func (m BackMark) String() string {
-	if int(m) >= len(backMarkNames) {
-		return "?"
-	}
-	return backMarkNames[m]
-}
-
-// BackMarks is every mark, in a fixed order, for the contact sheet. A slice rather than a
-// map: Go randomizes map order and a sheet whose rows moved between runs is useless as a
-// diff.
-func BackMarks() []BackMark { return []BackMark{MarkTriangle, MarkDiamond, MarkChevron} }
-
-// ParseBackMark resolves the name in `data/duelists.json`.
-//
-// **It falls back to the triangle rather than failing**, and reports that it did. A back is
-// cosmetic — the wrong shape on a pile is a bug worth a log line, and refusing to start a
-// duel over one would be a worse outcome than the bug. Same reasoning as
-// combat.ParsePlanStyle falling back to brute.
-func ParseBackMark(name string) (BackMark, bool) {
-	for i, n := range backMarkNames {
-		if n == name {
-			return BackMark(i), true
-		}
-	}
-	return MarkTriangle, false
-}
 
 // Ink colors. Hueless on purpose — the border is carrying the only color on the face.
 var (
@@ -642,18 +587,9 @@ type Spec struct {
 	// contact sheet is the first thing to use it.
 	Dragging bool
 
-	// Back is which mark this card's back carries, when FaceDown is set.
-	//
-	// **A duelist and a card back go together** *(2026-08-11)*: the plan is to offer
-	// different duelists as different decks, and the back is how you tell at a glance whose
-	// deck is on the table. It is named in `data/duelists.json` and parsed by ParseBackMark.
-	//
-	// The zero value is the triangle, which is what every card had before this existed — so
-	// a Spec that says nothing about its back still draws the back the game shipped with.
-	Back BackMark
-
 	// FaceDown draws the back instead of the face, and every other field is ignored except
-	// Back.
+	// Art, which is the deck's back — see data.DeckData. A face-down Spec with no Art draws the
+	// plain dark back.
 	//
 	// **A field rather than a separate RenderBack, so the cache does not need to learn
 	// about it.** internal/screens keys its cache on the Spec, so a face-down card is

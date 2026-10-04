@@ -1104,9 +1104,9 @@ func TestACardWhosePictureIsItsFaceNamesItselfNowhere(t *testing.T) {
 	}
 }
 
-// The back is one drawing with one job, so there are only three things to pin: that it is
-// the same object as a face, that it says nothing about which card it is, and that it does
-// not need the things a face needs.
+// The back is one drawing with one job, so there are only four things to pin: that it is
+// the same object as a face, that it says nothing about which card it is, that it does not need
+// the things a face needs, and that a deck's picture lands inside the rim rather than over it.
 
 func TestBackHasExactlyTheFaceSilhouette(t *testing.T) {
 	// The load-bearing property. A flip swaps one picture for the other mid-animation and a
@@ -1129,7 +1129,8 @@ func TestBackHasExactlyTheFaceSilhouette(t *testing.T) {
 
 func TestBackIsTheSamePictureWhateverTheCard(t *testing.T) {
 	// The draw pile is shuffled, so a back that varied with the card under it would hand the
-	// player the order. Every field but FaceDown has to reach the drawing as nothing.
+	// player the order. Every field but FaceDown and the deck's Art has to reach the drawing as
+	// nothing.
 	want := render(t, Spec{FaceDown: true}, Hand)
 
 	loud := Spec{
@@ -1155,9 +1156,35 @@ func TestBackRendersWithNoFont(t *testing.T) {
 	if err != nil {
 		t.Fatalf("rendering a back without fonts: %v", err)
 	}
-	if img.RGBAAt(Hand.Width/2, Hand.Height/2) != BackInk {
-		t.Errorf("center of the back is %v, want the mark %v",
-			img.RGBAAt(Hand.Width/2, Hand.Height/2), BackInk)
+	if img.RGBAAt(Hand.Width/2, Hand.Height/2) != BackSurface {
+		t.Errorf("center of an undrawn back is %v, want the plain surface %v",
+			img.RGBAAt(Hand.Width/2, Hand.Height/2), BackSurface)
+	}
+}
+
+func TestADecksPictureFillsTheBackInsideItsRim(t *testing.T) {
+	// The deck's picture covers the back, and the rim is still drawn round it — the rim is what
+	// separates one back in a pile from the back behind it, so a picture painted over it would
+	// merge the pile into one card.
+	art := image.NewRGBA(image.Rect(0, 0, Hand.Width, Hand.Height))
+	paint := color.RGBA{R: 200, G: 40, B: 160, A: 255}
+	for y := 0; y < Hand.Height; y++ {
+		for x := 0; x < Hand.Width; x++ {
+			art.SetRGBA(x, y, paint)
+		}
+	}
+
+	for name, st := range map[string]Style{"hand": Hand, "stack": Stack} {
+		img, err := Render(Spec{FaceDown: true, Art: art}, st, nil)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if got := img.RGBAAt(st.Width/2, st.Height/2); got != paint {
+			t.Errorf("%s: center of a drawn back is %v, want the deck's picture %v", name, got, paint)
+		}
+		if got := img.RGBAAt(st.Width/2, 0); got == paint {
+			t.Errorf("%s: the picture is painted over the rim at the top edge", name)
+		}
 	}
 }
 

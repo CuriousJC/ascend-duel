@@ -2,7 +2,7 @@
 //
 // The stats live in the embedded rules type so internal/combat can take them without ever seeing
 // a picture, and what this package adds is the handful of things a screen needs and the engine
-// must not have — the record key, the portrait key, the name, the card back.
+// must not have — the record key, the portrait key, the name, the deck.
 //
 // There is no sprite here, and no Ebitengine import at all. Both duelists are cards now, so a
 // portrait travels as an assets key rather than as an image, and the card is drawn by

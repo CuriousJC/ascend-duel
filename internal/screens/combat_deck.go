@@ -44,7 +44,7 @@ import (
 //
 // **It is the base rather than the size as of 2026-08-15**, because a Plan card widens one hand
 // by two. See handTarget, which is what the refill actually reads; this is what it widens from.
-// Eight is left alone deliberately: `discardsPerRound` and now Plan are the levers meant to
+// Eight is left alone deliberately: the deck's discards and now Plan are the levers meant to
 // answer draw variance, and moving all three at once would leave no way to tell which did the
 // work. A tonic growing hand size is the permanent version, read through handTarget.
 const handSize = 8
@@ -374,13 +374,14 @@ func (s *CombatScene) handTarget() int {
 	return s.run.HandSize(handSize)
 }
 
-// roundDiscards is how many discards a round of this fight allows: discardsPerRound plus every
-// discards tonic the run has drunk.
+// roundDiscards is how many discards a round of this fight allows: the deck's own figure plus
+// every discards tonic the run has drunk.
 func (s *CombatScene) roundDiscards() int {
+	base := s.fighter.Deck.Discards
 	if s.run == nil {
-		return discardsPerRound
+		return base
 	}
-	return s.run.Discards(discardsPerRound)
+	return s.run.Discards(base)
 }
 
 // drawHand fills the hand up to handTarget, reshuffling the discard back into the draw pile

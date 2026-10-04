@@ -18,10 +18,12 @@ import (
 // Left there, the shared layer cannot be lifted out without reaching back down into a scene, which
 // is the shape a package boundary exists to make impossible.
 
-// DuelistFromRecord resolves a playable duelist. **No sheet to look up** — the character
-// block replaced the fighter's sprite, so a duelist record has no picture in it.
+// DuelistFromRecord resolves a playable duelist and the deck it plays from. **No sheet to look
+// up** — the character block replaced the fighter's sprite, so a duelist record has no picture in
+// it; the one picture a duelist owns is its deck's back.
 func DuelistFromRecord(gs *state.GlobalState, record string) *entities.Combatant {
-	return entities.NewDuelistFrom(gs.Duelists[record])
+	d := gs.Duelists[record]
+	return entities.NewDuelistFrom(d, gs.Decks[d.Deck])
 }
 
 // SetEnabled flips a button between disabled and normal without clobbering a hover or

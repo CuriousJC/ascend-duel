@@ -34,29 +34,17 @@ import (
 // event.
 
 const (
-	// deckCountSize is the count written beside the pile. **`60/60` is 41.2 pixels of kubasta at
-	// 22**, which is what the strip it used to be right-aligned into was sized for; it is
-	// right-aligned on the pile's own edge now — see deckCaptionRect.
+	// deckCountSize is the count written under the pile, on the bottom line of the screen.
 	deckCountSize = 22
 
 	deckStackDepth = 3 // backs drawn behind the front one, to read as a pile
 	deckStackStep  = 3 // pixels each one is offset up and left
 
-	// **The pile stands in the duelist card's column, at the size of every other card**
-	// *(2026-09-04, owner's call)*. It was a half-size back in the bottom-right corner, which made
-	// it the one card on the screen drawn small — and it stood in the corner the enemy card, the
-	// sort column and DUEL! now line up on. Left-aligned under the duelist card and the realm
-	// caption, it is the bottom of a column that reads as one thing: who you are, where you are,
-	// what is left to draw.
-	//
-	// **The corner is the pile's again** *(2026-09-04)*. The frame's cog and ledger stood there
-	// and have moved to the control column on the right — see screens.ControlColumnLeft — so what
-	// the pile is measured against is the screen's own bottom edge, with its count under it.
+	// deckStackBottomInset is the air under the bottom line of the screen: the line the pile's count,
+	// the discard badge and the cog at the foot of the control column all sit on.
 	deckStackBottomInset = 10
 
-	// deckCaptionGap is the air between the pile and the two things hung off it: the sack button
-	// on the line above, the count on the line below. **Neither is beside it**, because what is to
-	// its right at that height is the action-point bar, which spans the whole hand.
+	// deckCaptionGap is the air between the between-fights pile and the count written under it.
 	deckCaptionGap = 6
 
 	// outboundDriftUp is how far a discarded card rises as it leaves, and outboundSpin how
@@ -174,41 +162,23 @@ func (s *CombatScene) inboundTo(i int) bool {
 // deckStackRect is the front card of the pile: the one that is drawn on top and the one a
 // click is tested against.
 //
-// **It is cards.Stack at three quarters, in the duelist's column** *(2026-09-04, owner's call)*.
-// The style was a fifth — a back drawn small, because the strip it used to stand in was 86 pixels
-// deep — and then briefly the full card, which in a column of its own read as the biggest thing on
-// the screen. Three quarters is a card that is plainly a card and plainly not in play.
-//
-// Left-aligned with the duelist card above it, with the count on the line underneath.
+// **It is a hand card, in the hand row, in the duelist's column.** The pile is level with the
+// cards it deals — same top, same bottom, same size — so a card leaving it for the hand travels
+// straight along the row rather than growing on the way, and the pile reads as the hand's own
+// source rather than as a control parked in a corner. The duelist card's column is free at that
+// height, and the hand band starts to its right.
 func deckStackRect(gs *state.GlobalState) image.Rectangle {
-	w, h := cards.Stack.Width, cards.Stack.Height
-
-	bottom := gs.ScreenHeight - deckStackBottomInset - deckCountSize - deckCaptionGap
-	left := gs.PctX(ui.DuelistCardLeftPct)
-
-	return image.Rect(left, bottom-h, left+w, bottom)
+	left, top := gs.PctX(ui.DuelistCardLeftPct), handTop(gs)
+	return image.Rect(left, top, left+cardWidth, top+cardHeight)
 }
 
-// deckCountRect is the line under the pile, where the count is written left-aligned with it
-// *(2026-09-04, owner's call)*.
+// deckCountRect is the count, left-aligned with the pile on the bottom line of the screen — the
+// line the discard badge and the cog sit on, so the bottom of the screen still reads as one line
+// with the pile raised into the hand row above it.
 func deckCountRect(gs *state.GlobalState) image.Rectangle {
 	pile := deckStackRect(gs)
-	top := pile.Max.Y + deckCaptionGap
-	return image.Rect(pile.Min.X, top, pile.Max.X, top+deckCountSize)
-}
-
-// deckCaptionRect is the line above the pile: the sack button at its left end and the count at
-// its right, both hung off the pile's own edges.
-//
-// **Above rather than beside**, which is the whole of what the move into the column cost. The pile
-// used to have the width of the corner to spread into; it now fills its column, and what is to its
-// right at that height is the action-point bar.
-func deckCaptionRect(gs *state.GlobalState) image.Rectangle {
-	// The pile's *bounds*, not its front card: the backs are drawn up and to the left, so the
-	// front card's top edge is not the pile's.
-	pile := deckStackBounds(gs)
-	bottom := pile.Min.Y - deckCaptionGap
-	return image.Rect(pile.Min.X, bottom-ui.PileSlotSize, pile.Max.X, bottom)
+	bottom := gs.ScreenHeight - deckStackBottomInset
+	return image.Rect(pile.Min.X, bottom-deckCountSize, pile.Max.X, bottom)
 }
 
 // deckStackBounds is the whole pile including the backs behind the front one, which is what
@@ -255,13 +225,11 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 	// Back to front, so the front card is the one on top and the one the click tests.
 	for i := deckStackDepth - 1; i >= 0; i-- {
 		off := i * deckStackStep
-		s.drawCardBack(gs, screen, image.Pt(front.Min.X-off, front.Min.Y-off), cards.Stack)
+		s.drawCardBack(gs, screen, image.Pt(front.Min.X-off, front.Min.Y-off), cards.Hand)
 	}
 
-	// **Under the pile, left-aligned with it** *(2026-09-04, owner's call)*. It shares an edge with
-	// the cards either way, which is what makes the pile read as the thing the number is about; what
-	// the line underneath buys is that the count does not have to find room beside a card in a
-	// column exactly one card wide.
+	// **Under the pile, left-aligned with it**, on the bottom line. It shares an edge with the
+	// cards, which is what makes the pile read as the thing the number is about.
 	count := deckCountRect(gs)
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(count.Min.X), float64(count.Min.Y))
@@ -277,7 +245,7 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 // nobody holds just to throw every field away. Separate from drawFlyingCard because a
 // resting card must not be filtered.
 func (s *CombatScene) drawCardBack(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style) {
-	img := ui.CardImage(gs, s.backSpec(), st)
+	img := ui.CardImage(gs, s.backSpec(gs), st)
 	if img == nil {
 		return
 	}
@@ -345,11 +313,11 @@ func outboundGeoM(from image.Point, t float64) ebiten.GeoM {
 func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f cardFlight) {
 	to := slotAt(gs, f.index, f.count)
 	face := ui.CardSpec(f.card, ui.HeldBy(s.fighter.Duelist, f.card), true, false)
-	drawDealtCard(gs, screen, deckStackRect(gs).Min, to, f.Progress(), face, s.backSpec())
+	drawDealtCard(gs, screen, deckStackRect(gs).Min, to, f.Progress(), face, s.backSpec(gs))
 }
 
-// drawDealtCard is the deal itself: a card out of the pile, growing to hand size, turning face up
-// on the way, landing in `to`.
+// drawDealtCard is the deal itself: a card out of the pile, turning face up on the way, landing in
+// `to`.
 //
 // **It takes a face and two points rather than a card**, which is the whole of what it costs to be
 // shared. The
@@ -365,12 +333,6 @@ func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f
 func drawDealtCard(gs *state.GlobalState, screen *ebiten.Image, from, to image.Point, raw float64, face, back cards.Spec) {
 	t := ui.EaseOut(raw)
 
-	// The stack is a small card and the hand is a full-size one, so the journey scales as
-	// well as travels. Landing is at exactly 1, which is what keeps a resting card the same
-	// blit it has always been — filtering a pixel-art glyph is fine in motion and not at rest.
-	startScale := float64(cards.Stack.Width) / float64(cardWidth)
-	scale := startScale + (1-startScale)*t
-
 	x := float64(from.X) + (float64(to.X)-float64(from.X))*t
 	y := float64(from.Y) - (float64(from.Y)-float64(to.Y))*t
 
@@ -380,29 +342,17 @@ func drawDealtCard(gs *state.GlobalState, screen *ebiten.Image, from, to image.P
 	faceDown := raw < 0.5
 	flip := math.Abs(1 - 2*raw)
 
-	style, spec := cards.Hand, face
+	spec := face
 	if faceDown {
 		spec = back
 	}
 
 	var geo ebiten.GeoM
 	geo.Translate(-cardWidth/2, -cardHeight/2)
-	geo.Scale(scale*flip, scale)
+	geo.Scale(flip, 1)
 	geo.Translate(x+cardWidth/2, y+cardHeight/2)
 
-	// A face-down card is drawn from the Stack style, which is the size the back is
-	// authored at; the geometry above is written in Hand units, so it is scaled up to match
-	// before the flight's own transform applies.
-	if faceDown {
-		var b ebiten.GeoM
-		b.Scale(float64(cardWidth)/float64(cards.Stack.Width),
-			float64(cardHeight)/float64(cards.Stack.Height))
-		b.Concat(geo)
-		geo = b
-		style = cards.Stack
-	}
-
-	ui.DrawFlyingCard(gs, screen, spec, style, geo)
+	ui.DrawFlyingCard(gs, screen, spec, cards.Hand, geo)
 }
 
 // resolvedCard is one of the player's cards for this round, on its way from the hand to its

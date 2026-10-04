@@ -381,6 +381,13 @@ elemental.
 45 + 10 = **55 cards**, and a hand of eight is 15% of that. **The hand is a constant eight**;
 nothing in the deck draws extra cards, and the only answer to a bad draw is the Discard button.
 
+**A duelist plays from a deck, and a deck is a back and a discard count.** `data/decks.json` is the
+catalog and `data/duelists.json` names the one each duelist holds. The back is the picture on every
+face-down card the duelist owns, so it says whose deck is on the table and nothing about any card in
+it. **The discards are the deck's own figure**: how many presses of Discard a round allows, refilled
+at the end of each round, and the base a discards tonic adds to. One press costs one discard however
+many cards were selected. The catalog is drawn on the card sheet, `go run ./tools/cardsheet`.
+
 ### The deck is a starting position, not the game's deck
 
 **Every count on this page describes the deck a run opens with, and a run spends itself changing

@@ -677,8 +677,15 @@ func RelicSpec(gs *state.GlobalState, r data.RelicData, counter string, enabled,
 	}
 }
 
-// WarnedBack keeps a bad name in duelists.json to one log line rather than one per frame.
-var WarnedBack bool
+// BackSpec is a face-down card of one deck: its back's picture, or the plain back for a deck not
+// drawn yet.
+//
+// **One function for every screen that draws a back**, because the combat pile, the smaller pile
+// between fights and a card mid-flip are one object, and a second spelling of it is how a pile in
+// the shop comes to wear a different back from the cards dealt out of it.
+func BackSpec(gs *state.GlobalState, deck data.DeckData) cards.Spec {
+	return cards.Spec{FaceDown: true, Art: Artwork(gs, deck.ArtKey())}
+}
 
 // ArtFor maps the rules' element onto the drawing package's.
 //

@@ -291,9 +291,10 @@ func animFace(gs *state.GlobalState, c combat.Card) cards.Spec {
 	return ui.CardSpec(c, ui.HeldByRun(gs, c), true, false)
 }
 
-// animBack is the card back the deal turns over from.
+// animBack is the card back the deal turns over from: the player's own deck's, so the page shows
+// the back the game deals.
 func animBack(gs *state.GlobalState) cards.Spec {
-	return cards.Spec{FaceDown: true}
+	return ui.BackSpec(gs, ui.DuelistFromRecord(gs, ui.PlayerRecord).Deck)
 }
 
 // animRelic is a relic to toast. **Whichever the catalog answers first by sorted key**, so the page

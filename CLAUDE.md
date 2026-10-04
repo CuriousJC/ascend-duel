@@ -175,6 +175,7 @@ go run ./tools/relicart -kind rune   # the same, for data/runes.json and assets/
 go run ./tools/relicart -kind stone  # the same, for data/stones.json and assets/stone
 go run ./tools/relicart -kind cantrip  # the same, for data/cantrips.json and assets/cantrip
 go run ./tools/relicart -kind other  # the potions, the tonics and the sealed goods together, into assets/other
+go run ./tools/relicart -kind deck   # the card backs, for data/decks.json and assets/deck
 go run ./tools/artcompare   # one catalog's art, every candidate batch side by side, as real cards
 go run ./tools/artcompare -catalog relic    # the same for relics; card, essence, rune, stone, other
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones

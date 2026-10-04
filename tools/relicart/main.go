@@ -16,6 +16,7 @@
 //	go run ./tools/relicart -kind stone    # the stones instead
 //	go run ./tools/relicart -kind card     # the playing cards instead
 //	go run ./tools/relicart -kind upgrade  # the upgrade art an altered card wears over its face
+//	go run ./tools/relicart -kind deck     # the card backs, one per deck
 //	go run ./tools/relicart -n                 # say what would happen and touch nothing
 //	go run ./tools/relicart -blocky            # quantize to the block grid on the way down
 //
@@ -112,6 +113,11 @@ var catalogs = map[string]catalog{
 		inbox:   filepath.Join(".scratch", "to-process-upgrade-art"),
 		out:     filepath.Join("assets", "upgrade-art"),
 		sources: []source{{json: "data/upgrade_art.json", key: "UpgradeArtRecord"}},
+	},
+	"deck": {
+		inbox:   filepath.Join(".scratch", "to-process-deck-art"),
+		out:     filepath.Join("assets", "deck"),
+		sources: []source{{json: "data/decks.json", key: "DeckRecord"}},
 	},
 	"other": {
 		inbox: filepath.Join(".scratch", "to-process-other-art"),

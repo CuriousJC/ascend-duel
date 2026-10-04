@@ -11,7 +11,8 @@ is what lets every layer above read it, and it **must never import upward**.
 
 | File | Loader | Holds |
 |---|---|---|
-| `duelists.json` | `LoadDuelists` | who the player can be: three stats and their card back |
+| `duelists.json` | `LoadDuelists` | who the player can be: three stats and the deck they play from — a `Deck` naming no record in `decks.json` panics at load |
+| `decks.json` | `LoadDecks` | what a duelist plays from: a `Discards` count per round, and a back — an `Art` stem under `assets/deck/` (keyed `deck-<stem>`) and a `Draw` brief pasted after `docs/art/deck_art_prompt.MD`. Empty `Art` draws the plain back in code |
 | `motifs/<motif>/motif.json` | `LoadMotifs` | the roster, one directory per motif: the realms it may theme, what its portal says about it (`Text`, `ElementText`), and every creature that can stand in one of its three rooms |
 | `motifs/<motif>/backdrops.json` | `LoadMotifs` | optional: the rooms that motif's fights are drawn in front of, one per record per tier, drawn once per element. `MotifData.BackdropFor` picks one off the run seed, the realm and the fight's tier — derived, never rolled — and a fight with none draws `default-background`. See the `motifs` skill |
 | `journey.json` | `LoadJourney` | how tall the journey is and the two rates the growth curve compounds at |
@@ -130,8 +131,8 @@ each field is the figure the game uses, so the roster is tuned in units a design
 
 ### Duelists and enemies are separate files
 
-Their fields do not overlap — an enemy has a portrait, a deck and a realm band; a duelist has a
-card back. One struct would make every field optional and none of them mean anything.
+Their fields do not overlap — an enemy has a portrait, a deck and a realm band; a duelist has
+a deck from `decks.json`. One struct would make every field optional and none of them mean anything.
 
 **`ValidRealms` is `[lowest, highest]`** against the journey's realms (`journey.json`), so a
 Dragon is not on realm one.

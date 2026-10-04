@@ -86,8 +86,8 @@ func (s *Session) Realm() int { return journey.RealmOf(s.fight) }
 // Element is the element whoever stands in the current room is dealt as, which is the realm's
 // theme. Empty on a run with no journey.
 //
-// **It is a string rather than a combat.Element** for the reason a card back is: this package
-// carries what the data file writes, and the parsing belongs where the cards are built.
+// **It is a string rather than a combat.Element**: this package carries what the data file
+// writes, and the parsing belongs where the cards are built.
 func (s *Session) Element() string {
 	if s.journey == nil {
 		return ""

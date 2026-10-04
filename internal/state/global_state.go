@@ -192,8 +192,12 @@ type GlobalState struct {
 	Journey data.JourneyData
 
 	// **The player and the opponents do not share a struct.** A creature has affinities, a
-	// picture family and a tier; a duelist has a card back. See data/duelists_data.go.
+	// picture family and a tier; a duelist has a deck. See data/duelists_data.go.
 	Duelists map[string]data.DuelistData
+
+	// Decks is what a duelist can play from: a back and the discards a round allows. Loaded once
+	// from data/decks.json; which one this run is holding is the duelist's own `Deck`.
+	Decks map[string]data.DeckData
 
 	// Relics is what the player can equip. **Genuinely global for the same reason the rosters
 	// are** — it is loaded once from data/relics.json and no screen owns it. What is *equipped*

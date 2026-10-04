@@ -39,17 +39,17 @@ type Combatant struct {
 	// from its record, and moving that is a separate change.
 	Name string
 
-	// CardBack is the mark on the back of this duelist's cards, by name. A string rather
-	// than a cards.BackMark because entities must not import the drawing package — the
-	// screen parses it with cards.ParseBackMark, exactly as it parses an element.
+	// Deck is the deck this duelist plays from — its back and how many discards a round allows —
+	// resolved off the record's `Deck` key when the duelist is built.
 	//
-	// Empty for an enemy: enemies do not have a deck the player ever sees the back of.
-	CardBack string
+	// Zero for an enemy: enemies do not have a deck the player ever sees the back of, and nothing
+	// discards from one.
+	Deck data.DeckData
 
 	// Element is which element this opponent was dealt as, by name — the realm's theme. Empty for
 	// the player, whose cards each carry their own.
 	//
-	// **A string rather than a combat.Element**, like CardBack: what this package carries is what
+	// **A string rather than a combat.Element**: what this package carries is what
 	// the data file writes, and the parsing belongs where the cards are built.
 	Element string
 }
@@ -103,20 +103,20 @@ func enemyElement(name string) combat.Element {
 	return e
 }
 
-// NewDuelistFrom builds the player from a duelist record.
+// NewDuelistFrom builds the player from a duelist record and the deck it plays from.
 //
 // **No sprite, no plan style, and neither is a gap.** The character block replaced the
 // fighter's sprite on the combat screen, and a duelist is planned by whoever is holding the
 // mouse — which is exactly why the two records split.
-func NewDuelistFrom(d data.DuelistData) *Combatant {
+func NewDuelistFrom(d data.DuelistData, deck data.DeckData) *Combatant {
 	c := &Combatant{
 		Duelist: combat.Duelist{
 			DMG:     d.DMG,
 			Actions: d.Actions,
 			MaxLife: d.HP,
 		},
-		Name:     d.Name,
-		CardBack: d.CardBack,
+		Name: d.Name,
+		Deck: deck,
 	}
 	c.CurrentLife = c.MaxLife
 	return c

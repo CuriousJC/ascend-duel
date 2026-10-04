@@ -91,7 +91,7 @@ func damageChainLines(c combat.Card, h held) []string {
 
 	lines := []string{multiplierText(c.Amount()) + " the card"}
 	for _, contribution := range contributions {
-		lines = append(lines, multiplierText(contribution.Effect.Amount)+" "+
+		lines = append(lines, multiplierText(contribution.Effect.DamagePct(h.vitae))+" "+
 			combat.RelicOf(contribution.Relic).Name)
 	}
 
@@ -113,7 +113,7 @@ func damageChainLines(c combat.Card, h held) []string {
 func relicScale(c combat.Card, h held) int {
 	scale := 100
 	for _, contribution := range combat.RelicContributionsAt(h.worn, combat.MomentCardDamage, c) {
-		scale = scale * contribution.Effect.Amount / 100
+		scale = scale * contribution.Effect.DamagePct(h.vitae) / 100
 	}
 	return scale
 }

@@ -236,6 +236,29 @@ func TestTheHandEventCarriesEachTermsRelicMultipliers(t *testing.T) {
 	}
 }
 
+// A relic scaling by the purse is a term in the sum like any other, worked out against the vitae
+// the duelist is holding — otherwise the sum adds up to half of what the hit lands for.
+func TestTheHandEventCarriesThePerVitaeMultiplier(t *testing.T) {
+	ofLife := relic(t, "vitae-scale", RelicRule{
+		When: MomentCardDamage,
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoScaleDamagePerVitae, Amount: 1}},
+	})
+
+	attacker := duelist(100, 8, 100).Wearing(WornRelic{Relic: ofLife})
+	attacker.Vitae = 100
+
+	log, _, _ := resolve(attacker, duelist(10, 5, 100000), []Card{Of(Bash, Fire)}, nil, 1)
+
+	hand, ok := firstOfKind(log, KindHand)
+	if !ok {
+		t.Fatal("the blow produced no hand event")
+	}
+	if got := hand.HandRelicScale[0][0]; got != 200 {
+		t.Errorf("at 100 vitae the term was counted at %d%% by the relic, want 200%%", got)
+	}
+}
+
 // A duelist wearing no growing relic says nothing about growth, which is every blow of a run that
 // has not bought one.
 func TestABlowWithNoRelicsReportsNoneFiring(t *testing.T) {

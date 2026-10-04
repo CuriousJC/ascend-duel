@@ -2301,7 +2301,7 @@ chore in front of a decision that has already been made. What the pouch is for i
 - **Only the runes reorder.** The row is the sack then the pouch, so a seat past the last rune is
   not a sack position; a drag across the join would reorder by a number meaning something else. A
   stone has nothing to be before or after.
-- **Selling pays what any consumable pays** — see §Selling a consumable.
+- **Selling pays what any consumable pays** — see §Selling, on every screen that shows the band.
 - **Selling is the shop's and nowhere else's**, because selling is a trade and the shop is the only
   screen that trades. Using is on both, since a rung is worth raising in front of the hand that
   wants it and also worth raising while shopping for the next one.
@@ -2585,40 +2585,54 @@ kinds fill the seats is the player's business.
   chosen — 201 against a 203-pixel card, a two-pixel overlap — and **both panes take the same one**,
   which is what makes the line read as one row divided rather than two rows at two spacings. A row
   closes up rather than shrinking a card, because a smaller relic is a different drawing.
-  **The shop and the reward screen pay nothing**: there is no opponent card, the span is 1662, and
-  the pitch hits its cap at 229 before it hits the span, so nothing overlaps there.
-- **The shop buys back anything in the pane** — see §Selling a consumable.
+  **Every screen showing the band has the same span**, because every one of them has a card in the
+  opponent's corner — the creature in a fight, The Prismatic everywhere else.
+- **Anything in the pane can be sold wherever the pane is shown** — see §Selling, on every screen
+  that shows the band.
 - **A fixture may still plant more than two.** `session.StartingRunes` goes past the cap on
   purpose, exactly as a scenario's hand may be longer than the game's own — four fixtures walk six
   runes through the dialog. The pane draws the first two seats and the count reports the honest
   number, so an over-full sack looks like what it is.
 
-### Selling a consumable
+### Selling, on every screen that shows the band
 
-**The shop buys back anything in the consumables pane — a rune, an essence, a cantrip or a stone —
-for one price, `session.ConsumableSalePrice`, which is 2.** It is the worn relics' gesture: a click on a carried
-card arms a `SELL FOR 2?` tab under it, a click on the tab sells, and a click on the armed card
-again puts it away. Only one thing on the top row is armed at a time, relic or consumable, and
-nothing is written under either until it is armed — the tab is where the price is read.
+**Anything on the top row can be sold wherever the top row is shown** *(owner's call, 2026-10-04)*
+— the combat screen, the reward screen, the shop, an opened sealed good and the portal. The top
+third of those screens is one scene, the duelist card, the worn relics, the consumables pane and
+the card in the opponent's corner, and what can be done to it is the same everywhere: a relic or a
+carried card drags along its row, and a click arms a `SELL FOR N?` tab under it; a click on the tab
+sells, and a click on the armed card again puts it away. Only one thing on the row is armed at a
+time, and nothing is written under either until it is armed — the tab is where the price is read.
 
-- **One price for every kind.** A pack of four costs 5 and one of the four is kept, so 2 is a loss
+- **A relic sells for its tier's figure, a consumable for `session.ConsumableSalePrice`, which is
+  2**, whatever kind it is. A pack of four costs 5 and one of the four is kept, so 2 is a loss
   against what the thing cost to find — the relic rule, where a sale never pays back the purchase.
   **A record worth more takes a multiplier on its own record, read over this base**, rather than a
   second constant beside it. No catalog carries one yet.
-- **Selling is what frees a seat.** The pane holds two and a full pane dims the shop's carried
-  packs, so a sale is how a run makes room for the pack it wants without spending something it does
-  not.
-- **The shop's and nowhere else's**, for the stones' reason: selling is a trade and the shop is the
-  only screen that trades.
+- **A carried card on a screen that can spend it hangs two tabs, USE over SELL.** That is the
+  combat screen, and USE is lit exactly when the selection is what the card needs — see the next
+  section.
+- **In a fight, selling waits for planning**, as spending does: a sale changes the duelist, and a
+  round already decided must not have its duelist changed under it. The rows still reorder while a
+  round plays back; a reorder lands on the next round.
+- **A relic sold mid-fight stops counting at once** *(owner's call, 2026-10-04)*. The duelist in
+  the room is rebuilt from the run without it — its life, its DMG, its clock and its rules all go —
+  and the fight is carried across: the wound stays a wound, never below one life, and the standing
+  shields, the banked surge, the statuses, the other relics' growth this fight and every cantrip cast
+  this fight come with it. **What has happened stays happened**: a card a flip or a demotion ring
+  changed as it was dealt keeps the face it was dealt with.
+- **Selling is what frees a seat.** The pane holds two. A rune sack or a scroll bundle opens over a
+  full pane all the same, and its cards are held back until a carried card is sold to make room —
+  or the good is skipped.
 
 ### Select the cards, then click the consumable
 
-**Aiming a consumable is select-then-click**: select the cards in the hand, then click the rune in
-the consumables pane. The essence offer follows the same order, so there is one way to point a
+**Aiming a consumable is select-then-click**: select the cards in the hand, click the rune in the
+consumables pane, and click the USE tab that hangs under it beside SELL. The essence offer follows the same order, so there is one way to point a
 consumable at a card anywhere in the game, and no modal, no two-stage prompt and no second drawing
 of the hand row anywhere in it.
 
-- **A consumable is clickable exactly when the selection is what it needs**, and dim otherwise —
+- **A consumable's USE is live exactly when the selection is what it needs**, and dim otherwise —
   the same state an unaffordable card on the shop shelf takes. That predicate is the whole of what
   makes the reversed order readable: the player is never asked whether they have picked the right
   cards, because the consumable that wants them is the one that is lit.

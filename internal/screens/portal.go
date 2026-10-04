@@ -121,9 +121,8 @@ type PortalScene struct {
 	// deck is the panel over the whole deck, opened by clicking the pile.
 	deck ui.DeckToggle
 
-	// relicDrag is the press in progress over the worn relic row. The row is reorderable on every
-	// screen it is drawn on, because worn order is firing order.
-	relicDrag ui.CardDrag
+	// band is the top third's input, the same on every screen that shows it — see band.go.
+	band bandControls
 
 	tip models.Tooltip
 }
@@ -140,7 +139,7 @@ func (s *PortalScene) Init(gs *state.GlobalState) {
 		s.take[i].ScreenY = (g.Min.Y + g.Max.Y) / 2
 	}
 	s.deck.InitAsPile()
-	s.relicDrag = ui.CardDrag{}
+	s.band.init()
 	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 }
 
@@ -165,11 +164,8 @@ func (s *PortalScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
-	row := buildRelicRow(gs, nil)
-	if gs.CursorAllowed() {
-		s.relicDrag.Update(gs, row)
-	} else {
-		s.relicDrag.Cancel(row)
+	if s.band.update(gs, bandHooks{live: true, forget: s.tip.Forget}) {
+		return nil
 	}
 
 	offers := gs.Run.PortalOffers()
@@ -198,7 +194,7 @@ func (s *PortalScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		return
 	}
 
-	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.relicDrag, s.tip.Showing())
+	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.band, s.tip.Showing())
 	drawDeckPile(gs, screen)
 
 	center := float64(portalGateMids[0]+portalGateMids[len(portalGateMids)-1]) / 2
@@ -225,6 +221,7 @@ func (s *PortalScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		s.drawPanel(gs, screen, i, offers[i])
 		systems.DrawSwirl(screen, s.take[i], portalSwirl(gs))
 	}
+	drawBandOverlay(gs, screen, &s.band)
 	systems.DrawTooltip(gs, screen, &s.tip)
 
 	// Last, and over everything: the panel covers the screen.

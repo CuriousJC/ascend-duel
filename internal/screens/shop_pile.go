@@ -17,7 +17,7 @@ func (s *ShopScene) clickedPile(gs *state.GlobalState, at image.Point) bool {
 		return false
 	}
 	s.deck.Toggle()
-	s.armed = shopSale{}
+	s.band.sale.armed = shopSale{}
 	s.tip.Forget()
 	return true
 }

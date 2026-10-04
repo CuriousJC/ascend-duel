@@ -192,19 +192,19 @@ func TestClickingAWornRelicOnlyArmsIt(t *testing.T) {
 	before := gs.Run.Worn()
 
 	var shop ShopScene
-	shop.arm(relicSale(before[0]))
+	shop.band.sale.arm(relicSale(before[0]))
 
 	if got := gs.Run.Worn(); len(got) != len(before) {
 		t.Errorf("arming sold a relic: wearing %v, was %v", got, before)
 	}
-	if shop.armed != relicSale(before[0]) {
-		t.Errorf("armed %+v, want %q", shop.armed, before[0])
+	if shop.band.sale.armed != relicSale(before[0]) {
+		t.Errorf("armed %+v, want %q", shop.band.sale.armed, before[0])
 	}
 
 	// The same relic again puts the question away, rather than a second click confirming it.
-	shop.arm(relicSale(before[0]))
-	if shop.armed.any() {
-		t.Errorf("a second click left %+v armed", shop.armed)
+	shop.band.sale.arm(relicSale(before[0]))
+	if shop.band.sale.armed.any() {
+		t.Errorf("a second click left %+v armed", shop.band.sale.armed)
 	}
 	if got := gs.Run.Worn(); len(got) != len(before) {
 		t.Errorf("a second click sold a relic: wearing %v", got)
@@ -221,13 +221,13 @@ func TestTheSellTabClearsTheHint(t *testing.T) {
 
 	for _, sale := range []shopSale{relicSale(gs.Run.Worn()[0]), heldSale(0)} {
 		var shop ShopScene
-		shop.armed = sale
+		shop.band.sale.armed = sale
 
-		seat, ok := shop.armedSeat(gs)
+		seat, ok := shop.band.sale.armedSeat(gs)
 		if !ok {
 			t.Fatalf("%+v is armed and has no seat", sale)
 		}
-		tab := shop.sellTabRect(gs)
+		tab := shop.band.sale.sellTabRect(gs)
 		if tab.Max.Y >= shopHintTop {
 			t.Errorf("%+v: the tab ends at %d and the hint starts at %d",
 				sale, tab.Max.Y, shopHintTop)
@@ -246,14 +246,14 @@ func TestTheSellTabClearsTheHint(t *testing.T) {
 // round, so two tabs can never stand at once.
 func TestArmingOneSaleDropsTheOther(t *testing.T) {
 	var shop ShopScene
-	shop.arm(relicSale("dmg-all-slash"))
-	shop.arm(heldSale(1))
-	if shop.armed != heldSale(1) {
-		t.Errorf("armed %+v after arming a carried card", shop.armed)
+	shop.band.sale.arm(relicSale("dmg-all-slash"))
+	shop.band.sale.arm(heldSale(1))
+	if shop.band.sale.armed != heldSale(1) {
+		t.Errorf("armed %+v after arming a carried card", shop.band.sale.armed)
 	}
-	shop.arm(relicSale("dmg-all-slash"))
-	if shop.armed != relicSale("dmg-all-slash") {
-		t.Errorf("armed %+v after arming a relic", shop.armed)
+	shop.band.sale.arm(relicSale("dmg-all-slash"))
+	if shop.band.sale.armed != relicSale("dmg-all-slash") {
+		t.Errorf("armed %+v after arming a relic", shop.band.sale.armed)
 	}
 }
 

@@ -30,7 +30,7 @@ func TestTheBubbleDoesNotCoverTheEssencesItIsPointingAt(t *testing.T) {
 	// The screen as the step actually meets it: two prizes on the table and a deck to aim them at.
 	// An empty offer row shrinks the anchor enough that the fallback is never reached, which is
 	// exactly the shape that would let this pass while the bug was in.
-	reward := &PostBattleScene{prizes: make([]prize, 2), offer: make([]int, 8)}
+	reward := &PostBattleScene{prizes: make([]prize, 2), dealtRow: dealtRow{offer: make([]int, 8), top: offerRowTop}}
 
 	var overlay tutorialOverlay
 	bubble := overlay.place(gs, reward, tutorial.Step{

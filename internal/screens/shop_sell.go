@@ -56,20 +56,24 @@ func heldSale(seat int) shopSale    { return shopSale{kind: saleHeld, seat: seat
 // any is whether something is armed.
 func (a shopSale) any() bool { return a.kind != saleNone }
 
-// sellTab is the sale itself: what is armed, the one confirm tab hung under it, and the request the
-// tab raises. **Every screen that sells a carried card holds one of these** — the shop, and the goods
-// screen a sealed good opens onto — so there is one gesture and one tab, wherever it is made.
+// sellTab is the sale itself: what is armed, the tabs hung under it, and the request each raises.
+// **Every screen that shows the band holds one**, through bandControls, so there is one gesture and
+// one tab wherever a relic or a carried card is sold.
 //
-// carriedOnly is a screen where a relic cannot be sold: an armed relic there has no seat, and is
-// disarmed on the next update. **The zero value is the shop's**, which sells both.
+// **A carried card on a screen that can spend it hangs two tabs**, USE over SELL *(owner's call,
+// 2026-10-04)* — the stone pouch's shape. canUse is that screen's answer for one seat, and nil where
+// nothing carried is ever spent; it is set by the band every frame.
 type sellTab struct {
-	armed       shopSale
-	sellButton  *models.Button
-	selling     bool
-	carriedOnly bool
+	armed      shopSale
+	sellButton *models.Button
+	selling    bool
+
+	useButton *models.Button
+	using     bool
+	canUse    func(seat int) bool
 }
 
-// initSellTab builds the tab the first time and puts any question away.
+// initSellTab builds the tabs the first time and puts any question away.
 func (s *sellTab) initSellTab() {
 	if s.sellButton == nil {
 		s.sellButton = models.NewButton(sellTabWidth, sellTabHeight, "", func() { s.selling = true })
@@ -78,7 +82,12 @@ func (s *sellTab) initSellTab() {
 		s.sellButton.BaseColor = ui.ButtonRed
 		s.sellButton.TextSize = sellTabTextSize
 	}
-	s.armed, s.selling = shopSale{}, false
+	if s.useButton == nil {
+		s.useButton = models.NewButton(sellTabWidth, sellTabHeight, "USE", func() { s.using = true })
+		s.useButton.BaseColor = ui.ButtonGray
+		s.useButton.TextSize = sellTabTextSize
+	}
+	s.armed, s.selling, s.using = shopSale{}, false, false
 }
 
 // arm puts the question under one thing, or takes it away again if that thing is already asking
@@ -104,13 +113,26 @@ func (s *sellTab) takeSale() (shopSale, bool) {
 	return a, a.any()
 }
 
+// takeUse is the carried seat the USE tab asked to spend, once, and clears the question.
+func (s *sellTab) takeUse() (int, bool) {
+	if !s.using {
+		return 0, false
+	}
+	a := s.armed
+	s.using, s.armed = false, shopSale{}
+	if a.kind != saleHeld || s.canUse == nil || !s.canUse(a.seat) {
+		return 0, false
+	}
+	return a.seat, true
+}
+
+// showsUse is whether the armed thing hangs a USE tab: a carried card, on a screen that spends one.
+func (s *sellTab) showsUse() bool { return s.armed.kind == saleHeld && s.canUse != nil }
+
 // armedSeat is where the armed thing is sitting, and whether it is still there.
 func (s *sellTab) armedSeat(gs *state.GlobalState) (image.Rectangle, bool) {
 	switch s.armed.kind {
 	case saleRelic:
-		if s.carriedOnly {
-			return image.Rectangle{}, false
-		}
 		return wornSeat(gs, s.armed.key)
 	case saleHeld:
 		if s.armed.seat < 0 || s.armed.seat >= len(heldConsumables(gs)) {
@@ -130,7 +152,7 @@ func (s *sellTab) salePrice() int {
 	return session.SellValue(s.armed.key)
 }
 
-// updateSellTab positions the tab under whatever is armed and runs it.
+// updateSellTab positions the tabs under whatever is armed and runs them.
 //
 // **It disarms a thing that is no longer there**, which is what stops a tab surviving the sale it
 // asked about — or a scenario arriving with a key the run does not hold.
@@ -144,92 +166,71 @@ func (s *sellTab) updateSellTab(gs *state.GlobalState) {
 	}
 
 	s.sellButton.Text = fmt.Sprintf("SELL FOR %d?", s.salePrice())
-	tab := s.sellTabRect(gs)
-	s.sellButton.ScreenX = (tab.Min.X + tab.Max.X) / 2
-	s.sellButton.ScreenY = (tab.Min.Y + tab.Max.Y) / 2
+	place(s.sellButton, s.sellTabRect(gs))
 	systems.UpdateButton(gs, s.sellButton)
+
+	if s.showsUse() {
+		place(s.useButton, s.useTabRect(gs))
+		ui.SetEnabled(s.useButton, s.canUse(s.armed.seat))
+		systems.UpdateButton(gs, s.useButton)
+	}
 }
 
-// pressHeld is a press anywhere but the worn row: a carried card arms on the press, the tab itself
-// is left for its own release to answer, and a press anywhere else drops the question. It reports
-// whether the press was the pane's or the tab's.
-//
-// **A carried card arms on the press**, unlike a relic: the consumables pane is not reorderable,
-// so there is no drag for the release to tell it apart from.
-func (s *sellTab) pressHeld(gs *state.GlobalState, at image.Point) bool {
-	if i := heldAt(gs, at); i >= 0 {
-		s.arm(heldSale(i))
-		return true
-	}
-	if s.armed.any() && at.In(s.sellTabRect(gs)) {
-		return true
-	}
-	s.armed = shopSale{}
-	return false
+// place centers a button on a rectangle.
+func place(b *models.Button, r image.Rectangle) {
+	b.ScreenX, b.ScreenY = (r.Min.X+r.Max.X)/2, (r.Min.Y+r.Max.Y)/2
 }
 
-// sellTabRect is where the confirm tab hangs, centered under the armed thing. One rectangle, drawn
-// in and hit-tested against.
-func (s *sellTab) sellTabRect(gs *state.GlobalState) image.Rectangle {
+// tabTop is where the first tab hangs: under the armed card, centered on it.
+func (s *sellTab) tabTop(gs *state.GlobalState) (image.Rectangle, bool) {
 	seat, ok := s.armedSeat(gs)
 	if !ok {
-		return image.Rectangle{}
+		return image.Rectangle{}, false
 	}
 	left := (seat.Min.X+seat.Max.X)/2 - sellTabWidth/2
 	top := seat.Max.Y + shopFigureGap
-	return image.Rect(left, top, left+sellTabWidth, top+sellTabHeight)
+	return image.Rect(left, top, left+sellTabWidth, top+sellTabHeight), true
 }
 
-// drawTab draws the tab under whatever is armed.
+// useTabRect is the USE tab, first under the card when it hangs at all.
+func (s *sellTab) useTabRect(gs *state.GlobalState) image.Rectangle {
+	r, ok := s.tabTop(gs)
+	if !ok || !s.showsUse() {
+		return image.Rectangle{}
+	}
+	return r
+}
+
+// sellTabRect is where the SELL tab hangs: under the armed card, or under its USE tab. One
+// rectangle, drawn in and hit-tested against.
+func (s *sellTab) sellTabRect(gs *state.GlobalState) image.Rectangle {
+	r, ok := s.tabTop(gs)
+	if !ok {
+		return image.Rectangle{}
+	}
+	if s.showsUse() {
+		r = r.Add(image.Pt(0, sellTabHeight+shopFigureGap))
+	}
+	return r
+}
+
+// onTabs is whether a point is on either tab.
+func (s *sellTab) onTabs(gs *state.GlobalState, at image.Point) bool {
+	if !s.armed.any() {
+		return false
+	}
+	return at.In(s.sellTabRect(gs)) || at.In(s.useTabRect(gs))
+}
+
+// drawTab draws the tabs under whatever is armed.
 func (s *sellTab) drawTab(gs *state.GlobalState, screen *ebiten.Image) {
-	if _, ok := s.armedSeat(gs); ok {
-		systems.DrawButton(gs, screen, s.sellButton)
+	if _, ok := s.armedSeat(gs); !ok {
+		return
 	}
-}
-
-// sellArmed sells whatever a tab asked about.
-func (s *ShopScene) sellArmed(gs *state.GlobalState, a shopSale) {
-	switch a.kind {
-	case saleRelic:
-		s.sell(gs, a.key)
-	case saleHeld:
-		s.sellHeld(gs, a.seat)
+	if s.showsUse() {
+		systems.DrawButton(gs, screen, s.useButton)
 	}
-}
-
-// wornSeat is where one worn relic is sitting in the build band's relic row, by key, and whether it
-// is worn at all.
-func wornSeat(gs *state.GlobalState, key string) (image.Rectangle, bool) {
-	worn := gs.Run.Worn()
-	for i, k := range worn {
-		if k == key {
-			return relicSlotRect(buildRelicRect(gs), i, len(worn)), true
-		}
-	}
-	return image.Rectangle{}, false
-}
-
-// heldSeat is where one carried card is drawn in the shop's consumables pane, and the rectangle it
-// is clicked in.
-func heldSeat(gs *state.GlobalState, i int) image.Rectangle {
-	return consumableSlotRect(buildConsumableRect(gs), i, consumableSeats(gs))
-}
-
-// heldAt is which carried card a press landed on, or -1.
-//
-// **ui.HoveredSeat, like every row**, so the click lands on the card the tooltip just described:
-// an over-full pane packs its cards into overlapping seats and the last drawn is on top.
-func heldAt(gs *state.GlobalState, at image.Point) int {
-	return ui.HoveredSeat(at, len(heldConsumables(gs)), func(i int) image.Rectangle {
-		return heldSeat(gs, i)
-	})
-}
-
-// sellHeld sells the carried card at one seat of the pane.
-func (s *ShopScene) sellHeld(gs *state.GlobalState, i int) {
-	if sellCarried(gs, i) {
-		s.tip.Forget()
-	}
+	systems.DrawButton(gs, screen, s.sellButton)
 }
 
 // sellCarried sells the carried card at one seat of the consumables pane, journals it, and reports

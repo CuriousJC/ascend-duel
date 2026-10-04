@@ -185,7 +185,7 @@ func TestADialogAlwaysHasSomethingToClick(t *testing.T) {
 		if g.count() == 0 {
 			t.Errorf("%s opened with nothing in it", good.Record)
 		}
-		if good.Contains == session.ContentsEssences && len(g.offer) == 0 {
+		if good.Contains == session.ContentsEssences && len(g.row.offer) == 0 {
 			t.Errorf("%s opened with no cards to aim at", good.Record)
 		}
 		g.reset()
@@ -272,11 +272,20 @@ func TestTheCanAppliesTheEssenceToTheSelectedCard(t *testing.T) {
 	}
 	idx := picked[0]
 
+	// **An essence that would change the card**, tried on a copy of the deck: painting an ice card
+	// ice is a legal pick that changes nothing, and this test is about the card changing.
+	before0, _ := gs.Run.Card(idx)
 	pick := -1
 	for i, w := range g.essences {
-		if g.essenceSpendable(gs, w) {
-			pick = i
-			break
+		if !g.essenceSpendable(gs, w) {
+			continue
+		}
+		trial := session.New(gs.Run.Deck())
+		if trial.Apply(w, idx) {
+			if after, ok := trial.Card(idx); !ok || after != before0 || trial.Size() != gs.Run.Size() {
+				pick = i
+				break
+			}
 		}
 	}
 	if pick < 0 {

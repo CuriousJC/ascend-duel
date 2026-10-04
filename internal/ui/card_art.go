@@ -498,6 +498,28 @@ func Artwork(gs *state.GlobalState, key string) image.Image {
 // for the figure flying at it: while a hit is in the air the card keeps drawing what the duelist had
 // before the hits, so the drop and the arrival are one event. The combatant is already correct
 // underneath — see `CombatScene.shownLife`, which is a view over it and never a second copy.
+// GuideName is what the guide is called on every screen it stands on.
+const GuideName = "The Prismatic"
+
+// GuideSpec is The Prismatic as the card in the opponent's corner, drawn in cards.GuideStyle.
+//
+// **The picture is the opponent placeholder's**, `data.DefaultEnemyArt`: the same rainbow figure as
+// the tutorial's speech-bubble portrait, rendered for a card — opaque and at the card's own size,
+// where the bubble's is transparent. See assets/embed.go's note on the guide.
+func GuideSpec(gs *state.GlobalState) cards.Spec {
+	return cards.Spec{
+		Name:    GuideName,
+		Element: cards.Basic,
+		Art:     Artwork(gs, data.DefaultEnemyArt),
+		Enabled: true,
+	}
+}
+
+// GuideTip is what resting on The Prismatic says.
+func GuideTip() (string, []string) {
+	return GuideName, []string{"Your guide between the fights."}
+}
+
 func EnemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life int) cards.Spec {
 	spec := cards.Spec{
 		// **No name on the face.** The card is a picture, and the full name and title are the

@@ -657,8 +657,11 @@
   },
   {
     "ScenarioRecord": "fight-two-runes",
-    "Note": "A plain opening fight on the 55-card starting deck, carrying two runes and 1000 vitae: the runes are in the consumables pane to spend between turns, and the purse is deep enough that every shop after it is a shelf to look at rather than a sum to count. Fight 0, the opening room's own creature, no relics.",
-    "Relics": [],
+    "Note": "A plain opening fight on the 55-card starting deck, carrying two runes, two relics and 1000 vitae. Click a rune for its USE and SELL tabs, or a relic for its SELL tab: a relic sold mid-fight stops counting at once, so selling the life relic takes its life off the bar with the wound kept. The purse is deep enough that every shop after it is a shelf to look at rather than a sum to count. Fight 0, the opening room's own creature.",
+    "Relics": [
+      "hp-plus",
+      "dmg-all-slash"
+    ],
     "Runes": [
       "two-into-fire",
       "duplicate-card"

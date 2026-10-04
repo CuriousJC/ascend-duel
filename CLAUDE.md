@@ -345,8 +345,8 @@ round**. `data/runes.json` is the catalog, `internal/session/rune.go` validates 
 `internal/combat/rider.go` holds the one vocabulary the rules have to read, and
 `internal/screens/combat_rune.go` is the run's half — there is no board piece and no dialog. A
 rune is a card in the **consumables pane** on the top row (`consumables.go`), and it is aimed by
-**selecting the cards in the hand first and clicking the rune second** — the rule that joins the
-two is `targeting.go`. See MECHANICS.md §Runes. A handful of things to know before touching any
+**selecting the cards in the hand, clicking the rune, and pressing the USE tab under it** — the rule
+that joins the two is `targeting.go`, and the tab is the band's (`band.go`). See the band below. See MECHANICS.md §Runes. A handful of things to know before touching any
 of it:
 
 - **Between turns, never inside one.** Spending is gated on `planning()`, because `ResolveRound`
@@ -736,6 +736,29 @@ and `RunOverScene.leave` drops it.
 six-character code that exists to be transcribed has to be somewhere a player can read it.
 `screens.abandonLabel` is what puts it on the settings screen, and it names no code with no run
 standing.
+
+### The band: the top third is one scene
+
+**The combat screen, the reward screen, the shop, a sealed good and the portal share their top
+third** *(owner's call, 2026-10-04)*: the duelist card, the worn relics, the consumables pane and a
+card in the opponent's corner — the creature in a fight, **The Prismatic** everywhere else
+(`ui.GuideSpec`, `cards.GuideStyle`). The panes span the gap between the two corner cards on every
+screen (`buildTopRowPanes`), so nothing in the band moves between screens.
+
+- **`bandControls` in `internal/screens/band.go` is the whole of its input**, and every screen
+  holds one: both rows drag to reorder, a click arms the one sell tab (`sellTab`, shop_sell.go), and
+  a carried card on a screen that can spend it hangs USE over SELL. What differs between screens is
+  `bandHooks` — whether the band is live, whether arming is closed (a round playing back), what a
+  relic move or sale also has to keep in step, and whether a carried card can be used here.
+- **A relic sold mid-fight goes through `CombatScene.refit`**, which rebuilds the duelist from the
+  run and carries the fight across. **Never `Equip` a duelist that is already equipped** — it adds
+  the run's flat bonuses to whatever it is handed, so a second call pays them twice. Every mid-fight
+  change to what the run carries is a refit.
+
+**The bottom third's dealt rows are one widget too.** `dealtRow` (dealtrow.go) is the reward
+screen's and the vial's row of the player's own cards: the three sort tabs the combat screen's hand
+carries, drag to reorder, and a selection that moves with its card. A sort re-applies on a deal and
+on a tab press, never every frame, so a drag holds until the player asks for an order back.
 
 ### Five screens that are not stations of a run
 

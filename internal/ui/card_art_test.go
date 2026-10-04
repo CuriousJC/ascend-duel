@@ -862,3 +862,32 @@ func TestNoCardFaceCarriesText(t *testing.T) {
 		}
 	}
 }
+
+func TestEveryDeckBackIsEmbeddedAtTheCardsOwnSize(t *testing.T) {
+	// A deck whose Art names no file draws the plain back with nothing failing, which looks exactly
+	// like a deck nobody has painted yet — so a misspelled stem is caught here rather than by eye.
+	// The size is the bleeding cards' rule: one picture at the hand card's own 200x280 is what every
+	// back in the game is reduced from.
+	images := assets.LoadImageData()
+	decks := data.LoadDecks()
+	for _, k := range data.DeckOrder(decks) {
+		key := decks[k].ArtKey()
+		if key == "" {
+			continue
+		}
+		raw, ok := images[key]
+		if !ok {
+			t.Errorf("deck %s names the back %q, and no embedded picture is called that", k, key)
+			continue
+		}
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))
+		if err != nil {
+			t.Errorf("%s: %v", key, err)
+			continue
+		}
+		if cfg.Width != cards.Hand.Width || cfg.Height != cards.Hand.Height {
+			t.Errorf("%s is %dx%d where a card back is %dx%d — file it with tools/relicart -kind deck",
+				key, cfg.Width, cfg.Height, cards.Hand.Width, cards.Hand.Height)
+		}
+	}
+}

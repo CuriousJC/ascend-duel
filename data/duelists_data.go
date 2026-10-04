@@ -1,17 +1,11 @@
 package data
 
-// The playable duelists: who the player can be, and what their cards look like from behind.
+// The playable duelists: who the player can be, and which deck they play from.
 //
-// **Split out of combatants.json on 2026-08-11.** One file held the player and the four
-// enemies because they were the same struct, and they were the same struct because both are
-// three stats and a sprite. They have stopped being: an enemy has a plan style, a portrait
-// and an affix pool, and a duelist has a card back and — eventually — a deck. Keeping them
-// in one record meant every field was optional and no field meant anything.
-//
-// **A duelist and a card back go together, and that is the point of the field.** The plan is
-// to offer different duelists as different *decks*, so the back is how you tell at a glance
-// whose deck is on the table. It is a name rather than a picture: the mark is drawn in code
-// by internal/cards, so adding a back costs no file.
+// **A duelist and a deck go together, and the `Deck` field is that link.** The plan is to offer
+// different duelists as different decks, so the deck's back is how you tell at a glance whose
+// cards are on the table. The deck itself — its back and its discards — is `data/decks.json`; a
+// duelist naming one the catalog does not hold is refused at load.
 
 import (
 	_ "embed"
@@ -34,12 +28,9 @@ type DuelistData struct {
 	// separation the enemies have between a record and a roster name.
 	Name string `json:"Name"`
 
-	// CardBack names the mark drawn on the back of this duelist's cards: triangle, diamond
-	// or chevron. Parsed by cards.ParseBackMark, which falls back rather than failing — a
-	// deck whose backs are the wrong shape is a cosmetic bug, and refusing to start the game
-	// over one would be worse.
-	CardBack string `json:"CardBack"`
-
+	// Deck names the record in `data/decks.json` this duelist plays from: its back, and how many
+	// discards a round allows.
+	Deck string `json:"Deck"`
 	// **Three stats, and every one of them is the number it sounds like** *(2026-08-16)*. Speed
 	// and Constitution were conversions into the action-point budget and into life; they went the
 	// day after Strength went, and for the same reason. See combat.Duelist.
@@ -52,7 +43,18 @@ type DuelistData struct {
 	HP      int `json:"HP"`
 }
 
-// LoadDuelists parses the embedded duelist list into a map keyed by DuelistRecord.
+// LoadDuelists parses the embedded duelist list into a map keyed by DuelistRecord, refusing a
+// duelist whose deck the catalog does not hold.
+//
+// **Refused rather than defaulted**, because the deck carries a rule — the discards — and a duelist
+// quietly playing from some other deck would be a balance change nobody made.
 func LoadDuelists() map[string]DuelistData {
-	return keyed(duelistsJSON, "duelists.json", func(d DuelistData) string { return d.DuelistRecord })
+	duelists := keyed(duelistsJSON, "duelists.json", func(d DuelistData) string { return d.DuelistRecord })
+	decks := LoadDecks()
+	for _, k := range sortedKeys(duelists) {
+		if _, ok := decks[duelists[k].Deck]; !ok {
+			panic("duelists.json: " + k + " plays from deck " + `"` + duelists[k].Deck + `"` + ", which decks.json does not hold")
+		}
+	}
+	return duelists
 }

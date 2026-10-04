@@ -1,11 +1,10 @@
 package screens
 
 import (
-	"log"
-
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
@@ -19,24 +18,10 @@ import (
 // The split is not an inconvenience to work around: it is the boundary stating which of these
 // decide something about *this duel* and which describe a card or an event to anybody who asks.
 
-// backSpec is a face-down card of this duelist's deck.
-//
-// **A duelist and a card back go together** *(2026-08-11)*: the plan is to offer different
-// duelists as different decks, and the mark on the back is how you tell at a glance whose
-// deck is on the table. The name comes from `data/duelists.json` and is parsed here rather
-// than at load, because `internal/entities` must not import the drawing package — the same
-// separation the element mapping below exists for.
-//
-// An unrecognized name falls back to the triangle and says so once. A back is cosmetic;
-// refusing to draw the draw pile over one would be a worse outcome than the wrong shape.
-func (s *CombatScene) backSpec() cards.Spec {
-	mark, ok := cards.ParseBackMark(s.fighter.CardBack)
-	if !ok && s.fighter.CardBack != "" && !ui.WarnedBack {
-		ui.WarnedBack = true
-		log.Printf("cards: duelist card back %q is not a mark; using %v",
-			s.fighter.CardBack, mark)
-	}
-	return cards.Spec{FaceDown: true, Back: mark}
+// backSpec is a face-down card of this duelist's deck: the back of `data/decks.json`'s record,
+// which is how you tell at a glance whose deck is on the table.
+func (s *CombatScene) backSpec(gs *state.GlobalState) cards.Spec {
+	return ui.BackSpec(gs, s.fighter.Deck)
 }
 
 // ledgerRecords is the walk itself: one record per thing that happened, in the order the resolver

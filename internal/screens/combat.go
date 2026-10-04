@@ -173,18 +173,6 @@ func (s *CombatScene) shuffleSeeds(gs *state.GlobalState) (player, enemy int64) 
 // The AP rule is never actually broken; it is enforced one step later, at the point of
 // playing rather than the point of picking up. See overBudget.
 
-// discardsPerRound caps how many times cards can be thrown back in one round, and refills
-// at the end of each round. One press costs one discard however many cards were selected,
-// which is what makes the size of the selection a decision rather than a formality: four
-// presses of one card and one press of four cost the same.
-//
-// It matters more since the hand stopped emptying every round. Discard used to be a way of
-// getting a fresh deal slightly early; it is now the *only* way an unwanted card leaves your
-// hand, so this number is the rate at which a hand can be steered rather than a convenience.
-// Four against a hand of eight is deliberately generous for now — a number to play against,
-// not a balanced one.
-const discardsPerRound = 4
-
 // apSpentColor fills an action point already committed to the round *(owner's call,
 // 2026-09-10)*. The bar is the round timer's picture one row down — a cell per point, bevelled,
 // sunken while it is still yours and raised once it is gone — so what a spent cell needs is a

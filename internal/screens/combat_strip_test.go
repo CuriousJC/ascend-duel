@@ -24,9 +24,8 @@ func testState() *state.GlobalState {
 	return &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 }
 
-// The pile stands at the bottom of the duelist card's column *(2026-09-04, owner's call)*, which
-// is a different set of neighbors from the corner it used to sit in: the hand and its bar are
-// beside it rather than above it, and the frame's own corner controls are below it.
+// The pile stands in the duelist card's column, level with the hand row: the hand and its bar are
+// beside it, and the frame's own corner controls are on the bottom line below it.
 func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 	gs := testState()
 
@@ -58,10 +57,20 @@ func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 		t.Errorf("the pile %v runs off the screen", relic)
 	}
 
-	// The sack button is on the line above it, and that line must clear the played row.
-	if top := deckCaptionRect(gs).Min.Y; top < tableRowTop(gs)+cardHeight {
-		t.Errorf("the pile's caption line starts at y=%d, inside the played row ending at y=%d",
+	// Level with the hand it deals into, and clear of the played row above it — the backs drawn up
+	// and to the left included.
+	if front := deckStackRect(gs); front.Min.Y != handTop(gs) || front.Dy() != cardHeight {
+		t.Errorf("the pile runs y=%d..%d and the hand row y=%d..%d",
+			front.Min.Y, front.Max.Y, handTop(gs), handTop(gs)+cardHeight)
+	}
+	if top := relic.Min.Y; top < tableRowTop(gs)+cardHeight {
+		t.Errorf("the pile starts at y=%d, inside the played row ending at y=%d",
 			top, tableRowTop(gs)+cardHeight)
+	}
+
+	// The count is under it rather than on it.
+	if count.Min.Y < deckStackRect(gs).Max.Y {
+		t.Errorf("the count starts at y=%d, inside the pile ending at y=%d", count.Min.Y, deckStackRect(gs).Max.Y)
 	}
 }
 
@@ -116,9 +125,15 @@ func TestDeckStackIsTheSizeItIsDrawnAt(t *testing.T) {
 	// The front card is what a click is tested against, so its rectangle has to be the
 	// picture's size or the clickable area and the visible area disagree.
 	front := deckStackRect(gs)
-	if front.Dx() != cards.Stack.Width || front.Dy() != cards.Stack.Height {
-		t.Errorf("the deck stack's hit rectangle is %dx%d, but cards.Stack draws %dx%d",
-			front.Dx(), front.Dy(), cards.Stack.Width, cards.Stack.Height)
+	if front.Dx() != cards.Hand.Width || front.Dy() != cards.Hand.Height {
+		t.Errorf("the deck stack's hit rectangle is %dx%d, but cards.Hand draws %dx%d",
+			front.Dx(), front.Dy(), cards.Hand.Width, cards.Hand.Height)
+	}
+
+	// The between-fights pile is the smaller card, and the same rule holds for it.
+	if pile := deckPileRect(gs); pile.Dx() != cards.Stack.Width || pile.Dy() != cards.Stack.Height {
+		t.Errorf("the between-fights pile's hit rectangle is %dx%d, but cards.Stack draws %dx%d",
+			pile.Dx(), pile.Dy(), cards.Stack.Width, cards.Stack.Height)
 	}
 
 	// The backs are drawn up and to the left of the front card, so the bounds have to cover
@@ -130,7 +145,7 @@ func TestDeckStackIsTheSizeItIsDrawnAt(t *testing.T) {
 }
 
 func TestStackStyleKeepsTheCardsProportions(t *testing.T) {
-	// The pile has to read as the same object as the cards in the hand, seen smaller. Drift
+	// The between-fights pile has to read as the same object as the cards in the hand, seen smaller. Drift
 	// here would make it a differently shaped rectangle that happens to be dark.
 	hand := float64(cards.Hand.Width) / float64(cards.Hand.Height)
 	stack := float64(cards.Stack.Width) / float64(cards.Stack.Height)

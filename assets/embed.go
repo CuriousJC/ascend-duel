@@ -155,6 +155,17 @@ var wildcardupgrade_png []byte
 //go:embed upgrade-art/*.png
 var upgradeArt embed.FS
 
+// CARD BACKS
+//
+// The back of every card in one deck — `data/decks.json` names one per deck, and `internal/cards`
+// lays it inside the back's one-pixel rim. Committed at the card's own 200x280. **Keyed `deck-<stem>`**
+// for the upgrade art's reason: the map is flat, and a deck named after a gem is a name a relic could
+// take. **The directory may hold nothing but its README**, as the playing cards' may, so the family
+// lands before the art does. See embedPrefixed.
+//
+//go:embed deck
+var deckArt embed.FS
+
 // MATERIAL TEXTURES
 //
 // The stone and metal a *word* is set in on a dark panel: steel for SLASH, ivory for STAB, granite
@@ -457,6 +468,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, formArt, "form")
 	embedFamily(images, textureArt, "texture")
 	embedPrefixed(images, upgradeArt, "upgrade-art", "upgrade-")
+	embedPrefixed(images, deckArt, "deck", "deck-")
 	embedFamily(images, barArt, "bar")
 	embedTree(images, motifArt, "motifs")
 	embedFamily(images, screenArt, "screen")

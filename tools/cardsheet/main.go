@@ -42,6 +42,7 @@ import (
 	"path/filepath"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )
 
@@ -173,23 +174,32 @@ func run(dir string) error {
 	// the row — the back has to share its silhouette exactly, or a flip would change outline
 	// halfway through and a stack of backs would read as a different object next to the hand.
 	// Two pictures side by side is the only way to check that.
-	backs := []struct {
+	type back struct {
 		name  string
 		label string
 		spec  cards.Spec
 		style cards.Style
-	}{
-		// Every mark, at both sizes that show one. **A duelist and a card back go together**
-		// — `data/duelists.json` names one of these — so the row is a picture of the choice
-		// that file offers, which is otherwise only visible by editing it and relaunching.
-		{"back-triangle-hand", "triangle — hand size", cards.Spec{FaceDown: true, Back: cards.MarkTriangle}, cards.Hand},
-		{"back-diamond-hand", "diamond — hand size", cards.Spec{FaceDown: true, Back: cards.MarkDiamond}, cards.Hand},
-		{"back-chevron-hand", "chevron — hand size", cards.Spec{FaceDown: true, Back: cards.MarkChevron}, cards.Hand},
-		{"back-triangle-stack", "triangle — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkTriangle}, cards.Stack},
-		{"back-diamond-stack", "diamond — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkDiamond}, cards.Stack},
-		{"back-chevron-stack", "chevron — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkChevron}, cards.Stack},
-		{"back-face", "a face, for the silhouette", specFor("Bash", cards.Fire), cards.Hand},
 	}
+	// Every deck's back, at both sizes the game draws one. **A duelist plays from one of these** —
+	// `data/duelists.json` names it — so the row is a picture of the catalog `data/decks.json`
+	// holds, which is otherwise only visible by editing the duelist and relaunching.
+	var backs []back
+	decks := data.LoadDecks()
+	for _, k := range data.DeckOrder(decks) {
+		d := decks[k]
+		spec := cards.Spec{FaceDown: true}
+		if key := d.ArtKey(); key != "" {
+			art, err := loadPNG(key)
+			if err != nil {
+				return err
+			}
+			spec.Art = art
+		}
+		backs = append(backs,
+			back{"back-" + k + "-hand", d.Name + " — hand size", spec, cards.Hand},
+			back{"back-" + k + "-stack", d.Name + " — draw pile", spec, cards.Stack})
+	}
+	backs = append(backs, back{"back-face", "a face, for the silhouette", specFor("Bash", cards.Fire), cards.Hand})
 	backRow := row{Label: "card back"}
 	for _, b := range backs {
 		cell, err := write(dir, faces, b.spec, b.style, b.name+".png", b.label)

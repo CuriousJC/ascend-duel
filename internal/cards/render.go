@@ -1101,58 +1101,6 @@ func wholeWord(s string, at, n int) bool {
 	return true
 }
 
-// The mark is as wide as the card allows, and centered on it.
-//
-// **Derived rather than a Style field, unlike every other measurement here.** The face
-// cannot work that way — its glyphs are 1:1 pixel art with a one-pixel rim, so a smaller card
-// has to *drop* what will not fit rather than shrink it, and each size states its own
-// numbers. A triangle has no rim to lose and no detail to fall below, so one proportion
-// draws the same back at every size and cannot drift between them. If a size ever wants
-// its own mark, this is one line to promote into Style.
-//
-// **It was 40% of the width until 2026-08-11.** At the draw pile's 44x64 that came out as a
-// 17-pixel mark floating in the middle of a dark card, which read as a speck rather than as
-// a back. It now spans the card between its rims, so the pile reads as a stack of the same
-// object at any size — which is the whole reason the back is one proportion rather than a
-// per-Style number.
-//
-// It stays vertically centered. Hanging the apex from the top row was tried the same day and
-// left the whole mark sitting high with a band of empty card under it; an equilateral
-// triangle is wider than it is tall in a portrait rectangle, so the space it leaves has to
-// be split rather than pushed to one end. Heights, for the three sizes that exist:
-// **154 on a hand card, 76 on a mini, 36 on the draw pile's.**
-//
-// backMarkAspect is sqrt(3)/2 in integer thousandths — the height of an equilateral
-// triangle against its base.
-//
-// backMarkPct trims it back off the rims by a further 5%, so the base does not run the whole
-// width of the card and the mark reads as sitting on the back rather than as the back's own
-// shape.
-const (
-	backMarkAspect = 866
-	backMarkPct    = 95
-
-	// chevronThicknessPct is how much of the triangle's base each arm of the chevron keeps.
-	// The rest is cut away as a smaller triangle sharing the base, so the outer silhouette
-	// is identical to MarkTriangle's and only the middle is missing.
-	chevronThicknessPct = 22
-)
-
-// backMarkWidth is the mark's base: the card less its rims, scaled, and then nudged to the
-// card's own parity.
-//
-// **The parity step is what makes "centered" exact rather than nearly.** A row is placed at
-// `(Width-span)/2`, so a base whose width differs in parity from the card leaves the extra
-// pixel on one side and the whole triangle leans. Rounding the width by one is invisible;
-// the lean is not, at the draw pile's 44 pixels.
-func backMarkWidth(st Style) int {
-	w := (st.Width - 2*backRimWidth) * backMarkPct / 100
-	if (st.Width-w)%2 != 0 {
-		w--
-	}
-	return w
-}
-
 // backRimWidth is one pixel at every size, and does not come from Style.BorderWidth.
 //
 // The face's border is 6 pixels because it carries the element and has to be seen across a
@@ -1161,8 +1109,8 @@ func backMarkWidth(st Style) int {
 // cards are smallest and the separation matters most.
 const backRimWidth = 1
 
-// drawBack draws the back of a card: the same silhouette as a face, filled dark, with a
-// pale triangle centered on it.
+// drawBack draws the back of a card: the same silhouette as a face, its deck's picture inside a
+// hairline rim, or a plain dark face where the deck has no picture yet.
 //
 // **The silhouette has to match the face exactly** — same footprint, same corner radius —
 // because these are the same object seen from the other side. A back with its own shape
@@ -1173,40 +1121,17 @@ const backRimWidth = 1
 // border is where the element is said, so a back carrying one would name the card under it;
 // a hueless one-pixel edge says only "this is where the card stops", which the draw pile
 // needs — see BackRim.
+//
+// **The picture is the bleeding cards' path with the rim as its border**: covered, clipped to the
+// rim's inner curve, composited over the dark surface. One picture authored at the hand card's size
+// therefore draws every back the game shows — the pile, the smaller pile between fights, and a card
+// mid-flip — with nothing resampled but the reduction.
 func drawBack(dst *image.RGBA, s Spec, st Style) {
 	roundedBorder(dst, 0, 0, st.Width, st.Height, st.CornerRadius, backRimWidth,
 		BackRim, BackSurface)
 
-	w := backMarkWidth(st)
-	h := w * backMarkAspect / 1000
-	left, top := (st.Width-w)/2, (st.Height-h)/2
-
-	// **Every mark is built from the same box**, so they are the same weight on the card and
-	// swapping one for another cannot change how heavy a pile looks. Only the shape inside it
-	// differs.
-	switch s.Back {
-	case MarkDiamond:
-		// Two triangles base to base, each half the height, so the diamond fills the same
-		// box rather than being a triangle with something added under it.
-		half := h / 2
-		fillTriangleUp(dst, left, top, w, half, BackInk)
-		fillTriangleDown(dst, left, top+half, w, h-half, BackInk)
-	case MarkChevron:
-		// The triangle with a triangle taken out of it: a solid one, then the surface
-		// painted back over a smaller one sharing its base. Cutting rather than drawing two
-		// arms is what keeps the outer edge identical to MarkTriangle's.
-		fillTriangleUp(dst, left, top, w, h, BackInk)
-
-		inset := w * chevronThicknessPct / 100
-		cutW := w - 2*inset
-		if (w-cutW)%2 != 0 {
-			cutW--
-		}
-		cutH := cutW * backMarkAspect / 1000
-		fillTriangleUp(dst, left+(w-cutW)/2, top+h-cutH, cutW, cutH, BackSurface)
-	default:
-		fillTriangleUp(dst, left, top, w, h, BackInk)
-	}
+	st.BorderWidth = backRimWidth
+	drawArtBleed(dst, s, st)
 }
 
 // blitGlyph composites an art mark, untinted, clipped to the card's own silhouette.

@@ -393,7 +393,7 @@ func (s *CombatScene) drawDeal(gs *state.GlobalState, screen *ebiten.Image) {
 
 		to := slotAt(gs, c.index, c.Count)
 		if !c.flight.Done() {
-			drawDealtCard(gs, screen, deckStackRect(gs).Min, to, c.flight.Progress(), c.faces[0].spec, s.backSpec())
+			drawDealtCard(gs, screen, deckStackRect(gs).Min, to, c.flight.Progress(), c.faces[0].spec, s.backSpec(gs))
 			continue
 		}
 

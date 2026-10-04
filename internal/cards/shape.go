@@ -159,54 +159,6 @@ func clampRadius(w, h, radius int) int {
 	return radius
 }
 
-// fillTriangleUp fills an upward-pointing isosceles triangle whose base runs from left to
-// left+w, apex centered over it.
-//
-// Scanline, hard-edged, integer-only — the same idiom as roundedRect and for the same
-// reason: a pixel is either the mark or it is not, so a test can assert a color rather
-// than a tolerance. Each row's span grows linearly from the apex to the full base width.
-//
-// **The apex keeps the base's parity, which is what makes it centered rather than nearly
-// centered.** A row is drawn at `left + (w-span)/2`, so a span of the wrong parity puts the
-// extra pixel on one side and the whole shape leans by half a pixel — visible on a 44-pixel
-// card back, where the apex is most of what is read. An even base therefore comes to a
-// two-pixel point and an odd one to a single pixel, rather than every apex being one pixel
-// and slightly off.
-func fillTriangleUp(dst *image.RGBA, left, top, w, h int, c color.RGBA) {
-	if w <= 0 || h < 2 {
-		return
-	}
-	for i := 0; i < h; i++ {
-		span := w * i / (h - 1)
-		if span < 1 {
-			span = 1
-		}
-		if span%2 != w%2 {
-			span++
-		}
-		fillRect(dst, left+(w-span)/2, top+i, span, 1, c)
-	}
-}
-
-// fillTriangleDown is fillTriangleUp upside down: the base along the top edge of the box,
-// the point at the bottom. It is the lower half of the diamond back, and it keeps the same
-// parity rule so the two halves meet on exactly the same columns.
-func fillTriangleDown(dst *image.RGBA, left, top, w, h int, c color.RGBA) {
-	if w <= 0 || h < 2 {
-		return
-	}
-	for i := 0; i < h; i++ {
-		span := w * (h - 1 - i) / (h - 1)
-		if span < 1 {
-			span = 1
-		}
-		if span%2 != w%2 {
-			span++
-		}
-		fillRect(dst, left+(w-span)/2, top+i, span, 1, c)
-	}
-}
-
 // fillRect is an unrounded block, used for the cost dashes.
 func fillRect(dst *image.RGBA, x, y, w, h int, c color.RGBA) {
 	for py := y; py < y+h; py++ {

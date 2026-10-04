@@ -178,6 +178,7 @@ func main() {
 	g.GlobalState.Journey = data.LoadJourney()
 	data.MustFillJourney(g.GlobalState.Motifs, g.GlobalState.Journey.Realms)
 	g.GlobalState.Duelists = data.LoadDuelists()
+	g.GlobalState.Decks = data.LoadDecks()
 	g.GlobalState.Relics = data.LoadRelics()
 
 	// **The run starts here** *(2026-08-17)*, because a run outlives every screen and no scene

@@ -2,7 +2,7 @@
   {
     "DuelistRecord": "Fighter1",
     "Name": "Duelist",
-    "CardBack": "triangle",
+    "Deck": "rainbow-gem",
     "DMG": 10,
     "Actions": 6,
     "HP": 60

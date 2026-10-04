@@ -10,8 +10,8 @@ package screens
 //
 // **A cap is what makes a pane possible.** A row drawn as `n/2` has to be a rule or it is a lie the
 // first time a third consumable arrives, so the cap is `session.MaxConsumables` — every kind the pane
-// holds counted together, see internal/session/consumable.go — and the shop's pack seats go dim
-// rather than selling a rune or a cantrip there is no room for.
+// holds counted together, see internal/session/consumable.go — and a sack opened over a full pane
+// holds its cards back until a carried one is sold or the sack is skipped.
 //
 // **It is the relics pane's twin and shares everything it can**: the same backing color, the same
 // eight pixels of padding, the same drop below the cards on either side, and the same count hung

@@ -173,15 +173,14 @@ func TestTheWornRowFitsTheScreen(t *testing.T) {
 	}
 }
 
-// The two narrated lines have to fit between the band and the hint under them. **The shopkeeper's
-// wording is authored**, so a third sentence or a longer one is a layout change and this is what
-// says so.
-func TestTheShopkeeperFitsAboveTheShelf(t *testing.T) {
-	lines := shopkeeperLines()
-	bottom := shopProseTop + (len(lines)-1)*proseLineGap + proseLineGap/2
-	if bottom >= shopHintTop {
-		t.Errorf("%d lines of narration reach %d and the hint sits at %d",
-			len(lines), bottom, shopHintTop)
+// The hint sits between the band and the shelf, clear of both.
+func TestTheHintSitsBetweenTheBandAndTheShelf(t *testing.T) {
+	gs := shopState(t)
+	if shopHintTop <= buildBandBottom(gs) {
+		t.Errorf("the hint sits at %d, inside a band that ends at %d", shopHintTop, buildBandBottom(gs))
+	}
+	if top := shopPaneBackRect(gs, shopPaneRelics).Min.Y; shopHintTop+shopFigureSize >= top {
+		t.Errorf("the hint sits at %d and the shelf starts at %d", shopHintTop, top)
 	}
 }
 
@@ -212,9 +211,9 @@ func TestClickingAWornRelicOnlyArmsIt(t *testing.T) {
 	}
 }
 
-// The tab hangs under the armed relic or carried card, so it has to clear the narration under the
-// band whichever pane it is in.
-func TestTheSellTabClearsTheNarration(t *testing.T) {
+// The tab hangs under the armed relic or carried card, so it has to clear the hint under the band
+// whichever pane it is in.
+func TestTheSellTabClearsTheHint(t *testing.T) {
 	gs := shopState(t)
 	if !gs.Run.Hold(session.Runes()[0].Record) {
 		t.Fatal("the run would not carry a rune")
@@ -229,9 +228,9 @@ func TestTheSellTabClearsTheNarration(t *testing.T) {
 			t.Fatalf("%+v is armed and has no seat", sale)
 		}
 		tab := shop.sellTabRect(gs)
-		if tab.Max.Y >= shopProseTop {
-			t.Errorf("%+v: the tab ends at %d and the narration starts at %d",
-				sale, tab.Max.Y, shopProseTop)
+		if tab.Max.Y >= shopHintTop {
+			t.Errorf("%+v: the tab ends at %d and the hint starts at %d",
+				sale, tab.Max.Y, shopHintTop)
 		}
 		if tab.Min.Y < seat.Max.Y {
 			t.Errorf("%+v: the tab starts at %d, above the bottom of its card at %d",

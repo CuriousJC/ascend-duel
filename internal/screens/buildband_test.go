@@ -220,7 +220,7 @@ func TestNothingUnderTheBandIsDrawnInsideIt(t *testing.T) {
 		{"the reward screen's title", offerTitleTop(gs)},
 		{"the reward screen's narration", proseTop(gs, 5)},
 		{"the reward screen's hint", offerHintTop(gs)},
-		{"the shop's narration", shopProseTop},
+		{"the shop's hint", shopHintTop},
 	} {
 		if c.top <= bottom {
 			t.Errorf("%s starts at %d, inside a band that ends at %d", c.what, c.top, bottom)

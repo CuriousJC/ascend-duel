@@ -64,8 +64,7 @@
 //     the flights, the hits, the shields, the shatter, the signals, the hand dialog, the deal. Read the
 //     `combat-screen` skill before touching any of them.
 //   - **The between-fight scenes** — postbattle*.go and shop*.go. Pick an essence and the card it
-//     eats; then three relics on a shelf, the sealed goods, the pouch and the hooded creature who
-//     greets you.
+//     eats; then three relics on a shelf, the sealed goods, the pouch, the potions and the tonic.
 //   - **The screens that are not stations of a run** — title.go, credits.go, settings*.go,
 //     achievements.go, runover.go, animations.go. None appears in flow.go, which is
 //     what "not a station" means mechanically.

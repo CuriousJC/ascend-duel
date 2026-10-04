@@ -120,13 +120,25 @@ func DrawRuneCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 func DrawCantripCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	c session.Cantrip, enabled bool) {
 
-	BlitCard(gs, screen, at, cards.Spec{
+	BlitCard(gs, screen, at, CantripSpec(gs, c, enabled), cards.EssenceStyle)
+}
+
+// CantripSpec is a cantrip's face, for a caller that draws it under a transform — a flight — rather
+// than blitting it into a seat.
+func CantripSpec(gs *state.GlobalState, c session.Cantrip, enabled bool) cards.Spec {
+	return cards.Spec{
 		Name:    c.Name,
 		Form:    cards.FormNone,
 		Element: cards.Basic,
 		Art:     Artwork(gs, c.Art),
 		Enabled: enabled,
-	}, cards.EssenceStyle)
+	}
+}
+
+// RuneSpec is a rune's face, for a caller that draws it under a transform — a flight — rather than
+// blitting it into a seat.
+func RuneSpec(gs *state.GlobalState, p session.Rune, enabled, selected bool) cards.Spec {
+	return runeSpec(gs, p, enabled, selected)
 }
 
 // DrawStoneCard draws a stone as the card it is offered as. Same style as an essence — a picture with

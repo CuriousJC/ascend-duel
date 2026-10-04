@@ -824,6 +824,20 @@ func (c RelicCondition) Matches(card Card) bool {
 	return true
 }
 
+// DamagePct is what one card-damage effect multiplies a card by, as a percentage, for a duelist
+// holding vitae.
+//
+// **The per-vitae scaler is the one that is not a plain percentage.** Its Amount is percentage
+// points *per vitae*, read against the live purse, so it composes into the same left-to-right
+// product as everything else. The resolver, the hand event and the tooltip all ask here, so the
+// figure a hit lands for and the figures the sum shows cannot come from two pieces of arithmetic.
+func (e RelicEffect) DamagePct(vitae int) int {
+	if e.Do == DoScaleDamagePerVitae {
+		return 100 + e.Amount*vitae
+	}
+	return e.Amount
+}
+
 // RelicEffect is one entry in a rule's `Then`. Which fields mean anything depends on the verb, the
 // same way a card's Amount is read against its verb.
 type RelicEffect struct {
@@ -1276,14 +1290,7 @@ func (d Duelist) CardDamage(c Card) int {
 		return 0
 	}
 	for _, e := range d.relicEffects(MomentCardDamage, c) {
-		// **The per-vitae scaler is the one that is not a plain percentage.** Its Amount is
-		// percentage points *per vitae*, read against the duelist's live purse, so it composes
-		// into the same left-to-right product as everything else rather than needing its own pass.
-		if e.Do == DoScaleDamagePerVitae {
-			dmg = dmg * (100 + e.Amount*d.Vitae) / 100
-			continue
-		}
-		dmg = dmg * e.Amount / 100
+		dmg = dmg * e.DamagePct(d.Vitae) / 100
 	}
 	if dmg < 1 {
 		dmg = 1
@@ -2097,7 +2104,10 @@ func (d Duelist) GrowOnLanding(card Card) Duelist {
 // **Zero is "did not fire", which is why the identity is not stored.** A relic whose rule does not
 // match the card contributes nothing and has no beat; a relic contributing exactly 100 has fired and
 // changed nothing, which no relic in the file does but which the grammar allows.
-func CardScaleBySeat(worn []WornRelic, card Card) []int {
+//
+// **vitae is the purse the card is priced against**, because a per-vitae scaler is a percentage of
+// what the duelist holds — the figure CardDamage reads it at.
+func CardScaleBySeat(worn []WornRelic, card Card, vitae int) []int {
 	out := make([]int, len(worn))
 
 	for seat, w := range worn {
@@ -2106,13 +2116,14 @@ func CardScaleBySeat(worn []WornRelic, card Card) []int {
 				continue
 			}
 			for _, e := range rule.Then {
-				if e.Do != DoScaleDamage {
+				if e.Do != DoScaleDamage && e.Do != DoScaleDamagePerVitae {
 					continue
 				}
+				e.Amount += w.Grown
 				if out[seat] == 0 {
 					out[seat] = 100
 				}
-				out[seat] = out[seat] * (e.Amount + w.Grown) / 100
+				out[seat] = out[seat] * e.DamagePct(vitae) / 100
 			}
 		}
 	}

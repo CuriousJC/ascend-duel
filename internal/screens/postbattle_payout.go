@@ -37,19 +37,17 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 
 	var lines []proseLine
 
-	// **The interest line only appears when there is interest**, which is most fights after the
-	// first few. A sentence saying a purse swelled by nothing is a sentence that teaches the player
-	// the screen is not reading their run.
-	if spoils.Propagated > 0 {
-		lines = append(lines, proseLine{
-			spans: []proseSpan{
-				{text: "Vitae", ink: ui.VitaeInk},
-				{text: fmt.Sprintf(" proliferates for each %d -- ", session.PropagationPer)},
-				{text: fmt.Sprintf("+%d", spoils.Propagated), ink: ui.VitaeInk},
-			},
-			pays: func(gs *state.GlobalState) int { return gs.Run.ClaimPropagation() },
-		})
-	}
+	// **The interest line is always there, +0 included**, like the other two: a purse too small to
+	// earn any is the line telling the player what holding more would have paid. A zero claim flies
+	// nothing — see typewriter.tick.
+	lines = append(lines, proseLine{
+		spans: []proseSpan{
+			{text: "Vitae", ink: ui.VitaeInk},
+			{text: fmt.Sprintf(" proliferates for each %d -- ", session.PropagationPer)},
+			{text: fmt.Sprintf("+%d", spoils.Propagated), ink: ui.VitaeInk},
+		},
+		pays: func(gs *state.GlobalState) int { return gs.Run.ClaimPropagation() },
+	})
 
 	lines = append(lines, proseLine{
 		spans: []proseSpan{
@@ -152,8 +150,7 @@ func offerHintTop(gs *state.GlobalState) int  { return buildBandBottom(gs) + off
 //
 // **The block is laid out from the bottom up** *(owner's call, 2026-09-18)*, so its last line ends
 // on the same edge the essences beside it do: the payout and the offer are one band read across,
-// and a block hung from the top of the column ends wherever its own length happens to put it — a
-// fight paying no interest is one sentence shorter and would have floated.
+// and a block hung from the top of the column ends wherever its own length happens to put it.
 //
 // **The last line's *height* is what the edge is measured against, not the pitch.** proseLineGap is
 // the distance between two lines and says nothing about where the last one ends; see

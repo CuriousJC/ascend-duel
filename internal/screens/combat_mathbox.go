@@ -631,7 +631,6 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event, at in
 // placeFigures says where each flying item of one line sets off from and what color it is: the
 // half of the box that knows the table.
 func (s *CombatScene) placeFigures(gs *state.GlobalState, e combat.Event, col *mathColumn) {
-	raised := col.hit != 0
 	for i := range col.items {
 		it := &col.items[i]
 		switch {
@@ -649,13 +648,9 @@ func (s *CombatScene) placeFigures(gs *state.GlobalState, e combat.Event, col *m
 			it.from = s.relicCardCenter(gs, it.relicSeat-1)
 		case it.fromDuelist:
 			// **The DMG figure comes off the duelist's own card**, where a rung relic has just
-			// raised it. **The rung relic shakes on the first hit's DMG only** — the same figure
-			// leads every line, and a relic shaking once per hit would read as that many raises.
+			// raised it. The relic that raised it shook when its own figure set off, in
+			// raiseDMGSignal, and does not shake again here.
 			it.from = s.fighterCardMid(gs, e.Side)
-			if !raised {
-				it.shakeRelics = dmgRaiseSeats(e)
-				raised = true
-			}
 		case it.cardTerm:
 			// **A figure is drawn in the color of whatever produced it**, and a card's figure is
 			// produced by the card — so it wears that card's element, the color of its border.
@@ -707,9 +702,19 @@ func (s *CombatScene) raiseDMGSignal(e combat.Event) {
 	if raise <= 0 {
 		return
 	}
-	seat := firstSeat(dmgRaiseSeats(e))
+	paid := dmgRaiseSeats(e)
+	seat := firstSeat(paid)
 	if seat == 0 {
 		return
+	}
+	// **Every relic that paid shakes as the figure leaves**, because the figure leaving and the
+	// relic rattling are the same event. Only the player's row shakes, as in tickShakes.
+	if e.Side == combat.SideA {
+		for i, did := range paid {
+			if did {
+				s.shakeRelicAt(i)
+			}
+		}
 	}
 	s.Theater.signals = append(s.Theater.signals, cardSignal{
 		dest:   signalRaise,

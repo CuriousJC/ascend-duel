@@ -160,12 +160,16 @@ func (t *DeckToggle) initInCorner(slot int) {
 // Update runs the button and the tooltip over the panel's cards, and reports whether the screen
 // is covered.
 func (t *DeckToggle) Update(gs *state.GlobalState, d DeckContents) bool {
-	return t.ModalToggle.Update(gs, func(at image.Point, tip *models.Tooltip) {
+	covered := t.ModalToggle.Update(gs, func(at image.Point, tip *models.Tooltip) {
 		// **The view's buttons run before the tooltip is pointed**, and only while the panel is up,
 		// which is what this closure already guarantees.
 		t.view.Update(gs, d)
 		HoverDeckPanel(gs, at, t.view, d, tip)
 	})
+	if !t.IsOpen() {
+		WarmDeckPanel(gs, t.view, d)
+	}
+	return covered
 }
 
 // Draw puts the panel up if it is open, and the button on top of it either way.
@@ -642,13 +646,38 @@ func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, v DeckView,
 		// **The filter marks rather than dims**, which is what lets a card say both things at once:
 		// dimmed and picked is a card you have already played that answers what you asked. See
 		// cards.MarkPicked.
-		mark := cards.MarkNone
-		if slot.picked {
-			mark = cards.MarkPicked
-		}
-		DrawMarkedCard(gs, screen, slot.at.Min, cards.Mini, slot.card,
-			HeldBy(d.Holder, slot.card), slot.lit, false, mark)
+		BlitCard(gs, screen, slot.at.Min, d.slotSpec(slot), cards.Mini)
 	}
 
 	return grid
+}
+
+// slotSpec is the face one slot of the grid draws. **One function, read by the drawing and by the
+// warm-up**, so the face rendered ahead of time is the face the panel asks for.
+func (d DeckContents) slotSpec(slot pileSlot) cards.Spec {
+	spec := CardSpec(slot.card, HeldBy(d.Holder, slot.card), slot.lit, false)
+	if slot.picked {
+		spec.Mark = cards.MarkPicked
+	}
+	return spec
+}
+
+// WarmDeckPanel renders, while the panel is closed, the next face it would draw that the cache
+// does not hold yet — **one a tick**, so the first open is a lookup rather than a whole deck
+// rendered in a frame.
+//
+// **It keeps itself current by being asked every tick**: the cache is keyed on the whole spec, so a
+// card that changes — a rune, a pile it moved to, a relic that reprices it — is a face the walk
+// finds missing and renders on the next tick. One a tick because a face is every pixel written in
+// Go, and a burst of them is the hitch this exists to move out of sight.
+func WarmDeckPanel(gs *state.GlobalState, v DeckView, d DeckContents) {
+	centerX, width, top := deckGridRegion(gs)
+	for _, slot := range d.grid(v, centerX, width, top).slots {
+		spec := d.slotSpec(slot)
+		if cardCached(spec, cards.Mini) {
+			continue
+		}
+		CardImage(gs, spec, cards.Mini)
+		return
+	}
 }

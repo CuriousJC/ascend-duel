@@ -618,6 +618,18 @@ var EnemyStyle = Style{
 	EffectGap:  fighterBadgeGap,
 }
 
+// GuideStyle is The Prismatic standing in the opponent's corner on every screen that is not a
+// fight *(owner's call, 2026-10-04)*: the enemy card's face and seat with nothing on it a fight
+// would put there — no health bar, no figure under the portrait, no badge row. The guide is not
+// an opponent, and an empty bar would read as one that has already lost.
+var GuideStyle = func() Style {
+	st := EnemyStyle
+	st.PortraitStatTop, st.PortraitStatSize = 0, 0
+	st.HealthBarInset, st.HealthBarTop, st.HealthBarHeight, st.HealthTextSize = 0, 0, 0, 0
+	st.EffectSize, st.EffectTop, st.EffectGap = 0, 0, 0
+	return st
+}()
+
 // DuelistStyle is the player, in the card format *(2026-08-12)*.
 //
 // **It replaced the character block**, which was a framed box of stacked captions and figures

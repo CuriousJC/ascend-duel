@@ -24,8 +24,8 @@ func TestTheSortPreferenceIsOneThingForTheWholeGame(t *testing.T) {
 
 	var post PostBattleScene
 	post.Init(gs)
-	if post.sortMode != ui.SortByElement {
-		t.Errorf("the essence screen opened sorting by %v, want %v", post.sortMode, ui.SortByElement)
+	if post.mode != ui.SortByElement {
+		t.Errorf("the essence screen opened sorting by %v, want %v", post.mode, ui.SortByElement)
 	}
 
 	if got := ui.HandSortOf(gs); got != ui.SortByElement {
@@ -84,7 +84,7 @@ func TestTheEssenceScreensSortBlockFitsBesideItsRow(t *testing.T) {
 	s.Init(gs)
 
 	row := s.offerRow(gs)
-	block := s.sortTabs.Rect(gs)
+	block := s.tabs.Rect(gs)
 
 	if block.Min.X < row.Max.X {
 		t.Errorf("the block starts at %d, inside a row that ends at %d", block.Min.X, row.Max.X)
@@ -106,7 +106,7 @@ func TestTheTwoScreensLeaveTheSameAirBesideTheirCards(t *testing.T) {
 	var s PostBattleScene
 	s.Init(gs)
 
-	if got := s.sortTabs.Rect(gs).Min.X - s.offerRow(gs).Max.X; got != ui.SortColumnGap {
+	if got := s.tabs.Rect(gs).Min.X - s.offerRow(gs).Max.X; got != ui.SortColumnGap {
 		t.Errorf("the essence screen leaves %d beside its row, want %d", got, ui.SortColumnGap)
 	}
 	if got := sortColumnRect(gs).Min.X - (handBandLeft(gs) + cardBandWidth(gs)); got != 0 {

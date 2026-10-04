@@ -122,15 +122,12 @@ type goods struct {
 	runes    []session.Rune
 	cantrips []session.Cantrip
 
-	// offer is the cards an essence may be aimed at, by index into the run's deck. **Only the vial
-	// fills it**, and it is dealt when the vial is opened rather than when an essence is picked — the
-	// two rows are up at once, so the cards cannot be a function of a choice not yet made.
-	offer []int
-
-	// selected is which offered cards are picked out, as row slots. **A set, because an essence may
-	// take more than one card** — one is the mechanic and a relic scales it, see
-	// essence_targets.go. The reward screen's own field, under the same rules. See consumableTarget.
-	selected []int
+	// row is the cards an essence may be aimed at — `offer` by index into the run's deck, `selected`
+	// as row slots — and the sort and the drag over them: the row every screen dealing the player's
+	// cards shares, see dealtrow.go. **Only the vial fills it**, and it is dealt when the vial is
+	// opened rather than when an essence is picked — the two rows are up at once, so the cards cannot
+	// be a function of a choice not yet made.
+	row dealtRow
 
 	// tip explains whichever card the cursor is resting on.
 	tip models.Tooltip
@@ -162,8 +159,9 @@ type goods struct {
 // visit is not possible — see the shelf's `bought` flag — so a stream per fight is a stream per
 // bag.
 func (g *goods) open(gs *state.GlobalState, good session.Good) {
-	g.good, g.stage, g.selected = good, goodsPick, nil
-	g.stones, g.essences, g.runes, g.cantrips, g.offer = nil, nil, nil, nil, nil
+	g.good, g.stage = good, goodsPick
+	g.stones, g.essences, g.runes, g.cantrips = nil, nil, nil, nil
+	g.row.initRow(gs, func(gs *state.GlobalState) int { return gs.PctY(goodsOfferRowPct) })
 	g.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 
 	switch good.Contains {
@@ -171,7 +169,7 @@ func (g *goods) open(gs *state.GlobalState, good session.Good) {
 		g.stones = dealStones(gs, good.Record, good.Size)
 	case session.ContentsEssences:
 		g.essences = dealVialEssences(gs, good.Record, good.Size)
-		g.offer = dealVialOffer(gs)
+		g.row.deal(gs, dealVialOffer(gs))
 	case session.ContentsRunes:
 		g.runes = dealSackRunes(gs, good.Record, good.Size)
 	case session.ContentsCantrips:
@@ -192,8 +190,9 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 
 // close puts it away.
 func (g *goods) reset() {
-	g.good, g.stage, g.selected = session.Good{}, goodsClosed, nil
-	g.stones, g.essences, g.runes, g.cantrips, g.offer = nil, nil, nil, nil, nil
+	g.good, g.stage = session.Good{}, goodsClosed
+	g.stones, g.essences, g.runes, g.cantrips = nil, nil, nil, nil
+	g.row.offer, g.row.selected = nil, nil
 	g.lands = nil
 	g.removes, g.copied, g.held = false, false, 0
 	g.arrival, g.arrivedFrom, g.applyNow = ui.Travel{}, image.Rectangle{}, nil
@@ -422,47 +421,25 @@ func (g *goods) slot(gs *state.GlobalState, i int) image.Rectangle {
 // consumable is aimed at says which card is picked by standing it up, not by a highlight nobody
 // has to learn.
 func (g *goods) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
-	n := len(g.offer)
-	if n == 0 || i < 0 || i >= n {
-		return image.Rectangle{}
-	}
-
-	pitch := handPitch(gs, n)
-	width := (n-1)*pitch + cardWidth
-	left := gs.PctX(50) - width/2 + i*pitch
-	top := gs.PctY(goodsOfferRowPct)
-	if g.isSelected(i) {
-		top -= offerSelectedNudge
-	}
-	return image.Rect(left, top, left+cardWidth, top+cardHeight)
-}
-
-// isSelected reports whether this row slot is one of the picked cards.
-func (g *goods) isSelected(i int) bool {
-	for _, sel := range g.selected {
-		if sel == i {
-			return true
-		}
-	}
-	return false
+	return g.row.slot(gs, i)
 }
 
 // targets is how many cards an essence takes here — one, whatever the relics make of it, and never
 // more than the offer is holding. See essence_targets.go.
 func (g *goods) targets(gs *state.GlobalState) int {
-	return essenceTargetCount(gs, len(g.offer))
+	return essenceTargetCount(gs, len(g.row.offer))
 }
 
 // reachNow is how many cards a click on an essence would change right now: what is selected, or the
 // ceiling when nothing is — the reward screen's rule. See essenceReach.
 func (g *goods) reachNow(gs *state.GlobalState) int {
-	return essenceReach(len(g.selected), g.targets(gs))
+	return essenceReach(len(g.row.selected), g.targets(gs))
 }
 
 // selectedSlots is the picked cards **in row order**, whatever order they were clicked in — the
 // reward screen's rule, and the combat screen's.
 func (g *goods) selectedSlots() []int {
-	out := append([]int(nil), g.selected...)
+	out := append([]int(nil), g.row.selected...)
 	sort.Ints(out)
 	return out
 }
@@ -470,12 +447,12 @@ func (g *goods) selectedSlots() []int {
 // selectedDeckIndexes is the offer's current picks as indexes into the run deck, in row order. The
 // reward screen's function of the same name, and the same job.
 func (g *goods) selectedDeckIndexes() []int {
-	out := make([]int, 0, len(g.selected))
+	out := make([]int, 0, len(g.row.selected))
 	for _, slot := range g.selectedSlots() {
-		if slot < 0 || slot >= len(g.offer) {
+		if slot < 0 || slot >= len(g.row.offer) {
 			return nil
 		}
-		out = append(out, g.offer[slot])
+		out = append(out, g.row.offer[slot])
 	}
 	return out
 }
@@ -528,6 +505,11 @@ func (g *goods) update(gs *state.GlobalState, pile func(image.Point) bool) bool 
 		return true
 	}
 
+	// The vial's row of cards: the shared sort and drag, with a press that never travels selecting.
+	if len(g.row.offer) > 0 {
+		g.row.update(gs, true, func(i int) { g.selectCard(gs, i) })
+	}
+
 	g.hover(gs)
 	systems.UpdateTooltip(gs, &g.tip)
 
@@ -547,13 +529,19 @@ func (g *goods) hover(gs *state.GlobalState) {
 	}
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
+	// **The band explains itself here as on every screen that shows it** — the relics, the carried
+	// cards and the guide.
+	if hoverBuildRelics(gs, at, &g.tip) {
+		return
+	}
+
 	// **ui.HoveredSeat** — the vial deals its offer at the hand's pitch, so the row overlaps for the
 	// same reason the hand does and the card on top is the last drawn.
-	if i := ui.HoveredSeat(at, len(g.offer), func(i int) image.Rectangle {
+	if i := ui.HoveredSeat(at, len(g.row.offer), func(i int) image.Rectangle {
 		return g.offerSlot(gs, i)
 	}); i >= 0 {
 		seat := g.offerSlot(gs, i)
-		if card, ok := gs.Run.Card(g.offer[i]); ok {
+		if card, ok := gs.Run.Card(g.row.offer[i]); ok {
 			title, lines := ui.CardTip(card, ui.HeldByRun(gs, card))
 			g.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 		}
@@ -594,13 +582,11 @@ func (g *goods) hover(gs *state.GlobalState) {
 func (g *goods) click(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
-	// **The offer row first**, because it is the row drawn in front: a selected card is lifted and
-	// a lifted card overlaps nothing above it, but reading the rows in drawing order is the rule
-	// every screen here follows.
-	if i := ui.HoveredSeat(at, len(g.offer), func(i int) image.Rectangle {
+	// **The offer row is the drag's**: a press that never travels selects, one that does reorders.
+	// See dealtrow.go, and update, which runs it.
+	if ui.HoveredSeat(at, len(g.row.offer), func(i int) image.Rectangle {
 		return g.offerSlot(gs, i)
-	}); i >= 0 {
-		g.selectCard(gs, i)
+	}) >= 0 {
 		return
 	}
 
@@ -685,14 +671,14 @@ func (g *goods) show(gs *state.GlobalState, essence session.Essence, slots []int
 	from := make([]image.Rectangle, 0, len(slots))
 	ids := make([]int, 0, len(slots))
 	for _, slot := range slots {
-		if slot < 0 || slot >= len(g.offer) {
+		if slot < 0 || slot >= len(g.row.offer) {
 			return
 		}
-		card, ok := gs.Run.Card(g.offer[slot])
+		card, ok := gs.Run.Card(g.row.offer[slot])
 		if !ok {
 			return
 		}
-		at = append(at, g.offer[slot])
+		at = append(at, g.row.offer[slot])
 		from = append(from, g.offerSlot(gs, slot))
 		ids = append(ids, card.ID)
 	}
@@ -758,18 +744,18 @@ func (g *goods) tickShowing(gs *state.GlobalState) {
 // screen's rule, written up in PostBattleScene.selectOffered: with one target it reads as the pick
 // moving, which is exactly what it always did.
 func (g *goods) selectCard(gs *state.GlobalState, i int) {
-	for k, sel := range g.selected {
+	for k, sel := range g.row.selected {
 		if sel == i {
-			g.selected = append(g.selected[:k], g.selected[k+1:]...)
+			g.row.selected = append(g.row.selected[:k], g.row.selected[k+1:]...)
 			g.tip.Forget()
 			return
 		}
 	}
 
-	if n := g.targets(gs); len(g.selected) >= n {
-		g.selected = append([]int(nil), g.selected[len(g.selected)-n+1:]...)
+	if n := g.targets(gs); len(g.row.selected) >= n {
+		g.row.selected = append([]int(nil), g.row.selected[len(g.row.selected)-n+1:]...)
 	}
-	g.selected = append(g.selected, i)
+	g.row.selected = append(g.row.selected, i)
 	g.tip.Forget()
 }
 
@@ -813,13 +799,8 @@ func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 	// **The cards the essences may eat, under them and up at the same time** *(owner's call,
 	// 2026-09-06)*. They are drawn after the essences so a lifted card is in front of the row above
 	// it, which is the only place the two rows can meet.
-	for i, deckIndex := range g.offer {
-		card, ok := gs.Run.Card(deckIndex)
-		if !ok {
-			continue
-		}
-		ui.DrawCard(gs, screen, g.offerSlot(gs, i).Min, cards.Hand, card, ui.HeldByRun(gs, card),
-			true, g.isSelected(i))
+	if len(g.row.offer) > 0 {
+		g.row.draw(gs, screen)
 	}
 }
 

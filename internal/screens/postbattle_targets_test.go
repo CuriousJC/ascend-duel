@@ -18,7 +18,7 @@ func wearingNecklace(t *testing.T) (*PostBattleScene, *state.GlobalState) {
 	if !gs.Run.Wear("essence-targets") {
 		t.Fatal("the Cloud Necklace would not go on")
 	}
-	return &PostBattleScene{offer: dealOffer(gs)}, gs
+	return &PostBattleScene{dealtRow: dealtRow{offer: dealOffer(gs), top: offerRowTop}}, gs
 }
 
 // **A relic widens the offer row's requirement, and nothing on a record does.** The reward screen
@@ -26,7 +26,7 @@ func wearingNecklace(t *testing.T) (*PostBattleScene, *state.GlobalState) {
 // catalog at once.
 func TestTheOfferAsksForAsManyCardsAsTheRunSays(t *testing.T) {
 	gs := testRun()
-	bare := &PostBattleScene{offer: dealOffer(gs)}
+	bare := &PostBattleScene{dealtRow: dealtRow{offer: dealOffer(gs), top: offerRowTop}}
 	if got := bare.targets(gs); got != 1 {
 		t.Errorf("a bare run is asked for %d cards, want 1", got)
 	}

@@ -7,19 +7,18 @@ package screens
 // *(owner's call, 2026-08-22)*: the payout it narrates lands on the purse written on that card, and
 // choosing an essence is a choice about a deck you can only judge against the build you are holding.
 //
-// **The shop draws it too** *(2026-08-22)*, and it is what took the shop's second relic row away:
-// with the band up, a separate "worn" row was the same five relics drawn twice. The shop calls the
-// two halves separately — `drawBuildCard`, then its own relic row over `buildRelicRect` — because a
-// relic there is a thing you can sell.
+// **The shop, a sealed good and the portal draw it too**, and **The Prismatic stands in the
+// opponent's corner** on all of them *(owner's call, 2026-10-04)*, so the panes span the gap between
+// two corner cards exactly as they do in a fight. The shop draws its relic row itself, because its
+// row moves when a relic is bought or sold.
 //
-// **It is a free function over the run rather than a method on a scene**, which is what lets a
-// second screen draw it. What it deliberately does *not* do is move: the combat screen's own band
-// is still its own — it draws a live fighter, mid-fight life, standing shields and an opponent's card at
-// the far end, none of which exist here. This is the between-fights view of the same thing.
+// **It is a free function over the run rather than a method on a scene**, which is what lets every
+// screen draw it. The combat screen draws its own live fighter, mid-fight life, standing shields and
+// the creature — the between-fights view is this one — but **the input is shared everywhere**: see
+// band.go.
 //
-// **Relics are laid out by the same functions the combat screen uses** — `relicSlotAt`, `wornRelics` —
-// so the row cannot drift between the two screens. The pane rectangle is the only thing computed
-// here, because there is no enemy card to end it at.
+// **Relics are laid out by the same functions the combat screen uses** — `relicSlotAt`,
+// `wornRelics`, `buildTopRowPanes` — so the row cannot drift between screens.
 
 import (
 	"fmt"
@@ -32,17 +31,15 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// buildBandRightPct is where the relic row stops. **It mirrors duelistCardLeftPct**, exactly as the
-// combat screen's enemy card does — there is no opponent on this screen, so the row simply runs to
-// the far margin.
-const buildBandRightPct = 99
-
 // buildCardRect is where the duelist card sits: the same corner it occupies in a fight, so the
 // player's card does not move between the duel and the screen that follows it.
-func buildCardRect(gs *state.GlobalState) image.Rectangle {
-	left, top := gs.PctX(ui.DuelistCardLeftPct), gs.PctY(ui.TopRowTopPct)
-	return image.Rect(left, top, left+cards.DuelistStyle.Width, top+cards.DuelistStyle.Height)
-}
+func buildCardRect(gs *state.GlobalState) image.Rectangle { return ui.DuelistCardRect(gs) }
+
+// buildOpponentRect is the far corner: the creature in a fight, and The Prismatic on every other
+// screen that shows the band. **The same seat everywhere** *(owner's call, 2026-10-04)*, so the two
+// panes between the cards are the same width on every screen and nothing in the band moves when a
+// fight begins or ends.
+func buildOpponentRect(gs *state.GlobalState) image.Rectangle { return ui.EnemyCardRect(gs) }
 
 // buildRelicRect is the row's extent, taken off the duelist card beside it for the reason the
 // combat screen's is: whichever card moves, the row follows.
@@ -58,15 +55,11 @@ func buildConsumableRect(gs *state.GlobalState) image.Rectangle {
 	return consumables
 }
 
-// buildTopRowPanes is the split, over the span between the duelist card and the far margin.
-//
-// **It is the same function the combat screen calls** *(2026-09-06)*, over a wider span, which is
-// what stops the two screens disagreeing about where the consumables pane begins. The band has no
-// opponent card to stop at, so the relics keep more room here than they do in a fight.
+// buildTopRowPanes is the split, over the span between the two corner cards: **the combat screen's
+// own span**, so every screen showing the band lays the relics and the consumables out the same.
 func buildTopRowPanes(gs *state.GlobalState) (relics, consumables image.Rectangle) {
-	card := buildCardRect(gs)
-	return topRowPanes(card.Max.X+relicPaneGap, gs.PctX(buildBandRightPct),
-		card.Min.Y+relicPaneTopDrop)
+	left, right := relicRowSpan(gs)
+	return topRowPanes(left, right, buildCardRect(gs).Min.Y+relicPaneTopDrop)
 }
 
 // buildBandBottom is where the band ends, so a screen below it knows what it has left.
@@ -93,12 +86,37 @@ func buildBandBottom(gs *state.GlobalState) int {
 //
 // The AP figure is the duelist's own budget, which is now simply the stat — nothing adds to it any
 // more. No shields either: nothing is standing between fights.
-func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag *ui.CardDrag, raise bool) {
+func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, band *bandControls, raise bool) {
 	drawBuildCard(gs, screen, vitae)
-	drawBuildRelics(gs, screen, drag)
+	drawBuildRelics(gs, screen, &band.relicDrag)
 	// **nil: a rune is carried on these screens, not spent.** The pane draws the same two seats
 	// and the same cards, dim, and the tooltip still explains them. See canSpend.
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, nil, raise)
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, band.heldSkip, raise)
+	drawGuideCard(gs, screen)
+}
+
+// drawBandOverlay is what the band draws over everything below it: the card riding the cursor and
+// the tabs under whatever is armed. Called after the screen's own content, before its tooltip.
+func drawBandOverlay(gs *state.GlobalState, screen *ebiten.Image, band *bandControls) {
+	drawDraggedRelic(gs, screen, &band.relicDrag, runCounters(gs))
+	band.drawHeldGhost(gs, screen, nil)
+	band.sale.drawTab(gs, screen)
+}
+
+// drawGuideCard puts The Prismatic in the opponent's corner.
+func drawGuideCard(gs *state.GlobalState, screen *ebiten.Image) {
+	ui.BlitCard(gs, screen, buildOpponentRect(gs).Min, ui.GuideSpec(gs), cards.GuideStyle)
+}
+
+// hoverGuideCard explains The Prismatic, and reports whether the cursor was on it.
+func hoverGuideCard(gs *state.GlobalState, at image.Point, tip *models.Tooltip) bool {
+	seat := buildOpponentRect(gs)
+	if !at.In(seat) {
+		return false
+	}
+	title, lines := ui.GuideTip()
+	tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+	return true
 }
 
 // drawBuildCard is the duelist half of the band on its own.
@@ -163,10 +181,8 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardD
 		at := relicSlotAt(row, i, len(worn))
 		ui.DrawRelicCard(gs, screen, at, record, counters[record.RelicRecord], true, false)
 	}
-
-	if drag != nil {
-		drawDraggedRelic(gs, screen, drag, counters)
-	}
+	// The relic riding the cursor is the band's overlay, drawn over everything — see
+	// drawBandOverlay.
 }
 
 // drawBuildRelicPane is the surface the worn relics stand on and the fraction on its corner.
@@ -218,6 +234,9 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 	// **No hand to clamp against**: an essence carried past a between-fights screen is spent in a
 	// fight that has not been dealt, so what the pane can say is what the essence will do.
 	if hoverConsumables(gs, buildConsumableRect(gs), at, tip, runEssenceTargets(gs)) {
+		return true
+	}
+	if hoverGuideCard(gs, at, tip) {
 		return true
 	}
 

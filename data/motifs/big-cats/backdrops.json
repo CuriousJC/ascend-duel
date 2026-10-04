@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "big-cats-outer-hunting-ground",
+    "Name": "Hunting Ground",
+    "Tier": "outer",
+    "Art": "big-cats-outer-hunting-ground",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A great-cat hunting ground, with nobody in it: a broad open stretch of trampled grass and packed earth, clear from the foreground to the far side, bordered by thorn scrub, fallen logs and low stone outcrops. The middle is a wide stalking lane scraped by enormous claw marks. Bones, shed fur, scratched bark and broken antlers lie at the edges, and several tree trunks have deep gouges cut high into them. At the far side, in a low wall of tangled brush and stone, is a single small closed gate made from rough timbers bound with hide, barely taller than a person.",
+    "ElementDraw": {
+      "fire": "The hunting ground is scorched. Blackened grass, smoking logs and glowing claw marks run across the earth, and orange embers drift among the thorn scrub. The small hide-bound gate is singed at its edges, and the whole place is lit warm orange.",
+      "ice": "The hunting ground is frozen over. Snow fills the claw marks, frost crusts the bones and antlers, and icicles hang from the scratched tree trunks. The small gate is rimed white, and the air is pale blue and cold.",
+      "lightning": "The hunting ground waits under a thunderhead. Yellow lightning forks across the sky and leaves branching scorch marks in the earth, while static lifts dry grass and shed fur at the edges. The small gate's metal lashings glow hot yellow.",
+      "earth": "The hunting ground has risen into mountain country. Jagged green-gray rocks frame the lane, roots split the packed earth, and moss and tough alpine grass grow around the bones. The small gate is set into a low cairn wall, lit in a dim green cast.",
+      "arcane": "The hunting ground is uncanny. Purple motes drift between the thorn branches, faint paw prints glow and fade across the open lane, and claw marks in the tree trunks shine from within. The small gate is marked by floating violet symbols with no readable letters."
+    }
+  },
+  {
+    "Backdrop": "big-cats-inner-den-mouth",
+    "Name": "Den Mouth",
+    "Tier": "inner",
+    "Art": "big-cats-inner-den-mouth",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A vast den mouth for great cats, with nobody in it: a broad cavern floor of worn stone and hard-packed dirt, clear from the foreground to the far wall, under a high natural roof ribbed with roots and stone ledges. The edges of the chamber are nested with old hides, dry grass, gnawed bones and claw-scarred posts driven into cracks in the rock. Along the walls are ledges and dark alcoves where something large could sleep, but the centre remains open. The far wall is dominated by a great closed double gate of dark timber and stone, many times the height of a person, framed by an arch gouged with huge claw marks.",
+    "ElementDraw": {
+      "fire": "The den is volcanic and hot. Lava glows in thin cracks along the side walls, the hides are smoke-darkened, and the great gate's claw marks burn orange at their edges. Heat shimmer hangs under the roof, and the chamber is lit warm orange.",
+      "ice": "The den is a frost cave. Blue ice sheets coat the stone, snow has drifted against the hides, and long icicles hang from the ledges and the gate's arch. The great double gate is sealed with rime, and the chamber is lit cold blue.",
+      "lightning": "The den is storm-charged. Yellow arcs jump between iron studs on the great gate and across mineral veins in the walls, while loose fur and dust stand up in the static. The roof flickers with reflected lightning.",
+      "earth": "The den is deep in the mountains. Green moss, ferns and roots crowd the edges, stone cairns stand beside the sleeping alcoves, and the great gate is built from slabs of rock bound with timber. The light is dim, green and mineral.",
+      "arcane": "The den has become a wizard's lair without its wizard. Purple glass lanterns hang from the roots, paw-shaped sigils glow on the floor outside the open fighting lane, and the great gate carries orbiting violet symbols with no readable text."
+    }
+  },
+  {
+    "Backdrop": "big-cats-boss-pride-throne",
+    "Name": "Pride Throne",
+    "Tier": "boss",
+    "Art": "big-cats-boss-pride-throne",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A great-cat pride throne, with nobody in it: a broad open floor of polished stone and worn earth, clear from the foreground to the far side, under a high vaulted roof of rock and tangled roots. At the centre of the far side rises a low throne of layered stone slabs, hides and claw-marked timber, broad enough for a huge cat to sprawl across. The two portals stand one on each side of the throne, flanking it. Around the edges are trophies of the hunt: broken antlers, old collars, cracked shields, hanging hides and heaps of bones kept well back from the open floor.",
+    "ElementDraw": {
+      "fire": "The pride throne smoulders. Braziers burn among the trophies, orange light glows through cracks in the stone slabs, and embers drift down from the roof roots. The portal frames are hot dark stone, and the chamber is lit warm orange.",
+      "ice": "The pride throne is buried in frost. Hides are stiff with rime, bones are half-covered by snow, and the stone slabs glitter with blue ice. The portal frames are carved from frozen rock, and the chamber is lit pale blue.",
+      "lightning": "The pride throne is crowned by storm metal. Yellow arcs crawl over the cracked shields and leap between bronze bands on the throne, throwing sharp flashes across the trophies. The portal frames carry a hot yellow halo.",
+      "earth": "The pride throne has grown out of the mountain. Moss and alpine flowers soften the stone slabs, roots grip the trophy piles, and green mineral veins run through the floor. The portal frames are rough living rock in a dim green cast.",
+      "arcane": "The pride throne is moonlit and strange. Purple symbols orbit the throne like slow fireflies, translucent paw prints appear and vanish on the floor, and the hanging hides cast shadows that do not quite match them. The portal frames shine violet around their rainbow swirls."
+    }
+  }
+]

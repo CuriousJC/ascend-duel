@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "mutants-outer-holding-ward",
+    "Name": "Holding Ward",
+    "Tier": "outer",
+    "Art": "mutants-outer-holding-ward",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A laboratory holding ward, with nobody in it: a broad floor of cracked white tile, clear from the foreground to the far wall, under a high ceiling of exposed pipes and hanging surgical lamps. The tile is stained and the drains in the floor are clogged with something dark. Along both side walls stand steel gurneys with torn leather straps, empty cages with their bars bent outward, and tall glass specimen jars holding floating organs and a single severed hand. Rubber tubing runs from the jars up the walls and disappears into fleshy growths that have spread across the tiles like a skin, veined and faintly glistening. In the far wall is a single small steel door, closed, about the height of a person, with a narrow wired-glass window smeared from the inside.",
+    "ElementDraw": {
+      "fire": "The ward was burned out to clean it, and it did not work. The tile is scorched black, an incinerator hatch glows orange in one wall, the fleshy growths are blistered and charred and still spreading, and smoke hangs under the pipes. The ward is lit warm orange from below.",
+      "ice": "The ward is a cryogenic store. Frost furs every surface, the specimen jars are frozen solid with the organs suspended in blue ice, cold vapour pours off the gurneys and pools along the floor, and the fleshy growths on the walls have gone blue-black and hard. The light is pale and blue.",
+      "lightning": "The ward is galvanic. Brass electrodes are clamped to the jars and the gurneys, cables run across the floor's edges to humming coils, small yellow arcs jump between the steel frames, and the fleshy growths twitch where the current touches them. The light is hot yellow.",
+      "earth": "The growths have gone mineral. Slabs of green rock have pushed up through the tile and out of the walls, crusting over the gurneys and the jars, and the fleshy skin on the walls is studded with stone. Dust hangs in the air, and the light is dim and green.",
+      "arcane": "The fluid in the specimen jars glows violet, lighting the organs from within so their shapes show through, and the fleshy growths on the walls are faintly transparent, with violet light pulsing in their veins. The ward is lit violet."
+    }
+  },
+  {
+    "Backdrop": "mutants-inner-growth-lab",
+    "Name": "Growth Lab",
+    "Tier": "inner",
+    "Art": "mutants-inner-growth-lab",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A great laboratory hall where flesh is grown, with nobody in it: a broad floor of stained steel grating and cracked tile, clear from the foreground to the far wall, under a high ceiling two or three storeys up, crossed by catwalks and hung with chains and surgical lamps. Huge glass vats stand along both side walls, each holding a shapeless mass of grown tissue suspended in cloudy fluid, with tubes and cables running out of their lids into the ceiling. Operating tables with straps and racks of surgical tools stand between the vats. The flesh has got out: veined tissue, tendrils and swollen sacs have grown over the walls, the machinery and the catwalks, and hang down from the ceiling in ropes. In the far wall is a great closed blast door, many times the height of a person and filling much of the far wall: two heavy riveted steel leaves, half-overgrown at the edges with the same grown flesh.",
+    "ElementDraw": {
+      "fire": "The hall is burning in places. The vats glow orange from heaters beneath them, the fluid inside boils, charred flesh hangs from the catwalks with flame guttering along its edges, and the steel is scorched and heat-blued. The hall is lit warm orange from below.",
+      "ice": "The hall is a cryogenic plant. The vats are frosted white with the tissue frozen inside them, cold vapour spills from burst pipes and pools along the floor, and the flesh on the walls is frozen hard and glazed with ice. The light is pale and blue.",
+      "lightning": "The hall runs on current. Great copper coils stand between the vats, cables thick as arms run into the flesh on the walls, small yellow arcs jump along the catwalks, and the tissue in the vats flickers with light every time they strike. The light is hot yellow.",
+      "earth": "The growths in the hall have gone mineral. Slabs of green rock push out of the vats through cracked glass, crust over the operating tables and break up through the floor, and the flesh on the walls is crusted with stone. Dust hangs in the air, and the light is dim and green.",
+      "arcane": "The fluid in the vats glows violet, showing the shape of the tissue inside, the flesh on the walls is faintly transparent with violet light pulsing through its veins, and loose surgical tools hang a little off the tables in the light. The hall is lit violet."
+    }
+  },
+  {
+    "Backdrop": "mutants-boss-incubation-chamber",
+    "Name": "Incubation Chamber",
+    "Tier": "boss",
+    "Art": "mutants-boss-incubation-chamber",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "The central chamber of a laboratory, with nobody in it: a broad round floor of steel plate, clear from the foreground to the far wall, under a high domed ceiling crossed by catwalks and cables. At the centre of the far side stands an enormous glass incubation tank, many times the height of a person, cracked open down its front and empty, its fluid spilled in a wide stain across the floor in front of it. Thick tubes, cables and grown flesh run into the tank from every side, and veined tissue has spread over the walls and up into the dome. Banks of machinery and smashed monitoring equipment stand along the edges. The two portals stand one on each side of the tank, flanking it, each framed by a riveted steel bulkhead overgrown with the same grown flesh.",
+    "ElementDraw": {
+      "fire": "The chamber is burning. Flame gutters from broken pipes, the flesh on the walls is charred and blistered, the spilled fluid steams, and the steel is scorched and heat-blued. The chamber is lit warm orange from below.",
+      "ice": "The chamber is frozen. Frost furs the tank and the machinery, the spilled fluid is a sheet of ice across the floor, vapour pours from the cracked glass, and the flesh on the walls is frozen hard. The light is pale and blue.",
+      "lightning": "The chamber crackles. Great electrodes stand around the tank, small yellow arcs jump between the bulkheads and the cables, and the flesh on the walls flickers with light where the current runs through it. The light is hot yellow.",
+      "earth": "The chamber has gone mineral. Slabs of green rock have broken up through the floor and grown over the machinery, the empty tank is crusted with crystal, and the flesh on the walls is studded with stone. The light is dim and green.",
+      "arcane": "The spilled fluid glows violet, the empty tank is lit from within as though something were still in it, and the flesh on the walls is faintly transparent with violet light pulsing in its veins. The chamber is lit violet."
+    }
+  }
+]

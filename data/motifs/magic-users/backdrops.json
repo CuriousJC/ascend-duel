@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "magic-users-outer-smoke-laboratory",
+    "Name": "Smoky Laboratory",
+    "Tier": "outer",
+    "Art": "magic-users-outer-smoke-laboratory",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A magician's laboratory, with nobody in it: a broad floor of worn flagstones, clear from the foreground to the far wall, under a low ceiling of heavy dark beams, lower than any other room in the realm though still well above head height. Smoke hangs in a haze beneath the beams and drifts in slow layers across the room, softening everything behind it. The laboratory is sparsely kept: a few plain workbenches stand against the side walls with only a handful of vessels and tools on each, and the edges of the floor are bare but for a stool or two. In the far wall is a single small plain door, closed, about the height of a person.",
+    "ElementDraw": {
+      "fire": "The laboratory is an alchemist's. A squat brick furnace glows at one side, a single crucible sits on a bench above a low flame, and a pair of brass tongs and a bellows lean against the wall. The smoke is thick and sooty, and the room is lit warm orange from below.",
+      "ice": "The laboratory is a cryomancer's. A few frost-rimed glass jars hold packed snow, a block of clear ice sits on a bench with a dark shape frozen inside it, and cold vapour spills off the bench edges and pools along the floor. The haze is a cold mist rather than smoke, and the light is pale and blue.",
+      "lightning": "The laboratory is a storm-catcher's. A single copper coil stands on a bench beside a glass globe with a small arc flickering inside it, and a brass rod runs up through the low ceiling. The smoke smells of scorched air and every metal edge carries a faint hot-yellow halo. The light is hot yellow.",
+      "earth": "The laboratory is a geomancer's. A stone mortar, a few jars of soil and a split geode with green crystals inside sit on the benches, and a potted root hangs from a beam. Dust hangs in the haze, and the light is dim and green.",
+      "arcane": "The laboratory is an astrologer's. A small brass orrery stands on one bench, a crystal ball on another, and a few candles burn with purple flames. The smoke curls in slow spirals, and the room is lit violet."
+    }
+  },
+  {
+    "Backdrop": "magic-users-inner-grand-laboratory",
+    "Name": "Grand Laboratory",
+    "Tier": "inner",
+    "Art": "magic-users-inner-grand-laboratory",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A great magician's laboratory hall, with nobody in it: a broad floor of polished flagstones, clear from the foreground to the far wall, under a high vaulted ceiling two or three storeys up. Tall bookshelves line both side walls from floor to vault, packed with books, and tall stained-glass windows rise between them, throwing colored light across the floor. Benches along the edges are crowded with magical equipment of every kind, books lie open on lecterns and side tables, and scrolls hang down the shelves and from the rafters, their writing too small and distant to read. In the far wall is a great closed door, many times the height of a person and filling much of the far wall: two heavy carved leaves under a massive stone arch.",
+    "ElementDraw": {
+      "fire": "The hall belongs to an alchemist. Brick furnaces glow along the walls, crucibles and bubbling retorts crowd the benches, and brass tongs, bellows and racks of glowing vials stand among them. The stained glass is orange, red and gold, showing flames and suns, and the whole hall is lit warm orange.",
+      "ice": "The hall belongs to a cryomancer. Frost-rimed glass vessels and jars of snow crowd the benches, ice crystals grow in shallow dishes, specimens hang frozen in blocks of clear ice, and cold vapour pours off the benches onto the floor. The stained glass is pale and deep blue, showing snowflakes and frozen stars, frost creeps across the bookshelves, and the light is pale and blue.",
+      "lightning": "The hall belongs to a storm-catcher. Copper coils, glass globes full of crackling arcs, banks of glass jars and brass rods crowd the benches, and cables run up the shelves into the vault. The stained glass is yellow and gold, showing lightning bolts and storm clouds, small arcs jump between the metal on the benches, and the light is hot yellow.",
+      "earth": "The hall belongs to a geomancer. Split geodes, mineral specimens, stone mortars, jars of soil and potted roots and herbs crowd the benches, and moss grows between the books on the lower shelves. The stained glass is green and amber, showing leaves and mountains, and the light is dim and green.",
+      "arcane": "The hall belongs to an astrologer. Brass orreries, astrolabes, crystal balls and star charts crowd the benches, candles burn with purple flames, and a few books float a little off the lecterns. The stained glass is deep purple and violet, showing moons and constellations, and the whole hall is lit violet."
+    }
+  },
+  {
+    "Backdrop": "magic-users-boss-gem-altar",
+    "Name": "Gem Altar",
+    "Tier": "boss",
+    "Art": "magic-users-boss-gem-altar",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A great bare sanctum, with nobody in it: a broad floor of smooth dark stone, clear from the foreground to the far wall, under a high vaulted ceiling. There is no furniture, equipment or clutter of any kind anywhere in the room. Glowing pictograms, symbols rather than writing, are carved across the whole floor in rings and lines, and the same glowing pictograms cover the walls from floor to vault. At the centre of the far side stands an altar: a tall pedestal of carved green jade holding up a great faceted gem, light swirling slowly inside it. The two portals stand one on each side of the altar, flanking it, each framed in ornate bronze cast with a dragon's head at its crown, the dragon's eyes glowing.",
+    "ElementDraw": {
+      "fire": "The pictograms on the floor and walls glow orange, the light inside the gem swirls in orange and gold like a contained flame, and the eyes of the bronze dragons glow orange. The sanctum is lit warm orange.",
+      "ice": "The pictograms on the floor and walls glow pale blue, the light inside the gem swirls in pale and deep blue like drifting snow, and the eyes of the bronze dragons glow blue. Frost edges the jade pedestal, and the light is pale and blue.",
+      "lightning": "The pictograms on the floor and walls glow yellow, the light inside the gem swirls in yellow with small arcs flickering through it, and the eyes of the bronze dragons glow yellow. The light is hot yellow.",
+      "earth": "The pictograms on the floor and walls glow green, the light inside the gem swirls in green like deep water over moss, and the eyes of the bronze dragons glow green. The light is dim and green.",
+      "arcane": "The pictograms on the floor and walls glow purple, the light inside the gem swirls in violet and deep purple, and the eyes of the bronze dragons glow purple. The sanctum is lit violet."
+    }
+  }
+]

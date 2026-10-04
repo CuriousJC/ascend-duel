@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "cat-people-outer-alley-court",
+    "Name": "Alley Court",
+    "Tier": "outer",
+    "Art": "cat-people-outer-alley-court",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A cat-people alley court, with nobody in it: a broad paved courtyard, clear from the foreground to the far wall, enclosed by tall close-set buildings with balconies, awnings, laundry ropes and narrow roof walks above. The centre is open for a duel, while the edges are crowded with stacked crates, fish baskets, rain barrels, folded market stalls, scratching posts and low sleeping mats. Claw marks run up doorframes and across balcony rails. At the far side, between two leaning walls, is a single small closed door of dark wood with a low lintel, about the height of a person.",
+    "ElementDraw": {
+      "fire": "The alley court is lit by brazier heat. Orange lanterns hang under the awnings, singed cloth smokes at the edges, and the crates cast long warm shadows. The small door's iron latch glows faintly hot.",
+      "ice": "The alley court is frozen and quiet. Frost hangs from the balcony rails, blue ice films the paving stones, and snow has collected on the awnings and mats. The small door is rimed shut under cold blue light.",
+      "lightning": "The alley court is strung with charged wires. Yellow arcs jump between roof walks, metal bells and wet gutters, and sparks skitter along the puddles near the edges. The small door flickers with a hot halo around its latch.",
+      "earth": "The alley court has sunk into a green overgrown quarter. Moss fills the cracks between paving stones, vines climb the balconies, and clay pots of tough herbs line the walls. The small door is set in mud-stained stone under dim green light.",
+      "arcane": "The alley court is moonlit purple. Violet paw-print sigils glow briefly on the paving stones, beads and charms drift under the awnings, and shadows on the roof walks move a little after the things that cast them."
+    }
+  },
+  {
+    "Backdrop": "cat-people-inner-dueling-house",
+    "Name": "Dueling House",
+    "Tier": "inner",
+    "Art": "cat-people-inner-dueling-house",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A cat-people dueling house, with nobody in it: a broad polished floor of dark wood, clear from the foreground to the far wall, inside a high hall with rafters, hanging cloths and narrow balconies running along both sides. Weapon racks, practice posts wrapped in rope, claw-scarred shields, folded jackets and water bowls line the walls, all pushed well back from the centre. The far wall is dominated by a great closed double door of lacquered wood, many times the height of a person, banded with metal and carved with sweeping claw patterns that contain no letters.",
+    "ElementDraw": {
+      "fire": "The dueling house is warm with orange firelight. Braziers burn beside the practice posts, the lacquered floor reflects ember glow, and the great door's metal bands are heat-bright at the edges.",
+      "ice": "The dueling house is cold and blue. Frost whitens the rope-wrapped posts, breath-like mist hangs low over the polished floor, and icicles hang from the balcony rails. The great door is sealed with rime.",
+      "lightning": "The dueling house hums with storm charge. Yellow sparks jump between blades on the racks and metal studs in the floor, and the hanging cloths lift in static drafts. The great door's bands glow hot yellow.",
+      "earth": "The dueling house is grounded and green. Stone training weights, clay bowls and mossy practice posts line the walls, roots creep between floorboards at the edges, and the great door is framed by rough living wood.",
+      "arcane": "The dueling house is lit violet from nowhere. Practice posts cast doubled shadows, ribbon charms float beside the balconies, and the claw patterns on the great door glow purple without becoming writing."
+    }
+  },
+  {
+    "Backdrop": "cat-people-boss-matriarch-court",
+    "Name": "Matriarch Court",
+    "Tier": "boss",
+    "Art": "cat-people-boss-matriarch-court",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A cat-people matriarch's court, with nobody in it: a broad open hall of polished stone and woven rugs, clear from the foreground to the far side, under a high roof of dark beams and layered hanging cloth. At the centre of the far side is a raised dais with a low cushioned seat, bowls, rings, folded wraps and claw-scarred armrests arranged for an absent ruler. The two portals stand one on each side of the dais, flanking it. Along the side walls are balconies, bead curtains, weapon racks and shelves of bright trinkets, all kept back from the open floor.",
+    "ElementDraw": {
+      "fire": "The matriarch court glows orange. Braziers burn before the dais, hanging cloths are singed at their hems, and the rings and bowls catch ember light. The portal frames are dark bronze warmed by fire.",
+      "ice": "The matriarch court is hushed with frost. Blue rime covers the bead curtains, the rugs are stiff with snow at the edges, and the cushioned seat is rimmed with ice crystals. The portal frames are pale frozen stone.",
+      "lightning": "The matriarch court crackles. Yellow arcs jump between jewelry, weapon racks and balcony rails, making bead curtains glitter like sparks. The portal frames are banded in charged metal.",
+      "earth": "The matriarch court is overgrown with green life. Moss softens the stone floor at the edges, vines climb the dark beams, and clay bowls on the dais hold roots and mountain flowers. The portal frames are living wood and rough stone.",
+      "arcane": "The matriarch court is violet and watchful. Purple light glows under the dais cushions, rings float above their bowls, and faint cat-eye shapes open and close in the hanging cloth without becoming faces. The portal frames shine violet around their rainbow swirls."
+    }
+  }
+]

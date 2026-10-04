@@ -1,0 +1,97 @@
+[
+  {
+    "Backdrop": "animals-outer-burnt-woods",
+    "Name": "Burnt Woods",
+    "Tier": "outer",
+    "Art": "animals-outer-burnt-woods",
+    "Affinities": ["fire"],
+    "Draw": "A woodland after a wildfire, with nobody in it: a broad clearing of black ash and cinder, clear from the foreground to the far side. Charred trunks stand all around the edges, still smouldering, and the biggest of them are scored with deep claw marks higher than a person could reach. Cracked bones lie in the ash at the edges, and the grass beyond is burnt to stubble. At the far side, in a low bank of scorched earth, is a single small den mouth, barely taller than a person, framed by charred roots. Smoke and embers drift across the sky, and the woods are lit warm orange from below."
+  },
+  {
+    "Backdrop": "animals-outer-frozen-taiga",
+    "Name": "Frozen Taiga",
+    "Tier": "outer",
+    "Art": "animals-outer-frozen-taiga",
+    "Affinities": ["ice"],
+    "Draw": "A clearing in a pine forest deep in winter, with nobody in it: a broad stretch of trampled snow, clear from the foreground to the far side. Dark pines heavy with snow and icicles stand around the edges, their lower bark rubbed and torn away, and tufts of grey fur are snagged on the branches. Paw prints far too large for any ordinary wolf cross the snow at the edges, and gnawed bones poke out of the drifts. At the far side, in a snowbank under the roots of a great fallen pine, is a single small den opening, barely taller than a person, fringed with icicles. The light is pale and blue."
+  },
+  {
+    "Backdrop": "animals-outer-thunder-crag",
+    "Name": "Thunder Crag",
+    "Tier": "outer",
+    "Art": "animals-outer-thunder-crag",
+    "Affinities": ["lightning"],
+    "Draw": "A bare rocky plateau high in the hills in a thunderstorm, with nobody in it: a broad stretch of flat stone and flattened grass, clear from the foreground to the far side, under dark storm clouds. Boulders the size of houses stand around the edges, scored with long parallel claw marks, and a lone dead tree split by lightning leans at one side. Gnawed bones lie scattered among the rocks. At the far side, in a low wall of tumbled stone, is a single small opening, barely taller than a person, and lightning is striking the rocks above it. The light is hot yellow."
+  },
+  {
+    "Backdrop": "animals-outer-mud-wallow",
+    "Name": "Mud Wallow",
+    "Tier": "outer",
+    "Art": "animals-outer-mud-wallow",
+    "Affinities": ["earth"],
+    "Draw": "A boar wallow in a dense old forest, with nobody in it: a broad stretch of churned brown mud and trampled earth, clear from the foreground to the far side. Thick green trees crowd in around the edges, their trunks rubbed bare of bark at shoulder height and gashed by tusks, and the ground at the edges is rooted up into furrows and heaps. Hoofprints the size of shields are pressed into the mud. At the far side, under the roots of an enormous tree, is a single small opening dug into the earth, barely taller than a person. The light falls through the canopy dappled and green."
+  },
+  {
+    "Backdrop": "animals-outer-roost-cavern",
+    "Name": "Roost Cavern",
+    "Tier": "outer",
+    "Art": "animals-outer-roost-cavern",
+    "Affinities": ["arcane"],
+    "Draw": "A vast cavern, with nobody in it: a broad, flat floor of pale stone, clear from the foreground to the far wall, under a ceiling so high it is lost in shadow. Stalactites hang from it in great clusters, the empty roost of something with wings, and the floor at the edges is streaked with droppings and littered with small bones. Moonlight falls in through a crack in the roof, and glowing purple fungus grows along the walls. In the far wall is a single small opening, barely taller than a person, ringed with glowing fungus. The whole cavern is lit violet."
+  },
+  {
+    "Backdrop": "animals-inner-burnt-woods",
+    "Name": "Burnt Woods Den",
+    "Tier": "inner",
+    "Art": "animals-inner-burnt-woods",
+    "Affinities": ["fire"],
+    "Draw": "A woodland after a wildfire, with nobody in it: a broad clearing of black ash and cinder, clear from the foreground to the far side. Charred trunks stand all around the edges, still smouldering, and the biggest of them are scored with deep claw marks higher than a person could reach. Cracked bones lie in the ash at the edges. At the far side a hillside of scorched earth rises, and in it is a great den mouth, many times the height of a person and filling much of the far side, closed across by two massive charred trunks fallen together like a heavy double gate, embers glowing along their edges. Smoke and embers drift across the sky, and the woods are lit warm orange from below."
+  },
+  {
+    "Backdrop": "animals-inner-frozen-taiga",
+    "Name": "Frozen Taiga Den",
+    "Tier": "inner",
+    "Art": "animals-inner-frozen-taiga",
+    "Affinities": ["ice"],
+    "Draw": "A clearing in a pine forest deep in winter, with nobody in it: a broad stretch of trampled snow, clear from the foreground to the far side. Dark pines heavy with snow and icicles stand around the edges, their lower bark rubbed and torn away, and tufts of grey fur are snagged on the branches. Gnawed bones poke out of the drifts. At the far side rises a ridge of ice-bound rock, and in it is a great den mouth, many times the height of a person and filling much of the far side, closed by two massive slabs of frost-covered stone leaned together like a heavy double gate, hung with icicles and half-buried in drifted snow. The light is pale and blue."
+  },
+  {
+    "Backdrop": "animals-inner-thunder-crag",
+    "Name": "Thunder Crag Den",
+    "Tier": "inner",
+    "Art": "animals-inner-thunder-crag",
+    "Affinities": ["lightning"],
+    "Draw": "A bare rocky plateau high in the hills in a thunderstorm, with nobody in it: a broad stretch of flat stone and flattened grass, clear from the foreground to the far side, under dark storm clouds. Boulders the size of houses stand around the edges, scored with long parallel claw marks, and gnawed bones lie scattered among the rocks. The far side is a towering cliff of dark rock, and in it is a great den mouth, many times the height of a person and filling much of the far side, closed by two massive split slabs of rock leaned together like a heavy double gate, with lightning striking the cliff above it. The light is hot yellow."
+  },
+  {
+    "Backdrop": "animals-inner-mud-wallow",
+    "Name": "Mud Wallow Den",
+    "Tier": "inner",
+    "Art": "animals-inner-mud-wallow",
+    "Affinities": ["earth"],
+    "Draw": "A boar wallow in a dense old forest, with nobody in it: a broad stretch of churned brown mud and trampled earth, clear from the foreground to the far side. Thick green trees crowd in around the edges, their trunks rubbed bare of bark at shoulder height and gashed by tusks, and hoofprints the size of shields are pressed into the mud. At the far side the roots of an enormous tree arch up out of a mud bank into a great opening, many times the height of a person and filling much of the far side, closed by two massive leaves of root-bound earth like a heavy double gate. The light falls through the canopy dappled and green."
+  },
+  {
+    "Backdrop": "animals-inner-roost-cavern",
+    "Name": "Deep Roost",
+    "Tier": "inner",
+    "Art": "animals-inner-roost-cavern",
+    "Affinities": ["arcane"],
+    "Draw": "A vast cavern, with nobody in it: a broad, flat floor of pale stone, clear from the foreground to the far wall, under a ceiling so high it is lost in shadow. Stalactites hang from it in great clusters, the empty roost of something with wings, and the floor at the edges is streaked with droppings and littered with small bones. Glowing purple fungus grows along the walls. In the far wall a great opening rises many times the height of a person and fills much of the far wall, closed by two massive curtains of fused stalactites hanging together like a heavy double gate, ringed with glowing fungus. The whole cavern is lit violet."
+  },
+  {
+    "Backdrop": "animals-boss-bone-hill",
+    "Name": "Bone Hill",
+    "Tier": "boss",
+    "Art": "animals-boss-bone-hill",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A vast open hilltop, with nobody in it: a broad stretch of trampled ground, clear from the foreground to the far side, open to the sky. At the centre of the far side rises a great mound of bones, many times the height of a person: ribs, antlers, tusks and skulls of every size, heaped up over years by whatever hunts here, and crowned by one colossal horned skull. Its foot spills out to either side and stops short of the open floor, and deep claw marks score the ground around it. The two portals stand one on each side of the mound, flanking it.",
+    "ElementDraw": {
+      "fire": "The hill stands in burnt woods. The grass is burnt to ash, charred trunks ring the edges, and the bones are blackened with embers glowing in their cracks. Smoke and embers drift across the sky, and the hilltop is lit warm orange from below.",
+      "ice": "The hill stands in a frozen pine forest. Snow covers the ground and drifts against the mound, frost furs every bone, and icicles hang from the ribs and from the great skull's horns. The light is pale and blue.",
+      "lightning": "The hill is a bare crag under a dark storm sky. Small yellow arcs crawl between the antlers and along the great skull's horns, and lightning forks down onto the hills behind. The light is hot yellow.",
+      "earth": "The hill stands in a deep old forest. Moss, ferns and roots have grown over the mound and bind its bones together, flowers sprout from the eye sockets of the skulls, and great trees crowd in around the edges. The light falls through the canopy dappled and green.",
+      "arcane": "The hill stands under a huge full moon. The bones are veined with glowing purple light, the great skull's eye sockets glow violet, and purple fungus grows around the foot of the mound. The hilltop is lit violet."
+    }
+  }
+]

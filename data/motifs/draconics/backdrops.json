@@ -1,0 +1,47 @@
+[
+  {
+    "Backdrop": "draconics-outer-hatchery-ledge",
+    "Name": "Hatchery Ledge",
+    "Tier": "outer",
+    "Art": "draconics-outer-hatchery-ledge",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A draconic hatchery ledge, with nobody in it: a broad stone platform inside an enormous cavern, clear from the foreground to the far wall, under a high roof lost in shadow. The edges are lined with empty egg shells, claw-scored nesting pits, shed scales, gnawed bones and piles of broken stone warmed smooth by old bodies. Wing scratches mark the walls and soot darkens the roof. At the far side, in the cavern wall, is a single small closed stone door, about the height of a person, banded with dark metal and dwarfed by the cave around it.",
+    "ElementDraw": {
+      "fire": "The hatchery ledge is volcanic. Orange lava glows in cracks below the platform, old shells are scorched black at their edges, and heat shimmer rises from the nesting pits. The small stone door is lit warm orange from beneath.",
+      "ice": "The hatchery ledge is glacial. Blue ice coats the stone, frost rims the empty shells, and icicles hang from the high roof. The small stone door is half-buried in drifted snow and cold blue light.",
+      "lightning": "The hatchery ledge is open to a storm through rents in the cavern roof. Yellow lightning crawls along metal bands and wet stone, and static lifts loose scales in little shivers. The small door's hinges glow hot yellow.",
+      "earth": "The hatchery ledge is deep mountain green. Moss, lichen and roots grow around the nesting pits, mineral veins run through the platform, and piles of rough stone frame the walls. The small door is set into living rock.",
+      "arcane": "The hatchery ledge is strange and purple. Empty shells glow from within, shed scales hover just above the stone, and gem-like motes drift under the roof. The small door is marked by violet crest shapes with no readable text."
+    }
+  },
+  {
+    "Backdrop": "draconics-inner-hoard-vault",
+    "Name": "Hoard Vault",
+    "Tier": "inner",
+    "Art": "draconics-inner-hoard-vault",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A draconic hoard vault, with nobody in it: a broad floor of worn stone, clear from the foreground to the far wall, inside a vast vaulted cavern reinforced by ancient pillars. Treasure lies at the edges rather than the centre: heaps of coins, cracked shields, torn banners, broken crowns, metal cups, gemstones and old bones shoved against the walls and under ledges. Long drag marks and claw grooves cross the stone. The far wall is dominated by a great closed double door of black stone and banded metal, many times the height of a person, carved with wing and horn patterns that contain no writing.",
+    "ElementDraw": {
+      "fire": "The hoard vault burns with orange heat. Coins glow like embers near the walls, molten light runs through cracks in the floor, and the great door's metal bands are red-hot at the seams.",
+      "ice": "The hoard vault is sealed in blue frost. Coins and crowns are trapped under clear ice, banners hang stiff and brittle, and the great door is rimed white beneath hanging icicles.",
+      "lightning": "The hoard vault is charged with yellow stormlight. Arcs leap between coins, crowns and pillar bands, making the treasure glitter sharply. The great door flickers with hot halos along its metalwork.",
+      "earth": "The hoard vault has become a mineral cave. Green crystals push up among the coins, roots thread through cracked shields, and moss creeps over the old bones. The great door is rough stone veined with green.",
+      "arcane": "The hoard vault glows purple from the gems. Jewels float slowly above the treasure heaps, cups turn in the air, and violet light pulses through the wing and horn carvings on the great door."
+    }
+  },
+  {
+    "Backdrop": "draconics-boss-crown-roost",
+    "Name": "Crown Roost",
+    "Tier": "boss",
+    "Art": "draconics-boss-crown-roost",
+    "Affinities": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Draw": "A draconic crown roost, with nobody in it: a vast open cavern terrace with a broad clear floor of dark stone, high above a distant drop, under a roof of jagged arches. At the centre of the far side rises a throne-like roost of piled stone, old shields, huge ribs and broken crowns, built for a dragon rather than a person. The two portals stand one on each side of the roost, flanking it. Along the edges are treasure drifts, shed scales, torn banners and claw-marked pillars, all well back from the open floor.",
+    "ElementDraw": {
+      "fire": "The crown roost is lit by volcanic fire. Orange lava glows beyond the terrace, shields and crowns are scorched black, and the stone roost smoulders at its cracks. The portal frames are hot basalt around their rainbow swirls.",
+      "ice": "The crown roost is a frozen height. Blue ice sheets cover the terrace, frost crusts the ribs and crowns, and snow blows through the jagged arches. The portal frames are carved from pale glacier stone.",
+      "lightning": "The crown roost stands inside a storm. Yellow lightning strikes the pillars and leaps across the broken crowns, throwing sharp flashes over the terrace. The portal frames are banded with charged metal.",
+      "earth": "The crown roost is a mountain throne. Green moss, roots and crystal veins climb the piled stone, and wind-tough plants grow between the treasure drifts. The portal frames are rough living rock.",
+      "arcane": "The crown roost is purple and regal. Gem crests hover above the broken crowns, shed scales orbit the roost in slow rings, and violet light fills the high arches. The portal frames shine purple around their rainbow swirls."
+    }
+  }
+]

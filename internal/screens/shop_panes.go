@@ -64,9 +64,10 @@ const (
 	// inside one**, which is what makes the four read as four rather than as one long tray.
 	shopPaneGutter = 24
 
-	// shopPaneTopPct is where the cards stand. Under the narration and the hint, and far enough
-	// above the Leave button for a price and a reroll button to hang beneath them.
-	shopPaneTopPct = 46
+	// shopPaneTopPct is where the cards stand: **the row, its prices and its reroll buttons centered
+	// between the build band and the Leave button** *(owner's call, 2026-10-04)*, with the hint in
+	// the gap above.
+	shopPaneTopPct = 39
 
 	// shopRerollGap is how far a reroll button sits under the price figures of the pane it
 	// belongs to.

@@ -95,6 +95,11 @@ const (
 	// them the alteration. **Only the vial reaches this stage** — a stone and a rune change no card,
 	// so there is nothing to watch.
 	goodsShowing
+
+	// goodsCarrying: a rune or a cantrip has been taken and is flying into its seat in the
+	// consumables pane *(owner's call, 2026-10-04)* — cards fly, they never appear. The run already
+	// holds it; this is the picture catching up, and the screen leaves when it lands.
+	goodsCarrying
 )
 
 // goods is the dialog: which good was opened, what was drawn from it, and how far through the
@@ -141,6 +146,13 @@ type goods struct {
 	arrival     ui.Travel
 	arrivedFrom image.Rectangle
 	applyNow    func(*session.Session)
+
+	// What a taken rune or cantrip looks like on its way to the pane, through goodsCarrying: its
+	// face, the seat it left, the pane seat it is landing in, and the clock.
+	carryFace cards.Spec
+	carryFrom image.Rectangle
+	carrySeat int
+	carryTrip ui.Travel
 }
 
 // open puts a good up, drawing what is inside it.
@@ -167,6 +179,14 @@ func (g *goods) open(gs *state.GlobalState, good session.Good) {
 	}
 }
 
+// roomFull is whether what this good holds has nowhere to go: it is carried into the consumables
+// pane rather than spent here, and the pane is full. **The cards are held back rather than the good
+// refused** *(owner's call, 2026-10-04)* — the player opens it, sees what is inside, and either sells
+// a carried card to make room or skips. See GoodsScene.
+func (g *goods) roomFull(gs *state.GlobalState) bool {
+	return gs.Run != nil && carried(g.good.Contains) && gs.Run.ConsumablesFull()
+}
+
 // openBag reports whether anything is up.
 func (g *goods) openNow() bool { return g.stage != goodsClosed }
 
@@ -177,7 +197,48 @@ func (g *goods) reset() {
 	g.lands = nil
 	g.removes, g.copied, g.held = false, false, 0
 	g.arrival, g.arrivedFrom, g.applyNow = ui.Travel{}, image.Rectangle{}, nil
+	g.carryFace, g.carryFrom, g.carrySeat, g.carryTrip = cards.Spec{}, image.Rectangle{}, -1, ui.Travel{}
 	g.tip.Forget()
+}
+
+// carry starts a taken card's flight from the seat it was picked in to its seat in the pane.
+//
+// **The run has already moved**: the card is held before this is called, so the seat it lands in is
+// read off the pane as it now stands — the last carried thing of that kind and that record.
+func (g *goods) carry(gs *state.GlobalState, i int, face cards.Spec, kind session.ConsumableKind, key string) {
+	g.carrySeat = -1
+	for k, c := range heldConsumables(gs) {
+		if c.Kind == kind && consumableKey(c) == key {
+			g.carrySeat = k
+		}
+	}
+	if g.carrySeat < 0 {
+		g.reset()
+		return
+	}
+	g.stage, g.carryFace, g.carryFrom = goodsCarrying, face, g.slot(gs, i)
+	g.carryTrip = ui.NewTravel(0, flightTicks())
+	g.tip.Forget()
+}
+
+// landingSeat is whether a pane seat is the one a card is flying into, and so is drawn empty until
+// it lands — the seat a mover is headed for is an absence, never the card arriving twice.
+func (g *goods) landingSeat(i int) bool {
+	return g.stage == goodsCarrying && i == g.carrySeat
+}
+
+// drawCarry is the taken card mid-flight, shrinking from the size it was offered at to the pane's.
+func (g *goods) drawCarry(gs *state.GlobalState, screen *ebiten.Image) {
+	to := heldSeat(gs, g.carrySeat)
+	at := ui.FlyingTo(g.carryFrom, to, g.carryTrip)
+	p := ui.EaseOut(g.carryTrip.Progress())
+	w := float64(g.carryFrom.Dx()) + float64(to.Dx()-g.carryFrom.Dx())*p
+	h := float64(g.carryFrom.Dy()) + float64(to.Dy()-g.carryFrom.Dy())*p
+
+	var geo ebiten.GeoM
+	geo.Scale(w/float64(cards.EssenceStyle.Width), h/float64(cards.EssenceStyle.Height))
+	geo.Translate(float64(at.X), float64(at.Y))
+	ui.DrawFlyingCard(gs, screen, g.carryFace, cards.EssenceStyle, geo)
 }
 
 // count is how many cards are in the row that is taken from: the stones, the runes, or the
@@ -458,6 +519,14 @@ func (g *goods) update(gs *state.GlobalState, pile func(image.Point) bool) bool 
 		g.tickShowing(gs)
 		return true
 	}
+	if g.stage == goodsCarrying {
+		g.carryTrip.Tick()
+		if g.carryTrip.Done() {
+			g.reset()
+			return false
+		}
+		return true
+	}
 
 	g.hover(gs)
 	systems.UpdateTooltip(gs, &g.tip)
@@ -576,24 +645,26 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		// **A rune is not applied here — it goes into the sack.** That is the whole
 		// difference between this good and the other two: a stone and an essence are spent on the
 		// spot, and a rune is carried into the next fight and spent between its turns.
+		// **A full pane takes nothing and closes nothing**: the card is dim, and the sack stays open
+		// until a carried card is sold or the good is skipped.
 		p := g.runes[i]
-		if gs.Run.Hold(p.Record) {
-			gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: p.Record, Seat: i})
-			trace.Logf("shop", "sack of runes: %s held, %d in the sack",
-				p.Record, gs.Run.HoldCount())
+		if !gs.Run.Hold(p.Record) {
+			return
 		}
-		g.reset()
+		gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: p.Record, Seat: i})
+		trace.Logf("shop", "sack of runes: %s held, %d in the sack", p.Record, gs.Run.HoldCount())
+		g.carry(gs, i, ui.RuneSpec(gs, p, true, false), session.ConsumableRune, p.Record)
 
 	case session.ContentsCantrips:
 		// **A cantrip goes into the scroll case**, the rune's rule: it is cast between the turns of a
 		// fight, so nothing happens to the run here but the carrying.
 		c := g.cantrips[i]
-		if gs.Run.HoldCantrip(c.Record) {
-			gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: c.Record, Seat: i})
-			trace.Logf("shop", "bundle of scrolls: %s held, %d in the case",
-				c.Record, gs.Run.ScrollCount())
+		if !gs.Run.HoldCantrip(c.Record) {
+			return
 		}
-		g.reset()
+		gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: c.Record, Seat: i})
+		trace.Logf("shop", "bundle of scrolls: %s held, %d in the case", c.Record, gs.Run.ScrollCount())
+		g.carry(gs, i, ui.CantripSpec(gs, c, true), session.ConsumableCantrip, c.Record)
 	}
 }
 
@@ -717,6 +788,10 @@ func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 		g.drawShowing(gs, screen)
 		return
 	}
+	if g.stage == goodsCarrying {
+		g.drawCarry(gs, screen)
+		return
+	}
 
 	for i := 0; i < g.count(); i++ {
 		at := g.slot(gs, i).Min
@@ -724,9 +799,9 @@ func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 		case session.ContentsStones:
 			ui.DrawStoneCard(gs, screen, at, g.stones[i], true)
 		case session.ContentsRunes:
-			ui.DrawRuneCard(gs, screen, at, g.runes[i], true, false)
+			ui.DrawRuneCard(gs, screen, at, g.runes[i], !g.roomFull(gs), false)
 		case session.ContentsCantrips:
-			ui.DrawCantripCard(gs, screen, at, g.cantrips[i], true)
+			ui.DrawCantripCard(gs, screen, at, g.cantrips[i], !g.roomFull(gs))
 		default:
 			// **An essence is lit only for the cards that are selected.** With nothing selected the
 			// whole row is dim, which is what says the gesture starts underneath — the reward
@@ -752,8 +827,7 @@ func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 // paragraph**: the cards say what they are, and this says how many of them the player gets.
 //
 // **Both come off the record now** *(2026-09-14)*, resolved once at load — see session.Good, where a
-// blank Title becomes the good's Name and a blank Hint becomes "take one of the four, the rest are
-// gone", with the figure the record's own Size rather than a number authored twice. The vial is
+// blank Title becomes the good's Name and a blank Hint becomes session.DefaultGoodHint, with the figure the record's own Size rather than a number authored twice. The vial is
 // still the exception and still says one thing *(owner's call, 2026-09-05)*: the essences on the
 // table are the whole of what the dialog is, so it heads itself with an instruction rather than a
 // label with a caption. It authors both fields to say so.

@@ -83,8 +83,7 @@ type Good struct {
 	Price    int
 
 	// Title and Hint are the dialog's heading and the line under it, already resolved: an empty
-	// Title in the file becomes the Name here, and an empty Hint becomes the computed
-	// "take one of the four, the rest are gone". **Resolved once, at load**, so the screen reads a
+	// Title in the file becomes the Name here, and an empty Hint becomes DefaultGoodHint. **Resolved once, at load**, so the screen reads a
 	// string rather than deciding what a blank field meant.
 	Title string
 	Hint  string
@@ -93,6 +92,10 @@ type Good struct {
 	// not in it: the screen computes both from the fields above.
 	Tip []string
 }
+
+// DefaultGoodHint is the line under a good's title when its record writes none: the cards on the
+// table say what they are, and this says how many of them the player gets.
+const DefaultGoodHint = "Choose One"
 
 // goods is the validated catalog, in file order, built once at package init.
 //
@@ -247,7 +250,7 @@ func resolveGood(rec data.GoodData) (Good, error) {
 	}
 	hint := rec.Hint
 	if hint == "" {
-		hint = fmt.Sprintf("take one of the %d, the rest are gone", rec.Size)
+		hint = DefaultGoodHint
 	}
 
 	return Good{

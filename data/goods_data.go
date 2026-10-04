@@ -66,7 +66,7 @@ type GoodData struct {
 	// because the four essences on the table are the whole of what the dialog is.
 	Title string `json:"Title"`
 
-	// Hint is the line under that title. **Empty means the computed one** — "take one of the four,
+	// Hint is the line under that title. **Empty means the default one** — session.DefaultGoodHint,
 	// the rest are gone" — so the figure on the screen is the Size above rather than a number
 	// authored twice and free to drift. A good whose dialog has something else to say writes it
 	// here.

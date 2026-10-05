@@ -1,5 +1,31 @@
 [
   {
+    "ScenarioRecord": "full-top-row",
+    "Note": "The top row as full as a run can make it: seven relics worn on seven fingers and a consumables pane at its cap of three - two runes and a cantrip, so the pane shows two kinds side by side. It is a fixture for looking at how the two panes pack, not for a fight: the relics are seven families so no two pictures repeat, and the deck, the enemy and the draw are the game's own. RelicSlots is 7, over the shipped five. Realm 3, middle room, seed pinned so the hand is the same every launch.",
+    "RelicSlots": 7,
+    "Relics": [
+      "dmgx-fire",
+      "repeat-ice",
+      "discount-arcane",
+      "jar-earth",
+      "sundering",
+      "flip-fire-to-ice",
+      "status-burn"
+    ],
+    "Hand": [],
+    "Runes": [
+      "left-to-right",
+      "switch-gold"
+    ],
+    "Cantrips": [
+      "cantrip-might"
+    ],
+    "Screen": "combat",
+    "Seed": "CGPBSC",
+    "Fight": 7,
+    "Vitae": 45
+  },
+  {
     "ScenarioRecord": "mid-run",
     "Note": "A run already under way, which is the state nothing else here boots into. Every other fixture is a question about one mechanic on an otherwise empty run; this one asks what the screen looks like when the player has been journeying for a while - five fingers full, runes in the sack, stones in the pouch, a purse worth spending and a duelist carrying a wound. Realm 3, middle room. The relics are picked to be told apart rather than to combo: one of each rarity so the pane shows all three borders, and five different families so no two cards are the same picture. Nothing here is tuned for a win - it is a fixture for looking at a laid-out screen, and the deck, the enemy and the draw are all the game's own. The seed is pinned rather than the deck replaced, so the hand is whatever the real shuffle deals and is the same hand every launch.",
     "Relics": [

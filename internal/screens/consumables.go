@@ -82,8 +82,9 @@ const topRowPaneGap = 2 * relicPaneGap
 // consumablePaneWidth is how wide the consumables pane is, and it is **a fixed size nothing else in
 // the row can move** *(owner's call, 2026-09-17)*.
 //
-// It is the sack's own seats at the comfortable pitch — two cards with relicSlotMaxGap between them
-// — so the pane is exactly as big as a full sack drawn properly, and never any bigger.
+// It is two cards at the comfortable pitch, with relicSlotMaxGap between them — **not maxHeld of
+// them**. A full sack of three packs inside it, overlapping, at the pitch relicSlotPitch works out;
+// the cap moving does not widen the pane or take room from the relics.
 //
 // **This replaced a pitch solved across both panes at once** *(reversing the 2026-09-06 call)*. That
 // version divided the whole span so both panes filled together, which gave the row one rhythm and
@@ -96,11 +97,15 @@ const topRowPaneGap = 2 * relicPaneGap
 // whatever spacing their own pane works out, so the two can differ. That is the accepted cost of
 // each pane keeping its own size.
 func consumablePaneWidth() int {
-	return (maxHeld-1)*(cards.RelicStyle.Width+relicSlotMaxGap) + cards.RelicStyle.Width
+	return consumablePaneCards*(cards.RelicStyle.Width+relicSlotMaxGap) - relicSlotMaxGap
 }
 
+// consumablePaneCards is how many cards the pane is wide enough to hold side by side.
+const consumablePaneCards = 2
+
 // topRowPanes divides the band between the duelist card and whatever ends the row into the two panes
-// that stand in it: the relics on the left, the consumables on the right.
+// that stand in it: the consumables on the left, beside the duelist card, and the relics on the
+// right.
 //
 // **One function for both screens and both panes**, which is the rule every row in this game is
 // under: the combat screen and the build band ask the same question of different spans, and a second
@@ -112,8 +117,8 @@ func consumablePaneWidth() int {
 func topRowPanes(left, right, top int) (relics, consumables image.Rectangle) {
 	bottom := top + cards.RelicStyle.Height
 
-	consumables = image.Rect(right-consumablePaneWidth(), top, right, bottom)
-	relics = image.Rect(left, top, consumables.Min.X-topRowPaneGap, bottom)
+	consumables = image.Rect(left, top, left+consumablePaneWidth(), bottom)
+	relics = image.Rect(consumables.Max.X+topRowPaneGap, top, right, bottom)
 	return relics, consumables
 }
 

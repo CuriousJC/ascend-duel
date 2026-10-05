@@ -90,19 +90,12 @@ var buttonDisabled_png []byte
 //
 // A square button drawn whole — its face and its picture in one file, with no label — at 256x256,
 // scaled by the caller to the button's size. See models.Button.Icon and
-// docs/art/icon_button_art_prompt.MD. Keyed `icon-<name>`, the file's stem.
+// docs/art/icon_button_art_prompt.MD and docs/art/sort_button_art_prompt.MD. Keyed `icon-<name>`,
+// the file's stem, so a new icon is a file dropped in and nothing edited here. A stem ending
+// `-pressed` is the same button drawn latched — see systems.drawButtonIcon.
 //
-//go:embed button/icon-close.png
-var iconClose_png []byte
-
-//go:embed button/icon-settings.png
-var iconSettings_png []byte
-
-//go:embed button/icon-hands.png
-var iconHands_png []byte
-
-//go:embed button/icon-ledger.png
-var iconLedger_png []byte
+//go:embed button/icon-*.png
+var iconButtons embed.FS
 
 // THE GUIDE
 //
@@ -423,10 +416,11 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["button-pink"] = loadImage(buttonPink_png)
 	assets["button-olive"] = loadImage(buttonOlive_png)
 	assets["button-disabled"] = loadImage(buttonDisabled_png)
-	assets["icon-close"] = loadImage(iconClose_png)
-	assets["icon-settings"] = loadImage(iconSettings_png)
-	assets["icon-hands"] = loadImage(iconHands_png)
-	assets["icon-ledger"] = loadImage(iconLedger_png)
+	icons := map[string][]byte{}
+	embedFamily(icons, iconButtons, "button")
+	for key, raw := range icons {
+		assets[key] = loadImage(raw)
+	}
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)

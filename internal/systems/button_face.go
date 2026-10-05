@@ -128,14 +128,20 @@ func drawButtonFace(button *models.Button, face *ebiten.Image) {
 const (
 	iconPressedScale = 0.92
 	iconDisabledLum  = 0.45
+
+	// iconPressedSuffix names an icon's latched drawing: `icon-sort-cost-pressed` beside
+	// `icon-sort-cost`. **The art is already sunk and darkened**, so it is drawn as it is.
+	iconPressedSuffix = "-pressed"
 )
 
 // drawButtonIcon paints an icon button's picture into its own image: scaled whole to the button's
 // size, never stretched in parts, and brightened, shrunk or dimmed for its state with the same
 // figures a face uses.
-func drawButtonIcon(button *models.Button, icon *ebiten.Image) {
+//
+// pressed is the icon's own latched drawing, nil for an icon that has none. **A latched button with
+// one wears it whole**; without one it is the resting picture shrunk and darkened.
+func drawButtonIcon(button *models.Button, icon, pressed *ebiten.Image) {
 	w, h := float64(button.Width), float64(button.Height)
-	sw, sh := float64(icon.Bounds().Dx()), float64(icon.Bounds().Dy())
 
 	size := 1.0
 	var lum float32 = 1
@@ -145,10 +151,15 @@ func drawButtonIcon(button *models.Button, icon *ebiten.Image) {
 	case models.ButtonStatePressed:
 		size = iconPressedScale
 	case models.ButtonStateLatched:
-		size, lum = iconPressedScale, faceLatchedScale
+		if pressed != nil {
+			icon = pressed
+		} else {
+			size, lum = iconPressedScale, faceLatchedScale
+		}
 	case models.ButtonStateDisabled:
 		lum = iconDisabledLum
 	}
+	sw, sh := float64(icon.Bounds().Dx()), float64(icon.Bounds().Dy())
 
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(w*size/sw, h*size/sh)

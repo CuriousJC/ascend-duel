@@ -146,6 +146,10 @@ const (
 	ModalCloseInset = 12
 	modalCloseLabel = "X"
 	modalCloseText  = 34
+
+	// modalCloseIcon is the X drawn whole, red face and all; the label above is what draws should
+	// the picture fail to load. See docs/art/icon_button_art_prompt.MD.
+	modalCloseIcon = "icon-close"
 )
 
 // ModalCloseColor is the face at full strength. It rests at 65% of this, like every button; see
@@ -169,6 +173,7 @@ func (c *ModalCloser) Update(gs *state.GlobalState) bool {
 			func() { c.pressed = true })
 		c.button.BaseColor = ModalCloseColor
 		c.button.TextSize = modalCloseText
+		c.button.Icon = modalCloseIcon
 	}
 	r := ModalPanelRect(gs)
 	c.button.ScreenX = r.Max.X - ModalCloseInset - ModalCloseSize/2
@@ -209,6 +214,10 @@ const (
 	// five characters at 18pt do not fill 88 either.
 	handsButtonWidth = 170
 	handsButtonText  = 36
+
+	// handsIconKey is the fanned hand the button wears, which replaces the word whenever it loads;
+	// the width above is the word's, for that fallback. See HandsToggle.wearIcon.
+	handsIconKey = "icon-hands"
 )
 
 // ModalToggle is a button, whether its panel is up, and the tooltip that panel needs.

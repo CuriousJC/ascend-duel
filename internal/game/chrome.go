@@ -66,17 +66,15 @@ const (
 	settingsButtonSize  = ui.ChromeButtonSize
 	settingsButtonInset = ui.ChromeButtonInset
 
-	// **`LEDGER`, spelled out and in caps** *(2026-09-04, owner's call)*. It was `L` — what the
-	// fight log's button carried, and what a 44-pixel square can hold. It stands in the combat
-	// screen's control column now and pairs with HANDS directly above it, which has been in caps
-	// since it was written; the two open a page over the game and are the only two controls on
-	// that side that do.
-	//
-	// **Caps at 18 are checked rather than assumed** — see CLAUDE.md, where VITAE rendered as
-	// VITRE at 12. Both words are legible at this size on the contact sheet.
-	//
-	// The size and the width are the column's own, so the pair is set in one type.
+	// **The ledger's button is an open scroll**, a ui.PanelButtonSize square, standing in the combat
+	// screen's control column and pairing with the fanned hand of HANDS directly above it; the two
+	// open a page over the game and are the only two controls on that side that do. The word is
+	// what draws should the picture fail to load.
 	ledgerButtonLabel = "LEDGER"
+	ledgerIconKey     = "icon-ledger"
+
+	// settingsIconKey is the cog button, drawn whole. See docs/art/icon_button_art_prompt.MD.
+	settingsIconKey = "icon-settings"
 
 	// **`A`, one letter** *(owner's call, 2026-09-15)*. There is no drawn mark for "every gesture
 	// the game makes" and a generated one at 32 pixels would be a silhouette nobody could name —
@@ -201,6 +199,7 @@ func (g *Game) updateChrome(gs *state.GlobalState) {
 		g.settingsButton = models.NewButton(
 			settingsButtonSize, settingsButtonSize, "", g.openSettings)
 		g.settingsButton.BaseColor = settingsButtonColor
+		g.settingsButton.Icon = settingsIconKey
 	}
 
 	r := settingsButtonRect(gs)
@@ -264,10 +263,11 @@ func (g *Game) updateAnimButton(gs *state.GlobalState) {
 func (g *Game) updateLedgerButton(gs *state.GlobalState) {
 	if g.ledgerButton == nil {
 		g.ledgerButton = models.NewButton(
-			ui.ControlButtonWidth, ui.ControlButtonHeight,
+			ui.PanelButtonSize, ui.PanelButtonSize,
 			ledgerButtonLabel, g.toggleLedger)
 		g.ledgerButton.BaseColor = settingsButtonColor
 		g.ledgerButton.TextSize = ui.ControlButtonText
+		g.ledgerButton.Icon = ledgerIconKey
 	}
 
 	r := ledgerButtonRect(gs)
@@ -294,50 +294,14 @@ func setChromeEnabled(b *models.Button, on bool) {
 	}
 }
 
-// drawChrome draws the settings button and the cog on its face.
-//
-// **The glyph is drawn by the frame, over the button, rather than being a field on the
-// widget** — the same split drawDiscardsLeft makes on the combat screen, and for the same
-// reason. models.Button is shared by every screen and holds one centered string; giving it a
-// glyph slot would put this control's needs into all of them. It has to come after
-// DrawButton, which blits an opaque cached face.
-// gearArtKey and gearArtSize are the settings cog: which asset, and how big it is drawn.
-//
-// **The size is named here rather than read off the picture** — the button is 44 and the cog is a
-// mark on it, so what decides the figure is the chrome's layout rather than whatever the file
-// happens to be. A replacement drawn at 256 lands at the same size on screen.
-const (
-	gearArtKey  = "gear"
-	gearArtSize = 32
-)
-
+// drawChrome draws the settings button, the ledger's and the gallery's door. The cog and the
+// scroll are each one picture with the button's face in it — see models.Button.Icon.
 func (g *Game) drawChrome(gs *state.GlobalState, screen *ebiten.Image) {
 	if g.settingsButton == nil || !chromeShowing(gs) {
 		return
 	}
 	systems.DrawButton(gs, screen, g.settingsButton)
 
-	// Centered on the face, at the one size it is drawn: the 44px button has to hold it with room
-	// to spare, and a cog that filled the face would read as the button rather than as a mark on it.
-	//
-	// **It is an asset rather than a generated glyph** *(2026-09-16)*. `internal/systems` drew this
-	// shape until the day the last of the marks became authored art and the silhouette generator
-	// was deleted; the picture was baked to `assets/game/gear.png` unchanged on the way out. A
-	// missing file draws nothing rather than crashing, which is the same courtesy every other
-	// keyed asset gets.
-	if cog := systems.ArtMarkImage(gearArtKey, gearArtSize, gearArtSize); cog != nil {
-		r := settingsButtonRect(gs)
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(
-			float64(r.Min.X+(r.Dx()-gearArtSize)/2),
-			float64(r.Min.Y+(r.Dy()-gearArtSize)/2),
-		)
-		screen.DrawImage(cog, op)
-	}
-
-	// The ledger's button, beside it. **A letter rather than a glyph**, because there is no drawn
-	// mark for "the account of this run" and a generated one at 32 pixels would be a silhouette
-	// nobody could name. See CLAUDE.md on what a glyph can carry at that size.
 	if g.ledgerButton != nil && g.ledgerShowing(gs) {
 		systems.DrawButton(gs, screen, g.ledgerButton)
 	}

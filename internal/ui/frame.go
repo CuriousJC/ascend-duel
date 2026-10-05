@@ -106,6 +106,10 @@ const (
 	ControlButtonHeight = ButtonSmall
 	ControlButtonWidth  = 120
 	ControlButtonText   = 36
+
+	// PanelButtonSize is the square HANDS and LEDGER take: each is one picture, the fanned hand and
+	// the scroll, and at the cog's 44 neither reads. The column's two slots are this square.
+	PanelButtonSize = ButtonMedium
 )
 
 // The bottom line's occupants, counted leftward from the corner. **Written down here rather than

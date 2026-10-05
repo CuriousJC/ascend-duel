@@ -181,6 +181,7 @@ func needsPaint(button *models.Button) bool {
 		button.PaintedText != button.Text ||
 		button.PaintedTextSize != button.TextSize ||
 		button.PaintedColor != button.BaseColor ||
+		button.PaintedIcon != button.Icon ||
 		button.Image == nil ||
 		button.Image.Bounds().Dx() != button.Width ||
 		button.Image.Bounds().Dy() != button.Height
@@ -197,6 +198,19 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// Clear before repainting. The fill below is opaque and covers the whole face, but a
 	// shorter label would otherwise leave the tail of a longer one behind it.
 	button.Image.Clear()
+	button.PaintedIcon = button.Icon
+
+	// **An icon button is its picture**, so a key that loaded draws nothing else; one that did not
+	// falls through to the ordinary face and label, which is why such a button keeps its Text.
+	if icon := gs.Assets[button.Icon]; button.Icon != "" && icon != nil {
+		drawButtonIcon(button, icon)
+		button.Painted = true
+		button.PaintedState = button.State
+		button.PaintedText = button.Text
+		button.PaintedTextSize = button.TextSize
+		button.PaintedColor = button.BaseColor
+		return
+	}
 
 	// **The face is bevelled, and pressed and latched are drawn sunken rather than merely
 	// darker** *(2026-08-24)*. Both of those states mean "in", which brightness alone cannot say

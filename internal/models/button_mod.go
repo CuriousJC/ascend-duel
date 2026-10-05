@@ -59,6 +59,11 @@ type Button struct {
 	// first and as active second.
 	Latched bool
 
+	// Icon is the asset key of a button drawn whole — face and picture in one file, with no
+	// label. Set, it replaces both the colored face and Text; BaseColor is ignored, because the
+	// color is in the picture. Empty is an ordinary button. See docs/art/icon_button_art_prompt.MD.
+	Icon string
+
 	// What Image currently holds, so DrawButton can repaint it only when something
 	// visible has changed rather than every frame.
 	//
@@ -74,6 +79,7 @@ type Button struct {
 	PaintedText     string
 	PaintedTextSize float64
 	PaintedColor    color.RGBA
+	PaintedIcon     string
 }
 
 // NewButton creates a new button with the given width, height, and text

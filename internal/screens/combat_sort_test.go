@@ -5,6 +5,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
@@ -543,6 +544,31 @@ func TestThePanelButtonsStackUpFromTheAPBar(t *testing.T) {
 	// And clear of the block above them, whose last tab must not reach into the pair.
 	if last, top := sortColumnRect(gs).Max.Y, ControlColumnSlot(gs, ControlColumnSlots-1).Min.Y; last > top {
 		t.Errorf("the sort block ends at y=%d, into the panel buttons at y=%d", last, top)
+	}
+}
+
+func TestOnTheCombatScreenThePanelButtonsStandUnderThePile(t *testing.T) {
+	gs := testState()
+	gs.ActiveScreen = state.Combat
+	pile, count := deckStackRect(gs), deckCountRect(gs)
+	hands, ledger := ControlColumnSlot(gs, SlotHands), ControlColumnSlot(gs, SlotLedger)
+
+	// One row, HANDS first, between the pile and its count.
+	if hands.Min.Y != ledger.Min.Y || hands.Max.X > ledger.Min.X {
+		t.Fatalf("hands %v and ledger %v are not one row, hands first", hands, ledger)
+	}
+	if hands.Min.Y < pile.Max.Y || hands.Max.Y > count.Min.Y {
+		t.Errorf("the row y=%d..%d is not between the pile's bottom %d and the count's top %d",
+			hands.Min.Y, hands.Max.Y, pile.Max.Y, count.Min.Y)
+	}
+
+	// The air before, between and after the two is equal, to a pixel of rounding.
+	gaps := []int{hands.Min.X - pile.Min.X, ledger.Min.X - hands.Max.X, pile.Max.X - ledger.Max.X}
+	for _, g := range gaps[1:] {
+		if d := g - gaps[0]; d < -1 || d > 1 {
+			t.Errorf("the gaps across the pile are %v, want them equal", gaps)
+			break
+		}
 	}
 }
 

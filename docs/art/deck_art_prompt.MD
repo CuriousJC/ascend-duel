@@ -52,9 +52,15 @@ half-turn symmetry -> rich material rendering.
 The subject — what repeats, how many across, and what sets it — is the record's own `Draw` in
 `data/decks.json`, pasted after this block.
 
-Name each image after its record's own key — the `DeckRecord` value, like `rainbow-gem` — and give
-me the file itself if there is only one, and a single zip file of everything if there is more than
-one, so I can download it all at once — never a link per file.
+**Make three options for every record**, so one can be chosen. Each option follows the whole of
+this prompt and the whole of the record's `Draw`; they differ only in what the brief leaves open —
+the proportions of the cut, how the facets catch the light, how wide the setting lines run, and
+where within the brief's color range the stones sit. Three near-copies of one picture is one
+option, not three.
+
+Name each image after its record's own key — the `DeckRecord` value, like `rainbow-gem` — with
+`-a`, `-b` and `-c` for the three options: `rainbow-gem-a`, `rainbow-gem-b`, `rainbow-gem-c`. Give
+me a single zip file of everything, so I can download it all at once — never a link per file.
 
 ## The color words
 
@@ -74,7 +80,7 @@ to sit beside.
 
 ## What happens to it afterwards
 
-Not for the generator. The batch goes in `.scratch/to-process-deck-art/` and
+Not for the generator. The chosen option drops its `-a`/`-b`/`-c` suffix, and the batch goes in `.scratch/to-process-deck-art/` and
 `go run ./tools/relicart -kind deck` files it: reduced to the card's own **200 x 280** and written
 to `assets/deck/<record>.png`, with `Art` set on the record. The game lays it inside a one-pixel
 neutral rim, clipped to the card's rounded corners, and that one picture is every back the game

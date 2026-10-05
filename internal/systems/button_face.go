@@ -122,6 +122,42 @@ func drawButtonFace(button *models.Button, face *ebiten.Image) {
 	piece(sw-buttonFaceCap, sw, capW+mid, capW)
 }
 
+// How an icon button is drawn in each state. It has no drop to sink into, so "in" is the picture
+// drawn a little smaller about its center; disabled is the picture dimmed, since there is no
+// separate disabled file for each icon.
+const (
+	iconPressedScale = 0.92
+	iconDisabledLum  = 0.45
+)
+
+// drawButtonIcon paints an icon button's picture into its own image: scaled whole to the button's
+// size, never stretched in parts, and brightened, shrunk or dimmed for its state with the same
+// figures a face uses.
+func drawButtonIcon(button *models.Button, icon *ebiten.Image) {
+	w, h := float64(button.Width), float64(button.Height)
+	sw, sh := float64(icon.Bounds().Dx()), float64(icon.Bounds().Dy())
+
+	size := 1.0
+	var lum float32 = 1
+	switch button.State {
+	case models.ButtonStateHovered:
+		lum = faceHoverScale
+	case models.ButtonStatePressed:
+		size = iconPressedScale
+	case models.ButtonStateLatched:
+		size, lum = iconPressedScale, faceLatchedScale
+	case models.ButtonStateDisabled:
+		lum = iconDisabledLum
+	}
+
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(w*size/sw, h*size/sh)
+	op.GeoM.Translate(w*(1-size)/2, h*(1-size)/2)
+	op.ColorScale.Scale(lum, lum, lum, 1)
+	op.Filter = ebiten.FilterLinear
+	button.Image.DrawImage(icon, op)
+}
+
 // faceLabelShift is where a label sits on a face, against the button's center: up by half the
 // drop, so it is centered on the body rather than on the body and its shadow, and down by the
 // whole drop when the face has sunk into it.

@@ -86,6 +86,24 @@ var buttonOlive_png []byte
 //go:embed button/button-disabled.png
 var buttonDisabled_png []byte
 
+// ICON BUTTONS
+//
+// A square button drawn whole — its face and its picture in one file, with no label — at 256x256,
+// scaled by the caller to the button's size. See models.Button.Icon and
+// docs/art/icon_button_art_prompt.MD. Keyed `icon-<name>`, the file's stem.
+//
+//go:embed button/icon-close.png
+var iconClose_png []byte
+
+//go:embed button/icon-settings.png
+var iconSettings_png []byte
+
+//go:embed button/icon-hands.png
+var iconHands_png []byte
+
+//go:embed button/icon-ledger.png
+var iconLedger_png []byte
+
 // THE GUIDE
 //
 // The guide: the face on the tutorial's speech bubble. **A named one-off rather than a member of
@@ -405,6 +423,10 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["button-pink"] = loadImage(buttonPink_png)
 	assets["button-olive"] = loadImage(buttonOlive_png)
 	assets["button-disabled"] = loadImage(buttonDisabled_png)
+	assets["icon-close"] = loadImage(iconClose_png)
+	assets["icon-settings"] = loadImage(iconSettings_png)
+	assets["icon-hands"] = loadImage(iconHands_png)
+	assets["icon-ledger"] = loadImage(iconLedger_png)
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)

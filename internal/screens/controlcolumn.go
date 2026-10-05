@@ -22,9 +22,9 @@ package screens
 // has to be placed by whoever owns the column, or the two drift apart the first time either moves.
 // The arrow already points this way; nothing new is imported to make it work.
 //
-// **The buttons carry words, not characters** *(2026-09-04, owner's call)*. They were 44px squares
-// holding `$`, `T`, `E` and `L`, which is what a column 44 pixels wide can carry, and a symbol
-// that has to be learned is worse than a word that does not.
+// **The two panel buttons are pictures** — the fanned hand and the open scroll, each a
+// ui.PanelButtonSize square. The sort tabs carry words. **On the combat screen the pair leaves the
+// column** and stands in a row under the draw pile; see underPileSlot.
 
 import (
 	"image"
@@ -46,15 +46,9 @@ const (
 	// a tab and `LEDGER` on a narrow button both have to fit without being abbreviated back, which
 	// is what spelling them out was for.
 
-	// ControlButtonWidth is how wide HANDS and LEDGER are: **the wider word and a little more,
-	// not the column** *(2026-09-04, owner's call)*. `LEDGER` measures about 62 pixels of kubasta
-	// at 18, so this is the label with half again around it. A control taking a card's width to
-	// carry one word reads as a pane rather than a button, which is what these two open rather
-	// than what they are.
-	//
-	// **It was 200 and the column was 203**, which is three pixels of a distinction nobody could
-	// see and is not what the paragraph above asks for. TestThePanelButtonsStackUpFromTheAPBar only
-	// caught it when the card came down to 200 and the two became equal.
+	// The panel buttons are ui.PanelButtonSize squares, **narrower than the column**: a control
+	// taking a card's width reads as a pane rather than a button, which is what these two open
+	// rather than what they are. TestThePanelButtonsStackUpFromTheAPBar holds it.
 
 	// sortTabWidth is the block's width, and it is the enemy card's so the block, the cards it
 	// arranges and the corner above it are one measure.
@@ -80,10 +74,29 @@ const (
 // ties the pair to the hand's own furniture rather than leaving them floating in the column. They
 // stack upward from there, so adding a third would grow the group toward the cards rather than
 // off the bottom of the screen.
+//
+// **On the combat screen they stand under the draw pile instead**, side by side — see
+// underPileSlot. Every other screen keeps them in the column.
 func ControlColumnSlot(gs *state.GlobalState, i int) image.Rectangle {
+	if gs.ActiveScreen == state.Combat {
+		return underPileSlot(gs, i)
+	}
 	left := ui.ControlColumnLeft(gs)
-	bottom := apBarBottom(gs) - i*(ui.ControlButtonHeight+ControlButtonGap)
-	return image.Rect(left, bottom-ui.ControlButtonHeight, left+ui.ControlButtonWidth, bottom)
+	bottom := apBarBottom(gs) - i*(ui.PanelButtonSize+ControlButtonGap)
+	return image.Rect(left, bottom-ui.PanelButtonSize, left+ui.PanelButtonSize, bottom)
+}
+
+// underPileSlot is a panel button's square on the combat screen: in a row under the draw pile,
+// HANDS on the left and LEDGER on the right, the pile's width shared out so the air before, between
+// and after the two is equal, and the row centered between the pile's bottom and its count.
+func underPileSlot(gs *state.GlobalState, i int) image.Rectangle {
+	pile := deckStackRect(gs)
+	size := ui.PanelButtonSize
+	gap := (pile.Dx() - ControlColumnSlots*size) / (ControlColumnSlots + 1)
+	row := ControlColumnSlots*size + (ControlColumnSlots-1)*gap
+	left := pile.Min.X + (pile.Dx()-row)/2 + (ControlColumnSlots-1-i)*(size+gap)
+	top := pile.Max.Y + (deckCountRect(gs).Min.Y-pile.Max.Y-size)/2
+	return image.Rect(left, top, left+size, top+size)
 }
 
 // ControlColumnSlotCenter is that slot's center, which is what models.Button stores.

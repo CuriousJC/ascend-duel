@@ -559,6 +559,15 @@ type HandsToggle struct {
 func (t *HandsToggle) Init(place func(gs *state.GlobalState) image.Point) {
 	t.ModalToggle.Init(handsToggleLabel, handsButtonWidth, PileSlotSize, handsButtonText,
 		place)
+	t.wearIcon()
+}
+
+// wearIcon makes the button the fanned hand: a PanelButtonSize square, centered on whatever point
+// the placement asks for. The label stays on the button as the fallback should the picture fail to
+// load.
+func (t *HandsToggle) wearIcon() {
+	t.Button.Icon = handsIconKey
+	t.Button.Width, t.Button.Height = PanelButtonSize, PanelButtonSize
 }
 
 // InitInColumn wires it as a rung of the combat screen's control column: the column's width, the
@@ -570,6 +579,7 @@ func (t *HandsToggle) Init(place func(gs *state.GlobalState) image.Point) {
 func (t *HandsToggle) InitInColumn(place func(gs *state.GlobalState) image.Point) {
 	t.ModalToggle.Init(handsToggleLabel, ControlButtonWidth, ControlButtonHeight,
 		ControlButtonText, place)
+	t.wearIcon()
 }
 
 func (t *HandsToggle) Update(gs *state.GlobalState) bool {

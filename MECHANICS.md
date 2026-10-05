@@ -2554,19 +2554,19 @@ whose name says it became the right-hand card and whose color says it did not.
   copies. Refusing any pair sharing a *concept* would make two colors of one card illegal, which
   is the pick a player reaching for this most obviously wants.
 
-### The consumables pane holds two, and the top row says so
+### The consumables pane holds three, and the top row says so
 
-**A run carries at most two consumables, of every kind together** *(owner's call, 2026-09-28)* —
-two runes, a rune and a cantrip, two cantrips. The count is drawn where the worn relics' is: the
-top row of every screen that shows a build is **two panes** — `worn/5` relics on the left,
-`held/2` consumables on the right. A run has a total of relics and a total of consumables, and which
+**A run carries at most three consumables, of every kind together** — runes, cantrips, any mix.
+The count is drawn where the worn relics' is: the top row of every screen that shows a build is
+**two panes** — `held/3` consumables on the left, beside the duelist card, and `worn/5` relics on
+the right. A run has a total of relics and a total of consumables, and which
 kinds fill the seats is the player's business.
 
 - **The cap came from the pane and not the other way round.** A row drawn as `n/2` has to be a rule
-  or it is a lie the first time a third consumable arrives. `session.MaxConsumables` is that rule,
+  or it is a lie the first time a fourth consumable arrives. `session.MaxConsumables` is that rule,
   and `ConsumableCount` counts the sack, the satchel, the scroll case and the pouch together.
-- **What it buys is that the third purchase is a decision.** An uncapped consumable is one a rich
-  run hoards rather than spends; with two seats, a pack bought while both are full is a consumable
+- **What it buys is that the fourth purchase is a decision.** An uncapped consumable is one a rich
+  run hoards rather than spends; with three seats, a pack bought while all are full is a consumable
   you have to spend one to make room for.
 - **The shop's sack and bundle seats go dim when the pane is full**, rather than taking vitae for a
   consumable that would be refused. It is the same courtesy an unaffordable good already gets, and
@@ -3237,7 +3237,7 @@ standing in the room and is gone when the duel ends. `data/cantrips.json` is the
 | | |
 |---|---|
 | Bought | the shop's **bundle of scrolls** — 3, 4 or 5 inside at 3, 5 or 6 vitae, keep 1, offered on visits where the pack roll puts it up |
-| Held | the **scroll case**, in the consumables pane, counted against the pane's cap of two |
+| Held | the **scroll case**, in the consumables pane, counted against the pane's cap of three |
 | Spent | on the combat screen, **between turns only** — click it; nothing is selected, and it is lit for the whole of planning |
 | Lasts | until the fight ends |
 

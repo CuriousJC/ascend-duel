@@ -39,17 +39,17 @@ const (
 // *(owner's call, 2026-09-28)*.
 //
 // **The cap is the pane's, not a kind's.** A run wears at most so many relics and carries at most
-// so many consumables, and which kinds fill those seats is the player's business: two runes, a rune
-// and a cantrip, two cantrips. It is a rule rather than a number the layout chose — the pane draws
-// `held/2` on its corner, and a row saying two while the run carried a third is exactly the drift a
-// displayed cap invites.
+// so many consumables, and which kinds fill those seats is the player's business: runes, cantrips,
+// any mix. It is a rule rather than a number the layout chose — the pane draws `held/3` on its
+// corner, and a row saying three while the run carried a fourth is exactly the drift a displayed cap
+// invites.
 //
 // **It is a rule about acquiring.** A purchase is refused against it — see Hold, HoldCantrip and the
 // shop's seats, which go dim rather than taking vitae for something with no room — and nothing that
 // hands the run a consumable without a purchase checks it: a fixture planting a pane, a save being
 // resumed, a rock shower dropping stones into the pouch. The pane draws an over-full row as the
-// `3/2` it is.
-const MaxConsumables = 2
+// `4/3` it is.
+const MaxConsumables = 3
 
 // ConsumableCount is how many things the run is carrying, every kind counted.
 func (s *Session) ConsumableCount() int {

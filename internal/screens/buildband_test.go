@@ -88,9 +88,9 @@ func TestTheRelicSeatIsDrawnWhereItIsClicked(t *testing.T) {
 	}
 }
 
-// **The row is centered and grows outwards, rather than pinned to both edges.** A run wearing two
-// relics on a band with no enemy card to end it put one beside the duelist card and the other in
-// the far corner; the pitch is capped now, so the slack sits at the two ends of the row.
+// **The row is centered and grows outwards, rather than pinned to both edges**: the pitch is capped,
+// so the slack sits at the two ends of the row. Once a row has packed to the pane's full width it
+// stays there, so a longer row is never narrower than a shorter one.
 func TestTheRelicRowIsCenteredAndGrowsOutwards(t *testing.T) {
 	gs := bandState(t)
 	row := buildRelicRect(gs)
@@ -103,8 +103,8 @@ func TestTheRelicRowIsCenteredAndGrowsOutwards(t *testing.T) {
 		if l, r := left-row.Min.X, row.Max.X-right; l-r > 1 || r-l > 1 {
 			t.Errorf("a row of %d leaves %dpx on the left and %dpx on the right", n, l, r)
 		}
-		if width := right - left; n > 1 && width <= last {
-			t.Errorf("a row of %d is %dpx wide, no wider than the %dpx row of %d",
+		if width := right - left; n > 1 && width < last {
+			t.Errorf("a row of %d is %dpx wide, narrower than the %dpx row of %d",
 				n, width, last, n-1)
 		}
 		last = right - left
@@ -248,13 +248,14 @@ func TestEachTopRowPaneKeepsItsOwnSize(t *testing.T) {
 		t.Errorf("the relics got %dpx against the consumables' %dpx, which is the wrong way round",
 			relics.Dx(), consumables.Dx())
 	}
-	if relics.Max.X > consumables.Min.X {
-		t.Errorf("the two panes overlap: %v into %v", relics, consumables)
+	if consumables.Max.X > relics.Min.X {
+		t.Errorf("the two panes overlap: %v into %v", consumables, relics)
 	}
 
-	// **A full sack sits inside its pane without overlapping**, which is the case that was broken.
-	if pitch := relicSlotPitch(consumables, session.MaxConsumables); pitch < cards.RelicStyle.Width {
-		t.Errorf("a full sack packs at %dpx for a %dpx card, so the runes overlap",
+	// **A full sack packs inside a pane two cards wide**, overlapping, with more than half of every
+	// card still showing.
+	if pitch := relicSlotPitch(consumables, session.MaxConsumables); pitch*2 <= cards.RelicStyle.Width {
+		t.Errorf("a full sack packs at %dpx for a %dpx card, which hides most of every card",
 			pitch, cards.RelicStyle.Width)
 	}
 
@@ -305,8 +306,13 @@ func TestTheBandExplainsTheRelicThatIsOnTop(t *testing.T) {
 			len(worn), first.Max.X, second.Min.X)
 	}
 
-	// A point inside both seats belongs to the second, which is drawn over the first.
-	at := image.Pt((second.Min.X+first.Max.X)/2, (second.Min.Y+second.Max.Y)/2)
+	// A point inside the first two seats and no later one belongs to the second, which is drawn
+	// over the first.
+	end := first.Max.X
+	if third := relicSlotRect(row, 2, len(worn)); third.Min.X < end {
+		end = third.Min.X
+	}
+	at := image.Pt((second.Min.X+end)/2, (second.Min.Y+second.Max.Y)/2)
 
 	var tip models.Tooltip
 	if !hoverBuildRelics(gs, at, &tip) {

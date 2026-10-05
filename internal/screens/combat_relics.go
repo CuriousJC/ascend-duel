@@ -142,7 +142,7 @@ func (s *CombatScene) relicPaneRect(gs *state.GlobalState) image.Rectangle {
 	return relics
 }
 
-// consumablePaneRect is the right half: the runes the run is carrying. See consumables.go.
+// consumablePaneRect is the left half: the runes the run is carrying. See consumables.go.
 func (s *CombatScene) consumablePaneRect(gs *state.GlobalState) image.Rectangle {
 	_, consumables := s.topRowPanes(gs)
 	return consumables

@@ -44,9 +44,15 @@ func EnemyCardRect(gs *state.GlobalState) image.Rectangle {
 // ControlColumnLeft is the line the panel buttons stand on: the enemy card's left edge.
 func ControlColumnLeft(gs *state.GlobalState) int { return EnemyCardRect(gs).Min.X }
 
-// ControlColumnWidth is the column's full width, which is the enemy card's. **Only the sort block
-// is this wide**; the panel buttons take ControlButtonWidth.
+// ControlColumnWidth is the column's full width, which is the enemy card's.
 func ControlColumnWidth() int { return cards.EnemyStyle.Width }
+
+// SortColumnLeft is the sort block's left edge on the combat screen: a column of SortTabSize
+// squares ending SortColumnGap short of the enemy card's right edge. **The cards run up to it**, so
+// everything the block does not take is the hand's.
+func SortColumnLeft(gs *state.GlobalState) int {
+	return ControlColumnLeft(gs) + ControlColumnWidth() - SortColumnGap - SortTabSize
+}
 
 // ChromeCornerSlot is the n'th square along the bottom line, counting **leftward from the corner**.
 // Slot 0 is the settings cog's seat; a scene's own square controls take 1, 2 and so on.
@@ -110,6 +116,10 @@ const (
 	// PanelButtonSize is the square HANDS and LEDGER take: each is one picture, the fanned hand and
 	// the scroll, and at the cog's 44 neither reads. The column's two slots are this square.
 	PanelButtonSize = ButtonMedium
+
+	// SortTabSize is one sort tab: the HANDS button's square, each carrying one picture. Three
+	// stacked are shorter than a dealt card, so the block stands beside the row it arranges.
+	SortTabSize = PanelButtonSize
 )
 
 // The bottom line's occupants, counted leftward from the corner. **Written down here rather than

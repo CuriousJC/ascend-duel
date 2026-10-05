@@ -105,13 +105,13 @@ func (r *dealtRow) isSelected(i int) bool {
 	return false
 }
 
-// tabRect is the i'th sort tab: one block, no air in it, its top on the row's top, hung off the
-// row's right edge — the combat screen's rule for its own block.
+// tabRect is the i'th sort tab: one block, no air in it, centered on the row's height, hung off
+// the row's right edge — the combat screen's rule for its own block.
 func (r *dealtRow) tabRect(gs *state.GlobalState, i int) image.Rectangle {
 	row := r.rowOf(gs, len(r.offer))
 	left := row.Max.X + ui.SortColumnGap
-	top := row.Min.Y + i*ui.ControlButtonHeight
-	return image.Rect(left, top, left+ui.ControlColumnWidth(), top+ui.ControlButtonHeight)
+	top := row.Min.Y + sortBlockDrop() + i*(ui.SortTabSize+sortTabGap)
+	return image.Rect(left, top, left+ui.SortTabSize, top+ui.SortTabSize)
 }
 
 // update runs the row for one frame: the tabs, any sort they asked for, the drag, and the slides.

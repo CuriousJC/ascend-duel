@@ -61,27 +61,20 @@ func SetHandSort(gs *state.GlobalState, mode HandSort) {
 // edge is measured from. One figure, so the two rows sit the same distance from their tabs.
 const SortColumnGap = 12
 
-// SortButtonSpecs is the block, top to bottom, with the label each tab carries.
+// SortButtonSpecs is the block, top to bottom, with the picture each tab carries: an up arrow for
+// cost, an axe for form, a flame for element. Each icon has a `-pressed` drawing beside it, which is
+// what the latched tab wears.
 //
-// **The labels are bare nouns** *(2026-09-04, owner's call)*. They were `$`, `T` and `E`, then
-// `Sort: Cost` and its two siblings — and the prefix went as soon as the three were one block,
-// because a block of three tabs is self-evidently one control and the word was then written three
-// times to say what the group is. `Form` is the axis the middle one sorts on: stab, slash, crush,
-// then defend.
-//
-// **They are set in capitals so the button draws them in the figure lettering** — the set is upper
-// case, and a label with a lower-case letter in it falls back to the font, which is how these three
-// came to be the only buttons on the screen not in the game's own lettering.
-//
-// **They carry no tooltip**, and with the labels spelled out they no longer want one — see the
-// tooltip entry in TODO.md, which names the figures written straight onto the table as the gap.
+// **Label is what a tab says while its icon file is missing**, one figure glyph, because a word
+// does not fit a square this size. An icon that loads draws instead of it.
 var SortButtonSpecs = []struct {
 	Mode  HandSort
+	Icon  string
 	Label string
 }{
-	{SortByCost, "COST"},
-	{SortByForm, "FORM"},
-	{SortByElement, "ELEMENT"},
+	{SortByCost, "icon-sort-cost", "▲"},
+	{SortByForm, "icon-sort-form", "F"},
+	{SortByElement, "icon-sort-element", "E"},
 }
 
 // SortButtonColor is ButtonGray, quieter than either button on the combat screen's strip.
@@ -117,8 +110,8 @@ func NewSortTabs(seat func(gs *state.GlobalState, i int) image.Rectangle, pick f
 	t := &SortTabs{seat: seat}
 	for _, spec := range SortButtonSpecs {
 		mode := spec.Mode // captured per button, not per loop
-		b := models.NewButton(ControlColumnWidth(), ControlButtonHeight, spec.Label,
-			func() { pick(mode) })
+		b := models.NewButton(SortTabSize, SortTabSize, spec.Label, func() { pick(mode) })
+		b.Icon = spec.Icon
 		b.BaseColor = SortButtonColor
 		b.TextSize = ControlButtonText
 		t.buttons = append(t.buttons, b)

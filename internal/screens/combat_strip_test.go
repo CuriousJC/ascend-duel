@@ -232,8 +232,8 @@ func TestTheHandIsLaidOutBetweenTheFighterCards(t *testing.T) {
 		t.Errorf("the band starts at x=%d, want the relic row's own left edge at %d", left, want)
 	}
 
-	// The cards stop a gap short of the control column, and are centered on what is left.
-	if got, want := cardBandWidth(gs), ui.ControlColumnLeft(gs)-ui.SortColumnGap-left; got != want {
+	// The cards run up to the sort block, and are centered on what is left.
+	if got, want := cardBandWidth(gs), ui.SortColumnLeft(gs)-left; got != want {
 		t.Errorf("the cards are laid out into %dpx, want %dpx", got, want)
 	}
 	if got, want := handRowCenter(gs).X, left+cardBandWidth(gs)/2; got != want {

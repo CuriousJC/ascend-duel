@@ -37,8 +37,6 @@ import (
 	"image/color"
 	"image/draw"
 	"log"
-
-	"github.com/curiousjc/ascend-duel/assets"
 )
 
 // Upgrade is a visible alteration to a card.
@@ -250,7 +248,7 @@ func flatInk(c color.RGBA) *image.RGBA {
 // decodeInk reads an authored ink out of the embedded assets and holds it to the one size every
 // caller assumes.
 func decodeInk(key string) *image.RGBA {
-	raw := assets.LoadImageData()[key]
+	raw := embeddedImages()[key]
 	if len(raw) == 0 {
 		log.Fatalf("upgrade ink %q is not in assets.LoadImageData", key)
 	}

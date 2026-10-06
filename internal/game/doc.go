@@ -65,7 +65,7 @@
 //     screen that goes dead, and it says why underneath itself rather than merely going gray.
 //   - **Square and iconic because the corner is 52 pixels wide** on the combat screen — the hand band
 //     starts at x=52 and the action-point figure sits on its left edge, so a labeled button does not fit.
-//   - **The cog is `assets/game/gear.png`, and it has eight teeth: four on the axes, four on the
+//   - **The cog is `icon-settings`, and it has eight teeth: four on the axes, four on the
 //     diagonals.** Four teeth read as a compass rose — at 32 pixels a gear is recognized by the *count*
 //     of its teeth before any one of them is legible — and the hole in the middle is what makes it a cog
 //     rather than a flower. Both are constraints on any replacement drawing.

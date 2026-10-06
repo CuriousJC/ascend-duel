@@ -30,6 +30,7 @@ import (
 	"image/color"
 	"image/draw"
 	_ "image/png"
+	"sync"
 
 	xdraw "golang.org/x/image/draw"
 
@@ -62,7 +63,7 @@ func ArtMark(key string, w, h int) *image.RGBA {
 		return img
 	}
 
-	data := assets.LoadImageData()[key]
+	data := embeddedImages()[key]
 	if len(data) == 0 {
 		markCache[ck] = nil
 		return nil
@@ -156,3 +157,8 @@ func downsample(src *image.RGBA, factor int) *image.RGBA {
 	}
 	return out
 }
+
+// embeddedImages is every embedded picture's bytes, read once and kept. **`assets.LoadImageData`
+// builds a fresh map of the whole tree on every call** — every portrait and backdrop copied out of
+// the binary — so a mark looked up through it cost a card face most of its render time.
+var embeddedImages = sync.OnceValue(assets.LoadImageData)

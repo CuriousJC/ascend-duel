@@ -238,7 +238,7 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// as the same surface going down.
 	nudgeX, nudgeY := 0.0, 0.0
 	if face != nil {
-		nudgeY = faceLabelShift(button, face)
+		nudgeY = faceLabelShift(button)
 	} else if button.State != models.ButtonStateDisabled && buttonSunken(button) {
 		nudgeX, nudgeY = 1, 1
 	}

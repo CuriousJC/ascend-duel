@@ -105,7 +105,7 @@ func (t *AchievementToast) Update(gs *state.GlobalState) {
 
 	if t.dismiss == nil {
 		t.dismiss = models.NewButton(toastButtonWidth, toastButtonHeight, toastButtonLabel, nil)
-		t.dismiss.BaseColor = panelBlue
+		t.dismiss.BaseColor = ButtonJade
 	}
 
 	// **Rebound every frame**, for confirm.go's reason: one widget serves every achievement, so a

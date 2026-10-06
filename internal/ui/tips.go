@@ -301,6 +301,25 @@ func statusTexts() map[string]string {
 // the list. The sentence names the consequence in full: a player who has read this cannot be
 // surprised by the death, and a timer that killed without having said so would be the worst kind
 // of hidden rule.
+// SortTip names one sort tab. **A title and nothing under it**: the button's picture says the rest.
+func SortTip(mode HandSort) string {
+	switch mode {
+	case SortByForm:
+		return "Sort by Form"
+	case SortByElement:
+		return "Sort by Element"
+	default:
+		return "Sort by Cost"
+	}
+}
+
+// The three panel buttons' names, on SortTip's terms.
+const (
+	HandsButtonTip    = "Hands"
+	LedgerButtonTip   = "Ledger"
+	SettingsButtonTip = "Settings"
+)
+
 func RoundTimerTip(spent, limit int) (string, []string) {
 	return "The Clock", []string{
 		fmt.Sprintf("Round %d of %d.", spent+1, limit),

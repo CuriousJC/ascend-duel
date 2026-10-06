@@ -56,8 +56,8 @@ func TestAlterationsAreOnByDefault(t *testing.T) {
 	if v.unaltered {
 		t.Error("the panel opens showing the cards as owned; alterations are the default")
 	}
-	if v.played {
-		t.Error("the panel opens on the whole deck")
+	if v.full {
+		t.Error("the panel opens on every card; REMAINING is the default")
 	}
 
 	run := panelRun(t, panelDeck(), "flip-lightning-to-ice")
@@ -119,10 +119,10 @@ func TestTheAlterationsToggleShowsBothFacesOfOneCard(t *testing.T) {
 	}
 }
 
-func TestFullAndPlayedInvertTheLitHalfAndMoveNothing(t *testing.T) {
-	// **The panel's governing idea, applied to the new toggle**: a card does not move, it only
-	// dims. FULL lights what is still to draw and PLAYED lights what has been drawn — the same
-	// grid, the same order, the other half lit.
+func TestRemainingAndFullLightTheirHalvesAndMoveNothing(t *testing.T) {
+	// **The panel's governing idea, applied to the toggle**: a card does not move, it only dims.
+	// REMAINING lights what is still to draw and FULL lights every card — the same grid, the same
+	// order, the played cards lit or not.
 	run := panelRun(t, panelDeck())
 	owned := run.Deck()
 
@@ -133,36 +133,33 @@ func TestFullAndPlayedInvertTheLitHalfAndMoveNothing(t *testing.T) {
 		InFight: true,
 	}
 
-	full := laidOut(d, DeckView{})
-	played := laidOut(d, DeckView{played: true})
+	remaining := laidOut(d, DeckView{})
+	full := laidOut(d, DeckView{full: true})
 
-	if len(full.slots) != len(played.slots) {
-		t.Fatalf("FULL lays out %d cards and PLAYED %d — the toggle is dropping cards",
-			len(full.slots), len(played.slots))
+	if len(remaining.slots) != len(full.slots) {
+		t.Fatalf("REMAINING lays out %d cards and FULL %d — the toggle is dropping cards",
+			len(remaining.slots), len(full.slots))
 	}
 
-	litFull, litPlayed := 0, 0
-	for i := range full.slots {
-		if full.slots[i].at != played.slots[i].at {
-			t.Fatalf("card %d sits at %v under FULL and %v under PLAYED — the grid moved",
-				i, full.slots[i].at, played.slots[i].at)
+	litRemaining, litFull := 0, 0
+	for i := range remaining.slots {
+		if remaining.slots[i].at != full.slots[i].at {
+			t.Fatalf("card %d sits at %v under REMAINING and %v under FULL — the grid moved",
+				i, remaining.slots[i].at, full.slots[i].at)
 		}
-		if full.slots[i].card != played.slots[i].card {
+		if remaining.slots[i].card != full.slots[i].card {
 			t.Fatalf("position %d holds a different card under each toggle", i)
 		}
-		if full.slots[i].lit == played.slots[i].lit {
-			t.Errorf("card %d is lit the same way under both toggles; the halves should invert", i)
+		if remaining.slots[i].lit {
+			litRemaining++
 		}
 		if full.slots[i].lit {
 			litFull++
 		}
-		if played.slots[i].lit {
-			litPlayed++
-		}
 	}
 
-	if litFull != 2 || litPlayed != 1 {
-		t.Errorf("FULL lights %d and PLAYED lights %d, want 2 and 1", litFull, litPlayed)
+	if litRemaining != 2 || litFull != 3 {
+		t.Errorf("REMAINING lights %d and FULL lights %d, want 2 and 3", litRemaining, litFull)
 	}
 }
 
@@ -172,9 +169,11 @@ func TestNothingIsEverPlayedBetweenFights(t *testing.T) {
 	run := panelRun(t, panelDeck())
 	d := DeckContents{Draw: run.Deck(), Run: run}
 
-	for _, s := range laidOut(d, DeckView{played: true}).slots {
-		if !s.lit {
-			t.Fatal("a card is dimmed on a panel where nothing has been played")
+	for _, v := range []DeckView{{}, {full: true}} {
+		for _, s := range laidOut(d, v).slots {
+			if !s.lit {
+				t.Fatal("a card is dimmed on a panel where nothing has been played")
+			}
 		}
 	}
 }
@@ -187,20 +186,20 @@ func TestTheFiguresCountWhatIsLit(t *testing.T) {
 
 	d := DeckContents{Draw: owned[:2], Spent: owned[2:], Run: run, InFight: true}
 
-	full := countsOf(laidOut(d, DeckView{}).slots, d.Holder, deckFilter{})
-	played := countsOf(laidOut(d, DeckView{played: true}).slots, d.Holder, deckFilter{})
+	remaining := countsOf(laidOut(d, DeckView{}).slots, d.Holder, deckFilter{})
+	full := countsOf(laidOut(d, DeckView{full: true}).slots, d.Holder, deckFilter{})
 
-	if full.total != 2 {
-		t.Errorf("FULL counts %d cards, want the 2 still to draw", full.total)
+	if remaining.total != 2 {
+		t.Errorf("REMAINING counts %d cards, want the 2 still to draw", remaining.total)
 	}
-	if played.total != 1 {
-		t.Errorf("PLAYED counts %d cards, want the 1 spent", played.total)
+	if full.total != 3 {
+		t.Errorf("FULL counts %d cards, want all 3", full.total)
 	}
-	if full.byElement[cards.Lightning] != 2 {
-		t.Errorf("FULL counts %d lightning, want 2", full.byElement[cards.Lightning])
+	if remaining.byElement[cards.Fire] != 0 {
+		t.Errorf("REMAINING counts %d fire, want the played one left out", remaining.byElement[cards.Fire])
 	}
-	if played.byElement[cards.Fire] != 1 {
-		t.Errorf("PLAYED counts %d fire, want 1", played.byElement[cards.Fire])
+	if full.byElement[cards.Fire] != 1 {
+		t.Errorf("FULL counts %d fire, want 1", full.byElement[cards.Fire])
 	}
 }
 
@@ -301,7 +300,7 @@ func TestTheFilterColumnFitsThePanel(t *testing.T) {
 	// imports screens and not the reverse.
 	bottom := state.ScreenHeight*ModalPanelBottomPct/100 - modalBodyBottom
 
-	// Three toggles is what a fight shows: ALTERATIONS, FULL and SHOW ALL. Four prices is the
+	// Three toggles is what a fight shows: RELICS, REMAINING and CLEAR FILTERS. Four prices is the
 	// shipping deck's spread with room for one more.
 	if got := deckColumnBottom(3, 4); got > bottom {
 		t.Errorf("the column ends at %d and the panel's margin is at %d", got, bottom)
@@ -325,15 +324,14 @@ func TestTheFilterColumnAndTheGridDoNotOverlap(t *testing.T) {
 
 // The filter itself: what a set of pressed buttons means, and what it is never allowed to touch.
 
-func TestAnEmptyFilterPicksNothing(t *testing.T) {
-	// **The panel opens pointing at nothing**, or every card in it would be marked and the mark
-	// would say nothing at all.
+func TestAnEmptyFilterDarkensNothing(t *testing.T) {
+	// **The panel opens with every card at full strength**; a filter is what darkens the rest.
 	run := session.New(session.StartingDeck())
 	d := DeckContents{Draw: run.Deck(), Run: run}
 
 	for _, s := range laidOut(d, DeckView{}).slots {
-		if s.picked {
-			t.Fatal("a card is marked on a panel with no filter set")
+		if s.lowlit {
+			t.Fatal("a card is darkened on a panel with no filter set")
 		}
 	}
 }
@@ -395,7 +393,7 @@ func TestClearDropsEveryAxis(t *testing.T) {
 
 	f.Clear()
 	if !f.empty() {
-		t.Error("SHOW ALL left something picked")
+		t.Error("CLEAR FILTERS left something set")
 	}
 }
 
@@ -435,9 +433,9 @@ func TestAButtonsFigureIgnoresItsOwnAxis(t *testing.T) {
 	}
 }
 
-func TestTheGridMarksExactlyTheCardsTheHeadingCounts(t *testing.T) {
-	// The figure and the marked cards are two readings of one answer, and the panel is unusable if
-	// they disagree: the number would send the player looking for cards that are not lit.
+func TestTheGridLeavesLitExactlyTheCardsTheHeadingCounts(t *testing.T) {
+	// The figure and the cards left undarkened are two readings of one answer, and the panel is
+	// unusable if they disagree: the number would send the player looking for cards that are dark.
 	run := session.New(session.StartingDeck())
 	d := DeckContents{Draw: run.Deck(), Run: run}
 
@@ -448,13 +446,13 @@ func TestTheGridMarksExactlyTheCardsTheHeadingCounts(t *testing.T) {
 	slots := laidOut(d, v).slots
 	marked := 0
 	for _, s := range slots {
-		if s.picked {
+		if !s.lowlit {
 			marked++
 		}
 	}
 
 	if c := countsOf(slots, d.Holder, v.filter); marked != c.total {
-		t.Errorf("%d cards are marked and the heading says %d", marked, c.total)
+		t.Errorf("%d cards are left lit and the heading says %d", marked, c.total)
 	}
 	if marked == 0 {
 		t.Fatal("fire stabs picked nothing, so this test is checking two zeroes")
@@ -463,8 +461,8 @@ func TestTheGridMarksExactlyTheCardsTheHeadingCounts(t *testing.T) {
 
 func TestTheFilterMovesNoCardAndDimsNothing(t *testing.T) {
 	// **The panel's governing idea**: a card does not move when something changes about the view, it
-	// only changes how it is drawn. The filter is a mark, on a separate channel from the dimming —
-	// see cards.MarkPicked — so neither a seat nor a lit flag may differ under one.
+	// only changes how it is drawn. The filter darkens, on a separate channel from the fading that
+	// says a card was played — see pileEntry.lowlit — so neither a seat nor a lit flag may differ.
 	owned := session.New(session.StartingDeck())
 	deck := owned.Deck()
 	d := DeckContents{Draw: deck[:20], Spent: deck[20:], Run: owned, InFight: true}

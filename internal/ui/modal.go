@@ -256,6 +256,10 @@ type ModalToggle struct {
 
 	// closer is the X on this toggle's own panel — the only thing that closes it.
 	closer ModalCloser
+
+	// Tip is the button's name, shown under a resting cursor while the panel is down. Empty is a
+	// button that explains nothing.
+	Tip string
 }
 
 // Toggle is the scene's way in when the opener is hidden: whatever it drew was clicked.
@@ -340,6 +344,10 @@ func (t *ModalToggle) Update(gs *state.GlobalState,
 		if hover != nil {
 			hover(image.Pt(gs.MouseX, gs.MouseY), &t.tip)
 		}
+	} else if t.Tip != "" && !t.hidden && gs.CursorAllowed() {
+		if r := t.Button.Rect(); image.Pt(gs.MouseX, gs.MouseY).In(r) {
+			t.tip.Point(r, TipLine(t.Tip), nil)
+		}
 	}
 	systems.UpdateTooltip(gs, &t.tip)
 	return was || t.open
@@ -354,6 +362,9 @@ func (t *ModalToggle) Draw(gs *state.GlobalState, screen *ebiten.Image, body fun
 		systems.DrawButton(gs, screen, t.Button)
 	}
 	if !t.open {
+		if !t.blocked {
+			systems.DrawTooltip(gs, screen, &t.tip)
+		}
 		return
 	}
 	body()

@@ -45,6 +45,9 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 		ui.HoverDeckPanel(gs, at, s.DeckView, s.fightContents(), &s.tip)
 		return
 	}
+	if s.SortTabs.Hover(gs, at, &s.tip) {
+		return
+	}
 	if s.hoverHand(gs, at) || s.hoverRelics(gs, at) {
 		return
 	}

@@ -316,7 +316,7 @@ func (t *tutorialOverlay) build() {
 	if t.skip == nil {
 		t.skip = models.NewButton(tutorialButtonW, tutorialButtonH, "SKIP",
 			func() { t.skipPressed = true })
-		t.skip.BaseColor = ui.ButtonGray
+		t.skip.BaseColor = ui.ButtonJade
 		t.skip.TextSize = 36
 	}
 }

@@ -168,6 +168,7 @@ go run ./tools/tonicsheet    # every tonic: its rule, its tooltip, and the realm
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/goodsheet     # every sealed good beside the offer it actually makes
 go run ./tools/badgesheet    # every damage badge: eleven values by six colors, in all three outlines
+go run ./tools/interfacesheet # the lettering in every ink, every button face, square button, glyph and bar cell
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
 go run ./tools/relicart      # files generated relic art: reduce, commit, set "Art" on the record
@@ -295,9 +296,9 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
 - **`cards.Mark` is a bitmask and marks compose**. A card can be broken *and* pointed
   at; `internal/cards/mark.go`'s `drawMark` owns the order they are painted in, so one pair of facts
   draws one way. **Append-only, and worse to insert into than an ordinal enum** — claiming a bit in
-  the middle changes what every existing value means, not just the ones after it. Three marks today:
-  `MarkShattered`, `MarkHighlit` and `MarkPicked` — the last being the deck panel's filter column
-  pointing at the cards its figures counted, in the relic pink rather than a sixth hue.
+  the middle changes what every existing value means, not just the ones after it. Two marks today:
+  `MarkShattered` and `MarkHighlit`. The deck panel's filter is not a mark: it darkens the cards it
+  leaves out at draw time, beside the fading that says a card has been played.
 - **Only the player raises shields**, and creatures raise nothing at all. Every creature is a solo
   attacker (`SoloAttacks`, a hit per card) and the player forms hands and lands a hit per card,
   so a shield is worth one hit whichever way it faces; nothing in the rules stops a creature raising
@@ -980,14 +981,16 @@ run code, the seed wheels. Classify a new line as one or the other; "neither" is
   same on a card and on the table. A card's names, stat rows and effect text are prose; its life
   fraction, badge numeral and relic counter are figures.
 
-**A button's color picks its face**, in `internal/systems/button_face.go`:
-`systems.ButtonRed`, `ButtonGray`, `ButtonYellow`, `ButtonBlue`, `ButtonPink` and the default olive
-each name one file in `assets/button/`, and a disabled button wears the flat `button-disabled`.
-**Red commits or leaves; gray is the program rather than the fight** — a new button takes one of the
-two before it reaches for a third color, because a third color is a third face to author.
+**A button's color picks its face**, in `internal/systems/button_face.go`: `systems.ButtonRed`
+names `button-carnelian`, and `ButtonJade` and the default name `button-jade`. **Red commits or leaves;
+jade is everything else** — a new button takes one of the two before it reaches for a third color,
+because a third color is a third face to author. A latched button wears `button-amber` and a
+disabled one `button-disabled`, whatever color it names.
 
-- **The picture is the button at rest.** Hover brightens it; pressed sinks it into its own black
-  drop and the label goes down with it; latched sinks it and dims it. No state is a second file.
+- **The picture is the button at rest.** Hover brightens it. Every face is polished stone and
+  stands on no drop, so pressed darkens it and moves its label a pixel. **The middle tiles rather
+  than stretches**, a whole number of copies each stretched a little to fit, so the clouding keeps
+  its size and the last copy meets the right cap with the art's own seamless join.
 - **Caps are drawn at whole pixels.** A cap scaled to a half pixel leaves a column both pieces
   cover by half, which shows as a seam.
 - **Every button wears a face and sits on a height tier**; there is no opting out. A color with
@@ -1434,7 +1437,8 @@ cost ticks in `assets/form/` are authored in their element, and **every prompt u
 writes the ramps out in full** — the closed-set prompts (`card_art_prompt.MD`,
 `damage_art_prompt.MD`, `glyph_art_prompt.MD`) as their element table, and the subject prompts as a
 shared **The color words** block, which is what lets a brief say "a purple orb" and land in arcane.
-`gear_art_prompt.MD` is the one without a ramp, since the cog is neutral gray by rule. **Move a
+`icon_button_art_prompt.MD` is the one without an element ramp, since its buttons are jade, which is
+no element. **Move a
 `core` and all of them have to follow**, or a card's corner mark and the word naming its element
 are two different colors.
 

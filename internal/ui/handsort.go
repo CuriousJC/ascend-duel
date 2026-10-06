@@ -77,13 +77,13 @@ var SortButtonSpecs = []struct {
 	{SortByElement, "icon-sort-element", "E"},
 }
 
-// SortButtonColor is ButtonGray, quieter than either button on the combat screen's strip.
+// SortButtonColor is ButtonJade, quieter than either button on the combat screen's strip.
 //
 // **Deliberately not the red or the Discard yellow**: those two commit a round and these three only
 // rearrange one — which is no longer the same as saying they change nothing, since 2026-08-26. They
 // are still the quieter control of the two kinds. The active mode is drawn *darker* than the two
 // beside it, so the bright end of the ramp stays with hover and press.
-var SortButtonColor = ButtonGray
+var SortButtonColor = ButtonJade
 
 // SortTabs is the block of three as a widget: three models.Button, one latched, drawn touching so
 // the group reads as one control with three tabs rather than as three controls that happen to
@@ -149,6 +149,18 @@ func (t *SortTabs) Update(gs *state.GlobalState, live bool) {
 		SetEnabled(b, live)
 		systems.UpdateButton(gs, b)
 	}
+}
+
+// Hover points tip at the tab under the cursor, to its left so the panel does not cover the cards
+// it would explain the order of, and reports whether there was one.
+func (t *SortTabs) Hover(gs *state.GlobalState, at image.Point, tip *models.Tooltip) bool {
+	for i, spec := range SortButtonSpecs {
+		if r := t.seat(gs, i); at.In(r) {
+			tip.PointLeft(r, TipLine(SortTip(spec.Mode)), nil)
+			return true
+		}
+	}
+	return false
 }
 
 func (t *SortTabs) Draw(gs *state.GlobalState, screen *ebiten.Image) {

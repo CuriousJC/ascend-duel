@@ -45,7 +45,10 @@ type Game struct {
 	// no scene — and the panel could not have been a screen at all: navigating away from the
 	// combat screen and back re-runs its Init, which deals a fresh duel. See chrome.go.
 	ledgerButton *models.Button
-	ledger       screens.LedgerPanel
+
+	// chromeTip explains the cog and the ledger's scroll; see hoverChrome.
+	chromeTip models.Tooltip
+	ledger    screens.LedgerPanel
 
 	// animButton opens the animation gallery, and it is **the one thing in the frame that is not
 	// chrome by the frame's own test**: it is not true of the whole session, it is instrumentation.

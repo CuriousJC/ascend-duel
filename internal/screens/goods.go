@@ -108,7 +108,7 @@ func (s *GoodsScene) Init(gs *state.GlobalState) {
 		s.skipButton = models.NewButton(goodsSkipWidth, goodsSkipHeight, goodsSkipLabel,
 			func() { s.skipping = true })
 		s.skipButton.TextSize = goodsSkipTextSize
-		s.skipButton.BaseColor = ui.ButtonGray
+		s.skipButton.BaseColor = ui.ButtonJade
 	}
 	s.skipping = false
 	s.band.init()

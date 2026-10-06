@@ -212,7 +212,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	if s.leaveButton == nil {
 		s.leaveButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LEAVE",
 			func() { s.leaving = true })
-		s.leaveButton.BaseColor = ui.ButtonGray
+		s.leaveButton.BaseColor = ui.ButtonJade
 	}
 
 	s.band.init()

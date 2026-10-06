@@ -84,14 +84,14 @@ const (
 	animButtonLabel = "A"
 )
 
-// settingsButtonColor is the face at full strength: ButtonGray, deliberately unlike any control
+// settingsButtonColor is the face at full strength: ButtonJade, deliberately unlike any control
 // that plays the game.
 //
 // DUEL! is red and Discard is yellow because they are choices inside a duel. This is not a
 // move — it changes nothing about a run and never becomes unavailable for a game reason — so
 // it takes a color that says "this is the program, not the fight". Same argument as the relic
 // row's backing being gray rather than pink, and the settings screen's sliders share it.
-var settingsButtonColor = ui.ButtonGray
+var settingsButtonColor = ui.ButtonJade
 
 // openSettings goes to the settings screen, remembering where the player was.
 //
@@ -225,6 +225,25 @@ func (g *Game) updateChrome(gs *state.GlobalState) {
 
 	g.updateLedgerButton(gs)
 	g.updateAnimButton(gs)
+	g.hoverChrome(gs)
+}
+
+// hoverChrome explains the cog and the scroll under a resting cursor, on the timing every other
+// tooltip keeps. **The frame owns its own tooltip** because the buttons are its own: no scene knows
+// they are there.
+func (g *Game) hoverChrome(gs *state.GlobalState) {
+	if g.chromeTip.DwellTicks == 0 {
+		g.chromeTip = models.Tooltip{DwellTicks: ui.TipDwell()}
+	}
+	at := image.Pt(gs.MouseX, gs.MouseY)
+	if gs.CursorAllowed() {
+		if r := g.settingsButton.Rect(); at.In(r) {
+			g.chromeTip.Point(r, ui.TipLine(ui.SettingsButtonTip), nil)
+		} else if g.ledgerButton != nil && g.ledgerShowing(gs) && at.In(g.ledgerButton.Rect()) {
+			g.chromeTip.Point(g.ledgerButton.Rect(), ui.TipLine(ui.LedgerButtonTip), nil)
+		}
+	}
+	systems.UpdateTooltip(gs, &g.chromeTip)
 }
 
 // openAnimations goes to the animation gallery, on openSettings' terms: the run's phase is not
@@ -312,4 +331,5 @@ func (g *Game) drawChrome(gs *state.GlobalState, screen *ebiten.Image) {
 	if g.animButton != nil && gs.DebugAnimations {
 		systems.DrawButton(gs, screen, g.animButton)
 	}
+	systems.DrawTooltip(gs, screen, &g.chromeTip)
 }

@@ -58,44 +58,23 @@ var barCellOver_png []byte
 //go:embed bar/*.png
 var barArt embed.FS
 
-// BUTTON FACES
+// BUTTONS
 //
-// The blank body of every button, one per color at rest plus the flat disabled face, drawn at
-// 512x128 and scaled by the caller to the button's height tier. **Like a bar cell, a face is two
-// end caps and a middle every column of which is identical**, so only the middle stretches; see
-// systems.DrawButton and docs/art/button_art_prompt.MD. Keyed `button-<color>`, the file's stem.
+// Every file under `button/`, as one family keyed by filename stem, so a new face or icon is a file
+// dropped in and nothing edited here.
 //
-//go:embed button/button-red.png
-var buttonRed_png []byte
-
-//go:embed button/button-gray.png
-var buttonGray_png []byte
-
-//go:embed button/button-yellow.png
-var buttonYellow_png []byte
-
-//go:embed button/button-blue.png
-var buttonBlue_png []byte
-
-//go:embed button/button-pink.png
-var buttonPink_png []byte
-
-//go:embed button/button-olive.png
-var buttonOlive_png []byte
-
-//go:embed button/button-disabled.png
-var buttonDisabled_png []byte
-
-// ICON BUTTONS
+//   - **`button-<color>`** is the blank body of a word button, drawn at 512x128 and scaled by the
+//     caller to the button's height tier: two end caps and a middle. See systems.DrawButton.
+//   - **`icon-<name>`** is a square button drawn whole, face and picture together, at 256x256. See
+//     models.Button.Icon. A stem ending `-pressed` is the same button drawn latched — see
+//     systems.drawButtonIcon.
+//   - **`icon-blank*` and `glyph-<name>`** are the parts of a square button assembled in code: a
+//     blank tile and a picture laid over it.
 //
-// A square button drawn whole — its face and its picture in one file, with no label — at 256x256,
-// scaled by the caller to the button's size. See models.Button.Icon and
-// docs/art/icon_button_art_prompt.MD and docs/art/sort_button_art_prompt.MD. Keyed `icon-<name>`,
-// the file's stem, so a new icon is a file dropped in and nothing edited here. A stem ending
-// `-pressed` is the same button drawn latched — see systems.drawButtonIcon.
+// The prompts are under docs/art/; docs/art/README.md says which file each came from.
 //
-//go:embed button/icon-*.png
-var iconButtons embed.FS
+//go:embed button/*.png
+var buttonArt embed.FS
 
 // THE GUIDE
 //
@@ -115,19 +94,6 @@ var iconButtons embed.FS
 var guide_png []byte
 
 // THE GEAR
-//
-// The settings control in the game's chrome corner. **A named one-off rather than a member of the
-// form family**, because it is not a card mark: it says something about the program where every
-// mark in `form/` says something about a card.
-//
-// **Baked from the silhouette generator on 2026-09-16 and then the generator was deleted**
-// *(owner's call)*. It was the last kind `internal/systems` drew, so the picture was rendered once
-// at the size the chrome blits it and committed as an ordinary asset — no change to what is on
-// screen, and replacing it with drawn art is now a file swap. `docs/art/gear_art_prompt.MD` is the
-// brief for that replacement.
-//
-//go:embed game/gear.png
-var gear_png []byte
 
 // FORM MARKS AND COST TICKS
 //
@@ -409,16 +375,9 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["barCellEmpty_png"] = loadImage(barCellEmpty_png)
 	assets["barCellSpent_png"] = loadImage(barCellSpent_png)
 	assets["barCellOver_png"] = loadImage(barCellOver_png)
-	assets["button-red"] = loadImage(buttonRed_png)
-	assets["button-gray"] = loadImage(buttonGray_png)
-	assets["button-yellow"] = loadImage(buttonYellow_png)
-	assets["button-blue"] = loadImage(buttonBlue_png)
-	assets["button-pink"] = loadImage(buttonPink_png)
-	assets["button-olive"] = loadImage(buttonOlive_png)
-	assets["button-disabled"] = loadImage(buttonDisabled_png)
-	icons := map[string][]byte{}
-	embedFamily(icons, iconButtons, "button")
-	for key, raw := range icons {
+	buttons := map[string][]byte{}
+	embedFamily(buttons, buttonArt, "button")
+	for key, raw := range buttons {
 		assets[key] = loadImage(raw)
 	}
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
@@ -482,6 +441,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, otherArt, "other")
 	embedFamily(images, formArt, "form")
+	embedFamily(images, buttonArt, "button")
 	embedFamily(images, textureArt, "texture")
 	embedPrefixed(images, upgradeArt, "upgrade-art", "upgrade-")
 	embedPrefixed(images, deckArt, "deck", "deck-")
@@ -493,7 +453,6 @@ func LoadImageData() map[string][]byte {
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.
 	images["guide_png"] = guide_png
-	images["gear"] = gear_png
 
 	// The status badges, for the same reason as the relic art: they are drawn *into* the enemy
 	// card by internal/cards, which has no graphics context.

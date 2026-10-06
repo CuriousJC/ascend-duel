@@ -100,7 +100,7 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 	// drawing would be a second answer to the same question and the two would differ on the day a
 	// rounding changed.
 	title, body, w, h := tipLayout(t, face, titleFace)
-	at := tipPlace(gs, t.Anchor, w, h)
+	at := tipPlaceFor(gs.ScreenWidth, gs.ScreenHeight, t.Side, t.Anchor, w, h)
 
 	vector.FillRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), PanelSurface, false)
 	vector.StrokeRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), 1, PanelEdgeInk, false)
@@ -231,10 +231,32 @@ func tipLayout(t *models.Tooltip, face, titleFace *text.GoTextFace) (title, body
 	return title, body, int(widest) + tipPad*2, h + tipPad*2
 }
 
-// tipPlace is where the panel goes: above the anchor, flipping and clamping rather than running off
-// the screen.
-func tipPlace(gs *state.GlobalState, anchor image.Rectangle, w, h int) image.Point {
-	return tipPlaceIn(gs.ScreenWidth, gs.ScreenHeight, anchor, w, h)
+// tipPlaceFor is where the panel goes for the side its tooltip asked for.
+func tipPlaceFor(screenW, screenH int, side models.TipSide, anchor image.Rectangle, w, h int) image.Point {
+	if side == models.TipLeft {
+		return tipLeftIn(screenW, screenH, anchor, w, h)
+	}
+	return tipPlaceIn(screenW, screenH, anchor, w, h)
+}
+
+// tipLeftIn stands the panel to the anchor's left, centered on it vertically, flipping to the right
+// when there is no room and clamped to the screen.
+func tipLeftIn(screenW, screenH int, anchor image.Rectangle, w, h int) image.Point {
+	x := anchor.Min.X - tipGap - w
+	if x < tipEdge {
+		x = anchor.Max.X + tipGap
+	}
+	if x+w > screenW-tipEdge {
+		x = screenW - tipEdge - w
+	}
+	y := (anchor.Min.Y+anchor.Max.Y)/2 - h/2
+	if y+h > screenH-tipEdge {
+		y = screenH - tipEdge - h
+	}
+	if y < tipEdge {
+		y = tipEdge
+	}
+	return image.Pt(x, y)
 }
 
 // tipPlaceIn is tipPlace against a screen of a given size.

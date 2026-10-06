@@ -38,12 +38,12 @@ func SetEnabled(b *models.Button, enabled bool) {
 	}
 }
 
-// ButtonRed and ButtonGray are the two faces most buttons take — see systems.ButtonRed for what
+// ButtonRed and ButtonJade are the two faces most buttons take — see systems.ButtonRed for what
 // each means. A new button picks one of the two before it reaches for a third color, because a
 // third color is a third face to author.
 var (
 	ButtonRed  = systems.ButtonRed
-	ButtonGray = systems.ButtonGray
+	ButtonJade = systems.ButtonJade
 )
 
 // panelBlue is the stroke around a dialog and the toast's dismiss button. It was the

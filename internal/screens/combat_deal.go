@@ -139,6 +139,10 @@ type dealFace struct {
 	spec cards.Spec
 }
 
+// dealHoldFrames is how many frames a fresh screen draws before its deal starts moving: long enough
+// for the slow first draw to be behind it, short enough to read as the table settling.
+const dealHoldFrames = 8
+
 // running reports whether a deal is on stage at all.
 func (d handDeal) Running() bool { return d.stage != dealIdle }
 
@@ -244,7 +248,7 @@ func (s *CombatScene) dealFace(c combat.Card) cards.Spec {
 // running, so there is one place the stages hand over.
 func (s *CombatScene) tickDeal() {
 	d := &s.Theater.deal
-	if !d.Running() {
+	if !d.Running() || s.holdFrames > 0 {
 		return
 	}
 

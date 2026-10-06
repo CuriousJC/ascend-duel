@@ -299,7 +299,7 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	if s.skipButton == nil {
 		s.skipButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LET THEM ESCAPE",
 			func() { s.skipping = true })
-		s.skipButton.BaseColor = ui.ButtonGray
+		s.skipButton.BaseColor = ui.ButtonJade
 	}
 
 	s.deck.InitAsPile()
@@ -530,6 +530,9 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 	// worn relic is what the choice is being *judged against*, and "what does the one I am wearing
 	// actually do" is the question an essence is picked by.
 	if hoverBuildRelics(gs, at, &s.tip) {
+		return
+	}
+	if s.dealtRow.tabs != nil && len(s.dealtRow.offer) > 0 && s.dealtRow.tabs.Hover(gs, at, &s.tip) {
 		return
 	}
 

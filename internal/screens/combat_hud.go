@@ -69,7 +69,7 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 	// "something you are carrying moved this figure" — so a Might reads on the card for the whole
 	// fight rather than as a number the player has to remember was 10.
 	if s.cantripDMG > 0 {
-		spec.Stats[0].ValueInk = cards.PickedInk
+		spec.Stats[0].ValueInk = cards.BorderOf(cards.Relic)
 	}
 
 	img := ui.CardImage(gs, spec, cards.DuelistStyle)

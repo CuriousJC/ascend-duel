@@ -155,6 +155,16 @@ var sheets = []sheet{
 			"is still open.",
 	},
 	{
+		Dir:   "interfacesheet",
+		Tool:  "./tools/interfacesheet",
+		Title: "Interface sheet",
+		Blurb: "The interface's own art: the prose and figure lettering in every ink at the sizes " +
+			"the game sets them, every word-button face at the four button heights, every square " +
+			"button, the blank tiles with every glyph laid over them, and the bar cells. **A " +
+			"glyph an ink is missing is listed under it**, since one gap sends a whole word back " +
+			"to the font.",
+	},
+	{
 		Dir:   "scenariosheet",
 		Tool:  "./tools/scenariosheet",
 		Title: "Scenario sheet",

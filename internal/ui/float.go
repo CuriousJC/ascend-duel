@@ -64,9 +64,9 @@ var FloatSchemes = []Float{
 	},
 	{
 		Name: "drift",
-		What: "a 1.5 x 2.5px loop, each card its own",
-		Bob:  2.5, BobTicks: 235,
-		Drift: 1.5, DriftTicks: 320,
+		What: "a 0.75 x 1.25px loop, each card its own",
+		Bob:  1.25, BobTicks: 235,
+		Drift: 0.75, DriftTicks: 320,
 	},
 	{
 		Name: "sway",

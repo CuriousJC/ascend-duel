@@ -41,6 +41,13 @@ const (
 	titleButtonWidth  = 460
 	titleButtonHeight = ui.ButtonLarge
 	titleRowGap       = 88
+
+	// The swirl that stands where the menu will be while the run's faces are painted: how big it
+	// is, the least time it turns so a fast machine does not flash it, and how long it takes to
+	// fade out as the buttons fade in.
+	titleSwirlRadius = 200
+	titleSwirlMin    = 45
+	titleSwirlFade   = 24
 )
 
 // TitleScene is the front screen: the logo and the menu.
@@ -60,6 +67,20 @@ type TitleScene struct {
 	// until the first Init, and kept through a return to the title so the picture does not change
 	// under a player who only went to the settings.
 	backdrops []string
+
+	// **The menu waits for the run's faces.** Until warm has painted them, a swirl turns where the
+	// buttons will be; then the swirl fades out as the menu fades in, over titleSwirlFade ticks. See
+	// warm.go. ready is kept through a return to the title, so only the first visit of a launch
+	// waits.
+	warm  faceWarmer
+	swirl models.Swirl
+	ticks int
+	ready bool
+	fade  int
+
+	// layer is what each half of the cross-fade is drawn into before it goes on the screen at its
+	// own strength — a button and a swirl carry no alpha of their own.
+	layer *ebiten.Image
 }
 
 // Init builds the buttons on first entry and positions them every time.
@@ -106,6 +127,43 @@ func (s *TitleScene) Init(gs *state.GlobalState) {
 		b.ScreenX = gs.PctX(50)
 		b.ScreenY = menuTop + i*titleRowGap
 	}
+
+	if !s.ready {
+		s.warm.start(gs)
+		if s.layer == nil {
+			s.layer = ebiten.NewImage(state.ScreenWidth, state.ScreenHeight)
+		}
+		// **The buttons are painted during the wait too**, as the last job, so the frame the menu
+		// starts to appear is not also the frame every button paints its face for the first time.
+		s.warm.jobs = append(s.warm.jobs, func() {
+			for _, b := range s.menu() {
+				systems.DrawButton(gs, s.layer, b)
+			}
+			s.layer.Clear()
+		})
+		s.ticks, s.fade = 0, 0
+		s.swirl = models.Swirl{
+			ScreenX: gs.PctX(50), ScreenY: menuTop + (len(s.menu())-1)*titleRowGap/2,
+			Radius: titleSwirlRadius, State: models.ButtonStateDisabled,
+		}
+	}
+}
+
+// updateSwirl turns the swirl and paints faces, and reports whether the menu may be shown yet.
+func (s *TitleScene) updateSwirl(gs *state.GlobalState) bool {
+	if s.ready {
+		return true
+	}
+	s.ticks++
+	systems.UpdateSwirl(gs, &s.swirl)
+	if s.warm.step() || s.ticks < titleSwirlMin {
+		return false
+	}
+	s.fade++
+	if s.fade >= titleSwirlFade {
+		s.ready = true
+	}
+	return s.ready
 }
 
 func (s *TitleScene) Update(gs *state.GlobalState) error {
@@ -119,6 +177,10 @@ func (s *TitleScene) Update(gs *state.GlobalState) error {
 	// **Dead with nothing to go back to.** A run only exists here if BootRun resumed one off disk
 	// or the player started one and came back to the title; either way the test is the same.
 	ui.SetEnabled(s.continueButton, gs.Run != nil && gs.Resumed)
+
+	if !s.updateSwirl(gs) {
+		return nil
+	}
 
 	for _, b := range s.menu() {
 		systems.UpdateButton(gs, b)
@@ -167,9 +229,25 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	//BUTTONS
 	//
-	// Positions are set in Init; Draw only draws.
-	for _, b := range s.menu() {
-		systems.DrawButton(gs, screen, b)
+	// Positions are set in Init; Draw only draws. **The swirl stands in their place until the run's
+	// faces are painted** — see updateSwirl.
+	switch {
+	case s.ready:
+		for _, b := range s.menu() {
+			systems.DrawButton(gs, screen, b)
+		}
+	case s.fade == 0:
+		systems.DrawSwirl(screen, &s.swirl, portalSwirl(gs))
+	default:
+		t := float32(s.fade) / titleSwirlFade
+		s.layer.Clear()
+		systems.DrawSwirl(s.layer, &s.swirl, portalSwirl(gs))
+		s.drawLayer(screen, 1-t)
+		s.layer.Clear()
+		for _, b := range s.menu() {
+			systems.DrawButton(gs, s.layer, b)
+		}
+		s.drawLayer(screen, t)
 	}
 
 	// The build, bottom right. Small on purpose — it is a thing to be *found* when someone is asked
@@ -204,3 +282,10 @@ const versionInset = 14
 const versionCap = 10
 
 var versionColor = color.RGBA{R: 60, G: 80, B: 78, A: 255}
+
+// drawLayer puts the cross-fade's layer on the screen at a strength between 0 and 1.
+func (s *TitleScene) drawLayer(screen *ebiten.Image, alpha float32) {
+	op := &ebiten.DrawImageOptions{}
+	op.ColorScale.ScaleAlpha(alpha)
+	screen.DrawImage(s.layer, op)
+}

@@ -468,6 +468,12 @@ type CombatScene struct {
 	sortMode ui.HandSort
 	SortTabs *ui.SortTabs
 
+	// holdFrames is how many more frames a freshly entered screen draws before its deal moves. Set
+	// by Init and counted down by Draw. **The deal waits for it**: a fresh screen's first draw
+	// uploads every texture it shows and can take most of a second, and a deal already in flight
+	// across that frame visibly stalls and then lurches.
+	holdFrames int
+
 	// tut is Bob, when a run is being taught. **A field on the scene rather than global state**,
 	// because the widget is this screen's — the two buttons and where the bubble last sat. What
 	// survives a fight is the step cursor, and that is on the run. See tutorial.go.
@@ -497,6 +503,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// The deal captures its faces here, before anything has been drawn, so the picture bank has to
 	// be reachable before the first frame rather than on the first blit. See useImages.
 	ui.UseImages(gs)
+	s.holdFrames = dealHoldFrames
 
 	// Taken on every entry rather than only on a fresh duel, because Init is re-run whenever the
 	// screen is come back to and a handle picked up once would outlive a run that ended in between.
@@ -686,7 +693,7 @@ func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
 	}
 	if s.discardButton == nil {
 		s.discardButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DISCARD", s.discardSelected)
-		s.discardButton.BaseColor = systems.ButtonYellow
+		s.discardButton.BaseColor = systems.ButtonJade
 	}
 	// **The bottom strip is one row of four things, spaced rather than placed** *(2026-08-11)*:
 	// the AP figure at the hand's left edge, the two buttons, and the deck pile at the right.
@@ -899,7 +906,9 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// of the deck and can change nothing about the round underneath — see deckView.
 	if s.showDeck {
 		s.DeckView.Update(gs, s.fightContents())
-	} else {
+	} else if s.planning() && !s.Theater.deal.Running() && !s.Theater.Running() {
+		// **Only while nothing is moving.** A face is every pixel written in Go, and one rendered
+		// on a frame a card is crossing the screen is a hitch in that card's flight.
 		ui.WarmDeckPanel(gs, s.DeckView, s.fightContents())
 	}
 
@@ -1788,6 +1797,10 @@ func (s *CombatScene) applyStatusBadge(e combat.Event) {
 // somewhere else, not a box.
 
 func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
+	if s.holdFrames > 0 {
+		s.holdFrames--
+	}
+
 	// **The duel is the only screen drawn on a backdrop**; every other scene keeps the gradient.
 	ui.FillBackdrop(screen, ui.Backdrop(gs, s.backdrop))
 

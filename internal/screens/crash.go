@@ -76,10 +76,10 @@ const (
 	crashFolderTop = 14
 )
 
-// crashRevealColor is the second button's face: ButtonGray, which every control that is the
+// crashRevealColor is the second button's face: ButtonJade, which every control that is the
 // program rather than the fight takes. The quit is the modal red, because it is the way out and that is
 // already what the one red in the game means.
-var crashRevealColor = ui.ButtonGray
+var crashRevealColor = ui.ButtonJade
 
 // CrashScene is the screen a panic ends on.
 type CrashScene struct {

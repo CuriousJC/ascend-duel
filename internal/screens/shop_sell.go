@@ -84,7 +84,7 @@ func (s *sellTab) initSellTab() {
 	}
 	if s.useButton == nil {
 		s.useButton = models.NewButton(sellTabWidth, sellTabHeight, "USE", func() { s.using = true })
-		s.useButton.BaseColor = ui.ButtonGray
+		s.useButton.BaseColor = ui.ButtonJade
 		s.useButton.TextSize = sellTabTextSize
 	}
 	s.armed, s.selling, s.using = shopSale{}, false, false

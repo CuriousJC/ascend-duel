@@ -52,8 +52,8 @@ const (
 	confirmButtonBottom = 56
 )
 
-// confirmCancelColor is the safe answer, in ButtonGray: "the program, not the fight".
-var confirmCancelColor = ButtonGray
+// confirmCancelColor is the safe answer, in ButtonJade: "the program, not the fight".
+var confirmCancelColor = ButtonJade
 
 // ConfirmDialog is a question with two answers.
 //

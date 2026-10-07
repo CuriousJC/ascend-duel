@@ -119,35 +119,11 @@ type Duelist struct {
 	// shield that matches the hit it eats, which banks a Surge.
 	Element Element
 
-	// Statuses is what has been done to this duelist, **indexed by status** — see status.go for
-	// the lifecycle, which is one rule for all of them.
-	//
-	// **It was indexed by element until 2026-08-17**, which is the array the relic grammar could not
-	// use: one element applying two statuses is the case that breaks it, and a status arriving from
-	// something that is not a color at all has no seat in it. The price moves with the index —
-	// `statuses.json` is now the append-only file, because inserting a record mid-file re-points
-	// every status a duelist is carrying.
-	//
-	// An array rather than named fields for the reason it always was: a new status does not grow
-	// this struct, and *"consume the status this card applies"* stays expressible.
-	//
-	// The defenses above deliberately stay where they are. Defend is a card effect rather than a
-	// status, and filing it in this table would say it was one.
-	Statuses [MaxStatuses]Status
-
 	// Relics is what this duelist is wearing, in worn order, and RelicCount is how many of the
 	// array is in use. See relic.go for the grammar and WornRelics for why the order is a rule.
 	//
-	// **It is what makes an element do anything at all** *(2026-08-16)*. A fire attack from a
-	// duelist with no fire relic is a plain attack with a red border: it counts toward a hand, it
-	// is discounted by nothing, and it applies no burn. See status.go for the argument, which is
-	// that statuses given away free left the first three relics with no mechanic of their own.
-	//
-	// **It was `[ElementCount]bool` until 2026-08-17**, and the grammar is what took the flags
-	// away: a form multiplier and a vitae relic have no element to be a bit under.
-	//
-	// **The relic is read off the attacker, never the victim.** Your fire relic makes *your* fire
-	// attacks burn; it does nothing when a fire attack is aimed at you.
+	// **The relic is read off its wearer.** Your fire relic prices *your* fire cards; it does
+	// nothing when a fire attack is aimed at you.
 	//
 	// **A slice, and there is no width at all** *(owner's call, 2026-09-17)*. It was a fixed array
 	// plus a count until then, sized by a `MaxWornRelics` constant — a width rather than a rule,
@@ -169,8 +145,7 @@ type Duelist struct {
 	//
 	// **Enemies never wear one.** The zero value is an empty hand and nothing sets it for them, so
 	// an enemy's elements are inert by construction rather than by a rule written down somewhere
-	// else. Statuses reaching the player by some other route later is expected; it will not be by
-	// an enemy putting on jewelry.
+	// else.
 	Relics []WornRelic
 
 	// RelicSlots is how many of those seats this duelist may actually fill. **Zero means
@@ -346,7 +321,7 @@ const baseMaxActions = 5
 // MaxEchoLandings is the most times one card can land in a turn — the most hits it can throw —
 // echoes and repeats included.
 //
-// **A width rather than a design cap**, exactly like MaxStatuses: Event's hand
+// **A width rather than a design cap**: Event's hand
 // arrays are fixed so an Event stays comparable, and every landing is a term in them. Five is
 // generous against the one echo relic that exists, which lands a card three times.
 const MaxEchoLandings = 5
@@ -369,8 +344,6 @@ func (d Duelist) MaxActions() int { return baseMaxActions }
 //
 // **It stays a method rather than becoming a field read**, for the reason MaxActions is one: a
 // relic or a tonic raising a budget wants somewhere to bite that is not every call site.
-//
-// **No status touches it.** A chill is a card off the front of the turn instead — see playTurn.
 func (d Duelist) ActionPoints() int { return d.Actions + d.Surge }
 
 // CanAfford reports whether a queued set fits inside this duelist's budget. The UI

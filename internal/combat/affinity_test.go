@@ -49,20 +49,19 @@ func TestAFizzledCardStillFormsTheHand(t *testing.T) {
 	}
 }
 
-// TestAFizzledHitDoesNothingElse. No status, no drain: the whole hit is wasted, not just its
-// figure.
+// TestAFizzledHitDoesNothingElse. No drain: the whole hit is wasted, not just its figure.
 func TestAFizzledHitDoesNothingElse(t *testing.T) {
-	burning := firstStatusOf(t, EffectDamageOverTime)
-	lit := relic(t, "affinity-kindling", RelicRule{
+	leech := relic(t, "affinity-leech", RelicRule{
 		When: MomentAttackLands,
 		If:   RelicCondition{Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
+		Then: []RelicEffect{{Do: DoDrainDamage, Amount: 50}},
 	})
-	a := duelist(10, 8, 5000).Wearing(WornRelic{Relic: lit})
+	a := duelist(10, 8, 5000).Wearing(WornRelic{Relic: leech})
+	a.CurrentLife = 1000
 
 	events, _, _ := resolve(a, creature(Fire, 10, 6, 5000), []Card{Of(Bash, Fire)}, nil, 1)
-	if n := kindCount(events, KindStatus); n != 0 {
-		t.Errorf("a fizzled fire hit landed %d statuses", n)
+	if n := kindCount(events, KindDrained); n != 0 {
+		t.Errorf("a fizzled fire hit drained %d times", n)
 	}
 }
 

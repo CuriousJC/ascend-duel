@@ -76,7 +76,7 @@ func (s *CombatScene) equippedFighter(gs *state.GlobalState) combat.Duelist {
 // **What the fight has done is carried, and what the run carries is not.** The purse is the run's,
 // which is where a sale's proceeds have just gone — the rules take it back at the next DUEL!. The wound stays a
 // wound — life is the new ceiling less what the fight has taken, never below one — and the standing
-// shields, the banked surge, the statuses and each remaining relic's growth this fight come across
+// shields, the banked surge and each remaining relic's growth this fight come across
 // as they are. Every cantrip cast this fight is cast again, in order, on the rebuilt duelist,
 // because a cantrip lasts the fight and is not the run's.
 func (s *CombatScene) refit(gs *state.GlobalState) {
@@ -93,7 +93,7 @@ func (s *CombatScene) refit(gs *state.GlobalState) {
 
 	wound := live.MaxLife - live.CurrentLife
 	d.CurrentLife = min(max(d.MaxLife-wound, 1), d.MaxLife)
-	d.Shields, d.Surge, d.Statuses = live.Shields, live.Surge, live.Statuses
+	d.Shields, d.Surge = live.Shields, live.Surge
 	for i := range d.Relics {
 		for _, w := range live.Relics {
 			if w.Relic == d.Relics[i].Relic {

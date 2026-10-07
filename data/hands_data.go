@@ -10,8 +10,7 @@ package data
 //
 // **One list, and a hand is only ever a damage multiplier** *(2026-08-17)*. A hand counts cards that
 // agree on one axis — the same concept, the same form or the same element — and pays a multiplier;
-// that is the whole vocabulary. Statuses come from elements and relics, and nothing a hand forms
-// buys anything besides damage.
+// that is the whole vocabulary, and nothing a hand forms buys anything besides damage.
 //
 // **What is deliberately not here: any meaning.** The strings below are names, and joining them to
 // the rules is `internal/combat`'s job, exactly as it is for `CardData.Concept`. A malformed

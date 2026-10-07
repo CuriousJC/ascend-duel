@@ -14,7 +14,7 @@ package ui
 // event, so a line cannot claim a sum the round did not use. What is decided here is only how a
 // figure is spelled and which ink names it carries.
 //
-// **The attaching is here rather than in the record stream.** An outcome — damage, a status, a
+// **The attaching is here rather than in the record stream.** An outcome — damage, a drain, a
 // shield going up — is what became of a card that was played, and the sentence for it is the act
 // above it. So the records stay one-per-thing-that-happened and the state machine that folds them
 // into readable lines lives with the wording, where it can be changed without rewriting an account.
@@ -135,22 +135,14 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 
 	// ---- the outcomes ----
 
-	case session.KindMissed:
-		// **Naming the shock is the whole point.** A hit that simply missed would look like a bug
-		// in a game with no dice in it.
-		w.attach(r.Hit, "misses - shocked")
-
 	case session.KindFizzled:
-		// **Naming the reason is the point, as it is for a shock**: a hit that landed nothing with
-		// no word beside it would read as a bug.
+		// **Naming the reason is the point**: a hit that landed nothing with no word beside it
+		// would read as a bug.
 		w.attach(r.Hit, "fizzles - its own element")
-
-	case session.KindStatus:
-		w.attach(r.Hit, StatusPhraseByKey(r.Status))
 
 	case session.KindDrained:
 		// **The relic names itself**, so a second drain relic cannot narrate identically to the
-		// first — the argument a ticking status is already under.
+		// first.
 		w.attach(r.Hit, fmt.Sprintf("%s drains %d", r.Relic, r.Amount))
 
 	case session.KindRaised:
@@ -197,10 +189,6 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 
 	// ---- the announcements ----
 
-	case session.KindChilled:
-		w.announce(voiceForSide(r.Side),
-			fmt.Sprintf("%s is chilled - %v is lost", r.Name, r.Card))
-
 	case session.KindRegenerated:
 		// **A line of its own, where a drain attaches to one.** This happens at the top of a turn
 		// with nothing before it, so there is nothing to attach to.
@@ -212,13 +200,6 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		w.announce(voiceForSide(r.Side),
 			fmt.Sprintf("%s raises %s - %s", r.Name,
 				strings.Replace(ShieldCount(r.Amount), " ", " "+r.Element+" ", 1), r.Relic))
-
-	case session.KindTicked:
-		// A tick belongs to nobody's card, so it opens its own line, and it carries the victim's
-		// swatch because it is a thing happening *to* them. **The status names itself**, so a
-		// second damage-over-time status cannot narrate as a burn.
-		w.announce(voiceForSide(r.Target),
-			fmt.Sprintf("%s %s %d", r.Name, TickVerbByKey(r.Status), r.Amount))
 
 	case session.KindTimeUp:
 		// **A line of its own, and it opens one.** Nobody swung, so there is no attacker's sentence

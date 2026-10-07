@@ -46,9 +46,7 @@ type namedSeed struct {
 
 var seedCatalog = []namedSeed{
 	// 1xJab 1xCut 1xSlice 1xCleave 1xThump 3xBash. Three Bashes is 6 AP, exactly the opening
-	// budget, so the Three of a Kind is clickable on round one with nothing set up first — and being
-	// three colors it lands three statuses with it, which is what the hand and its colors look
-	// like when they arrive together.
+	// budget, so the Three of a Kind is clickable on round one with nothing set up first.
 	{"three-bashes", 51, "three or more Bashes: a Three of a Kind that can be clicked"},
 
 	// 2xThrust 1xCleave 5xBash. **The biggest hand the deck can deal**: the deck is 55 cards and

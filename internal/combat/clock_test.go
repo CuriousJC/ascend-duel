@@ -5,8 +5,6 @@ import "testing"
 // The round limit. These are about the *clock* rather than about a duel: a fight that ends on its
 // own is the ordinary case and the interesting one is the fight that does not.
 
-// countKind, the helper these lean on, is in status_test.go.
-
 // A duelist on a clock fights its rounds and then dies on the last one, whatever is left of them.
 //
 // **The four survivable rounds are checked as well as the fatal one**, because a clock that fired
@@ -18,7 +16,7 @@ func TestTheClockKillsOnTheLastRoundAndNotBefore(t *testing.T) {
 
 	for round := 1; round < DefaultRoundLimit; round++ {
 		events, after, _ := resolve(a, b, nil, nil, round)
-		if n := countKind(events, KindTimeUp); n != 0 {
+		if n := kindCount(events, KindTimeUp); n != 0 {
 			t.Fatalf("round %d of %d raised %d time-up events, want none",
 				round, DefaultRoundLimit, n)
 		}
@@ -28,7 +26,7 @@ func TestTheClockKillsOnTheLastRoundAndNotBefore(t *testing.T) {
 	}
 
 	events, after, _ := resolve(a, b, nil, nil, DefaultRoundLimit)
-	if n := countKind(events, KindTimeUp); n != 1 {
+	if n := kindCount(events, KindTimeUp); n != 1 {
 		t.Fatalf("the last round raised %d time-up events, want exactly one", n)
 	}
 	if after.Alive() {
@@ -82,7 +80,7 @@ func TestADuelistWithNoLimitIsNeverTimedOut(t *testing.T) {
 
 	for round := 1; round <= 20; round++ {
 		events, after, _ := resolve(a, b, nil, nil, round)
-		if n := countKind(events, KindTimeUp); n != 0 {
+		if n := kindCount(events, KindTimeUp); n != 0 {
 			t.Fatalf("round %d raised a time-up event on a duelist with no limit", round)
 		}
 		a = after
@@ -90,8 +88,7 @@ func TestADuelistWithNoLimitIsNeverTimedOut(t *testing.T) {
 }
 
 // A duelist who died on the last round died to whatever killed them, not to the clock. Otherwise a
-// fight finishing on round five would announce a second death over a body — the same failure the
-// burn tick documents.
+// fight finishing on round five would announce a second death over a body.
 func TestTheClockDoesNotFireOverABody(t *testing.T) {
 	a := duelist(1, 5, 1)
 	a.RoundLimit = 1
@@ -102,10 +99,10 @@ func TestTheClockDoesNotFireOverABody(t *testing.T) {
 	if after.Alive() {
 		t.Fatal("the test's blow did not kill, so it proves nothing about the clock")
 	}
-	if n := countKind(events, KindTimeUp); n != 0 {
+	if n := kindCount(events, KindTimeUp); n != 0 {
 		t.Errorf("the clock fired %d times over a duelist already dead", n)
 	}
-	if n := countKind(events, KindDefeated); n != 1 {
+	if n := kindCount(events, KindDefeated); n != 1 {
 		t.Errorf("%d falls announced over one death", n)
 	}
 }
@@ -135,7 +132,7 @@ func TestAPassedLimitStillFires(t *testing.T) {
 	b := duelist(1, 5, 300)
 
 	events, after, _ := resolve(a, b, nil, nil, 9)
-	if n := countKind(events, KindTimeUp); n != 1 {
+	if n := kindCount(events, KindTimeUp); n != 1 {
 		t.Fatalf("round 9 against a limit of 2 raised %d time-up events, want one", n)
 	}
 	if after.Alive() {

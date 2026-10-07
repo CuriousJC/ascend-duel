@@ -92,9 +92,9 @@ func TestAVerbAtTheWrongMomentIsRefused(t *testing.T) {
 		When: MomentFightStart,
 		Then: []RelicEffect{{Do: DoAdjustCost, Amount: -1}},
 	})
-	refused(t, "status at card-cost", RelicRule{
+	refused(t, "drain at card-cost", RelicRule{
 		When: MomentCardCost,
-		Then: []RelicEffect{{Do: DoApplyStatus, Status: 0}},
+		Then: []RelicEffect{{Do: DoDrainDamage, Amount: 50}},
 	})
 }
 
@@ -124,13 +124,6 @@ func TestAnEffectWithNothingToDoIsRefused(t *testing.T) {
 		Then: []RelicEffect{{Do: DoSetElement, Element: Basic}},
 	})
 	refused(t, "a relic with no rules at all")
-}
-
-func TestAStatusTheFilesDoNotHoldIsRefused(t *testing.T) {
-	refused(t, "unknown status", RelicRule{
-		When: MomentAttackLands,
-		Then: []RelicEffect{{Do: DoApplyStatus, Status: StatusID(StatusCount() + 1)}},
-	})
 }
 
 // --- what wearing one does --------------------------------------------------------------------
@@ -258,124 +251,23 @@ func TestTwoPredicatesNarrowARuleRatherThanWidenIt(t *testing.T) {
 	}
 }
 
-func TestAStatusNamesTheRelicThatAppliedIt(t *testing.T) {
-	// **The screen flies the word out of the relic that caused it**, so the event has to say which
-	// relic that was. Nothing else can: the card's color is not the answer, because a relic may
-	// match on a form or a concept and apply a status with no color involved at all - which is
-	// the case the second half of this test pins.
-	burning := MustStatus("burning")
-	chilled := MustStatus("chilled")
-
-	fire := relic(t, "names-fire", RelicRule{
-		When: MomentAttackLands,
-		If:   RelicCondition{Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
-	})
-	// A relic that reads the form rather than the color, which is what makes deriving the relic
-	// from the element impossible rather than merely fragile.
-	slash := relic(t, "names-slash", RelicRule{
-		When: MomentAttackLands,
-		If:   RelicCondition{Form: FormSlash, HasForm: true},
-		Then: []RelicEffect{{Do: DoApplyStatus, Status: chilled}},
-	})
-
-	a := duelist(10, 8, 500).Wearing(WornRelic{Relic: fire}).Wearing(WornRelic{Relic: slash})
-	b := duelist(10, 5, 500)
-
-	// One fire slash matches both relics at once, so both statuses land off one card.
-	events, _, _ := resolve(a, b, []Card{Of(Slice, Fire)}, nil, 1)
-
-	got := map[StatusID]RelicID{}
-	for _, e := range events {
-		if e.Kind == KindStatus {
-			got[e.Status] = e.Relic
-		}
-	}
-	if len(got) != 2 {
-		t.Fatalf("a fire slash under two relics announced %d statuses, want 2", len(got))
-	}
-	if got[burning] != fire {
-		t.Errorf("the burn is credited to relic %d, want the fire relic %d", got[burning], fire)
-	}
-	if got[chilled] != slash {
-		t.Errorf("the chill is credited to relic %d, want the slash relic %d", got[chilled], slash)
-	}
-}
-
-func TestTheFirstRelicToApplyAStatusIsTheOneCredited(t *testing.T) {
-	// Two relics, one status, one blow. The dedup keeps it to a single event; worn order decides
-	// whose it is, which is the tie-break every other compounding effect already takes.
-	burning := MustStatus("burning")
-	rule := RelicRule{
-		When: MomentAttackLands,
-		If:   RelicCondition{Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
-	}
-	first := relic(t, "credit-first", rule)
-	second := relic(t, "credit-second", rule)
-
-	a := duelist(10, 8, 500).Wearing(WornRelic{Relic: first}).Wearing(WornRelic{Relic: second})
-	events, _, _ := resolve(a, duelist(10, 5, 500), []Card{Of(Jab, Fire)}, nil, 1)
-
-	n := 0
-	for _, e := range events {
-		if e.Kind != KindStatus {
-			continue
-		}
-		n++
-		if e.Relic != first {
-			t.Errorf("the burn is credited to relic %d, want the one worn first, %d", e.Relic, first)
-		}
-	}
-	if n != 1 {
-		t.Errorf("two relics applying one status announced it %d times, want 1", n)
-	}
-}
-
-func TestEveryHitLandsItsStatusOnce(t *testing.T) {
-	// Two fire cards are two hits, and each lands the burn once. The status does not stack, so the
-	// second refreshes the first. See statusesFrom.
-	burning := MustStatus("burning")
-	fire := relic(t, "burns-fire", RelicRule{
-		When: MomentAttackLands,
-		If:   RelicCondition{Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
-	})
-
-	a := duelist(10, 8, 500).Wearing(WornRelic{Relic: fire})
-	b := duelist(10, 5, 500)
-
-	events, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Fire)}, nil, 1)
-
-	if n := countKind(events, KindStatus); n != 2 {
-		t.Errorf("two fire hits announced %d statuses, want one each", n)
-	}
-	if !bAfter.Statuses[burning].Active() {
-		t.Error("two fire cards left no burn at all")
-	}
-}
-
-func TestOneRuleCanApplyTwoStatuses(t *testing.T) {
-	// **`Then` is a list**, which is what buys a relic that shocks *and* chills with no new
-	// vocabulary at all — the Storm relic, whole, in one entry.
-	shocked, chilled := MustStatus("shocked"), MustStatus("chilled")
-	storm := relic(t, "storm", RelicRule{
-		When: MomentAttackLands,
-		If:   RelicCondition{Element: Lightning, HasElement: true},
+func TestOneRuleCanDoTwoThings(t *testing.T) {
+	// **`Then` is a list**, which is what buys a relic that does two things at one moment with no
+	// new vocabulary at all.
+	both := relic(t, "both", RelicRule{
+		When: MomentFightStart,
 		Then: []RelicEffect{
-			{Do: DoApplyStatus, Status: shocked},
-			{Do: DoApplyStatus, Status: chilled},
+			{Do: DoAddDMG, Amount: 5},
+			{Do: DoAddHP, Amount: 20},
 		},
 	})
 
-	a := duelist(10, 5, 500).Wearing(WornRelic{Relic: storm})
-	b := duelist(10, 5, 500)
-
-	_, _, bAfter := resolve(a, b, []Card{Of(Bash, Lightning)}, nil, 1)
-
-	if !bAfter.Statuses[shocked].Active() || !bAfter.Statuses[chilled].Active() {
-		t.Errorf("one storm hit left shocked=%v chilled=%v, want both",
-			bAfter.Statuses[shocked].Active(), bAfter.Statuses[chilled].Active())
+	worn := []WornRelic{{Relic: both}}
+	if got := AddedDMG(worn); got != 5 {
+		t.Errorf("the rule added %d DMG, want 5", got)
+	}
+	if got := AddedHP(worn); got != 20 {
+		t.Errorf("the rule added %d HP, want 20", got)
 	}
 }
 
@@ -544,8 +436,8 @@ func TestAnEnemyWearsNothing(t *testing.T) {
 	if n := len(enemy.WornRelics()); n != 0 {
 		t.Errorf("a zero duelist wears %d relics", n)
 	}
-	if got := enemy.statusesFrom([]Card{Of(Bash, Fire)}); len(got) != 0 {
-		t.Errorf("a relicless duelist's fire Bash applied %d statuses", len(got))
+	if got := enemy.drainsFrom([]Card{Of(Bash, Fire)}); len(got) != 0 {
+		t.Errorf("a relicless duelist's fire Bash drained %d times", len(got))
 	}
 }
 
@@ -838,7 +730,7 @@ func TestAGrowOnHitRelicGetsStrongerInsideOneFight(t *testing.T) {
 	}
 
 	// **Once per landing** *(owner's call, 2026-08-22, and per card inside the blow since
-	// 2026-08-26)*: two fire cards in one hand are two steps, where a status would land once.
+	// 2026-08-26)*: two fire cards in one hand are two steps.
 	d = d.GrowOnLanding(fire).GrowOnLanding(fire)
 	if got := d.WornRelics()[0].Grown; got != 30 {
 		t.Errorf("three fire landings left the relic at %d, want 30", got)

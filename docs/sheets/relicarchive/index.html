@@ -88,8 +88,8 @@
 <h1>Relic archive</h1>
 
 <p class="facts">
-  11 archived relics, 0 of them drawing the default face,
-  0 with no subject paragraph written, 0 that would not load.
+  29 archived relics, 0 of them drawing the default face,
+  0 with no subject paragraph written, 18 that would not load.
 </p>
 <p class="note">
   <strong>These relics are out of the game and kept in the repository.</strong> The records are
@@ -149,12 +149,16 @@
 <div class="sheet-filters" hidden>
   <div class="sheet-facet"><span class="sheet-facet-label">rarity</span>
     <button type="button" data-facet="rarity" data-value="common" aria-pressed="false">common<i>10</i></button>
-    <button type="button" data-facet="rarity" data-value="rare" aria-pressed="false">rare<i>1</i></button>
+    <button type="button" data-facet="rarity" data-value="uncommon" aria-pressed="false">uncommon<i>8</i></button>
+    <button type="button" data-facet="rarity" data-value="rare" aria-pressed="false">rare<i>11</i></button>
   </div>
   <div class="sheet-facet"><span class="sheet-facet-label">family</span>
     <button type="button" data-facet="family" data-value="indigo-rings" aria-pressed="false">Indigo rings<i>5</i></button>
     <button type="button" data-facet="family" data-value="sandstone-rings" aria-pressed="false">Sandstone rings<i>5</i></button>
     <button type="button" data-facet="family" data-value="tier-demotions" aria-pressed="false">Tier demotions<i>1</i></button>
+    <button type="button" data-facet="family" data-value="elemental-statuses" aria-pressed="false">Elemental statuses<i>5</i></button>
+    <button type="button" data-facet="family" data-value="paired-statuses" aria-pressed="false">Paired statuses<i>10</i></button>
+    <button type="button" data-facet="family" data-value="form-statuses" aria-pressed="false">Form statuses<i>3</i></button>
   </div>
   <div class="sheet-filters-end">
     <button type="button" class="sheet-clear" hidden>clear</button>
@@ -563,6 +567,486 @@ on Elemental Five of a Kind played.</p>
         </ul>
         
           <p class="art">art: <code>demotion-one</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="elemental-statuses">
+<h3 class="family">
+  Elemental statuses
+  <span>5 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+      <img src="relic-status-burn.png" width="228" height="308"
+           alt="Burning">
+      <div class="about">
+        <p class="name">Burning</p>
+        <div class="record">status-burn</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span></p>
+        
+        
+        <p class="art missing">would not load: status-burn does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Fire attacks apply BURNING status to target. BURNING enemies receive 1/2 DMG each turn.</p>
+        
+          <p class="draw">a gold ring with a red gem, the flames should be licking up the sides of the ring</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if fire → apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>status-burn</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+      <img src="relic-status-chill.png" width="228" height="308"
+           alt="Chilling">
+      <div class="about">
+        <p class="name">Chilling</p>
+        <div class="record">status-chill</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span></p>
+        
+        
+        <p class="art missing">would not load: status-chill does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.</p>
+        
+          <p class="draw">a gold ring with a blue gem, icicles hanging off the shoulders and frost dripping down the sides of the band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if ice → apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>status-chill</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+      <img src="relic-status-shock.png" width="228" height="308"
+           alt="Shocking">
+      <div class="about">
+        <p class="name">Shocking</p>
+        <div class="record">status-shock</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span></p>
+        
+        
+        <p class="art missing">would not load: status-shock does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 1/4 chance to miss.</p>
+        
+          <p class="draw">a gold ring with a yellow gem, electricity crackling up the sides of the ring</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if lightning → apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>status-shock</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+      <img src="relic-status-weight.png" width="228" height="308"
+           alt="Weighted">
+      <div class="about">
+        <p class="name">Weighted</p>
+        <div class="record">status-weight</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span></p>
+        
+        
+        <p class="art missing">would not load: status-weight does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 1/4 less DMG.</p>
+        
+          <p class="draw">a gold ring with a green gem, chunks of rock stuck along the shoulders of the band and a few loose pebbles around it</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if earth → apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>status-weight</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+      <img src="relic-status-weak.png" width="228" height="308"
+           alt="Weakening">
+      <div class="about">
+        <p class="name">Weakening</p>
+        <div class="record">status-weak</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span></p>
+        
+        
+        <p class="art missing">would not load: status-weak does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.</p>
+        
+          <p class="draw">a gold ring with a purple gem, purple flames licking up the sides of the ring</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if arcane → apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>status-weak</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="paired-statuses">
+<h3 class="family">
+  Paired statuses
+  <span>10 relics &middot; all rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-shock-chill.png" width="228" height="308"
+           alt="Storm">
+      <div class="about">
+        <p class="name">Storm</p>
+        <div class="record">pair-status-shock-chill</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-shock-chill does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Lightning attacks SHOCK and CHILL the target.</p>
+        
+          <p class="draw">a ring with a yellow gem surrounded by cold blue lightning, the lightning should be burning up the sides of the ring.  there should be 2 smaller blue gems beside it, with some blue bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if lightning → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-shock-chill</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-burn-chill.png" width="228" height="308"
+           alt="Scald">
+      <div class="about">
+        <p class="name">Scald</p>
+        <div class="record">pair-status-burn-chill</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-burn-chill does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Fire attacks BURN and CHILL the target.</p>
+        
+          <p class="draw">a ring with a red gem surrounded by steam, the steam should be rising up the sides of the ring.  there should be 2 smaller blue gems beside it, with some blue bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if fire → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-burn-chill</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-burn-shock.png" width="228" height="308"
+           alt="Wildfire">
+      <div class="about">
+        <p class="name">Wildfire</p>
+        <div class="record">pair-status-burn-shock</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-burn-shock does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Fire attacks BURN and SHOCK the target.</p>
+        
+          <p class="draw">a ring with a red gem surrounded by yellow flames, the flames should be licking up the sides of the ring.  there should be 2 smaller yellow gems beside it, with some yellow bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if fire → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-burn-shock</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-chill-weight.png" width="228" height="308"
+           alt="Hoarfrost">
+      <div class="about">
+        <p class="name">Hoarfrost</p>
+        <div class="record">pair-status-chill-weight</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-chill-weight does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Ice attacks CHILL and WEIGH the target.</p>
+        
+          <p class="draw">a ring with a blue gem surrounded by frosty ice shards, the frost should be dripping down the sides of the ring.  there should be 2 smaller green gems beside it, with some green bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if ice → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-chill-weight</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-chill-weak.png" width="228" height="308"
+           alt="Brittle">
+      <div class="about">
+        <p class="name">Brittle</p>
+        <div class="record">pair-status-chill-weak</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-chill-weak does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Ice attacks CHILL and WEAKEN the target.</p>
+        
+          <p class="draw">a ring with a blue gem that has a crack running through it, the crack should be glowing with a faint blue light.  there should be 2 smaller purple gems beside it, with some purple bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if ice → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-chill-weak</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-shock-weak.png" width="228" height="308"
+           alt="Palsy">
+      <div class="about">
+        <p class="name">Palsy</p>
+        <div class="record">pair-status-shock-weak</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-shock-weak does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Lightning attacks SHOCK and WEAKEN the target.</p>
+        
+          <p class="draw">a ring with a yellow gem sparking with electricity, the sparks should be crackling up the sides of the ring.  there should be 2 smaller purple gems beside it, with some purple bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if lightning → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-shock-weak</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-weight-burn.png" width="228" height="308"
+           alt="Caldera">
+      <div class="about">
+        <p class="name">Caldera</p>
+        <div class="record">pair-status-weight-burn</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-weight-burn does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Earth attacks WEIGH and BURN the target.</p>
+        
+          <p class="draw">a ring with a green gem surrounded by molten rock, the rock should be glowing with a faint green light.  there should be 2 smaller red gems beside it, with some red bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if earth → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-weight-burn</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-weight-shock.png" width="228" height="308"
+           alt="Tremor">
+      <div class="about">
+        <p class="name">Tremor</p>
+        <div class="record">pair-status-weight-shock</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-weight-shock does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Earth attacks WEIGH and SHOCK the target.</p>
+        
+          <p class="draw">a ring with a green gem surrounded by lightning, the lightning should be sparking up the sides of the ring.  there should be 2 smaller yellow gems beside it, with some yellow bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if earth → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-weight-shock</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-weak-burn.png" width="228" height="308"
+           alt="Blightfire">
+      <div class="about">
+        <p class="name">Blightfire</p>
+        <div class="record">pair-status-weak-burn</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-weak-burn does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Arcane attacks WEAKEN and BURN the target.</p>
+        
+          <p class="draw">a ring with a purple gem surrounded by flames, the flames should be licking up the sides of the ring.  there should be 2 smaller red gems beside it, with some red bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if arcane → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-weak-burn</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="rare" data-pool="default">
+      <img src="relic-pair-status-weak-weight.png" width="228" height="308"
+           alt="Millstone">
+      <div class="about">
+        <p class="name">Millstone</p>
+        <div class="record">pair-status-weak-weight</div>
+        
+          <p class="price"><span class="rarity rare">rare</span></p>
+        
+        
+        <p class="art missing">would not load: pair-status-weak-weight does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Arcane attacks WEAKEN and WEIGH the target.</p>
+        
+          <p class="draw">a ring with a purple gem surrounded by rock, the rock should be glowing with a faint purple light.  there should be 2 smaller green gems beside it, with some green bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if arcane → apply-status and apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>pair-status-weak-weight</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="form-statuses">
+<h3 class="family">
+  Form statuses
+  <span>3 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+      <img src="relic-sundering.png" width="228" height="308"
+           alt="The Sundering">
+      <div class="about">
+        <p class="name">The Sundering</p>
+        <div class="record">sundering</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span></p>
+        
+        
+        <p class="art missing">would not load: sundering does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Slash attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.</p>
+        
+          <p class="draw">an obsidion scimitar with a purple glowing gem in the hilt angled to the right</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if slash → apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>sundering</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+      <img src="relic-bruise.png" width="228" height="308"
+           alt="The Bruise">
+      <div class="about">
+        <p class="name">The Bruise</p>
+        <div class="record">bruise</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span></p>
+        
+        
+        <p class="art missing">would not load: bruise does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 1/4 less DMG.</p>
+        
+          <p class="draw">an obsidian mace topped with a green glowing blunt rock</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if crush → apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>bruise</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+      <img src="relic-strike.png" width="228" height="308"
+           alt="The Strike">
+      <div class="about">
+        <p class="name">The Strike</p>
+        <div class="record">strike</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span></p>
+        
+        
+        <p class="art missing">would not load: strike does &#34;apply-status&#34;, which is not an effect</p>
+        <p class="text">Stab attacks apply SHOCKED status to target. SHOCKED enemies have 1/4 chance to miss.</p>
+        
+          <p class="draw">a spear made of yellow glass with lightning crackling along the shaft</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if stab → apply-status</li>
+        </ul>
+        
+          <p class="art">art: <code>strike</code></p>
         
       </div>
     </div>

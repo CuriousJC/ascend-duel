@@ -28,13 +28,12 @@ func hitScene() *CombatScene {
 }
 
 func TestOnlyDamageRaisesALandingFigure(t *testing.T) {
-	// **Every other kind has its own row in the theater table**, and a burn in particular has a
-	// different source: it ticks off the badge standing on its victim rather than out of a blow.
-	// Raising a damage figure for it would draw the same gesture for two different causes.
+	// **Every other kind has its own row in the theater table**, and raising a damage figure for
+	// one of them would draw the same gesture for two different causes.
 	s := hitScene()
 	for _, k := range []combat.EventKind{
-		combat.KindAction, combat.KindBurned, combat.KindBlocked,
-		combat.KindHand, combat.KindStatus, combat.KindMissed,
+		combat.KindAction, combat.KindBlocked, combat.KindHand, combat.KindFizzled,
+		combat.KindDrained, combat.KindTimeUp,
 	} {
 		s.noteHit(combat.Event{Kind: k, Amount: 10, Target: combat.SideB, Life: 90}, 100)
 	}
@@ -50,8 +49,7 @@ func TestOnlyDamageRaisesALandingFigure(t *testing.T) {
 
 func TestAZeroBlowRaisesNothing(t *testing.T) {
 	// A blow of nothing is a figure of nothing flying across the screen. `Amount` can be zero:
-	// nothing reduces a blow to zero by the rules, but a shocked turn writes no damage event at
-	// all and a future effect might well land a nought.
+	// nothing reduces a blow to zero by the rules, but a defense's hit lands one.
 	s := hitScene()
 	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 0, Target: combat.SideB, Life: 100}, 100)
 	if len(s.Theater.hits) != 0 {
@@ -167,14 +165,14 @@ func TestASoloAttackerWithNothingLitFallsBackToNoSeat(t *testing.T) {
 // --- a hand's hits, thrown by their lines ----------------------------------------------------
 
 // throwScene is a hand-forming player mid-dialog: two lines, and a log whose hits are a landing and
-// a miss.
+// a fizzle.
 func throwScene() *CombatScene {
 	s := hitScene()
 	s.fighter.SoloAttacks = false
 	s.log = []combat.Event{
 		{Kind: combat.KindHand, Side: combat.SideA},
 		{Kind: combat.KindDamage, Side: combat.SideA, Target: combat.SideB, Hit: 0, Amount: 30, Life: 70},
-		{Kind: combat.KindMissed, Side: combat.SideA, Hit: 1},
+		{Kind: combat.KindFizzled, Side: combat.SideA, Hit: 1},
 		{Kind: combat.KindRoundEnd},
 	}
 	total := []mathItem{{text: "30"}}
@@ -207,18 +205,18 @@ func TestALandedLineFliesAndTheBarWaitsForIt(t *testing.T) {
 	}
 }
 
-func TestAMissedLineSaysSoAndFliesNothing(t *testing.T) {
+func TestAFizzledLineSaysSoAndFliesNothing(t *testing.T) {
 	s := throwScene()
 	s.throwColumn(1)
 
-	if col := s.Theater.mathBox.columns[1]; col.verdict != "MISS" {
-		t.Errorf("the missed line says %q, want MISS", col.verdict)
+	if col := s.Theater.mathBox.columns[1]; col.verdict != "FIZZLE" {
+		t.Errorf("the fizzled line says %q, want FIZZLE", col.verdict)
 	}
 	if len(s.Theater.hits) != 0 {
-		t.Error("a missed hit raised a figure")
+		t.Error("a fizzled hit raised a figure")
 	}
 	if !s.Theater.walked[2] {
-		t.Error("the miss is not marked as shown")
+		t.Error("the fizzle is not marked as shown")
 	}
 }
 

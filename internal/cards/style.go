@@ -172,12 +172,11 @@ type Style struct {
 	HealthTextSize  float64
 
 	// Spec.Effects drawn as a centered row of squares along the bottom edge. A zero
-	// EffectSize means the style shows none, which is every style but the two fighter cards.
+	// EffectSize means the style shows none, which is every style but the duelist's card.
 	//
-	// **A square box each, and the badge is fitted into it** — the art is 500px and this is
-	// twenty, so it is scaled like the portrait rather than blitted like a glyph. The row is
-	// centered on the card and closes up as badges come and go, so two statuses sit in the
-	// middle rather than clinging to the left.
+	// **A square box each, and the picture is fitted into it** — scaled like the portrait rather
+	// than blitted like a glyph. The row is centered on the card and closes up as pictures come
+	// and go, so two sit in the middle rather than clinging to the left.
 	EffectSize int
 	EffectTop  int
 	EffectGap  int
@@ -563,11 +562,12 @@ func stackOf(st Style) Style {
 //
 // What is left on the face reads bottom-up:
 //
-//	 30  DMG               30..50    label left, figure right, on its own scrim
-//	207  health bar        207..225
-//	229  hit points        "42/60", centered
-//	247  status badges     247..271  (Spec.Effects, a centered row)
-//	272  inside of the bottom border
+//	216  scrim             216..276  the dark band the figure is written on
+//	222  DMG               222..247  label left, figure right
+//	250  health bar        250..274  with the fraction written across it
+//	276  inside of the bottom border
+//
+// The offsets are fighter.go's, shared with DuelistStyle.
 //
 // **DMG is on the face and the rest of the stat line is not** *(owner's call)*. What a player is
 // deciding is how much the next blow takes off them, and that is the one figure they cannot work
@@ -577,15 +577,6 @@ func stackOf(st Style) Style {
 // **The bar sits where the duelist card's does.** See DuelistStyle, which is where the argument
 // for the figures lives — the two cards face each other across the table and a bar at a different
 // height on each would make comparing them an act of measurement.
-//
-// **The badges are on this card and not the duelist's**, which breaks the twins rule everywhere
-// except where that rule actually bites: the bar and the fraction are at identical offsets on
-// both, and the band under them is the same free strip. `DuelistStyle`'s holds the shield count,
-// one pip per shield, at the same offsets — so the two still read as twins.
-//
-// **The strip the badges sit in is twenty-five pixels.** The fraction's ink ends around y=246 and
-// the border starts at 272. `TestStatusBadgesClearTheHealthTextAndTheBorder` holds both ends of
-// it; making them bigger means moving the fraction on *both* fighter cards.
 //
 // **Every offset here scales with the card**, unlike Hand's — nothing on this face is fixed-size
 // art, so the whole layout is a proportion of the card and stays one.
@@ -603,7 +594,7 @@ var EnemyStyle = Style{
 	TextLeft: 15,
 
 	// **The one figure a portrait leaves no room for**, written under it. Its offsets and the
-	// bar's and the badge row's all come out of fighter.go, so the seats the two fighter cards
+	// bar's all come out of fighter.go, so the seats the two fighter cards
 	// share cannot be moved on one of them.
 	PortraitStatTop:  fighterStatTop,
 	PortraitStatSize: fighterStatSize,
@@ -612,21 +603,16 @@ var EnemyStyle = Style{
 	HealthBarTop:    fighterBarTop,
 	HealthBarHeight: fighterBarHeight,
 	HealthTextSize:  fighterBarText,
-
-	EffectSize: fighterBadgeSize,
-	EffectTop:  fighterBadgeTop,
-	EffectGap:  fighterBadgeGap,
 }
 
 // GuideStyle is The Prismatic standing in the opponent's corner on every screen that is not a
 // fight *(owner's call, 2026-10-04)*: the enemy card's face and seat with nothing on it a fight
-// would put there — no health bar, no figure under the portrait, no badge row. The guide is not
+// would put there — no health bar and no figure under the portrait. The guide is not
 // an opponent, and an empty bar would read as one that has already lost.
 var GuideStyle = func() Style {
 	st := EnemyStyle
 	st.PortraitStatTop, st.PortraitStatSize = 0, 0
 	st.HealthBarInset, st.HealthBarTop, st.HealthBarHeight, st.HealthTextSize = 0, 0, 0, 0
-	st.EffectSize, st.EffectTop, st.EffectGap = 0, 0, 0
 	return st
 }()
 
@@ -669,7 +655,7 @@ var GuideStyle = func() Style {
 // **The rule is what stops five rows reading as one list.** DMG, AP and VITAE are what the duelist
 // *is*; REALM and ROOM are where the run has got to. See Style.StatRuleAfter.
 //
-// **The shield row is the enemy's badge row, seat for seat** *(2026-08-31)*. It holds five, which
+// **The shield row sits in the fighter block's pip row** — see fighter.go. It holds five, which
 // is `combat`'s cap on a duelist's shields for the same reason — a turn is five cards, so a sixth
 // shield could never be spent. The row closes up as shields are eaten, so three pips sit centered
 // rather than clinging to the left, and an unshielded duelist draws nothing at all.
@@ -716,9 +702,9 @@ var DuelistStyle = Style{
 	HealthBarHeight: fighterBarHeight,
 	HealthTextSize:  fighterBarText,
 
-	EffectSize: fighterBadgeSize,
-	EffectTop:  fighterBadgeTop,
-	EffectGap:  fighterBadgeGap,
+	EffectSize: fighterPipSize,
+	EffectTop:  fighterPipTop,
+	EffectGap:  fighterPipGap,
 }
 
 // EssenceStyle is an essence, in the card format *(2026-08-22)*.

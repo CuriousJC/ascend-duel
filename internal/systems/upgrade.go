@@ -149,7 +149,7 @@ func ParseUpgrade(name string) (Upgrade, bool) {
 //
 // **True for the wildcard alone, and it is not a special case dressed up as a rule** *(owner's
 // call, 2026-09-09)*. The left column exists to state the card's element. A wildcard's element is
-// still what the card *is* — it still burns, it is still drawn from the fire row — but what it
+// still what the card *is* — fire relics still read it, it is still drawn from the fire row — but what it
 // *counts as* is every element at once, so a column stating one of them is stating the less useful
 // half of the truth. It goes hueless, and the card's edges say the rest.
 //

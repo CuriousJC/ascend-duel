@@ -141,8 +141,8 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **Rolled off its own salted stream**, so a replayed run code meets the same boss with the
         same advantage. See the `randomness` skill before adding the salt.
       - The vocabulary itself is undecided. Candidates that need no new rules are a heavier deck
-        and a single enormous card; the rest — taking vitae, applying a status, healing on a
-        kill, an extra action — are new verbs, and a shield-raising boss contradicts the rule in
+        and a single enormous card; the rest — taking vitae, healing on a kill, an extra action —
+        are new verbs, and a shield-raising boss contradicts the rule in
         `CLAUDE.md` that creatures raise none.
 
 - [ ] **The tutorial is switched off and has to be re-taught** *(owner asked for this to be
@@ -161,10 +161,9 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 - [ ] **What an element does to a creature** *(owner asked for this to be tracked)*. A creature is
       instantiated as one element, and today that element picks the art and marks the attack cards
       and nothing else — a fire goblin and an ice goblin resolve identically. What it could carry:
-      a status applied on hit, a resistance, a weakness, or something the realm's element does to
-      the **player** rather than to the creature.
-      - **It needs its own argument in `MECHANICS.md`** before it is written, and a status applied
-        by a creature is the first thing in the game to put one on the player.
+      a resistance, a weakness, or something the realm's element does to the **player** rather
+      than to the creature.
+      - **It needs its own argument in `MECHANICS.md`** before it is written.
 
 - [ ] **What makes an inner-chamber creature different from an outer one** *(owner asked for this
       to be tracked)*, beyond its place on the growth curve. The tier is a position today. Whether
@@ -178,9 +177,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **The table's two rows during playback** — the cards actually being resolved. They are the
         one place a player is watching rather than deciding, which is the argument for leaving them
         out, but it is also where "why did that hit for 96" is asked.
-      - **Individual status badges.** Hovering the enemy card lists every status on it; hovering one
-        badge does nothing, because `internal/cards` draws the row and no badge rectangle reaches
-        the screen. A per-badge tooltip needs a geometry accessor from that package.
       - **The AP bar, the discard count, the journey place** and the other figures written straight
         onto the table. Each is a number with no legend anywhere.
 
@@ -247,14 +243,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         walking `duelist_cards.json` and then every enemy's deck,
         so it is stable for one build of one data set and for nothing else. Adding an enemy
         renumbers every concept after it. `Element` carries the same `iota` hazard it always did.
-      - **`[?]` The combat roll has to be settled before this ships.** `MECHANICS.md` requires
-        rolling on every attack phase and discarding the irrelevant result, precisely so a
-        balance tweak does not shift every later roll in a run. `shockMisses` short-circuits when
-        the attacker carries no shock, so the stream only advances when lightning is in play —
-        which is exactly the drift the rule forbids. It is narrow: a shock needs a lightning
-        relic on the attacker to exist at all, so a bare duel never advances the stream. Nothing
-        depends on stored seeds yet, so it is cheap to fix now and expensive to fix after a save
-        format exists.
       - Serializing live state instead means a migration every time state changes — the
         refactor this whole set of decisions exists to avoid.
       - Cost: loading replays the run to reach the current point. Trivial here, since

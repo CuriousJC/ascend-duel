@@ -245,8 +245,7 @@ type LedgerRecordSnapshot struct {
 
 	Weight int `json:"weight,omitempty"`
 
-	Status string `json:"status,omitempty"`
-	Relic  string `json:"relic,omitempty"`
+	Relic string `json:"relic,omitempty"`
 
 	Amount int `json:"amount,omitempty"`
 

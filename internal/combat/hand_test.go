@@ -57,17 +57,6 @@ func handByKey(key string) (Hand, bool) {
 	return HandByID(id)
 }
 
-// chilledActions returns the actions one side lost to a chill.
-func chilledActions(events []Event, by Side) []ConceptID {
-	var out []ConceptID
-	for _, e := range events {
-		if e.Kind == KindChilled && e.Side == by {
-			out = append(out, e.Action)
-		}
-	}
-	return out
-}
-
 // sideActions returns the actions one side actually took.
 func sideActions(events []Event, by Side) []ConceptID {
 	var out []ConceptID
@@ -340,7 +329,7 @@ func TestEveryAttackThrowsAHitAndTheHitsAddUp(t *testing.T) {
 
 // **The hand is the whole multiplier** *(2026-08-17)*. A second axis counted the distinct colors
 // in the formed hand and added its own multiplier on top, so a colored pair paid more than a plain
-// one. Color buys statuses now and nothing else, and a pair of any two colors is worth exactly
+// one. Color buys no multiplier, and a pair of any two colors is worth exactly
 // what the catalog says a pair is worth.
 func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
@@ -521,173 +510,6 @@ func TestTheNoHandIsNamedAndPaysTheIdentityMultiplier(t *testing.T) {
 	}
 }
 
-// --- the hand's colors ---------------------------------------------------------------------
-
-// **The colors in the formed hand are what land, and basic is not one.** This used to be counted
-// into a "mix" that paid its own multiplier; what survives is the list, which decides the statuses
-// and nothing else.
-func TestTheHandsColorsDecideWhichStatusesLand(t *testing.T) {
-	for _, tc := range []struct {
-		what string
-		turn []Card
-		want []Element
-	}{
-		{"two basics", PlainCards(Bash, Bash), nil},
-		{"a basic and an ice", []Card{Plain(Bash), Of(Bash, Ice)}, []Element{Ice}},
-		{"two ice", []Card{Of(Bash, Ice), Of(Bash, Ice)}, []Element{Ice}},
-		{"ice and fire", []Card{Of(Bash, Ice), Of(Bash, Fire)}, []Element{Ice, Fire}},
-		{"ice, fire and a basic", []Card{Of(Bash, Ice), Of(Bash, Fire), Plain(Bash)},
-			[]Element{Ice, Fire}},
-		{"five colors", []Card{
-			Of(Bash, Ice), Of(Bash, Fire), Of(Bash, Earth), Of(Bash, Lightning),
-			Of(Bash, Arcane),
-		}, []Element{Ice, Fire, Earth, Lightning, Arcane}},
-	} {
-		a, b := reliced(duelist(10, 4, 10000)), duelist(10, 4, 10000)
-		_, _, bAfter := resolve(a, b, tc.turn, nil, 1)
-
-		for _, e := range AllElements {
-			if e == Basic {
-				continue
-			}
-			wanted := false
-			for _, w := range tc.want {
-				if w == e {
-					wanted = true
-				}
-			}
-			if got := bAfter.Statuses[statusOf(e)].Active(); got != wanted {
-				t.Errorf("%s: %v active is %v, want %v", tc.what, e, got, wanted)
-			}
-		}
-	}
-}
-
-// **Every card that pays into the blow carries its color.** The fire Jab makes no hand and swings
-// anyway, so it burns — a card that visibly hit and left nothing behind would read as a bug rather
-// than as a rule.
-func TestAnAttackOutsideTheHandStillColorsTheBlow(t *testing.T) {
-	a, b := reliced(duelist(10, 4, 5000)), duelist(10, 4, 5000)
-
-	_, _, bAfter := resolve(a, b, []Card{Of(Bash, Ice), Of(Jab, Fire), Of(Bash, Ice)}, nil, 1)
-
-	if !bAfter.Statuses[statusOf(Ice)].Active() {
-		t.Error("the ice pair is the hand and should have chilled")
-	}
-	if !bAfter.Statuses[statusOf(Fire)].Active() {
-		t.Error("the fire Jab paid into the blow and should have burned")
-	}
-}
-
-// **A defense that made no hand still lands its color**: every card throws a hit, and a hit lands
-// its card's statuses.
-func TestADefenseOutsideTheHandStillLandsItsColor(t *testing.T) {
-	a, b := reliced(duelist(10, 6, 5000)), duelist(10, 6, 5000)
-
-	// Brace, Block, Bash, Bash once resolved. The ice Brace makes the elemental trips with the two
-	// ice Bashes; the fire Block makes nothing.
-	_, _, bAfter := resolve(a, b, []Card{
-		Of(Brace, Ice), Of(Block, Fire), Of(Bash, Ice), Of(Bash, Ice),
-	}, nil, 1)
-
-	if !bAfter.Statuses[statusOf(Ice)].Active() {
-		t.Error("the ice trips are the hand and should have chilled")
-	}
-	if !bAfter.Statuses[statusOf(Fire)].Active() {
-		t.Error("the fire Block threw a hit and should have burned")
-	}
-}
-
-// **One status per color in the hand**, so one color lands one and four land four — for a
-// duelist wearing all four relics, which is what a status needs since 2026-08-16.
-func TestEveryColorInTheHandLandsItsStatus(t *testing.T) {
-	a, b := reliced(duelist(10, 4, 10000)), duelist(10, 4, 10000)
-
-	events, _, bAfter := resolve(a, b, []Card{
-		Of(Bash, Fire), Of(Bash, Ice), Of(Bash, Earth), Of(Bash, Lightning),
-	}, nil, 1)
-
-	if n := kindCount(events, KindStatus); n != 4 {
-		t.Errorf("a rainbow landed %d statuses, want 4", n)
-	}
-	for _, e := range []Element{Fire, Ice, Earth, Lightning} {
-		if !bAfter.Statuses[statusOf(e)].Active() {
-			t.Errorf("%v did not land", e)
-		}
-	}
-}
-
-func TestAColorlessHandLandsNoStatus(t *testing.T) {
-	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
-
-	events, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
-
-	if n := kindCount(events, KindStatus); n != 0 {
-		t.Errorf("a colorless pair landed %d statuses, want 0 — basic is not a color", n)
-	}
-}
-
-// A lone attack that formed no hand still applies its own element, which is the rule that
-// predates hands and was deliberately kept.
-func TestALoneAttackStillAppliesItsElement(t *testing.T) {
-	a, b := reliced(duelist(10, 4, 5000)), duelist(10, 4, 5000)
-
-	events, _, bAfter := resolve(a, b, []Card{Of(Bash, Ice), Plain(Jab)}, nil, 1)
-
-	if got := handsFormed(events, SideA); len(got) != 0 {
-		t.Fatalf("a Bash and a Jab formed %v, want no hand", got)
-	}
-	if !bAfter.Statuses[statusOf(Ice)].Active() {
-		t.Error("the ice Bash was the blow and should still have chilled")
-	}
-}
-
-// --- a chilled turn -------------------------------------------------------------------------
-
-// **A hand is scored off what survives the chill, not off the queue.** Scoring the queue would let
-// a chilled duelist swing with a turn it never took. Four Bashes survive out of five, so a four of
-// a kind forms rather than whatever five would have been.
-func TestChilledCardsCannotFormAHand(t *testing.T) {
-	a := wearing(duelist(10, 4, 20000), Ice)
-	b := duelist(10, 4, 20000)
-
-	// A's ice Jab chills B before B's own turn is read.
-	events, _, _ := resolve(a, b,
-		[]Card{Of(Jab, Ice)},
-		PlainCards(Bash, Bash, Bash, Bash, Bash), 1)
-
-	if lost := chilledActions(events, SideB); len(lost) != chillPct() {
-		t.Fatalf("B should lose %d card to the chill, got %v", chillPct(), lost)
-	}
-
-	fourOfAKind, _ := handByKey("concept-four-of-a-kind")
-	if got := handsFormed(events, SideB); len(got) != 1 || got[0] != fourOfAKind.ID {
-		t.Fatalf("four surviving Bashes should form a four of a kind, got %v", got)
-	}
-}
-
-// Side B acts last, so ice B lands finds A has already acted, and bites in the round after. That is
-// the one asymmetry phases impose, and the status is what carries it across the boundary.
-func TestIceLandedByBBitesInTheFollowingRound(t *testing.T) {
-	a, b := duelist(10, 4, 20000), wearing(duelist(10, 4, 20000), Ice)
-
-	// **A queues nothing**, deliberately: a shield would eat B's Bash whole and the ice would
-	// never land, which is a test about shields rather than about when a chill bites.
-	r1, a1, b1 := resolve(a, b, nil, []Card{Of(Bash, Ice)}, 1)
-
-	if lost := chilledActions(r1, SideA); len(lost) != 0 {
-		t.Fatalf("A already acted, so nothing can be taken from it this round, got %v", lost)
-	}
-	if !a1.Statuses[statusOf(Ice)].Active() {
-		t.Fatal("A should be carrying the chill into the next round")
-	}
-
-	r2, _, _ := resolve(a1, b1, PlainCards(Bash, Bash), nil, 2)
-	if lost := chilledActions(r2, SideA); len(lost) != chillPct() {
-		t.Fatalf("A should lose %d card in the round after, got %v", chillPct(), lost)
-	}
-}
-
 // --- the event ----------------------------------------------------------------------------
 
 // **A rung is not contiguous**, which is the case a start-and-length bracket could not describe:
@@ -764,11 +586,11 @@ func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 	}
 }
 
-// TestEverySlotIsEitherTakenOrChilled is the invariant the screen's highlight rests on:
-// CombatScene.currentSlot counts one beat per slot, taken or lost, and would light the wrong card
-// for the rest of the round if a slot went unaccounted for.
-func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
-	a, b := wearing(duelist(10, 4, 20000), Ice), duelist(10, 4, 20000)
+// TestEverySlotTakesABeat is the invariant the screen's highlight rests on:
+// CombatScene.currentSlot counts one beat per slot, and would light the wrong card for the rest of
+// the round if a slot went unaccounted for.
+func TestEverySlotTakesABeat(t *testing.T) {
+	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
 	aPlan := []Card{Of(Bash, Ice), Of(Bash, Ice), Of(Bash, Ice)}
 	bPlan := PlainCards(Block, Jab, Bash, Brace)
 
@@ -777,7 +599,7 @@ func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 
 	var beats []ConceptID
 	for _, e := range events {
-		if e.Kind == KindAction || e.Kind == KindChilled {
+		if e.Kind == KindAction {
 			beats = append(beats, e.Action)
 		}
 	}
@@ -791,9 +613,6 @@ func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 		}
 	}
 
-	if lost := chilledActions(events, SideB); len(lost) == 0 {
-		t.Fatal("this fixture is meant to chill side B")
-	}
 }
 
 // **A blow of nothing may not spend anything of the target's** *(owner's call, 2026-09-02)*. A

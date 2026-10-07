@@ -7,7 +7,7 @@
     python .claude/skills/relic-balance/classify.py --shelf           # counts against what a player actually sees
     python .claude/skills/relic-balance/classify.py --holes          # a filled family with an empty sibling
 
-Run from the repo root. It reads data/relics.json and data/statuses.json and puts
+Run from the repo root. It reads data/relics.json and puts
 each ring on several axes. Nothing is written down in rings.json: a ring's
 category is a fact about its verbs, so the file cannot disagree with the rules.
 
@@ -43,8 +43,8 @@ VERBS = {
     "drain-damage":            (("defense",), "multiplicative"),
     # a share of the maximum every turn: sustain, and the figure does not move with the fight
     "heal-share":              (("defense",), "flat"),
-    # luck: widens the paying band on every roll, and widens the miss roll against its own wearer
-    "scale-rolls":             (("offense", "drawback"), "multiplicative"),
+    # luck: widens the paying band on every roll
+    "scale-rolls":             (("offense",), "multiplicative"),
     # tempo -- buys action points, never damage
     "adjust-cost":             (("tempo",), "flat"),
     "demote-card":             (("tempo",), "flat"),
@@ -74,18 +74,6 @@ VERBS = {
     "grow-on-turn":            (("growth",), "stateful"),
     "grow-per-card":           (("growth",), "stateful"),
     "reset-growth":            (("growth",), "stateful"),
-    # the split verb -- read off the status it applies
-    "apply-status":            (None, "status"),
-}
-
-# status Effect kind -> category. CHILLED steals a card off their turn, which is
-# damage you never take: denial counts as defense here (owner's call, 2026-09-06).
-STATUS_EFFECTS = {
-    "damage-over-time":      "offense",
-    "damage-amplification":  "offense",
-    "lose-actions":          "defense",
-    "miss-chance":           "defense",
-    "damage-reduction":      "defense",
 }
 
 # When -> scope. How often the rule gets to matter.
@@ -119,7 +107,6 @@ AXES = ("category", "payload", "scope", "breadth", "rarity", "build",
 # --- deriving ---------------------------------------------------------------
 
 RINGS = json.load(open("data/relics.json"))
-STATUSES = {s["StatusRecord"]: s for s in json.load(open("data/statuses.json"))}
 
 
 def unknown(what, word):
@@ -156,16 +143,7 @@ def classify(ring):
             cats, payload = VERBS[do]
             out["do"].add(do)
             out["payload"].add(payload)
-            if cats is None:                       # apply-status
-                status = STATUSES.get(effect.get("Status"))
-                if status is None:
-                    unknown("status", effect.get("Status"))
-                kind = status["Effect"]
-                if kind not in STATUS_EFFECTS:
-                    unknown("status effect", kind)
-                out["category"].add(STATUS_EFFECTS[kind])
-            else:
-                out["category"].update(cats)
+            out["category"].update(cats)
             # a scaling verb told to scale *down* is a drawback, whatever else it is
             if payload == "multiplicative" and effect.get("Amount", 100) < 100:
                 out["category"].add("drawback")
@@ -179,7 +157,7 @@ TABLE = {r["Name"]: classify(r) for r in RINGS}
 ORDER = {
     "category": ["offense", "defense", "tempo", "economy", "enabler", "growth",
                  "drawback"],
-    "payload": ["flat", "multiplicative", "repeat", "status", "stateful",
+    "payload": ["flat", "multiplicative", "repeat", "stateful",
                 "enabler"],
     "scope": ["per-card", "per-blow", "per-turn", "per-fight", "per-run"],
     "breadth": ["unconditional", "element", "form", "concept", "tier", "hand",

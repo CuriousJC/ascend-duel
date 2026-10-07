@@ -15,11 +15,8 @@ package data
 // the rules. What replaces it is validation at registration — see `combat.RegisterConcept`, which
 // knows the verb vocabulary and rejects a record naming one it does not have.
 //
-// **A card never names a status, and that is load-bearing.** What an element *does* is decided by
-// the source of that element on the card's owner — a relic for the player, an elemental affix for
-// an enemy — and a relic may later decide which of several fire statuses a fire card applies. A
-// card that named its own status would be deciding something that is not its to decide. So the
-// schema carries a color and a target and stops there.
+// **A card names its color and nothing that color does.** What an element *does* is decided by the
+// relics the card's owner wears, so the schema carries a color and a target and stops there.
 
 import (
 	_ "embed"
@@ -63,9 +60,8 @@ type CardData struct {
 
 	// Elements is which colors this concept ships in. Empty means `basic` alone.
 	//
-	// **Every enemy card says basic today**, and the field exists anyway. An enemy's color does
-	// nothing until an elemental affix attunes it, and affixes are not built — coloring an enemy
-	// card now would hand it a free status, which is exactly what the source rule forbids.
+	// **Every enemy card says basic today**, and the field exists anyway: a creature is dealt its
+	// realm's element whole, and its cards carry none of their own.
 	Elements []string `json:"Elements"`
 
 	// Copies is how many of each element's card the deck holds.

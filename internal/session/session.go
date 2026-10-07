@@ -330,7 +330,7 @@ func (s *Session) Remove(i int) bool {
 
 // SetElement recolors a card. The concept is untouched: an essence varies a card the game already
 // defines rather than inventing one, so what changes is which color it counts as in a mix and
-// which status it can apply.
+// which relics it answers to.
 func (s *Session) SetElement(i int, e combat.Element) bool {
 	if i < 0 || i >= len(s.deck) {
 		return false

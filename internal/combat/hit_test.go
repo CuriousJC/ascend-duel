@@ -1,13 +1,12 @@
 package combat
 
 import (
-	"math/rand"
 	"testing"
 )
 
 // The hand-forming attack phase is a hit per landing. These pin the parts of that which are a
 // property of *hits* rather than of any one relic: every attack throws one, each is its own
-// arithmetic, and everything that happens to a hit — a roll, a shield, a status, a drain, a death —
+// arithmetic, and everything that happens to a hit — a fizzle, a shield, a drain, a death —
 // happens to that hit alone.
 
 // cardTerms is what a hand's cards deal between them, before any flat term or multiplier.
@@ -38,7 +37,7 @@ func hitEvents(events []Event, by Side) []Event {
 	var out []Event
 	for _, e := range events {
 		switch e.Kind {
-		case KindDamage, KindMissed, KindFizzled:
+		case KindDamage, KindFizzled:
 			if e.Side == by {
 				out = append(out, e)
 			}
@@ -49,29 +48,6 @@ func hitEvents(events []Event, by Side) []Event {
 		}
 	}
 	return out
-}
-
-// sequenceSource hands back its rolls in order and then repeats the last, so a test can say
-// "the first hit misses and the rest land" without hunting for a seed.
-type sequenceSource struct {
-	rolls []int64
-	at    *int
-}
-
-func (s sequenceSource) Int63() int64 {
-	r := s.rolls[min(*s.at, len(s.rolls)-1)]
-	*s.at++
-	return r
-}
-func (s sequenceSource) Seed(int64) {}
-
-func rolls(values ...int) *rand.Rand {
-	at := 0
-	src := sequenceSource{at: &at}
-	for _, v := range values {
-		src.rolls = append(src.rolls, int64(v)<<32)
-	}
-	return rand.New(src)
 }
 
 func TestEveryAttackCardLandsItsOwnHit(t *testing.T) {
@@ -165,27 +141,6 @@ func TestAHeldRaiseReachesEveryHitThroughTheCard(t *testing.T) {
 	}
 }
 
-func TestAShockRollsOncePerHit(t *testing.T) {
-	a := shockedDuelist(t, duelist(10, 8, 5000))
-	b := duelist(10, 8, 5000)
-
-	// The first hit misses, the rest land.
-	events, _, _ := resolveWith(rolls(0, 99, 99), a, b, PlainCards(Bash, Jab, Cut), nil, 1)
-
-	hits := hitEvents(events, SideA)
-	if len(hits) != 3 {
-		t.Fatalf("three attacks threw %d hits, want three", len(hits))
-	}
-	if hits[0].Kind != KindMissed || hits[0].Hit != 0 {
-		t.Errorf("the first hit was a %v on term %d, want a miss on term 0", hits[0].Kind, hits[0].Hit)
-	}
-	for n := 1; n < 3; n++ {
-		if hits[n].Kind != KindDamage {
-			t.Errorf("hit %d was a %v; a miss takes its own hit and nothing else", n, hits[n].Kind)
-		}
-	}
-}
-
 func TestHitsStopAtADeath(t *testing.T) {
 	a := duelist(10, 8, 5000)
 	// Three different attacks form no hand, so every hit is its card's face: enough life to take
@@ -244,39 +199,4 @@ func TestAShieldEatsTheHeaviestHit(t *testing.T) {
 	if after.Shields.Count() != 0 {
 		t.Errorf("%d shields left standing after the turn", after.Shields.Count())
 	}
-}
-
-func TestEveryHitLandsItsCardsStatus(t *testing.T) {
-	burning := firstStatusOf(t, EffectDamageOverTime)
-	lit := relic(t, "hit-kindling", RelicRule{
-		When: MomentAttackLands,
-		If:   RelicCondition{Element: Fire, HasElement: true},
-		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
-	})
-
-	a := duelist(10, 8, 5000).Wearing(WornRelic{Relic: lit})
-	turn := []Card{Of(Bash, Fire), Of(Jab, Ice), Of(Cut, Fire)}
-	events, _, _ := resolve(a, duelist(10, 8, 5000), turn, nil, 1)
-
-	var burnedOn []int
-	for _, e := range events {
-		if e.Kind == KindStatus && e.Side == SideA {
-			burnedOn = append(burnedOn, e.Hit)
-		}
-	}
-	if len(burnedOn) != 2 || burnedOn[0] != 0 || burnedOn[1] != 2 {
-		t.Errorf("the burn landed on hits %v, want [0 2] — once per fire hit", burnedOn)
-	}
-}
-
-// firstStatusOf is the first registered status of one effect kind.
-func firstStatusOf(t *testing.T, kind StatusEffect) StatusID {
-	t.Helper()
-	for _, id := range AllStatuses() {
-		if StatusOf(id).Effect == kind {
-			return id
-		}
-	}
-	t.Fatalf("no status in the file is a %v", kind)
-	return 0
 }

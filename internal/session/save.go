@@ -103,7 +103,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 // **A record is copied rather than resolved.** Every other conversion here turns a name back into
 // a thing this build has — a concept, an element, a relic — and refuses a snapshot naming something
 // it has not got. A ledger record resolves to nothing: its fields are already the labels that were
-// true when it was written, and the day a status is renamed is not a day a saved run should stop
+// true when it was written, and the day a relic is renamed is not a day a saved run should stop
 // loading.
 func (s *Session) ledgerSnapshot() []profile.LedgerFightSnapshot {
 	if len(s.ledger.Fights) == 0 {
@@ -147,7 +147,7 @@ func recordsSnapshot(in []LedgerRecord) []profile.LedgerRecordSnapshot {
 		rec := profile.LedgerRecordSnapshot{
 			Kind: r.Kind, Side: r.Side, Target: r.Target, Name: r.Name,
 			Card: r.Card, Element: r.Element, Verb: r.Verb, Raises: r.Raises,
-			Weight: r.Weight, Status: r.Status, Relic: r.Relic, Amount: r.Amount,
+			Weight: r.Weight, Relic: r.Relic, Amount: r.Amount,
 			Hand: r.Hand, Multiplier: r.Multiplier, HandScale: r.HandScale,
 			Role: r.Role, Base: r.Base, Note: r.Note,
 			Flats: append([]int(nil), r.Flats...), Total: r.Total,
@@ -178,7 +178,7 @@ func resumeRecords(in []profile.LedgerRecordSnapshot) []LedgerRecord {
 		rec := LedgerRecord{
 			Kind: r.Kind, Side: r.Side, Target: r.Target, Name: r.Name,
 			Card: r.Card, Element: r.Element, Verb: r.Verb, Raises: r.Raises,
-			Weight: r.Weight, Status: r.Status, Relic: r.Relic, Amount: r.Amount,
+			Weight: r.Weight, Relic: r.Relic, Amount: r.Amount,
 			Hand: r.Hand, Multiplier: r.Multiplier, HandScale: r.HandScale,
 			Role: r.Role, Base: r.Base, Note: r.Note,
 			Flats: append([]int(nil), r.Flats...), Total: r.Total,

@@ -45,7 +45,7 @@ and both are things the repo produced. These are things the repo consumes.
   refused: one flat asset map means one id is one picture.
 - **The generic prompt is what lives here; each record's own description lives on the record.**
   A prompt is about no record at all. The subject paragraph is about exactly one, so it is `Draw` in
-  `data/relics.json` — ignored by the engine, exactly as a status's `Badge` is, and pasted into
+  `data/relics.json` — ignored by the engine, exactly as `Art` is, and pasted into
   the generator as the record's own JSON. A brief kept apart from the record is a brief that
   gets deleted when the picture it produced is filed.
 - **The worklist is a query.** A record with an empty `Art` has no picture, a record with an

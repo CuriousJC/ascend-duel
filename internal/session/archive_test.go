@@ -42,10 +42,21 @@ func pictureStems(t *testing.T, dir string) map[string]bool {
 // archived relic is kept so it can be moved back, and one whose words the rules have stopped
 // knowing is a relic that would refuse to load the day it is wanted. **The fix is to update the
 // archived record to the current vocabulary**, not to loosen this.
+//
+// **A record written in a retired verb is the one exception** — see data.RetiredRelicVerbs. There
+// is no current word to update it to, so it is held to the other half of this test instead: it
+// must not load, or the verb was never retired.
 func TestEveryArchivedRelicWouldLoad(t *testing.T) {
 	records, order := archivedRelics(t)
 	for _, key := range order {
-		if err := CheckRelicRecord(records[key]); err != nil {
+		err := CheckRelicRecord(records[key])
+		if records[key].UsesRetiredVerb() {
+			if err == nil {
+				t.Errorf("%s is written in a retired verb and loads anyway; take the verb off data.RetiredRelicVerbs", key)
+			}
+			continue
+		}
+		if err != nil {
 			t.Errorf("archived relic would not load: %v", err)
 		}
 	}

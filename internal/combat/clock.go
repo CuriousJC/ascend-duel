@@ -41,7 +41,7 @@ func FightOver(a, b Duelist) bool { return !a.Alive() || !b.Alive() }
 //
 // **Life goes to zero rather than taking a figure.** The clock is not a blow — there is nothing
 // to survive with one life left and nothing to block it with — so what it announces is the whole
-// of what it took, and `KindDefeated` follows it exactly as it follows the last burn tick.
+// of what it took, and `KindDefeated` follows it exactly as it follows a killing blow.
 func callTime(events []Event, side Side, d Duelist, round int) ([]Event, Duelist) {
 	if !outOfTime(d, round) {
 		return events, d

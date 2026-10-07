@@ -32,7 +32,7 @@ func TestAWildcardCompletesAnElementalGroup(t *testing.T) {
 }
 
 // **The card keeps its own element.** A wild ice card is still ice for everything that is not the
-// matcher — which is what decides whether it lands a chill.
+// matcher — which is what a relic's element predicate reads.
 func TestAWildcardStillCarriesItsOwnElement(t *testing.T) {
 	c := wild(Slice, Ice)
 	if c.Element != Ice {

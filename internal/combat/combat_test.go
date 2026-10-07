@@ -1,41 +1,16 @@
 package combat
 
 import (
-	"math/rand"
 	"reflect"
 	"testing"
 )
 
 // duelist builds a full-health duelist for tests.
 // resolve is ResolveRound with **no randomness at all**, which is what almost every test here
-// wants: a nil source means the shock roll never fires, so everything that is still exact stays
-// exact and a test about defenses is not a test about luck.
-//
-// The rolled path has its own tests, which pass a decided source deliberately — see below and
-// status_test.go.
+// wants: a nil source means nothing rolls, so a test about defenses is not a test about luck.
 func resolve(a, b Duelist, aCards, bCards []Card, round int) ([]Event, Duelist, Duelist) {
 	return ResolveRound(a, b, aCards, bCards, round, Sources{})
 }
-
-// resolveWith is the same round with a source, for the tests that are about the roll.
-func resolveWith(rng *rand.Rand, a, b Duelist, aCards, bCards []Card, round int) ([]Event, Duelist, Duelist) {
-	return ResolveRound(a, b, aCards, bCards, round, Sources{Roll: rng})
-}
-
-// fixedSource always hands back the same value, so a test can *say* "this attack misses" instead
-// of hunting for a seed that happens to make it. A seed would work and would be unreadable: the
-// test would assert a miss while naming a number, and retuning shockPct() could silently turn
-// it into a test about something else.
-type fixedSource int64
-
-func (s fixedSource) Int63() int64 { return int64(s) }
-func (s fixedSource) Seed(int64)   {}
-
-// The two rolls a test wants. rand.Intn(100) reduces to `int32(Int63()>>32) % 100`, so 0 is
-// below any chance the game can produce and 99 is above the maxStatusPct ceiling — which is
-// only expressible because the cap exists, and is one more reason it has to.
-func alwaysMisses() *rand.Rand { return rand.New(fixedSource(0)) }
-func neverMisses() *rand.Rand  { return rand.New(fixedSource(99 << 32)) }
 
 func duelist(dmg, actions, life int) Duelist {
 	return Duelist{DMG: dmg, Actions: actions, MaxLife: life, CurrentLife: life}

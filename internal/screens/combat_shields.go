@@ -448,8 +448,8 @@ func (s *CombatScene) shieldOrigin(gs *state.GlobalState, f shieldFlight) (image
 // journey to the same point, which made a shield read as something being done *to* the duelist. It
 // now lands in the seat it is about to occupy, so the arrival and the row filling are one event.
 //
-// The row's own offset comes from the card style — `EffectTop`, the band the enemy's status badges
-// use and the pips share — so a card re-laid out moves the target with it.
+// The row's own offset comes from the card style — `EffectTop`, the band the pips sit in — so a
+// card re-laid out moves the target with it.
 func (s *CombatScene) shieldTarget(gs *state.GlobalState, f shieldFlight) image.Point {
 	r, style := ui.DuelistCardRect(gs), cards.DuelistStyle
 	if f.side == combat.SideB {

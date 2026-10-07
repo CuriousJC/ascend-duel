@@ -26,7 +26,7 @@
         "Name": "left essence",
         "Kind": "card",
         "X": 836,
-        "Y": 367,
+        "Y": 356,
         "W": 200,
         "H": 280
       },
@@ -34,7 +34,7 @@
         "Name": "right essence",
         "Kind": "card",
         "X": 1076,
-        "Y": 367,
+        "Y": 356,
         "W": 200,
         "H": 280
       }

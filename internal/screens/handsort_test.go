@@ -97,19 +97,21 @@ func TestTheEssenceScreensSortBlockFitsBesideItsRow(t *testing.T) {
 	}
 }
 
-// TestTheTwoScreensLeaveTheSameAirBesideTheirCards. Both blocks are hung off a row of cards rather
-// than off a column of their own, and the same constant is what makes the two rows look alike.
-func TestTheTwoScreensLeaveTheSameAirBesideTheirCards(t *testing.T) {
+// TestTheRewardRowStandsWhereTheHandDoes. The bottom third is one layout: the reward screen's row
+// and its sort block are the combat screen's hand band and block, to the pixel.
+func TestTheRewardRowStandsWhereTheHandDoes(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = 1920, 1080
 
 	var s PostBattleScene
 	s.Init(gs)
 
-	if got := s.tabs.Rect(gs).Min.X - s.offerRow(gs).Max.X; got != ui.SortColumnGap {
-		t.Errorf("the essence screen leaves %d beside its row, want %d", got, ui.SortColumnGap)
+	for i := range ui.SortButtonSpecs {
+		if got, want := s.tabRect(gs, i), sortTabRect(gs, i); got != want {
+			t.Errorf("the reward screen's tab %d is at %v, the combat screen's at %v", i, got, want)
+		}
 	}
-	if got := sortColumnRect(gs).Min.X - (handBandLeft(gs) + cardBandWidth(gs)); got != 0 {
-		t.Errorf("the combat screen's block is %d off the card band's right edge, want 0", got)
+	if got, want := s.offerRow(gs), handBand(gs, len(s.offer)); got != want {
+		t.Errorf("the reward row is at %v, the combat hand of %d at %v", got, len(s.offer), want)
 	}
 }

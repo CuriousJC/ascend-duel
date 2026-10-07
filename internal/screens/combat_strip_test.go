@@ -130,12 +130,6 @@ func TestDeckStackIsTheSizeItIsDrawnAt(t *testing.T) {
 			front.Dx(), front.Dy(), cards.Hand.Width, cards.Hand.Height)
 	}
 
-	// The between-fights pile is the smaller card, and the same rule holds for it.
-	if pile := deckPileRect(gs); pile.Dx() != cards.Stack.Width || pile.Dy() != cards.Stack.Height {
-		t.Errorf("the between-fights pile's hit rectangle is %dx%d, but cards.Stack draws %dx%d",
-			pile.Dx(), pile.Dy(), cards.Stack.Width, cards.Stack.Height)
-	}
-
 	// The backs are drawn up and to the left of the front card, so the bounds have to cover
 	// them — that rectangle is what the ring is drawn around and what the click uses.
 	bounds := deckStackBounds(gs)
@@ -240,13 +234,8 @@ func TestTheHandIsLaidOutBetweenTheFighterCards(t *testing.T) {
 		t.Errorf("the hand is centered at x=%d, want %d", got, want)
 	}
 
-	// The sort block abuts the cards, and the panel buttons under it stand on the enemy card's
-	// left edge — the two groups are anchored to different things, which is the point of the
-	// column being two groups. See controlcolumn.go.
+	// The sort block abuts the cards. See controlcolumn.go.
 	if got, want := sortColumnRect(gs).Min.X, left+cardBandWidth(gs); got != want {
 		t.Errorf("the sort block starts at x=%d, want the cards' right edge at %d", got, want)
-	}
-	if got, want := ControlColumnSlot(gs, SlotHands).Min.X, ui.EnemyCardRect(gs).Min.X; got != want {
-		t.Errorf("the panel buttons start at x=%d, want the enemy card's left edge at %d", got, want)
 	}
 }

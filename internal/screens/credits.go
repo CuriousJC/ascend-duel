@@ -56,18 +56,18 @@ const (
 // The page's shape.
 const (
 	creditsTitle     = "CREDITS"
-	creditsTitleSize = 40
+	creditsTitleSize = 56
 
-	creditsHeadingSize = systems.TextMedium
-	creditsBodySize    = systems.TextSmall
-	creditsQuietSize   = systems.TextSmall
+	creditsHeadingSize = 32
+	creditsBodySize    = systems.TextLarge
+	creditsQuietSize   = systems.TextMedium
 
 	// creditsLineHeight is the pitch of an ordinary line, and creditsHeadingTop the extra air a
 	// heading gets above it. Headings are separated by space rather than by a rule, because the
 	// page is short and four rules on it would read as a table.
-	creditsLineHeight = 26
-	creditsHeadingTop = 18
-	creditsGapHeight  = 12
+	creditsLineHeight = 34
+	creditsHeadingTop = 22
+	creditsGapHeight  = 14
 )
 
 // credits is the page. **The version is not in here** — it is drawn separately at the bottom, from
@@ -96,12 +96,19 @@ var credits = []creditsLine{
 	{"Source-available. Monetized streaming and video of gameplay permitted.", creditsQuiet},
 }
 
-// creditsQuietInk is how far a quiet line is pulled toward the ground it is written on.
-const creditsQuietPct = 38
+// The page's inks. **Light rather than `ui.GroundInk`**, because the page stands on the gray fog
+// backdrop rather than the light ground, and near-black type on mid-gray fog does not read. A light
+// ink multiplies the prose sheet, so the letters keep their dark outline against the fog.
+var (
+	creditsTextInk = color.RGBA{R: 240, G: 238, B: 232, A: 255}
 
-// creditsVersionColor is the build string at the foot of the page — dimmer than a quiet line,
-// because it is a thing to be found rather than read.
-var creditsVersionColor = color.RGBA{R: 120, G: 108, B: 90, A: 255}
+	// creditsQuietInk is a line that has to be there and does not have to be read.
+	creditsQuietInk = color.RGBA{R: 206, G: 206, B: 212, A: 255}
+
+	// creditsVersionColor is the build string at the foot of the page — dimmer than a quiet line,
+	// because it is a thing to be found rather than read.
+	creditsVersionColor = color.RGBA{R: 180, G: 182, B: 192, A: 255}
+)
 
 // CreditsScene is the credits screen.
 type CreditsScene struct {
@@ -129,14 +136,14 @@ func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	heading.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(9)))
 	heading.PrimaryAlign = text.AlignCenter
 	heading.SecondaryAlign = text.AlignCenter
-	heading.ColorScale.ScaleWithColor(ui.GroundInk)
+	heading.ColorScale.ScaleWithColor(creditsTextInk)
 	systems.DrawText(screen, creditsTitle,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: creditsTitleSize}, heading)
 
 	// **Everything is centered on one axis**, which is what makes a page of unequal-length lines
 	// read as a document rather than as a list.
 	center := float64(gs.PctX(50))
-	y := gs.PctY(17)
+	y := gs.PctY(16)
 
 	for _, l := range credits {
 		if l.kind == creditsGap {
@@ -166,7 +173,7 @@ func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	version.SecondaryAlign = text.AlignCenter
 	version.ColorScale.ScaleWithColor(creditsVersionColor)
 	systems.DrawText(screen, gs.Version,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, version)
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextMedium}, version)
 
 	systems.DrawButton(gs, screen, s.back)
 }
@@ -183,14 +190,12 @@ func creditsSize(k creditsKind) float64 {
 	}
 }
 
-// creditsInk is the color a kind is set in. **ColorToward rather than ColorAtStrength**, because
-// this page is drawn on the light ground — scaling toward black there makes a line louder, not
-// quieter. See the color rule in CLAUDE.md.
+// creditsInk is the color a kind is set in.
 func creditsInk(k creditsKind) color.Color {
 	if k == creditsQuiet {
-		return systems.ColorToward(ui.GroundInk, ui.ScreenGround, creditsQuietPct)
+		return creditsQuietInk
 	}
-	return ui.GroundInk
+	return creditsTextInk
 }
 
 // leave goes back to whichever screen opened this one, on the same terms the settings and

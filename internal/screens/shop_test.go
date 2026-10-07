@@ -351,12 +351,12 @@ func dealShelfFor(gs *state.GlobalState) []shelfItem {
 func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
-	pile := deckPileBounds(gs)
+	pile := deckStackBounds(gs)
 	if pile.Max.X >= ui.ControlColumnLeft(gs) {
 		t.Errorf("the pile ends at %d and the column starts at %d",
 			pile.Max.X, ui.ControlColumnLeft(gs))
 	}
-	if pile.Min.X < 0 || deckPileCountRect(gs).Max.Y > gs.ScreenHeight {
+	if pile.Min.X < 0 || deckCountRect(gs).Max.Y > gs.ScreenHeight {
 		t.Errorf("the pile and its count run off the screen: %v", pile)
 	}
 

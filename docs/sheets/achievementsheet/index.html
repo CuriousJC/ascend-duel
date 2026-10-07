@@ -1,0 +1,831 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Duello — achievement sheet</title>
+<style>
+  :root {
+    --ground: #a8bcd4;
+    --ink: #2c2822;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
+    --pink: #c8508c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 72ch; margin: 12px 0 0; }
+  .plates { display: flex; flex-direction: column; gap: 20px; margin-top: 26px; }
+  .plate {
+    display: flex; gap: 22px; align-items: flex-start;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 16px;
+  }
+  .icons { display: grid; grid-template-columns: auto auto; gap: 8px 12px; align-items: end; }
+  .icons figure { margin: 0; }
+  .icons figcaption { font-size: 11px; color: var(--dim); }
+  img { display: block; }
+  .about { min-width: 0; flex: 1; }
+  .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  table.steam { border-collapse: collapse; margin-top: 8px; font-size: 12.5px; }
+  table.steam th { text-align: left; color: var(--dim); font-weight: 600; padding: 2px 14px 2px 0; }
+  table.steam td { padding: 2px 0; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+  .said { margin: 10px 0 0; font-size: 12.5px; font-style: italic; }
+  .said p { margin: 0; }
+  .rule { margin: 10px 0 0; color: var(--dim); word-break: break-word; }
+  .art { margin: 10px 0 0; font-size: 11.5px; color: var(--dim); }
+  .art.missing { color: var(--pink); }
+  .draw {
+    margin: 10px 0 0; font-size: 12.5px; color: var(--dim);
+    border-left: 2px solid var(--rule); padding-left: 9px;
+  }
+  .draw.missing { color: var(--pink); border-left-color: var(--pink); }
+</style>
+
+<h1>Achievement sheet</h1>
+<p class="facts">
+  27 achievements, 0 of them drawing the default icon, 0 with no
+  subject paragraph written, 0 hidden.
+</p>
+<p class="note">
+  Regenerate with <code>go run ./tools/achievementsheet</code> and refresh. Every field is read out
+  of <code>data/achievements.json</code> through <code>internal/achieve</code>'s own validation.
+</p>
+<p class="note">
+  <strong>The fields under each name are Steamworks' own</strong>, under the names its admin page
+  uses, so this page is what that page is filled in from. <strong>The two 256px icons are the
+  upload files</strong>: <code>achieved-*.png</code> is the Achieved Icon and
+  <code>unachieved-*.png</code> the Unachieved Icon. The gray one is derived, by
+  <code>systems.ArtMarkGray</code> — the same call that draws a locked row in the game.
+</p>
+<p class="note">
+  <strong>Judge an icon at 64px, not at 256.</strong> That is the size Steam's pop-up
+  and the game's achievements page both draw it, and the small pair is reduced by the game's own
+  averaging rather than by the browser.
+</p>
+
+<div class="plates">
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-first-steps.png" width="256" height="256" alt="FIRST STEPS"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-first-steps.png" width="256" height="256" alt="FIRST STEPS, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-first-steps-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-first-steps-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">FIRST STEPS</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">first-steps</td></tr>
+          <tr><th>Display Name</th><td>FIRST STEPS</td></tr>
+          <tr><th>Description</th><td>Defeat your first enemy.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>One down. The realm does not notice, but you do.</p><p>Everything above this is the same thing again, harder.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;duel-won&#34;}</p>
+        
+          <p class="draw">A single sturdy boot planted on the lowest of three chunky stone steps rising to the upper right.</p>
+        
+        
+          <p class="art">icon: <code>first-steps</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-taught.png" width="256" height="256" alt="TAUGHT"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-taught.png" width="256" height="256" alt="TAUGHT, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-taught-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-taught-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">TAUGHT</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">taught</td></tr>
+          <tr><th>Display Name</th><td>TAUGHT</td></tr>
+          <tr><th>Description</th><td>Sit through the whole lesson.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Bob has said his piece and gone back to wherever he waits.</p><p>Nothing he told you was untrue. Nothing he told you was all of it.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;tutorial-finished&#34;}</p>
+        
+          <p class="draw">A thick closed book seen at a slight angle, a teacher&#39;s pointer stick laid diagonally across its cover.</p>
+        
+        
+          <p class="art">icon: <code>taught</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-look-mom-no-hands.png" width="256" height="256" alt="LOOK MOM, NO HANDS!"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-look-mom-no-hands.png" width="256" height="256" alt="LOOK MOM, NO HANDS!, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-look-mom-no-hands-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-look-mom-no-hands-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">LOOK MOM, NO HANDS!</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">look-mom-no-hands</td></tr>
+          <tr><th>Display Name</th><td>LOOK MOM, NO HANDS!</td></tr>
+          <tr><th>Description</th><td>Play a turn that forms No Hand.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Congrats...do you need to do the tutorial again?</p></div>
+        <p class="rule mono">unlocks: no-hand-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;hand-formed&#34;,&#34;Value&#34;:&#34;no-hand&#34;}</p>
+        
+          <p class="draw">Two open hands raised and spread in a shrug, palms out, holding nothing at all.</p>
+        
+        
+          <p class="art">icon: <code>look-mom-no-hands</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-mighty-mouse.png" width="256" height="256" alt="MIGHTY MOUSE"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-mighty-mouse.png" width="256" height="256" alt="MIGHTY MOUSE, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-mighty-mouse-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-mighty-mouse-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">MIGHTY MOUSE</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">mighty-mouse</td></tr>
+          <tr><th>Display Name</th><td>MIGHTY MOUSE</td></tr>
+          <tr><th>Description</th><td>Weaken a 1 AP attack until it comes back round as its 3 AP card.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Smaller and smaller, until it was not small at all.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;ladder-wrapped&#34;,&#34;Value&#34;:&#34;down&#34;}</p>
+        
+          <p class="draw">A small mouse standing upright and flexing one hugely muscled arm, round ears and a long curling tail.</p>
+        
+        
+          <p class="art">icon: <code>mighty-mouse</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-quittin-roids.png" width="256" height="256" alt="QUITTIN ROIDS"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-quittin-roids.png" width="256" height="256" alt="QUITTIN ROIDS, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-quittin-roids-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-quittin-roids-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">QUITTIN ROIDS</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">quittin-roids</td></tr>
+          <tr><th>Display Name</th><td>QUITTIN ROIDS</td></tr>
+          <tr><th>Description</th><td>Strengthen a 3 AP attack until it comes back round as its 1 AP card.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Bigger and bigger, and then all of it, gone.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;ladder-wrapped&#34;,&#34;Value&#34;:&#34;up&#34;}</p>
+        
+          <p class="draw">A heavy dumbbell snapped clean in two at its bar, the two halves tipping apart.</p>
+        
+        
+          <p class="art">icon: <code>quittin-roids</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-spectrum.png" width="256" height="256" alt="SPECTRUM"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-spectrum.png" width="256" height="256" alt="SPECTRUM, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-spectrum-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-spectrum-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">SPECTRUM</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">spectrum</td></tr>
+          <tr><th>Display Name</th><td>SPECTRUM</td></tr>
+          <tr><th>Description</th><td>Attack with four elements in one turn.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Four colors in one breath.</p><p>The hand ladder does not pay for this. Do it anyway.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;turn&#34;,&#34;Patterns&#34;:[{&#34;Clauses&#34;:[{&#34;Of&#34;:&#34;attack&#34;,&#34;Axis&#34;:&#34;element&#34;,&#34;Mode&#34;:&#34;distinct&#34;,&#34;N&#34;:4}]}]}</p>
+        
+          <p class="draw">Four broad arcs nested one inside the next, like a short thick rainbow, each band separated by a dark contour line.</p>
+        
+        
+          <p class="art">icon: <code>spectrum</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-elementalist.png" width="256" height="256" alt="ELEMENTALIST"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-elementalist.png" width="256" height="256" alt="ELEMENTALIST, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-elementalist-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-elementalist-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">ELEMENTALIST</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">elementalist</td></tr>
+          <tr><th>Display Name</th><td>ELEMENTALIST</td></tr>
+          <tr><th>Description</th><td>Attack with all five elements in one turn.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Fire, ice, lightning, earth and arcane, all in the same swing.</p><p>Every relic you own fired at once, and every one you do not sat out.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;turn&#34;,&#34;Patterns&#34;:[{&#34;Clauses&#34;:[{&#34;Of&#34;:&#34;attack&#34;,&#34;Axis&#34;:&#34;element&#34;,&#34;Mode&#34;:&#34;distinct&#34;,&#34;N&#34;:5}]}]}</p>
+        
+          <p class="draw">A five-pointed star with a different element at each point — a flame, an ice shard, a lightning bolt, a rock and a curling wisp — meeting at the center.</p>
+        
+        
+          <p class="art">icon: <code>elementalist</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-weaponmaster.png" width="256" height="256" alt="WEAPONMASTER"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-weaponmaster.png" width="256" height="256" alt="WEAPONMASTER, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-weaponmaster-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-weaponmaster-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">WEAPONMASTER</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">weaponmaster</td></tr>
+          <tr><th>Display Name</th><td>WEAPONMASTER</td></tr>
+          <tr><th>Description</th><td>Attack with a stab, a slash and a crush in one turn.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Three ways of hitting, none of them wasted.</p><p>A rung the ladder used to have, and could never price.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;turn&#34;,&#34;Patterns&#34;:[{&#34;Clauses&#34;:[{&#34;Of&#34;:&#34;attack&#34;,&#34;Axis&#34;:&#34;form&#34;,&#34;Mode&#34;:&#34;distinct&#34;,&#34;N&#34;:3}]}]}</p>
+        
+          <p class="draw">A spear, a curved scimitar and a club crossed at their middles in a heraldic trophy.</p>
+        
+        
+          <p class="art">icon: <code>weaponmaster</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-arsenal.png" width="256" height="256" alt="ARSENAL"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-arsenal.png" width="256" height="256" alt="ARSENAL, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-arsenal-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-arsenal-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">ARSENAL</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">arsenal</td></tr>
+          <tr><th>Display Name</th><td>ARSENAL</td></tr>
+          <tr><th>Description</th><td>All three attack forms and a defense, in one turn.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Everything the deck can be, on the table at once.</p><p>Four forms. There is no fifth.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;turn&#34;,&#34;Patterns&#34;:[{&#34;Clauses&#34;:[{&#34;Of&#34;:&#34;attack&#34;,&#34;Axis&#34;:&#34;form&#34;,&#34;Mode&#34;:&#34;distinct&#34;,&#34;N&#34;:3},{&#34;Of&#34;:&#34;defend&#34;,&#34;Mode&#34;:&#34;count&#34;,&#34;N&#34;:1}]}]}</p>
+        
+          <p class="draw">A round shield, with the tips of a spear, a scimitar and a club fanned out behind it.</p>
+        
+        
+          <p class="art">icon: <code>arsenal</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-prism.png" width="256" height="256" alt="PRISM"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-prism.png" width="256" height="256" alt="PRISM, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-prism-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-prism-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">PRISM</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">prism</td></tr>
+          <tr><th>Display Name</th><td>PRISM</td></tr>
+          <tr><th>Description</th><td>Five attacks of one form or one card, in all five elements.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>One shape, every color.</p><p>The narrowest hand in the game and the widest, at the same time.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;turn&#34;,&#34;Patterns&#34;:[{&#34;Clauses&#34;:[{&#34;Of&#34;:&#34;attack&#34;,&#34;Axis&#34;:&#34;element&#34;,&#34;Mode&#34;:&#34;distinct&#34;,&#34;N&#34;:5},{&#34;Of&#34;:&#34;attack&#34;,&#34;Axis&#34;:&#34;form&#34;,&#34;Mode&#34;:&#34;same&#34;}]},{&#34;Clauses&#34;:[{&#34;Of&#34;:&#34;attack&#34;,&#34;Axis&#34;:&#34;element&#34;,&#34;Mode&#34;:&#34;distinct&#34;,&#34;N&#34;:5},{&#34;Of&#34;:&#34;attack&#34;,&#34;Axis&#34;:&#34;concept&#34;,&#34;Mode&#34;:&#34;same&#34;}]}]}</p>
+        
+          <p class="draw">A triangular glass prism, one broad beam entering on the left and five broad rays fanning out on the right.</p>
+        
+        
+          <p class="art">icon: <code>prism</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-fifth-realm.png" width="256" height="256" alt="FIFTH REALM"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-fifth-realm.png" width="256" height="256" alt="FIFTH REALM, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-fifth-realm-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-fifth-realm-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">FIFTH REALM</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">fifth-realm</td></tr>
+          <tr><th>Display Name</th><td>FIFTH REALM</td></tr>
+          <tr><th>Description</th><td>Journey as far as the fifth realm.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Four realms behind you and more to come.</p><p>Whatever you came in wearing, you are not wearing it now.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;realm-reached&#34;,&#34;N&#34;:5}</p>
+        
+          <p class="draw">A tall stone archway with a swirling spiral filling the opening and five notches cut into the keystone.</p>
+        
+        
+          <p class="art">icon: <code>fifth-realm</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-stab-50.png" width="256" height="256" alt="NEEDLEWORK"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-stab-50.png" width="256" height="256" alt="NEEDLEWORK, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-stab-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-stab-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">NEEDLEWORK</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">stab-50</td></tr>
+          <tr><th>Display Name</th><td>NEEDLEWORK</td></tr>
+          <tr><th>Description</th><td>Play 50 stabbing cards.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Fifty holes, and every one of them where you meant it.</p></div>
+        <p class="rule mono">unlocks: stab-repeat-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;form:stab&#34;,&#34;N&#34;:50}</p>
+        
+          <p class="draw">A large sewing needle with a loop of thick thread through its eye, stabbed through a small square of cloth.</p>
+        
+        
+          <p class="art">icon: <code>stab-50</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-slash-50.png" width="256" height="256" alt="WHITTLER"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-slash-50.png" width="256" height="256" alt="WHITTLER, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-slash-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-slash-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">WHITTLER</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">slash-50</td></tr>
+          <tr><th>Display Name</th><td>WHITTLER</td></tr>
+          <tr><th>Description</th><td>Play 50 slashing cards.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Fifty cuts. The shavings are starting to pile up.</p></div>
+        <p class="rule mono">unlocks: slash-repeat-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;form:slash&#34;,&#34;N&#34;:50}</p>
+        
+          <p class="draw">A short knife beside a half-whittled stick, big curls of wood shaving falling away from it.</p>
+        
+        
+          <p class="art">icon: <code>slash-50</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-crush-50.png" width="256" height="256" alt="TENDERIZER"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-crush-50.png" width="256" height="256" alt="TENDERIZER, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-crush-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-crush-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">TENDERIZER</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">crush-50</td></tr>
+          <tr><th>Display Name</th><td>TENDERIZER</td></tr>
+          <tr><th>Description</th><td>Play 50 crushing cards.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Fifty blows, and nothing on the other end is the shape it was.</p></div>
+        <p class="rule mono">unlocks: crush-repeat-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;form:crush&#34;,&#34;N&#34;:50}</p>
+        
+          <p class="draw">A meat-tenderizing mallet with a square studded head and a short thick handle.</p>
+        
+        
+          <p class="art">icon: <code>crush-50</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-fire-50.png" width="256" height="256" alt="KINDLING"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-fire-50.png" width="256" height="256" alt="KINDLING, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-fire-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-fire-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">KINDLING</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">fire-50</td></tr>
+          <tr><th>Display Name</th><td>KINDLING</td></tr>
+          <tr><th>Description</th><td>Play 50 fire cards.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Fifty sparks. Something is going to catch.</p></div>
+        <p class="rule mono">unlocks: fire-repeat-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;element:fire&#34;,&#34;N&#34;:50}</p>
+        
+          <p class="draw">A small bundle of sticks tied with twine, a single flame rising from its middle.</p>
+        
+        
+          <p class="art">icon: <code>fire-50</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-ice-50.png" width="256" height="256" alt="COLD SNAP"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-ice-50.png" width="256" height="256" alt="COLD SNAP, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-ice-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-ice-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">COLD SNAP</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">ice-50</td></tr>
+          <tr><th>Display Name</th><td>COLD SNAP</td></tr>
+          <tr><th>Description</th><td>Play 50 ice cards.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Fifty of them, and the room has not warmed since.</p></div>
+        <p class="rule mono">unlocks: ice-repeat-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;element:ice&#34;,&#34;N&#34;:50}</p>
+        
+          <p class="draw">A thick twig snapped in two, both halves sheathed in chunky ice with a few icicles hanging down.</p>
+        
+        
+          <p class="art">icon: <code>ice-50</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-lightning-50.png" width="256" height="256" alt="LIGHTNING ROD"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-lightning-50.png" width="256" height="256" alt="LIGHTNING ROD, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-lightning-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-lightning-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">LIGHTNING ROD</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">lightning-50</td></tr>
+          <tr><th>Display Name</th><td>LIGHTNING ROD</td></tr>
+          <tr><th>Description</th><td>Play 50 lightning cards.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Fifty strikes in the same place. So much for the saying.</p></div>
+        <p class="rule mono">unlocks: lightning-repeat-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;element:lightning&#34;,&#34;N&#34;:50}</p>
+        
+          <p class="draw">A lightning rod standing on the peak of a small pitched roof, a jagged bolt striking its tip.</p>
+        
+        
+          <p class="art">icon: <code>lightning-50</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-earth-50.png" width="256" height="256" alt="BEDROCK"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-earth-50.png" width="256" height="256" alt="BEDROCK, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-earth-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-earth-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">BEDROCK</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">earth-50</td></tr>
+          <tr><th>Display Name</th><td>BEDROCK</td></tr>
+          <tr><th>Description</th><td>Play 50 earth cards.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Fifty stones laid. It is starting to look like a foundation.</p></div>
+        <p class="rule mono">unlocks: earth-repeat-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;element:earth&#34;,&#34;N&#34;:50}</p>
+        
+          <p class="draw">A squat square block of stone with three bold horizontal layers, solid like a foundation stone.</p>
+        
+        
+          <p class="art">icon: <code>earth-50</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-arcane-50.png" width="256" height="256" alt="INITIATE"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-arcane-50.png" width="256" height="256" alt="INITIATE, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-arcane-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-arcane-50-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">INITIATE</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">arcane-50</td></tr>
+          <tr><th>Display Name</th><td>INITIATE</td></tr>
+          <tr><th>Description</th><td>Play 50 arcane cards.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Fifty workings, and the words have stopped feeling borrowed.</p></div>
+        <p class="rule mono">unlocks: arcane-repeat-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;element:arcane&#34;,&#34;N&#34;:50}</p>
+        
+          <p class="draw">An open spellbook with a small glowing sigil — a circle with a star inside it — floating above its pages.</p>
+        
+        
+          <p class="art">icon: <code>arcane-50</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-slash-300.png" width="256" height="256" alt="THREE HUNDRED CUTS"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-slash-300.png" width="256" height="256" alt="THREE HUNDRED CUTS, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-slash-300-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-slash-300-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">THREE HUNDRED CUTS</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">slash-300</td></tr>
+          <tr><th>Display Name</th><td>THREE HUNDRED CUTS</td></tr>
+          <tr><th>Description</th><td>Play 300 slashing cards.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Three hundred of them, and the edge has not dulled.</p><p>You have a favorite. That is fine. It is also readable.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;form:slash&#34;,&#34;N&#34;:300}</p>
+        
+          <p class="draw">A curved scimitar mid-swing, three broad overlapping arcs trailing behind its edge.</p>
+        
+        
+          <p class="art">icon: <code>slash-300</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-strike-200.png" width="256" height="256" alt="STRUCK TWO HUNDRED"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-strike-200.png" width="256" height="256" alt="STRUCK TWO HUNDRED, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-strike-200-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-strike-200-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">STRUCK TWO HUNDRED</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">strike-200</td></tr>
+          <tr><th>Display Name</th><td>STRUCK TWO HUNDRED</td></tr>
+          <tr><th>Description</th><td>Play the Bash card 200 times.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Two hundred Bashes. The middle rung of the crushes, over and over.</p><p>Nothing fancy has ever needed to be.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;count&#34;,&#34;Counter&#34;:&#34;concept:Bash&#34;,&#34;N&#34;:200}</p>
+        
+          <p class="draw">A blacksmith&#39;s anvil with a heavy club resting across it, the anvil&#39;s top pocked with dents.</p>
+        
+        
+          <p class="art">icon: <code>strike-200</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-invulnerable.png" width="256" height="256" alt="INVULNERABLE"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-invulnerable.png" width="256" height="256" alt="INVULNERABLE, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-invulnerable-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-invulnerable-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">INVULNERABLE</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">invulnerable</td></tr>
+          <tr><th>Display Name</th><td>INVULNERABLE</td></tr>
+          <tr><th>Description</th><td>Stand behind ten shields at once.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Ten of them, and a turn can only throw five.</p><p>Five more than anything on the journey can reach. You bought the ones nobody could take.</p></div>
+        
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;shields-raised&#34;,&#34;N&#34;:10}</p>
+        
+          <p class="draw">A wall of round shields overlapping one behind another, the front one whole and unmarked.</p>
+        
+        
+          <p class="art">icon: <code>invulnerable</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-monochrome.png" width="256" height="256" alt="MONOCHROME"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-monochrome.png" width="256" height="256" alt="MONOCHROME, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-monochrome-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-monochrome-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">MONOCHROME</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">monochrome</td></tr>
+          <tr><th>Display Name</th><td>MONOCHROME</td></tr>
+          <tr><th>Description</th><td>Form an Elemental Five of a Kind.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Five cards, one color, one blow.</p><p>The shop has heard. It will have something for a hand like that.</p></div>
+        <p class="rule mono">unlocks: element-five-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;hand-formed&#34;,&#34;Value&#34;:&#34;element-five-of-a-kind&#34;}</p>
+        
+          <p class="draw">Five blank playing cards fanned in a hand, all marked with the same single teardrop shape.</p>
+        
+        
+          <p class="art">icon: <code>monochrome</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-quintet.png" width="256" height="256" alt="QUINTET"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-quintet.png" width="256" height="256" alt="QUINTET, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-quintet-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-quintet-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">QUINTET</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">quintet</td></tr>
+          <tr><th>Display Name</th><td>QUINTET</td></tr>
+          <tr><th>Description</th><td>Form a Form Five of a Kind.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Five blades that all agree on how to cut.</p><p>The shop has heard. It keeps a ring for hands like that.</p></div>
+        <p class="rule mono">unlocks: form-five-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;hand-formed&#34;,&#34;Value&#34;:&#34;form-five-of-a-kind&#34;}</p>
+        
+          <p class="draw">Five identical scimitars fanned like the fingers of an open hand, all their blades pointing the same way.</p>
+        
+        
+          <p class="art">icon: <code>quintet</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-multiplicity.png" width="256" height="256" alt="MULTIPLICITY"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-multiplicity.png" width="256" height="256" alt="MULTIPLICITY, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-multiplicity-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-multiplicity-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">MULTIPLICITY</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">multiplicity</td></tr>
+          <tr><th>Display Name</th><td>MULTIPLICITY</td></tr>
+          <tr><th>Description</th><td>Form a Card Five of a Kind.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>The same card, five times over. The deck was never meant to hold that many.</p><p>Something rare has been waiting on the shelf for exactly this.</p></div>
+        <p class="rule mono">unlocks: card-five-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;hand-formed&#34;,&#34;Value&#34;:&#34;concept-five-of-a-kind&#34;}</p>
+        
+          <p class="draw">Five identical blank playing cards stacked with a slight offset, each an exact copy of the one behind it.</p>
+        
+        
+          <p class="art">icon: <code>multiplicity</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-saturated.png" width="256" height="256" alt="SATURATED"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-saturated.png" width="256" height="256" alt="SATURATED, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-saturated-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-saturated-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">SATURATED</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">saturated</td></tr>
+          <tr><th>Display Name</th><td>SATURATED</td></tr>
+          <tr><th>Description</th><td>Form an Elemental Four of a Kind.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>Four cards in one color, and the blow comes out the same shade.</p><p>The shop has heard. It keeps a ring that hits twice for a hand like that.</p></div>
+        <p class="rule mono">unlocks: element-four-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;hand-formed&#34;,&#34;Value&#34;:&#34;element-four-of-a-kind&#34;}</p>
+        
+          <p class="draw">Four blank playing cards fanned in a hand, a large drop dripping off the bottom edge of the lowest card.</p>
+        
+        
+          <p class="art">icon: <code>saturated</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="icons">
+        <figure><img src="achieved-quadruplicate.png" width="256" height="256" alt="QUADRUPLICATE"><figcaption>achieved, 256</figcaption></figure>
+        <figure><img src="unachieved-quadruplicate.png" width="256" height="256" alt="QUADRUPLICATE, unachieved"><figcaption>unachieved, 256</figcaption></figure>
+        <figure><img src="achieved-quadruplicate-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+        <figure><img src="unachieved-quadruplicate-64.png" width="64" height="64" alt=""><figcaption>64</figcaption></figure>
+      </div>
+      <div class="about">
+        <p class="name">QUADRUPLICATE</p>
+        <table class="steam">
+          <tr><th>API Name</th><td class="mono">quadruplicate</td></tr>
+          <tr><th>Display Name</th><td>QUADRUPLICATE</td></tr>
+          <tr><th>Description</th><td>Form a Card Four of a Kind.</td></tr>
+          <tr><th>Set By</th><td>client</td></tr>
+          <tr><th>Hidden?</th><td>no</td></tr>
+        </table>
+        <div class="said"><p>The same card four times in one hand. The shuffle did not do that on its own.</p><p>Something rare has been waiting on the shelf for exactly this.</p></div>
+        <p class="rule mono">unlocks: card-four-relics</p>
+        <p class="rule mono">{&#34;Kind&#34;:&#34;moment&#34;,&#34;Moment&#34;:&#34;hand-formed&#34;,&#34;Value&#34;:&#34;concept-four-of-a-kind&#34;}</p>
+        
+          <p class="draw">Four identical blank playing cards laid out in a neat two-by-two square.</p>
+        
+        
+          <p class="art">icon: <code>quadruplicate</code></p>
+        
+      </div>
+    </div>
+  
+</div>

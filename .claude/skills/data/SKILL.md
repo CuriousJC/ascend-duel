@@ -29,7 +29,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
 | `upgrade_art.json` | `LoadUpgradeArt` | the art an upgraded card wears over its face: one record per upgrade plus `default`, each an `Art` stem under `assets/upgrade-art/` and a `Draw` brief — the `card_art.json` shape. Keys are checked against `systems.Upgrade` names in `internal/cards`, which `data` cannot import |
 | `screen_art.json` | `LoadScreenArt` | the backdrops behind every screen that is not a duel: one record per picture, the `Screens` it stands behind, a `Draw` brief pasted after `docs/art/screen_art_prompt.MD`, and optional `Anchors` — a card, a button or a painted place a brief positions something against, held to the layout by tests in `internal/screens`. Screen names are checked against `state.ActiveScreen` in `internal/state`, which `data` cannot import |
-| `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
+| `achievements.json` | `LoadAchievements` | what the player has done: Steamworks' own achievement fields under Steamworks' own names, an icon and its brief, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 
 ## Who may read what, and why it is not "whether it is data"
@@ -239,7 +239,7 @@ catalogs carry all three; every record under `data/motifs/` carries `Art` and `D
   all. **Empty means nobody has written one**, which — read against an empty `Art` — is
   the backlog each sheet marks in pink. **Every enemy and boss `Draw`** is the
   brief its portraits are generated from.
-- **`go run ./tools/relicart -kind relic|essence|rune|stone|cantrip|card|upgrade|other`** files a generated picture into
+- **`go run ./tools/relicart -kind relic|essence|rune|stone|cantrip|card|upgrade|other|achievement`** files a generated picture into
   any of them: reduce to the card's size, commit under the family's asset directory, write `Art` on
   the record. **`other` is the one kind spanning two files** — the potions and the sealed goods
   share a prompt and an inbox, and the tool writes each record's `Art` back into whichever of
@@ -304,8 +304,8 @@ the rules have never heard of a shop.
 
 ### Achievements
 
-`achievements.json` is **a name, two pieces of prose and a trigger**, and the trigger is the whole
-design. **Parsed and validated in `internal/achieve`, not here and not in `internal/combat`** — an
+`achievements.json` is **Steamworks' achievement fields, an icon, our own line of prose and a
+trigger**, and the trigger is the whole design. **Parsed and validated in `internal/achieve`, not here and not in `internal/combat`** — an
 achievement is the *player's*, and the rules have never heard of a player. Same who-consumes-it test
 every file here answers.
 
@@ -319,9 +319,19 @@ every file here answers.
   `Mode` is `distinct` (at least N values), `same` or `count`. **The filter is on the clause rather
   than on the pattern**, which is what lets Arsenal ask for three attack forms *and* a defense
   beside them: two different selections of one turn.
-- **A record's `AchievementRecord` is the disk contract** and may never change once shipped. Its
-  `Name`, `How` and `Said` can be reworded any afternoon.
-- **`How` and `Said` are two strings on purpose.** `How` is what you must do, legible while the row
+- **The record wears Steamworks' field names**, because the file is what the Steamworks admin page
+  is filled in from: `APIName`, `DisplayName`, `Description`, `SetBy`, `Hidden`, and `AchievedIcon`
+  for the Achieved Icon. **There is no unachieved field** — the Unachieved Icon is the achieved one
+  in grayscale, `systems.ArtMarkGray`, shared by the page and the review sheet. `SetBy` is closed at
+  `client` and refused otherwise; `Hidden` keeps a locked row's name, description and icon off the
+  page. `Draw` is the icon's brief, pasted after `docs/art/achievement_art_prompt.MD`.
+- **Icons are square, at Steam's 256**, under `assets/achievement/` keyed `achievement-<stem>`, with
+  `default.png` for a record whose `AchievedIcon` is empty. `go run ./tools/relicart -kind
+  achievement` files them; `go run ./tools/achievementsheet` draws both of each pair at 256 and at
+  the 64 Steam and the page show, and its 256 pair is the upload set.
+- **A record's `APIName` is the disk contract** and may never change once shipped — on Steam as
+  well. Its `DisplayName`, `Description` and `Said` can be reworded any afternoon.
+- **`Description` and `Said` are two strings on purpose.** `Description` is what you must do, legible while the row
   is locked; `Said` is what the game says once it happened. Every `Said` line is shown at once —
   picking one would be a roll, and a roll owes its own stream.
 - **`Unlocks` is the bridge to the rules, and the achievement itself never gates anything.** Two key

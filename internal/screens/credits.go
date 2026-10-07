@@ -73,12 +73,8 @@ const (
 // credits is the page. **The version is not in here** — it is drawn separately at the bottom, from
 // `gs.Version`, because it is a fact about the build rather than a line somebody wrote.
 var credits = []creditsLine{
-	{"Duello", creditsHeading},
-	{"a roguelike duel from realm to realm", creditsQuiet},
-	{"", creditsGap},
-
 	{"MADE BY", creditsHeading},
-	{"Justin Crosby  ·  CuriousJC", creditsBody},
+	{"CuriousJC", creditsBody},
 	{"KingSherman1820", creditsBody},
 	{"", creditsGap},
 
@@ -87,17 +83,17 @@ var credits = []creditsLine{
 	{"Oto  ·  Apache-2.0", creditsBody},
 	{"", creditsGap},
 
-	{"ART AND SOUND", creditsHeading},
-	{"All art generated from prompts in this repository", creditsBody},
-	{"Interface art and glyphs generated in-engine", creditsQuiet},
-	{"Score synthesized from MIDI in-engine", creditsQuiet},
-	{"Music loops from Humble Bundle", creditsQuiet},
+	{"ART", creditsHeading},
+	{"Art generated with iteratively revised prompts using ChatGPT.", creditsBody},
+	{"", creditsGap},
+
+	{"SOUND", creditsHeading},
+	{"TBD", creditsBody},
 	{"", creditsGap},
 
 	{"LICENSE", creditsHeading},
 	{"PolyForm Noncommercial 1.0.0", creditsBody},
-	{"Source-available. Streaming and video of gameplay are permitted,", creditsQuiet},
-	{"monetised or not. See LICENSE for the full terms.", creditsQuiet},
+	{"Source-available. Monetized streaming and video of gameplay permitted.", creditsQuiet},
 }
 
 // creditsQuietInk is how far a quiet line is pulled toward the ground it is written on.

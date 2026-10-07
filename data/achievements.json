@@ -1,8 +1,12 @@
 [
   {
-    "AchievementRecord": "first-steps",
-    "Name": "FIRST STEPS",
-    "How": "Defeat your first enemy.",
+    "APIName": "first-steps",
+    "DisplayName": "FIRST STEPS",
+    "Description": "Defeat your first enemy.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "first-steps",
+    "Draw": "A single sturdy boot planted on the lowest of three chunky stone steps rising to the upper right.",
     "Said": [
       "One down. The realm does not notice, but you do.",
       "Everything above this is the same thing again, harder."
@@ -10,9 +14,13 @@
     "Trigger": { "Kind": "moment", "Moment": "duel-won" }
   },
   {
-    "AchievementRecord": "taught",
-    "Name": "TAUGHT",
-    "How": "Sit through the whole lesson.",
+    "APIName": "taught",
+    "DisplayName": "TAUGHT",
+    "Description": "Sit through the whole lesson.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "taught",
+    "Draw": "A thick closed book seen at a slight angle, a teacher's pointer stick laid diagonally across its cover.",
     "Said": [
       "Bob has said his piece and gone back to wherever he waits.",
       "Nothing he told you was untrue. Nothing he told you was all of it."
@@ -20,9 +28,13 @@
     "Trigger": { "Kind": "moment", "Moment": "tutorial-finished" }
   },
   {
-    "AchievementRecord": "look-mom-no-hands",
-    "Name": "LOOK MOM, NO HANDS!",
-    "How": "Play a turn that forms No Hand.",
+    "APIName": "look-mom-no-hands",
+    "DisplayName": "LOOK MOM, NO HANDS!",
+    "Description": "Play a turn that forms No Hand.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "look-mom-no-hands",
+    "Draw": "Two open hands raised and spread in a shrug, palms out, holding nothing at all.",
     "Said": [
       "Congrats...do you need to do the tutorial again?"
     ],
@@ -30,27 +42,39 @@
     "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "no-hand" }
   },
   {
-    "AchievementRecord": "mighty-mouse",
-    "Name": "MIGHTY MOUSE",
-    "How": "Weaken a 1 AP attack until it comes back round as its 3 AP card.",
+    "APIName": "mighty-mouse",
+    "DisplayName": "MIGHTY MOUSE",
+    "Description": "Weaken a 1 AP attack until it comes back round as its 3 AP card.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "mighty-mouse",
+    "Draw": "A small mouse standing upright and flexing one hugely muscled arm, round ears and a long curling tail.",
     "Said": [
       "Smaller and smaller, until it was not small at all."
     ],
     "Trigger": { "Kind": "moment", "Moment": "ladder-wrapped", "Value": "down" }
   },
   {
-    "AchievementRecord": "quittin-roids",
-    "Name": "QUITTIN ROIDS",
-    "How": "Strengthen a 3 AP attack until it comes back round as its 1 AP card.",
+    "APIName": "quittin-roids",
+    "DisplayName": "QUITTIN ROIDS",
+    "Description": "Strengthen a 3 AP attack until it comes back round as its 1 AP card.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "quittin-roids",
+    "Draw": "A heavy dumbbell snapped clean in two at its bar, the two halves tipping apart.",
     "Said": [
       "Bigger and bigger, and then all of it, gone."
     ],
     "Trigger": { "Kind": "moment", "Moment": "ladder-wrapped", "Value": "up" }
   },
   {
-    "AchievementRecord": "spectrum",
-    "Name": "SPECTRUM",
-    "How": "Attack with four elements in one turn.",
+    "APIName": "spectrum",
+    "DisplayName": "SPECTRUM",
+    "Description": "Attack with four elements in one turn.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "spectrum",
+    "Draw": "Four broad arcs nested one inside the next, like a short thick rainbow, each band separated by a dark contour line.",
     "Said": [
       "Four colors in one breath.",
       "The hand ladder does not pay for this. Do it anyway."
@@ -63,9 +87,13 @@
     }
   },
   {
-    "AchievementRecord": "elementalist",
-    "Name": "ELEMENTALIST",
-    "How": "Attack with all five elements in one turn.",
+    "APIName": "elementalist",
+    "DisplayName": "ELEMENTALIST",
+    "Description": "Attack with all five elements in one turn.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "elementalist",
+    "Draw": "A five-pointed star with a different element at each point — a flame, an ice shard, a lightning bolt, a rock and a curling wisp — meeting at the center.",
     "Said": [
       "Fire, ice, lightning, earth and arcane, all in the same swing.",
       "Every relic you own fired at once, and every one you do not sat out."
@@ -78,9 +106,13 @@
     }
   },
   {
-    "AchievementRecord": "weaponmaster",
-    "Name": "WEAPONMASTER",
-    "How": "Attack with a stab, a slash and a crush in one turn.",
+    "APIName": "weaponmaster",
+    "DisplayName": "WEAPONMASTER",
+    "Description": "Attack with a stab, a slash and a crush in one turn.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "weaponmaster",
+    "Draw": "A spear, a curved scimitar and a club crossed at their middles in a heraldic trophy.",
     "Said": [
       "Three ways of hitting, none of them wasted.",
       "A rung the ladder used to have, and could never price."
@@ -93,9 +125,13 @@
     }
   },
   {
-    "AchievementRecord": "arsenal",
-    "Name": "ARSENAL",
-    "How": "All three attack forms and a defense, in one turn.",
+    "APIName": "arsenal",
+    "DisplayName": "ARSENAL",
+    "Description": "All three attack forms and a defense, in one turn.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "arsenal",
+    "Draw": "A round shield, with the tips of a spear, a scimitar and a club fanned out behind it.",
     "Said": [
       "Everything the deck can be, on the table at once.",
       "Four forms. There is no fifth."
@@ -113,9 +149,13 @@
     }
   },
   {
-    "AchievementRecord": "prism",
-    "Name": "PRISM",
-    "How": "Five attacks of one form or one card, in all five elements.",
+    "APIName": "prism",
+    "DisplayName": "PRISM",
+    "Description": "Five attacks of one form or one card, in all five elements.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "prism",
+    "Draw": "A triangular glass prism, one broad beam entering on the left and five broad rays fanning out on the right.",
     "Said": [
       "One shape, every color.",
       "The narrowest hand in the game and the widest, at the same time."
@@ -139,9 +179,13 @@
     }
   },
   {
-    "AchievementRecord": "fifth-realm",
-    "Name": "FIFTH REALM",
-    "How": "Journey as far as the fifth realm.",
+    "APIName": "fifth-realm",
+    "DisplayName": "FIFTH REALM",
+    "Description": "Journey as far as the fifth realm.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "fifth-realm",
+    "Draw": "A tall stone archway with a swirling spiral filling the opening and five notches cut into the keystone.",
     "Said": [
       "Four realms behind you and more to come.",
       "Whatever you came in wearing, you are not wearing it now."
@@ -149,9 +193,13 @@
     "Trigger": { "Kind": "moment", "Moment": "realm-reached", "N": 5 }
   },
   {
-    "AchievementRecord": "stab-50",
-    "Name": "NEEDLEWORK",
-    "How": "Play 50 stabbing cards.",
+    "APIName": "stab-50",
+    "DisplayName": "NEEDLEWORK",
+    "Description": "Play 50 stabbing cards.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "stab-50",
+    "Draw": "A large sewing needle with a loop of thick thread through its eye, stabbed through a small square of cloth.",
     "Said": [
       "Fifty holes, and every one of them where you meant it."
     ],
@@ -159,9 +207,13 @@
     "Trigger": { "Kind": "count", "Counter": "form:stab", "N": 50 }
   },
   {
-    "AchievementRecord": "slash-50",
-    "Name": "WHITTLER",
-    "How": "Play 50 slashing cards.",
+    "APIName": "slash-50",
+    "DisplayName": "WHITTLER",
+    "Description": "Play 50 slashing cards.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "slash-50",
+    "Draw": "A short knife beside a half-whittled stick, big curls of wood shaving falling away from it.",
     "Said": [
       "Fifty cuts. The shavings are starting to pile up."
     ],
@@ -169,9 +221,13 @@
     "Trigger": { "Kind": "count", "Counter": "form:slash", "N": 50 }
   },
   {
-    "AchievementRecord": "crush-50",
-    "Name": "TENDERIZER",
-    "How": "Play 50 crushing cards.",
+    "APIName": "crush-50",
+    "DisplayName": "TENDERIZER",
+    "Description": "Play 50 crushing cards.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "crush-50",
+    "Draw": "A meat-tenderizing mallet with a square studded head and a short thick handle.",
     "Said": [
       "Fifty blows, and nothing on the other end is the shape it was."
     ],
@@ -179,9 +235,13 @@
     "Trigger": { "Kind": "count", "Counter": "form:crush", "N": 50 }
   },
   {
-    "AchievementRecord": "fire-50",
-    "Name": "KINDLING",
-    "How": "Play 50 fire cards.",
+    "APIName": "fire-50",
+    "DisplayName": "KINDLING",
+    "Description": "Play 50 fire cards.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "fire-50",
+    "Draw": "A small bundle of sticks tied with twine, a single flame rising from its middle.",
     "Said": [
       "Fifty sparks. Something is going to catch."
     ],
@@ -189,9 +249,13 @@
     "Trigger": { "Kind": "count", "Counter": "element:fire", "N": 50 }
   },
   {
-    "AchievementRecord": "ice-50",
-    "Name": "COLD SNAP",
-    "How": "Play 50 ice cards.",
+    "APIName": "ice-50",
+    "DisplayName": "COLD SNAP",
+    "Description": "Play 50 ice cards.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "ice-50",
+    "Draw": "A thick twig snapped in two, both halves sheathed in chunky ice with a few icicles hanging down.",
     "Said": [
       "Fifty of them, and the room has not warmed since."
     ],
@@ -199,9 +263,13 @@
     "Trigger": { "Kind": "count", "Counter": "element:ice", "N": 50 }
   },
   {
-    "AchievementRecord": "lightning-50",
-    "Name": "LIGHTNING ROD",
-    "How": "Play 50 lightning cards.",
+    "APIName": "lightning-50",
+    "DisplayName": "LIGHTNING ROD",
+    "Description": "Play 50 lightning cards.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "lightning-50",
+    "Draw": "A lightning rod standing on the peak of a small pitched roof, a jagged bolt striking its tip.",
     "Said": [
       "Fifty strikes in the same place. So much for the saying."
     ],
@@ -209,9 +277,13 @@
     "Trigger": { "Kind": "count", "Counter": "element:lightning", "N": 50 }
   },
   {
-    "AchievementRecord": "earth-50",
-    "Name": "BEDROCK",
-    "How": "Play 50 earth cards.",
+    "APIName": "earth-50",
+    "DisplayName": "BEDROCK",
+    "Description": "Play 50 earth cards.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "earth-50",
+    "Draw": "A squat square block of stone with three bold horizontal layers, solid like a foundation stone.",
     "Said": [
       "Fifty stones laid. It is starting to look like a foundation."
     ],
@@ -219,9 +291,13 @@
     "Trigger": { "Kind": "count", "Counter": "element:earth", "N": 50 }
   },
   {
-    "AchievementRecord": "arcane-50",
-    "Name": "INITIATE",
-    "How": "Play 50 arcane cards.",
+    "APIName": "arcane-50",
+    "DisplayName": "INITIATE",
+    "Description": "Play 50 arcane cards.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "arcane-50",
+    "Draw": "An open spellbook with a small glowing sigil — a circle with a star inside it — floating above its pages.",
     "Said": [
       "Fifty workings, and the words have stopped feeling borrowed."
     ],
@@ -229,9 +305,13 @@
     "Trigger": { "Kind": "count", "Counter": "element:arcane", "N": 50 }
   },
   {
-    "AchievementRecord": "slash-300",
-    "Name": "THREE HUNDRED CUTS",
-    "How": "Play 300 slashing cards.",
+    "APIName": "slash-300",
+    "DisplayName": "THREE HUNDRED CUTS",
+    "Description": "Play 300 slashing cards.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "slash-300",
+    "Draw": "A curved scimitar mid-swing, three broad overlapping arcs trailing behind its edge.",
     "Said": [
       "Three hundred of them, and the edge has not dulled.",
       "You have a favorite. That is fine. It is also readable."
@@ -239,9 +319,13 @@
     "Trigger": { "Kind": "count", "Counter": "form:slash", "N": 300 }
   },
   {
-    "AchievementRecord": "strike-200",
-    "Name": "STRUCK TWO HUNDRED",
-    "How": "Play the Bash card 200 times.",
+    "APIName": "strike-200",
+    "DisplayName": "STRUCK TWO HUNDRED",
+    "Description": "Play the Bash card 200 times.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "strike-200",
+    "Draw": "A blacksmith's anvil with a heavy club resting across it, the anvil's top pocked with dents.",
     "Said": [
       "Two hundred Bashes. The middle rung of the crushes, over and over.",
       "Nothing fancy has ever needed to be."
@@ -249,9 +333,13 @@
     "Trigger": { "Kind": "count", "Counter": "concept:Bash", "N": 200 }
   },
   {
-    "AchievementRecord": "invulnerable",
-    "Name": "INVULNERABLE",
-    "How": "Stand behind ten shields at once.",
+    "APIName": "invulnerable",
+    "DisplayName": "INVULNERABLE",
+    "Description": "Stand behind ten shields at once.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "invulnerable",
+    "Draw": "A wall of round shields overlapping one behind another, the front one whole and unmarked.",
     "Said": [
       "Ten of them, and a turn can only throw five.",
       "Five more than anything on the journey can reach. You bought the ones nobody could take."
@@ -259,9 +347,13 @@
     "Trigger": { "Kind": "moment", "Moment": "shields-raised", "N": 10 }
   },
   {
-    "AchievementRecord": "monochrome",
-    "Name": "MONOCHROME",
-    "How": "Form an Elemental Five of a Kind.",
+    "APIName": "monochrome",
+    "DisplayName": "MONOCHROME",
+    "Description": "Form an Elemental Five of a Kind.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "monochrome",
+    "Draw": "Five blank playing cards fanned in a hand, all marked with the same single teardrop shape.",
     "Said": [
       "Five cards, one color, one blow.",
       "The shop has heard. It will have something for a hand like that."
@@ -270,9 +362,13 @@
     "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "element-five-of-a-kind" }
   },
   {
-    "AchievementRecord": "quintet",
-    "Name": "QUINTET",
-    "How": "Form a Form Five of a Kind.",
+    "APIName": "quintet",
+    "DisplayName": "QUINTET",
+    "Description": "Form a Form Five of a Kind.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "quintet",
+    "Draw": "Five identical scimitars fanned like the fingers of an open hand, all their blades pointing the same way.",
     "Said": [
       "Five blades that all agree on how to cut.",
       "The shop has heard. It keeps a ring for hands like that."
@@ -281,9 +377,13 @@
     "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "form-five-of-a-kind" }
   },
   {
-    "AchievementRecord": "multiplicity",
-    "Name": "MULTIPLICITY",
-    "How": "Form a Card Five of a Kind.",
+    "APIName": "multiplicity",
+    "DisplayName": "MULTIPLICITY",
+    "Description": "Form a Card Five of a Kind.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "multiplicity",
+    "Draw": "Five identical blank playing cards stacked with a slight offset, each an exact copy of the one behind it.",
     "Said": [
       "The same card, five times over. The deck was never meant to hold that many.",
       "Something rare has been waiting on the shelf for exactly this."
@@ -292,9 +392,13 @@
     "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "concept-five-of-a-kind" }
   },
   {
-    "AchievementRecord": "saturated",
-    "Name": "SATURATED",
-    "How": "Form an Elemental Four of a Kind.",
+    "APIName": "saturated",
+    "DisplayName": "SATURATED",
+    "Description": "Form an Elemental Four of a Kind.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "saturated",
+    "Draw": "Four blank playing cards fanned in a hand, a large drop dripping off the bottom edge of the lowest card.",
     "Said": [
       "Four cards in one color, and the blow comes out the same shade.",
       "The shop has heard. It keeps a ring that hits twice for a hand like that."
@@ -303,9 +407,13 @@
     "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "element-four-of-a-kind" }
   },
   {
-    "AchievementRecord": "quadruplicate",
-    "Name": "QUADRUPLICATE",
-    "How": "Form a Card Four of a Kind.",
+    "APIName": "quadruplicate",
+    "DisplayName": "QUADRUPLICATE",
+    "Description": "Form a Card Four of a Kind.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "quadruplicate",
+    "Draw": "Four identical blank playing cards laid out in a neat two-by-two square.",
     "Said": [
       "The same card four times in one hand. The shuffle did not do that on its own.",
       "Something rare has been waiting on the shelf for exactly this."

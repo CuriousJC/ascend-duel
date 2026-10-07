@@ -3614,7 +3614,7 @@ it, which reads as a bug in the page.
 
 ### What a record says, and what it says twice
 
-**Two pieces of prose, in opposite tenses.** `How` is what you must do and is legible while the row
+**Two pieces of prose, in opposite tenses.** `Description` is what you must do and is legible while the row
 is still locked — which is the entire reason the achievements page lists what has not been earned.
 `Said` is what the game says once it has happened. One line would have to be both.
 

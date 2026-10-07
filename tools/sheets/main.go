@@ -218,6 +218,14 @@ var sheets = []sheet{
 			"buying everything and buying nothing — so which realm offers what, and when a tonic " +
 			"with a requirement comes back, is read off the page.",
 	},
+	{
+		Dir:   "achievementsheet",
+		Tool:  "./tools/achievementsheet",
+		Title: "Achievement sheet",
+		Blurb: "Every achievement under Steamworks' own field names, with its icon pair — achieved " +
+			"and the derived grayscale unachieved — at Steam's 256 upload size and at the 64 Steam " +
+			"and the game both show. **The 256 pair is the upload set** for the Steamworks admin page.",
+	},
 }
 
 func main() {

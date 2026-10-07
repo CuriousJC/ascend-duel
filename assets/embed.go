@@ -143,6 +143,17 @@ var upgradeArt embed.FS
 //go:embed deck
 var deckArt embed.FS
 
+// ACHIEVEMENT ICONS
+//
+// One square icon per achievement — `data/achievements.json` names it in `AchievedIcon` — committed
+// at **256x256, Steam's own upload size**, which the achievements page draws at Steam's 64. **Keyed
+// `achievement-<stem>`** for the upgrade art's reason: the map is flat, and `prism` or `arsenal` is
+// a name a relic could take. `default.png` is what a record with no icon draws. There is no
+// unachieved file anywhere: that icon is this one in grayscale, see systems.ArtMarkGray.
+//
+//go:embed achievement/*.png
+var achievementArt embed.FS
+
 // MATERIAL TEXTURES
 //
 // The stone and metal a *word* is set in on a dark panel: steel for SLASH, ivory for STAB, granite
@@ -421,6 +432,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, textureArt, "texture")
 	embedPrefixed(images, upgradeArt, "upgrade-art", "upgrade-")
 	embedPrefixed(images, deckArt, "deck", "deck-")
+	embedPrefixed(images, achievementArt, "achievement", "achievement-")
 	embedFamily(images, barArt, "bar")
 	embedTree(images, motifArt, "motifs")
 	embedFamily(images, screenArt, "screen")

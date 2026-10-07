@@ -17,6 +17,9 @@ package ui
 // "chosen" means: turning a wheel and turning it back is the rolled run, and RANDOM rolls again
 // and is not a choice either.
 //
+// **TUTORIAL, in the top-right corner, is the third way to start a run.** The lesson is tuned to one
+// deal against one creature, so it starts on the script's own code and ignores the wheels.
+//
 // **START is the destructive answer only when there is something to destroy.** With a journey in
 // progress it takes the modal red and the body says what is lost, which is the confirm box's whole
 // question folded into this one — two dialogs in a row for one button is one too many.
@@ -71,6 +74,10 @@ const (
 	seedButtonGap    = 20
 	seedButtonHeight = confirmButtonHeight
 	seedButtonBottom = 40
+
+	// The TUTORIAL button, in the top-right corner beside the title.
+	seedTutorialWidth = 200
+	seedTutorialInset = 24
 )
 
 var (
@@ -87,15 +94,18 @@ type SeedDialog struct {
 	warn   bool   // a journey is in progress and START throws it away
 	roll   func() int64
 	start  func(seed int64, chosen bool)
+	teach  func() // the TUTORIAL button; nil puts no button up
 
 	up, down                    [seeds.CodeLen]*models.Button
 	cancel, random, startButton *models.Button
+	tutorial                    *models.Button
 }
 
 // Open puts the dialog up on a rolled code. roll is how RANDOM rolls another; start is called with
-// the seed on the wheels and whether the player chose it. warn says a journey is in progress.
-func (d *SeedDialog) Open(roll func() int64, warn bool, start func(seed int64, chosen bool)) {
-	d.roll, d.warn, d.start = roll, warn, start
+// the seed on the wheels and whether the player chose it; teach starts the tutorial, which is a run
+// on the lesson's own code and so ignores the wheels. warn says a journey is in progress.
+func (d *SeedDialog) Open(roll func() int64, warn bool, start func(seed int64, chosen bool), teach func()) {
+	d.roll, d.warn, d.start, d.teach = roll, warn, start, teach
 	d.rolled = seeds.Code(roll())
 	d.code = d.rolled
 	d.open = true
@@ -134,6 +144,7 @@ func (d *SeedDialog) build() {
 	})
 	d.random.BaseColor = confirmCancelColor
 	d.startButton = models.NewButton(seedButtonWidth, seedButtonHeight, "START", nil)
+	d.tutorial = models.NewButton(seedTutorialWidth, ButtonSmall, "TUTORIAL", nil)
 }
 
 // Update runs every control on the dialog. It sets gs.ModalOpen while it is up, so the frame's
@@ -164,6 +175,20 @@ func (d *SeedDialog) Update(gs *state.GlobalState) {
 		}
 	}
 
+	// **TUTORIAL is START on the lesson's code**, so it takes START's red when there is a journey
+	// to lose: it throws that journey away just the same.
+	d.tutorial.BaseColor = color.RGBA{}
+	if d.warn {
+		d.tutorial.BaseColor = ModalCloseColor
+	}
+	teach := d.teach
+	d.tutorial.OnClick = func() {
+		d.Close()
+		if teach != nil {
+			teach()
+		}
+	}
+
 	d.place(gs)
 	gs.ModalOpen = true
 	for _, b := range d.controls() {
@@ -171,9 +196,13 @@ func (d *SeedDialog) Update(gs *state.GlobalState) {
 	}
 }
 
-// controls is every button on the dialog, in the order a focus ring would walk them.
+// controls is every button on the dialog, in the order a focus ring would walk them. TUTORIAL is
+// first because it is at the top of the box, and absent when the caller gave it nothing to do.
 func (d *SeedDialog) controls() []*models.Button {
-	out := make([]*models.Button, 0, 2*seeds.CodeLen+3)
+	out := make([]*models.Button, 0, 2*seeds.CodeLen+4)
+	if d.teach != nil {
+		out = append(out, d.tutorial)
+	}
 	out = append(out, d.up[:]...)
 	out = append(out, d.down[:]...)
 	return append(out, d.cancel, d.random, d.startButton)
@@ -194,6 +223,11 @@ func (d *SeedDialog) place(gs *state.GlobalState) {
 		b.ScreenX = left + i*(seedButtonWidth+seedButtonGap) + seedButtonWidth/2
 		b.ScreenY = row
 	}
+
+	// Off to the side of the title, in the top-right corner: the third way to start a run, and the
+	// one that does not read the wheels.
+	d.tutorial.ScreenX = box.Max.X - seedTutorialInset - seedTutorialWidth/2
+	d.tutorial.ScreenY = box.Min.Y + seedTitleTop
 }
 
 // Draw puts the scrim, the box, the words, the wheels and the answers over the scene.
@@ -232,6 +266,9 @@ func (d *SeedDialog) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	systems.DrawButton(gs, screen, d.cancel)
 	systems.DrawButton(gs, screen, d.random)
 	systems.DrawButton(gs, screen, d.startButton)
+	if d.teach != nil {
+		systems.DrawButton(gs, screen, d.tutorial)
+	}
 }
 
 // drawCheck is the achievements reading: a sunken box, ticked while the run would earn them, and

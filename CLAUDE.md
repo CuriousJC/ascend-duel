@@ -687,7 +687,8 @@ These apply everywhere, the combat screen included. The pointer vocabulary is:
 - **Nothing in the game accepts typed input.** Even a run code is entered by clicking: New Run
   opens six wheels, one per character, each turned by an arrow above and below it —
   `internal/ui/seeddialog.go`. A wheel only lands on a character `seeds.Code` emits, so there
-  is no code to refuse, and a focus ring can walk every arrow.
+  is no code to refuse, and a focus ring can walk every arrow. The tutorial is a button on the same
+  dialog rather than a setting.
 
 **No right click, ever.** There is no context menu and no secondary action. Anything
 that feels like it wants one needs a different design. **A gamepad's spare face buttons are not a
@@ -702,13 +703,23 @@ ordering a cursor gets by dragging, and neither is a second thing a control does
 The menu *decides something* — **New Run** or **Continue** — which is a question nothing else in
 the game asks, and a run that started before the player was asked is a run they cannot decline.
 
+**The one exception is the first launch** *(owner's call)*: a profile that has never finished the
+lesson boots straight into the tutorial, past the title and the new-run dialog, because the
+dialog's choices mean nothing to someone who has not been told what a seed is. Bob's skip is the way
+out, and a saved run still opens on the title.
+
 - **`internal/screens/run.go` is the run's whole lifecycle**: `BootRun` (resume off disk or build
-  fresh), `NewRun`, `ContinueRun`, `AbandonRun`. **They live in `screens` because a screen cannot
-  import `main`** — once starting a run is a button, building one is something a screen does.
-  `main` rolls a seed and calls `BootRun`.
+  fresh), `NewRunOn`, `NewRunTaught`, `ContinueRun`, `AbandonRun`. **They live in `screens`
+  because a screen cannot import `main`** — once starting a run is a button, building one is
+  something a screen does. `main` rolls a seed and calls `BootRun`.
+- **The new-run dialog starts a run three ways, and `teachMode` is which**: START on the rolled
+  code teaches an untaught profile, a code dialled on the wheels never teaches, and **TUTORIAL**
+  (the dialog's top-right corner) always teaches. **A taught run is dealt the script's own code**
+  whatever was on the wheels, because the lesson describes one deal against one creature — so the
+  lesson outranks a rolled or pinned seed and loses to a dialled one. A TUTORIAL run is not a
+  chosen seed, and earns achievements.
 - **`state.SeedPinned` says the seed was chosen rather than rolled**, so `NewRun` does not silently
-  break `fixedRunSeed` or a scenario's `Seed` from a menu button. **The tutorial still outranks
-  it** — a taught run is dealt the script's own code.
+  break `fixedRunSeed` or a scenario's `Seed` from a menu button.
 - **`Continue` is gated on `gs.Resumed`.**
 - **`demoplay` needed a door.** The scripted demo drives the combat scene rather than navigating to
   it, so a menu in front of the duel is a menu it sits on forever. `screens.DemoPlaysItself` is the

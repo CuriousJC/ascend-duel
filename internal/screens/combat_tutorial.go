@@ -10,7 +10,9 @@ package screens
 
 import (
 	"image"
+	"strings"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/tutorial"
@@ -224,8 +226,122 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		return one(buttonRect(s.duelButton)), true
 	case tutorial.AnchorHandsButton:
 		return one(buttonRect(s.hands.Button)), true
+
+	case tutorial.AnchorFightFrame:
+		// The opponent, where you are, and how long you have: the card, the REALM and ROOM rows,
+		// and the clock when the fight is on one.
+		lit := []image.Rectangle{ui.EnemyCardRect(gs), duelistRows(gs, duelistRowRealm, duelistRowRoom)}
+		if s.roundTimerLimit() > 0 {
+			lit = append(lit, s.roundTimerRect(gs))
+		}
+		return lit, true
+
+	case tutorial.AnchorNamedCards:
+		// **The step's own cards, read off the step on the run** — the one anchor whose cards a
+		// script names rather than a rule picks. Each name takes the first seat holding it, and
+		// **a queued card stays lit** *(owner's call)*: the spotlight holds still while the player
+		// takes them, rather than changing under every click.
+		step, ok := runOf(gs).Current()
+		if !ok || len(step.Cards) == 0 {
+			return nil, false
+		}
+		var lit []image.Rectangle
+		for _, i := range s.namedSeats(step.Cards) {
+			lit = append(lit, s.cardSlot(gs, i))
+		}
+		if len(lit) == 0 {
+			return nil, false
+		}
+		return lit, true
+
+	case tutorial.AnchorDuelistDMG:
+		return one(duelistRows(gs, duelistRowDMG, duelistRowDMG)), true
+
+	case tutorial.AnchorMatchingCard:
+		match := s.matchingCards(gs)
+		if len(match) == 0 {
+			return nil, false
+		}
+		return one(s.cardSlot(gs, match[0])), true
+
+	case tutorial.AnchorElementBlock, tutorial.AnchorElementAttack:
+		// **The card's seat, which is also its click gate**, exactly as the matching cards are.
+		i, ok := s.elementCard(a == tutorial.AnchorElementBlock)
+		if !ok {
+			return nil, false
+		}
+		return one(s.cardSlot(gs, i)), true
 	}
 	return nil, false
+}
+
+// The duelist card's stat rows a step can point at, by their place in ui.DuelistSpec.
+const (
+	duelistRowDMG   = 0
+	duelistRowRealm = 3
+	duelistRowRoom  = 4
+)
+
+// duelistRows is the band of the duelist card holding stat rows from..to, read off the card's own
+// style — the card is drawn at 1:1 into its rectangle, so a row is the corner plus the style's
+// offset. See signalTarget, which lands figures on the same rows.
+func duelistRows(gs *state.GlobalState, from, to int) image.Rectangle {
+	r, st := ui.DuelistCardRect(gs), cards.DuelistStyle
+	return image.Rect(r.Min.X, r.Min.Y+statRowTopOf(st, from)-2,
+		r.Max.X, r.Min.Y+statRowTopOf(st, to)+st.StatRowPitch-4)
+}
+
+// namedSeats is the hand seat each name points at: the first seat holding a card of that name that
+// no earlier name has claimed, in the order the names are written.
+func (s *CombatScene) namedSeats(names []string) []int {
+	claimed := map[int]bool{}
+	var out []int
+	for _, name := range names {
+		for i, c := range s.hand {
+			if !claimed[i] && cardIsNamed(c.Card, name) {
+				claimed[i] = true
+				out = append(out, i)
+				break
+			}
+		}
+	}
+	return out
+}
+
+// cardIsNamed reports whether a card answers to a name as the tutorial script writes one: a label,
+// or an element and a label — "Smash", "arcane Smash".
+func cardIsNamed(c combat.Card, name string) bool {
+	words := strings.Fields(name)
+	if len(words) == 0 || combat.ConceptOf(c.Concept).Label != words[len(words)-1] {
+		return false
+	}
+	return len(words) == 1 || strings.EqualFold(ui.ElementName(c.Element), words[0])
+}
+
+// elementCard is the hand seat of a card in the opponent's element: a defend card when shield is
+// set — the one raising the most shields, so a Block before a Brace — and otherwise the first
+// attack. False when the hand holds none, or the opponent has no element.
+func (s *CombatScene) elementCard(shield bool) (int, bool) {
+	if s.enemy == nil || s.enemy.Duelist.Element == combat.Basic {
+		return 0, false
+	}
+	best, bestAmount := -1, 0
+	for i, c := range s.hand {
+		if c.Element != s.enemy.Duelist.Element {
+			continue
+		}
+		concept := combat.ConceptOf(c.Concept)
+		if (concept.Verb == combat.VerbAttack) == shield {
+			continue
+		}
+		if !shield {
+			return i, true
+		}
+		if amount := c.Amount(); best < 0 || amount > bestAmount {
+			best, bestAmount = i, amount
+		}
+	}
+	return best, best >= 0
 }
 
 // tutorialCovered is whether one of this screen's three dialogs is up: the deck overlay, the fight

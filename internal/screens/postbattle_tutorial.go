@@ -33,25 +33,50 @@ func (s *PostBattleScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor
 	if a == tutorial.AnchorBuildCard {
 		return one(buildCardRect(gs)), true
 	}
+
+	// The payout's account: its first four lines — interest, health kept, the enemy's vitae and the
+	// total — across the payout column, measured off the same layout drawProse types them on.
+	if a == tutorial.AnchorPayout {
+		n := len(s.prose.lines)
+		if n < payoutAccountLines {
+			return nil, false
+		}
+		top := proseTop(gs, n)
+		return one(image.Rect(tutorialMargin, top-6,
+			gs.PctX(payoutColumnPct)-tutorialMargin,
+			top+(payoutAccountLines-1)*proseLineGap+proseLineHeight+6)), true
+	}
+
 	if a != tutorial.AnchorRewardEssences || len(s.prizes) == 0 {
 		return nil, false
 	}
-	r := s.essenceSlot(gs, 0)
-	for i := 1; i < len(s.prizes); i++ {
-		r = r.Union(s.essenceSlot(gs, i))
+	// **The two essences and nothing else** *(owner's call)*. The step waits for the run to reach
+	// the shop, which locks nothing, so the anchor is a picture rather than a gate and need not
+	// cover the row of cards an essence is aimed at. A frame each, since they are two things.
+	lit := make([]image.Rectangle, 0, len(s.prizes))
+	for i := range s.prizes {
+		lit = append(lit, s.essenceSlot(gs, i))
 	}
+	return lit, true
+}
 
-	// **The offer row is inside the anchor since the gesture reversed** *(2026-09-06)*. The lit
-	// square is also the one legal click, so an anchor covering only the essences would have been a
-	// lock-up the moment taking one required a card to be selected first: every essence dim, every
-	// card unclickable, and a step waiting for a phase that could never arrive. This is the failure
-	// CLAUDE.md warns about — the machinery can refuse an ungated step, and cannot tell whether an
-	// anchor shows the player how to satisfy its own condition.
+// tutorialKeepClear is what the bubble stays off beyond the lit essences: **the row of cards an
+// essence is aimed at** *(owner's call)*, since taking one means choosing from that row, so the
+// bubble goes above the essences rather than over the hand.
+func (s *PostBattleScene) tutorialKeepClear(gs *state.GlobalState, a tutorial.Anchor) []image.Rectangle {
+	if a != tutorial.AnchorRewardEssences || len(s.offer) == 0 {
+		return nil
+	}
+	r := s.offerSlot(gs, 0)
 	for i := range s.offer {
 		r = r.Union(s.offerSlot(gs, i))
 	}
-	return one(r), true
+	return []image.Rectangle{r}
 }
+
+// payoutAccountLines is how many of payoutLines are the account of the vitae: the three claims and
+// the total, before the line about the essences.
+const payoutAccountLines = 4
 
 // tutorialCovered is whether anything is over the screen. **Nothing can be**: this screen carries
 // no panel of its own and the chrome stands down on it, so the choice is the only thing up. See the

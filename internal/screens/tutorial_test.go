@@ -2,8 +2,11 @@ package screens
 
 import (
 	"image"
+	"image/color"
+	"strings"
 	"testing"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -40,7 +43,7 @@ func TestEveryAnchorHasARectangle(t *testing.T) {
 	// that reports false only because a row is empty would hide a missing case.
 	combat := stubCombat()
 
-	reward := &PostBattleScene{prizes: make([]prize, 2)}
+	reward := stubReward()
 	shop := &ShopScene{shelf: make([]shelfItem, shelfSize)}
 
 	hosts := []struct {
@@ -62,6 +65,12 @@ func TestEveryAnchorHasARectangle(t *testing.T) {
 		// screen and in the shop, and both defer to `buildCardRect`. What must never happen is two
 		// scenes returning *different* rectangles for one name, which is two spotlights that can
 		// disagree about where a thing is.
+		// **A named card is read off the current step**, so the run is put on a step naming one the
+		// stub hand holds.
+		if a == tutorial.AnchorNamedCards {
+			onStep(gs, tutorial.Step{Key: "named", Text: "named", Anchor: a, Cards: []string{"arcane Smash"}})
+		}
+
 		answered := ""
 		var agreed image.Rectangle
 		for _, h := range hosts {
@@ -99,13 +108,16 @@ func TestTheShippedScriptOnlyNamesRealAnchors(t *testing.T) {
 	combat := stubCombat()
 	hosts := []tutorialHost{
 		combat,
-		&PostBattleScene{prizes: make([]prize, 2)},
+		stubReward(),
 		&ShopScene{shelf: make([]shelfItem, shelfSize)},
 	}
 
 	for _, step := range tutorial.Load().Steps {
 		if step.Anchor == tutorial.AnchorNone {
 			continue
+		}
+		if step.Anchor == tutorial.AnchorNamedCards {
+			onStep(gs, step) // its card is read off the current step
 		}
 		found := false
 		for _, h := range hosts {
@@ -115,6 +127,17 @@ func TestTheShippedScriptOnlyNamesRealAnchors(t *testing.T) {
 		}
 		if !found {
 			t.Errorf("step %q points at %q, which no scene draws", step.Key, step.Anchor)
+		}
+		for _, extra := range step.Also {
+			drawn := false
+			for _, h := range hosts {
+				if _, ok := h.tutorialRects(gs, extra); ok {
+					drawn = true
+				}
+			}
+			if !drawn {
+				t.Errorf("step %q also frames %q, which no scene draws", step.Key, extra)
+			}
 		}
 	}
 }
@@ -362,6 +385,13 @@ func stubCombat() *CombatScene {
 	s.hands.Button = stubButton()
 	s.hand = make([]paletteCard, 5)
 
+	// **A Block and a Jab in the opponent's element**, because `element-block` and `element-attack`
+	// report no rectangle for a hand without one, for the hand's reason above.
+	s.hand[3].Card = combat.Card{Concept: combat.Block, Element: combat.Fire}
+	s.hand[4].Card = combat.Card{Concept: combat.Jab, Element: combat.Fire}
+	s.hand[2].Card = combat.Card{Concept: combat.Smash, Element: combat.Arcane}
+	s.enemy = &entities.Combatant{Duelist: combat.Duelist{Element: combat.Fire}}
+
 	// **On a clock, because `round-timer` reports no rectangle without one** — the same reason the
 	// hand above is filled. A fighter with no limit draws no bar, which is honest and would read
 	// here as a missing case.
@@ -570,4 +600,152 @@ func wearTwo(t *testing.T, gs *state.GlobalState) {
 		}
 	}
 	t.Fatalf("could not put two relics on the run; the catalog offered %d", worn)
+}
+
+// stubReward is a reward screen with enough on it for its anchors to resolve: two essences on
+// offer, and the payout typed out far enough to hold its account.
+func stubReward() *PostBattleScene {
+	s := &PostBattleScene{prizes: make([]prize, 2)}
+	s.prose.lines = make([]proseLine, payoutAccountLines+1)
+	return s
+}
+
+// TestTheScrimShadesEverythingButTheHoles: holes in different corners of the screen are each left
+// bright, nothing between them is, and no pixel is shaded twice — a translucent fill laid twice
+// shows as a darker band.
+func TestTheScrimShadesEverythingButTheHoles(t *testing.T) {
+	screen := image.Rect(0, 0, 200, 100)
+	holes := []image.Rectangle{
+		image.Rect(10, 10, 40, 30),   // top left
+		image.Rect(150, 60, 190, 90), // bottom right
+		image.Rect(30, 20, 60, 50),   // overlapping the first
+	}
+	shaded := map[image.Point]int{}
+	for _, r := range scrimAround(screen, holes) {
+		for y := r.Min.Y; y < r.Max.Y; y++ {
+			for x := r.Min.X; x < r.Max.X; x++ {
+				shaded[image.Pt(x, y)]++
+			}
+		}
+	}
+	for y := screen.Min.Y; y < screen.Max.Y; y++ {
+		for x := screen.Min.X; x < screen.Max.X; x++ {
+			p := image.Pt(x, y)
+			inHole := false
+			for _, h := range holes {
+				if p.In(h) {
+					inHole = true
+				}
+			}
+			switch n := shaded[p]; {
+			case inHole && n != 0:
+				t.Fatalf("%v is inside a hole and shaded", p)
+			case !inHole && n != 1:
+				t.Fatalf("%v is outside every hole and shaded %d times", p, n)
+			}
+		}
+	}
+}
+
+// onStep teaches the run a script of this one step, so an anchor that reads the current step has
+// one to read.
+func onStep(gs *state.GlobalState, step tutorial.Step) {
+	gs.Run.Teach(tutorial.Script{Match: tutorial.MatchConcept, Steps: []tutorial.Step{step}})
+}
+
+// A marked part never wears the ink of an element word in its own step, and two parts never share
+// an ink — the phrase and its frame have to point at one thing.
+func TestPartInksAvoidTheStepsElementWords(t *testing.T) {
+	step := tutorial.Step{
+		Anchor: tutorial.AnchorFightFrame,
+		Text:   "{realm:Each realm} holds ice and {enemy:enemies} on a {clock:clock}.",
+	}
+	inks := partInks(step)
+	if len(inks) != 3 {
+		t.Fatalf("got inks for %d parts, want 3", len(inks))
+	}
+	seen := map[color.RGBA]string{}
+	for part, ink := range inks {
+		if ink == elementInk(cards.Ice) {
+			t.Errorf("part %q wears ice's ink beside the word ice", part)
+		}
+		if other, dup := seen[ink]; dup {
+			t.Errorf("parts %q and %q share an ink", part, other)
+		}
+		seen[ink] = part
+	}
+}
+
+// TestNoMarkupReachesTheBubble: every shipped step's text, as the bubble builds it, carries no mark
+// syntax — a brace on screen is a mark nobody parsed.
+func TestNoMarkupReachesTheBubble(t *testing.T) {
+	parkTutorial(t)
+	for _, step := range tutorial.Load().Steps {
+		inks := partInks(step)
+		for _, authored := range strings.Split(step.Text, "\n") {
+			for _, span := range bubbleLine(authored, inks) {
+				if strings.ContainsAny(span.Text, "{}") {
+					t.Errorf("step %q draws %q", step.Key, span.Text)
+				}
+			}
+		}
+	}
+}
+
+// TestTheShopLineSitsOverLeave: the last step frames the four panes and the bubble lands at the
+// bottom, over the LEAVE button, clear of every pane it points at.
+func TestTheShopLineSitsOverLeave(t *testing.T) {
+	parkTutorial(t)
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
+	gs.Run = session.New(nil)
+	shop := &ShopScene{shelf: make([]shelfItem, shelfSize)}
+
+	for _, step := range tutorial.Load().Steps {
+		if step.Anchor != tutorial.AnchorShopWares {
+			continue
+		}
+		onStep(gs, step)
+		var o tutorialOverlay
+		panel := o.place(gs, shop, step)
+		leave := image.Pt(gs.PctX(50), gs.PctY(offerButtonsPct))
+		if !leave.In(panel) {
+			t.Errorf("step %q puts the bubble at %v, not over LEAVE at %v", step.Key, panel, leave)
+		}
+		rects, _ := shop.tutorialRects(gs, step.Anchor)
+		for _, r := range rects {
+			if panel.Overlaps(r) {
+				t.Errorf("step %q's bubble covers a pane it points at: %v", step.Key, r)
+			}
+		}
+		if inks := frameInks(step, len(rects)); len(inks) != 4 || inks[0] == inks[1] || inks[2] == inks[3] {
+			t.Errorf("step %q frames its panes in %v; four panes want four inks", step.Key, inks)
+		}
+	}
+}
+
+// TestTheEssenceLineSitsAboveTheEssences: the step asking for an essence keeps off both the
+// essences and the row of cards they are aimed at, which puts it above them.
+func TestTheEssenceLineSitsAboveTheEssences(t *testing.T) {
+	parkTutorial(t)
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
+	gs.Run = session.New(nil)
+	reward := stubReward()
+	reward.dealtRow = dealtRow{offer: make([]int, handSize), top: offerRowTop}
+
+	for _, step := range tutorial.Load().Steps {
+		if step.Anchor != tutorial.AnchorRewardEssences {
+			continue
+		}
+		var o tutorialOverlay
+		panel := o.place(gs, reward, step)
+		essences, _ := reward.tutorialRects(gs, step.Anchor)
+		for _, r := range append(essences, reward.tutorialKeepClear(gs, step.Anchor)...) {
+			if panel.Overlaps(r) {
+				t.Errorf("step %q's bubble at %v covers %v", step.Key, panel, r)
+			}
+		}
+		if panel.Max.Y > unionOf(essences).Min.Y {
+			t.Errorf("step %q's bubble at %v is not above the essences at %v", step.Key, panel, unionOf(essences))
+		}
+	}
 }

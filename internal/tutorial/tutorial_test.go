@@ -55,7 +55,7 @@ func satisfying(t *testing.T, step Step, baseRounds, baseLedger, baseDMG, baseBr
 	case CondNext:
 		return Facts{}, true
 	case CondCardsQueued:
-		return Facts{Queued: 1}, false
+		return Facts{Queued: max(1, step.Count)}, false
 	case CondHandEmptied:
 		return Facts{Queued: 5, Unqueued: 0}, false
 	case CondMatchQueued:
@@ -366,6 +366,31 @@ func TestAnInventedAxisIsRefused(t *testing.T) {
 	}
 }
 
+// Card names belong to `named-cards` alone: required there and checked against the deck, refused
+// everywhere else.
+func TestCardNamesBelongToTheNamedCardsAnchor(t *testing.T) {
+	parkTutorial(t)
+	cases := []struct {
+		why  string
+		step data.TutorialStepData
+		ok   bool
+	}{
+		{"a card the deck holds", data.TutorialStepData{Anchor: "named-cards", Cards: []string{"Smash"}}, true},
+		{"an element and a card", data.TutorialStepData{Anchor: "named-cards", Cards: []string{"arcane Smash"}}, true},
+		{"no card at all", data.TutorialStepData{Anchor: "named-cards"}, false},
+		{"a card the deck does not hold", data.TutorialStepData{Anchor: "named-cards", Cards: []string{"Smack"}}, false},
+		{"an element the card does not ship in", data.TutorialStepData{Anchor: "named-cards", Cards: []string{"stone Smash"}}, false},
+		{"a card on another anchor", data.TutorialStepData{Anchor: "enemy-card", Cards: []string{"Smash"}}, false},
+	}
+	for _, c := range cases {
+		c.step.StepRecord, c.step.Text, c.step.Until = "s", "s", "next"
+		_, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{c.step}})
+		if (err == nil) != c.ok {
+			t.Errorf("%s: accepted %v, want %v (%v)", c.why, err == nil, c.ok, err)
+		}
+	}
+}
+
 // **A step waiting for NEXT holds the round, and nothing else does.** The shield step is the first
 // in the lesson that lands inside a playing round, and the pause is the whole of what makes it
 // readable — without it the break appears and the creature is already swinging.
@@ -398,5 +423,75 @@ func TestASpentScriptHoldsNothing(t *testing.T) {
 	run.Advance(Facts{})
 	if run.HoldsRound() {
 		t.Error("a script that has run out is still holding the round")
+	}
+}
+
+// A counted `cards-queued` waits for the count, so a step asking for three named cards does not give
+// way on the first.
+func TestACountedQueueWaitsForTheCount(t *testing.T) {
+	parkTutorial(t)
+	run := &Run{script: Script{Steps: []Step{{Key: "x", Text: "x", Until: CondCardsQueued, Count: 3}}}}
+	run.Update(Facts{Queued: 2}, false)
+	if !run.Active() {
+		t.Fatal("two queued cards satisfied a step waiting for three")
+	}
+	run.Update(Facts{Queued: 3}, false)
+	if run.Active() {
+		t.Error("three queued cards did not satisfy a step waiting for three")
+	}
+}
+
+// A mark is `{part:phrase}`, it must name a part its step's anchor has, and the phrase is what the
+// step reads as.
+func TestMarksNameTheAnchorsParts(t *testing.T) {
+	parkTutorial(t)
+	parse := func(anchor, text string) error {
+		_, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
+			{StepRecord: "s", Text: text, Anchor: anchor, Until: "next"},
+		}})
+		return err
+	}
+	if err := parse("fight-frame", "{realm:Each realm} and {clock:your time}"); err != nil {
+		t.Errorf("marks naming the anchor's parts were refused: %v", err)
+	}
+	if parse("fight-frame", "{shop:the shop}") == nil {
+		t.Error("a mark naming a part the anchor does not have was accepted")
+	}
+	if parse("enemy-card", "{enemy:it}") == nil {
+		t.Error("a mark on an anchor with no parts was accepted")
+	}
+	if parse("fight-frame", "{realm the realm}") == nil || parse("fight-frame", "{realm:open") == nil {
+		t.Error("a malformed mark was accepted")
+	}
+
+	step := Step{Text: "{realm:Each realm} has {enemy:enemies}, and {realm:realms} end."}
+	if got := step.Plain(); got != "Each realm has enemies, and realms end." {
+		t.Errorf("Plain = %q", got)
+	}
+	if got := step.MarkedParts(); len(got) != 2 || got[0] != "realm" || got[1] != "enemy" {
+		t.Errorf("MarkedParts = %v, want [realm enemy]", got)
+	}
+}
+
+// An Also frame is a control on a reading step, and a mark may name it.
+func TestAlsoFramesAControlOnAReadingStep(t *testing.T) {
+	parkTutorial(t)
+	parse := func(until string, also []string, text string) error {
+		_, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
+			{StepRecord: "s", Text: text, Anchor: "enemy-card", Until: until, Also: also},
+		}})
+		return err
+	}
+	if err := parse("next", []string{"ledger-button"}, "{ledger-button:the ledger}"); err != nil {
+		t.Errorf("an Also control on a reading step, marked by name, was refused: %v", err)
+	}
+	if parse("duel-pressed", []string{"ledger-button"}, "s") == nil {
+		t.Error("an Also frame on a step waiting for a click was accepted")
+	}
+	if parse("next", []string{"first-card"}, "s") == nil {
+		t.Error("a card anchor in Also was accepted; cards are tinted, not framed")
+	}
+	if parse("next", []string{"ledgr-button"}, "s") == nil {
+		t.Error("a misspelled Also was accepted")
 	}
 }

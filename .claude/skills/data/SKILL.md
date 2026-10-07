@@ -338,9 +338,10 @@ every file here answers.
 a sequence like `duelist_cards.json`, since file order is play order and a map would put the run's
 first lesson wherever Go's hashing felt like it.
 
-- **`Seed`, `Enemy` and `Match` sit above the steps**. Bob promises four matching
-  cards and a turn that wounds without killing, and both are facts about one deal against one
-  creature rather than about the game. The profile can start the lesson with no fixture in sight,
+- **`Seed`, `Enemy` and `Match` sit above the steps**. The lesson promises a hand of three Slices
+  that wounds, a shield that surges, and a kill, and all three are facts about
+  one deal against one creature rather than about the game. The realm's element is the seed's, so
+  the seed is chosen for the element the steps name — see `go doc ./internal/tutorial`. The profile can start the lesson with no fixture in sight,
   so pinned anywhere else it runs on whatever the clock rolled and describes a hand it has not
   dealt. **A promise and the thing that makes it true belong in the same file.**
 - **`Match` is a fourth closed vocabulary** — `concept`, `form` or `element`, the three axes a hand

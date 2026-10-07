@@ -13,7 +13,7 @@ import (
 // is up**, which is the combat screen's rule for its own pile: the X is the exit, and this is the
 // opener, so a press here while the panel is up must not reach the shelf underneath.
 func (s *ShopScene) clickedPile(gs *state.GlobalState, at image.Point) bool {
-	if !at.In(deckPileBounds(gs)) {
+	if !at.In(deckStackBounds(gs)) {
 		return false
 	}
 	s.deck.Toggle()

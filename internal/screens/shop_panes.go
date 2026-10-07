@@ -56,8 +56,9 @@ func shopPaneOrder() []shopPane {
 }
 
 const (
-	// shopPaneMargin is the bare ground kept at each end of the row. It is what the pitch is
-	// solved against, so widening it narrows every pane rather than pushing one off the screen.
+	// shopPaneMargin is the bare ground kept at the row's right end; the left end starts on the card
+	// band — see shopShelfLeft. It is what the pitch is solved against, so widening it narrows every
+	// pane rather than pushing one off the screen.
 	shopPaneMargin = 24
 
 	// shopPaneGutter is the bare ground between two panes' backings. **Wider than the padding
@@ -123,7 +124,7 @@ func shopSeatTotal() int {
 // pane is ever taken off it.
 func shopPitch(gs *state.GlobalState) int {
 	n := len(shopPaneOrder())
-	usable := gs.ScreenWidth - 2*shopPaneMargin - n*2*relicPaneBackPad - (n-1)*shopPaneGutter
+	usable := gs.ScreenWidth - shopShelfLeft(gs) - shopPaneMargin - n*2*relicPaneBackPad - (n-1)*shopPaneGutter
 
 	steps := shopSeatTotal() - n
 	if steps <= 0 {
@@ -137,6 +138,13 @@ func shopPitch(gs *state.GlobalState) int {
 	return pitch
 }
 
+// shopShelfLeft is where the shelf's first backing starts: **the card band's left edge**, the line
+// the worn relics and a fight's hand start on. The duelist's column under it holds the draw pile, at
+// hand size on every screen, so a shelf starting at the screen's edge would stand on it.
+func shopShelfLeft(gs *state.GlobalState) int {
+	return handBandLeft(gs)
+}
+
 // shopPaneWidth is how wide one pane's cards run, before its padding.
 func shopPaneWidth(gs *state.GlobalState, p shopPane) int {
 	return (shopPaneSeats(p)-1)*shopPitch(gs) + cardWidth
@@ -148,7 +156,7 @@ func shopPaneWidth(gs *state.GlobalState, p shopPane) int {
 func shopPaneRect(gs *state.GlobalState, p shopPane) image.Rectangle {
 	top := gs.PctY(shopPaneTopPct)
 
-	left := shopPaneMargin + relicPaneBackPad
+	left := shopShelfLeft(gs) + relicPaneBackPad
 	for _, before := range shopPaneOrder() {
 		if before == p {
 			break

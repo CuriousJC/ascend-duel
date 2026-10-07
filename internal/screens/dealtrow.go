@@ -36,7 +36,7 @@ type dealtRow struct {
 	slides  []ui.CardSlide
 	drag    ui.CardDrag
 
-	// top is the row's top edge on this screen. The row is centered on the screen and cut at the
+	// top is the row's top edge on this screen. The row is the combat hand's band and cut at the
 	// hand's own compressing pitch, so this is the one fact a screen supplies.
 	top func(gs *state.GlobalState) int
 }
@@ -63,9 +63,15 @@ func (r *dealtRow) deal(gs *state.GlobalState, offer []int) {
 
 // rowOf is the row for a stated number of cards — what a slide needs, since a row of eight is not
 // centered where a row of seven is.
+//
+// **It is the combat hand's band**: centered on handRowCenter, between the duelist card and the sort
+// tabs, at the hand's own pitch. Only the top is the screen's.
 func (r *dealtRow) rowOf(gs *state.GlobalState, n int) image.Rectangle {
+	if n < 1 {
+		n = 1
+	}
 	width := (n-1)*handPitch(gs, n) + cardWidth
-	left := gs.PctX(50) - width/2
+	left := handRowCenter(gs).X - width/2
 	top := r.top(gs)
 	return image.Rect(left, top, left+width, top+cardHeight)
 }
@@ -105,12 +111,12 @@ func (r *dealtRow) isSelected(i int) bool {
 	return false
 }
 
-// tabRect is the i'th sort tab: one block, no air in it, centered on the row's height, hung off
-// the row's right edge — the combat screen's rule for its own block.
+// tabRect is the i'th sort tab: the combat screen's block, at the right end of the card band and
+// centered on the row's height. **It does not follow the row's width**, so the tabs stand in the
+// same place however many cards were dealt.
 func (r *dealtRow) tabRect(gs *state.GlobalState, i int) image.Rectangle {
-	row := r.rowOf(gs, len(r.offer))
-	left := row.Max.X + ui.SortColumnGap
-	top := row.Min.Y + sortBlockDrop() + i*(ui.SortTabSize+sortTabGap)
+	left := handBandLeft(gs) + cardBandWidth(gs)
+	top := r.top(gs) + sortBlockDrop() + i*(ui.SortTabSize+sortTabGap)
 	return image.Rect(left, top, left+ui.SortTabSize, top+ui.SortTabSize)
 }
 

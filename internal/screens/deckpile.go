@@ -10,9 +10,9 @@ package screens
 // **It stands in the fight's column** *(owner's call)* — the duelist's, bottom left, with its count
 // on the line the chrome's own squares sit on at the other end. The deck is one object the player
 // tracks across a whole run, so it is in one corner: a pile that changed corners between the duel
-// and the shop would be a thing to find again on every screen. **It is the smaller card here**,
-// cards.Stack, where a fight raises it to hand size in the hand row — a between-fights screen has
-// no row of cards for it to stand level with.
+// and the shop would be a thing to find again on every screen. **It is a hand-size card, in the
+// hand row, on every screen** — the fight's own pile, so nothing about the corner changes when the
+// duel ends.
 //
 // **It is free functions rather than a scene's** *(owner's call, 2026-09-19)*, because three
 // between-fights screens draw it now — the shop, the reward screen and the sealed good. Each owns
@@ -36,35 +36,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-// deckPileRect is the front card of the pile: what is drawn on top, and what a click is tested
-// against once the backs behind it are added.
-//
-// **The smaller card, at the foot of the duelist's column.** A between-fights screen has no hand
-// row for the pile to stand level with, so it keeps the draw pile's own three-quarter card —
-// cards.Stack — with its count under it on the bottom line. The column is the fight's, so the deck
-// is in the same corner on every screen it appears on.
-func deckPileRect(gs *state.GlobalState) image.Rectangle {
-	w, h := cards.Stack.Width, cards.Stack.Height
-	bottom := gs.ScreenHeight - deckStackBottomInset - deckCountSize - deckCaptionGap
-	left := gs.PctX(ui.DuelistCardLeftPct)
-	return image.Rect(left, bottom-h, left+w, bottom)
-}
-
-// deckPileBounds is the whole pile including the backs drawn up and to the left of the front card,
-// which is what the click is tested against.
-func deckPileBounds(gs *state.GlobalState) image.Rectangle {
-	r := deckPileRect(gs)
-	back := (deckStackDepth - 1) * deckStackStep
-	return image.Rect(r.Min.X-back, r.Min.Y-back, r.Max.X, r.Max.Y)
-}
-
-// deckPileCountRect is the line under the pile, where the count is written left-aligned with it —
-// the combat screen's own arrangement.
-func deckPileCountRect(gs *state.GlobalState) image.Rectangle {
-	pile := deckPileRect(gs)
-	top := pile.Max.Y + deckCaptionGap
-	return image.Rect(pile.Min.X, top, pile.Max.X, top+deckCountSize)
-}
+// The pile's geometry is the combat screen's: deckStackRect, deckStackBounds and deckCountRect. **A
+// between-fights screen does not get a pile of its own**, because the bottom third is one layout on
+// every screen that draws it — the pile at hand size in the duelist's column, level with where a hand
+// is dealt, and its count on the bottom line.
 
 // drawShopPile draws the backs and the count under them.
 //
@@ -76,20 +51,20 @@ func drawDeckPile(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	spec := deckPileBackSpec(gs)
-	front := deckPileRect(gs)
+	front := deckStackRect(gs)
 
 	// Back to front, so the front card is the one on top and the one the click tests.
 	for i := deckStackDepth - 1; i >= 0; i-- {
 		off := i * deckStackStep
 		at := image.Pt(front.Min.X-off, front.Min.Y-off)
-		if img := ui.CardImage(gs, spec, cards.Stack); img != nil {
+		if img := ui.CardImage(gs, spec, cards.Hand); img != nil {
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(at.X), float64(at.Y))
 			screen.DrawImage(img, op)
 		}
 	}
 
-	count := deckPileCountRect(gs)
+	count := deckCountRect(gs)
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(count.Min.X), float64(count.Min.Y))
 	op.ColorScale.ScaleWithColor(ui.GroundInk)

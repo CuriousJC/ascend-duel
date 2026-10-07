@@ -213,8 +213,8 @@ func TestTheSkipButtonStandsBesideTheEssences(t *testing.T) {
 }
 
 // **A lifted card must not reach the essences above it.** The lift is what says which card is
-// selected, and the row it lifts into is the one the essences stand in — see offerRowPct, which moved
-// to buy this clearance.
+// selected, and the row it lifts into is the one the essences stand in. The row is on the hand's
+// line, so the clearance is bought by essenceChosenRowPct.
 func TestASelectedOfferCardClearsTheEssenceRow(t *testing.T) {
 	gs := testState()
 	prizes, _ := essenceRowSeats(gs, 2)

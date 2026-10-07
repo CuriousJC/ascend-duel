@@ -176,7 +176,7 @@ func chromeShowing(gs *state.GlobalState) bool {
 		return false
 	}
 	switch gs.ActiveScreen {
-	case state.Settings, state.Achievements, state.Credits, state.RunOver, state.PostBattle,
+	case state.Settings, state.Achievements, state.Credits, state.RunOver,
 		state.Title, state.Goods, state.Crashed, state.Animations, state.Portal:
 		return false
 	}

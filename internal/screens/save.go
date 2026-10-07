@@ -52,9 +52,8 @@ func saveRun(gs *state.GlobalState) {
 
 // markTutorialSeen records that the teaching run is over.
 //
-// **Skipping counts as seeing it.** A player who dismissed Bob does not want him back next launch,
-// and there is nowhere to put a control that would bring him back — the same argument that makes
-// `tutorial.Run.Skip` irreversible for the session.
+// **Skipping counts as seeing it.** A player who dismissed Bob does not want him back next launch;
+// one who does presses TUTORIAL on the new-run dialog, which teaches whatever this flag says.
 func markTutorialSeen(gs *state.GlobalState) {
 	if gs == nil || gs.Profile == nil || gs.Profile.TutorialSeen {
 		return

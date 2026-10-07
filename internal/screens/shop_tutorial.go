@@ -68,6 +68,18 @@ func (s *ShopScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]i
 		return nil, false
 	}
 
+	// **The four panes, a frame each, in the anchor's part order** — relics, consumables, potions,
+	// elixir — so each can take its own ink. The backing rather than the cards, so an empty seat or
+	// an elixir not yet on offer still has its pane pointed at.
+	if a == tutorial.AnchorShopWares {
+		return []image.Rectangle{
+			shopPaneBackRect(gs, shopPaneRelics),
+			shopPaneBackRect(gs, shopPanePacks),
+			shopPaneBackRect(gs, shopPanePotions),
+			shopPaneBackRect(gs, shopPaneTonic),
+		}, true
+	}
+
 	if a != tutorial.AnchorShopShelf {
 		return nil, false
 	}

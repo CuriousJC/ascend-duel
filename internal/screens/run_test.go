@@ -8,6 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/tutorial"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
@@ -74,9 +75,9 @@ func TestAPinnedSeedSurvivesANewRun(t *testing.T) {
 	gs.SeedPinned = true
 
 	// **Taught, and the pin loses.** The tutorial's script carries its own run code because the
-	// lesson promises the player the hand they are holding, and that outranks every other way a
-	// seed can be chosen — see buildRun. This test is about the other case, so the player is one
-	// who has already been taught.
+	// lesson promises the player the hand they are holding, and that outranks a rolled or pinned
+	// seed — see buildRun. This test is about the other case, so the player is one who has already
+	// been taught.
 	gs.Profile.TutorialSeen = true
 
 	before := gs.RunSeed
@@ -85,6 +86,60 @@ func TestAPinnedSeedSurvivesANewRun(t *testing.T) {
 
 	if gs.RunSeed != before {
 		t.Errorf("a pinned seed must survive New Run: %d became %d", before, gs.RunSeed)
+	}
+}
+
+// TestTheThreeWaysToStartARun are the new-run dialog's three doors, on a profile never taught: a
+// rolled code is taught on the lesson's code, a dialled code is the dialled code untaught, and
+// TUTORIAL teaches even a profile that has seen it.
+func TestTheThreeWaysToStartARun(t *testing.T) {
+	lesson, err := seeds.Parse(tutorial.Load().Seed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dialled, _ := seeds.Parse("M9079R")
+
+	gs := saveState(t)
+	NewRunOn(gs, dialled, false)
+	if gs.RunSeed != lesson || !(gs.Run.Tutorial() != nil) {
+		t.Errorf("a rolled run on an untaught profile is the lesson: got %s, teaching %v",
+			seeds.Code(gs.RunSeed), (gs.Run.Tutorial() != nil))
+	}
+
+	gs = saveState(t)
+	NewRunOn(gs, dialled, true)
+	if gs.RunSeed != dialled || (gs.Run.Tutorial() != nil) {
+		t.Errorf("a dialled code is that code, untaught: got %s, teaching %v",
+			seeds.Code(gs.RunSeed), (gs.Run.Tutorial() != nil))
+	}
+
+	gs = saveState(t)
+	gs.Profile.TutorialSeen = true
+	NewRunTaught(gs)
+	if gs.RunSeed != lesson || !(gs.Run.Tutorial() != nil) || gs.Run.SeedChosen() {
+		t.Errorf("TUTORIAL is the lesson whatever the profile says, and not a chosen seed: got %s, teaching %v, chosen %v",
+			seeds.Code(gs.RunSeed), (gs.Run.Tutorial() != nil), gs.Run.SeedChosen())
+	}
+}
+
+// TestAnUntaughtProfileBootsIntoTheLesson: the first launch never shows the title or the seed
+// dialog, and every launch after the lesson does.
+func TestAnUntaughtProfileBootsIntoTheLesson(t *testing.T) {
+	gs := saveState(t)
+	gs.ActiveScreen = state.Title
+	BootRun(gs)
+	if gs.ActiveScreen == state.Title || gs.Run.Tutorial() == nil {
+		t.Errorf("an untaught profile must open in the lesson: on %v, teaching %v",
+			gs.ActiveScreen, gs.Run.Tutorial() != nil)
+	}
+
+	gs = saveState(t)
+	gs.Profile.TutorialSeen = true
+	gs.ActiveScreen = state.Title
+	BootRun(gs)
+	if gs.ActiveScreen != state.Title || gs.Run.Tutorial() != nil {
+		t.Errorf("a taught profile opens on the title, untaught run: on %v, teaching %v",
+			gs.ActiveScreen, gs.Run.Tutorial() != nil)
 	}
 }
 

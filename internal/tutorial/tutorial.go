@@ -4,6 +4,8 @@ package tutorial
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
 )
@@ -154,6 +156,40 @@ const (
 	// nothing and the gate drops for the frame before the condition advances the step — which is
 	// the correct reading of "there is nothing left to click here".
 	AnchorMatchingCardsLeft
+
+	// AnchorFightFrame is everything that bounds a fight: the opponent's card, the REALM and ROOM
+	// rows on the duelist card, and the round timer. **One name for the four because the step is
+	// one sentence about them** — an anchor names what a step is asking the player to look at.
+	AnchorFightFrame
+
+	// AnchorMatchingCard is one card of [AnchorMatchingCards] — the first — for a step that
+	// introduces a kind of card before asking for the set.
+	AnchorMatchingCard
+
+	// AnchorElementBlock is a defend card in the opponent's element, the Block before a Brace: the
+	// card whose shields surge when they eat the opponent's hits. **The opponent's element rather
+	// than a named one**, so the step stays true whichever realm the lesson is fought in.
+	AnchorElementBlock
+
+	// AnchorElementAttack is an attack card in the opponent's element — the card that fizzles on
+	// it.
+	AnchorElementAttack
+
+	// AnchorNamedCards is the cards in the hand the step names in its `Cards`, **queued or not**, so
+	// the spotlight holds still while the player takes them. For a step about particular cards, where no rule picks them out: a hand can hold two cards of the same cost,
+	// multiplier and element, and only the name tells them apart.
+	AnchorNamedCards
+
+	// AnchorDuelistDMG is the DMG row on the duelist card: the figure every hit starts from.
+	AnchorDuelistDMG
+
+	// AnchorShopWares is the shop's four panes, each its own part: the relics, the packs of
+	// consumables that reroll, the potions, and the realm's one elixir.
+	AnchorShopWares
+
+	// AnchorPayout is the reward screen's account of the vitae a win paid: interest, health kept,
+	// the enemy's vitae and the total.
+	AnchorPayout
 )
 
 // anchorNames is the word each anchor is written as in `data/tutorial.json`.
@@ -183,6 +219,14 @@ var anchorNames = map[Anchor]string{
 	AnchorRoundTimer:        "round-timer",
 	AnchorShatteredCards:    "shattered-cards",
 	AnchorMatchingCardsLeft: "matching-cards-left",
+	AnchorFightFrame:        "fight-frame",
+	AnchorMatchingCard:      "matching-card",
+	AnchorElementBlock:      "element-block",
+	AnchorElementAttack:     "element-attack",
+	AnchorNamedCards:        "named-cards",
+	AnchorPayout:            "payout",
+	AnchorDuelistDMG:        "duelist-dmg",
+	AnchorShopWares:         "shop-wares",
 }
 
 // cardAnchors is which anchors name *cards* rather than controls.
@@ -200,10 +244,92 @@ var cardAnchors = map[Anchor]bool{
 	AnchorMatchingCards:     true,
 	AnchorShatteredCards:    true,
 	AnchorMatchingCardsLeft: true,
+	AnchorMatchingCard:      true,
+	AnchorElementBlock:      true,
+	AnchorElementAttack:     true,
+	AnchorNamedCards:        true,
 }
 
 // NamesCards reports whether this anchor points at cards, which are marked rather than framed.
 func (a Anchor) NamesCards() bool { return cardAnchors[a] }
+
+// anchorParts is the named pieces of an anchor that frames several things, **in the order its
+// rectangles are handed back** — what a step's text can mark a phrase as being about, so the phrase
+// and its frame are drawn in one ink. See [Segments].
+var anchorParts = map[Anchor][]string{
+	AnchorFightFrame: {"enemy", "realm", "clock"},
+	AnchorShopWares:  {"relics", "consumables", "potions", "elixir"},
+}
+
+// Parts is this anchor's named pieces, in rectangle order; nil for an anchor that is one thing.
+func (a Anchor) Parts() []string { return anchorParts[a] }
+
+// Segment is a run of a step's text: plain, or marked as being about one part of the step's anchor.
+type Segment struct {
+	Text string
+	Part string
+}
+
+// Segments cuts a step's text at its marks. **A mark is `{part:phrase}`** — "{enemy:enemies}" — and
+// the phrase is drawn in the ink its part's frame is drawn in. Text with no marks is one segment.
+func Segments(text string) ([]Segment, error) {
+	var out []Segment
+	for text != "" {
+		open := strings.IndexByte(text, '{')
+		if open < 0 {
+			out = append(out, Segment{Text: text})
+			break
+		}
+		if open > 0 {
+			out = append(out, Segment{Text: text[:open]})
+		}
+		end := strings.IndexByte(text[open:], '}')
+		if end < 0 {
+			return nil, fmt.Errorf("a mark is opened and never closed: %q", text[open:])
+		}
+		mark := text[open+1 : open+end]
+		part, phrase, ok := strings.Cut(mark, ":")
+		if !ok || part == "" || phrase == "" {
+			return nil, fmt.Errorf("a mark is written {part:phrase}, not {%s}", mark)
+		}
+		out = append(out, Segment{Text: phrase, Part: part})
+		text = text[open+end+1:]
+	}
+	return out, nil
+}
+
+// Plain is a step's text with its marks taken out — what it reads as.
+func (s Step) Plain() string {
+	segs, _ := Segments(s.Text)
+	var b strings.Builder
+	for _, seg := range segs {
+		b.WriteString(seg.Text)
+	}
+	return b.String()
+}
+
+// Parts is what this step's text may mark: its anchor's parts, then each [Step.Also] by name.
+func (s Step) Parts() []string {
+	out := append([]string(nil), s.Anchor.Parts()...)
+	for _, a := range s.Also {
+		out = append(out, a.String())
+	}
+	return out
+}
+
+// MarkedParts is the parts this step's text marks, in the order they first appear.
+func (s Step) MarkedParts() []string {
+	segs, _ := Segments(s.Text)
+	seen := map[string]bool{}
+	var out []string
+	for _, seg := range segs {
+		if seg.Part != "" && !seen[seg.Part] {
+			seen[seg.Part] = true
+			out = append(out, seg.Part)
+		}
+	}
+	return out
+}
 
 func (a Anchor) String() string {
 	if n, ok := anchorNames[a]; ok {
@@ -438,6 +564,14 @@ type Step struct {
 	Lock   Lock
 	Until  Condition
 
+	// Also is the controls a reading step frames beside its Anchor, each one also a part its text
+	// can mark by name. See [Step.Parts].
+	Also []Anchor
+
+	// Cards is what a [AnchorNamedCards] step points at — each a label, or an element and a label,
+	// "arcane Smash" — and empty on every other step.
+	Cards []string
+
 	// Count is how many of something the step is waiting for, and **only the counting conditions
 	// read it**. It is the one number the script hands the state machine.
 	//
@@ -604,6 +738,30 @@ func Load() Script {
 
 // Parse is Load without the panic, so a test can assert on a bad record rather than recover from
 // one.
+// deckHolds reports whether the player's deck has a card of this name: a label, or an element and
+// a label — "Smash", "arcane Smash".
+func deckHolds(name string) bool {
+	words := strings.Fields(name)
+	if len(words) == 0 || len(words) > 2 {
+		return false
+	}
+	label := words[len(words)-1]
+	for _, c := range data.LoadDuelistCards() {
+		if c.Label != label {
+			continue
+		}
+		if len(words) == 1 {
+			return true
+		}
+		for _, e := range c.Elements {
+			if strings.EqualFold(e, words[0]) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func Parse(in data.TutorialData) (Script, error) {
 	records := in.Steps
 	if len(records) == 0 {
@@ -665,14 +823,65 @@ func Parse(in data.TutorialData) (Script, error) {
 				"step %q waits on %v and names no Count, so it is satisfied before it is shown",
 				r.StepRecord, until)
 		}
-		if until != CondRelicsWorn && r.Count != 0 {
+		if until != CondRelicsWorn && until != CondCardsQueued && r.Count != 0 {
 			return Script{}, fmt.Errorf("step %q carries Count %d, which %v does not read",
 				r.StepRecord, r.Count, until)
 		}
 
+		// **Card names belong to exactly the anchor that reads them**, on Count's terms: required
+		// there, refused elsewhere, and checked against the deck so a misspelling is a refused launch
+		// rather than a spotlight on nothing.
+		if anchor == AnchorNamedCards && len(r.Cards) == 0 {
+			return Script{}, fmt.Errorf("step %q points at %v and names no Cards", r.StepRecord, anchor)
+		}
+		for _, name := range r.Cards {
+			if !deckHolds(name) {
+				return Script{}, fmt.Errorf("step %q names %q, which the deck does not hold",
+					r.StepRecord, name)
+			}
+		}
+		// **An extra frame belongs on a reading step, and is a control rather than a card**: a
+		// locked screen keeps it from becoming a second thing to click, and a card is tinted rather
+		// than framed, so a card named here would be lit by nothing.
+		var also []Anchor
+		for _, name := range r.Also {
+			extra, err := ParseAnchor(name)
+			if err != nil {
+				return Script{}, fmt.Errorf("step %q: Also: %w", r.StepRecord, err)
+			}
+			if extra == AnchorNone || extra.NamesCards() {
+				return Script{}, fmt.Errorf("step %q: Also names %q, which is not a control to frame",
+					r.StepRecord, name)
+			}
+			also = append(also, extra)
+		}
+		if len(also) > 0 && until != CondNext {
+			return Script{}, fmt.Errorf("step %q frames more with Also and waits on %v; only a step "+
+				"waiting for NEXT may", r.StepRecord, until)
+		}
+		parts := Step{Anchor: anchor, Also: also}.Parts()
+
+		// **A mark has to name a part the step has**, or the phrase is colored for a frame that is
+		// not drawn.
+		segs, err := Segments(r.Text)
+		if err != nil {
+			return Script{}, fmt.Errorf("step %q: %w", r.StepRecord, err)
+		}
+		for _, seg := range segs {
+			if seg.Part != "" && !slices.Contains(parts, seg.Part) {
+				return Script{}, fmt.Errorf("step %q marks %q as %q, which %v has no part named",
+					r.StepRecord, seg.Text, seg.Part, anchor)
+			}
+		}
+
+		if anchor != AnchorNamedCards && len(r.Cards) > 0 {
+			return Script{}, fmt.Errorf("step %q names cards %v, which %v does not read",
+				r.StepRecord, r.Cards, anchor)
+		}
+
 		out.Steps = append(out.Steps, Step{
 			Key: r.StepRecord, Text: r.Text, Anchor: anchor, Lock: lock, Until: until,
-			Count: r.Count,
+			Cards: r.Cards, Also: also, Count: r.Count,
 		})
 	}
 
@@ -796,7 +1005,9 @@ func (r *Run) satisfied(step Step, f Facts, nextPressed bool) bool {
 	case CondNext:
 		return nextPressed
 	case CondCardsQueued:
-		return f.Queued > 0
+		// **At least Count, and at least one** — a step asking for three named cards waits for the
+		// three, and the gate leaves nothing else to queue.
+		return f.Queued > 0 && f.Queued >= step.Count
 	case CondHandEmptied:
 		return f.Queued > 0 && f.Unqueued == 0
 	case CondMatchQueued:

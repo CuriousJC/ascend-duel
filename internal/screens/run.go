@@ -32,9 +32,9 @@ import (
 // BootRun is the run the game opens with: the one saved on disk if there is one, otherwise a fresh
 // one from the seed main has already chosen.
 //
-// **It sets gs.Run and gs.Resumed and nothing else** — in particular it does not touch
-// ActiveScreen, because the game now boots to the title and the player says which run they want.
-// A resumed run is built and left standing until Continue is pressed.
+// **It sets gs.Run and gs.Resumed, and leaves ActiveScreen on the title** so the player says which
+// run they want. A resumed run is built and left standing until Continue is pressed. **The one
+// exception is a run that is teaching**, which walks straight in — see the end of the function.
 //
 // **A scenario never resumes.** A fixture describes a run it is putting together itself, and a
 // saved journey would be the one thing it could not override.
@@ -64,8 +64,17 @@ func BootRun(gs *state.GlobalState) {
 		}
 	}
 	gs.Resumed = false
-	gs.Run = buildRun(gs)
+	gs.Run = buildRun(gs, teachIfUntaught)
 	beginJournal(gs)
+
+	// **A player who has never been taught opens in the lesson, not on the title** *(owner's call)*.
+	// There is no run of theirs to resume and nothing to choose yet: the new-run dialog's three doors
+	// mean nothing to someone who has not been told what a seed is. Bob's skip is the way out.
+	if gs.Run.Tutorial() != nil {
+		log.Printf("untaught profile: booting straight into the lesson")
+		enterRun(gs)
+		return
+	}
 	bootPastTheTitle(gs)
 }
 
@@ -131,8 +140,8 @@ func bootPastTheTitle(gs *state.GlobalState) {
 // blow; both are facts about one deal against one creature, so the script carries the run code and
 // session.Enemy reads the opponent off it. Teaching on whatever the clock rolled is exactly the
 // bug this fixes — the lesson said five matching cards over a hand holding two.
-func buildRun(gs *state.GlobalState) *session.Session {
-	script, teaching := tutorialForThisRun(gs)
+func buildRun(gs *state.GlobalState, mode teachMode) *session.Session {
+	script, teaching := tutorialForThisRun(gs, mode)
 	if teaching && script.Seed != "" {
 		seed, err := seeds.Parse(script.Seed)
 		if err != nil {
@@ -164,18 +173,49 @@ func playerUnlocks(gs *state.GlobalState) []string {
 	return gs.Profile.Unlocks
 }
 
-// tutorialForThisRun is the script to teach and whether to teach it.
+// teachMode is how a run being built asks for the lesson: the three ways the new-run dialog can
+// start one.
+type teachMode int
+
+const (
+	// teachIfUntaught is a rolled run — the boot run and the dialog's START on the code it rolled.
+	// It teaches a profile that has never finished the lesson, so a clean machine opens into it.
+	teachIfUntaught teachMode = iota
+
+	// teachNever is a code the player dialled on the wheels. The lesson would replace it with its
+	// own, and a player who asked for a particular journey gets that journey.
+	teachNever
+
+	// teachAlways is the dialog's TUTORIAL button, whatever the profile says.
+	teachAlways
+)
+
+// tutorialForThisRun is the script to teach and whether to teach it, which is a question about the
+// profile and about how this particular run started.
 //
-// **It answers no to everything, because the lesson has no fight to be taught in.** The script
-// names a creature and a run code together — the taught hand, the blow it lands and the answering
-// turn were one tuned set — and the roster it names no longer exists. A lesson that opened on a
-// creature the script had not measured would describe a hand it had not dealt, which is worse than
-// no lesson: the tutorial is the one feature whose audience cannot tell a bug from the game.
+// **A scenario answers no unless it asks**, because it has its own switch and because a fixture that
+// jumped the run to the shop cannot also be teaching a lesson that opens in a duel. The TUTORIAL
+// button outranks it: a press is a request for the lesson.
 //
-// Re-teaching it is a motif, an element and a fresh run code that satisfy all of it at once; see
-// TODO.md, and the tutorial section of CLAUDE.md for the constraints a replacement has to meet.
-func tutorialForThisRun(gs *state.GlobalState) (tutorial.Script, bool) {
-	return tutorial.Script{}, false
+// **gs.Resumed is not consulted here**, because a resumed run never reaches this function. A player
+// who quits during the tutorial is taught again next launch, because nothing has marked it seen.
+//
+// **The script names a creature and a run code together** — the taught hand, the blow it lands and
+// the answering turn are one tuned set — so a roster or deck change can leave the lesson describing
+// a hand it no longer deals. The tests in tutorial_seed_test.go and tutorial_shield_test.go hold it.
+func tutorialForThisRun(gs *state.GlobalState, mode teachMode) (tutorial.Script, bool) {
+	switch {
+	case mode == teachAlways:
+		return tutorial.Load(), true
+	case scenario.Active():
+		if scenario.Teach() {
+			return tutorial.Load(), true
+		}
+		return tutorial.Script{}, false
+	case mode == teachNever, gs.Profile == nil, gs.Profile.TutorialSeen:
+		return tutorial.Script{}, false
+	}
+	return tutorial.Load(), true
 }
 
 // NewRun throws away whatever run was in progress and starts one from the beginning.
@@ -205,11 +245,28 @@ func RollSeed(gs *state.GlobalState) int64 {
 // the journal — a chosen seed is a journey that could have been looked up in advance, which is
 // what the game withholds things from. See session.ChooseSeed.
 func NewRunOn(gs *state.GlobalState, seed int64, chosen bool) {
+	mode := teachIfUntaught
+	if chosen {
+		mode = teachNever
+	}
+	startRun(gs, seed, chosen, mode)
+}
+
+// NewRunTaught starts the tutorial: a new run on the lesson's own code, taught whether or not this
+// profile has seen it. **It is not a chosen seed** — the code is the script's rather than the
+// player's, and it is the same run a first launch is taught on.
+func NewRunTaught(gs *state.GlobalState) {
+	startRun(gs, gs.RunSeed, false, teachAlways)
+}
+
+// startRun is the one way a new run is built from a button: the saved run goes, the run is built
+// (buildRun replaces the seed with the lesson's when it teaches), and the player walks in.
+func startRun(gs *state.GlobalState, seed int64, chosen bool, mode teachMode) {
 	discardSavedRun(gs)
 
 	gs.RunSeed = seed
 	gs.Resumed = false
-	gs.Run = buildRun(gs)
+	gs.Run = buildRun(gs, mode)
 	if chosen {
 		gs.Run.ChooseSeed()
 	}

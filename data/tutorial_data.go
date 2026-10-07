@@ -96,8 +96,20 @@ type TutorialStepData struct {
 	// player to acknowledge rather than to act.
 	Until string `json:"Until"`
 
+	// Also is more controls a step frames beside its Anchor — `ledger-button` — each a word from
+	// the same vocabulary. **Only on a step waiting for NEXT**: a reading step locks the screen, so
+	// an extra frame says "look here too" without becoming a second thing to click. Each is a part a
+	// mark in Text can name, so the phrase and its frame share an ink.
+	Also []string `json:"Also,omitempty"`
+
+	// Cards is what a `named-cards` step points at: each a label in `duelist_cards.json`, or an
+	// element and a label — "arcane Smash". **Required by that anchor and refused on every other**,
+	// like Count: a name nothing reads is a script saying something it is not doing. A card the deck
+	// does not hold is refused at load.
+	Cards []string `json:"Cards,omitempty"`
+
 	// Count is how many of something the step waits for, read by the counting conditions alone —
-	// `relics-worn` is the only one today. **Refused where the condition cannot read it**, so a
+	// `relics-worn`, and `cards-queued` where it wants more than one. **Refused where the condition cannot read it**, so a
 	// figure never sits in the file doing nothing; see `tutorial.Parse`.
 	Count int `json:"Count,omitempty"`
 }

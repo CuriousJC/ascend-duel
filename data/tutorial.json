@@ -1,161 +1,102 @@
 {
-  "Seed": "0019QS",
-  "Enemy": "animals-outer-bat",
-  "Match": "element",
+  "Seed": "00698M",
+  "Enemy": "goblins-inner-brute",
+  "Match": "concept",
   "Steps": [
     {
-      "StepRecord": "hello",
-      "Text": "Welcome duelist. I am Bob. Many years ago a group of adventures tried journeying through these realms but the realms corrupted them and they never seen again. So this is my warning to you. Let me show you one round of it so you will be prepared.",
+      "StepRecord": "welcome",
+      "Text": "Welcome, Duelist. I'm the Prismatic. I'll be guiding you through the journey of our realms.",
       "Until": "next"
     },
     {
-      "StepRecord": "where-you-are",
-      "Text": "Eight realms, three rooms each.",
-      "Anchor": "journey-place",
+      "StepRecord": "three-fights",
+      "Text": "{realm:Each realm} will require three fights with {enemy:enemies} before you can move on, and you must win within your {clock:allotted time}.",
+      "Anchor": "fight-frame",
       "Until": "next"
     },
     {
-      "StepRecord": "the-clock",
-      "Text": "And that bar is your rope. Five rounds a fight, no more. Still standing when the last one burns out and the realm takes you - so every duel is a race, not a siege.",
-      "Anchor": "round-timer",
+      "StepRecord": "a-card",
+      "Text": "Each card in your deck is an attack or a defend. They have a form, an element, and a cost. This is a slashing ice attack that costs two AP.",
+      "Anchor": "matching-card",
       "Until": "next"
     },
     {
-      "StepRecord": "the-opponent",
-      "Text": "And that is what is in the way.",
-      "Anchor": "enemy-card",
+      "StepRecord": "a-defend",
+      "Text": "Defends cancel attacks and always choose the most effective attack to stop first. This is a defending fire card that costs 2 AP and provides two fire shields.",
+      "Anchor": "element-block",
       "Until": "next"
     },
     {
-      "StepRecord": "yourself",
-      "Text": "You. DMG is how hard your hits start out.  AP determines how much you can do.  Vitae I'll cover later.  Last is your life, drop to zero and your journey is over.",
-      "Anchor": "duelist-card",
-      "Until": "next"
-    },
-    {
-      "StepRecord": "the-hand",
-      "Text": "Your dealt hand. Click that one to queue it.",
-      "Anchor": "first-card",
-      "Until": "cards-queued"
-    },
-    {
-      "StepRecord": "the-budget",
-      "Text": "That Jab cost 1 AP. You may play five cards a round, but never more AP than you have.",
-      "Anchor": "ap-bar",
-      "Until": "next"
-    },
-    {
-      "StepRecord": "take-them-all",
-      "Text": "Now look closer. Four cards burn the same color. Matching cards make a hand, and a hand multiplies every card's hit - so take the other three.",
+      "StepRecord": "choose-the-slices",
+      "Text": "Use forms, elements, and specific cards to create hands and boost your damage. Choose those three slices and attack with a three of a kind hand, duelist.",
       "Anchor": "matching-cards-left",
       "Until": "matching-queued"
     },
     {
-      "StepRecord": "the-shield",
-      "Text": "One of those four is a Brace - a shield, not a hit. It deals nothing, but it counts toward the hand all the same. It buys you one shield, and a shield does not eat whatever swings first - it picks their hardest hit and swallows that one.",
-      "Anchor": "matching-cards",
-      "Until": "next"
-    },
-    {
-      "StepRecord": "swing",
-      "Text": "Elemental Four of a Kind. Matching colors count, not just matching cards.",
+      "StepRecord": "attack-with-the-slices",
+      "Text": "Use forms, elements, and specific cards to create hands and boost your damage. Choose those three slices and attack with a three of a kind hand, duelist.",
       "Anchor": "duel-button",
       "Until": "duel-pressed"
     },
     {
-      "StepRecord": "watch",
-      "Text": "Now your hand calculates. Each attack multiplies your DMG, and your hand has its own multiplier on top.",
-      "Anchor": "math-band",
-      "Until": "shield-broke"
-    },
-    {
-      "StepRecord": "the-shield-bit",
-      "Text": "Stop there. That card is broken - your shield went out and killed it before it could swing. It took the Drain, the biggest thing the bat had. A shield never eats whatever comes first; it always takes their worst.",
-      "Anchor": "shattered-cards",
-      "Until": "next"
-    },
-    {
-      "StepRecord": "the-answer",
-      "Text": "Now the two it has left.",
-      "Anchor": "enemy-card",
+      "StepRecord": "the-slices-land",
+      "Text": "Use forms, elements, and specific cards to create hands and boost your damage. Choose those three slices and attack with a three of a kind hand, duelist.",
       "Until": "round-done"
     },
     {
-      "StepRecord": "the-blow-landed",
-      "Text": "So it swung three times and landed two. One shield, one attack, and always their worst one - which is why a shield is worth more against a big hitter than against a swarm. Raise more when you expect worse.",
-      "Anchor": "duelist-card",
+      "StepRecord": "the-damage",
+      "Text": "Your damage is based on {duelist-dmg:your DMG stat} and multiplies by the strength of an attacking card and then by the multiplier of your hand. Each attack deals its own damage. This arcane crushing attack deals 3x your DMG stat and costs 3 AP. If you are ever in doubt, {ledger-button:check the ledger} for how a card calculated damage.",
+      "Anchor": "named-cards",
+      "Cards": ["arcane Smash"],
+      "Also": ["duelist-dmg", "ledger-button"],
       "Until": "next"
     },
     {
-      "StepRecord": "the-ledger",
-      "Text": "Every hit of this journey is written down here, figure by figure. Open it and see what that round actually cost.",
-      "Anchor": "ledger-button",
-      "Until": "ledger-opened"
+      "StepRecord": "its-own-element",
+      "Text": "Attacking with the element of your enemy will not hurt them.  A fire club can still be used to form a hand against this fire goblin, but don't expect it to hurt.",
+      "Anchor": "element-attack",
+      "Until": "next"
     },
     {
-      "StepRecord": "finish-it",
-      "Text": "It has little left. Take it down.",
-      "Anchor": "hand",
+      "StepRecord": "choose-the-shield",
+      "Text": "Defending with the element of your enemy will surge your abilities, allowing you to perform more actions on your next turn. Choose the dual fire shield and the fire Thump and the arcane Smash cards to attack with a pair and defend yourself.",
+      "Anchor": "named-cards",
+      "Cards": ["fire Block", "fire Thump", "arcane Smash"],
+      "Until": "cards-queued",
+      "Count": 3
+    },
+    {
+      "StepRecord": "raise-the-shield",
+      "Text": "Defending with the element of your enemy will surge your abilities, allowing you to perform more actions on your next turn. Choose the dual fire shield and the fire Thump and the arcane Smash cards to attack with a pair and defend yourself.",
+      "Anchor": "duel-button",
+      "Until": "duel-pressed"
+    },
+    {
+      "StepRecord": "the-shield-holds",
+      "Text": "Defending with the element of your enemy will surge your abilities, allowing you to perform more actions on your next turn. Choose the dual fire shield and the fire Thump and the arcane Smash cards to attack with a pair and defend yourself.",
+      "Until": "round-done"
+    },
+    {
+      "StepRecord": "surging",
+      "Text": "Now with surging power you can defeat your enemy.",
       "Until": "phase-reward"
     },
     {
-      "StepRecord": "the-vitae",
-      "Text": "Dead. Its vitae is yours, the only coin in these realms.",
-      "Anchor": "build-card",
+      "StepRecord": "the-payout",
+      "Text": "Vitae is the currency of the realms. After victory you will gain interest on what you already carry, a small amount based on your remaining health, and some vitae from the fallen enemy based on their power.",
+      "Anchor": "payout",
       "Until": "next"
     },
     {
-      "StepRecord": "the-essence",
-      "Text": "Every enemy has runes you can use.",
-      "Anchor": "reward-essences",
-      "Until": "next"
-    },
-    {
-      "StepRecord": "choose-an-essence",
-      "Text": "Pick the card you want changed, then click the essence that changes it.",
+      "StepRecord": "an-essence",
+      "Text": "Each victory grants you an essence to alter your deck. Choose either.",
       "Anchor": "reward-essences",
       "Until": "phase-shop"
     },
     {
-      "StepRecord": "the-shelf",
-      "Text": "Now your jewelry. Three on offer and coin enough for two of them - you won't survive without them, so spend it.",
-      "Anchor": "shop-shelf",
-      "Until": "next"
-    },
-    {
-      "StepRecord": "buy-two-rings",
-      "Text": "Take two. Any two - they are yours for the rest of the journey.",
-      "Anchor": "shop-shelf",
-      "Until": "relics-worn",
-      "Count": 2
-    },
-    {
-      "StepRecord": "relics-stack",
-      "Text": "Both are on your hand now, and both are awake at once. Every card they match, they each take a turn at - so two relics that want the same card multiply together rather than taking turns. They fire left to right along this row.",
-      "Anchor": "shop-worn",
-      "Until": "next"
-    },
-    {
-      "StepRecord": "the-draught",
-      "Text": "One flask left to buy. Drink it.",
-      "Anchor": "shop-dmg-potion",
-      "Until": "dmg-bought"
-    },
-    {
-      "StepRecord": "draught-is-permanent",
-      "Text": "That DMG is yours for good. A relic can be sold and a shield lasts a turn, but a draught changes the duelist - every hit you throw from here is bigger for it.",
-      "Anchor": "build-card",
-      "Until": "next"
-    },
-    {
-      "StepRecord": "leave-the-shop",
-      "Text": "Now proceed into the next room.",
-      "Anchor": "shop-leave",
-      "Until": "phase-fight"
-    },
-    {
-      "StepRecord": "farewell",
-      "Text": "Go ahead, duelist, it's time to begin your journey.",
+      "StepRecord": "the-shop",
+      "Text": "I will bring you {relics:relics}, {consumables:spells}, {potions:potions}, and {elixir:elixirs} to prepare you for the next fight. {relics:Relics} stay with you until you sell them, {consumables:some you can save}, and {potions:others will always be in the shop}. Each realm has a {elixir:single elixir} to offer for a permanent upgrade.  Good luck duelist.",
+      "Anchor": "shop-wares",
       "Until": "next"
     }
   ]

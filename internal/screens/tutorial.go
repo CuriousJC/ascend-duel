@@ -25,7 +25,9 @@ package screens
 import (
 	"image"
 	"image/color"
+	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/achieve"
@@ -48,6 +50,13 @@ import (
 // the scene and most of them are only meaningful while it is the one on screen. An anchor asked
 // of the wrong scene reports `false` and the bubble simply points at nothing, which is the right
 // behavior for the frame or two either side of a scene change.
+// tutorialClearance is a scene that knows what the bubble must stay off for an anchor beyond what
+// the anchor lights — the reward screen's row of cards, which the essence step asks the player to
+// choose from without pointing at it. Optional: a scene without one keeps only the anchor clear.
+type tutorialClearance interface {
+	tutorialKeepClear(gs *state.GlobalState, a tutorial.Anchor) []image.Rectangle
+}
+
 type tutorialHost interface {
 	// tutorialFacts is what this scene can say about the run right now. See tutorial.Facts for
 	// why the traffic goes this way rather than as events.
@@ -123,6 +132,12 @@ var (
 	// gray stops being a step off the surface the moment the surface moves.
 	tutorialWaiting = systems.ColorToward(systems.PanelInk, tutorialPanel, 40)
 
+	// tutorialAction is the waiting line when it is something the player has to do. **Amber, which
+	// sits between fire's orange and lightning's yellow** — the wheel is full — so it is set in
+	// capitals in the interface's own lettering, where no element word ever appears, to read as an
+	// instruction rather than as an element.
+	tutorialAction = color.RGBA{R: 255, G: 190, B: 40, A: 255}
+
 	// tutorialGlow is the square drawn around whatever is being pointed at, and the leader line
 	// running to it from the bubble. **Red** *(owner's call, 2026-08-25)*.
 	//
@@ -148,6 +163,12 @@ var (
 // never builds one.
 type tutorialOverlay struct {
 	next, skip *models.Button
+
+	// placedFor is the step the bubble was last placed for, and placedPointing whether its anchor
+	// had anything to point at then. See update: the bubble settles once per step.
+	placedFor      string
+	placedText     string
+	placedPointing bool
 
 	nextPressed bool
 	skipPressed bool
@@ -197,7 +218,23 @@ func (t *tutorialOverlay) update(gs *state.GlobalState, host tutorialHost) {
 	gs.InputGated = gated
 	gs.InputFocus = focus
 
-	t.panel = t.place(gs, host, step)
+	// **The bubble settles once per step** *(owner's call)*, so a card lifting as it is selected does
+	// not move it. It is placed again while the step's anchor has nothing to point at yet — a hand
+	// still being dealt — and holds from the first frame it does.
+	//
+	// **A step repeating the line before it keeps that step's seat** — choosing the cards, pressing
+	// DUEL! and watching the round are one sentence across three steps — unless it would cover what
+	// the new step points at.
+	if step.Key != t.placedFor || !t.placedPointing {
+		rs, ok := host.tutorialRects(gs, step.Anchor)
+		keep := step.Key != t.placedFor && step.Text == t.placedText && t.placedPointing &&
+			!(ok && t.panel.Overlaps(unionOf(rs).Inset(-tutorialMargin)))
+		if !keep {
+			t.panel = t.place(gs, host, step)
+		}
+		t.placedFor, t.placedText = step.Key, step.Text
+		t.placedPointing = step.Anchor == tutorial.AnchorNone || (ok && len(rs) > 0)
+	}
 	t.build()
 	t.nextPressed, t.skipPressed = false, false
 
@@ -385,13 +422,41 @@ func (t *tutorialOverlay) place(gs *state.GlobalState, host tutorialHost,
 	targets, pointing := host.tutorialRects(gs, step.Anchor)
 	target := unionOf(targets)
 	if step.Anchor == tutorial.AnchorNone || !pointing || target.Empty() {
+		// **A step waiting on an outcome is one the player watches the game through** — a round
+		// playing out, a fight being finished — so it sits at the top, over the panes, and leaves the
+		// table and the arithmetic in the middle of it visible. That is a step with neither a Next
+		// nor a click to wait for; a round playing back locks the screen, so the lock cannot say it.
+		if step.Until != tutorial.CondNext && step.Lock != tutorial.LockToAnchor {
+			return image.Rect(middle, top, middle+w, top+h)
+		}
 		// Nothing to avoid: an opening or closing line belongs in the middle of the screen.
 		return image.Rect(middle, (gs.ScreenHeight-h)/2, middle+w, (gs.ScreenHeight-h)/2+h)
 	}
 
 	// Kept off the anchor by the same margin it keeps off the screen edge, so a bubble does not
 	// end up touching the thing it is pointing at.
+	if c, ok := host.(tutorialClearance); ok {
+		for _, r := range c.tutorialKeepClear(gs, step.Anchor) {
+			target = target.Union(r)
+		}
+	}
 	avoid := target.Inset(-tutorialMargin)
+
+	// **A step that describes a card sits in the middle, straight above it** *(owner's call)*: it
+	// is read rather than acted on, the table is empty while the player plans, and the middle is
+	// the seat nearest a card in the hand. Only when it is clear of the card.
+	if step.Until == tutorial.CondNext && step.Anchor.NamesCards() {
+		mid := seats[len(seats)-1]
+		r := image.Rect(mid.X, mid.Y, mid.X+w, mid.Y+h)
+		clear := !r.Overlaps(avoid)
+		extras, _ := alsoRects(gs, host, step)
+		for _, e := range extras {
+			clear = clear && !r.Overlaps(e.Inset(-tutorialMargin))
+		}
+		if clear {
+			return r
+		}
+	}
 
 	// **Scored against the anchor itself, not against the margin around it.** What matters in the
 	// fallback is how much of the thing being pointed at is hidden; the margin is a courtesy that
@@ -428,13 +493,40 @@ func (t *tutorialOverlay) draw(gs *state.GlobalState, screen *ebiten.Image, host
 	// line, because both would be describing something the player cannot see.
 	targets, ok := host.tutorialRects(gs, step.Anchor)
 	if ok && len(targets) > 0 && step.Anchor != tutorial.AnchorNone && !host.tutorialCovered(gs) {
-		t.drawSpotlight(screen, gs, targets, step.Lock != tutorial.LockNone,
-			!step.Anchor.NamesCards())
+		inks := frameInks(step, len(targets))
+		framed := make([]bool, len(targets))
+		for i := range framed {
+			framed[i] = !step.Anchor.NamesCards()
+		}
+
+		// **The step's Also frames join the same spotlight**, each framed in its own part's ink, so
+		// the scrim is cut once round everything the step points at.
+		extras, extraInks := alsoRects(gs, host, step)
+		holes := append(append([]image.Rectangle(nil), targets...), extras...)
+		holeInks := append(append([]color.RGBA(nil), inks...), extraInks...)
+		for range extras {
+			framed = append(framed, true)
+		}
+		t.drawSpotlight(screen, gs, holes, holeInks, framed, step.Lock != tutorial.LockNone)
+		for i, r := range extras {
+			t.drawLeader(screen, r, extraInks[i])
+		}
 
 		// **Under the bubble and over the scrim.** The line leaves the bubble's edge, so nothing
 		// of it is hidden either way — but drawing it before the panel is what guarantees that
 		// stays true if the bubble ever grows a shadow or a tail of its own.
-		t.drawLeader(screen, unionOf(targets))
+		// **A line to each framed thing**, since a framed anchor can name controls in different
+		// corners and a line to the middle of them points at nothing. A row of cards is one subject
+		// and gets one line.
+		// **Named cards are separate subjects and get a line each** — they need not sit together,
+		// and a line to the middle of them lands on a card the step did not name.
+		if step.Anchor.NamesCards() && step.Anchor != tutorial.AnchorNamedCards {
+			t.drawLeader(screen, unionOf(targets), tutorialGlow)
+		} else {
+			for i, r := range targets {
+				t.drawLeader(screen, r, inks[i])
+			}
+		}
 	}
 	t.drawBubble(gs, screen, step)
 }
@@ -451,7 +543,7 @@ func (t *tutorialOverlay) draw(gs *state.GlobalState, screen *ebiten.Image, host
 // square rather than starting inside one and burying its first thirty pixels. The dot at the
 // target end is what makes it read as pointing rather than as a stray rule — a bare line meets the
 // square at a right angle and looks like part of the frame.
-func (t *tutorialOverlay) drawLeader(screen *ebiten.Image, target image.Rectangle) {
+func (t *tutorialOverlay) drawLeader(screen *ebiten.Image, target image.Rectangle, ink color.RGBA) {
 	// The same hole the spotlight cuts, so the line lands on the square and not inside it.
 	hole := target.Inset(-8)
 
@@ -459,8 +551,8 @@ func (t *tutorialOverlay) drawLeader(screen *ebiten.Image, target image.Rectangl
 	to := edgeToward(hole, center(t.panel))
 
 	vector.StrokeLine(screen, float32(from.X), float32(from.Y),
-		float32(to.X), float32(to.Y), 3, tutorialGlow, true)
-	vector.FillCircle(screen, float32(to.X), float32(to.Y), 6, tutorialGlow, true)
+		float32(to.X), float32(to.Y), 3, ink, true)
+	vector.FillCircle(screen, float32(to.X), float32(to.Y), 6, ink, true)
 }
 
 // center is a rectangle's middle.
@@ -532,12 +624,11 @@ func edgeToward(r image.Rectangle, at image.Point) image.Point {
 // area are the same area. Lighting the bounding box would have made the odd card out look like part
 // of the lesson, which is how it came to be queued.
 //
-// **The gaps are closed horizontally**, because every multi-hole anchor there is names cards in a
-// row. A set stacked vertically would leave its gaps lit — a shape nothing produces today, and the
-// day it does the answer is to close them the same way on the other axis rather than to reach for a
-// mask.
+// **Every gap is closed, on both axes** — see scrimAround — because an anchor can name things in
+// different corners of the screen (the opponent's card, two rows of the duelist's, the clock), and
+// the lit area has to be the holes and nothing between them.
 func (t *tutorialOverlay) drawSpotlight(screen *ebiten.Image, gs *state.GlobalState,
-	targets []image.Rectangle, locked, framed bool) {
+	targets []image.Rectangle, inks []color.RGBA, framed []bool, locked bool) {
 
 	holes := make([]image.Rectangle, 0, len(targets))
 	for _, r := range targets {
@@ -546,41 +637,171 @@ func (t *tutorialOverlay) drawSpotlight(screen *ebiten.Image, gs *state.GlobalSt
 	if len(holes) == 0 {
 		return
 	}
-	sort.Slice(holes, func(i, j int) bool { return holes[i].Min.X < holes[j].Min.X })
-	span := unionOf(holes)
 
 	if locked {
-		w, h := float32(gs.ScreenWidth), float32(gs.ScreenHeight)
-		top, bot := float32(span.Min.Y), float32(span.Max.Y)
-		l, r := float32(span.Min.X), float32(span.Max.X)
-
-		vector.FillRect(screen, 0, 0, w, top, tutorialShade, false)
-		vector.FillRect(screen, 0, bot, w, h-bot, tutorialShade, false)
-		vector.FillRect(screen, 0, top, l, bot-top, tutorialShade, false)
-		vector.FillRect(screen, r, top, w-r, bot-top, tutorialShade, false)
-
-		// The columns between one hole and the next, which is what stops the bounding box being
-		// the lit area. **Measured against the furthest right edge seen so far**, not against the
-		// previous hole, so overlapping cards — the hand row overlaps when it is full — never
-		// produce a negative-width band that scrims a hole it is between.
-		reach := holes[0].Max.X
-		for _, next := range holes[1:] {
-			if next.Min.X > reach {
-				vector.FillRect(screen, float32(reach), top,
-					float32(next.Min.X-reach), bot-top, tutorialShade, false)
-			}
-			if next.Max.X > reach {
-				reach = next.Max.X
-			}
+		for _, r := range scrimAround(image.Rect(0, 0, gs.ScreenWidth, gs.ScreenHeight), holes) {
+			vector.FillRect(screen, float32(r.Min.X), float32(r.Min.Y),
+				float32(r.Dx()), float32(r.Dy()), tutorialShade, false)
 		}
 	}
 
-	if framed {
-		for _, hole := range holes {
+	for i, hole := range holes {
+		if framed[i] {
 			vector.StrokeRect(screen, float32(hole.Min.X), float32(hole.Min.Y),
-				float32(hole.Dx()), float32(hole.Dy()), 3, tutorialGlow, false)
+				float32(hole.Dx()), float32(hole.Dy()), 3, inks[i], false)
 		}
 	}
+}
+
+// alsoRects is the rectangles a step's Also frames, and the ink each is framed in: its part's,
+// where the text marks it by name, and the glow otherwise. An Also the scene cannot answer for is
+// left out, as an anchor is.
+func alsoRects(gs *state.GlobalState, host tutorialHost, step tutorial.Step) ([]image.Rectangle, []color.RGBA) {
+	byPart := partInks(step)
+	var rects []image.Rectangle
+	var inks []color.RGBA
+	for _, a := range step.Also {
+		rs, ok := host.tutorialRects(gs, a)
+		if !ok || len(rs) == 0 {
+			continue
+		}
+		ink, marked := byPart[a.String()]
+		if !marked {
+			ink = tutorialGlow
+		}
+		rects = append(rects, unionOf(rs))
+		inks = append(inks, ink)
+	}
+	return rects, inks
+}
+
+// partInkOrder is the inks a step's marked parts are drawn in, taken in this order. **Borrowed from
+// the rest of the game and strictly the tutorial's** *(owner's call)*: the relic pink first, since
+// it is no element, then the element inks — each skipped on a step whose own text names that
+// element, so a part never wears the color of an element word beside it.
+var partInkOrder = []cards.Element{cards.Relic, cards.Ice, cards.Earth, cards.Arcane, cards.Lightning, cards.Fire}
+
+// partInks is the ink each part a step's text marks is drawn in — the phrase and its frame alike.
+func partInks(step tutorial.Step) map[string]color.RGBA {
+	taken := map[color.RGBA]bool{}
+	for _, span := range cards.ElementSpans(step.Plain()) {
+		taken[span.Ink] = true
+	}
+	// **Every part takes an ink, marked or not** *(owner's call)* — the marked ones first, in the
+	// order the text names them, so a phrase and its frame agree; then the rest in the anchor's own
+	// order, so four panes are four colors whether or not the sentence names each one.
+	order := step.MarkedParts()
+	for _, part := range step.Parts() {
+		if !slices.Contains(order, part) {
+			order = append(order, part)
+		}
+	}
+	out := map[string]color.RGBA{}
+	next := 0
+	for _, part := range order {
+		for next < len(partInkOrder) {
+			ink := elementInk(partInkOrder[next])
+			next++
+			if !taken[ink] {
+				out[part] = ink
+				break
+			}
+		}
+	}
+	return out
+}
+
+// elementInk is the ink an element's word is written in, which is what a part borrows; the relic
+// pink is its border, since no word names it.
+func elementInk(e cards.Element) color.RGBA {
+	if e == cards.Relic {
+		return cards.BorderOf(cards.Relic)
+	}
+	if spans := cards.ElementSpans(e.String()); len(spans) > 0 {
+		return spans[0].Ink
+	}
+	return tutorialGlow
+}
+
+// frameInks is the ink each of an anchor's n rectangles is framed in: its part's, where the step's
+// text marks that part, and the glow everywhere else.
+func frameInks(step tutorial.Step, n int) []color.RGBA {
+	byPart := partInks(step)
+	parts := step.Anchor.Parts()
+	out := make([]color.RGBA, n)
+	for i := range out {
+		out[i] = tutorialGlow
+		if i < len(parts) {
+			if ink, ok := byPart[parts[i]]; ok {
+				out[i] = ink
+			}
+		}
+	}
+	return out
+}
+
+// bubbleLine is one authored line of a step's text as runs: the element words colored as every
+// tooltip colors them, and each marked phrase in its part's ink.
+func bubbleLine(authored string, inks map[string]color.RGBA) models.TipLine {
+	segs, err := tutorial.Segments(authored)
+	if err != nil {
+		return ui.TipLine(authored)
+	}
+	var out models.TipLine
+	for _, seg := range segs {
+		if ink, ok := inks[seg.Part]; ok {
+			out = append(out, models.TextSpan{Text: seg.Text, Ink: ink})
+			continue
+		}
+		out = append(out, ui.TipLine(seg.Text)...)
+	}
+	return out
+}
+
+// scrimAround is the screen minus the holes, as rectangles that do not overlap — so the shade is
+// laid once everywhere and never twice anywhere, which a translucent fill would show as a darker
+// band.
+//
+// **Cut into vertical slabs at every hole edge**: inside one slab the holes covering it are a set
+// of vertical intervals, and the shade is the gaps between them. Overlapping holes — the hand row
+// overlaps when it is full — merge rather than producing a negative gap.
+func scrimAround(screen image.Rectangle, holes []image.Rectangle) []image.Rectangle {
+	xs := []int{screen.Min.X, screen.Max.X}
+	for _, h := range holes {
+		h = h.Intersect(screen)
+		if !h.Empty() {
+			xs = append(xs, h.Min.X, h.Max.X)
+		}
+	}
+	sort.Ints(xs)
+
+	var out []image.Rectangle
+	for i := 0; i+1 < len(xs); i++ {
+		x0, x1 := xs[i], xs[i+1]
+		if x1 <= x0 {
+			continue
+		}
+		var cover []image.Rectangle
+		for _, h := range holes {
+			if h.Min.X <= x0 && h.Max.X >= x1 {
+				cover = append(cover, h)
+			}
+		}
+		sort.Slice(cover, func(a, b int) bool { return cover[a].Min.Y < cover[b].Min.Y })
+		y := screen.Min.Y
+		for _, h := range cover {
+			if h.Min.Y > y {
+				out = append(out, image.Rect(x0, y, x1, h.Min.Y))
+			}
+			if h.Max.Y > y {
+				y = h.Max.Y
+			}
+		}
+		if y < screen.Max.Y {
+			out = append(out, image.Rect(x0, y, x1, screen.Max.Y))
+		}
+	}
+	return out
 }
 
 // drawBubble is Bob's card, what he is saying, and the buttons.
@@ -610,8 +831,9 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 	//
 	// **An authored break still forces a line and can only ever add one** — each is wrapped on its
 	// own — so `data/tutorial.json` can shape a paragraph without having to measure one.
+	inks := partInks(step)
 	for _, authored := range strings.Split(step.Text, "\n") {
-		for _, line := range systems.WrapLine(ui.TipLine(authored), face, tutorialTextW) {
+		for _, line := range systems.WrapLine(bubbleLine(authored, inks), face, tutorialTextW) {
 			systems.DrawLine(screen, line, face, x, y, tutorialText)
 			y += tutorialLinePitch
 		}
@@ -629,18 +851,24 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 	// one thing a step exists to teach is the fastest route to a player who has read the tutorial
 	// and cannot play the game. So the slot says why it is empty instead.
 	//
-	// **Left of Skip, not where Next would be.** Skip slides right into the empty slot when there
-	// is no Next — see placeButtons — so a hint pinned to the panel's edge was drawn underneath it,
-	// which is how it first shipped: "take them all" and "SKIP" in the same pixels.
+	// **On a line of its own, centered in the text column, halfway between the prose and the
+	// buttons** *(owner's call)*: tucked beside Skip it read as part of the button row and was
+	// missed. It is the interface's own lettering, so it is set in the figure glyphs, in capitals.
 	//
-	// It is measured off the button rather than off the panel, so the two cannot drift apart.
-	hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}
+	// **An action is amber, an outcome is quiet.** "TAKE THEM ALL" and "PRESS IT" are things the
+	// player must do and have to stand out as such; "WATCHING" is not an instruction, and in amber it
+	// would read as one.
+	hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextMedium}
+	buttonsTop := r.Max.Y - tutorialPad - tutorialButtonH
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(t.skip.ScreenX-tutorialButtonW/2-tutorialButtonGap),
-		float64(r.Max.Y-tutorialPad-tutorialButtonH/2-9))
-	op.PrimaryAlign = text.AlignEnd
-	op.ColorScale.ScaleWithColor(tutorialWaiting)
-	systems.DrawText(screen, waitingFor(step.Until), hint, op)
+	op.GeoM.Translate(float64(x+tutorialTextW/2), float64(y+buttonsTop)/2)
+	op.PrimaryAlign, op.SecondaryAlign = text.AlignCenter, text.AlignCenter
+	ink := tutorialWaiting
+	if step.Lock == tutorial.LockToAnchor {
+		ink = tutorialAction
+	}
+	op.ColorScale.ScaleWithColor(ink)
+	systems.DrawUI(screen, strings.ToUpper(waitingHint(step)), hint, op)
 }
 
 // waitingFor is what the bubble says in place of a Next button: the thing the player has to do
@@ -655,8 +883,8 @@ var waitingWords = map[tutorial.Condition]string{
 	tutorial.CondNext:         "", // has a button; this is never read
 	tutorial.CondCardsQueued:  "take a card",
 	tutorial.CondHandEmptied:  "take them all",
-	tutorial.CondMatchQueued:  "take them all",
-	tutorial.CondDuelPressed:  "press it",
+	tutorial.CondMatchQueued:  "select all three",
+	tutorial.CondDuelPressed:  "duel!",
 	tutorial.CondRoundDone:    "watching",
 	tutorial.CondShieldBroke:  "watching",
 	tutorial.CondPhaseFight:   "back to the journey",
@@ -668,6 +896,27 @@ var waitingWords = map[tutorial.Condition]string{
 }
 
 func waitingFor(c tutorial.Condition) string { return waitingWords[c] }
+
+// waitingHint is the line for one step: its condition's, except a queue counting more than one card,
+// which names the count — a step asking for three named cards does not say "take a card".
+//
+// **`select all three` on the matching set is a fact about the taught hand**, which holds exactly
+// three Slices; TestTheTutorialsFightPlaysAsTaught fails if it stops.
+func waitingHint(step tutorial.Step) string {
+	if step.Until == tutorial.CondCardsQueued && step.Count > 1 {
+		return "select all " + numberWord(step.Count)
+	}
+	return waitingFor(step.Until)
+}
+
+// numberWord is a small count as the tutorial writes it.
+func numberWord(n int) string {
+	words := []string{"zero", "one", "two", "three", "four", "five"}
+	if n >= 0 && n < len(words) {
+		return words[n]
+	}
+	return strconv.Itoa(n)
+}
 
 // guideSpec is Bob as a card: his name, his face, and nothing else.
 //

@@ -196,13 +196,8 @@ func EssenceTip(w session.Essence, targets int) (string, []string) {
 	return w.Name, strings.Split(w.TextAt(targets), "\n")
 }
 
-// DuelistTip explains one of the two fighters: what they hit for, what is left of them, and every
-// status standing on them.
+// DuelistTip explains one of the two fighters: what they hit for and what is left of them.
 //
-// **This is where a badge is read.** The row of pictures along the bottom of the enemy's card is the
-// only thing on screen that says a status is running, and nothing anywhere says what one *does* —
-// `statuses.json` has carried the sentence since the day statuses became data, with nowhere to print
-// it.
 // **The element is the line under the name** *(owner's call)*, ahead of the figures. It is the one
 // thing about an opponent that nothing else on the screen says in words — the card states it in the
 // colour of its picture and in nothing else — and it is what the realm was themed on, so it belongs
@@ -220,18 +215,6 @@ func DuelistTip(name, element string, d combat.Duelist) (string, []string) {
 		strconv.Itoa(d.DMG)+" DMG",
 		fmt.Sprintf("%d of %d HP", d.CurrentLife, d.MaxLife),
 	)
-
-	for _, id := range combat.AllStatuses() {
-		st := d.Statuses[id]
-		if !st.Active() {
-			continue
-		}
-		spec := combat.StatusOf(id)
-		lines = append(lines, "", spec.Name+" - "+statusRounds(st.Rounds))
-		if Text := statusEffectText(spec, d); Text != "" {
-			lines = append(lines, Text)
-		}
-	}
 	return name, lines
 }
 
@@ -247,49 +230,6 @@ func ElementWord(element string) string {
 	return strings.ToUpper(element[:1]) + element[1:]
 }
 
-func statusRounds(n int) string {
-	if n == 1 {
-		return "1 round left"
-	}
-	return strconv.Itoa(n) + " rounds left"
-}
-
-// statusEffectText is what a status says it does **to this duelist**, which is not always what the
-// record says it does.
-//
-// **A miss chance is the one figure a relic can move**, and when one has, the authored sentence is
-// wrong — `1/4 CHANCE TO MISS ATTACKS` over a duelist who is actually missing half the time. The
-// rules are asked for the live figure and the line is rewritten around it; every other status is
-// its authored sentence, because nothing scales them.
-//
-// **The wording is rebuilt rather than patched**, so there is one sentence rather than an authored
-// one with a correction stapled to it.
-func statusEffectText(spec combat.StatusSpec, d combat.Duelist) string {
-	if spec.Effect == combat.EffectMissChance {
-		if live := d.MissChance(); live != spec.Amount {
-			return carddesc.Fraction(live) + " CHANCE TO MISS ATTACKS"
-		}
-	}
-	return statusText(spec.Key)
-}
-
-// statusText is the authored line for a status, out of `statuses.json`.
-//
-// **Read here rather than carried on `combat.StatusSpec`**, exactly as the badge key is: what a
-// status is worth and how long it lasts are rules, and the sentence describing it to a player is
-// this layer's business. Same division the relic's art key draws.
-func statusText(key string) string { return statusLines[key] }
-
-var statusLines = statusTexts()
-
-func statusTexts() map[string]string {
-	out := map[string]string{}
-	for _, record := range data.LoadStatuses() {
-		out[record.StatusRecord] = record.Text
-	}
-	return out
-}
-
 // **An essence has no tooltip** *(owner's call, 2026-09-05)*. The card's own face says what it does,
 // one word to a line, and a hover repeating that sentence beside it was the same words twice.
 
@@ -301,6 +241,25 @@ func statusTexts() map[string]string {
 // the list. The sentence names the consequence in full: a player who has read this cannot be
 // surprised by the death, and a timer that killed without having said so would be the worst kind
 // of hidden rule.
+// SortTip names one sort tab. **A title and nothing under it**: the button's picture says the rest.
+func SortTip(mode HandSort) string {
+	switch mode {
+	case SortByForm:
+		return "Sort by Form"
+	case SortByElement:
+		return "Sort by Element"
+	default:
+		return "Sort by Cost"
+	}
+}
+
+// The three panel buttons' names, on SortTip's terms.
+const (
+	HandsButtonTip    = "Hands"
+	LedgerButtonTip   = "Ledger"
+	SettingsButtonTip = "Settings"
+)
+
 func RoundTimerTip(spent, limit int) (string, []string) {
 	return "The Clock", []string{
 		fmt.Sprintf("Round %d of %d.", spent+1, limit),

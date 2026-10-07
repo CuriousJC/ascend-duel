@@ -296,7 +296,7 @@ func (s *ShopScene) initRerollButtons() {
 		b := models.NewButton(shopRerollWidth, shopRerollHeight, "", func() {
 			s.rerolling, s.rerollNow = p, true
 		})
-		b.BaseColor = ui.ButtonGray
+		b.BaseColor = ui.ButtonJade
 		b.TextSize = shopRerollText
 		return b
 	}

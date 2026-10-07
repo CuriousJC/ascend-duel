@@ -13,7 +13,7 @@ package session
 // puts a run back where it was is the player's own choices, which are a different file.
 //
 // **Every field is a name, a number or an already-resolved label**, because a record outlives the
-// build that wrote it harder than a save does. A concept, a relic, a status and a hand are written
+// build that wrote it harder than a save does. A concept, a relic and a hand are written
 // as the words they were called, so a catalog edit leaves an old account readable rather than
 // blank. Nothing here is an ordinal and nothing here is a color.
 //
@@ -47,9 +47,7 @@ const (
 	// one, because they are what became of a card that was played and the sentence for it is
 	// already written. An outcome carrying Hit attaches to that hit's line.
 	KindDamage  = "damage"
-	KindStatus  = "status"
 	KindDrained = "drained"
-	KindMissed  = "missed"
 	KindFizzled = "fizzled"
 	KindBlocked = "blocked"
 	KindRaised  = "raised"
@@ -66,9 +64,7 @@ const (
 	// The announcements. **Each opens a line of its own**, because there is nothing above them to
 	// attach to: they happen at the top of a turn, at the end of a round, or to a duelist rather
 	// than to a card.
-	KindChilled     = "chilled"
 	KindRegenerated = "regenerated"
-	KindTicked      = "ticked"
 	KindTimeUp      = "time-up"
 	KindDefeated    = "defeated"
 
@@ -144,7 +140,7 @@ type LedgerRecord struct {
 	Kind string `json:"kind"`
 
 	// Side is whose record it is, and Target who it happened to. **Both, because they differ**: a
-	// burn ticks on the duelist it was put on, and a blow belongs to whoever swung it.
+	// blow belongs to whoever swung it and lands on the other duelist.
 	Side   string `json:"side,omitempty"`
 	Target string `json:"target,omitempty"`
 
@@ -168,11 +164,9 @@ type LedgerRecord struct {
 	// only and never the identity**, which is what keeps `(1x)` off every ordinary swing.
 	Weight int `json:"weight,omitempty"`
 
-	// Status is a status's key and Relic a relic's name — the two things that name themselves in a
-	// line, so that a second status or a second relic doing the same thing cannot narrate
-	// identically to the first.
-	Status string `json:"status,omitempty"`
-	Relic  string `json:"relic,omitempty"`
+	// Relic is a relic's name, which names itself in a line, so that a second relic doing the same
+	// thing cannot narrate identically to the first.
+	Relic string `json:"relic,omitempty"`
 
 	// Amount is the figure the record is about: damage dealt, shields standing, vitae paid.
 	Amount int `json:"amount,omitempty"`
@@ -209,7 +203,7 @@ type LedgerRecord struct {
 
 	// Hit is which hit of its side's blow a record is about, **counted from one** so that zero
 	// is "not about a hit". A RoleHit line carries it, and so does every outcome of that hit —
-	// which is how a status landed by the third hit attaches to the third hit's line rather than
+	// which is how a drain from the third hit attaches to the third hit's line rather than
 	// to whichever line happened to be written last.
 	Hit int `json:"hit,omitempty"`
 
@@ -285,9 +279,9 @@ type LedgerSum struct {
 func RecordKinds() []string {
 	return []string{
 		KindAct, KindBlow, KindTerm,
-		KindDamage, KindStatus, KindDrained, KindMissed, KindFizzled, KindBlocked,
+		KindDamage, KindDrained, KindFizzled, KindBlocked,
 		KindRaised, KindLapsed, KindHeld, KindSilver, KindReflected, KindTithed,
-		KindChilled, KindRegenerated, KindWarded, KindTicked, KindTimeUp, KindDefeated, KindUsed,
+		KindRegenerated, KindWarded, KindTimeUp, KindDefeated, KindUsed,
 		KindTook, KindCut, KindChanged, KindWore, KindSold, KindSpent,
 		KindRaisedRung, KindGained, KindPaid,
 	}

@@ -31,8 +31,8 @@
 // What retired it was every one of its pictures becoming a drawing. The form marks went from four
 // tinted silhouettes to one authored picture per form per element plus a neutral set plus a tick
 // per element, which is a multiplication rather than a list; the rest had drawn nothing for a
-// month; and the settings cog, the last one standing, became assets/game/gear.png. The art comes
-// from a prompt this repo owns, in docs/art/.
+// month; and the settings cog, the last one standing, became an icon button. The art comes from a
+// prompt this repo owns, in docs/art/.
 //
 // Two properties of the old technique are worth remembering, because they are why it could not
 // hold this set:

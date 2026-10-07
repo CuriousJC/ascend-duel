@@ -73,6 +73,10 @@ type Tooltip struct {
 	// hand moves inside one card.
 	Anchor image.Rectangle
 
+	// Side is where the panel goes against its anchor. The zero value is above, which is what
+	// nearly everything takes; PointLeft asks for beside.
+	Side TipSide
+
 	// Dwell is how long the cursor has rested, in ticks, and DwellTicks is how long it has to before
 	// the panel appears. **A delay rather than an instant panel**, because a cursor crossing a row of
 	// eight cards would otherwise strobe eight tooltips on its way somewhere else.
@@ -101,7 +105,26 @@ func (t *Tooltip) Point(at image.Rectangle, title TipLine, lines []TipLine) {
 		t.key, t.Dwell = key, 0
 	}
 	t.Title, t.Lines, t.Anchor, t.pointed = title, lines, at, true
+	t.Side = TipAbove
 }
+
+// PointLeft is Point with the panel to the left of the anchor rather than above it — for a control
+// standing beside the thing a panel above it would cover.
+func (t *Tooltip) PointLeft(at image.Rectangle, title TipLine, lines []TipLine) {
+	t.Point(at, title, lines)
+	t.Side = TipLeft
+}
+
+// TipSide is which side of its anchor a tooltip prefers.
+type TipSide int
+
+const (
+	// TipAbove centers the panel over the anchor, flipping under it near the top of the screen.
+	TipAbove TipSide = iota
+
+	// TipLeft stands the panel to the anchor's left, centered on it, flipping right at the edge.
+	TipLeft
+)
 
 // Pointed reports whether a scene aimed this tooltip on the tick just gone. For the systems update,
 // which is the only thing that should ask.

@@ -203,7 +203,7 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// **An icon button is its picture**, so a key that loaded draws nothing else; one that did not
 	// falls through to the ordinary face and label, which is why such a button keeps its Text.
 	if icon := gs.Assets[button.Icon]; button.Icon != "" && icon != nil {
-		drawButtonIcon(button, icon)
+		drawButtonIcon(button, icon, gs.Assets[button.Icon+iconPressedSuffix])
 		button.Painted = true
 		button.PaintedState = button.State
 		button.PaintedText = button.Text
@@ -238,7 +238,7 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// as the same surface going down.
 	nudgeX, nudgeY := 0.0, 0.0
 	if face != nil {
-		nudgeY = faceLabelShift(button, face)
+		nudgeY = faceLabelShift(button)
 	} else if button.State != models.ButtonStateDisabled && buttonSunken(button) {
 		nudgeX, nudgeY = 1, 1
 	}

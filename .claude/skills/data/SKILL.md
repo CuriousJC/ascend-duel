@@ -19,7 +19,6 @@ is what lets every layer above read it, and it **must never import upward**.
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
 | `relics.json` | `LoadRelics` | the relics that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
 | `archive/relics.json` | `ParseRelics`, off disk | relics taken out of the game and kept: **not embedded**, read only by `tools/relicsheet -archive` and the test holding it to the grammar — see `data/archive.go` |
-| `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies every hit by |
 | `essences.json` | `LoadEssences` | the deck alterations offered between fights |
 | `runes.json` | `LoadRunes` | the deck alterations spent *during* a fight |
@@ -35,13 +34,8 @@ is what lets every layer above read it, and it **must never import upward**.
 
 ## Who may read what, and why it is not "whether it is data"
 
-**Three files are read by `internal/combat` itself**: `hands.json`, `duelist_cards.json` and
-`statuses.json`. The rest are consumed by `screens`, `decks`, `session` or `entities`.
-
-**`statuses.json` passes the same test**: how much a status is worth,
-how long it lasts and which of four things it does are rules by definition — the engine cannot
-resolve a round without them, and its own tests could not run if a screen had to hand them over.
-Its `Badge` is the exception the engine ignores, exactly as it ignores a relic's `Art`.
+**Two files are read by `internal/combat` itself**: `hands.json` and `duelist_cards.json`. The
+rest are consumed by `screens`, `decks`, `session` or `entities`.
 
 **`relics.json` is the counter-example, and it is read by `internal/session`.** A relic's rules *are*
 rules, but the record carries an art key and a relic belongs to a *run* — so `session` parses the
@@ -169,8 +163,8 @@ loader refuses a motif for.
 
 ### Relics
 
-**A relic is what makes its element do anything**: an attack applies a status only
-if its owner wears that element's relic, so a bare fire Bash is a plain Bash that happens to be
+**A relic is what makes its element do anything**: a fire card is doubled, discounted or grown
+only if its owner wears a relic that says so, so a bare fire Bash is a plain Bash that happens to be
 fire. `Element` is the field that carries it — parsed in `internal/session` with
 `combat.ParseElement`, because `internal/combat` may not read this file. A name the rules do not
 have is logged rather than dropped.
@@ -410,8 +404,7 @@ concept the deck does not ship, so their numbers are an extrapolation and a judg
 the plain budget cannot reach.
 
 **A hand is a damage multiplier and nothing else** *(owner's call, 2026-08-17)*. There is no
-reward vocabulary to extend, no mix axis counting distinct colors, and no `scope` field — statuses
-come from elements and relics, and the matcher counts every card in the turn because that is what it
+reward vocabulary to extend, no mix axis counting distinct colors, and no `scope` field — the matcher counts every card in the turn because that is what it
 does, not because an entry asked it to — what a card is worth to a hand is decided by the axis it is
 counted on. **Adding a rung is one entry in the JSON**;
 adding anything a hand can *buy* is a design decision, not a field.

@@ -45,6 +45,9 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 		ui.HoverDeckPanel(gs, at, s.DeckView, s.fightContents(), &s.tip)
 		return
 	}
+	if s.SortTabs.Hover(gs, at, &s.tip) {
+		return
+	}
 	if s.hoverHand(gs, at) || s.hoverRelics(gs, at) {
 		return
 	}
@@ -133,11 +136,7 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 	return true
 }
 
-// hoverFighters explains either duelist card: their figures, and every status standing on them.
-//
-// **This is the only place a badge is readable.** The row of pictures under the enemy's health says
-// that something is running and nothing anywhere says what — the sentence has been in
-// `statuses.json` since the day statuses became data, with nowhere to print it.
+// hoverFighters explains either duelist card: their element and their figures.
 func (s *CombatScene) hoverFighters(gs *state.GlobalState, at image.Point) {
 	if seat := ui.EnemyCardRect(gs); at.In(seat) {
 		title, lines := ui.DuelistTip(s.enemy.Name, s.enemy.Element, s.enemy.Duelist)

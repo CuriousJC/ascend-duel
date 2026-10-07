@@ -451,12 +451,11 @@ func lightness(c color.RGBA) int {
 	return int((299*int(c.R) + 587*int(c.G) + 114*int(c.B)) / 1000)
 }
 
-// drawEffects lays the status badges out in a centered row along the bottom of the card.
+// drawEffects lays Spec.Effects out in a centered row along the bottom of the card.
 //
 // **The row is sized to what is actually there.** Nil entries are skipped before the width is
-// worked out, so one status sits in the middle of the card and four spread across it — rather
-// than four fixed slots of which three are holes, which would say the card is waiting for three
-// more statuses it may never take.
+// worked out, so one picture sits in the middle of the card and four spread across it — rather
+// than four fixed slots of which three are holes.
 //
 // **Fitted and resampled like the portrait, not blitted like a glyph.** These are 500-pixel
 // drawings landing in a twenty-pixel box; nearest-neighbor at that ratio throws away 24 rows
@@ -998,19 +997,18 @@ type Segment struct {
 // **Exported because two rasterizers draw this game's words.** This package sets a card's own text
 // and everything else on screen goes through Ebitengine's text/v2 in internal/screens; they share
 // no drawing code and cannot, so they share the cut instead. A second implementation over there
-// would be a second set of answers to where BURN ends inside BURNING.
+// would be a second set of answers to where one word ends inside another.
 //
-// **Every occurrence of every run is colored**, so one entry carries a word a sentence repeats —
-// "apply BURNING status … BURNING enemies" — without spending a second seat in a fixed array.
+// **Every occurrence of every run is colored**, so one entry carries a word a sentence repeats
+// without spending a second seat in a fixed array.
 //
 // **Matching ignores case and the line keeps its own spelling.** Relics write "Fire" and essences write
 // "FIRE", and neither the file nor the caller's vocabulary should have to pick one.
 //
-// **A run only matches at a word boundary**: ICE is inside SLICE and BURN is inside BURNING, and a
-// plain substring match would paint half a word in a color naming something else.
+// **A run only matches at a word boundary**: ICE is inside SLICE, and a plain substring match would paint half a word in a color naming something else.
 //
 // **The first run to claim a position keeps it**, which is why the caller sorts by length —
-// otherwise BURN would take the front of BURNING and leave ING in the default ink.
+// otherwise a short run would take the front of a longer word that contains it.
 func SplitSpans(line string, runs []TextSpan) []Segment {
 	folded := strings.ToLower(line)
 

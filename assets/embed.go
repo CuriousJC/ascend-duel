@@ -18,7 +18,7 @@ import (
 )
 
 // Files are grouped into directories by what they are for — `game/`, `motifs/`, `relic/`,
-// `effect/`, `upgrade/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
+// `upgrade/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
 // directory rename is a one-line edit per asset here and nothing anywhere else.
 //
 // **The map keys did not change with the move.** They are the lookup names used across the
@@ -58,51 +58,23 @@ var barCellOver_png []byte
 //go:embed bar/*.png
 var barArt embed.FS
 
-// BUTTON FACES
+// BUTTONS
 //
-// The blank body of every button, one per color at rest plus the flat disabled face, drawn at
-// 512x128 and scaled by the caller to the button's height tier. **Like a bar cell, a face is two
-// end caps and a middle every column of which is identical**, so only the middle stretches; see
-// systems.DrawButton and docs/art/button_art_prompt.MD. Keyed `button-<color>`, the file's stem.
+// Every file under `button/`, as one family keyed by filename stem, so a new face or icon is a file
+// dropped in and nothing edited here.
 //
-//go:embed button/button-red.png
-var buttonRed_png []byte
-
-//go:embed button/button-gray.png
-var buttonGray_png []byte
-
-//go:embed button/button-yellow.png
-var buttonYellow_png []byte
-
-//go:embed button/button-blue.png
-var buttonBlue_png []byte
-
-//go:embed button/button-pink.png
-var buttonPink_png []byte
-
-//go:embed button/button-olive.png
-var buttonOlive_png []byte
-
-//go:embed button/button-disabled.png
-var buttonDisabled_png []byte
-
-// ICON BUTTONS
+//   - **`button-<color>`** is the blank body of a word button, drawn at 512x128 and scaled by the
+//     caller to the button's height tier: two end caps and a middle. See systems.DrawButton.
+//   - **`icon-<name>`** is a square button drawn whole, face and picture together, at 256x256. See
+//     models.Button.Icon. A stem ending `-pressed` is the same button drawn latched — see
+//     systems.drawButtonIcon.
+//   - **`icon-blank*` and `glyph-<name>`** are the parts of a square button assembled in code: a
+//     blank tile and a picture laid over it.
 //
-// A square button drawn whole — its face and its picture in one file, with no label — at 256x256,
-// scaled by the caller to the button's size. See models.Button.Icon and
-// docs/art/icon_button_art_prompt.MD. Keyed `icon-<name>`, the file's stem.
+// The prompts are under docs/art/; docs/art/README.md says which file each came from.
 //
-//go:embed button/icon-close.png
-var iconClose_png []byte
-
-//go:embed button/icon-settings.png
-var iconSettings_png []byte
-
-//go:embed button/icon-hands.png
-var iconHands_png []byte
-
-//go:embed button/icon-ledger.png
-var iconLedger_png []byte
+//go:embed button/*.png
+var buttonArt embed.FS
 
 // THE GUIDE
 //
@@ -122,19 +94,6 @@ var iconLedger_png []byte
 var guide_png []byte
 
 // THE GEAR
-//
-// The settings control in the game's chrome corner. **A named one-off rather than a member of the
-// form family**, because it is not a card mark: it says something about the program where every
-// mark in `form/` says something about a card.
-//
-// **Baked from the silhouette generator on 2026-09-16 and then the generator was deleted**
-// *(owner's call)*. It was the last kind `internal/systems` drew, so the picture was rendered once
-// at the size the chrome blits it and committed as an ordinary asset — no change to what is on
-// screen, and replacing it with drawn art is now a file swap. `docs/art/gear_art_prompt.MD` is the
-// brief for that replacement.
-//
-//go:embed game/gear.png
-var gear_png []byte
 
 // FORM MARKS AND COST TICKS
 //
@@ -375,25 +334,6 @@ func ProseFile(name string) ([]byte, error) {
 	return proseArt.ReadFile("prose/" + name)
 }
 
-//go:embed effect/fire-effect.png
-var fireeffect_png []byte
-
-//go:embed effect/frozen-effect.png
-var frozeneffect_png []byte
-
-//go:embed effect/thunder-effect.png
-var thundereffect_png []byte
-
-//go:embed effect/earth-effect.png
-var eartheffect_png []byte
-
-// The badge an element with no artwork of its own falls back to, so a status always shows
-// *something* rather than nothing — a status that is on and invisible is worse than one drawn
-// as a shape you have not learned yet.
-//
-//go:embed effect/default-effect.png
-var defaulteffect_png []byte
-
 // MUSIC
 //
 // Scores are Standard MIDI Files, not recorded audio: internal/music synthesizes them
@@ -416,22 +356,11 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["barCellEmpty_png"] = loadImage(barCellEmpty_png)
 	assets["barCellSpent_png"] = loadImage(barCellSpent_png)
 	assets["barCellOver_png"] = loadImage(barCellOver_png)
-	assets["button-red"] = loadImage(buttonRed_png)
-	assets["button-gray"] = loadImage(buttonGray_png)
-	assets["button-yellow"] = loadImage(buttonYellow_png)
-	assets["button-blue"] = loadImage(buttonBlue_png)
-	assets["button-pink"] = loadImage(buttonPink_png)
-	assets["button-olive"] = loadImage(buttonOlive_png)
-	assets["button-disabled"] = loadImage(buttonDisabled_png)
-	assets["icon-close"] = loadImage(iconClose_png)
-	assets["icon-settings"] = loadImage(iconSettings_png)
-	assets["icon-hands"] = loadImage(iconHands_png)
-	assets["icon-ledger"] = loadImage(iconLedger_png)
-	assets["fireeffect_png"] = loadImage(fireeffect_png)
-	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
-	assets["thundereffect_png"] = loadImage(thundereffect_png)
-	assets["eartheffect_png"] = loadImage(eartheffect_png)
-	assets["defaulteffect_png"] = loadImage(defaulteffect_png)
+	buttons := map[string][]byte{}
+	embedFamily(buttons, buttonArt, "button")
+	for key, raw := range buttons {
+		assets[key] = loadImage(raw)
+	}
 	// The enemy portraits are deliberately absent. They are drawn *into* a card by
 	// internal/cards, which has no graphics context, so they are handed out as bytes by
 	// LoadImageData instead — and decoding 96 of them here at startup would cost about
@@ -488,6 +417,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, otherArt, "other")
 	embedFamily(images, formArt, "form")
+	embedFamily(images, buttonArt, "button")
 	embedFamily(images, textureArt, "texture")
 	embedPrefixed(images, upgradeArt, "upgrade-art", "upgrade-")
 	embedPrefixed(images, deckArt, "deck", "deck-")
@@ -499,15 +429,6 @@ func LoadImageData() map[string][]byte {
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.
 	images["guide_png"] = guide_png
-	images["gear"] = gear_png
-
-	// The status badges, for the same reason as the relic art: they are drawn *into* the enemy
-	// card by internal/cards, which has no graphics context.
-	images["fireeffect_png"] = fireeffect_png
-	images["frozeneffect_png"] = frozeneffect_png
-	images["thundereffect_png"] = thundereffect_png
-	images["eartheffect_png"] = eartheffect_png
-	images["defaulteffect_png"] = defaulteffect_png
 
 	// The glyph art. internal/systems takes the bytes rather than an *ebiten.Image for the
 	// same reason the relic art does: internal/cards draws into a plain Go image so the contact

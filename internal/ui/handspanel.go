@@ -566,6 +566,7 @@ func (t *HandsToggle) Init(place func(gs *state.GlobalState) image.Point) {
 // the placement asks for. The label stays on the button as the fallback should the picture fail to
 // load.
 func (t *HandsToggle) wearIcon() {
+	t.Tip = HandsButtonTip
 	t.Button.Icon = handsIconKey
 	t.Button.Width, t.Button.Height = PanelButtonSize, PanelButtonSize
 }

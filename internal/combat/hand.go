@@ -28,9 +28,6 @@ import "sort"
 // worth nothing of its own — so a hand of nothing but shields deals nothing, and a Brace beside two
 // attacks raises the rung the two attacks' hits are paid at.
 //
-// **A defense's color counts toward the hand and lands its status**, since every card throws a hit
-// and a hit lands its card's statuses.
-//
 // **What "agree" means is the hand's own business** *(2026-08-19)*. Most rungs exist three times
 // over, once per `Axis`: two Thumps are a Card Two Pair only if a second pair joins them, a Thump and
 // a Cleave agree on no form - they have different ones - and an ice Thump beside an ice Thrust is an
@@ -53,8 +50,7 @@ import "sort"
 //
 // **That is deliberately narrow.** Hands used to carry a second axis counting the distinct colors
 // in the formed hand, and a reward vocabulary that could bank action points or take actions off the
-// opponent's next turn. Both are gone: statuses come from **elements and the relics that arm them**,
-// so a hand is one number and there is exactly one place to look for what a hand is worth.
+// opponent's next turn. Both are gone, so a hand is one number and there is exactly one place to look for what a hand is worth.
 //
 // **Exactly one hand applies.** A hand wins on its multiplier — four Bashes are a Four of a Kind
 // rather than also the pair and the trips inside it — so a turn produces one hand with no ranking
@@ -324,9 +320,7 @@ type Blow struct {
 	// indices. The screen's lift asks that narrower question — which cards the announcement is
 	// about.
 	//
-	// **Nothing else reads it.** Damage, colors, statuses and every relic read `Cards`: what landed
-	// is what counts, and a fire card that visibly hit and did not burn would read as a bug rather
-	// than as a rule.
+	// **Nothing else reads it.** Damage and every relic read `Cards`: what landed is what counts.
 	Rung []int
 
 	// Lead is the turn index of the card the hand is named after: the first card of its first
@@ -343,11 +337,6 @@ type Blow struct {
 	// the resolver and the feed both read — neither should have to know the multiplier has only
 	// one source today. 100 is the identity: it is what the No Hand carries.
 	Multiplier int
-
-	// Elements is every distinct non-basic color in the hand, in element order. It is what
-	// decides which statuses land, and it is the *only* thing color does to a blow — it buys no
-	// damage.
-	Elements []Element
 
 	// Satisfied is every rung of the ladder this turn could be read as, in catalog order, and it
 	// is what a relic's `Hand` predicate is asked against *(owner's call, 2026-09-13)*.
@@ -414,7 +403,6 @@ func blowFor(turn []Slot, hands []Hand) Blow {
 		Lead:       lead,
 		Hand:       hand,
 		Multiplier: hand.Multiplier,
-		Elements:   elementsOf(turn, cards),
 		Satisfied:  satisfied,
 	}
 }
@@ -721,36 +709,6 @@ func (c Card) formsBlow() bool {
 // — it exists only so Heavy sorts above Bash sorts above Jab — and it is deliberately large
 // enough that Jab's `dmg/2` floor of 1 cannot flatten the ladder.
 const damageRankDMG = 100
-
-// elementsOf is every distinct non-basic color among the cards that formed the hand, in element
-// order.
-//
-// **Color buys no damage, only statuses** *(2026-08-17)*. This list is read by the resolver to
-// decide what lands, gated on the relics the attacker wears; the count of it used to be a second
-// multiplier and is not any more.
-//
-// **Basic is skipped.** It is the absence of an element, so a basic card neither adds a color nor
-// spoils one — two basic Bashes and an ice Bash show one color. That is what makes a plain
-// draw neutral rather than a punishment.
-func elementsOf(turn []Slot, cards []int) []Element {
-	var seen [ElementCount]bool
-	for _, i := range cards {
-		if i < 0 || i >= len(turn) {
-			continue
-		}
-		if e := turn[i].Card.Element; e != Basic {
-			seen[e] = true
-		}
-	}
-
-	var out []Element
-	for _, e := range AllElements {
-		if e != Basic && seen[e] {
-			out = append(out, e)
-		}
-	}
-	return out
-}
 
 // scaleDamage applies a multiplier to one hit's figure — the card's term plus its flat bonuses —
 // so it is the whole of the hit rather than a bonus term.

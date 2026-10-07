@@ -8,11 +8,11 @@ import "math/rand"
 // Inputs are taken by value and never mutated, so a caller can re-run a round from
 // the same starting state — the returned duelists are the authority on what changed.
 // **`src` is the round's randomness and every field of it may be nil.** It is the seat CLAUDE.md's
-// determinism rules require — injected sources, never a package global — and there are two of them:
-// the shock roll and the gamble a golden or a silver card takes. **The zero value rolls nothing**,
-// which is what a caller with no business being random should pass: a preview, or a test pinning
-// the parts of the engine that are still exact. See Sources, which is where the rule that the two
-// streams are never interchanged is written down.
+// determinism rules require — injected sources, never a package global — and today it carries one:
+// the gamble a golden or a silver card takes. **The zero value rolls nothing**, which is what a
+// caller with no business being random should pass: a preview, or a test pinning the parts of the
+// engine that are still exact. See Sources, which is where the rule that a roll never shares a
+// stream is written down.
 func ResolveRound(a, b Duelist, aCards, bCards []Card, round int, src Sources) (events []Event, aAfter, bAfter Duelist) {
 	return resolveRound(a, b, aCards, bCards, nil, nil, round, handTable, src)
 }
@@ -57,11 +57,9 @@ func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, 
 	// about the action sequence, which is why it lives here and not in ResolutionOrder —
 	// a side that queues nothing still has a turn, and still loses its guard in it.
 	//
-	// A whole turn each, A then B. This used to be one flat loop over ResolutionOrder with a
-	// flag watching for the handover; hands made a turn a thing with its own beginning —
-	// a chill is spent at it, and a hand's position is an index *within* it — so the turn
-	// became worth naming. ResolutionOrder is still the authority on order: playTurn walks
-	// exactly the slots it produced for that side.
+	// A whole turn each, A then B. A turn is a thing with its own beginning — defenses lapse at
+	// it, and a hand's position is an index *within* it. ResolutionOrder is the authority on
+	// order: playTurn walks exactly the slots it produced for that side.
 	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), aHeld, round, hands, src)
 
 	// B still loses its standing defenses even in a round it never gets to act in, which is
@@ -73,13 +71,8 @@ func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, 
 		events, b = expireDefenses(events, SideB, b, round)
 	}
 
-	// **A always burns before B**, which is the same order the turns were played in and needs no
-	// tie-break.
-	events, a = endRound(events, SideA, a, round)
-	events, b = endRound(events, SideB, b, round)
-
 	// **The clock is read last, after every other way the round could have ended.** A duelist who
-	// died to the final blow or to a burn tick is not out of time — they are simply dead — and
+	// died to the final blow is not out of time — they are simply dead — and
 	// `callTime` says so by asking whether they are still alive. A fight that finishes on the last
 	// round is a fight nobody ran out of. See clock.go.
 	//
@@ -87,7 +80,7 @@ func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, 
 	// final round beat the clock; one who died to the final blow died to the blow. Only a duel
 	// still standing on both sides has run out of anything. See FightOver.
 	//
-	// **A always before B**, the same order the turns and the burns took, so a round that times
+	// **A always before B**, the same order the turns took, so a round that times
 	// both sides out reads in one order rather than in whichever the map felt like.
 	if !FightOver(a, b) {
 		events, a = callTime(events, SideA, a, round)
@@ -98,16 +91,8 @@ func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, 
 	return events, a, b
 }
 
-// playTurn runs one side's whole turn: expiry, then whatever a chill has taken off the
-// front of it, then **every hand the surviving cards form**, and only then the cards
-// themselves.
-//
-// **Hands are matched against what is left after a chill, not against the queue.** The
-// player queued five attacks; a chill that ate two means three happened, and a hand scored
-// off cards a chill deleted would let a chilled duelist swing with a turn they did not take.
-// That ordering is the reason the hand phase sits *inside* a turn rather than at the top of
-// the round: a round-wide hand phase would score B's hands before A's ice had taken
-// anything off B.
+// playTurn runs one side's whole turn: regeneration, expiry, the riders, the defenses, and then
+// **the hand the attack cards form** and the hits it throws.
 func playTurn(
 	events []Event,
 	side Side,
@@ -118,8 +103,8 @@ func playTurn(
 	hands []Hand,
 	src Sources,
 ) ([]Event, Duelist, Duelist) {
-	// **Regeneration is the first thing that happens in a turn**, ahead of the chill, the riders
-	// and both phases — a relic that puts life back does it in time for the turn it is about to
+	// **Regeneration is the first thing that happens in a turn**, ahead of the riders and both
+	// phases — a relic that puts life back does it in time for the turn it is about to
 	// survive rather than after it. See MomentTurnStart and DoHealShare.
 	events, actor = healAtTurnStart(events, side, actor, round)
 
@@ -134,47 +119,9 @@ func playTurn(
 	// it had just been handed. See DoRaiseShield.
 	events, actor = wardAtTurnStart(events, side, actor, round)
 
-	// A chill comes off the front, which needs no tie-break and so is the only pick that is
-	// deterministic without inventing a rule.
-	//
-	// **The front of a turn is its defenses as of 2026-09-15**, because the phase order flipped —
-	// see Categories. So what a chill costs first is now the guard rather than the blow. **That is
-	// a real change to what ice does and it was taken rather than worked around**: the alternative
-	// is naming attacks explicitly here, which is exactly the invented rule this picks the front to
-	// avoid. If ice should go back to eating the blow first, this is the line, and it needs a
-	// tie-break rule of its own.
-	//
-	// **The action points are not refunded.** They were committed when the cards were queued,
-	// and letting them come back would make a chill pure tempo; keeping them spent makes it
-	// tempo and economy both.
-	//
-	// **The chill is read off the status and nowhere else** *(2026-08-17)*. A hand buys damage and
-	// only damage, so nothing else in the game can take a card off a turn — which means there is
-	// exactly one place to look for how many, and a second counter would be a second answer to a
-	// question with one.
-	//
-	// **It bites on every turn it outlives**, rather than being spent when it bites — the status
-	// counting down is what ends it. The asymmetry phases impose is carried by the status too:
-	// side A acts first, so ice A lands takes a card from B the same round, while ice B lands
-	// finds A has already acted and bites in the round after.
-	lost := actor.chillCards()
-	if lost > len(turn) {
-		lost = len(turn)
-	}
-	for i := 0; i < lost; i++ {
-		events = append(events, Event{
-			Kind:    KindChilled,
-			Side:    side,
-			Action:  turn[i].Card.Concept,
-			Element: turn[i].Card.Element,
-			Round:   round,
-		})
-	}
-	turn = turn[lost:]
-
-	// **Riders fire here: after the chill, before the blow.** A rider belongs to one card rather
-	// than to the duelist, so the moment it wants is "this card was played" — and a card a chill
-	// ate was never played. Putting it in front of the attack phase is what makes a heal arrive in
+	// **Riders fire here, before the blow.** A rider belongs to one card rather than to the
+	// duelist, so the moment it wants is "this card was played". Putting it in front of the attack
+	// phase is what makes a heal arrive in
 	// time to matter to the turn it was spent in, rather than after the round it was meant to
 	// survive. See rider.go.
 	events, actor = playRiders(events, side, actor, turn, held, round, src.Luck)
@@ -208,7 +155,7 @@ func playTurn(
 	// **The attack phase is a hit per landing.** Every attack card queued is announced, then the
 	// hand they form is announced, then every card lands its own hit — five Bashes are five hits
 	// under one Four of a Kind. See hit.go.
-	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands, src.Roll)
+	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands)
 
 	// **Nothing follows the hits**, so a duelist who fell to one closes no turn: the streak below is
 	// a fact about turns taken and a corpse takes none.
@@ -335,63 +282,10 @@ func wardAtTurnStart(events []Event, side Side, actor Duelist, round int) ([]Eve
 	return events, actor
 }
 
-// endRound ticks a burn and counts every status down one.
-//
-// **The burn ticks before the countdown**, so a fire hit lands damage at the end of the round it
-// was struck in as well as the round after. MECHANICS.md says a DoT "lands at end of round" and
-// this is the end of the round it was applied in; making it wait would mean a fire attack did
-// nothing at all in a duel that ended on the round it was played.
-//
-// **A dead duelist does not burn.** The first version ticked regardless, on the grounds that
-// skipping a corpse would make the order of two deaths matter — it does not, because whether a
-// duelist is dead is settled before either side's round-end runs. What it did instead was
-// announce a second `KindDefeated` over a body, and the Resolution feed duly read
-// "Goblin falls / Goblin burns for 2 / Goblin falls". Statuses still tick down, so a duelist
-// somehow revived does not wake up carrying an expired burn.
-func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist) {
-	// **Every damage-over-time status ticks, one at a time**, in registration order. There is one
-	// such status in the game today; walking them is what stops a second one being silently
-	// ignored, and the order is fixed because which tick killed a duelist decides what the feed
-	// says they fell to.
-	for _, id := range d.tickingStatuses() {
-		if !d.Alive() {
-			break
-		}
-		// **A tick is amplified by whatever the carrier is vulnerable to**, exactly as a blow is. A
-		// burn is damage this duelist takes, and a rule that exempted it would be "damage, except the
-		// kind that arrives at the end of the round" — see EffectDamageAmplification.
-		tick := amplify(d.Statuses[id].Amount, d.vulnerability())
-		d.CurrentLife = reduce(d.CurrentLife, tick)
-
-		// Side and Target are both this duelist, because nobody acted. The status was applied by an
-		// attack rounds ago and whoever applied it may not even be alive to see this.
-		events = append(events, Event{
-			Kind:   KindBurned,
-			Side:   side,
-			Target: side,
-			Status: id,
-			Amount: tick,
-			Life:   d.CurrentLife,
-			Round:  round,
-		})
-
-		if !d.Alive() {
-			events = append(events, Event{
-				Kind:   KindDefeated,
-				Side:   side,
-				Target: side,
-				Round:  round,
-			})
-		}
-	}
-
-	return events, tickStatuses(d)
-}
-
 // healAtTurnStart is every worn regeneration relic firing, at the top of this duelist's own turn.
 //
-// **It is a whole function rather than four lines inside playTurn** because it is the only thing
-// that happens before the chill, and the order there is the argument — see MomentTurnStart.
+// **It is a whole function rather than four lines inside playTurn** because it is the first thing
+// a turn does, and the order there is the argument — see MomentTurnStart.
 //
 // **A share that restored nothing writes no beat.** A duelist at full life has a relic that did not
 // fire, and a figure leaving the ring carrying a zero would say it did. Same rule as the heal rider
@@ -424,13 +318,9 @@ func healAtTurnStart(events []Event, side Side, actor Duelist, round int) ([]Eve
 // **A shield of the hit's own element banks an action point** for the target's next turn — see
 // Duelist.Surge. Basic is no element, so a plain shield eating a plain hit matches nothing.
 //
-// **It is checked before weight and vulnerability** — everything downstream shapes a figure, and a
-// blocked hit never produces one. Ordering it after them would spend a shield on arithmetic nobody
-// sees.
-//
 // **Then the target's hit-blocked relics fire**, in worn order: a share of `would` sent back at the
-// actor, life, vitae. `would` is the hit as it would have landed — after weight and vulnerability —
-// which is what the target did not take. A thrower the share kills gets its KindDefeated here.
+// actor, life, vitae. `would` is the hit as it would have landed, which is what the target did not
+// take. A thrower the share kills gets its KindDefeated here.
 //
 // `slot` is the card's seat in the turn and `hit` is which term of the hand this was; a solo
 // attacker has no hand and passes zero.
@@ -519,18 +409,14 @@ func blockedByShield(events []Event, side Side, actor, target Duelist, card Card
 // rather than rules about hands:
 //
 //   - **One beat per slot.** Every attack card announces itself with a KindAction, so playback can
-//     still count how far through the round it is — see TestEverySlotIsEitherTakenOrChilled.
-//   - **A shock rolls once per hit.** Each attack is its own chance to miss.
-//   - **Weight, vulnerability, then shields, then statuses**, in that order: weight is a property of
-//     the attacker and vulnerability of the target, so everything the defender actively does happens
-//     to a hit both of them have already shaped.
+//     still count how far through the round it is — see TestEverySlotTakesABeat.
+//   - **One shield eats one hit whole**, and which hits it eats is decided before the turn starts.
 func resolveSoloAttacks(
 	events []Event,
 	side Side,
 	actor, target Duelist,
 	turn []Slot,
 	round int,
-	rng *rand.Rand,
 ) ([]Event, Duelist, Duelist) {
 	targetSide := other(side)
 
@@ -554,24 +440,9 @@ func resolveSoloAttacks(
 			Round:   round,
 		})
 
-		if attackMisses(actor, rng) {
-			events = append(events, Event{
-				Kind:    KindMissed,
-				Side:    side,
-				Action:  slot.Card.Concept,
-				Element: slot.Card.Element,
-				Target:  targetSide,
-				Slot:    i,
-				Round:   round,
-			})
-			continue
-		}
-
 		// **One shield, one hit**, and the hits it eats were chosen before the turn began — the
-		// matching element first and then the heaviest, by shieldedSlots. Spending is here rather than up there because a missed
-		// hit spends nothing: the roll above continues before this line.
-		dmg := blunt(actor.CardDamage(slot.Card), actor.weight())
-		dmg = amplify(dmg, target.vulnerability())
+		// matching element first and then the heaviest, by shieldedSlots.
+		dmg := actor.CardDamage(slot.Card)
 
 		if blocked := false; eaten[i] >= 0 {
 			events, actor, target, blocked = blockedByShield(events, side, actor, target, slot.Card, eaten[i], dmg, i, 0, round)
@@ -596,28 +467,6 @@ func resolveSoloAttacks(
 			Life:    target.CurrentLife,
 			Round:   round,
 		})
-
-		// One card, and the same relics the other phase reads. An enemy wears none, so this does
-		// nothing for the only duelists that are solo attackers today — it is here because the rule
-		// belongs to attacking, not to hand-forming.
-		for _, a := range actor.statusesFrom([]Card{slot.Card}) {
-			applied, amount, ok := applyStatus(target, a.Status, actor)
-			if !ok {
-				continue
-			}
-			target = applied
-			events = append(events, Event{
-				Kind:    KindStatus,
-				Side:    side,
-				Target:  targetSide,
-				Element: slot.Card.Element,
-				Status:  a.Status,
-				Relic:   a.Relic,
-				Amount:  amount,
-				Life:    target.CurrentLife,
-				Round:   round,
-			})
-		}
 
 		if !target.Alive() {
 			events = append(events, Event{Kind: KindDefeated, Side: side, Target: targetSide, Round: round})
@@ -822,16 +671,11 @@ func other(s Side) Side {
 // creature happened to lead with — a Giant Bat opening with a Nip would spend it on two damage and
 // then land a Drain for ten.
 //
-// **Ranked on CardDamage alone, and that is the whole of the arithmetic rather than a shortcut.**
-// Everything downstream of a card's own damage — the attacker's weight and the target's
-// vulnerability — is one multiplier applied identically to every attack in the turn, so neither can
-// reorder two cards. Projecting the whole pipeline per card would be a second resolver that agreed
-// with the first.
+// **Ranked on CardDamage alone, and that is the whole of the arithmetic.** A solo attacker's hit
+// lands its card's own damage, so the figure ranked is the figure that would land.
 //
-// **It is a snapshot of the turn's opening state, knowingly.** A status landed by an early hit
-// amplifies the ones after it, so a shield can be provably not-optimal in hindsight. That is the
-// price of deciding up front, and deciding up front is what lets the screen show the whole exchange
-// before the creature swings — see screens.shatter.
+// **It is decided up front**, which is what lets the screen show the whole exchange before the
+// creature swings — see screens.shatter.
 func shieldedSlots(actor, target Duelist, turn []Slot) []Element {
 	planned := make([]int, len(turn))
 	elems := make([]Element, len(turn))

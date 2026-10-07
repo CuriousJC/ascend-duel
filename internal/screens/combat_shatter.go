@@ -160,11 +160,6 @@ func (s *CombatScene) stageShieldBreaks(gs *state.GlobalState) bool {
 //
 // **The seat is `Event.Slot`, and it indexes the turn as it resolved.** That is the same convention
 // `Event.HandCards` uses and the same one `noteHand` reads it under, so the two cannot drift apart.
-// It also inherits the same known gap: a *chilled* card is taken off the front of the turn before
-// the indices are handed out, while the table row still draws it — so a round in which ice takes a
-// creature's card and a shield eats another would break the wrong seat. Ice is the only thing that
-// can chill, no creature carries it today, and fixing it properly means the row learning what a
-// chill did, which is a change to `noteResolved` rather than to this.
 func (s *CombatScene) blocksAhead() []combat.Event {
 	var out []combat.Event
 	for i := s.cursor; i < len(s.log); i++ {

@@ -1,6 +1,6 @@
 ---
 name: relic-balance
-description: The relic taxonomy and the aggregate view of the catalog - what a relic *is* (offense, defense, tempo, economy, enabler, growth, drawback) and how flat, multiplicative, repeat, status and stateful payloads are spread across rarity, element, form and hand. Load before answering any question about the catalog as a whole - is offense over-represented at common, does every element have a cost relic, what would this proposal do to the shape of the shelf - or before adding a category, an axis, or a new verb that has to be classified. The `relics` skill is one relic at a time; this one is all of them at once.
+description: The relic taxonomy and the aggregate view of the catalog - what a relic *is* (offense, defense, tempo, economy, enabler, growth, drawback) and how flat, multiplicative, repeat and stateful payloads are spread across rarity, element, form and hand. Load before answering any question about the catalog as a whole - is offense over-represented at common, does every element have a cost relic, what would this proposal do to the shape of the shelf - or before adding a category, an axis, or a new verb that has to be classified. The `relics` skill is one relic at a time; this one is all of them at once.
 ---
 
 # Relic balance — the catalog as a shape
@@ -55,33 +55,28 @@ with three rules can be per-card and per-blow at once, and that is information r
 
 | Category | Means | Derived from |
 |---|---|---|
-| **offense** | it makes a hit bigger | every damage verb, plus `apply-status` where the status is `damage-over-time` or `damage-amplification` |
-| **defense** | damage you do not take | `add-hp`, `scale-hp`, and `apply-status` where the status is `lose-actions`, `miss-chance` or `damage-reduction` |
+| **offense** | it makes a hit bigger | every damage verb |
+| **defense** | damage you do not take | `add-hp`, `scale-hp`, and the shield verbs |
 | **tempo** | it buys action points, never damage | `adjust-cost`, `demote-card` |
 | **economy** | the run's purse and its picks | `scale-propagation`, `adjust-prize-vitae`, `adjust-picks` |
 | **enabler** | it changes what you are holding so something else can fire | `set-element` |
 | **growth** | its value is a function of time, and it holds state | every `grow-*` verb and `reset-growth` |
 | **drawback** | it takes something away | any multiplicative verb with `Amount < 100` |
 
-**Denial is defense** *(owner's call, 2026-09-06)*. CHILLED steals a card off the front of their
-turn, which is damage that never gets thrown — so it sits with `add-hp` rather than in a category
+**Denial is defense** *(owner's call, 2026-09-06)*. A relic that takes a card off the front of
+their turn is damage that never gets thrown — so it sits with `add-hp` rather than in a category
 of its own. The alternative was a **control** bucket, and it was declined because the split it
 draws is between two ways of achieving the same thing rather than between two things.
-
-**`apply-status` is the one verb that cannot be classified by its own name**, and it is why the
-status catalog is read too: BURNING is offense and CHILLED is defense through the identical
-verb. `STATUS_EFFECTS` maps the five effect *kinds*, not the five records, so a sixth status
-classifies itself.
 
 **`grow-on-hit` is offense *and* growth**, which is the case that made many-to-many necessary. The
 Weight relics both grow and swing; a taxonomy forcing a choice would have to lie about one.
 
 ### `payload` — flat or scaling, and what kind of scaling
 
-`flat` / `multiplicative` / `repeat` / `status` / `stateful` / `enabler`.
+`flat` / `multiplicative` / `repeat` / `stateful` / `enabler`.
 
 **This is the +DMG versus xDMG axis and it is deliberately not folded into `category`.** They cut
-across each other: offense comes in all five payloads, and a flat economy relic and a flat offense
+across each other: offense comes in several payloads, and a flat economy relic and a flat offense
 relic have more in common with each other, price-wise, than either has with its multiplicative
 sibling. It is the axis that answers **how much of the catalog compounds** — relics fire left to
 right and multiply, so two multiplicative relics are a build and two flat ones are an addition.
@@ -156,7 +151,7 @@ earns its place when it is going to be read and argued with, not as a log.
 ## Extending it
 
 **A new verb in `internal/combat/relic.go` must be added to `VERBS` or the tool exits.** Same for a
-new moment, a new predicate and a new status effect kind. That is deliberate and matches the
+new moment and a new predicate. That is deliberate and matches the
 game's own loaders: a classification that silently defaulted an unknown verb to nothing would
 under-report the exact thing that just changed.
 

@@ -49,12 +49,12 @@ func TestTheTopRowIsThreeThingsThatDoNotOverlap(t *testing.T) {
 		t.Errorf("%d relics sit at a pitch of %dpx in a %dpx row", combat.DefaultRelicSlots, pitch, relics.Dx())
 	}
 
-	// The consumables pane is the other half of the row, and it must clear the enemy card and the
+	// The consumables pane is the other half of the row, and it must clear the duelist card and the
 	// relics on either side of it. It is fixed width, so this is what catches the row being narrowed
 	// under it rather than the pane being resized.
-	if cons := s.consumablePaneRect(gs); cons.Min.X <= relics.Max.X || cons.Max.X > enemy.Min.X {
-		t.Errorf("the consumables pane runs %d..%d, against a relic row ending at %d and an enemy card at %d",
-			cons.Min.X, cons.Max.X, relics.Max.X, enemy.Min.X)
+	if cons := s.consumablePaneRect(gs); cons.Min.X <= duelist.Max.X || cons.Max.X >= relics.Min.X {
+		t.Errorf("the consumables pane runs %d..%d, against a duelist card ending at %d and a relic row starting at %d",
+			cons.Min.X, cons.Max.X, duelist.Max.X, relics.Min.X)
 	}
 }
 

@@ -1,5 +1,31 @@
 [
   {
+    "ScenarioRecord": "full-top-row",
+    "Note": "The top row as full as a run can make it: seven relics worn on seven fingers and a consumables pane at its cap of three - two runes and a cantrip, so the pane shows two kinds side by side. It is a fixture for looking at how the two panes pack, not for a fight: the relics are seven families so no two pictures repeat, and the deck, the enemy and the draw are the game's own. RelicSlots is 7, over the shipped five. Realm 3, middle room, seed pinned so the hand is the same every launch.",
+    "RelicSlots": 7,
+    "Relics": [
+      "dmgx-fire",
+      "repeat-ice",
+      "discount-arcane",
+      "jar-earth",
+      "dmg-all-slash",
+      "flip-fire-to-ice",
+      "drain-blow"
+    ],
+    "Hand": [],
+    "Runes": [
+      "left-to-right",
+      "switch-gold"
+    ],
+    "Cantrips": [
+      "cantrip-might"
+    ],
+    "Screen": "combat",
+    "Seed": "CGPBSC",
+    "Fight": 7,
+    "Vitae": 45
+  },
+  {
     "ScenarioRecord": "mid-run",
     "Note": "A run already under way, which is the state nothing else here boots into. Every other fixture is a question about one mechanic on an otherwise empty run; this one asks what the screen looks like when the player has been journeying for a while - five fingers full, runes in the sack, stones in the pouch, a purse worth spending and a duelist carrying a wound. Realm 3, middle room. The relics are picked to be told apart rather than to combo: one of each rarity so the pane shows all three borders, and five different families so no two cards are the same picture. Nothing here is tuned for a win - it is a fixture for looking at a laid-out screen, and the deck, the enemy and the draw are all the game's own. The seed is pinned rather than the deck replaced, so the hand is whatever the real shuffle deals and is the same hand every launch.",
     "Relics": [
@@ -147,81 +173,8 @@
     "Dummy": true
   },
   {
-    "ScenarioRecord": "new-rings-fire-ice-lightning",
-    "Note": "The five dual-status rings drawn on 2026-09-12 that carry a fire, ice or lightning rule, worn at once so the artwork can be read on the pane at the size a player actually sees it - Scald, Wildfire, Hoarfrost, Brittle and Palsy. It is a batch of art rather than an interaction, which is what RelicSlots exists for: the shipped cap is five, so looking at nine new rings used to mean buying one, selling it and buying the next. The art is the question, but the rules are worth watching too, because every one of these applies TWO statuses off one attack: the hand is a fire slash, an ice slash, a lightning crush and two more of the same colors, so a single turn puts BURNED, CHILLED, SHOCKED and WEAKENED on the badge row under the creature's fraction at once. Against a dummy, so the statuses can be stacked and read rather than killed off; 15 AP so the choice is which cards rather than which are affordable.",
-    "Relics": [
-      "pair-status-burn-chill",
-      "pair-status-burn-shock",
-      "pair-status-chill-weight",
-      "pair-status-chill-weak",
-      "pair-status-shock-weak"
-    ],
-    "Hand": [
-      {
-        "Card": "Cut",
-        "Element": "fire"
-      },
-      {
-        "Card": "Slice",
-        "Element": "ice"
-      },
-      {
-        "Card": "Thump",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Bash",
-        "Element": "fire"
-      },
-      {
-        "Card": "Thrust",
-        "Element": "ice"
-      }
-    ],
-    "Actions": 15,
-    "Dummy": true
-  },
-  {
-    "ScenarioRecord": "new-relics-earth-arcane-and-the-weapons",
-    "Note": "The other seven relics drawn on 2026-09-12: the four dual-status rings on earth and arcane - Caldera, Tremor, Blightfire and Millstone - plus the three records whose art is not a ring at all. The Sundering is an obsidian scimitar and The Bruise an obsidian mace, and they are the reason this fixture exists as well as the art: a relic is the category and a ring is one kind of it, so this is the page where a weapon and a ring are worn in the same row and can be told apart at a glance. The Jar of Metal is the third, and it is the one that says nothing until cards are LEFT in hand - it reads crush cards kept, so playing three of these five is a different turn from playing all five. The hand is earth and arcane in slash and crush, so Sundering fires on the slashes, Bruise on the crushes, and all four rings on the colors. RelicSlots is 7, which is under combat.MaxWornRelics and over the shipped cap. Against a dummy, 15 AP.",
-    "RelicSlots": 7,
-    "Relics": [
-      "pair-status-weight-burn",
-      "pair-status-weight-shock",
-      "pair-status-weak-burn",
-      "pair-status-weak-weight",
-      "sundering",
-      "bruise",
-      "jar-crush"
-    ],
-    "Hand": [
-      {
-        "Card": "Cut",
-        "Element": "earth"
-      },
-      {
-        "Card": "Thump",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Bash",
-        "Element": "earth"
-      },
-      {
-        "Card": "Smash",
-        "Element": "arcane"
-      },
-      {
-        "Card": "Slice",
-        "Element": "earth"
-      }
-    ],
-    "Actions": 15,
-    "Dummy": true
-  },
-  {
     "ScenarioRecord": "training-dummy",
-    "Note": "A fight that cannot end, on the real starting deck against whichever creature the journey dealt. Both duelists carry 999999 life and the clock is lifted to 999 rounds, so every blow, every shield break, every status and every signal can be played with for as long as it is interesting - the thing that is otherwise five rounds and a death away. The creature is a real record with a real portrait and a real deck, so it still swings back and the exchange still reads the way it reads in a run; what is gone is the ending. Add Relics, Deck or Runes to this entry and it becomes a bench for whatever is being looked at. Note both health bars sit at a fraction nothing will visibly move, which is the mechanic rather than a broken bar.",
+    "Note": "A fight that cannot end, on the real starting deck against whichever creature the journey dealt. Both duelists carry 999999 life and the clock is lifted to 999 rounds, so every blow, every shield break and every signal can be played with for as long as it is interesting - the thing that is otherwise five rounds and a death away. The creature is a real record with a real portrait and a real deck, so it still swings back and the exchange still reads the way it reads in a run; what is gone is the ending. Add Relics, Deck or Runes to this entry and it becomes a bench for whatever is being looked at. Note both health bars sit at a fraction nothing will visibly move, which is the mechanic rather than a broken bar.",
     "Relics": [],
     "Hand": [],
     "Dummy": true,
@@ -1177,7 +1130,7 @@
   },
   {
     "ScenarioRecord": "every-attack-counts",
-    "Note": "Every attack the turn paid for lands its own hit, whether or not it made the rung. The hand is two ice shields and five attacks in four colours, so the two cases are one click apart. Take the two shields and one attack: they form the Pair on themselves and throw no hit, the attack is in no rung, and it lands its hit anyway at the Pair's multiplier. Take the two earth Jabs and add the fire Bash: the Card Pair is the two Jabs, the Bash's hit rides at its rate and burns as well. The budget is wide and nothing dies, so every combination can be tried against the same bat.",
+    "Note": "Every attack the turn paid for lands its own hit, whether or not it made the rung. The hand is two ice shields and five attacks in four colours, so the two cases are one click apart. Take the two shields and one attack: they form the Pair on themselves and throw no hit, the attack is in no rung, and it lands its hit anyway at the Pair's multiplier. Take the two earth Jabs and add the fire Bash: the Card Pair is the two Jabs, the Bash's hit rides at its rate. The budget is wide and nothing dies, so every combination can be tried against the same bat.",
     "Enemy": "animals-outer-bat",
     "Hand": [
       { "Card": "Brace", "Element": "ice" },
@@ -1358,12 +1311,12 @@
       "jar-ice",
       "dmg-all-slash",
       "hp-scale",
-      "sundering",
+      "drain-blow",
       "growth-crush",
       "handmult-pair",
       "lead-three-times",
       "discount-slash",
-      "pair-status-burn-chill"
+      "green-helm"
     ],
     "RelicSlots": 10,
     "Runes": [
@@ -1392,7 +1345,7 @@
   },
   {
     "ScenarioRecord": "life-relics",
-    "Note": "Two flips that chain and the two life relics, on a real duelist with a readable health bar. The deck is half lightning and half ice; Frozen Lightning is worn left of Meltdown, so a lightning card is dealt ice and then fire - two steps, two beats, a toast on each ring - while a native ice card takes the second step alone. That is combat.DealSteps carrying a running element through the worn list, and the worn order is what decides it: swap the two rings and lightning stays lightning, because Meltdown reads the card before Frozen Lightning has touched it. Vampiric Fang gives back 3/10 of every hit and The Tear restores 1/4 of maximum life at the top of each turn, so the two life gestures are side by side: a drain leaves the body it was taken out of, a regeneration leaves the ring that made it. It has NO Hand on purpose - a plugged hand is seated straight out of the run and never goes through drawHand, so it would show the cards unflipped and the cascade would not run at all. It is not a dummy for the same kind of reason: 999999 life each way makes both life figures land on a bar that cannot visibly move. The Rabbit's Foot is worn last, so every gold and silver card in the deck reads 2 IN 5 rather than 1 IN 5 on its tooltip and pays that often - and if anything shocks the duelist, their own miss chance reads 1/2 rather than 1/4, which is the drawback the relic is honest about. Round one heals nothing either way, since nothing in the game heals above full.",
+    "Note": "Two flips that chain and the two life relics, on a real duelist with a readable health bar. The deck is half lightning and half ice; Frozen Lightning is worn left of Meltdown, so a lightning card is dealt ice and then fire - two steps, two beats, a toast on each ring - while a native ice card takes the second step alone. That is combat.DealSteps carrying a running element through the worn list, and the worn order is what decides it: swap the two rings and lightning stays lightning, because Meltdown reads the card before Frozen Lightning has touched it. Vampiric Fang gives back 3/10 of every hit and The Tear restores 1/4 of maximum life at the top of each turn, so the two life gestures are side by side: a drain leaves the body it was taken out of, a regeneration leaves the ring that made it. It has NO Hand on purpose - a plugged hand is seated straight out of the run and never goes through drawHand, so it would show the cards unflipped and the cascade would not run at all. It is not a dummy for the same kind of reason: 999999 life each way makes both life figures land on a bar that cannot visibly move. The Rabbit's Foot is worn last, so every gold and silver card in the deck reads 2 IN 5 rather than 1 IN 5 on its tooltip and pays that often. Round one heals nothing either way, since nothing in the game heals above full.",
     "Relics": [
       "flip-lightning-to-ice",
       "flip-ice-to-fire",
@@ -1801,9 +1754,9 @@
   },
   {
     "ScenarioRecord": "goblin-brute",
-    "Note": "A real fight against a goblin with a mixed row of relics on the ordinary deck, for playing rather than for testing one rule. Fire attacks burn and grow, crush attacks double and every Bash hits for 4x, and a pair pays 2x - so a status, a growth, a form bonus, a concept weapon and a hand multiplier are all live at once. No hand is plugged, so the deal and the flip cascade run as they would in a run, and it is not a dummy: the clock and both life totals are the game's own.",
+    "Note": "A real fight against a goblin with a mixed row of relics on the ordinary deck, for playing rather than for testing one rule. Every hit drains, fire attacks grow, crush attacks double and every Bash hits for 4x, and a pair pays 2x - so a drain, a growth, a form bonus, a concept weapon and a hand multiplier are all live at once. No hand is plugged, so the deal and the flip cascade run as they would in a run, and it is not a dummy: the clock and both life totals are the game's own.",
     "Relics": [
-      "status-burn",
+      "drain-blow",
       "growth-fire",
       "dmg-all-crush",
       "basher",

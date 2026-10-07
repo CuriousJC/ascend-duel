@@ -34,10 +34,8 @@ const (
 	// afterwards, and Element is **the shield's** element — which pip the row loses. Surged says the
 	// shield matched the hit's own element and banked an action point for the defender's next turn.
 	//
-	// **It leaves no figure**, so a feed reading
-	// `Amount` off the two would be reading a remaining blow in one case and a remaining shield in
-	// the other. It is not a KindMissed either: a miss is the attacker's own failure and costs the
-	// defender nothing, where this is something the defender paid for.
+	// **It leaves no figure**, so a feed reading `Amount` off the two would be reading a remaining
+	// blow in one case and a remaining shield in the other.
 	KindBlocked
 
 	// KindExpired is a duelist's standing shields lapsing unspent, at the start of their own next
@@ -46,11 +44,10 @@ const (
 	// **It exists because a shield row has to empty when the shields do.** Every other change to
 	// that count is announced — raised, and eaten one attack at a time — so an expiry that said
 	// nothing would leave the readout showing a defense the engine had already taken away, for a
-	// whole turn. This is the same argument that makes a chilled slot emit a beat.
+	// whole turn.
 	//
-	// **Only shields raise it, and only when some were standing.** A percentage guard lapsing is
-	// not drawn anywhere, so announcing it would be a beat with no picture; and a turn beginning
-	// with nothing up is the ordinary case, which must not cost the feed a line.
+	// **Only when some were standing.** A turn beginning with nothing up is the ordinary case,
+	// which must not cost the feed a line.
 	KindExpired
 
 	// KindDamage is one hit landing. Slot is the card that threw it and, from a hand-forming
@@ -62,34 +59,6 @@ const (
 	// throw. It follows the turn's attack KindActions and comes before the first hit, so no figure
 	// lands before the reason for it.
 	KindHand
-
-	// KindChilled is one action lost to a chill. One event per action, so a chill deep enough to
-	// take several narrates as the several things it actually is.
-	KindChilled
-
-	// The three element events, added 2026-08-12 with the statuses.
-
-	// KindStatus is one element status landing on a duelist. Element says which, Amount says how
-	// much was added by this hit, Target is who is carrying it.
-	//
-	// It is a separate event rather than a field on KindDamage because a status is not the hit:
-	// a chill that lands is felt a round later and against a completely different card, and a
-	// Resolution feed that folded it into the damage line would announce it at the one moment it
-	// does nothing.
-	KindStatus
-
-	// KindMissed is one hit that never happened because its owner was shocked. Action is the
-	// attack that was lost, Side is whose it was, and Slot and Hit say which hit — a shock rolls
-	// once per hit, so one card of a turn can miss while the rest land.
-	//
-	// Nothing of the defender's stopped it, and a log
-	// saying a blow was "stopped cold" by a defense that was never raised would send the player
-	// looking for a card that is not there.
-	KindMissed
-
-	// KindBurned is a fire tick at the end of a round. Target is who burned; Side is the same,
-	// because nobody acted.
-	KindBurned
 
 	// KindHealed is a rider restoring life to the duelist who played the card. Action is the card
 	// that carried it, Amount is the life restored — **after the cap**, so a heal on full life
@@ -164,18 +133,12 @@ const (
 	// **Its own kind rather than a KindDrained, and the difference is where the life came from.**
 	// A drain takes its share out of a blow, so the figure flies out of the body it was taken
 	// from; a regeneration is made by the relic out of nothing, so it flies out of the ring. That
-	// is the same distinction KindStatus draws by taking anchorRelic, and the choreography table is
-	// one entry per kind.
+	// is why the choreography table is one entry per kind.
 	KindRegenerated
 
 	// KindFizzled is one hit of the target's own element landing nothing at all: no damage, no
-	// drain, no status, and no relic stepping. Action is the card, Element its element, and Slot
-	// and Hit say which hit — like a miss, one card of a turn can fizzle while the rest land.
-	//
-	// **Its own kind rather than a KindMissed.** A miss is the attacker's shock and a matter of
-	// luck; a fizzle is the target's nature and a matter of the player's choice, and a feed saying
-	// "shocked" over an ice card thrown at an ice creature would send the player looking for a
-	// status that is not there.
+	// drain, and no relic stepping. Action is the card, Element its element, and Slot and Hit say
+	// which hit — one card of a turn can fizzle while the rest land.
 	KindFizzled
 
 	// KindWarded is a worn relic raising shields at the top of its wearer's own turn — a helm.
@@ -213,8 +176,8 @@ const maxHandTerms = baseMaxActions * MaxEchoLandings
 type Event struct {
 	Kind   EventKind
 	Side   Side      // who acted
-	Action ConceptID // set on KindAction, on KindRaised for the card that raised the shields, on KindBlocked for the attack a shield ate, on KindChilled for the action lost, on KindMissed for the attack that never landed, on KindDamage for the card that landed, and on KindHand for the card the hand led with
-	Amount int       // damage dealt, shields raised or left standing, status applied, or on KindHand what its hits add up to
+	Action ConceptID // set on KindAction, on KindRaised for the card that raised the shields, on KindBlocked for the attack a shield ate, on KindDamage for the card that landed, and on KindHand for the card the hand led with
+	Amount int       // damage dealt, shields raised or left standing, or on KindHand what its hits add up to
 	Target Side      // who took the damage
 	Life   int       // target's life after the event
 	Round  int
@@ -223,21 +186,21 @@ type Event struct {
 	// it was played — the same sequence HandCards indexes and the same one this side's KindActions
 	// arrive in.
 	//
-	// **It is set on every hit event — KindDamage, KindMissed, KindBlocked, and the KindDrained and
-	// KindStatus a hit produced — on KindRaised, and on the rider events.** A block names its attack
+	// **It is set on every hit event — KindDamage, KindFizzled, KindBlocked, and the KindDrained a
+	// hit produced — on KindRaised, and on the rider events.** A block names its attack
 	// by ConceptID, which is a *kind* of card rather than one of them: a creature queuing two Nips
 	// and having one of them eaten gives a screen reading `Action` no way to say which, and shields
 	// pick the heaviest blow, so the card a shield ate may be the third of five and the screen has
 	// to shatter that one. A raise carries it for the same reason one layer over: the defenses fire
 	// as a bundle with no card lit, so the pips have nothing but this to leave from.
 	//
-	// **The zero value is a real slot**, like Status's and Relic's, so it is read only on the kind
+	// **The zero value is a real slot**, like Relic's, so it is read only on the kind
 	// that sets it.
 	Slot int
 
 	// Hit is which term of the turn's KindHand a hit event belongs to: an index into HandCards and
 	// every array beside it. **Set on the hit events of a hand-forming attacker** — KindDamage,
-	// KindMissed, KindBlocked, and the KindDrained and KindStatus that hit produced — and read on no
+	// KindFizzled, KindBlocked, and the KindDrained that hit produced — and read on no
 	// others. A solo attacker has no hand event to point into, so its hits leave it zero, which is a
 	// real term, like Slot's zero is a real slot.
 	//
@@ -270,36 +233,23 @@ type Event struct {
 	// banked one action point for the defender's next turn. See Duelist.Surge.
 	Surged bool
 
-	// Element is the card's element on KindAction, KindMissed and KindStatus. Basic everywhere
+	// Element is the card's element on KindAction and KindFizzled. Basic everywhere
 	// else, which is also the zero value — an event with nothing to say about color says `basic`,
 	// exactly as a plain card does.
 	Element Element
 
-	// Status is which status is meant, on KindStatus and KindBurned.
+	// Relic is the worn relic behind the event, on KindDrained, KindRegenerated, KindWarded,
+	// KindReflected and KindTithed.
 	//
-	// **It replaced reading Element for it** *(2026-08-17)*, because a status is no longer the same
-	// object as a color: two relics can put two different statuses on the same fire card, and an
-	// event naming the color could not say which had landed. Element still carries the card's own
-	// color on a KindStatus, which is what the feed's swatch and its sentence are drawn from.
-	//
-	// **The zero value is a real status**, the first one registered — the hazard Action carries for
-	// concepts. It is set on the two kinds that mean it and read on no others.
-	Status StatusID
-
-	// Relic is the worn relic behind the event, on KindStatus, KindDrained, KindRegenerated,
-	// KindWarded, KindReflected and KindTithed.
-	//
-	// **It is here because a status has a cause the player can see** *(2026-08-18)*. The screen
-	// flies the word out of the relic that caused it, and there is no other honest way for it to
-	// know which relic that was: reading it off the card's element would be a second rule about
-	// something the grammar already decides, and it would be wrong the first time a form relic or
-	// a concept relic applied a status - both of which RegisterRelic accepts today.
+	// **It is here because the cause is something the player can see.** The screen flies the
+	// figure out of the relic that caused it, and there is no other honest way for it to know which
+	// relic that was.
 	//
 	// **Which relic, not which slot.** A RelicID says something in a trace and in a test; a worn
 	// index says nothing outside one duelist's array. The screen finds its position by walking the
 	// worn list, which is at most five entries and is the same order the relic row is drawn in.
 	//
-	// **The zero value is a real relic**, exactly as Status's is a real status, so it is set on the
+	// **The zero value is a real relic**, so it is set on the
 	// kinds that mean it and read on no others. NoRelic is the absence, for a caller that wants
 	// to say so explicitly.
 	Relic RelicID
@@ -335,8 +285,7 @@ type Event struct {
 	// **A term is a landing, not a card.** An echoed card seats the same index two or three times
 	// with a smaller amount each time, and each of those is a hit of its own.
 	//
-	// The indices count the actions that actually resolved, chilled ones already removed, which is
-	// the same sequence as this side's KindAction events. The screen seats the whole turn at DUEL!
+	// The indices count the actions that resolved, which is the same sequence as this side's KindAction events. The screen seats the whole turn at DUEL!
 	// rather than a card at a time, so the cards are there to point at.
 	HandCards     [maxHandTerms]int
 	HandCardCount int
@@ -411,13 +360,13 @@ type Event struct {
 	HandPlayAdd [maxHandTerms]int
 	HandPlayPct [maxHandTerms]int
 
-	// HitAmounts[i] is what hit i comes to before the attacker's weight and the target's
-	// vulnerability: the card's term (its riders and its relics inside it), times the hand's
+	// HitAmounts[i] is what hit i comes to: the card's term (its riders and its relics inside it),
+	// times the hand's
 	// multiplier, times HandScale — each step rounded toward zero, on this hit alone.
 	//
 	// **It is the figure the hit's arithmetic ends on**, and `Amount` on this event is the sum of
 	// them — what the hand was worth, not what landed. What landed is each hit's KindDamage, and a
-	// hit that missed, was blocked, or came after a death has a figure here and nothing there.
+	// hit that fizzled, was blocked, or came after a death has a figure here and nothing there.
 	HitAmounts [maxHandTerms]int
 
 	// HandRelicScale[i][seat] is what the relic on that worn seat multiplied hit i's card term by, as
@@ -445,7 +394,7 @@ type Event struct {
 	HandLanding [maxHandTerms][]bool
 
 	// HandGrown[i][seat] is what the relic on that worn seat had accumulated **after** hit i was
-	// thrown — unchanged by a hit that missed, was blocked or was never thrown, since only a hit
+	// thrown — unchanged by a hit that fizzled, was blocked or was never thrown, since only a hit
 	// that connects grows a relic. The relic row reads it to step each badge as the hits land.
 	//
 	// **Indexed by worn seat**, which is stable for the length of a turn: the row can be reordered

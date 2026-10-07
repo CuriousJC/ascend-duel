@@ -41,8 +41,7 @@ import (
 
 // MaxHandSlots is the ceiling on how many rungs a duelist can carry a stone count for.
 //
-// **It exists because `Duelist` has to stay comparable**, exactly as `MaxStatuses` and
-// `MaxStatuses` does — `TestRoundIsDeterministic` compares two resolved duelists structurally, and a
+// **It exists because `Duelist` has to stay comparable** — `TestRoundIsDeterministic` compares two resolved duelists structurally, and a
 // map on the struct would end that. Thirty-two is well clear of the eighteen rungs the catalog
 // holds; a catalog that outgrew it panics at init rather than silently dropping the rungs past
 // the end.
@@ -57,7 +56,7 @@ const MaxHandSlots = 32
 //
 // **It is never written down.** A seat is derived from the catalog this build loaded, so a save
 // file records the hand's *key* and resolves it back through here, on exactly the terms
-// `ConceptID` and `StatusID` are under.
+// `ConceptID` is under.
 var handSlots = buildHandSlots()
 
 func buildHandSlots() map[string]int {

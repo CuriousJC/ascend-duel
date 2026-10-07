@@ -46,8 +46,8 @@ top of, and they are not repeated below:
 - **Widgets are hand-rolled**, `models` struct plus `systems.Update*`/`Draw*`. No toolkit.
 - **Determinism.** Three of the screen's sources are seeded in `Init` and all three come off
   `RunSeed`: the deck's `rng` and the opponent's `enemyPile` from `shuffleSeeds` (salted per
-  side and per fight), and `combatRNG` for the engine's lightning roll from
-  `RunSeed ^ combatSalt`. Separate streams, and they must stay separate. `deckSeed` pins the
+  side and per fight), and `luckRNG` for the gold and silver gamble from `seeds.LuckRoll`.
+  Separate streams, and they must stay separate. `deckSeed` pins the
   two shuffles for debugging — both of them, never one.
 - **Which of the screen's files holds what** — the map is the package doc,
   `go doc ./internal/screens`, and it lives beside the code rather than here so there is only
@@ -65,7 +65,7 @@ then swing.
 
 **The attack phase is one hand and a hit per landing.** Every attack card queued is announced with
 a `KindAction`, then one `KindHand` names the hand they formed and carries every hit's arithmetic,
-then each hit lands as its own `KindMissed`, `KindBlocked` or `KindDamage`, carrying `Slot` (the
+then each hit lands as its own `KindFizzled`, `KindBlocked` or `KindDamage`, carrying `Slot` (the
 card) and `Hit` (its term on the hand event). Five Bashes are five hits under one Four of a Kind.
 
 **The run's account writes the hand once and a line per hit under it.** The `KindAction`s still
@@ -114,8 +114,8 @@ action to lead, and nothing buys priority.
   `Duelist.Surge`), so a `KindBlocked` carries **the shield's** element in `Element` and the row
   spends that pip (`ui.ShieldRow.Spend`). **Nothing reduces a hit to zero by arithmetic** — a
   shield eats a whole hit or it does not, and a fizzle (`KindFizzled`, a hit of a creature's own
-  element) wastes a whole hit rather than zeroing a figure. It is drawn like a miss: `FIZZLE` on
-  the hit's line.
+  element) wastes a whole hit rather than zeroing a figure. It is drawn as `FIZZLE` on the hit's
+  line.
 - **`Slot.Index` is not a position in the round.** It is where the card sits in its own
   side's queue, which regrouping breaks apart. Anything asking "how far through the round are
   we" counts slots — `CombatScene.currentSlot` does, and lighting the right Resolution row
@@ -145,9 +145,8 @@ in `MECHANICS.md`; these are what matter to the screen.
   which is structural: counting would match the one-card hand against every turn in the game, and
   the fallback picks the hardest-hitting card rather than the commonest.
 - **The event carries every hit's arithmetic, and the engine lands the same figures.**
-  `HitAmounts[i]` is hit i before the attacker's weight and the target's vulnerability, and the
-  hit's own `KindDamage` is that figure after them — so the figure a line prints and the figure the
-  hit landed cannot come from two different sums. `Amount` on the hand event is every hit added up.
+  `HitAmounts[i]` is hit i, and the hit's own `KindDamage` lands that figure — so the figure a line
+  prints and the figure the hit landed cannot come from two different sums. `Amount` on the hand event is every hit added up.
   A shield does not appear in that gap at all: it removes a whole hit up front, and `KindBlocked` is
   what says so.
 - **The multiplier multiplies the cards, and there is no third term** *(owner's call)*. `no-hand`
@@ -180,10 +179,8 @@ in `MECHANICS.md`; these are what matter to the screen.
   **`Blow.Cards` indexes the turn, not the hand**, which is why the preview goes through
   `ResolutionOrder` — a Brace queued first resolves last, so a preview read off the hand as the
   player left it would miss the hand behind it.
-- **A chilled slot is a row that never resolves.** `currentSlot` counts `KindChilled`
-  alongside `KindAction` for exactly this reason — one beat per slot, taken or lost — and
-  `TestEverySlotIsEitherTakenOrChilled` pins it. **The pane still draws that row as though it
-  happened**, which is a known gap. Ice is the only thing that can take a slot.
+- **Every slot is a beat.** `currentSlot` counts `KindAction` — one beat per slot — and
+  `TestEverySlotTakesABeat` pins it.
 
 ### The hand dialog: every hit worked out under its card
 
@@ -206,7 +203,7 @@ exist.
 - **What became of each hit is read ahead in the log.** `hitOutcomes` walks forward from the hand
   event over the hits it threw and hands each line its own outcome's position. A finished line
   that **landed** flies its figure into the target (`throwColumn` moves the target's life at that
-  moment and marks the event walked), a **miss** says MISS over the line, a **block** says BLOCKED,
+  moment and marks the event walked), a **fizzle** says FIZZLE over the line, a **block** says BLOCKED,
   and a line with no outcome — the target fell to an earlier hit — fades where it stands.
   **This is the one place the screen reads ahead of the cursor besides the shield break**, and it
   is confined to the hits directly after the hand.
@@ -337,8 +334,9 @@ with nothing lifted, the hand is announced with its cards up, and the lines run 
 rest.** Nothing else on that turn may lift a card — a second gesture ahead of the announcement
 reads as whichever card it lifted having gone first.
 
-And **the hand is announced even if every hit then misses** — the shock rolls per hit, after the
-hand event, because the hand is scored off the queue and the queue was committed at DUEL!.
+And **the hand is announced even if every hit then lands nothing** — a fizzle or a block is decided
+per hit, after the hand event, because the hand is scored off the queue and the queue was committed
+at DUEL!.
 
 ### Pacing: one speed, and a table of proportions
 
@@ -346,7 +344,7 @@ hand event, because the hand is scored off the queue and the queue was committed
 — 25 ticks, five twelfths of a second** — and `eventDwells` is a multiplier per event kind, read
 through `eventDwell`. Nearly every row is `1`.
 
-- **Two questions, two edits.** "Playback is too slow" is the constant; "a chill should hold longer
+- **Two questions, two edits.** "Playback is too slow" is the constant; "a grant should hold longer
   than a card firing" is a multiplier. Written as durations the two could not be asked separately —
   every retune of the speed meant re-deriving every entry, and an entry that had drifted out of
   proportion looked exactly like one that had been chosen. **A row that is not 1 needs a sentence
@@ -434,8 +432,7 @@ card's face, the round holds, then the creature swings with what is left. **A ma
 - **The pips leave the shield row as they fly**, several beats before `KindBlocked` says so — the
   same predict-then-correct the raises use.
 - **`Event.Slot` is the index into the turn as it resolved**, the convention `HandCards` already
-  uses, and it inherits that convention's known gap: a chilled card is trimmed off the front before
-  the indices are handed out while the table row still draws it. Nothing can chill a creature today.
+  uses.
 - **It holds the playback cursor** — `combatTheater.running` — which is pacing and is allowed. The
   hold after the break is the longest single one on this screen, deliberately: the round has three
   acts and the middle one needs a beat of its own.
@@ -514,7 +511,7 @@ is lifted only a quarter toward white for the same reason — at more than half,
 silver's puts a white disc in the middle of the burst.
 
 **When they fire is the real decision.** Riders resolve *before* the attack phase — `playTurn`
-runs chill, then riders, then the hits — so every one of these events sits in the log ahead of
+runs riders, then the hits — so every one of these events sits in the log ahead of
 `KindHand`. Drawing them where they sit would put four fireworks up before the hand was named. So
 the screen defers *(owner's call)*:
 
@@ -588,15 +585,15 @@ round, filled for the rounds already spent.
 - **It arrives with a tooltip**, which is deliberately unlike every other figure written straight
   onto the table — a timer that killed without having said what it was would be the worst kind of
   hidden rule. The tutorial names it before the first duel for the same reason.
-- **`KindTimeUp` is the event.** It moves the life bar like a burn does (nobody acted, so nothing
-  else would), pops on the card whose bar it empties rather than flying from a seat there is none of,
+- **`KindTimeUp` is the event.** It moves the life bar itself (nobody acted, so nothing else
+  would), pops on the card whose bar it empties rather than flying from a seat there is none of,
   and opens its own line in the feed with the fall following it.
 
 ### The shield row on the duelist card
 
 *`combat_shields.go` and `card_art.go`.* The player's defend cards raise shields, and
-**one pip per shield is drawn in the seat the enemy card's status badges occupy** — same offsets,
-same box, so the two fighter cards stay twins. The pip is the defend form mark in the raising
+**one pip per shield is drawn in the fighter block's pip row**, above the bar — see
+`cards.FighterBlockTop`. The pip is the defend form mark in the raising
 card's element — `ui.ShieldPipKey`, out of `assets/form/` — the mark the cards themselves carry, so what was raised and what is standing are the same picture.
 
 - **`shownShields` is a view, exactly like `shownLife`.** `Duelist.Shields` is not
@@ -803,8 +800,8 @@ The active one latches darker than the other two.
 - **All three go dead outside `planning()`** — a resolved card is drawn from the hand slot it
   flew out of, so rearranging mid-round would light the wrong card on the table.
 - **`elementRank` and `categoryRank` are written out**, like `formRank`. `combat.Basic` leads
-  its enum as the zero value and trails on screen: the colors are what the statuses are counted
-  on, and the colorless cards are the plans.
+  its enum as the zero value and trails on screen: the colors are what the relics are counted on,
+  and the colorless cards are the plans.
 - **The cards give up width to the column.** `cardBandWidth` is the band less
   `sortColumnReserve`, and `handBand` centers on *that* rather than on `PctX(50)`, so the whole row
   sits left rather than only its right edge coming in. The AP bar and the AP figure travel with it,

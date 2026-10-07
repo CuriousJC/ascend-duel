@@ -23,7 +23,7 @@ package screens
 // The arrow already points this way; nothing new is imported to make it work.
 //
 // **The two panel buttons are pictures** — the fanned hand and the open scroll, each a
-// ui.PanelButtonSize square. The sort tabs carry words. **On the combat screen the pair leaves the
+// ui.PanelButtonSize square, and so are the sort tabs — an arrow, an axe, a flame. **On the combat screen the pair leaves the
 // column** and stands in a row under the draw pile; see underPileSlot.
 
 import (
@@ -50,8 +50,7 @@ const (
 	// taking a card's width reads as a pane rather than a button, which is what these two open
 	// rather than what they are. TestThePanelButtonsStackUpFromTheAPBar holds it.
 
-	// sortTabWidth is the block's width, and it is the enemy card's so the block, the cards it
-	// arranges and the corner above it are one measure.
+	// sortTabGap is the air between two sort tabs: none, so the three read as one control.
 	sortTabGap = 0
 )
 
@@ -124,19 +123,25 @@ const ()
 // independently is how a button ends up drawn over another.
 const ()
 
-// sortTabRect is the i'th tab of the sort block: full column width, no gap above or below it, and
-// the block's top edge on the hand's top edge.
+// sortTabRect is the i'th tab of the sort block: a SortTabSize square, no gap above or below it,
+// and the block centered on the dealt cards' height.
 //
 // **It hangs off the cards rather than off the column** *(2026-09-04, owner's call)*. The block
 // arranges the hand, so it is tied to the row it arranges: its left edge is where the widest hand
-// stops, which is sortColumnGap left of the column's own line. That leaves the block ending short
-// of the enemy card's right edge by the same amount — accepted, because what the block should look
-// attached to is the cards under it and not the card above it.
+// stops — ui.SortColumnLeft, which ends the block SortColumnGap short of the enemy card's right
+// edge, because what the block should look attached to is the cards beside it.
 //
 // **The left edge is the card band's, which does not narrow.** handBand does, as the hand is
 // spent; a block tied to that would slide sideways mid-round.
+// sortBlockDrop is how far below a row's top edge the block starts, so it sits centered on the
+// cards beside it. Shared by every row the tabs stand beside.
+func sortBlockDrop() int {
+	n := len(ui.SortButtonSpecs)
+	return (cardHeight - n*ui.SortTabSize - (n-1)*sortTabGap) / 2
+}
+
 func sortTabRect(gs *state.GlobalState, i int) image.Rectangle {
 	left := handBandLeft(gs) + cardBandWidth(gs)
-	top := handTop(gs) + i*(ui.ControlButtonHeight+sortTabGap)
-	return image.Rect(left, top, left+ui.ControlColumnWidth(), top+ui.ControlButtonHeight)
+	top := handTop(gs) + sortBlockDrop() + i*(ui.SortTabSize+sortTabGap)
+	return image.Rect(left, top, left+ui.SortTabSize, top+ui.SortTabSize)
 }

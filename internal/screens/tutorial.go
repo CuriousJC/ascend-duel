@@ -316,7 +316,7 @@ func (t *tutorialOverlay) build() {
 	if t.skip == nil {
 		t.skip = models.NewButton(tutorialButtonW, tutorialButtonH, "SKIP",
 			func() { t.skipPressed = true })
-		t.skip.BaseColor = ui.ButtonGray
+		t.skip.BaseColor = ui.ButtonJade
 		t.skip.TextSize = 36
 	}
 }
@@ -671,7 +671,7 @@ func waitingFor(c tutorial.Condition) string { return waitingWords[c] }
 
 // guideSpec is Bob as a card: his name, his face, and nothing else.
 //
-// **RelicStyle's shape rather than an opponent's.** He has no life to draw and no statuses to
+// **RelicStyle's shape rather than an opponent's.** He has no life to draw and no shields to
 // carry, and a health bar on the character explaining the game would be the single most confusing
 // thing on the screen — the player would spend the tutorial waiting to fight him.
 //

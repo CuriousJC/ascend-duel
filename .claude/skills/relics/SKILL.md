@@ -1,6 +1,6 @@
 ---
 name: relics
-description: The relic grammar - how a relic is written as data, the closed vocabularies it draws on, where each moment fires in the code, and what a relic may never do. Load before designing or discussing a new relic, adding an entry to relics.json or statuses.json, adding a moment or an effect verb, or wiring anything that reads a worn relic. Also the relic analyzer: given a proposed relic, whether it duplicates one that exists, which siblings it implies across the element/form/concept/tier axes, what it costs to build against the current grammar, and a best guess at its rarity and whether it should be locked behind an achievement.
+description: The relic grammar - how a relic is written as data, the closed vocabularies it draws on, where each moment fires in the code, and what a relic may never do. Load before designing or discussing a new relic, adding an entry to relics.json, adding a moment or an effect verb, or wiring anything that reads a worn relic. Also the relic analyzer: given a proposed relic, whether it duplicates one that exists, which siblings it implies across the element/form/concept/tier axes, what it costs to build against the current grammar, and a best guess at its rarity and whether it should be locked behind an achievement.
 ---
 
 # Relics
@@ -21,16 +21,16 @@ costs if it does not.
 
 ```json
 {
-  "RelicRecord": "chilling",
-  "Name": "Chilling Ring",
-  "Art": "",
-  "Text": "Ice attacks CHILL the target.",
-  "Rarity": "uncommon",
+  "RelicRecord": "dmgx-fire",
+  "Name": "Fire",
+  "Art": "dmgx-fire",
+  "Text": "Fire cards deal 2x DMG.",
+  "Rarity": "common",
   "Rules": [
     {
-      "When": "attack-lands",
-      "If":   { "Element": "ice" },
-      "Then": [{ "Do": "apply-status", "Status": "chilled" }]
+      "When": "card-damage",
+      "If":   { "Element": "fire" },
+      "Then": [{ "Do": "scale-damage", "Amount": 200 }]
     }
   ]
 }
@@ -55,15 +55,14 @@ costs if it does not.
   be locked?* below and MECHANICS.md §Unlocks.
 - **`Rarity`'s third tier is where a drawback belongs.** Onslaught takes something away, and
   `scale-hp` below 100 is how it says so.
-- **`Then`** — a list, so one rule can do two things. That is what buys a lightning relic that
-  shocks *and* chills with no new vocabulary at all.
+- **`Then`** — a list, so one rule can do two things at one moment with no new vocabulary at all.
 
 **A list of rules rather than one** because a relic can want two different moments — the growing
 stat relics below need exactly that, one rule to accumulate and one to apply.
 
 **`Do` is one word carrying both the operation and its subject** — `scale-damage`, not
 `{Op: scale, Of: damage}` *(owner's call, 2026-08-17)*. Splitting it into two crossing lists
-would buy a grid that is mostly meaningless cells, and `apply-status` sits on neither axis. Do not
+would buy a grid that is mostly meaningless cells. Do not
 re-propose it without a new argument.
 
 ## The three vocabularies
@@ -84,7 +83,7 @@ which is what makes a relic a *run* concept rather than a combat one.
 | `prizes-dealt` | `screens` | `dealPrizes` | once, as the post-battle cards go down |
 | `turn-taken` | `combat` | `playTurn` | once at the end of each of this duelist's own turns, **including an empty one**. Its `If` is matched against the turn as a whole: the rule fires when *any* card of the turn matches |
 | `blow-formed` | `combat` | `strike` (hit.go) | once per turn, as the hand is read and its hits are laid out — **the only moment that sees the turn's attacks as a set rather than a card**, and its `If` matches the *lead* card |
-| `turn-start` | `combat` | `playTurn` | once at the top of each of this duelist's own turns, **before the chill, the riders and both phases**. It has no card and no turn to read, so **a rule carrying any `If` is refused at registration** |
+| `turn-start` | `combat` | `playTurn` | once at the top of each of this duelist's own turns, **before the riders and both phases**. It has no card and no turn to read, so **a rule carrying any `If` is refused at registration** |
 | `hit-blocked` | `combat` | `blockedByShield` | once for every incoming hit one of the **wearer's** shields eats — the one moment read off the target rather than the actor. Its `If` matches the **eaten hit's card**, so it can narrow to blocks of a fire hit |
 | `essence-spent` | `session` | `Session.EssenceTargets` | as an essence is pointed at the deck — the reward offer, the shop's vial, one out of the satchel. **A question rather than an event**, the shape `prizes-dealt` has: it has no card and no turn, so **a rule carrying any `If` is refused at registration** |
 
@@ -171,7 +170,6 @@ not ignored.
 |---|---|---|---|
 | `adjust-cost` | `card-cost` | `Amount` delta | makes a matching card cheaper or dearer |
 | `scale-damage` | `card-damage` | `Amount` percent | 200 is double |
-| `apply-status` | `attack-lands` | `Status` key | puts a status on the target |
 | `set-element` | `card-drawn` | `Element` | the flip: recolors a matching card as it is drawn |
 | `demote-card` | `card-drawn` | `Amount` rungs | steps a matching card **down its own form's ladder** — a 3 AP Skewer is dealt as a 2 AP Thrust. Walks `Neighbor`; a card with no rung below it is left alone |
 | `add-dmg` | `fight-start` | `Amount` | flat DMG for the fight |
@@ -184,14 +182,14 @@ not ignored.
 | `scale-hand-damage` | `blow-formed` | `Amount` | scales **every hit**, after the hand's own multiplier (the HAND RELICS step), when it formed the named rung — the Pairing / Oak / Pentacle family. A **second multiplier**: `Event.Multiplier` stays the ladder's figure, because that is what the banner and hand row show |
 | `scale-damage-per-vitae` | `card-damage` | `Amount` | scales a matching card by **Amount percentage points per vitae held** — Fire of Life. 1 is +1% a vitae |
 | `reset-growth` | `turn-taken` | *nothing* | puts the accumulator back to zero. **Growth is applied first and resets second**, so a turn cannot both bank and lose the same step |
-| `grow-on-hit` | `attack-lands` | `Amount` | the same accumulator, **once per matching hit that connects** — so the card queued first is counted bare and pays for the one behind it to be counted bigger. Echoes and repeats each count; a miss or a block does not |
+| `grow-on-hit` | `attack-lands` | `Amount` | the same accumulator, **once per matching hit that connects** — so the card queued first is counted bare and pays for the one behind it to be counted bigger. Echoes and repeats each count; a fizzle or a block does not |
 | `scale-propagation` | `fight-won` | `Amount` percent | scales vitae propagation, *after* its cap |
 | `adjust-picks` | `prizes-dealt` | `Amount` delta | more post-battle choices |
 | `adjust-prize-vitae` | `prizes-dealt` | `Amount` flat | the vitae card pays more |
 | `repeat-card` | `blow-formed` | `Amount` landings | every **matching** card lands Amount times, each at **full** damage — the form repeat relics. **Under a `Hand` predicate, matching is membership**: only the cards that formed that rung repeat, so four fire cards and an ice one under an Elemental Four repeat the fire four — `combat.RungsOf`. The Twisted Prism and the Rainbow Knot |
 | `add-hand-dmg` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one turn** when the turn satisfied the named rung, so every hit grows by its card's own multiplier — *not* a term of its own, and already inside every figure a hit prints |
 | `add-dmg-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one blow, for every card still in hand** matching the rule's card predicate — the jars. Folded in beside `add-hand-dmg`'s raise, so every hit grows by its card's own multiplier. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
-| `drain-damage` | `attack-lands` | `Amount` percent | restores that share of each hit that **landed** to whoever threw it — after weight, vulnerability, the shield and the miss, so a hit that was eaten drains nothing. **Once per matching hit**: the predicate asks about that hit's card |
+| `drain-damage` | `attack-lands` | `Amount` percent | restores that share of each hit that **landed** to whoever threw it — after the shield and the fizzle, so a hit that was eaten drains nothing. **Once per matching hit**: the predicate asks about that hit's card |
 | `heal-share` | `turn-start` | `Amount` percent | restores that share of **maximum** life. Of the maximum rather than of what is left, so it is worth the same however badly the fight is going |
 | `adjust-round-limit` | `fight-start` | `Amount` rounds, **signed** | moves **this fight's** clock — Hermes takes two off. A delta rather than a figure, so it mixes with a relic that buys rounds; **every delta sums and worn order decides nothing**, because addition commutes. Clamped at one round, never at none, and read over the run's number rather than written into it, so selling gives the rounds back |
 | `echo-attack` | `blow-formed` | `Amount` landings | the turn's lead card lands Amount times — a hit each — at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
@@ -199,7 +197,7 @@ not ignored.
 | `raise-shield` | `turn-start` | `Element`, `Amount` shields | raises that many shields of that element at the top of the wearer's turn, **after the expiry** — the helms. A shield like any other: it eats its own element's heaviest hit first and banks the matched block's AP. Basic is legal. Bounded at `MaxShields`, like a card |
 | `match-foe-shields` | `fight-start` | *nothing* | every shield the wearer's defend cards raise takes **the opponent's element** — the Prismatic Shield. The card keeps its own element for the hand it forms; only the shield changes |
 | `keep-shields` | `fight-start` | `Amount` shields | that many unspent shields survive both lapses — the attacker's turn ending and the owner's next turn arriving — kept in element order. The Tower Shield |
-| `reflect-damage` | `hit-blocked` | `Amount` percent | sends that share of the eaten hit, **as it would have landed** and rounded down, back at the thrower as plain damage — no status, no drain, no growth. A thrower it kills falls there and the rest of their turn is not thrown. The Thorned Shield |
+| `reflect-damage` | `hit-blocked` | `Amount` percent | sends that share of the eaten hit, **as it would have landed** and rounded down, back at the thrower as plain damage — no drain, no growth. A thrower it kills falls there and the rest of their turn is not thrown. The Thorned Shield |
 | `heal-on-block` | `hit-blocked` | `Amount` flat | restores that much life to the wearer per block, capped at full. The Mending Shield |
 | `vitae-on-block` | `hit-blocked` | `Amount` flat | pays the wearer that much vitae per block, stepping `Duelist.Vitae`. The Tithe Shield |
 | `adjust-essence-targets` | `essence-spent` | `Amount` cards, **signed** | moves how many cards one essence is spent on. 1 is two where the mechanic gives one; **every delta sums and worn order decides nothing**, because addition commutes, so two relics are three cards. **Floored at one card, never at none** |
@@ -217,52 +215,6 @@ never assert a verb into existence.
   so the order has to be one a rule can name — and worn order is the only one the player can
   actually see on screen. See the `randomness` skill.
 - **Compounding is intended.** Two slash relics are ×4, not ×2, and that is a build.
-
-## Statuses are their own collection
-
-**A status is data, and it is not the same thing as an element** *(owner's call,
-2026-08-17)*. `statuses.json`:
-
-```json
-{
-  "StatusRecord": "chilled",
-  "Name":   "CHILLED",
-  "Badge":  "ice-effect",
-  "Effect": "lose-actions",
-  "Amount": 1,
-  "Rounds": 2,
-  "Text":   "loses one card off the front of each turn"
-}
-```
-
-**Five effect kinds, closed**: `damage-over-time`, `lose-actions`, `miss-chance`,
-`damage-reduction`, `damage-amplification`. A status is a file entry; a *kind* of status is a Go
-change.
-
-**`damage-amplification` is the odd one and the shape to know before adding a sixth.** Every other kind modifies what its carrier *does*, so it is read off whoever is
-acting; this one modifies what its carrier *takes*, so it is read off whoever is being acted upon —
-a second site in the damage pipeline, and it reaches the burn tick as well as the hit. It is also
-the only percentage with no natural ceiling, so `combat.maxAmplifyPct` caps it where the others are
-bounded by *nothing reduces a hit to zero*. WEAKENED is the one record.
-
-**Fully decoupled means fire does not burn on its own.** There is no default status per element:
-free statuses would leave relics with nothing to be, and giving a relic a second fire status is only
-possible if the first one is not inherent.
-
-**What decoupling costs:**
-
-- `Duelist.Statuses` is indexed by **status**, and its width is `combat.MaxStatuses` — an array
-  width rather than a design cap, since a duelist must stay comparable. Registration refuses a
-  record past it rather than dropping it.
-- `Duelist.Relics` is a fixed array of `WornRelic` plus a count, not a bool per element.
-- `cards.MaxEffects` **matches the number of statuses in the file**, checked by
-  `TestTheCardHoldsAsManyEffectsAsThereAreStatuses`. The badge row fits six at the current pitch, so
-  **a sixth status costs that one number, and a seventh is a redesign of the band.**
-- The badge is read off each record's `Badge`; nothing keys a badge by element.
-- `StatusID` is append-only, and it is the *file* that decides the order — inserting a record
-  mid-file re-points every status a duelist is carrying.
-- **Queries are by effect kind and they sum**: two `lose-actions` statuses take two cards. Nothing
-  applies two yet, but choosing between them silently would be a rule nobody wrote down.
 
 ## Growing relics hold state
 
@@ -293,7 +245,7 @@ not — it carries a number that lives on the run:
   what makes it compound with `echo-attack` and `repeat-card` rather than ignoring them. Three
   consequences `grow-on-win` does not have: the *second card of the first attack* is already
   stronger than the first, the growth is on the **duelist's** copy until `Session.AbsorbGrowth` reads
-  it back on the win, and a hit that misses or is blocked pays nothing. A lost fight forfeits it, which needs no
+  it back on the win, and a hit that fizzles or is blocked pays nothing. A lost fight forfeits it, which needs no
   rule: a defeat ends the run.
 - **No relic reaches a card's printed damage** *(owner's call, 2026-08-26)*. A face says what the card
   does — `1x DMG` — whatever is worn: a growing relic's multiplier depends on where in the turn the
@@ -342,7 +294,6 @@ Reach for these first when an idea sounds too easy.
 | Piece | Where |
 |---|---|
 | the vocabulary, `RegisterRelic`, and every applier | `internal/combat/relic.go` |
-| the status catalog and its lifecycle | `internal/combat/status.go`, `data/statuses.json` |
 | parsing `relics.json` into rules, and registering it | `internal/session/relic.go` |
 | what a run wears, and its accumulators | `session.Session` — `Wear`, `Worn`, `WornRelics`, `Grown` |
 | `fight-start` / `fight-won` | `session.Equip`, `session.WonFight` |
@@ -358,7 +309,7 @@ holding an art key. That is the who-consumes-it test in the `data` skill, answer
 package.
 
 **Bad records panic at load**, like every other catalog: an unknown moment, a verb used at the
-wrong moment, a predicate the rules cannot resolve, or a status key that is in no file.
+wrong moment, or a predicate the rules cannot resolve.
 
 **A duelist wears `[MaxWornRelics]WornRelic` plus a count**, not a slice — `Duelist` has to stay
 comparable, so a worn relic is an ID and its accumulator and the rules themselves live in the
@@ -477,7 +428,7 @@ Four verdicts, in ascending cost. Name the one and the specific term:
 | Verdict | Means | Cost |
 |---|---|---|
 | **expressible today** | an existing moment, an existing `If`, existing verbs | a record in `relics.json` and a `Text` line |
-| **needs one new term** | a new status, a new predicate value, a new effect verb | one row in a table here plus the one place applying it; a status is a file entry, a *kind* of status is Go |
+| **needs one new term** | a new predicate value, a new effect verb | one row in a table here plus the one place applying it |
 | **needs new plumbing** | a new moment, a Go seat, a fact the rules cannot currently observe | a `When` with a seat somewhere real, and the seat has to already be a place the code passes through |
 | **refused** | it collides with *What a relic may never do* | say which rule, and offer the nearest thing that is legal |
 

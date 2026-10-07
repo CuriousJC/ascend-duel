@@ -479,15 +479,15 @@ func TestTheSortColumnStandsClearOfTheCards(t *testing.T) {
 	}
 }
 
-// The sort tabs are one block: top edge on the hand's top edge, left edge on the cards' right
+// The sort tabs are one block: centered on the hand's height, left edge on the cards' right
 // edge, and no air between the three *(2026-09-04, owner's call)*.
 func TestTheSortTabsAreOneBlockTiedToTheCards(t *testing.T) {
 	gs := testState()
 	block := sortColumnRect(gs)
 
-	if block.Min.Y != handTop(gs) {
-		t.Errorf("the block starts at y=%d, want the top of the dealt hand at %d",
-			block.Min.Y, handTop(gs))
+	if above, below := block.Min.Y-handTop(gs), handTop(gs)+cardHeight-block.Max.Y; above < 0 || below < 0 || above-below > 1 || below-above > 1 {
+		t.Errorf("the block runs y=%d..%d, want it centered on the dealt hand's y=%d..%d",
+			block.Min.Y, block.Max.Y, handTop(gs), handTop(gs)+cardHeight)
 	}
 	if want := handBandLeft(gs) + cardBandWidth(gs); block.Min.X != want {
 		t.Errorf("the block starts at x=%d, want the cards' right edge at %d", block.Min.X, want)
@@ -541,9 +541,11 @@ func TestThePanelButtonsStackUpFromTheAPBar(t *testing.T) {
 			slot.Dx(), ui.ControlColumnWidth())
 	}
 
-	// And clear of the block above them, whose last tab must not reach into the pair.
-	if last, top := sortColumnRect(gs).Max.Y, ControlColumnSlot(gs, ControlColumnSlots-1).Min.Y; last > top {
-		t.Errorf("the sort block ends at y=%d, into the panel buttons at y=%d", last, top)
+	// And clear of the sort block, which must not overlap either of the pair.
+	for i := 0; i < ControlColumnSlots; i++ {
+		if slot, block := ControlColumnSlot(gs, i), sortColumnRect(gs); slot.Overlaps(block) {
+			t.Errorf("panel slot %d at %v overlaps the sort block at %v", i, slot, block)
+		}
 	}
 }
 

@@ -78,31 +78,13 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 			}
 			add(s.actRecord(e.Side, combat.Card{Concept: e.Action, Element: e.Element}))
 
-		case combat.KindChilled:
-			add(session.LedgerRecord{
-				Kind: session.KindChilled, Side: sideWord(e.Side), Name: s.sideName(e.Side),
-				Card: combat.ConceptOf(e.Action).Label,
-			})
-
-		case combat.KindMissed:
-			// It belongs to the attacker's own entry rather than opening one, because the card
-			// *was* played. Naming the shock is the whole point: a hit that simply missed would
-			// look like a bug in a game with no dice in it.
-			add(session.LedgerRecord{Kind: session.KindMissed, Side: sideWord(e.Side), Hit: s.hitOf(e, e.Side)})
-
 		case combat.KindFizzled:
-			// The attacker's entry, like a miss: the card was played, and its hit was wasted on a
-			// creature of its own element.
+			// It belongs to the attacker's own entry rather than opening one: the card was played,
+			// and its hit was wasted on a creature of its own element.
 			add(session.LedgerRecord{Kind: session.KindFizzled, Side: sideWord(e.Side), Hit: s.hitOf(e, e.Side)})
 
-		case combat.KindStatus:
-			add(session.LedgerRecord{
-				Kind: session.KindStatus, Side: sideWord(e.Side),
-				Status: combat.StatusOf(e.Status).Key, Hit: s.hitOf(e, e.Side),
-			})
-
 		case combat.KindDrained:
-			// **It belongs to the attacker's entry**, like a status does, because it is something
+			// **It belongs to the attacker's entry**, like a fizzle does, because it is something
 			// the hit did rather than an event of its own. **The relic names itself**, so a second
 			// drain relic cannot narrate identically to the first.
 			add(session.LedgerRecord{
@@ -140,16 +122,6 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 			add(session.LedgerRecord{
 				Kind: kind, Side: sideWord(e.Side),
 				Relic: combat.RelicOf(e.Relic).Name, Amount: e.Amount, Hit: s.hitOf(e, thrower),
-			})
-
-		case combat.KindBurned:
-			// A tick belongs to nobody's card, so it opens its own entry, and it carries the
-			// victim's side because it is a thing happening *to* them — which is also the only side
-			// the event names. **The status names itself**, so a second damage-over-time status
-			// cannot narrate as a burn.
-			add(session.LedgerRecord{
-				Kind: session.KindTicked, Target: sideWord(e.Target), Name: s.sideName(e.Target),
-				Status: combat.StatusOf(e.Status).Key, Amount: e.Amount,
 			})
 
 		case combat.KindHand:
@@ -300,7 +272,7 @@ func (s *CombatScene) sideName(side combat.Side) string {
 // **One line per slot, not one per event.** A busy round is 25-30 events, so writing the log
 // verbatim would be a panel nobody could read. Merging an action with its outcome is
 // presentation of events the engine already decided; it computes nothing, so what is written
-// here still cannot disagree with what the round did. **Hands and chills get lines of their
+// here still cannot disagree with what the round did. **Hands get lines of their
 // own**, because they are not something a card did â€” folding a hand into the line of the card
 // that happened to start it would bury the one thing worth reading.
 //

@@ -18,31 +18,29 @@ is a picture that says the wrong thing.
 
 ### Color is the element, everywhere, without exception
 
-| Element | Gem | Raw matter |
-|---|---|---|
-| fire | red | red/orange flame, burning coals, molten rock |
-| ice | blue | pale blue ice, frost, icicles, shards |
-| lightning | yellow | yellow electricity, ball lightning, sparks |
-| earth | green | brown stone, rock, pebbles, mud |
-| arcane | purple | purple flame, purple energy, glowing veins |
+| Element   | Gem    | Raw matter                                   |
+| --------- | ------ | -------------------------------------------- |
+| fire      | red    | red/orange flame, burning coals, molten rock |
+| ice       | blue   | pale blue ice, frost, icicles, shards        |
+| lightning | yellow | yellow electricity, ball lightning, sparks   |
+| earth     | green  | brown stone, rock, pebbles, mud              |
+| arcane    | purple | purple flame, purple energy, glowing veins   |
 
-This is the strongest rule in the file and it holds across seven families — the five
-elemental status rings, the ten paired status rings, the five growth amulets, the five
-robes, the twenty elemental flips, the five elemental damage rings and the five jars.
+This is the strongest rule in the file and it holds across seven families — the five growth amulets, the five robes, the twenty elemental flips, the five elemental damage rings and the five jars.
 
-**The one wrinkle is earth, and it is probably correct rather than a bug.** Earth's *gem*
-is green (`weighted`, `growth-earth`, `hoarfrost`'s pair) and earth's *matter* is brown
+**The one wrinkle is earth, and it is probably correct rather than a bug.** Earth's _gem_
+is green (`weighted`, `growth-earth`, `hoarfrost`'s pair) and earth's _matter_ is brown
 (`earth`, `discount-earth`, `jar-earth`). Green reads as a gemstone and brown does not, so
 the split is defensible — but it should be stated rather than left to be rediscovered:
 **cut earth is green, raw earth is brown.**
 
 ### Shape is the form
 
-| Form | Weapon shape | Material |
-|---|---|---|
-| stab | spear, needle, foil, point | ivory |
-| slash | scimitar, sickle, blade, edge | steel |
-| crush | mace, club, hammer, weight | granite |
+| Form  | Weapon shape                  | Material |
+| ----- | ----------------------------- | -------- |
+| stab  | spear, needle, foil, point    | ivory    |
+| slash | scimitar, sickle, blade, edge | steel    |
+| crush | mace, club, hammer, weight    | granite  |
 
 The three materials are the form ramps in `docs/art/palette.json` and the color words every art
 prompt carries — **ivory is stab, steel is slash, granite is crush** — and they are the same three
@@ -68,16 +66,16 @@ pattern every two-axis relic should follow.
 
 ### The motif says the verb
 
-| Motif | What it means | Families |
-|---|---|---|
-| a ring wrapped into a circle twice | the card lands twice | Elemental repeats, Form repeats |
-| a scale amulet, one side weighed down | grows while worn | Elemental growth, Form growth |
-| a clear glass jar with a lid | the relic holds a kind of card | Elements held, Forms held |
-| a ring of one substance, no band, no gem | the element itself, undiluted | Elemental damage |
-| N ouroboros rings intertwined | a hand of N | Hand multipliers |
-| a robe | a discount | Elemental discounts |
-| a ring with a line along one edge | erosion, a rung lost | Tier demotions |
-| a gem with N smaller gems beside it | a primary set and a kicker pair | the three ring families, Paired statuses |
+| Motif                                    | What it means                   | Families                                 |
+| ---------------------------------------- | ------------------------------- | ---------------------------------------- |
+| a ring wrapped into a circle twice       | the card lands twice            | Elemental repeats, Form repeats          |
+| a scale amulet, one side weighed down    | grows while worn                | Elemental growth, Form growth            |
+| a clear glass jar with a lid             | the relic holds a kind of card  | Elements held, Forms held                |
+| a ring of one substance, no band, no gem | the element itself, undiluted   | Elemental damage                         |
+| N ouroboros rings intertwined            | a hand of N                     | Hand multipliers                         |
+| a robe                                   | a discount                      | Elemental discounts                      |
+| a ring with a line along one edge        | erosion, a rung lost            | Tier demotions                           |
+| a gem with N smaller gems beside it      | a primary set and a kicker pair | the three ring families, Paired statuses |
 
 None of these collide. The ring families and the paired statuses both already use "one big
 gem, two small ones" for the same idea — a counted set plus a pair — which is the sort of
@@ -92,11 +90,11 @@ coincidence worth making deliberate.
 The three hand axes each have a band material, and then two other families name the same
 axes with entirely different materials:
 
-| Axis | Ring band | Jar lid | Growth amulet |
-|---|---|---|---|
-| concept | jade | — | — |
-| form | indigo | indigo | gold |
-| element | sandstone | copper | silver |
+| Axis    | Ring band | Jar lid | Growth amulet |
+| ------- | --------- | ------- | ------------- |
+| concept | jade      | —       | —             |
+| form    | indigo    | indigo  | gold          |
+| element | sandstone | copper  | silver        |
 
 Indigo agrees with itself across the ring and the jar, which is the only half of this that
 works. Element is sandstone as a band, copper as a lid and silver as an amulet chain; form
@@ -111,12 +109,12 @@ rather than silver — which also frees silver up, see below.
 
 ### The counted gem is a different stone in each family
 
-| Family | Counted set | Kicker pair |
-|---|---|---|
-| Jade rings (concept) | diamond | black gem |
-| Indigo rings (form) | golden gem | silver gem |
-| Sandstone rings (element) | turquoise | ruby |
-| Hand multipliers | bronze ring | silver ring |
+| Family                    | Counted set | Kicker pair |
+| ------------------------- | ----------- | ----------- |
+| Jade rings (concept)      | diamond     | black gem   |
+| Indigo rings (form)       | golden gem  | silver gem  |
+| Sandstone rings (element) | turquoise   | ruby        |
+| Hand multipliers          | bronze ring | silver ring |
 
 Four families doing one job with four vocabularies. Since the band already names the axis,
 **the gems do not have to** — they could be one stone throughout (diamond for the counted
@@ -133,13 +131,13 @@ rather than settle it here.
 The fifteen weapons are the three concept ladders, 0 AP to 4 AP, and the materials are
 currently unordered:
 
-| Rung | stab | slash | crush |
-|---|---|---|---|
-| 0 AP | sharpened stick — wood | bread knife — steel | wooden spoon — wood |
-| 1 AP | rusty dagger — rusted iron | hunting knife — steel | brass knuckles — brass |
-| 2 AP | epee — steel | katana — silver, damascus | hammer — copper and silver |
-| 3 AP | wood spear — copper tip | cleaver — silver and copper | warhammer — silver, black steel |
-| 4 AP | lance — obsidian, silver | axe — black steel, silver | maul — stone and wood |
+| Rung | stab                       | slash                       | crush                           |
+| ---- | -------------------------- | --------------------------- | ------------------------------- |
+| 0 AP | sharpened stick — wood     | bread knife — steel         | wooden spoon — wood             |
+| 1 AP | rusty dagger — rusted iron | hunting knife — steel       | brass knuckles — brass          |
+| 2 AP | epee — steel               | katana — silver, damascus   | hammer — copper and silver      |
+| 3 AP | wood spear — copper tip    | cleaver — silver and copper | warhammer — silver, black steel |
+| 4 AP | lance — obsidian, silver   | axe — black steel, silver   | maul — stone and wood           |
 
 Read down a column and it mostly climbs; read across a row and it does not. A bread knife
 at rung 0 is steel while a rung-3 spear is wood, and the rung-4 maul is stone and wood
@@ -190,19 +188,19 @@ Both are one-word fixes and neither record has art committed yet.
 
 Twenty-one records have no `Draw`. Under the language above, most of them write themselves:
 
-| Record | What the language implies |
-|---|---|
-| `whetted` / `hefted` / `tapered` | robes, as the elemental discounts are — but in the form's material rather than an element's color: steel, granite, ivory |
-| `weight-of-the-earth` / `struck-by-lightning` / `sharp-as-ice` | the form-status pattern exactly: the form's weapon shape in the element's color |
-| `swarm` / `crown` | a rung is a material, so a swarm of the 1 AP material and a crown of the 3 AP one |
-| `demotion-one` / `-two` / `-three` | already rings with an eroding line; the line's color should be the rung it erodes **to** |
-| `momentum` / `ebb-and-flow` | shields, and the game has no shield motif yet — the one genuinely new picture in the list |
-| `echo` | the twice-wrapped ring is taken; three of something, each fainter than the last |
-| `onslaught` / `braced` | a discount is a robe, and these are discounts on everything |
-| `might` / `bulwark` / `heart` | `bulwark` is already a gold armband; the other two should match it as gold worn on the body rather than on a hand |
-| `rampant` / `fire-of-life` | vitae, which has no material yet |
-| `dual-wield` | two of the form materials, one of each |
-| `banker` / `soul-taker` / `hungry` | `banker` is already a gold band with red gems; spoils are about the purse, and gold is the obvious metal if it stops being the status band |
+| Record                                                         | What the language implies                                                                                                                  |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `whetted` / `hefted` / `tapered`                               | robes, as the elemental discounts are — but in the form's material rather than an element's color: steel, granite, ivory                   |
+| `weight-of-the-earth` / `struck-by-lightning` / `sharp-as-ice` | the form-status pattern exactly: the form's weapon shape in the element's color                                                            |
+| `swarm` / `crown`                                              | a rung is a material, so a swarm of the 1 AP material and a crown of the 3 AP one                                                          |
+| `demotion-one` / `-two` / `-three`                             | already rings with an eroding line; the line's color should be the rung it erodes **to**                                                   |
+| `momentum` / `ebb-and-flow`                                    | shields, and the game has no shield motif yet — the one genuinely new picture in the list                                                  |
+| `echo`                                                         | the twice-wrapped ring is taken; three of something, each fainter than the last                                                            |
+| `onslaught` / `braced`                                         | a discount is a robe, and these are discounts on everything                                                                                |
+| `might` / `bulwark` / `heart`                                  | `bulwark` is already a gold armband; the other two should match it as gold worn on the body rather than on a hand                          |
+| `rampant` / `fire-of-life`                                     | vitae, which has no material yet                                                                                                           |
+| `dual-wield`                                                   | two of the form materials, one of each                                                                                                     |
+| `banker` / `soul-taker` / `hungry`                             | `banker` is already a gold band with red gems; spoils are about the purse, and gold is the obvious metal if it stops being the status band |
 
 **Two things the language does not cover at all: shields, and vitae.** Both need a material
 chosen rather than derived, and both come up more than once.

@@ -1,10 +1,18 @@
 package models
 
 import (
+	"image"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
+
+// Rect is the button's rectangle on screen. ScreenX and ScreenY are its center, which is what
+// both the hit test and the drawing derive the top-left from.
+func (b *Button) Rect() image.Rectangle {
+	x, y := b.ScreenX-b.Width/2, b.ScreenY-b.Height/2
+	return image.Rect(x, y, x+b.Width, y+b.Height)
+}
 
 type ButtonState int
 

@@ -412,8 +412,8 @@ func handPitch(gs *state.GlobalState, n int) int {
 	return (band - cardWidth) / (n - 1)
 }
 
-// cardBandWidth is how much room the cards themselves get: everything up to the control column,
-// less the air between the last card and it.
+// cardBandWidth is how much room the cards themselves get: everything up to the sort block, which
+// stands at the right end of the control column.
 //
 // **The band is derived rather than written down as percentages** *(2026-09-04, owner's call)*.
 // It used to run 2% to 96%, which agreed with nothing above it; it now runs between the two
@@ -423,7 +423,7 @@ func handPitch(gs *state.GlobalState, n int) int {
 // **One function rather than the arithmetic written twice**, because the pitch and the row's
 // center both need it and the two disagreeing would put the row half a card off center.
 func cardBandWidth(gs *state.GlobalState) int {
-	return ui.ControlColumnLeft(gs) - ui.SortColumnGap - handBandLeft(gs)
+	return ui.SortColumnLeft(gs) - handBandLeft(gs)
 }
 
 // handBandLeft is where the bottom of the screen starts: the same line the relic row starts on,

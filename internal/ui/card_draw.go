@@ -184,3 +184,22 @@ func MarksFor(gs *state.GlobalState, seat image.Rectangle) cards.Mark {
 	}
 	return cards.MarkNone
 }
+
+// warmTarget is where WarmFace draws a face it has just painted: a few pixels nothing ever shows.
+var warmTarget *ebiten.Image
+
+// WarmFace paints a face into the cache and draws it once, offscreen, so the picture is already on
+// the graphics card the first time a screen blits it. **Drawing it is the point** — a texture is
+// uploaded when it is first used, and that upload is a stall of its own in the middle of a flight.
+func WarmFace(gs *state.GlobalState, spec cards.Spec, st cards.Style) {
+	img := CardImage(gs, spec, st)
+	if img == nil {
+		return
+	}
+	if warmTarget == nil {
+		warmTarget = ebiten.NewImage(4, 4)
+	}
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(4/float64(st.Width), 4/float64(st.Height))
+	warmTarget.DrawImage(img, op)
+}

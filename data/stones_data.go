@@ -58,7 +58,7 @@ type StoneData struct {
 
 	// Draw is the subject paragraph the art generator is given for this stone, pasted under
 	// `docs/art/stone_art_prompt.MD` as this record's own JSON. **The engine ignores it**, exactly
-	// as it ignores a status's Badge.
+	// as it ignores Art.
 	//
 	// **The finish is the prompt's rule, not this field's.** Where a stone's shape sits on the
 	// ladder decides how refined the specimen looks, so a brief says what this particular mineral

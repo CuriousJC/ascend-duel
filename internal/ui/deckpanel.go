@@ -62,7 +62,7 @@ type DeckContents struct {
 	// deck that does not move.
 	Run *session.Session
 
-	// InFight says whether some of these cards have been played. **It is what FULL/PLAYED is
+	// InFight says whether some of these cards have been played. **It is what REMAINING/FULL is
 	// gated on**: a screen between fights has one pile, so both states of that button would be the
 	// same picture and it is not drawn at all.
 	InFight bool
@@ -183,14 +183,18 @@ func (t *DeckToggle) Draw(gs *state.GlobalState, screen *ebiten.Image, d DeckCon
 func HoverDeckPanel(gs *state.GlobalState, at image.Point, v DeckView, d DeckContents,
 	tip *models.Tooltip) {
 
-	left := float32(gs.PctX(ModalPanelLeftPct))
-	width := float32(gs.PctX(ModalPanelRightPct)) - left
-	top := float32(gs.PctY(ModalPanelTopPct))
+	if v.hoverToggles(gs, d, at, tip) {
+		return
+	}
 
+	// **The region the drawing lays the grid in**, deckGridRegion, so the rectangles hit-tested are
+	// the rectangles drawn.
+	//
 	// **HoveredSeat, like every row in the game.** A row here has no floor on its pitch — see
 	// rowPitchFor, which will pack cards a pixel apart rather than truncate the row — so this is the
 	// place overlap is hardest and the card the cursor is over is the *last* one drawn covering it.
-	slots := d.grid(v, left+width/2, width, top+modalBareBodyTop).slots
+	centerX, width, top := deckGridRegion(gs)
+	slots := d.grid(v, centerX, width, top).slots
 	i := HoveredSeat(at, len(slots), func(i int) image.Rectangle { return slots[i].at })
 	if i < 0 {
 		return
@@ -395,21 +399,18 @@ type pileEntry struct {
 	// lit is whether this card is one of the ones the view is *about* — full strength rather than
 	// dimmed, and counted in the tallies under the grid.
 	//
-	// **It is `available` under FULL and its opposite under PLAYED** *(owner's call, 2026-08-24)*,
-	// which is why it is a second field rather than the same one read twice. The panel's governing
-	// idea is that a card does not move when it is spent, it only dims — so the FULL/PLAYED toggle
-	// inverts which half is dimmed and moves nothing at all. Between fights nothing is spent and
-	// everything is lit.
+	// **It is `available` under REMAINING and true under FULL**, which is why it is a second field
+	// rather than the same one read twice. The panel's governing idea is that a card does not move
+	// when it is spent, it only dims — so the toggle decides whether the played cards dim and moves
+	// nothing at all. Between fights nothing is spent and everything is lit.
 	lit bool
-	// picked is whether the filter column is pointing at this card — see deckfilter.go. It is a
-	// third field rather than a narrowing of `lit` because the two are different channels on
-	// purpose: `lit` is dimming and says which half of the deck the panel is about, and a filter
-	// that reached for the same channel would draw a played card inside the selection and a
-	// drawable card outside it as the same picture. This one becomes a cards.Mark instead.
+
+	// lowlit is whether the filter column has left this card out: a filter is down and this card
+	// does not answer it. **Drawn the same way as a card that is not lit** — darkened — so
+	// everything the panel is not about recedes by one amount, whichever control set it aside.
 	//
-	// **Nothing is picked while the filter is empty**, which is what stops the panel opening with
-	// every card in it marked.
-	picked bool
+	// **Nothing is lowlit while the filter is empty**, which is what stops the panel opening dark.
+	lowlit bool
 }
 
 // deckRowElements is the colors the overlay gives a row to, in the fixed order internal/cards
@@ -551,24 +552,21 @@ func (d DeckContents) grid(v DeckView, centerX, width, top float32) pileGridLayo
 }
 
 // entry is one card turned into a grid entry: the face the alterations toggle asked for, and
-// whether the FULL/PLAYED toggle is lighting it.
+// whether the REMAINING/FULL toggle is lighting it.
 //
-// **Nothing is lit between fights except everything.** `inFight` is false there, so PLAYED cannot
-// be reached and this reduces to what the panel has always drawn.
+// **Everything is lit between fights.** Nothing has been spent there, so every card is available
+// and the toggle, which is not drawn, has nothing to change.
 func (d DeckContents) entry(v DeckView, c combat.Card, available bool) pileEntry {
-	lit := available
-	if d.InFight && v.played {
-		lit = !available
-	}
+	lit := available || (d.InFight && v.full)
 	face := d.faceOf(c, v.unaltered)
 
 	// **The filter is asked about the face, not the card underneath**, exactly as the figures are:
 	// with alterations on, a lightning card dealt as ice answers the ice button, because that is the
 	// card in the picture and the picture is what is being read.
-	picked := !v.filter.empty() &&
-		v.filter.matches(face.Form(), d.Holder.CardCost(face), ArtFor(face.Element), axisNone)
+	lowlit := !v.filter.empty() &&
+		!v.filter.matches(face.Form(), d.Holder.CardCost(face), ArtFor(face.Element), axisNone)
 
-	return pileEntry{card: face, available: available, lit: lit, picked: picked}
+	return pileEntry{card: face, available: available, lit: lit, lowlit: lowlit}
 }
 
 // rowWidth is how much of the panel n cards at this pitch occupy: the last card is drawn whole,
@@ -635,31 +633,30 @@ func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, v DeckView,
 	// and card 1's left edge is exactly where its glyph and dashes are — so every row rendered as
 	// one complete card followed by eleven blank slivers.
 	for _, slot := range grid.slots {
-		// available carries "can be drawn", not "can be afforded". Never selected: this is an
-		// inventory, not a choice, and dimming by the round's remaining AP would say something
-		// about a budget that has nothing to do with a pile you cannot play from.
-		// **`lit` rather than `available`**, because the FULL/PLAYED toggle inverts which half of
-		// the deck the panel is about. It still carries "can be drawn" under FULL, which is what it
-		// has always meant; never "can be afforded", since dimming by the round's remaining AP
-		// would say something about a budget that has nothing to do with a pile you cannot play
-		// from.
-		// **The filter marks rather than dims**, which is what lets a card say both things at once:
-		// dimmed and picked is a card you have already played that answers what you asked. See
-		// cards.MarkPicked.
-		BlitCard(gs, screen, slot.at.Min, d.slotSpec(slot), cards.Mini)
+		// **A card the view is not about is darkened**, whichever control set it aside — the
+		// REMAINING toggle or the filter. See pileEntry.
+		img := CardImage(gs, d.slotSpec(slot), cards.Mini)
+		if img == nil {
+			continue
+		}
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(float64(slot.at.Min.X), float64(slot.at.Min.Y))
+		if slot.lowlit || !slot.lit {
+			op.ColorScale.Scale(deckLowlight, deckLowlight, deckLowlight, 1)
+		}
+		screen.DrawImage(img, op)
 	}
 
 	return grid
 }
 
+// deckLowlight is how bright a card the filter left out is drawn, as a share of its own colors.
+const deckLowlight = 0.35
+
 // slotSpec is the face one slot of the grid draws. **One function, read by the drawing and by the
 // warm-up**, so the face rendered ahead of time is the face the panel asks for.
 func (d DeckContents) slotSpec(slot pileSlot) cards.Spec {
-	spec := CardSpec(slot.card, HeldBy(d.Holder, slot.card), slot.lit, false)
-	if slot.picked {
-		spec.Mark = cards.MarkPicked
-	}
-	return spec
+	return CardSpec(slot.card, HeldBy(d.Holder, slot.card), true, false)
 }
 
 // WarmDeckPanel renders, while the panel is closed, the next face it would draw that the cache
@@ -680,4 +677,21 @@ func WarmDeckPanel(gs *state.GlobalState, v DeckView, d DeckContents) {
 		CardImage(gs, spec, cards.Mini)
 		return
 	}
+}
+
+// DeckWarmJobs is one job per face the run's deck will want — each card in its dealt colors at the
+// hand's size and at the deck panel's — for a screen that has time to spend before anything moves.
+// See screens.LoadingScene.
+func DeckWarmJobs(gs *state.GlobalState) []func() {
+	d := OwnedContents(gs)
+	centerX, width, top := deckGridRegion(gs)
+	var jobs []func()
+	for _, slot := range d.grid(DeckView{}, centerX, width, top).slots {
+		hand := CardSpec(slot.card, HeldBy(d.Holder, slot.card), true, false)
+		mini := d.slotSpec(slot)
+		jobs = append(jobs,
+			func() { WarmFace(gs, hand, cards.Hand) },
+			func() { WarmFace(gs, mini, cards.Mini) })
+	}
+	return jobs
 }

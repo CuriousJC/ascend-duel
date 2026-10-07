@@ -102,8 +102,8 @@ func TestAMarkThatIsNotInTheTextChangesNothing(t *testing.T) {
 }
 
 func TestTwoRunsTakeTwoColorsOnOneCard(t *testing.T) {
-	// The case the single-run version could not draw: a relic naming an element and a status that
-	// belongs to a different one. Both have to appear, in their own colors, on one face.
+	// The case the single-run version could not draw: a line naming two things in two different
+	// colors. Both have to appear, in their own colors, on one face.
 	f := faces(t)
 
 	spec := markedSpec(
@@ -137,8 +137,8 @@ func TestARunOnlyMatchesAWholeWord(t *testing.T) {
 }
 
 func TestEveryOccurrenceOfARunIsColored(t *testing.T) {
-	// One entry covers a word a sentence says twice — "apply BURNING status … BURNING enemies" —
-	// so a repeat does not cost a second seat in a fixed array.
+	// One entry covers a word a sentence says twice, so a repeat does not cost a second seat in a
+	// fixed array.
 	segs := SplitSpans("BURNING and BURNING", []TextSpan{{Span: "BURNING", Ink: fireInk}})
 
 	n := 0

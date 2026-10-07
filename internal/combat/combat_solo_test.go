@@ -93,36 +93,9 @@ func TestASoloAttackerStopsAtTheKill(t *testing.T) {
 	}
 }
 
-func TestAShockedSoloAttackerMissesWithEverything(t *testing.T) {
-	// **One roll for the turn, not one per card.** A shock is "the turn's attack misses", and a
-	// roll per card would change what the status means as well as how far the package's one random
-	// stream advances in a round.
-	a := soloist(10, 9, 500)
-	a.Statuses[statusOf(Lightning)] = Status{Amount: 50, Rounds: 2}
-	b := duelist(10, 5, 500)
-
-	events, _, after := resolveWith(alwaysMisses(), a, b, PlainCards(Bash, Bash, Bash), nil, 1)
-
-	misses := 0
-	for _, e := range events {
-		if e.Kind == KindMissed {
-			misses++
-		}
-	}
-	if misses != 3 {
-		t.Errorf("%d cards reported a miss, want 3 — each says what became of it", misses)
-	}
-	if n := damageCount(events); n != 0 {
-		t.Errorf("%d blows landed through a shock that missed, want 0", n)
-	}
-	if after.CurrentLife != 500 {
-		t.Errorf("the target lost %d life to a missed turn", 500-after.CurrentLife)
-	}
-}
-
 func TestEverySoloAttackAnnouncesItself(t *testing.T) {
 	// One beat per slot is what playback counts to know which card is lit — see
-	// TestEverySlotIsEitherTakenOrChilled, which the hand-forming phase is held to for the same
+	// TestEverySlotTakesABeat, which the hand-forming phase is held to for the same
 	// reason. It has to hold when the blows are separate too.
 	a := soloist(10, 9, 500)
 	b := duelist(10, 5, 500)

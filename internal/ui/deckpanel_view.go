@@ -28,6 +28,7 @@ package ui
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -68,19 +69,22 @@ const (
 	// deckColumnPad is the air inside a button, at both ends of its line.
 	deckColumnPad = 12
 
-	// The view toggles' own label size. **Smaller than the 36 the centered pair used**: those had
-	// the width of the panel to stand in and these have the column's, and ALTERATIONS is eleven
+	// The view toggles' own label size, sized to the column's width: CLEAR FILTERS is thirteen
 	// characters.
 	deckToggleTextSize = 22
 
 	// The labels. **Each names the state the panel is in, not the state pressing would move to.**
-	// A latched button already says "this is on", so a label naming the other side would have the
-	// two contradicting each other.
-	deckViewAlteredLabel   = "ALTERATIONS"
-	deckViewUnalteredLabel = "AS OWNED"
+	// RELICS is the deck as the worn relics deal it, DECK the cards as owned; REMAINING is what is
+	// still to draw, FULL is every card.
+	deckViewAlteredLabel   = "RELICS"
+	deckViewUnalteredLabel = "DECK"
+	deckViewRemainingLabel = "REMAINING"
 	deckViewFullLabel      = "FULL"
-	deckViewPlayedLabel    = "PLAYED"
-	deckViewClearLabel     = "SHOW ALL"
+	deckViewClearLabel     = "CLEAR FILTERS"
+
+	// The two view toggles' tooltips. The filter buttons and CLEAR FILTERS carry none.
+	deckViewAlteredTip = "Toggle relic alterations"
+	deckViewHalfTip    = "Toggle played deck"
 )
 
 // DeckView is how a panel is being read, and it belongs to whoever puts the panel up.
@@ -94,9 +98,9 @@ type DeckView struct {
 	// showing a deck the player will never draw.
 	unaltered bool
 
-	// played picks which half of the deck the figures count and which half is drawn lit. **False is
-	// the whole deck**, which is the question between fights and the commoner one in a fight.
-	played bool
+	// full lights and counts every card, played or not. **False is REMAINING** — what is still to
+	// draw — which is the question a fight asks. Between fights nothing is played and the two agree.
+	full bool
 
 	// filter is which cards the panel is pointing at. See deckfilter.go.
 	filter deckFilter
@@ -165,7 +169,7 @@ func (v *DeckView) build() {
 	v.alterations = v.columnButton(func() { v.unaltered = !v.unaltered })
 	v.alterations.TextSize = deckToggleTextSize
 
-	v.half = v.columnButton(func() { v.played = !v.played })
+	v.half = v.columnButton(func() { v.full = !v.full })
 	v.half.TextSize = deckToggleTextSize
 
 	v.clear = v.columnButton(func() { v.filter.Clear() })
@@ -229,21 +233,21 @@ func (v *DeckView) layout(gs *state.GlobalState, d DeckContents) {
 	}
 	Place(v.alterations)
 
-	// **The FULL/PLAYED button is skipped rather than placed and hidden between fights.** The pair
+	// **The REMAINING/FULL button is skipped rather than placed and hidden between fights.** The pair
 	// used to be centered and had to hold its partner's space so the alterations button did not move
 	// sideways between a fight and a shop; in a column the blocks below would move instead, and a
 	// block of filters that sat 38 pixels lower in a shop than in a duel is the same complaint one
 	// axis over. What is constant here is the *order*, not the offsets.
 	if d.InFight {
-		v.half.Text = deckViewFullLabel
-		v.half.Latched = v.played
-		if v.played {
-			v.half.Text = deckViewPlayedLabel
+		v.half.Text = deckViewRemainingLabel
+		v.half.Latched = !v.full
+		if v.full {
+			v.half.Text = deckViewFullLabel
 		}
 		Place(v.half)
 	}
 
-	// **SHOW ALL goes dead when there is nothing to show all of**, rather than being taken away.
+	// **CLEAR FILTERS goes dead when there is nothing to show all of**, rather than being taken away.
 	// A control that vanishes when it has nothing to do is one the player never learns is there —
 	// the same argument the alterations button already wins on one line up.
 	enable(v.clear, !v.filter.empty())
@@ -288,6 +292,23 @@ func (v *DeckView) layoutBlock(centerX, top int, rows func(Place func(*models.Bu
 	return y - deckColumnButtonHeight/2
 }
 
+// hoverToggles points tip at whichever view toggle is under the cursor, and reports whether one was.
+func (v *DeckView) hoverToggles(gs *state.GlobalState, d DeckContents, at image.Point, tip *models.Tooltip) bool {
+	if v.alterations == nil {
+		return false
+	}
+	v.refresh(gs, d)
+	if r := v.alterations.Rect(); at.In(r) {
+		tip.Point(r, TipLine(deckViewAlteredTip), nil)
+		return true
+	}
+	if r := v.half.Rect(); d.InFight && at.In(r) {
+		tip.Point(r, TipLine(deckViewHalfTip), nil)
+		return true
+	}
+	return false
+}
+
 // enable puts a button back in play, or takes it out. **Both directions**, because UpdateButton
 // returns early on a disabled button and would never clear the state it was left in.
 func enable(b *models.Button, on bool) {
@@ -305,7 +326,7 @@ func (v *DeckView) Draw(gs *state.GlobalState, screen *ebiten.Image, d DeckConte
 
 	systems.DrawButton(gs, screen, v.alterations)
 
-	// **No FULL/PLAYED between fights**, because nothing has been played: there is one pile and
+	// **No REMAINING/FULL between fights**, because nothing has been played: there is one pile and
 	// both states of the button would be the same picture. See deckContents.inFight.
 	if d.InFight {
 		systems.DrawButton(gs, screen, v.half)

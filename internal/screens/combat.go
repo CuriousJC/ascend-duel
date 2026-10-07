@@ -49,7 +49,7 @@ const defeatButtonLabel = "END RUN"
 // where 1 is the ordinary beat every event gets.
 //
 // **One speed setting and a table of proportions, rather than a table of durations**
-// *(2026-08-19, owner's call)*. Playback as a whole is `beatTicks`; whether a chill should
+// *(2026-08-19, owner's call)*. Playback as a whole is `beatTicks`; whether a grant should
 // hold longer than a card firing is this table. Written as ticks, the two questions could not be
 // asked separately — every retune of the speed meant re-deriving every entry, and an entry that
 // had drifted out of proportion looked exactly like one that had been chosen.
@@ -80,11 +80,7 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindDamage:      1,
 	combat.KindDefeated:    1,
 	combat.KindHand:        1,
-	combat.KindChilled:     1,
-	combat.KindStatus:      1,
-	combat.KindMissed:      1,
 	combat.KindFizzled:     1,
-	combat.KindBurned:      1,
 	combat.KindHealed:      1,
 	combat.KindDrained:     1,
 	combat.KindRegenerated: 1,
@@ -277,21 +273,11 @@ type CombatScene struct {
 	// and would make a run unreproducible. Seeded once in Init.
 	rng *rand.Rand
 
-	// The rules' own source, handed to ResolveRound. **A sixth stream, and separate from every
-	// other one on purpose** — it is advanced per attack phase by the shock roll, so sharing it
-	// with either shuffle would make a hand a function of how many attacks had been rolled
-	// against, and every entry in seeds.go would break the first time lightning landed.
-	//
-	// Seeded from the run seed with its own salt, so a replayed run rolls the same shocks.
-	combatRNG *rand.Rand
-
 	// The source the gamble on a golden or a silver card draws from, injected into ResolveRound
-	// beside combatRNG — see combat.Sources, which is why the two travel together and are never
-	// interchanged.
+	// through combat.Sources.
 	//
-	// **Its own stream, and per fight** — see seeds.LuckRoll. Sharing the shock roll would make
-	// every gamble in a run a function of how often the player was shocked, and every shock a
-	// function of how many gold cards were played.
+	// **Its own stream, and per fight** — see seeds.LuckRoll. Sharing either shuffle would make
+	// every gamble in a run a function of how many cards had been drawn.
 	//
 	// **It is a live cursor rather than a seed plus a counter** *(2026-09-09)*. The gamble used to
 	// be a consumable spent between turns, so the count of rolls the run had taken was what
@@ -346,7 +332,7 @@ type CombatScene struct {
 	showDeck bool
 
 	// tip is the panel explaining whatever the cursor is resting on — a card's arithmetic, a
-	// relic's rule, a status nobody has anywhere else to read. Aimed once a tick by `hover`, in
+	// relic's rule, a fighter's figures. Aimed once a tick by `hover`, in
 	// combat_hover.go, and hidden by the tick it is not aimed.
 	tip models.Tooltip
 
@@ -468,6 +454,12 @@ type CombatScene struct {
 	sortMode ui.HandSort
 	SortTabs *ui.SortTabs
 
+	// holdFrames is how many more frames a freshly entered screen draws before its deal moves. Set
+	// by Init and counted down by Draw. **The deal waits for it**: a fresh screen's first draw
+	// uploads every texture it shows and can take most of a second, and a deal already in flight
+	// across that frame visibly stalls and then lurches.
+	holdFrames int
+
 	// tut is Bob, when a run is being taught. **A field on the scene rather than global state**,
 	// because the widget is this screen's — the two buttons and where the bubble last sat. What
 	// survives a fight is the step cursor, and that is on the run. See tutorial.go.
@@ -497,6 +489,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// The deal captures its faces here, before anything has been drawn, so the picture bank has to
 	// be reachable before the first frame rather than on the first blit. See useImages.
 	ui.UseImages(gs)
+	s.holdFrames = dealHoldFrames
 
 	// Taken on every entry rather than only on a fresh duel, because Init is re-run whenever the
 	// screen is come back to and a handle picked up once would outlive a run that ended in between.
@@ -574,8 +567,8 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	// **A scenario may also make the fight unkillable in both directions**, which is what a training
 	// dummy is: a real creature with a real portrait and a real deck, whose blows can be watched for
 	// as long as anybody wants to watch them. Both sides get the same ceiling, so it is not a
-	// one-sided view of a duel either — the creature still swings, statuses still land and shields
-	// still break; nothing ends. The clock is lifted in main.go, because it is a run-level number.
+	// one-sided view of a duel either — the creature still swings and shields still break; nothing
+	// ends. The clock is lifted in main.go, because it is a run-level number.
 	// Compiled out of every normal build; see internal/scenario.
 	if scenario.Active() && scenario.Dummy() {
 		s.enemy.MaxLife, s.enemy.CurrentLife = scenario.DummyLife, scenario.DummyLife
@@ -608,7 +601,6 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	// fresh *shuffle* per fight — the seeds come from the run seed unless deckSeed pins them.
 	playerSeed, enemySeed := s.shuffleSeeds(gs)
 	s.rng = rand.New(rand.NewSource(playerSeed))
-	s.combatRNG = rand.New(rand.NewSource(seeds.For(gs.RunSeed, seeds.CombatRoll)))
 	s.luckRNG = rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.LuckRoll, fightIndex(gs.Run))))
 	s.resetDeck(gs.Run)
 
@@ -686,7 +678,7 @@ func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
 	}
 	if s.discardButton == nil {
 		s.discardButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DISCARD", s.discardSelected)
-		s.discardButton.BaseColor = systems.ButtonYellow
+		s.discardButton.BaseColor = systems.ButtonJade
 	}
 	// **The bottom strip is one row of four things, spaced rather than placed** *(2026-08-11)*:
 	// the AP figure at the hand's left edge, the two buttons, and the deck pile at the right.
@@ -736,14 +728,11 @@ func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
 // raised defense survived into the next fight — which is exactly the failure a screen
 // enumerating another package's state invites. It clears the shields too, so this reads as one
 // call rather than as a call plus whatever the screen remembered to add.
-// **The statuses go too, and the relics stay** *(2026-08-16)*. A burn is something one duel did
-// to you; a relic is something you are wearing, and clearing it here would strip the player between
-// fights. Both are fields on `combat.Duelist` and the difference between them is what this
-// function exists to know.
+// **The relics stay.** A relic is something you are wearing, and clearing it here would strip the
+// player between fights.
 func resetCombatState(d combat.Duelist) combat.Duelist {
 	d = combat.ClearDefenses(d)
 	d.Surge = 0
-	d.Statuses = [combat.MaxStatuses]combat.Status{}
 	return d
 }
 
@@ -899,7 +888,9 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// of the deck and can change nothing about the round underneath — see deckView.
 	if s.showDeck {
 		s.DeckView.Update(gs, s.fightContents())
-	} else {
+	} else if s.planning() && !s.Theater.deal.Running() && !s.Theater.Running() {
+		// **Only while nothing is moving.** A face is every pixel written in Go, and one rendered
+		// on a frame a card is crossing the screen is a hitch in that card's flight.
 		ui.WarmDeckPanel(gs, s.DeckView, s.fightContents())
 	}
 
@@ -1284,7 +1275,7 @@ func (s *CombatScene) startRound() {
 		s.fighterActions, s.enemyActions,
 		s.heldCards(), nil,
 		s.round,
-		combat.Sources{Roll: s.combatRNG, Luck: s.luckRNG},
+		combat.Sources{Luck: s.luckRNG},
 	)
 
 	s.fighterAfter = fighterAfter
@@ -1352,15 +1343,8 @@ func eventLabel(e combat.Event) string {
 		return fmt.Sprintf("round-end   round %d", e.Round)
 	case combat.KindAction:
 		return fmt.Sprintf("action      %v plays %v %v (%v)", e.Side, e.Element, combat.ConceptOf(e.Action).Label, combat.Plain(e.Action).Category())
-	case combat.KindStatus:
-		return fmt.Sprintf("status      %v puts %d %v on %v", e.Side, e.Amount, combat.StatusOf(e.Status).Key, e.Target)
-	case combat.KindMissed:
-		return fmt.Sprintf("missed      %v's %v never lands - shocked", e.Side, e.Action)
 	case combat.KindFizzled:
 		return fmt.Sprintf("fizzled     %v's %v %v lands nothing on its own element", e.Side, e.Element, e.Action)
-	case combat.KindBurned:
-		return fmt.Sprintf("burned      %v takes %d from %v, leaving %d",
-			e.Target, e.Amount, combat.StatusOf(e.Status).Key, e.Life)
 	case combat.KindHealed:
 		return fmt.Sprintf("healed      %v restores %d from %v, leaving %d",
 			e.Side, e.Amount, combat.ConceptOf(e.Action).Label, e.Life)
@@ -1389,8 +1373,6 @@ func eventLabel(e combat.Event) string {
 	case combat.KindHand:
 		return fmt.Sprintf("attack      %v forms %s (x%d.%02d)",
 			e.Side, ui.HandName(e), e.Multiplier/100, e.Multiplier%100)
-	case combat.KindChilled:
-		return fmt.Sprintf("chilled     %v loses its %v", e.Side, e.Action)
 	case combat.KindDefeated:
 		return fmt.Sprintf("defeated    %v falls to %v", e.Target, e.Side)
 	default:
@@ -1505,7 +1487,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	}
 	s.ticks = 0
 
-	// **The finished lines stay on screen until the event after them is reached**, so a MISS or a
+	// **The finished lines stay on screen until the event after them is reached**, so a FIZZLE or a
 	// BLOCKED is still being read while the flights that did land finish.
 	if s.Theater.mathBox.active && !s.Theater.mathBox.Running() {
 		s.Theater.mathBox.Clear()
@@ -1538,7 +1520,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	s.cursor++
 
 	// **An event the hand dialog has already shown is walked past without a beat**: a hit that
-	// landed or missed was drawn when its line finished, so reaching it again would be the same
+	// landed or fizzled was drawn when its line finished, so reaching it again would be the same
 	// thing happening twice. See throwColumn.
 	for s.cursor < len(s.log) && s.Theater.walked[s.cursor] {
 		s.cursor++
@@ -1604,7 +1586,7 @@ func (s *CombatScene) endOfRound() {
 	// **The opponent plans the next round the instant this one is over**, so its cards are
 	// on the table while the player chooses their answer. It has to happen *after* the two
 	// duelists above adopt their end-of-round state, or the plan is made against a budget
-	// that no longer exists — a chill landing this round has to be in the AP the planner
+	// that no longer exists — a surge banked this round has to be in the AP the planner
 	// reads.
 	s.planEnemyRound()
 }
@@ -1662,21 +1644,6 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// A hand has formed: leave raised only the cards the engine says formed it.
 	s.noteHand(e)
 
-	// A status has landed: put its badge on the card at the beat it was announced.
-	//
-	// **This is a drawing, and it is overwritten a few frames later.** The authoritative statuses
-	// arrive with `s.enemyAfter` when playback finishes; what is written here is the same fact
-	// arriving early, so the badge appears on the line that says it landed rather than after the
-	// round is over. `Rounds` is set to 1 for no better reason than that `Active()` needs one —
-	// nothing on this screen reads a duration, and the engine's own count replaces it.
-	//
-	// The same argument as the burn below: the alternative is a card that disagrees with the
-	// sentence next to it.
-	if e.Kind == combat.KindStatus {
-		s.applyStatusBadge(e)
-		return
-	}
-
 	// A rider fired: park its burst and its figure for the beat the card is scored on. See
 	// combat_signal.go, which owns everything about when that is.
 	if s.noteSignal(e) {
@@ -1709,18 +1676,15 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 		return
 	}
 
-	// **A burn changes a life total without anybody acting**, so it has to be applied here
-	// alongside damage rather than being a consequence of a card. Missing it would leave the two
-	// fighter cards showing a life the engine has already spent — and a duelist who dies to a
-	// fire tick would fall with a health bar that never moved.
-	// **The clock empties a bar the same way**, and for the same reason a burn does: nobody acted,
-	// so nothing else on this screen would ever move that life. A duelist timed out with a full
-	// bar would fall looking untouched until the end-of-round adoption caught up.
-	// **A drain moves a life total with nobody being hit**, so it joins the three above rather
-	// than being a consequence of a card: it is the one event that puts life *back*, and without
+	// **The clock changes a life total without anybody acting**, so it has to be applied here
+	// alongside damage rather than being a consequence of a card: nothing else on this screen would
+	// ever move that life. A duelist timed out with a full bar would fall looking untouched until
+	// the end-of-round adoption caught up.
+	// **A drain moves a life total with nobody being hit**, so it joins those rather than being a
+	// consequence of a card: it is the one event that puts life *back*, and without
 	// it here the drainer's bar would not move until the round was adopted — which is the rise
 	// arriving several beats after the reason for it. See combat_drain.go.
-	if e.Kind != combat.KindDamage && e.Kind != combat.KindBurned && e.Kind != combat.KindTimeUp &&
+	if e.Kind != combat.KindDamage && e.Kind != combat.KindTimeUp &&
 		e.Kind != combat.KindDrained && e.Kind != combat.KindRegenerated && e.Kind != combat.KindReflected {
 		return
 	}
@@ -1743,8 +1707,7 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 
 	// **The figure is raised after the life has already moved**, so it is a ghost of something
 	// that has happened rather than a thing in progress — the same division every card in flight
-	// keeps. What lags is the bar's *drawing*, through `shownLife`. A burn is not flown from here:
-	// it has its own source, the badge it ticks off, and its own row in the theater table.
+	// keeps. What lags is the bar's *drawing*, through `shownLife`.
 	if e.Kind == combat.KindDamage {
 		s.noteHit(e, before)
 	}
@@ -1759,23 +1722,6 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	}
 }
 
-// applyStatusBadge shows one landed status on the target's card, mid-playback.
-//
-// **Only the enemy card draws badges today** and this writes to both anyway, because which card
-// shows what is `EnemyStyle`'s business and not this function's — the duelist's statuses are
-// already tracked on its duelist for every other purpose, and having the screen hold two
-// different ideas of what is standing on a combatant is how the two come to disagree.
-func (s *CombatScene) applyStatusBadge(e combat.Event) {
-	target := s.enemy
-	if e.Target == combat.SideA {
-		target = s.fighter
-	}
-	if e.Status < 0 || int(e.Status) >= combat.StatusCount() {
-		return
-	}
-	target.Statuses[e.Status] = combat.Status{Amount: e.Amount, Rounds: 1}
-}
-
 // **There is no caption box**, and since 2026-08-18 there is no Resolution feed either — the
 // band above the hand is empty except while a hand is previewed or a blow is being acted out.
 //
@@ -1788,6 +1734,10 @@ func (s *CombatScene) applyStatusBadge(e combat.Event) {
 // somewhere else, not a box.
 
 func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
+	if s.holdFrames > 0 {
+		s.holdFrames--
+	}
+
 	// **The duel is the only screen drawn on a backdrop**; every other scene keeps the gradient.
 	ui.FillBackdrop(screen, ui.Backdrop(gs, s.backdrop))
 
@@ -1956,13 +1906,11 @@ func (s *CombatScene) currentSlot() (int, bool) {
 		return 0, false
 	}
 
-	// **A chilled action counts as a slot even though it never happened.** The pane draws
-	// every slot ResolutionOrder produced, including ones a chill deleted, so counting only
-	// the actions that resolved would leave the highlight one row short for the rest of the
-	// round and light the wrong card. One beat per slot, whether it was taken or lost.
+	// **One beat per slot.** Every attack card announces itself with a KindAction, so counting
+	// them says how far through the round playback is.
 	played := -1
 	for _, e := range s.log[:s.cursor+1] {
-		if e.Kind == combat.KindAction || e.Kind == combat.KindChilled {
+		if e.Kind == combat.KindAction {
 			played++
 		}
 	}

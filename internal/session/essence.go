@@ -38,7 +38,7 @@ type EssenceTarget int
 
 const (
 	// TargetElement recolors a card. The concept is untouched, so what changes is which color
-	// it counts as in a mix and which status it can apply.
+	// it counts as in a mix and which relics it answers to.
 	TargetElement EssenceTarget = iota
 
 	// TargetRemove takes a card out of the run for good.

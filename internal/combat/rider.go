@@ -34,9 +34,7 @@ const (
 	// RiderHealOnPlay restores life to the card's owner as the card is played. Amount is the
 	// figure, in life.
 	//
-	// **It fires per card played, after a chill has taken what it takes.** A card a chill ate was
-	// never played, so it heals nothing — which is what makes a rider on a cheap card that always
-	// gets through worth something over one on the card at the front of a fat turn.
+	// **It fires per card played**, and a card held back heals nothing.
 	RiderHealOnPlay
 
 	// RiderShieldOnPlay raises shields as the card is played. Amount is how many.
@@ -92,7 +90,7 @@ const (
 	// It carries no amount.
 	//
 	// **The card keeps its own element and the drawing keeps reading it.** A wild fire Bash is
-	// still drawn from the fire row of the deck panel, and `Blow.Elements` reports fire for it. What
+	// still drawn from the fire row of the deck panel. What
 	// changes is what it counts as on the element axis — for a hand and for a relic's predicate
 	// alike, see RelicCondition.Matches — and it answers that with "whatever you need".
 	//

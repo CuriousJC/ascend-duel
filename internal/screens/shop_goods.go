@@ -534,6 +534,9 @@ func (g *goods) hover(gs *state.GlobalState) {
 	if hoverBuildRelics(gs, at, &g.tip) {
 		return
 	}
+	if g.row.tabs != nil && len(g.row.offer) > 0 && g.row.tabs.Hover(gs, at, &g.tip) {
+		return
+	}
 
 	// **ui.HoveredSeat** — the vial deals its offer at the hand's pitch, so the row overlaps for the
 	// same reason the hand does and the card on top is the last drawn.

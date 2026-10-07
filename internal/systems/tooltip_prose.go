@@ -85,7 +85,7 @@ func drawTooltipProse(screen *ebiten.Image, t *models.Tooltip, gsW, gsH int) {
 		}
 	}
 	w, h := int(math.Ceil(widest))+tipPad*2, h+tipPad*2
-	at := tipPlaceIn(gsW, gsH, t.Anchor, w, h)
+	at := tipPlaceFor(gsW, gsH, t.Side, t.Anchor, w, h)
 
 	vector.FillRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), PanelSurface, false)
 	vector.StrokeRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), 1, PanelEdgeInk, false)

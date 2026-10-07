@@ -186,8 +186,8 @@ func (c Card) Form() Form { return c.Spec().Form }
 // Label is what this card is called on screen and in the Resolution feed.
 func (c Card) Label() string { return c.Spec().Label }
 
-// Damage is what this card deals in the hands of a duelist with this DMG, before any multiplier,
-// blunting or defense.
+// Damage is what this card deals in the hands of a duelist with this DMG, before any multiplier or
+// defense.
 //
 // **The ladder is a number on the card now** *(2026-08-16)*. It was three switch cases — half DMG,
 // DMG, double — which is exactly the 50/100/200 the player's nine attacks still declare. What

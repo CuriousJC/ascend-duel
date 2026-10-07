@@ -60,7 +60,7 @@ func TestAShieldEatsExactlyOneAttack(t *testing.T) {
 	// expires unspent — see TestUnspentShieldsLapseBeforeTheirOwnerActsAgain.
 	events, a2, _ := resolve(a, b, PlainCards(Block), PlainCards(Bash, Bash, Bash), 1)
 
-	if got := countKind(events, KindBlocked); got != 2 {
+	if got := kindCount(events, KindBlocked); got != 2 {
 		t.Errorf("%d attacks blocked, want 2 — one shield is one attack", got)
 	}
 	landed := 0

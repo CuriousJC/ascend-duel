@@ -499,10 +499,6 @@ func Artwork(gs *state.GlobalState, key string) image.Image {
 // Life is on the Spec, so a point of damage produces a different cache entry — see the
 // field's comment in internal/cards. Bounded by how many distinct life totals a fight passes
 // through, which is a handful.
-// **It carries the statuses standing on the opponent** *(2026-08-16)*, as a row of badges along
-// the bottom edge — see `effectArt`. A status is invisible without it: a chill takes a card off
-// a turn that has not been queued yet and a weight blunts a blow not yet swung, so a player with
-// no badge to look at learns about either only by being surprised by it.
 // **`life` is passed in rather than read off the combatant** *(2026-08-18)*, because the bar waits
 // for the figure flying at it: while a hit is in the air the card keeps drawing what the duelist had
 // before the hits, so the drop and the arrival are one event. The combatant is already correct
@@ -543,59 +539,10 @@ func EnemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life i
 
 	// **The one figure a player cannot read off the table.** Life is already the bar and the
 	// fraction, and the action budget is visible as the cards the creature queues; what the next
-	// blow takes off them is not anywhere else. It is written under the portrait, between the
-	// badge row and the bar — see cards.FighterBlockTop, which is what the art is composed
-	// against.
+	// blow takes off them is not anywhere else. It is written under the portrait, above the bar —
+	// see cards.FighterBlockTop, which is what the art is composed against.
 	spec.PortraitStat = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
-
-	// **Walked in registration order, which is what makes the row stable.** A badge that moved along
-	// the row as another status came and went would read as a different badge. `AllStatuses` is the
-	// file order the determinism rules require.
-	n := 0
-	for _, id := range combat.AllStatuses() {
-		if n == len(spec.Effects) || !c.Statuses[id].Active() {
-			continue
-		}
-		img := effectArt(gs, id)
-		if img == nil {
-			continue
-		}
-		spec.Effects[n] = img
-		n++
-	}
 	return spec
-}
-
-// statusBadges is the art key each status is drawn with, **read off `statuses.json`** rather than
-// held in a table here *(2026-08-17)*.
-//
-// **A badge belongs to the status and not to the relic that switches it on**, which is why the key
-// sits in the status record: a status arriving by some other route — an affix, a boss rule — has to
-// draw the same picture, and reading the art key off a relic the enemy is not wearing would be the
-// wrong lookup by construction. It was a table keyed by element until statuses stopped being
-// elements, at which point the table would have had to be keyed by the record anyway — so the
-// record carries it.
-//
-// A status whose badge is empty or unknown falls back to `defaulteffect_png`, so one nobody has made
-// art for shows a shape nobody has learned rather than nothing at all.
-var statusBadges = badgeKeys()
-
-func badgeKeys() map[string]string {
-	out := map[string]string{}
-	for _, s := range data.LoadStatuses() {
-		if s.Badge != "" {
-			out[s.StatusRecord] = s.Badge
-		}
-	}
-	return out
-}
-
-func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
-	key, ok := statusBadges[combat.StatusOf(id).Key]
-	if !ok {
-		key = "defaulteffect_png"
-	}
-	return Artwork(gs, key)
 }
 
 // DuelistSpec is the player as a card: their name, three figures, and the life they have
@@ -643,7 +590,7 @@ func DuelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 	spec.Stats[3] = cards.StatLine{Label: "REALM", Value: strconv.Itoa(JourneyRealm(fight))}
 	spec.Stats[4] = cards.StatLine{Label: "ROOM", Value: JourneyRoom(fight)}
 
-	// **One pip per shield, in the seat the enemy's status badges sit in.** They are drawn with
+	// **One pip per shield, in the fighter block's pip row.** They are drawn with
 	// the defend form's own mark, so what the player raised and what is standing are the same
 	// picture — a second drawing for the same idea is how a row of pips comes to mean something
 	// slightly different from the card that bought it.
@@ -673,9 +620,8 @@ func DuelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 // shield's own element, the same file a Brace and a Block carry.
 //
 // **It goes through `artwork` rather than `systems.ArtMark`** because a pip is scaled into a
-// twenty-pixel badge box like every other thing in that row, and the badge row takes an
-// `image.Image` — `internal/cards` has no graphics context, which is the whole reason the badges
-// are bytes.
+// twenty-pixel box, and the pip row takes an `image.Image` — `internal/cards` has no graphics
+// context, which is the whole reason the pips are bytes.
 //
 // **Nothing is tinted** *(2026-09-16)*. There were four form marks and five elements, so a pip was
 // one near-white drawing multiplied by a color; there are now twenty marks plus a neutral set, so

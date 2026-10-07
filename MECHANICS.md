@@ -41,7 +41,7 @@ The run is written to disk between rooms and every run has a six-character code 
 | [The thrust](#the-thrust) | the principle every rule is measured against | principle |
 | [Attributes and scaling](#attributes-and-scaling) | DMG, Actions, HP, and what may cut a hit | built |
 | [Cards](#cards) | forms, the cost ladder, shields, the deck, the card language | built |
-| [Elements](#elements) | the five colors, their statuses, where a status comes from, and a creature's own element | built |
+| [Elements](#elements) | the five colors, what a color does, and a creature's own element | built |
 | [Resolution — phases](#resolution--phases) | what order a round resolves in | built |
 | [Hands](#hands) | the ladder, its axes, and how every hit is multiplied | built |
 | [A round is bounded twice](#a-round-is-bounded-twice) | the action budget and the five-card cap | built |
@@ -75,8 +75,8 @@ below is a candidate for something to bend.
 
 The consequence for the code: **rules cannot stay `const`**. A card's cost, damage and shield
 count are fields on its record, so retuning one is a file edit. What is still a compile-time
-constant is the actions-per-round cap and the status magnitudes, read by functions with no access
-to the run. Bending either needs a **carrier** — a modifier set passed alongside the duelists that
+constant is the actions-per-round cap, read by functions with no access to the run. Bending it
+needs a **carrier** — a modifier set passed alongside the duelists that
 `internal/combat` reads instead of the constants, making cost a function of the card *and* that
 carrier, the way `Damage` is already a function of the action and the wielder.
 
@@ -95,18 +95,12 @@ creature's out of its motif file under `data/motifs/`, grown by the growth curve
 met at. Life is HP. The action-point budget is `Actions`. Damage is
 `DMG × the card's own multiplier ÷ 100`.
 
-**Damage reduction is a percentage on the attacker and a percentage on the target, and no
-attribute is either of them.** The **earth status** blunts what its carrier deals out;
-amplification raises what its carrier takes in. A durable combatant is one with high `HP`, or with
-earth standing on whatever is hitting it. Anything that should reduce damage extends one of those
-rather than arriving as a third system — two mechanics quietly stacking is the failure to avoid.
-**Nothing shaves a fraction off an incoming hit**: a shield eats one hit whole, and that is the
-whole of the defending side.
+**No attribute reduces damage, and nothing shaves a fraction off an incoming hit.** A durable
+combatant is one with high `HP`. A shield eats one hit whole, and that is the whole of the
+defending side.
 
-**The terms of a hit compose in a fixed order**: the concept's damage plus any flat bonus, the hand
-multiplier, the attacker's weight, then the target's vulnerability. Weight sits on the attacker's
-side of that line because it says how hard they can still swing; everything after it happens to a
-hit that has already been blunted.
+**The terms of a hit compose in a fixed order**: the concept's damage plus any flat bonus, then the
+hand multiplier.
 
 **Nothing subtracts from the action budget, so it has no floor.** Every term is non-negative. A
 future subtraction brings its own floor with it.
@@ -225,9 +219,7 @@ the same whichever kind of attacker is swinging** — `combat.shieldedHits` is t
 for a hand-forming attacker every landing is a hit to rank, an echo's included.
 
 **It is decided at the top of the creature's turn, before any of it resolves**, which is the part
-with a consequence. The ranking is a snapshot: a status landed by an early card amplifies the ones
-after it, so a shield can be provably not-optimal in hindsight. That is paid knowingly, and what it
-buys is that the whole exchange is *showable* — every broken attack can be struck and cracked before
+with a consequence: the whole exchange is *showable* — every broken attack can be struck and cracked before
 the creature swings, rather than one card silently doing nothing at a time. Re-ranking as the turn
 resolved would win a little damage and cost the player any way of watching it happen.
 
@@ -240,8 +232,8 @@ by raising ice against an ice creature: the shield is spent where it banks an ac
 life. Ties still go to the earliest.
 
 **Ranked on the card's own damage, which is the whole of the arithmetic.** Everything downstream —
-the attacker's weight, the target's vulnerability, the hand's multiplier — is one multiplier applied
-identically to every hit in the turn, so none of them can reorder two. See `combat.shieldedSlots`.
+the hand's multiplier — is one multiplier applied identically to every hit in the turn, so it cannot
+reorder two. See `combat.shieldedSlots`.
 
 **This is a straight buff to shields, and it scales with how spiky a creature's deck is.** A
 swarm of identical small attacks is unaffected; a deck with one big card in it is now much
@@ -432,8 +424,7 @@ particular run. Neither says anything about a deck that has been played with.
 
 **Five copies of a concept is the ceiling of the *starting deck*, and it shapes the hand table.**
 No attack concept ships more than five times, so **a Card Four of a Kind necessarily shows four of
-the five colors** — copies of a concept are all different elements, so it is also the hand that
-lands most of the statuses the player is reliced for. **A Card Five of a Kind is the whole color
+the five colors** — copies of a concept are all different elements. **A Card Five of a Kind is the whole color
 set in one concept**, dealable from the starting deck. See the reachability table below.
 
 **The deck list is data.** `data/duelist_cards.json` holds every concept the player's deck is
@@ -475,10 +466,8 @@ Seven fields, and the player's cards are written in the same language as every c
   grid. A bad record panics at init. Nothing cross-checks a declared cost against a tier, because
   there is no second place a cost is written down.
 
-**A card never names a status, and that is load-bearing.** See *Elements* — what a color does is
-decided by the source of that color on the card's owner, and a relic may later decide *which* fire
-a fire card applies. A card that named its own status would be deciding something that is not its
-to decide.
+**A card names its color and nothing that color does.** See *Elements* — what a color does is
+decided by the relics the card's owner wears.
 
 **The deck is not 52 cards and the playing-card instinct is the wrong one.** 13 ranks × 4 suits
 is a shape borrowed from a game whose hands this one only names; the ladder decides the size
@@ -495,8 +484,7 @@ magnifies anything.
 **Resting the cursor on something explains it.** A card gives the whole damage chain term by
 term — your DMG, the card's own multiplier, every relic that matches, the result, and a line
 saying the hand multiplier comes after; a relic gives its authored line from `relics.json` and
-where it fires in the worn order; a fighter card gives its figures and every status standing on
-it, which is the only place a badge can be read.
+where it fires in the worn order; a fighter card gives its element and its figures.
 
 - **It arrives after a dwell of a beat and a half**, about six tenths of a second, so a cursor
   crossing the hand on its way to DUEL! does not strobe eight panels. A panel that appears before
@@ -528,9 +516,9 @@ toggles selection. The distance and time thresholds must not fight each other.
 | **primary** | ice, fire, lightning, earth, arcane |
 
 **There are five elements and no more**. Every one of
-them has cards, a color and a status, so an element is a complete thing rather than a name waiting
-for rules. **A color ships with all three or it does not ship**: a card in every dealt concept, a
-hue of its own, and a status.
+them has cards and a color, so an element is a complete thing rather than a name waiting for
+rules. **A color ships with both or it does not ship**: a card in every dealt concept and a hue of
+its own.
 
 **What a sixth color costs, so it can be priced before it is proposed.** None of it is the cards
 — the cards are one line of JSON. It is everything downstream:
@@ -543,8 +531,8 @@ hue of its own, and a status.
   rung above it that nothing has priced.
 - **The deck overlay runs out of room.** A row of cards per color plus the tally band has to fit
   the modal, and the card itself cannot shrink: the form mark is drawn on a 32px canvas.
-- **Four relics, not one**, since each color carries a damage, a status, a discount and a growth
-  relic — **plus the flip relics, which are a full cross-product** of ordered pairs and grow
+- **A family of relics, not one**, since each color carries a damage, a discount and a growth
+  relic among others — **plus the flip relics, which are a full cross-product** of ordered pairs and grow
   quadratically.
 - **Every cataloged deck seed has to be re-checked**, because the shuffle deals a different deck.
 
@@ -565,14 +553,10 @@ hue of its own, and a status.
 because the card surface is off-white and a near-white border on it is invisible.
 
 **Every word that names an element is written in that element's color**. An essence reading
-"CARD BECOMES ARCANE" sets ARCANE in the arcane purple; a relic reading "Fire attacks BURN and
-CHILL the target." sets three words across two colors. It reaches the card faces, the tooltips
+"CARD BECOMES ARCANE" sets ARCANE in the arcane purple; a relic naming two colors sets each in its
+own. It reaches the card faces, the tooltips
 and the fight log, because the words are the same words wherever they are read.
 
-- **A status is written in the color of the element it belongs to**, so BURNING is fire orange
-  wherever it appears. `statuses.json` carries an `Element` and a `Verb` — BURN against BURNING —
-  and a status shipping without either fails a test rather than going quietly uncolored while
-  every other one is lit.
 - **No new colors.** The vocabulary is `cards.BorderOf` exactly, which is what the deck panel's
   row labels and the arithmetic panel already read — so a color cannot drift between a card and
   the sentence describing it. Lightning and earth read thinnest as text, lightning
@@ -588,59 +572,6 @@ that the two are never seen side by side — a swatch is a square in a pane row,
 edge of a card — so the fix is deferred rather than done. Either the sides stop being
 color-coded or earth takes a green far enough from `ui.PlayerSwatch` to read as a different idea.
 
-### Statuses
-
-*Implemented in `internal/combat/status.go`.* Each element has a status it applies **to whoever
-took the hit** — **and only if the attacker is wearing that element's relic**:
-
-**`data/statuses.json` is the catalog and every figure here comes off it**, so read the file
-rather than this table when a number matters. All five last **two rounds** and none of them
-stacks.
-
-| Element | Status | Verb | What it does |
-|---|---|---|---|
-| **fire** | BURNING | BURN | ticks 50% of the attacker's DMG at the end of each round it survives, minimum 1, frozen at the DMG that lit it |
-| **ice** | CHILLED | CHILL | one card off the front of every turn it outlives |
-| **lightning** | SHOCKED | SHOCK | 25% chance each of the victim's hits misses, rolled every hit |
-| **earth** | WEIGHTED | WEIGH | the victim deals 25% less damage |
-| **arcane** | WEAKENED | WEAKEN | the victim takes 100% more damage from everything, burn ticks included |
-
-**WEAKENED is a different shape from the other four, and that is worth knowing before a sixth is
-designed**. Every other status modifies what its carrier *does* — how
-hard they swing, how often they connect, how many cards their turn holds — so it is read off
-whoever is acting. WEAKENED modifies what its carrier *takes*, so it is read off whoever is being
-acted upon, and it is the first thing in the damage pipeline to be read off the victim. Two
-consequences follow and both are intended:
-
-- **A relic applying it is worth more against a slow opponent than a fast one**, because the value
-  is in the hits that land during its two rounds rather than in the ones you throw — **the later
-  hits of the very turn that lands it included**, since a status lands between hits.
-- **It amplifies a burn tick as well as a hit.** A tick is damage the carrier takes, and exempting
-  it would have made the rule *"damage, except the kind that arrives at the end of the round"* —
-  which is a sentence no card face can carry. Fire plus arcane is therefore the sharpest pair of
-  statuses in the game, and it is a build rather than an oversight.
-- **It does not stack and it is capped**, like everything else here: a second application refreshes
-  the clock, and `combat.maxAmplifyPct` holds any sum at 300. Amplification is the one percentage
-  with no natural ceiling — a miss chance and a weight both stop at *nothing reduces a hit to
-  zero*, and this one stops nowhere at all.
-
-**Statuses are off by default, and the relic is what switches one on**. A
-bare fire attack is a plain attack with a red border: it forms hands exactly as any other
-card does and it leaves no status behind. What an element does on its own is the fizzle — see
-§A creature's own element — which is about the target rather than the card. The worn relics are read off the **attacker**, per hit,
-before anything is applied.
-
-**Why a relic pays for it.** A status given away free leaves its element's relics with nothing
-to *be* — each one has to invent a second mechanic to sell, because the thing the color does is
-already happening. Charging a relic for it makes the element set a hand axis on its own terms and
-makes a relic the thing that turns a color into a rule. It also gives the loot a shape: what a
-relic buys is legible in one line of card text, and a second and third relic are worth buying
-because one relic is one element.
-
-**Enemies never wear relics.** The zero value is what an enemy is hydrated with and nothing sets
-it, so an enemy's colors are inert by construction rather than by a rule written down somewhere
-else.
-
 ### A creature's own element
 
 **A creature is dealt one element with its realm, and it is that element's own.** It decides the
@@ -652,9 +583,9 @@ damage ice hit is 0 — while the fire Bash beside it lands as it always did.
   hits of the matching element and nothing else. See §Damage: a hit per card, one multiplier.
 - **The card still forms the hand.** The hand is read off the turn before a hit is thrown, so two
   ice Bashes at an ice goblin are still a pair; what fizzles is the damage.
-- **A fizzle wastes the whole hit.** No damage, no drain, no status, and no growing relic steps on
-  it — everything a relic would have done on that hit goes with it. It is decided before the shock
-  roll, since it is the target's nature rather than luck.
+- **A fizzle wastes the whole hit.** No damage, no drain, and no growing relic steps on it —
+  everything a relic would have done on that hit goes with it. It is decided before a shield is
+  spent, since it is the target's nature.
 - **A wildcard never fizzles** *(owner's call)*. It counts as every element when a hand is formed,
   and a card that matched every creature's element would be wasted against all of them.
 - **Basic never fizzles, and the duelist has no element**, so the rule runs one way: a creature's
@@ -662,42 +593,19 @@ damage ice hit is 0 — while the fire Bash beside it lands as it always did.
   banks an action point when it eats one of its hits. See §A shield of the hit's own element banks
   an action point.
 
-**It is the one thing an element does on its own**, without a relic. Everything else a color does
-is switched on by something the player is wearing.
-
 The fight log says `fizzles - its own element` on the hit's line and the hit's arithmetic line
-takes `FIZZLE` where a shock takes `MISS`. `combat.fizzles` is the rule and `KindFizzled` the event.
+takes `FIZZLE`. `combat.fizzles` is the rule and `KindFizzled` the event.
 
-### One rule, two sources — the intersection
+### Elements and relics
 
-**An element does something only where a card's color meets a source of that color on its
-owner.** The player's source is a **relic**. An enemy's is an **elemental affix** — its own, or the
-realm's. Neither side gets statuses free; both get them at an intersection.
-
-What this buys is that `Duelist.Relics` turns out to be the general mechanism rather than the
-player's half of one: an affix sets flags in the same array. Nothing new is needed for it, and the
-name is what should eventually change rather than the machinery.
-
-**A card still never names a status**, and that is the reason the rule is worth stating this way. A
-relic may later confer *which* fire a fire card applies — different relics, different burns — so the
-decision belongs to the source and not to the card. See *The card language*.
-
-**Enemy statuses are blocked on affixes, which do not exist.** Every enemy card is authored
-`basic`, so today the whole element system still runs in one direction only. Coloring an enemy
-card before an affix can gate it would hand it a free status, which is exactly what this rule
-forbids.
+**An element does nothing on its own but fizzle**, and everything else a color does is a relic the
+player is wearing — a doubler, a discount, a growth, a flip. Relics are the duelist's only: an
+enemy wears none, so an enemy's colors are inert by construction.
 
 **A run opens wearing no relics at all**, so **every element is inert
 until the first one is bought**: an ice Bash is a plain Bash with a blue border. That is what
 makes the shop the first thing a run saves for. `session.StartingRelics` is the seat for putting one
 on without playing to a shop — the relic counterpart of `deckSeedName` — and it ships empty.
-
-**A status shows as a badge along the bottom of the enemy card**, from
-`assets/effect/`. It is the only place a standing status is stated, and it has to be: two of the
-four bite something the player has not done yet — a chill takes a card off a turn not yet queued,
-a weight blunts a hit not yet swung — so without a badge they are learned by being surprised.
-The row is centered and closes up as it fills. Earth's art is a placeholder. **The player's card
-carries no badges**, because nothing can put a status on the player: the enemy wears no relics.
 
 **Element is a rules type.** `combat.Card` is a concept plus an element, and it is the one card
 type the hand, the queue and the round all use — `screens.actionCard` is an alias for it, so a
@@ -706,135 +614,6 @@ card is never converted between the screen's idea of one and the engine's.
 **Cost is a property of the pairing**. `Card.Cost()` is the card's own printed
 figure and `Duelist.CardCost` is what it costs the duelist holding it, discounts included — which
 is what everything that spends or checks a budget reads.
-
-#### The trigger: every hit that connects
-
-**A status is applied by a hit, off that hit's card.** The relics match against the card that threw
-the hit, and each `apply-status` they fire lands once for that hit — so a turn of three fire hits
-lands a burn three times, each refreshing the last. An all-basic hand lands nothing, because no
-elemental rule matches a colorless card. **A defend card throws a hit like any other and lands its
-status** *(owner's call)* — one rule, every card hits, with nothing special for a verb. The cost is
-taken knowingly: a 1-AP Brace is as good a status delivery as a 1-AP Jab, and buys a shield too.
-
-**This is the whole of what color does to a hit.** An element earns its keep by what it leaves on
-the victim, never by hitting harder — there is no damage multiplier anywhere on the element axis.
-Three consequences:
-
-- **A color lands once per hit that carries it.** Nothing stacks, so two ice hits and an ice hit
-  more are one chill refreshed three times; what more hits buy is more chances past a shock and a
-  shield, and a status that lands in time to shape the hits after it.
-- **Every card carries its color, in the hand or not.** `Bash, Jab, Bash` in fire, ice, fire is a
-  fire Pair, and the ice Jab's hit lands a chill anyway; a fire Brace beside them burns.
-- **A status lands because the hit connected, not because it hurt.** A hit blunted to nothing still
-  connected, and making the status conditional on the final figure would let the target's own
-  statuses silently un-apply an element the attacker had already paid for. **A miss and a block land
-  nothing** — the hit never connected.
-
-The cost, stated: **element is mechanically inert on a defend card**, which still carries one for
-the relic discount and for the hand axis.
-
-**Magnitude is per hit, not per card.** A fire Jab and a fire Smash apply the same burn, so the
-cheapest attack in the deck is the cheapest status delivery. The concept ladder prices damage;
-the element ladder does not exist. Making status scale with the card is a second axis and a
-design change. **Fire is the one that scales, and it scales off the *duelist*** — a share of
-DMG, frozen when it lands — which is a different axis from the card and does not reopen this one.
-
-#### One lifecycle, learned once
-
-**Nothing stacks; a second hit resets the clock, and everything clears at the end of the round
-after the one that applied it.** **How long is authored per record** — `Rounds` in
-`data/statuses.json`, read into `combat.Status.Rounds` — and every status in the file writes 2
-today. **It cannot be 1**, and that is a rule rather than a preference: side B acts second, so a
-status B applied would expire before it ever bit anything. `registerStatus` refuses a record that
-lasts no rounds at all; the floor of 2 is not enforced, so an author setting 1 gets a status that
-never fires.
-
-**Nothing stacks, and that is the base rule so a relic has somewhere to go.** Adding amounts
-makes a status something to pile on rather than something to keep up. **Every hit that connects
-lands its card's statuses**, so four fire hits refresh one burn four times rather than stacking
-four. A relic that *does* stack is a relic someone can design.
-
-**A status lands between hits, so it can reach the hits after it.** Vulnerability landed by the
-second hit of a turn amplifies the third. *(Owner's call)*: it makes the order of the cards matter
-more. Nothing has measured it.
-
-**The ceiling is `combat.maxStatusPct` — 99.** One number holding *any* summed percentage short
-of one, so nothing misses every time and nothing stops a hit outright. Two registration checks
-hold the same line for a single record, which is what makes a catalog edit unable to reach it
-either.
-
-Per-element tuning is one constant each away, and **nothing measures what moving one does**.
-
-#### Lightning is a roll, and it is the only one in the rules
-
-**A shock is a 25% chance each hit misses, rolled on every hit the shock outlives** — once per
-landing, so a five-card turn is five rolls and an echoed card rolls for each of its landings.
-Nothing is consumed by a roll: with no stacks to wear down, a shock that spent itself on contact
-would be a two-round status that reliably lasted one attack — a duration doing no work.
-
-**A shock is a chance and never a certainty.** A certain miss would delete every hit of the
-opposing turn, so a 1 AP lightning Jab would erase an 8 AP Four of a Kind outright for a point. A
-roll is what was chosen, because lightning should *feel* unreliable — a design reason rather than a
-balance one. With nothing stacking, the ceiling is the number itself.
-
-**Rolling per hit rather than per turn keeps the average and narrows the spread.** A shocked
-duelist loses about a quarter of each turn instead of a quarter of their turns outright; the
-expected damage is the same and a turn wiped out entirely becomes rare. *(Owner's call.)*
-
-**What it costs, accepted rather than argued away:**
-
-- `internal/combat` is not pure integer arithmetic. It takes injected sources on `ResolveRound` —
-  `combat.Sources`, never a package global, per the determinism rules — and a nil source means
-  "no rolls", which is how tests and previews stay exact.
-- The stream advances **per hit**, so a change early in a duel reshuffles every roll after it —
-  and so does any change to how many hits a turn throws, an echo relic included. That cost is real
-  and is accepted.
-- It breaks the rule hands otherwise follow — *what you committed to cannot be silently undone*.
-  Lightning is the deliberate exception, and it is the only one.
-
-#### Ice, fire, earth and arcane in detail
-
-- **Ice takes a card, not a point.** A chilled duelist loses a card off the front of its turn,
-  and the front of a turn is its attacks — so ice costs a swing, and it is felt after the player
-  has committed rather than while they are still choosing.
-  - **It is the only thing in the game that takes an action.** The chill is read straight off the
-    status and `Duelist` carries no separate counter. The action points are **not** refunded: a
-    chill is tempo *and* economy.
-  - **It bites on every turn it outlives**, rather than being spent when it bites — the status
-    counting down is what ends it, and a second hit resets the clock rather than deepening it.
-  - **The asymmetry phases impose is carried by the status.** Side A acts first, so ice A lands
-    takes a card from B in the same round; ice B lands finds A has already acted and bites in the
-    round after.
-  - **A chill deletes cards before the hand is matched**, so a chilled duelist cannot swing with a
-    turn it never took. That ordering is why the hand is worked out *inside* a turn rather than at
-    the top of the round.
-  - **In the log** it is announced as `KindChilled`, one event per card lost, which is what keeps
-    playback's one-beat-per-slot invariant true.
-- **Fire scales with the attacker.** A burn ticks for a share of the DMG of whoever lit it —
-  `Amount` in `data/statuses.json`, read once and frozen onto the victim, so a duelist whose DMG
-  changes later does not retroactively burn harder. It floors at 1, the same rule the cheapest
-  attack card follows, so a duelist with very little DMG still lights a burn that does something.
-  - **A burn is state that outlives an action.** `KindBurned` fires from `endRound`, side A then
-    side B, and the screen's `applyEvent` reads it alongside `KindDamage` because a burn changes a
-    life total with nobody acting. **A burn can kill**, and produces a
-    `KindDefeated` when it does.
-- **Earth applies attacker-side.** Weight says how hard you can still swing, so the order within a
-  hit is the card's own term, the hand multiplier, then the attacker's weight. **Rounding is toward zero**,
-  matching `scaleDamage` and every other percentage. **It is 25%**, because a smaller cut that
-  cannot stack is a status nobody notices landing.
-- **Arcane applies victim-side, after the weight.** Vulnerability says how hard *this body* takes
-  a hit, so it is the last term: the card's own term, the hand multiplier, the attacker's weight,
-  the target's vulnerability. **Rounding is toward zero**, so the two halves of one hit round the
-  same way. **It is 100%** — double — and unlike the other four it is capped centrally
-  as well as per record, at `combat.maxAmplifyPct`.
-  - **It reaches the burn tick too**, in `endRound` rather than in the attack phase, which is the
-    one place a status modifies damage nobody threw.
-- **Statuses live in `Duelist.Statuses [MaxStatuses]Status`** — an array indexed by **status**,
-  not by element and not as named fields. That is what makes *"consume the status this card
-  applies"* expressible and is the difference between a system and a handful of ad-hoc fields. The
-  price: **`StatusID` is append-only and the file decides the order**, the hazard `Element` and
-  `ConceptID` also carry. Standing shields stay off this table — a shield is a card effect, and
-  filing it here would say it was a status.
 
 ## Resolution — phases
 
@@ -926,10 +705,9 @@ shields compose without an order among themselves.
 *choosing a shape* and building a deck toward it is meant to work better. Hands are the
 mechanism that pays for that choice.
 
-**A hand is a damage multiplier and nothing else**. It buys no
-status, no action points and no action off the opponent's turn. Statuses come from **elements
-and the relics that arm them**, and that split is the whole reason this section is now short:
-there is one axis, one number per rung, and one place to look for what a hand is worth.
+**A hand is a damage multiplier and nothing else**. It buys no action points and no action off
+the opponent's turn: there is one axis, one number per rung, and one place to look for what a hand
+is worth.
 
 Hands are **discovered**, not given, and discovery persists on the **profile** — part of the
 roguelike unlock structure, not the run. `[?]` **Discovery is not enforced** —
@@ -1050,9 +828,6 @@ DUELIST  →  CARD  →  CARD RELICS  →  HAND  →  HAND RELICS
    Triplicate Rings and the rest of the family, and Dual Wield. They reach every hit of a hand they
    name, as the hand does.
 
-then the attacker's weight and the target's vulnerability, which are statuses on the two duelists
-rather than part of what was built.
-
 **Every damage increase is one of two kinds, and which kind decides where it goes.** A **duelist
 upgrade** raises the DMG at step 1 and so reaches every hit of the turn; a **card upgrade** changes
 one card at step 2 and reaches that card's hit alone. The hand multiplier reaches every hit too,
@@ -1076,12 +851,10 @@ more, and every one of them is multiplied by the hand.
 Everything else happens to each hit:
 
 - **A duelist upgrade reaches every hit, a card upgrade only its own.** See the five steps above.
-- **A shock rolls per hit.** See *Lightning is a roll*.
 - **A shield eats one hit**, the heaviest first.
-- **A status lands per hit that connects**, off that hit's card.
 - **A drain takes its share of each hit that landed.**
 - **A growing relic steps on every hit that connects**, and each hit is priced at the figure the
-  hits before it left. A miss or a block pays no relic.
+  hits before it left. A fizzle or a block pays no relic.
 - **Hits stop at a death.** A hit after the one that killed is worked out on screen and not thrown.
 
 **Every card the turn played throws a hit, whether or not it made the hand** *(owner's call)*. An
@@ -1089,7 +862,7 @@ action point spent on an attack buys a swing: `Bash, Jab, Bash` is a Pair the Ja
 and the Jab lands anyway, at the Pair's rate.
 
 **A defense throws a hit too, and its card deals nothing.** Its hit is its own card upgrades, then
-its relics, times the hand — usually 0 — and it can miss and lands its card's statuses like any other. **A hit of nothing
+its relics, times the hand — usually 0. **A hit of nothing
 spends nothing of the target's** *(owner's call)*: no shield eats it and it does not clear the
 target's defenses, or a turn of shields would strip an opponent's for free. A hit a card upgrade
 lifted above 0 is a hit like any other.
@@ -1128,10 +901,9 @@ fills groups largest-count-first and would hand back whichever concept appeared 
 that hits hardest — so `matchHand` skips every one-card hand and `biggestAttack` answers the
 question on damage.
 
-**Color buys statuses and no damage.** Each hit lands the status of its card's element, gated on the
-attacker wearing that element's relic; basic is not a color and never counts. **An attack that made
-no hand still lands its hit, so it still burns** — a card the player watched land and leave nothing
-behind would read as a bug rather than as a rule.
+**Color buys no damage of its own.** What a color does to a hit is whatever relic the attacker
+wears for it; basic is not a color and never counts. **An attack that made no hand still lands its
+hit**, with every relic its card matches.
 
 **The rung is kept separately.** `Blow.Cards` is the scoring set and `Blow.Rung` is the cards that
 made the hand. Two readers ask the narrower question: `RiderScaleInCombo` — the `DMG IF IT SCORES`
@@ -1253,8 +1025,7 @@ you played, not what you hit with**. Five things follow:
   that is not an attack, so the multiplier multiplies the attacks that are in there with it — a
   fire Brace beside two fire Bashes turns a Pair into an Elemental Three of a Kind and pays it
   on the two Bashes' damage. That is the whole of what the change buys.
-- **A defense's color counts toward the hand and lands its status.** Every card throws a hit,
-  and a hit lands its card's statuses — so a fire Brace makes a fire hand and burns.
+- **A defense's color counts toward the hand.** A fire Brace makes a fire hand.
 - **A hand of nothing but shields is real, is scored, and deals nothing** — which is the
   accepted cost, see the decision below the table. It is named and multiplied like any other rung,
   and every hit it throws is worth nothing but its flat bonuses. Leaving it unscored would make the
@@ -1262,7 +1033,7 @@ you played, not what you hit with**. Five things follow:
   to reward it.
 - **A hit of nothing spends nothing of the target's** — no shield eaten, no defense cleared —
   because a shield build stripping an opponent's defenses for free is an attack in everything but
-  the arithmetic. It still rolls its shock and lands its statuses.
+  the arithmetic.
 
 The ladders are **not** the same numbers, and no two of them are. The starting deck is 55 cards —
 **5 per concept, 15 per attack form and 10 for defend, 11 per element, 20 at the commonest cost** —
@@ -1401,16 +1172,13 @@ one they win. `go run ./tools/handsheet` draws it.
 - **The hand event carries its own card lists, not a span.** A counted hand is not contiguous —
   Two Pair can be two cards, a card that earned nothing, and two more — so the screen raises what
   the engine names and never derives it from a pattern length.
-- **`KindChilled` counts as a slot in playback** even though nothing happened, or the
-  log runs a row short for the rest of the round.
 - **A place to browse hands** — a reference the player can return to. Probably belongs with the
   profile rather than inside a duel. `Hands()` exists for it to read.
 - **The attack phase writes the hand's line and a line per hit.** Attack cards write no act of
   their own: a turn of five Bashes is the hand's heading and five hits under it, each carrying its
   arithmetic off the event, so the figure shown is the figure used and the hit's outcome attaches
   to it. **The hand dialog carries the same arithmetic at the size of the screen**; the lines stay
-  because they are the record and the dialog is the moment. **What is still not drawn** is a row
-  that a chill deleted.
+  because they are the record and the dialog is the moment.
 
 ---
 
@@ -1476,8 +1244,7 @@ the end of the round and after every other way the round could have finished:
 
 - **A duelist who killed their opponent on the final round has beaten the clock.** The check runs
   only on a fight still standing on both sides, so a win on round five is a win.
-- **A duelist who died to the final blow died to the blow.** The clock never fires over a body,
-  the same rule the burn tick keeps.
+- **A duelist who died to the final blow died to the blow.** The clock never fires over a body.
 - **Zero is no clock at all**, which is what every creature carries and what a bare duelist in a
   test carries. That is deliberately not "the default": a default of five in the rules would put
   every headless caller on a timer it was never written against, and the safe direction for a rule
@@ -1546,7 +1313,7 @@ language does not need.
 
 - **A relic holds a *list* of rules.** Forced by the growing stat relics, which accumulate at one
   moment and apply at another; it generalizes to any relic wanting two.
-- **`Then` is a list too**, which is what buys a lightning relic that shocks *and* chills with no
+- **`Then` is a list too**, which is what buys a relic that does two things at one moment with no
   new vocabulary.
 - **Seven moments, and only four are in `internal/combat`.** The other three fire in `session`
   and on the post-battle screen, which is what makes a relic a **run** concept the rules consult
@@ -1574,7 +1341,7 @@ the turn at the figure the relic opened with, which is the same relic paying for
 - **The shape is settled per card and the figures are asked per landing.** How many times a card
   lands is fixed when the card is reached; what each landing is worth is not. See
   `combat.LandingShape`.
-- **A miss or a block pays nothing.** A hit that never connected leaves the relic where it was, and
+- **A fizzle or a block pays nothing.** A hit that never connected leaves the relic where it was, and
   the hits after it are counted at the figure it left.
 - **A relic's figure belongs to the hit's arithmetic, never to the card face.** A card says what the *card*
   does and nothing else — `1x DMG` whatever is on the fingers — because a growing relic's
@@ -1596,7 +1363,6 @@ the turn at the figure the relic opened with, which is the same relic paying for
 - `Duelist.Relics` was `[ElementCount]bool`, which a form multiplier had no element to be a bit
   under. It is a fixed array of `WornRelic` — a `RelicID` and its accumulator — plus a count,
   which is the shape the defend set already used and the reason a duelist is still comparable.
-- `Duelist.Statuses` was indexed by element and is indexed by **status** — see below.
 - **Growing relics hold state**, the first relic thing that does, and the first that must be
   **serialized**: an accumulator on `Session`, keyed by `RelicRecord`, which is why the record key
   is the identity rather than an index. **Uncapped, by decision** — a +5 HP relic is +100 by the
@@ -1604,24 +1370,6 @@ the turn at the figure the relic opened with, which is the same relic paying for
   accumulator never has to say which of two it feeds.
 - **Nothing measures any of this**, so **a relic's balance is unknown** — say so rather than
   guessing at a multiplier.
-
-### Statuses are their own collection, not a property of an element
-
-**A status is data**, in `statuses.json`: a key, a name, a verb, a badge, one of a closed set of
-effect kinds (`damage-over-time`, `lose-actions`, `miss-chance`, `damage-reduction`,
-`damage-amplification`), an amount and a duration.
-
-**Fully decoupled — fire does not burn on its own.** A status that came free with its color would
-leave that color's relics with nothing to be, and a *second* fire status arriving on a different
-relic later is only possible while the first was never inherent to the color.
-
-**`Duelist.Statuses` is indexed by status, not by element**, and its width is `MaxStatuses` — an
-array width rather than a design cap, which registration refuses to grow past because a duelist
-has to stay comparable. `cards.MaxEffects` is the badge row's width and
-`TestTheCardHoldsAsManyEffectsAsThereAreStatuses` is what turns authoring one more status into a
-visible layout decision rather than a silently clipped row. The badge lookup is
-`screens.statusBadges`, read straight off each record's `Badge`. **`StatusID` is append-only**,
-carrying the same hazard `Element` does — with the file, not the enum, deciding the order.
 
 ### The relic shapes
 
@@ -1635,9 +1383,7 @@ relic that matches none of them is a new shape and needs its own argument.
 
 | Shape | Moment | Does |
 |---|---|---|
-| **Burning / Chilling / Shocking / Weighted / Weakening** | `attack-lands` | the five colors' status relics — one per color, and the thing that arms an element at all |
 | **Fire / Ice / Lightning / Earth / Arcane** | `card-damage` | doubles every card of that color — *element* multipliers, where the form weapons are form ones |
-| **Storm** | `attack-lands` | lightning shocks *and* chills |
 | **The Sickle / The Club / The Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn — the form weapons |
 | **The Basher** | `card-damage` | multiplies every Bash — a concept relic, 5 cards where a form covers 15, and priced accordingly |
 | **Banker** | `fight-won` | a second +1 vitae per 5 held, on top of propagation |
@@ -1657,16 +1403,9 @@ relic that matches none of them is a new shape and needs its own argument.
 The Basher covers 5 cards, The Sickle covers 15.
 
 **A color is worth about a dozen relics, not one**, and that is the number to expect when one is
-proposed. Four are the color's own seats in families that already exist — the damage relic, the
-status relic, the discount and the growing one — and the rest are the **flip cross-product**,
-which is quadratic in the number of colors. A sixth color would bring fourteen relics, ten of them
-flips.
-
-**Weakening is the strongest of the five status relics and is priced the same as the others.** That
-is deliberate rather than unexamined: WEAKENED doubles everything the target takes for two rounds,
-where a weight blunts a quarter and a chill takes one card, so its tier is the thing to move first
-if the arcane build turns out to dominate. Nothing in the repo measures what a relic does to a duel,
-so the price is judgment — see the relics skill.
+proposed. Several are the color's own seats in families that already exist — the damage relic,
+the discount, the growing one and the rest — and the flips are a **cross-product**, which is
+quadratic in the number of colors.
 
 ### Momentum — a streak that carries between fights
 
@@ -1682,8 +1421,8 @@ predicate at all, so the streak is worth the same on every card in the hand.
 - **`turn-taken` is a new moment**, the first that is about a *turn* rather than a card, a hit or a
   fight. Its predicate is matched against the turn as a whole: the rule fires when any card of the
   turn matches it.
-- **An empty turn is still a turn taken**, so a duelist chilled out of their whole turn keeps
-  building. The streak is about not *defending*, not about swinging.
+- **An empty turn is still a turn taken**, so a duelist who queues nothing keeps building. The
+  streak is about not *defending*, not about swinging.
 - **A duelist who falls mid-turn never reaches it**, since `playTurn` returns early on a death — a
   streak is a fact about turns taken and a corpse takes none.
 - **The streak survives the fight** *(owner's call)*: it carries from duel to duel for as long as
@@ -1759,7 +1498,7 @@ third.** Uncommon.
 
 **Each landing is a hit of its own.** The lead card is seated again behind itself at a smaller
 figure, twice, and each of those is a hit with everything a hit carries: the hand's multiplier,
-every flat bonus, its own shock roll, its own statuses, a shield to eat it. The turn reads as
+every flat bonus, a shield to eat it, a drain off it. The turn reads as
 *seven hits off five cards, the first card three times*.
 
 - **The echo never reaches the matcher.** The hand is read before the landings are laid out, so
@@ -1789,7 +1528,7 @@ each rung the blow satisfied — `combat.RungsOf` — so nothing decides twice w
 - **They deal what the form weapons deal on the card, and more once anything flat is in
   play.** Two full-strength landings and one doubled landing are the same card term; what the
   repeat buys is **two hits instead of one**, and a hit is now what pays — a flat bonus joins each,
-  a status lands on each, a drain takes a share of each and a growing relic steps on each. What
+  a drain takes a share of each and a growing relic steps on each. What
   that makes them worth against the commons beside them is unmeasured.
 - **`Lead` is a new predicate, and the only one that is not a fact about the card.** It is what
   lets one pair of verbs cover both scopes: Echo says `{"Lead": true}`, a repeat says `{"Form":
@@ -1807,29 +1546,10 @@ each rung the blow satisfied — `combat.RungsOf` — so nothing decides twice w
 `card-cost`, one relic per color. Each is named for the *color it warms* rather than for the
 discount.
 
-**They are the third thing a color relic can be**, after the damage doubler and the status
-relic, and the one that changes what a turn can hold rather than what it does: a 6 AP budget
+**They are the second thing a color relic can be**, after the damage doubler, and the one that changes what a turn can hold rather than what it does: a 6 AP budget
 buying four cheap cards instead of three is a different hand ladder, not a bigger number.
 **Nothing measures that**, so what a color's discount is worth against a color's doubling is
 unknown, and reads as the bigger of the two.
-
-### The color relics
-
-`data/relics.json` holds them, each as one `attack-lands` rule matching one color and applying one
-status. **There is no special case for them in the engine** — they are the plainest
-thing the grammar can say, which is what the grammar was checked against. One relic is one element,
-so wearing one and swinging a hand of all four colors lands one status and nothing else — which is
-what makes the second and third worth buying.
-
-| Relic | Element | What wearing it does |
-|---|---|---|
-| Burning | fire | your fire attacks BURN: a share of your DMG at the end of each round |
-| Chilling | ice | your ice attacks CHILL: one card off the front of each of their turns |
-| Shocking | lightning | your lightning attacks SHOCK: a chance their attack misses |
-| Weighted | earth | your earth attacks WEIGH: they deal less damage |
-| Weakening | arcane | your arcane attacks WEAKEN: they take more damage from everything |
-
-The figures are `data/statuses.json`'s, not this table's.
 
 ### The flip relics — one for every ordered pair
 
@@ -1865,8 +1585,7 @@ rule may read that ID**; it is a handle for the screens.
 - **A flip is what makes a color relic worth wearing**, which is the whole point of the pair:
   the Fire relic doubles fire cards and there are only so many, so the orbs dealing other colors as
   fire are how a
-  deck is bent toward the color a run has bought into. It is also how the *status* relics get
-  fed.
+  deck is bent toward the color a run has bought into.
 - **Flips compose, and the cascade is the point**. `combat.DealSteps` is
   the walk: each worn relic, in worn order, reads **what the flip before it left behind**. The Frozen
   Charged Orb (lightning→ice) and the Muddy Frozen Orb (ice→earth) worn in that order deal a lightning card as
@@ -1895,17 +1614,12 @@ rule may read that ID**; it is a handle for the screens.
   one relic rarer on the shelf. If the shelf needs thinning the lever is a weight or a tier, never
   a price.
 
-**Every color is two relics.** **Fire, Ice, Lightning, Earth and Arcane** are `card-damage`
-doublers on their color — *element* multipliers, where the form weapons multiply a form —
-and **Burning, Chilling, Shocking, Weighted, Weakening** are the status relics beside them, a tier
-dearer. So a color offers cheap damage or a dearer, rarer status, and every record key matches the
-element name the rules use.
+**Fire, Ice, Lightning, Earth and Arcane** are `card-damage` doublers on their color — *element*
+multipliers, where the form weapons multiply a form — and every record key matches the element name
+the rules use.
 
-**A burn is priced to be worth roughly a whole extra attack** over its two rounds, which is what
-the uncommon tier is meant to buy. Nothing measures it, so that is a judgment.
-
-**The relic is read off the attacker, never the victim.** Your fire relic makes *your* fire attacks
-burn; it does nothing about fire aimed at you. The alternative would make a relic a liability and
+**The relic is read off its wearer, never the victim.** Your fire relic prices *your* fire cards;
+it does nothing about fire aimed at you. The alternative would make a relic a liability and
 buying one a decision with a wrong answer.
 
 **A run opens wearing nothing.** `session.StartingRelics` is the seat for putting one on without
@@ -2069,11 +1783,10 @@ and a proposal landing in a full one is a sibling.
 |---|---|---|
 | **concept relics** | common | one per attack card, `scale-damage` on one concept — The Basher's shape, five cards wide |
 | **form cost relics** | rare | the form counterparts of the Robes' color family |
-| **form status / growth** | uncommon | a status relic and a growing relic per attack form |
+| **form growth** | uncommon | a growing relic per attack form |
 | **tier relics** | rare / uncommon | demote a whole tier, or pay for holding one |
 | **rung relics, flat** | common | one per rung, `add-hand-dmg`, the bonus derived from the rung's multiplier |
 | **rung relics, multiplying** | uncommon / rare | `scale-hand-damage` on one rung; **the top two rungs are rare**, because 4x on a Four of a Kind makes every hit twentyfold |
-| **double-status** | rare | one per unordered status pair, triggered by an element holding one of the two |
 | **element repeats** | uncommon | the color half of the Twisted form repeats |
 | **held-card relics** | common | DMG per matching card **kept back**, one per color and one per form |
 
@@ -2199,9 +1912,8 @@ belongs to whoever raised it, and its `If` matches **the eaten hit's card**, the
 relic is its own figure out of its own ring, in worn order.
 
 - **The Thorned Shield sends half the eaten hit back at whoever threw it** (`reflect-damage` 50).
-  Half of the hit **as it would have landed** — after the attacker's weight and the wearer's
-  vulnerability, the figure the wearer did not take — rounded down. **Plain damage**
-  *(owner's call)*: no status, no drain, no growing relic steps, and the thrower's own shields do
+  Half of the hit **as it would have landed** — the figure the wearer did not take — rounded down.
+  **Plain damage** *(owner's call)*: no drain, no growing relic steps, and the thrower's own shields do
   not eat it. **A thrower it kills falls there and then, and the rest of their turn is not
   thrown** — the same door a killing blow uses.
 - **The Mending Shield restores flat life per block** (`heal-on-block`), capped at full. Flat
@@ -2554,19 +2266,19 @@ whose name says it became the right-hand card and whose color says it did not.
   copies. Refusing any pair sharing a *concept* would make two colors of one card illegal, which
   is the pick a player reaching for this most obviously wants.
 
-### The consumables pane holds two, and the top row says so
+### The consumables pane holds three, and the top row says so
 
-**A run carries at most two consumables, of every kind together** *(owner's call, 2026-09-28)* —
-two runes, a rune and a cantrip, two cantrips. The count is drawn where the worn relics' is: the
-top row of every screen that shows a build is **two panes** — `worn/5` relics on the left,
-`held/2` consumables on the right. A run has a total of relics and a total of consumables, and which
+**A run carries at most three consumables, of every kind together** — runes, cantrips, any mix.
+The count is drawn where the worn relics' is: the top row of every screen that shows a build is
+**two panes** — `held/3` consumables on the left, beside the duelist card, and `worn/5` relics on
+the right. A run has a total of relics and a total of consumables, and which
 kinds fill the seats is the player's business.
 
 - **The cap came from the pane and not the other way round.** A row drawn as `n/2` has to be a rule
-  or it is a lie the first time a third consumable arrives. `session.MaxConsumables` is that rule,
+  or it is a lie the first time a fourth consumable arrives. `session.MaxConsumables` is that rule,
   and `ConsumableCount` counts the sack, the satchel, the scroll case and the pouch together.
-- **What it buys is that the third purchase is a decision.** An uncapped consumable is one a rich
-  run hoards rather than spends; with two seats, a pack bought while both are full is a consumable
+- **What it buys is that the fourth purchase is a decision.** An uncapped consumable is one a rich
+  run hoards rather than spends; with three seats, a pack bought while all are full is a consumable
   you have to spend one to make room for.
 - **The shop's sack and bundle seats go dim when the pane is full**, rather than taking vitae for a
   consumable that would be refused. It is the same courtesy an unaffordable good already gets, and
@@ -2618,7 +2330,7 @@ time, and nothing is written under either until it is armed — the tab is where
 - **A relic sold mid-fight stops counting at once** *(owner's call, 2026-10-04)*. The duelist in
   the room is rebuilt from the run without it — its life, its DMG, its clock and its rules all go —
   and the fight is carried across: the wound stays a wound, never below one life, and the standing
-  shields, the banked surge, the statuses, the other relics' growth this fight and every cantrip cast
+  shields, the banked surge, the other relics' growth this fight and every cantrip cast
   this fight come with it. **What has happened stays happened**: a card a flip or a demotion ring
   changed as it was dealt keeps the face it was dealt with.
 - **Selling is what frees a seat.** The pane holds two. A rune sack or a scroll bundle opens over a
@@ -2891,7 +2603,7 @@ changed my card", and what separates them is what the *next* rune does.
   template — so the picker's click order is a rule rather than a detail. It copies the concept and
   keeps the first card's identity, riders and modifiers.
 
-### Gold and silver: the second roll in the game, and it is on a card now
+### Gold and silver: the roll in the game, and it is on a card
 
 **Golden and Silver are upgrades, and they gamble every time their card is played.** A **gold**
 card rolls a d5: on a 1 the run gains **+1 DMG** permanently, on a 2 it gains **+5 max life**,
@@ -2909,18 +2621,15 @@ would have paid something 36% of the time and *both* 4% of the time, and a headl
 rare is one most runs never see while the runs that do see it price the card off it for ever. One
 die with a losing face is a gamble a player can hold in their head.
 
-**A roll needs its own argument and this is it.** The `randomness` skill is explicit that
-lightning is the exception rather than the precedent: certainty is usually the better game as
-well as the cheaper code. The exception here is that **the card's whole subject is luck**. Every
+**A roll needs its own argument and this is it.** Certainty is usually the better game as well as
+the cheaper code. The exception here is that **the card's whole subject is luck**. Every
 other random-sounding rule in the game had a deterministic rewrite that was at least as good;
 this one does not, because a metal that always paid is a purchase, and the catalog is already
 full of purchases.
 
-- **The roll is in `internal/combat`, because the card is played there.** It is the second thing in
+- **The roll is in `internal/combat`, because the card is played there.** It is the only thing in
   that package that rolls, and it takes **its own injected source** — `combat.Sources` is a struct
-  with a `Roll` for the shock and a `Luck` for the gamble, never one field. Sharing would make every
-  shock in a run a function of how many gold cards were played, and every gamble a function of how
-  often the player was shocked.
+  so that a second roll arrives as a field of its own and never shares `Luck`.
 - **`seeds.LuckRoll` is the stream**, per fight, and it is a **live cursor** rather than a seed
   plus a counter: a roll that happens inside a resolved round has the round's own sequence to
   advance, so nothing on the run has to tally how many rolls have been taken.
@@ -2991,7 +2700,7 @@ hand and the discard, and fires only when that card is played.
 
 | Rider | Fires | Does |
 |---|---|---|
-| `heal-on-play` | as the card is played, **after a chill has taken what it takes** | restores life, capped at full |
+| `heal-on-play` | as the card is played | restores life, capped at full |
 | `shield-on-play` | as the card is played | raises shields, through the same cap a Block is under |
 | `damage-on-play` | the turn the card is played into | **adds to that card's own hit** |
 | `damage-in-hand` | every turn the card is **kept back** | adds to the duelist's DMG for every hit of that turn |
@@ -3038,8 +2747,7 @@ hand and the discard, and fires only when that card is played.
   down to one, because a seat is what makes "no upgrade" the zero value rather than a case.
 - **Last one wins, and nothing stacks.** `Card.SetRider` replaces, so a second rune on a card is
   one upgrade forgetting the other rather than two ten-point heals adding to twenty life.
-- **A card a chill ate heals nothing**, which is why riders fire after the chill and before the
-  hits. A rider on the front card of a turn is exposed to the one thing that can delete it.
+- **Riders fire before the hits**, so a heal lands in time for the turn it was spent in.
 - **A heal that restores nothing is silent.** The cap is applied first and the event carries what
   actually landed, so the log never reports life that the bar cannot show.
 
@@ -3088,7 +2796,7 @@ panel that trains the player not to read it.
   reach and the place it matters most. `Title` and `Lines` are both `TipLine` and go through one
   drawing.
 - **A wildcard is CHROMATIC, not the element it happens to be.** The card still *is* an arcane
-  Skewer — it burns as one, it is drawn from the arcane row, `Blow.Elements` reports arcane —
+  Skewer — every arcane relic reads it, it is drawn from the arcane row —
   but the title says what the player is holding, and `ARCANE SKEWER` over a line reading `COUNTS
   AS EVERY ELEMENT` is a panel contradicting itself in two lines. **CHROMATIC takes no color**:
   the wheel has none left for "all of them", and writing it in one of the five would claim the
@@ -3113,15 +2821,14 @@ versatile Jab cannot make up a defend pair — and a versatile Brace still count
 beside the three attack forms. `Card.WildFits` is the whole of that rule.
 
 **The card keeps its own element and form, and the drawing goes on reading them.** A wild fire
-Bash is still a fire Bash on the table: it sits in the fire row of the deck panel and
-`Blow.Elements` reports fire for it; a versatile Jab still wears the stab mark.
+Bash is still a fire Bash on the table: it sits in the fire row of the deck panel; a versatile Jab
+still wears the stab mark.
 
 **Relics count a wildcard the way a hand does** *(owner's call)*. A rule naming an element matches a
 card that counts as every element, and a rule naming stab, slash or crush matches a card that counts
 as any attack form — `RelicCondition.Matches` asks `Card.WildFits`, the matcher's own answer. So a
 versatile Jab feeds the Jar of Razors, and a chromatic card is multiplied by every element relic
-worn, discounted by every element discount, lands every status an element relic applies, and is
-touched by every flip ring it is dealt under. **That is the largest balance lever on a wildcard**,
+worn, discounted by every element discount, and touched by every flip ring it is dealt under. **That is the largest balance lever on a wildcard**,
 and what a run pays for one is in `data/runes.json`. Basic is not an element a wildcard joins.
 
 **It is the first rider read while the hand is *matched* rather than while the turn resolves.**
@@ -3237,7 +2944,7 @@ standing in the room and is gone when the duel ends. `data/cantrips.json` is the
 | | |
 |---|---|
 | Bought | the shop's **bundle of scrolls** — 3, 4 or 5 inside at 3, 5 or 6 vitae, keep 1, offered on visits where the pack roll puts it up |
-| Held | the **scroll case**, in the consumables pane, counted against the pane's cap of two |
+| Held | the **scroll case**, in the consumables pane, counted against the pane's cap of three |
 | Spent | on the combat screen, **between turns only** — click it; nothing is selected, and it is lit for the whole of planning |
 | Lasts | until the fight ends |
 
@@ -3443,8 +3150,8 @@ unrelated creatures who happen to share a corridor.
 - **A record is dealt as exactly one element and its whole deck takes it.** There is no element
   anywhere on a creature's card: the colour belongs to the creature, the way a duelist's Jab is a
   concept that ships in five colours. Today the element marks the attacks and picks the picture,
-  and `[?]` what else it should do — a status on hit, a resistance, something the realm does to the
-  *player* — is open.
+  and `[?]` what else it should do — a resistance, something the realm does to the *player* — is
+  open.
 - **A record carries one picture per element it can be dealt as.** A fire goblin serf and an ice
   goblin serf are two drawings of one creature.
 
@@ -3604,8 +3311,6 @@ before pressing DUEL!.
 - **The player's shields answer the whole turn.** A shield stands through the opposing turn and
   eats the heaviest hit in it rather than the first — see §Shields. Spending one on whichever
   card came round first would make it worth least against exactly the opponents that swing most.
-- **A shock rolls once per hit**, exactly as it does against a hand-forming attacker — see
-  *Lightning is a roll*.
 - **It is a flag on the duelist, never a rule about side B.** The engine has no idea which side is a
   person and must not learn — a headless simulation plays both sides.
 - **`[?]` Whether a boss or an affix can give an enemy hands back.** The flag is per duelist, so
@@ -3781,7 +3486,7 @@ than any it could prevent. A file written by a newer build is read but never wri
 is the one mistake that cannot be repaired afterwards.
 
 **What is written down is a name, never a number.** Every ordinal in this game is append-only and
-index-shaped — `ConceptID`, `Element`, `StatusID`, `Phase` — so an ordinal in a file
+index-shaped — `ConceptID`, `Element`, `Phase` — so an ordinal in a file
 that outlives its build is an ordinal that will eventually mean something else. **The stones are the
 newest case**: a run's raised rungs are saved by hand *key*, never by the seat the
 count actually sits in, because a seat is a position in the catalog this build happened to load.
@@ -3954,19 +3659,10 @@ pattern in the file.
 
 The determinism rules in `CLAUDE.md` still hold.
 
-**Lightning put randomness into combat, and it is built.** The rules pre-gated this rather than
-forbidding it, and it arrived the way they required: an injected `*rand.Rand` on `ResolveRound`,
-never a package global. A nil source means no rolls, which is how tests and any future preview
-stay exact. It is the sixth stream and it is salted from `RunSeed` like the others; nothing
-shares a source.
-
-**`[?]` The roll is conditional, and this document said it should not be.** The design note here
-required rolling on *every* attack phase and discarding the irrelevant result, on the grounds
-that a conditional roll means adding or removing a status shifts every later roll in the run —
-so a balance tweak invalidates every stored seed. The implementation short-circuits when the
-attacker carries no shock, so the stream only advances when lightning is in play. **Nothing
-depends on stored seeds yet**, which is why this is recorded rather than fixed; it has to be
-settled before the save format lands, because a choice log replays through this.
+**The gold and silver gamble is the randomness in combat.** It arrives the way the rules require:
+an injected `*rand.Rand` on `ResolveRound`, through `combat.Sources`, never a package global. A nil
+source means no rolls, which is how tests and any preview stay exact. It is salted from `RunSeed`
+like every other stream; nothing shares a source.
 
 **Deck shuffles use a seed derived per encounter, not a running stream:**
 `hash(runSeed, realm, fightIndex)`.
@@ -4061,7 +3757,7 @@ while the playback cursor rests there. Presentation-only, so it cannot touch the
 splash length joins the pacing constants destined to become the game-speed setting.
 
 **A hand never has to be drawn *across* rows**, because it gets a line of its own, in amber, at
-the moment it forms. So does a chill. The bracket-or-join problem simply stopped existing, which
+the moment it forms. The bracket-or-join problem simply stopped existing, which
 is worth recording as the pattern — **one row per slot was being asked to answer two questions at
 once, and the fix was a line of prose, not a cleverer drawing.**
 
@@ -4080,8 +3776,7 @@ unwinnable realm looks exactly like a run of bad draws, no test goes red, and ev
 every stat below is therefore a judgment.
 
 - `[?]` **Nothing has measured the roster against a hit per card.** Enemy HP and DMG are tuned
-  by hand, and every flat bonus, status, drain and shock now scales with how many hits a turn
-  throws.
+  by hand, and every flat bonus and drain scales with how many hits a turn throws.
 - `[?]` **How enemies scale through the realms.** Records carry no level term; the growth curve is the
   only thing that scales one.
 - `[?]` **Whether the growth curve should be flatter**, now that it compounds on top of the
@@ -4100,8 +3795,6 @@ every stat below is therefore a judgment.
   offers keep-or-spend. Only a fixture puts one in the satchel today.
 - `[?]` **Long press is unbuilt**, and it is the whole of the touchscreen and controller story for
   the reveal hover already gives.
-- `[?]` **Enemy statuses are blocked on affixes, which do not exist.** Every creature card is
-  authored `basic`, so the element system runs in one direction only.
 
 **Journey and rooms:**
 

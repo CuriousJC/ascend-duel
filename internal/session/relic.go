@@ -14,10 +14,10 @@ package session
 // **What crosses the edge is a rules type, never a record.** `data.RelicData` holds an art key and a
 // long-press line; `combat.RegisterRelic` takes a key, a name and `[]combat.RelicRule`. So the engine
 // never reads a file it has no business in, and this file never grows an opinion about what a
-// status is worth. Same division `decks.EnemyCards` draws for enemy cards.
+// relic's effect is worth. Same division `decks.EnemyCards` draws for enemy cards.
 //
 // **Bad records panic at load**, like every other catalog: an unknown moment, a verb used at the
-// wrong moment, a predicate the rules cannot resolve, or a status key that is in no file.
+// wrong moment, or a predicate the rules cannot resolve.
 
 import (
 	"fmt"
@@ -35,8 +35,7 @@ import (
 // bare and buys its first relic out of what the first fights pay.
 //
 // **What that means for a launch, said plainly:** every element is inert until the first relic is
-// bought — an ice Bash is a plain Bash with a blue border — so the opening fights carry no
-// statuses at all. That is the intended shape of a run rather than an oversight, and it is the
+// bought — an ice Bash is a plain Bash with a blue border. That is the intended shape of a run rather than an oversight, and it is the
 // thing to look at first if the early realms read as flat.
 //
 // **It stays as a list rather than being deleted**, because it is the relic counterpart of
@@ -190,7 +189,7 @@ func RelicID(key string) (combat.RelicID, bool) {
 }
 
 // relicRules turns one record's strings into rules. **Every word is resolved rather than trusted** —
-// a moment, a verb, an element, a form, a concept label and a status key are six vocabularies, and
+// a moment, a verb, an element, a form and a concept label are five vocabularies, and
 // a misspelling in any of them is a relic that wears cleanly and does nothing.
 func relicRules(r data.RelicData) ([]combat.RelicRule, error) {
 	out := make([]combat.RelicRule, 0, len(r.Rules))
@@ -289,13 +288,6 @@ func relicEffect(key string, in data.RelicEffectData) (combat.RelicEffect, error
 	}
 	out.Do, out.Amount = do, in.Amount
 
-	if in.Status != "" {
-		id, ok := combat.StatusByKey(in.Status)
-		if !ok {
-			return out, fmt.Errorf("%s applies status %q, which is in no file", key, in.Status)
-		}
-		out.Status = id
-	}
 	if in.Element != "" {
 		e, ok := combat.ParseElement(in.Element)
 		if !ok {

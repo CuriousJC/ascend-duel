@@ -53,13 +53,9 @@ const (
 	anchorActorCard
 	anchorTargetCard
 
-	// anchorActorBadges is the status badge row along the bottom of the acting side's fighter
-	// card. It is where a status that is *already standing* acts from, as against one landing.
-	anchorActorBadges
-
 	// anchorRelic is one worn relic's card in the relic row, named by `Event.Relic`. This is the
-	// anchor the engine gained a field for: nothing else on screen can say which relic caused a
-	// status.
+	// anchor the engine gained a field for: nothing else on screen can say which relic caused an
+	// event.
 	anchorRelic
 
 	// anchorSumLine is a hit's line of figures in the hand dialog, under the card that threw it.
@@ -107,8 +103,6 @@ func (a anchor) String() string {
 		return "the acting fighter's card"
 	case anchorTargetCard:
 		return "the target fighter's card"
-	case anchorActorBadges:
-		return "the acting fighter's badge row"
 	case anchorRelic:
 		return "the relic named on the event"
 	case anchorSumLine:
@@ -222,25 +216,9 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorActorSeat, anchorSumLine, gestureFly,
 		"each card's own figure flies out of that card into its hit's line - the dialog that started this",
 	},
-	combat.KindChilled: {
-		anchorActorBadges, anchorActorSeat, gestureFly,
-		"the chill stands on the duelist losing the card, so it acts from their own badge row",
-	},
-	combat.KindStatus: {
-		anchorRelic, anchorTargetCard, gestureFly,
-		"a status has a cause the player is wearing; Event.Relic exists so this can be drawn",
-	},
-	combat.KindMissed: {
-		anchorNone, anchorSumLine, gestureStrike,
-		"a shock rolls once per hit, so what is struck out is that hit's line and nothing else",
-	},
 	combat.KindFizzled: {
 		anchorNone, anchorSumLine, gestureStrike,
-		"a fizzle wastes one hit the way a shock does, so it is struck out on that hit's line - the word says which",
-	},
-	combat.KindBurned: {
-		anchorActorBadges, anchorActorCard, gestureFly,
-		"a burn is resident on its victim: off their own flame badge into their own bar",
+		"a fizzle wastes one hit, so what is struck out is that hit's line and nothing else - the word says why",
 	},
 	combat.KindHealed: {
 		anchorActorSeat, anchorActorCard, gestureFly,
@@ -252,7 +230,7 @@ var choreography = map[combat.EventKind]flightSpec{
 	},
 	combat.KindRegenerated: {
 		anchorRelic, anchorActorCard, gestureFly,
-		"a relic makes this life out of nothing, as it makes a status out of nothing - so it leaves the ring rather than a body, which is the one thing that separates it from a drain",
+		"a relic makes this life out of nothing - so it leaves the ring rather than a body, which is the one thing that separates it from a drain",
 	},
 	combat.KindVitae: {
 		anchorActorSeat, anchorActorCard, gestureFly,
@@ -424,7 +402,7 @@ type combatTheater struct {
 	mathBox handMathBox
 
 	// walked is every position in this round's log the hand dialog has already drawn — a hit that
-	// landed or missed, shown when its line finished — so playback walks past it without a second
+	// landed or fizzled, shown when its line finished — so playback walks past it without a second
 	// picture. See CombatScene.throwColumn.
 	walked map[int]bool
 }

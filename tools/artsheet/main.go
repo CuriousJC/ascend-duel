@@ -61,7 +61,6 @@ var known = map[string]struct {
 	"damage":  {"Damage badges", "../badgesheet/index.html", "The numeral is drawn into the badge."},
 	"form":    {"Form marks and cost ticks", "../marksheet/index.html", "One per form per element, plus a neutral set."},
 	"upgrade": {"Upgrade art", "../upgradesheet/index.html", "The one rider that keeps a picture for its ink."},
-	"effect":  {"Status badges", "", "Drawn along the bottom of the enemy card."},
 	"texture": {"Form materials", "", "Seamless tiles, kept inside the glyph shapes of a form word."},
 	"game":    {"Interface", "", "The title screens and the cog."},
 }

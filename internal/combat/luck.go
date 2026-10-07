@@ -7,15 +7,13 @@ package combat
 // permanently carries, so the roll happens where the card is played — which means here, in the
 // rules, off an injected source like every other roll in this package.
 //
-// **It is the second roll `internal/combat` has**, and the argument for it is not lightning's. See
-// MECHANICS.md: a mechanic whose entire subject is luck is the one case where certainty deletes the
-// thing rather than tightening it, and a gamble that always pays is a purchase. What is new here is
-// only *where* it is taken; the design argument was made when the rune landed and is unchanged.
+// **It is the only roll `internal/combat` has.** See MECHANICS.md: a mechanic whose entire subject
+// is luck is the one case where certainty deletes the thing rather than tightening it, and a gamble
+// that always pays is a purchase.
 //
-// **It takes its own source and never the one lightning draws from.** Sharing would make every
-// shock in a run a function of how many golden cards were played, and every gamble a function of
-// how often the player was shocked — two concerns advancing one cursor, which is the rule the
-// randomness skill states and the reason `Sources` is a struct rather than a second parameter.
+// **It takes its own source**, and a roll added later takes another — two concerns advancing one
+// cursor is the thing the randomness skill forbids, and the reason `Sources` is a struct rather than
+// a parameter.
 
 import "math/rand"
 
@@ -42,17 +40,13 @@ const (
 
 // Sources is every stream a resolved round may draw from.
 //
-// **A struct rather than a second parameter**, because the list has now grown twice and a seventh
-// positional argument is how a caller ends up handing the shuffle to the shock roll. Each field is
-// its own concern's stream and they are never interchanged — see the randomness skill, which is
-// where the rule lives.
+// **A struct rather than a parameter**, so a second roll arrives as a second named field and a
+// caller cannot hand one concern's stream to another. Each field is its own concern's stream and
+// they are never interchanged — see the randomness skill, which is where the rule lives.
 //
 // **The zero value rolls nothing**, which is what every test and every headless caller passes and
 // what `TestRoundIsDeterministic` pins: a nil source means the rules are integer arithmetic.
 type Sources struct {
-	// Roll is the shock roll — whether an attack under a shock lands at all. See attackMisses.
-	Roll *rand.Rand
-
 	// Luck is the gamble a golden or a silver card takes when it is played. See rollGolden.
 	Luck *rand.Rand
 }

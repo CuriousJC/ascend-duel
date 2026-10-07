@@ -581,13 +581,13 @@ type family struct {
 	Key string
 }
 
-// unlockOpeners is, for every unlock key, the achievements that grant it, name and How, written
+// unlockOpeners is, for every unlock key, the achievements that grant it, display name and description, written
 // for a plate. Several achievements may grant one key, and any of them opens it.
 func unlockOpeners() map[string]string {
 	out := map[string]string{}
 	for _, a := range data.LoadAchievements() {
 		for _, u := range a.Unlocks {
-			line := a.Name + " — " + a.How
+			line := a.DisplayName + " — " + a.Description
 			if out[u] != "" {
 				line = out[u] + " or " + line
 			}

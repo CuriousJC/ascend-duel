@@ -49,7 +49,7 @@ func loadRelicUnlocks() map[string]string {
 		for _, u := range a.Unlocks {
 			if !read[u] {
 				panic(fmt.Sprintf("achievements.json: %s grants unlock %q, which nothing reads",
-					a.AchievementRecord, u))
+					a.APIName, u))
 			}
 		}
 	}

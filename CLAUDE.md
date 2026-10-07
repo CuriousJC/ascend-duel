@@ -165,6 +165,7 @@ go run ./tools/stonesheet   # every stone against the rungs it raises, walked by
 go run ./tools/runesheet # every rune: the line it prints against the rule that fires
 go run ./tools/cantripsheet  # every cantrip: its line, its effect, and that effect cast onto the duelist
 go run ./tools/tonicsheet    # every tonic: its rule, its tooltip, and the realm-by-realm offer for sample runs
+go run ./tools/achievementsheet  # every achievement's Steam fields and icon pair, at 256 and 64: the upload set
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/goodsheet     # every sealed good beside the offer it actually makes
 go run ./tools/badgesheet    # every damage badge: eleven values by six colors, in all three outlines
@@ -178,6 +179,7 @@ go run ./tools/relicart -kind stone  # the same, for data/stones.json and assets
 go run ./tools/relicart -kind cantrip  # the same, for data/cantrips.json and assets/cantrip
 go run ./tools/relicart -kind other  # the potions, the tonics and the sealed goods together, into assets/other
 go run ./tools/relicart -kind deck   # the card backs, for data/decks.json and assets/deck
+go run ./tools/relicart -kind achievement  # the achievement icons, square at Steam's 256, into assets/achievement
 go run ./tools/artcompare   # one catalog's art, every candidate batch side by side, as real cards
 go run ./tools/artcompare -catalog relic    # the same for relics; card, essence, rune, stone, other
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones

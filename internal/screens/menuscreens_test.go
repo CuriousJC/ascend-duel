@@ -24,8 +24,8 @@ func TestEveryAchievementInTheCatalogHasBothHalves(t *testing.T) {
 		t.Fatal("the catalog is empty, so the page has nothing to say")
 	}
 	for _, a := range all {
-		if a.Name == "" || a.How == "" {
-			t.Errorf("achievement %q is missing a Name or a How", a.Key)
+		if a.DisplayName == "" || a.Description == "" {
+			t.Errorf("achievement %q is missing a DisplayName or a Description", a.APIName)
 		}
 	}
 }
@@ -66,8 +66,8 @@ func TestAMissingProfileIsNothingEarned(t *testing.T) {
 	gs.Profile = nil
 
 	for _, a := range achieve.Loaded().All() {
-		if earned(gs, a.Key) {
-			t.Errorf("%q cannot be earned with no profile to hold it", a.Key)
+		if earned(gs, a.APIName) {
+			t.Errorf("%q cannot be earned with no profile to hold it", a.APIName)
 		}
 	}
 	want := "0 of " + strconv.Itoa(len(achieve.Loaded().All()))
@@ -135,7 +135,7 @@ func TestNoCreditsLineIsBlankByAccident(t *testing.T) {
 // source-available and meant to be sold by two people; a credits screen that dropped one of them is
 // the kind of mistake nobody notices until it has shipped.
 func TestTheCreditsNameBothCopyrightHolders(t *testing.T) {
-	for _, want := range []string{"Justin Crosby", "KingSherman1820", "PolyForm Noncommercial"} {
+	for _, want := range []string{"CuriousJC", "KingSherman1820", "PolyForm Noncommercial"} {
 		if !creditsMention(want) {
 			t.Errorf("the credits do not mention %q", want)
 		}

@@ -85,11 +85,17 @@ const (
 	counterElement = "element:"
 )
 
-// Achievement is one record with its trigger resolved.
+// Achievement is one record with its trigger resolved. The first fields carry Steamworks' names, as
+// the record's do — see data.AchievementData.
 type Achievement struct {
-	Key  string
-	Name string
-	How  string
+	APIName     string
+	DisplayName string
+	Description string
+	Hidden      bool
+
+	// AchievedIconKey is the asset key of the icon, the record's own or the default. The unachieved
+	// icon is the same picture in grayscale — see systems.ArtMarkGray.
+	AchievedIconKey string
 
 	// Said is every line shown when it lands, in order, all at once.
 	Said []string
@@ -182,19 +188,25 @@ func load() *Catalog {
 	for _, r := range records {
 		t, err := parseTrigger(r.Trigger)
 		if err != nil {
-			panic(fmt.Sprintf("achievements.json: %s: %v", r.AchievementRecord, err))
+			panic(fmt.Sprintf("achievements.json: %s: %v", r.APIName, err))
 		}
-		if r.Name == "" || r.How == "" {
-			panic("achievements.json: " + r.AchievementRecord + " needs a Name and a How")
+		if r.DisplayName == "" || r.Description == "" {
+			panic("achievements.json: " + r.APIName + " needs a DisplayName and a Description")
 		}
-		out.by[r.AchievementRecord] = len(out.list)
+		if r.SetBy != data.SetByClient {
+			panic(fmt.Sprintf("achievements.json: %s: SetBy %q; every achievement is set by %q",
+				r.APIName, r.SetBy, data.SetByClient))
+		}
+		out.by[r.APIName] = len(out.list)
 		out.list = append(out.list, Achievement{
-			Key:     r.AchievementRecord,
-			Name:    r.Name,
-			How:     r.How,
-			Said:    r.Said,
-			Unlocks: r.Unlocks,
-			trigger: t,
+			APIName:         r.APIName,
+			DisplayName:     r.DisplayName,
+			Description:     r.Description,
+			Hidden:          r.Hidden,
+			AchievedIconKey: r.AchievedIconKey(),
+			Said:            r.Said,
+			Unlocks:         r.Unlocks,
+			trigger:         t,
 		})
 	}
 	return out

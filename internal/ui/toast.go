@@ -145,7 +145,7 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// invisible dialog.
 	a, ok := achieve.Loaded().Find(t.shown)
 	if !ok {
-		a = achieve.Achievement{Name: "SOMETHING"}
+		a = achieve.Achievement{DisplayName: "SOMETHING"}
 	}
 
 	ModalScrim(screen)
@@ -170,7 +170,7 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	name.GeoM.Translate(center, float64(box.Min.Y+toastNameTop))
 	name.PrimaryAlign = text.AlignCenter
 	name.SecondaryAlign = text.AlignCenter
-	systems.DrawText(screen, a.Name,
+	systems.DrawText(screen, a.DisplayName,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: toastNameSize}, name)
 
 	for i, line := range a.Said {

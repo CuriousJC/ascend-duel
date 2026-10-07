@@ -8,8 +8,8 @@ package screens
 //
 // **It shows locked entries as well as earned ones**, grayed, with the name and the line still
 // legible. An achievements page that listed only what you already have is a page that says nothing
-// on the day a player most wants to read it. Nothing here is a spoiler yet; the day one is, that
-// entry gets a hidden flag rather than the page getting a policy.
+// on the day a player most wants to read it. A spoiler is a record with `Hidden` set, which keeps
+// its row and gives up its words and its picture until it is earned.
 //
 // **The catalog moved to `data/achievements.json` on 2026-09-06**, which is exactly the move the
 // old note in this file said it would make once there were enough of these to scroll. Eleven records
@@ -17,8 +17,8 @@ package screens
 // not earn a loader stopped holding the moment a record had to say *what earns it*. `internal/achieve`
 // is the loader; this file draws what it hands over and decides nothing.
 //
-// **The key is the disk contract and the name is not.** A record's `AchievementRecord` may never
-// change once shipped; its `Name` can be reworded any afternoon.
+// **The key is the disk contract and the name is not.** A record's `APIName` may never
+// change once shipped; its `DisplayName` can be reworded any afternoon.
 //
 // **It scrolls now**, on `models.Scrollbar` — the third widget in the game, a drag rather than a
 // wheel because the input vocabulary has no wheel. The rows are a fixed height, so the bar counts
@@ -29,6 +29,7 @@ import (
 	"image/color"
 	"strconv"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -53,8 +54,15 @@ const (
 	achievementNameSize = systems.TextMedium
 	achievementLineSize = systems.TextSmall
 
-	// achievementRowInset is how far in from the row's left edge the words start.
+	// achievementRowInset is the margin at either end of a row: the icon sits that far in from the
+	// left edge, and the progress figure and the tick that far in from the right.
 	achievementRowInset = 20
+
+	// achievementIconSize is the icon's side on the page — **Steam's own display size**, so the icon
+	// a player reads here is the one Steam's pop-up will show — and achievementTextLeft is where the
+	// words start, clear of it.
+	achievementIconSize = 64
+	achievementTextLeft = achievementRowInset/2 + achievementIconSize + achievementRowInset
 
 	// achievementTallySize is the "1 of 11" under the heading.
 	achievementTallySize = systems.TextSmall
@@ -77,6 +85,12 @@ const (
 var (
 	achievementEarnedFill = color.RGBA{R: 244, G: 234, B: 214, A: 255}
 	achievementLockedFill = color.RGBA{R: 216, G: 200, B: 172, A: 255}
+)
+
+// What a hidden achievement's row says while it is locked.
+const (
+	hiddenAchievementName = "HIDDEN ACHIEVEMENT"
+	hiddenAchievementLine = "Earn it to find out what it is."
 )
 
 // AchievementsScene is the achievements screen.
@@ -147,7 +161,7 @@ func (s *AchievementsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	for i := 0; i < achievementsVisible && offset+i < len(all); i++ {
 		a := all[offset+i]
 		y := top + i*(achievementRowHeight+achievementRowGap)
-		s.drawRow(gs, screen, a, left, y, earned(gs, a.Key))
+		s.drawRow(gs, screen, a, left, y, earned(gs, a.APIName))
 	}
 
 	systems.DrawScrollbar(gs, screen, s.scroll)
@@ -177,18 +191,41 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 		lineInk = systems.ColorToward(ui.GroundInk, fill, 60)
 	}
 
+	// **A hidden achievement says nothing about itself until it is earned** — Steam's meaning of the
+	// flag. It keeps its row, so the tally and the scrollbar still count it; what it gives up is its
+	// name, its description and its icon, all three of which would give it away.
+	shown := a
+	if a.Hidden && !got {
+		shown.DisplayName = hiddenAchievementName
+		shown.Description = hiddenAchievementLine
+		shown.AchievedIconKey = data.AchievementIconPrefix + data.DefaultAchievementIcon
+	}
+
+	// **The icon is the Steam pair**: the achieved picture on an earned row and the same picture in
+	// grayscale on a locked one — see systems.ArtMarkGray.
+	icon := systems.ArtMarkGrayImage(shown.AchievedIconKey, achievementIconSize, achievementIconSize)
+	if got {
+		icon = systems.ArtMarkImage(shown.AchievedIconKey, achievementIconSize, achievementIconSize)
+	}
+	if icon != nil {
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(float64(x+achievementRowInset/2),
+			float64(y+(achievementRowHeight-achievementIconSize)/2))
+		screen.DrawImage(icon, op)
+	}
+
 	name := &text.DrawOptions{}
-	name.GeoM.Translate(float64(x+achievementRowInset), float64(y+22))
+	name.GeoM.Translate(float64(x+achievementTextLeft), float64(y+22))
 	name.SecondaryAlign = text.AlignCenter
 	name.ColorScale.ScaleWithColor(nameInk)
-	systems.DrawText(screen, a.Name,
+	systems.DrawText(screen, shown.DisplayName,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementNameSize}, name)
 
 	line := &text.DrawOptions{}
-	line.GeoM.Translate(float64(x+achievementRowInset), float64(y+54))
+	line.GeoM.Translate(float64(x+achievementTextLeft), float64(y+54))
 	line.SecondaryAlign = text.AlignCenter
 	line.ColorScale.ScaleWithColor(lineInk)
-	systems.DrawText(screen, a.How,
+	systems.DrawText(screen, shown.Description,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementLineSize}, line)
 
 	// **Progress, but only where there is any.** A tally has a fraction and a moment does not, so a
@@ -197,7 +234,7 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 	//
 	// **It is drawn on a locked row and not on an earned one.** A finished tally would read
 	// "300 / 300" next to a tick, which is the same fact twice.
-	if !got && gs.Profile != nil {
+	if !got && !a.Hidden && gs.Profile != nil {
 		if p := a.Progress(gs.Profile.Counters); p != "" {
 			prog := &text.DrawOptions{}
 			prog.GeoM.Translate(
@@ -257,7 +294,7 @@ func achievementTally(gs *state.GlobalState) string {
 	all := achieve.Loaded().All()
 	got := 0
 	for _, a := range all {
-		if earned(gs, a.Key) {
+		if earned(gs, a.APIName) {
 			got++
 		}
 	}

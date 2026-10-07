@@ -21,7 +21,7 @@ func anUnlockingAchievement(t *testing.T) (string, string, string) {
 		for _, a := range achieve.Loaded().All() {
 			for _, granted := range a.Unlocks {
 				if granted == u {
-					return a.Key, u, key
+					return a.APIName, u, key
 				}
 			}
 		}

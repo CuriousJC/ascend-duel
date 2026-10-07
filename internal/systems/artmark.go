@@ -119,6 +119,65 @@ func ArtMarkImage(key string, w, h int) *ebiten.Image {
 	return img
 }
 
+var grayCache = map[markKey]*image.RGBA{}
+
+// ArtMarkGray is ArtMark in grayscale, or nil if there is no such art.
+//
+// **It is the whole of an unachieved achievement icon** — Steamworks asks for an achieved and an
+// unachieved picture, and the second is derived from the first rather than drawn, so the two can
+// never be two different drawings. The achievements page and the review sheet both come here, so
+// the locked row in the game and the file uploaded to Steam are the same pixels.
+func ArtMarkGray(key string, w, h int) *image.RGBA {
+	ck := markKey{key, w, h}
+	if img, ok := grayCache[ck]; ok {
+		return img
+	}
+	src := ArtMark(key, w, h)
+	if src == nil {
+		grayCache[ck] = nil
+		return nil
+	}
+	out := Grayscale(src)
+	grayCache[ck] = out
+	return out
+}
+
+// Grayscale is src with every pixel replaced by its luminance, alpha kept.
+//
+// **Rec. 601 weights**, the ones a desaturate in any paint program uses, so a green and a red of the
+// same paint value do not come out as two different grays. Premultiplied in and out, which a
+// weighted sum of premultiplied channels already is.
+func Grayscale(src *image.RGBA) *image.RGBA {
+	b := src.Bounds()
+	out := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	for y := 0; y < b.Dy(); y++ {
+		for x := 0; x < b.Dx(); x++ {
+			c := src.RGBAAt(b.Min.X+x, b.Min.Y+y)
+			l := uint8((299*int(c.R) + 587*int(c.G) + 114*int(c.B)) / 1000)
+			out.SetRGBA(x, y, color.RGBA{R: l, G: l, B: l, A: c.A})
+		}
+	}
+	return out
+}
+
+var grayImages = map[markKey]*ebiten.Image{}
+
+// ArtMarkGrayImage is ArtMarkGray as a texture, for a screen to draw. Nil if there is no such art.
+func ArtMarkGrayImage(key string, w, h int) *ebiten.Image {
+	ck := markKey{key, w, h}
+	if img, ok := grayImages[ck]; ok {
+		return img
+	}
+	src := ArtMarkGray(key, w, h)
+	if src == nil {
+		grayImages[ck] = nil
+		return nil
+	}
+	img := ebiten.NewImageFromImage(src)
+	grayImages[ck] = img
+	return img
+}
+
 // downsample averages each factor x factor block down to one pixel.
 //
 // **Averaged, not sampled.** Nearest-neighbor at half size keeps every other pixel and

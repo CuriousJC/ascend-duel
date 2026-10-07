@@ -53,11 +53,11 @@ func TestTheCatalogLoads(t *testing.T) {
 		t.Fatal("the catalog is empty")
 	}
 	for _, a := range all {
-		if a.Key == "" || a.Name == "" || a.How == "" {
-			t.Errorf("%q is missing a key, a name or a how", a.Key)
+		if a.APIName == "" || a.DisplayName == "" || a.Description == "" {
+			t.Errorf("%q is missing an API name, a display name or a description", a.APIName)
 		}
 		if len(a.Said) == 0 {
-			t.Errorf("%q says nothing when it lands", a.Key)
+			t.Errorf("%q says nothing when it lands", a.APIName)
 		}
 	}
 }
@@ -109,9 +109,9 @@ func TestEveryShippedAchievementIsReachable(t *testing.T) {
 		if a.trigger.kind != data.TriggerTurn {
 			continue
 		}
-		if !reachable[a.Key] {
+		if !reachable[a.APIName] {
 			t.Errorf("%q is a turn achievement no turn in this test can satisfy; either the "+
-				"pattern is wrong or the deck can no longer build it", a.Key)
+				"pattern is wrong or the deck can no longer build it", a.APIName)
 		}
 	}
 }
@@ -268,12 +268,12 @@ func TestHandFormedMatchesOnTheRungItNamed(t *testing.T) {
 		if a.trigger.kind != data.TriggerMoment || a.trigger.moment != MomentHandFormed {
 			continue
 		}
-		if !contains(Loaded().ByMoment(HandFormed(a.trigger.value)), a.Key) {
-			t.Errorf("forming %s must earn %s", a.trigger.value, a.Key)
+		if !contains(Loaded().ByMoment(HandFormed(a.trigger.value)), a.APIName) {
+			t.Errorf("forming %s must earn %s", a.trigger.value, a.APIName)
 		}
 		for _, h := range combat.Hands() {
-			if h.Key != a.trigger.value && contains(Loaded().ByMoment(HandFormed(h.Key)), a.Key) {
-				t.Errorf("forming %s earned %s, which asks for %s", h.Key, a.Key, a.trigger.value)
+			if h.Key != a.trigger.value && contains(Loaded().ByMoment(HandFormed(h.Key)), a.APIName) {
+				t.Errorf("forming %s earned %s, which asks for %s", h.Key, a.APIName, a.trigger.value)
 			}
 		}
 	}
@@ -373,11 +373,11 @@ func TestProgressOnlyMeansSomethingForATally(t *testing.T) {
 		switch a.trigger.kind {
 		case data.TriggerCount:
 			if got == "" {
-				t.Errorf("%q is a tally and should show progress", a.Key)
+				t.Errorf("%q is a tally and should show progress", a.APIName)
 			}
 		default:
 			if got != "" {
-				t.Errorf("%q is not a tally and showed %q", a.Key, got)
+				t.Errorf("%q is not a tally and showed %q", a.APIName, got)
 			}
 		}
 	}

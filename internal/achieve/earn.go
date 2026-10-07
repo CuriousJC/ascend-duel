@@ -85,7 +85,7 @@ func (c *Catalog) ByMoment(m Moment) []string {
 				continue
 			}
 		}
-		out = append(out, a.Key)
+		out = append(out, a.APIName)
 	}
 	return out
 }
@@ -104,7 +104,7 @@ func (c *Catalog) ByCounts(counts map[string]int) []string {
 			continue
 		}
 		if counts[a.trigger.counter] >= a.trigger.n {
-			out = append(out, a.Key)
+			out = append(out, a.APIName)
 		}
 	}
 	return out
@@ -126,7 +126,7 @@ func (c *Catalog) ByTurn(turn []combat.Card) []string {
 		}
 		for _, p := range a.trigger.patterns {
 			if p.holds(turn) {
-				out = append(out, a.Key)
+				out = append(out, a.APIName)
 				break
 			}
 		}

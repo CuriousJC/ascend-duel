@@ -17,6 +17,7 @@
 //	go run ./tools/relicart -kind card     # the playing cards instead
 //	go run ./tools/relicart -kind upgrade  # the upgrade art an altered card wears over its face
 //	go run ./tools/relicart -kind deck     # the card backs, one per deck
+//	go run ./tools/relicart -kind achievement  # the achievement icons, square at Steam's 256
 //	go run ./tools/relicart -n                 # say what would happen and touch nothing
 //	go run ./tools/relicart -blocky            # quantize to the block grid on the way down
 //
@@ -50,6 +51,7 @@ import (
 
 	xdraw "golang.org/x/image/draw"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )
 
@@ -65,6 +67,19 @@ type catalog struct {
 	inbox   string
 	out     string
 	sources []source
+
+	// square, when set, is the side of a square picture this catalog is committed at instead of
+	// the card's own 200x280. **Only the achievement icons set it**: they are not a card at all but
+	// Steam's 256x256 icon, and the page draws them at Steam's 64.
+	square int
+}
+
+// size is what a picture in this catalog is reduced to.
+func (c catalog) size() (int, int) {
+	if c.square > 0 {
+		return c.square, c.square
+	}
+	return cards.RelicStyle.Width, cards.RelicStyle.Height
 }
 
 // source is one JSON file a catalog files art into, and what that file calls its key.
@@ -76,6 +91,18 @@ type catalog struct {
 type source struct {
 	json string
 	key  string
+
+	// art is the field the picture's stem is written into, and empty means `Art`. **Only the
+	// achievements differ**, whose field is `AchievedIcon` because the file wears Steamworks' names.
+	art string
+}
+
+// artField is the name of the field this file records a picture in.
+func (s source) artField() string {
+	if s.art == "" {
+		return "Art"
+	}
+	return s.art
 }
 
 var catalogs = map[string]catalog{
@@ -128,6 +155,12 @@ var catalogs = map[string]catalog{
 			{json: "data/goods.json", key: "GoodRecord"},
 		},
 	},
+	"achievement": {
+		inbox:   filepath.Join(".scratch", "to-process-achievement-art"),
+		out:     filepath.Join("assets", data.AchievementIconDir),
+		sources: []source{{json: "data/achievements.json", key: "APIName", art: "AchievedIcon"}},
+		square:  data.AchievementIconSize,
+	},
 }
 
 // kindList is the -kind flag's vocabulary, sorted, for the error a misspelling gets.
@@ -167,11 +200,11 @@ func main() {
 		*done = filepath.Join(".scratch", "processed-"+*kind+"s")
 	}
 
-	// **Every one of the three draws a full-bleed card at RelicStyle's size.** EssenceStyle is the
+	// **Every card catalog draws a full-bleed card at RelicStyle's size.** EssenceStyle is the
 	// same width and height — the two differ in the text band, not in the picture — so one target
 	// size is a fact about the card rather than a shortcut. TestEveryBleedingCardArtIsTheCardsOwnSize
-	// is what fails if that stops being true.
-	w, h := cards.RelicStyle.Width, cards.RelicStyle.Height
+	// is what fails if that stops being true. The achievement icons are the square exception.
+	w, h := cat.size()
 
 	records, err := recordIDs(cat)
 	if err != nil {
@@ -228,6 +261,9 @@ func main() {
 		log.Fatal(err)
 	}
 	left, err := undrawn(cat)
+	if *kind == "achievement" {
+		fmt.Println("the unachieved icons are derived: go run ./tools/achievementsheet writes both of each pair")
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -429,9 +465,9 @@ func setArt(records map[string]source, keys []string) error {
 			re := regexp.MustCompile(`("` + src.key + `": "` + regexp.QuoteMeta(key) + `",
 (?:[^
 ]*
-){0,4}?[ 	]*"Art": )"[^"]*"`)
+){0,4}?[ 	]*"` + src.artField() + `": )"[^"]*"`)
 			if !re.MatchString(s) {
-				return fmt.Errorf("%s: found no Art field on record %q", src.json, key)
+				return fmt.Errorf("%s: found no %s field on record %q", src.json, src.artField(), key)
 			}
 			s = re.ReplaceAllString(s, "${1}\""+key+"\"")
 		}
@@ -452,14 +488,18 @@ func undrawn(cat catalog) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		var file []struct {
-			Art string `json:"Art"`
-		}
+		var file []map[string]json.RawMessage
 		if err := json.Unmarshal(raw, &file); err != nil {
 			return 0, fmt.Errorf("%s: %w", src.json, err)
 		}
 		for _, r := range file {
-			if r.Art == "" {
+			var art string
+			if v, ok := r[src.artField()]; ok {
+				if err := json.Unmarshal(v, &art); err != nil {
+					return 0, fmt.Errorf("%s: an %s is not a string: %w", src.json, src.artField(), err)
+				}
+			}
+			if art == "" {
 				left++
 			}
 		}

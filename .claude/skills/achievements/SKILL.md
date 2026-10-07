@@ -14,7 +14,9 @@ after the run that earned them is gone.
 
 | Thing | File |
 |---|---|
-| The catalog | `data/achievements.json` |
+| The catalog — Steamworks' fields under Steamworks' names, plus `Draw`, `Said`, `Unlocks`, `Trigger` | `data/achievements.json` |
+| The icons — achieved only, 256 square; the unachieved is derived gray | `assets/achievement/`, `systems.ArtMarkGray`, `docs/art/achievement_art_prompt.MD` |
+| The review sheet and the Steam upload set | `go run ./tools/achievementsheet` |
 | The vocabulary and the validator — trigger kinds, clause modes, axes, moment and counter names | `internal/achieve` (`go doc ./internal/achieve` is the story) |
 | What a player has earned, on disk | `internal/profile` — `Achievements`, `Unlocks`, `Counters` |
 | **The one place progress is written** | `internal/screens/achieve.go` |
@@ -88,7 +90,9 @@ is kept off every shelf until the player's profile holds that key. See MECHANICS
 ## Adding an achievement
 
 1. Write the record in `data/achievements.json` against the vocabulary `internal/achieve` validates;
-   a misspelled trigger, moment or counter fails the launch, which is deliberate.
+   a misspelled trigger, moment or counter fails the launch, which is deliberate. Every record
+   carries `SetBy: "client"`, a `Hidden` and a `Draw` for its icon; `AchievedIcon` stays empty
+   until `tools/relicart -kind achievement` files one.
 2. If it needs a moment the code does not raise yet, add the constant and the `earnMoment` call —
    see above.
 3. `go test ./internal/achieve ./internal/screens` — the catalog walk and the progress gate.

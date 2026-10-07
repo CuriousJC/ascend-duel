@@ -1,6 +1,6 @@
 ---
 name: secondary
-description: How to work as the secondary copy of this repo - the second clone, on the long-lived secondary-work branch, working beside the primary copy. Load the moment the owner says you are the secondary, and before refreshing from main, checking for conflicts, or opening a PR from secondary-work. Covers the branch, the resync after a squash, the conflict check before a merge, and the parts of github-workflow that do not apply here.
+description: How to work as the secondary copy of this repo - the second clone, on the long-lived secondary-work branch, working beside the primary copy. Load the moment the owner says you are the secondary, and before refreshing from main, checking for conflicts, or opening a PR from secondary-work. Covers the branch, the start-of-session refresh that takes main wholesale, the conflict check before a merge, and the parts of github-workflow that do not apply here.
 ---
 
 # The secondary copy
@@ -44,23 +44,45 @@ off to the side, and `github-workflow`'s sweep leaves it alone for that reason.
 - **If `secondary-work` has gone** — deleted locally or on the remote — recreate it off
   `origin/main` rather than working on anything else.
 
-## Refreshing from main
+## Refreshing from main — main wins, wholesale
 
-Run this at the start of a session and again before opening a PR. Say it is happening; it is a
-merge onto the working branch.
+**The secondary is a side job taken while the primary is busy, disconnected from it.** So a
+session starts by making `secondary-work` *be* main, and then does the owner's task on top. Run it
+at the start of every session without asking, and say it happened. **Every conflict resolves to
+main's side**, and so does every non-conflicting hunk: the end state is a tree identical to
+`origin/main`. A conflict here is not a decision to bring to the owner.
+
+**The one thing to check first is that nothing on this branch is unlanded**, because taking main
+wholesale throws it away. It is unlanded only if the working tree is dirty, or there is an open PR
+from `secondary-work`, or the branch differs from the squash of its last merged PR:
 
 ```powershell
-git status --short                              # must be clean - stop and ask if not
+git status --short                              # dirty -> stop and say what is there
+gh pr list --head secondary-work --state open   # open PR -> stop; its work has not landed
+$sq = gh pr list --head secondary-work --state merged --limit 1 --json mergeCommit --jq '.[0].mergeCommit.oid'
 git fetch origin --prune
-git log --oneline HEAD..origin/main             # what landed since the last refresh
-git merge-tree --write-tree --name-only origin/main HEAD   # exit 0 = clean, 1 = conflicts listed
-git merge origin/main                           # only once the preview is understood
+git diff $sq HEAD --stat                        # must be empty; if not, stop and say what differs
 ```
 
-**After one of our own PRs squashes, this is the resync.** The branch reads as N ahead and one
-behind with identical content; merging `origin/main` folds the squash in cleanly, because both
-sides made the same change. Prove it first: `git diff origin/main HEAD --stat` is **empty**
-before the merge. If it is not, something on this branch did not land — stop and say what.
+Then take main. A plain merge with `-X theirs` is **not** enough — it keeps this side's
+non-conflicting hunks, which re-adds anything main deleted since the stale merge base. Reset the
+merge's tree to main's outright instead:
+
+```powershell
+git log --oneline HEAD..origin/main             # what landed since the last refresh, for the summary
+git merge --no-commit -X theirs origin/main
+git read-tree -u --reset origin/main            # index and working tree become exactly main
+git commit --no-edit
+git diff origin/main HEAD --stat                # must be empty
+```
+
+**It is a merge, not a reset**, because `secondary-work` is on the remote: a `reset --hard` to main
+would leave it behind its own remote and the next push would have to be forced. The merge commit
+carries main's tree and keeps the branch fast-forwardable.
+
+Run it again before opening a PR, and there the rule changes: the branch now *has* unlanded work,
+so it is an ordinary merge — preview with `git merge-tree --write-tree --name-only origin/main
+HEAD`, and read every conflict on both sides.
 
 **Merge, never rebase.** The branch is on the remote and a PR has been opened from it; rewriting
 it forces a push for nothing.

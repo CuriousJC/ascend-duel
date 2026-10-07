@@ -7,10 +7,10 @@ package data
 // unlock, which is a different key on a different list. See `internal/profile`, which holds both
 // and keeps them apart.
 //
-// **A record is a name, two pieces of prose, and a trigger.** The prose is deliberately two things
-// rather than one: `How` is what you must do and is legible while the row is still locked, and
-// `Said` is what the game says once it has happened. A single line would have to be both, and the
-// two want opposite tenses.
+// **A record is Steam's achievement fields, one line of our own prose, and a trigger.** The prose is
+// deliberately two things rather than one: `Description` is what you must do and is legible while
+// the row is still locked, and `Said` is what the game says once it has happened. A single line
+// would have to be both, and the two want opposite tenses.
 //
 // **The trigger is the whole design.** Eleven achievements that each needed their own line of Go
 // would be eleven places to forget, so the trigger is a small closed grammar with exactly three
@@ -123,19 +123,69 @@ type TriggerData struct {
 	N int `json:"N,omitempty"`
 }
 
+// SetByClient is the one `SetBy` the game writes. **Steam's three values are Client, GS and
+// Official GS**, and the two server ones mean a game server vouches for the unlock. Every
+// achievement here is earned on the player's own machine, so a record naming a server would be a
+// promise nothing keeps — the vocabulary is closed at this one word, and internal/achieve refuses
+// any other.
+const SetByClient = "client"
+
+// AchievementIconDir is where the achieved icons are committed, and AchievementIconPrefix the
+// prefix their asset keys carry — `assets/achievement/first-steps.png` is `achievement-first-steps`.
+// **Prefixed** for the upgrade art's reason: the image map is flat, and an achievement named
+// `prism` or `arsenal` is a name a relic could take.
+const (
+	AchievementIconDir    = "achievement"
+	AchievementIconPrefix = "achievement-"
+
+	// DefaultAchievementIcon is the stem an achievement with no icon of its own draws.
+	DefaultAchievementIcon = "default"
+
+	// AchievementIconSize is the side of the square every icon is committed at — **Steam's own
+	// upload size**, which it shows reduced to 64. The game's page draws it at that 64 too, so the
+	// icon a player sees in the game is the one Steam will show.
+	AchievementIconSize = 256
+)
+
 // AchievementData is one achievement as written in the file.
+//
+// **The first five fields are Steamworks' own achievement fields, under Steamworks' own names** —
+// API Name, Display Name, Description, Set By, Hidden — and the icon pair is the sixth and seventh.
+// The file is the source the Steamworks admin page is filled in from, so a field that means the same
+// thing as one there is called what it is called there.
 type AchievementData struct {
-	// AchievementRecord is the key, and **it is the disk contract**: it is written into
-	// `profile.json` and is the thing that must never be renamed once a build has shipped. Every
-	// other field here can be rewritten any afternoon. Kebab-case, like a relic's and an essence's.
-	AchievementRecord string `json:"AchievementRecord"`
+	// APIName is the key, and **it is the disk contract**: it is written into `profile.json` and is
+	// the thing that must never be renamed once a build has shipped — on Steam as well, where it is
+	// the string the API unlocks by. Every other field here can be rewritten any afternoon.
+	// Kebab-case, like a relic's and an essence's.
+	APIName string `json:"APIName"`
 
-	// Name is what the page calls it, in caps, like the rows already on that screen.
-	Name string `json:"Name"`
+	// DisplayName is what the page and the toast call it, in caps, like the rows already on that
+	// screen — and the name Steam's pop-up and the Community page show.
+	DisplayName string `json:"DisplayName"`
 
-	// How is what you must do, in the imperative. **It is legible while the row is still locked**,
-	// which is the whole reason the achievements page lists what has not been earned.
-	How string `json:"How"`
+	// Description is what you must do, in the imperative. **It is legible while the row is still
+	// locked**, which is the whole reason the achievements page lists what has not been earned.
+	Description string `json:"Description"`
+
+	// SetBy is who may unlock it, and is always SetByClient. Written on every record anyway, because
+	// it is a Steamworks field and this file is what that form is filled in from.
+	SetBy string `json:"SetBy"`
+
+	// Hidden keeps a locked achievement's name, description and icon off the page until it is
+	// earned — Steam's own meaning, where a hidden achievement does not appear on the Community page
+	// at all until it is achieved.
+	Hidden bool `json:"Hidden"`
+
+	// AchievedIcon is the icon's stem under assets/achievement/, and **empty draws the default**.
+	// It is the Steamworks "Achieved Icon"; **there is no UnachievedIcon field**, because the
+	// unachieved icon is this one in grayscale, derived rather than drawn — a second picture per
+	// record would be a second thing to keep in step and a generator's chance to draw it differently.
+	AchievedIcon string `json:"AchievedIcon"`
+
+	// Draw is the subject the icon is generated from, pasted after
+	// docs/art/achievement_art_prompt.MD. **Ignored by the game**, like every catalog's Draw.
+	Draw string `json:"Draw"`
 
 	// Said is what the game says once it lands, and **every line is shown at once** *(owner's call,
 	// 2026-09-06)*. Picking one of several would be a roll, and a roll owes its own salted stream
@@ -172,6 +222,14 @@ func LoadAchievements() []AchievementData {
 	return mustBeUniquelyKeyed(
 		parse[AchievementData](achievementsJSON, "achievements.json"),
 		"achievements.json",
-		func(a AchievementData) string { return a.AchievementRecord },
+		func(a AchievementData) string { return a.APIName },
 	)
+}
+
+// AchievedIconKey is the asset key the achieved icon draws from: the record's own, or the default.
+func (a AchievementData) AchievedIconKey() string {
+	if a.AchievedIcon == "" {
+		return AchievementIconPrefix + DefaultAchievementIcon
+	}
+	return AchievementIconPrefix + a.AchievedIcon
 }

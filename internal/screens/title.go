@@ -211,6 +211,7 @@ func (s *TitleScene) startNewRun(gs *state.GlobalState) {
 		func() int64 { return RollSeed(gs) },
 		inProgress,
 		func(seed int64, chosen bool) { NewRunOn(gs, seed, chosen) },
+		func() { NewRunTaught(gs) },
 	)
 }
 

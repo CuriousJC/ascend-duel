@@ -61,9 +61,9 @@ func newJourney(motifs map[string]data.MotifData, shape data.JourneyData, runSee
 // been handed a session that was never started, which is a wiring mistake rather than a state the
 // game can reach.
 func (s *Session) Enemy() string {
-	// **A taught run's first room is the one the lesson was written against** *(2026-08-25)*. Bob
-	// promises a fight ended in one blow, which is a fact about the taught hand's damage against one
-	// creature's HP — so the opponent is part of the script, exactly as the seed is. It applies to
+	// **A taught run's first room is the one the lesson was written against.** The lesson promises a
+	// wound, a surge and a kill, which are facts about the taught hands against one creature — so the
+	// opponent is part of the script, exactly as the seed is. It applies to
 	// room zero only: the lesson is over long before room one, and a tutorial that rewrote the whole
 	// journey would be teaching a journey nobody else plays.
 	//

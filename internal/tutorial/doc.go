@@ -58,8 +58,8 @@
 // # The screen's half of it
 //
 //   - **A step waiting for NEXT holds the round where it is.** `Run.HoldsRound` is the predicate and
-//     `advancePlayback` is the one reader. It exists for the shield step, which lands *inside* a playing
-//     round: a round has three acts (the duelist swings, the shields break what they can reach, the
+//     `advancePlayback` is the one reader. It is for a step that lands *inside* a playing round, on
+//     `shield-broke` — no step in the shipped script does — since a round has three acts (the duelist swings, the shields break what they can reach, the
 //     creature swings with what is left) and the middle one needs a beat of its own. **Only a NEXT step
 //     holds**, which is what stops a step waiting on an outcome from stopping the thing it is waiting
 //     for; `TestOnlyANextStepHoldsTheRound` is the tripwire. It changes pacing and cannot change an
@@ -67,7 +67,7 @@
 //   - **A break lives inside its own round.** `seatEnemyCards` drops the marks, because the opponent's
 //     row is re-planned the moment a round ends, so a mark left standing cracks whichever card the
 //     planner has just put in that seat. Anything wanting to point at a break has to do it during the
-//     round, which is why the step above holds one.
+//     round, which is why a step on `shield-broke` holds one.
 //   - **An anchor names what the step is *asking for*, not what it is about.** `matching-cards` and
 //     `matching-cards-left` are the same set minus what is already queued, and they are two because the
 //     steps using them say different things: "take the other three" asks, and "one of those four is a
@@ -86,11 +86,12 @@
 //     `state.InputFocus` are both lists because `matching-cards` and `shattered-cards` point at cards
 //     that need not be adjacent, and the bounding box round them is the set *plus whatever is between
 //     two of them*. **Cards sharing a *concept* land together whichever sort key leads; cards sharing an
-//     *element* do not** — and the lesson matches on element, so under the default cost-led sort the
-//     taught four can sit either side of a card worth 2 AP the taught set needs. Lit and clickable, it
-//     can be queued, and then the fourth taught card cannot be paid for.
+//     *element* do not**, so a lesson matching on element can have a card it did not name sitting
+//     between two it did. Lit and clickable, that card can be queued.
 //     `TestTheMatchingCardsGateLightsOnlyTheTaughtCards` walks every seat of the real dealt hand through
-//     `InputAllowed`. The spotlight scrims the gaps between holes, so lit and clickable stay one area.
+//     `InputAllowed`. **The spotlight shades everything but the holes, on both axes** —
+//     `screens.scrimAround` — so an anchor naming things in different corners, like `fight-frame`,
+//     lights those things and nothing between them.
 //   - **The tutorial runs on the real deck, and `matching-cards` is what pays for that.** A real hand of
 //     eight against a five-card cap and a six-point budget leaves cards behind by the rules of the game,
 //     so the lesson cannot wait on an emptied hand. The anchor is the largest matching set in the hand
@@ -100,7 +101,7 @@
 //     square and the condition read.
 //   - **Which axis a set is counted on is authored, not assumed.** The script's `Match` is `concept`,
 //     `form` or `element`, and a script pointing at a matching set without naming one is **refused at
-//     load**. The lesson matches on `element`.
+//     load**. The lesson matches on `concept`.
 //   - **The ledger step is the one anchor naming a control the frame owns.** `state.LedgerOpens` is a
 //     tally bumped by `internal/game` when the panel opens, published as a fact and read by
 //     `ledger-opened` against a baseline — the same trick `round-done` uses, because the account is
@@ -122,48 +123,34 @@
 // pointing at the shop shelf while waiting for the player to press *Leave* reads as a lock-up. Read
 // each new step against its own condition.
 //
-// # The taught run, and the tests that hold its promise
+// # The taught run, and the test that holds its promise
 //
 // The script carries the run it needs — `Seed`, `Enemy` and `Match` — because a promise and the thing
-// that makes it true belong in one file.
+// that makes it true belong in one file. **The realm's element is not in the script**: it is the
+// seed's, so the seed is chosen for a realm one in the element the steps name.
 //
-// **The taught fight is two rounds, and the shield is why.** Run code `0019QS` deals `Jab Brace Thrust
-// Bash`, all arcane, for exactly 6 AP — an Elemental Four of a Kind that wounds the GiantBat without
-// killing it. **One of the four is a Brace**, which teaches what a hand of pure attacks cannot: a
-// defense carries an element and joins a hand like anything else, bringing no damage with it. Because
-// it brings none, the creature lives, takes its turn — Swoop, Drain, Nip — and **the Brace's one shield
-// eats the Drain whole while the other two land**. A creature that dies to the player's turn never
-// swings, so a lesson about shields cannot be taught in a round that kills. The player then reads the
-// ledger and finishes it. **The Drain is the bat's one big card**, which is what the heaviest-hit rule
-// makes visible, and the step that explains it has a broken card on the table to point at. The other
-// four cards dealt are an arcane, an earth, a fire and an ice, so there is no competing set, and the
-// first card dealt is one of the four — which the opening step needs, since it queues `first-card`.
+// **The taught fight is three rounds, one lesson each.**
 //
-// **Three tests hold the promise, and they check each other.**
+//   - **Round one is a hand.** The opening deal holds exactly three Slices, none in the creature's
+//     element, and no other set of three — a Card Three of a Kind, which is the set `matching-cards`
+//     lights on the `concept` axis. They wound the creature without killing it.
+//   - **Round two is a surge and a pair.** The opening deal also holds the Block in the creature's
+//     element, and the step names two more cards beside it — `named-cards`, counted by
+//     `cards-queued` — to make a Pair. The creature throws exactly two attacks, and both shields eat
+//     a hit of their own element, banking two action points. Round two's hand also holds an attack in
+//     the creature's element, which is what `element-attack` points at to say a hit of it fizzles.
+//   - **Round three is the kill**, which some play in that hand makes on the surged budget. **Whether
+//     it needs the surge is reported, not required** *(owner's call)*.
 //
-//   - `TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` proves the
-//     rules resolve that turn to a wound. **It is two-sided**, failing if the hits start killing, if
-//     they leave more than half the creature standing, or if the taught set stops holding exactly one
-//     shield. It is the one to keep: four files tuned for their own reasons can break the promise
-//     silently in either direction — the taught cards' `Amount`, the ladder's multiplier, the duelist's
-//     `DMG`, the bat's `HP`.
-//   - `TestTheTutorialsSeedDealsTheHandTheLessonDescribes` in `internal/screens` proves the seed deals
-//     it — the set's size, that it is the only one that size, that the first card belongs to it, that it
-//     is affordable, that it does *not* kill, and that its four cards are the four the combat test writes
-//     out by hand.
-//   - `TestTheTutorialsShieldEatsTheCreaturesHeaviestBlow` in `internal/screens` plans the bat's turn
-//     exactly as the screen does, resolves the whole round, and checks that one hit is blocked, that it
-//     is the heaviest, that the heaviest is the *only* card that size, and that the step naming the card
-//     names the right one.
+// **The creature is an inner-room record of the realm's own motif**, standing in the first room: an
+// outer-room creature has too little life to survive the first two rounds.
 //
-// **If any goes red the answer is a new seed, not a weaker check.** `TestFindATutorialSeed`, skipped
-// unless `SEEDSEARCH=1` is set, is the search: it is a test rather than a tool because the shop
-// internals it deals from are unexported, and `tools/seeds` tallies concepts where the tutorial matches
-// on element. **It proposes and asserts nothing** — take a candidate, pin it, and let the tests above
-// confirm it. **Prefer a marked candidate**, which keeps the cards the steps name; a seed dealing a
-// different four means re-authoring the lesson. **Expect to re-run it whenever `relics.json` gains,
-// loses or renames a record**: the shelf is a weighted draw over the catalog's sorted keys, so any of
-// those reshuffles what the taught seed lands on, and the shop step is the one part of the lesson a
-// catalog edit can break silently. Pinning the taught shop is the fix to argue for if that keeps
-// happening.
+// `TestTheTutorialsFightPlaysAsTaught` in `internal/screens` plays all three rounds headlessly — the
+// screen's own deal and refill, the creature's planner, `ResolveRound`, round two as the script names
+// it — and fails on any of the above.
+// **If it goes red the answer is a new seed, not a weaker check.** `TestFindATaughtFight`, skipped unless
+// `SEEDSEARCH=1` is set, is the search: it walks run codes for a realm one in the element, plays the
+// fight against every creature of that realm's motif with a picture in it — round two as the Block
+// alone, since the cards named beside it are a fact about one deal — and prints the ones that hold. It proposes and asserts nothing. **Re-run it after touching the player's deck, the hand ladder,
+// a creature's deck or stats, or the growth curve** — every one of them moves the fight.
 package tutorial

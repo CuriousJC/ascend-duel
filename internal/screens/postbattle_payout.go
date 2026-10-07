@@ -3,7 +3,7 @@ package screens
 // **What the reward screen says, and where the essences come in from.**
 //
 // The sentences are here rather than in prose.go because prose.go is the vocabulary a *log* line
-// draws on — a verb for an attack, a name for a status — and this is a fixed script that happens
+// draws on — a verb for an attack, a phrase for a card — and this is a fixed script that happens
 // once a fight. What the two have in common is the rule: **the words are presentation over figures
 // something else already decided**, and nothing in this file computes a payout. It reads
 // `session.Spoils`, which `WonFight` froze.

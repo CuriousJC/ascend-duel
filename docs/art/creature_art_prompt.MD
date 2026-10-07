@@ -1,9 +1,8 @@
 # Creature art prompt
 
 **One image per record per element.** A creature's card is its picture, edge to edge, so what is
-being made is a portrait rather than an icon. The bottom 80 pixels carry the creature's status
-badges, its damage figure and its health bar, and most of that strip is covered by an opaque dark
-band — so the portrait is composed against the 200 x 200 above it.
+being made is a portrait rather than an icon. The bottom 80 pixels carry the creature's damage
+figure and its health bar, and most of that strip is covered by an opaque dark band — so the portrait is composed against the 200 x 200 above it.
 
 ## A brief is four layers
 

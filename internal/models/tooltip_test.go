@@ -83,7 +83,7 @@ func TestMovingToAnotherCardRestartsTheDwell(t *testing.T) {
 }
 
 func TestTheSameCardSayingSomethingNewKeepsItsDwell(t *testing.T) {
-	// A card whose figures change while the cursor rests on it — a relic bought, a status expiring —
+	// A card whose figures change while the cursor rests on it — a relic bought, a shield eaten —
 	// is still the card being looked at, so the panel must not flicker off and back on.
 	tip := &Tooltip{DwellTicks: 1}
 

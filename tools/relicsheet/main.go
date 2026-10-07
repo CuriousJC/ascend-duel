@@ -336,8 +336,6 @@ func condition(in *data.RelicIfData) string {
 
 func effect(e data.RelicEffectData) string {
 	switch {
-	case e.Status != "":
-		return e.Do + " " + e.Status
 	case e.Element != "":
 		return e.Do + " " + e.Element
 	case e.Amount != 0:

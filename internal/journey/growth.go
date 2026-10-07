@@ -45,8 +45,8 @@ const BasisPoints = 10_000
 // from a seed — so the same rule that keeps `math/rand` out of the game keeps `math.Pow` out of
 // this.
 //
-// **Truncating, like every other percentage in the game** — `blunt`, the defend reductions and
-// `scaleDamage` all round toward zero, and a curve that rounded the other way would be the one
+// **Truncating, like every other percentage in the game** — `scaleDamage` and every relic
+// percentage round toward zero, and a curve that rounded the other way would be the one
 // number a player could not work out from the others.
 //
 // **Nothing caps the fight.** The journey has a configured height and the journey wraps past it; the

@@ -12,11 +12,6 @@ const (
 	// band. Per run: rolled once per launch, so a defeat and a retry walk the same order.
 	EnemySelect Stream = iota
 
-	// CombatRoll is the rules' own stream — the lightning shock, and nothing else. Per run,
-	// but it advances *per attack phase*, so a change early in a duel reshuffles every roll
-	// after it.
-	CombatRoll
-
 	// PlayerDeck is the player's card shuffle. Per fight.
 	PlayerDeck
 
@@ -165,7 +160,6 @@ type stream struct {
 
 var streams = [...]stream{
 	EnemySelect:  {name: "enemy-select", salt: 0x5EED_E9E3},
-	CombatRoll:   {name: "combat-roll", salt: 0x5EED_5C0F},
 	PlayerDeck:   {name: "player-deck", salt: 0x5EED_DEC4, perFight: true},
 	EnemyDeck:    {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
 	RewardHand:   {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},

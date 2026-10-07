@@ -4,7 +4,7 @@ package ui
 //
 // `logRows` is the walk — one line per thing that happened, in the order the resolver produced
 // them — and everything under it is the vocabulary that walk draws on: the verb an attack
-// takes, what a card does said in words, what a status is called while it is ticking.
+// takes and what a card does said in words.
 //
 // **It lives here and not in internal/combat** on purpose: the rules package names actions, it
 // does not describe them. Everything here is presentation over a log that is already finished,
@@ -22,7 +22,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -198,7 +197,7 @@ func multiplierText(amount int) string {
 //
 // **The cut is `cards.SplitSpans`**, the same one the card face uses, so where a word begins and ends
 // is answered once — see internal/cards/render.go on why a second implementation would be two sets
-// of answers to where BURN ends inside BURNING.
+// of answers to where one word ends inside another.
 func ElementSpans(clause string) []session.LedgerSpan {
 	found := cards.ElementSpans(clause)
 	if len(found) == 0 {
@@ -219,8 +218,8 @@ func ElementSpans(clause string) []session.LedgerSpan {
 // that wrote it happened to use, and the account would then disagree with the game it is an account
 // of the first time the palette moved.
 //
-// Built once, off the same `statuses.json` the vocabulary itself is built from, so a status arriving
-// later cannot be colored on a card and plain in the account.
+// Built once, off the same five elements the vocabulary itself is built from, so a word cannot be
+// colored on a card and plain in the account.
 var elementInkNames = buildElementInkNames()
 
 func buildElementInkNames() map[string]string {
@@ -228,60 +227,7 @@ func buildElementInkNames() map[string]string {
 	for _, e := range []combat.Element{combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Arcane} {
 		out[e.String()] = e.String()
 	}
-	for _, st := range data.LoadStatuses() {
-		if e, ok := combat.ParseElement(st.Element); ok {
-			out[strings.ToLower(st.Name)] = e.String()
-			out[strings.ToLower(st.Verb)] = e.String()
-		}
-	}
 	return out
-}
-
-// StatusPhraseByKey is what a landed status says it did, as an outcome attached to the attacker's line.
-// Each names the *effect* rather than the status, because "chills them" says what happens next and
-// "applies chilled" says only that a rule fired.
-//
-// **Keyed by record rather than by element** *(2026-08-17)*, since a status is no longer a color:
-// two relics can put two different statuses on the same fire card, and one phrase per color could
-// not tell them apart. The fallback is what a status with no sentence of its own narrates as — its
-// own name, which is at least true — so authoring a status in the file does not need a Go change to
-// read properly.
-// **It is keyed by the status's key rather than by its ordinal**, because a ledger record holds
-// the key: a record outlives the build that wrote it, and a StatusID is an index into an array. A
-// key this build no longer has falls back to the key itself, which is honest where a blank is a
-// line the player would read as a bug.
-func StatusPhraseByKey(key string) string {
-	switch key {
-	case "burning":
-		return "sets them burning"
-	case "chilled":
-		return "chills them"
-	case "shocked":
-		return "shocks them"
-	case "weighted":
-		return "weighs them down"
-	}
-	return "leaves them " + lower(statusName(key))
-}
-
-// TickVerbByKey is how a damage-over-time status reads when it bites at the end of a round: "Goblin burns
-// for 2". A status with no verb of its own falls back to its name, which is true rather than
-// graceful — and is what stops a second such status narrating as a burn.
-func TickVerbByKey(key string) string {
-	if key == "burning" {
-		return "burns for"
-	}
-	return "takes " + lower(statusName(key)) + " damage:"
-}
-
-// statusName is what a status is called, from its key, falling back to the key itself for one this
-// build no longer carries. **A key is named rather than hidden**, for relicName's reason: a line in
-// a saved account has to read as something.
-func statusName(key string) string {
-	if id, ok := combat.StatusByKey(key); ok {
-		return combat.StatusOf(id).Name
-	}
-	return key
 }
 
 // VerbFor is the verb a category is spoken with.
@@ -336,7 +282,7 @@ const PlayerRecord = "Fighter1"
 //
 // **A hand carries its whole name** *(2026-08-17)*. The name used to be assembled here from two
 // parts — the element makeup in front of the hand, "Duo Bash Flurry" — and both of those axes
-// are gone: color buys statuses rather than a multiplier, and a hand is named for its shape
+// are gone: color buys no multiplier, and a hand is named for its shape
 // rather than for the card that formed it. A blow that formed no hand at all is named only as an
 // attack; the pane does not announce those, but the trace does.
 //

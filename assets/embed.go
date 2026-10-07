@@ -18,7 +18,7 @@ import (
 )
 
 // Files are grouped into directories by what they are for — `game/`, `motifs/`, `relic/`,
-// `effect/`, `upgrade/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
+// `upgrade/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
 // directory rename is a one-line edit per asset here and nothing anywhere else.
 //
 // **The map keys did not change with the move.** They are the lookup names used across the
@@ -334,25 +334,6 @@ func ProseFile(name string) ([]byte, error) {
 	return proseArt.ReadFile("prose/" + name)
 }
 
-//go:embed effect/fire-effect.png
-var fireeffect_png []byte
-
-//go:embed effect/frozen-effect.png
-var frozeneffect_png []byte
-
-//go:embed effect/thunder-effect.png
-var thundereffect_png []byte
-
-//go:embed effect/earth-effect.png
-var eartheffect_png []byte
-
-// The badge an element with no artwork of its own falls back to, so a status always shows
-// *something* rather than nothing — a status that is on and invisible is worse than one drawn
-// as a shape you have not learned yet.
-//
-//go:embed effect/default-effect.png
-var defaulteffect_png []byte
-
 // MUSIC
 //
 // Scores are Standard MIDI Files, not recorded audio: internal/music synthesizes them
@@ -380,11 +361,6 @@ func LoadAssets() map[string]*ebiten.Image {
 	for key, raw := range buttons {
 		assets[key] = loadImage(raw)
 	}
-	assets["fireeffect_png"] = loadImage(fireeffect_png)
-	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
-	assets["thundereffect_png"] = loadImage(thundereffect_png)
-	assets["eartheffect_png"] = loadImage(eartheffect_png)
-	assets["defaulteffect_png"] = loadImage(defaulteffect_png)
 	// The enemy portraits are deliberately absent. They are drawn *into* a card by
 	// internal/cards, which has no graphics context, so they are handed out as bytes by
 	// LoadImageData instead — and decoding 96 of them here at startup would cost about
@@ -453,14 +429,6 @@ func LoadImageData() map[string][]byte {
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.
 	images["guide_png"] = guide_png
-
-	// The status badges, for the same reason as the relic art: they are drawn *into* the enemy
-	// card by internal/cards, which has no graphics context.
-	images["fireeffect_png"] = fireeffect_png
-	images["frozeneffect_png"] = frozeneffect_png
-	images["thundereffect_png"] = thundereffect_png
-	images["eartheffect_png"] = eartheffect_png
-	images["defaulteffect_png"] = defaulteffect_png
 
 	// The glyph art. internal/systems takes the bytes rather than an *ebiten.Image for the
 	// same reason the relic art does: internal/cards draws into a plain Go image so the contact

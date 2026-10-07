@@ -40,11 +40,6 @@
 //
 //   - element.go — the five colors plus Basic, which is the absence of one rather than a sixth.
 //
-//   - status.go — a status is a record in statuses.json rather than an element: a key, a name, a
-//     badge, one of four closed effect kinds, an amount and a duration. They share one lifecycle
-//     and nothing stacks; a second hit resets the clock. A status only happens if a worn relic says
-//     so, which is what left the elemental relics something to be.
-//
 //   - duelist.go — who is fighting, and what a round spends: action points, and the shields a
 //     defend card raised. A Duelist is a value; every rule takes one and returns a new one.
 //
@@ -67,8 +62,7 @@
 //     goes to the narrowest axis. The multiplier multiplies the cards; there is no third term.
 //     Adding a rung is one entry in data/hands.json.
 //
-//   - relic.go — the relic grammar, with registration refusing a verb used at the wrong moment or
-//     a status no file holds. Worn order is a rule, because effects compound left to right. An
+//   - relic.go — the relic grammar, with registration refusing a verb used at the wrong moment. Worn order is a rule, because effects compound left to right. An
 //     enemy wears no relics, so an enemy's colors are inert by construction.
 //
 //     **The three vocabularies are deliberately not counted here.** They grow by authoring —

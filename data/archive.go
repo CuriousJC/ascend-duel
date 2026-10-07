@@ -35,3 +35,26 @@ func ParseRelics(raw []byte, file string) (map[string]RelicData, []string) {
 	key := func(r RelicData) string { return r.RelicRecord }
 	return keyed(raw, file, key), fileOrder(raw, file, key)
 }
+
+// RetiredRelicVerbs are effect verbs the grammar no longer has, which archived records may still be
+// written in.
+//
+// **An archived record is held to the live grammar unless it is built on one of these.** Such a
+// record is kept exactly as it stands: there is no current word to bring it up to, because the
+// mechanic it drives is not in the game. Restoring one means restoring its mechanic first, and a
+// verb comes off this list the day it comes back into `combat.RelicVerbs`.
+var RetiredRelicVerbs = []string{"apply-status"}
+
+// UsesRetiredVerb reports whether any rule of a relic is written in a retired verb.
+func (r RelicData) UsesRetiredVerb() bool {
+	for _, rule := range r.Rules {
+		for _, e := range rule.Then {
+			for _, v := range RetiredRelicVerbs {
+				if e.Do == v {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}

@@ -85,24 +85,6 @@ func TestAHealOnFullLifeIsSilent(t *testing.T) {
 	}
 }
 
-func TestAChilledCardHealsNothing(t *testing.T) {
-	// **A card a chill ate was never played**, which is the whole reason riders fire after the
-	// chill and before the blow. Getting this backwards would make a rider on the front card of a
-	// turn immune to the one thing that can delete it.
-	a := duelist(10, 3, 100)
-	a.CurrentLife = 50
-	a.Statuses[statusOf(Ice)] = Status{Amount: 1, Rounds: 2}
-
-	events, after, _ := resolve(a, duelist(0, 0, 100), []Card{ridden(Bash, 10)}, nil, 1)
-
-	if got := healedBy(events, SideA); got != 0 {
-		t.Errorf("a chilled card healed %d", got)
-	}
-	if after.CurrentLife != 50 {
-		t.Errorf("life moved to %d on a turn nothing was played in", after.CurrentLife)
-	}
-}
-
 func TestAnUnriddenCardIsTheZeroValue(t *testing.T) {
 	// Nothing may *require* a rider, and the common case has to stay the plain literal every test
 	// in this package writes.

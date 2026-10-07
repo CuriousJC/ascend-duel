@@ -455,8 +455,7 @@ func labels(list []string) []string {
 //
 // **Full life rather than a sample wound**, because the figure a reviewer is reading is the
 // record's HP and a bar drawn at some fraction of it would be inviting the question of which
-// fraction. It carries no status badges for the same reason — a status is something a fight puts
-// on a combatant, and nothing in a catalog has been in one.
+// fraction.
 func opponentSpec(e Entry, art image.Image) cards.Spec {
 	return cards.Spec{
 		Name:    e.Name,

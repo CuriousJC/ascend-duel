@@ -9,13 +9,14 @@ Runs will eventually be **replayable from a seed**: the same journey, the same e
 rolls, so a player can retry a run and make different choices. Nothing replays yet, but every roll
 written now either preserves that property or quietly destroys it, and the second kind is invisible until the day someone tries to replay something.
 
-**Combat is stochastic.** Lightning rolls. That is exactly the case these rules exist to survive, so follow them rather than reading the first roll as permission
-for the second.
+**Combat is stochastic.** A gold or silver card rolls when it is played. That is exactly the case
+these rules exist to survive, so follow them rather than reading the first roll as permission for
+the second.
 
-**`internal/combat` takes two sources**, not one: `combat.Sources` is a struct with a `Roll` for
-the shock and a `Luck` for a gold or silver card's gamble. Each roll in the rules is its **own**
-injected parameter, never the lightning source — which is why `ResolveRound`'s last
-argument is a struct rather than a `*rand.Rand`. The zero value rolls nothing.
+**`internal/combat` takes its sources as a struct**: `combat.Sources`, with a `Luck` for a gold or
+silver card's gamble. Each roll in the rules is its **own** injected field, never a share of
+another's — which is why `ResolveRound`'s last argument is a struct rather than a `*rand.Rand`. The
+zero value rolls nothing.
 
 ## The three rules that are never bent
 
@@ -95,7 +96,6 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | Stream | Scope | Used by | Sharing it would reroll |
 |---|---|---|---|
 | `seeds.EnemySelect` | run | `session.newJourney` → `journey.New`: every realm's offers, both realms behind every portal, and the creature in every room | the whole journey, on any change to loot or offers |
-| `seeds.CombatRoll` | run | `CombatScene.combatRNG`, injected into `ResolveRound` | every shock in the run, on any change to draw |
 | `seeds.PlayerDeck` | fight | `CombatScene.rng` | every cataloged hand in `internal/screens/seeds.go` |
 | `seeds.EnemyDeck` | fight | `decks.EnemyPile` | the player's opening hand, per the entry below |
 | `seeds.RewardHand` | fight | `dealOffer` (`internal/screens/postbattle.go`) | which cards a win offers you to alter |
@@ -108,7 +108,7 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.PackOffer` | fight | `ShopScene.packRNG` (`internal/screens/shop_packs.go`) | which two of the three packs a visit puts up, on any change to the relic shelf |
 | `seeds.ScrollStock` | fight | `dealScrolls` (`internal/screens/shop_goods.go`) | which cantrips a bundle of scrolls holds, on any change to the rune catalog |
 | `seeds.TonicOrder` | run | `newTonicOrder` (`internal/session/tonic.go`): one shuffle of the tonic catalog's sorted keys, walked a realm at a time | which tonic every realm offers, on any change to the relic shelf |
-| `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to the shock roll |
+| `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to either shuffle |
 | Loot offers | — | **not built** | — |
 
 **`VialStock` is the sharpest case in the table**: it draws essences from the same
@@ -171,7 +171,7 @@ off by default**, because a pinned game is not the game.
 
 | Pin | Default | Fixes |
 |---|---|---|
-| `fixedRunSeed` (`main.go`) | `""` — rolled from the clock | the whole run: enemies, shocks, both shuffles |
+| `fixedRunSeed` (`main.go`) | `""` — rolled from the clock | the whole run: enemies, gambles, both shuffles |
 | `deckSeedName` / `deckSeed` (`combat_deck.go`) | `""` — unpinned | the player's hand *and* the opponent's, together |
 | `seeds.EnemyDeckPin` | only while `deckSeed` pins the player's hand | the opponent's shuffle |
 | `hands.Seed` (`tools/hands`) | always | which hands the reachability sample deals, for both `handodds` and `handsheet` |
@@ -188,20 +188,18 @@ particular deck, and changing the deck silently deals something else.
 
 ## Adding a roll — the argument comes before the code
 
-**Rewrite a random-sounding rule rather than let it in.** Lightning is the deliberate
-exception, not the precedent. **The gamble on a gold or silver card is the second one**, and it makes its own argument in
-`MECHANICS.md` rather than appealing to lightning's: every other random-sounding rule has a
-deterministic rewrite at least as good, and a card whose whole subject is luck does not — a gamble
-that always pays is a purchase. Note what it still has to do: name the alternative it declines (two
-independent rolls), say what the roll costs, and take its own stream. Lightning is the exception
-because unreliability is what lightning *is*, and because the alternatives — breaking the hand,
-cutting the multiplier — are weighed in `MECHANICS.md`.
+**Rewrite a random-sounding rule rather than let it in.** The gamble on a gold or silver card is
+the deliberate exception, not the precedent, and it makes its own argument in `MECHANICS.md`:
+every other random-sounding rule has a deterministic rewrite at least as good, and a card whose
+whole subject is luck does not — a gamble that always pays is a purchase. Note what it still has to
+do: name the alternative it declines (two independent rolls), say what the roll costs, and take its
+own stream.
 
 **Certainty is often the better game as well as the cheaper code.** It matches the rule hands
 otherwise follow: what you committed to cannot be silently undone. **A second roll needs the
-same argument made from scratch**, in `MECHANICS.md`, not an appeal to lightning.
+same argument made from scratch**, in `MECHANICS.md`, not an appeal to the gamble's.
 
-What a roll costs, using lightning as the measure:
+What a roll costs:
 
 - **A single-sample verdict means nothing.** One duel winning half the time and one
   winning always read identically, so anything measuring balance has to report a distribution.
@@ -222,18 +220,16 @@ What a roll costs, using lightning as the measure:
 
 ## The rest of the discipline
 
-- **`internal/combat` has no clock and exactly two rolls** — the shock, and a gold or silver card's
-  gamble. It is otherwise integer arithmetic, and `TestRoundIsDeterministic` pins that an empty
+- **`internal/combat` has no clock and exactly one roll** — a gold or silver card's gamble. It is otherwise integer arithmetic, and `TestRoundIsDeterministic` pins that an empty
   `Sources` resolves identically every time. Every field of `Sources` may be nil and a nil one
   rolls nothing, which is what every test and every headless caller passes.
-- **A third roll goes in `Sources` as its own field.** That is the rule the second one followed and
-  it is not negotiable: two concerns advancing one cursor means a change to either silently rerolls
+- **A second roll goes in `Sources` as its own field.** That is not negotiable: two concerns advancing one cursor means a change to either silently rerolls
   the other. Adding a field costs nothing at the call sites, because they name what they pass.
 - **The deck lives on the scene, not in `internal/combat`.** Keeping the shuffle out of the
   rules package is what preserves its purity, its tests and any headless caller. Moving draw into
   `combat` is a real option later, but it has to arrive as its **own** field on `Sources` — never
-  the lightning source or the luck one, since a shuffle, a miss-roll and a gamble are three
-  different concerns — and it changes `TestRoundIsDeterministic`.
+  the luck one, since a shuffle and a gamble are two different concerns — and it changes
+  `TestRoundIsDeterministic`.
 - **Do not pre-roll randomness into fixed-size slices.** A seeded `*rand.Rand` already is an
   infinite deterministic list, and the planned endless journey gives no worst case to size an
   array against. A reroll simply advances the cursor.

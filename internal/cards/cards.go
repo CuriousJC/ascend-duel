@@ -310,8 +310,8 @@ type StatLine struct {
 
 // MaxTextHighlights is how many separately colored spans one card's text can carry.
 //
-// **Four, because the wordiest relic in the catalog names three things** — an element and two
-// statuses — and a fixed array needs a number. `TestEveryTextFitsItsHighlights` in
+// **Four, because a fixed array needs a number** and four covers the wordiest line in the
+// catalog. `TestEveryTextFitsItsHighlights` in
 // internal/screens holds the authored catalog against it, so an entry wanting a fifth fails a
 // test rather than losing its last color to an array that silently ran out.
 const MaxTextHighlights = 4
@@ -343,20 +343,12 @@ type TextSpan struct {
 // a pitch of 38 finished 36 pixels above the bar.
 const MaxStatLines = 5
 
-// MaxEffects is how many status badges a card can show at once.
+// MaxEffects is how many pictures the row along the bottom of a fighter card can show at once —
+// the duelist's shield pips.
 //
-// **Five, because `statuses.json` holds five and a duelist carries at most one of each.** This
-// package does not know that — it holds pictures — so the number is stated here as the width of the
-// row the bottom band fits, and checked against the rules by
-// `TestTheCardHoldsAsManyEffectsAsThereAreStatuses` in internal/screens, which is the layer that can
-// see both.
-//
-// **It stopped being "one per element" on 2026-08-17**, when statuses became their own collection.
-// The two were the same number only because a status *was* an element. Authoring a status is
-// therefore a layout change as well as a file edit, exactly as a fourth stat row is — and WEAKENED
-// spent the prediction on 2026-08-25: it cost this one number and nothing else, because at 20px
-// badges and a 6px gap the row fits six inside the borders. **The sixth is the last one that is
-// free**; a seventh status is a redesign of the band.
+// **Five, because that is what the bottom band fits** at 20px pictures and the row's gap, inside
+// the borders. This package does not know what the pictures mean; a sixth is the last that fits,
+// and a seventh is a redesign of the band.
 const MaxEffects = 5
 
 // Spec is everything about one card that changes what it looks like.
@@ -398,7 +390,7 @@ type Spec struct {
 	//
 	// **Element is still what the card is**, and is still what everything else on the face and in
 	// the rules reads. A wildcard is a fire card that also counts as anything, not a card with no
-	// element, and the difference matters the moment a status has to land.
+	// element.
 	//
 	// **This package does not know what a rider is**, on the same terms it does not know what a
 	// relic is: `internal/screens` decides that a card carrying combat.RiderWildElement is drawn
@@ -441,13 +433,13 @@ type Spec struct {
 	//
 	// **It exists so the words that name a thing with a color are drawn in it** *(owner's call,
 	// 2026-09-08)*: an essence reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple, and a
-	// relic reading "Fire attacks BURN and CHILL the target." sets three words across two colors.
+	// relic reading "Doubles DMG of Fire and Ice cards." sets two words in two colors.
 	// The state coloring still applies on top, so a disabled card fades with everything else.
 	//
 	// **A span is matched at word boundaries and every occurrence of it is colored**, which is
-	// what lets one entry carry a word a sentence says twice — "BURNING enemies" after "apply
-	// BURNING status" — without spending two seats. The boundary is not an optimization: ICE is
-	// inside SLICE and BURN is inside BURNING, and a substring match would paint half a word.
+	// what lets one entry carry a word a sentence says twice without spending two seats. The
+	// boundary is not an optimization: ICE is inside SLICE, and a substring match would paint half
+	// a word.
 	//
 	// **Longest first, so an entry cannot eat a longer one's word.** Ordering is the caller's,
 	// and internal/screens sorts by length before filling this in.
@@ -487,17 +479,15 @@ type Spec struct {
 	//
 	// **It is its own field rather than an entry in Stats** because it is not on that ladder: the
 	// rows in Stats stack from the top of the card at one pitch, and this one sits in the block at
-	// the bottom, between the badge row and the health bar. See fighter.go.
+	// the bottom, between the pip row and the health bar. See fighter.go.
 	PortraitStat StatLine
 
-	// Effects are the status badges drawn in a row along the bottom edge, on the styles that
-	// ask for them. Nil entries are skipped, so the row is as wide as the statuses actually
-	// standing on the combatant and stays centered as they come and go.
+	// Effects are the pictures drawn in a row along the bottom edge, on the styles that ask for
+	// them — the duelist's shield pips. Nil entries are skipped, so the row is as wide as what is
+	// actually standing and stays centered as it comes and goes.
 	//
 	// **What they mean is none of this package's business.** A caller hands over pictures in
-	// the order it wants them read; `internal/screens` fills them from `Duelist.Statuses` in
-	// element order, which is what makes the row's order deterministic. Putting the element
-	// enum in here would give the drawing package an opinion about the rules.
+	// the order it wants them read.
 	//
 	// **A fixed array, and comparable for the same reason `Stats` is** — the screen's card
 	// cache keys on the whole Spec. `image.Image` compares by dynamic type and pointer, which
@@ -561,9 +551,8 @@ type Spec struct {
 	//
 	// **A string rather than a number, because the unit is not this package's to know.** Heart
 	// grows flat life and Enflamed grows a multiplier, so one of them wants "+50" and the other
-	// "1.5x"; a figure here would make the drawing package decide which, the way an element enum
-	// on Effects would have given it an opinion about the rules. The caller formats and this
-	// draws.
+	// "1.5x"; a figure here would make the drawing package decide which. The caller formats and
+	// this draws.
 	//
 	// **Empty draws nothing**, so a card that has no counter is the card that always was — and a
 	// style with no CounterHeight draws none whatever the Spec says, which is every style but

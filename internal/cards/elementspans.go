@@ -10,31 +10,18 @@ package cards
 // The only way none of the three can disagree about what color arcane is, is for all of them to
 // ask one table; and a table anywhere above this package would be one the sheets cannot reach
 // without linking a window.
-//
-// **It is the one place this package reads `data/`.** The arrow points down like every other and
-// `statuses.json` was already carrying presentation the engine ignores — `Badge` is the precedent —
-// so a status's color and the word for it sit beside its picture rather than in a second file.
-// What this package still does not learn is anything about how a round resolves: a status is a name
-// and a color here, and nothing asks what it does.
 
 import (
 	"image/color"
 	"sort"
 	"strings"
-
-	"github.com/curiousjc/ascend-duel/data"
 )
 
-// elementWords is every word that names an element or one of its statuses, longest first.
+// elementWords is every word that names an element, longest first.
 //
 // **Longest first is load-bearing**, because SplitSpans lets the first span to claim a position keep
-// it: BURN offered before BURNING would take the front of the word and leave ING in the default
-// ink.
-//
-// **Three words per status and one per element**, all read off `statuses.json` rather than typed
-// here: the status's Name (BURNING), its Verb (BURN), and the element it belongs to. A status
-// shipping without an Element or a Verb fails a test rather than quietly going uncolored — see
-// TestEveryStatusNamesAnElement.
+// it: a short word offered before a longer one containing it would take the front of the word and
+// leave the rest in the default ink.
 var elementWords = buildElementWords()
 
 // elementWord is one colored term, held lower case. Case is not part of the match and a text keeps
@@ -58,15 +45,6 @@ func buildElementWords() []elementWord {
 	// to change nothing. Relic is not an element at all.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		add(e.String(), e)
-	}
-
-	for _, s := range data.LoadStatuses() {
-		e, ok := ParseElement(s.Element)
-		if !ok {
-			continue
-		}
-		add(s.Name, e)
-		add(s.Verb, e)
 	}
 
 	sort.SliceStable(out, func(i, j int) bool {

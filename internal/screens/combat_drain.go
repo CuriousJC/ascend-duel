@@ -21,14 +21,13 @@ import (
 // card into the duelist's, and fills theirs. One object making a round trip says "this is a
 // portion of the hit you just watched" in a way a figure appearing beside the health bar cannot.
 //
-// **Not out of the relic ring**, which is where a status flies from and was the first thing this
-// tried. A relic is the *cause*, and `anchorRelic` is the right source for something the relic
-// creates out of nothing — a status lands on a body that had none. Life a drain takes is not
-// created: it comes off the blow, so the blow is where the player's eye already is.
+// **Not out of the relic ring.** A relic is the *cause*, and `anchorRelic` is the right source for
+// something the relic creates out of nothing. Life a drain takes is not created: it comes off the
+// blow, so the blow is where the player's eye already is.
 //
 // **A regeneration flies out of the relic instead** — `anchorRelic` to `anchorActorCard` — and that
-// is the same distinction the other way round. A relic makes this life out of nothing, exactly as
-// it makes a status out of nothing, so the ring is where it comes from and there is no blow for the
+// is the same distinction the other way round. A relic makes this life out of nothing, so the ring
+// is where it comes from and there is no blow for the
 // eye to be looking at. The two share everything else: the color, the size, the clock and the bar
 // that waits.
 //

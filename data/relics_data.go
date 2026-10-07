@@ -15,7 +15,7 @@ package data
 // carrying an art key and this file never grows an opinion about damage.
 //
 // **A vocabulary word this file invents does not exist.** An unknown moment, a verb used at the wrong
-// moment, a status key in no file — every one of them fails at load rather than producing a relic that
+// moment, a predicate the rules cannot resolve — every one of them fails at load rather than producing a relic that
 // wears cleanly and does nothing. See `combat.RegisterRelic`, which is where the grammar is enforced.
 //
 // **Art is an assets key, not a path**, like every other named asset — see assets/embed.go. It has to
@@ -74,7 +74,7 @@ type RelicData struct {
 
 	// Draw is the subject paragraph the art generator is given for this relic — what the object
 	// *is* and what the effect is doing to it, in one sentence. **Nothing in the game reads it**,
-	// exactly like Art's own key and a status's Badge; it is here because it is the one place a
+	// exactly like Art's own key; it is here because it is the one place a
 	// relic's identity is written down beside the rules that made it.
 	//
 	// **It is on the record so that regenerating a picture does not mean writing its brief again**
@@ -198,15 +198,12 @@ type RelicEffectData struct {
 	//
 	// **One word carrying both the operation and its subject** *(owner's call, 2026-08-17)*, rather
 	// than an operation crossed with a subject: two lists would buy a grid that is mostly
-	// meaningless cells, and `apply-status` sits on neither axis.
+	// meaningless cells.
 	Do string `json:"Do"`
 
 	// Amount is the figure, read against the verb: a signed cost delta, a percentage where 200 is
 	// double, flat DMG or HP, or how much an accumulator grows.
 	Amount int `json:"Amount,omitempty"`
-
-	// Status is the record key `apply-status` applies — see statuses.json.
-	Status string `json:"Status,omitempty"`
 
 	// Element is what `set-element` recolors a matching card to, and the element `raise-shield`
 	// raises.

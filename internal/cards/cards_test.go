@@ -785,9 +785,6 @@ func TestTheTwoFighterCardsShareTheirHealthGeometry(t *testing.T) {
 		{"bar top", DuelistStyle.HealthBarTop, EnemyStyle.HealthBarTop},
 		{"bar height", DuelistStyle.HealthBarHeight, EnemyStyle.HealthBarHeight},
 		{"bar inset", DuelistStyle.HealthBarInset, EnemyStyle.HealthBarInset},
-		{"badge top", DuelistStyle.EffectTop, EnemyStyle.EffectTop},
-		{"badge size", DuelistStyle.EffectSize, EnemyStyle.EffectSize},
-		{"badge gap", DuelistStyle.EffectGap, EnemyStyle.EffectGap},
 		{"width", DuelistStyle.Width, EnemyStyle.Width},
 		{"height", DuelistStyle.Height, EnemyStyle.Height},
 	} {
@@ -819,10 +816,9 @@ func TestTheOpponentWritesItsDamageUnderItsPortrait(t *testing.T) {
 	}
 }
 
-func TestTheBadgeRowClearsTheFigureUnderIt(t *testing.T) {
-	// The badges are the first thing under the portrait and the DMG figure is written beneath
-	// them. Neither end is obvious by eye at that size: a badge over the figure makes the damage
-	// unreadable, and a figure running into the bar puts type through a solid shape.
+func TestTheFigureUnderThePortraitClearsTheBar(t *testing.T) {
+	// The DMG figure is written under the opponent's portrait, above the bar. A figure running into
+	// the bar puts type through a solid shape, which is not obvious by eye at that size.
 	st := EnemyStyle
 	f := faces(t)
 
@@ -832,16 +828,15 @@ func TestTheBadgeRowClearsTheFigureUnderIt(t *testing.T) {
 	}
 	m := face.Metrics()
 
-	if bottom := st.EffectTop + st.EffectSize; bottom > st.PortraitStatTop {
-		t.Errorf("the badges end at y=%d, %dpx into the DMG row at y=%d",
-			bottom, bottom-st.PortraitStatTop, st.PortraitStatTop)
-	}
 	if figure := st.PortraitStatTop + m.Ascent.Ceil() + m.Descent.Ceil(); figure > st.HealthBarTop {
 		t.Errorf("the DMG row ends at y=%d, %dpx into the health bar at y=%d",
 			figure, figure-st.HealthBarTop, st.HealthBarTop)
 	}
+}
 
-	// And a full row fits across the card between its side borders.
+func TestAFullBadgeRowFitsAcrossTheCard(t *testing.T) {
+	// The duelist's shield pips: a full row has to fit between the side borders.
+	st := DuelistStyle
 	span := MaxEffects*st.EffectSize + (MaxEffects-1)*st.EffectGap
 	if usable := st.Width - 2*st.BorderWidth; span > usable {
 		t.Errorf("%d badges span %dpx across a card %dpx wide inside its borders",
@@ -879,11 +874,11 @@ func TestTheHitPointsFitOnTheBarTheyAreWrittenAcross(t *testing.T) {
 }
 
 func TestAnEffectRowIsCenteredAndClosesUpAsItEmpties(t *testing.T) {
-	// Nil entries are skipped rather than drawn as holes, so one status sits in the middle of
+	// Nil entries are skipped rather than drawn as holes, so one shield pip sits in the middle of
 	// the card. What this checks is that the *drawn* row is centered for every count — the
 	// failure it guards is a row laid out against MaxEffects, which leaves a single badge
 	// hard left with three empty slots beside it.
-	st := EnemyStyle
+	st := DuelistStyle
 	f := faces(t)
 
 	solid := image.NewRGBA(image.Rect(0, 0, 8, 8))
@@ -894,7 +889,7 @@ func TestAnEffectRowIsCenteredAndClosesUpAsItEmpties(t *testing.T) {
 	}
 
 	for count := 1; count <= MaxEffects; count++ {
-		spec := Spec{Name: "Goblin", Element: Basic, Life: 10, MaxLife: 10, Enabled: true}
+		spec := Spec{Name: "Duelist", Element: Basic, Life: 10, MaxLife: 10, Enabled: true}
 		for i := 0; i < count; i++ {
 			spec.Effects[i] = solid
 		}
@@ -1492,11 +1487,13 @@ func TestTheBottomBlockFitsInsideTheCard(t *testing.T) {
 		name string
 		st   Style
 	}{{"duelist", DuelistStyle}, {"enemy", EnemyStyle}} {
-		// The badge row is the top of the block and the bar is its realm, and both cards carry
-		// them at the same heights — that is what makes the two comparable across the table.
-		if badges := c.st.EffectTop + c.st.EffectSize; badges > c.st.HealthBarTop {
-			t.Errorf("%s: the badge row ends at y=%d, %dpx into the bar at y=%d",
-				c.name, badges, badges-c.st.HealthBarTop, c.st.HealthBarTop)
+		// The pip row, on the card that has one, is the top of the block and has to end above the
+		// bar.
+		if c.st.EffectSize > 0 {
+			if pips := c.st.EffectTop + c.st.EffectSize; pips > c.st.HealthBarTop {
+				t.Errorf("%s: the pip row ends at y=%d, %dpx into the bar at y=%d",
+					c.name, pips, pips-c.st.HealthBarTop, c.st.HealthBarTop)
+			}
 		}
 		inside := c.st.Height - c.st.BorderWidth
 		if bar := c.st.HealthBarTop + c.st.HealthBarHeight; bar > inside {

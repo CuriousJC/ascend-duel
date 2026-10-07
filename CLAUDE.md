@@ -23,7 +23,7 @@ Six streams, each with one job. Reach for the right one rather than searching al
 | **Unfiltered** | [ideas.md](ideas.md) | the inbox; entries get promoted into MECHANICS or TODO and struck from here |
 
 - **`MECHANICS.md` is the design record.** Decided unless marked `[?]`. It holds the element
-  set and their statuses, cards and types, hands, relics, tonics, vitae, the journey, enemies,
+  set, cards and types, hands, relics, tonics, vitae, the journey, enemies,
   and the phase-based resolution experiment.
 - **`TODO.md` is open work only.** Completed entries are deleted rather than archived, so it
   says what is left, not what happened. Prefer `MECHANICS.md` for "what should this do".
@@ -102,7 +102,7 @@ skill that does not exist.
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
 | [`motifs`](.claude/skills/motifs/SKILL.md) | adding a motif directory, adding or changing a creature or a backdrop under `data/motifs/`, authoring creatures, bosses or rooms, touching `data/journey.json`, wiring anything that picks an opponent or a backdrop, or asking what a motif is still missing and what to author next |
-| [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json` or `statuses.json`, adding a moment or an effect verb, wiring anything that reads a worn relic, or deciding whether a relic is locked behind an achievement |
+| [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json`, adding a moment or an effect verb, wiring anything that reads a worn relic, or deciding whether a relic is locked behind an achievement |
 | [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
 | [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
 | [`achievements`](.claude/skills/achievements/SKILL.md) | adding or changing an achievement, a moment, a counter or an unlock, adding any new kind of progress the profile keeps, or touching `internal/screens/achieve.go` — a chosen-seed run must progress nothing |
@@ -278,8 +278,8 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
   simply the first**. `combat.shieldedHits` is the whole rule,
   shared by both attack phases, and it decides the mask at the top of the turn rather than as each
   hit arrives — which is what lets the screen show the exchange before anything swings. Ranked on
-  each landing's own damage, deliberately: weight, vulnerability and the hand's multiplier are one
-  multiplier over the whole turn and cannot reorder two hits, so projecting the pipeline per hit
+  each landing's own damage, deliberately: the hand's multiplier is one multiplier over the whole
+  turn and cannot reorder two hits, so projecting the pipeline per hit
   would be a second resolver agreeing with the first. **The screen draws it as a broken window** —
   `cards.MarkShattered` for the settled mark, `internal/screens/combat_shatter.go` for the pip
   crossing the table and the crack opening. **A mark is not an upgrade**: an upgrade is what a
@@ -389,9 +389,9 @@ of it:
 - **The wildcard is read while the hand is *formed*, not while the turn resolves**, so it lives in
   `matchCountOf` rather than in `playRiders` — the one rider that does. `combat.RiderWildElement`.
 - **Gold and silver gamble on every play, and the roll is in the resolver.**
-  `combat.RiderGolden` and `RiderSilver`; `combat.Sources` is the struct carrying
-  **two** streams into `ResolveRound` — `Roll` for the shock, `Luck` for the gamble — and they are
-  never interchanged. The grant moves the fighting duelist *and* announces `KindGrantedDMG` /
+  `combat.RiderGolden` and `RiderSilver`; `combat.Sources` is the struct carrying the round's
+  streams into `ResolveRound` — `Luck` for the gamble — and a second roll is a second field, never
+  a share of this one. The grant moves the fighting duelist *and* announces `KindGrantedDMG` /
   `KindGrantedLife` for `screens.settleGrants` to make permanent on the run; silver goes through the
   purse and needs no event. **A card that gambles on every play is worth however often it is
   played**, which on a cheap starting card is dozens of times a run — the dial is the denominator in
@@ -592,7 +592,7 @@ The three decisions worth knowing without opening it:
 ## Determinism — see the `randomness` skill
 
 Runs will eventually be **replayable from a seed**, and **combat is already stochastic** —
-lightning rolls, and the gold and silver upgrades — so the rules that protect replayability are
+the gold and silver upgrades roll — so the rules that protect replayability are
 live rather than theoretical, and they are easy to break without noticing.
 
 The procedure, the stream table and the argument a new roll has to make live in
@@ -628,9 +628,9 @@ exists:
   pacing and must not alter results. Same constraint as the debug flags, `internal/trace`,
   `internal/idle` and the scripted demo.
 
-**Rewrite a random-sounding rule rather than let it in.** Lightning is the deliberate
-exception, not the precedent, and a second roll needs its own argument in `MECHANICS.md` — the
-skill says what the first one cost.
+**Rewrite a random-sounding rule rather than let it in.** The gold and silver gamble is the
+deliberate exception, not the precedent, and a second roll needs its own argument in
+`MECHANICS.md` — the skill says what the first one cost.
 
 ## The combat screen — see the `combat-screen` skill
 
@@ -673,7 +673,7 @@ These apply everywhere, the combat screen included. The pointer vocabulary is:
 - **Left click** — buttons and selection.
 - **Drag and drop** — the action box, and anything else that needs ordering or moving.
 - **Hover** — rest the cursor on something and a tooltip explains it. A card's
-  damage arithmetic term by term, a relic's rule, a status badge's meaning. `models.Tooltip` and
+  damage arithmetic term by term, a relic's rule, a fighter's figures. `models.Tooltip` and
   `systems.DrawTooltip` are the widget; the wording is `internal/ui/tips.go`.
 - **Long press** — the same reveal, for a touchscreen or a controller, where there is no cursor to
   rest. **Not built**, and it is the only reason hover did not simply replace it: see MECHANICS.md
@@ -1189,7 +1189,7 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
 - **The generator's generic prompt lives in `docs/art/`; each record's own description lives on
   the record**. A prompt is about no record at all, which is why it
   is not in `data/`. What *is* about one record is the subject paragraph, and that is `Draw` —
-  **ignored by the engine**, exactly as a status's `Badge` is, and pasted into the generator as
+  **ignored by the engine**, exactly as `Art` is, and pasted into the generator as
   the record's own JSON. A brief kept apart from the record is a brief that gets deleted when
   the picture it produced is filed. **There is no worklist file** — a
   record with an empty `Art` is still to draw and one with an empty `Draw` has no brief, and the
@@ -1361,8 +1361,7 @@ catalog's, to a tenth of a percent, because a scarce tier rounds to `0%` and wou
 unreachable.
 
 **Every word naming an element is written in that element's color**.
-`cards.ElementSpans` is the one vocabulary — the five element names plus each status's `Name` and
-`Verb`, read off `statuses.json`, longest first — and `cards.SplitSpans` is the one cut, matching
+`cards.ElementSpans` is the one vocabulary — the five element names, longest first — and `cards.SplitSpans` is the one cut, matching
 whole words only and ignoring case so a relic writing `Fire` and an essence writing `FIRE` share an
 entry. Four things to know before touching it:
 
@@ -1370,8 +1369,7 @@ entry. Four things to know before touching it:
   readers share.** The card faces are set there, the screen text is set by Ebitengine's `text/v2` in
   `internal/screens`, and the nine review sheets build their own `cards.Spec` on purpose — a table
   anywhere higher would leave every sheet uncolored, since a sheet cannot import `screens` without
-  linking a window. It costs a `cards` → `data` arrow, which is downward like every other; the
-  precedent is `Badge`, which `statuses.json` already carried for a reader the engine ignores.
+  linking a window.
 - **`Spec.Highlights` is a fixed array**, because `cards.Spec` is the render cache's key in
   `internal/screens` and must stay comparable — the same constraint `Stats` is under and
   `combat.Card.Riders` is under one package over. `TestEveryTextFitsItsHighlights` holds the whole
@@ -1747,7 +1745,7 @@ fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only 
 - **Never call the `math/rand` package-level functions.** See the `randomness` skill.
 - **A new `EventKind` needs a choreography entry**, or `internal/screens` fails a test. An event
   with no picture and an event whose picture was forgotten otherwise look identical.
-- **`ConceptID`, `StatusID` and `Element` are append-only**, and none may be
+- **`ConceptID` and `Element` are append-only**, and neither may be
   serialized. Arrays and caches are indexed by the ordinal, so inserting one mid-enum silently
   re-points everything already stored.
 - **Re-run `tools/handodds` and `tools/seeds` after touching the deck.** Both measure facts about
@@ -1785,7 +1783,7 @@ fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only 
 ## Art
 
 **`assets/` is grouped by what a file is for**: `game/` (fonts, title screens), `motifs/`,
-`relic/`, `effect/`, `upgrade/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
+`relic/`, `upgrade/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
 refiling something is one line there and nothing anywhere else.
 
 **The music loops are not in here and must never be filed here.** They are `privateassets/`, a
@@ -1826,20 +1824,12 @@ They are handed out as **bytes, not `*ebiten.Image`** — they are drawn into a 
 `internal/cards`, which has no graphics context, and decoding every one of them at startup would
 cost tens of megabytes of resident memory for pictures most runs never show.
 
-**`assets/effect/` is the status badges**, drawn as a centered row along the bottom of the enemy
-card by `internal/cards` — so they go through `LoadImageData` as bytes, exactly like the relic art
-and for the same reason. `ui.statusBadges` is the lookup and **it is read off each record's own
-`Badge` in `statuses.json`** rather than keyed by element — because a badge belongs to the
-*status*, so a status arriving by an affix or a boss rule draws the same picture whatever brought
-it. `default-effect.png` is the fallback.
-
 **Nothing in the game draws a loose sprite.** There are no creature sprites in `assets/`;
 `Combatant` has no `Sprite` field and `entities` imports no Ebitengine at all. **Both duelists
 are cards**, in opposite corners, and both state their life the same way — a bar over a
 fraction, at identical offsets on the two styles so the pair can be compared across the
-screen without measuring. **The enemy's carries a badge row under its fraction and the
-player's does not**, which is not a break of that rule: an enemy wears no relics, so nothing can
-put a status on the player to draw.
+screen without measuring. **The player's carries a row of shield pips** in the block above its
+bar, and the enemy's carries its DMG figure there instead.
 
 **A creature is one still picture and there is no animation anywhere.** Animating one means
 generating frames from the same brief `tools/creatureprompt` assembles, not going back for a sprite

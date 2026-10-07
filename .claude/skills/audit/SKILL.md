@@ -74,7 +74,7 @@ holds everywhere, and whether a new thing has quietly invented a second way to s
 - **Presentation may never change an outcome.** `ResolveRound` decides a whole round before playback
   starts. Playback speed, the speed setting, every flight, every debug flag, `trace`, `idle` and the
   demo may alter pacing and may not alter results.
-- **Never serialize an ordinal.** `ConceptID`, `Element`, `StatusID`, `Phase` are append-only
+- **Never serialize an ordinal.** `ConceptID`, `Element`, `Phase` are append-only
   indices into arrays. What gets written to disk is a name.
 - **Randomness is an injected `*rand.Rand` off a named, salted stream.** No package-level
   `math/rand`, and a stream is only ever advanced by its own concern.

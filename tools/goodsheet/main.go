@@ -203,8 +203,8 @@ var allContents = []session.GoodContents{
 // briefs is each good's Draw, keyed by record.
 //
 // **Read off data.LoadGoods rather than session.Good**, which does not carry it: Draw is the
-// subject paragraph an art generator is given and the engine ignores it, exactly as a status's
-// Badge is ignored — so it never had a reason to be resolved onto the run's side of the catalog.
+// subject paragraph an art generator is given and the engine ignores it, exactly as a relic's Art
+// is ignored — so it never had a reason to be resolved onto the run's side of the catalog.
 // A review sheet is the one reader it has.
 var briefs = func() map[string]string {
 	out := map[string]string{}

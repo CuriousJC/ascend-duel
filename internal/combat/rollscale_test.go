@@ -11,25 +11,6 @@ import (
 // same die, never a smaller die — and the determinism, which is that the stream is drawn from
 // exactly as often whether the relic is worn or not.
 
-// shockedDuelist is a duelist carrying whatever status the file registers as the miss chance, so
-// the test names the effect kind rather than a record key that could be renamed.
-func shockedDuelist(t *testing.T, d Duelist) Duelist {
-	t.Helper()
-
-	for _, id := range AllStatuses() {
-		if StatusOf(id).Effect != EffectMissChance {
-			continue
-		}
-		out, _, ok := applyStatus(d, id, Duelist{})
-		if !ok {
-			t.Fatalf("%v would not apply", StatusOf(id).Key)
-		}
-		return out
-	}
-	t.Fatal("no status in the file is a miss chance")
-	return d
-}
-
 func rollsRelic(t *testing.T, key string, pct int) RelicID {
 	t.Helper()
 
@@ -101,30 +82,6 @@ func TestALosingFaceAlwaysSurvives(t *testing.T) {
 		if paid == 2000 {
 			t.Errorf("at %d%% a golden card paid on every one of 2000 plays, which is a purchase", scale)
 		}
-	}
-}
-
-func TestTheShockRollDoublesAgainstItsOwnWearer(t *testing.T) {
-	id := rollsRelic(t, "rolls.shock", 200)
-
-	d := shockedDuelist(t, duelist(10, 3, 100))
-	bare := d.MissChance()
-
-	lucky := d.Wearing(WornRelic{Relic: id})
-	if got, want := lucky.MissChance(), bare*2; got != want {
-		t.Errorf("a shocked duelist wearing a doubling relic misses %d%% of the time, wanted %d%%", got, want)
-	}
-}
-
-func TestTheMissChanceIsStillCapped(t *testing.T) {
-	// **Nothing misses every time**, which is maxStatusPct's line — and the scale is applied
-	// before the cap, or doubling a figure already held at 99 would do nothing at all.
-	id := rollsRelic(t, "rolls.cap", 100000)
-
-	d := shockedDuelist(t, duelist(10, 3, 100)).Wearing(WornRelic{Relic: id})
-
-	if got := d.MissChance(); got > maxStatusPct {
-		t.Errorf("miss chance reached %d%%, and the ceiling is %d%%", got, maxStatusPct)
 	}
 }
 

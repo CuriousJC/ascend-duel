@@ -7,44 +7,8 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 )
 
-// The element vocabulary: that every status can be colored, that no authored text names more
-// colored terms than a card can carry, and that the words are offered longest first.
-
-func TestEveryStatusNamesAnElement(t *testing.T) {
-	// A status shipping without an Element or a Verb goes uncolored while every other one is lit,
-	// which reads as a rendering fault rather than as a missing field. This is the counterpart of
-	// TestEveryStatusElementHasABadge in internal/screens, on the other presentation axis.
-	for _, s := range data.LoadStatuses() {
-		if _, ok := ParseElement(s.Element); !ok {
-			t.Errorf("status %q has Element %q, which is not an element", s.StatusRecord, s.Element)
-		}
-		if s.Verb == "" {
-			t.Errorf("status %q has no Verb, so prose saying it happens rather than stands "+
-				"goes uncolored", s.StatusRecord)
-		}
-		if s.Name == "" {
-			t.Errorf("status %q has no Name", s.StatusRecord)
-		}
-	}
-}
-
-func TestEveryStatusWordIsColored(t *testing.T) {
-	// The words themselves, through the real matcher: a status's Name and its Verb both have to
-	// come back as runs, or half the relic catalog's sentences color and half do not.
-	for _, s := range data.LoadStatuses() {
-		for _, word := range []string{s.Name, s.Verb} {
-			found := false
-			for _, r := range ElementSpans("attacks " + word + " the target.") {
-				if strings.EqualFold(r.Span, word) {
-					found = true
-				}
-			}
-			if !found {
-				t.Errorf("%q, from status %q, is not in the colored vocabulary", word, s.StatusRecord)
-			}
-		}
-	}
-}
+// The element vocabulary: that every element is colored, that no authored text names more colored
+// terms than a card can carry, and that the words are offered longest first.
 
 func TestTheFiveElementsAreColoredInBothCases(t *testing.T) {
 	// Relics write "Fire" and essences write "FIRE". Both color, through one vocabulary entry, because
@@ -82,8 +46,8 @@ func TestAnElementInsideALongerWordIsNotColored(t *testing.T) {
 }
 
 func TestTheVocabularyIsLongestFirst(t *testing.T) {
-	// SplitSpans lets the first run to claim a position keep it, so BURNING has to be offered before
-	// BURN or the longer word draws as a colored BURN and a default-ink ING.
+	// SplitSpans lets the first run to claim a position keep it, so a longer word has to be offered
+	// before a shorter one inside it, or the longer word draws half colored.
 	for i := 1; i < len(elementWords); i++ {
 		if len(elementWords[i-1].word) < len(elementWords[i].word) {
 			t.Fatalf("the vocabulary is not longest first: %q before %q",
@@ -115,8 +79,5 @@ func TestEveryTextFitsItsHighlights(t *testing.T) {
 	}
 	for key, r := range data.LoadRelics() {
 		check("relic "+key, r.Text)
-	}
-	for _, s := range data.LoadStatuses() {
-		check("status "+s.StatusRecord, s.Text)
 	}
 }

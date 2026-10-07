@@ -318,9 +318,9 @@ func TestAnEchoedCardsHitsBuildUpInTurn(t *testing.T) {
 func TestEachLineFindsItsOwnOutcome(t *testing.T) {
 	log := []combat.Event{
 		{Kind: combat.KindHand},
-		{Kind: combat.KindMissed, Hit: 0},
+		{Kind: combat.KindFizzled, Hit: 0},
 		{Kind: combat.KindDamage, Hit: 1},
-		{Kind: combat.KindStatus, Hit: 1},
+		{Kind: combat.KindDrained, Hit: 1},
 		{Kind: combat.KindDamage, Hit: 2},
 		{Kind: combat.KindDefeated},
 		{Kind: combat.KindRoundEnd},

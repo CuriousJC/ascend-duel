@@ -282,17 +282,6 @@ func TestEveryRelicHasSomethingToSay(t *testing.T) {
 	}
 }
 
-func TestEveryStatusHasSomethingToSay(t *testing.T) {
-	// The badge row is pictures. This is the only place the words behind them are printed, so a
-	// status with no line is a badge that stays a mystery.
-	for _, id := range combat.AllStatuses() {
-		spec := combat.StatusOf(id)
-		if statusText(spec.Key) == "" {
-			t.Errorf("%s has no Text in statuses.json, so its badge cannot be read", spec.Key)
-		}
-	}
-}
-
 // **A relic panel is its rule and nothing else** *(owner's call, 2026-09-18)*. The firing order
 // used to be printed under the text whenever more than one was worn; it is a rule about the row
 // rather than about this relic, and a panel opened to read what something does should not have to

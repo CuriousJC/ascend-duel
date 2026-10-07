@@ -7,9 +7,8 @@ import (
 // MaxShieldPips is how many pips the row can draw, and it is **a measurement of the card rather
 // than a rule** *(2026-09-09)*.
 //
-// The row sits in the seat the enemy's status badges occupy — 20px squares on a 6px pitch along the
-// bottom band of a 162px card — and `cards.MaxEffects` records that six is the last one that fits
-// inside the borders. A seventh is a redesign of the band, not a bigger number.
+// The row sits in the fighter block's pip row — 20px squares along the bottom band of the
+// card — and `cards.MaxEffects` records how many fit inside the borders. A seventh is a redesign of the band, not a bigger number.
 //
 // **It was `combat.MaxShields` until the duelist's own clamp came off.** While the engine held a
 // duelist to five, one constant could honestly serve as both the cap and the row's width; now that

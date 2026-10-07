@@ -49,7 +49,7 @@ const (
 //
 // **What became of each hit is read ahead in the log.** The hand event is followed by one outcome
 // per thrown hit, and a finished line looks its own up — see hitOutcomes — so a hit that landed
-// flies, a miss says MISS, a block says BLOCKED, and a hit after a death fades where it stands. The
+// flies, a fizzle says FIZZLE, a block says BLOCKED, and a hit after a death fades where it stands. The
 // damage that line throws is applied to the target's bar as it lands, and the log's own event for
 // it is walked past without a second flight: see CombatScene.throwColumn.
 //
@@ -132,7 +132,7 @@ const (
 	mathRowShare = 1.15
 
 	// mathUnthrownAlpha is how solid a line stays once it is known its hit was never thrown — the
-	// target fell to an earlier hit — and mathVerdictDim how solid the arithmetic under a MISS or a
+	// target fell to an earlier hit — and mathVerdictDim how solid the arithmetic under a FIZZLE or a
 	// BLOCKED is.
 	mathUnthrownAlpha = 0.35
 	mathVerdictDim    = 0.45
@@ -449,11 +449,11 @@ type mathColumn struct {
 	logAt int
 
 	// thrown says the finished line has been handed on — its figure flown into the target, or
-	// marked as a miss or a block — so it happens once. spent says the total has left the line.
+	// marked as a fizzle or a block — so it happens once. spent says the total has left the line.
 	thrown bool
 	spent  bool
 
-	// verdict is the word drawn over a line whose hit did not land: MISS, BLOCKED, or "" for a hit
+	// verdict is the word drawn over a line whose hit did not land: FIZZLE, BLOCKED, or "" for a hit
 	// that landed. unthrown dims a line whose hit never happened.
 	verdict  string
 	verdictT ui.Travel
@@ -673,17 +673,17 @@ func (s *CombatScene) placeFigures(gs *state.GlobalState, e combat.Event, col *m
 // sits in the log, keyed by the hit.
 //
 // **The hits follow the hand event directly** and are everything the resolver writes for them — the
-// outcome, what it drained, what it landed, and a fall — so the walk stops at the first event that
+// outcome, what it drained, and a fall — so the walk stops at the first event that
 // is none of those. A hit that has no outcome was never thrown.
 func hitOutcomes(log []combat.Event, at int) map[int]int {
 	out := map[int]int{}
 	for k := at + 1; k < len(log); k++ {
 		switch log[k].Kind {
-		case combat.KindDamage, combat.KindMissed, combat.KindFizzled, combat.KindBlocked:
+		case combat.KindDamage, combat.KindFizzled, combat.KindBlocked:
 			if _, seen := out[log[k].Hit]; !seen {
 				out[log[k].Hit] = k
 			}
-		case combat.KindDrained, combat.KindStatus, combat.KindDefeated,
+		case combat.KindDrained, combat.KindDefeated,
 			combat.KindReflected, combat.KindRegenerated, combat.KindTithed:
 		default:
 			return out
@@ -1436,7 +1436,7 @@ func (b *handMathBox) Clear() { *b = handMathBox{} }
 // which is what makes a slow swell enough to be noticed without being a flash.
 //
 // **It carries no number, and that is a rule rather than an omission.** `Blow.Base` is the
-// resolver working against a strength and a shock roll that have not happened, so a figure shown
+// resolver working against a strength and a gamble that have not happened, so a figure shown
 // here could be contradicted by the round a second later — worse than no figure. The name is the
 // part that is already true.
 //

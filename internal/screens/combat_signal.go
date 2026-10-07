@@ -34,7 +34,7 @@ package screens
 //
 // # When they fire, which is the part that took a design decision
 //
-// **Riders resolve before the attack phase** — `playTurn` runs chill, then riders, then the hits —
+// **Riders resolve before the attack phase** — `playTurn` runs riders, then the hits —
 // so every one of these events sits in the log *ahead* of `KindHand` and the hand dialog. Drawing them
 // where they sit would put four fireworks on screen before the hand had even been named.
 //

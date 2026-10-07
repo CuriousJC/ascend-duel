@@ -40,7 +40,7 @@ import (
 // be naming a color that is the absence of one.
 //
 // **A wildcard is CHROMATIC, not the element it happens to be** *(owner's call, 2026-09-09)*. The
-// card still *is* an arcane Skewer — it burns as one, it is drawn from the arcane row — but the
+// card still *is* an arcane Skewer — every arcane relic reads it, it is drawn from the arcane row — but the
 // title is where the panel says what the player is holding, and what they are holding counts as
 // every element. `ARCANE SKEWER` over a line reading `COUNTS AS EVERY ELEMENT` is the panel
 // contradicting itself in two lines. See Chromatic.
@@ -238,10 +238,9 @@ func Odds(amount, rolls, bands int) string {
 // Fraction writes a percentage as a reduced fraction — 25 as `1/4`, 50 as `1/2`, 30 as `3/10`.
 //
 // **Every probability in the game is written this way** *(owner's call, 2026-09-18)*. A percentage
-// and a fraction were both in use — `statuses.json` said `1/4 CHANCE TO MISS` while the relic
-// applying it said `25% chance to miss` — which is one fact in two notations, and the player has to
-// notice they are the same number. The fraction won because the figures that move are *numerators*:
-// a relic that doubles a roll turns 1/4 into 2/4, and there is nowhere in `25%` for that to show.
+// and a fraction would be one fact in two notations, and the player would have to notice they are
+// the same number. The fraction wins because the figures that move are *numerators*: a relic that
+// doubles a roll turns 1/5 into 2/5, and there is nowhere in `20%` for that to show.
 //
 // **It is not for a multiplier.** `4x DMG` is a scaling rather than a chance, and `Multiplier` is
 // its own function for that reason — a card dealing `4/1 DMG` would be arithmetic pretending to be

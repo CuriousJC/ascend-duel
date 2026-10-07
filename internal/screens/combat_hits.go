@@ -159,8 +159,8 @@ func (s *CombatScene) noteHit(e combat.Event, held int) {
 //     life moves here, when the figure sets off, rather than when playback reaches the event — the
 //     lines finish in whatever order their arithmetic allows, so the event is reached later and is
 //     walked past. `shownLife` holds the bar until the figure arrives.
-//   - **A miss says MISS and a block says BLOCKED** over the line. A miss is walked past like a
-//     landing; a block is left for playback, because the shield row is moved by it.
+//   - **A fizzle says FIZZLE and a block says BLOCKED** over the line. A fizzle is walked past like
+//     a landing; a block is left for playback, because the shield row is moved by it.
 //   - **A hit that was never thrown fades where it stands**: the target fell to an earlier one.
 //
 // **It decides nothing.** Every figure and every verdict is the resolver's.
@@ -194,11 +194,6 @@ func (s *CombatScene) throwColumn(c int) {
 	e := s.log[col.logAt]
 
 	switch e.Kind {
-	case combat.KindMissed:
-		col.verdict = "MISS"
-		col.verdictT = ui.NewTravel(0, mathSymbolTicks())
-		s.markShown(col.logAt)
-
 	case combat.KindFizzled:
 		col.verdict = "FIZZLE"
 		col.verdictT = ui.NewTravel(0, mathSymbolTicks())
@@ -209,7 +204,7 @@ func (s *CombatScene) throwColumn(c int) {
 		col.verdictT = ui.NewTravel(0, mathSymbolTicks())
 
 	case combat.KindDamage:
-		// **A hit of nothing flies nothing**: a defense's hit lands its statuses and moves no bar, so
+		// **A hit of nothing flies nothing**: a defense's hit moves no bar, so
 		// its line keeps its `= 0` and the event is walked past like any other shown hit.
 		if e.Amount <= 0 {
 			s.markShown(col.logAt)

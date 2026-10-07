@@ -36,7 +36,7 @@ const tipMaxW = 690
 // mid-word. That is the card text band's posture: the strings are authored in this repo, so an
 // overrun is an authoring mistake to see rather than a case to hide.
 //
-// **A blank line comes back as itself.** Callers use one as a spacer between a status and the next,
+// **A blank line comes back as itself.** Callers use one as a spacer between two blocks of a panel,
 // and a wrapper that dropped it would close up the panel's only paragraph break.
 func WrapRuns(line models.TipLine, face *text.GoTextFace, max float64) []models.TipLine {
 	return wrapRuns(line, func(s string) float64 { return measureText(s, face) }, max)

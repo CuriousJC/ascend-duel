@@ -11,7 +11,7 @@ package combat
 //
 // **A relic is a list of `When` / `If` / `Then` rules.** A list rather than one rule because a
 // growing stat relic needs two moments — one to accumulate and one to apply — and `Then` is a list
-// too, which is what buys a relic that shocks *and* chills with no new vocabulary.
+// too, which is what buys a relic that does two things with no new vocabulary.
 //
 // **This package holds the vocabulary and refuses a rule that misuses it; it does not read
 // `relics.json`.** The file lives beside the essences in `internal/session`, which parses the strings
@@ -93,7 +93,7 @@ const (
 	MomentCardDrawn
 
 	// MomentTurnStart fires once at the top of each of this duelist's own turns, in playTurn,
-	// **before the chill, the riders and both phases** — so a relic that puts life back does it in
+	// **before the riders and both phases** — so a relic that puts life back does it in
 	// time for the turn it is about to survive.
 	//
 	// **It is MomentTurnTaken's other end and it is deliberately a second moment rather than a
@@ -205,8 +205,7 @@ func (m Moment) readsACard() bool {
 
 // RelicVerb is what a rule does. **One word carrying both the operation and its subject** —
 // `scale-damage`, not an operation crossed with a subject *(owner's call, 2026-08-17)*: two crossing
-// lists would buy a grid that is mostly meaningless cells, and `apply-status` sits on neither axis.
-// The same argument that took the mixes out of `hands.json`.
+// lists would buy a grid that is mostly meaningless cells. The same argument that took the mixes out of `hands.json`.
 //
 // **Each verb belongs to exactly one moment**, and a verb used at the wrong one is refused at
 // registration rather than ignored. See verbMoment.
@@ -218,9 +217,6 @@ const (
 
 	// DoScaleDamage scales a matching card's damage by Amount percent; 200 is double.
 	DoScaleDamage
-
-	// DoApplyStatus puts a status on whoever took the blow.
-	DoApplyStatus
 
 	// DoSetElement is the flip: it recolors a matching card **as that card is drawn**. One of the
 	// two verbs at MomentCardDrawn, with DoDemoteCard; see DealSteps.
@@ -281,8 +277,7 @@ const (
 	// DoGrowOnHit adds Amount to **this relic's own accumulator** every blow that lands with a
 	// matching card in it — where DoGrowOnWin does the same once per fight won.
 	//
-	// **Once per hit** *(owner's call, 2026-08-22)*, where a status is once per blow: two fire cards
-	// in a hand are two hits, and a fire card an echo relic seats three times is three. That is the
+	// **Once per hit** *(owner's call, 2026-08-22)*: two fire cards in a hand are two hits, and a fire card an echo relic seats three times is three. That is the
 	// point of it — the accumulator measures how many times something connected, so the relics that
 	// multiply landings and the relics that grow per landing are meant to compound.
 	//
@@ -380,13 +375,12 @@ const (
 	// DoDrainDamage restores Amount percent of a landed blow to the duelist who threw it — the
 	// first verb in the grammar that gives a relic's wearer life back.
 	//
-	// **Once per blow, not once per card**, which is DoApplyStatus's rule rather than DoGrowOnHit's:
-	// the share is taken out of the blow, and a blow is one figure however many cards went into it.
+	// **Once per blow, not once per card**, unlike DoGrowOnHit: the share is taken out of the blow, and a blow is one figure however many cards went into it.
 	// A rule carrying a predicate asks whether *any* card of the blow matched, so an elemental drain
 	// is "your fire hands drain" rather than a share paid per fire card.
 	//
-	// **It reads the figure that landed**, after weight, after the target's vulnerability, and after
-	// the shield and the miss — so a blow that was eaten or never thrown drains nothing, and a
+	// **It reads the figure that landed**, after the shield and the fizzle — so a blow that was
+	// eaten or never thrown drains nothing, and a
 	// drain is never worth more than the blow the player watched.
 	//
 	// **Two relics add rather than compound**, like every other flat share of one figure.
@@ -413,8 +407,7 @@ const (
 	DoHealShare
 
 	// DoScaleRolls scales **the numerator of every roll in the rules** by Amount percent: 200 is
-	// twice as many winning faces on a gold or a silver card, and twice as likely to miss while
-	// shocked.
+	// twice as many winning faces on a gold or a silver card.
 	//
 	// **The numerator, never the denominator.** Halving a d5 to a d2 is the obvious reading and it
 	// is a trap: LuckOutcomes refuses a die with under three faces, so the card would silently stop
@@ -423,14 +416,8 @@ const (
 	// **It must not change how many times a stream is drawn from.** Rolling twice and taking the
 	// better would advance the luck cursor twice, so wearing this would reroll every later gamble
 	// in the run — which is the determinism rule in the randomness skill, met by scaling the
-	// comparison rather than the number of draws. See rollGolden and attackMisses, both of which
-	// still take exactly one sample.
-	//
-	// **It reaches the shock as well, and that is a drawback rather than an oversight**
-	// *(owner's call)*. attackMisses reads the *acting* duelist's own miss chance, so a worn relic
-	// can only ever double its wearer's own chance of whiffing — there is no way from here to make
-	// a shocked opponent miss more. A relic about luck that is only ever lucky would be the
-	// dishonest version.
+	// comparison rather than the number of draws. See rollGolden, which still takes exactly one
+	// sample.
 	//
 	// **Two of them compound**, like DoScaleHP and unlike the flat shares — it is a multiplier.
 	//
@@ -527,11 +514,11 @@ const (
 	// DoReflectDamage returns Amount percent of a blocked hit to the duelist who threw it — the
 	// Thorned Shield.
 	//
-	// **Of the hit that was eaten, as it would have landed**: after the attacker's weight and the
-	// wearer's vulnerability, which is the figure the wearer did not take. **Rounded down**, so a
+	// **Of the hit that was eaten, as it would have landed**, which is the figure the wearer did not
+	// take. **Rounded down**, so a
 	// share of a small hit can come to nothing, and a share of nothing writes no beat.
 	//
-	// **Plain damage** *(owner's call)*: it drains nothing, lands no status and steps no growing
+	// **Plain damage** *(owner's call)*: it drains nothing and steps no growing
 	// relic, and the thrower's own shields do not eat it — it is not a hit, it is the hit coming
 	// back. A thrower it kills falls there and then, and the rest of their turn is not thrown.
 	//
@@ -573,7 +560,7 @@ const (
 
 // RelicVerbs is every verb in a fixed order.
 func RelicVerbs() []RelicVerb {
-	return []RelicVerb{DoAdjustCost, DoScaleDamage, DoApplyStatus, DoSetElement, DoAddDMG,
+	return []RelicVerb{DoAdjustCost, DoScaleDamage, DoSetElement, DoAddDMG,
 		DoAddHP, DoGrowOnWin, DoScalePropagation, DoAdjustPicks, DoAdjustPrizeVitae, DoScaleHP,
 		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth,
 		DoAddHandDMG, DoAddDMGPerHeld, DoGrowPerCard, DoAddDMGPerVitae,
@@ -586,8 +573,6 @@ func (v RelicVerb) String() string {
 	switch v {
 	case DoScaleDamage:
 		return "scale-damage"
-	case DoApplyStatus:
-		return "apply-status"
 	case DoSetElement:
 		return "set-element"
 	case DoAddDMG:
@@ -676,7 +661,7 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentCardCost
 	case DoScaleDamage, DoScaleDamagePerVitae:
 		return MomentCardDamage
-	case DoApplyStatus, DoGrowOnHit, DoDrainDamage:
+	case DoGrowOnHit, DoDrainDamage:
 		return MomentAttackLands
 	case DoHealShare, DoRaiseShield:
 		return MomentTurnStart
@@ -844,12 +829,9 @@ type RelicEffect struct {
 	Do RelicVerb
 
 	// Amount is the figure, read against the verb: a signed cost delta, a percentage, flat DMG or
-	// HP, or how much an accumulator grows. Unused by apply-status and set-element, which name a
-	// thing rather than a quantity.
+	// HP, or how much an accumulator grows. Unused by set-element, which names a thing rather than
+	// a quantity.
 	Amount int
-
-	// Status is what apply-status applies.
-	Status StatusID
 
 	// Element is what set-element recolors a card to.
 	Element Element
@@ -876,7 +858,7 @@ type Relic struct {
 }
 
 // RelicID identifies a registered relic. An index into a registry, so **registration-ordered and never
-// serialized** — the hazard ConceptID and StatusID carry, and the reason WornRelic is resolved from a
+// serialized** — the hazard ConceptID carries, and the reason WornRelic is resolved from a
 // key rather than stored as a number.
 type RelicID int
 
@@ -890,10 +872,9 @@ var (
 
 // RegisterRelic adds one relic and returns its ID, or reports why it could not.
 //
-// **It is where the grammar is enforced**, and the four failures it catches are the four a file can
+// **It is where the grammar is enforced**, and the failures it catches are the ones a file can
 // produce: an effect whose verb belongs to another moment, a predicate on a moment with no card to
-// match, an `apply-status` naming a status no file defines, and a figure that makes the effect do
-// nothing. Every one of them would otherwise load cleanly and look like a relic with no rules.
+// match, and a figure that makes the effect do nothing. Every one of them would otherwise load cleanly and look like a relic with no rules.
 func RegisterRelic(key, name string, rules []RelicRule) (RelicID, error) {
 	if id, taken := relicBy[key]; taken {
 		return id, fmt.Errorf("%s is registered twice", key)
@@ -984,10 +965,6 @@ func CheckRelic(key string, rules []RelicRule) error {
 // than a ceiling, where a relic is authored once and a zero there is a typo.
 func checkEffect(key string, e RelicEffect) error {
 	switch e.Do {
-	case DoApplyStatus:
-		if e.Status < 0 || int(e.Status) >= StatusCount() {
-			return fmt.Errorf("%s applies a status that is in no file", key)
-		}
 	case DoSetElement:
 		// A flip to basic is the absence of a flip, and Basic is the zero value — so this is also
 		// what catches an effect that forgot to name an element at all.
@@ -1194,9 +1171,8 @@ func RelicEffectsAt(worn []WornRelic, m Moment, card Card) []RelicEffect {
 
 // RelicContribution is one effect and the worn relic that produced it.
 //
-// **The pair travels together because a screen needs both and can derive neither**, which is the
-// argument appliedStatus already makes one moment over: an effect says a card is doubled, and only
-// the relic says what doubled it. A tooltip explaining where a figure came from is a picture of the
+// **The pair travels together because a screen needs both and can derive neither**: an effect
+// says a card is doubled, and only the relic says what doubled it. A tooltip explaining where a figure came from is a picture of the
 // second half.
 type RelicContribution struct {
 	Relic  RelicID
@@ -1274,7 +1250,7 @@ func (d Duelist) CostOf(cards []Card) int {
 	return total
 }
 
-// CardDamage is what one card deals in this duelist's hands, before any hand multiplier, blunting or
+// CardDamage is what one card deals in this duelist's hands, before any hand multiplier or
 // defense — the card's own figure scaled by every relic that matches it.
 //
 // **Compounding, left to right**, which is what makes two matching relics x4 rather than x2. The floor
@@ -1298,59 +1274,13 @@ func (d Duelist) CardDamage(c Card) int {
 	return dmg
 }
 
-// statusesFrom is every status this duelist's relics put on a target for a landed hit, in the order
-// they will be applied. The resolver asks it once per hit, with that hit's card.
-//
-// **Deduplicated, so one hit lands one of each.** Two relics that both set something burning are one
-// burn for the hit — see the no-stacking rule — and a feed saying "sets them burning" twice for one
-// hit is a feed describing two things that did not happen.
-//
-// **Relic order outer, cards inner**, per the worn-order rule.
-//
-// **It says which relic applied each status, not just which statuses landed** *(2026-08-18)*. It
-// always knew - the relic is the thing being walked - and threw the answer away, which left the
-// screen unable to fly a CHILLED out of the relic that caused it without inventing an element-to-relic
-// table of its own. That table would be a second rule about the same thing, and it would be wrong
-// the first time a form relic or a concept relic applied a status, which this grammar already
-// allows. See Event.Relic.
-//
-// **The first relic to apply a status is the one credited**, which falls out of the dedup and out of
-// worn order being left to right. Two relics that both set something burning are one burn, and it
-// belongs to the one worn first - the same tie-break every other compounding effect takes.
-func (d Duelist) statusesFrom(cards []Card) []appliedStatus {
-	var out []appliedStatus
-	seen := make(map[StatusID]bool)
-
-	for _, w := range d.WornRelics() {
-		for _, rule := range RelicOf(w.Relic).Rules {
-			if rule.When != MomentAttackLands {
-				continue
-			}
-			for _, card := range cards {
-				if !rule.If.Matches(card) {
-					continue
-				}
-				for _, e := range rule.Then {
-					if e.Do != DoApplyStatus || seen[e.Status] {
-						continue
-					}
-					seen[e.Status] = true
-					out = append(out, appliedStatus{Relic: w.Relic, Status: e.Status})
-				}
-			}
-		}
-	}
-	return out
-}
-
 // drainsFrom is every share of a hit this duelist's relics turn back into life, in worn order. The
 // resolver asks it once per hit that landed, with that hit's card.
 //
-// **One entry per relic, where statusesFrom deduplicates by status.** Two relics that both drain
-// both pay, because two shares of a figure are two different amounts; two relics that both set
-// something burning are one burn.
+// **One entry per relic.** Two relics that both drain both pay, because two shares of a figure are
+// two different amounts.
 //
-// **It says which relic each share came from**, for appliedStatus's reason: the screen flies the
+// **It says which relic each share came from**: the screen flies the
 // life out of the ring that produced it, and nothing else on the event can name which ring that was.
 func (d Duelist) drainsFrom(cards []Card) []relicDrain {
 	var out []relicDrain
@@ -1501,16 +1431,6 @@ func (d Duelist) blockRewardsFrom(card Card) []blockReward {
 type relicDrain struct {
 	Relic RelicID
 	Pct   int
-}
-
-// appliedStatus is one status a blow lands, and the worn relic that put it there.
-//
-// **The pair travels together because the screen needs both and can derive neither.** A status
-// names what landed; only the relic names where it came from, and "where it came from" is a card
-// the player is looking at.
-type appliedStatus struct {
-	Relic  RelicID
-	Status StatusID
 }
 
 // AddedDMG and AddedHP are what a worn set adds for the fight about to start. They take the worn
@@ -2056,7 +1976,7 @@ func Resets(id RelicID) bool {
 // **It steps between hits** *(owner's call)*, so the order of the cards in a turn decides what they
 // are worth: the first fire hit fires bare, steps the relic, and the second fires at the bigger
 // multiplier. That makes the queue an ordering decision the player is meant to make. A hit that
-// missed or was blocked does not step it.
+// fizzled or was blocked does not step it.
 //
 // **Hits, not cards** *(owner's call)*. A card that an echo or a repeat lands three times hits three
 // times, so it steps three times — and each of those hits is counted at the figure the one before it
@@ -2310,7 +2230,7 @@ func Scaling(do RelicVerb) bool {
 // badge showing the step would print the same number all run.
 //
 // It reports false for a relic that does not grow, and for one whose only effects carry no figure —
-// a status or a flip. Neither exists today; refusing is what stops a badge inventing a number.
+// a flip. Neither exists today; refusing is what stops a badge inventing a number.
 func GrowthEffect(w WornRelic) (RelicEffect, bool) {
 	if !Grows(w.Relic) {
 		return RelicEffect{}, false
@@ -2319,7 +2239,7 @@ func GrowthEffect(w WornRelic) (RelicEffect, bool) {
 		for _, e := range rule.Then {
 			switch e.Do {
 			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard, DoResetGrowth,
-				DoApplyStatus, DoSetElement:
+				DoSetElement:
 				continue
 			}
 			e.Amount += w.Grown

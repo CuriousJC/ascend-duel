@@ -89,7 +89,7 @@ func TestTheStrideIsOdd(t *testing.T) {
 // like it worked, which is why it panics rather than being merely discouraged.
 func TestScopeIsEnforced(t *testing.T) {
 	assertPanics(t, "For(PlayerDeck)", func() { For(1, PlayerDeck) })
-	assertPanics(t, "ForFight(CombatRoll)", func() { ForFight(1, CombatRoll, 0) })
+	assertPanics(t, "ForFight(TonicOrder)", func() { ForFight(1, TonicOrder, 0) })
 	assertPanics(t, "For(unknown stream)", func() { For(1, Stream(len(streams))) })
 }
 

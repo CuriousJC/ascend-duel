@@ -25,6 +25,7 @@ package screens
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -39,7 +40,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 // shelfSize is how many relics a visit puts up.
@@ -52,9 +52,11 @@ const shelfSize = 3
 // Where the two rows sit. Percentages anchor the groups; offsets inside a group stay in pixels,
 // per CLAUDE.md.
 const (
-	// The figure under a card on the shelf: what it costs. The gap is also where a sell tab hangs.
-	shopFigureGap  = 10
-	shopFigureSize = 22
+	// The price on a card on the shelf, written inside its bottom edge — shopFigureInset up from it.
+	// The gap is where a sell tab hangs under the card it belongs to.
+	shopFigureGap   = 10
+	shopFigureInset = 12
+	shopFigureSize  = 30
 
 	// The confirm tab that hangs under an armed relic or carried card. **Narrower than the card it
 	// hangs off**, so it reads as attached to that card rather than as a row of its own.
@@ -664,7 +666,7 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
 		// and a shelf relic is one nobody has ever put on. A relic the run once wore and sold has
 		// had its number reset, so there is nothing to show there either.
 		ui.DrawRelicCard(gs, screen, at.Min, record, "", affordable, false)
-		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", price), affordable)
+		s.figure(gs, screen, at, price, affordable)
 	}
 }
 
@@ -700,22 +702,40 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 }
 
-// figure writes the number under a card, centered on it. Dimmed toward the ground rather than
-// scaled toward black, because it is written straight onto the table — see the color rules in
-// CLAUDE.md, and `systems.ColorToward`, which exists for exactly this.
+// figure writes a card's price across its bottom edge, centered on it: the number and the vitae
+// mark, in the figure lettering — see priceLabel.
+//
+// **On the card rather than under it**, so nothing hangs below a pane but its reroll button. It is
+// set from the red sheet, inside the sheet's black contour, which reads on whatever picture is
+// under it. **An unaffordable price drops the red** for the neutral sheet dimmed toward the ground,
+// as the card under it is dimmed — unavailable first, a price second.
 func (s *ShopScene) figure(gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle,
-	msg string, lit bool) {
+	price int, lit bool) {
 
-	ink := ui.GroundInk
+	h := systems.UIHeightOf(shopFigureSize)
+	label := priceLabel(price)
+	left := float64(at.Min.X+cardWidth/2) - systems.MeasureFigure(label, h)/2
+	s.priceFigure(screen, price, left, float64(at.Max.Y-shopFigureInset)-h/2, lit)
+}
+
+// priceFigure writes a price with its left edge at x and its digits centered on cy: red when it
+// can be paid, the neutral sheet dimmed toward the ground when it cannot.
+func (s *ShopScene) priceFigure(screen *ebiten.Image, price int, x, cy float64, lit bool) {
+	sheet, ink := shopPriceSheet, color.RGBA{}
 	if !lit {
-		ink = systems.ColorToward(ui.GroundInk, ui.ScreenGround, 55)
+		sheet, ink = systems.FigureNeutral, systems.ColorToward(ui.GroundInk, ui.ScreenGround, 55)
 	}
+	h := systems.UIHeightOf(shopFigureSize)
+	label := priceLabel(price)
+	systems.DrawFigure(screen, label, sheet, ink, x+systems.MeasureFigure(label, h)/2, cy, h, 1, 1)
+}
 
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(at.Min.X+cardWidth/2), float64(at.Max.Y+shopFigureGap))
-	op.PrimaryAlign = text.AlignCenter
-	op.ColorScale.ScaleWithColor(ink)
-	systems.DrawText(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: shopFigureSize}, op)
+// shopPriceSheet is the figure sheet a price the player can afford is set from: the red one.
+const shopPriceSheet = "attack"
+
+// priceLabel is a sum of vitae as the interface writes it: the number and the vitae mark, `12 ¤`.
+func priceLabel(n int) string {
+	return fmt.Sprintf("%d ¤", n)
 }
 
 // Compile-time assurance that the record the shelf draws still carries what this screen reads off
@@ -819,7 +839,7 @@ func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image) {
 
 		lit := goodAvailable(gs, key)
 		ui.DrawGoodCard(gs, screen, at.Min, good.Name, goodArt(gs, good), lit)
-		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", shopPrice(gs, good.Price)), lit)
+		s.figure(gs, screen, at, shopPrice(gs, good.Price), lit)
 	}
 }
 

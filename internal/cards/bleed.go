@@ -93,6 +93,13 @@ var scrimWhite = color.RGBA{R: 244, G: 246, B: 250, A: 255}
 // picture now shows is the card's own surface, which is the honest failure: the card still reads as
 // a card and the art visibly needs regenerating.
 func drawArtBleed(dst *image.RGBA, s Spec, st Style) {
+	drawArtBleedFaded(dst, s, st, 0, color.RGBA{})
+}
+
+// drawArtBleedFaded is drawArtBleed with every pixel of the picture walked pct of the way toward
+// one color as it lands — how a playing card's figure says it cannot be afforded, by the same
+// distance its border, its marks and its upgrade art walk.
+func drawArtBleedFaded(dst *image.RGBA, s Spec, st Style, pct int, toward color.RGBA) {
 	if s.Art == nil {
 		return
 	}
@@ -112,8 +119,14 @@ func drawArtBleed(dst *image.RGBA, s Spec, st Style) {
 			if !insideRounded(iw, ih, radius, x, y) {
 				continue
 			}
-			dst.SetRGBA(x+inset, y+inset,
-				over(dst.RGBAAt(x+inset, y+inset), tmp.RGBAAt(x+inset, y+inset)))
+			c := tmp.RGBAAt(x+inset, y+inset)
+			if pct > 0 && c.A > 0 {
+				// Premultiplied, so the target is scaled by the pixel's own alpha — see blitGlyph.
+				faded := systems.ColorToward(c, premul(toward, c.A), pct)
+				faded.A = c.A
+				c = faded
+			}
+			dst.SetRGBA(x+inset, y+inset, over(dst.RGBAAt(x+inset, y+inset), c))
 		}
 	}
 }

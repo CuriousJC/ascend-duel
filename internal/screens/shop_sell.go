@@ -14,7 +14,6 @@ package screens
 // else.
 
 import (
-	"fmt"
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/journal"
@@ -172,7 +171,7 @@ func (s *sellTab) updateSellTab(gs *state.GlobalState) {
 		return
 	}
 
-	s.sellButton.Text = fmt.Sprintf("SELL FOR %d?", s.salePrice())
+	s.sellButton.Text = "SELL " + priceLabel(s.salePrice())
 	place(s.sellButton, s.sellTabRect(gs))
 	systems.UpdateButton(gs, s.sellButton)
 

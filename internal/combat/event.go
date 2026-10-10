@@ -360,6 +360,20 @@ type Event struct {
 	HandPlayAdd [maxHandTerms]int
 	HandPlayPct [maxHandTerms]int
 
+	// HandAwaken[i] is the damage an Awakening added to hit i's card: after the card's own multiplier
+	// and played riders, before the relics that price the card. Zero on the turn's first card, on a
+	// defense and on every hit of a turn whose first card woke nothing. HandAmounts already has it
+	// inside it, relic-priced.
+	HandAwaken [maxHandTerms]int
+
+	// Awaken is what every attack after the turn's first card gains from the Awakenings the first
+	// card woke, and AwakenSeats is which worn seats woke. AwakenOpener is the opener's index into the
+	// turn as it resolved — the convention HandCards and Slot use — so a screen can toast the card
+	// that woke them. See combat.AwakenBonus.
+	Awaken       int
+	AwakenSeats  []bool
+	AwakenOpener int
+
 	// HitAmounts[i] is what hit i comes to: the card's term (its riders and its relics inside it),
 	// times the hand's
 	// multiplier, times HandScale — each step rounded toward zero, on this hit alone.

@@ -141,8 +141,9 @@ type ShopScene struct {
 
 	// stockRNG and packRNG are the visit's two streams, kept so a reroll advances a cursor rather
 	// than starting a second sequence. See Init.
-	stockRNG *rand.Rand
-	packRNG  *rand.Rand
+	stockRNG  *rand.Rand
+	packRNG   *rand.Rand
+	mythicRNG *rand.Rand
 
 	// relicReroll and packReroll are the two buttons under those panes. **Two buttons rather than
 	// one moved between two places**, unlike the worn row's sell tab, because both are up at once.
@@ -230,10 +231,11 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	// beside it — the property TODO.md asked for, and the one that keeps a replayed run exact.
 	s.stockRNG = shopRNG(gs, seeds.ShopStock)
 	s.packRNG = shopRNG(gs, seeds.PackOffer)
+	s.mythicRNG = shopRNG(gs, seeds.MythicRoll)
 	s.rerolls = map[shopPane]int{}
 	s.drunk = map[string]bool{}
 	s.offered = dealPacks(s.packRNG)
-	s.shelf = dealShelf(gs, s.stockRNG)
+	s.shelf = dealShelf(gs, s.stockRNG, s.mythicRNG)
 
 	// **The realm's tonic is settled at its first shop** and every later shop in the realm shows
 	// the same one, or an empty seat once it is drunk. See session/tonic.go.
@@ -285,7 +287,11 @@ func shelfKeys(items []shelfItem) []string {
 //
 // **What is already worn is off the shelf**, rather than shown and refused. A relic on your hand
 // offered back to you is a seat spent saying nothing, and `Buy` would turn the click down anyway.
-func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
+//
+// **A mythic is never on the tickets.** Each seat first rolls one in data.MythicOdds on `mythic`
+// (`seeds.MythicRoll`) and, on a hit, takes a mythic the run is not wearing; otherwise it draws
+// from everything else. A nil `mythic` rolls nothing.
+func dealShelf(gs *state.GlobalState, rng, mythic *rand.Rand) []shelfItem {
 	if gs.Run == nil || rng == nil {
 		return nil
 	}
@@ -295,15 +301,28 @@ func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
 		worn[key] = true
 	}
 
-	var pool []string
+	var pool, mythics []string
 	for _, key := range gs.Run.OfferableRelics() {
-		if !worn[key] {
+		switch {
+		case worn[key]:
+		case session.RelicRarity(key) == data.Mythic:
+			mythics = append(mythics, key)
+		default:
 			pool = append(pool, key)
 		}
 	}
 
 	out := make([]shelfItem, 0, shelfSize)
-	for len(out) < shelfSize && len(pool) > 0 {
+	for len(out) < shelfSize && (len(pool) > 0 || len(mythics) > 0) {
+		if mythic != nil && mythic.Intn(data.MythicOdds) == 0 && len(mythics) > 0 {
+			at := mythic.Intn(len(mythics))
+			out = append(out, shelfItem{key: mythics[at]})
+			mythics = append(mythics[:at], mythics[at+1:]...)
+			continue
+		}
+		if len(pool) == 0 {
+			break
+		}
 		at := drawWeighted(pool, rng)
 		out = append(out, shelfItem{key: pool[at]})
 		pool = append(pool[:at], pool[at+1:]...)

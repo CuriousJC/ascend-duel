@@ -251,6 +251,9 @@ is a block and nothing else. Basic is no element and matches nothing.
 - **No cap.** Five ice shields eating five ice hits is five more points. What bounds it is how many
   shields a turn can pay for and how many hits a creature throws; the five-card cap on a turn still
   holds, so a big surge buys dearer cards rather than more of them.
+- **A form Attunement banks a point per card of its form played** — the Slash Attunement, +1 AP
+  next turn for every slash card the turn held, whatever its hit did. `surge-per-card` at
+  `turn-taken`; spent exactly as a block's surge is.
 - **It is the mirror of the fizzle** — see §A creature's own element. The duelist has no element
   for a creature's hit to fizzle on, so matching a creature's element pays the player on defense
   where it costs them on offense.
@@ -588,6 +591,9 @@ damage ice hit is 0 — while the fire Bash beside it lands as it always did.
   spent, since it is the target's nature.
 - **A wildcard never fizzles** *(owner's call)*. It counts as every element when a hand is formed,
   and a card that matched every creature's element would be wasted against all of them.
+- **An Attunement lets its element through.** A duelist wearing the Ice Attunement lands ice cards
+  on an ice creature as on any other — blockable, draining and stepping a growing relic like any
+  hit. The pierce is the thrower's, one relic per element, `pierce-element` at `equipped`.
 - **Basic never fizzles, and the duelist has no element**, so the rule runs one way: a creature's
   hits always land on the player. The mirror is on defense — a shield of the creature's element
   banks an action point when it eats one of its hits. See §A shield of the hit's own element banks
@@ -1696,7 +1702,7 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
   shelf's rule rather than the worn row's: the price is on the card, the purse cannot go into
   debt, and what it does is visible on the duelist card immediately.
 
-- **A relic declares a rarity, and the rarity is the price.** `relics.json` names one of three
+- **A relic declares a rarity, and the rarity is the price.** `relics.json` names one of four
   tiers and `data.Rarity` turns it into both what the shop charges and how often the shelf offers
   it:
 
@@ -1705,10 +1711,16 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
   | common | 3 | 1 | 10 |
   | uncommon | 5 | 2 | 4 |
   | rare | 7 | 3 | 1 |
+  | mythic | 10 | 4 | — |
 
   **A common relic is 3, and that is the base everything else is read against** — the plainest
   thing the grammar can say, priced at what a first shop can afford.
-- **Three tiers rather than a number per relic.** A per-relic price can only be judged one relic
+- **A mythic is not on the tickets** *(owner's call, 2026-10-10)*. Each shelf seat first rolls one
+  in a thousand (`data.MythicOdds`) on its own stream, `seeds.MythicRoll`, and on a hit takes a
+  mythic the run is not wearing; otherwise it draws on tickets from everything else. A share of the
+  tickets would move every time a common was authored; a flat 0.1% a seat does not. **A mythic
+  wears a near-black border** so the art is the loudest thing on the card.
+- **Three priced tiers rather than a number per relic.** A per-relic price can only be judged one relic
   at a time and drifts; a tier is read against the whole catalog at a glance, and rebalancing a
   relic is moving it rather than inventing a figure. **What that costs, said out loud:** two relics
   in the same tier cost the same even when one is plainly stronger — the answer to that is which
@@ -1725,7 +1737,7 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
 - **Nothing measures whether any of those numbers is right.** Nothing in the repo measures what
   a relic does to a duel, so what a doubling of every slash card is worth in vitae is a
   judgment. Recorded as a judgment rather than dressed up as a derivation.
-- **Selling pays the tier's own figure — 1, 2 or 3**, written down rather than derived from the
+- **Selling pays the tier's own figure — 1, 2, 3 or 4**, written down rather than derived from the
   price by arithmetic that has to be argued with. The round trip loses, and loses more the dearer
   the relic — a shelf you could try on for free
   would be a rerolling of your hand every visit rather than a decision.
@@ -1803,13 +1815,16 @@ and a proposal landing in a full one is a sibling.
 | **rung relics, multiplying** | uncommon / rare | `scale-hand-damage` on one rung; **the top two rungs are rare**, because 4x on a Four of a Kind makes every hit twentyfold |
 | **element repeats** | uncommon | the color half of the Twisted form repeats |
 | **held-card relics** | common | DMG per matching card **kept back**, one per color and one per form |
+| **orbs** | common | every flip, element and form — see the tier rule below |
+| **attunements** | uncommon, locked | a pierce per element, a surge per form; each behind the 300-card achievement for its element or form |
+| **awakenings** | common | a first card of one element or form raises every attack after it by 10 |
+| **mythics** | mythic | the Eternity Pearl |
 
 **Four tier rules, and the reasoning is worth more than the assignments:**
 
 - **Every card-cost reducer is rare.** A discount is worth a fraction of a turn every turn,
   forever; nothing else at common compounds like that.
-- **Every flip relic is uncommon.** A flip is what makes a mono-color build reachable at all, and
-  the color payoffs it feeds are uncommon already, so a common flip undersells itself.
+- **Every orb is common** *(owner's call, 2026-10-10)* — the element flips and the form orbs alike.
 - **A demotion is a discount written the other way round**, and belongs in the cost family's tier.
   The narrow version being cheaper than the wide one is the inconsistency to check for.
 - **Flat, self-capping and unable to compound is what common means.** A relic with a dead case
@@ -1893,6 +1908,33 @@ Quartered, Perfected — were written as three rules apiece, one per axis, which
 fired once per axis the blow satisfied: Quartered Rings paid 4x twice on four identical cards
 and dealt 16x, against its own printed "Every Four of a Kind deals 4x DMG." `Hand` and `Hands`
 are the same predicate and a record setting both is refused at load.
+
+### The Awakenings — a first card that raises the turn behind it
+
+**If the turn's first card matches, every attack queued after it gains +10 on its card — after the
+card's own multiplier and riders, before the relics that price the card** *(owner's call,
+2026-10-10)*, so a Club, a Swarm and the hand all multiply the 10. One per element and one per
+attack form, all common.
+
+- **First as queued, whatever it is.** A Brace queued first is the opener even though the defend
+  phase resolves first, and a fire Brace opener wakes the fire Awakening. `First` is the predicate,
+  read at `blow-formed` and only by `awaken`, and the rule's element or form is matched against
+  that one card.
+- **The opener gains nothing and neither does a defense.** Every landing of a later attack gains
+  the 10, an echo's or a repeat's included; two Awakenings that both wake add.
+- **It is shown before a card is counted**: on the announcement's beat the Awakening and its opener
+  toast together, then every attack it raised rattles, and only then do the lines run — each
+  carrying its `+ 10` flying out of the relic inside the card's working. The fight log writes it
+  inside the card's bracket, before the relics' factors. `Event.HandAwaken`, `Awaken`, `AwakenSeats` and `AwakenOpener` carry it.
+
+### The Eternity Pearl — the mythic
+
+**At the top of every fight it copies one carried consumable at random, weightless.** The pick is
+over everything carried, weightless copies included, off `seeds.PearlCopy`; the copy goes into its
+own kind's list and stays until spent or sold, so the pane grows without ever filling. Once per
+fight however often the fight is set up — the run remembers which fight it last fired in. An empty
+pane copies nothing. **The pearl toasts as the combat screen opens** whenever it copied something.
+`fight-begun` / `copy-consumable`, and a cantrip-relic may not wake at it.
 
 ### The shield relics
 
@@ -2300,7 +2342,12 @@ kinds fill the seats is the player's business.
 
 - **The cap came from the pane and not the other way round.** A row drawn as `n/2` has to be a rule
   or it is a lie the first time a fourth consumable arrives. `session.MaxConsumables` is that rule,
-  and `ConsumableCount` counts the sack, the satchel, the scroll case and the pouch together.
+  and `WeightedConsumables` counts the sack, the satchel, the scroll case and the pouch together.
+- **A weightless consumable takes no seat** *(owner's call, 2026-10-10)*. It is spent, sold and
+  aimed like any other and draws floating the way a weightless relic does, but it never counts
+  toward the cap or the pane's `held/3`. Weightless is a property of one carried entry — two runes
+  of one record may be one of each — and it is saved with the run. The Eternity Pearl is what makes
+  one.
 - **What it buys is that the fourth purchase is a decision.** An uncapped consumable is one a rich
   run hoards rather than spends; with three seats, a pack bought while all are full is a consumable
   you have to spend one to make room for.
@@ -3017,7 +3064,8 @@ cantrip's own record key.
   It drags along the row like any relic — worn order is firing order, so where it stands decides
   what it compounds with — and a run relic dragged past it keeps its place among the run's own
   relics. It cannot be sold.
-- **Any relic may be worn weightless.** The run keeps the flag per relic record
+- **Any relic may be worn weightless**, and any consumable carried weightless — see §The
+  consumables pane holds three. The run keeps the flag per relic record
   (`Session.SetWeightless`), saves it with the run, and hands it to the duelist on the worn relic;
   only the relics that weigh something count against the fingers or toward the pane's `n/5`. Nothing
   in the shipped game sets it on a run relic yet.
@@ -3627,6 +3675,8 @@ relic they cannot yet judge; behind the hand, it arrives as the reward for havin
   repeat ring opens after fifty cards of its form or its element have been played, across every run,
   so a first run's shelf carries none of them and the opening fights are the plain ones. A card
   counts in the element it was played as, and a wildcard counts once in each of the five.
+- **The Attunements unlock on use too** *(owner's call, 2026-10-10)*: each opens after three
+  hundred cards of its element or its form have been played, across every run.
 - **Locking a relic is a catalog change, and it moves the shelf shares.** A new player's shelf is
   drawn from the default pool alone, so every tier's tickets are over a smaller catalog.
   `go run ./tools/relicsheet` prints both sets of shares and its *pool* chips read the catalog

@@ -169,6 +169,14 @@ type RunSnapshot struct {
 	// lasts only as long as the fight, and a run is never resumed inside one.
 	Cantrips []string `json:"cantrips,omitempty"`
 
+	// WeightlessCarried is which carried entries take no seat in the consumables pane, as positions in
+	// Held, Pouch, Satchel and Cantrips. Omitted when there are none.
+	WeightlessCarried *CarriedSnapshot `json:"weightlessCarried,omitempty"`
+
+	// PearlFight is one more than the index of the last fight the Eternity Pearl copied into, so a
+	// resumed fight does not copy a second time. Zero when it has never fired.
+	PearlFight int `json:"pearlFight,omitempty"`
+
 	// LastRune is the record key of the rune the run spent most recently, which is what a
 	// chimera copies. **A name, never an ordinal**, the rule every vocabulary in this file is
 	// under. Empty on a run that has spent none, which is what makes a chimera refuse.
@@ -288,6 +296,7 @@ type LedgerSumSnapshot struct {
 	Base    int    `json:"base,omitempty"`
 	PlayAdd int    `json:"playAdd,omitempty"`
 	PlayPct int    `json:"playPct,omitempty"`
+	Awaken  int    `json:"awaken,omitempty"`
 	Scales  []int  `json:"scales,omitempty"`
 }
 
@@ -363,4 +372,12 @@ func DeleteRun(s Store) error { return s.remove(runFile) }
 type RiderSnapshot struct {
 	Kind   string `json:"kind"`
 	Amount int    `json:"amount"`
+}
+
+// CarriedSnapshot is a position list per carried kind.
+type CarriedSnapshot struct {
+	Held     []int `json:"held,omitempty"`
+	Pouch    []int `json:"pouch,omitempty"`
+	Satchel  []int `json:"satchel,omitempty"`
+	Cantrips []int `json:"cantrips,omitempty"`
 }

@@ -508,6 +508,37 @@ type handMathBox struct {
 	// own schedules — the shakes from Update, the signals from playback.
 	freshShakes  []mathRef
 	freshSignals []mathRef
+
+	// awakenT is the Awakenings' beat, between the announcement and the lines, and the zero Travel
+	// when nothing woke. **It is shown before any card is counted** *(owner's call)*: the relic and
+	// the card that woke it toast together, then every attack it raised rattles, and only then do
+	// the lines start — so a +10 arriving in a line has already been explained.
+	//
+	// awakenRelics and awakenOpener (a seat, or -1) are the first half's shakes, awakenCards the
+	// second's; awakenLate says the second half has gone. pendRelics and pendCards are what the
+	// beat has set moving and takeShakes has not yet drained.
+	awakenT      ui.Travel
+	awakenRelics []bool
+	awakenOpener int
+	awakenCards  []int
+	awakenLate   bool
+	pendRelics   []bool
+	pendCards    []int
+}
+
+// awakenTicks is the Awakenings' beat: the toast, then the raised cards, a beat each.
+func awakenTicks() int { return ui.Beat(2, 1) }
+
+// wake starts the Awakenings' beat, if anything woke, and reports whether it did.
+func (b *handMathBox) wake() bool {
+	if b.awakenT.Ticks == 0 {
+		return false
+	}
+	b.pendRelics = append(b.pendRelics, b.awakenRelics...)
+	if b.awakenOpener >= 0 {
+		b.pendCards = append(b.pendCards, b.awakenOpener)
+	}
+	return true
 }
 
 // growthNow is the accumulators one side's relics have reached at this point, and false when the
@@ -558,7 +589,14 @@ func (b *handMathBox) takeShakes(side combat.Side) (relics []bool, cards []int) 
 			cards = append(cards, it.cardSeat-1)
 		}
 	}
-	b.freshShakes = nil
+	for seat, on := range b.pendRelics {
+		if on {
+			relics = growTo(relics, seat)
+			relics[seat] = true
+		}
+	}
+	cards = append(cards, b.pendCards...)
+	b.freshShakes, b.pendRelics, b.pendCards = nil, nil, nil
 	return relics, cards
 }
 
@@ -618,6 +656,13 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event, at in
 
 	s.layOutMath(gs, &box)
 	box.shoutAt = s.handShoutAt(gs)
+	box.awakenOpener = -1
+	if e.Awaken != 0 {
+		box.awakenT = ui.NewTravel(0, awakenTicks())
+		box.awakenRelics = append([]bool(nil), e.AwakenSeats...)
+		box.awakenOpener = e.AwakenOpener
+		box.awakenCards = awakenedSeats(e)
+	}
 
 	s.Theater.mathBox = box
 
@@ -630,6 +675,19 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event, at in
 	// **And the rung relic pays into the duelist before the hits are worked out**, on the same beat
 	// and for the same reason: the DMG every line is about to use is the figure this raises.
 	s.raiseDMGSignal(e)
+}
+
+// awakenedSeats is every played seat an Awakening raised, once each, in the order their hits run.
+func awakenedSeats(e combat.Event) []int {
+	var out []int
+	seen := map[int]bool{}
+	for i := 0; i < e.HandCardCount; i++ {
+		if seat := e.HandCards[i]; e.HandAwaken[i] != 0 && !seen[seat] {
+			seen[seat] = true
+			out = append(out, seat)
+		}
+	}
+	return out
 }
 
 // placeFigures says where each flying item of one line sets off from and what color it is: the
@@ -819,6 +877,7 @@ func termItems(e combat.Event, i int) []mathItem {
 			t:        ui.NewTravel(0, mathTermTicks()),
 		}}
 		out = append(out, playRiderItems(e, i)...)
+		out = append(out, awakenItems(e, i)...)
 		return append(out, relicFactorItems(e, i)...)
 	}
 
@@ -849,10 +908,28 @@ func termItems(e combat.Event, i int) []mathItem {
 		innerOperator("x"),
 		mult,
 	}
-	// **DUELIST, CARD, CARD RELICS**: the duelist's DMG times the card's own multiplier, then the
-	// card's own riders, then the relics that priced what the card came to.
+	// **DUELIST, CARD, AWAKENING, CARD RELICS**: the duelist's DMG times the card's own multiplier,
+	// then the card's own riders, then what the opener woke, then the relics that priced what the
+	// card came to.
 	out = append(out, playRiderItems(e, i)...)
+	out = append(out, awakenItems(e, i)...)
 	return append(out, relicFactorItems(e, i)...)
+}
+
+// awakenItems is what the opener woke on this hit's card: a `+` and the figure, flying out of the
+// Awakening that paid it, in the relic pink — after the card's riders and before the relics that
+// multiply it.
+func awakenItems(e combat.Event, i int) []mathItem {
+	add := e.HandAwaken[i]
+	if add == 0 {
+		return nil
+	}
+	it := relicNote(100, firstSeat(e.AwakenSeats)-1)
+	if it == nil {
+		return nil
+	}
+	it.text = strconv.Itoa(add)
+	return []mathItem{wide(mathOperator("+")), *it}
 }
 
 // playRiderItems is what the hit's own card's riders did to its term, each a row of its own after
@@ -1286,7 +1363,7 @@ func (b *handMathBox) Running() bool {
 	if !b.active {
 		return false
 	}
-	if !b.shoutT.Done() || !b.Hold.Done() {
+	if !b.shoutT.Done() || !b.awakenT.Done() || !b.Hold.Done() {
 		return true
 	}
 	for _, c := range b.columns {
@@ -1317,7 +1394,18 @@ func (b *handMathBox) Tick() {
 	}
 	if !b.shoutT.Done() {
 		b.shoutT.Tick()
-		if b.shoutT.Done() {
+		if b.shoutT.Done() && !b.wake() {
+			b.begin()
+		}
+		return
+	}
+	if !b.awakenT.Done() {
+		b.awakenT.Tick()
+		if !b.awakenLate && b.awakenT.Progress() >= 0.5 {
+			b.awakenLate = true
+			b.pendCards = append(b.pendCards, b.awakenCards...)
+		}
+		if b.awakenT.Done() {
 			b.begin()
 		}
 		return

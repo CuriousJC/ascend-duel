@@ -88,7 +88,7 @@
 <h1>Relic sheet</h1>
 
 <p class="facts">
-  128 relics, 3 of them drawing the default face,
+  145 relics, 0 of them drawing the default face,
   0 with no subject paragraph written.
   Relic card <code>200&times;280</code>,
   corner radius <code>15</code>,
@@ -154,7 +154,7 @@
   <strong>Two shelves, because a relic can be locked.</strong> A relic carrying an
   <code>Unlock</code> is offered only to a run started by a player whose profile holds that key,
   and an achievement's <code>Unlocks</code> is what grants it. The first list is a player holding
-  every unlock; the second is a new player's shelf, with the 14 locked relics out of the
+  every unlock; the second is a new player's shelf, with the 22 locked relics out of the
   draw &mdash; and the shares move, since every tier's tickets are over a smaller catalog. The
   <em>pool</em> chips below narrow the catalog the same way.
 </p>
@@ -162,29 +162,36 @@
 <ul class="shelf">
 
   <li class="tier common"><strong>common</strong>
-    40 relics &middot; 3 vitae, sells for 1 &middot;
-    weight 10 each &middot; 57.8% of a shelf draw</li>
+    74 relics &middot; 3 vitae, sells for 1 &middot;
+    weight 10 each &middot; 77.1% of a shelf draw</li>
 
   <li class="tier uncommon"><strong>uncommon</strong>
-    68 relics &middot; 5 vitae, sells for 2 &middot;
-    weight 4 each &middot; 39.3% of a shelf draw</li>
+    50 relics &middot; 5 vitae, sells for 2 &middot;
+    weight 4 each &middot; 20.8% of a shelf draw</li>
 
   <li class="tier rare"><strong>rare</strong>
     20 relics &middot; 7 vitae, sells for 3 &middot;
-    weight 1 each &middot; 2.9% of a shelf draw</li>
+    weight 1 each &middot; 2.1% of a shelf draw</li>
+
+  <li class="tier mythic"><strong>mythic</strong>
+    1 relics &middot; 10 vitae, sells for 4 &middot;
+    weight 0 each &middot; 0.1% of a shelf draw</li>
 
 </ul>
 <h3>A new player's shelf</h3>
 <ul class="shelf">
 
   <li class="tier common"><strong>common</strong>
-    38 relics &middot; 60.3% of a shelf draw</li>
+    72 relics &middot; 83.1% of a shelf draw</li>
 
   <li class="tier uncommon"><strong>uncommon</strong>
-    58 relics &middot; 36.8% of a shelf draw</li>
+    32 relics &middot; 14.8% of a shelf draw</li>
 
   <li class="tier rare"><strong>rare</strong>
-    18 relics &middot; 2.9% of a shelf draw</li>
+    18 relics &middot; 2.1% of a shelf draw</li>
+
+  <li class="tier mythic"><strong>mythic</strong>
+    1 relics &middot; 0.1% of a shelf draw</li>
 
 </ul>
 
@@ -235,26 +242,35 @@
 </style>
 <div class="sheet-filters" hidden>
   <div class="sheet-facet"><span class="sheet-facet-label">pool</span>
-    <button type="button" data-facet="pool" data-value="default" aria-pressed="false">default<i>114</i></button>
+    <button type="button" data-facet="pool" data-value="default" aria-pressed="false">default<i>123</i></button>
+    <button type="button" data-facet="pool" data-value="arcane-attunement" aria-pressed="false">behind arcane-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="arcane-repeat-relics" aria-pressed="false">behind arcane-repeat-relics<i>1</i></button>
     <button type="button" data-facet="pool" data-value="card-five-relics" aria-pressed="false">behind card-five-relics<i>1</i></button>
     <button type="button" data-facet="pool" data-value="card-four-relics" aria-pressed="false">behind card-four-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="crush-attunement" aria-pressed="false">behind crush-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="crush-repeat-relics" aria-pressed="false">behind crush-repeat-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="earth-attunement" aria-pressed="false">behind earth-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="earth-repeat-relics" aria-pressed="false">behind earth-repeat-relics<i>1</i></button>
     <button type="button" data-facet="pool" data-value="element-five-relics" aria-pressed="false">behind element-five-relics<i>1</i></button>
     <button type="button" data-facet="pool" data-value="element-four-relics" aria-pressed="false">behind element-four-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="fire-attunement" aria-pressed="false">behind fire-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="fire-repeat-relics" aria-pressed="false">behind fire-repeat-relics<i>1</i></button>
     <button type="button" data-facet="pool" data-value="form-five-relics" aria-pressed="false">behind form-five-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="ice-attunement" aria-pressed="false">behind ice-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="ice-repeat-relics" aria-pressed="false">behind ice-repeat-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="lightning-attunement" aria-pressed="false">behind lightning-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="lightning-repeat-relics" aria-pressed="false">behind lightning-repeat-relics<i>1</i></button>
     <button type="button" data-facet="pool" data-value="no-hand-relics" aria-pressed="false">behind no-hand-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="slash-attunement" aria-pressed="false">behind slash-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="slash-repeat-relics" aria-pressed="false">behind slash-repeat-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="stab-attunement" aria-pressed="false">behind stab-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="stab-repeat-relics" aria-pressed="false">behind stab-repeat-relics<i>1</i></button>
   </div>
   <div class="sheet-facet"><span class="sheet-facet-label">rarity</span>
-    <button type="button" data-facet="rarity" data-value="common" aria-pressed="false">common<i>40</i></button>
-    <button type="button" data-facet="rarity" data-value="uncommon" aria-pressed="false">uncommon<i>68</i></button>
+    <button type="button" data-facet="rarity" data-value="common" aria-pressed="false">common<i>74</i></button>
+    <button type="button" data-facet="rarity" data-value="uncommon" aria-pressed="false">uncommon<i>50</i></button>
     <button type="button" data-facet="rarity" data-value="rare" aria-pressed="false">rare<i>20</i></button>
+    <button type="button" data-facet="rarity" data-value="mythic" aria-pressed="false">mythic<i>1</i></button>
   </div>
   <div class="sheet-facet"><span class="sheet-facet-label">family</span>
     <button type="button" data-facet="family" data-value="elemental-flips" aria-pressed="false">Elemental flips<i>20</i></button>
@@ -288,6 +304,11 @@
     <button type="button" data-facet="family" data-value="deck-alteration" aria-pressed="false">Deck alteration<i>1</i></button>
     <button type="button" data-facet="family" data-value="shields" aria-pressed="false">Shields<i>5</i></button>
     <button type="button" data-facet="family" data-value="helms" aria-pressed="false">Helms<i>5</i></button>
+    <button type="button" data-facet="family" data-value="elemental-attunements" aria-pressed="false">Elemental attunements<i>5</i></button>
+    <button type="button" data-facet="family" data-value="form-attunements" aria-pressed="false">Form attunements<i>3</i></button>
+    <button type="button" data-facet="family" data-value="elemental-awakenings" aria-pressed="false">Elemental awakenings<i>5</i></button>
+    <button type="button" data-facet="family" data-value="form-awakenings" aria-pressed="false">Form awakenings<i>3</i></button>
+    <button type="button" data-facet="family" data-value="mythics" aria-pressed="false">Mythics<i>1</i></button>
   </div>
   <div class="sheet-filters-end">
     <button type="button" class="sheet-clear" hidden>clear</button>
@@ -391,18 +412,18 @@
 <section class="sheet-group" data-family="elemental-flips">
 <h3 class="family">
   Elemental flips
-  <span>20 relics &middot; all uncommon</span>
+  <span>20 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-lightning-to-ice.png" width="228" height="308"
            alt="Frozen Charged Orb">
       <div class="about">
         <p class="name">Frozen Charged Orb</p>
         <div class="record">flip-lightning-to-ice</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -420,14 +441,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-earth-to-ice.png" width="228" height="308"
            alt="Frozen Stone Orb">
       <div class="about">
         <p class="name">Frozen Stone Orb</p>
         <div class="record">flip-earth-to-ice</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -445,14 +466,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-fire-to-ice.png" width="228" height="308"
            alt="Frozen Fire Orb">
       <div class="about">
         <p class="name">Frozen Fire Orb</p>
         <div class="record">flip-fire-to-ice</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -470,14 +491,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-ice-to-fire.png" width="228" height="308"
            alt="Burning Frozen Orb">
       <div class="about">
         <p class="name">Burning Frozen Orb</p>
         <div class="record">flip-ice-to-fire</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -495,14 +516,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-lightning-to-fire.png" width="228" height="308"
            alt="Burning Charged Orb">
       <div class="about">
         <p class="name">Burning Charged Orb</p>
         <div class="record">flip-lightning-to-fire</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -520,14 +541,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-earth-to-fire.png" width="228" height="308"
            alt="Burning Stone Orb">
       <div class="about">
         <p class="name">Burning Stone Orb</p>
         <div class="record">flip-earth-to-fire</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -545,14 +566,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-ice-to-lightning.png" width="228" height="308"
            alt="Charged Frozen Orb">
       <div class="about">
         <p class="name">Charged Frozen Orb</p>
         <div class="record">flip-ice-to-lightning</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -570,14 +591,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-fire-to-lightning.png" width="228" height="308"
            alt="Charged Fire Orb">
       <div class="about">
         <p class="name">Charged Fire Orb</p>
         <div class="record">flip-fire-to-lightning</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -595,14 +616,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-earth-to-lightning.png" width="228" height="308"
            alt="Charged Stone Orb">
       <div class="about">
         <p class="name">Charged Stone Orb</p>
         <div class="record">flip-earth-to-lightning</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -620,14 +641,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-ice-to-earth.png" width="228" height="308"
            alt="Muddy Frozen Orb">
       <div class="about">
         <p class="name">Muddy Frozen Orb</p>
         <div class="record">flip-ice-to-earth</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -645,14 +666,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-fire-to-earth.png" width="228" height="308"
            alt="Muddy Fire Orb">
       <div class="about">
         <p class="name">Muddy Fire Orb</p>
         <div class="record">flip-fire-to-earth</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -670,14 +691,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-lightning-to-earth.png" width="228" height="308"
            alt="Muddy Charged Orb">
       <div class="about">
         <p class="name">Muddy Charged Orb</p>
         <div class="record">flip-lightning-to-earth</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -695,14 +716,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-fire-to-arcane.png" width="228" height="308"
            alt="Enchanted Fire Orb">
       <div class="about">
         <p class="name">Enchanted Fire Orb</p>
         <div class="record">flip-fire-to-arcane</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -720,14 +741,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-ice-to-arcane.png" width="228" height="308"
            alt="Enchanted Frozen Orb">
       <div class="about">
         <p class="name">Enchanted Frozen Orb</p>
         <div class="record">flip-ice-to-arcane</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -745,14 +766,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-lightning-to-arcane.png" width="228" height="308"
            alt="Enchanted Charged Orb">
       <div class="about">
         <p class="name">Enchanted Charged Orb</p>
         <div class="record">flip-lightning-to-arcane</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -770,14 +791,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-earth-to-arcane.png" width="228" height="308"
            alt="Enchanted Stone Orb">
       <div class="about">
         <p class="name">Enchanted Stone Orb</p>
         <div class="record">flip-earth-to-arcane</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -795,14 +816,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-arcane-to-fire.png" width="228" height="308"
            alt="Burning Arcane Orb">
       <div class="about">
         <p class="name">Burning Arcane Orb</p>
         <div class="record">flip-arcane-to-fire</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -820,14 +841,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-arcane-to-ice.png" width="228" height="308"
            alt="Frozen Arcane Orb">
       <div class="about">
         <p class="name">Frozen Arcane Orb</p>
         <div class="record">flip-arcane-to-ice</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -845,14 +866,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-arcane-to-lightning.png" width="228" height="308"
            alt="Charged Arcane Orb">
       <div class="about">
         <p class="name">Charged Arcane Orb</p>
         <div class="record">flip-arcane-to-lightning</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -870,14 +891,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-arcane-to-earth.png" width="228" height="308"
            alt="Muddy Arcane Orb">
       <div class="about">
         <p class="name">Muddy Arcane Orb</p>
         <div class="record">flip-arcane-to-earth</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -901,18 +922,18 @@
 <section class="sheet-group" data-family="form-flips">
 <h3 class="family">
   Form flips
-  <span>6 relics &middot; all uncommon</span>
+  <span>6 relics &middot; all common</span>
 </h3>
 <div class="plates">
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-slash-to-crush.png" width="228" height="308"
            alt="Blunted Orb">
       <div class="about">
         <p class="name">Blunted Orb</p>
         <div class="record">flip-slash-to-crush</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -930,14 +951,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-stab-to-crush.png" width="228" height="308"
            alt="Snapped Orb">
       <div class="about">
         <p class="name">Snapped Orb</p>
         <div class="record">flip-stab-to-crush</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -955,14 +976,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-crush-to-stab.png" width="228" height="308"
            alt="Pointed Orb">
       <div class="about">
         <p class="name">Pointed Orb</p>
         <div class="record">flip-crush-to-stab</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -980,14 +1001,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-slash-to-stab.png" width="228" height="308"
            alt="Chipped Orb">
       <div class="about">
         <p class="name">Chipped Orb</p>
         <div class="record">flip-slash-to-stab</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -1005,14 +1026,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-stab-to-slash.png" width="228" height="308"
            alt="Slashing Orb">
       <div class="about">
         <p class="name">Slashing Orb</p>
         <div class="record">flip-stab-to-slash</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -1030,14 +1051,14 @@
       </div>
     </div>
   
-    <div class="plate sheet-item" data-rarity="uncommon" data-pool="default">
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
       <img src="relic-flip-crush-to-slash.png" width="228" height="308"
            alt="Razor Orb">
       <div class="about">
         <p class="name">Razor Orb</p>
         <div class="record">flip-crush-to-slash</div>
         
-          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
         
         
         
@@ -1938,7 +1959,7 @@ arcane card.</p>
           <li>when blow-formed, if element-four-of-a-kind → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>repeat-element-four</code></p>
         
       </div>
     </div>
@@ -1963,7 +1984,7 @@ arcane card.</p>
           <li>when blow-formed, if element-five-of-a-kind → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>repeat-element-five</code></p>
         
       </div>
     </div>
@@ -2836,7 +2857,7 @@ crush card.</p>
           <li>when card-cost, if slash → adjust-cost -1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>discount-slash</code></p>
         
       </div>
     </div>
@@ -3919,6 +3940,481 @@ different forms deals 3x DMG.</p>
         </ul>
         
           <p class="art">art: <code>ice-helm</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="elemental-attunements">
+<h3 class="family">
+  Elemental attunements
+  <span>5 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="fire-attunement">
+      <img src="relic-attune-fire.png" width="228" height="308"
+           alt="Fire Attunement">
+      <div class="about">
+        <p class="name">Fire Attunement</p>
+        <div class="record">attune-fire</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>fire-attunement</code> &mdash; WILDFIRE — Play 300 fire cards.</p>
+        
+        <p class="text">Fire cards land on fire creatures instead of fizzling.</p>
+        
+          <p class="draw">a coiled copper chain with sparks of orange vapor wrapping around the chain</p>
+        
+        
+        <ul class="rules">
+          <li>when equipped → pierce-element fire</li>
+        </ul>
+        
+          <p class="art">art: <code>attune-fire</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="ice-attunement">
+      <img src="relic-attune-ice.png" width="228" height="308"
+           alt="Ice Attunement">
+      <div class="about">
+        <p class="name">Ice Attunement</p>
+        <div class="record">attune-ice</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>ice-attunement</code> &mdash; GLACIER — Play 300 ice cards.</p>
+        
+        <p class="text">Ice cards land on ice creatures instead of fizzling.</p>
+        
+          <p class="draw">a coiled copper chain with sparks of blue vapor wrapping around the chain</p>
+        
+        
+        <ul class="rules">
+          <li>when equipped → pierce-element ice</li>
+        </ul>
+        
+          <p class="art">art: <code>attune-ice</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="lightning-attunement">
+      <img src="relic-attune-lightning.png" width="228" height="308"
+           alt="Lightning Attunement">
+      <div class="about">
+        <p class="name">Lightning Attunement</p>
+        <div class="record">attune-lightning</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>lightning-attunement</code> &mdash; STORMCALLER — Play 300 lightning cards.</p>
+        
+        <p class="text">Lightning cards land on lightning creatures instead of fizzling.</p>
+        
+          <p class="draw">a coiled copper chain with sparks of yellow vapor wrapping around the chain</p>
+        
+        
+        <ul class="rules">
+          <li>when equipped → pierce-element lightning</li>
+        </ul>
+        
+          <p class="art">art: <code>attune-lightning</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="earth-attunement">
+      <img src="relic-attune-earth.png" width="228" height="308"
+           alt="Earth Attunement">
+      <div class="about">
+        <p class="name">Earth Attunement</p>
+        <div class="record">attune-earth</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>earth-attunement</code> &mdash; MOUNTAIN — Play 300 earth cards.</p>
+        
+        <p class="text">Earth cards land on earth creatures instead of fizzling.</p>
+        
+          <p class="draw">a coiled copper chain with sparks of green vapor wrapping around the chain</p>
+        
+        
+        <ul class="rules">
+          <li>when equipped → pierce-element earth</li>
+        </ul>
+        
+          <p class="art">art: <code>attune-earth</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="arcane-attunement">
+      <img src="relic-attune-arcane.png" width="228" height="308"
+           alt="Arcane Attunement">
+      <div class="about">
+        <p class="name">Arcane Attunement</p>
+        <div class="record">attune-arcane</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>arcane-attunement</code> &mdash; ARCHMAGE — Play 300 arcane cards.</p>
+        
+        <p class="text">Arcane cards land on arcane creatures instead of fizzling.</p>
+        
+          <p class="draw">a coiled copper chain with sparks of purple vapor wrapping around the chain</p>
+        
+        
+        <ul class="rules">
+          <li>when equipped → pierce-element arcane</li>
+        </ul>
+        
+          <p class="art">art: <code>attune-arcane</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="form-attunements">
+<h3 class="family">
+  Form attunements
+  <span>3 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="stab-attunement">
+      <img src="relic-attune-stab.png" width="228" height="308"
+           alt="Stab Attunement">
+      <div class="about">
+        <p class="name">Stab Attunement</p>
+        <div class="record">attune-stab</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>stab-attunement</code> &mdash; THREE HUNDRED THRUSTS — Play 300 stabbing cards.</p>
+        
+        <p class="text">Every stabbing card you play banks &#43;1 AP for your next turn.</p>
+        
+          <p class="draw">a coiled ivory chain with rainbow colored vapor wrapped around it</p>
+        
+        
+        <ul class="rules">
+          <li>when turn-taken, if stab → surge-per-card &#43;1</li>
+        </ul>
+        
+          <p class="art">art: <code>attune-stab</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="slash-attunement">
+      <img src="relic-attune-slash.png" width="228" height="308"
+           alt="Slash Attunement">
+      <div class="about">
+        <p class="name">Slash Attunement</p>
+        <div class="record">attune-slash</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>slash-attunement</code> &mdash; THREE HUNDRED CUTS — Play 300 slashing cards.</p>
+        
+        <p class="text">Every slashing card you play banks &#43;1 AP for your next turn.</p>
+        
+          <p class="draw">a coiled steel chain with rainbow colored vapor wrapped around it</p>
+        
+        
+        <ul class="rules">
+          <li>when turn-taken, if slash → surge-per-card &#43;1</li>
+        </ul>
+        
+          <p class="art">art: <code>attune-slash</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="crush-attunement">
+      <img src="relic-attune-crush.png" width="228" height="308"
+           alt="Crush Attunement">
+      <div class="about">
+        <p class="name">Crush Attunement</p>
+        <div class="record">attune-crush</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>crush-attunement</code> &mdash; THREE HUNDRED BLOWS — Play 300 crushing cards.</p>
+        
+        <p class="text">Every crushing card you play banks &#43;1 AP for your next turn.</p>
+        
+          <p class="draw">a coiled granite chain with rainbow colored vapor wrapped around it</p>
+        
+        
+        <ul class="rules">
+          <li>when turn-taken, if crush → surge-per-card &#43;1</li>
+        </ul>
+        
+          <p class="art">art: <code>attune-crush</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="elemental-awakenings">
+<h3 class="family">
+  Elemental awakenings
+  <span>5 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
+      <img src="relic-awaken-fire.png" width="228" height="308"
+           alt="Awakening Flame">
+      <div class="about">
+        <p class="name">Awakening Flame</p>
+        <div class="record">awaken-fire</div>
+        
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
+        
+        
+        
+        <p class="text">If your first card is a fire card, every attack after it deals &#43;10 damage.</p>
+        
+          <p class="draw">a lapis chain with a bone carved eye pendant, swirling with orange fire swirls</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if fire → awaken &#43;10</li>
+        </ul>
+        
+          <p class="art">art: <code>awaken-fire</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
+      <img src="relic-awaken-ice.png" width="228" height="308"
+           alt="Awakening Frost">
+      <div class="about">
+        <p class="name">Awakening Frost</p>
+        <div class="record">awaken-ice</div>
+        
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
+        
+        
+        
+        <p class="text">If your first card is an ice card, every attack after it deals &#43;10 damage.</p>
+        
+          <p class="draw">a lapis chain with a bone carved eye pendant, swirling with blue ice swirls</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if ice → awaken &#43;10</li>
+        </ul>
+        
+          <p class="art">art: <code>awaken-ice</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
+      <img src="relic-awaken-lightning.png" width="228" height="308"
+           alt="Awakening Storm">
+      <div class="about">
+        <p class="name">Awakening Storm</p>
+        <div class="record">awaken-lightning</div>
+        
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
+        
+        
+        
+        <p class="text">If your first card is a lightning card, every attack after it deals &#43;10 damage.</p>
+        
+          <p class="draw">a lapis chain with a bone carved eye pendant, swirling with yellow lightning swirls</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if lightning → awaken &#43;10</li>
+        </ul>
+        
+          <p class="art">art: <code>awaken-lightning</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
+      <img src="relic-awaken-earth.png" width="228" height="308"
+           alt="Awakening Stone">
+      <div class="about">
+        <p class="name">Awakening Stone</p>
+        <div class="record">awaken-earth</div>
+        
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
+        
+        
+        
+        <p class="text">If your first card is an earth card, every attack after it deals &#43;10 damage.</p>
+        
+          <p class="draw">a lapis chain with a bone carved eye pendant, swirling with green earth swirls</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if earth → awaken &#43;10</li>
+        </ul>
+        
+          <p class="art">art: <code>awaken-earth</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
+      <img src="relic-awaken-arcane.png" width="228" height="308"
+           alt="Awakening Arcana">
+      <div class="about">
+        <p class="name">Awakening Arcana</p>
+        <div class="record">awaken-arcane</div>
+        
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
+        
+        
+        
+        <p class="text">If your first card is an arcane card, every attack after it deals &#43;10 damage.</p>
+        
+          <p class="draw">a lapis chain with a bone carved eye pendant, swirling with purple arcane swirls</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if arcane → awaken &#43;10</li>
+        </ul>
+        
+          <p class="art">art: <code>awaken-arcane</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="form-awakenings">
+<h3 class="family">
+  Form awakenings
+  <span>3 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
+      <img src="relic-awaken-stab.png" width="228" height="308"
+           alt="Awakening Spear">
+      <div class="about">
+        <p class="name">Awakening Spear</p>
+        <div class="record">awaken-stab</div>
+        
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
+        
+        
+        
+        <p class="text">If your first card is a stabbing card, every attack after it deals &#43;10 damage.</p>
+        
+          <p class="draw">a lapis chain with a bone carved eye pendant whose iris is ivory, swirling with rainbow swirls</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if stab → awaken &#43;10</li>
+        </ul>
+        
+          <p class="art">art: <code>awaken-stab</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
+      <img src="relic-awaken-slash.png" width="228" height="308"
+           alt="Awakening Blade">
+      <div class="about">
+        <p class="name">Awakening Blade</p>
+        <div class="record">awaken-slash</div>
+        
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
+        
+        
+        
+        <p class="text">If your first card is a slashing card, every attack after it deals &#43;10 damage.</p>
+        
+          <p class="draw">a lapis chain with a bone carved eye pendant whose iris is steel, swirling with rainbow swirls</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if slash → awaken &#43;10</li>
+        </ul>
+        
+          <p class="art">art: <code>awaken-slash</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="common" data-pool="default">
+      <img src="relic-awaken-crush.png" width="228" height="308"
+           alt="Awakening Club">
+      <div class="about">
+        <p class="name">Awakening Club</p>
+        <div class="record">awaken-crush</div>
+        
+          <p class="price"><span class="rarity common">common</span>3 vitae, sells back for 1</p>
+        
+        
+        
+        <p class="text">If your first card is a crushing card, every attack after it deals &#43;10 damage.</p>
+        
+          <p class="draw">a lapis chain with a bone carved eye pendant whose iris is granite, swirling with rainbow swirls</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if crush → awaken &#43;10</li>
+        </ul>
+        
+          <p class="art">art: <code>awaken-crush</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="mythics">
+<h3 class="family">
+  Mythics
+  <span>1 relic &middot; mythic</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="mythic" data-pool="default">
+      <img src="relic-eternity-pearl.png" width="228" height="308"
+           alt="Eternity Pearl">
+      <div class="about">
+        <p class="name">Eternity Pearl</p>
+        <div class="record">eternity-pearl</div>
+        
+          <p class="price"><span class="rarity mythic">mythic</span>10 vitae, sells back for 4</p>
+        
+        
+        
+        <p class="text">At the start of every fight, copy one of your consumables at random. The copy is weightless.</p>
+        
+          <p class="draw">a singular black pearl with an infinity symbol inside it, the rest of the card a background of rainbow vapor</p>
+        
+        
+        <ul class="rules">
+          <li>when fight-begun → copy-consumable &#43;1</li>
+        </ul>
+        
+          <p class="art">art: <code>eternity-pearl</code></p>
         
       </div>
     </div>

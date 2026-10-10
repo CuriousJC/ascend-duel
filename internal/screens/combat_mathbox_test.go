@@ -565,3 +565,19 @@ func TestALineIsSetInThreeLevelsOfAir(t *testing.T) {
 			mathTightGap, mathItemGap, mathWideGap)
 	}
 }
+
+// **An Awakening is a term inside the card's own working**, after its multiplier and before the
+// relics that price it, and the line still ends on the hit's own figure.
+func TestAnAwakeningIsATermInsideTheCard(t *testing.T) {
+	e := handEvent("pair", []int{20, 30}, 150, 75)
+	e.HandDMG = 10
+	e.HandCardPct[1], e.HandCardBase[1] = 200, 20
+	e.HandAwaken[1] = 10
+	e.Awaken, e.AwakenSeats = 10, []bool{true}
+
+	sameLines(t, "a Pair behind a fire opener", linesOf(e),
+		[]string{"20 x 1.5 = 30", "+ 10 x 2 + 10 x 1.5 = 45"})
+	if got := awakenedSeats(e); len(got) != 1 || got[0] != e.HandCards[1] {
+		t.Errorf("the Awakening raised seats %v, want only the second card's", got)
+	}
+}

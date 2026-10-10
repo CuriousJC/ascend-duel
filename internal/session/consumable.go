@@ -12,6 +12,12 @@ package session
 // that kind in, because those lists are what spending walks: a rune is dropped out of the sack by
 // seat and a stone is taken out of the pouch by position, and both may hold two of the same record.
 
+import (
+	"math/rand"
+
+	"github.com/curiousjc/ascend-duel/internal/combat"
+)
+
 // ConsumableKind is which kind of carried thing an entry is. **Append-only**, like every other
 // ordinal in this game, though nothing serializes it today — the run's own files still write the
 // sack and the pouch as their own lists of record keys.
@@ -51,15 +57,24 @@ const (
 // `4/3` it is.
 const MaxConsumables = 3
 
-// ConsumableCount is how many things the run is carrying, every kind counted.
+// ConsumableCount is how many things the run is carrying, every kind counted, weightless included.
 func (s *Session) ConsumableCount() int {
-	return len(s.held) + len(s.satchel) + len(s.pouch) + len(s.scrolls)
+	return s.held.len() + s.satchel.len() + s.pouch.len() + s.scrolls.len()
+}
+
+// WeightedConsumables is how many carried things count against MaxConsumables: everything but the
+// weightless ones. It is the figure the pane's corner reads.
+func (s *Session) WeightedConsumables() int {
+	return s.held.weighted() + s.satchel.weighted() + s.pouch.weighted() + s.scrolls.weighted()
 }
 
 // ConsumablesFull is whether the pane has no room. **Asked before anything carried is paid for**,
 // which is the shop's business: see the pack seats, which go unavailable rather than taking vitae
 // for a consumable that would be refused.
-func (s *Session) ConsumablesFull() bool { return s.ConsumableCount() >= MaxConsumables }
+//
+// **A weightless entry takes no seat**, so a pane carrying three plus any number of weightless
+// copies is full and one carrying two plus ten is not.
+func (s *Session) ConsumablesFull() bool { return s.WeightedConsumables() >= MaxConsumables }
 
 // ConsumableSalePrice is what one carried thing fetches when the shop buys it back, whatever kind
 // it is.
@@ -102,6 +117,10 @@ type Consumable struct {
 	// merged row and is the caller's own loop variable.
 	At int
 
+	// Weightless says this entry takes no seat in the pane — a copy the Eternity Pearl made. It is
+	// spent, sold and drawn like any other, and floats where the others rest.
+	Weightless bool
+
 	Rune    Rune
 	Stone   Stone
 	Essence Essence
@@ -137,22 +156,78 @@ func (s *Session) Consumables() []Consumable {
 	out := make([]Consumable, 0, s.ConsumableCount())
 	for i, key := range s.Held() {
 		if p, ok := RuneByKey(key); ok {
-			out = append(out, Consumable{Kind: ConsumableRune, At: i, Rune: p})
+			out = append(out, Consumable{Kind: ConsumableRune, At: i, Rune: p, Weightless: s.held.weightless(i)})
 		}
 	}
 	for i, key := range s.Stowed() {
 		if w, ok := essences[key]; ok {
-			out = append(out, Consumable{Kind: ConsumableEssence, At: i, Essence: w})
+			out = append(out, Consumable{Kind: ConsumableEssence, At: i, Essence: w,
+				Weightless: s.satchel.weightless(i)})
 		}
 	}
 	for i, key := range s.Scrolls() {
 		if c, ok := cantrips[key]; ok {
-			out = append(out, Consumable{Kind: ConsumableCantrip, At: i, Cantrip: c})
+			out = append(out, Consumable{Kind: ConsumableCantrip, At: i, Cantrip: c,
+				Weightless: s.scrolls.weightless(i)})
 		}
 	}
 	for i, key := range s.Carried() {
 		if st, ok := stones[key]; ok {
-			out = append(out, Consumable{Kind: ConsumableStone, At: i, Stone: st})
+			out = append(out, Consumable{Kind: ConsumableStone, At: i, Stone: st,
+				Weightless: s.pouch.weightless(i)})
+		}
+	}
+	return out
+}
+
+// copyWeightless puts a weightless copy of one carried thing into its own kind's list, at the end.
+// It reports whether the entry was there.
+func (s *Session) copyWeightless(c Consumable) bool {
+	var l *carriedList
+	switch c.Kind {
+	case ConsumableRune:
+		l = &s.held
+	case ConsumableEssence:
+		l = &s.satchel
+	case ConsumableCantrip:
+		l = &s.scrolls
+	case ConsumableStone:
+		l = &s.pouch
+	default:
+		return false
+	}
+	if c.At < 0 || c.At >= l.len() {
+		return false
+	}
+	l.add(l.keys[c.At], true)
+	return true
+}
+
+// CopyAtFightStart is the `fight-begun` moment: for every copy the worn relics make, one carried
+// entry is picked off `rng` — weightless copies included — and a weightless copy of it goes into
+// its own kind's list. It hands back the copies, in the order they were made.
+//
+// **Once per fight.** The combat screen sets a fight up again when it is re-entered and when a run
+// is resumed inside one, so the fight the pearl last fired in is kept on the run and a second call
+// for the same fight makes nothing.
+//
+// **Nothing carried, nothing copied**, and the roll is not taken — an empty pane advances no stream.
+func (s *Session) CopyAtFightStart(rng *rand.Rand) []Consumable {
+	n := combat.CopiesAtFightStart(s.WornRelics())
+	if n <= 0 || rng == nil || s.pearlFight == s.fight+1 {
+		return nil
+	}
+	s.pearlFight = s.fight + 1
+
+	var out []Consumable
+	for k := 0; k < n; k++ {
+		pool := s.Consumables()
+		if len(pool) == 0 {
+			break
+		}
+		pick := pool[rng.Intn(len(pool))]
+		if s.copyWeightless(pick) {
+			out = append(out, pick)
 		}
 	}
 	return out

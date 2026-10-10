@@ -266,19 +266,17 @@ func (s *Session) Carry(key string) bool {
 	if _, ok := stones[key]; !ok {
 		return false
 	}
-	s.pouch = append(s.pouch, key)
+	s.pouch.add(key, false)
 	return true
 }
 
 // Carried is every stone the run is carrying, by record key, in the order they were acquired.
 func (s *Session) Carried() []string {
-	out := make([]string, len(s.pouch))
-	copy(out, s.pouch)
-	return out
+	return s.pouch.list()
 }
 
 // CarryCount is how many stones are in the pouch.
-func (s *Session) CarryCount() int { return len(s.pouch) }
+func (s *Session) CarryCount() int { return s.pouch.len() }
 
 // SpendCarried takes one out of the pouch and puts it on its rungs. It reports whether it was there.
 //
@@ -286,11 +284,11 @@ func (s *Session) CarryCount() int { return len(s.pouch) }
 // pouch may hold two of the same stone and spending one must not be ambiguous about which — the
 // argument a rune's seat index in the consumables pane is under.
 func (s *Session) SpendCarried(i int) bool {
-	if i < 0 || i >= len(s.pouch) {
+	if i < 0 || i >= s.pouch.len() {
 		return false
 	}
-	key := s.pouch[i]
-	s.pouch = append(s.pouch[:i], s.pouch[i+1:]...)
+	key := s.pouch.keys[i]
+	s.pouch.drop(i)
 	return s.UseStone(key)
 }
 
@@ -300,10 +298,9 @@ func (s *Session) SpendCarried(i int) bool {
 // carrying one: a rung you will never build is a thing to turn into vitae rather than a raise you
 // are stuck with.
 func (s *Session) SellCarried(i int) bool {
-	if i < 0 || i >= len(s.pouch) {
+	if !s.pouch.drop(i) {
 		return false
 	}
-	s.pouch = append(s.pouch[:i], s.pouch[i+1:]...)
 	s.AddVitae(ConsumableSalePrice)
 	return true
 }

@@ -8,14 +8,16 @@ package session
 // order wrong on the day it fails.
 //
 // **A price is a fact about a relic's rarity** *(owner's call, 2026-08-22)*, not a number the relic
-// writes down: `relics.json` names one of three tiers and `data.Rarity` turns it into both a price
-// and a draw weight. A common relic is 3 — the base, the plainest thing the grammar can say — and the
-// two tiers above it are 5 and 7. What a relic *sells* for comes off the same tier: 1, 2 or 3,
+// writes down: `relics.json` names a tier and `data.Rarity` turns it into both a price and a draw
+// weight. A common relic is 3 — the base, the plainest thing the grammar can say — and the tiers
+// above it are 5, 7 and 10. What a relic *sells* for comes off the same tier: 1, 2, 3 or 4,
 // written down rather than derived, because a quarter rounded up paid an uncommon and a rare alike.
 //
 // **Nothing prices these numbers but judgment.** Nothing in the repo measures what a relic does to a
 // duel, so what a doubling of every slash card is worth in vitae is a guess that has never been
 // checked. Said out loud here because the alternative is a table of figures that looks derived.
+
+import "github.com/curiousjc/ascend-duel/data"
 
 // RelicPrice is what the shop charges for a relic, and whether the catalog holds one at all.
 func RelicPrice(key string) (int, bool) {
@@ -30,7 +32,11 @@ func RelicPrice(key string) (int, bool) {
 // worth in tickets is the shop's arithmetic, not a screen's.
 func RelicWeight(key string) int { return relicWeights[key] }
 
-// SellValue is what taking a relic off pays back: the tier's own figure — 1, 2 or 3. Zero for a relic
+// RelicRarity is a relic's tier, and empty for a relic the catalog does not hold. The shelf reads it
+// to keep a mythic out of the ticket draw — see data.MythicOdds.
+func RelicRarity(key string) data.Rarity { return relicRarities[key] }
+
+// SellValue is what taking a relic off pays back: the tier's own figure — 1, 2, 3 or 4. Zero for a relic
 // the catalog does not hold, which is a relic nothing can be wearing.
 func SellValue(key string) int { return relicSells[key] }
 

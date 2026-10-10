@@ -187,7 +187,7 @@ func (s *ShopScene) rerollPacks(gs *state.GlobalState) {
 // A short pool — fewer unworn relics left than open seats — leaves the remaining seats empty rather
 // than keeping what was standing there, so the row never shows a relic the fresh draw did not pick.
 func (s *ShopScene) rerollRelics(gs *state.GlobalState) {
-	fresh := dealShelf(gs, s.stockRNG)
+	fresh := dealShelf(gs, s.stockRNG, s.mythicRNG)
 
 	next := 0
 	for i := range s.shelf {

@@ -614,6 +614,14 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.luckRNG = rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.LuckRoll, fightIndex(gs.Run))))
 	s.resetDeck(gs.Run)
 
+	// **The `fight-begun` moment**: an Eternity Pearl copies something carried, weightless, before
+	// the first hand. Off its own stream, and once per fight however often this is re-entered.
+	var copied bool
+	if gs.Run != nil {
+		copied = len(gs.Run.CopyAtFightStart(rand.New(rand.NewSource(
+			seeds.ForFight(gs.RunSeed, seeds.PearlCopy, fightIndex(gs.Run)))))) > 0
+	}
+
 	// **After resetDeck**, which is what hands the scene this run: a tonic can widen the round.
 	s.discardsLeft = s.roundDiscards()
 
@@ -623,6 +631,16 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.drag = ui.CardDrag{}
 	s.band.init()
 	s.relicShake, s.cardShake = nil, nil
+
+	// **A pearl that copied something toasts as the screen opens** *(owner's call)*, so the copy
+	// floating in the pane has a relic that said it made it.
+	if copied {
+		for seat, did := range combat.CopyingSeats(s.fighter.WornRelics()) {
+			if did {
+				s.shakeRelicAt(seat)
+			}
+		}
+	}
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
 	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, s.enemyElement, enemySeed, decks.EnemyHandSize)

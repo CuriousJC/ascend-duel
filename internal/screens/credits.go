@@ -44,10 +44,6 @@ const (
 	// creditsBody is an ordinary line.
 	creditsBody
 
-	// creditsQuiet is a line that has to be there and does not have to be read: the license
-	// wording, the attribution small print.
-	creditsQuiet
-
 	// creditsGap is a blank line. **A kind rather than an empty string**, so a gap is deliberate
 	// rather than a line somebody forgot to fill in.
 	creditsGap
@@ -60,7 +56,6 @@ const (
 
 	creditsHeadingSize = 32
 	creditsBodySize    = systems.TextLarge
-	creditsQuietSize   = systems.TextMedium
 
 	// creditsLineHeight is the pitch of an ordinary line, and creditsHeadingTop the extra air a
 	// heading gets above it. Headings are separated by space rather than by a rule, because the
@@ -74,8 +69,7 @@ const (
 // `gs.Version`, because it is a fact about the build rather than a line somebody wrote.
 var credits = []creditsLine{
 	{"MADE BY", creditsHeading},
-	{"CuriousJC", creditsBody},
-	{"KingSherman1820", creditsBody},
+	{"Ambivalent Systems", creditsBody},
 	{"", creditsGap},
 
 	{"BUILT WITH", creditsHeading},
@@ -93,7 +87,6 @@ var credits = []creditsLine{
 
 	{"LICENSE", creditsHeading},
 	{"PolyForm Noncommercial 1.0.0", creditsBody},
-	{"Source-available. Monetized streaming and video of gameplay permitted.", creditsQuiet},
 }
 
 // The page's inks. **Light rather than `ui.GroundInk`**, because the page stands on the gray fog
@@ -102,10 +95,7 @@ var credits = []creditsLine{
 var (
 	creditsTextInk = color.RGBA{R: 240, G: 238, B: 232, A: 255}
 
-	// creditsQuietInk is a line that has to be there and does not have to be read.
-	creditsQuietInk = color.RGBA{R: 206, G: 206, B: 212, A: 255}
-
-	// creditsVersionColor is the build string at the foot of the page — dimmer than a quiet line,
+	// creditsVersionColor is the build string at the foot of the page — dimmer than the page,
 	// because it is a thing to be found rather than read.
 	creditsVersionColor = color.RGBA{R: 180, G: 182, B: 192, A: 255}
 )
@@ -183,8 +173,6 @@ func creditsSize(k creditsKind) float64 {
 	switch k {
 	case creditsHeading:
 		return creditsHeadingSize
-	case creditsQuiet:
-		return creditsQuietSize
 	default:
 		return creditsBodySize
 	}
@@ -192,9 +180,6 @@ func creditsSize(k creditsKind) float64 {
 
 // creditsInk is the color a kind is set in.
 func creditsInk(k creditsKind) color.Color {
-	if k == creditsQuiet {
-		return creditsQuietInk
-	}
 	return creditsTextInk
 }
 

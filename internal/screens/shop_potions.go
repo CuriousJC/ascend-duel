@@ -79,7 +79,7 @@ func (s *ShopScene) drawPotions(gs *state.GlobalState, screen *ebiten.Image) {
 
 		lit := gs.Run != nil && gs.Run.CanDrink(p.Record)
 		ui.BlitCard(gs, screen, at.Min, potionSpec(gs, p, lit), cards.EssenceStyle)
-		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", shopPrice(gs, p.Price)), lit)
+		s.figure(gs, screen, at, shopPrice(gs, p.Price), lit)
 	}
 }
 
@@ -96,7 +96,7 @@ func (s *ShopScene) drawTonic(gs *state.GlobalState, screen *ebiten.Image) {
 	at := tonicSeat(gs)
 	lit := gs.Run.CanDrinkTonic(t.Record)
 	ui.BlitCard(gs, screen, at.Min, tonicSpec(gs, t, lit), cards.EssenceStyle)
-	s.figure(gs, screen, at, fmt.Sprintf("%d vitae", shopPrice(gs, t.Price)), lit)
+	s.figure(gs, screen, at, shopPrice(gs, t.Price), lit)
 }
 
 // potionSpec is a potion drawn as a card.

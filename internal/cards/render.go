@@ -104,7 +104,13 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		if _, upgraded := UpgradeArtOf(s.Upgrade); upgraded && opaque(s.Art) {
 			art.Art = matteOf(s.Art)
 		}
-		drawArtBleed(img, art, st)
+		// **An unaffordable card fades its figure too**, by the distance its upgrade art fades —
+		// a picture at full strength over a faded column reads as a card half-disabled.
+		fade, toward := 0, Surface
+		if !s.Enabled {
+			fade, toward = borderDisabledToward, SurfaceDisabled
+		}
+		drawArtBleedFaded(img, art, st, fade, toward)
 	}
 
 	if st.ShowName {

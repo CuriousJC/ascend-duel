@@ -182,6 +182,8 @@ func needsPaint(button *models.Button) bool {
 		button.PaintedTextSize != button.TextSize ||
 		button.PaintedColor != button.BaseColor ||
 		button.PaintedIcon != button.Icon ||
+		button.PaintedGlyph != button.Glyph ||
+		button.PaintedSheet != button.LabelSheet ||
 		button.Image == nil ||
 		button.Image.Bounds().Dx() != button.Width ||
 		button.Image.Bounds().Dy() != button.Height
@@ -199,6 +201,12 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// shorter label would otherwise leave the tail of a longer one behind it.
 	button.Image.Clear()
 	button.PaintedIcon = button.Icon
+	button.PaintedGlyph = button.Glyph
+	button.PaintedSheet = button.LabelSheet
+	glyph := gs.Assets[button.Glyph]
+	if button.Glyph == "" {
+		glyph = nil
+	}
 
 	// **An icon button is its picture**, so a key that loaded draws nothing else; one that did not
 	// falls through to the ordinary face and label, which is why such a button keeps its Text.
@@ -247,7 +255,7 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// button reads in the same lettering as the figures flying over the table. A label with a
 	// lower-case letter in it is not covered and stays in the font.
 	if FigureCovers(button.Text) {
-		drawButtonFigure(button, nudgeX, nudgeY)
+		drawButtonFigure(button, glyph, nudgeX, nudgeY)
 		button.Painted = true
 		button.PaintedState = button.State
 		button.PaintedText = button.Text
@@ -296,18 +304,61 @@ var buttonFigureDisabled = color.RGBA{R: 150, G: 150, B: 150, A: 255}
 // **It shrinks to fit rather than overflowing**: the lettering is wider than the font at the
 // same height, and a face is a fixed width, so a long label on a narrow button comes down in size
 // until it clears both sides.
-func drawButtonFigure(button *models.Button, nudgeX, nudgeY float64) {
+//
+// **A glyph stands to the left of the words**, and the two are centered as one group: the glyph
+// at labelGlyphShare of the face's height, then a gap, then the label.
+func drawButtonFigure(button *models.Button, glyph *ebiten.Image, nudgeX, nudgeY float64) {
+	gw, gap := 0.0, 0.0
+	if glyph != nil {
+		gw = float64(button.Height) * labelGlyphShare
+		gap = gw * labelGlyphGap
+	}
 	height := textSizeOf(button) * buttonFigureShare
-	room := float64(button.Width - 2*min(buttonFigurePad, button.Height/4))
-	if w := MeasureFigure(button.Text, height); w > room && w > 0 {
+	room := float64(button.Width-2*min(buttonFigurePad, button.Height/4)) - gw - gap
+	w := MeasureFigure(button.Text, height)
+	if w > room && w > 0 {
 		height *= room / w
+		w = room
 	}
-	ink := color.RGBA{}
+	sheet, ink := FigureNeutral, color.RGBA{}
+	if button.LabelSheet != "" {
+		sheet = button.LabelSheet
+	}
 	if button.State == models.ButtonStateDisabled {
-		ink = buttonFigureDisabled
+		sheet, ink = FigureNeutral, buttonFigureDisabled
 	}
-	DrawFigure(button.Image, button.Text, FigureNeutral, ink,
-		float64(button.Width)/2+nudgeX, float64(button.Height)/2+nudgeY, height, 1, 1)
+	left := (float64(button.Width)-(gw+gap+w))/2 + nudgeX
+	cy := float64(button.Height)/2 + nudgeY
+	if glyph != nil {
+		drawGlyphAt(button, glyph, left, cy-gw/2, gw)
+	}
+	DrawFigure(button.Image, button.Text, sheet, ink, left+gw+gap+w/2, cy, height, 1, 1)
+}
+
+// How a glyph sits beside a label: as a share of the face's height, with a gap after it as a share of
+// its own size.
+const (
+	labelGlyphShare = 0.62
+	labelGlyphGap   = 0.25
+)
+
+// drawGlyphAt draws a glyph square at (x, y), `side` pixels across, brightened with the face on
+// hover and dimmed with it when disabled.
+func drawGlyphAt(button *models.Button, glyph *ebiten.Image, x, y, side float64) {
+	var lum float32 = 1
+	switch button.State {
+	case models.ButtonStateHovered:
+		lum = faceHoverScale
+	case models.ButtonStateDisabled:
+		lum = iconDisabledLum
+	}
+	b := glyph.Bounds()
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(side/float64(b.Dx()), side/float64(b.Dy()))
+	op.GeoM.Translate(x, y)
+	op.ColorScale.Scale(lum, lum, lum, 1)
+	op.Filter = ebiten.FilterLinear
+	button.Image.DrawImage(glyph, op)
 }
 
 // defaultButtonTextSize is what a button that names no size draws its label at, which is

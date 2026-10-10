@@ -23,7 +23,6 @@ package screens
 // exact however many times the button is pressed.
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -286,7 +285,11 @@ func paneName(p shopPane) string {
 }
 
 // initRerollButtons builds the two, once. **The red is not theirs** — a reroll is not a thing
-// that cannot be taken back, so it wears the Leave button's gray rather than the sell tab's red.
+// that cannot be taken back, so the face is jade rather than the sell tab's red.
+//
+// **The die is the word.** Each button carries the die and what a press costs, `4 ¤`, the price in
+// the shelf's own red lettering — so the label reads as a price the way every price on the shelf
+// does, and the face says what it buys.
 func (s *ShopScene) initRerollButtons() {
 	if s.relicReroll != nil {
 		return
@@ -298,11 +301,16 @@ func (s *ShopScene) initRerollButtons() {
 		})
 		b.BaseColor = ui.ButtonJade
 		b.TextSize = shopRerollText
+		b.Glyph = shopRerollGlyph
+		b.LabelSheet = shopPriceSheet
 		return b
 	}
 	s.relicReroll = build(shopPaneRelics)
 	s.packReroll = build(shopPanePacks)
 }
+
+// shopRerollGlyph is the die the reroll buttons wear.
+const shopRerollGlyph = "glyph-dice"
 
 // updateRerollButtons positions and runs them, and takes the press the previous frame recorded.
 func (s *ShopScene) updateRerollButtons(gs *state.GlobalState) {
@@ -316,7 +324,7 @@ func (s *ShopScene) updateRerollButtons(gs *state.GlobalState) {
 		b := s.rerollButton(p)
 		at := shopRerollRect(gs, p)
 		b.ScreenX, b.ScreenY = (at.Min.X+at.Max.X)/2, (at.Min.Y+at.Max.Y)/2
-		b.Text = fmt.Sprintf("REROLL %d", shopPrice(gs, s.rerollPrice(p)))
+		b.Text = priceLabel(shopPrice(gs, s.rerollPrice(p)))
 		ui.SetEnabled(b, s.canReroll(gs, p))
 		systems.UpdateButton(gs, b)
 	}

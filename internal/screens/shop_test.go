@@ -153,8 +153,7 @@ func TestTheFourPanesFitOnOneRow(t *testing.T) {
 		t.Errorf("the shelf's backing ends at %d and the draw pile starts at %d", back, pile)
 	}
 
-	// The prices hang under the panes and the two reroll buttons hang under those, so it is the
-	// buttons rather than the figures that have to clear the Leave button.
+	// The two reroll buttons hang under the panes, so they are what has to clear the Leave button.
 	bottom := shopRerollRect(gs, shopPaneRelics).Max.Y
 	if bottom >= gs.PctY(offerButtonsPct)-offerButtonHeight/2 {
 		t.Errorf("a reroll button ends at %d and Leave starts at %d",

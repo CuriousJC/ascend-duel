@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/ui"
@@ -57,7 +58,7 @@ const (
 	// hitFigureSize is the type size of a landing figure, and it is **`mathTotalSize` on purpose,
 	// not a size of its own**. The figure is meant to *be* the hit's total continuing its journey:
 	// the line stops drawing its total on the frame this launches, from the same point, and
-	// `hitInk` is already the color the total is drawn in — so matching the size is the last of the
+	// `hitInkFor` is already the color the total is drawn in — so matching the size is the last of the
 	// four things that make one number appear to set off rather than two numbers to swap.
 	hitFigureSize = mathTotalSize
 
@@ -71,7 +72,7 @@ const (
 	hitToScale   = 0.72
 )
 
-// hitInk is the color a landing figure is written in.
+// hitInk is the color a landing figure is written in when the card that threw it has no element.
 //
 // **The attack red the log's verbs are marked in, asked for rather than restated.** `verbInkFor`
 // decides what an attack is colored in this screen, and a figure that lands damage is the same
@@ -80,6 +81,17 @@ const (
 // and reusing it
 // would say the hand fired twice.
 func hitInk() color.RGBA { return ui.VerbInkFor(combat.CategoryAttack) }
+
+// hitInkFor is the color a hit's total and its landing figure are written in: **the element of the
+// card that threw it**, the rule every other figure on the line already keeps — a number wears the
+// color of what produced it. An elementless card has nothing to say in color and falls back to the
+// attack red.
+func hitInkFor(el cards.Element) color.RGBA {
+	if el == cards.Basic {
+		return hitInk()
+	}
+	return cards.BorderOf(el)
+}
 
 // hitFlight is one damage figure on its way from where the hit was worked out into the card it
 // empties.
@@ -101,6 +113,10 @@ type hitFlight struct {
 	// seat**, and the one mover here that stores one, because a line is laid out once when the box
 	// starts and never moves under it.
 	from image.Point
+
+	// element is the element of the card that threw the hit, and decides the figure's ink through
+	// hitInkFor. A reflected blow came out of no card and carries `cards.Basic`.
+	element cards.Element
 
 	// relic is the ring a reflected blow leaves, and fromRelic says to use it — the Thorned
 	// Shield's figure comes out of no card and no line. **Recomputed each frame**, like a seat.
@@ -141,14 +157,18 @@ func (s *CombatScene) noteHit(e combat.Event, held int) {
 		return
 	}
 
-	s.Theater.hits = append(s.Theater.hits, hitFlight{
-		amount: e.Amount,
-		side:   e.Side,
-		target: e.Target,
-		seat:   s.blowSeat(e),
-		held:   held,
-		t:      ui.NewTravel(0, hitFlyTicks()+hitHoldTicks()),
-	})
+	seat := s.blowSeat(e)
+	h := hitFlight{
+		amount:  e.Amount,
+		side:    e.Side,
+		target:  e.Target,
+		seat:    seat,
+		element: s.handCardElement(e.Side, seat),
+		held:    held,
+		t:       ui.NewTravel(0, hitFlyTicks()+hitHoldTicks()),
+	}
+	s.Theater.hits = append(s.Theater.hits, h)
+	s.raiseTrail(h)
 }
 
 // throwColumn hands one finished line of the hand dialog on to what became of its hit, read off the
@@ -186,6 +206,8 @@ func (s *CombatScene) throwColumn(c int) {
 	box := &s.Theater.mathBox
 	col := &box.columns[c]
 	col.thrown = true
+	// Whatever became of the hit, the total is no longer resting: its wrap stops here.
+	s.closeWrap(c)
 
 	if col.logAt < 0 || col.logAt >= len(s.log) {
 		col.unthrown = true
@@ -219,15 +241,18 @@ func (s *CombatScene) throwColumn(c int) {
 		s.markShown(col.logAt)
 
 		col.spent = true
-		s.Theater.hits = append(s.Theater.hits, hitFlight{
-			amount: e.Amount,
-			side:   e.Side,
-			target: e.Target,
-			seat:   -1,
-			from:   col.total().at,
-			held:   held,
-			t:      ui.NewTravel(0, hitFlyTicks()+hitHoldTicks()),
-		})
+		h := hitFlight{
+			amount:  e.Amount,
+			side:    e.Side,
+			target:  e.Target,
+			seat:    -1,
+			from:    col.total().at,
+			element: s.handCardElement(e.Side, col.seat),
+			held:    held,
+			t:       ui.NewTravel(0, hitFlyTicks()+hitHoldTicks()),
+		}
+		s.Theater.hits = append(s.Theater.hits, h)
+		s.raiseTrail(h)
 	}
 }
 
@@ -309,7 +334,7 @@ func (s *CombatScene) drawHits(gs *state.GlobalState, screen *ebiten.Image) {
 		scale := hitFromScale + (hitToScale-hitFromScale)*p
 		// Not bold: a line's own total is not, and the handoff between the two depends on the
 		// figure setting off looking exactly like the number it left.
-		drawMathText(gs, screen, "-"+strconv.Itoa(h.amount), hitFigureSize, hitInk(),
+		drawMathText(gs, screen, "-"+strconv.Itoa(h.amount), hitFigureSize, hitInkFor(h.element),
 			at, scale, hitAlpha(h), false)
 	}
 }

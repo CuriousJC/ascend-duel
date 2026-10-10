@@ -463,6 +463,10 @@ type mathColumn struct {
 	// above them** — see Tick — so a line can sit unbegun, and draws nothing, while another is
 	// being worked out.
 	begun bool
+
+	// wrapped says the total's particles have been raised, so they are raised once. See
+	// combat_particles.go.
+	wrapped bool
 }
 
 // done reports whether every item of the line is up.
@@ -667,6 +671,12 @@ func (s *CombatScene) placeFigures(gs *state.GlobalState, e combat.Event, col *m
 			it.from = s.handMultiplierOrigin(gs, e)
 		}
 	}
+
+	// **The total wears its card's element too**, and so does the figure it sets off as — see
+	// hitInkFor. It is not a flying item, so the loop above never reaches it.
+	if n := len(col.items); n > 0 {
+		col.items[n-1].tint = hitInkFor(s.handCardElement(e.Side, col.seat))
+	}
 }
 
 // hitOutcomes reads ahead from a hand event to the hits it threw, and says where each hit's outcome
@@ -774,7 +784,9 @@ func hitScript(e combat.Event, i int, first bool) []mathItem {
 	return append(items, wide(mathOperator("=")), mathItem{
 		text: strconv.Itoa(e.HitAmounts[i]),
 		size: mathTotalSize,
-		tint: ui.VerbInkFor(combat.CategoryAttack),
+		// The attack red is a fallback: the total wears its card's element, which is a question
+		// about a seat and is placeFigures'.
+		tint: hitInk(),
 		t:    ui.NewTravel(0, mathTotalTicks()),
 	})
 }

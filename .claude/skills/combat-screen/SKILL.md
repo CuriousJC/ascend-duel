@@ -302,8 +302,9 @@ exist.
   card's figure wears that card's element — `cards.BorderOf`, the same color as the border it
   flies out of — so a hit reads as being made *of its card* rather than handed down by the
   game; the multiplier wears `handNameInk`, the hand's own color, which is also the banner it
-  leaves; the total wears the attack ink, and the damage figure that flies on out of it wears the
-  same. Operators stay faded ground ink, being the one thing on the line the game supplied rather
+  leaves; the total wears its card's element too, and the damage figure that flies on out of it wears the
+  same — `hitInkFor`, which falls back to the attack ink for an elementless card. A solo
+  attacker's figure wears the element of the card it comes out of. Operators stay faded ground ink, being the one thing on the line the game supplied rather
   than the player. **The element is read off the card in the seat, never off the event** —
   `Event.Element` is the hand's lead card and every line has its own.
   **Lightning is the figure to check**: it is the brightest of the five, and a yellow figure
@@ -477,6 +478,23 @@ arrival are one event rather than two. It is the second half of the hand dialog:
   line comes toward the reader, a figure flying into a card goes away into it.
 - **`Init` takes the whole theater down**, because anything tidied up only by the end-of-round spend
   assumes every round ends in one, and a settled duel does not.
+
+### Elemental particles round a total and behind its figure
+
+*`combat_particles.go`; the emitter is `internal/ui/particles.go`, the art `assets/particle/`.* A
+line's total is **wrapped** in its card's element from the beat it starts landing until the line is
+thrown, and the figure that flies on out of it **trails** the same element into the target — a
+creature's solo hits included. Both are `ui.Emitter`s off `wrapEmitter` / `trailEmitter`, elemental
+physics on the mixed set (`particle-*` pieces and `spark-*` flecks together).
+
+- **Nothing waits on a particle.** `particles` is ticked with the theater and is deliberately not in
+  `Running`; a field that has stopped emitting finishes its particles' lives on its own clock.
+- **A field holds no particles.** Every one is derived from its index and the field's seed, so a
+  field is an age and a seed, and the same hit throws the same cloud.
+- **An elementless card throws none**, the rule the figure's ink keeps, and a defense's `= 0` line is
+  not wrapped. A reflected blow comes out of a ring and has no trail.
+- **The options page is the animation gallery's `wrap:` and `trail:` entries**, which draw the same
+  emitter in every set and motion side by side.
 
 ### A card that fires says so: the signal widget
 

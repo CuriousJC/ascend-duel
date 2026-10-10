@@ -282,6 +282,60 @@ var animGestures = []animGesture{
 			systems.DrawSwirl(screen, swirl, portalSwirl(gs))
 		},
 	},
+	{
+		name:  "wrap: elemental",
+		where: "ui.DrawParticleWrap, MotionElemental",
+		what:  "Particles round a resting total, each element its own physics. Rows: shards, sparks, mixed.",
+		ticks: func() int { return ui.Beat(4, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawWrapGrid(gs, screen, at.Min, ui.MotionElemental, false)
+		},
+	},
+	{
+		name:  "wrap: orbit",
+		where: "ui.DrawParticleWrap, MotionOrbit",
+		what:  "The same, but every element circles its total: only the sprite and the color differ.",
+		ticks: func() int { return ui.Beat(4, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawWrapGrid(gs, screen, at.Min, ui.MotionOrbit, false)
+		},
+	},
+	{
+		name:  "wrap: glow",
+		where: "ui.DrawParticleWrap, Emitter.Glow",
+		what:  "Elemental physics with each sprite drawn a second time additively, to brighten in its own color.",
+		ticks: func() int { return ui.Beat(4, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawWrapGrid(gs, screen, at.Min, ui.MotionElemental, true)
+		},
+	},
+	{
+		name:  "trail: shards",
+		where: "ui.DrawParticleTrail, ParticleShards",
+		what:  "The hit's figure flying into a card, trailing pieces of its element.",
+		ticks: trailGalleryTicks,
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawTrailRows(gs, screen, at.Min, ui.ParticleShards, s.t.Age)
+		},
+	},
+	{
+		name:  "trail: sparks",
+		where: "ui.DrawParticleTrail, ParticleSparks",
+		what:  "The hit's figure flying into a card, trailing sparks of its element's color.",
+		ticks: trailGalleryTicks,
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawTrailRows(gs, screen, at.Min, ui.ParticleSparks, s.t.Age)
+		},
+	},
+	{
+		name:  "trail: mixed",
+		where: "ui.DrawParticleTrail, ParticleMixed",
+		what:  "The hit's figure flying into a card, trailing pieces and sparks together.",
+		ticks: trailGalleryTicks,
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawTrailRows(gs, screen, at.Min, ui.ParticleMixed, s.t.Age)
+		},
+	},
 }
 
 // The two cards the page is drawn with. **Two rather than one**, because a morph needs a card to

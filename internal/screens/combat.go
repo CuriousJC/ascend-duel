@@ -1311,6 +1311,7 @@ func (s *CombatScene) startRound() {
 	// the hand by the flights seatPlayedCards raises. Nothing here decides anything — the round
 	// above is already resolved. See combat_table.go.
 	s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
+	s.closeWraps()
 	s.Theater.mathBox.Clear()
 	// **What the dialog showed was a position in last round's log**, and this round's log starts
 	// again from nothing.
@@ -1410,6 +1411,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		}
 
 		s.Theater.mathBox.Tick()
+		// A total that has started landing gets its particles. See combat_particles.go.
+		s.raiseWraps()
 
 		// **The lines need no card raised** *(owner's call)*. The blow's cards are lifted by
 		// noteHand on the `KindHand` beat, which is the announcement — what the hand is made of,
@@ -1495,6 +1498,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// **The finished lines stay on screen until the event after them is reached**, so a FIZZLE or a
 	// BLOCKED is still being read while the flights that did land finish.
 	if s.Theater.mathBox.active && !s.Theater.mathBox.Running() {
+		s.closeWraps()
 		s.Theater.mathBox.Clear()
 		// **The turn-length raise comes down with the lines that used it.** See signalRaise.
 		s.Theater.clearRaise()
@@ -1827,6 +1831,8 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// screen for the few seconds it is up, and it is deliberately over both rows of cards: the
 	// shout is written across the hand row, which is inert while it is up, and every hit's line
 	// under its card. See combat_mathbox.go.
+	// **The wraps under the lines**, so the total reads over its own particles.
+	s.drawParticles(gs, screen, false)
 	s.drawHandMath(gs, screen)
 
 	// **The planned hand's name, in the middle of the half of the table its cards are about to
@@ -1836,7 +1842,9 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **The damage figures, over the lines they came out of and the card they are flying into.**
 	// They are drawn after the dialog because a figure leaving a line has to be on top of it —
-	// underneath, the first frames of the flight would be hidden by the number it left.
+	// underneath, the first frames of the flight would be hidden by the number it left. **Their trails
+	// go under them**, for the wraps' reason.
+	s.drawParticles(gs, screen, true)
 	s.drawHits(gs, screen)
 
 	// **After the hits, because a drain is a share of one.** A drain's event is reached after the

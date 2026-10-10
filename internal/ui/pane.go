@@ -37,7 +37,7 @@ const (
 	swatchGap      = 6 // gap between a swatch and its label
 
 	// paneTextSize is what a pane writes at unless it says otherwise. See panePlacement.textSize.
-	paneTextSize = 16
+	paneTextSize = systems.TextSmall
 
 	// paneBandInset keeps a row's ground clear of the pane's own border, and paneBandRise lifts it
 	// so the band sits around the line rather than starting at its cap height.

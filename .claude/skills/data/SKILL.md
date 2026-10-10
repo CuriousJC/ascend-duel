@@ -31,6 +31,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `screen_art.json` | `LoadScreenArt` | the backdrops behind every screen that is not a duel: one record per picture, the `Screens` it stands behind, a `Draw` brief pasted after `docs/art/screen_art_prompt.MD`, and optional `Anchors` — a card, a button or a painted place a brief positions something against, held to the layout by tests in `internal/screens`. Screen names are checked against `state.ActiveScreen` in `internal/state`, which `data` cannot import |
 | `achievements.json` | `LoadAchievements` | what the player has done: Steamworks' own achievement fields under Steamworks' own names, an icon and its brief, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
+| `wording.json` | `LoadWording` | the sentences the fight log and the reward screen say, as templates by `section.key` — `{hole}` filled by code, `{ink:word}` colored, `{mark:word}` marked. Read only by `internal/ui/wording.go`, which declares each sentence's holes and refuses a mismatch at launch |
 
 ## Who may read what, and why it is not "whether it is data"
 
@@ -317,7 +318,7 @@ every file here answers.
 - **A turn trigger is patterns, and a pattern is clauses.** Any pattern matching earns it; every
   clause in a pattern must hold. A clause is `{Of, Axis, Mode, N}` — `Of` filters by category,
   `Mode` is `distinct` (at least N values), `same` or `count`. **The filter is on the clause rather
-  than on the pattern**, which is what lets Arsenal ask for three attack forms *and* a defense
+  than on the pattern**, which is what lets Kitchen Sink ask for three attack forms *and* a defense
   beside them: two different selections of one turn.
 - **The record wears Steamworks' field names**, because the file is what the Steamworks admin page
   is filled in from: `APIName`, `DisplayName`, `Description`, `SetBy`, `Hidden`, and `AchievedIcon`

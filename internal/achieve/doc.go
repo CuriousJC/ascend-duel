@@ -11,7 +11,7 @@
 // one design decision worth reading before changing anything:
 //
 //   - A **turn** is gone the moment it resolves, so it has to be judged as it happens. It is also
-//     the family that is pure grammar: Spectrum, Weaponmaster, Arsenal, Prism and Elementalist are
+//     the family that is pure grammar: Spectrum, Weaponmaster, Kitchen Sink, Prism and Elementalist are
 //     patterns over the cards a turn put on the table, and four of the five were rungs of the hand
 //     ladder until 2026-09-05 — cut because the ladder could not *price* them, not because they
 //     could not be matched. This is where they went.

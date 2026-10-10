@@ -8,7 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The offer's arithmetic, which needs no window — the same narrow exception the other tests in
@@ -252,13 +252,12 @@ func TestTheEssenceRowStaysOutOfThePayoutsColumn(t *testing.T) {
 	}
 }
 
-// **The payout ends on the edge the essences end on** *(owner's call, 2026-09-18)*, whatever the
-// script's length — a block hung from the top of its column would float by however many sentences
-// the script is short of the longest.
+// **The account is centered between the two panels** *(owner's call)* — the build band above and
+// the dealt row below — and the prompt for the essences stands in its own box above the way out.
 //
 // **And it still has to fit the band it is read in**, between the relics above and the cards below.
 // The wording is authored, so a longer script is a layout change and this is what says so.
-func TestThePayoutIsAlignedToTheBottomOfTheEssenceRow(t *testing.T) {
+func TestThePayoutIsCenteredBetweenThePanels(t *testing.T) {
 	gs := testState()
 	gs.Run = session.New(session.StartingDeck())
 	gs.Run.WonFight(3, 40)
@@ -268,20 +267,34 @@ func TestThePayoutIsAlignedToTheBottomOfTheEssenceRow(t *testing.T) {
 		t.Fatalf("a won fight narrated %d lines", len(lines))
 	}
 
-	for _, n := range []int{len(lines), len(lines) - 1, 1} {
-		bottom := proseTop(gs, n) + (n-1)*proseLineGap + proseLineHeight
-		if want := essenceRowBottom(gs); bottom != want {
-			t.Errorf("%d lines end at y=%d and the essence row at y=%d", n, bottom, want)
-		}
+	n := len(lines)
+	top := proseTop(gs, n)
+	bottom := top + (n-1)*proseLineGap + proseLineHeight
+	above, below := top-buildBandBottom(gs), offerRowTop(gs)-bottom
+	if d := above - below; d < -1 || d > 1 {
+		t.Errorf("the account has %dpx above it and %dpx below: not centered between the panels", above, below)
+	}
+	if above <= 0 {
+		t.Errorf("%d lines start at y=%d, inside a build band ending at y=%d", n, top, buildBandBottom(gs))
+	}
+	if lifted := offerRowOf(gs, handSize).Min.Y - offerSelectedNudge; bottom > lifted {
+		t.Errorf("the account ends at y=%d and a lifted offer card reaches y=%d", bottom, lifted)
 	}
 
-	if top := proseTop(gs, len(lines)); top <= buildBandBottom(gs) {
-		t.Errorf("%d narrated lines start at y=%d, inside a build band ending at y=%d",
-			len(lines), top, buildBandBottom(gs))
+	// The prompt's box stands above the way out and inside the essence row's band.
+	box := essencePromptRect(gs, 2)
+	_, button := essenceRowSeats(gs, 2)
+	if box.Max.Y > button.Min.Y || box.Min.X != button.Min.X || box.Max.X != button.Max.X {
+		t.Errorf("the prompt box %v is not directly above the way out %v", box, button)
 	}
-	if bottom := essenceRowBottom(gs); bottom > offerRowOf(gs, handSize).Min.Y-offerSelectedNudge {
-		t.Errorf("the payout's band ends at y=%d and a lifted offer card reaches y=%d",
-			bottom, offerRowOf(gs, handSize).Min.Y-offerSelectedNudge)
+	// The prompt is wider than SKIP and centered on it, so it must still clear the essence beside it.
+	seats, _ := essenceRowSeats(gs, 2)
+	w := int(spansWidth(saidProse(ui.SayPayoutEssence, nil), payoutFace(gs)))
+	if left, edge := box.Min.X+box.Dx()/2-w/2, seats[len(seats)-1].Max.X; left < edge {
+		t.Errorf("the prompt starts at x=%d, over the last essence ending at x=%d", left, edge)
+	}
+	if box.Min.Y < gs.PctY(essenceChosenRowPct) {
+		t.Errorf("the prompt box %v rises above the essence row's top %d", box, gs.PctY(essenceChosenRowPct))
 	}
 }
 
@@ -308,11 +321,14 @@ func TestThePayoutsTypeFitsItsColumn(t *testing.T) {
 			proseTextSize, got, proseLineHeight)
 	}
 
-	mid, split := proseColumnMid(gs), gs.PctX(payoutColumnPct)
+	block, split := payoutBlockOf(gs), gs.PctX(payoutColumnPct)
+	if block.left < 0 || block.right > split {
+		t.Errorf("the account runs %d..%d, outside a column of 0..%d", block.left, block.right, split)
+	}
 	for _, line := range payoutLines(gs) {
-		w := systems.MeasureText(line.plain(), face)
-		if left, right := mid-int(w)/2, mid+int(w)/2; left < 0 || right > split {
-			t.Errorf("%q runs %d..%d, outside a column of 0..%d", line.plain(), left, right, split)
+		w := spansWidth(line.spans, face) + spansWidth(line.right, face)
+		if int(w) > payoutBlockWidth {
+			t.Errorf("%q is %.0f wide, in a block of %d", line.plain(), w, payoutBlockWidth)
 		}
 	}
 }

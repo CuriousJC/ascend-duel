@@ -154,10 +154,10 @@ func TestFourElementsIsNotFive(t *testing.T) {
 	}
 }
 
-// TestArsenalNeedsTheDefenseBesideTheThreeForms is the achievement the clause-level filter exists
-// for: three attack forms is Weaponmaster, and Arsenal is that plus something the attack filter
+// TestKitchenSinkNeedsTheDefenseBesideTheThreeForms is the achievement the clause-level filter exists
+// for: three attack forms is Weaponmaster, and Kitchen Sink is that plus something the attack filter
 // cannot see.
-func TestArsenalNeedsTheDefenseBesideTheThreeForms(t *testing.T) {
+func TestKitchenSinkNeedsTheDefenseBesideTheThreeForms(t *testing.T) {
 	threeForms := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Cut", combat.Fire),
@@ -170,8 +170,8 @@ func TestArsenalNeedsTheDefenseBesideTheThreeForms(t *testing.T) {
 	if !got["weaponmaster"] {
 		t.Error("stab, slash and crush together is the weaponmaster")
 	}
-	if got["arsenal"] {
-		t.Error("three attack forms with no defense is not the arsenal")
+	if got["kitchen-sink"] {
+		t.Error("three attack forms with no defense is not the kitchen sink")
 	}
 
 	withDefense := append(append([]combat.Card{}, threeForms...), card("Brace", combat.Fire))
@@ -179,8 +179,8 @@ func TestArsenalNeedsTheDefenseBesideTheThreeForms(t *testing.T) {
 	for _, k := range Loaded().ByTurn(withDefense) {
 		got[k] = true
 	}
-	if !got["arsenal"] {
-		t.Error("three attack forms and a defense is the arsenal")
+	if !got["kitchen-sink"] {
+		t.Error("three attack forms and a defense is the kitchen sink")
 	}
 }
 

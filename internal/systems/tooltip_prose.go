@@ -25,7 +25,7 @@ import (
 
 // The panel's type in the prose glyphs, as capital heights in screen pixels.
 const (
-	tipProseCap      = 15
+	tipProseCap      = proseCapLarge
 	tipProseTitleCap = 20
 
 	// tipProseLead is the air added under each line's own height.

@@ -75,14 +75,19 @@ func TestALineIsTypedLeftToRight(t *testing.T) {
 	w := typewriter{}
 	w.setLines(payoutLines(gs))
 
-	full := w.lines[0].plain()
-	for i := 0; i < 200 && !w.filled(); i++ {
-		runs, on := w.visible(0)
+	// The first claim, which has both a left part and an amount to type.
+	const row = 1
+	for i := 0; i < 2000 && w.line < row; i++ {
+		w.tick(gs, func(int) image.Point { return image.Point{} })
+	}
+	full := w.lines[row].plain()
+	for i := 0; i < 400 && w.line == row; i++ {
+		left, right, on := w.visible(row)
 		if !on {
-			t.Fatal("the first line is not on screen")
+			t.Fatal("the first claim is not on screen")
 		}
 		shown := ""
-		for _, r := range runs {
+		for _, r := range append(left, right...) {
 			shown += r.text
 		}
 		if !strings.HasPrefix(full, shown) {
@@ -101,15 +106,34 @@ func TestTheInterestLineIsThereWithNoInterest(t *testing.T) {
 	}
 	gs.Run.WonFight(50, 50)
 
+	want := payoutGain(0).text
 	for _, l := range payoutLines(gs) {
-		if strings.Contains(l.plain(), "proliferates") {
-			if !strings.HasSuffix(l.plain(), "+0") {
-				t.Errorf("a run earning no interest was told %q, want +0", l.plain())
+		if strings.Contains(l.plain(), itoaTest(session.PropagationPer)) && l.pays != nil {
+			if len(l.right) != 1 || l.right[0].text != want {
+				t.Errorf("a run earning no interest was told %q, want it to end on %q", l.plain(), want)
 			}
 			return
 		}
 	}
 	t.Error("a run earning no interest was not told about interest at all")
+}
+
+// TestEveryClaimIsARowAndItsAmountIsAFigure. The account reads as a rectangle only if every claim
+// puts its amount on the right edge, and the amount carries the vitae mark only if it is drawn on
+// the figure sheet — the prose sheet has no `¤`.
+func TestEveryClaimIsARowAndItsAmountIsAFigure(t *testing.T) {
+	for _, l := range payoutLines(wonRun(63)) {
+		if l.pays == nil {
+			continue
+		}
+		if l.centered || len(l.right) != 1 {
+			t.Errorf("claim %q is not a row ending on one amount", l.plain())
+			continue
+		}
+		if !l.right[0].figure {
+			t.Errorf("claim %q sets its amount %q in prose", l.plain(), l.right[0].text)
+		}
+	}
 }
 
 func itoaTest(n int) string {

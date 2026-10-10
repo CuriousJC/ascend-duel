@@ -98,12 +98,17 @@ func inkNamed(name string) color.RGBA {
 		return BoostInk
 	case session.InkTotal:
 		return VerbInkFor(combat.CategoryAttack)
+	case session.InkVitae:
+		return VitaeInk
 	}
 	if e, ok := combat.ParseElement(name); ok {
 		return cards.BorderOf(ArtFor(e))
 	}
 	return color.RGBA{}
 }
+
+// InkNamed is inkNamed for a screen drawing a Say template outside a pane.
+func InkNamed(name string) color.RGBA { return inkNamed(name) }
 
 // swatchForVoice is the square a line is drawn beside. **A zero-alpha swatch is a line with no
 // swatch**, which drawPane centers — so headings read as blocks rather than as more of the list.

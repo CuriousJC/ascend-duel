@@ -147,7 +147,7 @@ var deckArt embed.FS
 //
 // One square icon per achievement — `data/achievements.json` names it in `AchievedIcon` — committed
 // at **256x256, Steam's own upload size**, which the achievements page draws at Steam's 64. **Keyed
-// `achievement-<stem>`** for the upgrade art's reason: the map is flat, and `prism` or `arsenal` is
+// `achievement-<stem>`** for the upgrade art's reason: the map is flat, and `prism` or `kitchen-sink` is
 // a name a relic could take. `default.png` is what a record with no icon draws. There is no
 // unachieved file anywhere: that icon is this one in grayscale, see systems.ArtMarkGray.
 //

@@ -25,7 +25,6 @@ package screens
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -53,11 +52,6 @@ const shelfSize = 3
 // Where the two rows sit. Percentages anchor the groups; offsets inside a group stay in pixels,
 // per CLAUDE.md.
 const (
-	// shopHintTop is the line between the band and the shelf, written only when it has something
-	// the duelist card does not already say. **Clear of the band's row**, which can carry a confirm
-	// tab under an armed relic or carried card — TestTheSellTabClearsTheHint holds the gap.
-	shopHintTop = 372
-
 	// The figure under a card on the shelf: what it costs. The gap is also where a sell tab hangs.
 	shopFigureGap  = 10
 	shopFigureSize = 22
@@ -210,7 +204,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	}
 
 	if s.leaveButton == nil {
-		s.leaveButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LEAVE",
+		s.leaveButton = models.NewButton(offerButtonWidth, offerButtonHeight, "CONTINUE JOURNEY",
 			func() { s.leaving = true })
 		s.leaveButton.BaseColor = ui.ButtonJade
 	}
@@ -602,16 +596,6 @@ func (s *ShopScene) wornSlot(gs *state.GlobalState, i, n int) image.Rectangle {
 func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	ui.FillScreenBackdrop(gs, screen)
 
-	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}
-
-	line := func(y int, face *text.GoTextFace, msg string, ink color.RGBA) {
-		op := &text.DrawOptions{}
-		op.GeoM.Translate(float64(gs.PctX(50)), float64(y))
-		op.PrimaryAlign = text.AlignCenter
-		op.ColorScale.ScaleWithColor(ink)
-		systems.DrawText(screen, msg, face, op)
-	}
-
 	// **The duelist card, then the worn row drawn by this screen** — the band's two halves, split
 	// because a relic here can be sold and moves when the row re-centers. See buildband.go.
 	drawBuildCard(gs, screen, gs.Run.Vitae())
@@ -627,8 +611,6 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// vanished. nil: a rune is carried on this screen, not spent. See buildband.go.
 	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, s.band.heldSkip, s.tip.Showing())
 	drawBandOverlay(gs, screen, &s.band)
-
-	line(shopHintTop, small, s.hint(gs), ui.GroundInk)
 
 	// **The four panes, left to right.** Each paints its own surface first and its cards on top;
 	// see shop_panes.go, which owns where they stand.
@@ -735,38 +717,6 @@ func (s *ShopScene) figure(gs *state.GlobalState, screen *ebiten.Image, at image
 	op.PrimaryAlign = text.AlignCenter
 	op.ColorScale.ScaleWithColor(ink)
 	systems.DrawText(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: shopFigureSize}, op)
-}
-
-// hint is the line between the narration and the shelf, and **it is usually empty** *(2026-08-22)*.
-//
-// **The cap surfaces here rather than being displayed as empty slots** — MECHANICS.md's rule is
-// that it is never shown until it binds, and a hand of five with relics still on the shelf is the
-// moment it binds. That is the whole of what this line is for now.
-//
-// It used to open with the purse as well. The duelist card in the build band writes the purse in
-// crimson two hundred pixels above, so saying it again here would be the screen's only sentence
-// spent on a figure already on it.
-func (s *ShopScene) hint(gs *state.GlobalState) string {
-	// **Against the run's own cap, not a width** *(2026-09-17)*. It read combat.MaxWornRelics — the
-	// duelist array's width, eight — so the hint about every finger being spoken for waited for a
-	// sixth, seventh and eighth relic the shop had already refused to sell. The same mistake the
-	// pane's `0/8` fraction made, and the constant is gone now.
-	if len(gs.Run.Worn()) >= gs.Run.RelicSlots() && s.anyLeft() {
-		return fmt.Sprintf("%d vitae - every finger is spoken for, sell one to make room",
-			gs.Run.Vitae())
-	}
-	return ""
-}
-
-// anyLeft reports whether the shelf still holds something to buy — so the cap is only mentioned
-// when it is what is stopping the player, rather than on an empty shelf.
-func (s *ShopScene) anyLeft() bool {
-	for _, item := range s.shelf {
-		if !item.bought {
-			return true
-		}
-	}
-	return false
 }
 
 // Compile-time assurance that the record the shelf draws still carries what this screen reads off

@@ -60,9 +60,9 @@ const (
 
 	// animNameSize is a row in the list, animNoteSize the symbol under the stage and
 	// animWhatSize the sentence beside it.
-	animNameSize = 20
-	animNoteSize = 16
-	animWhatSize = 17
+	animNameSize = systems.TextMedium
+	animNoteSize = systems.TextSmall
+	animWhatSize = systems.TextSmall
 
 	animRowHeight = 34
 )

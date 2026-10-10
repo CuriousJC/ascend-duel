@@ -86,7 +86,7 @@ const (
 	// **The two move together.** A bigger face at the old pitch overlaps its neighbors, and a
 	// bigger pitch alone just spreads small text out. The panel's capacity is derived from the
 	// pitch, so it falls out of this rather than being re-tuned by hand.
-	ledgerTextSize  = 20
+	ledgerTextSize  = systems.TextMedium
 	ledgerRowHeight = 27
 
 	// ledgerBottomInset is the air kept under the last row, so a full panel does not write its

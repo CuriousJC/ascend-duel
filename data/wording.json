@@ -1,0 +1,72 @@
+{
+  "payout": {
+    "heading": "{vitae:Vitae} {vitae:¤}",
+    "interest": "Proliferation For Each {per} (max {max})",
+    "life": "Duelist Health",
+    "room": "Fallen Enemy",
+    "total": "Total Vitae",
+    "gain": "+{n} ¤",
+    "purse": "{n} ¤",
+    "leader": "·",
+    "essence": "Choose an Essence..."
+  },
+
+  "act": {
+    "line": "{who} {verb} {clause}",
+    "with": "with {card}{weight}",
+    "raising": "and raises {card}{weight}",
+    "attacks": "attacks",
+    "defends": "defends"
+  },
+
+  "used": {
+    "line": "{who} {verb} {subject}",
+    "into": " - {into}",
+    "on": " on {into}",
+    "casts": "casts",
+    "uses": "uses"
+  },
+
+  "outcome": {
+    "first": " - ",
+    "next": ", ",
+    "fizzled": "fizzles - its own element",
+    "drained": "{relic} drains {n}",
+    "raised": "{shields} up",
+    "held": "unplayed for {n} vitae",
+    "reflected": "{relic} returns {n}",
+    "tithed": "{relic} pays {n} vitae",
+    "silver": "silver pays {n} vitae",
+    "lapsed": "{shields} lapse",
+    "blocked": "blocked - {shields} left",
+    "hit-back": "hits back for {n}",
+    "damage": "{n} damage"
+  },
+
+  "announce": {
+    "regenerated": "{who} restores {n} - {relic}",
+    "warded": "{who} raises {shields} - {relic}",
+    "time-up": "{who} is out of time - the duel takes {n}",
+    "defeated": "{who} falls"
+  },
+
+  "after": {
+    "took": "{mark:took} {subject}",
+    "cut": "{mark:cut} {subject}",
+    "wore": "{mark:wore} {subject}",
+    "sold": "{mark:sold} {subject}",
+    "spent": "{mark:spent} {subject}",
+    "changed": "{mark:changed} {subject} into {into}",
+    "raised": "{mark:raised} {hand} to +{n}",
+    "gained": "{mark:gained} {n} vitae",
+    "paid": "{mark:spent} {n} vitae"
+  },
+
+  "term": {
+    "dmg": "+{n} DMG",
+    "flat": "+{n} each hit",
+    "total": "every hit",
+    "lands": "  + {relic} lands it again",
+    "grown": " (grown {n})"
+  }
+}

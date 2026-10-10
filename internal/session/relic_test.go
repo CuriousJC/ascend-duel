@@ -152,10 +152,10 @@ func TestAGrowingRelicGainsOnEveryWin(t *testing.T) {
 	}
 }
 
-func TestPropagationCountsFivesAndStopsAtFive(t *testing.T) {
-	// +1 for every 5 held, capped at +5. Rounded down, like every other integer rule in the game.
+func TestPropagationCountsFivesAndStopsAtSeven(t *testing.T) {
+	// +1 for every 5 held, capped at +7. Rounded down, like every other integer rule in the game.
 	for _, tc := range []struct{ held, want int }{
-		{0, 0}, {4, 0}, {5, 1}, {9, 1}, {10, 2}, {25, 5}, {60, 5},
+		{0, 0}, {4, 0}, {5, 1}, {9, 1}, {10, 2}, {25, 5}, {35, 7}, {60, 7},
 	} {
 		run := bare(t)
 		run.vitae = tc.held
@@ -170,15 +170,15 @@ func TestPropagationCountsFivesAndStopsAtFive(t *testing.T) {
 
 func TestBankerScalesWhatTheCapProduced(t *testing.T) {
 	// **The cap binds the base rate and the relic scales what the cap produced** (owner's call). At
-	// 25 held that is +5 bare and +10 wearing Banker — an absolute cap would leave the relic doing
-	// nothing past 25, which is a relic that stops working when a run can finally afford it.
+	// 35 held that is +7 bare and +14 wearing Banker — an absolute cap would leave the relic doing
+	// nothing past 35, which is a relic that stops working when a run can finally afford it.
 	run := wearing(t, "banker")
-	run.vitae = 25
+	run.vitae = 35
 	run.WonFight(0, 0)
 	run.ClaimPropagation()
 
-	if got := run.Vitae() - 25; got != 10 {
-		t.Errorf("Banker propagated %d on a purse of 25, want 10", got)
+	if got := run.Vitae() - 35; got != 14 {
+		t.Errorf("Banker propagated %d on a purse of 35, want 14", got)
 	}
 }
 

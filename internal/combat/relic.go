@@ -2082,7 +2082,7 @@ func (d Duelist) MoveRelic(from, to int) Duelist {
 //
 // **The cap binds the base rate and the relic scales what the cap produced** *(owner's call,
 // 2026-08-17)*. An absolute cap on the figure that finally lands would leave Banker doing nothing
-// past 25 held — a relic that stops working exactly when a run can afford it.
+// past 35 held — a relic that stops working exactly when a run can afford it.
 //
 // Left to right and compounding, like every other relic effect.
 func ScalePropagation(worn []WornRelic, base int) int {

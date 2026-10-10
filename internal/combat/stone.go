@@ -9,7 +9,7 @@ import (
 //
 // A hand's multiplier is written in `data/hands.json` and is a fact about the game. A *stone* is a
 // fact about one run: it raises every rung of one *shape* — every Three of a Kind, say, whatever
-// axis it counts on — each by a tenth of that rung's own catalog value, and it does it for the
+// axis it counts on — each by a share of that rung's own catalog value, and it does it for the
 // duelist holding it and nobody else. See Hand.Shape.
 //
 // **The count is still kept per rung.** A stone lands on each rung of its shape, so the rungs of
@@ -23,11 +23,19 @@ import (
 // rung and the catalog is read *through* it; a duelist with no stones reads the table itself,
 // unchanged and unallocated.
 //
-// **Ten percent of the base, per stone, floored** *(owner's call, 2026-08-27)*. Card Two Pair is
-// 179, so a stone is worth 17 and two stones are worth 34 - never 17.9 rounded up, and never 10% of
-// the value the stone before it produced. The arithmetic is integer for the reason everything in
-// this package is: a hand that rounded differently from the rest of the damage path would be the
-// one number in the game whose sum could not be checked by hand.
+// **Ten percent of the base, per stone, with the total floored to the tenth** *(owner's call)*.
+// Card Two Pair is 180, so its stones come to 18, 36, 54 and pay 1.9x, 2.1x, 2.3x: the fraction a
+// single stone cannot show is carried into the next rather than thrown away, so a harder rung
+// pulls ahead of an easier one however close their bases. Never 10% of the value the stone before
+// it produced. A raised rung stays on the same tenths grid the catalog is written on.
+//
+// **The No Hand grows at thirty percent** *(owner's call)*, written as `stonePercent` on its
+// record in `hands.json`: playing many cards that agree on nothing is the hard thing it rewards.
+// Every other rung writes nothing and grows at `defaultStonePercent`.
+//
+// The arithmetic is integer for the reason everything in this package is: a hand that rounded
+// differently from the rest of the damage path would be the one number in the game whose sum
+// could not be checked by hand.
 //
 // **A hand at a multiplier below its own rung is still legal**, exactly as `hands.json` allows,
 // so nothing here clamps. What it will not do is grow without a stone: `HandStones` is the whole
@@ -84,7 +92,7 @@ func HandSlot(key string) (int, bool) {
 //
 // **A shape is what a stone raises.** A Three of a Kind counted on the card, on the form and on
 // the element is one idea read three ways, and a stone buys that idea rather than one reading of
-// it — so it names a shape and every rung carrying it moves together, each by a tenth of its own
+// it — so it names a shape and every rung carrying it moves together, each by a share of its own
 // multiplier. **Derived from `Groups` rather than written beside them**, so a rung cannot claim a
 // shape its groups disagree with.
 func (h Hand) Shape() string { return ShapeOf(h.Groups) }
@@ -135,20 +143,30 @@ func HandKeys() []string {
 	return out
 }
 
-// stoneStep is what one stone adds to one rung: a tenth of the rung's catalog multiplier,
-// floored. Zero for a rung so cheap that a tenth of it rounds away — which the catalog has none
-// of, since the lowest multiplier in the game is the No Hand's 100.
-func stoneStep(base int) int { return base / 10 }
+// defaultStonePercent is what one stone adds to a rung whose record writes no `stonePercent`: a
+// tenth of its catalog multiplier.
+const defaultStonePercent = 10
 
-// StoneValue is what `n` stones are worth on a rung whose catalog multiplier is `base`.
+// stonePercent is what one stone adds to this rung, as a percentage of its catalog multiplier.
+func (h Hand) stonePercent() int {
+	if h.StonePercent == 0 {
+		return defaultStonePercent
+	}
+	return h.StonePercent
+}
+
+// StoneValue is what `n` stones are worth on a rung, read off its catalog multiplier.
 //
-// **`n` steps, not one step compounded.** Each stone is worth a tenth of the number the file
-// writes down, so the tenth stone is worth exactly what the first was.
-func StoneValue(base, n int) int {
+// **The total is floored to `handStep`, never each stone.** `n` stones are worth `n` times the
+// rung's percentage of its base, and only the sum is put back on the tenths grid — so a 1.4x rung
+// at a tenth per stone goes 1.5, 1.6, 1.8 rather than standing still beside the Pair. A stone may
+// therefore be worth a step more than the one before it; over any run of stones the sum is the
+// percentage exactly, to within one step.
+func StoneValue(h Hand, n int) int {
 	if n <= 0 {
 		return 0
 	}
-	return n * stoneStep(base)
+	return h.Multiplier * h.stonePercent() * n / multiplierScale / handStep * handStep
 }
 
 // HandStoneCount is how many stones this duelist holds for one rung, by key. Zero for a rung the
@@ -207,7 +225,7 @@ func (d Duelist) handsFrom(hands []Hand) []Hand {
 		if !ok {
 			continue
 		}
-		out[i].Multiplier += StoneValue(out[i].Multiplier, d.HandStones[seat])
+		out[i].Multiplier += StoneValue(out[i], d.HandStones[seat])
 	}
 	return out
 }

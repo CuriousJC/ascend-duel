@@ -83,6 +83,10 @@ const HandNone HandID = 0
 // would be the one number in the game that rounds differently from every other.
 const multiplierScale = 100
 
+// handStep is the grid every hand multiplier sits on: a tenth of the identity, so a rung pays
+// 1.8x and never 1.79x. The catalog is refused at load off it, and a stone steps on it.
+const handStep = multiplierScale / 10
+
 // Axis is what a hand counts copies *of* *(2026-08-19)*. The same rung exists once per axis —
 // three Thumps are a Card Three of a Kind, three crushes are a Form Three of a Kind, three ice
 // cards are an Elemental Three of a Kind — so each can be priced on its own rarity.
@@ -221,6 +225,10 @@ type Hand struct {
 	// Multiplier is this hand's damage multiplier, in percent, and is the whole of what forming
 	// it buys.
 	Multiplier int
+
+	// StonePercent is what one stone adds to this rung, as a percentage of Multiplier. Zero reads
+	// as defaultStonePercent, so a Hand built in a test grows like a rung that wrote nothing.
+	StonePercent int
 }
 
 // On is this rung read on one of its axes. **A copy rather than a mutation**, like everything

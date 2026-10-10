@@ -42,13 +42,14 @@ func loadCatalog() []Hand {
 		seenKey[rec.Key] = true
 
 		h := Hand{
-			ID:         HandID(rec.ID),
-			Key:        rec.Key,
-			Name:       rec.Name,
-			Match:      axes[0],
-			Axes:       axes,
-			Groups:     append([]int(nil), rec.Groups...),
-			Multiplier: rec.Multiplier,
+			ID:           HandID(rec.ID),
+			Key:          rec.Key,
+			Name:         rec.Name,
+			Match:        axes[0],
+			Axes:         axes,
+			Groups:       append([]int(nil), rec.Groups...),
+			Multiplier:   rec.Multiplier,
+			StonePercent: rec.StonePercent,
 		}
 		if prev, dup := seenID[h.ID]; dup {
 			panic(fmt.Sprintf("combat: hand ID %d is used by both %q and %q", h.ID, prev, h.Name))
@@ -109,6 +110,13 @@ func validateHand(r data.HandData) ([]Axis, error) {
 	// tuning lever away from the file, which is the one place the ladder is meant to be tuned.
 	case r.Multiplier <= 0:
 		return one, fmt.Errorf("has a multiplier of %d; the multiplier scales the hand's own cards, so that is an attack phase dealing nothing", r.Multiplier)
+	// **A multiplier is written to the tenth and never to the hundredth** *(owner's call)*: 180,
+	// never 179. The ladder is read as 1.8x, and a hundredth is a precision a player cannot use.
+	// Stones hold to the same grid; see StoneValue.
+	case r.Multiplier%handStep != 0:
+		return one, fmt.Errorf("has a multiplier of %d; a hand pays in tenths, so it must be a multiple of %d", r.Multiplier, handStep)
+	case r.StonePercent < 0:
+		return one, fmt.Errorf("has a stonePercent of %d; a stone raises a rung, never lowers it", r.StonePercent)
 	}
 
 	total := 0

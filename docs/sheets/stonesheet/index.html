@@ -88,8 +88,9 @@
 </p>
 <p class="note">
   <strong>One stone, every axis.</strong> A stone raises a <em>shape</em> — every Three of a Kind,
-  whether it counts on the card, the form or the element — and each rung moves by a tenth of its
-  own catalog multiplier, <code>combat.StoneValue</code>. So one rock is a different +N on every
+  whether it counts on the card, the form or the element — and each rung moves by a share of its
+  own catalog multiplier — a tenth, unless its record in <code>hands.json</code> writes a
+  <code>stonePercent</code> — <code>combat.StoneValue</code>. So one rock is a different +N on every
   row beside it, and all of them follow <code>hands.json</code> without anything being edited here.
 </p>
 <p class="note">
@@ -129,8 +130,8 @@
           
             <tr>
               <td>No Hand<br><span class="record">no-hand &middot; 1 cards on concept</span></td>
-              <td class="n"><b>100</b> &rarr; <b>110</b></td>
-              <td class="n">+10</td>
+              <td class="n"><b>100</b> &rarr; <b>130</b></td>
+              <td class="n">+30</td>
             </tr>
           
         </table>
@@ -179,20 +180,20 @@
           
             <tr>
               <td>Card Two Pair<br><span class="record">concept-two-pair &middot; 4 cards on concept</span></td>
-              <td class="n"><b>179</b> &rarr; <b>196</b></td>
-              <td class="n">+17</td>
+              <td class="n"><b>180</b> &rarr; <b>190</b></td>
+              <td class="n">+10</td>
             </tr>
           
             <tr>
               <td>Form Two Pair<br><span class="record">form-two-pair &middot; 4 cards on form</span></td>
-              <td class="n"><b>129</b> &rarr; <b>141</b></td>
-              <td class="n">+12</td>
+              <td class="n"><b>130</b> &rarr; <b>140</b></td>
+              <td class="n">+10</td>
             </tr>
           
             <tr>
               <td>Elemental Two Pair<br><span class="record">element-two-pair &middot; 4 cards on element</span></td>
-              <td class="n"><b>134</b> &rarr; <b>147</b></td>
-              <td class="n">+13</td>
+              <td class="n"><b>140</b> &rarr; <b>150</b></td>
+              <td class="n">+10</td>
             </tr>
           
         </table>
@@ -216,20 +217,20 @@
           
             <tr>
               <td>Card Three of a Kind<br><span class="record">concept-three-of-a-kind &middot; 3 cards on concept</span></td>
-              <td class="n"><b>240</b> &rarr; <b>264</b></td>
-              <td class="n">+24</td>
+              <td class="n"><b>240</b> &rarr; <b>260</b></td>
+              <td class="n">+20</td>
             </tr>
           
             <tr>
               <td>Form Three of a Kind<br><span class="record">form-three-of-a-kind &middot; 3 cards on form</span></td>
-              <td class="n"><b>120</b> &rarr; <b>132</b></td>
-              <td class="n">+12</td>
+              <td class="n"><b>120</b> &rarr; <b>130</b></td>
+              <td class="n">+10</td>
             </tr>
           
             <tr>
               <td>Elemental Three of a Kind<br><span class="record">element-three-of-a-kind &middot; 3 cards on element</span></td>
-              <td class="n"><b>134</b> &rarr; <b>147</b></td>
-              <td class="n">+13</td>
+              <td class="n"><b>140</b> &rarr; <b>150</b></td>
+              <td class="n">+10</td>
             </tr>
           
         </table>
@@ -253,20 +254,20 @@
           
             <tr>
               <td>Card Full House<br><span class="record">concept-full-house &middot; 5 cards on concept</span></td>
-              <td class="n"><b>342</b> &rarr; <b>376</b></td>
-              <td class="n">+34</td>
+              <td class="n"><b>350</b> &rarr; <b>380</b></td>
+              <td class="n">+30</td>
             </tr>
           
             <tr>
               <td>Form Full House<br><span class="record">form-full-house &middot; 5 cards on form</span></td>
-              <td class="n"><b>202</b> &rarr; <b>222</b></td>
+              <td class="n"><b>200</b> &rarr; <b>220</b></td>
               <td class="n">+20</td>
             </tr>
           
             <tr>
               <td>Elemental Full House<br><span class="record">element-full-house &middot; 5 cards on element</span></td>
-              <td class="n"><b>232</b> &rarr; <b>255</b></td>
-              <td class="n">+23</td>
+              <td class="n"><b>230</b> &rarr; <b>250</b></td>
+              <td class="n">+20</td>
             </tr>
           
         </table>
@@ -290,20 +291,20 @@
           
             <tr>
               <td>Card Four of a Kind<br><span class="record">concept-four-of-a-kind &middot; 4 cards on concept</span></td>
-              <td class="n"><b>479</b> &rarr; <b>526</b></td>
-              <td class="n">+47</td>
+              <td class="n"><b>480</b> &rarr; <b>520</b></td>
+              <td class="n">+40</td>
             </tr>
           
             <tr>
               <td>Form Four of a Kind<br><span class="record">form-four-of-a-kind &middot; 4 cards on form</span></td>
-              <td class="n"><b>226</b> &rarr; <b>248</b></td>
-              <td class="n">+22</td>
+              <td class="n"><b>230</b> &rarr; <b>250</b></td>
+              <td class="n">+20</td>
             </tr>
           
             <tr>
               <td>Elemental Four of a Kind<br><span class="record">element-four-of-a-kind &middot; 4 cards on element</span></td>
-              <td class="n"><b>276</b> &rarr; <b>303</b></td>
-              <td class="n">+27</td>
+              <td class="n"><b>280</b> &rarr; <b>300</b></td>
+              <td class="n">+20</td>
             </tr>
           
         </table>
@@ -327,20 +328,20 @@
           
             <tr>
               <td>Card Five of a Kind<br><span class="record">concept-five-of-a-kind &middot; 5 cards on concept</span></td>
-              <td class="n"><b>787</b> &rarr; <b>865</b></td>
-              <td class="n">+78</td>
+              <td class="n"><b>800</b> &rarr; <b>880</b></td>
+              <td class="n">+80</td>
             </tr>
           
             <tr>
               <td>Form Five of a Kind<br><span class="record">form-five-of-a-kind &middot; 5 cards on form</span></td>
-              <td class="n"><b>439</b> &rarr; <b>482</b></td>
-              <td class="n">+43</td>
+              <td class="n"><b>450</b> &rarr; <b>490</b></td>
+              <td class="n">+40</td>
             </tr>
           
             <tr>
               <td>Elemental Five of a Kind<br><span class="record">element-five-of-a-kind &middot; 5 cards on element</span></td>
-              <td class="n"><b>537</b> &rarr; <b>590</b></td>
-              <td class="n">+53</td>
+              <td class="n"><b>550</b> &rarr; <b>600</b></td>
+              <td class="n">+50</td>
             </tr>
           
         </table>
@@ -364,8 +365,8 @@
           
             <tr>
               <td>Elementalist<br><span class="record">element-elementalist &middot; 5 cards on element</span></td>
-              <td class="n"><b>256</b> &rarr; <b>281</b></td>
-              <td class="n">+25</td>
+              <td class="n"><b>260</b> &rarr; <b>280</b></td>
+              <td class="n">+20</td>
             </tr>
           
         </table>

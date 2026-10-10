@@ -67,6 +67,11 @@ type HandData struct {
 	// `internal/combat` is integer arithmetic throughout, and a float here would be the one number
 	// in the game that rounds differently from the rest.
 	Multiplier int `json:"multiplier"`
+
+	// StonePercent is what one stone adds to this rung, as a percentage of Multiplier. Omitted is
+	// the ladder's own ten; the No Hand writes more, because playing many cards without forming a
+	// hand is the hard thing it rewards.
+	StonePercent int `json:"stonePercent,omitempty"`
 }
 
 // LoadHands parses the catalog, in file order.

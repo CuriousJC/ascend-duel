@@ -18,14 +18,14 @@
 // # What to look at
 //
 // **One stone, several rungs, several figures.** A stone raises a *shape* — every Three of a
-// Kind, on the card, the form and the element alike — and each rung moves by a tenth of its own
+// Kind, on the card, the form and the element alike — and each rung moves by a share of its own
 // catalog multiplier, so one rock is worth a different +N on every rung it touches. The figures are
 // computed rather than authored, so a rung retuned in `hands.json` moves its row here without
 // anything being edited in `stones.json`.
 //
 // **The gap between the cheap shapes and the dear ones.** Every stone costs the same inside the
-// same bag, and a No Hand stone is worth a tenth of 100 where a Five of a Kind stone moves three
-// rungs each by a tenth of a far larger number. Whether that spread is the intended bargain is
+// same bag, and a No Hand stone is worth three tenths of 100 where a Five of a Kind stone moves
+// three rungs each by a tenth of a far larger number. Whether that spread is the intended bargain is
 // a design question this page is for asking.
 //
 // **A shape with no stone.** Walked in ladder order, so a shape the catalog has not authored a
@@ -103,7 +103,7 @@ func run(dir string) error {
 			if h.Shape() != shape {
 				continue
 			}
-			worth := session.StoneWorth(h.Key)
+			worth := session.StoneWorth(h.Key, 0)
 			p.Rungs = append(p.Rungs, rung{
 				Hand: h.Name, HandKey: h.Key, Axis: axisLabel(h), CardsWanted: h.Cards(),
 				Multiplier: h.Multiplier, Worth: worth, Raised: h.Multiplier + worth,

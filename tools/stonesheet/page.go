@@ -105,8 +105,9 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
 </p>
 <p class="note">
   <strong>One stone, every axis.</strong> A stone raises a <em>shape</em> — every Three of a Kind,
-  whether it counts on the card, the form or the element — and each rung moves by a tenth of its
-  own catalog multiplier, <code>combat.StoneValue</code>. So one rock is a different +N on every
+  whether it counts on the card, the form or the element — and each rung moves by a share of its
+  own catalog multiplier — a tenth, unless its record in <code>hands.json</code> writes a
+  <code>stonePercent</code> — <code>combat.StoneValue</code>. So one rock is a different +N on every
   row beside it, and all of them follow <code>hands.json</code> without anything being edited here.
 </p>
 <p class="note">

@@ -325,14 +325,16 @@ func TestTakingAStoneRaisesTheRunsRung(t *testing.T) {
 	stone := g.stones[0]
 
 	before := map[string]int{}
+	worth := map[string]int{}
 	for _, hand := range stone.Hands() {
 		before[hand], _ = gs.Run.HandMultiplier(hand)
+		worth[hand] = session.StoneWorth(hand, gs.Run.StonesOn(hand))
 	}
 	g.take(gs, 0)
 
 	for _, hand := range stone.Hands() {
 		after, _ := gs.Run.HandMultiplier(hand)
-		if want := before[hand] + session.StoneWorth(hand); after != want {
+		if want := before[hand] + worth[hand]; after != want {
 			t.Errorf("%s pays %d after the stone, want %d", hand, after, want)
 		}
 	}

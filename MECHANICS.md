@@ -1068,11 +1068,22 @@ ten in rarity buys, and it is **a fixed constant rather than a curve fitted to t
 the sample**, so adding a rarer hand cannot silently reprice every hand below it. It is the number
 that puts the rarest rung of the shipped ladder at the 785 it was already tuned to.
 
+**Every multiplier is written to the tenth** *(owner's call)* — 180, never 179 — and the loader
+refuses one that is not a multiple of 10, so the ladder reads 1.8x and never 1.79x. The curve's
+suggestion is rounded to the same grid.
+
 `go run ./tools/handodds -price` prints what the curve would charge beside what the file charges,
-and marks every row where they differ. **The Pair is the one marked row and it is deliberate**
-: the curve would charge 110 for a 100% hand and the file charges 100,
-because the Pair is the ladder's floor rather than a reward. Every other rung matches, so any second
-mark is a real signal rather than accumulated drift.
+and marks every row where they differ. **Seven rows are marked and every one is deliberate**
+*(owner's call)*:
+
+- **The Pair**: the curve would charge 110 for a 100% hand and the file charges 100, because the
+  Pair is the ladder's floor rather than a reward.
+- **Elemental Two Pair and Elemental Three of a Kind** sit a tenth above the curve, at 1.4x, so the
+  element rungs open above the form rungs beside them.
+- **Card Full House, Form Five of a Kind, Elemental Five of a Kind and Card Five of a Kind** sit a
+  tenth or two above it, on round figures: 3.5x, 4.5x, 5.5x and 8x.
+
+Any eighth mark is a real signal rather than accumulated drift.
 
 From a two-million-hand simulation of round one:
 
@@ -1080,21 +1091,21 @@ From a two-million-hand simulation of round one:
 |---|---|---|---|---|---|
 | Pair | any | 100% | 100% | 100% | 100 |
 | Form Three of a Kind | form | 95.7% | 80.0% | 87.5% | 120 |
-| Form Two Pair | form | 97.5% | 61.7% | 77.6% | 129 |
-| Elemental Three of a Kind | element | 79.7% | 65.3% | 72.2% | 134 |
-| Elemental Two Pair | element | 96.9% | 52.8% | 71.5% | 134 |
-| Card Two Pair | concept | 57.3% | 26.6% | 39.0% | 179 |
-| Form Full House | form | 93.3% | 8.5% | 28.2% | 202 |
-| Form Four of a Kind | form | 41.4% | 10.1% | 20.4% | 226 |
-| Elemental Full House | element | 76.5% | 4.7% | 18.9% | 232 |
+| Form Two Pair | form | 97.5% | 61.7% | 77.6% | 130 |
+| Elemental Three of a Kind | element | 79.7% | 65.3% | 72.2% | 140 |
+| Elemental Two Pair | element | 96.9% | 52.8% | 71.5% | 140 |
+| Card Two Pair | concept | 57.3% | 26.6% | 39.0% | 180 |
+| Form Full House | form | 93.3% | 8.5% | 28.2% | 200 |
+| Form Four of a Kind | form | 41.4% | 10.1% | 20.4% | 230 |
+| Elemental Full House | element | 76.5% | 4.7% | 18.9% | 230 |
 | Card Three of a Kind | concept | 19.8% | 14.5% | 16.9% | 240 |
-| Elementalist | element | 38.4% | 4.8% | 13.5% | 256 |
-| Elemental Four of a Kind | element | 21.0% | 5.0% | 10.2% | 276 |
-| Card Full House | concept | 12.0% | 1.4% | 4.2% | 342 |
-| Form Five of a Kind | form | 8.6% | 0.14% | 1.10% | 439 |
-| Card Four of a Kind | concept | 1.1% | 0.39% | 0.64% | 479 |
-| Elemental Five of a Kind | element | 2.7% | 0.03% | 0.29% | 537 |
-| Card Five of a Kind | concept | 0.016% | 0.006% | 0.009% | 787 |
+| Elementalist | element | 38.4% | 4.8% | 13.5% | 260 |
+| Elemental Four of a Kind | element | 21.0% | 5.0% | 10.2% | 280 |
+| Card Full House | concept | 12.0% | 1.4% | 4.2% | 350 |
+| Form Five of a Kind | form | 8.6% | 0.14% | 1.10% | 450 |
+| Card Four of a Kind | concept | 1.1% | 0.39% | 0.64% | 480 |
+| Elemental Five of a Kind | element | 2.7% | 0.03% | 0.29% | 550 |
+| Card Five of a Kind | concept | 0.016% | 0.006% | 0.009% | 800 |
 
 **Every row is measurement.** Nothing in the table is hand-set and nothing is forced to climb
 within its ladder: the curve is monotone in the score by construction.
@@ -1128,8 +1139,8 @@ Three things fall out of it and are worth keeping:
   element — a fire Jab and an ice Jab are one concept and two colors — so there is no containment
   between those axes and no reason the card rung must outpay the elemental one. The measurements say
   an Elemental Two Pair is rarer than a Form Two Pair, and it is priced above it.
-- **The ladders cross, and that is intended.** A Form Full House pays 202 against a Card Two Pair's
-  179 though it counts on the wider axis, because at a 28.2% score it is genuinely the harder hand.
+- **The ladders cross, and that is intended.** A Form Full House pays 200 against a Card Two Pair's
+  180 though it counts on the wider axis, because at a 28.2% score it is genuinely the harder hand.
   Rung shape and axis width are both inputs to rarity; neither is the answer on its own.
 
 **The best hand is chosen on its multiplier, never on what it would deal.** The matcher does not
@@ -1930,15 +1941,16 @@ nothing simulates a duel, so no test says whether a run stacking them breaks a r
 
 **An essence alters a card; a stone alters a hand.** One stone raises **every rung of one shape**
 — a Three of a Kind counted on the card, on the form and on the element all at once — and each of
-them by **a tenth of the figure `hands.json` writes for that rung**, for the rest of the run.
+them by **a tenth of the figure `hands.json` writes for that rung**, for the rest of the run. **The
+No Hand is the one exception and grows by three tenths** *(owner's call)*.
 
 - **A stone buys a hand, not one reading of it.** A Card Three of a Kind, a Form Three of a Kind and
   an Elemental Three of a Kind are one idea read on three axes, and a player choosing a rock is
   choosing to lean on Three of a Kind rather than on one axis of it. So the stone names a *shape*
   and every axis' rung of that shape moves together.
 - **The multipliers stay apart.** Each rung still pays its own catalog figure and moves by a tenth
-  of *that*, so one Jasper adds 24 to the Card Three of a Kind, 12 to the Form and 13 to the
-  Elemental — the ladder's pricing of how hard each axis is to land survives the stone.
+  of *that*, so three Jaspers add 0.7 to the Card Three of a Kind and 0.3 to the Form and 0.4 to
+  the Elemental — the ladder's pricing of how hard each axis is to land survives the stone.
 - **A shape is the rung's `groups` with the axis left out** — `[3]`, `[3, 2]`, `[4]` — and a stone
   writes its `Groups` the same way. `combat.Hand.Shape` derives it rather than a field declaring
   it, so a rung cannot be filed under a shape its groups disagree with. The Pair is already one
@@ -1955,11 +1967,20 @@ them by **a tenth of the figure `hands.json` writes for that rung**, for the res
   *plays* are how many times the run has actually formed it, and they move nothing at all. They are
   deliberately not derived from one another — buying a rock and landing a Full House are different
   achievements, and one figure could not say which had happened. See *Play counts* below.
-- **Ten percent of the base, per stone, additive, floored.** Card Two Pair is 179, so a stone is
-  worth 17 and two stones are worth 34 — never 17.9 rounded up, and never a tenth of the number the
-  previous stone produced. The tenth stone is worth exactly what the first was. Integer arithmetic
-  throughout, like the rest of the damage path. **The Pair's 100 makes its stone worth 10**, which
-  is the cheapest step on the ladder and the only one starting from the identity.
+- **Ten percent of the base, per stone, additive, with the total floored to the tenth**
+  *(owner's call)*. Card Two Pair is 180, so its stones come to 18, 36, 54 and it pays 1.9x, 2.1x,
+  2.3x — never 2.08x, and never a tenth of the number the previous stone produced. **The total is
+  floored, never each stone**: the fraction one stone cannot show is carried into the next, so a
+  1.4x rung and the 1.0x Pair both gain 0.1 from their first stone and the harder rung pulls ahead
+  from the third. Each stone is worth the same to within one tenth, and ten stones are worth
+  exactly the base. Integer arithmetic throughout, like the rest of the damage path. **The Pair's
+  100 makes its stones worth 0.1 each**, the cheapest step on the ladder.
+- **The No Hand grows at thirty percent** *(owner's call)*, written as `stonePercent` on its own
+  record in `hands.json` — every other rung writes nothing and takes the tenth. It is the hand for a
+  turn that plays many cards which agree on nothing, which is hard to build on purpose, so its
+  stones go 1.3x, 1.6x, 1.9x. **It is always the last resort, however far it is raised**: any hand
+  that forms is the blow, even a Pair paying less than the No Hand would have. Avoiding every
+  agreement is the skill the stones reward, so a turn that slips into a Pair has not done it.
 - **A stone is spent from the consumables pane, mid-fight, beside the runes.** It needs nothing
   selected, because the shape it raises is written on the record, and it takes effect on the duelist
   standing there rather than at the next fight.
@@ -1974,13 +1995,13 @@ them by **a tenth of the figure `hands.json` writes for that rung**, for the res
   pink — the same color a relic-moved figure takes on a card. The shared reading is *something
   you bought moved this number*; a second hue for the second source would be two colors to learn
   one fact.
-- **A stone has no rarity and the bag is a flat draw.** Every rung is worth a tenth of itself, so a
+- **A stone has no rarity and the bag is a flat draw.** Every rung is worth a share of itself, so a
   Five of a Kind stone is not a better rock than a Pair stone — it is a rock for a hand you may
   never build. Weighting them would be pricing the *hand*, which the ladder already does.
 - **A shape stone is worth more rungs than a single-rung one.** Jasper moves three rungs and the
   Pair's Agate moves one; that is the Pair being already merged rather than a price, and nothing
   measures whether it wants correcting.
-- **Nothing measures whether a tenth is the right number**, on the same terms as every price in the
+- **Nothing measures whether a tenth — or the No Hand's three — is the right number**, on the same terms as every price in the
   shop section above. What it is worth in practice depends on which rung a run keeps hitting, which
   `tools/handodds` measures for the shipped deck and not for a run that has been distilling it.
 

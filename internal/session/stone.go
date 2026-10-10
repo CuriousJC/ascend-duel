@@ -3,7 +3,7 @@ package session
 // Stones: the run's own opinion about what a hand is worth.
 //
 // **An essence alters a card; a stone alters a shape.** One stone raises every rung of one shape —
-// every Three of a Kind, on the card, the form and the element alike — each by a tenth of the
+// every Three of a Kind, on the card, the form and the element alike — each by a share of the
 // figure `data/hands.json` writes for that rung, for the rest of the run. See
 // `internal/combat/stone.go`, which owns the arithmetic, the shape and the seat a count sits in.
 //
@@ -205,18 +205,20 @@ func (s *Session) HandMultiplier(hand string) (int, bool) {
 		if h.Key != hand {
 			continue
 		}
-		return h.Multiplier + combat.StoneValue(h.Multiplier, s.stones[hand]), true
+		return h.Multiplier + combat.StoneValue(h, s.stones[hand]), true
 	}
 	return 0, false
 }
 
-// StoneWorth is what the *next* stone on a rung would be worth, in multiplier points. It is what
-// a stone's tooltip writes against each rung it raises, and it does not depend on how many are
-// already there — a tenth of the catalog figure, every time.
-func StoneWorth(hand string) int {
+// StoneWorth is what the *next* stone on a rung would be worth, in multiplier points, to a run
+// already holding `have` of them. It is what a stone's tooltip writes against each rung it raises.
+//
+// **It depends on `have`** because the stones' total is what is floored to the tenth, not each
+// stone, so the next one can be worth a step more than the last. See combat.StoneValue.
+func StoneWorth(hand string, have int) int {
 	for _, h := range combat.Hands() {
 		if h.Key == hand {
-			return combat.StoneValue(h.Multiplier, 1)
+			return combat.StoneValue(h, have+1) - combat.StoneValue(h, have)
 		}
 	}
 	return 0

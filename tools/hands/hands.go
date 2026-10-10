@@ -410,7 +410,8 @@ const (
 // Score is the rung's combined rarity, in percent: the geometric mean of Dealt and Reachable.
 func (o Odds) Score() float64 { return math.Sqrt(o.Dealt * o.Reachable) }
 
-// Price is the multiplier the curve suggests for this rung.
+// Price is the multiplier the curve suggests for this rung, rounded to the tenth — the grid
+// data/hands.json is refused off, so a suggestion is always a number the file could hold.
 //
 // **It is a suggestion and not an authority.** data/hands.json is where the ladder is tuned and a
 // deliberate departure from the curve is a tuning decision, not a bug — what this is for is
@@ -424,5 +425,5 @@ func (o Odds) Price() int {
 	if r > 100 {
 		r = 100
 	}
-	return int(math.Round(PriceFloor + PriceDecade*math.Log10(100/r)))
+	return int(math.Round((PriceFloor+PriceDecade*math.Log10(100/r))/10)) * 10
 }

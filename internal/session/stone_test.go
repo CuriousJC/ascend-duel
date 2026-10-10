@@ -41,19 +41,21 @@ func TestEveryStoneNamesRungsTheRulesHave(t *testing.T) {
 	}
 }
 
-// A stone is worth a tenth of each of its rungs and never nothing. A rung so cheap that a tenth of
-// it floored away would be a row promising `+0`.
+// A stone is worth a share of each of its rungs and never nothing, however many came before it. A
+// rung so cheap that its share floored away would be a row promising `+0`.
 func TestNoStoneIsWorthNothing(t *testing.T) {
 	for _, s := range Stones() {
 		for _, hand := range s.Hands() {
-			if worth := StoneWorth(hand); worth <= 0 {
-				t.Errorf("%s is worth %d on %s", s.Record, worth, hand)
+			for have := 0; have < 10; have++ {
+				if worth := StoneWorth(hand, have); worth <= 0 {
+					t.Errorf("%s is worth %d on %s after %d", s.Record, worth, hand, have)
+				}
 			}
 		}
 	}
 }
 
-// **One stone raises every axis of its shape**, each by a tenth of that rung's own multiplier, and
+// **One stone raises every axis of its shape**, each by a share of that rung's own multiplier, and
 // nothing outside the shape moves.
 func TestUsingAStoneRaisesEveryRungOfItsShapeAndNothingElse(t *testing.T) {
 	s := New(nil)
@@ -88,7 +90,7 @@ func TestUsingAStoneRaisesEveryRungOfItsShapeAndNothingElse(t *testing.T) {
 		}
 		want := before[h.Key]
 		if raised[h.Key] {
-			want += StoneWorth(h.Key)
+			want += StoneWorth(h.Key, 0)
 		}
 		if now != want {
 			t.Errorf("%s pays %d, want %d", h.Key, now, want)
@@ -106,7 +108,7 @@ func TestTwoStonesOnOneRungAreWorthTwice(t *testing.T) {
 	s.UseStone(stone.Record)
 	s.UseStone(stone.Record)
 
-	want := base + 2*StoneWorth("pair")
+	want := base + StoneWorth("pair", 0) + StoneWorth("pair", 1)
 	if got, _ := s.HandMultiplier("pair"); got != want {
 		t.Errorf("two stones give %d, want %d", got, want)
 	}

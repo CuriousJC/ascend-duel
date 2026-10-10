@@ -11,27 +11,66 @@ import (
 
 func TestAStoneIsATenthOfTheRungsOwnMultiplier(t *testing.T) {
 	for _, h := range Hands() {
-		if got, want := StoneValue(h.Multiplier, 1), h.Multiplier/10; got != want {
+		if h.StonePercent != 0 {
+			continue
+		}
+		if got, want := StoneValue(h, 1), h.Multiplier/10/handStep*handStep; got != want {
 			t.Errorf("%s: one stone is worth %d, want %d", h.Key, got, want)
 		}
 	}
 }
 
-// **Additive on the base, never compounding**, which is the owner's call the whole mechanic is
-// priced off: the tenth stone is worth exactly what the first was.
-func TestStonesStackOnTheBaseRatherThanCompounding(t *testing.T) {
-	const base = 115
+// **The No Hand grows at three times the ladder's rate**, written on its own record: playing many
+// cards that agree on nothing is the hard thing it rewards.
+func TestTheNoHandGrowsAtThirtyPercent(t *testing.T) {
+	for _, h := range Hands() {
+		if h.Key != "no-hand" {
+			continue
+		}
+		for n, want := range []int{0, 30, 60, 90, 120, 150} {
+			if got := StoneValue(h, n); got != want {
+				t.Errorf("%d stones on the No Hand are worth %d, want %d", n, got, want)
+			}
+		}
+		return
+	}
+	t.Fatal("the catalog holds no No Hand")
+}
 
-	if got, want := StoneValue(base, 2), 22; got != want {
-		t.Errorf("two stones on %d are worth %d, want %d", base, got, want)
+// **A raised rung stays on the tenths grid** the catalog is written on, however many stones.
+func TestARaisedRungStaysOnTheTenths(t *testing.T) {
+	for _, h := range Hands() {
+		for n := 1; n <= 10; n++ {
+			if v := h.Multiplier + StoneValue(h, n); v%handStep != 0 {
+				t.Errorf("%s with %d stones pays %d, off the tenths grid", h.Key, n, v)
+			}
+		}
 	}
-	if got, want := StoneValue(base, 3), 33; got != want {
-		t.Errorf("three stones on %d are worth %d, want %d", base, got, want)
+}
+
+// **The total is floored, never each stone**, so a fraction one stone cannot show is carried into
+// the next. A 1.4x rung and the 1.0x Pair both gain a tenth from their first stone; by the third
+// the harder rung has pulled ahead.
+func TestStonesCarryTheirFractionForward(t *testing.T) {
+	h := Hand{Multiplier: 140}
+	for n, want := range []int{0, 10, 20, 40, 50, 70} {
+		if got := StoneValue(h, n); got != want {
+			t.Errorf("%d stones on 140 are worth %d, want %d", n, got, want)
+		}
 	}
-	// Compounding would give 115 -> 126 -> 138, so a second stone worth 12 rather than 11 is the
-	// failure this pins.
-	if StoneValue(base, 2) != 2*StoneValue(base, 1) {
-		t.Error("the second stone is not worth the same as the first")
+}
+
+// **Additive on the base, never compounding**, which is the owner's call the whole mechanic is
+// priced off: ten stones are worth exactly ten tenths of the catalog figure.
+func TestStonesStackOnTheBaseRatherThanCompounding(t *testing.T) {
+	h := Hand{Multiplier: 450}
+
+	if got, want := StoneValue(h, 2), 90; got != want {
+		t.Errorf("two stones on %d are worth %d, want %d", h.Multiplier, got, want)
+	}
+	// Compounding would put ten stones at about 2.6 times the base; additive is exactly double.
+	if got, want := StoneValue(h, 10), 450; got != want {
+		t.Errorf("ten stones on %d are worth %d, want %d", h.Multiplier, got, want)
 	}
 }
 
@@ -63,7 +102,7 @@ func TestAStoneRaisesOnlyItsOwnRung(t *testing.T) {
 		}
 		want := base.Multiplier
 		if h.Key == "pair" {
-			want += StoneValue(base.Multiplier, 1)
+			want += StoneValue(base, 1)
 		}
 		if h.Multiplier != want {
 			t.Errorf("%s pays %d, want %d", h.Key, h.Multiplier, want)
@@ -109,7 +148,7 @@ func TestARaisedRungPaysMoreInARealRound(t *testing.T) {
 	// The figures are the multiplier's, so the ratio has to be exactly the two multipliers'.
 	wantBefore := blowBase(plain) * pair.Multiplier / multiplierScale
 	wantAfter := blowBase(plain) *
-		(pair.Multiplier + StoneValue(pair.Multiplier, 1)) / multiplierScale
+		(pair.Multiplier + StoneValue(pair, 1)) / multiplierScale
 	if before != wantBefore || after != wantAfter {
 		t.Errorf("dealt %d then %d, want %d then %d", before, after, wantBefore, wantAfter)
 	}

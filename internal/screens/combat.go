@@ -1376,8 +1376,8 @@ func eventLabel(e combat.Event) string {
 	case combat.KindDamage:
 		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
 	case combat.KindHand:
-		return fmt.Sprintf("attack      %v forms %s (x%d.%02d)",
-			e.Side, ui.HandName(e), e.Multiplier/100, e.Multiplier%100)
+		return fmt.Sprintf("attack      %v forms %s (x%s)",
+			e.Side, ui.HandName(e), ui.HandMultiplierText(e.Multiplier))
 	case combat.KindDefeated:
 		return fmt.Sprintf("defeated    %v falls to %v", e.Target, e.Side)
 	default:

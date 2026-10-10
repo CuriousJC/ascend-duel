@@ -138,7 +138,7 @@ func run(dir string) error {
 			Groups:     groupText(h.Groups),
 			Cards:      h.Cards(),
 			Multiplier: h.Multiplier,
-			Pays:       fmt.Sprintf("%d.%02dx", h.Multiplier/100, h.Multiplier%100),
+			Pays:       fmt.Sprintf("%d.%dx", h.Multiplier/100, h.Multiplier%100/10),
 		}
 
 		if o, ok := odds.Find(h.Key); ok {

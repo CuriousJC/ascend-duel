@@ -68,8 +68,8 @@ package ui
 // tooltips; changing it here alone would make the panel disagree with them.
 //
 // **Ordered by multiplier, cheapest-paying first, across all three axes at once.** That is the
-// comparison the multipliers are making — an Elemental Three of a Kind at 145 says it is worth
-// about what a Form Three of a Kind is — and it is exactly the comparison `hands.json`'s
+// comparison the multipliers are making — an Elemental Three of a Kind at 140 says it is worth
+// about what a Form Two Pair is — and it is exactly the comparison `hands.json`'s
 // axis-by-axis layout hides. tools/handsheet orders its page the same way for the same reason.
 //
 // The panel's chrome is the shared one; see modal.go.

@@ -856,15 +856,19 @@ func (g *goods) hint(gs *state.GlobalState) string {
 // adds to that rung and where the rung stands for this run right now.
 //
 // **One line per rung because the figures differ.** A stone raises every rung of its shape by a
-// tenth of that rung's *own* multiplier, so a Card Three of a Kind and a Form Three of a Kind move
+// share of that rung's *own* multiplier, so a Card Three of a Kind and a Form Three of a Kind move
 // by different amounts off the same rock, and a single "+N" would be true of neither.
 //
-// **The run's own figure rather than the catalog's**, because a second stone on a rung is worth
-// exactly what the first was and the player has no other way to see what the first one did.
+// **The run's own figure rather than the catalog's**, because what the next stone adds depends on
+// how many the run already holds, and the player has no other way to see what the last one did.
 func stoneTipLines(gs *state.GlobalState, st session.Stone) []string {
 	var out []string
 	for _, hand := range st.Hands() {
-		worth := session.StoneWorth(hand)
+		have := 0
+		if gs.Run != nil {
+			have = gs.Run.StonesOn(hand)
+		}
+		worth := session.StoneWorth(hand, have)
 		line := fmt.Sprintf("%s +%d", stoneHandName(hand), worth)
 		if gs.Run != nil {
 			if now, ok := gs.Run.HandMultiplier(hand); ok {

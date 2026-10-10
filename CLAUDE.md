@@ -251,7 +251,8 @@ instead of found by relaunching.
 **Stones raise a hand shape for one run and never touch the catalog**. `data/stones.json`
 holds one per shape — `combat.Hand.Shape`, a rung's `groups` with the axis left out — and one
 stone raises every rung of that shape, card, form and element alike, each by a tenth of its own
-multiplier. A run's counts are still kept per rung and ride on `combat.Duelist.HandStones`, and
+multiplier — three tenths for the No Hand, written as `stonePercent` on its record — with the total
+floored to a tenth. A run's counts are still kept per rung and ride on `combat.Duelist.HandStones`, and
 `handTable` is read *through* them — so the ladder every tool and test sees is the shipped one. See MECHANICS.md
 §Stones and `internal/combat/stone.go`, which owns the arithmetic. **The corollary for tuning:**
 `tools/handodds` and `tools/handsheet` describe the game as shipped and say nothing about a run
@@ -404,7 +405,7 @@ of it:
 
 **Re-run `tools/handodds` after touching the deck, and read the hand multipliers against what it
 prints.** The ladder is priced off how hard each rung is to land — the Pair scores 100% and pays
-100, a Card Four of a Kind scores 0.64% and pays 479 — and every one of those figures is a fact
+100, a Card Four of a Kind scores 0.64% and pays 480 — and every one of those figures is a fact
 about `data/duelist_cards.json`, the hand size and the action budget. Change any of them and the
 ladder is tuned against a deck that no longer exists, silently, because nothing fails.
 
@@ -413,10 +414,11 @@ of eight holds the cards for the rung at all; **playable** is whether it
 could also pay for them inside the round. They come apart hard on the five-card rungs — a Form Full
 House is dealt in 93% of hands and payable in 8% — and the **score** is the geometric mean of the
 two, which is what the multipliers are priced against. `go run ./tools/handodds -price` prints what
-the curve would charge beside what the file charges and marks every row where they differ. **The
-Pair is the one marked row and it is deliberate** — the curve would charge 110 for a certain hand
-and the file charges the identity, because the Pair is the ladder's floor rather than a reward — so
-a second mark is a real signal. See MECHANICS.md for why neither column
+the curve would charge beside what the file charges and marks every row where they differ. **Seven
+rows are marked and all seven are deliberate** — the Pair at the identity where the curve would
+charge 110, and six rungs the owner set a tenth or two above it; MECHANICS.md names them — so an
+eighth mark is a real signal. **Every multiplier is a multiple of 10**, read as 1.8x and never
+1.79x: the loader refuses anything else and a stone steps on the same grid. See MECHANICS.md for why neither column
 alone can price a ladder. **It counts every card,
 defenses included** — they carry an element and a form and join hands like anything
 else, bringing no damage with them. MECHANICS.md holds the
@@ -1319,7 +1321,7 @@ shop visits and a lot of luck away in a launched game. The stone sheet is **walk
 than by stone** — the catalog is one stone per shape, so walking the ladder orders the page for
 free *and* makes a shape nobody authored a stone for show as a gap rather than as an absence nobody
 notices. Each stone lists every rung it raises. **It is also the only place the ladder and the +N
-are visible together**, and one stone is a different +N on every rung — a tenth of that rung's own
+are visible together**, and one stone is a different +N on every rung — a share of that rung's own
 multiplier, computed from `hands.json` rather than authored, so a retuned rung moves its row with
 nothing edited in `stones.json`. The rune sheet is relic-sheet
 shaped — the authored line against the resolved rule — and earned a page before it had many

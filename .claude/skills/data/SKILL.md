@@ -251,7 +251,7 @@ catalogs carry all three; every record under `data/motifs/` carries `Art` and `D
 `stones.json` is **the essences' shape pointed at the hand ladder instead of at a card**: a record
 names a hand *shape* by its `Groups` — written exactly as `hands.json` writes a rung's `groups`, so
 `[3]` is every Three of a Kind and `[3, 2]` every Full House — and using one raises every rung of that
-shape, whatever axis it counts on, each by a tenth of its own catalog figure for the rest of the run.
+shape, whatever axis it counts on, each by a share of its own catalog figure for the rest of the run.
 
 **Parsed and validated in `internal/session`, like the essences and for the same reason** — a stone is
 held by a *run*. `internal/combat` owns the arithmetic and the seat a count sits in
@@ -262,12 +262,15 @@ none, or `Groups` no rung carries panics at load: a shape with no stone is a set
 never be raised and nothing else would notice. The shape is `combat.Hand.Shape`, derived from the
 rung's groups, so no field in `hands.json` declares it.
 
-**No amount field, on purpose.** A record could carry `"Percent": 10` and it would be the `CostTier`
-mistake again — a rules vocabulary declared in JSON ahead of the rules. The tenth is one decision
-about the whole mechanic and it lives in Go. It becomes a field the day two stones want to be worth
-different amounts, and not before.
+**The rate is on the rung, not on the stone.** `hands.json` may write `stonePercent` on a rung —
+what one stone adds, as a percentage of that rung's multiplier — and a rung writing nothing takes
+the tenth, `combat.defaultStonePercent`. Only the No Hand writes one. It lives on the rung because
+`internal/combat` reads `hands.json` and owns the arithmetic, and because what grows is the rung:
+a stone raising a shape still raises each rung at that rung's own rate. **Write it only where a
+rung is meant to grow differently from the ladder** — a field on every record would be the tenth
+written eighteen times.
 
-**The figure is not in the `Text` either.** One stone moves several rungs, each by a tenth of its
+**The figure is not in the `Text` either.** One stone moves several rungs, each by a share of its
 own multiplier, so `+11` written into the file would be one number standing for several and would
 go stale the first time `hands.json` is tuned. The record carries the sentence and the shop's stone
 tooltip, `screens.stoneTipLines`, carries the arithmetic, a line per rung.
@@ -406,7 +409,7 @@ panics on a rung with none.
 
 **The three ladders are priced apart and are meant to be.** They come from measured reachability
 against the real starting deck rather than from poker's ordering: the Pair is a 100% hand at 100 and
-a Card Four of a Kind a 0.6% hand at 479. The model is in MECHANICS.md; do not "fix" the
+a Card Four of a Kind a 0.6% hand at 480. The model is in MECHANICS.md; do not "fix" the
 ladders into agreement.
 
 **Two of the three five-of-a-kind rungs could not be measured, and MECHANICS.md says so entry by

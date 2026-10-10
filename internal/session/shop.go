@@ -54,7 +54,9 @@ func (s *Session) canWear(key string) bool {
 	if _, ok := registeredRelics[key]; !ok {
 		return false
 	}
-	if len(s.worn) >= s.RelicSlots() {
+	// **Only the relics that weigh something count against the fingers**, and a weightless one goes
+	// on whatever the count.
+	if !s.weightless[key] && s.WeightedCount() >= s.RelicSlots() {
 		return false
 	}
 	for _, k := range s.worn {

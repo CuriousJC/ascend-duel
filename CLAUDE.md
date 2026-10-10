@@ -780,7 +780,8 @@ on a tab press, never every frame, so a drag holds until the player asks for an 
 ### Five screens that are not stations of a run
 
 **Settings, Achievements, Credits, RunOver and Goods.** None appears in `screens/flow.go` —
-which is what "not a station" means mechanically — and the chrome stands down on all five. The
+which is what "not a station" means mechanically — and the chrome stands down on the first four.
+Goods keeps the reward screen's corner: the cog, the ledger and its own hands button. The
 first three are reached by an `actions.Open*` call and record `gs.ReturnScreen` so Back works
 from anywhere; **RunOver is the exception and goes to the title outright**, because the screen
 it came from was drawing a run that has ended and there is nowhere to put the player back to.

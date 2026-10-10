@@ -371,10 +371,43 @@ func (s *Session) WornRelics() []combat.WornRelic {
 		if !ok {
 			continue
 		}
-		out = append(out, combat.WornRelic{Relic: id, Grown: s.grown[key]})
+		out = append(out, combat.WornRelic{Relic: id, Grown: s.grown[key], Weightless: s.weightless[key]})
 	}
 	return out
 }
+
+// SetWeightless marks a relic as worn weightless or not, by record — before it goes on or while it is
+// worn. **Any relic may be weightless**: it takes no finger, so a full row still takes it. Nothing in
+// the shipped game sets it on a run relic yet; a cantrip-relic is weightless by its own wearing.
+func (s *Session) SetWeightless(key string, on bool) {
+	if s.weightless == nil {
+		s.weightless = map[string]bool{}
+	}
+	if on {
+		s.weightless[key] = true
+		return
+	}
+	delete(s.weightless, key)
+}
+
+// IsWeightless reports whether a relic is worn weightless.
+func (s *Session) IsWeightless(key string) bool { return s.weightless[key] }
+
+// WeightedCount is how many of the worn relics take a finger: every one but the weightless.
+func (s *Session) WeightedCount() int {
+	n := 0
+	for _, key := range s.worn {
+		if !s.weightless[key] {
+			n++
+		}
+	}
+	return n
+}
+
+// StartingWeightless is which of StartingRelics a run opens wearing weightless. **A debug seat**,
+// beside StartingRelics and set from the same place: `internal/scenario` fills it and nothing else
+// may. Set before the relics go on, so a weightless one is not refused a finger.
+var StartingWeightless []string
 
 // AbsorbGrowth takes back whatever a fight grew. **The run's accumulators are the duelist's, after
 // the fight** *(2026-08-22)*.

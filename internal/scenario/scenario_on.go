@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -50,6 +51,11 @@ type record struct {
 	// Relics is what the run opens wearing, in worn order — and worn order matters, since relics
 	// fire left to right and two multiplicative ones do not commute.
 	Relics []string `json:"Relics"`
+
+	// Weightless names relics out of Relics that the fight's duelist wears weightless, as a
+	// cantrip-relic is worn. **Only the cast puts weightless on in a shipped game**, so this is the one
+	// way to see a relic with real art worn that way. Every key must also be in Relics.
+	Weightless []string `json:"Weightless"`
 
 	// Hand is the opening hand, dealt over whatever the shuffle produced.
 	Hand []handCard `json:"Hand"`
@@ -395,7 +401,13 @@ func check(r *record) error {
 	if r.RelicSlots < 0 {
 		return fmt.Errorf("%d relic slots is not a number of fingers", r.RelicSlots)
 	}
-	if n := len(r.Relics); n > 0 && n > r.effectiveRelicSlots() {
+	for _, key := range r.Weightless {
+		if !slices.Contains(r.Relics, key) {
+			return fmt.Errorf("weightless names %q, which it does not wear", key)
+		}
+	}
+	// **Only the relics that weigh something need a finger.**
+	if n := len(r.Relics) - len(r.Weightless); n > 0 && n > r.effectiveRelicSlots() {
 		return fmt.Errorf("wears %d relics on %d fingers, so %d of them would never go on",
 			n, r.effectiveRelicSlots(), n-r.effectiveRelicSlots())
 	}
@@ -438,6 +450,9 @@ func Note() string { return current.Note }
 
 // Relics is what the run should open wearing, in worn order.
 func Relics() []string { return current.Relics }
+
+// Weightless is which of those the fight's duelist wears weightless.
+func Weightless() []string { return current.Weightless }
 
 // Runes is what the run opens holding in its sack, by record key. The caller resolves them,
 // for the reason it resolves the relics.

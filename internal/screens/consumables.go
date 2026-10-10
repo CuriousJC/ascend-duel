@@ -200,9 +200,12 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 	// **It lands on the tooltip's own tick** *(owner's call, 2026-09-17)*, which the caller asks for
 	// — see models.Tooltip.Showing. Raising on arrival made the row flinch at a cursor crossing it,
 	// and raising halfway split one gesture into two answers a beat apart.
+	// **And it keeps floating** *(owner's call)*, drawn exactly as the row draws it.
 	if raised >= 0 && !skip(raised) {
 		at := consumableSlotRect(r, raised, seats)
-		drawConsumableCard(gs, screen, at.Min, held[raised], canSpend(spendable, held[raised]), false)
+		if spec, st, ok := consumableFace(gs, held[raised], canSpend(spendable, held[raised]), false); ok {
+			ui.DrawFloatingCard(gs, screen, at.Min, raised, spec, st)
+		}
 	}
 
 	// **`held / cap`, the relic pane's figure in the relic pane's seat** — drawPaneCount, under the

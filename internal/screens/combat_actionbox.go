@@ -627,10 +627,12 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		if h, ok := s.handMorphFor(c.Card.ID); ok {
 			ui.DrawMorph(gs, screen, seat.Min, h.m)
 		} else {
+			// **It keeps floating** *(owner's call)*: being looked at is not being set down, so the
+			// raised card is the same floating card as in the row, drawn on top of it.
 			enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
-			ui.DrawMarkedCard(gs, screen, seat.Min, cards.Hand,
-				c.Card, ui.HeldBy(s.fighter.Duelist, c.Card), enabled, c.selected,
-				ui.MarksFor(gs, seat))
+			spec := ui.CardSpec(c.Card, ui.HeldBy(s.fighter.Duelist, c.Card), enabled, c.selected)
+			spec.Mark = ui.MarksFor(gs, seat)
+			ui.DrawFloatingCard(gs, screen, seat.Min, raised, spec, cards.Hand)
 		}
 	}
 

@@ -18,6 +18,7 @@ package screens
 import (
 	"image"
 
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
@@ -131,7 +132,13 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 		return false
 	}
 	slot := row.RowSlot(gs, i)
-	title, lines := ui.RelicTip(worn[i])
+	// **What the fighter wears it as**, so a weightless or an ephemeral wearing says so — read off
+	// the same seat the rules read. See ui.WornRelicTip.
+	var wearing combat.WornRelic
+	if s.fighter != nil && i < len(s.fighter.Relics) {
+		wearing = s.fighter.Relics[i]
+	}
+	title, lines := ui.WornRelicTip(worn[i], wearing)
 	// **To the left of the card, never under it** *(owner's call)*: a panel under the top row
 	// covers the pane's count and the tab a click hangs there. PointLeft flips right at the
 	// screen's edge.

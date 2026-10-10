@@ -67,12 +67,15 @@ func TestTakingFromASealedGoodReturnsToTheShop(t *testing.T) {
 		t.Fatalf("the screen left before a card was taken, to %v", gs.ActiveScreen)
 	}
 
+	// A stone is used up in front of the player, and the screen leaves when that has played.
 	scene.take(gs, 0)
-	if scene.openNow() {
-		t.Fatal("a stone was taken and the good is still open")
+	for i := 0; i < 1000 && gs.ActiveScreen == state.Goods; i++ {
+		if err := scene.Update(gs); err != nil {
+			t.Fatalf("update: %v", err)
+		}
 	}
-	if err := scene.Update(gs); err != nil {
-		t.Fatalf("update: %v", err)
+	if scene.openNow() {
+		t.Fatal("a stone was taken and the good is still open once its use has played")
 	}
 	if gs.ActiveScreen != state.Shop {
 		t.Errorf("the good finished and left the player on %v, want Shop", gs.ActiveScreen)

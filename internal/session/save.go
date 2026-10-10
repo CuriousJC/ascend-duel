@@ -74,6 +74,9 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		if n := s.grown[key]; n != 0 {
 			out.Grown[key] = n
 		}
+		if s.weightless[key] {
+			out.Weightless = append(out.Weightless, key)
+		}
 	}
 
 	for _, c := range s.deck {
@@ -350,6 +353,10 @@ func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *prof
 	}
 	s.portals = append([]string(nil), snap.Portals...)
 
+	// **Weightless before the row goes on**, so a weightless relic is not refused a finger.
+	for _, key := range snap.Weightless {
+		s.SetWeightless(key, true)
+	}
 	for _, key := range snap.Worn {
 		if !s.Wear(key) {
 			return nil, 0, fmt.Errorf("relic %q is not one this build can wear", key)

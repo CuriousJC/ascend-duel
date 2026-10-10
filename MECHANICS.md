@@ -1684,6 +1684,9 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
 - **A reroll is per pane and it escalates** — 2 vitae, then 4, then 8, doubling within a visit and
   starting again at the next shop. The relics and the packs each have their own button and their
   own count, so pressing one does not make the other dearer.
+- **A relic reroll only redraws the seats still standing.** A bought seat stays spent for the
+  visit, so a reroll never puts more relics on the shelf than were left on it, and a shelf bought
+  out has nothing to reroll.
 - **A reroll advances the visit's cursor rather than seeding a second stream.** The scene holds
   its `*rand.Rand`s from `Init` and every deal draws from them, which is what keeps a replayed run
   exact however many times the button is pressed.
@@ -3013,8 +3016,16 @@ cantrip's own record key.
 - **The cantrip-relic stands in the relic row**, after the run's relics, for the rest of the fight.
   It drags along the row like any relic — worn order is firing order, so where it stands decides
   what it compounds with — and a run relic dragged past it keeps its place among the run's own
-  relics. It cannot be sold. How a weightless or an ephemeral relic is told apart on its face is not
-  designed yet.
+  relics. It cannot be sold.
+- **Any relic may be worn weightless.** The run keeps the flag per relic record
+  (`Session.SetWeightless`), saves it with the run, and hands it to the duelist on the worn relic;
+  only the relics that weigh something count against the fingers or toward the pane's `n/5`. Nothing
+  in the shipped game sets it on a run relic yet.
+- **A weightless relic floats off the row it takes no slot in** *(owner's call)*: lifted, drifting,
+  a little see-through, with a band of light passing down it, drawn from its own card with no art
+  of its own. A relic that is firing toasts like any other. Its tooltip ends on the word
+  **Weightless**, and an ephemeral one's on **Ephemeral**. How an ephemeral relic is told apart on
+  its face is not designed yet.
 - **A DMG a cantrip moved is written in the relic pink** on the duelist card for the rest of the
   fight. The life fraction carries no mark; it is simply the bigger number.
 - **A bundle of scrolls draws with replacement** while the catalog is shorter than the smallest

@@ -496,6 +496,24 @@ physics on the mixed set (`particle-*` pieces and `spark-*` flecks together).
 - **The options page is the animation gallery's `wrap:` and `trail:` entries**, which draw the same
   emitter in every set and motion side by side.
 
+### A consumable is used up in the middle of the table
+
+*`combat_consume.go`; the sequence is `ui.Consume` in `internal/ui/consume.go`, the card effects
+`internal/ui/cardfx.go`.* Every consumable spent mid-fight runs one sequence: it **lifts** out of its
+pane seat to the middle of the table, **exits** there in its own way, and its **motes** carry the
+change to what it altered, which **changes** as they land. Only the exit differs — an essence is
+absorbed, a rune fires (toast, sigil, absorb), a stone crumbles, a cantrip burns bottom-up.
+
+- **The run has already moved**, the flights' rule: the card is out of the pane, the hand already
+  holds the new cards and they are selectable while they change. Nothing waits on a use.
+- **A rune's or essence's hand morphs are the ones `raiseHandMorphs` always raised**, put back with
+  `Morph.Delayed` to start as the motes arrive. No rune has a case.
+- **A cantrip's relic seat is drawn empty until its relic has arrived** — `relicSeatArriving` — and
+  the arrival is a `MorphIn` at that seat.
+- **`spendSeat` is the pane seat, read in `spendConsumable`** before any spend closes the pane over
+  it; the run index the spends take is not a seat.
+- **The gallery's `use:` entries are the same sequence** with stand-in destinations.
+
 ### A card that fires says so: the signal widget
 
 *`combat_signal.go`.* **A rider that fires says so on screen.** Without it a golden card comes up,

@@ -128,6 +128,10 @@ type RunSnapshot struct {
 	// nothing in a file.
 	Grown map[string]int `json:"grown"`
 
+	// Weightless is the worn relics that take no finger, by record key. Omitted when there are none,
+	// which is every run today.
+	Weightless []string `json:"weightless,omitempty"`
+
 	// Stones is how many stones the run has put on each rung of the hand ladder, by **hand key**.
 	// A name rather than a seat, on the same terms `Worn` names a relic record: a seat is a position
 	// in the catalog this build loaded, and a file outlives the build that wrote it.

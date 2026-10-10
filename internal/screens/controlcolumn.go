@@ -1,30 +1,23 @@
 package screens
 
-// The control column: what stands down the right-hand side of the combat screen, between the
-// enemy card and the bottom of the action-point bar.
+// The controls of the bottom third that are not cards: the sort tabs and the two panel buttons.
+// **The bottom third is one layout on every screen that draws it** — the fight, the reward screen,
+// the shop, the sealed good and the portal — so these are placed here once rather than by each
+// screen.
 //
-// **It is two groups rather than one stack** *(2026-09-04, owner's call)*, and they are anchored
-// at opposite ends because they belong to different things:
-//
-//   - **The sort tabs** are a block of three, no air between them, hung off the *cards'* right
-//     edge and starting on the hand's top line. They arrange the hand and belong to it, so they
-//     are tied to the row rather than to the column — see sortTabRect.
-//   - **The two panel buttons**, HANDS and the frame's LEDGER, stack *upward* from the bottom of
-//     the action-point bar on the column's own line. They open a page over the game and belong to
-//     the screen, not to the row.
-//
-// **The line the second group stands on is the enemy card's left edge**, so the corner and the
-// buttons under it read as one strip. The cards stop sortColumnGap short of it — see
-// cardBandWidth, which is what that costs.
+//   - **The sort tabs** are a block of three, no air between them, standing at the right end of the
+//     card band and centered on the hand's height. They arrange the hand and belong to it — see
+//     sortTabRect.
+//   - **The two panel buttons**, HANDS and the frame's LEDGER, stand in a row under the draw pile.
+//     They open a page over the game and belong to the screen, not to the row — see underPileSlot.
 //
 // **It is exported because the frame is drawn by internal/game**, which imports this package. The
-// ledger belongs to no scene, which is what makes it chrome — but a control standing in a column
-// has to be placed by whoever owns the column, or the two drift apart the first time either moves.
-// The arrow already points this way; nothing new is imported to make it work.
+// ledger belongs to no scene, which is what makes it chrome — but a control standing beside the
+// pile has to be placed by whoever owns the pile, or the two drift apart the first time either
+// moves. The arrow already points this way; nothing new is imported to make it work.
 //
 // **The two panel buttons are pictures** — the fanned hand and the open scroll, each a
-// ui.PanelButtonSize square, and so are the sort tabs — an arrow, an axe, a flame. **On the combat screen the pair leaves the
-// column** and stands in a row under the draw pile; see underPileSlot.
+// ui.PanelButtonSize square, and so are the sort tabs — an arrow, an axe, a flame.
 
 import (
 	"image"
@@ -54,9 +47,9 @@ const (
 	sortTabGap = 0
 )
 
-// The two panel buttons, counted **up from the bottom of the action-point bar**. They are written
+// The two panel buttons, counted **from the right of the row under the pile**. They are written
 // down here rather than each caller knowing its own index: one is placed by this package and one
-// by internal/game, and two owners counting the same column independently is how a button ends up
+// by internal/game, and two owners counting the same row independently is how a button ends up
 // drawn over another.
 const (
 	SlotLedger = iota
@@ -67,25 +60,14 @@ const (
 	ControlColumnSlots
 )
 
-// ControlColumnSlot is a panel button's rectangle, counting up from the action-point bar.
-//
-// **The bottom of LEDGER is the bottom of that bar** *(2026-09-04, owner's call)*, which is what
-// ties the pair to the hand's own furniture rather than leaving them floating in the column. They
-// stack upward from there, so adding a third would grow the group toward the cards rather than
-// off the bottom of the screen.
-//
-// **On the combat screen they stand under the draw pile instead**, side by side — see
-// underPileSlot. Every other screen keeps them in the column.
+// ControlColumnSlot is a panel button's rectangle: under the draw pile, side by side — see
+// underPileSlot — on every screen that has them, because the pile stands in the same place on all
+// of them.
 func ControlColumnSlot(gs *state.GlobalState, i int) image.Rectangle {
-	if gs.ActiveScreen == state.Combat {
-		return underPileSlot(gs, i)
-	}
-	left := ui.ControlColumnLeft(gs)
-	bottom := apBarBottom(gs) - i*(ui.PanelButtonSize+ControlButtonGap)
-	return image.Rect(left, bottom-ui.PanelButtonSize, left+ui.PanelButtonSize, bottom)
+	return underPileSlot(gs, i)
 }
 
-// underPileSlot is a panel button's square on the combat screen: in a row under the draw pile,
+// underPileSlot is a panel button's square: in a row under the draw pile,
 // HANDS on the left and LEDGER on the right, the pile's width shared out so the air before, between
 // and after the two is equal, and the row centered between the pile's bottom and its count.
 func underPileSlot(gs *state.GlobalState, i int) image.Rectangle {

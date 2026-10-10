@@ -260,7 +260,7 @@ func leaveGoods(gs *state.GlobalState) {
 // pile. **It runs whether or not the panel is up**: the X is the exit and this is the opener, so a
 // press here while the panel is up must not reach the cards underneath.
 func (s *GoodsScene) clickedPile(gs *state.GlobalState, at image.Point) bool {
-	if !at.In(deckPileBounds(gs)) {
+	if !at.In(deckStackBounds(gs)) {
 		return false
 	}
 	s.deck.Toggle()

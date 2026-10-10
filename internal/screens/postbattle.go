@@ -91,7 +91,7 @@ const (
 	// strip at 88%, so there is nowhere for the cards to go. **The narration therefore clears when
 	// the offer arrives rather than one stage later**, which is the cost of the reversed gesture
 	// and was taken deliberately.
-	essenceChosenRowPct = 34
+	essenceChosenRowPct = 33
 
 	// payoutColumnPct is where the payout's column ends and the offer's begins.
 	//
@@ -101,11 +101,6 @@ const (
 	// button, 880 wide, which fits the rest. Neither column is centered on the screen, so the two
 	// cannot drift into each other as either grows: the split is the one number they both read.
 	payoutColumnPct = 33
-
-	// **64 rather than 62 since 2026-09-06**, to buy the headroom a selected card lifts into. See
-	// offerSelectedNudge: the row is a card tall and rises by 26 when one is picked, and at 62 the
-	// lifted card's top edge landed inside the essence row above it.
-	offerRowPct = 64
 
 	// The title and the hint hang off the bottom of the build band, each by its own drop.
 	// **Measured from the band rather than from the top of the screen**, so the next time the band
@@ -229,6 +224,14 @@ type PostBattleScene struct {
 	// the sealed good carry — see deckpile.go.
 	deck ui.DeckToggle
 
+	// hands is the panel over every hand the deck can build, opened from the button under the pile —
+	// the same widget and the same place the fight and the shop give it.
+	hands ui.HandsToggle
+
+	// visit is which reward the state on this scene belongs to — the run and the fight it follows.
+	// See Init.
+	visit shopVisit
+
 	// band is the top third's input, the same on every screen that shows it — see band.go.
 	band bandControls
 
@@ -294,15 +297,32 @@ type PostBattleScene struct {
 }
 
 // Init deals both offers. **Re-entered on every visit**, because each fight earns its own.
+//
+// **A visit is one deal, however many times the screen is entered** — the shop's rule. The frame's
+// cog leaves for Settings and Back runs Init again, and a second deal would offer different
+// essences and type the payout out again. A matching visit only rebuilds the widgets; leaving the
+// screen closes the visit, so a new run on the same code is dealt afresh.
 func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	s.band.init()
+	s.deck.InitAsPile()
+	s.hands.InitInColumn(func(gs *state.GlobalState) image.Point {
+		return ControlColumnSlotCenter(gs, SlotHands)
+	})
+	if gs.Run != nil {
+		now := shopVisit{seed: gs.RunSeed, fight: gs.Run.Fight()}
+		if now == s.visit {
+			s.skipping = false
+			s.tip.Forget()
+			return
+		}
+		s.visit = now
+	}
 	if s.skipButton == nil {
 		s.skipButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LET THEM ESCAPE",
 			func() { s.skipping = true })
 		s.skipButton.BaseColor = ui.ButtonJade
 	}
 
-	s.deck.InitAsPile()
 	s.chosen, s.selected = -1, nil
 	s.stage = choosing
 	s.removes, s.copied, s.held = false, false, 0
@@ -432,7 +452,12 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	// **The deck panel runs before anything else and swallows the frame**, the shop's own order:
 	// while it is up the rows underneath are dead, so a press meant for the panel cannot reach the
 	// offer behind it.
+	s.deck.Block(s.hands.IsOpen())
+	s.hands.Block(s.deck.IsOpen())
 	if s.deck.Update(gs, ui.OwnedContents(gs)) {
+		return nil
+	}
+	if s.hands.Update(gs) {
 		return nil
 	}
 
@@ -473,6 +498,7 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 			if s.rearm(gs) {
 				return nil
 			}
+			s.visit = shopVisit{}
 			advanceRun(gs)
 		}
 		return nil
@@ -482,6 +508,7 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		s.skipping = false
 		s.claimThePayout(gs)
 		trace.Logf("postbattle", "took neither essence")
+		s.visit = shopVisit{}
 		advanceRun(gs)
 		return nil
 	}
@@ -579,7 +606,7 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 
 	// **The pile is asked first**, because the panel it opens covers both rows: a press here while
 	// the panel is up must not reach the offer underneath. See deckpile.go.
-	if at.In(deckPileBounds(gs)) {
+	if at.In(deckStackBounds(gs)) {
 		s.deck.Toggle()
 		s.tip.Forget()
 		return
@@ -918,8 +945,9 @@ func offerRowOf(gs *state.GlobalState, n int) image.Rectangle {
 	return r.rowOf(gs, n)
 }
 
-// offerRowTop is where this screen deals its row.
-func offerRowTop(gs *state.GlobalState) int { return gs.PctY(offerRowPct) }
+// offerRowTop is where this screen deals its row: **the hand's own line**, so the row stands where a
+// fight's hand stood.
+func offerRowTop(gs *state.GlobalState) int { return handTop(gs) }
 
 // offerSlot is where one offered card is drawn, and the rectangle it is clicked in — the shared row's
 // seat, lifted when it is picked. See dealtRow.slot.
@@ -997,6 +1025,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// The deck panel covers the screen, so nothing of this one may be drawn on top of it.
 	s.deck.Draw(gs, screen, ui.OwnedContents(gs))
+	s.hands.Draw(gs, screen, ui.OwnedHands(gs))
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
 	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.

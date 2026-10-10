@@ -34,13 +34,13 @@ func TestTheSettingsButtonSitsInTheBottomRightCorner(t *testing.T) {
 			got, settingsButtonInset)
 	}
 
-	// The ledger is the last rung of that column, and the cog stands clear below it.
+	// The ledger stands under the pile, in its slot, and clear of the cog.
 	l := ledgerButtonRect(gs)
 	if want := screens.ControlColumnSlot(gs, screens.SlotLedger); l != want {
-		t.Errorf("the ledger button is at %v, want the column's last slot %v", l, want)
+		t.Errorf("the ledger button is at %v, want its slot %v", l, want)
 	}
-	if l.Max.Y >= r.Min.Y {
-		t.Errorf("the ledger button ends at y=%d, into the cog starting at y=%d", l.Max.Y, r.Min.Y)
+	if l.Overlaps(r) {
+		t.Errorf("the ledger button at %v overlaps the cog at %v", l, r)
 	}
 }
 

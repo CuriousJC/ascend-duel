@@ -507,51 +507,17 @@ func TestTheSortTabsAreOneBlockTiedToTheCards(t *testing.T) {
 	}
 }
 
-// The two panel buttons stack upward from the bottom of the action-point bar, on the enemy card's
-// line, and they are narrower than the column *(2026-09-04, owner's call)*.
-func TestThePanelButtonsStackUpFromTheAPBar(t *testing.T) {
-	gs := testState()
-	// LEDGER's bottom is the bar's bottom, which is the whole of what ties the pair to the hand's
-	// own furniture rather than leaving them floating.
-	if got := ControlColumnSlot(gs, SlotLedger).Max.Y; got != apBarBottom(gs) {
-		t.Errorf("the ledger's bottom is y=%d, want the action-point bar's at %d",
-			got, apBarBottom(gs))
-	}
-
-	for i := 1; i < ControlColumnSlots; i++ {
-		below, this := ControlColumnSlot(gs, i-1), ControlColumnSlot(gs, i)
-		if gap := below.Min.Y - this.Max.Y; gap != ControlButtonGap {
-			t.Errorf("slot %d sits %dpx above slot %d, want %d", i, gap, i-1, ControlButtonGap)
-		}
-		if this.Min.X != below.Min.X || this.Max.X != below.Max.X {
-			t.Errorf("slot %d runs x=%d..%d and slot %d x=%d..%d — the pair is not aligned",
-				i, this.Min.X, this.Max.X, i-1, below.Min.X, below.Max.X)
-		}
-	}
-
-	// On the enemy card's line, and **narrower than the column**: a control taking a card's width
-	// to carry one word reads as a pane rather than as a button.
-	slot := ControlColumnSlot(gs, SlotHands)
-	if card := ui.EnemyCardRect(gs); slot.Min.X != card.Min.X {
-		t.Errorf("the panel buttons start at x=%d, want the enemy card's left edge at %d",
-			slot.Min.X, card.Min.X)
-	}
-	if slot.Dx() >= ui.ControlColumnWidth() {
-		t.Errorf("the panel buttons are %dpx wide, which is the whole %dpx column",
-			slot.Dx(), ui.ControlColumnWidth())
-	}
-
-	// And clear of the sort block, which must not overlap either of the pair.
-	for i := 0; i < ControlColumnSlots; i++ {
-		if slot, block := ControlColumnSlot(gs, i), sortColumnRect(gs); slot.Overlaps(block) {
-			t.Errorf("panel slot %d at %v overlaps the sort block at %v", i, slot, block)
-		}
+// The panel buttons stand under the pile on every screen, because the bottom third is one layout.
+func TestThePanelButtonsStandUnderThePile(t *testing.T) {
+	for _, screen := range []state.ActiveScreen{state.Combat, state.PostBattle, state.Shop, state.Goods} {
+		gs := testState()
+		gs.ActiveScreen = screen
+		checkPanelButtonsUnderThePile(t, gs)
 	}
 }
 
-func TestOnTheCombatScreenThePanelButtonsStandUnderThePile(t *testing.T) {
-	gs := testState()
-	gs.ActiveScreen = state.Combat
+func checkPanelButtonsUnderThePile(t *testing.T, gs *state.GlobalState) {
+	t.Helper()
 	pile, count := deckStackRect(gs), deckCountRect(gs)
 	hands, ledger := ControlColumnSlot(gs, SlotHands), ControlColumnSlot(gs, SlotLedger)
 

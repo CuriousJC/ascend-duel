@@ -158,7 +158,7 @@ func (s *PortalScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 	if gs.CursorAllowed() && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) &&
-		image.Pt(gs.MouseX, gs.MouseY).In(deckPileBounds(gs)) {
+		image.Pt(gs.MouseX, gs.MouseY).In(deckStackBounds(gs)) {
 		s.deck.Toggle()
 		s.tip.Forget()
 		return nil

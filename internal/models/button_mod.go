@@ -72,6 +72,15 @@ type Button struct {
 	// color is in the picture. Empty is an ordinary button. See docs/art/icon_button_art_prompt.MD.
 	Icon string
 
+	// Glyph is the asset key of a picture set beside the label — a `glyph-<name>` from assets/button/.
+	// It stands to the left of the words, and the pair is centered together.
+	Glyph string
+
+	// LabelSheet names the figure sheet a covered label is set from — "attack" for the red one.
+	// Empty is the neutral sheet, white under its contour, which is every ordinary button. A
+	// disabled button sets its label in the dimmed neutral whatever this names.
+	LabelSheet string
+
 	// What Image currently holds, so DrawButton can repaint it only when something
 	// visible has changed rather than every frame.
 	//
@@ -88,6 +97,8 @@ type Button struct {
 	PaintedTextSize float64
 	PaintedColor    color.RGBA
 	PaintedIcon     string
+	PaintedGlyph    string
+	PaintedSheet    string
 }
 
 // NewButton creates a new button with the given width, height, and text

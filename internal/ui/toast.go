@@ -41,22 +41,24 @@ import (
 // notice that grew with the screen would be a page again.
 const (
 	toastWidth  = 820
-	toastHeight = 340
+	toastHeight = 308 + toastIconSize + toastIconGap
 
-	// The eyebrow is the word that says what kind of thing this is, over the name that says which.
-	// Small and quiet: the player reads the name, and the eyebrow is what tells them why a box has
-	// appeared at all.
-	toastEyebrow     = "ACHIEVEMENT"
-	toastEyebrowSize = systems.TextSmall
-	toastEyebrowTop  = 48
+	// The icon, over the name: the achieved picture, the one the Achievements page shows on an
+	// earned row. **It is what says what kind of box this is**, so there is no word above it doing
+	// the same job. **Half of Steam's 256**, so it is one clean reduction of the committed art.
+	// Stacked rather than set beside the words, because the commentary's longest line already runs
+	// most of the box's width.
+	toastIconSize = 128
+	toastIconTop  = 40
+	toastIconGap  = 24
 
 	toastNameSize = 38
-	toastNameTop  = 92
+	toastNameTop  = 60 + toastIconSize + toastIconGap
 
 	// The commentary. **Every line at once**, so this is a stack rather than one string — see
 	// data.AchievementData.Said for why there is no picking.
 	toastSaidSize = systems.TextMedium
-	toastSaidTop  = 156
+	toastSaidTop  = 124 + toastIconSize + toastIconGap
 	toastSaidStep = 30
 
 	toastButtonWidth  = 300
@@ -68,13 +70,11 @@ const (
 	toastButtonLabel = "GOT IT"
 )
 
-// toastEyebrowInk is the quiet word over the name, and toastSaidInk the commentary under it. Both
-// are pulled toward the panel rather than given a hue: the color wheel belongs to the elements,
-// and this box has nothing elemental to say.
+// toastSaidInk is the commentary under the name, pulled toward the panel rather than given a hue:
+// the color wheel belongs to the elements, and this box has nothing elemental to say.
 var (
-	toastPanelFill  = color.RGBA{R: 30, G: 30, B: 38, A: 255}
-	toastEyebrowInk = color.RGBA{R: 150, G: 150, B: 164, A: 255}
-	toastSaidInk    = color.RGBA{R: 198, G: 198, B: 208, A: 255}
+	toastPanelFill = color.RGBA{R: 30, G: 30, B: 38, A: 255}
+	toastSaidInk   = color.RGBA{R: 198, G: 198, B: 208, A: 255}
 )
 
 // AchievementToast is the frame's notice. **It holds no queue of its own** — the queue is
@@ -158,13 +158,15 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	center := float64(box.Min.X + box.Dx()/2)
 
-	eyebrow := &text.DrawOptions{}
-	eyebrow.GeoM.Translate(center, float64(box.Min.Y+toastEyebrowTop))
-	eyebrow.PrimaryAlign = text.AlignCenter
-	eyebrow.SecondaryAlign = text.AlignCenter
-	eyebrow.ColorScale.ScaleWithColor(toastEyebrowInk)
-	systems.DrawText(screen, toastEyebrow,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: toastEyebrowSize}, eyebrow)
+	// **An unknown key draws no icon** rather than the default one, for the reason it still draws a
+	// box: it is a notice about something this build cannot name.
+	if a.AchievedIconKey != "" {
+		if icon := systems.ArtMarkImage(a.AchievedIconKey, toastIconSize, toastIconSize); icon != nil {
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Translate(center-toastIconSize/2, float64(box.Min.Y+toastIconTop))
+			screen.DrawImage(icon, op)
+		}
+	}
 
 	name := &text.DrawOptions{}
 	name.GeoM.Translate(center, float64(box.Min.Y+toastNameTop))

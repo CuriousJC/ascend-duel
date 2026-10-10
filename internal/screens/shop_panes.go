@@ -56,9 +56,9 @@ func shopPaneOrder() []shopPane {
 }
 
 const (
-	// shopPaneMargin is the bare ground kept at the row's right end; the left end starts on the card
-	// band — see shopShelfLeft. It is what the pitch is solved against, so widening it narrows every
-	// pane rather than pushing one off the screen.
+	// shopPaneMargin is the bare ground kept at each end of the row — see shopShelfLeft. It is what
+	// the pitch is solved against, so widening it narrows every pane rather than pushing one off the
+	// screen.
 	shopPaneMargin = 24
 
 	// shopPaneGutter is the bare ground between two panes' backings. **Wider than the padding
@@ -70,15 +70,14 @@ const (
 	// the shelf's top and the pile rises toward its bottom, and both have to clear. See shopPaneTop.
 	shopPileClear = 8
 
-	// shopRerollGap is how far a reroll button sits under the price figures of the pane it
-	// belongs to.
+	// shopRerollGap is how far a reroll button sits under the backing of the pane it belongs to.
 	shopRerollGap = 12
 
 	// The reroll button itself. **Narrower than the pane it hangs under**, so it reads as
 	// attached to that pane rather than as a row of its own — the sell tab's rule.
 	shopRerollWidth  = 240
-	shopRerollHeight = ui.ButtonSmall
-	shopRerollText   = 20
+	shopRerollHeight = ui.ButtonMedium
+	shopRerollText   = 40
 )
 
 // shopPaneSeats is how many cards a pane holds, full or empty.
@@ -138,11 +137,11 @@ func shopPitch(gs *state.GlobalState) int {
 	return pitch
 }
 
-// shopShelfLeft is where the shelf's first backing starts: **the card band's left edge**, the line
-// the worn relics and a fight's hand start on. The duelist's column under it holds the draw pile, at
-// hand size on every screen, so a shelf starting at the screen's edge would stand on it.
+// shopShelfLeft is where the shelf's first backing starts: **the screen's own margin**, the same
+// bare ground the row keeps at its right end. The shelf stands above the draw pile — see
+// shopPaneTop — so it has the whole width of the screen and spends all of it on the pitch.
 func shopShelfLeft(gs *state.GlobalState) int {
-	return handBandLeft(gs)
+	return shopPaneMargin
 }
 
 // shopPaneTop is where the shelf's cards stand: **high enough that the backing ends above the draw
@@ -190,18 +189,12 @@ func shopSeatRect(gs *state.GlobalState, p shopPane, i int) image.Rectangle {
 	return image.Rect(left, r.Min.Y, left+cardWidth, r.Max.Y)
 }
 
-// shopFigureBottom is where the prices under a pane stop, and what anything hanging below them has
-// to clear. The figures are written under the *backing* rather than under the cards, so a pane's
-// own edge is not struck through by its prices.
-func shopFigureBottom(gs *state.GlobalState) int {
-	return shopPaneBackRect(gs, shopPaneRelics).Max.Y + shopFigureGap + shopFigureSize
-}
-
-// shopRerollRect is where a pane's reroll button hangs: centered under it, below the prices.
+// shopRerollRect is where a pane's reroll button hangs: centered under its backing. The prices are
+// written on the cards, so nothing else hangs there.
 func shopRerollRect(gs *state.GlobalState, p shopPane) image.Rectangle {
 	back := shopPaneBackRect(gs, p)
 	cx := (back.Min.X + back.Max.X) / 2
-	top := shopFigureBottom(gs) + shopRerollGap
+	top := back.Max.Y + shopRerollGap
 	return image.Rect(cx-shopRerollWidth/2, top, cx+shopRerollWidth/2, top+shopRerollHeight)
 }
 

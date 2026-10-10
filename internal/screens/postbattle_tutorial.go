@@ -74,10 +74,6 @@ func (s *PostBattleScene) tutorialKeepClear(gs *state.GlobalState, a tutorial.An
 	return []image.Rectangle{r}
 }
 
-// payoutAccountLines is how many of payoutLines are the account of the vitae: the three claims and
-// the total, before the line about the essences.
-const payoutAccountLines = 4
-
 // tutorialCovered is whether anything is over the screen. **Nothing can be**: this screen carries
 // no panel of its own and the chrome stands down on it, so the choice is the only thing up. See the
 // combat screen's, and tutorial.go for what it is for.

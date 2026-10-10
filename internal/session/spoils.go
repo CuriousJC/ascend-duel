@@ -53,6 +53,10 @@ const lifeFullVitae = 5
 // from a different number would be a lie nothing fails on.
 const PropagationPer = propagationPer
 
+// PropagationCeiling is the purse past which holding more earns no more interest — the rate times
+// its cap — exported for the same sentence and on the same argument.
+const PropagationCeiling = propagationPer * maxPropagation
+
 // roomVitae is what the room itself pays: **3 for a realm's outer room, 4 for its inner room, 5 for
 // the portal room that is its boss** *(owner's call, 2026-08-22)*. Flat for the whole journey — a realm-8
 // boss pays the same 5 as realm 1's, because the scaling that makes a later fight worth more is the

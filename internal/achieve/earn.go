@@ -114,7 +114,7 @@ func (c *Catalog) ByCounts(counts map[string]int) []string {
 //
 // **The turn, not the hand.** A hand counts the cards that scored it and leaves the rest out; these
 // achievements are about what the player put on the table together — "four elements at once" — so
-// Arsenal can ask for a defense beside three attack forms, which no hand on the ladder can say.
+// Kitchen Sink can ask for a defense beside three attack forms, which no hand on the ladder can say.
 func (c *Catalog) ByTurn(turn []combat.Card) []string {
 	if len(turn) == 0 {
 		return nil

@@ -65,10 +65,10 @@ const (
 	// inside one**, which is what makes the four read as four rather than as one long tray.
 	shopPaneGutter = 24
 
-	// shopPaneTopPct is where the cards stand: **the row, its prices and its reroll buttons centered
-	// between the build band and the Leave button** *(owner's call, 2026-10-04)*, with the hint in
-	// the gap above.
-	shopPaneTopPct = 39
+	// shopPileClear is the bare ground between the bottom of the shelf's backing and the top of the
+	// draw pile under the duelist's column. **Small on purpose**: the band's sell tab hangs down toward
+	// the shelf's top and the pile rises toward its bottom, and both have to clear. See shopPaneTop.
+	shopPileClear = 8
 
 	// shopRerollGap is how far a reroll button sits under the price figures of the pane it
 	// belongs to.
@@ -145,6 +145,15 @@ func shopShelfLeft(gs *state.GlobalState) int {
 	return handBandLeft(gs)
 }
 
+// shopPaneTop is where the shelf's cards stand: **high enough that the backing ends above the draw
+// pile** *(owner's call)*, so the shelf and the pile read as two rows rather than one overlapping
+// the other. Measured off the pile rather than written as a percentage, so the shelf follows the
+// pile when the bottom third moves. The band's sell tab is what bounds it from above —
+// TestTheSellTabClearsTheShelf and TestTheFourPanesFitOnOneRow hold the two edges.
+func shopPaneTop(gs *state.GlobalState) int {
+	return deckStackBounds(gs).Min.Y - shopPileClear - relicPaneBackPad - cardHeight
+}
+
 // shopPaneWidth is how wide one pane's cards run, before its padding.
 func shopPaneWidth(gs *state.GlobalState, p shopPane) int {
 	return (shopPaneSeats(p)-1)*shopPitch(gs) + cardWidth
@@ -154,7 +163,7 @@ func shopPaneWidth(gs *state.GlobalState, p shopPane) int {
 // derived from. **The cards and not the backing**, which is the distinction relicPaneRect draws and
 // for the same reason: growing the padding must not be able to move a card.
 func shopPaneRect(gs *state.GlobalState, p shopPane) image.Rectangle {
-	top := gs.PctY(shopPaneTopPct)
+	top := shopPaneTop(gs)
 
 	left := shopShelfLeft(gs) + relicPaneBackPad
 	for _, before := range shopPaneOrder() {

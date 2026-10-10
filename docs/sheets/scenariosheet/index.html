@@ -63,7 +63,7 @@
 <div class="wrap">
   <h1>Scenario sheet</h1>
   <p class="note">
-    The 58 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
+    The 59 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
     that launches it. Compiled out of every build that is not <code>-tags scenario</code>, so none
     of this is reachable from a shipped binary.
   </p>
@@ -1918,6 +1918,32 @@
             <tr><th>Deck — 20 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
             <tr><td>Jab</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Skewer</td><td>earth</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cleave</td><td>arcane</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Thump</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Smash</td><td>lightning</td><td>2</td><td>3</td><td class="rider"></td></tr><tr><td>Brace</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Block</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr>
           </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">faceroll</div>
+      <div class="facts">opens on combat · room 0 · 200 vitae · 10 AP a turn · 23 relic slots</div>
+      <code class="cmd">DUELLO_SCENARIO=faceroll go run -tags scenario .</code>
+      <p class="blurb">A whole run that cannot be lost, for playing through the journey to read it rather than to fight it. Every element and every form doubles, every form lands twice, the common hands multiply, every hit drains life back, the turn opens healed and behind one shield of each element, and the budget is 10 AP so any five cards can be paid for. The deck, the enemies, the shops and the draw are the game&#39;s own and the seed is the clock&#39;s, so every launch is a different run.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the sack, and in the pouch</div>
+          <div class="scroll"><img src="faceroll-worn.png" width="5464" height="308" alt="worn, in the sack, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
+            <tr><td class="key">dmg-plus</td><td>Might</td><td class="said">&#43;10 DMG for every fight.</td></tr><tr><td class="key">hp-plus</td><td>Bulwark</td><td class="said">&#43;25 HP for every fight.</td></tr><tr><td class="key">dmgx-fire</td><td>Fire</td><td class="said">Fire cards deal 2x DMG.</td></tr><tr><td class="key">dmgx-ice</td><td>Ice</td><td class="said">Ice cards deal 2x DMG.</td></tr><tr><td class="key">dmgx-lightning</td><td>Lightning</td><td class="said">Lightning cards deal 2x DMG.</td></tr><tr><td class="key">dmgx-earth</td><td>Earth</td><td class="said">Earth cards deal 2x DMG.</td></tr><tr><td class="key">dmgx-arcane</td><td>Arcane</td><td class="said">Arcane cards deal 2x DMG.</td></tr><tr><td class="key">dmg-all-stab</td><td>The Needle</td><td class="said">Every stab card deals double DMG.</td></tr><tr><td class="key">dmg-all-slash</td><td>The Sickle</td><td class="said">Every slash card deals double DMG.</td></tr><tr><td class="key">dmg-all-crush</td><td>The Club</td><td class="said">Every crush card deals double DMG.</td></tr><tr><td class="key">repeat-stab</td><td>Twisted Points</td><td class="said">Every stab card lands twice, both at full DMG.</td></tr><tr><td class="key">repeat-slash</td><td>Twisted Edges</td><td class="said">Every slash card lands twice, both at full DMG.</td></tr><tr><td class="key">repeat-crush</td><td>Twisted Weights</td><td class="said">Every crush card lands twice, both at full DMG.</td></tr><tr><td class="key">handmult-pair</td><td>Paired Rings</td><td class="said">Every pair deals 2x DMG.</td></tr><tr><td class="key">handmult-two-pair</td><td>Mirrored Rings</td><td class="said">Every Two Pair deals 2x DMG.</td></tr><tr><td class="key">handmult-triplicate</td><td>Triplicate Rings</td><td class="said">Every Three of a Kind deals 3x DMG.</td></tr><tr><td class="key">drain-blow</td><td>Vampiric Fang</td><td class="said">Every hit gives back 3/10 of its damage as life.</td></tr><tr><td class="key">heal-turn-start</td><td>The Tear</td><td class="said">Restores 1/4 of max life at the start of your turn.</td></tr><tr><td class="key">burning-helm</td><td>Burning Helm</td><td class="said">Raises one fire shield at the start of your turn.</td></tr><tr><td class="key">ice-helm</td><td>Ice Helm</td><td class="said">Raises one ice shield at the start of your turn.</td></tr><tr><td class="key">cloud-helm</td><td>Cloud Helm</td><td class="said">Raises one lightning shield at the start of your turn.</td></tr><tr><td class="key">green-helm</td><td>Green Helm</td><td class="said">Raises one earth shield at the start of your turn.</td></tr><tr><td class="key">arcane-helm</td><td>Arcane Helm</td><td class="said">Raises one arcane shield at the start of your turn.</td></tr>
+          </table>
+        
+        
+        
         
       </div>
     </div>

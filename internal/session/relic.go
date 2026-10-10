@@ -549,15 +549,15 @@ func (s *Session) CardCost(c combat.Card) int {
 	return combat.CostWith(s.WornRelics(), s.CostCut(), c)
 }
 
-// propagation is vitae earning interest: **+1 for every 5 held, capped at +5**, then scaled by every
+// propagation is vitae earning interest: **+1 for every 5 held, capped at +7**, then scaled by every
 // relic that scales it.
 //
 // **It is a rule of the run rather than a relic** *(owner's call, 2026-08-17)*, which is what lets
 // Banker bend it — a relic may only ever bend a rule the game already has.
 //
-// **The cap binds the base rate and a relic scales what the cap produced.** At 25 held that is +5
-// bare and +10 wearing Banker. An absolute cap on the figure that finally lands would leave the relic
-// doing nothing past 25 held, which is a relic that stops working exactly when a run can afford it.
+// **The cap binds the base rate and a relic scales what the cap produced.** At 35 held that is +7
+// bare and +14 wearing Banker. An absolute cap on the figure that finally lands would leave the relic
+// doing nothing past 35 held, which is a relic that stops working exactly when a run can afford it.
 // Rounded down, like every other integer rule in the game.
 // **It reports the figure rather than adding it** *(2026-08-22)*, because the post-battle screen
 // narrates the interest as its own sentence and the purse has to climb when that sentence lands.
@@ -579,7 +579,7 @@ func (s *Session) propagation() int {
 // maxPropagation is the ceiling on the base rate. **It is what stops it running away**: uncapped,
 // +1 per 5 is roughly x1.2 a purse per fight, which compounds across 24 fights into a number no shop
 // can be priced against. Capping the rate rather than the purse leaves a big purse worth having.
-const maxPropagation = 5
+const maxPropagation = 7
 
 // growRelics is the other half of `fight-won`: every growing relic's accumulator takes its step.
 //

@@ -61,7 +61,7 @@ const (
 	ModeSame = "same"
 
 	// ModeCount is at least N filtered cards, and is the one mode with no axis. It exists for the
-	// half of Arsenal that is "and a defense" — a presence rather than a shape.
+	// half of Kitchen Sink that is "and a defense" — a presence rather than a shape.
 	ModeCount = "count"
 )
 
@@ -75,7 +75,7 @@ const (
 //
 // **The filter is on the clause rather than on the pattern**, which is the one shape decision worth
 // arguing with. A pattern-level filter would be tidier for four of the five turn achievements and
-// could not express the fifth at all: Arsenal counts forms among the attacks *and* asks for a
+// could not express the fifth at all: Kitchen Sink counts forms among the attacks *and* asks for a
 // defense beside them, which is two different selections of the same turn.
 type ClauseData struct {
 	// Of is which cards this clause looks at: `attack`, `defend`, or empty for the whole turn.
@@ -133,7 +133,7 @@ const SetByClient = "client"
 // AchievementIconDir is where the achieved icons are committed, and AchievementIconPrefix the
 // prefix their asset keys carry — `assets/achievement/first-steps.png` is `achievement-first-steps`.
 // **Prefixed** for the upgrade art's reason: the image map is flat, and an achievement named
-// `prism` or `arsenal` is a name a relic could take.
+// `prism` or `kitchen-sink` is a name a relic could take.
 const (
 	AchievementIconDir    = "achievement"
 	AchievementIconPrefix = "achievement-"
@@ -213,7 +213,7 @@ type AchievementData struct {
 // page order: the achievements screen has listed its rows in an authored order since it was written,
 // because a page that reshuffled itself between visits is a page you have to re-read each time. A
 // map would hand that decision to Go's hashing, and a sorted walk would hand it to the alphabet,
-// which puts "Arsenal" above "First Steps".
+// which puts "Elementalist" above "First Steps".
 //
 // **Shape only.** Whether a trigger says anything the game can act on is internal/achieve's
 // question, exactly as an essence's target is internal/session's and a card's verb is

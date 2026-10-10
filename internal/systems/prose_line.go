@@ -28,12 +28,18 @@ import (
 const (
 	proseCapSmall  = 10
 	proseCapMedium = 12
-	proseCapLarge  = 14
+	proseCapLarge  = 15
 	proseCapFloor  = 10
+
+	// proseCapPerPoint is the capital height a font point is worth when a size is not a tier: a
+	// heading's, a card face's. **It is its own figure rather than Large's ratio**, so retuning a
+	// tier moves the lines set at that tier and nothing else — no heading, and no card face, whose
+	// type is held to its bands by the tests in internal/cards.
+	proseCapPerPoint = 14.0 / 26.0
 )
 
 // ProseCap is the capital height a line set at font `size` takes in the prose glyphs. The three
-// tiers answer their own figure; a size off the tiers scales with the Large one and never drops
+// tiers answer their own figure; a size off the tiers scales by proseCapPerPoint and never drops
 // under the floor the set was drawn for.
 func ProseCap(size float64) float64 {
 	switch size {
@@ -44,7 +50,7 @@ func ProseCap(size float64) float64 {
 	case TextLarge:
 		return proseCapLarge
 	}
-	c := size * proseCapLarge / TextLarge
+	c := size * proseCapPerPoint
 	if c < proseCapFloor {
 		c = proseCapFloor
 	}
@@ -53,7 +59,7 @@ func ProseCap(size float64) float64 {
 
 // ProseCapOf is the capital height a line at font `size` takes in proportion, with no tier and no
 // floor — for a card face, where a small copy of a card carries small type on purpose.
-func ProseCapOf(size float64) float64 { return size * proseCapLarge / TextLarge }
+func ProseCapOf(size float64) float64 { return size * proseCapPerPoint }
 
 // MeasureText is how far the pen travels over s as DrawText would set it: in the prose glyphs when
 // the set covers it, in the face otherwise. It is the measure to lay out beside a DrawText call.

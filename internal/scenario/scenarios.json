@@ -920,7 +920,7 @@
   },
   {
     "ScenarioRecord": "achievement-toast",
-    "Note": "Four cheap attacks across three forms and four elements, plus a defense: one turn that earns Spectrum, Weaponmaster and Arsenal at once, which is three toasts in a row and the only way to see the queue drain. Jab, Cut and Thump are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Arsenal cannot both land on one turn. The awards are written to the real profile; point DUELLO_PROFILE at an empty directory to see them land again.",
+    "Note": "Four cheap attacks across three forms and four elements, plus a defense: one turn that earns Spectrum, Weaponmaster and Kitchen Sink at once, which is three toasts in a row and the only way to see the queue drain. Jab, Cut and Thump are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Kitchen Sink cannot both land on one turn. The awards are written to the real profile; point DUELLO_PROFILE at an empty directory to see them land again.",
     "Relics": [],
     "Hand": [
       { "Card": "Jab", "Element": "fire" },
@@ -1903,5 +1903,38 @@
     "Enemy": "animals-outer-bat",
     "Screen": "combat",
     "Dummy": true
+  },
+  {
+    "ScenarioRecord": "faceroll",
+    "Note": "A whole run that cannot be lost, for playing through the journey to read it rather than to fight it. Every element and every form doubles, every form lands twice, the common hands multiply, every hit drains life back, the turn opens healed and behind one shield of each element, and the budget is 10 AP so any five cards can be paid for. The deck, the enemies, the shops and the draw are the game's own and the seed is the clock's, so every launch is a different run.",
+    "RelicSlots": 23,
+    "Relics": [
+      "dmg-plus",
+      "hp-plus",
+      "dmgx-fire",
+      "dmgx-ice",
+      "dmgx-lightning",
+      "dmgx-earth",
+      "dmgx-arcane",
+      "dmg-all-stab",
+      "dmg-all-slash",
+      "dmg-all-crush",
+      "repeat-stab",
+      "repeat-slash",
+      "repeat-crush",
+      "handmult-pair",
+      "handmult-two-pair",
+      "handmult-triplicate",
+      "drain-blow",
+      "heal-turn-start",
+      "burning-helm",
+      "ice-helm",
+      "cloud-helm",
+      "green-helm",
+      "arcane-helm"
+    ],
+    "Hand": [],
+    "Actions": 10,
+    "Vitae": 200
   }
 ]

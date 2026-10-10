@@ -64,7 +64,7 @@ func TestTheLadderIsThePokerHandsOnEveryAxis(t *testing.T) {
 
 		// **The one spread rung left** *(owner's call, 2026-09-05)*. Everything above counts
 		// copies; this counts *difference*, which is the other thing a set of cards can have in
-		// common. Prism, Spectrum, Arsenal, Rising Attack and Weaponmaster were cut with it.
+		// common. Prism, Spectrum, Kitchen Sink, Rising Attack and Weaponmaster were cut with it.
 		"element-elementalist": "Elementalist",
 	}
 

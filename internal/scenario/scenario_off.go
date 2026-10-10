@@ -20,6 +20,9 @@ func Note() string { return "" }
 // Relics is what the run should open wearing. Nil here.
 func Relics() []string { return nil }
 
+// Weightless is which of those the fight's duelist wears weightless. Nil here.
+func Weightless() []string { return nil }
+
 // Hand is the opening hand to deal. Nil here.
 func Hand() []combat.Card { return nil }
 

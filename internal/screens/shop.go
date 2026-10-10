@@ -130,6 +130,10 @@ type ShopScene struct {
 	// answers and the shelf does not. See handspanel.go.
 	hands ui.HandsToggle
 
+	// uses are the stones being used up out of the pouch: crumbling in the middle of the screen with
+	// their dust on its way to the hands button. Nothing waits on them. See stoneUseFrom.
+	uses []ui.Consume
+
 	// offered is which packs this visit put up: two of the three, dealt in Init and fixed for the
 	// visit unless the reroll button under them is pressed. **A slice rather than three flags**,
 	// because the pane's two seats are positions and which kind stands in each is the decision.
@@ -345,6 +349,14 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	s.tut.update(gs, s)
 
 	s.move.Tick()
+	kept := s.uses[:0]
+	for i := range s.uses {
+		s.uses[i].Tick()
+		if !s.uses[i].Done() {
+			kept = append(kept, s.uses[i])
+		}
+	}
+	s.uses = kept
 
 	if s.leaving {
 		s.leaving = false
@@ -630,6 +642,10 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.deck.Draw(gs, screen, ui.OwnedContents(gs))
 	s.hands.Draw(gs, screen, ui.OwnedHands(gs))
 	s.drawPouch(gs, screen)
+	// **Over the pouch it came out of**, so a stone used from the open panel is seen going.
+	for _, u := range s.uses {
+		u.Draw(gs, screen)
+	}
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
 	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.

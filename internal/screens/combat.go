@@ -357,6 +357,11 @@ type CombatScene struct {
 	// stoneflight.go, and MECHANICS.md for what a rune is.
 	stones []stoneFlight
 
+	// uses are the consumables being used up in the middle of the table, and spendSeat the pane seat
+	// the one being spent stood in, read before the pane closes over it. See combat_consume.go.
+	uses      []combatUse
+	spendSeat int
+
 	// ledgerDealt is what the player's blows in the round being played back came to, and
 	// ledgerWritten says whether that round has been handed to the run's account yet.
 	//
@@ -717,6 +722,8 @@ func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
 	s.showDeck = false
 	s.hands.InitInColumn(handsButtonPlace)
 	s.stones = nil
+	s.uses = nil
+	s.spendSeat = -1
 	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 }
 
@@ -915,6 +922,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 
 	s.updateBand(gs)
 	s.updateStoneFlights()
+	s.updateUses()
 
 	// Tell the frame a dialog is up, so the game's own chrome stands down rather than sitting
 	// live on top of it. Written unconditionally from what the screen already knows, never
@@ -1876,6 +1884,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// The sack, beside the hands panel and under the other two, for the same reason: its own
 	// draw puts its button back on top of its own panel.
+	s.drawUses(gs, screen)
 	s.drawStoneFlights(gs, screen)
 
 	// The overlay covers everything, card in flight included, and the X goes on top of it. The

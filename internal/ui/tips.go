@@ -147,6 +147,26 @@ func RelicTip(record data.RelicData) (string, []string) {
 	return relicTitle(record), strings.Split(record.Text, "\n")
 }
 
+// The lines a worn relic's tooltip ends on when it is worn weightless or ephemeral — **the word and
+// nothing else** *(owner's call)*. Properties of the wearing, not of the relic, so they are said
+// where it is worn and never on a shelf.
+const (
+	WeightlessTipLine = "Weightless"
+	EphemeralTipLine  = "Ephemeral"
+)
+
+// WornRelicTip is RelicTip for a relic being worn, with a line for each property of the wearing.
+func WornRelicTip(record data.RelicData, w combat.WornRelic) (string, []string) {
+	title, lines := RelicTip(record)
+	if w.Weightless {
+		lines = append(lines, WeightlessTipLine)
+	}
+	if w.Ephemeral {
+		lines = append(lines, EphemeralTipLine)
+	}
+	return title, lines
+}
+
 // relicTitle is the relic's name with its rarity after it — `Twisted Weights (UNCOMMON)`.
 //
 // **In the title rather than on a line of its own** *(owner's call, 2026-09-18)*. Rarity is not

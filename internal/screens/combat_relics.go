@@ -239,7 +239,7 @@ func drawRelicPaneFrame(gs *state.GlobalState, screen *ebiten.Image, row image.R
 		return
 	}
 	drawPaneCount(gs, screen, relicPaneBackOf(row),
-		fmt.Sprintf("%d/%d", len(gs.Run.Worn()), relicSlots(gs)))
+		fmt.Sprintf("%d/%d", gs.Run.WeightedCount(), relicSlots(gs)))
 }
 
 // relicSlotMaxGap is the most bare table ever left between two relic cards.
@@ -319,12 +319,11 @@ func wornRelics(gs *state.GlobalState) []data.RelicData {
 		return nil
 	}
 
-	slots := relicSlots(gs)
-	out := make([]data.RelicData, 0, slots)
-	for _, key := range gs.Run.Worn() {
-		if len(out) == slots {
-			break
-		}
+	// **Every worn relic, the weightless included** — a weightless one takes no finger, so a row may
+	// hold more relics than the run has fingers.
+	worn := gs.Run.Worn()
+	out := make([]data.RelicData, 0, len(worn))
+	for _, key := range worn {
 		record, ok := gs.Relics[key]
 		if !ok {
 			log.Printf("the run is wearing %q, which is in no record", key)
@@ -826,6 +825,17 @@ func (s *CombatScene) playedCardShake(seat int) int {
 	return shakeOffset(s.cardShake[seat])
 }
 
+// wornWeightless is whether the relic in one seat of the row is worn weightless. **Read off the
+// fighter, which is what the rules read** — a seat in the row is the fighter's seat of the same
+// number — rather than off whether the seat is a cantrip's, since weightless is a property of the
+// wearing and may one day be put on a run relic.
+func (s *CombatScene) wornWeightless(seat int) bool {
+	if s.fighter == nil || seat < 0 || seat >= len(s.fighter.Relics) {
+		return false
+	}
+	return s.fighter.Relics[seat].Weightless
+}
+
 // relicCardCenter is the middle of one worn seat's card, which is where that relic's multiplier sets
 // off from on its way into its line.
 //
@@ -879,6 +889,11 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		if s.band.relicDrag.Dragging() && i == s.band.relicDrag.Origin() {
 			continue
 		}
+		// **A cantrip's relic is drawn by the cast until it has arrived**, out of nothing, as the
+		// scroll's embers land. See combat_consume.go.
+		if s.relicSeatArriving(i) {
+			continue
+		}
 
 		// **The shake, the tilt and the light go together**: the card rattles, rocks and its border
 		// lights, which is what says the relic is working rather than merely moving. See relicToast.
@@ -892,6 +907,16 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		// combat_deal.go.
 		if t, firing := s.dealRingClock(relic.RelicRecord); firing {
 			toast = dealToast(t)
+		}
+
+		// **A weightless relic floats off the row it takes no slot in** *(owner's call)*: lifted,
+		// drifting and shimmering, unless it is firing, when the toast is the louder thing. See
+		// ui.DrawWeightless.
+		if !toast.lit && s.wornWeightless(i) {
+			face := ui.CardImage(gs, ui.RelicSpec(gs, relic, counters[relic.RelicRecord], true, false),
+				cards.RelicStyle)
+			ui.DrawWeightless(screen, face, at, 1, float64(gs.Count), float64(i)*2.1)
+			continue
 		}
 
 		// **A resting relic is blitted and a toasting one is flown**, which is the same split every
@@ -911,8 +936,18 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 	// which still outranks everything.
 	if raised >= 0 && raised < len(worn) && !(s.band.relicDrag.Dragging() && raised == s.band.relicDrag.Origin()) {
 		relic := worn[raised]
-		ui.DrawRelicCard(gs, screen, relicSlotAt(r, raised, len(worn)), relic,
-			counters[relic.RelicRecord], true, false)
+		at := relicSlotAt(r, raised, len(worn))
+		// **It keeps moving under the cursor** *(owner's call)*: being looked at is not being set
+		// down, so the raised relic is drawn exactly as the row draws it — floating, or weightless.
+		spec := ui.RelicSpec(gs, relic, counters[relic.RelicRecord], true, false)
+		switch {
+		case s.relicSeatArriving(raised):
+		case s.wornWeightless(raised):
+			ui.DrawWeightless(screen, ui.CardImage(gs, spec, cards.RelicStyle), at, 1,
+				float64(gs.Count), float64(raised)*2.1)
+		default:
+			ui.DrawFloatingCard(gs, screen, at, raised, spec, cards.RelicStyle)
+		}
 	}
 
 	// Last, so the relic riding the cursor is over the rule and the fraction as well as the row.

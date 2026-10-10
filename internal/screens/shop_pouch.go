@@ -249,7 +249,16 @@ func (s *ShopScene) takeStone(gs *state.GlobalState, what pouchAction, i int) {
 
 	switch what {
 	case pouchUse:
+		// **Its seat and face are read now**, before the panel closes over the stone. See
+		// stoneUseFrom.
+		var from image.Rectangle
+		if seats := s.pouch.cardRects(gs); i < len(seats) {
+			from = seats[i]
+		}
+		face := ui.StoneSpec(gs, st, true)
 		if gs.Run.SpendCarried(i) {
+			// **It crumbles in the middle of the screen, and its dust goes to the ladder.**
+			s.uses = append(s.uses, stoneUseFrom(gs, face, from))
 			gs.Journal.Write(journal.Record{
 				Kind:   journal.KindStone,
 				Action: journal.StoneUsed,

@@ -141,6 +141,13 @@ func (m Morph) Clock() Travel { return m.t }
 func (m Morph) Eats() bool    { return m.hasBefore && !m.hasAfter }
 func (m Morph) Arrives() bool { return !m.hasBefore && m.hasAfter }
 
+// Delayed is this morph with its wait replaced, for a caller sequencing it behind something else —
+// a rune's targets changing as its motes arrive rather than a beat after a card lands.
+func (m Morph) Delayed(ticks int) Morph {
+	m.t.Delay = ticks
+	return m
+}
+
 func (m *Morph) Tick()        { m.t.Tick() }
 func (m Morph) Done() bool    { return m.t.Done() }
 func (m Morph) Waiting() bool { return m.t.Waiting() }

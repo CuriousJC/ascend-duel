@@ -170,33 +170,33 @@ func (s *ShopScene) rerollPacks(gs *state.GlobalState) {
 	s.offered = out
 }
 
-// rerollRelics redraws the whole shelf, bought seats included.
+// rerollRelics redraws the seats that have not been bought, and only those.
 //
-// **A reroll refills every seat** *(owner's call, 2026-09-08)*, which reverses the rule that a
-// bought seat stays spent for the visit. What that rule was protecting against — one reroll being
-// worth three relics — is already paid for twice over: the escalating price is charged whatever the
-// shelf looks like, and the relic that emptied the seat was bought at full price. What it cost was a
-// player who bought early having less shelf to reroll than one who had not, which is the shop
-// punishing the purchase it just made.
+// **A reroll never adds relics to the shelf** *(owner's call)*: a bought seat stays spent for the
+// visit, so a shelf with one relic left standing rerolls that one relic, and a shelf whose every
+// seat has been bought has nothing to reroll at all.
 //
 // **The relic just bought cannot come back**, because dealShelf draws from what the run is not
-// wearing and it is now worn. A relic that was bought and then sold again can, which is correct: the
-// shelf offers what the run does not have.
+// wearing and it is now worn. A relic that was bought and then sold again can: the shelf offers what
+// the run does not have.
 //
-// **A relic that was standing and was not taken may be dealt again** *(owner's call, 2026-09-08)*,
-// and it is drawn on exactly its rarity's tickets like anything else in the pool. The fresh deal
-// has no memory of the old shelf, which is the point: excluding what was just offered would give a
-// rejected relic worse odds than its rarity says it has, and the shelf is a weighted sample of what
-// the run does not own rather than a queue through the catalog.
+// **A relic that was standing and was not taken may be dealt again**, on exactly its rarity's
+// tickets like anything else in the pool: excluding what was just offered would give a rejected
+// relic worse odds than its rarity says it has.
 //
-// A short pool — fewer unworn relics left than seats — leaves the remaining seats empty rather than
-// keeping what was standing there, so the row never shows a relic the fresh draw did not pick.
+// A short pool — fewer unworn relics left than open seats — leaves the remaining seats empty rather
+// than keeping what was standing there, so the row never shows a relic the fresh draw did not pick.
 func (s *ShopScene) rerollRelics(gs *state.GlobalState) {
 	fresh := dealShelf(gs, s.stockRNG)
 
+	next := 0
 	for i := range s.shelf {
-		if i < len(fresh) {
-			s.shelf[i] = fresh[i]
+		if s.shelf[i].bought {
+			continue
+		}
+		if next < len(fresh) {
+			s.shelf[i] = fresh[next]
+			next++
 			continue
 		}
 		s.shelf[i] = shelfItem{bought: true}
@@ -206,13 +206,18 @@ func (s *ShopScene) rerollRelics(gs *state.GlobalState) {
 // paneHasSomethingToReroll is whether a press would change anything. A pane whose every seat is
 // spent has nothing to redraw, and taking vitae for that would be the shop selling nothing.
 //
-// **The relics pane asks the catalog rather than the shelf**, because a reroll refills bought
-// seats: a shelf where all three have been taken still has something to redraw, so long as the run
-// is not wearing every relic there is.
+// **The relics pane needs a seat still standing and a relic to put in it**: a reroll only redraws
+// the seats that have not been bought, so a fully bought shelf has nothing to redraw, and neither
+// does a run already wearing every relic there is.
 func (s *ShopScene) paneHasSomethingToReroll(gs *state.GlobalState, p shopPane) bool {
 	switch p {
 	case shopPaneRelics:
-		return s.unwornRelicExists(gs)
+		for _, item := range s.shelf {
+			if !item.bought {
+				return s.unwornRelicExists(gs)
+			}
+		}
+		return false
 	case shopPanePacks:
 		for _, key := range s.offered {
 			if !s.goodTaken(key) {

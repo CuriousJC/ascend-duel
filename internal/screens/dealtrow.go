@@ -39,6 +39,10 @@ type dealtRow struct {
 	// top is the row's top edge on this screen. The row is the combat hand's band and cut at the
 	// hand's own compressing pitch, so this is the one fact a screen supplies.
 	top func(gs *state.GlobalState) int
+
+	// hidden is the seats something else is drawing for the moment — the cards an essence is
+	// changing where they stand. Emptied by every deal.
+	hidden map[int]bool
 }
 
 // initRow builds the tabs the first time, loads the shared sort preference and empties the row.
@@ -48,14 +52,14 @@ func (r *dealtRow) initRow(gs *state.GlobalState, top func(gs *state.GlobalState
 		r.tabs = ui.NewSortTabs(r.tabRect, func(mode ui.HandSort) { r.mode, r.sortDue = mode, true })
 	}
 	r.mode = ui.HandSortOf(gs)
-	r.offer, r.selected, r.slides = nil, nil, nil
+	r.offer, r.selected, r.slides, r.hidden = nil, nil, nil, nil
 	r.drag = ui.CardDrag{}
 }
 
 // deal puts a fresh row up, arranged in the current order and with nothing picked. **Arranged on
 // the spot** rather than on the next frame, so a row is never drawn in the order it was dealt.
 func (r *dealtRow) deal(gs *state.GlobalState, offer []int) {
-	r.offer, r.selected = offer, nil
+	r.offer, r.selected, r.hidden = offer, nil, nil
 	r.drag = ui.CardDrag{}
 	r.sort(gs)
 	r.slides = nil
@@ -220,7 +224,7 @@ func (r *dealtRow) draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 	for i, deckIndex := range r.offer {
 		card, ok := gs.Run.Card(deckIndex)
-		if !ok || ui.SlideInto(r.slides, i) || (r.drag.Dragging() && i == r.drag.Origin()) {
+		if !ok || r.hidden[i] || ui.SlideInto(r.slides, i) || (r.drag.Dragging() && i == r.drag.Origin()) {
 			continue
 		}
 		ui.DrawFloatingCard(gs, screen, r.slot(gs, i).Min, i,

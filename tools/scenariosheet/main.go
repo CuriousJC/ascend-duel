@@ -194,6 +194,7 @@ type record struct {
 	ScenarioRecord string     `json:"ScenarioRecord"`
 	Note           string     `json:"Note"`
 	Relics         []string   `json:"Relics"`
+	Weightless     []string   `json:"Weightless"`
 	Hand           []handCard `json:"Hand"`
 	Runes          []string   `json:"Runes"`
 	Stones         []string   `json:"Stones"`
@@ -469,6 +470,9 @@ func factsOf(r record) []string {
 	}
 	if r.Dummy {
 		out = append(out, "DUMMY -- nothing dies")
+	}
+	if len(r.Weightless) > 0 {
+		out = append(out, "weightless: "+strings.Join(r.Weightless, ", "))
 	}
 	if r.Actions > 0 {
 		out = append(out, strconv.Itoa(r.Actions)+" AP a turn")

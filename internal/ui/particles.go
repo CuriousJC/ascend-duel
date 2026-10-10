@@ -15,6 +15,7 @@ package ui
 
 import (
 	"image"
+	"image/color"
 	"math"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -65,6 +66,13 @@ type Emitter struct {
 
 	// Seed separates two fields drawn at once, so neighbors are not the same cloud.
 	Seed uint32
+
+	// Sprites, when set, replaces the element's own sprites with these asset keys — ash, rubble,
+	// rune motes — while Element still picks the physics. None of them is turned to face its way.
+	Sprites []string
+
+	// Tint, when its alpha is not zero, multiplies every sprite.
+	Tint color.RGBA
 }
 
 func (e Emitter) rate() float64 {
@@ -128,6 +136,18 @@ func DrawParticleTrail(screen *ebiten.Image, e Emitter, path func(t float64) (fl
 		dx, dy = bx-by*side*0.8, by+bx*side*0.8
 		m := math.Hypot(dx, dy)
 		return x + -by*side*10, y + bx*side*10, dx / m, dy / m, x, y
+	})
+}
+
+// DrawParticleField is the general case the wrap and the trail are two shapes of: `origin` says where
+// particle i was born, given its birth tick, and the direction it is thrown in. A field born along a
+// burning edge or out of a crumbling card is one of these.
+func DrawParticleField(screen *ebiten.Image, e Emitter, emitUntil, age int,
+	origin func(i int, born float64) (x, y, dx, dy float64)) {
+
+	e.draw(screen, age, emitUntil, func(i int, born float64) (x, y, dx, dy, ox, oy float64) {
+		x, y, dx, dy = origin(i, born)
+		return x, y, dx, dy, x, y
 	})
 }
 
@@ -248,6 +268,9 @@ func (e Emitter) drawOne(screen *ebiten.Image, i int, a, lf, x, y, dx, dy, ox, o
 	op.GeoM.Rotate(rot)
 	op.GeoM.Scale(sc, sc)
 	op.GeoM.Translate(x, y)
+	if e.Tint.A != 0 {
+		op.ColorScale.ScaleWithColor(e.Tint)
+	}
 	op.ColorScale.ScaleAlpha(alpha)
 	screen.DrawImage(img, op)
 
@@ -261,6 +284,10 @@ func (e Emitter) drawOne(screen *ebiten.Image, i int, a, lf, x, y, dx, dy, ox, o
 
 // sprite is particle i's picture, and whether it is one of the pointed ones that faces its way.
 func (e Emitter) sprite(i int) (*ebiten.Image, bool) {
+	if len(e.Sprites) > 0 {
+		key := e.Sprites[int(hash01(e.Seed, i, 13)*float64(len(e.Sprites)))%len(e.Sprites)]
+		return systems.ArtMarkImage(key, particleArtSize, particleArtSize), false
+	}
 	n := 1 + int(hash01(e.Seed, i, 13)*3)
 	if n > 3 {
 		n = 3

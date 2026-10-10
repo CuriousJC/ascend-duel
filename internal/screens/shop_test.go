@@ -367,14 +367,10 @@ func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
 	}
 }
 
-// TestARerollRefillsABoughtSeat. **A reroll gives the shelf back whole** *(owner's call,
-// 2026-09-08)*, which is the reversal of the older rule that a spent seat stayed spent for the
-// visit. A player who bought early otherwise had less shelf to reroll than one who had not, while
-// paying the same escalating price for it.
-//
-// It is two-sided: the seat comes back, and it does not come back holding the relic that was just
-// bought — dealShelf draws from what the run is not wearing, and the check is what says so.
-func TestARerollRefillsABoughtSeat(t *testing.T) {
+// TestARerollLeavesABoughtSeatSpent. **A reroll never adds relics to the shelf** *(owner's call)*:
+// a bought seat stays spent, the seats still standing are redrawn, and none of them comes back
+// holding the relic that was just bought. A shelf bought out has nothing to reroll.
+func TestARerollLeavesABoughtSeatSpent(t *testing.T) {
 	gs := testRun()
 	// The purchase is the setup, not the subject, so the purse is filled rather than left at
 	// what a run opens with: which tier lands in seat 0 is a function of the catalog, and a
@@ -398,12 +394,22 @@ func TestARerollRefillsABoughtSeat(t *testing.T) {
 
 	s.rerollRelics(gs)
 
-	for i, item := range s.shelf {
+	if !s.shelf[0].bought {
+		t.Error("the bought seat came back after a reroll")
+	}
+	for i, item := range s.shelf[1:] {
 		if item.bought {
-			t.Errorf("seat %d is still spent after a reroll", i)
+			t.Errorf("seat %d was standing and is empty after a reroll", i+1)
 		}
 		if item.key == taken {
-			t.Errorf("seat %d offers %s back, and the run is wearing it", i, taken)
+			t.Errorf("seat %d offers %s back, and the run is wearing it", i+1, taken)
 		}
+	}
+
+	for i := range s.shelf {
+		s.shelf[i].bought = true
+	}
+	if s.paneHasSomethingToReroll(gs, shopPaneRelics) {
+		t.Error("a shelf bought out says it has something to reroll")
 	}
 }

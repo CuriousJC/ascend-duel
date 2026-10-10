@@ -710,6 +710,35 @@
     "Life": 30
   },
   {
+    "ScenarioRecord": "weightless-relics",
+    "Note": "Five relics with real art: three worn the ordinary way - an orb, a weapon and a jar - and two worn weightless, which nothing but a cantrip's cast does in a shipped game. The two are lifted off the row, drifting, a little see-through, with light passing down them, beside the three resting on it; hover one and its tooltip ends on the Weightless line.",
+    "Relics": [
+      "flip-fire-to-ice",
+      "dmg-all-slash",
+      "jar-fire",
+      "dmg-pair-hand",
+      "drain-blow"
+    ],
+    "Weightless": [
+      "dmg-pair-hand",
+      "drain-blow"
+    ],
+    "Hand": [],
+    "Enemy": "animals-outer-rat"
+  },
+  {
+    "ScenarioRecord": "bag-of-rocks",
+    "Note": "The shop with a bag of rocks standing on the goods row and the vitae to buy it. Buy the bag and click a stone: it is lifted to the middle of the screen, crumbles, and its dust goes to the duelist card whose ladder it raised. The seed is pinned because the goods row is a roll off the run code and the fight.",
+    "Relics": [
+      "hp-scale"
+    ],
+    "Hand": [],
+    "Screen": "shop",
+    "Seed": "00000A",
+    "Fight": 3,
+    "Vitae": 40
+  },
+  {
     "ScenarioRecord": "portal-boss",
     "Note": "A portal protector on his own card: name, title, portrait and a deck out of bosses.json rather than the roster. The first portal room a run reaches is fight 2, which is where this opens.",
     "Relics": [

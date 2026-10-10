@@ -23,6 +23,9 @@ var clockExceptions = map[string]string{
 	"BeatTicks":       "the speed itself — everything else is a fraction of this one",
 	"ticksPerSecond":  "the simulation rate, a fact about Ebitengine rather than a pace",
 	"mathBreathTicks": "deliberately not a beat; see its own comment for why",
+
+	"weightlessDriftTicks":   "idle motion on a resting relic, the breath's reason; see weightless.go",
+	"weightlessShimmerTicks": "idle motion on a resting relic, the breath's reason; see weightless.go",
 }
 
 func TestNoClockIsWrittenAsARawNumber(t *testing.T) {

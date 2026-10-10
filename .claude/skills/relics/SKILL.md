@@ -535,10 +535,10 @@ They reach for the same screen, so the difference is worth stating:
 
 - **Banker doubles vitae propagation**, at `fight-won` — `scale-propagation`, 200. It scales a
   rule of the run, defined and capped in *Vitae* in `MECHANICS.md`.
-  - **The cap binds the base rate; the relic scales what the cap produced.** At 25 held that is
-    +5 bare and +10 wearing Banker. An absolute cap would leave the relic doing nothing past 25,
+  - **The cap binds the base rate; the relic scales what the cap produced.** At 35 held that is
+    +7 bare and +14 wearing Banker. An absolute cap would leave the relic doing nothing past 35,
     which is a relic that stops working when a run can finally afford it.
-  - So the order is: count the fives, clamp to +5, then apply every scaling relic left to right.
+  - So the order is: count the fives, clamp to +7, then apply every scaling relic left to right.
     Two of them compound, like every other relic effect.
 - **Soul Taker** is a **flat +5 to the vitae prize card**, at `prizes-dealt`: 5 becomes 10. Flat,
   not a percentage.

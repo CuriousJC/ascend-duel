@@ -58,7 +58,7 @@ type lineWriter struct {
 
 // attach adds an outcome to the tail of the line it belongs to, after the verb, so the colored verb
 // never moves as a line grows. `hit` is the record's Hit, and zero attaches to the open line.
-func (w *lineWriter) attach(hit int, what string) {
+func (w *lineWriter) attach(hit int, what []session.LedgerSpan) {
 	row := w.cur
 	if w.onHit(hit) {
 		row = w.hits[hit]
@@ -69,11 +69,11 @@ func (w *lineWriter) attach(hit int, what string) {
 	if w.outcomes == nil {
 		w.outcomes = map[int]int{}
 	}
-	sep := " - "
+	sep := SayOutcomeFirst
 	if w.outcomes[row] > 0 {
-		sep = ", "
+		sep = SayOutcomeNext
 	}
-	w.rows[row].Spans = append(w.rows[row].Spans, session.LedgerSpan{Text: sep + what})
+	w.rows[row].Spans = append(w.rows[row].Spans, Say(sep+"{what}", Slots{"what": what})...)
 	w.outcomes[row]++
 }
 
@@ -92,8 +92,8 @@ func (w *lineWriter) sideOf(hit int) string {
 }
 
 // announce opens a line belonging to nobody's card, which nothing may then attach to.
-func (w *lineWriter) announce(voice, text string) {
-	w.rows = append(w.rows, session.Line(voice, text))
+func (w *lineWriter) announce(voice string, spans []session.LedgerSpan) {
+	w.rows = append(w.rows, session.LedgerLine{Voice: voice, Spans: spans})
 	w.cur = -1
 }
 
@@ -111,13 +111,13 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 	case session.KindAct:
 		// "<who> <verb> <phrase>": "Duelist attacks with a fire strike". The verb is its own span
 		// so it can carry its category's color.
-		clause := " " + cardClause(r) + cardWeightText(r.Weight)
 		w.open(session.LedgerLine{
 			Voice: voiceForSide(r.Side),
-			Spans: append([]session.LedgerSpan{
-				{Text: r.Name + " "},
-				{Text: verbWord(r.Verb), Ink: verbInkName(r.Verb), Mark: true},
-			}, ElementSpans(clause)...),
+			Spans: Say(SayAct, Slots{
+				"who":    Plain(r.Name),
+				"verb":   Marked(verbWord(r.Verb), verbInkName(r.Verb)),
+				"clause": cardClause(r),
+			}),
 		}, r.Side)
 
 	case session.KindBlow:
@@ -138,94 +138,96 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 	case session.KindFizzled:
 		// **Naming the reason is the point**: a hit that landed nothing with no word beside it
 		// would read as a bug.
-		w.attach(r.Hit, "fizzles - its own element")
+		w.attach(r.Hit, Say(SayFizzled, nil))
 
 	case session.KindDrained:
 		// **The relic names itself**, so a second drain relic cannot narrate identically to the
 		// first.
-		w.attach(r.Hit, fmt.Sprintf("%s drains %d", r.Relic, r.Amount))
+		w.attach(r.Hit, Say(SayDrained, Slots{"relic": Plain(r.Relic), "n": figure(r.Amount)}))
 
 	case session.KindRaised:
 		// **The count that is standing, not the count this card added.** Two Guards in a turn is
 		// one duelist behind six shields, and a line saying "+3" twice makes the reader do the
 		// arithmetic the readout has already done.
-		w.attach(0, ShieldCount(r.Amount)+" up")
+		w.attach(0, Say(SayRaised, Slots{"shields": Plain(ShieldCount(r.Amount))}))
 
 	case session.KindHeld:
-		w.attach(0, fmt.Sprintf("unplayed for %d vitae", r.Amount))
+		w.attach(0, Say(SayHeld, Slots{"n": figure(r.Amount)}))
 
 	case session.KindReflected:
 		// **The relic names itself**, the drain's rule, so a second thorn relic cannot narrate as
 		// the first.
-		w.attach(r.Hit, fmt.Sprintf("%s returns %d", r.Relic, r.Amount))
+		w.attach(r.Hit, Say(SayReflected, Slots{"relic": Plain(r.Relic), "n": figure(r.Amount)}))
 
 	case session.KindTithed:
-		w.attach(r.Hit, fmt.Sprintf("%s pays %d vitae", r.Relic, r.Amount))
+		w.attach(r.Hit, Say(SayTithed, Slots{"relic": Plain(r.Relic), "n": figure(r.Amount)}))
 
 	case session.KindSilver:
 		// **Two riders pay vitae and they are different sentences.** A held card is paid for being
 		// kept back; a played silver card gambled and came up.
-		w.attach(0, fmt.Sprintf("silver pays %d vitae", r.Amount))
+		w.attach(0, Say(SaySilver, Slots{"n": figure(r.Amount)}))
 
 	case session.KindLapsed:
 		// **Shields that were never spent are the player's own decision coming back**, and a
 		// readout that simply went blank would read as a bug.
-		w.attach(0, ShieldCount(r.Amount)+" lapse")
+		w.attach(0, Say(SayLapsed, Slots{"shields": Plain(ShieldCount(r.Amount))}))
 
 	case session.KindBlocked:
 		// **The only record that the hit happened at all**, since it landed nothing and there is no
 		// damage line coming.
-		w.attach(r.Hit, fmt.Sprintf("blocked - %s left", ShieldCount(r.Amount)))
+		w.attach(r.Hit, Say(SayBlocked, Slots{"shields": Plain(ShieldCount(r.Amount))}))
 
 	case session.KindDamage:
 		// **Damage whose side does not match the line it is attaching to is damage running the
 		// other way**, which reads as something done back rather than as a hit of its own. Nothing
 		// produces it today; it costs one branch and catches the case rather than mis-narrating it.
 		if (w.cur >= 0 || w.onHit(r.Hit)) && w.sideOf(r.Hit) != r.Side {
-			w.attach(r.Hit, fmt.Sprintf("hits back for %d", r.Amount))
+			w.attach(r.Hit, Say(SayHitBack, Slots{"n": figure(r.Amount)}))
 			return
 		}
-		w.attach(r.Hit, fmt.Sprintf("%d damage", r.Amount))
+		w.attach(r.Hit, Say(SayDamage, Slots{"n": figure(r.Amount)}))
 
 	// ---- the announcements ----
 
 	case session.KindRegenerated:
 		// **A line of its own, where a drain attaches to one.** This happens at the top of a turn
 		// with nothing before it, so there is nothing to attach to.
-		w.announce(voiceForSide(r.Side),
-			fmt.Sprintf("%s restores %d - %s", r.Name, r.Amount, r.Relic))
+		w.announce(voiceForSide(r.Side), Say(SayRegenerated, Slots{
+			"who": Plain(r.Name), "n": figure(r.Amount), "relic": Plain(r.Relic),
+		}))
 
 	case session.KindWarded:
 		// **A line of its own**, like a regeneration: the top of a turn has nothing to attach to.
-		w.announce(voiceForSide(r.Side),
-			fmt.Sprintf("%s raises %s - %s", r.Name,
-				strings.Replace(ShieldCount(r.Amount), " ", " "+r.Element+" ", 1), r.Relic))
+		w.announce(voiceForSide(r.Side), Say(SayWarded, Slots{
+			"who":     Plain(r.Name),
+			"shields": Plain(strings.Replace(ShieldCount(r.Amount), " ", " "+r.Element+" ", 1)),
+			"relic":   Plain(r.Relic),
+		}))
 
 	case session.KindTimeUp:
 		// **A line of its own, and it opens one.** Nobody swung, so there is no attacker's sentence
 		// for this to attach to — and the fall on the next record would otherwise be the only
 		// account of the biggest thing that can happen in a fight.
-		w.announce(voiceForSide(r.Target),
-			fmt.Sprintf("%s is out of time - the duel takes %d", r.Name, r.Amount))
+		w.announce(voiceForSide(r.Target), Say(SayTimeUp, Slots{"who": Plain(r.Name), "n": figure(r.Amount)}))
 
 	case session.KindDefeated:
-		w.announce(voiceForSide(r.Target), r.Name+" falls")
+		w.announce(voiceForSide(r.Target), Say(SayDefeated, Slots{"who": Plain(r.Name)}))
 
 	case session.KindUsed:
 		// "Duelist casts Cantrip of Might - DMG 10 to 20", "Duelist uses Embermark on a jab and a
 		// bash". **The verb is marked like an act's** so a round's spending can be scanned for, and
 		// takes the row's own ink: a consumable is neither of the two verbs that own a color.
-		spans := []session.LedgerSpan{
-			{Text: r.Name + " "},
-			{Text: usedVerb(r.Note), Mark: true},
-			{Text: " " + r.Subject},
-		}
+		spans := Say(SayUsed, Slots{
+			"who":     Plain(r.Name),
+			"verb":    Marked(usedVerb(r.Note), ""),
+			"subject": Plain(r.Subject),
+		})
 		if r.Into != "" {
-			join := " - "
+			join := SayUsedInto
 			if r.Note == "rune" || r.Note == "essence" {
-				join = " on "
+				join = SayUsedOn
 			}
-			spans = append(spans, ElementSpans(join+r.Into)...)
+			spans = append(spans, Say(join, Slots{"into": ElementSpans(r.Into)})...)
 		}
 		w.rows = append(w.rows, session.LedgerLine{Voice: voiceForSide(r.Side), Spans: spans})
 		w.cur = -1
@@ -246,24 +248,27 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 	// ---- the gap between two fights ----
 
 	case session.KindChanged:
-		w.rows = append(w.rows, afterLine(r.Kind, r.Subject+" into "+r.Into))
+		w.rows = append(w.rows, afterLine(SayAfterChanged, Slots{
+			"subject": ElementSpans(r.Subject), "into": ElementSpans(r.Into),
+		}))
 		w.cur = -1
 
 	case session.KindRaisedRung:
-		w.rows = append(w.rows, afterLine("raised",
-			fmt.Sprintf("%s to +%d", r.Hand, r.Amount)))
+		w.rows = append(w.rows, afterLine(SayAfterRaised, Slots{
+			"hand": ElementSpans(r.Hand), "n": figure(r.Amount),
+		}))
 		w.cur = -1
 
 	case session.KindGained, session.KindPaid:
-		verb := "gained"
+		tmpl := SayAfterGained
 		if r.Kind == session.KindPaid {
-			verb = "spent"
+			tmpl = SayAfterPaid
 		}
-		w.rows = append(w.rows, afterLine(verb, fmt.Sprintf("%d vitae", r.Amount)))
+		w.rows = append(w.rows, afterLine(tmpl, Slots{"n": figure(r.Amount)}))
 		w.cur = -1
 
 	case session.KindTook, session.KindCut, session.KindWore, session.KindSold, session.KindSpent:
-		w.rows = append(w.rows, afterLine(r.Kind, r.Subject))
+		w.rows = append(w.rows, afterLine(afterTemplates[r.Kind], Slots{"subject": ElementSpans(r.Subject)}))
 		w.cur = -1
 	}
 }
@@ -286,7 +291,7 @@ func termLine(r session.LedgerRecord) session.LedgerLine {
 		}
 		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
 			{Text: fmt.Sprintf("%-14s", r.Relic+" ("+why+")"), Ink: session.InkRelic},
-			{Text: fmt.Sprintf("+%d DMG", r.Amount), Ink: session.InkRelic},
+			{Text: SayText(SayTermDMG, Slots{"n": figure(r.Amount)}), Ink: session.InkRelic},
 		}}
 
 	case session.RoleFlat:
@@ -294,7 +299,7 @@ func termLine(r session.LedgerRecord) session.LedgerLine {
 		// every hit, but the term is the hand paying rather than a number a relic moved on a card.
 		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
 			{Text: fmt.Sprintf("%-14s", r.Relic+" ("+r.Note+")"), Ink: session.InkRelic},
-			{Text: fmt.Sprintf("+%d each hit", r.Amount)},
+			{Text: SayText(SayTermFlat, Slots{"n": figure(r.Amount)})},
 		}}
 
 	case session.RoleHit:
@@ -306,7 +311,7 @@ func termLine(r session.LedgerRecord) session.LedgerLine {
 
 	case session.RoleTotal:
 		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
-			{Text: fmt.Sprintf("%-14s", "every hit")},
+			{Text: fmt.Sprintf("%-14s", SayTermTotal)},
 			{Text: strconv.Itoa(r.Total), Ink: session.InkTotal},
 		}}
 
@@ -347,7 +352,7 @@ func factorNotes(factors []session.LedgerFactor) []session.LedgerSpan {
 	for _, f := range factors {
 		if f.Landed {
 			out = append(out, session.LedgerSpan{
-				Text: "  + " + f.Relic + " lands it again", Ink: session.InkRelic,
+				Text: SayText(SayFactorLands, Slots{"relic": Plain(f.Relic)}), Ink: session.InkRelic,
 			})
 			continue
 		}
@@ -362,7 +367,7 @@ func factorNotes(factors []session.LedgerFactor) []session.LedgerSpan {
 		// **What the relic stood at after this term**, written only where it moved — the one case
 		// in which the same relic prices two terms of one blow differently.
 		if f.Grown > 0 {
-			note += fmt.Sprintf(" (grown %d)", f.Grown)
+			note += SayText(SayFactorGrown, Slots{"n": figure(f.Grown)})
 		}
 		out = append(out, session.LedgerSpan{Text: note, Ink: session.InkRelic})
 	}
@@ -474,35 +479,48 @@ func scaleSpans(scales []int) []session.LedgerSpan {
 // done to.
 //
 // **The verb is marked exactly as an action's is**, so the aftermath can be scanned for what kind
-// of thing happened before any of it is read. The rest goes through ElementSpans, so a fire card is
-// named in the fire color here as it is everywhere else.
-func afterLine(verb, clause string) session.LedgerLine {
-	spans := []session.LedgerSpan{{Text: verb, Mark: true}}
-	return session.LedgerLine{
-		Voice: session.VoiceYou,
-		Spans: append(spans, ElementSpans(" "+clause)...),
-	}
+// of thing happened before any of it is read — every SayAfter template opens on a `{mark:...}`.
+// What it was done to goes through ElementSpans, so a fire card is named in the fire color here as
+// it is everywhere else.
+func afterLine(tmpl string, slots Slots) session.LedgerLine {
+	return session.LedgerLine{Voice: session.VoiceYou, Spans: Say(tmpl, slots)}
 }
+
+// afterTemplates is the sentence for each record kind that names one thing the player did.
+var afterTemplates = map[string]string{
+	session.KindTook:  SayAfterTook,
+	session.KindCut:   SayAfterCut,
+	session.KindWore:  SayAfterWore,
+	session.KindSold:  SayAfterSold,
+	session.KindSpent: SayAfterSpent,
+}
+
+// figure is a number as a slot, in the panel's own ink.
+func figure(n int) []session.LedgerSpan { return Plain(strconv.Itoa(n)) }
 
 // cardClause is what follows the verb on an act line: "with a fire strike", "and raises a brace".
 //
 // **The element goes after the article rather than in front of the phrase**, which is what makes it
 // a sentence instead of a label, and **the article is corrected rather than followed** — two of the
 // five elements begin with a vowel, so "a earth strike" is a third of the lines this writes.
-func cardClause(r session.LedgerRecord) string {
-	lead := "with a "
+func cardClause(r session.LedgerRecord) []session.LedgerSpan {
+	tmpl := SayActWith
 	if r.Raises {
-		lead = "and raises a "
+		tmpl = SayActRaising
 	}
-	name := lower(r.Card)
-	if r.Element == "" {
-		return lead + name
+	card := lower(r.Card)
+	article := "a "
+	if r.Element != "" {
+		el := lower(r.Element)
+		if isVowel(el) {
+			article = "an "
+		}
+		card = el + " " + card
 	}
-	el := lower(r.Element)
-	if isVowel(el) {
-		lead = lead[:len(lead)-2] + "an "
-	}
-	return lead + el + " " + name
+	return Say(tmpl, Slots{
+		"card":   ElementSpans(article + card),
+		"weight": Plain(cardWeightText(r.Weight)),
+	})
 }
 
 func isVowel(s string) bool {
@@ -544,17 +562,17 @@ func voiceForSide(side string) string {
 // half of the turn a line belongs to, not a description of the card.
 func verbWord(verb string) string {
 	if verb == session.InkDefend {
-		return "defends"
+		return SayVerbDefend
 	}
-	return "attacks"
+	return SayVerbAttack
 }
 
 // usedVerb is what the duelist does with a consumable: a cantrip is cast, everything else is used.
 func usedVerb(kind string) string {
 	if kind == "cantrip" {
-		return "casts"
+		return SayVerbCast
 	}
-	return "uses"
+	return SayVerbUse
 }
 
 // verbInkName is which ink that verb is written in, as the ledger names it.

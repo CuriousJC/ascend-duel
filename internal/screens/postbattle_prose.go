@@ -25,7 +25,6 @@ package screens
 
 import (
 	"image"
-	"strconv"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -60,24 +59,57 @@ func vitaeFlightTicks() int { return ui.Beat(3, 4) }
 type proseSpan struct {
 	text string
 	ink  color.RGBA
+
+	// figure draws the span on the figure sheet rather than the prose one — an amount carrying the
+	// vitae mark `¤`, which only the figure sheet has. **Decided off the whole span when it is
+	// made**, never off what has been typed of it, so "+5 ¤" does not start in one lettering and
+	// finish in the other.
+	figure bool
 }
 
-// proseLine is one sentence, and pays is what claiming it hands over — nil for a line that only
-// says something.
+// proseLine is one line of the block, and pays is what claiming it hands over — nil for a line
+// that only says something.
+//
+// **A line is either centered or a row.** A centered line is its spans across the middle of the
+// column. A row is `spans` from the block's left edge and `right` ending on its right edge, so a
+// column of rows reads as a rectangle: labels down the left, amounts down the right.
 type proseLine struct {
 	spans []proseSpan
+	right []proseSpan
+
+	centered bool
 
 	// pays is called when the figure this line named has flown to the card. **It is the claim**,
 	// so the purse moves at the moment the player watches it arrive.
 	pays func(*state.GlobalState) int
 }
 
+// plain is the whole line as one string — what is typed, in the order it is typed.
 func (l proseLine) plain() string {
 	out := ""
 	for _, r := range l.spans {
 		out += r.text
 	}
+	for _, r := range l.right {
+		out += r.text
+	}
 	return out
+}
+
+// spanWidth is how wide a span draws at the block's type size, on whichever sheet it is set on.
+func spanWidth(r proseSpan, face *text.GoTextFace) float64 {
+	if r.figure {
+		return systems.MeasureFigure(r.text, systems.UIHeightOf(face.Size))
+	}
+	return systems.MeasureText(r.text, face)
+}
+
+func spansWidth(spans []proseSpan, face *text.GoTextFace) float64 {
+	w := 0.0
+	for _, r := range spans {
+		w += spanWidth(r, face)
+	}
+	return w
 }
 
 // typewriter types a block of lines and flies each payment to the duelist card.
@@ -189,60 +221,93 @@ func (t *typewriter) skip(gs *state.GlobalState) {
 	t.line, t.shown, t.wait, t.flying = len(t.lines), 0, 0, false
 }
 
-// visible is the spans of one line as far as they have been typed, and whether the line is on screen
-// at all.
-func (t *typewriter) visible(i int) ([]proseSpan, bool) {
+// visible is one line's left spans and right spans as far as they have been typed, and whether the
+// line is on screen at all. The left part types first, then the right.
+func (t *typewriter) visible(i int) ([]proseSpan, []proseSpan, bool) {
 	if i > t.line {
-		return nil, false
+		return nil, nil, false
 	}
 	line := t.lines[i]
 	if i < t.line {
-		return line.spans, true
+		return line.spans, line.right, true
 	}
 
 	left := t.shown
-	out := make([]proseSpan, 0, len(line.spans))
-	for _, r := range line.spans {
-		runes := []rune(r.text)
-		if left <= 0 {
-			break
+	cut := func(spans []proseSpan) []proseSpan {
+		out := make([]proseSpan, 0, len(spans))
+		for _, r := range spans {
+			runes := []rune(r.text)
+			if left <= 0 {
+				break
+			}
+			if left < len(runes) {
+				r.text = string(runes[:left])
+				out = append(out, r)
+				left = 0
+				break
+			}
+			out = append(out, r)
+			left -= len(runes)
 		}
-		if left < len(runes) {
-			out = append(out, proseSpan{text: string(runes[:left]), ink: r.ink})
-			break
-		}
-		out = append(out, r)
-		left -= len(runes)
+		return out
 	}
-	return out, true
+	spans := cut(line.spans)
+	return spans, cut(line.right), true
 }
 
-// drawProseLine writes one line's spans centered on x, and reports the rectangle the whole line
-// occupies — which is what a payment flies out of.
+// drawProseLine writes one line, as far as it has been typed, on the baseline row y.
 //
-// **Centered by measuring the finished line, not the typed part** *(2026-08-22)*, so a sentence
-// does not slide sideways as it types. A line that grew from its own center would be a line the eye
-// has to keep re-finding.
-func drawProseLine(screen *ebiten.Image, face *text.GoTextFace, full string, spans []proseSpan,
-	centerX, y int) {
+// **Placed by measuring the finished line, not the typed part** *(2026-08-22)*, so a sentence does
+// not slide sideways as it types: a centered line is centered on its whole width, and a row's right
+// part starts where its whole right part has to start to end on the block's edge.
+func drawProseLine(screen *ebiten.Image, face *text.GoTextFace, line proseLine, left, right []proseSpan,
+	block payoutBlock, y int) {
 
-	x := float64(centerX) - systems.MeasureText(full, face)/2
+	x := float64(block.left)
+	if line.centered {
+		x = float64(block.mid()) - spansWidth(line.spans, face)/2
+	}
+	drawProseSpans(screen, face, left, x, y)
 
+	if len(line.right) > 0 {
+		drawProseSpans(screen, face, right, float64(block.right)-spansWidth(line.right, face), y)
+	}
+}
+
+// drawProseSpans writes spans left to right from x, each on its own sheet.
+func drawProseSpans(screen *ebiten.Image, face *text.GoTextFace, spans []proseSpan, x float64, y int) {
 	for _, r := range spans {
-		op := &text.DrawOptions{}
-		op.GeoM.Translate(x, float64(y))
 		ink := r.ink
 		if ink.A == 0 {
 			ink = ui.GroundInk
 		}
-		op.ColorScale.ScaleWithColor(ink)
-		systems.DrawText(screen, r.text, face, op)
-		x += systems.MeasureText(r.text, face)
+		w := spanWidth(r, face)
+		if r.figure {
+			drawPayoutFigure(screen, face, r.text, ink, x+w/2, y, 1)
+		} else {
+			op := &text.DrawOptions{}
+			op.GeoM.Translate(x, float64(y))
+			op.ColorScale.ScaleWithColor(ink)
+			systems.DrawText(screen, r.text, face, op)
+		}
+		x += w
 	}
 }
 
-// drawVitaeFlight draws the figure on its way to the purse: a crimson number crossing to the
-// duelist card, easing out so it lands rather than stops.
+// drawPayoutFigure draws a figure centered on cx with its body where the prose's capitals sit on
+// the row y — the same placement systems.DrawUI gives a figure set in a face — and on the vitae
+// sheet when the ink is the vitae crimson.
+func drawPayoutFigure(screen *ebiten.Image, face *text.GoTextFace, s string, ink color.RGBA,
+	cx float64, y int, alpha float32) {
+
+	h := systems.UIHeightOf(face.Size)
+	cy := float64(y) + face.Metrics().HAscent - h/2
+	sheet, tint := figureSheetFor(ink)
+	systems.DrawFigure(screen, s, sheet, tint, cx, cy, h, 1, alpha)
+}
+
+// drawVitaeFlight draws the figure on its way to the purse: the row's own amount, on the vitae
+// sheet, crossing to the duelist card and easing out so it lands rather than stops.
 func (t *typewriter) drawVitaeFlight(gs *state.GlobalState, screen *ebiten.Image,
 	face *text.GoTextFace) {
 
@@ -257,10 +322,8 @@ func (t *typewriter) drawVitaeFlight(gs *state.GlobalState, screen *ebiten.Image
 	x := float64(t.flight.from.X) + (float64(to.X-t.flight.from.X))*p
 	y := float64(t.flight.from.Y) + (float64(to.Y-t.flight.from.Y))*p
 
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(x, y)
-	op.PrimaryAlign = text.AlignCenter
-	op.SecondaryAlign = text.AlignCenter
-	op.ColorScale.ScaleWithColor(ui.VitaeInk)
-	systems.DrawText(screen, "+"+strconv.Itoa(t.flight.amount), face, op)
+	// **The same figure the row ends on, set off from where it sat**, so the amount leaving the row
+	// and the amount crossing the screen are one thing moving. `from` is the row's figure center on
+	// its baseline row, and the figure is drawn on that row's terms as it travels.
+	drawPayoutFigure(screen, face, payoutGain(t.flight.amount).text, ui.VitaeInk, x, int(y), 1)
 }

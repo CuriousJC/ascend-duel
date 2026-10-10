@@ -127,6 +127,16 @@ const (
 	offerButtonWidth  = 400
 	offerButtonHeight = ui.ButtonLarge
 
+	// essenceExitSeat is how wide a seat the essence row leaves for its way out — SKIP and the prompt
+	// over it, both centered in it. See essenceRowSeats.
+	essenceExitSeat = 400
+
+	// The reward screen's SKIP: half again the sealed good's, which is lost in a row of two
+	// full-size cards. The height is the nearest tier to half again.
+	essenceSkipWidth    = 210
+	essenceSkipHeight   = ui.ButtonMedium
+	essenceSkipTextSize = 42
+
 	// essenceRowGap is the air between the two essences, and between the second of them and the way
 	// out.
 	//
@@ -318,9 +328,10 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 		s.visit = now
 	}
 	if s.skipButton == nil {
-		s.skipButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LET THEM ESCAPE",
+		s.skipButton = models.NewButton(essenceSkipWidth, essenceSkipHeight, goodsSkipLabel,
 			func() { s.skipping = true })
 		s.skipButton.BaseColor = ui.ButtonJade
+		s.skipButton.TextSize = essenceSkipTextSize
 	}
 
 	s.chosen, s.selected = -1, nil
@@ -446,7 +457,7 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	// essence on the first frame end the visit with the same purse. See claimThePayout, which is
 	// what makes that true when the screen is left early.
 	if s.stage == choosing {
-		s.prose.tick(gs, func(i int) image.Point { return proseLineAt(gs, len(s.prose.lines), i) })
+		s.prose.tick(gs, func(i int) image.Point { return proseLineAt(gs, s.prose.lines, i) })
 	}
 
 	// **The deck panel runs before anything else and swallows the frame**, the shop's own order:
@@ -894,8 +905,11 @@ func (s *PostBattleScene) essenceSlot(gs *state.GlobalState, i int) image.Rectan
 func essenceRowSeats(gs *state.GlobalState, n int) (prizes []image.Rectangle, button image.Rectangle) {
 	top, bottom := gs.PctY(essenceChosenRowPct), essenceRowBottom(gs)
 
-	// The row is n cards and one button, with a gap between every pair.
-	width := n*cardWidth + offerButtonWidth + n*essenceRowGap
+	// The row is n cards and the way out's seat, with a gap between every pair. **The seat is wider
+	// than SKIP**, and SKIP and the prompt over it stand centered in it: the seat is what keeps the
+	// essences where the reward screen's backdrop paints them (see data/screen_art.json's anchors),
+	// and it is wide enough that the prompt, which is wider than the button, clears the last card.
+	width := n*cardWidth + essenceExitSeat + n*essenceRowGap
 	x := offerColumnMid(gs) - width/2
 
 	prizes = make([]image.Rectangle, 0, n)
@@ -903,7 +917,8 @@ func essenceRowSeats(gs *state.GlobalState, n int) (prizes []image.Rectangle, bu
 		prizes = append(prizes, image.Rect(x, top, x+cardWidth, top+cardHeight))
 		x += cardWidth + essenceRowGap
 	}
-	button = image.Rect(x, bottom-offerButtonHeight, x+offerButtonWidth, bottom)
+	x += (essenceExitSeat - essenceSkipWidth) / 2
+	button = image.Rect(x, bottom-essenceSkipHeight, x+essenceSkipWidth, bottom)
 	return prizes, button
 }
 
@@ -1017,6 +1032,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	if s.stage == choosing {
 		systems.DrawButton(gs, screen, s.skipButton)
+		drawEssencePrompt(gs, screen, prose, len(s.prizes))
 	}
 
 	if s.stage == choosing {

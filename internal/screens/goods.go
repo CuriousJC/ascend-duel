@@ -13,7 +13,7 @@ package screens
 //
 // **SKIP is the one way out that is not a card** *(owner's call, 2026-09-26)*. The good is already
 // paid for, so skipping it is the player's own choice to spend those vitae on nothing — the reward
-// screen's LET THEM ESCAPE, on the same terms. It is a labelled button at the bottom of the screen
+// screen's SKIP, on the same terms. It is a labelled button at the bottom of the screen
 // rather than an X, because an X means "put this away" everywhere else and this forfeits something.
 // The chrome still stands down the way it does on the reward screen.
 //

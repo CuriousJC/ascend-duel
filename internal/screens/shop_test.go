@@ -148,8 +148,9 @@ func TestTheFourPanesFitOnOneRow(t *testing.T) {
 		}
 	}
 
-	if top := shopPaneRect(gs, shopPaneRelics).Min.Y; top-shopFigureSize <= shopHintTop {
-		t.Errorf("the shelf starts at %d and the hint sits at %d", top, shopHintTop)
+	// The backing ends above the draw pile, so the two read as two rows.
+	if back, pile := shopPaneBackRect(gs, shopPaneRelics).Max.Y, deckStackBounds(gs).Min.Y; back >= pile {
+		t.Errorf("the shelf's backing ends at %d and the draw pile starts at %d", back, pile)
 	}
 
 	// The prices hang under the panes and the two reroll buttons hang under those, so it is the
@@ -173,14 +174,11 @@ func TestTheWornRowFitsTheScreen(t *testing.T) {
 	}
 }
 
-// The hint sits between the band and the shelf, clear of both.
-func TestTheHintSitsBetweenTheBandAndTheShelf(t *testing.T) {
+// The shelf stands below the band, clear of it.
+func TestTheShelfSitsBelowTheBand(t *testing.T) {
 	gs := shopState(t)
-	if shopHintTop <= buildBandBottom(gs) {
-		t.Errorf("the hint sits at %d, inside a band that ends at %d", shopHintTop, buildBandBottom(gs))
-	}
-	if top := shopPaneBackRect(gs, shopPaneRelics).Min.Y; shopHintTop+shopFigureSize >= top {
-		t.Errorf("the hint sits at %d and the shelf starts at %d", shopHintTop, top)
+	if top := shopPaneBackRect(gs, shopPaneRelics).Min.Y; top <= buildBandBottom(gs) {
+		t.Errorf("the shelf starts at %d, inside a band that ends at %d", top, buildBandBottom(gs))
 	}
 }
 
@@ -211,9 +209,9 @@ func TestClickingAWornRelicOnlyArmsIt(t *testing.T) {
 	}
 }
 
-// The tab hangs under the armed relic or carried card, so it has to clear the hint under the band
+// The tab hangs under the armed relic or carried card, so it has to clear the shelf under the band
 // whichever pane it is in.
-func TestTheSellTabClearsTheHint(t *testing.T) {
+func TestTheSellTabClearsTheShelf(t *testing.T) {
 	gs := shopState(t)
 	if !gs.Run.Hold(session.Runes()[0].Record) {
 		t.Fatal("the run would not carry a rune")
@@ -228,9 +226,8 @@ func TestTheSellTabClearsTheHint(t *testing.T) {
 			t.Fatalf("%+v is armed and has no seat", sale)
 		}
 		tab := shop.band.sale.sellTabRect(gs)
-		if tab.Max.Y >= shopHintTop {
-			t.Errorf("%+v: the tab ends at %d and the hint starts at %d",
-				sale, tab.Max.Y, shopHintTop)
+		if shelf := shopPaneBackRect(gs, shopPaneRelics).Min.Y; tab.Max.Y >= shelf {
+			t.Errorf("%+v: the tab ends at %d and the shelf starts at %d", sale, tab.Max.Y, shelf)
 		}
 		if tab.Min.Y < seat.Max.Y {
 			t.Errorf("%+v: the tab starts at %d, above the bottom of its card at %d",

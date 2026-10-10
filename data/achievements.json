@@ -8,8 +8,8 @@
     "AchievedIcon": "first-steps",
     "Draw": "A single sturdy boot planted on the lowest of three chunky stone steps rising to the upper right.",
     "Said": [
-      "One down. The realm does not notice, but you do.",
-      "Everything above this is the same thing again, harder."
+      "Congrats on crushing one of the weakest enemies in the realms.",
+      "Everyone's very impressed."
     ],
     "Trigger": { "Kind": "moment", "Moment": "duel-won" }
   },
@@ -21,10 +21,7 @@
     "Hidden": false,
     "AchievedIcon": "taught",
     "Draw": "A thick closed book seen at a slight angle, a teacher's pointer stick laid diagonally across its cover.",
-    "Said": [
-      "Bob has said his piece and gone back to wherever he waits.",
-      "Nothing he told you was untrue. Nothing he told you was all of it."
-    ],
+    "Said": ["Now your journey begins."],
     "Trigger": { "Kind": "moment", "Moment": "tutorial-finished" }
   },
   {
@@ -36,9 +33,9 @@
     "AchievedIcon": "look-mom-no-hands",
     "Draw": "Two open hands raised and spread in a shrug, palms out, holding nothing at all.",
     "Said": [
-      "Congrats...do you need to do the tutorial again?"
+      "Congrats...you forgot to form a hand...do you need to the tutorial again?"
     ],
-    "Unlocks": [ "no-hand-relics" ],
+    "Unlocks": ["no-hand-relics"],
     "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "no-hand" }
   },
   {
@@ -49,9 +46,7 @@
     "Hidden": false,
     "AchievedIcon": "mighty-mouse",
     "Draw": "A small mouse standing upright and flexing one hugely muscled arm, round ears and a long curling tail.",
-    "Said": [
-      "Smaller and smaller, until it was not small at all."
-    ],
+    "Said": ["Go big or go home."],
     "Trigger": { "Kind": "moment", "Moment": "ladder-wrapped", "Value": "down" }
   },
   {
@@ -62,9 +57,7 @@
     "Hidden": false,
     "AchievedIcon": "quittin-roids",
     "Draw": "A heavy dumbbell snapped clean in two at its bar, the two halves tipping apart.",
-    "Said": [
-      "Bigger and bigger, and then all of it, gone."
-    ],
+    "Said": ["What did you think was going to happen?"],
     "Trigger": { "Kind": "moment", "Moment": "ladder-wrapped", "Value": "up" }
   },
   {
@@ -75,14 +68,15 @@
     "Hidden": false,
     "AchievedIcon": "spectrum",
     "Draw": "Four broad arcs nested one inside the next, like a short thick rainbow, each band separated by a dark contour line.",
-    "Said": [
-      "Four colors in one breath.",
-      "The hand ladder does not pay for this. Do it anyway."
-    ],
+    "Said": ["Mix and match, make it work."],
     "Trigger": {
       "Kind": "turn",
       "Patterns": [
-        { "Clauses": [ { "Of": "attack", "Axis": "element", "Mode": "distinct", "N": 4 } ] }
+        {
+          "Clauses": [
+            { "Of": "attack", "Axis": "element", "Mode": "distinct", "N": 4 }
+          ]
+        }
       ]
     }
   },
@@ -94,14 +88,15 @@
     "Hidden": false,
     "AchievedIcon": "elementalist",
     "Draw": "A five-pointed star with a different element at each point — a flame, an ice shard, a lightning bolt, a rock and a curling wisp — meeting at the center.",
-    "Said": [
-      "Fire, ice, lightning, earth and arcane, all in the same swing.",
-      "Every relic you own fired at once, and every one you do not sat out."
-    ],
+    "Said": ["All together now."],
     "Trigger": {
       "Kind": "turn",
       "Patterns": [
-        { "Clauses": [ { "Of": "attack", "Axis": "element", "Mode": "distinct", "N": 5 } ] }
+        {
+          "Clauses": [
+            { "Of": "attack", "Axis": "element", "Mode": "distinct", "N": 5 }
+          ]
+        }
       ]
     }
   },
@@ -113,29 +108,27 @@
     "Hidden": false,
     "AchievedIcon": "weaponmaster",
     "Draw": "A spear, a curved scimitar and a club crossed at their middles in a heraldic trophy.",
-    "Said": [
-      "Three ways of hitting, none of them wasted.",
-      "A rung the ladder used to have, and could never price."
-    ],
+    "Said": ["Why pick a weapon, right?"],
     "Trigger": {
       "Kind": "turn",
       "Patterns": [
-        { "Clauses": [ { "Of": "attack", "Axis": "form", "Mode": "distinct", "N": 3 } ] }
+        {
+          "Clauses": [
+            { "Of": "attack", "Axis": "form", "Mode": "distinct", "N": 3 }
+          ]
+        }
       ]
     }
   },
   {
-    "APIName": "arsenal",
-    "DisplayName": "ARSENAL",
+    "APIName": "kitchen-sink",
+    "DisplayName": "KITCHEN SINK",
     "Description": "All three attack forms and a defense, in one turn.",
     "SetBy": "client",
     "Hidden": false,
-    "AchievedIcon": "arsenal",
+    "AchievedIcon": "kitchen-sink",
     "Draw": "A round shield, with the tips of a spear, a scimitar and a club fanned out behind it.",
-    "Said": [
-      "Everything the deck can be, on the table at once.",
-      "Four forms. There is no fifth."
-    ],
+    "Said": ["Just throw it all out there, right?"],
     "Trigger": {
       "Kind": "turn",
       "Patterns": [
@@ -156,10 +149,7 @@
     "Hidden": false,
     "AchievedIcon": "prism",
     "Draw": "A triangular glass prism, one broad beam entering on the left and five broad rays fanning out on the right.",
-    "Said": [
-      "One shape, every color.",
-      "The narrowest hand in the game and the widest, at the same time."
-    ],
+    "Said": ["I don't have a favorite color either."],
     "Trigger": {
       "Kind": "turn",
       "Patterns": [
@@ -186,10 +176,7 @@
     "Hidden": false,
     "AchievedIcon": "fifth-realm",
     "Draw": "A tall stone archway with a swirling spiral filling the opening and five notches cut into the keystone.",
-    "Said": [
-      "Four realms behind you and more to come.",
-      "Whatever you came in wearing, you are not wearing it now."
-    ],
+    "Said": ["Halfway there, getting difficult yet?"],
     "Trigger": { "Kind": "moment", "Moment": "realm-reached", "N": 5 }
   },
   {
@@ -200,10 +187,8 @@
     "Hidden": false,
     "AchievedIcon": "stab-50",
     "Draw": "A large sewing needle with a loop of thick thread through its eye, stabbed through a small square of cloth.",
-    "Said": [
-      "Fifty holes, and every one of them where you meant it."
-    ],
-    "Unlocks": [ "stab-repeat-relics" ],
+    "Said": ["Poke it till its dead."],
+    "Unlocks": ["stab-repeat-relics"],
     "Trigger": { "Kind": "count", "Counter": "form:stab", "N": 50 }
   },
   {
@@ -214,10 +199,8 @@
     "Hidden": false,
     "AchievedIcon": "slash-50",
     "Draw": "A short knife beside a half-whittled stick, big curls of wood shaving falling away from it.",
-    "Said": [
-      "Fifty cuts. The shavings are starting to pile up."
-    ],
-    "Unlocks": [ "slash-repeat-relics" ],
+    "Said": ["Does the word 'ribbons' mean anything to you?"],
+    "Unlocks": ["slash-repeat-relics"],
     "Trigger": { "Kind": "count", "Counter": "form:slash", "N": 50 }
   },
   {
@@ -228,10 +211,8 @@
     "Hidden": false,
     "AchievedIcon": "crush-50",
     "Draw": "A meat-tenderizing mallet with a square studded head and a short thick handle.",
-    "Said": [
-      "Fifty blows, and nothing on the other end is the shape it was."
-    ],
-    "Unlocks": [ "crush-repeat-relics" ],
+    "Said": ["Your club-wielding ancestors would be proud."],
+    "Unlocks": ["crush-repeat-relics"],
     "Trigger": { "Kind": "count", "Counter": "form:crush", "N": 50 }
   },
   {
@@ -242,10 +223,8 @@
     "Hidden": false,
     "AchievedIcon": "fire-50",
     "Draw": "A small bundle of sticks tied with twine, a single flame rising from its middle.",
-    "Said": [
-      "Fifty sparks. Something is going to catch."
-    ],
-    "Unlocks": [ "fire-repeat-relics" ],
+    "Said": ["Kill it with fire."],
+    "Unlocks": ["fire-repeat-relics"],
     "Trigger": { "Kind": "count", "Counter": "element:fire", "N": 50 }
   },
   {
@@ -256,10 +235,8 @@
     "Hidden": false,
     "AchievedIcon": "ice-50",
     "Draw": "A thick twig snapped in two, both halves sheathed in chunky ice with a few icicles hanging down.",
-    "Said": [
-      "Fifty of them, and the room has not warmed since."
-    ],
-    "Unlocks": [ "ice-repeat-relics" ],
+    "Said": ["The cold burns worse than the fire."],
+    "Unlocks": ["ice-repeat-relics"],
     "Trigger": { "Kind": "count", "Counter": "element:ice", "N": 50 }
   },
   {
@@ -270,10 +247,8 @@
     "Hidden": false,
     "AchievedIcon": "lightning-50",
     "Draw": "A lightning rod standing on the peak of a small pitched roof, a jagged bolt striking its tip.",
-    "Said": [
-      "Fifty strikes in the same place. So much for the saying."
-    ],
-    "Unlocks": [ "lightning-repeat-relics" ],
+    "Said": ["Bzzt! Bzzt! Bzzt!"],
+    "Unlocks": ["lightning-repeat-relics"],
     "Trigger": { "Kind": "count", "Counter": "element:lightning", "N": 50 }
   },
   {
@@ -284,10 +259,8 @@
     "Hidden": false,
     "AchievedIcon": "earth-50",
     "Draw": "A squat square block of stone with three bold horizontal layers, solid like a foundation stone.",
-    "Said": [
-      "Fifty stones laid. It is starting to look like a foundation."
-    ],
-    "Unlocks": [ "earth-repeat-relics" ],
+    "Said": ["Beginning to build."],
+    "Unlocks": ["earth-repeat-relics"],
     "Trigger": { "Kind": "count", "Counter": "element:earth", "N": 50 }
   },
   {
@@ -298,10 +271,8 @@
     "Hidden": false,
     "AchievedIcon": "arcane-50",
     "Draw": "An open spellbook with a small glowing sigil — a circle with a star inside it — floating above its pages.",
-    "Said": [
-      "Fifty workings, and the words have stopped feeling borrowed."
-    ],
-    "Unlocks": [ "arcane-repeat-relics" ],
+    "Said": ["Do you believe in magic?"],
+    "Unlocks": ["arcane-repeat-relics"],
     "Trigger": { "Kind": "count", "Counter": "element:arcane", "N": 50 }
   },
   {
@@ -312,24 +283,18 @@
     "Hidden": false,
     "AchievedIcon": "slash-300",
     "Draw": "A curved scimitar mid-swing, three broad overlapping arcs trailing behind its edge.",
-    "Said": [
-      "Three hundred of them, and the edge has not dulled.",
-      "You have a favorite. That is fine. It is also readable."
-    ],
+    "Said": ["Someone's a fan of the deep cuts."],
     "Trigger": { "Kind": "count", "Counter": "form:slash", "N": 300 }
   },
   {
-    "APIName": "strike-200",
-    "DisplayName": "STRUCK TWO HUNDRED",
+    "APIName": "bash-200",
+    "DisplayName": "SMASHING SUCCESS",
     "Description": "Play the Bash card 200 times.",
     "SetBy": "client",
     "Hidden": false,
-    "AchievedIcon": "strike-200",
+    "AchievedIcon": "bash-200",
     "Draw": "A blacksmith's anvil with a heavy club resting across it, the anvil's top pocked with dents.",
-    "Said": [
-      "Two hundred Bashes. The middle rung of the crushes, over and over.",
-      "Nothing fancy has ever needed to be."
-    ],
+    "Said": ["Stop hitting it, it's already dead."],
     "Trigger": { "Kind": "count", "Counter": "concept:Bash", "N": 200 }
   },
   {
@@ -340,10 +305,7 @@
     "Hidden": false,
     "AchievedIcon": "invulnerable",
     "Draw": "A wall of round shields overlapping one behind another, the front one whole and unmarked.",
-    "Said": [
-      "Ten of them, and a turn can only throw five.",
-      "Five more than anything on the journey can reach. You bought the ones nobody could take."
-    ],
+    "Said": ["You know you have to, like, hit stuff to win right?"],
     "Trigger": { "Kind": "moment", "Moment": "shields-raised", "N": 10 }
   },
   {
@@ -354,12 +316,13 @@
     "Hidden": false,
     "AchievedIcon": "monochrome",
     "Draw": "Five blank playing cards fanned in a hand, all marked with the same single teardrop shape.",
-    "Said": [
-      "Five cards, one color, one blow.",
-      "The shop has heard. It will have something for a hand like that."
-    ],
-    "Unlocks": [ "element-five-relics" ],
-    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "element-five-of-a-kind" }
+    "Said": ["Someone has a favorite color!"],
+    "Unlocks": ["element-five-relics"],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "hand-formed",
+      "Value": "element-five-of-a-kind"
+    }
   },
   {
     "APIName": "quintet",
@@ -369,12 +332,13 @@
     "Hidden": false,
     "AchievedIcon": "quintet",
     "Draw": "Five identical scimitars fanned like the fingers of an open hand, all their blades pointing the same way.",
-    "Said": [
-      "Five blades that all agree on how to cut.",
-      "The shop has heard. It keeps a ring for hands like that."
-    ],
-    "Unlocks": [ "form-five-relics" ],
-    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "form-five-of-a-kind" }
+    "Said": ["Somone has a favorite weapon!"],
+    "Unlocks": ["form-five-relics"],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "hand-formed",
+      "Value": "form-five-of-a-kind"
+    }
   },
   {
     "APIName": "multiplicity",
@@ -384,12 +348,13 @@
     "Hidden": false,
     "AchievedIcon": "multiplicity",
     "Draw": "Five identical blank playing cards stacked with a slight offset, each an exact copy of the one behind it.",
-    "Said": [
-      "The same card, five times over. The deck was never meant to hold that many.",
-      "Something rare has been waiting on the shelf for exactly this."
-    ],
-    "Unlocks": [ "card-five-relics" ],
-    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "concept-five-of-a-kind" }
+    "Said": ["Now THAT'S what I call specialization"],
+    "Unlocks": ["card-five-relics"],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "hand-formed",
+      "Value": "concept-five-of-a-kind"
+    }
   },
   {
     "APIName": "saturated",
@@ -399,12 +364,13 @@
     "Hidden": false,
     "AchievedIcon": "saturated",
     "Draw": "Four blank playing cards fanned in a hand, a large drop dripping off the bottom edge of the lowest card.",
-    "Said": [
-      "Four cards in one color, and the blow comes out the same shade.",
-      "The shop has heard. It keeps a ring that hits twice for a hand like that."
-    ],
-    "Unlocks": [ "element-four-relics" ],
-    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "element-four-of-a-kind" }
+    "Said": ["Starting to like that color?"],
+    "Unlocks": ["element-four-relics"],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "hand-formed",
+      "Value": "element-four-of-a-kind"
+    }
   },
   {
     "APIName": "quadruplicate",
@@ -414,11 +380,12 @@
     "Hidden": false,
     "AchievedIcon": "quadruplicate",
     "Draw": "Four identical blank playing cards laid out in a neat two-by-two square.",
-    "Said": [
-      "The same card four times in one hand. The shuffle did not do that on its own.",
-      "Something rare has been waiting on the shelf for exactly this."
-    ],
-    "Unlocks": [ "card-four-relics" ],
-    "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "concept-four-of-a-kind" }
+    "Said": ["Starting to like that weapon?"],
+    "Unlocks": ["card-four-relics"],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "hand-formed",
+      "Value": "concept-four-of-a-kind"
+    }
   }
 ]

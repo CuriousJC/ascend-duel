@@ -71,6 +71,9 @@ const (
 	// InkTotal is what the blow came to. The damage color rather than the hand's, because that is
 	// the figure that leaves the hand dialog and lands in a life bar.
 	InkTotal = "total"
+
+	// InkVitae is the purse: a figure paid in or held, in the crimson vitae is written in everywhere.
+	InkVitae = "vitae"
 )
 
 // The outcomes a fight record can end on. An empty outcome is a fight still being fought — the one

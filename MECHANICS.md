@@ -1766,7 +1766,7 @@ cantrip catalog is shorter than the smallest bundle — see §Cantrips.
   else. Every card is an exit too.
 - **The row is five seats rather than two rows, and the screen decided that.** A relic is worn and a
   good is opened, so two rows would have read better — but the shop is 960 tall with a build band,
-  two sentences of narration and the Leave button at 88%, and a card is 224. There is room for one
+  two sentences of narration and the Continue Journey button at 88%, and a card is 224. There is room for one
   row of cards, not two.
 
 ### Rarity is the price dial, and it is the only one
@@ -2017,7 +2017,7 @@ chore in front of a decision that has already been made. What the pouch is for i
 - **Selling is the shop's and nowhere else's**, because selling is a trade and the shop is the only
   screen that trades. Using is on both, since a rung is worth raising in front of the hand that
   wants it and also worth raising while shopping for the next one.
-- **A panel, not a row.** The shelf ends at y=684 and Leave is centered at 845; a card row wants 224
+- **A panel, not a row.** The shelf ends at y=684 and Continue Journey is centered at 845; a card row wants 224
   of the 160 between them. So the pouch is the shop's third corner toggle beside `D` and `C`.
 - **Spending asks twice**, on the worn row's own argument: a stone armed by a click puts two tabs
   under it, because a rung raised cannot be lowered and a sale cannot be undone.
@@ -2069,7 +2069,7 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
 | Offered | **two cards**: two essences from `data/essences.json`, in the two thirds beside the payout |
 | Then | a hand dealt fresh off the whole run deck, at the combat hand size |
 | Then | a **morph**: the card before and after, side by side, nothing committed |
-| Choice | one essence and one card, or **Let them escape** |
+| Choice | one essence and one card, or **Skip** |
 
 - **Essence first, card second.** Asking for a card and then offering verbs on it makes the
   reward look like a property of the card. **What you were given for winning has to be the thing
@@ -3085,8 +3085,8 @@ screen as it narrates them. See `internal/session/spoils.go`.
 
 ### Propagation — vitae earns interest
 
-**After every fight, a run gains +1 vitae for every 5 it is already holding**, capped at **+5**.
-So 5 held pays 1, 10 pays 2, and 25 pays the maximum 5 — holding more than 25 propagates no
+**After every fight, a run gains +1 vitae for every 5 it is already holding**, capped at **+7**.
+So 5 held pays 1, 10 pays 2, and 35 pays the maximum 7 — holding more than 35 propagates no
 faster.
 
 - **It is a rule of the run, not a relic.** The Banker relic scales it, which means it has to exist
@@ -3095,11 +3095,11 @@ faster.
   fight, which compounds across 24 fights into a number no shop can be priced against. Capping
   the *rate* rather than the purse leaves a big purse worth having and stops the curve.
 - **Rounded down**, like every other integer rule in the game.
-- **The cap binds the base rate, and a relic scales what the cap produced**. So at 25 held
-  propagation is +5, and +10 wearing Banker. The alternative — an absolute cap on the figure
-  that finally lands — would make Banker do nothing past 25 held, which is a relic that stops
+- **The cap binds the base rate, and a relic scales what the cap produced**. So at 35 held
+  propagation is +7, and +14 wearing Banker. The alternative — an absolute cap on the figure
+  that finally lands — would make Banker do nothing past 35 held, which is a relic that stops
   working exactly when a run can afford it.
-- **Order of operations, therefore:** count the fives, clamp to +5, *then* apply every relic that
+- **Order of operations, therefore:** count the fives, clamp to +7, *then* apply every relic that
   scales propagation, left to right in worn order. Two such relics compound, like every other
   relic effect.
 - **It is decided in `Session.WonFight`**, before the room counter moves and before either award
@@ -3579,7 +3579,7 @@ relic they cannot yet judge; behind the hand, it arrives as the reward for havin
 The list looks heterogeneous and is not. It is three families, and only one of them is situational:
 
 - **A turn shape** — what the player put on the table together. Spectrum (four elements at once),
-  Elementalist (five), Weaponmaster (three attack forms), Arsenal (three attack forms and a
+  Elementalist (five), Weaponmaster (three attack forms), Kitchen Sink (three attack forms and a
   defense), and Prism (one form or one card, in all five colors).
   **This family is pure grammar**, and it is where a shape the hand ladder cannot *price* belongs:
   worth naming, not worth paying for.
@@ -3601,7 +3601,7 @@ saw on the banner is the one that paid, and "you formed it" means that one. It i
 resolved event log, like the play counts.
 
 **The turn family reads the turn, not the hand.** A hand counts the cards that scored it and leaves
-the rest out; these are about what was played together, which is why Arsenal can ask for a defense
+the rest out; these are about what was played together, which is why Kitchen Sink can ask for a defense
 beside three attack forms — something no rung on the ladder can say, because a hand can only state
 what its cards must *agree* on.
 

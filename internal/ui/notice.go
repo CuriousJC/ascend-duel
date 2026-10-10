@@ -43,19 +43,19 @@ const (
 	noticeHeight = 300
 
 	noticeEyebrow     = "PROBLEM"
-	noticeEyebrowSize = 16
+	noticeEyebrowSize = systems.TextSmall
 	noticeEyebrowTop  = 52
 
 	// noticeWhatSize is the failure itself, and noticeWhatTop where it sits. **Set smaller than an
 	// achievement's name**, because what is written here is a sentence rather than a title.
-	noticeWhatSize = 22
+	noticeWhatSize = systems.TextMedium
 	noticeWhatTop  = 112
 
 	// The reassurance. **Every notice carries one**, because the reason this box exists at all is
 	// that the failure did *not* stop the game, and a player shown a red box with no such line
 	// reasonably assumes it did.
 	noticeCalm     = "The game is still running. This is a note, not a crash."
-	noticeCalmSize = 17
+	noticeCalmSize = systems.TextSmall
 	noticeCalmTop  = 160
 
 	noticeButtonWidth  = 300

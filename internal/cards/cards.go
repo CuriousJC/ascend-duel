@@ -113,7 +113,7 @@ var borderColors = [...]color.RGBA{
 // carrying the field, so a Spec with no Rarity is every other card in the game and takes the
 // neutral gray through borderBase.
 //
-// Three notes on the colors themselves:
+// Four notes on the colors themselves:
 //
 //   - **Common is bone, not white.** White is the trap borderColors[Basic] already documents: the
 //     bevel is derived by pushing the fill toward white, so a white fill has nowhere to climb and
@@ -125,11 +125,20 @@ var borderColors = [...]color.RGBA{
 //     lightning borders nothing any more, and a relic card carries no element.
 //   - **All three are dark or warm enough to hold against screenGround**, which is the constraint
 //     that pushed lightning down in 2026-08-19 and is why none of these is a pastel.
+//   - **Mythic is near-black** *(owner's call, 2026-10-10)*, so the rainbow a mythic's art carries
+//     is the loudest thing on the card. Near rather than pure, so the bevel's shade still has a
+//     step below it.
 var rarityBorders = map[data.Rarity]color.RGBA{
 	data.Common:   {R: 206, G: 201, B: 189, A: 255},
 	data.Uncommon: {R: 42, G: 145, B: 116, A: 255},
 	data.Rare:     {R: 196, G: 154, B: 56, A: 255},
+	data.Mythic:   {R: 22, G: 20, B: 26, A: 255},
 }
+
+// mythicLiftPct is how far a mythic's near-black is lifted to be written on a dark panel. The
+// ordinary lift leaves it at the panel's own weight, so the word would vanish; this one brings it
+// most of the way to WashLight, a pale ink the other three tiers never reach.
+const mythicLiftPct = 85
 
 // RarityInk is the color a rarity is written in, and it is the color the relic's own border is
 // drawn in — so the word in a panel and the ring on the card are one fact said twice.
@@ -144,6 +153,9 @@ func RarityInk(r data.Rarity) color.RGBA {
 	c, ok := rarityBorders[r]
 	if !ok {
 		return color.RGBA{}
+	}
+	if r == data.Mythic {
+		return systems.ColorToward(c, WashLight, mythicLiftPct)
 	}
 	return systems.ColorToward(c, WashLight, WashLiftPct)
 }
@@ -604,7 +616,7 @@ type Spec struct {
 // **A relic borders by rarity** *(owner's call, 2026-09-13)*, which is the second time this
 // function has given the border away — first to state, now, for relics only, to scarcity. See
 // rarityBorders for what replaced the pink and why the pink is still the fallback: a relic whose
-// rarity is not one of the three is a record that failed validation or a key naming no record at
+// rarity is not one of the tiers is a record that failed validation or a key naming no record at
 // all, and either should look wrong rather than look common.
 func borderBase(e Element, r data.Rarity) color.RGBA {
 	if e != Relic {

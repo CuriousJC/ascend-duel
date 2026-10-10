@@ -77,7 +77,7 @@ func TestTheShelfNeverDealsALockedRelic(t *testing.T) {
 	gs.Run.TakeUnlocks(nil)
 	for fight := 0; fight < 200; fight++ {
 		rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.ShopStock, fight)))
-		for _, item := range dealShelf(gs, rng) {
+		for _, item := range dealShelf(gs, rng, nil) {
 			if !gs.Run.Offers(item.key) {
 				t.Fatalf("the shelf dealt %s, which this run has not unlocked", item.key)
 			}

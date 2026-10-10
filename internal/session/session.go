@@ -122,7 +122,7 @@ type Session struct {
 	// held is the sack: every rune the run is carrying, by record key, in the order they
 	// were acquired. **A list rather than a count per key** — two of the same are two things to
 	// spend, and the board piece draws a card for each. See rune.go.
-	held []string
+	held carriedList
 
 	// duplicated is what the last duplicate rune minted, so the screen can seat the copy in
 	// the hand it was spent from. **Deliberately not snapshotted**: it is a handover between two
@@ -133,16 +133,21 @@ type Session struct {
 	// pouch is the stones the run is carrying but has not spent, by record key, in the order they
 	// were acquired. **A list rather than counts**, unlike `stones` — see stone.go, where the
 	// distinction is written down.
-	pouch []string
+	pouch carriedList
 
 	// satchel is the essences the run is carrying but has not spent, by record key, in the order
 	// they were acquired. **The sack's shape and the pouch's**, for the same argument: two of the
 	// same essence are two cards to draw and two decisions to make. See essence.go.
-	satchel []string
+	satchel carriedList
 
 	// scrolls is the scroll case: the cantrips the run is carrying but has not cast, by record key,
 	// in the order they were acquired. The sack's shape, for the sack's argument. See cantrip.go.
-	scrolls []string
+	scrolls carriedList
+
+	// pearlFight is one more than the index of the last fight the Eternity Pearl copied a
+	// consumable into, so a fight re-entered — a resumed run, a screen coming back — copies once.
+	// See CopyAtFightStart.
+	pearlFight int
 
 	// granted is the stones the last rock-shower rune handed over, so the dialog can show what
 	// the player just got. **Not snapshotted**, for the reason duplicated is not: it is a handover

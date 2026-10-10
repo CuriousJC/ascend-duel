@@ -1968,5 +1968,60 @@
     "Hand": [],
     "Actions": 10,
     "Vitae": 200
+  },
+  {
+    "ScenarioRecord": "awakening-and-pearl",
+    "Note": "The new relics in one fight. Awakening Flame, Ice Attunement, Slash Attunement and the Eternity Pearl are worn against an ice Giant Bat, with two runes carried. On arrival the pearl copies one of the runes weightless - the pane reads 2/3 while three cards float in it, the copy lifted and shimmering. The hand opens on a fire Bash: queue it first and every attack behind it is awakened - the relic and the Bash toast on the announcement's beat, the raised cards rattle, and each of their lines carries a + 10 out of the relic. The ice Cut lands rather than fizzling because of the attunement, and every slash played banks +1 AP for the next turn. Dummy life on both sides, so it can be replayed for as long as it is worth looking at.",
+    "Relics": [
+      "awaken-fire",
+      "attune-ice",
+      "attune-slash",
+      "eternity-pearl"
+    ],
+    "Runes": [
+      "left-to-right",
+      "switch-gold"
+    ],
+    "Enemy": "animals-outer-bat",
+    "EnemyElement": "ice",
+    "Dummy": true,
+    "Hand": [
+      {
+        "Card": "Bash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice"
+      },
+      {
+        "Card": "Slice",
+        "Element": "earth"
+      },
+      {
+        "Card": "Jab",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Brace",
+        "Element": "ice"
+      },
+      {
+        "Card": "Thrust",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Cut",
+        "Element": "fire"
+      },
+      {
+        "Card": "Block",
+        "Element": "earth"
+      }
+    ],
+    "Screen": "combat",
+    "Seed": "CGPBSC",
+    "Fight": 7,
+    "Vitae": 20
   }
 ]

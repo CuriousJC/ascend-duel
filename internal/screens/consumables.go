@@ -183,9 +183,7 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		// is what makes select-then-apply readable: the player never has to be told whether the
 		// cards they have selected are the right ones, because the rune that wants them is the
 		// one that is not dim. See consumableTarget.satisfiedBy.
-		if spec, st, ok := consumableFace(gs, held[i], canSpend(spendable, held[i]), false); ok {
-			ui.DrawFloatingCard(gs, screen, at.Min, i, spec, st)
-		}
+		drawHeldCard(gs, screen, at.Min, i, held[i], canSpend(spendable, held[i]))
 	}
 
 	// **The card under the cursor is drawn last, so it is drawn whole** *(owner's call,
@@ -203,15 +201,32 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 	// **And it keeps floating** *(owner's call)*, drawn exactly as the row draws it.
 	if raised >= 0 && !skip(raised) {
 		at := consumableSlotRect(r, raised, seats)
-		if spec, st, ok := consumableFace(gs, held[raised], canSpend(spendable, held[raised]), false); ok {
-			ui.DrawFloatingCard(gs, screen, at.Min, raised, spec, st)
-		}
+		drawHeldCard(gs, screen, at.Min, raised, held[raised], canSpend(spendable, held[raised]))
 	}
 
 	// **`held / cap`, the relic pane's figure in the relic pane's seat** — drawPaneCount, under the
 	// backing's right edge. It names nothing: the pane is called consumables because of its shape, so
 	// a new spendable standing here needs nothing changed.
-	drawPaneCount(gs, screen, back, fmt.Sprintf("%d/%d", len(held), heldSlots(gs)))
+	//
+	// **The figure counts what weighs**, so a weightless copy is never what makes a pane read full.
+	drawPaneCount(gs, screen, back, fmt.Sprintf("%d/%d", gs.Run.WeightedConsumables(), heldSlots(gs)))
+}
+
+// drawHeldCard puts one carried thing in its seat in the pane: floating like every card in the band,
+// or — for a weightless copy — lifted, drifting and shimmering exactly as a weightless relic is.
+// See ui.DrawWeightless.
+func drawHeldCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, seat int,
+	c session.Consumable, enabled bool) {
+
+	spec, st, ok := consumableFace(gs, c, enabled, false)
+	if !ok {
+		return
+	}
+	if c.Weightless {
+		ui.DrawWeightless(screen, ui.CardImage(gs, spec, st), at, 1, float64(gs.Count), float64(seat)*2.1)
+		return
+	}
+	ui.DrawFloatingCard(gs, screen, at, seat, spec, st)
 }
 
 // hoverConsumables explains whichever carried rune the cursor is resting on, and reports whether
@@ -242,8 +257,11 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 	// **To the left of the card, never under it** *(owner's call)*: a panel under the top row
 	// covers the pane's count and the tab a click hangs there. PointLeft flips right at the
 	// screen's edge.
-	tip.PointLeft(seat, ui.TipLine(held[i].Name()),
-		ui.TipLines(consumableTipLines(gs, held[i], essenceTargets)))
+	lines := consumableTipLines(gs, held[i], essenceTargets)
+	if held[i].Weightless {
+		lines = append(lines, ui.WeightlessTipLine)
+	}
+	tip.PointLeft(seat, ui.TipLine(held[i].Name()), ui.TipLines(lines))
 	return true
 }
 

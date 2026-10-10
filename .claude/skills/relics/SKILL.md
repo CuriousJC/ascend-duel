@@ -46,8 +46,9 @@ costs if it does not.
   every relic card, shelf and worn row alike, shows this and nothing generated from the rules. So a
   rule changed without its `Text` is a relic that lies to the player, and `TestEveryRelicHasSomethingToSay`
   only catches an empty one, not a stale one.
-- **`Rarity`** — `common`, `uncommon` or `rare`, and it decides both the price and how often the
-  shelf offers it. There is no `Price` field; see the shop section below.
+- **`Rarity`** — `common`, `uncommon`, `rare` or `mythic`, and it decides both the price and how
+  often the shelf offers it. A mythic is never on the tickets: each seat rolls one in
+  `data.MythicOdds` for one. There is no `Price` field; see the shop section below.
 - **`When`** — which moment wakes the rule. Closed; one Go seat each.
 - **`If`** — what has to be true. Optional; **a rule with no `If` always fires**.
 - **`Unlock`** — optional: an unlock key some achievement grants. A relic carrying one is kept off
@@ -85,6 +86,7 @@ which is what makes a relic a *run* concept rather than a combat one.
 | `blow-formed` | `combat` | `strike` (hit.go) | once per turn, as the hand is read and its hits are laid out — **the only moment that sees the turn's attacks as a set rather than a card**, and its `If` matches the *lead* card |
 | `turn-start` | `combat` | `playTurn` | once at the top of each of this duelist's own turns, **before the riders and both phases**. It has no card and no turn to read, so **a rule carrying any `If` is refused at registration** |
 | `hit-blocked` | `combat` | `blockedByShield` | once for every incoming hit one of the **wearer's** shields eats — the one moment read off the target rather than the actor. Its `If` matches the **eaten hit's card**, so it can narrow to blocks of a fire hit |
+| `fight-begun` | `session` | `Session.CopyAtFightStart`, called from `CombatScene.newDuel` | once as a fight is set up, before the first hand — **once per fight**, however often the scene is re-entered. No card, so **a rule carrying any `If` is refused** |
 | `essence-spent` | `session` | `Session.EssenceTargets` | as an essence is pointed at the deck — the reward offer, the shop's vial, one out of the satchel. **A question rather than an event**, the shape `prizes-dealt` has: it has no card and no turn, so **a rule carrying any `If` is refused at registration** |
 
 **Flips and demotions chain, in worn order, within one draw** *(owner's call, 2026-09-15 and
@@ -129,6 +131,7 @@ inside the same blow.
 | `Tier` | **the rung of its form's ladder** a card sits on — its *declared* cost, 1/2/3 | `{ "Tier": 3 }` — Atrophy |
 | `Lead` | **the turn's first attack card**, not a fact about the card | `{ "Lead": true }` — Echo. `blow-formed` only; refused elsewhere |
 | `Hand` | **the rung the turn formed**, by its `hands.json` key | `{ "Hand": "concept-full-house" }` — the rung relics. `blow-formed` only, and refused alongside any card predicate |
+| `First` | **the turn's first card as queued**, defenses included — and the rule's card predicates are read against that card | `{ "First": true, "Element": "fire" }` — the Awakenings. `blow-formed` with `awaken` only, and refused beside `Lead`, `Hand` or `MinForms` |
 | `MinForms` | **how many distinct forms the turn's scoring cards cover** | `{ "Hand": "pair", "MinForms": 2 }` — Dual Wield. `blow-formed` only. Legal beside `Hand`, since both narrow the same set |
 | *(absent)* | always | Banker, Hungry, the stat relics |
 
@@ -200,6 +203,10 @@ not ignored.
 | `reflect-damage` | `hit-blocked` | `Amount` percent | sends that share of the eaten hit, **as it would have landed** and rounded down, back at the thrower as plain damage — no drain, no growth. A thrower it kills falls there and the rest of their turn is not thrown. The Thorned Shield |
 | `heal-on-block` | `hit-blocked` | `Amount` flat | restores that much life to the wearer per block, capped at full. The Mending Shield |
 | `vitae-on-block` | `hit-blocked` | `Amount` flat | pays the wearer that much vitae per block, stepping `Duelist.Vitae`. The Tithe Shield |
+| `pierce-element` | `equipped` | `Element` | the wearer's cards of that element **land on a creature of it** instead of fizzling — the Attunements. Read off the thrower in `fizzles`. Basic refused |
+| `surge-per-card` | `turn-taken` | `Amount` points | banks `Amount` AP on `Duelist.Surge` **for every matching card of the turn**, whatever its hit did — the form Attunements. Spent like a block's surge. Refused with no `If` |
+| `awaken` | `blow-formed` | `Amount` flat | every **attack** queued after the first card gains `Amount` on its card — after the card's own multiplier and riders, **before the relics that price the card**, so they multiply it — the Awakenings. Needs `First`. Two that wake add. `Event.HandAwaken` |
+| `copy-consumable` | `fight-begun` | `Amount` copies | a weightless copy of one carried consumable picked off `seeds.PearlCopy`, weightless copies included — the Eternity Pearl |
 | `adjust-essence-targets` | `essence-spent` | `Amount` cards, **signed** | moves how many cards one essence is spent on. 1 is two where the mechanic gives one; **every delta sums and worn order decides nothing**, because addition commutes, so two relics are three cards. **Floored at one card, never at none** |
 
 **Adding a verb is a Go change** — one entry here plus the one place applying it — and that cost
@@ -229,7 +236,7 @@ same rules can be worn plain on one duelist and weightless on another.
 - **A cantrip-relic is both**, and is the only thing that makes either today. Its rules are written
   inline on its cantrip in `data/cantrips.json`, never in `relics.json`, and are registered under the
   cantrip's record key. It may not wake at a moment read off the run — `card-drawn`, `fight-won`,
-  `prizes-dealt`, `essence-spent` — because it is never among the run's relics. See MECHANICS.md
+  `prizes-dealt`, `essence-spent`, `fight-begun` — because it is never among the run's relics. See MECHANICS.md
   §Cantrips.
 
 ## Growing relics hold state
@@ -339,14 +346,15 @@ registry. `WearsRelic` takes a `RelicID`.
 is inert until the first relic is bought; `session.StartingRelics` is the debug seat for putting one
 on without playing to a shop and ships empty.
 
-- **A relic carries a `Rarity` in `relics.json`** — `common`, `uncommon` or `rare` — and a record
-  whose tier is missing or misspelled panics at load like every other unresolvable word. The tier is
-  the whole pricing decision *(owner's call, 2026-08-22)*: common 3 vitae, uncommon 5, rare 7, with
-  draw weights of 10 / 4 / 1. A relic is rebalanced by moving it between tiers, never by writing a
+- **A relic carries a `Rarity` in `relics.json`** — `common`, `uncommon`, `rare` or `mythic` — and
+  a record whose tier is missing or misspelled panics at load like every other unresolvable word. The
+  tier is the whole pricing decision *(owner's call, 2026-08-22)*: common 3 vitae, uncommon 5, rare 7,
+  mythic 10, with draw weights of 10 / 4 / 1 and none for a mythic, which rolls one in a thousand a
+  seat on `seeds.MythicRoll` instead. A relic is rebalanced by moving it between tiers, never by writing a
   number.
 - **The shelf's three seats are weighted draws without replacement**, on those tickets, so a rare
   relic is something a run mostly does not see rather than something it sees and cannot afford.
-- **Selling is the only way a relic comes off**, and it pays **the tier's own figure: 1, 2 or 3**.
+- **Selling is the only way a relic comes off**, and it pays **the tier's own figure: 1, 2, 3 or 4**.
   Buying at five worn is refused rather than swapped: the trade is two decisions with a price
   between them.
 - **A sold relic's accumulator resets to zero** *(owner's call, 2026-08-21)*. `grown` stays keyed by

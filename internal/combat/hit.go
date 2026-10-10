@@ -158,6 +158,21 @@ func strike(
 	// after it on every hit — the HAND RELICS step.
 	e.HandScale, e.HandScaleSeats = HandScale(worn, blow.Satisfied, scoringCards(blow, turn))
 
+	// **The turn's first card wakes the Awakenings**, and every attack after it gains their figure
+	// on its card — after the card's own multiplier, before the relics that price the card.
+	//
+	// **First as the player queued it**, not as the turn resolves: the defend phase goes first, so
+	// a Brace queued third is turn[0] here. A slot's Index is its place in the queue.
+	opener := firstQueued(turn)
+	e.Awaken, e.AwakenSeats = AwakenBonus(worn, turn[opener].Card)
+	e.AwakenOpener = opener
+	awaken := func(l landing) int {
+		if e.Awaken == 0 || l.seat == opener || turn[l.seat].Card.Spec().Verb != VerbAttack {
+			return 0
+		}
+		return e.Awaken
+	}
+
 	for _, i := range blow.Rung {
 		if e.RungCardCount >= len(e.RungCards) {
 			break
@@ -180,8 +195,8 @@ func strike(
 	for h, l := range landings {
 		card := turn[l.seat].Card
 		elems[h] = card.Element
-		planned[h] = scaleDamage(l.shape.Amount(l.nth, actor.CardDamage(card)), blow.Multiplier)
-		if planned[h] <= 0 || fizzles(card, target) {
+		planned[h] = scaleDamage(l.shape.Amount(l.nth, actor.cardDamageWoken(card, awaken(l))), blow.Multiplier)
+		if planned[h] <= 0 || fizzles(card, actor, target) {
 			planned[h] = -1
 		}
 	}
@@ -192,9 +207,10 @@ func strike(
 	for h, l := range landings {
 		card := turn[l.seat].Card
 
-		// **DUELIST, CARD, CARD RELICS, HAND, HAND RELICS** — `CardDamage` is the first three; then
-		// the hand's multiplier, then the relics that multiply the hand.
-		d := l.shape.Amount(l.nth, actor.CardDamage(card))
+		// **DUELIST, CARD, AWAKENING, CARD RELICS, HAND, HAND RELICS** — `cardDamageWoken` is the
+		// first four; then the hand's multiplier, then the relics that multiply the hand.
+		woke := awaken(l)
+		d := l.shape.Amount(l.nth, actor.cardDamageWoken(card, woke))
 		figure := scaleDamage(d, blow.Multiplier)
 		if e.HandScale != 0 && e.HandScale != 100 {
 			figure = scaleDamage(figure, e.HandScale)
@@ -220,6 +236,7 @@ func strike(
 				e.HandPlayAdd[at] = l.shape.Amount(l.nth, add)
 			}
 			e.HandPlayPct[at] = card.ScaleOnPlay()
+			e.HandAwaken[at] = woke
 			e.HitAmounts[at] = figure
 			if l.nth > 0 {
 				// **Only the extra landings are attributed to a relic.** The card's own first
@@ -278,7 +295,7 @@ func throwHit(
 ) ([]Event, Duelist, Duelist) {
 	// **A fizzle is decided first**: it is the target's nature, so a hit that was never going to
 	// land spends no shield.
-	if fizzles(card, target) {
+	if fizzles(card, actor, target) {
 		return append(hits, Event{
 			Kind:    KindFizzled,
 			Side:    side,
@@ -355,8 +372,23 @@ func throwHit(
 //
 // **Basic is no element**, so a plain card never fizzles and a target with no element — the
 // player, and every bare `Duelist{}` — takes every hit. That is what makes the rule one-way.
-func fizzles(card Card, target Duelist) bool {
-	return target.Element != Basic && card.Element == target.Element && !card.Wild(AxisElement)
+//
+// **An attuned thrower's card lands anyway** — see DoPierceElement. The pierce is the thrower's,
+// so it is read off the actor.
+func fizzles(card Card, actor, target Duelist) bool {
+	return target.Element != Basic && card.Element == target.Element && !card.Wild(AxisElement) &&
+		!Pierces(actor.WornRelics(), card.Element)
+}
+
+// firstQueued is the turn index of the card the player queued first, whatever phase it resolves in.
+func firstQueued(turn []Slot) int {
+	at := 0
+	for i, slot := range turn {
+		if slot.Index < turn[at].Index {
+			at = i
+		}
+	}
+	return at
 }
 
 // leadSlot is the turn index of the attack the blow is named by: the earliest attack card in the

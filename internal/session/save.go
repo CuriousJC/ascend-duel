@@ -58,6 +58,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		Pouch:       s.Carried(),
 		Satchel:     s.Stowed(),
 		Cantrips:    s.Scrolls(),
+		PearlFight:  s.pearlFight,
 		NextCardID:  s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
 			Propagated: s.spoils.Propagated,
@@ -77,6 +78,12 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		if s.weightless[key] {
 			out.Weightless = append(out.Weightless, key)
 		}
+	}
+
+	if free := (profile.CarriedSnapshot{Held: s.held.freeAt(), Pouch: s.pouch.freeAt(),
+		Satchel: s.satchel.freeAt(), Cantrips: s.scrolls.freeAt()}); len(free.Held)+len(free.Pouch)+
+		len(free.Satchel)+len(free.Cantrips) > 0 {
+		out.WeightlessCarried = &free
 	}
 
 	for _, c := range s.deck {
@@ -164,7 +171,8 @@ func recordsSnapshot(in []LedgerRecord) []profile.LedgerRecordSnapshot {
 		for _, t := range r.Terms {
 			rec.Terms = append(rec.Terms, profile.LedgerSumSnapshot{
 				Element: t.Element, Split: t.Split, DMG: t.DMG, Weight: t.Weight,
-				Base: t.Base, PlayAdd: t.PlayAdd, PlayPct: t.PlayPct, Scales: append([]int(nil), t.Scales...),
+				Base: t.Base, PlayAdd: t.PlayAdd, PlayPct: t.PlayPct, Awaken: t.Awaken,
+				Scales: append([]int(nil), t.Scales...),
 			})
 		}
 		out = append(out, rec)
@@ -195,7 +203,8 @@ func resumeRecords(in []profile.LedgerRecordSnapshot) []LedgerRecord {
 		for _, t := range r.Terms {
 			rec.Terms = append(rec.Terms, LedgerSum{
 				Element: t.Element, Split: t.Split, DMG: t.DMG, Weight: t.Weight,
-				Base: t.Base, PlayAdd: t.PlayAdd, PlayPct: t.PlayPct, Scales: append([]int(nil), t.Scales...),
+				Base: t.Base, PlayAdd: t.PlayAdd, PlayPct: t.PlayPct, Awaken: t.Awaken,
+				Scales: append([]int(nil), t.Scales...),
 			})
 		}
 		out = append(out, rec)
@@ -365,8 +374,11 @@ func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *prof
 	// **A rune the catalog no longer holds is refused rather than dropped**, on the terms a
 	// relic is: a run resumed one consumable lighter is a run the player would have to work out had
 	// changed. Order is acquisition order and is kept, because it is the order the sack draws.
+	//
+	// **Past the cap**, like the scroll case below: MaxConsumables refuses a purchase, and a resumed
+	// run is not buying anything.
 	for _, key := range snap.Held {
-		if !s.Hold(key) {
+		if !s.hold(key) {
 			return nil, 0, fmt.Errorf("rune %q is not one this build has", key)
 		}
 	}
@@ -410,6 +422,21 @@ func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *prof
 			return nil, 0, fmt.Errorf("cantrip %q is not one this build has", key)
 		}
 	}
+	if w := snap.WeightlessCarried; w != nil {
+		for _, i := range w.Held {
+			s.held.lighten(i)
+		}
+		for _, i := range w.Pouch {
+			s.pouch.lighten(i)
+		}
+		for _, i := range w.Satchel {
+			s.satchel.lighten(i)
+		}
+		for _, i := range w.Cantrips {
+			s.scrolls.lighten(i)
+		}
+	}
+	s.pearlFight = snap.PearlFight
 
 	// **A stone naming a rung this build has not got is refused rather than dropped**, exactly as a
 	// relic the catalog no longer holds is: a run resumed quietly paying less for its Card Pairs is

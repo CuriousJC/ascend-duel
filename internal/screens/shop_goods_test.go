@@ -91,7 +91,7 @@ func TestTheSameFightOpensTheSameBag(t *testing.T) {
 func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	gs := testRun()
 
-	shelf := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
+	shelf := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil))
 	before := append([]string(nil), shelf...)
 
 	bag := goodHolding(t, session.ContentsStones)
@@ -101,7 +101,7 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	dealStones(gs, bag.Record, bag.Size)
 	dealVialEssences(gs, vial.Record, vial.Size)
 
-	after := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
+	after := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil))
 	for i := range before {
 		if before[i] != after[i] {
 			t.Fatalf("the shelf changed after a bag was drawn: %v then %v", before, after)

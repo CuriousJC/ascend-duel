@@ -65,6 +65,7 @@ func HandTermRecords(e combat.Event, relics []combat.WornRelic, played []combat.
 func hitRecord(e combat.Event, i int, card combat.Card, relics []combat.WornRelic) session.LedgerRecord {
 	term := session.LedgerSum{Scales: relicFactors(e, i), Element: ElementName(card.Element)}
 	term.PlayAdd = e.HandPlayAdd[i]
+	term.Awaken = e.HandAwaken[i]
 	if pct := e.HandPlayPct[i]; pct != 0 && pct != 100 {
 		term.PlayPct = pct
 	}
@@ -80,13 +81,37 @@ func hitRecord(e combat.Event, i int, card combat.Card, relics []combat.WornReli
 		Hit:        i + 1,
 		Card:       combat.ConceptOf(card.Concept).Label,
 		Element:    ElementName(card.Element),
-		Factors:    append(termFactors(e, i, relics), playRiderFactors(e, i)...),
+		Factors:    hitFactors(e, i, relics),
 		Terms:      []session.LedgerSum{term},
 		Multiplier: e.Multiplier,
 		HandScale:  e.HandScale,
 		Total:      e.HitAmounts[i],
 	}
 	return rec
+}
+
+// hitFactors is everything that touched one hit, in the order the arithmetic applied it: the
+// landings relics bought, the card's own riders, what the opener woke, then the relics' prices.
+func hitFactors(e combat.Event, i int, relics []combat.WornRelic) []session.LedgerFactor {
+	var landed, priced []session.LedgerFactor
+	for _, f := range termFactors(e, i, relics) {
+		if f.Landed {
+			landed = append(landed, f)
+		} else {
+			priced = append(priced, f)
+		}
+	}
+	out := append(landed, playRiderFactors(e, i)...)
+	out = append(out, awakenFactors(e, i, relics)...)
+	return append(out, priced...)
+}
+
+// awakenFactors names the Awakenings that added to one hit, and what they added.
+func awakenFactors(e combat.Event, term int, relics []combat.WornRelic) []session.LedgerFactor {
+	if add := e.HandAwaken[term]; add != 0 {
+		return []session.LedgerFactor{{Relic: relicNames(relics, e.AwakenSeats), Add: add}}
+	}
+	return nil
 }
 
 // handDMGRecords is what the relics did to the DMG this blow was swung at: the rung's raise, the

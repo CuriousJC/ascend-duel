@@ -517,13 +517,11 @@ var StartingRunes []string
 // and the board piece draws a card for each. Order is acquisition order, which is the only order
 // the player can see.
 func (s *Session) Held() []string {
-	out := make([]string, len(s.held))
-	copy(out, s.held)
-	return out
+	return s.held.list()
 }
 
 // HoldCount is how many runes the run is carrying.
-func (s *Session) HoldCount() int { return len(s.held) }
+func (s *Session) HoldCount() int { return s.held.len() }
 
 // Hold puts a rune in the sack, and reports whether it went in.
 //
@@ -549,7 +547,7 @@ func (s *Session) hold(key string) bool {
 	if _, ok := runes[key]; !ok {
 		return false
 	}
-	s.held = append(s.held, key)
+	s.held.add(key, false)
 	return true
 }
 
@@ -570,19 +568,7 @@ func (s *Session) hold(key string) bool {
 // resolved against a sack that changed underneath it must not take the frame with it. The same
 // courtesy MoveRelic extends.
 func (s *Session) MoveRune(from, to int) bool {
-	n := len(s.held)
-	if from < 0 || from >= n || to < 0 || to >= n || from == to {
-		return false
-	}
-
-	key := s.held[from]
-	if from < to {
-		copy(s.held[from:to], s.held[from+1:to+1])
-	} else {
-		copy(s.held[to+1:from+1], s.held[to:from])
-	}
-	s.held[to] = key
-	return true
+	return s.held.move(from, to)
 }
 
 // Drop takes one out of the sack by position, and reports whether it was there.
@@ -592,11 +578,7 @@ func (s *Session) MoveRune(from, to int) bool {
 // out of at any point — the same rule the essence morph is under. Dropping first would charge for a
 // choice that was never made.
 func (s *Session) Drop(i int) bool {
-	if i < 0 || i >= len(s.held) {
-		return false
-	}
-	s.held = append(s.held[:i], s.held[i+1:]...)
-	return true
+	return s.held.drop(i)
 }
 
 // ApplyRune performs a rune against the cards it names, by identity.
